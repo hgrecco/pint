@@ -1,0 +1,9 @@
+*~
+__pycache__
+*egg-info*
+_past*
+*.pyc
+.DS_Store
+docs/_build/
+docs/drivers
+.idea
