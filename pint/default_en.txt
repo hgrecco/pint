@@ -1,0 +1,294 @@
+# Default Pint units definition file
+
+# decimal prefixes
+yocto- = 10.0**-24 = y-
+zepto- = 10.0**-21 = z-
+atto- =  10.0**-18 = a-
+femto- = 10.0**-15 = f-
+pico- =  10.0**-12 = p-
+nano- =  10.0**-9  = n-
+micro- = 10.0**-6  = u-
+milli- = 10.0**-3  = m-
+centi- = 10.0**-2  = c-
+deci- =  10.0**-1  = d-
+deca- =  10.0      = da-
+hecto- = 10.0**2   = h-
+kilo- =  10.0**3   = k-
+mega- =  10.0**6   = M-
+giga- =  10.0**9   = G-
+tera- =  10.0**12  = T-
+peta- =  10.0**15  = P-
+exa- =   10.0**18  = E-
+zetta- = 10.0**21  = Z-
+yotta- = 10.0**24  = Y-
+
+# binary_prefixes
+kibi- = 2**10
+mebi- = 2**20
+gibi- = 2**30
+tebi- = 2**40
+pebi- = 2**50
+exbi- = 2**60
+zebi- = 2**70
+yobi- = 2**80
+
+# reference
+meter = [length] = m = metre
+second = [time] = s = sec
+ampere = [current] = A = amp
+cd = [luminosity] = candela = candle
+gram = [mass]
+mol = [substance] = mole
+degK = [temperature] = K = kelvin
+radian = [] = rad
+bit = []
+count = []
+
+# acceleration
+standard_gravity = 9.806650 * meter / second ** 2 = g_0 = g_n = gravity
+
+# Angle
+turn = 2 * pi * radian = revolution = cycle = circle
+degree = pi / 180 * radian = deg = arcdeg = arcdegree = angular_degree
+arcminute = arcdeg / 60 = arcmin = arc_minute = angular_minute
+arcsecond = arcmin / 60 =  arcsec = arc_second = angular_second
+steradian = radian ** 2 = sr
+are = 100 * m**2
+barn = 1e-28 * m ** 2 = b
+cmil = 5.067075e-10 * m ** 2 = circular_mils
+darcy = 9.869233e-13 * m ** 2
+acre = 4046.8564224 * m ** 2 = international_acre
+US_survey_acre = 160 * rod ** 2
+
+# EM
+esu = 1 * erg**0.5 * centimeter**0.5 = statcoulombs = statC = franklin = Fr
+esu_per_second = 1 * esu / second = statampere
+ampere_turn = 1 * A
+gilbert = 10 / (4 * pi ) * ampere_turn = G
+coulomb = ampere * second = C
+volt = joule / coulomb = V
+farad = coulomb / volt = F
+ohm = volt / ampere
+siemens = ampere / volt = S = mho
+weber = volt * second = Wb
+tesla = weber / meter ** 2 = T
+henry = weber / ampere = H
+elementary_charge = 1.602176487e-19 * coulomb = e
+chemical_faraday = 9.64957e4 * coulomb
+physical_faraday = 9.65219e4 * coulomb
+faraday =  96485.3399 * coulomb = C12_faraday
+gamma = 1e-9 * tesla
+gauss = 1e-4 * tesla
+maxwell = 1e-8 * weber = mx
+oersted = 1000 / (4 * pi) * A / m = Oe
+statfarad = 1.112650e-12 * farad = statF = stF
+stathenry = 8.987554e11 * henry = statH = stH
+statmho = 1.112650e-12 * siemens = statS = stS
+statohm = 8.987554e11 * ohm
+statvolt = 2.997925e2 * volt = statV = stV
+unit_pole = 1.256637e-7 * weber
+vacuum_permeability = 4 * pi * 1e-7 * newton / ampere ** 2 = mu_0 = magnetic_constant
+vacuum_permittivity = 1 / (mu_0 * c **2 ) = epsilon_0 = electric_constant
+Z_0 = mu_0 * c = impedance_of_free_space = characteristic_impedance_of_vacuum
+
+# Energy
+joule = newton * meter = J
+erg = dyne * centimeter
+btu = 1.05505585262e3 * joule = Btu = BTU = british_thermal_unit
+eV = 1.60217653e-19 * J = electron_volt
+thm = 100000 * BTU = therm = EC_therm
+cal = 4.184 * joule = calorie = thermochemical_calorie
+international_steam_table_calorie = 4.1868 * joule
+ton_TNT = 4.184e9 * joule = tTNT
+US_therm = 1.054804e8 * joule
+watt_hour = watt / hour = Wh = watthour
+E_h = 4.35974394e-18 * joule = hartree = hartree_energy
+
+# Force
+newton = kilogram * meter / second ** 2 = N
+dyne = gram * centimeter / second ** 2 = dyn
+force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
+force_gram = g_0 * gram = gf = gram_force
+force_ounce = g_0 * ounce = ozf = ounce_force
+force_pound = g_0 * lb = lbf = pound_force
+force_ton = 2000 * force_pound = ton_force
+poundal = lb * feet / second ** 2 = pdl
+kip = 1000*lbf
+
+# Frequency
+hertz = 1 / second = Hz = rps
+revolutions_per_minute = revolution / minute = rpm
+counts_per_second = count / second = cps
+
+# Heat
+#RSI = degK * meter ** 2 / watt
+#clo = 0.155 * RSI = clos
+#R_value = foot ** 2 * degF * hour / btu
+
+# Information
+byte = 8 * bit = Bo = octet
+baud = bit / second = Bd = bps
+
+# Length
+angstrom = 1e-10 * meter
+inch = 2.54 * centimeter = international_inch = inches = international_inches
+foot = 12 * inch = international_foot = ft = feet = international_foot = international_feet
+mile = 5280 * foot = mi = international_mile
+yard = 3 * feet = yd = international_yard
+mil = inch / 1000 = thou
+parsec = 3.08568025e16 * meter = pc
+light_year = speed_of_light * julian_year = ly
+astronomical_unit = 149597870691 * meter = au
+nautical_mile = 1.852e3 * meter = nmi
+printers_point = 127 * millimeter / 360 = point
+printers_pica = 12 * printers_point = pica
+US_survey_foot = 1200 * meter / 3937
+US_survey_yard =  3 * US_survey_foot
+US_survey_mile = 5280 * US_survey_foot = US_statute_mile
+rod = 16.5 * US_survey_foot = pole = perch
+furlong = 660 * US_survey_foot
+fathom = 6 * US_survey_foot
+chain = 66 * US_survey_foot
+barleycorn = inch / 3
+arpentlin = 191.835 * feet
+kayser = 1 / centimeter = wavenumber
+
+# Mass
+dram = oz / 16 = dr = avoirdupois_dram
+ounce = 28.349523125 * gram = oz = avoirdupois_ounce
+pound = 0.45359237 * kilogram = lb = avoirdupois_pound
+stone = 14 * lb = st
+carat = 200 * milligram
+grain = 64.79891 * milligram = gr
+long_hundredweight = 112 * lb
+short_hundredweight = 100 * lb
+metric_ton = 1000 * kilogram = t = tonne
+pennyweight = 24 * gram = dwt
+slug = 14.59390 * kilogram
+troy_ounce = 480 * gram = toz = apounce = apothecary_ounce
+troy_pound = 12 * toz = tlb = appound = apothecary_pound
+drachm = 60 * gram = apdram = apothecary_dram
+atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
+scruple = 20 * gram
+bag = 94 * lb
+ton = 2000 * lb = short_ton
+
+# Textile
+denier =  gram / (9000 * meter)
+tex = gram/ (1000 * meter)
+dtex = decitex
+
+# Power
+watt = joule / second = W = volt_ampere = VA
+horsepower = 33000 * ft * lbf / min = hp = UK_horsepower = British_horsepower
+boiler_horsepower = 33475 * btu / hour
+metric_horsepower =  75 * force_kilogram * meter / second
+electric_horsepower = 746 * watt
+hydraulic_horsepower = 550 * feet * lbf / second
+refrigeration_ton = 12000 * btu / hour = ton_of_refrigeration
+
+# Pressure
+Hg = gravity * 13.59510 * gram / centimeter ** 3 = mercury = conventional_mercury
+mercury_60F = gravity * 13.5568 * gram / centimeter ** 3
+H2O = gravity * 1000 * kilogram / meter ** 3 = h2o = water = conventional_water
+water_4C = gravity * 999.972 * kilogram / meter ** 3 = water_39F
+water_60F = gravity * 999.001 * kilogram / m ** 3
+pascal = newton / meter ** 2 = Pa
+bar = 100000 * pascal
+atmosphere = 101325 * pascal = atm = standard_atmosphere
+technical_atmosphere = kilogram * gravity / centimeter ** 2 = at
+torr = atm / 760
+psi = pound * gravity / inch ** 2 = pound_force_per_square_inch
+ksi = kip / inch ** 2 = kip_per_square_inch
+barye = 0.1 * newton / meter ** 2 = = barie = barad = barad = barrie = baryd = Ba
+mmHg = millimeter * Hg = mm_Hg = millimeter_Hg = millimeter_Hg_0C
+cmHg = centimeter * Hg = cm_Hg = centimeter_Hg
+inHg = inch * Hg = in_Hg = inch_Hg = inch_Hg_32F
+inch_Hg_60F = inch * mercury_60F
+inch_H2O_39F = inch * water_39F
+inch_H2O_60F = inch * water_60F
+footH2O = ft * water
+cmH2O = centimeter * water
+foot_H2O = ft * water = ftH2O
+
+# Radiation
+Bq = Hz = becquerel
+curie = 3.7e10 * Bq = Ci
+rutherford = 1e6*Bq = rd = Rd
+Gy = joule / kilogram = gray = Sv = sievert
+rem = 1e-2 * sievert
+rads = 1e-2 * gray
+roentgen = 2.58e-4 * coulomb / kilogram = R
+
+
+# Temperature
+degR = 9 / 5 * degK = rankine
+degC = degK = celsius; offset = 273.15
+degF = 9 / 5 * degK = fahrenheit; offset = 255.372222
+
+# Time
+minute = 60 * second = min
+hour = 60 * minute = h = hr
+day = 24 * hour
+week = 7 * day
+fortnight = 2 * week
+year = 31556925.9747 * second
+month = year/12
+shake = 1e-8 * second
+sidereal_day = day / 1.00273790935079524
+sidereal_hour = sidereal_day/24
+sidereal_minute=sidereal_hour/60
+sidereal_second =sidereal_minute/60
+sidereal_year = 366.25636042 * sidereal_day
+sidereal_month = 27.321661 * sidereal_day
+tropical_month = 27.321661 * day
+synodic_month = 29.530589 * day = lunar_month
+tropical_month = 27.321661 * day
+common_year = 365 * day
+leap_year = 366 * day
+julian_year = 365.25 * day
+gregorian_year = 365.2425 * day
+millenium = 1000 * year = millenia = milenia = milenium
+eon = 1e9 * year
+work_year = 2056 * hour
+work_month = work_year/12
+
+# Velocity
+speed_of_light = 299792458 * meter / second = c
+knot = nautical_mile / hour = kt = knot_international = international_knot = nautical_miles_per_hour
+
+# Viscosity
+poise = 1e-1 * Pa * second = P
+stokes = 1e-4 * meter ** 2 / second = St
+rhe = 10 / (Pa * s)
+
+# Volume
+liter = 1e-3 * m ** 3 = l = L = litre
+cc = centimeter ** 3 = cubic_centimeter
+stere = meter ** 3
+gross_register_ton = 100 * foot ** 3 = register_ton = GRT
+acre_foot = acre * foot = acre_feet
+board_foot = foot ** 2 * inch = FBM
+bushel = 2150.42 * inch ** 3 = bu = US_bushel
+dry_gallon = bushel / 8 = US_dry_gallon
+dry_quart = dry_gallon / 4 = US_dry_quart
+dry_pint = dry_quart / 2 = US_dry_pint
+gallon = 231 * inch ** 3 = liquid_gallon = US_liquid_gallon
+quart = gallon / 4 = liquid_quart = US_liquid_quart
+pint = quart / 2 = pt = liquid_pint = US_liquid_pint
+cup = pint / 2 = liquid_cup = US_liquid_cup
+gill = cup / 2 = liquid_gill = US_liquid_gill
+floz = gill / 4 = fluid_ounce = US_fluid_ounce = US_liquid_ounce
+imperial_bushel = 36.36872 * liter = UK_bushel
+imperial_gallon = imperial_bushel / 4 = UK_gallon
+imperial_quart = imperial_gallon / 4 = UK_quart
+imperial_pint = imperial_quart / 2 = UK_pint
+imperial_cup = imperial_pint / 2 = UK_cup
+imperial_gill = imperial_cup / 2 = UK_gill
+imperial_floz = imperial_gill / 5 = UK_fluid_ounce = imperial_fluid_ounce
+barrel = 42 * gallon = bbl = US_liquid_gallon
+tablespoon = floz / 2 = tbsp = Tbsp = Tblsp = tblsp = tbs = Tbl
+teaspoon = tablespoon / 3 = tsp
+peck = bushel / 4 = pk
+fluid_dram = floz / 8 = fldr = fluidram
+firkin = barrel / 4
