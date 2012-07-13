@@ -8,7 +8,7 @@
     unit of measurement. It allows arithmetic operations between them
     and conversions from and to different units.
 
-    :copyright: (c) 2012 by Hernan E. Grecco.
+    :copyright: 2012 by Hernan E. Grecco.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -66,7 +66,7 @@ def _definitions_from_file(filename):
             yield name, value, aliases, modifiers
 
 
-def solve_dependencies(dependencies):
+def _solve_dependencies(dependencies):
     """Solve a dependency graph.
 
     :param dependencies: dependency dictionary. For each key, the value is
@@ -406,7 +406,7 @@ class UnitRegistry(object):
         for unit_name, deps in dependencies.items():
             dep2[unit_name] = set(conv[dep_name] for dep_name in deps)
 
-        for unit_names in solve_dependencies(dep2):
+        for unit_names in _solve_dependencies(dep2):
             for unit_name in unit_names:
                 if not unit_name in self._UNITS:
                     self.add_unit(unit_name, *pending[unit_name])
