@@ -7,3 +7,5 @@ _past*
 docs/_build/
 docs/drivers
 .idea
+build/
+dist/
