@@ -1,0 +1,9 @@
+exclude *.pyc *~ .DS_Store
+
+include .gitignore
+include cinspect.dump
+include README
+include LICENSE
+include pint/default_en.txt
+
+recursive-include pint *
