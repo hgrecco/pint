@@ -9,7 +9,7 @@ Pint: a Python units library
 
 Pint is Python module/package to define, operate and manipulate **physical quantities**: the product of a numerical value and a unit of measurement. It allows arithmetic operations between them and conversions from and to different units.
 
-It is distributed with a comprehensive list of physical units, prefixes and constants. Due to it's modular design, you to extend (or even rewrite!) the complete list without changing the source code.
+It is distributed with a comprehensive list of physical units, prefixes and constants. Due to it's modular design, you can extend (or even rewrite!) the complete list without changing the source code.
 
 It has a complete test coverage. It runs in Python 2.6, 2.7, 3.0, 3.1 and 3.2 with no other dependency. It licensed under BSD.
 
@@ -26,8 +26,6 @@ This results in a much shorter and maintainable unit definition list as compared
 **Standalone unit definitions**: units definitions are loaded from simple and easy to edit text file.
 Adding and changing units and their definitions does not involve changing the code.
 
-**Handle temperature conversion**: it can convert between units with different point of reference, like positions on a map or absolute temperature scales.
-
 **Advanced string formatting**: a quantity can be formatted into string using PEP 3101 syntax.
 Extended conversion flags are given to provide latex and pretty formatting.
 
@@ -36,8 +34,15 @@ It is a single stand-alone module that can be installed as a package or added si
 
 **Dependency free**: it depends only on Python and it's standard library.
 
-**Python 2 and 3**: A single codebase that runs unchanged in Python 2.6+ and Python 3.0+.
+**Python 2 and 3**: a single codebase that runs unchanged in Python 2.6+ and Python 3.0+.
 
+**Experimental advanced NumPy support**: While NumPy is not a requirement for Pint, when available ndarray methods and ufuncs can be used in Quantity objects.
+
+
+Soon
+~~~~
+
+**Handle temperature conversion**: it can convert between units with different point of reference, like positions on a map or absolute temperature scales.
 
 
 Where to start

@@ -56,7 +56,9 @@ If you ask Pint to perform and invalid conversion::
    >>> speed.to(ureg.joule)
    Traceback (most recent call last):
    ...
-   pint.pint.DimensionalityError: Cannot convert from 'inch / minute' (length / time) to 'joule' (length ** 2 * mass / time ** 2).
+   pint.pint.DimensionalityError: Cannot convert
+   from 'inch / minute' (length / time)
+   to 'joule' (length ** 2 * mass / time ** 2).
 
 
 In some cases it is useful to define physical quantities objects using the class constructor::
@@ -78,9 +80,10 @@ If you try to use a unit which is not in the registry::
    >>> speed = 23 * ureg.snail_speed
    Traceback (most recent call last):
    ...
-   pint.pint.UndefinedUnitError: 'snail_speed' is not defined in the unit registry.
+   pint.pint.UndefinedUnitError: 'snail_speed' is not defined
+   in the unit registry.
 
-You can add your own units to the registry or build your own list. More info on that defining_
+You can add your own units to the registry or build your own list. More info on that :ref:`defining`
 
 
 String parsing
