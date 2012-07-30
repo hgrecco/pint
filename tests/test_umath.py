@@ -51,7 +51,6 @@ class TestUmath(TestCase):
         except ValueError as e:
             raise self.failureException(e)
 
-    @unittest.expectedFailure
     def test_cross(self):
         a = [3,-3, 1] * self.ureg.kPa
         b = [4, 9, 2] * self.ureg.m**2
@@ -156,7 +155,6 @@ class TestUmath(TestCase):
             [-1., -1., -0., 1., 2., 2., 2.] * self.ureg.m
         )
 
-    @unittest.expectedFailure
     def test_fix(self):
         try:
             self.assertEqual(np.fix(3.14 * self.ureg.degF), 3.0 * self.ureg.degF)
@@ -230,37 +228,21 @@ class TestUmath(TestCase):
         self.assertEqual(np.hypot(3 * self.ureg.m, 4 * self.ureg.m),  5 * self.ureg.m)
         self.assertRaises(ValueError, np.hypot, 1*self.ureg.m, 2*self.ureg.J)
 
-    @unittest.skip
     def test_degrees(self):
-        self.assertEqual(
-            np.degrees(6 * self.ureg.radians),
-            (6 * self.ureg.radians).rescale(self.ureg.degree)
-        )
-        self.assertRaises(ValueError, np.degrees, 0*self.ureg.degree)
-
-    def test_degrees_pint(self):
-        self.assertEqual(
+        self.assertAlmostEqual(
             np.degrees(6. * self.ureg.radians),
             (6. * self.ureg.radians).to(self.ureg.degree)
         )
         self.assertRaises(ValueError, np.degrees, 0.*self.ureg.m)
 
-    @unittest.skip
     def test_radians(self):
-        self.assertEqual(
-            np.radians(6 * self.ureg.degree),
-            (6 * self.ureg.degree).rescale(self.ureg.radian)
-        )
-        self.assertRaises(ValueError, np.radians, 0*self.ureg.radians)
-
-    def test_radians_pint(self):
-        self.assertEqual(
+        (6. * self.ureg.degree).to(self.ureg.radian)
+        self.assertAlmostEqual(
             np.radians(6. * self.ureg.degree),
             (6. * self.ureg.degree).to(self.ureg.radian)
         )
         self.assertRaises(ValueError, np.radians, 0*self.ureg.m)
 
-    @unittest.expectedFailure
     def test_unwrap(self):
         self.assertEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
         self.assertEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)

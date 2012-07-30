@@ -953,7 +953,7 @@ def _build_quantity(registry, force_ndarray):
                        'arctan': 'radian', 'arctan2': 'radian',
                        'arccosh': 'radian', 'arcsinh': 'radian',
                        'arctanh': 'radian',
-                       'degrees': 'degree', 'radian': 'radian',
+                       'degrees': 'degree', 'radians': 'radian',
                        'expm1': '', 'cumprod': ''}
 
         #: List of ufunc/attributes names in which units are copied from the

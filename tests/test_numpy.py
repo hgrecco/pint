@@ -29,7 +29,6 @@ class TestQuantityMethods(TestCase):
         self.assertEqual(self.q.sum(0), [4,     6]*self.ureg.m)
         self.assertEqual(self.q.sum(1), [3, 7]*self.ureg.m)
 
-    @unittest.expectedFailure
     def test_fill(self):
         self.q.fill(6 * self.ureg.ft)
         self.assertEqual(self.q, [[6, 6], [6, 6]] * self.ureg.ft)
@@ -57,7 +56,6 @@ class TestQuantityMethods(TestCase):
     def test_take(self):
         self.assertEqual(self.q.take([0,1,2,3]), self.q.flatten())
 
-    @unittest.expectedFailure
     def test_put(self):
         q = self.q.flatten()
         q.put([0,2], [10,20]*self.ureg.m)
@@ -98,7 +96,6 @@ class TestQuantityMethods(TestCase):
         self.assertEqual(self.q.compress([False, True], axis=1),
                          [[2], [4]] * self.ureg.m)
 
-    @unittest.expectedFailure
     def test_searchsorted(self):
         self.assertEqual(self.q.flatten().searchsorted([1.5, 2.5] * self.ureg.m),
                          [1, 2])
@@ -124,7 +121,6 @@ class TestQuantityMethods(TestCase):
     def test_ptp(self):
         self.assertEqual(self.q.ptp(), 3 * self.ureg.m)
 
-    @unittest.expectedFailure
     def test_clip(self):
         self.assertEqual(
             self.q.copy().clip(max=2*self.ureg.m),

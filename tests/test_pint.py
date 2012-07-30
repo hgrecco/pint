@@ -2,9 +2,13 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import sys
+
 import copy
 import math
 import operator as op
+
+PYTHON3 = sys.version >= '3'
 
 import unittest
 
@@ -304,9 +308,12 @@ class TestPint(TestCase):
         self._test_inplace(op.ifloordiv, '10*meter', '4.2*inch', '2*meter/inch')
 
     def test_quantity_abs_round(self):
+
         x = self.Q_(-4.2, 'meter')
         y = self.Q_(4.2, 'meter')
-        for fun in (abs, round, op.pos, op.neg):
+        # In Python 3+ round of x is delegated to x.__round__, instead of round(x.__float__)
+        # and therefore it can be properly implemented by Pint
+        for fun in (abs, op.pos, op.neg) + (round, ) if PYTHON3 else ():
             zx = self.Q_(fun(x.magnitude), 'meter')
             zy = self.Q_(fun(y.magnitude), 'meter')
             rx = fun(x)
@@ -355,7 +362,7 @@ class TestPint(TestCase):
 
     def test_dimensionless_units(self):
         self.assertAlmostEqual(self.Q_(360, 'degree').to('radian').magnitude, 2 * math.pi)
-        self.assertEqual(self.Q_(2 * math.pi, 'radian') == self.Q_(360, 'degree'))
+        self.assertAlmostEqual(self.Q_(2 * math.pi, 'radian'), self.Q_(360, 'degree'))
         self.assertEqual(self.Q_(1, 'radian').dimensionality, UnitsContainer())
         self.assertTrue(self.Q_(1, 'radian').dimensionless)
         self.assertFalse(self.Q_(1, 'radian').unitless)
