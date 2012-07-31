@@ -1,0 +1,7 @@
+exclude *.pyc *~ .DS_Store
+
+include README
+include LICENSE
+include pint/default_en.txt
+
+recursive-include pint *
