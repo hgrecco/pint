@@ -115,12 +115,12 @@ class TestPint(TestCase):
         self._test_inplace(op.ipow, z, -2, UnitsContainer(meter=-2, second=4))
 
     def test_str_errors(self):
-        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{!s}' is not defined in the unit registry.".format('rabbits'))
-        self.assertEqual(str(UndefinedUnitError(('rabbits', ))), "{!s} are not defined in the unit registry.".format(('rabbits',)))
+        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{!s}' is not defined in the unit registry".format('rabbits'))
+        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{!s} are not defined in the unit registry".format(('rabbits', 'horses')))
         self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
-                         "Cannot convert from 'meter' to 'second'.")
+                         "Cannot convert from 'meter' to 'second'")
         self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),
-                         "Cannot convert from 'meter' (length) to 'second' (time).")
+                         "Cannot convert from 'meter' (length) to 'second' (time)")
 
     def test_parse_single(self):
         self.assertEqual(self.ureg._parse_expression('meter'), self.Q_(1, UnitsContainer(meter=1.)))

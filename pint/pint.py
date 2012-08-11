@@ -48,9 +48,10 @@ PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹·⁻'
 
 try:
     import numpy as np
+    from numpy import ndarray
 
     HAS_NUMPY = True
-    NUMERIC_TYPES = (Number, np.ndarray)
+    NUMERIC_TYPES = (Number, ndarray)
 
     def _to_magnitude(value, force_ndarray=False):
         if value is None:
@@ -62,6 +63,9 @@ try:
         return value
 
 except ImportError:
+
+    class ndarray(object):
+        pass
 
     HAS_NUMPY = False
     NUMERIC_TYPES = (Number, )
@@ -75,7 +79,7 @@ def _eq(first, second):
     """
     out = first == second
     if isinstance(out, Iterable):
-        if isinstance(out, np.ndarray):
+        if isinstance(out, ndarray):
             return np.all(out)
         else:
             return all(out)
@@ -1035,7 +1039,7 @@ def _build_quantity(registry, force_ndarray):
 
         def __getattr__(self, item):
             if item.startswith('__array_'):
-                if isinstance(self._magnitude, np.ndarray):
+                if isinstance(self._magnitude, ndarray):
                     return getattr(self._magnitude, item)
                 else:
                     raise AttributeError('__array_* attributes are only taken from ndarray objects.')
