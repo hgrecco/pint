@@ -30,9 +30,6 @@ Pint to scratch my own itches.
   easy to edit text file. Adding and changing units and their definitions does
   not involve changing the code.
 
-- Handle temperature conversion: it can convert between units with different
-  point of reference, like positions on a map or absolute temperature scales.
-
 - Advanced string formatting: a quantity can be formatted into string using
   PEP 3101 syntax. Extended conversion flags are given to provide latex and pretty
   formatting.
@@ -44,3 +41,6 @@ Pint to scratch my own itches.
 - Dependency free: it depends only on Python and it's standard library.
 
 - Python 2 and 3: A single codebase that runs unchanged in Python 2.6+ and Python 3.0+.
+
+- Experimental advanced NumPy support: While NumPy is not a requirement for Pint,
+  when available ndarray methods and ufuncs can be used in Quantity objects.
