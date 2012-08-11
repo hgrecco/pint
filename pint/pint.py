@@ -144,9 +144,14 @@ class UndefinedUnitError(ValueError):
 
     def __str__(self):
         if isinstance(self.unit_names, string_types):
-            return "'{}' is not defined in the unit registry.".format(self.unit_names)
+            return "'{}' is not defined in the unit registry".format(self.unit_names)
+        elif isinstance(self.unit_names, (list, tuple)) and len(self.unit_names) == 1:
+            return "'{}' is not defined in the unit registry".format(self.unit_names[0])
+        elif isinstance(self.unit_names, set) and len(self.unit_names) == 1:
+            uname = list(self.unit_names)[0]
+            return "'{}' is not defined in the unit registry".format(uname)
         else:
-            return '{} are not defined in the unit registry.'.format(self.unit_names)
+            return '{} are not defined in the unit registry'.format(self.unit_names)
 
 
 class DimensionalityError(ValueError):
@@ -167,13 +172,13 @@ class DimensionalityError(ValueError):
         else:
             dim1 = ''
             dim2 = ''
-        return "Cannot convert from '{}'{} to '{}'{}.".format(self.units1, dim1, self.units2, dim2)
+        return "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
 
 
 class AliasDict(dict):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        dict.__init__(self, *args, **kwargs)
         self.preferred_alias = {}
 
     def add_alias(self, key, value, preferred=False):
