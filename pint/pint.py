@@ -172,10 +172,16 @@ class DimensionalityError(ValueError):
 
 class AliasDict(dict):
 
-    def add_alias(self, key, value):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.preferred_alias = {}
+
+    def add_alias(self, key, value, preferred=False):
         if value not in self:
             raise IndexError("The aliased value '{}' is not present in the dictionary".format(value))
-        self[key] = self.get_aliased(value)
+        self[key] = value = self.get_aliased(value)
+        if preferred:
+            self.preferred_alias[value] = key
 
     def get_aliased(self, key):
         value = self[key]
@@ -217,7 +223,7 @@ class UnitsContainer(dict):
             del self[key]
 
     def _formatter(self, product_sign=' * ', superscript_format=' ** {:n}',
-                  as_ratio=True, single_denominator=False):
+                   as_ratio=True, single_denominator=False, short_form=False):
         if not self:
             return 'dimensionless'
 
@@ -408,10 +414,10 @@ class UnitRegistry(object):
 
         self._UNITS[name] = value
 
-        for alias in aliases:
+        for ndx, alias in enumerate(aliases):
             if ' ' in alias:
                 logger.warn('Alias cannot contain a space ' + alias)
-            self._UNITS.add_alias(alias.strip(), name)
+            self._UNITS.add_alias(alias.strip(), name, not ndx)
 
     def add_prefix(self, name, value, aliases=tuple()):
         """Add prefix to the registry.
@@ -421,8 +427,8 @@ class UnitRegistry(object):
             value = eval(value, {'__builtins__': None}, {})
         self._PREFIXES[name] = float(value)
 
-        for alias in aliases:
-            self._PREFIXES.add_alias(alias.strip(), name)
+        for ndx, alias in enumerate(aliases):
+            self._PREFIXES.add_alias(alias.strip(), name, not ndx)
 
     def add_from_file(self, filename):
         """Add units and prefixes defined in a definition text file.
@@ -465,6 +471,22 @@ class UnitRegistry(object):
                 if not unit_name in self._UNITS:
                     self.add_unit(unit_name, *pending[unit_name])
 
+    def get_alias(self, name):
+        """Return the preferred alias for a unit
+        """
+        candidates = list(self._parse_candidate(name))
+        if not candidates:
+            raise UndefinedUnitError(name)
+        elif len(candidates) == 1:
+            prefix, unit_name, _ = candidates[0]
+        else:
+            logger.warning('Parsing {} yield multiple results. '
+                           'Options are: {}'.format(name, candidates))
+            prefix, unit_name, _ = candidates[0]
+
+        return self._PREFIXES.preferred_alias.get(prefix, prefix) + \
+               self._UNITS.preferred_alias.get(unit_name, unit_name)
+
     def _to_canonical(self, candidate):
         """Return the canonical name of a unit.
         """
@@ -488,7 +510,10 @@ class UnitRegistry(object):
             prefix, unit_name, _ = candidates[0]
 
         if prefix:
-            self._UNITS[prefix + unit_name] = self.Quantity(self._PREFIXES[prefix], unit_name)
+            alias = self.get_alias(prefix + unit_name)
+            if prefix + unit_name == 'kilogram':
+                pass
+            self.add_unit(prefix + unit_name, self.Quantity(self._PREFIXES[prefix], unit_name), (alias, ))
             return prefix + unit_name
 
         return unit_name
@@ -644,7 +669,15 @@ def _build_quantity(registry, force_ndarray):
                 conv = '!' + conv
             else:
                 fmt, conv = spec, ''
-            return format(self.magnitude, fmt) + ' ' + format(self.units, conv)
+
+            if conv.endswith('~'):
+                units = UnitsContainer({self._REGISTRY.get_alias(key): value
+                                       for key, value in self.units.items()})
+                conv = conv[:-1]
+            else:
+                units = self.units
+
+            return format(self.magnitude, fmt) + ' ' + format(units, conv)
 
         @property
         def magnitude(self):

@@ -228,14 +228,18 @@ class TestPint(TestCase):
         self.assertEqual(repr(x), "<Quantity(4.2, 'meter')>")
 
     def test_quantity_format(self):
-        x = self.Q_(4.12345678, UnitsContainer(meter=2, gram=1, second=-1))
+        x = self.Q_(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
         for spec, result in (('{}', str(x)), ('{!s}', str(x)), ('{!r}', repr(x)),
                              ('{0.magnitude}',  str(x.magnitude)), ('{0.units}',  str(x.units)),
                              ('{0.magnitude!s}',  str(x.magnitude)), ('{0.units!s}',  str(x.units)),
                              ('{0.magnitude!r}',  repr(x.magnitude)), ('{0.units!r}',  repr(x.units)),
                              ('{:.4f}', '{:.4f} {!s}'.format(x.magnitude, x.units)),
-                             ('{:!l}', r'4.12345678 \frac{gram \cdot meter^{2}}{second}'),
-                             ('{:!p}', '4.12345678 gram·meter²/second')):
+                             ('{:!l}', r'4.12345678 \frac{kilogram \cdot meter^{2}}{second}'),
+                             ('{:!p}', '4.12345678 kilogram·meter²/second'),
+                             ('{:!s~}', '4.12345678 kg * m ** 2 / s'),
+                             ('{:!l~}', r'4.12345678 \frac{kg \cdot m^{2}}{s}'),
+                             ('{:!p~}', '4.12345678 kg·m²/s')
+                             ):
             self.assertEqual(spec.format(x), result)
 
     def test_quantity_add_sub(self):
@@ -400,3 +404,12 @@ class TestPint(TestCase):
                     self.assertAlmostEqual(self.Q_(name), self.Q_(value), msg=msg)
                     self.assertAlmostEqual(self.Q_(name) ** 2, self.Q_(value) ** 2, msg=msg)
                     self.assertAlmostEqual(self.Q_(name) * 23.23, self.Q_(value) * 23.23, msg=msg)
+
+    def test_preferred_alias(self):
+        self.assertEqual(self.ureg.get_alias('meter'), 'm')
+        self.assertEqual(self.ureg.get_alias('second'), 's')
+        self.assertEqual(self.ureg.get_alias('hertz'), 'Hz')
+
+        self.assertEqual(self.ureg.get_alias('kilometer'), 'km')
+        self.assertEqual(self.ureg.get_alias('megahertz'), 'MHz')
+        self.assertEqual(self.ureg.get_alias('millisecond'), 'ms')

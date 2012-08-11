@@ -36,9 +36,9 @@ yobi- = 2**80
 meter = [length] = m = metre
 second = [time] = s = sec
 ampere = [current] = A = amp
-cd = [luminosity] = candela = candle
-gram = [mass]
-mol = [substance] = mole
+candela = [luminosity] = cd = candle
+gram = [mass] = g
+mole = [substance] = mol
 degK = [temperature] = K = kelvin
 radian = [] = rad
 bit = []
