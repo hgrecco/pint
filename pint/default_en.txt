@@ -200,7 +200,7 @@ technical_atmosphere = kilogram * gravity / centimeter ** 2 = at
 torr = atm / 760
 psi = pound * gravity / inch ** 2 = pound_force_per_square_inch
 ksi = kip / inch ** 2 = kip_per_square_inch
-barye = 0.1 * newton / meter ** 2 = = barie = barad = barad = barrie = baryd = Ba
+barye = 0.1 * newton / meter ** 2 = barie = barad = barad = barrie = baryd = Ba
 mmHg = millimeter * Hg = mm_Hg = millimeter_Hg = millimeter_Hg_0C
 cmHg = centimeter * Hg = cm_Hg = centimeter_Hg
 inHg = inch * Hg = in_Hg = inch_Hg = inch_Hg_32F
