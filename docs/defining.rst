@@ -47,7 +47,7 @@ By defining `second` as equal to a string `time` in square brackets we indicate 
 
 The ability to define basic physical dimensions as well as reference units allows to construct arbitrary units systems.
 
-Pint is shipped with a default definitiona file named `default_en.txt` where `en` stands for english. You can add your own definitions to the end of this file but you will have to be careful to merge when you update Pint. An easier way is to create a new file (e.g. `mydef.txt`) with your definitions::
+Pint is shipped with a default definition file named `default_en.txt` where `en` stands for english. You can add your own definitions to the end of this file but you will have to be careful to merge when you update Pint. An easier way is to create a new file (e.g. `mydef.txt`) with your definitions::
 
    dog_year = 52 * day = dy
 
