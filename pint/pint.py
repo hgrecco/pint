@@ -402,7 +402,7 @@ class UnitRegistry(object):
     _SUFFIXES = AliasDict({'': None, 's': ''})
 
     def __init__(self, filename='', force_ndarray=False):
-        self.Quantity = _build_quantity(self, force_ndarray)
+        self.Quantity = _build_quantity_class(self, force_ndarray)
         self._definition_files = []
         if filename == '':
             self.add_from_file(os.path.join(os.path.dirname(__file__), 'default_en.txt'))
@@ -620,7 +620,7 @@ class UnitRegistry(object):
                                          'U_': UnitsContainer})
 
 
-def _build_quantity(registry, force_ndarray):
+def _build_quantity_class(registry, force_ndarray):
     """Create a Quantity Class.
     """
 
@@ -635,6 +635,9 @@ def _build_quantity(registry, force_ndarray):
         """
 
         _REGISTRY = registry
+
+        def __reduce__(self):
+            return _build_quantity, (self.magnitude, self.units)
 
         def __new__(cls, value, units=None, offset=0, log_base=0):
             if units is None:
@@ -939,7 +942,9 @@ def _build_quantity(registry, force_ndarray):
             return self.__class__(operator.neg(self._magnitude), self._units)
 
         def __eq__(self, other):
-            if not isinstance(other, self.__class__):
+            # This is class comparison by name is to bypass that
+            # each Quantity class is unique.
+            if other.__class__.__name__ != self.__class__.__name__:
                 return self.dimensionless and _eq(self.magnitude, other)
 
             if _eq(self._magnitude, 0) and _eq(other._magnitude, 0):
@@ -1125,3 +1130,8 @@ def _build_quantity(registry, force_ndarray):
             return self.magnitude.__array_wrap__(obj, context)
 
     return _Quantity
+
+
+_DEFAULT_REGISTRY = UnitRegistry()
+def _build_quantity(value, units):
+    return _DEFAULT_REGISTRY.Quantity(value, units)

@@ -216,3 +216,11 @@ class TestQuantityMethods(TestCase):
         self.assertEqual(x * self.q, u * x * self.q)
         self.assertEqual(x + u, u + x)
         self.assertEqual(x - u, -(u - x))
+
+    def test_pickle(self):
+        import pickle
+
+        def pickle_test(q):
+            self.assertEqual(q, pickle.loads(pickle.dumps(q)))
+
+        pickle_test([10,20]*self.ureg.m)

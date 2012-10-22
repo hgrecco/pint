@@ -413,3 +413,14 @@ class TestPint(TestCase):
         self.assertEqual(self.ureg.get_alias('kilometer'), 'km')
         self.assertEqual(self.ureg.get_alias('megahertz'), 'MHz')
         self.assertEqual(self.ureg.get_alias('millisecond'), 'ms')
+
+    def test_pickle(self):
+        import pickle
+
+        def pickle_test(q):
+            self.assertEqual(q, pickle.loads(pickle.dumps(q)))
+
+        pickle_test(self.Q_(32, ''))
+        pickle_test(self.Q_(2.4, ''))
+        pickle_test(self.Q_(32, 'm/s'))
+        pickle_test(self.Q_(2.4, 'm/s'))
