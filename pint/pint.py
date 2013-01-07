@@ -177,6 +177,56 @@ class DimensionalityError(ValueError):
         return "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
 
 
+def formatter(items, product_symbol=' * ', power_format=' ** {:n}',
+              as_ratio=True, single_denominator=False):
+    """Format a list of (name, exponent) pairs.
+
+    :param items: a list of (name, exponent) pairs.
+    :param product_symbol: the symbol used for multiplication.
+    :param power_format: the symbol used for exponentiation including a,
+                         formatting place holder for the power.
+    :param as_ratio: True to display as ratio, False as negative powers.
+    :param single_denominator: put
+
+    :return: the formulas as a string.
+    """
+    if as_ratio:
+        fun = abs
+    else:
+        fun = lambda x: x
+
+    tmp_plus = []
+    tmp_minus = []
+    for key, value in sorted(items):
+        if value == 1:
+            tmp_plus.append(key)
+        elif value > 1:
+            tmp_plus.append(key + power_format.format(value))
+        elif value == -1:
+            tmp_minus.append(key)
+        else:
+            tmp_minus.append(key + power_format.format(fun(value)))
+
+    if tmp_plus:
+        ret = product_symbol.join(tmp_plus)
+    elif as_ratio and tmp_minus:
+        ret = '1'
+    else:
+        ret = ''
+
+    if tmp_minus:
+        if as_ratio:
+            ret += ' / '
+            if single_denominator:
+                ret += ' / '.join(tmp_minus)
+            else:
+                ret += product_symbol.join(tmp_minus)
+        else:
+            ret += product_symbol.join(tmp_minus)
+
+    return ret
+
+
 class AliasDict(dict):
 
     def __init__(self, *args, **kwargs):
@@ -229,49 +279,10 @@ class UnitsContainer(dict):
         else:
             del self[key]
 
-    def _formatter(self, product_sign=' * ', superscript_format=' ** {:n}',
-                   as_ratio=True, single_denominator=False, short_form=False):
+    def __str__(self):
         if not self:
             return 'dimensionless'
-
-        if as_ratio:
-            fun = abs
-        else:
-            fun = lambda x: x
-
-        tmp_plus = []
-        tmp_minus = []
-        for key, value in sorted(self.items()):
-            if value == 1:
-                tmp_plus.append(key)
-            elif value > 1:
-                tmp_plus.append(key + superscript_format.format(value))
-            elif value == -1:
-                tmp_minus.append(key)
-            else:
-                tmp_minus.append(key + superscript_format.format(fun(value)))
-
-        if tmp_plus:
-            ret = product_sign.join(tmp_plus)
-        elif as_ratio:
-            ret = '1'
-        else:
-            ret = ''
-
-        if tmp_minus:
-            if as_ratio:
-                ret += ' / '
-                if single_denominator:
-                   ret += ' / '.join(tmp_minus)
-                else:
-                   ret += product_sign.join(tmp_minus)
-            else:
-                ret += product_sign.join(tmp_minus)
-
-        return ret
-
-    def __str__(self):
-        return self._formatter()
+        return formatter(self.items())
 
     def __repr__(self):
         tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
@@ -283,7 +294,7 @@ class UnitsContainer(dict):
         elif spec == '!r':
             return repr(self)
         elif spec == '!l':
-            tmp = self._formatter(r' \cdot ', '^[{:n}]', True, True).replace('[', '{').replace(']', '}')
+            tmp = formatter(self.items(), r' \cdot ', '^[{:n}]', True, True).replace('[', '{').replace(']', '}')
             if '/' in tmp:
                 return r'\frac{%s}' % tmp.replace(' / ', '}{')
             return tmp
@@ -453,7 +464,7 @@ class UnitRegistry(object):
                     continue
                 if '[' in value:
                     # Reference units, indicates dimensionality
-                    value = value.strip('[]')
+                    #value = value.strip('[]')
                     if value:
                         value = self.Quantity(None, UnitsContainer({value: 1}))
                     else:
