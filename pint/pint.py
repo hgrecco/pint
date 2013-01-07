@@ -14,8 +14,6 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-__version__ = '0.1'
-
 import os
 import sys
 import copy

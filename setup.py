@@ -7,7 +7,7 @@ with open('README') as file:
 
 setup(
     name='Pint',
-    version='0.1.2',
+    version='0.1.3',
     description='Physical quantities module',
     long_description=long_description,
     author='Hernan E. Grecco',

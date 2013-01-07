@@ -12,6 +12,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from .pint import UnitRegistry, DimensionalityError, UnitsContainer, UndefinedUnitError, logger, __version__
+from .pint import UnitRegistry, DimensionalityError, UnitsContainer, UndefinedUnitError, logger
 
 
