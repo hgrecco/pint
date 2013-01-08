@@ -13,6 +13,6 @@
 """
 
 from .pint import (UnitRegistry, DimensionalityError, UnitsContainer,
-                   UndefinedUnitError, logger, Measurement)
+                   UndefinedUnitError, logger, Measurement, pi_theorem)
 
 

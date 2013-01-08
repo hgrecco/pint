@@ -47,6 +47,7 @@ PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹·⁻'
 try:
     import numpy as np
     from numpy import ndarray
+    from numpy.linalg import svd
 
     HAS_NUMPY = True
     NUMERIC_TYPES = (Number, ndarray)
@@ -60,6 +61,20 @@ try:
             return np.asarray(value)
         return value
 
+    def nullspace(A, atol=1e-7, rtol=0):
+        """Compute an approximate basis for the nullspace of A.
+
+        The algorithm used by this function is based on the singular value
+        decomposition of `A`.
+        """
+
+        A = np.atleast_2d(A)
+        u, s, vh = svd(A)
+        tol = max(atol, rtol * s[0])
+        nnz = (s >= tol).sum()
+        ns = vh[nnz:].conj().T
+        return ns
+
 except ImportError:
 
     class ndarray(object):
@@ -70,6 +85,9 @@ except ImportError:
 
     def _to_magnitude(value, force_ndarray=False):
         return value
+
+    def nullspace(A, atol=1e-13, rtol=0):
+        raise Exception('NumPy is required for this operation.')
 
 
 def _eq(first, second):
@@ -175,6 +193,66 @@ class DimensionalityError(ValueError):
             dim1 = ''
             dim2 = ''
         return "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
+
+
+def pi_theorem(quantities, registry=None):
+    """Builds dimensionless quantities using the Buckingham π theorem
+
+    :param quantities: mapping between variable name and units
+    :type quantities: dict
+    :return: a list of dimensionless quantities expressed as dicts
+    """
+    if registry is None:
+        registry = _DEFAULT_REGISTRY
+
+    # Preprocess input
+    quant = []
+    dimensions = set()
+    for name, value in quantities.items():
+        if isinstance(value, UnitsContainer):
+            if any((not unit.startswith('[') for unit in value)):
+                dims = registry.Quantity(1, value).dimensionality
+            else:
+                dims = value
+        elif not hasattr(value, 'dimensionality'):
+            dims = registry[value].dimensionality
+        else:
+            dims = value.dimensionality
+
+        quant.append((name, dims))
+        dimensions = dimensions.union(dims.keys())
+
+    dimensions = list(dimensions)
+
+    # Calculate dimensionless  quantities
+    M = np.zeros((len(dimensions), len(quant)))
+
+    for row, dimension in enumerate(dimensions):
+        for col, (name, dimensionality) in enumerate(quant):
+            M[row, col] = dimensionality[dimension]
+
+    kernel = np.atleast_2d(nullspace(M))
+
+    # Sanitizing output.
+    _decimals = 7
+    kernel[abs(kernel) < 10.**-_decimals] = 0
+    for col in range(kernel.shape[1]):
+        vector = kernel[:, col]
+        if sum(vector < 0) > sum(vector > 0):
+            vector = -vector
+        vector /= min(abs(vector[vector > 0]))
+        kernel[:, col] = vector
+
+    kernel = np.round(kernel, _decimals)
+
+    result = []
+    for col in range(kernel.shape[1]):
+        r = {}
+        for row in range(kernel.shape[0]):
+            if kernel[row, col] != 0:
+                r[quant[row][0]] = kernel[row, col]
+        result.append(r)
+    return result
 
 
 def formatter(items, product_symbol=' * ', power_format=' ** {:n}',
