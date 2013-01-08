@@ -465,6 +465,8 @@ class UnitRegistry(object):
                 if '[' in value:
                     # Reference units, indicates dimensionality
                     #value = value.strip('[]')
+                    if value == '[]':
+                        value = ''
                     if value:
                         value = self.Quantity(None, UnitsContainer({value: 1}))
                     else:
