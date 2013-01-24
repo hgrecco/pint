@@ -573,14 +573,14 @@ class UnitRegistry(object):
     def get_alias(self, name):
         """Return the preferred alias for a unit
         """
-        candidates = list(self._parse_candidate(name))
+        candidates = self._dedup_candidates(self._parse_candidate(name))
         if not candidates:
             raise UndefinedUnitError(name)
         elif len(candidates) == 1:
             prefix, unit_name, _ = candidates[0]
         else:
-            logger.warning('Parsing {} yield multiple results. '
-                           'Options are: {}'.format(name, candidates))
+            logging.warning('Parsing {} yield multiple results. '
+                            'Options are: {!r}'.format(name, candidates))
             prefix, unit_name, _ = candidates[0]
 
         return self._PREFIXES.preferred_alias.get(prefix, prefix) + \
@@ -598,7 +598,7 @@ class UnitRegistry(object):
         except KeyError:
             pass
 
-        candidates = tuple(self._parse_candidate(candidate))
+        candidates = self._dedup_candidates(self._parse_candidate(candidate))
         if not candidates:
             raise UndefinedUnitError(candidate)
         elif len(candidates) == 1:
@@ -617,11 +617,25 @@ class UnitRegistry(object):
 
         return unit_name
 
+    def _dedup_candidates(self, candidates):
+        candidates = tuple(candidates)
+        if len(candidates) < 2:
+            return candidates
+
+        unique = [candidates[0]]
+        for c in candidates[2:]:
+            for u in unique:
+                if c == u:
+                    break
+            else:
+                unique.append(c)
+
+        return tuple(unique)
+
     def _parse_candidate(self, candidate):
         """Parse a unit to identify prefix, suffix and unit name
         by walking the list of prefix and suffix.
         """
-
         for suffix, prefix in itertools.product(self._SUFFIXES.keys(), self._PREFIXES.keys()):
             if candidate.startswith(prefix) and candidate.endswith(suffix):
                 unit_name = candidate[len(prefix):]
@@ -633,25 +647,6 @@ class UnitRegistry(object):
                     yield (self._PREFIXES.get_aliased(prefix),
                            self._UNITS.get_aliased(unit_name),
                            self._SUFFIXES.get_aliased(suffix))
-
-
-    def _parse_candidate2(self, candidate):
-        """Parse a unit to identify prefix, suffix and unit name
-        by walking the list of units.
-        """
-        for unit_name in self._UNITS:
-            if unit_name in candidate:
-                try:
-                    [prefix, suffix] = candidate.split(unit_name)
-                    if len(unit_name) == 1 and len(suffix) == 1:
-                        continue
-                except ValueError: # too many values to unpack
-                    continue
-                if prefix in self._PREFIXES and suffix in self._SUFFIXES:
-                    yield (self._PREFIXES.get_aliased(prefix),
-                           self._UNITS.get_aliased(unit_name),
-                           self._SUFFIXES.get_aliased(suffix))
-
 
     def _parse_expression(self, input):
         """Parse expression mathematical units and return a quantity object.
