@@ -4,245 +4,651 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import unittest
 
-import numpy as np
+from tests import TestCase, HAS_NUMPY, np
 
-from pint import UnitRegistry, UnitsContainer
+# Following http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
-from tests import TestCase
+if np:
+    pi = np.pi
 
-class TestUmath(TestCase):
+
+@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+class TestUFuncs(TestCase):
 
     FORCE_NDARRAY = True
 
     @property
-    def q(self):
-        return [1,2,3,4] * self.ureg.J
+    def qless(self):
+        return np.asarray([1., 2., 3., 4.]) * self.ureg.dimensionless
 
-    def test_prod(self):
-        self.assertEqual(np.prod(self.q), 24 * self.ureg.J**4)
+    @property
+    def qs(self):
+        return 8 * self.ureg.J
 
-    def test_sum(self):
-        self.assertEqual(np.sum(self.q), 10 * self.ureg.J)
+    @property
+    def q1(self):
+        return np.asarray([1., 2., 3., 4.]) * self.ureg.J
 
-    def test_nansum(self):
-        c = [1,2,3, np.NaN] * self.ureg.m
-        self.assertEqual(np.nansum(c), 6 * self.ureg.m)
+    @property
+    def q2(self):
+        return 2 * self.q1
 
-    def test_cumprod(self):
-        self.assertRaises(ValueError, np.cumprod, self.q)
+    @property
+    def qm(self):
+        return np.asarray([1., 2., 3., 4.]) * self.ureg.m
 
-        q = [10, .1, 5, 50] * self.ureg.dimensionless
-        self.assertEqual(np.cumprod(q).tolist(), [10, 1, 5, 250])
+    @property
+    def qi(self):
+        return np.asarray([1 + 1j, 2 + 2j, 3 + 3j, 4 + 4j]) * self.ureg.m
 
-    def test_cumsum(self):
-        self.assertEqual(np.cumsum(self.q), [1, 3, 6, 10] * self.ureg.J)
+    def assertEqual(self, first, second, msg=None):
+        np.testing.assert_equal(first, second, msg)
 
-    def test_diff(self):
-        self.assertEqual(np.diff(self.q, 1), [1, 1, 1] * self.ureg.J)
-
-    def test_ediff1d(self):
-        self.assertEqual(np.ediff1d(self.q, 1), [1, 1, 1] * self.ureg.J)
-
-    def test_gradient(self):
+    def assertRaisesMsg(self, msg, ExcType, func, *args, **kwargs):
         try:
-            l = np.gradient([[1,1],[3,4]] * self.ureg.J, 1 * self.ureg.m)
-            self.assertEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.J / self.ureg.m)
-            self.assertEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.J / self.ureg.m)
-        except ValueError as e:
-            raise self.failureException(e)
+            func(*args, **kwargs)
+            self.assertFalse(True, msg='Exception {} not raised {}'.format(ExcType, msg))
+        except ExcType as e:
+            pass
+        except Exception as e:
+            self.assertFalse(True, msg='{} not raised but {}: {}'.format(ExcType, e))
 
-    def test_cross(self):
-        a = [3,-3, 1] * self.ureg.kPa
-        b = [4, 9, 2] * self.ureg.m**2
-        self.assertEqual(np.cross(a,b), [-15,-2,39]*self.ureg.kPa*self.ureg.m**2)
+    def _testn(self, func,  ok_with, raise_with=(), results=None):
+        self._test1(func, ok_with, raise_with, output_units=None, results=results)
 
-    def test_trapz(self):
-        self.assertEqual(np.trapz(self.q, dx = 1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
+    def _test1(self, func,  ok_with, raise_with=(), output_units='same', results=None):
+        if results is None:
+            results = [None, ] * len(ok_with)
+        for x1, res in zip(ok_with, results):
+            if output_units == 'same':
+                ou = x1.units
+            elif isinstance(output_units, int):
+                ou = x1.units ** output_units
+            else:
+                ou = output_units
 
-    def test_sinh(self):
-        q = [1, 2, 3, 4, 6] * self.ureg.radian
-        self.assertEqual(
-            np.sinh(q),
-            np.sinh(q.magnitude)
-        )
+            qm = func(x1)
+            if res is None:
+                res = func(x1.magnitude)
+                if ou is not None:
+                    res = self.Q_(res, ou)
+            self.assertEqual(qm, res,
+                             'At {} with {}'.format(func.__name__, x1))
 
-    def test_arcsinh(self):
-        q = [1, 2, 3, 4, 6] * self.ureg.dimensionless
-        self.assertEqual(
-            np.arcsinh(q),
-            np.arcsinh(q.magnitude) * self.ureg.rad
-        )
+        for x1 in raise_with:
+            self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
+                                 ValueError, func, x1)
 
-    def test_cosh(self):
-        q = [1, 2, 3, 4, 6] * self.ureg.radian
-        self.assertEqual(
-            np.cosh(q),
-            np.cosh(q.magnitude) * self.ureg.dimensionless
-        )
+    def _testn2(self, func, x1, ok_with, raise_with=()):
+        self._test2(func, x1, ok_with, raise_with, output_units=None)
 
-    def test_arccosh(self):
-        q = [1, 2, 3, 4, 6] * self.ureg.dimensionless
-        x = np.ones((1,1))  * self.ureg.rad
-        self.assertEqual(
-            np.arccosh(q),
-            np.arccosh(q.magnitude * self.ureg.rad)
-        )
+    def _test2(self, func, x1, ok_with, raise_with=(), output_units='same'):
+        for x2 in ok_with:
+            if output_units == 'same':
+                ou = x1.units
+            elif output_units == 'prod':
+                ou = x1.units * x2.units
+            elif output_units == 'div':
+                ou = x1.units / x2.units
+            else:
+                ou = output_units
 
-    def test_tanh(self):
-        q = [1, 2, 3, 4, 6] * self.ureg.rad
-        self.assertEqual(
-            np.tanh(q),
-            np.tanh(q.magnitude)
-        )
+            qm = func(x1, x2)
 
-    def test_arctanh(self):
-        q = [.01, .5, .6, .8, .99] * self.ureg.dimensionless
-        self.assertEqual(
-            np.arctanh(q),
-            np.arctanh(q.magnitude) * self.ureg.rad
-        )
+            res = func(x1.magnitude, getattr(x2, 'magnitude', x2))
+            if ou is not None:
+                res = self.Q_(res, ou)
 
-    def test_around(self):
-        self.assertEqual(
-            np.around([.5, 1.5, 2.5, 3.5, 4.5] * self.ureg.J) ,
-            [0., 2., 2., 4., 4.] * self.ureg.J
-        )
+            self.assertEqual(qm, res,
+                             'At {} with {} and {}'.format(func.__name__, x1, x2))
 
-        self.assertEqual(
-            np.around([1,2,3,11] * self.ureg.J, decimals=1),
-            [1, 2, 3, 11] * self.ureg.J
-        )
+        for x2 in raise_with:
+            self.assertRaisesMsg('At {} with {} and {}'.format(func.__name__, x1, x2),
+                                 ValueError, func, x1, x2)
 
-        self.assertEqual(
-            np.around([1,2,3,11] * self.ureg.J, decimals=-1),
-            [0, 0, 0, 10] * self.ureg.J
-        )
 
-    def test_round_(self):
-        self.assertEqual(
-            np.round_([.5, 1.5, 2.5, 3.5, 4.5] * self.ureg.J),
-            [0., 2., 2., 4., 4.] * self.ureg.J
-        )
+@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+class TestMathUfuncs(TestUFuncs):
+    """Universal functions (ufunc) > Math operations
 
-        self.assertEqual(
-            np.round_([1,2,3,11] * self.ureg.J, decimals=1),
-            [1, 2, 3, 11] * self.ureg.J
-        )
+    http://docs.scipy.org/doc/numpy/reference/ufuncs.html#math-operations
 
-        self.assertEqual(
-            np.round_([1,2,3,11] * self.ureg.J, decimals=-1),
-            [0, 0, 0, 10] * self.ureg.J
-        )
+    add(x1, x2[, out]) 	Add arguments element-wise.
+    subtract(x1, x2[, out]) 	Subtract arguments, element-wise.
+    multiply(x1, x2[, out]) 	Multiply arguments element-wise.
+    divide(x1, x2[, out]) 	Divide arguments element-wise.
+    logaddexp(x1, x2[, out]) 	Logarithm of the sum of exponentiations of the inputs.
+    logaddexp2(x1, x2[, out]) 	Logarithm of the sum of exponentiations of the inputs in base-2.
+    true_divide(x1, x2[, out]) 	Returns a true division of the inputs, element-wise.
+    floor_divide(x1, x2[, out]) 	Return the largest integer smaller or equal to the division of the inputs.
+    negative(x[, out]) 	Returns an array with the negative of each element of the original array.
+    power(x1, x2[, out]) 	First array elements raised to powers from second array, element-wise.
+    remainder(x1, x2[, out]) 	Return element-wise remainder of division.
+    mod(x1, x2[, out]) 	Return element-wise remainder of division.
+    fmod(x1, x2[, out]) 	Return the element-wise remainder of division.
+    absolute(x[, out]) 	Calculate the absolute value element-wise.
+    rint(x[, out]) 	Round elements of the array to the nearest integer.
+    sign(x[, out]) 	Returns an element-wise indication of the sign of a number.
+    conj(x[, out]) 	Return the complex conjugate, element-wise.
+    exp(x[, out]) 	Calculate the exponential of all elements in the input array.
+    exp2(x[, out]) 	Calculate 2**p for all p in the input array.
+    log(x[, out]) 	Natural logarithm, element-wise.
+    log2(x[, out]) 	Base-2 logarithm of x.
+    log10(x[, out]) 	Return the base 10 logarithm of the input array, element-wise.
+    expm1(x[, out]) 	Calculate exp(x) - 1 for all elements in the array.
+    log1p(x[, out]) 	Return the natural logarithm of one plus the input array, element-wise.
+    sqrt(x[, out]) 	Return the positive square-root of an array, element-wise.
+    square(x[, out]) 	Return the element-wise square of the input.
+    reciprocal(x[, out]) 	Return the reciprocal of the argument, element-wise.
+    ones_like(x[, out]) 	Returns an array of ones with the same shape and type as a given array.
+    """
+    def test_add(self):
+        self._test2(np.add,
+                    self.q1,
+                    (self.q2, self.qs),
+                    (self.qm, ))
+
+    def test_subtract(self):
+        self._test2(np.subtract,
+                    self.q1,
+                    (self.q2, self.qs),
+                    (self.qm, ))
+
+    def test_multiply(self):
+        self._test2(np.multiply,
+                    self.q1,
+                    (self.q2, self.qs), (),
+                    'prod')
+
+    def test_divide(self):
+        self._test2(np.divide,
+                    self.q1,
+                    (self.q2, self.qs, self.qless),
+                    (),
+                    'div')
+
+    def test_logaddexp(self):
+        self._test2(np.logaddexp,
+                    self.qless,
+                    (self.qless, ),
+                    (self.q1, ),
+                    '')
+
+    def test_logaddexp2(self):
+        self._test2(np.logaddexp2,
+                    self.qless,
+                    (self.qless, ),
+                    (self.q1, ),
+                    'div')
+
+    def test_true_divide(self):
+        self._test2(np.true_divide,
+                    self.q1,
+                    (self.q2, self.qs, self.qless),
+                    (),
+                    'div')
+
+    def test_floor_divide(self):
+        self._test2(np.floor_divide,
+                    self.q1,
+                    (self.q2, self.qs, self.qless),
+                    (),
+                    'div')
+
+
+    def test_negative(self):
+        self._test1(np.negative,
+                    (self.qless, self.q1),
+                    ())
+
+    def test_power(self):
+        self._test2(np.power, self.q1,
+                    (self.qless, np.asarray([1., 2, 3, 4])),
+                    (self.q2, ), 'div')
+
+    def test_remainder(self):
+        self._test2(np.remainder,
+                    self.q1,
+                    (self.q2, self.qs, self.qless),
+                    (),
+                    'div')
+
+    def test_mod(self):
+        self._test2(np.mod,
+                    self.q1,
+                    (self.q2, self.qs, self.qless),
+                    (),
+                    'div')
+
+    def test_fmod(self):
+        self._test2(np.fmod,
+                    self.q1,
+                    (self.q2, self.qs, self.qless),
+                    (),
+                    'div')
+
+    def test_absolute(self):
+        self._test1(np.absolute,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    'same')
 
     def test_rint(self):
-        a = [-4.1, -3.6, -2.5, 0.1, 2.5, 3.1, 3.9] * self.ureg.m
-        self.assertEqual(
-            np.rint(a),
-            [-4., -4., -2., 0., 2., 3., 4.]*self.ureg.m
-        )
+        self._test1(np.rint,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    'same')
 
-    def test_floor(self):
-        a = [-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0] * self.ureg.m
-        self.assertEqual(
-            np.floor(a),
-            [-2., -2., -1., 0., 1., 1., 2.] * self.ureg.m
-        )
-
-    def test_ceil(self):
-        a = [-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0] * self.ureg.m
-        self.assertEqual(
-            np.ceil(a),
-            [-1., -1., -0., 1., 2., 2., 2.] * self.ureg.m
-        )
-
-    def test_fix(self):
-        try:
-            self.assertEqual(np.fix(3.14 * self.ureg.degF), 3.0 * self.ureg.degF)
-            self.assertEqual(np.fix(3.0 * self.ureg.degF), 3.0 * self.ureg.degF)
-            self.assertEqual(
-                np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.degF),
-                [2., 2., -2., -2.] * self.ureg.degF
-            )
-        except ValueError as e:
-            raise self.failureException(e)
+    def test_conj(self):
+        self._test1(np.conj,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    'same')
 
     def test_exp(self):
-        self.assertEqual(np.exp(1*self.ureg.dimensionless), np.e)
-        self.assertRaises(ValueError, np.exp, 1*self.ureg.m)
+        self._test1(np.exp,
+                    (self.qless, self.qs,),
+                    (self.q1, ),
+                    '')
+
+    def test_exp2(self):
+        self._test1(np.exp2,
+                    (self.qless, self.qs,),
+                    (self.q1, ),
+                    '')
 
     def test_log(self):
-        self.assertEqual(np.log(1*self.ureg.dimensionless), 0)
-        self.assertRaises(ValueError, np.log, 1*self.ureg.m)
-
-    def test_log10(self):
-        self.assertEqual(np.log10(1*self.ureg.dimensionless), 0)
-        self.assertRaises(ValueError, np.log10, 1*self.ureg.m)
+        self._test1(np.log,
+                    (self.qless, self.qs,),
+                    (self.q1, ),
+                    '')
 
     def test_log2(self):
-        self.assertEqual(np.log2(1*self.ureg.dimensionless), 0)
-        self.assertRaises(ValueError, np.log2, 1*self.ureg.m)
+        self._test1(np.log2,
+                    (self.qless, self.qs,),
+                    (self.q1, ),
+                    '')
+
+    def test_log10(self):
+        self._test1(np.log10,
+                    (self.qless, self.qs,),
+                    (self.q1, ),
+                    '')
 
     def test_expm1(self):
-        self.assertAlmostEqual(np.expm1(1*self.ureg.dimensionless), np.e-1, delta=1e-6)
-        self.assertRaises(ValueError, np.expm1, 1*self.ureg.m)
+        self._test1(np.expm1,
+                    (self.qless, self.qs,),
+                    (self.q1, ),
+                    '')
 
-    def test_log1p(self):
-        self.assertEqual(np.log1p(0*self.ureg.dimensionless), 0)
-        self.assertRaises(ValueError, np.log1p, 1*self.ureg.m)
+    def test_sqrt(self):
+        self._test1(np.sqrt,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    'same')
+
+    def test_square(self):
+        self._test1(np.square,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    2)
+
+    def test_reciprocal(self):
+        self._test1(np.reciprocal,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    2)
+
+    def test_ones_like(self):
+        self._test1(np.ones_like,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    2)
+
+@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+class TestTrigUfuncs(TestUFuncs):
+    """Universal functions (ufunc) > Trigonometric functions
+
+    http://docs.scipy.org/doc/numpy/reference/ufuncs.html#trigonometric-functions
+
+    sin(x[, out]) 	Trigonometric sine, element-wise.
+    cos(x[, out]) 	Cosine elementwise.
+    tan(x[, out]) 	Compute tangent element-wise.
+    arcsin(x[, out]) 	Inverse sine, element-wise.
+    arccos(x[, out]) 	Trigonometric inverse cosine, element-wise.
+    arctan(x[, out]) 	Trigonometric inverse tangent, element-wise.
+    arctan2(x1, x2[, out]) 	Element-wise arc tangent of x1/x2 choosing the quadrant correctly.
+    hypot(x1, x2[, out]) 	Given the “legs” of a right triangle, return its hypotenuse.
+    sinh(x[, out]) 	Hyperbolic sine, element-wise.
+    cosh(x[, out]) 	Hyperbolic cosine, element-wise.
+    tanh(x[, out]) 	Compute hyperbolic tangent element-wise.
+    arcsinh(x[, out]) 	Inverse hyperbolic sine elementwise.
+    arccosh(x[, out]) 	Inverse hyperbolic cosine, elementwise.
+    arctanh(x[, out]) 	Inverse hyperbolic tangent elementwise.
+    deg2rad(x[, out]) 	Convert angles from degrees to radians.
+    rad2deg(x[, out]) 	Convert angles from radians to degrees.
+    """
 
     def test_sin(self):
-        self.assertEqual(np.sin(np.pi/2*self.ureg.radian), 1)
-        self.assertRaises(ValueError, np.sin, 1*self.ureg.m)
-
-    def test_arcsin(self):
-        self.assertEqual(
-            np.arcsin(1*self.ureg.dimensionless),
-            np.pi/2 * self.ureg.radian
-        )
-        self.assertRaises(ValueError, np.arcsin, 1*self.ureg.m)
+        self._test1(np.sin, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
+                             np.arange(0, pi/2, pi/4) * self.ureg.radian,
+                             np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
+                            ), (self.ureg.m, ), '')
+        self._test1(np.sin, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
+                            ), results=(np.sin(np.arange(0, pi/2, pi/4)), ))
 
     def test_cos(self):
-        self.assertEqual(np.cos(np.pi*self.ureg.radians), -1)
-        self.assertRaises(ValueError, np.cos, 1*self.ureg.m)
-
-    def test_arccos(self):
-        self.assertEqual(np.arccos(1*self.ureg.dimensionless), 0*self.ureg.radian)
-        self.assertRaises(ValueError, np.arccos, 1*self.ureg.m)
+        self._test1(np.cos, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
+                             np.arange(0, pi/2, pi/4) * self.ureg.radian,
+                             np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
+                            ), (self.ureg.m, ), '')
+        self._test1(np.cos, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
+                            ), results=(np.cos(np.arange(0, pi/2, pi/4)), ))
 
     def test_tan(self):
-        self.assertEqual(np.tan(0*self.ureg.radian), 0)
-        self.assertRaises(ValueError, np.tan, 1*self.ureg.m)
+        self._test1(np.tan, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
+                             np.arange(0, pi/2, pi/4) * self.ureg.radian,
+                             np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
+                            ), (self.ureg.m, ), '')
+        self._test1(np.tan, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
+                            ), results=(np.tan(np.arange(0, pi/2, pi/4)), ))
+
+    def test_arcsin(self):
+        self._test1(np.arcsin, (np.arange(0, .9, .1) * self.ureg.dimensionless,
+                                np.arange(0, .9, .1) * self.ureg.m / self.ureg.m
+                               ), (self.ureg.m, ), 'radian')
+
+    def test_arccos(self):
+        self._test1(np.arccos, (np.arange(0, .9, .1) * self.ureg.dimensionless,
+                                np.arange(0, .9, .1) * self.ureg.m / self.ureg.m
+                               ), (self.ureg.m, ), 'radian')
 
     def test_arctan(self):
-        self.assertEqual(np.arctan(0*self.ureg.dimensionless), 0*self.ureg.radian)
-        self.assertRaises(ValueError, np.arctan, 1*self.ureg.m)
+        self._test1(np.arctan, (np.arange(0, .9, .1) * self.ureg.dimensionless,
+                                np.arange(0, .9, .1) * self.ureg.m / self.ureg.m
+                                ), (self.ureg.m, ), 'radian')
 
     def test_arctan2(self):
-        self.assertEqual(
-            np.arctan2(0*self.ureg.dimensionless, 0*self.ureg.dimensionless),
-            0
-        )
-        self.assertRaises(ValueError, np.arctan2, (1*self.ureg.m, 1*self.ureg.m))
+        m = self.ureg.m
+        j = self.ureg.J
+        km = self.ureg.km
+        self._test2(np.arctan2, np.arange(0, .9, .1) * m,
+                    (np.arange(0, .9, .1) * m, np.arange(.9, 0., -.1) * m,
+                     np.arange(0, .9, .1) * km, np.arange(.9, 0., -.1) * km,
+                    ),
+                    raise_with=np.arange(0, .9, .1) * j,
+                    output_units='radian')
 
     def test_hypot(self):
         self.assertEqual(np.hypot(3 * self.ureg.m, 4 * self.ureg.m),  5 * self.ureg.m)
         self.assertRaises(ValueError, np.hypot, 1*self.ureg.m, 2*self.ureg.J)
 
-    def test_degrees(self):
-        self.assertAlmostEqual(
-            np.degrees(6. * self.ureg.radians),
-            (6. * self.ureg.radians).to(self.ureg.degree)
-        )
-        self.assertRaises(ValueError, np.degrees, 0.*self.ureg.m)
+    def test_sinh(self):
+        self._test1(np.sinh, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
+                              np.arange(0, pi/2, pi/4) * self.ureg.radian,
+                              np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
+                              ), (self.ureg.m, ), '')
+        self._test1(np.sinh, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
+                              ), results=(np.sinh(np.arange(0, pi/2, pi/4)), ))
 
-    def test_radians(self):
-        (6. * self.ureg.degree).to(self.ureg.radian)
-        self.assertAlmostEqual(
-            np.radians(6. * self.ureg.degree),
-            (6. * self.ureg.degree).to(self.ureg.radian)
-        )
-        self.assertRaises(ValueError, np.radians, 0*self.ureg.m)
+    def test_cosh(self):
+        self._test1(np.cosh, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
+                              np.arange(0, pi/2, pi/4) * self.ureg.radian,
+                              np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
+                             ), (self.ureg.m, ), '')
+        self._test1(np.cosh, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
+                             ), results=(np.cosh(np.arange(0, pi/2, pi/4)), ))
 
-    def test_unwrap(self):
-        self.assertEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
-        self.assertEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
+    def test_tanh(self):
+        self._test1(np.tanh, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
+                              np.arange(0, pi/2, pi/4) * self.ureg.radian,
+                              np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
+                             ), (self.ureg.m, ), '')
+        self._test1(np.tanh, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
+                             ), results=(np.tanh(np.arange(0, pi/2, pi/4)), ))
+
+    def test_arcsinh(self):
+        self._test1(np.arcsinh, (np.arange(0, .9, .1) * self.ureg.dimensionless,
+                                 np.arange(0, .9, .1) * self.ureg.m / self.ureg.m
+                                ), (self.ureg.m, ), 'radian')
+
+    def test_arccosh(self):
+        self._test1(np.arccosh, (np.arange(1., 1.9, .1) * self.ureg.dimensionless,
+                                 np.arange(1., 1.9, .1) * self.ureg.m / self.ureg.m
+                                ), (self.ureg.m, ), 'radian')
+
+    def test_arctanh(self):
+        self._test1(np.arctanh, (np.arange(0, .9, .1) * self.ureg.dimensionless,
+                                 np.arange(0, .9, .1) * self.ureg.m / self.ureg.m
+                                ), (self.ureg.m, ), 'radian')
+
+    def test_deg2rad(self):
+        self._test1(np.deg2rad, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
+                                 np.arange(0, pi/2, pi/4) * self.ureg.radian,
+                            ),
+                    (self.ureg.m, ), 'radians')
+
+    def test_rad2deg(self):
+        self._test1(np.rad2deg, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
+                                 np.arange(0, pi/2, pi/4) * self.ureg.radian,
+                                 np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
+            ),
+                    (self.ureg.m, ), 'degree')
+
+
+class TestBitTwiddlingUfuncs(TestUFuncs):
+    """Universal functions (ufuncs) >  Bit-twiddling functions
+
+    http://docs.scipy.org/doc/numpy/reference/ufuncs.html#bit-twiddling-functions
+
+    bitwise_and(x1, x2[, out]) 	Compute the bit-wise AND of two arrays element-wise.
+    bitwise_or(x1, x2[, out]) 	Compute the bit-wise OR of two arrays element-wise.
+    bitwise_xor(x1, x2[, out]) 	Compute the bit-wise XOR of two arrays element-wise.
+    invert(x[, out]) 	Compute bit-wise inversion, or bit-wise NOT, element-wise.
+    left_shift(x1, x2[, out]) 	Shift the bits of an integer to the left.
+    right_shift(x1, x2[, out]) 	Shift the bits of an integer to the right.
+    """
+
+    @property
+    def qless(self):
+        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.dimensionless
+
+    @property
+    def qs(self):
+        return 8 * self.ureg.J
+
+    @property
+    def q1(self):
+        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.J
+
+    @property
+    def q2(self):
+        return 2 * self.q1
+
+    @property
+    def qm(self):
+        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.m
+
+    def test_bitwise_and(self):
+        self._test2(np.bitwise_and,
+                    self.q1,
+                    (self.q2, self.qs,),
+                    (self.qm, ),
+                    'same')
+
+    def test_bitwise_or(self):
+        self._test2(np.bitwise_or,
+                    self.q1,
+                    (self.q1, self.q2, self.qs, ),
+                    (self.qm,),
+                    'same')
+
+    def test_bitwise_xor(self):
+        self._test2(np.bitwise_xor,
+                    self.q1,
+                    (self.q1, self.q2, self.qs, ),
+                    (self.qm, ),
+                    'same')
+
+    def test_invert(self):
+        self._test1(np.invert,
+                    (self.q1, self.q2, self.qs, ),
+                    (),
+                    'same')
+
+    def test_left_shift(self):
+        self._test2(np.left_shift,
+                    self.q1,
+                    (self.qless, 2),
+                    (self.q1, self.q2, self.qs, ),
+                    'same')
+
+    def test_right_shift(self):
+        self._test2(np.right_shift,
+                    self.q1,
+                    (self.qless, 2),
+                    (self.q1, self.q2, self.qs, ),
+                    'same')
+
+
+class TestComparisonUfuncs(TestUFuncs):
+    """Universal functions (ufunc) > Comparison functions
+
+    http://docs.scipy.org/doc/numpy/reference/ufuncs.html#comparison-functions
+
+    greater(x1, x2[, out]) 	Return the truth value of (x1 > x2) element-wise.
+    greater_equal(x1, x2[, out]) 	Return the truth value of (x1 >= x2) element-wise.
+    less(x1, x2[, out]) 	Return the truth value of (x1 < x2) element-wise.
+    less_equal(x1, x2[, out]) 	Return the truth value of (x1 =< x2) element-wise.
+    not_equal(x1, x2[, out]) 	Return (x1 != x2) element-wise.
+    equal(x1, x2[, out]) 	Return (x1 == x2) element-wise.
+    """
+
+    def test_greater(self):
+        self._testn2(np.greater,
+                    self.q1,
+                    (self.q2, ),
+                    (self.qm, ))
+
+    def test_greater_equal(self):
+        self._testn2(np.greater_equal,
+                     self.q1,
+                     (self.q2, ),
+                     (self.qm, ))
+
+    def test_less(self):
+        self._testn2(np.less,
+                     self.q1,
+                     (self.q2, ),
+                     (self.qm, ))
+
+    def test_less_equal(self):
+        self._testn2(np.less_equal,
+                     self.q1,
+                     (self.q2, ),
+                     (self.qm, ))
+
+    def test_not_equal(self):
+        self._testn2(np.not_equal,
+                     self.q1,
+                     (self.q2, ),
+                     (self.qm, ))
+
+    def test_equal(self):
+        self._testn2(np.equal,
+                     self.q1,
+                     (self.q2, ),
+                     (self.qm, ))
+
+
+class TestFloatingUfuncs(TestUFuncs):
+    """Universal functions (ufunc) > Floating functions
+
+    http://docs.scipy.org/doc/numpy/reference/ufuncs.html#floating-functions
+
+    isreal(x) 	Returns a bool array, where True if input element is real.
+    iscomplex(x) 	Returns a bool array, where True if input element is complex.
+    isfinite(x[, out]) 	Test element-wise for finite-ness (not infinity or not Not a Number).
+    isinf(x[, out]) 	Test element-wise for positive or negative infinity.
+    isnan(x[, out]) 	Test element-wise for Not a Number (NaN), return result as a bool array.
+    signbit(x[, out]) 	Returns element-wise True where signbit is set (less than zero).
+    copysign(x1, x2[, out]) 	Change the sign of x1 to that of x2, element-wise.
+    nextafter(x1, x2[, out]) 	Return the next representable floating-point value after x1 in the direction of x2 element-wise.
+    modf(x[, out1, out2]) 	Return the fractional and integral parts of an array, element-wise.
+    ldexp(x1, x2[, out]) 	Compute y = x1 * 2**x2.
+    frexp(x[, out1, out2]) 	Split the number, x, into a normalized fraction (y1) and exponent (y2)
+    fmod(x1, x2[, out]) 	Return the element-wise remainder of division.
+    floor(x[, out]) 	Return the floor of the input, element-wise.
+    ceil(x[, out]) 	Return the ceiling of the input, element-wise.
+    trunc(x[, out]) 	Return the truncated value of the input, element-wise.
+    """
+
+    def test_isreal(self):
+        self._testn(np.isreal,
+                    (self.q1, self.qm, self.qless))
+
+    def test_iscomplex(self):
+        self._testn(np.iscomplex,
+                    (self.q1, self.qm, self.qless))
+
+    def test_isfinite(self):
+        self._testn(np.isreal,
+                    (self.q1, self.qm, self.qless))
+
+    def test_isinf(self):
+        self._testn(np.isinf,
+                    (self.q1, self.qm, self.qless))
+
+    def test_isnan(self):
+        self._testn(np.isnan,
+                    (self.q1, self.qm, self.qless))
+
+    def test_signbit(self):
+        self._testn(np.signbit,
+                    (self.q1, self.qm, self.qless))
+
+    def test_copysign(self):
+        self._test2(np.add,
+                    self.q1,
+                    (self.q2, self.qs),
+                    (self.qm, ))
+
+    def test_nextafter(self):
+        self._test2(np.add,
+                    self.q1,
+                    (self.q2, self.qs),
+                    (self.qm, ))
+
+    def test_modf(self):
+        self._test2(np.add,
+                    self.q1,
+                    (self.q2, self.qs),
+                    (self.qm, ))
+
+    def test_ldexp(self):
+        self._test2(np.ldexp,
+                    self.q1,
+                    (self.q2, self.qs),
+                    (self.qm, ))
+
+    def test_frexp(self):
+        self._test2(np.frexp,
+                    self.q1,
+                    (self.q2, self.qs),
+                    (self.qm, ))
+
+    def test_fmod(self):
+        # See TestMathUfuncs.test_fmod
+        pass
+
+    def test_floor(self):
+        self._test1(np.floor,
+                    (self.q1, self.qm, self.qless))
+
+    def test_ceil(self):
+        self._test1(np.ceil,
+                    (self.q1, self.qm, self.qless))
+
+    def test_trunc(self):
+        self._test1(np.trunc,
+                    (self.q1, self.qm, self.qless))

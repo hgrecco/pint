@@ -23,6 +23,7 @@ import operator
 import functools
 import itertools
 
+
 from collections import Iterable
 
 from io import BytesIO
@@ -1069,7 +1070,8 @@ def _build_quantity_class(registry, force_ndarray):
         #: Dictionary mapping ufunc/attributes names to the units that they
         #: require (conversion will be tried).
         __require_units = {'cumprod': '',
-                           'arccos': '', 'arcsin': '', 'arctan': '', 'arctan2': '',
+                           'arccos': '', 'arcsin': '', 'arctan': '',
+                           'arccosh': '', 'arcsinh': '', 'arctanh': '',
                            'exp': '', 'expm1': '',
                            'log': '', 'log10': '', 'log1p': '', 'log2': '',
                            'sin': 'radian', 'cos': 'radian', 'tan': 'radian',
@@ -1090,10 +1092,10 @@ def _build_quantity_class(registry, force_ndarray):
 
         #: List of ufunc/attributes names in which units are copied from the
         #: original.
-        __copy_units = 'clip compress conj conjugate copy cumsum diagonal flatten ' \
+        __copy_units = 'compress conj conjugate copy cumsum diagonal flatten ' \
                        'max mean min ptp ravel repeat reshape round ' \
                        'squeeze std sum take trace transpose ' \
-                       'ceil diff ediff1d floor hypot rint trapz ' \
+                       'ceil floor hypot rint' \
                        'add subtract multiply'.split()
 
         #: Dictionary mapping ufunc/attributes names to the units that they will
@@ -1101,15 +1103,73 @@ def _build_quantity_class(registry, force_ndarray):
         #: will be raised.
         __prod_units = {'var': 2, 'prod': 'size', 'true_divide': -1, 'divide': -1}
 
+
+        __skip_other_args = 'left_shift right_shift'.split()
+
+        def clip(self, first=None, second=None, out=None, **kwargs):
+            min = kwargs.get('min', first)
+            max = kwargs.get('max', second)
+
+            if min is None and max is None:
+                raise TypeError('clip() takes at least 3 arguments (2 given)')
+
+            if max is None and 'min' not in kwargs:
+                min, max = max, min
+
+            kwargs = {'out': out}
+
+            if min is not None:
+                if isinstance(min, self.__class__):
+                    kwargs['min'] = min.to(self).magnitude
+                elif self.dimensionless:
+                    kwargs['min'] = min
+                else:
+                    raise DimensionalityError('dimensionless', self.units)
+
+            if max is not None:
+                if isinstance(max, self.__class__):
+                    kwargs['max'] = max.to(self).magnitude
+                elif self.dimensionless:
+                    kwargs['max'] = max
+                else:
+                    raise DimensionalityError('dimensionless', self.units)
+
+            return self.__class__(self.magnitude.clip(**kwargs), self._units)
+
+        def fill(self, value):
+            self._units = value.units
+            return self.magnitude.fill(value.magnitude)
+
+        def put(self, indices, values, mode='raise'):
+            if isinstance(values, self.__class__):
+                values = values.to(self).magnitude
+            elif self.dimensionless:
+                values = self.__class__(values, '').to(self)
+            else:
+                raise DimensionalityError('dimensionless', self.units)
+            self.magnitude.put(indices, values, mode)
+
+        def searchsorted(self, v, side='left'):
+            if isinstance(v, self.__class__):
+                v = v.to(self).magnitude
+            elif self.dimensionless:
+                v = self.__class__(v, '').to(self)
+            else:
+                raise DimensionalityError('dimensionless', self.units)
+            return self.magnitude.searchsorted(v, side)
+
+        def __ito_if_needed(self, to_units):
+            if self.unitless and to_units == 'radian':
+                return
+
+            self.ito(to_units)
+
         def __numpy_method_wrap(self, func, *args, **kwargs):
             """Convenience method to wrap on the fly numpy method taking
             care of the units.
             """
             if func.__name__ in self.__require_units:
-                try:
-                    self.ito(self.__require_units[func.__name__])
-                except:
-                    raise ValueError('Quantity must be dimensionless.')
+                self.__ito_if_needed(self.__require_units[func.__name__])
 
             value = func(*args, **kwargs)
 
@@ -1134,7 +1194,10 @@ def _build_quantity_class(registry, force_ndarray):
                 else:
                     raise AttributeError('__array_* attributes are only taken from ndarray objects.')
             try:
-                return functools.partial(self.__numpy_method_wrap, getattr(self._magnitude, item))
+                attr = getattr(self._magnitude, item)
+                if callable(attr):
+                    return functools.partial(self.__numpy_method_wrap, attr)
+                return attr
             except AttributeError:
                 raise AttributeError("Neither Quantity object nor its magnitude ({})"
                                      "has attribute '{}'".format(self._magnitude, item))
@@ -1173,19 +1236,15 @@ def _build_quantity_class(registry, force_ndarray):
         __array_priority__ = 21
 
         def __array_prepare__(self, obj, context=None):
-            try:
-                uf, objs, huh = context
-                if uf.__name__ in self.__require_units:
-                    try:
-                        self.ito(self.__require_units[uf.__name__])
-                    except:
-                        raise _Exception(ValueError)
-                return self.magnitude.__array_prepare__(obj, context)
-            except _Exception as ex:
-                raise ex.internal
-            except Exception as ex:
-                print(ex)
-            return self.magnitude.__array_prepare__(obj, context)
+            uf, objs, huh = context
+            if uf.__name__ in self.__require_units:
+                self.__ito_if_needed(self.__require_units[uf.__name__])
+            elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
+                to_units = objs[0]
+                objs = (to_units, ) + \
+                       tuple((other if self.units == other.units else other.to(self)
+                              for other in objs[1:]))
+            return self.magnitude.__array_prepare__(obj, (uf, objs, huh))
 
         def __array_wrap__(self, obj, context=None):
             try:

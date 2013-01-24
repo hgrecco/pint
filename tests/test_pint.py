@@ -2,20 +2,16 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import sys
-
 import copy
 import math
 import operator as op
 
-PYTHON3 = sys.version >= '3'
-
 import unittest
 
-from pint import UnitRegistry, UnitsContainer, DimensionalityError, UndefinedUnitError
+from pint import UnitsContainer, DimensionalityError, UndefinedUnitError
 from pint.pint import _definitions_from_file
 
-from tests import TestCase, string_types, u
+from tests import TestCase, string_types, u, PYTHON3
 
 class TestPint(TestCase):
 

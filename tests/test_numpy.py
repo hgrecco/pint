@@ -4,16 +4,10 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import unittest
 
-try:
-    import numpy as np
-    HAS_NUMPY = True
-except ImportError:
-    HAS_NUMPY = False
+from tests import TestCase, HAS_NUMPY, np
 
-from tests import TestCase
-
-@unittest.skipIf(not HAS_NUMPY, 'Numpy not present')
-class TestQuantityMethods(TestCase):
+@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+class TestNumpyMethods(TestCase):
 
     FORCE_NDARRAY = True
 
@@ -30,10 +24,11 @@ class TestQuantityMethods(TestCase):
         self.assertEqual(self.q.sum(1), [3, 7]*self.ureg.m)
 
     def test_fill(self):
-        self.q.fill(6 * self.ureg.ft)
-        self.assertEqual(self.q, [[6, 6], [6, 6]] * self.ureg.ft)
-        self.q.fill(5)
-        self.assertEqual(self.q, [[5, 5], [5, 5]] * self.ureg.ft)
+        tmp = self.q
+        tmp.fill(6 * self.ureg.ft)
+        self.assertEqual(tmp, [[6, 6], [6, 6]] * self.ureg.ft)
+        tmp.fill(5 * self.ureg.m)
+        self.assertEqual(tmp, [[5, 5], [5, 5]] * self.ureg.m)
 
     def test_reshape(self):
         self.assertEqual(self.q.reshape([1,4]), [[1, 2, 3, 4]] * self.ureg.m)
@@ -57,22 +52,21 @@ class TestQuantityMethods(TestCase):
         self.assertEqual(self.q.take([0,1,2,3]), self.q.flatten())
 
     def test_put(self):
-        q = self.q.flatten()
-        q.put([0,2], [10,20]*self.ureg.m)
-        self.assertEqual(q, [10, 2, 20, 4]*self.ureg.m)
+        q =  [1., 2., 3., 4.] * self.ureg.m
+        q.put([0, 2], [10.,20.]*self.ureg.m)
+        self.assertEqual(q, [10., 2., 20., 4.]*self.ureg.m)
 
-        q = self.q.flatten()
-        q.put([0, 2], [1, 2]*self.ureg.mm)
-        self.assertEqual(q, [0.001, 2, 0.002, 4]*self.ureg.m)
+        q =  [1., 2., 3., 4.] * self.ureg.m
+        q.put([0, 2], [1., 2.]*self.ureg.mm)
+        self.assertEqual(q, [0.001, 2., 0.002, 4.]*self.ureg.m)
 
-        q = self.q.flatten()/self.ureg.mm
-        q.put([0, 2], [1, 2])
-        self.assertEqual(q.simplified, [1, 2000, 2, 4000])
-        self.assertEqual(q, [0.001, 2, 0.002, 4]*self.ureg.m/self.ureg.mm)
+        q =  [1., 2., 3., 4.] * self.ureg.m / self.ureg.mm
+        q.put([0, 2], [1., 2.])
+        self.assertEqual(q, [0.001, 2., 0.002, 4.]*self.ureg.m/self.ureg.mm)
 
-        q = self.q.flatten()
-        self.assertRaises(ValueError, q.put, [0, 2], [4, 6] * self.ureg.J)
-        self.assertRaises(ValueError, q.put, [0, 2], [4, 6])
+        q =  [1., 2., 3., 4.] * self.ureg.m
+        self.assertRaises(ValueError, q.put, [0, 2], [4., 6.] * self.ureg.J)
+        self.assertRaises(ValueError, q.put, [0, 2], [4., 6.])
 
     def test_repeat(self):
         self.assertEqual(self.q.repeat(2), [1,1,2,2,3,3,4,4]*self.ureg.m)
@@ -97,10 +91,11 @@ class TestQuantityMethods(TestCase):
                          [[2], [4]] * self.ureg.m)
 
     def test_searchsorted(self):
-        self.assertEqual(self.q.flatten().searchsorted([1.5, 2.5] * self.ureg.m),
-                         [1, 2])
-
-        self.assertRaises(ValueError, self.q.flatten().searchsorted, [1.5, 2.5])
+        q = self.q.flatten()
+        self.assertSequenceEqual(q.searchsorted([1.5, 2.5] * self.ureg.m),
+                                 [1, 2])
+        q = self.q.flatten()
+        self.assertRaises(ValueError, q.searchsorted, [1.5, 2.5])
 
     def test_nonzero(self):
         q = [1, 0, 5, 6, 0, 9] * self.ureg.m
@@ -123,15 +118,15 @@ class TestQuantityMethods(TestCase):
 
     def test_clip(self):
         self.assertEqual(
-            self.q.copy().clip(max=2*self.ureg.m),
+            self.q.clip(max=2*self.ureg.m),
             [[1, 2], [2, 2]] * self.ureg.m
         )
         self.assertEqual(
-            self.q.copy().clip(min=3*self.ureg.m),
+            self.q.clip(min=3*self.ureg.m),
             [[3, 3], [3, 4]] * self.ureg.m
         )
         self.assertEqual(
-            self.q.copy().clip(min=2*self.ureg.m, max=3*self.ureg.m),
+            self.q.clip(min=2*self.ureg.m, max=3*self.ureg.m),
             [[2, 2], [3, 3]] * self.ureg.m
         )
         self.assertRaises(ValueError, self.q.clip, self.ureg.J)
@@ -212,10 +207,10 @@ class TestQuantityMethods(TestCase):
         """
         x = self.q.magnitude
         u = self.Q_(np.ones(x.shape))
-        self.assertEqual(x / self.q, u * x / self.q)
-        self.assertEqual(x * self.q, u * x * self.q)
-        self.assertEqual(x + u, u + x)
-        self.assertEqual(x - u, -(u - x))
+        self.assertSequenceEqual(x / self.q, u * x / self.q)
+        self.assertSequenceEqual(x * self.q, u * x * self.q)
+        self.assertSequenceEqual(x + u, u + x)
+        self.assertSequenceEqual(x - u, -(u - x))
 
     def test_pickle(self):
         import pickle
@@ -224,3 +219,61 @@ class TestQuantityMethods(TestCase):
             self.assertEqual(q, pickle.loads(pickle.dumps(q)))
 
         pickle_test([10,20]*self.ureg.m)
+
+
+@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+class __TestNumpyOtherMethods(TestCase):
+
+    FORCE_NDARRAY = True
+
+
+    @unittest.expectedFailure
+    def test_unwrap(self):
+        """unwrap depends on diff
+        """
+        self.assertEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
+        self.assertEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
+
+    @unittest.expectedFailure
+    def test_trapz(self):
+        """Units are erased by asanyarray, Quantity does not inherit from NDArray
+        """
+        self.assertEqual(np.trapz(self.q, dx = 1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
+
+    @unittest.expectedFailure
+    def test_diff(self):
+        """Units are erased by asanyarray, Quantity does not inherit from NDArray
+        """
+        self.assertSequenceEqual(np.diff(self.q, 1), [1, 1, 1] * self.ureg.J)
+
+    @unittest.expectedFailure
+    def test_ediff1d(self):
+        """Units are erased by asanyarray, Quantity does not inherit from NDArray
+        """
+        self.assertEqual(np.ediff1d(self.q, 1), [1, 1, 1] * self.ureg.J)
+
+    @unittest.expectedFailure
+    def test_fix(self):
+        """Units are erased by asanyarray, Quantity does not inherit from NDArray
+        """
+        self.assertEqual(np.fix(3.14 * self.ureg.m), 3.0 * self.ureg.m)
+        self.assertEqual(np.fix(3.0 * self.ureg.m), 3.0 * self.ureg.m)
+        self.assertSequenceEqual(
+            np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.m),
+            [2., 2., -2., -2.] * self.ureg.m
+        )
+
+    def test_gradient(self):
+        """shape is a property not a function
+        """
+        l = np.gradient([[1,1],[3,4]] * self.ureg.J, 1 * self.ureg.m)
+        self.assertEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.J / self.ureg.m)
+        self.assertEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.J / self.ureg.m)
+
+    @unittest.expectedFailure
+    def test_cross(self):
+        """Units are erased by asarray, Quantity does not inherit from NDArray
+        """
+        a = [3,-3, 1] * self.ureg.kPa
+        b = [4, 9, 2] * self.ureg.m**2
+        self.assertSequenceEqual(np.cross(a,b), [-15,-2,39]*self.ureg.kPa*self.ureg.m**2)

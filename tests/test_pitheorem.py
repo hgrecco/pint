@@ -2,17 +2,14 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import sys
-
+import unittest
 import itertools
-
-PYTHON3 = sys.version >= '3'
-
 
 from pint import pi_theorem
 
-from tests import TestCase, string_types, u
+from tests import TestCase, HAS_NUMPY
 
+@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestPiTheorem(TestCase):
 
     FORCE_NDARRAY = False

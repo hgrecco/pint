@@ -2,30 +2,38 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-
 import sys
 import logging
 import unittest
 
-import numpy as np
+try:
+    import numpy as np
+    HAS_NUMPY = True
+except ImportError:
+    np = None
+    HAS_NUMPY = False
 
-from pint import logger, UnitRegistry
+PYTHON3 = sys.version >= '3'
 
-logger.setLevel(logging.DEBUG)
-h = logging.StreamHandler()
-f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
-h.setFormatter(f)
-logger.addHandler(h)
-
-if sys.version < '3':
+if PYTHON3:
+    string_types = str
+    def u(x):
+        return x
+else:
     import codecs
     string_types = basestring
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
-else:
-    string_types = str
-    def u(x):
-        return x
+
+from pint import logger, UnitRegistry
+
+h = logging.StreamHandler()
+f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
+h.setLevel(logging.DEBUG)
+h.setFormatter(f)
+logger.addHandler(h)
+logger.setLevel(logging.DEBUG)
+
 
 class TestCase(unittest.TestCase):
 
@@ -35,12 +43,11 @@ class TestCase(unittest.TestCase):
         cls.Q_ = cls.ureg.Quantity
 
     def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
-        if isinstance(seq1, (tuple, list)) and isinstance(seq2, np.ndarray):
-            unittest.TestCase.assertSequenceEqual(self, seq1, seq2.tolist(), msg, seq_type)
-        elif isinstance(seq2, (tuple, list)) and isinstance(seq1, np.ndarray):
-            unittest.TestCase.assertSequenceEqual(self, seq1.tolist(), seq2, msg, seq_type)
-        else:
-            unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
+        if isinstance(seq1, np.ndarray):
+            seq1 = seq1.tolist()
+        if isinstance(seq2, np.ndarray):
+            seq2 = seq2.tolist()
+        unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
 
     def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
         if isinstance(first, self.Q_) and isinstance(second, self.Q_):

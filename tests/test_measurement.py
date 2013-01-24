@@ -2,20 +2,9 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import sys
+from pint import Measurement
 
-import copy
-import math
-import operator as op
-
-PYTHON3 = sys.version >= '3'
-
-import unittest
-
-from pint import UnitRegistry, UnitsContainer, DimensionalityError, UndefinedUnitError, Measurement
-from pint.pint import _definitions_from_file
-
-from tests import TestCase, string_types, u
+from tests import TestCase
 
 class TestMeasurement(TestCase):
 
