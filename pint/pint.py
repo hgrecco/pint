@@ -834,7 +834,7 @@ def _build_quantity_class(registry, force_ndarray):
                 other = self._REGISTRY._parse_expression(other)
 
             if self._units == other._units:
-                return self.__class__(self._magnitude, other)
+                return self
 
             factor = self.__class__(1, self.units / other.units)
             factor = factor.convert_to_reference()
