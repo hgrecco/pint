@@ -134,7 +134,7 @@ class TestPint(TestCase):
 
     def test_parse_prefix(self):
         self.assertEqual(self.ureg._parse_expression('kilometer'), self.Q_(1, UnitsContainer(kilometer=1.)))
-        self.assertEqual(self.ureg._UNITS['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
+        self.assertEqual(self.ureg._units['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
 
     def test_parse_complex(self):
         self.assertEqual(self.ureg._parse_expression('kilometre'), self.Q_(1, UnitsContainer(kilometer=1.)))
