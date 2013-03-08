@@ -418,8 +418,8 @@ class UnitsContainer(dict):
           (1,3,-3,-2,None,None,None):'resistivity',
       }
       my_units=(
-        self.get('length'),
         self.get('mass'),
+        self.get('length'),
         self.get('time'),
         self.get('current'),
         self.get('luminosity'),
