@@ -22,6 +22,7 @@ import logging
 import operator
 import functools
 import itertools
+import re
 
 from collections import Iterable
 
@@ -362,6 +363,24 @@ class UnitsContainer(dict):
         ret **= -1
         return ret
 
+    def type(self):
+      ulist=self.items()
+      if len(ulist)==1:
+        unit=ulist[0]
+        if unit[0]=='length':
+          if unit[1]==1:
+            return 'length'
+          elif unit[1]==2:
+            return 'area'
+          elif unit[1]==3:
+            return 'volume'
+          else:
+            return 'unknown'
+        else:
+          return 'undefined'
+      else:
+        return 'undefined'
+
 
 def converter_to_reference(scale, offset, log_base):
     def _inner(value):
@@ -567,6 +586,9 @@ class UnitRegistry(object):
 
         if not input:
             return self.Quantity(1)
+
+        input=re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])",r"\1*",input)
+        input=input.replace("^","**") #Convert carrot exponentials to **
 
         gen = _tokenize(input)
         result = []
