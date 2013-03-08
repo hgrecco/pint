@@ -905,8 +905,8 @@ def _build_quantity_class(registry, force_ndarray):
             ret //= other
             return ret
 
-        __div__ = __floordiv__
-        __idiv__ = __ifloordiv__
+        __div__ = __truediv__
+        __idiv__ = __itruediv__
 
         def __rfloordiv__(self, other):
             if isinstance(other, self.__class__):
