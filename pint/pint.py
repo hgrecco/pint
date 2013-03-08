@@ -636,6 +636,7 @@ class UnitRegistry(object):
         if not input:
             return self.Quantity(1)
 
+        input=input.replace(",","")
         input=re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])",r"\1*",input)
         input=input.replace("^","**") #Convert carrot exponentials to **
 
