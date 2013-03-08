@@ -758,6 +758,26 @@ def _build_quantity_class(registry, force_ndarray):
 
             return self._dimensionality
 
+        @property
+        def type(self):
+          """Quantity's unit type (e.g. length, energy, time)
+          """
+          try:
+            return self._dimensionality.type()
+          except AttributeError:
+              if self._magnitude is None:
+                  return UnitsContainer(self.units).type()
+
+              tmp = UnitsContainer()
+              for key, value in self.units.items():
+                  reg = self._REGISTRY._UNITS[key]
+                  tmp = tmp * reg.dimensionality ** value
+
+              self._dimensionality = tmp
+
+          return self._dimensionality.type()
+          
+
         def ito(self, other=None):
             """Inplace rescale to different units.
 
