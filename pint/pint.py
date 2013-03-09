@@ -637,6 +637,8 @@ class UnitRegistry(object):
             return self.Quantity(1)
 
         #A regular expression which converts 1foot -> 1 foot is very hard
+        #This is because the library may contain units such as g_0 which
+        #look like numbers, but are not
         #This is a start:
         #   r"(_[0-9]+[a-zA-Z]*)|(?<!_)([0-9])(?![eE][-+])(?=[a-zA-Z])"
         #It must 1foot -> 1 foot   1e-24 -> 1e-24   1e10 -> 1e10
