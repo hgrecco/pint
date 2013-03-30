@@ -326,6 +326,42 @@ class AliasDict(dict):
         return key
 
 
+class Unit(object):
+    """A unit class
+    """
+
+    def __init__(self, unit_name, dst_units, scale, offset=0):
+        self.unit_name = unit_name
+        self.dst_units = dst_units
+        self.scale = scale
+        self.offset = offset
+
+    def __str__(self):
+        return self.unit_name
+
+    def __repr__(self):
+        return self.__str__()
+
+    def to_reference(self, value):
+        if self.scale is None:
+            return value
+        return value / self.scale + self.offset
+
+    def from_reference(self, value):
+        if self.scale is None:
+            return value
+        return (value - self.offset) * self.scale
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.unit_name == other.unit_name
+        if isinstance(other, string_types):
+            return self.unit_name == other
+        if isinstance(other, dict):
+            return other == {self.unit_name: 1}
+        raise NotImplemented
+
+
 class UnitsContainer(dict):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations
@@ -454,23 +490,6 @@ class UnitsContainer(dict):
         return ret
 
 
-def converter_to_reference(scale, offset, log_base):
-    def _inner(value):
-        if log_base:
-            return log_base ** (value / scale + offset)
-        else:
-            return value * scale + offset
-    return _inner
-
-def converter_from_reference(scale, offset, log_base):
-    def _inner(value):
-        if log_base:
-            return (math.log10(value) / math.log10(log_base) - offset) / scale
-        else:
-            return (value - offset) / scale
-    return _inner
-
-
 class UnitRegistry(object):
     """The unit registry stores the definitions and relationships between
     units.
@@ -501,11 +520,22 @@ class UnitRegistry(object):
     def __getitem__(self, item):
         return self._parse_expression(item)
 
+    def _get_unit(self, item):
+        #return UnitsContainer({item: 1})
+        unit = self._to_canonical(item)
+        value = self._units[unit]
+        if isinstance(value, Unit):
+            return value
+        return UnitsContainer({item: 1})
+
     def add_unit(self, name, value, aliases=tuple(), **modifiers):
         """Add unit to the registry.
         """
-        if not isinstance(value, self.Quantity):
-            value = self.Quantity(value, **modifiers)
+        if modifiers:
+            value = self._parse_expression(value)
+            value = Unit(name, value.units, value.magnitude, **modifiers)
+        elif not isinstance(value, self.Quantity):
+            value = self.Quantity(value)
 
         self._units[name] = value
 
@@ -671,25 +701,16 @@ class UnitRegistry(object):
                     result.extend([
                         (NAME, 'Q_'),
                         (OP, '('),
-                        (NUMBER, '1'),
-                        (OP, ','),
-                        (NAME, 'U_'),
-                        (OP, '('),
-                        (STRING, tokval),
-                        (OP, '='),
-                        (NUMBER, '1'),
-                        (OP, ')'),
+                        (NUMBER, '1'),(OP, ','),
+                        (NAME, 'G_'), (OP, '('), (OP, '"'),  (STRING, tokval), (OP, '"'), (OP, ')'),
                         (OP, ')')
                     ])
                 else:
                     result.extend([
                         (NAME, 'Q_'),
                         (OP, '('),
-                        (NUMBER, '1'),
-                        (OP, ','),
-                        (NAME, 'U_'),
-                        (OP, '('),
-                        (OP, ')'),
+                        (NUMBER, '1'), (OP, ','),
+                        (NAME, 'U_'), (OP, '('), (OP, ')'),
                         (OP, ')')
                     ])
             else:
@@ -701,7 +722,8 @@ class UnitRegistry(object):
         return eval(untokenize(result), {'__builtins__': None},
                                         {'REGISTRY': self._units,
                                          'Q_': self.Quantity,
-                                         'U_': UnitsContainer})
+                                         'U_': UnitsContainer,
+                                         'G_': self._get_unit})
 
 
 def _build_quantity_class(registry, force_ndarray):
@@ -723,7 +745,7 @@ def _build_quantity_class(registry, force_ndarray):
         def __reduce__(self):
             return _build_quantity, (self.magnitude, self.units)
 
-        def __new__(cls, value, units=None, offset=0, log_base=0):
+        def __new__(cls, value, units=None):
             if units is None:
                 if isinstance(value, string_types):
                     inst = cls._REGISTRY._parse_expression(value)
@@ -733,7 +755,7 @@ def _build_quantity_class(registry, force_ndarray):
                     inst = object.__new__(cls)
                     inst._magnitude = _to_magnitude(value, force_ndarray)
                     inst._units = UnitsContainer()
-            elif isinstance(units, UnitsContainer):
+            elif isinstance(units, (UnitsContainer, Unit)):
                 inst = object.__new__(cls)
                 inst._magnitude = _to_magnitude(value, force_ndarray)
                 inst._units = units
@@ -834,14 +856,27 @@ def _build_quantity_class(registry, force_ndarray):
             if self._units == other._units:
                 return self
 
-            factor = self.__class__(1, self.units / other.units)
-            factor = factor.convert_to_reference()
+            if isinstance(self._units, UnitsContainer):
+                if not isinstance(other._units, UnitsContainer):
+                    raise DimensionalityError(self.units, other.units,
+                                              self.dimensionality, other.dimensionality)
 
-            if not factor.unitless:
+                factor = self.__class__(1, self.units / other.units)
+                factor = factor.convert_to_reference()
+
+                if not factor.unitless:
+                    raise DimensionalityError(self.units, other.units,
+                                              self.dimensionality, other.dimensionality)
+
+                self._magnitude *= factor.magnitude
+                self._units = copy.copy(other._units)
+                return self
+
+            if not isinstance(other._units, Unit):
                 raise DimensionalityError(self.units, other.units,
                                           self.dimensionality, other.dimensionality)
 
-            self._magnitude *= factor.magnitude
+            self._magnitude = other._units.from_reference(self._units.to_reference(self._magnitude))
             self._units = copy.copy(other._units)
             return self
 

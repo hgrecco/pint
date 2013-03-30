@@ -370,7 +370,6 @@ class TestPint(TestCase):
         self.assertEqual(self.Q_(1, 'meter')/self.Q_(1, 'meter'), 1)
         self.assertEqual((self.Q_(1, 'meter')/self.Q_(1, 'mm')).to(''), 1000)
 
-    @unittest.expectedFailure
     def test_offset(self):
         self.assertAlmostEqual(self.Q_(0, 'degK').to('degK'), self.Q_(0, 'degK'))
         self.assertAlmostEqual(self.Q_(0, 'degC').to('degK'), self.Q_(273.15, 'degK'))

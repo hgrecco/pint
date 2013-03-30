@@ -39,7 +39,7 @@ ampere = [current] = A = amp
 candela = [luminosity] = cd = candle
 gram = [mass] = g
 mole = [substance] = mol
-degK = [temperature] = K = kelvin
+degK = [temperature] = K = kelvin; offset = 0
 radian = [] = rad
 bit = []
 count = []
@@ -222,9 +222,9 @@ roentgen = 2.58e-4 * coulomb / kilogram = R
 
 
 # Temperature
-#degR = 9 / 5 * degK = rankine
-#degC = degK = celsius; offset = 273.15
-#degF = 9 / 5 * degK = fahrenheit; offset = 255.372222
+degR = 9 / 5 * degK = rankine; offset = 0
+degC = degK = celsius; offset = 273.15
+degF = 9 / 5 * degK = fahrenheit; offset = 255.372222
 
 # Time
 minute = 60 * second = min
