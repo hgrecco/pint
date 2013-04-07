@@ -137,7 +137,7 @@ mile = 5280 * foot = mi = international_mile
 yard = 3 * feet = yd = international_yard
 mil = inch / 1000 = thou
 parsec = 3.08568025e16 * meter = pc
-light_year = speed_of_light * julian_year = ly
+light_year = speed_of_light * julian_year = ly = lightyear
 astronomical_unit = 149597870691 * meter = au
 nautical_mile = 1.852e3 * meter = nmi
 printers_point = 127 * millimeter / 360 = point
