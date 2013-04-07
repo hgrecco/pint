@@ -644,6 +644,7 @@ class UnitRegistry(object):
         #It must 1foot -> 1 foot   1e-24 -> 1e-24   1e10 -> 1e10
         #g_0 * m ->  g_0 * m
         input=input.replace(",","")
+        input=re.sub(r"cubic ([a-zA-Z]+)",r"\1^3",input)
         input=re.sub(r"square ([a-zA-Z]+)",r"\1^2",input)
         input=re.sub(r"sq ([a-zA-Z]+)",r"\1^2",input)
         input=re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])",r"\1*",input)
