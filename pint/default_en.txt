@@ -256,6 +256,7 @@ work_month = work_year/12
 # Velocity
 speed_of_light = 299792458 * meter / second = c
 knot = nautical_mile / hour = kt = knot_international = international_knot = nautical_miles_per_hour
+mph = mile / hour = MPH
 
 # Viscosity
 poise = 1e-1 * Pa * second = P
