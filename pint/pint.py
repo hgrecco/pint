@@ -22,6 +22,7 @@ import logging
 import operator
 import functools
 import itertools
+import re
 
 from collections import Iterable
 
@@ -362,6 +363,73 @@ class UnitsContainer(dict):
         ret **= -1
         return ret
 
+    def type(self):
+      #(Mass,Length,Time,Current,Luminosity,Substance,Temperature)
+      types={
+          (None,1,None,None,None,None,None):'length',
+          (None,2,None,None,None,None,None):'area',
+          (None,3,None,None,None,None,None):'volume',
+          (None,1,-1,None,None,None,None):'speed',
+          (None,1,-2,None,None,None,None):'acceleration',
+          (None,None,-1,None,None,None,None):'hertz',
+          (1,1,-2,None,None,None,None):'force',
+          (1,-1,-2,None,None,None,None):'pressure',
+          (2,1,-2,None,None,None,None):'energy',
+          (2,1,-3,None,None,None,None):'power',
+          (None,None,1,1,None,None,None):'charge',
+          (1,2,-3,-1,None,None,None):'voltage',
+          (-1,-2,4,2,None,None,None):'capacitance',
+          (1,2,-3,-2,None,None,None):'resistance',
+          (-1,-2,3,2,None,None,None):'conductance',
+          (1,2,-2,-1,None,None,None):'magnetic_flux',
+          (1,None,-2,-1,None,None,None):'magnetic_field_strength',
+          (1,2,-2,-2,None,None,None):'inductance',
+          (1,None,None,None,None,None,None):'mass',
+          (None,None,1,None,None,None,None):'time',
+          (None,None,None,1,None,None,None):'current',
+          (None,None,None,None,1,None,None):'luminosity',
+          (None,None,None,None,None,1,None):'substance',
+          (None,None,None,None,None,None,1):'temperature',
+          (None,1,-3,None,None,None,None):'jerk',
+          (None,1,-4,None,None,None,None):'snap',
+          (1,1,-1,None,None,None,None):'impulse',
+          (2,1,-1,None,None,None,None):'angular_momentum',
+          (2,1,-2,None,None,None,None):'torque',
+          (1,-2,None,None,None,None,None):'area_density',
+          (1,-3,None,None,None,None,None):'density',
+          (-1,3,None,None,None,None,None):'specific_volume',
+          (None,3,None,None,None,-1,None):'molar_volume',
+          (1,2,-1,None,None,None,None):'action',
+          (1,2,-2,None,None,None,-1):'heat_capacity',
+          (None,2,-2,None,None,None,None):'specific_energy',
+          (1,-1,-2,None,None,None,None):'energy_density',
+          (1,None,-2,None,None,None,None):'surface_tension',
+          (1,1,-3,None,None,None,-1):'thermal_conductivity',
+          (None,2,-1,None,None,None,None):'kinematic_viscosity',
+          (1,-1,-1,None,None,None,None):'dynamic_viscosity',
+          (None,-3,1,1,None,None,None):'charge_density',
+          (None,-2,None,1,None,None,None):'current_density',
+          (-1,-3,3,2,None,None,None):'conductivity',
+          (-1,-3,4,2,None,None,None):'permittivity',
+          (1,1,-2,-2,None,None,None):'permeability',
+          (1,1,-3,-1,None,None,None):'electric_field_strength',
+          (None,-1,None,1,None,None,None):'magnetic_field_strength',
+          (None,-2,None,None,1,None,None):'luminance',
+          (1,3,-3,-2,None,None,None):'resistivity',
+      }
+      my_units=(
+        self.get('mass'),
+        self.get('length'),
+        self.get('time'),
+        self.get('current'),
+        self.get('luminosity'),
+        self.get('substance'),
+        self.get('temperature'),
+      )
+      if types.has_key(my_units):
+        return types[my_units]
+      else:
+        return 'undefined'
 
 def converter_to_reference(scale, offset, log_base):
     def _inner(value):
@@ -565,6 +633,23 @@ class UnitRegistry(object):
         if not input:
             return self.Quantity(1)
 
+        #A regular expression which converts 1foot -> 1 foot is very hard
+        #This is because the library may contain units such as g_0 which
+        #look like numbers, but are not
+        #This is a start:
+        #   r"(_[0-9]+[a-zA-Z]*)|(?<!_)([0-9])(?![eE][-+])(?=[a-zA-Z])"
+        #It must 1foot -> 1 foot   1e-24 -> 1e-24   1e10 -> 1e10
+        #g_0 * m ->  g_0 * m
+        input=input.replace(",","")                        #"1,234,567"  -> "1234567"
+        input=input.replace(" per ","/");                  #"km per hr"  -> "km/hr"
+        input=re.sub(r"([a-zA-Z]+) squared",r"\1^2",input) #"cm squared" -> "cm^2"
+        input=re.sub(r"([a-zA-Z]+) cubed",r"\1^3",input)   #"cm cubed"   -> "cm^3"
+        input=re.sub(r"cubic ([a-zA-Z]+)",r"\1^3",input)   #"cubic cm"   -> "cm^3"
+        input=re.sub(r"square ([a-zA-Z]+)",r"\1^2",input)  #"square cm"  -> "cm^2"
+        input=re.sub(r"sq ([a-zA-Z]+)",r"\1^2",input)      #"sq cm"      -> "cm^2"
+        input=re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])",r"\1*",input) #"3 m hr" -> "3*m*hr"
+        input=input.replace("^","**") #Convert carrot exponentials to **
+
         gen = _tokenize(input)
         result = []
         unknown = set()
@@ -732,6 +817,26 @@ def _build_quantity_class(registry, force_ndarray):
                 self._dimensionality = tmp
 
             return self._dimensionality
+
+        @property
+        def type(self):
+          """Quantity's unit type (e.g. length, energy, time)
+          """
+          try:
+            return self._dimensionality.type()
+          except AttributeError:
+              if self._magnitude is None:
+                  return UnitsContainer(self.units).type()
+
+              tmp = UnitsContainer()
+              for key, value in self.units.items():
+                  reg = self._REGISTRY._UNITS[key]
+                  tmp = tmp * reg.dimensionality ** value
+
+              self._dimensionality = tmp
+
+          return self._dimensionality.type()
+          
 
         def ito(self, other=None):
             """Inplace rescale to different units.

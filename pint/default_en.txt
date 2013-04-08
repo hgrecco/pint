@@ -57,8 +57,10 @@ are = 100 * m**2
 barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
 darcy = 9.869233e-13 * m ** 2
-acre = 4046.8564224 * m ** 2 = international_acre
+acre = 4046.8564224 * m ** 2 = international_acre = acres
 US_survey_acre = 160 * rod ** 2
+hectare = 2.47105 acres = hectares
+cubit = 1.5 feet = cubits
 
 # EM
 esu = 1 * erg**0.5 * centimeter**0.5 = statcoulombs = statC = franklin = Fr
@@ -131,13 +133,13 @@ baud = bit / second = Bd = bps
 
 # Length
 angstrom = 1e-10 * meter
-inch = 2.54 * centimeter = international_inch = inches = international_inches
+inch = 2.54 * centimeter = international_inch = inches = international_inches = in
 foot = 12 * inch = international_foot = ft = feet = international_foot = international_feet
 mile = 5280 * foot = mi = international_mile
 yard = 3 * feet = yd = international_yard
 mil = inch / 1000 = thou
 parsec = 3.08568025e16 * meter = pc
-light_year = speed_of_light * julian_year = ly
+light_year = speed_of_light * julian_year = ly = lightyear
 astronomical_unit = 149597870691 * meter = au
 nautical_mile = 1.852e3 * meter = nmi
 printers_point = 127 * millimeter / 360 = point
@@ -256,6 +258,8 @@ work_month = work_year/12
 # Velocity
 speed_of_light = 299792458 * meter / second = c
 knot = nautical_mile / hour = kt = knot_international = international_knot = nautical_miles_per_hour
+mph = mile / hour = MPH
+kph = kilometer / hour = KPH
 
 # Viscosity
 poise = 1e-1 * Pa * second = P
