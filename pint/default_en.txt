@@ -57,7 +57,7 @@ are = 100 * m**2
 barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
 darcy = 9.869233e-13 * m ** 2
-acre = 4046.8564224 * m ** 2 = international_acre
+acre = 4046.8564224 * m ** 2 = international_acre = acres
 US_survey_acre = 160 * rod ** 2
 
 # EM
