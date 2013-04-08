@@ -458,16 +458,13 @@ class UnitRegistry(object):
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
     """
 
-    #: Map unit name (string) to unit value (Quantity), and unit alias to canonical unit name
-    _UNITS = AliasDict()
-
-    #: Map prefix name (string) to prefix value (float), and unit alias to canonical prefix name
-    _PREFIXES = AliasDict({'': 1})
-
-    #: Map suffix name (string) to canonical , and unit alias to canonical unit name
-    _SUFFIXES = AliasDict({'': None, 's': ''})
-
     def __init__(self, filename='', force_ndarray=False):
+        #: Map unit name (string) to unit value (Quantity), and unit alias to canonical unit name
+        self._units = AliasDict()
+        #: Map prefix name (string) to prefix value (float), and unit alias to canonical prefix name
+        self._prefixes = AliasDict({'': 1})
+        #: Map suffix name (string) to canonical , and unit alias to canonical unit name
+        self._suffixes = AliasDict({'': None, 's': ''})
         self.Quantity = _build_quantity_class(self, force_ndarray)
         self._definition_files = []
         if filename == '':
@@ -487,12 +484,12 @@ class UnitRegistry(object):
         if not isinstance(value, self.Quantity):
             value = self.Quantity(value, **modifiers)
 
-        self._UNITS[name] = value
+        self._units[name] = value
 
         for ndx, alias in enumerate(aliases):
             if ' ' in alias:
                 logger.warn('Alias cannot contain a space ' + alias)
-            self._UNITS.add_alias(alias.strip(), name, not ndx)
+            self._units.add_alias(alias.strip(), name, not ndx)
 
     def add_prefix(self, name, value, aliases=tuple()):
         """Add prefix to the registry.
@@ -500,10 +497,10 @@ class UnitRegistry(object):
 
         if not isinstance(value, NUMERIC_TYPES):
             value = eval(value, {'__builtins__': None}, {})
-        self._PREFIXES[name] = float(value)
+        self._prefixes[name] = float(value)
 
         for ndx, alias in enumerate(aliases):
-            self._PREFIXES.add_alias(alias.strip(), name, not ndx)
+            self._prefixes.add_alias(alias.strip(), name, not ndx)
 
     def add_from_file(self, filename):
         """Add units and prefixes defined in a definition text file.
@@ -543,7 +540,7 @@ class UnitRegistry(object):
 
         for unit_names in _solve_dependencies(dep2):
             for unit_name in unit_names:
-                if not unit_name in self._UNITS:
+                if not unit_name in self._units:
                     self.add_unit(unit_name, *pending[unit_name])
 
     def get_alias(self, name):
@@ -559,8 +556,8 @@ class UnitRegistry(object):
                            'Options are: {}'.format(name, candidates))
             prefix, unit_name, _ = candidates[0]
 
-        return self._PREFIXES.preferred_alias.get(prefix, prefix) + \
-               self._UNITS.preferred_alias.get(unit_name, unit_name)
+        return self._prefixes.preferred_alias.get(prefix, prefix) + \
+               self._units.preferred_alias.get(unit_name, unit_name)
 
     def _to_canonical(self, candidate):
         """Return the canonical name of a unit.
@@ -570,7 +567,7 @@ class UnitRegistry(object):
             return ''
 
         try:
-            return self._UNITS.get_aliased(candidate)
+            return self._units.get_aliased(candidate)
         except KeyError:
             pass
 
@@ -588,7 +585,7 @@ class UnitRegistry(object):
             alias = self.get_alias(prefix + unit_name)
             if prefix + unit_name == 'kilogram':
                 pass
-            self.add_unit(prefix + unit_name, self.Quantity(self._PREFIXES[prefix], unit_name), (alias, ))
+            self.add_unit(prefix + unit_name, self.Quantity(self._prefixes[prefix], unit_name), (alias, ))
             return prefix + unit_name
 
         return unit_name
@@ -598,24 +595,24 @@ class UnitRegistry(object):
         by walking the list of prefix and suffix.
         """
 
-        for suffix, prefix in itertools.product(self._SUFFIXES.keys(), self._PREFIXES.keys()):
+        for suffix, prefix in itertools.product(self._suffixes.keys(), self._prefixes.keys()):
             if candidate.startswith(prefix) and candidate.endswith(suffix):
                 unit_name = candidate[len(prefix):]
                 if suffix:
                     unit_name = unit_name[:-len(suffix)]
                     if len(unit_name) == 1:
                         continue
-                if unit_name in self._UNITS:
-                    yield (self._PREFIXES.get_aliased(prefix),
-                           self._UNITS.get_aliased(unit_name),
-                           self._SUFFIXES.get_aliased(suffix))
+                if unit_name in self._units:
+                    yield (self._prefixes.get_aliased(prefix),
+                           self._units.get_aliased(unit_name),
+                           self._suffixes.get_aliased(suffix))
 
 
     def _parse_candidate2(self, candidate):
         """Parse a unit to identify prefix, suffix and unit name
         by walking the list of units.
         """
-        for unit_name in self._UNITS:
+        for unit_name in self._units:
             if unit_name in candidate:
                 try:
                     [prefix, suffix] = candidate.split(unit_name)
@@ -623,10 +620,10 @@ class UnitRegistry(object):
                         continue
                 except ValueError: # too many values to unpack
                     continue
-                if prefix in self._PREFIXES and suffix in self._SUFFIXES:
-                    yield (self._PREFIXES.get_aliased(prefix),
-                           self._UNITS.get_aliased(unit_name),
-                           self._SUFFIXES.get_aliased(suffix))
+                if prefix in self._prefixes and suffix in self._suffixes:
+                    yield (self._prefixes.get_aliased(prefix),
+                           self._units.get_aliased(unit_name),
+                           self._suffixes.get_aliased(suffix))
 
 
     def _parse_expression(self, input):
@@ -698,7 +695,7 @@ class UnitRegistry(object):
             raise UndefinedUnitError(unknown)
 
         return eval(untokenize(result), {'__builtins__': None},
-                                        {'REGISTRY': self._UNITS,
+                                        {'REGISTRY': self._units,
                                          'Q_': self.Quantity,
                                          'U_': UnitsContainer})
 
@@ -814,7 +811,7 @@ def _build_quantity_class(registry, force_ndarray):
 
                 tmp = UnitsContainer()
                 for key, value in self.units.items():
-                    reg = self._REGISTRY._UNITS[key]
+                    reg = self._REGISTRY._units[key]
                     tmp = tmp * reg.dimensionality ** value
 
                 self._dimensionality = tmp
@@ -879,7 +876,7 @@ def _build_quantity_class(registry, force_ndarray):
             factor = 1
             units = UnitsContainer()
             for key, value in input_units.items():
-                reg = self._REGISTRY._UNITS[key]
+                reg = self._REGISTRY._units[key]
                 if reg._magnitude is None:
                     units.add(key, value)
                 else:
@@ -904,7 +901,7 @@ def _build_quantity_class(registry, force_ndarray):
             tmp = self.__class__(self.magnitude)
 
             for key, value in self.units.items():
-                reg = self._REGISTRY._UNITS[key]
+                reg = self._REGISTRY._units[key]
                 if reg._magnitude is None:
                     factor = self.__class__(1, key) ** value
                 else:
@@ -1013,8 +1010,8 @@ def _build_quantity_class(registry, force_ndarray):
             ret //= other
             return ret
 
-        __div__ = __floordiv__
-        __idiv__ = __ifloordiv__
+        __div__ = __truediv__
+        __idiv__ = __itruediv__
 
         def __rfloordiv__(self, other):
             if isinstance(other, self.__class__):
