@@ -640,14 +640,14 @@ class UnitRegistry(object):
         #   r"(_[0-9]+[a-zA-Z]*)|(?<!_)([0-9])(?![eE][-+])(?=[a-zA-Z])"
         #It must 1foot -> 1 foot   1e-24 -> 1e-24   1e10 -> 1e10
         #g_0 * m ->  g_0 * m
-        input=input.replace(",","")
-        input=input.replace(" per ","/");
-        input=re.sub(r"([a-zA-Z]+) squared",r"\1^2",input)
-        input=re.sub(r"([a-zA-Z]+) cubed",r"\1^3",input)
-        input=re.sub(r"cubic ([a-zA-Z]+)",r"\1^3",input)
-        input=re.sub(r"square ([a-zA-Z]+)",r"\1^2",input)
-        input=re.sub(r"sq ([a-zA-Z]+)",r"\1^2",input)
-        input=re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])",r"\1*",input)
+        input=input.replace(",","")                        #"1,234,567"  -> "1234567"
+        input=input.replace(" per ","/");                  #"km per hr"  -> "km/hr"
+        input=re.sub(r"([a-zA-Z]+) squared",r"\1^2",input) #"cm squared" -> "cm^2"
+        input=re.sub(r"([a-zA-Z]+) cubed",r"\1^3",input)   #"cm cubed"   -> "cm^3"
+        input=re.sub(r"cubic ([a-zA-Z]+)",r"\1^3",input)   #"cubic cm"   -> "cm^3"
+        input=re.sub(r"square ([a-zA-Z]+)",r"\1^2",input)  #"square cm"  -> "cm^2"
+        input=re.sub(r"sq ([a-zA-Z]+)",r"\1^2",input)      #"sq cm"      -> "cm^2"
+        input=re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])",r"\1*",input) #"3 m hr" -> "3*m*hr"
         input=input.replace("^","**") #Convert carrot exponentials to **
 
         gen = _tokenize(input)
