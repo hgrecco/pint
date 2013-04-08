@@ -60,6 +60,7 @@ darcy = 9.869233e-13 * m ** 2
 acre = 4046.8564224 * m ** 2 = international_acre = acres
 US_survey_acre = 160 * rod ** 2
 hectare = 2.47105 acres = hectares
+cubit = 1.5 feet = cubits
 
 # EM
 esu = 1 * erg**0.5 * centimeter**0.5 = statcoulombs = statC = franklin = Fr
