@@ -264,7 +264,11 @@ class UnitsContainer(dict):
                 if single_denominator:
                    ret += ' / '.join(tmp_minus)
                 else:
+                   if len(tmp_minus) > 1:
+                       ret += '('
                    ret += product_sign.join(tmp_minus)
+                   if len(tmp_minus) > 1:
+                       ret += ')'
             else:
                 ret += product_sign.join(tmp_minus)
 
