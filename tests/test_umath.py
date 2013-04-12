@@ -42,6 +42,7 @@ class TestUFuncs(TestCase):
         return np.asarray([1 + 1j, 2 + 2j, 3 + 3j, 4 + 4j]) * self.ureg.m
 
     def assertEqual(self, first, second, msg=None):
+        if
         np.testing.assert_equal(first, second, msg)
 
     def assertRaisesMsg(self, msg, ExcType, func, *args, **kwargs):
@@ -56,7 +57,7 @@ class TestUFuncs(TestCase):
     def _testn(self, func,  ok_with, raise_with=(), results=None):
         self._test1(func, ok_with, raise_with, output_units=None, results=results)
 
-    def _test1(self, func,  ok_with, raise_with=(), output_units='same', results=None):
+    def _test1(self, func,  ok_with, raise_with=(), output_units='same', results=None, rtol=1e-6):
         if results is None:
             results = [None, ] * len(ok_with)
         for x1, res in zip(ok_with, results):
@@ -72,8 +73,8 @@ class TestUFuncs(TestCase):
                 res = func(x1.magnitude)
                 if ou is not None:
                     res = self.Q_(res, ou)
-            self.assertEqual(qm, res,
-                             'At {} with {}'.format(func.__name__, x1))
+            np.testing.assert_allclose(qm, res, rtol=rtol,
+                                       err_msg='At {} with {}'.format(func.__name__, x1))
 
         for x1 in raise_with:
             self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
@@ -380,8 +381,8 @@ class TestTrigUfuncs(TestUFuncs):
                     output_units='radian')
 
     def test_hypot(self):
-        self.assertEqual(np.hypot(3 * self.ureg.m, 4 * self.ureg.m),  5 * self.ureg.m)
-        self.assertRaises(ValueError, np.hypot, 1*self.ureg.m, 2*self.ureg.J)
+        self.assertTrue(np.hypot(3. * self.ureg.m, 4. * self.ureg.m) ==  5. * self.ureg.m)
+        self.assertRaises(ValueError, np.hypot, 1. * self.ureg.m, 2. * self.ureg.J)
 
     def test_sinh(self):
         self._test1(np.sinh, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
@@ -424,16 +425,14 @@ class TestTrigUfuncs(TestUFuncs):
 
     def test_deg2rad(self):
         self._test1(np.deg2rad, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
-                                 np.arange(0, pi/2, pi/4) * self.ureg.radian,
-                            ),
-                    (self.ureg.m, ), 'radians')
+                                 np.arange(0, pi/2, pi/4) * self.ureg.degrees,
+                                 ), (self.ureg.m, ), 'radians')
 
     def test_rad2deg(self):
         self._test1(np.rad2deg, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                                  np.arange(0, pi/2, pi/4) * self.ureg.radian,
                                  np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-            ),
-                    (self.ureg.m, ), 'degree')
+                                 ), (self.ureg.m, ), 'degree')
 
 
 class TestBitTwiddlingUfuncs(TestUFuncs):

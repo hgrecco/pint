@@ -8,8 +8,9 @@ import operator as op
 
 import unittest
 
-from pint import UnitsContainer, DimensionalityError, UndefinedUnitError
-from pint.pint import _definitions_from_file
+from pint.unit import UnitsContainer
+from pint import DimensionalityError, UndefinedUnitError
+from pint.unit import definitions_from_file
 
 from tests import TestCase, string_types, u, PYTHON3
 
@@ -58,58 +59,6 @@ class TestPint(TestCase):
         self.assertNotEqual(id(result), id1)
         self.assertNotEqual(id(result), id2)
 
-    def test_units_creation(self):
-        x = UnitsContainer(meter=1, second=2)
-        y = UnitsContainer({'meter': 1.0, 'second': 2.0})
-        self.assertIsInstance(x['meter'], float)
-        self.assertEqual(x, y)
-        self.assertIsNot(x, y)
-        z = copy.copy(x)
-        self.assertEqual(x, z)
-        self.assertIsNot(x, z)
-        z = UnitsContainer(x)
-        self.assertEqual(x, z)
-        self.assertIsNot(x, z)
-
-    def test_units_repr(self):
-        x = UnitsContainer()
-        self.assertEqual(str(x), 'dimensionless')
-        self.assertEqual(repr(x), '<UnitsContainer({})>')
-        x = UnitsContainer(meter=1, second=2)
-        self.assertEqual(str(x), 'meter * second ** 2')
-        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1.0, 'second': 2.0})>")
-        x = UnitsContainer(meter=1, second=2.5)
-        self.assertEqual(str(x), 'meter * second ** 2.5')
-        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1.0, 'second': 2.5})>")
-
-    def test_units_bool(self):
-        self.assertTrue(UnitsContainer(meter=1, second=2))
-        self.assertFalse(UnitsContainer())
-
-    def test_units_comp(self):
-        x = UnitsContainer(meter=1, second=2)
-        y = UnitsContainer(meter=1., second=2)
-        z = UnitsContainer(meter=1, second=3)
-        self.assertTrue(x == y)
-        self.assertFalse(x != y)
-        self.assertFalse(x == z)
-        self.assertTrue(x != z)
-
-    def test_units_arithmetic(self):
-        x = UnitsContainer(meter=1)
-        y = UnitsContainer(second=1)
-        z = UnitsContainer(meter=1, second=-2)
-
-        self._test_not_inplace(op.mul, x, y, UnitsContainer(meter=1, second=1))
-        self._test_not_inplace(op.truediv, x, y, UnitsContainer(meter=1, second=-1))
-        self._test_not_inplace(op.pow, z, 2, UnitsContainer(meter=2, second=-4))
-        self._test_not_inplace(op.pow, z, -2, UnitsContainer(meter=-2, second=4))
-
-        self._test_inplace(op.imul, x, y, UnitsContainer(meter=1, second=1))
-        self._test_inplace(op.itruediv, x, y, UnitsContainer(meter=1, second=-1))
-        self._test_inplace(op.ipow, z, 2, UnitsContainer(meter=2, second=-4))
-        self._test_inplace(op.ipow, z, -2, UnitsContainer(meter=-2, second=4))
-
     def test_str_errors(self):
         self.assertEqual(str(UndefinedUnitError('rabbits')), "'{!s}' is not defined in the unit registry".format('rabbits'))
         self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{!s} are not defined in the unit registry".format(('rabbits', 'horses')))
@@ -130,7 +79,7 @@ class TestPint(TestCase):
 
     def test_parse_prefix(self):
         self.assertEqual(self.ureg._parse_expression('kilometer'), self.Q_(1, UnitsContainer(kilometer=1.)))
-        self.assertEqual(self.ureg._units['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
+        #self.assertEqual(self.ureg._units['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
 
     def test_parse_complex(self):
         self.assertEqual(self.ureg._parse_expression('kilometre'), self.Q_(1, UnitsContainer(kilometer=1.)))
@@ -356,7 +305,7 @@ class TestPint(TestCase):
     def test_context_attr(self):
         self.assertEqual(self.ureg.meter, self.Q_(1, 'meter'))
 
-    def test_short(self):
+    def test_both_symbol(self):
         self.assertEqual(self.Q_(2, 'ms'), self.Q_(2, 'millisecond'))
         self.assertEqual(self.Q_(2, 'cm'), self.Q_(2, 'centimeter'))
 
@@ -384,30 +333,30 @@ class TestPint(TestCase):
         self.assertAlmostEqual(self.Q_(0, 'degK').to('degF'), self.Q_(-459.67, 'degF'), 2)
         self.assertAlmostEqual(self.Q_(100, 'degK').to('degF'), self.Q_(-279.67, 'degF'), 2)
 
-
         self.assertAlmostEqual(self.Q_(32, 'degF').to('degC'), self.Q_(0, 'degC'), 2)
         self.assertAlmostEqual(self.Q_(100, 'degC').to('degF'), self.Q_(212, 'degF'), 2)
 
-    def test_from_definitions(self):
-        #self.assertEqual(self.ureg.mm, self.ureg.millimeter)
-        for filename in self.ureg._definition_files:
-            for name, value, aliases, modifiers in _definitions_from_file(filename):
-                if '[' in value or '-' in name:
-                    continue
-                msg = '{} to {}'.format(name, value)
-                if not modifiers:
-                    self.assertAlmostEqual(self.Q_(name), self.Q_(value), msg=msg)
-                    self.assertAlmostEqual(self.Q_(name) ** 2, self.Q_(value) ** 2, msg=msg)
-                    self.assertAlmostEqual(self.Q_(name) * 23.23, self.Q_(value) * 23.23, msg=msg)
+    def test_offset_delta(self):
+        self.assertAlmostEqual(self.Q_(0, 'delta_degK').to('delta_degK'), self.Q_(0, 'delta_degK'))
+        self.assertAlmostEqual(self.Q_(0, 'delta_degC').to('delta_degK'), self.Q_(0, 'delta_degK'))
+        self.assertAlmostEqual(self.Q_(0, 'delta_degF').to('delta_degK'), self.Q_(0, 'delta_degK'), places=2)
 
-    def test_preferred_alias(self):
-        self.assertEqual(self.ureg.get_alias('meter'), 'm')
-        self.assertEqual(self.ureg.get_alias('second'), 's')
-        self.assertEqual(self.ureg.get_alias('hertz'), 'Hz')
+        self.assertAlmostEqual(self.Q_(100, 'delta_degK').to('delta_degK'), self.Q_(100, 'delta_degK'))
+        self.assertAlmostEqual(self.Q_(100, 'delta_degC').to('delta_degK'), self.Q_(100, 'delta_degK'))
+        self.assertAlmostEqual(self.Q_(100, 'delta_degF').to('delta_degK'), self.Q_(100 * 9 / 5, 'delta_degK'), places=2)
 
-        self.assertEqual(self.ureg.get_alias('kilometer'), 'km')
-        self.assertEqual(self.ureg.get_alias('megahertz'), 'MHz')
-        self.assertEqual(self.ureg.get_alias('millisecond'), 'ms')
+        self.assertAlmostEqual(self.Q_(100, 'delta_degK').to('delta_degK'), self.Q_(100, 'delta_degK'))
+        self.assertAlmostEqual(self.Q_(100, 'delta_degK').to('delta_degC'), self.Q_(100, 'delta_degC'))
+        self.assertAlmostEqual(self.Q_(100, 'delta_degK').to('delta_degF'), self.Q_(100 * 5 / 9, 'delta_degF'), places=2)
+
+    def test_symbol(self):
+        self.assertEqual(self.ureg.get_symbol('meter'), 'm')
+        self.assertEqual(self.ureg.get_symbol('second'), 's')
+        self.assertEqual(self.ureg.get_symbol('hertz'), 'Hz')
+
+        self.assertEqual(self.ureg.get_symbol('kilometer'), 'km')
+        self.assertEqual(self.ureg.get_symbol('megahertz'), 'MHz')
+        self.assertEqual(self.ureg.get_symbol('millisecond'), 'ms')
 
     def test_pickle(self):
         import pickle

@@ -1,26 +1,26 @@
 # Default Pint units definition file
 
 # decimal prefixes
-yocto- = 10.0**-24 = y-
-zepto- = 10.0**-21 = z-
-atto- =  10.0**-18 = a-
-femto- = 10.0**-15 = f-
-pico- =  10.0**-12 = p-
-nano- =  10.0**-9  = n-
-micro- = 10.0**-6  = u-
-milli- = 10.0**-3  = m-
-centi- = 10.0**-2  = c-
-deci- =  10.0**-1  = d-
-deca- =  10.0      = da-
-hecto- = 10.0**2   = h-
-kilo- =  10.0**3   = k-
-mega- =  10.0**6   = M-
-giga- =  10.0**9   = G-
-tera- =  10.0**12  = T-
-peta- =  10.0**15  = P-
-exa- =   10.0**18  = E-
-zetta- = 10.0**21  = Z-
-yotta- = 10.0**24  = Y-
+yocto- = 1e-24 = y-
+zepto- = 1e-21 = z-
+atto- =  1e-18 = a-
+femto- = 1e-15 = f-
+pico- =  1e-12 = p-
+nano- =  1e-9  = n-
+micro- = 1e-6  = u-
+milli- = 1e-3  = m-
+centi- = 1e-2  = c-
+deci- =  1e-1  = d-
+deca- =  1e+1  = da-
+hecto- = 1e2   = h-
+kilo- =  1e3   = k-
+mega- =  1e6   = M-
+giga- =  1e9   = G-
+tera- =  1e12  = T-
+peta- =  1e15  = P-
+exa- =   1e18  = E-
+zetta- = 1e21  = Z-
+yotta- = 1e24  = Y-
 
 # binary_prefixes
 kibi- = 2**10
@@ -39,7 +39,7 @@ ampere = [current] = A = amp
 candela = [luminosity] = cd = candle
 gram = [mass] = g
 mole = [substance] = mol
-degK = [temperature] = K = kelvin; offset = 0
+degK = [temperature]; offset: 0 = K = kelvin
 radian = [] = rad
 bit = []
 count = []
@@ -222,9 +222,9 @@ roentgen = 2.58e-4 * coulomb / kilogram = R
 
 
 # Temperature
-degR = 9 / 5 * degK = rankine; offset = 0
-degC = degK = celsius; offset = 273.15
-degF = 9 / 5 * degK = fahrenheit; offset = 255.372222
+degR = 9 / 5 * degK; offset: 0 = rankine
+degC = degK; offset: 273.15 = celsius
+degF = 9 / 5 * degK; offset: 255.372222 = fahrenheit
 
 # Time
 minute = 60 * second = min

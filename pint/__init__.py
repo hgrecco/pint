@@ -12,8 +12,14 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from .pint import (UnitRegistry, DimensionalityError, UnitsContainer,
-                   UndefinedUnitError, logger, Measurement, pi_theorem,
-                   formatter)
+from __future__ import with_statement
+
+from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError
+from .util import formatter, pi_theorem, logger
+from .measurement import Measurement
+
+_DEFAULT_REGISTRY = UnitRegistry()
 
 
+def _build_quantity(value, units):
+    return _DEFAULT_REGISTRY.Quantity(value, units)
