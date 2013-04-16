@@ -18,7 +18,7 @@ import copy
 import operator
 import functools
 
-from .unit import DimensionalityError, UnitsContainer, UnitDefinition
+from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
 from .measurement import Measurement
 from .util import _eq, string_types, _to_magnitude, NUMERIC_TYPES, HAS_NUMPY, ndarray
 
@@ -336,8 +336,7 @@ class _Quantity(object):
 
     __nonzero__ = __bool__
 
-
-    # Experimental NumPy Support
+    # NumPy Support
 
     #: Dictionary mapping ufunc/attributes names to the units that they
     #: require (conversion will be tried).
@@ -348,7 +347,8 @@ class _Quantity(object):
                        'log': '', 'log10': '', 'log1p': '', 'log2': '',
                        'sin': 'radian', 'cos': 'radian', 'tan': 'radian',
                        'sinh': 'radian', 'cosh': 'radian', 'tanh': 'radian',
-                       'radians': 'degree', 'degrees': 'radian'}
+                       'radians': 'degree', 'degrees': 'radian',
+                       'deg2rad': 'degree', 'rad2deg': 'radian'}
 
     #: Dictionary mapping ufunc/attributes names to the units that they
     #: will set on output.
@@ -359,7 +359,8 @@ class _Quantity(object):
                    'arccosh': 'radian', 'arcsinh': 'radian',
                    'arctanh': 'radian',
                    'degrees': 'degree', 'radians': 'radian',
-                   'expm1': '', 'cumprod': ''}
+                   'expm1': '', 'cumprod': '',
+                   'rad2deg': 'degree', 'deg2rad': 'radian'}
 
     #: List of ufunc/attributes names in which units are copied from the
     #: original.
@@ -373,7 +374,6 @@ class _Quantity(object):
     #: set on output. The value is interpreded as the power to which the unit
     #: will be raised.
     __prod_units = {'var': 2, 'prod': 'size', 'true_divide': -1, 'divide': -1}
-
 
     __skip_other_args = 'left_shift right_shift'.split()
 
@@ -506,10 +506,20 @@ class _Quantity(object):
 
     __array_priority__ = 21
 
+    _MUST_TRANSFORM = {}
+
     def __array_prepare__(self, obj, context=None):
         uf, objs, huh = context
+        self._MUST_TRANSFORM[id(obj)] = None
         if uf.__name__ in self.__require_units:
-            self.__ito_if_needed(self.__require_units[uf.__name__])
+            dst_units = self.__require_units[uf.__name__]
+            if self.unitless and dst_units == 'radian':
+                pass
+            else:
+                dst_units = self._REGISTRY._parse_expression(dst_units).units
+                if self._units != dst_units:
+                    self._MUST_TRANSFORM[id(obj)] = dst_units
+                    return obj
         elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
             to_units = objs[0]
             objs = (to_units, ) + \
@@ -520,7 +530,11 @@ class _Quantity(object):
     def __array_wrap__(self, obj, context=None):
         try:
             uf, objs, huh = context
-            out = self.magnitude.__array_wrap__(obj, context)
+            dst_units = self._MUST_TRANSFORM.get(id(obj), None)
+            if dst_units is not None:
+                out = uf(self._REGISTRY.convert(self.magnitude, self.units, dst_units))
+            else:
+                out = self.magnitude.__array_wrap__(obj, context)
             if uf.__name__ in self.__set_units:
                 try:
                     out = self.__class__(out, self.__set_units[uf.__name__])
@@ -538,6 +552,8 @@ class _Quantity(object):
                 else:
                     out = self.__class__(out, self.units ** tmp)
             return out
+        except (DimensionalityError, UndefinedUnitError) as ex:
+            raise ex
         except _Exception as ex:
             raise ex.internal
         except Exception as ex:
@@ -556,5 +572,3 @@ class _Quantity(object):
                 error = self.__class__(error, self.units)
 
         return Measurement(self, error)
-
-
