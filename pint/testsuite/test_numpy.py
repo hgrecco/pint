@@ -4,7 +4,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import unittest
 
-from tests import TestCase, HAS_NUMPY, np
+from pint.testsuite import TestCase, HAS_NUMPY, np
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestNumpyMethods(TestCase):
@@ -221,38 +221,34 @@ class TestNumpyMethods(TestCase):
         pickle_test([10,20]*self.ureg.m)
 
 
-@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
-class __TestNumpyOtherMethods(TestCase):
+from pint.testsuite.test_umath import TestUFuncs
+@unittest.skip
+class TestNumpyNotSupported(TestUFuncs):
 
     FORCE_NDARRAY = True
 
 
-    @unittest.expectedFailure
     def test_unwrap(self):
         """unwrap depends on diff
         """
         self.assertEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
         self.assertEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
 
-    @unittest.expectedFailure
     def test_trapz(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
         self.assertEqual(np.trapz(self.q, dx = 1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
 
-    @unittest.expectedFailure
     def test_diff(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
         self.assertSequenceEqual(np.diff(self.q, 1), [1, 1, 1] * self.ureg.J)
 
-    @unittest.expectedFailure
     def test_ediff1d(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
         self.assertEqual(np.ediff1d(self.q, 1), [1, 1, 1] * self.ureg.J)
 
-    @unittest.expectedFailure
     def test_fix(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
@@ -270,10 +266,105 @@ class __TestNumpyOtherMethods(TestCase):
         self.assertEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.J / self.ureg.m)
         self.assertEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.J / self.ureg.m)
 
-    @unittest.expectedFailure
     def test_cross(self):
         """Units are erased by asarray, Quantity does not inherit from NDArray
         """
         a = [3,-3, 1] * self.ureg.kPa
         b = [4, 9, 2] * self.ureg.m**2
         self.assertSequenceEqual(np.cross(a,b), [-15,-2,39]*self.ureg.kPa*self.ureg.m**2)
+
+    def test_power(self):
+        """This is not supported as different elements might end up with different units
+
+        eg. ([1, 1] * m) ** [2, 3]
+
+        Must force exponent to single value
+        """
+        self._test2(np.power, self.q1,
+                    (self.qless, np.asarray([1., 2, 3, 4])),
+                    (self.q2, ),)
+
+    def test_ones_like(self):
+        """Units are erased by emptyarra, Quantity does not inherit from NDArray
+        """
+        self._test1(np.ones_like,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    2)
+
+
+@unittest.skip
+class TestBitTwiddlingUfuncs(TestUFuncs):
+    """Universal functions (ufuncs) >  Bittwiddling functions
+
+    http://docs.scipy.org/doc/numpy/reference/ufuncs.html#bittwiddlingfunctions
+
+    bitwise_and(x1, x2[, out])         Compute the bitwise AND of two arrays elementwise.
+    bitwise_or(x1, x2[, out])  Compute the bitwise OR of two arrays elementwise.
+    bitwise_xor(x1, x2[, out])         Compute the bitwise XOR of two arrays elementwise.
+    invert(x[, out])   Compute bitwise inversion, or bitwise NOT, elementwise.
+    left_shift(x1, x2[, out])  Shift the bits of an integer to the left.
+    right_shift(x1, x2[, out])         Shift the bits of an integer to the right.
+    """
+
+    @property
+    def qless(self):
+        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.dimensionless
+
+    @property
+    def qs(self):
+        return 8 * self.ureg.J
+
+    @property
+    def q1(self):
+        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.J
+
+    @property
+    def q2(self):
+        return 2 * self.q1
+
+    @property
+    def qm(self):
+        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.m
+
+    def test_bitwise_and(self):
+        self._test2(np.bitwise_and,
+                    self.q1,
+                    (self.q2, self.qs,),
+                    (self.qm, ),
+                    'same')
+
+    def test_bitwise_or(self):
+        self._test2(np.bitwise_or,
+                    self.q1,
+                    (self.q1, self.q2, self.qs, ),
+                    (self.qm,),
+                    'same')
+
+    def test_bitwise_xor(self):
+        self._test2(np.bitwise_xor,
+                    self.q1,
+                    (self.q1, self.q2, self.qs, ),
+                    (self.qm, ),
+                    'same')
+
+    def test_invert(self):
+        self._test1(np.invert,
+                    (self.q1, self.q2, self.qs, ),
+                    (),
+                    'same')
+
+    def test_left_shift(self):
+        self._test2(np.left_shift,
+                    self.q1,
+                    (self.qless, 2),
+                    (self.q1, self.q2, self.qs, ),
+                    'same')
+
+    def test_right_shift(self):
+        self._test2(np.right_shift,
+                    self.q1,
+                    (self.qless, 2),
+                    (self.q1, self.q2, self.qs, ),
+                    'same')
+

@@ -7,7 +7,8 @@ import itertools
 
 from pint import pi_theorem
 
-from tests import TestCase, HAS_NUMPY
+from pint.testsuite import TestCase, HAS_NUMPY
+
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestPiTheorem(TestCase):

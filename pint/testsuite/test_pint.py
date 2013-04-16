@@ -6,13 +6,11 @@ import copy
 import math
 import operator as op
 
-import unittest
-
 from pint.unit import UnitsContainer
 from pint import DimensionalityError, UndefinedUnitError
-from pint.unit import definitions_from_file
 
-from tests import TestCase, string_types, u, PYTHON3
+from pint.testsuite import TestCase, string_types, u, PYTHON3
+
 
 class TestPint(TestCase):
 

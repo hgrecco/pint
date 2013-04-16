@@ -3,8 +3,8 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 from pint import Measurement
+from pint.testsuite import TestCase
 
-from tests import TestCase
 
 class TestMeasurement(TestCase):
 

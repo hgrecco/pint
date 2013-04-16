@@ -62,6 +62,7 @@ setup(
     author='Hernan E. Grecco',
     author_email='hernan.grecco@gmail.com',
     url='https://github.com/hgrecco/pint',
+    test_suite='pint.testsuite.testsuite',
     zip_safe=False,
     packages=['pint'],
     package_data={

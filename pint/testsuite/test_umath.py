@@ -4,7 +4,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import unittest
 
-from tests import TestCase, HAS_NUMPY, np
+from pint.testsuite import TestCase, HAS_NUMPY, np
 
 # Following http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 

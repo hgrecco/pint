@@ -688,10 +688,10 @@ class UnitRegistry(object):
                 raise DimensionalityError(src, dst,
                                           self.base_dimensionality_of(src),
                                           self.base_dimensionality_of(dst))
-            src_unit, src_value = src.items()[0]
+            src_unit, src_value = list(src.items())[0]
             src_unit = self._units[src_unit]
             if not isinstance(src_unit.converter, ScaleConverter):
-                dst_unit, dst_value = dst.items()[0]
+                dst_unit, dst_value = list(dst.items())[0]
                 dst_unit = self._units[dst_unit]
                 if not type(src_unit.converter) is type(dst_unit.converter):
                     raise DimensionalityError(src, dst,
