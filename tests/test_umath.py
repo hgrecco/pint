@@ -42,7 +42,6 @@ class TestUFuncs(TestCase):
         return np.asarray([1 + 1j, 2 + 2j, 3 + 3j, 4 + 4j]) * self.ureg.m
 
     def assertEqual(self, first, second, msg=None):
-        if
         np.testing.assert_equal(first, second, msg)
 
     def assertRaisesMsg(self, msg, ExcType, func, *args, **kwargs):
@@ -52,7 +51,7 @@ class TestUFuncs(TestCase):
         except ExcType as e:
             pass
         except Exception as e:
-            self.assertFalse(True, msg='{} not raised but {}: {}'.format(ExcType, e))
+            self.assertFalse(True, msg='{} not raised but {}\n{}'.format(ExcType, e, msg))
 
     def _testn(self, func,  ok_with, raise_with=(), results=None):
         self._test1(func, ok_with, raise_with, output_units=None, results=results)
@@ -61,6 +60,7 @@ class TestUFuncs(TestCase):
         if results is None:
             results = [None, ] * len(ok_with)
         for x1, res in zip(ok_with, results):
+            err_msg = 'At {} with {}'.format(func.__name__, x1)
             if output_units == 'same':
                 ou = x1.units
             elif isinstance(output_units, int):
@@ -73,8 +73,11 @@ class TestUFuncs(TestCase):
                 res = func(x1.magnitude)
                 if ou is not None:
                     res = self.Q_(res, ou)
-            np.testing.assert_allclose(qm, res, rtol=rtol,
-                                       err_msg='At {} with {}'.format(func.__name__, x1))
+            if isinstance(res, self.Q_):
+                self.assertIsInstance(qm, self.Q_, msg=err_msg)
+                qm = qm.magnitude
+                res = res.magnitude
+            np.testing.assert_allclose(qm, res, rtol=rtol, err_msg=err_msg)
 
         for x1 in raise_with:
             self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
@@ -83,8 +86,9 @@ class TestUFuncs(TestCase):
     def _testn2(self, func, x1, ok_with, raise_with=()):
         self._test2(func, x1, ok_with, raise_with, output_units=None)
 
-    def _test2(self, func, x1, ok_with, raise_with=(), output_units='same'):
+    def _test2(self, func, x1, ok_with, raise_with=(), output_units='same', rtol=1e-6):
         for x2 in ok_with:
+            err_msg = 'At {} with {} and {}'.format(func.__name__, x1, x2)
             if output_units == 'same':
                 ou = x1.units
             elif output_units == 'prod':
@@ -99,9 +103,11 @@ class TestUFuncs(TestCase):
             res = func(x1.magnitude, getattr(x2, 'magnitude', x2))
             if ou is not None:
                 res = self.Q_(res, ou)
-
-            self.assertEqual(qm, res,
-                             'At {} with {} and {}'.format(func.__name__, x1, x2))
+            if isinstance(res, self.Q_):
+                self.assertIsInstance(qm, self.Q_, msg=err_msg)
+                qm = qm.magnitude
+                res = res.magnitude
+            np.testing.assert_allclose(qm, res, rtol=rtol, err_msg=err_msg)
 
         for x2 in raise_with:
             self.assertRaisesMsg('At {} with {} and {}'.format(func.__name__, x1, x2),
@@ -424,8 +430,7 @@ class TestTrigUfuncs(TestUFuncs):
                                 ), (self.ureg.m, ), 'radian')
 
     def test_deg2rad(self):
-        self._test1(np.deg2rad, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
-                                 np.arange(0, pi/2, pi/4) * self.ureg.degrees,
+        self._test1(np.deg2rad, (np.arange(0, pi/2, pi/4) * self.ureg.degrees,
                                  ), (self.ureg.m, ), 'radians')
 
     def test_rad2deg(self):
