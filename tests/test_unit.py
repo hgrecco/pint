@@ -55,7 +55,7 @@ class TestDefinition(unittest.TestCase):
         x = Definition.from_string('meter = [length]')
         self.assertIsInstance(x, UnitDefinition)
         self.assertTrue(x.is_base)
-        self.assertEqual(x.reference, UnitsContainer(length=1))
+        self.assertEqual(x.reference, UnitsContainer({'[length]': 1}))
 
     def test_unit_definition(self):
         x = Definition.from_string('coulomb = ampere * second')
@@ -83,7 +83,7 @@ class TestDefinition(unittest.TestCase):
     def test_dimension_definition(self):
         x = Definition.from_string('[speed] = [length]/[time]')
         self.assertIsInstance(x, DimensionDefinition)
-        self.assertEqual(x.reference, UnitsContainer(length=1, time=-1))
+        self.assertEqual(x.reference, UnitsContainer({'[length]': 1, '[time]': -1}))
 
 
 class TestUnitsContainer(unittest.TestCase):

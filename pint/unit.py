@@ -9,7 +9,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, absolute_import, unicode_literals
+from __future__ import division, unicode_literals, print_function, absolute_import
 
 import os
 import sys
@@ -33,7 +33,7 @@ else:
     string_types = str
     _tokenize = lambda input_string: tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline)
 
-from .util import formatter, logger, NUMERIC_TYPES
+from .util import formatter, logger, NUMERIC_TYPES, pi_theorem
 
 PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹·⁻'
 
@@ -98,6 +98,12 @@ class LinearExpression(dict):
         if not input_string:
             return cls()
 
+        if '[' in input_string:
+            input_string = input_string.replace('[', '__obra__').replace(']', '__cbra__')
+            brackets = True
+        else:
+            brackets = False
+
         gen = _tokenize(input_string)
         result = []
         for toknum, tokval, _, _, _ in gen:
@@ -113,9 +119,16 @@ class LinearExpression(dict):
             else:
                 result.append((toknum, tokval))
 
-        return eval(untokenize(result),
-                    {'__builtins__': None},
-                    {'L_': cls})
+        ret = eval(untokenize(result),
+                   {'__builtins__': None},
+                   {'L_': cls})
+
+        if not brackets:
+            return ret
+
+        return LinearExpression(ret.scale,
+                                {key.replace('__obra__', '[').replace('__cbra__', ']'): value
+                                 for key, value in ret.items()})
 
     def __missing__(self, key):
         return 0.0
@@ -228,7 +241,12 @@ class OffsetConverter(Converter):
 
 
 class Definition(object):
-    """
+    """Base class for definitions.
+
+    :param name: name.
+    :param symbol: a short name or symbol for the definition
+    :param aliases: iterable of other names.
+    :param converter: an instance of Converter.
     """
 
     def __init__(self, name, symbol, aliases, converter):
@@ -249,7 +267,6 @@ class Definition(object):
         symbol, aliases = (aliases[0], aliases[1:]) if aliases else (None, aliases)
 
         if name.startswith('['):
-            name = name.strip('[]')
             return DimensionDefinition(name, symbol, aliases, value)
         elif name.endswith('-'):
             name = name.rstrip('-')
@@ -286,6 +303,8 @@ class Definition(object):
 
 
 class PrefixDefinition(Definition):
+    """Definition of a prefix.
+    """
 
     def __init__(self, name, symbol, aliases, converter):
         if isinstance(converter, string_types):
@@ -297,6 +316,11 @@ class PrefixDefinition(Definition):
 
 
 class UnitDefinition(Definition):
+    """Definition of a unit.
+
+    :param reference: Units container with reference units.
+    :param is_base: indicates if it is a base unit.
+    """
 
     def __init__(self, name, symbol, aliases, converter,
                  reference=None, is_base=False):
@@ -312,7 +336,7 @@ class UnitDefinition(Definition):
 
             if '[' in converter:
                 self.is_base = True
-                converter = converter.replace('[', '').replace(']', '')
+                #converter = converter.replace('[', '').replace(']', '')
             else:
                 self.is_base = False
             converter = LinearExpression.from_string(converter)
@@ -531,6 +555,12 @@ class UnitRegistry(object):
         """
         if isinstance(definition, UnitDefinition):
             d = self._units
+            if definition.is_base:
+                for dimension in definition.reference.keys():
+                    if dimension and dimension in self._dimensions:
+                        raise ValueError('Only one unit per dimension can be a base unit.')
+                    self.add_definition(DimensionDefinition(dimension, '', (), None))
+
         elif isinstance(definition, PrefixDefinition):
             d = self._prefixes
         elif isinstance(definition, DimensionDefinition):
@@ -597,15 +627,19 @@ class UnitRegistry(object):
         :return: dimensionality
         """
         units = UnitsContainer()
+        if not input_units:
+            return units
+
         for key, value in input_units.items():
             reg = self._units[self._to_canonical(key)]
             if reg.is_base:
-                units.update(reg.reference)
+                units.update(reg.reference ** value)
             else:
                 if not isinstance(reg.converter, ScaleConverter):
                     raise ValueError('{} is not a multiplicative unit'.format(reg))
                 units *= self.base_dimensionality_of(reg.reference) ** value
-
+        if '[]' in units:
+            del units['[]']
         return units
 
     def base_units_of(self, input_units):
@@ -615,9 +649,9 @@ class UnitRegistry(object):
         :return: multiplicative factor, base units
         """
         if not input_units:
-            return 1, UnitsContainer()
+            return 1., UnitsContainer()
 
-        factor = 1
+        factor = 1.
         units = UnitsContainer()
         for key, value in input_units.items():
             reg = self._units[self._to_canonical(key)]
@@ -633,6 +667,22 @@ class UnitRegistry(object):
         return factor, units
 
     def convert(self, value, src, dst):
+        """Convert value from some source to destination units.
+
+        :param value: value
+        :param src: source units.
+        :type src: UnitsContainer or str
+        :param dst: destination units.
+        :type dst: UnitsContainer or str
+
+        :return: converted value
+        """
+        if isinstance(src, string_types):
+            src = LinearExpression.from_string(src)
+        if isinstance(dst, string_types):
+            dst = LinearExpression.from_string(dst)
+        if src == dst:
+            return value
         if len(src) == 1:
             if not len(dst) == 1:
                 raise DimensionalityError(src, dst,
@@ -657,6 +707,9 @@ class UnitRegistry(object):
                                       self.base_dimensionality_of(dst))
 
         return factor * value
+
+    def pi_theorem(self, quantities):
+        return pi_theorem(quantities, self)
 
     def _to_canonical(self, candidate):
         """Return the canonical name of a unit.
