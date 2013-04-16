@@ -343,7 +343,7 @@ class _Quantity(object):
     __require_units = {'cumprod': '',
                        'arccos': '', 'arcsin': '', 'arctan': '',
                        'arccosh': '', 'arcsinh': '', 'arctanh': '',
-                       'exp': '', 'expm1': '',
+                       'exp': '', 'expm1': '', 'exp2': '',
                        'log': '', 'log10': '', 'log1p': '', 'log2': '',
                        'sin': 'radian', 'cos': 'radian', 'tan': 'radian',
                        'sinh': 'radian', 'cosh': 'radian', 'tanh': 'radian',
@@ -370,14 +370,20 @@ class _Quantity(object):
                    'ceil floor hypot rint ' \
                    'add subtract multiply ' \
                    'copysign nextafter trunc ' \
-                   'frexp ldexp modf modf__1'.split()
+                   'frexp ldexp modf modf__1 ' \
+                   'absolute negative remainder fmod mod'.split()
 
     #: Dictionary mapping ufunc/attributes names to the units that they will
-    #: set on output. The value is interpreded as the power to which the unit
+    #: set on output. The value is interpreted as the power to which the unit
     #: will be raised.
-    __prod_units = {'var': 2, 'prod': 'size', 'true_divide': -1, 'divide': -1}
+    __prod_units = {'var': 2, 'prod': 'size',
+                    'true_divide': 'div', 'divide': 'div', 'floor_divide': 'div',
+                    'remainder': 'div',
+                    'sqrt': .5, 'square': 2, 'reciprocal': -1}
 
-    __skip_other_args = 'left_shift right_shift ldexp'.split()
+    __skip_other_args = 'ldexp ' \
+                        'true_divide divide floor_divide fmod mod ' \
+                        'remainder'.split()
 
     def clip(self, first=None, second=None, out=None, **kwargs):
         min = kwargs.get('min', first)
@@ -552,6 +558,10 @@ class _Quantity(object):
                 tmp = self.__prod_units[ufname]
                 if tmp == 'size':
                     out = self.__class__(out, self.units ** self._magnitude.size)
+                elif tmp == 'div':
+                    units1 = objs[0].units if isinstance(objs[0], self.__class__) else UnitsContainer()
+                    units2 = objs[1].units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                    out = self.__class__(out, units1 / units2)
                 else:
                     out = self.__class__(out, self.units ** tmp)
             return out

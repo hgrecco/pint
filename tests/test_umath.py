@@ -71,10 +71,10 @@ class TestUFuncs(TestCase):
             qm = func(x1)
             if res is None:
                 res = func(x1.magnitude)
-                if ou is not None:
+                if ou:
                     res = self.Q_(res, ou)
             if isinstance(res, self.Q_):
-                self.assertIsInstance(qm, self.Q_, msg=err_msg)
+                self.assertIsInstance(qm, self.Q_, msg=err_msg + ' {!r} is not Quantity'.format(qm))
                 qm = qm.magnitude
                 res = res.magnitude
             np.testing.assert_allclose(qm, res, rtol=rtol, err_msg=err_msg)
@@ -124,13 +124,15 @@ class TestUFuncs(TestCase):
                 ou = x1.units * x2.units
             elif output_units == 'div':
                 ou = x1.units / x2.units
+            elif output_units == 'second':
+                ou = x1.units ** x2
             else:
                 ou = output_units
 
             qm = func(x1, x2)
 
             res = func(x1.magnitude, getattr(x2, 'magnitude', x2))
-            if ou is not None:
+            if ou:
                 res = self.Q_(res, ou)
             if isinstance(res, self.Q_):
                 self.assertIsInstance(qm, self.Q_, msg=err_msg)
@@ -158,7 +160,7 @@ class TestMathUfuncs(TestUFuncs):
     true_divide(x1, x2[, out]) 	Returns a true division of the inputs, element-wise.
     floor_divide(x1, x2[, out]) 	Return the largest integer smaller or equal to the division of the inputs.
     negative(x[, out]) 	Returns an array with the negative of each element of the original array.
-    power(x1, x2[, out]) 	First array elements raised to powers from second array, element-wise.
+    power(x1, x2[, out]) 	First array elements raised to powers from second array, element-wise. NOT IMPLEMENTED
     remainder(x1, x2[, out]) 	Return element-wise remainder of division.
     mod(x1, x2[, out]) 	Return element-wise remainder of division.
     fmod(x1, x2[, out]) 	Return the element-wise remainder of division.
@@ -237,11 +239,6 @@ class TestMathUfuncs(TestUFuncs):
                     (self.qless, self.q1),
                     ())
 
-    def test_power(self):
-        self._test2(np.power, self.q1,
-                    (self.qless, np.asarray([1., 2, 3, 4])),
-                    (self.q2, ), 'div')
-
     def test_remainder(self):
         self._test2(np.remainder,
                     self.q1,
@@ -254,14 +251,14 @@ class TestMathUfuncs(TestUFuncs):
                     self.q1,
                     (self.q2, self.qs, self.qless),
                     (),
-                    'div')
+                    'same')
 
     def test_fmod(self):
         self._test2(np.fmod,
                     self.q1,
                     (self.q2, self.qs, self.qless),
                     (),
-                    'div')
+                    'same')
 
     def test_absolute(self):
         self._test1(np.absolute,
@@ -283,37 +280,37 @@ class TestMathUfuncs(TestUFuncs):
 
     def test_exp(self):
         self._test1(np.exp,
-                    (self.qless, self.qs,),
+                    (self.qless, ),
                     (self.q1, ),
                     '')
 
     def test_exp2(self):
         self._test1(np.exp2,
-                    (self.qless, self.qs,),
+                    (self.qless,),
                     (self.q1, ),
                     '')
 
     def test_log(self):
         self._test1(np.log,
-                    (self.qless, self.qs,),
+                    (self.qless,),
                     (self.q1, ),
                     '')
 
     def test_log2(self):
         self._test1(np.log2,
-                    (self.qless, self.qs,),
+                    (self.qless,),
                     (self.q1, ),
                     '')
 
     def test_log10(self):
         self._test1(np.log10,
-                    (self.qless, self.qs,),
+                    (self.qless,),
                     (self.q1, ),
                     '')
 
     def test_expm1(self):
         self._test1(np.expm1,
-                    (self.qless, self.qs,),
+                    (self.qless,),
                     (self.q1, ),
                     '')
 
@@ -331,12 +328,6 @@ class TestMathUfuncs(TestUFuncs):
 
     def test_reciprocal(self):
         self._test1(np.reciprocal,
-                    (self.q2, self.qs, self.qless, self.qi),
-                    (),
-                    2)
-
-    def test_ones_like(self):
-        self._test1(np.ones_like,
                     (self.q2, self.qs, self.qless, self.qi),
                     (),
                     2)
@@ -467,81 +458,6 @@ class TestTrigUfuncs(TestUFuncs):
                                  np.arange(0, pi/2, pi/4) * self.ureg.radian,
                                  np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
                                  ), (self.ureg.m, ), 'degree')
-
-
-class TestBitTwiddlingUfuncs(TestUFuncs):
-    """Universal functions (ufuncs) >  Bit-twiddling functions
-
-    http://docs.scipy.org/doc/numpy/reference/ufuncs.html#bit-twiddling-functions
-
-    bitwise_and(x1, x2[, out]) 	Compute the bit-wise AND of two arrays element-wise.
-    bitwise_or(x1, x2[, out]) 	Compute the bit-wise OR of two arrays element-wise.
-    bitwise_xor(x1, x2[, out]) 	Compute the bit-wise XOR of two arrays element-wise.
-    invert(x[, out]) 	Compute bit-wise inversion, or bit-wise NOT, element-wise.
-    left_shift(x1, x2[, out]) 	Shift the bits of an integer to the left.
-    right_shift(x1, x2[, out]) 	Shift the bits of an integer to the right.
-    """
-
-    @property
-    def qless(self):
-        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.dimensionless
-
-    @property
-    def qs(self):
-        return 8 * self.ureg.J
-
-    @property
-    def q1(self):
-        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.J
-
-    @property
-    def q2(self):
-        return 2 * self.q1
-
-    @property
-    def qm(self):
-        return np.asarray([1, 2, 3, 4], dtype=np.uint8) * self.ureg.m
-
-    def test_bitwise_and(self):
-        self._test2(np.bitwise_and,
-                    self.q1,
-                    (self.q2, self.qs,),
-                    (self.qm, ),
-                    'same')
-
-    def test_bitwise_or(self):
-        self._test2(np.bitwise_or,
-                    self.q1,
-                    (self.q1, self.q2, self.qs, ),
-                    (self.qm,),
-                    'same')
-
-    def test_bitwise_xor(self):
-        self._test2(np.bitwise_xor,
-                    self.q1,
-                    (self.q1, self.q2, self.qs, ),
-                    (self.qm, ),
-                    'same')
-
-    def test_invert(self):
-        self._test1(np.invert,
-                    (self.q1, self.q2, self.qs, ),
-                    (),
-                    'same')
-
-    def test_left_shift(self):
-        self._test2(np.left_shift,
-                    self.q1,
-                    (self.qless, 2),
-                    (self.q1, self.q2, self.qs, ),
-                    'same')
-
-    def test_right_shift(self):
-        self._test2(np.right_shift,
-                    self.q1,
-                    (self.qless, 2),
-                    (self.q1, self.q2, self.qs, ),
-                    'same')
 
 
 class TestComparisonUfuncs(TestUFuncs):
