@@ -83,6 +83,35 @@ class TestUFuncs(TestCase):
             self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
                                  ValueError, func, x1)
 
+    def _test1_2o(self, func, ok_with, raise_with=(), output_units=('same', 'same'),
+                  results=None, rtol=1e-6):
+        if results is None:
+            results = [None, ] * len(ok_with)
+        for x1, res in zip(ok_with, results):
+            err_msg = 'At {} with {}'.format(func.__name__, x1)
+            qms = func(x1)
+            if res is None:
+                res = func(x1.magnitude)
+
+            for ndx, (qm, re, ou) in enumerate(zip(qms, res, output_units)):
+                if ou == 'same':
+                    ou = x1.units
+                elif isinstance(ou, int):
+                    ou = x1.units ** ou
+
+                if ou is not None:
+                    re = self.Q_(re, ou)
+
+                if isinstance(re, self.Q_):
+                    self.assertIsInstance(qm, self.Q_, msg=err_msg)
+                    qm = qm.magnitude
+                    re = re.magnitude
+                np.testing.assert_allclose(qm, re, rtol=rtol, err_msg=err_msg)
+
+        for x1 in raise_with:
+            self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
+                                 ValueError, func, x1)
+
     def _testn2(self, func, x1, ok_with, raise_with=()):
         self._test2(func, x1, ok_with, raise_with, output_units=None)
 
@@ -612,34 +641,32 @@ class TestFloatingUfuncs(TestUFuncs):
                     (self.q1, self.qm, self.qless))
 
     def test_copysign(self):
-        self._test2(np.add,
+        self._test2(np.copysign,
                     self.q1,
                     (self.q2, self.qs),
                     (self.qm, ))
 
     def test_nextafter(self):
-        self._test2(np.add,
+        self._test2(np.nextafter,
                     self.q1,
                     (self.q2, self.qs),
                     (self.qm, ))
 
     def test_modf(self):
-        self._test2(np.add,
-                    self.q1,
-                    (self.q2, self.qs),
-                    (self.qm, ))
+        self._test1_2o(np.modf,
+                       (self.q2, self.qs),
+                      )
 
     def test_ldexp(self):
+        x1, x2 = np.frexp(self.q2)
         self._test2(np.ldexp,
-                    self.q1,
-                    (self.q2, self.qs),
-                    (self.qm, ))
+                    x1,
+                    (x2, ))
 
     def test_frexp(self):
-        self._test2(np.frexp,
-                    self.q1,
-                    (self.q2, self.qs),
-                    (self.qm, ))
+        self._test1_2o(np.frexp,
+                       (self.q2, self.qs),
+                       output_units=('same', None))
 
     def test_fmod(self):
         # See TestMathUfuncs.test_fmod

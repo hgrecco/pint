@@ -367,15 +367,17 @@ class _Quantity(object):
     __copy_units = 'compress conj conjugate copy cumsum diagonal flatten ' \
                    'max mean min ptp ravel repeat reshape round ' \
                    'squeeze std sum take trace transpose ' \
-                   'ceil floor hypot rint' \
-                   'add subtract multiply'.split()
+                   'ceil floor hypot rint ' \
+                   'add subtract multiply ' \
+                   'copysign nextafter trunc ' \
+                   'frexp ldexp modf modf__1'.split()
 
     #: Dictionary mapping ufunc/attributes names to the units that they will
     #: set on output. The value is interpreded as the power to which the unit
     #: will be raised.
     __prod_units = {'var': 2, 'prod': 'size', 'true_divide': -1, 'divide': -1}
 
-    __skip_other_args = 'left_shift right_shift'.split()
+    __skip_other_args = 'left_shift right_shift ldexp'.split()
 
     def clip(self, first=None, second=None, out=None, **kwargs):
         min = kwargs.get('min', first)
@@ -530,23 +532,24 @@ class _Quantity(object):
     def __array_wrap__(self, obj, context=None):
         try:
             uf, objs, huh = context
+            ufname = uf.__name__ if huh ==0 else '{}__{}'.format(uf.__name__, huh)
             dst_units = self._MUST_TRANSFORM.get(id(obj), None)
             if dst_units is not None:
                 out = uf(self._REGISTRY.convert(self.magnitude, self.units, dst_units))
             else:
                 out = self.magnitude.__array_wrap__(obj, context)
-            if uf.__name__ in self.__set_units:
+            if ufname in self.__set_units:
                 try:
-                    out = self.__class__(out, self.__set_units[uf.__name__])
+                    out = self.__class__(out, self.__set_units[ufname])
                 except:
                     raise _Exception(ValueError)
-            elif uf.__name__ in self.__copy_units:
+            elif ufname in self.__copy_units:
                 try:
                     out = self.__class__(out, self.units)
                 except:
                     raise _Exception(ValueError)
-            elif uf.__name__ in self.__prod_units:
-                tmp = self.__prod_units[uf.__name__]
+            elif ufname in self.__prod_units:
+                tmp = self.__prod_units[ufname]
                 if tmp == 'size':
                     out = self.__class__(out, self.units ** self._magnitude.size)
                 else:
