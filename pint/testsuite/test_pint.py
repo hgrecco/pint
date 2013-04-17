@@ -94,6 +94,10 @@ class TestPint(TestCase):
         self.assertEqual(self.ureg.parse_expression('42*meter'), self.Q_(42, UnitsContainer(meter=1.)))
         self.assertEqual(self.ureg.parse_expression('meter*42'), self.Q_(42, UnitsContainer(meter=1.)))
 
+    def test_rep_and_parse(self):
+        q = self.Q_(1, 'g/(m**2*s)')
+        self.assertEqual(self.Q_(q.magnitude, str(q.units)), q)
+
     def test_dimensionality(self):
         x = self.Q_(42, 'centimeter')
         x.to_base_units()

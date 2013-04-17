@@ -83,7 +83,7 @@ def _eq(first, second):
 
 
 def formatter(items, product_symbol=' * ', power_format=' ** {:n}',
-              as_ratio=True, single_denominator=False):
+              as_ratio=True, single_denominator=False, parentheses=('(', ')')):
     """Format a list of (name, exponent) pairs.
 
     :param items: a list of (name, exponent) pairs.
@@ -93,6 +93,7 @@ def formatter(items, product_symbol=' * ', power_format=' ** {:n}',
     :param as_ratio: True to display as ratio, False as negative powers.
     :param single_denominator: all with terms with negative exponents are
                                collected together.
+    :param parentheses: tuple with the symbols to open and close parentheses.
 
     :return: the formula as a string.
     """
@@ -123,10 +124,14 @@ def formatter(items, product_symbol=' * ', power_format=' ** {:n}',
     if neg_terms:
         if as_ratio:
             ret += ' / '
-            if single_denominator: # TODO: this looks wrong
-                ret += ' / '.join(neg_terms)
-            else:
+            if single_denominator:
+                if len(neg_terms) > 1:
+                    ret += parentheses[0]
                 ret += product_symbol.join(neg_terms)
+                if len(neg_terms) > 1:
+                    ret += parentheses[1]
+            else:
+                ret += ' / '.join(neg_terms)
         else:
             ret += product_symbol.join(neg_terms)
 

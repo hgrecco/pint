@@ -401,7 +401,8 @@ class UnitsContainer(dict):
         elif spec == '!r':
             return repr(self)
         elif spec == '!l':
-            tmp = formatter(self.items(), r' \cdot ', '^[{:n}]', True, True).replace('[', '{').replace(']', '}')
+            tmp = formatter(self.items(), r' \cdot ', '^[{:n}]', True, True, (r'\left(', r'\right)'))
+            tmp = tmp.replace('[', '{').replace(']', '}')
             if '/' in tmp:
                 return r'\frac{%s}' % tmp.replace(' / ', '}{')
             return tmp
