@@ -12,6 +12,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import os
+import re
 import sys
 import copy
 import math
@@ -36,6 +37,26 @@ else:
 from .util import formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies
 
 PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹·⁻'
+
+
+def string_preprocessor(input_string):
+
+    input_string = input_string.replace(",", "")
+    input_string = input_string.replace(" per ", "/")
+
+    # Handle square and cube
+    input_string = re.sub(r"([a-zA-Z]+) squared", r"\1**2", input_string)
+    input_string = re.sub(r"([a-zA-Z]+) cubed", r"\1**3", input_string)
+    input_string = re.sub(r"cubic ([a-zA-Z]+)", r"\1**3", input_string)
+    input_string = re.sub(r"square ([a-zA-Z]+)", r"\1**2", input_string)
+    input_string = re.sub(r"sq ([a-zA-Z]+)", r"\1**2", input_string)
+
+    # Handle space for multiplication
+    input_string = re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])", r"\1*", input_string)
+
+    # Handle caret exponentiation
+    input_string = input_string.replace("^", "**")
+    return input_string
 
 
 class UndefinedUnitError(ValueError):
