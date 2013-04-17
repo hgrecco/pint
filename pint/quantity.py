@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    pint
-    ~~~~
-
-    Pint is Python module/package to define, operate and manipulate
-    **physical quantities**: the product of a numerical value and a
-    unit of measurement. It allows arithmetic operations between them
-    and conversions from and to different units.
+    pint.quantity
+    ~~~~~~~~~~~~~
 
     :copyright: 2012 by Hernan E. Grecco.
     :license: BSD, see LICENSE for more details.
@@ -34,7 +29,8 @@ class _Exception(Exception):
 
 @functools.total_ordering
 class _Quantity(object):
-    """Quantity object constituted by magnitude and units.
+    """Implements a class to describe a physical quantities:
+    the product of a numerical value and a unit of measurement.
 
     :param value: value of the physical quantity to be created.
     :type value: str, Quantity or any numeric type.
@@ -49,7 +45,7 @@ class _Quantity(object):
     def __new__(cls, value, units=None):
         if units is None:
             if isinstance(value, string_types):
-                inst = cls._REGISTRY._parse_expression(value)
+                inst = cls._REGISTRY.parse_expression(value)
             elif isinstance(value, cls):
                 inst = copy.copy(value)
             else:
@@ -61,8 +57,9 @@ class _Quantity(object):
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = units
         elif isinstance(units, string_types):
-            inst = cls._REGISTRY._parse_expression(units)
+            inst = object.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
+            inst._units = inst._REGISTRY.parse_units(units)
         elif isinstance(units, cls):
             inst = copy.copy(units)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
@@ -117,13 +114,13 @@ class _Quantity(object):
     def unitless(self):
         """Return true if the quantity does not have units.
         """
-        return not bool(self.convert_to_reference().units)
+        return not bool(self.to_base_units().units)
 
     @property
     def dimensionless(self):
         """Return true if the quantity is dimensionless.
         """
-        tmp = copy.copy(self).convert_to_reference()
+        tmp = copy.copy(self).to_base_units()
 
         return not bool(tmp.dimensionality)
 
@@ -134,7 +131,7 @@ class _Quantity(object):
         try:
             return self._dimensionality
         except AttributeError:
-            self._dimensionality = self._REGISTRY.base_dimensionality_of(self.units)
+            self._dimensionality = self._REGISTRY.get_dimensionality(self.units)
 
         return self._dimensionality
 
@@ -142,32 +139,46 @@ class _Quantity(object):
         """Inplace rescale to different units.
 
         :param other: destination units.
-        :type other: Quantity or str.
+        :type other: Quantity, str or dict
         """
         if isinstance(other, string_types):
-            other = self._REGISTRY._parse_expression(other)
+            other = self._REGISTRY.parse_units(other)
+        elif isinstance(other, self.__class__):
+            other = copy.copy(other.units)
+        else:
+            other = UnitsContainer(other)
 
-        self._magnitude = self._REGISTRY.convert(self._magnitude, self._units, other._units)
-        self._units = copy.copy(other._units)
+        self._magnitude = self._REGISTRY.convert(self._magnitude, self._units, other)
+        self._units = other
         return self
 
     def to(self, other=None):
         """Return Quantity rescaled to different units.
 
         :param other: destination units.
-        :type other: Quantity or str.
+        :type other: Quantity, str or dict
         """
         ret = copy.copy(self)
         ret.ito(other)
         return ret
 
-    def convert_to_reference(self):
-        """Return Quantity rescaled to reference units.
+    def ito_base_units(self):
+        """Return Quantity rescaled to base units
         """
 
-        factor, units = self._REGISTRY.base_units_of(self.units)
+        _, other = self._REGISTRY.get_base_units(self.units)
 
-        return self.__class__(self.magnitude * factor, units)
+        self._magnitude = self._REGISTRY.convert(self._magnitude, self._units, other)
+        self._units = other
+        return self
+
+    def to_base_units(self):
+        """Return Quantity rescaled to base units
+        """
+
+        ret = copy.copy(self)
+        ret.ito_base_units()
+        return ret
 
     # Mathematical operations
     def __float__(self):
@@ -328,8 +339,8 @@ class _Quantity(object):
         if self.dimensionality != other.dimensionality:
             raise DimensionalityError(self.units, other.units,
                                       self.dimensionality, other.dimensionality)
-        return operator.lt(self.convert_to_reference().magnitude,
-                           self.convert_to_reference().magnitude)
+        return operator.lt(self.convert_to_base().magnitude,
+                           self.convert_to_base().magnitude)
 
     def __bool__(self):
         return bool(self._magnitude)
@@ -492,9 +503,9 @@ class _Quantity(object):
     def __setitem__(self, key, value):
         try:
             if isinstance(value, self.__class__):
-                factor = self.__class__(value.magnitude, value.units / self.units).convert_to_reference()
+                factor = self.__class__(value.magnitude, value.units / self.units).to_base_units()
             else:
-                factor = self.__class__(value, self._units ** (-1)).convert_to_reference()
+                factor = self.__class__(value, self._units ** (-1)).to_base_units()
 
             if isinstance(factor, self.__class__):
                 if not factor.dimensionless:
@@ -524,7 +535,7 @@ class _Quantity(object):
             if self.unitless and dst_units == 'radian':
                 pass
             else:
-                dst_units = self._REGISTRY._parse_expression(dst_units).units
+                dst_units = self._REGISTRY.parse_expression(dst_units).units
                 if self._units != dst_units:
                     self._MUST_TRANSFORM[id(obj)] = dst_units
                     return obj

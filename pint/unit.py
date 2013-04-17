@@ -79,8 +79,8 @@ class DimensionalityError(ValueError):
         return "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
 
 
-class LinearExpression(dict):
-    """The LinearExpression stores in place the product of variables and
+class ParserHelper(dict):
+    """The ParserHelper stores in place the product of variables and
     their respective exponent and implements the corresponding operations.
     """
 
@@ -126,9 +126,9 @@ class LinearExpression(dict):
         if not brackets:
             return ret
 
-        return LinearExpression(ret.scale,
-                                {key.replace('__obra__', '[').replace('__cbra__', ']'): value
-                                 for key, value in ret.items()})
+        return ParserHelper(ret.scale,
+                            {key.replace('__obra__', '[').replace('__cbra__', ']'): value
+                            for key, value in ret.items()})
 
     def __missing__(self, key):
         return 0.0
@@ -155,7 +155,7 @@ class LinearExpression(dict):
 
     def __repr__(self):
         tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
-        return '<LinearExpression({}, {})>'.format(self.scale, tmp)
+        return '<ParserHelper({}, {})>'.format(self.scale, tmp)
 
     def __mul__(self, other):
         if isinstance(other, string_types):
@@ -336,10 +336,9 @@ class UnitDefinition(Definition):
 
             if '[' in converter:
                 self.is_base = True
-                #converter = converter.replace('[', '').replace(']', '')
             else:
                 self.is_base = False
-            converter = LinearExpression.from_string(converter)
+            converter = ParserHelper.from_string(converter)
             self.reference = UnitsContainer(converter.items())
             if 'offset' in modifiers:
                 converter = OffsetConverter(converter.scale, modifiers['offset'])
@@ -350,9 +349,8 @@ class UnitDefinition(Definition):
 
 
 class DimensionDefinition(UnitDefinition):
-
-    def __str__(self):
-        return '[' + self.name + ']'
+    """Definition of a dimension.
+    """
 
 
 class UnitsContainer(dict):
@@ -533,22 +531,7 @@ class UnitRegistry(object):
         return self.Quantity(1, item)
 
     def __getitem__(self, item):
-        return self._parse_expression(item)
-
-    def get_symbol(self, name):
-        """Return the preferred alias for a unit
-        """
-        candidates = self._dedup_candidates(self._parse_candidate(name))
-        if not candidates:
-            raise UndefinedUnitError(name)
-        elif len(candidates) == 1:
-            prefix, unit_name, _ = candidates[0]
-        else:
-            logger.warning('Parsing {} yield multiple results. '
-                           'Options are: {!r}'.format(name, candidates))
-            prefix, unit_name, _ = candidates[0]
-
-        return self._prefixes[prefix].symbol + self._units[unit_name].symbol
+        return self.parse_expression(item)
 
     def add_definition(self, definition):
         """Add unit to the registry.
@@ -620,7 +603,54 @@ class UnitRegistry(object):
                     value, aliases, modifiers = pending[unit_name]
                     self.add_unit(unit_name, value, aliases, **modifiers)
 
-    def base_dimensionality_of(self, input_units):
+    def get_name(self, name_or_alias):
+        """Return the canonical name of a unit.
+        """
+
+        if name_or_alias == 'dimensionless':
+            return ''
+
+        try:
+            return self._units[name_or_alias].name
+        except KeyError:
+            pass
+
+        candidates = self._dedup_candidates(self.parse_unit_name(name_or_alias))
+        if not candidates:
+            raise UndefinedUnitError(name_or_alias)
+        elif len(candidates) == 1:
+            prefix, unit_name, _ = candidates[0]
+        else:
+            logger.warning('Parsing {} yield multiple results. '
+                           'Options are: {}'.format(name_or_alias, candidates))
+            prefix, unit_name, _ = candidates[0]
+
+        if prefix:
+            name = prefix + unit_name
+            symbol = self.get_symbol(name)
+            prefix_def = self._prefixes[prefix]
+            self._units[name] = UnitDefinition(name, symbol, (), prefix_def.converter,
+                                               UnitsContainer({unit_name: 1}))
+            return prefix + unit_name
+
+        return unit_name
+
+    def get_symbol(self, name_or_alias):
+        """Return the preferred alias for a unit
+        """
+        candidates = self._dedup_candidates(self.parse_unit_name(name_or_alias))
+        if not candidates:
+            raise UndefinedUnitError(name_or_alias)
+        elif len(candidates) == 1:
+            prefix, unit_name, _ = candidates[0]
+        else:
+            logger.warning('Parsing {} yield multiple results. '
+                           'Options are: {!r}'.format(name_or_alias, candidates))
+            prefix, unit_name, _ = candidates[0]
+
+        return self._prefixes[prefix].symbol + self._units[unit_name].symbol
+
+    def get_dimensionality(self, input_units):
         """Convert unit or dict of units to a dict of dimensions
 
         :param input_units:
@@ -631,18 +661,18 @@ class UnitRegistry(object):
             return units
 
         for key, value in input_units.items():
-            reg = self._units[self._to_canonical(key)]
+            reg = self._units[self.get_name(key)]
             if reg.is_base:
                 units.update(reg.reference ** value)
             else:
                 if not isinstance(reg.converter, ScaleConverter):
                     raise ValueError('{} is not a multiplicative unit'.format(reg))
-                units *= self.base_dimensionality_of(reg.reference) ** value
+                units *= self.get_dimensionality(reg.reference) ** value
         if '[]' in units:
             del units['[]']
         return units
 
-    def base_units_of(self, input_units):
+    def get_base_units(self, input_units):
         """Convert unit or dict of units to the base units
 
         :param input_units:
@@ -654,13 +684,13 @@ class UnitRegistry(object):
         factor = 1.
         units = UnitsContainer()
         for key, value in input_units.items():
-            reg = self._units[self._to_canonical(key)]
+            reg = self._units[self.get_name(key)]
             if reg.is_base:
                 units.add(key, value)
             else:
                 if not isinstance(reg.converter, ScaleConverter):
                     raise ValueError('{} is not a multiplicative unit'.format(reg))
-                fac, uni = self.base_units_of(reg.reference)
+                fac, uni = self.get_base_units(reg.reference)
                 factor *= (reg.converter.scale * fac) ** value
                 units *= uni ** value
 
@@ -678,16 +708,16 @@ class UnitRegistry(object):
         :return: converted value
         """
         if isinstance(src, string_types):
-            src = LinearExpression.from_string(src)
+            src = ParserHelper.from_string(src)
         if isinstance(dst, string_types):
-            dst = LinearExpression.from_string(dst)
+            dst = ParserHelper.from_string(dst)
         if src == dst:
             return value
         if len(src) == 1:
             if not len(dst) == 1:
                 raise DimensionalityError(src, dst,
-                                          self.base_dimensionality_of(src),
-                                          self.base_dimensionality_of(dst))
+                                          self.get_dimensionality(src),
+                                          self.get_dimensionality(dst))
             src_unit, src_value = list(src.items())[0]
             src_unit = self._units[src_unit]
             if not isinstance(src_unit.converter, ScaleConverter):
@@ -695,55 +725,31 @@ class UnitRegistry(object):
                 dst_unit = self._units[dst_unit]
                 if not type(src_unit.converter) is type(dst_unit.converter):
                     raise DimensionalityError(src, dst,
-                                              self.base_dimensionality_of(src),
-                                              self.base_dimensionality_of(dst))
+                                              self.get_dimensionality(src),
+                                              self.get_dimensionality(dst))
 
                 return dst_unit.converter.from_reference(src_unit.converter.to_reference(value))
 
-        factor, units = self.base_units_of(src / dst)
+        factor, units = self.get_base_units(src / dst)
         if len(units):
             raise DimensionalityError(src, dst,
-                                      self.base_dimensionality_of(src),
-                                      self.base_dimensionality_of(dst))
+                                      self.get_dimensionality(src),
+                                      self.get_dimensionality(dst))
 
         return factor * value
 
     def pi_theorem(self, quantities):
+        """Builds dimensionless quantities using the Buckingham π theorem
+
+        :param quantities: mapping between variable name and units
+        :type quantities: dict
+        :return: a list of dimensionless quantities expressed as dicts
+        """
         return pi_theorem(quantities, self)
 
-    def _to_canonical(self, candidate):
-        """Return the canonical name of a unit.
-        """
-
-        if candidate == 'dimensionless':
-            return ''
-
-        try:
-            return self._units[candidate].name
-        except KeyError:
-            pass
-
-        candidates = self._dedup_candidates(self._parse_candidate(candidate))
-        if not candidates:
-            raise UndefinedUnitError(candidate)
-        elif len(candidates) == 1:
-            prefix, unit_name, _ = candidates[0]
-        else:
-            logger.warning('Parsing {} yield multiple results. '
-                           'Options are: {}'.format(candidate, candidates))
-            prefix, unit_name, _ = candidates[0]
-
-        if prefix:
-            name = prefix + unit_name
-            symbol = self.get_symbol(name)
-            prefix_def = self._prefixes[prefix]
-            self._units[name] = UnitDefinition(name, symbol, (), prefix_def.converter,
-                                               UnitsContainer({unit_name: 1}))
-            return prefix + unit_name
-
-        return unit_name
-
     def _dedup_candidates(self, candidates):
+        """Given a list of units, remove those with different names but equal value.
+        """
         candidates = tuple(candidates)
         if len(candidates) < 2:
             return candidates
@@ -758,24 +764,49 @@ class UnitRegistry(object):
 
         return tuple(unique)
 
-    def _parse_candidate(self, candidate):
-        """Parse a unit to identify prefix, suffix and unit name
+    def parse_unit_name(self, unit_name):
+        """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
         """
         for suffix, prefix in itertools.product(self._suffixes.keys(), self._prefixes.keys()):
-            if candidate.startswith(prefix) and candidate.endswith(suffix):
-                unit_name = candidate[len(prefix):]
+            if unit_name.startswith(prefix) and unit_name.endswith(suffix):
+                name = unit_name[len(prefix):]
                 if suffix:
-                    unit_name = unit_name[:-len(suffix)]
-                    if len(unit_name) == 1:
+                    name = name[:-len(suffix)]
+                    if len(name) == 1:
                         continue
-                if unit_name in self._units:
+                if name in self._units:
                     yield (self._prefixes[prefix].name,
-                           self._units[unit_name].name,
+                           self._units[name].name,
                            self._suffixes[suffix])
 
-    def _parse_expression(self, input_string):
-        """Parse expression mathematical units and return a quantity object.
+    def parse_units(self, input_string):
+        """Parse a units expression and returns a UnitContainer with
+        the canonical names.
+
+        The expression can only contain products, ratios and powers of units.
+
+        :raises:
+            :class:`pint.UndefinedUnitError` if a unit is not in the registry
+            :class:`ValueError` if the expression is invalid.
+        """
+        if not input_string:
+            return UnitsContainer()
+
+        units = ParserHelper.from_string(input_string)
+        if units.scale != 1:
+            raise ValueError('Unit expression cannot have a scaling factor.')
+
+        ret = UnitsContainer()
+        for name, value in units.items():
+            cname = self.get_name(name)
+            if cname:
+                ret[cname] = value
+
+        return ret
+
+    def parse_expression(self, input_string):
+        """Parse a mathematical expression including units and return a quantity object.
         """
 
         if not input_string:
@@ -791,7 +822,7 @@ class UnitRegistry(object):
                     result.append((toknum, str(math.pi)))
                     continue
                 try:
-                    tokval = self._to_canonical(tokval)
+                    tokval = self.get_name(tokval)
                 except UndefinedUnitError as ex:
                     unknown.add(ex.unit_names)
                 if tokval:

@@ -66,37 +66,37 @@ class TestPint(TestCase):
                          "Cannot convert from 'meter' (length) to 'second' (time)")
 
     def test_parse_single(self):
-        self.assertEqual(self.ureg._parse_expression('meter'), self.Q_(1, UnitsContainer(meter=1.)))
-        self.assertEqual(self.ureg._parse_expression('second'), self.Q_(1, UnitsContainer(second=1.)))
+        self.assertEqual(self.ureg.parse_expression('meter'), self.Q_(1, UnitsContainer(meter=1.)))
+        self.assertEqual(self.ureg.parse_expression('second'), self.Q_(1, UnitsContainer(second=1.)))
 
     def test_parse_alias(self):
-        self.assertEqual(self.ureg._parse_expression('metre'), self.Q_(1, UnitsContainer(meter=1.)))
+        self.assertEqual(self.ureg.parse_expression('metre'), self.Q_(1, UnitsContainer(meter=1.)))
 
     def test_parse_plural(self):
-        self.assertEqual(self.ureg._parse_expression('meters'), self.Q_(1, UnitsContainer(meter=1.)))
+        self.assertEqual(self.ureg.parse_expression('meters'), self.Q_(1, UnitsContainer(meter=1.)))
 
     def test_parse_prefix(self):
-        self.assertEqual(self.ureg._parse_expression('kilometer'), self.Q_(1, UnitsContainer(kilometer=1.)))
+        self.assertEqual(self.ureg.parse_expression('kilometer'), self.Q_(1, UnitsContainer(kilometer=1.)))
         #self.assertEqual(self.ureg._units['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
 
     def test_parse_complex(self):
-        self.assertEqual(self.ureg._parse_expression('kilometre'), self.Q_(1, UnitsContainer(kilometer=1.)))
-        self.assertEqual(self.ureg._parse_expression('kilometres'), self.Q_(1, UnitsContainer(kilometer=1.)))
+        self.assertEqual(self.ureg.parse_expression('kilometre'), self.Q_(1, UnitsContainer(kilometer=1.)))
+        self.assertEqual(self.ureg.parse_expression('kilometres'), self.Q_(1, UnitsContainer(kilometer=1.)))
 
     def test_parse_mul_div(self):
-        self.assertEqual(self.ureg._parse_expression('meter*meter'), self.Q_(1, UnitsContainer(meter=2.)))
-        self.assertEqual(self.ureg._parse_expression('meter**2'), self.Q_(1, UnitsContainer(meter=2.)))
-        self.assertEqual(self.ureg._parse_expression('meter*second'), self.Q_(1, UnitsContainer(meter=1., second=1)))
-        self.assertEqual(self.ureg._parse_expression('meter/second'), self.Q_(1, UnitsContainer(meter=1., second=-1)))
-        self.assertEqual(self.ureg._parse_expression('meter/second**2'), self.Q_(1, UnitsContainer(meter=1., second=-2)))
+        self.assertEqual(self.ureg.parse_expression('meter*meter'), self.Q_(1, UnitsContainer(meter=2.)))
+        self.assertEqual(self.ureg.parse_expression('meter**2'), self.Q_(1, UnitsContainer(meter=2.)))
+        self.assertEqual(self.ureg.parse_expression('meter*second'), self.Q_(1, UnitsContainer(meter=1., second=1)))
+        self.assertEqual(self.ureg.parse_expression('meter/second'), self.Q_(1, UnitsContainer(meter=1., second=-1)))
+        self.assertEqual(self.ureg.parse_expression('meter/second**2'), self.Q_(1, UnitsContainer(meter=1., second=-2)))
 
     def test_parse_factor(self):
-        self.assertEqual(self.ureg._parse_expression('42*meter'), self.Q_(42, UnitsContainer(meter=1.)))
-        self.assertEqual(self.ureg._parse_expression('meter*42'), self.Q_(42, UnitsContainer(meter=1.)))
+        self.assertEqual(self.ureg.parse_expression('42*meter'), self.Q_(42, UnitsContainer(meter=1.)))
+        self.assertEqual(self.ureg.parse_expression('meter*42'), self.Q_(42, UnitsContainer(meter=1.)))
 
     def test_dimensionality(self):
         x = self.Q_(42, 'centimeter')
-        x.convert_to_reference()
+        x.to_base_units()
         x = self.Q_(42, 'meter*second')
         self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1., '[time]': 1.}))
         x = self.Q_(42, 'meter*second*second')
@@ -279,13 +279,13 @@ class TestPint(TestCase):
             self.assertEqual(fun(y), fun(y.magnitude))
             self.assertRaises(DimensionalityError, fun, z)
 
-    def test_convert_to_reference(self):
+    def test_to_base_units(self):
         x = self.Q_('1*inch')
-        self.assertAlmostEqual(x.convert_to_reference(), self.Q_(0.0254, 'meter'))
+        self.assertAlmostEqual(x.to_base_units(), self.Q_(0.0254, 'meter'))
         x = self.Q_('1*inch*inch')
-        self.assertAlmostEqual(x.convert_to_reference(), self.Q_(0.0254 ** 2.0, 'meter*meter'))
+        self.assertAlmostEqual(x.to_base_units(), self.Q_(0.0254 ** 2.0, 'meter*meter'))
         x = self.Q_('1*inch/minute')
-        self.assertAlmostEqual(x.convert_to_reference(), self.Q_(0.0254 / 60., 'meter/second'))
+        self.assertAlmostEqual(x.to_base_units(), self.Q_(0.0254 / 60., 'meter/second'))
 
     def test_convert(self):
         x = self.Q_('2*inch')

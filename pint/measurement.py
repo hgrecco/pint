@@ -3,8 +3,6 @@
     pint.measurement
     ~~~~~~~~~~~~~~~~
 
-
-
     :copyright: 2012 by Hernan E. Grecco.
     :license: BSD, see LICENSE for more details.
 """
@@ -16,14 +14,15 @@ import operator
 
 
 class Measurement(object):
+    """Implements a class to describe a quantity with uncertainty.
+
+    :param value: The most likely value of the measurement.
+    :type value: Quantity or Number
+    :param error: The error or uncertainty of the measurement.
+    :type value: Quantity or Number
+    """
 
     def __init__(self, value, error):
-        """
-        :param value: The most likely value of the measurement.
-        :type value: Quantity or Number
-        :param error: The error or uncertainty of the measurement.
-        :type value: Quantity or Number
-        """
         if not (value/error).unitless:
             raise ValueError('{} and {} have incompatible units'.format(value, error))
         try:
