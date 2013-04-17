@@ -370,3 +370,19 @@ class TestPint(TestCase):
         pickle_test(self.Q_(2.4, ''))
         pickle_test(self.Q_(32, 'm/s'))
         pickle_test(self.Q_(2.4, 'm/s'))
+
+
+class TestParsing(TestCase):
+
+    FORCE_NDARRAY = False
+
+    def test_to_delta(self):
+        parse = self.ureg.parse_units
+        self.assertEqual(parse('degK', to_delta=True), UnitsContainer(degK=1))
+        self.assertEqual(parse('degK', to_delta=False), UnitsContainer(degK=1))
+        self.assertEqual(parse('degK**(-1)', to_delta=True), UnitsContainer(degK=-1))
+        self.assertEqual(parse('degK**(-1)', to_delta=False), UnitsContainer(degK=-1))
+        self.assertEqual(parse('degK**2', to_delta=True), UnitsContainer(delta_degK=2))
+        self.assertEqual(parse('degK**2', to_delta=False), UnitsContainer(degK=2))
+        self.assertEqual(parse('degK*meter', to_delta=True), UnitsContainer(delta_degK=1, meter= 1))
+        self.assertEqual(parse('degK*meter', to_delta=False), UnitsContainer(degK=1, meter=1))

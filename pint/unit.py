@@ -795,11 +795,14 @@ class UnitRegistry(object):
                            self._units[name].name,
                            self._suffixes[suffix])
 
-    def parse_units(self, input_string):
+    def parse_units(self, input_string, to_delta=True):
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
 
         The expression can only contain products, ratios and powers of units.
+
+        :param to_delta: if the expression has multiple units, the parser will
+                         interpret non multiplicative units as their `delta_` counterparts.
 
         :raises:
             :class:`pint.UndefinedUnitError` if a unit is not in the registry
@@ -813,10 +816,16 @@ class UnitRegistry(object):
             raise ValueError('Unit expression cannot have a scaling factor.')
 
         ret = UnitsContainer()
+        many = len(units) > 1
         for name, value in units.items():
             cname = self.get_name(name)
-            if cname:
-                ret[cname] = value
+            if not cname:
+                continue
+            if to_delta and (many or (not many and abs(value) != 1)):
+                definition = self._units[cname]
+                if not isinstance(definition.converter, ScaleConverter):
+                    cname = 'delta_' + cname
+            ret[cname] = value
 
         return ret
 

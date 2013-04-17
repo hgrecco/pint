@@ -166,4 +166,3 @@ class TestUnitsContainer(unittest.TestCase):
         self._test_inplace(op.itruediv, x, y, UnitsContainer(meter=1, second=-1))
         self._test_inplace(op.ipow, z, 2, UnitsContainer(meter=2, second=-4))
         self._test_inplace(op.ipow, z, -2, UnitsContainer(meter=-2, second=4))
-
