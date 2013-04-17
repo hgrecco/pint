@@ -98,21 +98,6 @@ class TestPint(TestCase):
         q = self.Q_(1, 'g/(m**2*s)')
         self.assertEqual(self.Q_(q.magnitude, str(q.units)), q)
 
-    def test_dimensionality(self):
-        x = self.Q_(42, 'centimeter')
-        x.to_base_units()
-        x = self.Q_(42, 'meter*second')
-        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1., '[time]': 1.}))
-        x = self.Q_(42, 'meter*second*second')
-        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1., '[time]': 2.}))
-        x = self.Q_(42, 'inch*second*second')
-        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1., '[time]': 2.}))
-        self.assertTrue(self.Q_(42, None).dimensionless)
-        self.assertFalse(self.Q_(42, 'meter').dimensionless)
-        self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'meter')).dimensionless)
-        self.assertFalse((self.Q_(42, 'meter') / self.Q_(1, 'second')).dimensionless)
-        self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'inch')).dimensionless)
-
     def test_quantity_creation(self):
         for args in ((4.2, 'meter'),
                      (4.2,  UnitsContainer(meter=1)),
@@ -370,6 +355,36 @@ class TestPint(TestCase):
         pickle_test(self.Q_(2.4, ''))
         pickle_test(self.Q_(32, 'm/s'))
         pickle_test(self.Q_(2.4, 'm/s'))
+
+
+class TestDimensions(TestCase):
+
+    FORCE_NDARRAY = False
+
+    def test_get_dimensionality(self):
+        get = self.ureg.get_dimensionality
+        self.assertEqual(get('[time]'), UnitsContainer({'[time]': 1}))
+        self.assertEqual(get(UnitsContainer({'[time]': 1})), UnitsContainer({'[time]': 1}))
+        self.assertEqual(get('seconds'), UnitsContainer({'[time]': 1}))
+        self.assertEqual(get(UnitsContainer({'seconds': 1})), UnitsContainer({'[time]': 1}))
+        self.assertEqual(get('[speed]'), UnitsContainer({'[length]': 1, '[time]': -1}))
+        self.assertEqual(get('[acceleration]'), UnitsContainer({'[length]': 1, '[time]': -2}))
+
+    def test_dimensionality(self):
+        x = self.Q_(42, 'centimeter')
+        x.to_base_units()
+        x = self.Q_(42, 'meter*second')
+        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1., '[time]': 1.}))
+        x = self.Q_(42, 'meter*second*second')
+        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1., '[time]': 2.}))
+        x = self.Q_(42, 'inch*second*second')
+        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1., '[time]': 2.}))
+        self.assertTrue(self.Q_(42, None).dimensionless)
+        self.assertFalse(self.Q_(42, 'meter').dimensionless)
+        self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'meter')).dimensionless)
+        self.assertFalse((self.Q_(42, 'meter') / self.Q_(1, 'second')).dimensionless)
+        self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'inch')).dimensionless)
+
 
 
 class TestParsing(TestCase):

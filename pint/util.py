@@ -11,18 +11,28 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import re
 import sys
+import tokenize
+import operator
 from numbers import Number
 from collections import Iterable
 
 import logging
+from token import STRING, NAME, OP, NUMBER
+from tokenize import untokenize
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 if sys.version < '3':
+    from StringIO import StringIO
     string_types = basestring
+    ptok = lambda input_string: tokenize.generate_tokens(StringIO(input_string).readline)
 else:
+    from io import BytesIO
     string_types = str
+    ptok = lambda input_string: tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline)
 
 try:
     import numpy as np
@@ -145,23 +155,29 @@ def pi_theorem(quantities, registry=None):
     :type quantities: dict
     :return: a list of dimensionless quantities expressed as dicts
     """
-    if registry is None:
-        from . import _DEFAULT_REGISTRY
-        registry = _DEFAULT_REGISTRY
 
     # Preprocess input
     quant = []
     dimensions = set()
+
+    if registry is None:
+        getdim = lambda x: x
+    else:
+        getdim = registry.get_dimensionality
+
     for name, value in quantities.items():
+        if isinstance(value, string_types):
+            value = ParserHelper.from_string(value)
         if isinstance(value, dict):
-            if any((not unit.startswith('[') for unit in value)):
-                dims = registry.Quantity(1, value).dimensionality
-            else:
-                dims = value
+            dims = getdim(value)
         elif not hasattr(value, 'dimensionality'):
-            dims = registry[value].dimensionality
+            dims = getdim(value)
         else:
             dims = value.dimensionality
+
+        if not registry and any(not key.startswith('[') for key in dims):
+            logger.warning('A non dimension was found and a registry was not provided. '
+                           'Assuming that it is a dimension name: {}.'.format(dims))
 
         quant.append((name, dims))
         dimensions = dimensions.union(dims.keys())
@@ -219,3 +235,144 @@ def solve_dependencies(dependencies):
         # and cleaned up
         d = dict(((k, v - t) for k, v in d.items() if v))
     return r
+
+
+class ParserHelper(dict):
+    """The ParserHelper stores in place the product of variables and
+    their respective exponent and implements the corresponding operations.
+    """
+
+    __slots__ = ('scale', )
+
+    def __init__(self, scale=1, *args, **kwargs):
+        self.scale = scale
+        dict.__init__(self, *args, **kwargs)
+
+    @classmethod
+    def from_string(cls, input_string):
+        """Parse linear expression mathematical units and return a quantity object.
+        """
+
+        if not input_string:
+            return cls()
+
+        if '[' in input_string:
+            input_string = input_string.replace('[', '__obra__').replace(']', '__cbra__')
+            brackets = True
+        else:
+            brackets = False
+
+        gen = ptok(input_string)
+        result = []
+        for toknum, tokval, _, _, _ in gen:
+            if toknum in (STRING, NAME):
+                if not tokval:
+                    continue
+                result.extend([
+                    (NAME, 'L_'),
+                    (OP, '('),
+                    (STRING, tokval), (OP, '='), (NUMBER, '1'),
+                    (OP, ')')
+                ])
+            else:
+                result.append((toknum, tokval))
+
+        ret = eval(untokenize(result),
+                   {'__builtins__': None},
+                   {'L_': cls})
+
+        if not brackets:
+            return ret
+
+        return ParserHelper(ret.scale,
+                            {key.replace('__obra__', '[').replace('__cbra__', ']'): value
+                            for key, value in ret.items()})
+
+    def __missing__(self, key):
+        return 0.0
+
+    def add(self, key, value):
+        newval = self.__getitem__(key) + value
+        if newval:
+            self.__setitem__(key, newval)
+        else:
+            del self[key]
+
+    def operate(self, items, op=operator.iadd, cleanup=True):
+        for key, value in items:
+            self[key] = op(self[key], value)
+
+        if cleanup:
+            keys = [key for key, value in self.items() if value == 0]
+            for key in keys:
+                del self[key]
+
+    def __str__(self):
+        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
+        return '{} {}'.format(self.scale, tmp)
+
+    def __repr__(self):
+        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
+        return '<ParserHelper({}, {})>'.format(self.scale, tmp)
+
+    def __mul__(self, other):
+        if isinstance(other, string_types):
+            self.add(other, 1)
+        elif isinstance(other, Number):
+            self.scale *= other
+        else:
+            self.operate(other.items())
+        return self
+
+    __imul__ = __mul__
+    __rmul__ = __mul__
+
+    def __pow__(self, other):
+        self.scale **= other
+        for key in self.keys():
+            self[key] *= other
+        return self
+
+    __ipow__ = __pow__
+
+    def __truediv__(self, other):
+        if isinstance(other, string_types):
+            self.add(other, -1)
+        elif isinstance(other, Number):
+            self.scale /= other
+        else:
+            self.operate(other.items(), operator.sub)
+        return self
+
+    __itruediv__ = __truediv__
+    __floordiv__ = __truediv__
+
+    def __rtruediv__(self, other):
+        self.__pow__(-1)
+        if isinstance(other, string_types):
+            self.add(other, 1)
+        elif isinstance(other, Number):
+            self.scale *= other
+        else:
+            self.operate(other.items(), operator.add)
+        return self
+
+
+def string_preprocessor(input_string):
+
+    input_string = input_string.replace(",", "")
+    input_string = input_string.replace(" per ", "/")
+
+    # Handle square and cube
+    input_string = re.sub(r"([a-zA-Z]+) squared", r"\1**2", input_string)
+    input_string = re.sub(r"([a-zA-Z]+) cubed", r"\1**3", input_string)
+    input_string = re.sub(r"cubic ([a-zA-Z]+)", r"\1**3", input_string)
+    input_string = re.sub(r"square ([a-zA-Z]+)", r"\1**2", input_string)
+    input_string = re.sub(r"sq ([a-zA-Z]+)", r"\1**2", input_string)
+
+    # Handle space for multiplication
+    input_string = re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])", r"\1*", input_string)
+
+    # Handle caret exponentiation
+    input_string = input_string.replace("^", "**")
+    return input_string

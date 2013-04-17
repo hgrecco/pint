@@ -44,7 +44,10 @@ radian = [] = rad
 bit = []
 count = []
 
+[speed] = [length] / [time]
+
 # acceleration
+[acceleration] = [length] / [time] ** 2
 standard_gravity = 9.806650 * meter / second ** 2 = g_0 = g_n = gravity
 
 # Angle

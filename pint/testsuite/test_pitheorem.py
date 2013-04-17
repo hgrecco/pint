@@ -38,4 +38,4 @@ class TestPiTheorem(TestCase):
             qv = fv(V)
             qt = ft(T)
             ql = ft(L)
-            self.assertEqual(pi_theorem({'V': qv, 'T': qt, 'L': ql}), [{'V': 1.0, 'T': 1.0, 'L': -1.0}])
+            self.assertEqual(self.ureg.pi_theorem({'V': qv, 'T': qt, 'L': ql}), [{'V': 1.0, 'T': 1.0, 'L': -1.0}])
