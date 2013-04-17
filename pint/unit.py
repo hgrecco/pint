@@ -33,7 +33,7 @@ else:
     string_types = str
     _tokenize = lambda input_string: tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline)
 
-from .util import formatter, logger, NUMERIC_TYPES, pi_theorem
+from .util import formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies
 
 PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹·⁻'
 
@@ -357,6 +357,7 @@ class UnitsContainer(dict):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations
     """
+    __slots__ = ()
 
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
@@ -483,17 +484,6 @@ class UnitsContainer(dict):
         return ret
 
 
-def definitions_from_file(filename):
-    """Yield definitions from file.
-    """
-    with open(filename, encoding='utf-8') as fp:
-        for line in fp:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            yield Definition.from_string(line)
-
-
 class UnitRegistry(object):
     """The unit registry stores the definitions and relationships between
     units.
@@ -521,11 +511,11 @@ class UnitRegistry(object):
 
         self._definition_files = []
         if filename == '':
-            self.add_from_file(os.path.join(os.path.dirname(__file__), 'default_en.txt'))
+            self.load_definitions(os.path.join(os.path.dirname(__file__), 'default_en.txt'))
         elif filename is not None:
-            self.add_from_file(filename)
+            self.load_definitions(filename)
 
-        self.add_definition(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
+        self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
 
     def __getattr__(self, item):
         return self.Quantity(1, item)
@@ -533,16 +523,19 @@ class UnitRegistry(object):
     def __getitem__(self, item):
         return self.parse_expression(item)
 
-    def add_definition(self, definition):
+    def define(self, definition):
         """Add unit to the registry.
         """
+        if isinstance(definition, str):
+            definition = Definition.from_string(definition)
+
         if isinstance(definition, UnitDefinition):
             d = self._units
             if definition.is_base:
                 for dimension in definition.reference.keys():
                     if dimension and dimension in self._dimensions:
                         raise ValueError('Only one unit per dimension can be a base unit.')
-                    self.add_definition(DimensionDefinition(dimension, '', (), None))
+                    self.define(DimensionDefinition(dimension, '', (), None))
 
         elif isinstance(definition, PrefixDefinition):
             d = self._prefixes
@@ -561,47 +554,45 @@ class UnitRegistry(object):
                 logger.warn('Alias cannot contain a space: ' + alias)
             d[alias] = definition
 
-    def add_from_file(self, filename):
+        if isinstance(definition.converter, OffsetConverter):
+            d_name = 'delta_' + definition.name
+            if definition.symbol:
+                d_symbol = 'Δ' + definition.symbol
+            else:
+                d_symbol = None
+            d_aliases = tuple('Δ' + alias for alias in definition.aliases)
+            d_reference = UnitsContainer({'delta_' + ref: value
+                                          for ref, value in definition.reference.items()})
+            self.define(UnitDefinition(d_name, d_symbol, d_aliases,
+                                                ScaleConverter(definition.converter.scale),
+                                                d_reference, definition.is_base))
+
+    def load_definitions(self, filename):
         """Add units and prefixes defined in a definition text file.
         """
+        with open(filename, encoding='utf-8') as fp:
+            for line in fp:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                try:
+                    self.define(Definition.from_string(line))
+                except Exception as ex:
+                    logger.error("Exception: Cannot add '{}' {}".format(line, ex))
         self._definition_files.append(filename)
-        for definition in definitions_from_file(filename):
-            try:
-                self.add_definition(definition)
-                if isinstance(definition.converter, OffsetConverter):
-                    d_name = 'delta_' + definition.name
-                    if definition.symbol:
-                        d_symbol = 'Δ' + definition.symbol
-                    else:
-                        d_symbol = None
-                    d_aliases = tuple('Δ' + alias for alias in definition.aliases)
-                    d_reference = UnitsContainer({'delta_' + ref: value
-                                                  for ref, value in definition.reference.items()})
-                    self.add_definition(UnitDefinition(d_name, d_symbol, d_aliases,
-                                                       ScaleConverter(definition.converter.scale),
-                                                       d_reference, definition.is_base))
-            except Exception as ex:
-                logger.error("Exception: Cannot add '{}' {}".format(definition, ex))
 
-    def validate_registry(self):
+    def validate(self):
+        """Walk the registry and calculate for each unit definition
+        the corresponding base units and dimensionality.
+        """
 
-        try:
-            raise Exception
-        except UndefinedUnitError as ex:
-            pending[name] = (value, aliases, modifiers)
-            dependencies[name] = ex.unit_names
-        except Exception as ex:
-            logger.error("Exception: Cannot add '{}' {}".format(name, ex))
+        deps = {name: set(definition.reference.keys())
+                for name, definition in self._units.items()}
 
-        dep2 = {}
-        for unit_name, deps in dependencies.items():
-            dep2[unit_name] = set(conv[dep_name] for dep_name in deps)
-
-        for unit_names in _solve_dependencies(dep2):
+        for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
-                if not unit_name in self._units:
-                    value, aliases, modifiers = pending[unit_name]
-                    self.add_unit(unit_name, value, aliases, **modifiers)
+                bu = self.get_base_units(unit_name)
+                di = self.get_dimensionality(bu)
 
     def get_name(self, name_or_alias):
         """Return the canonical name of a unit.
@@ -660,7 +651,8 @@ class UnitRegistry(object):
         if not input_units:
             return units
 
-        for key, value in input_units.items():
+        for key, value in (input_units.items() if isinstance(input_units, dict)
+                           else ((input_units, 1),)):
             reg = self._units[self.get_name(key)]
             if reg.is_base:
                 units.update(reg.reference ** value)
@@ -683,7 +675,8 @@ class UnitRegistry(object):
 
         factor = 1.
         units = UnitsContainer()
-        for key, value in input_units.items():
+        for key, value in (input_units.items() if isinstance(input_units, dict)
+                           else ((input_units, 1),)):
             reg = self._units[self.get_name(key)]
             if reg.is_base:
                 units.add(key, value)
@@ -827,27 +820,14 @@ class UnitRegistry(object):
                     unknown.add(ex.unit_names)
                 if tokval:
                     result.extend([
-                        (NAME, 'Q_'),
-                        (OP, '('),
-                        (NUMBER, '1'),
-                        (OP, ','),
-                        (NAME, 'U_'),
-                        (OP, '('),
-                        (STRING, tokval),
-                        (OP, '='),
-                        (NUMBER, '1'),
-                        (OP, ')'),
+                        (NAME, 'Q_'), (OP, '('), (NUMBER, '1'), (OP, ','),
+                        (NAME, 'U_'),  (OP, '('), (STRING, tokval), (OP, '='), (NUMBER, '1'), (OP, ')'),
                         (OP, ')')
                     ])
                 else:
                     result.extend([
-                        (NAME, 'Q_'),
-                        (OP, '('),
-                        (NUMBER, '1'),
-                        (OP, ','),
-                        (NAME, 'U_'),
-                        (OP, '('),
-                        (OP, ')'),
+                        (NAME, 'Q_'), (OP, '('), (NUMBER, '1'), (OP, ','),
+                        (NAME, 'U_'), (OP, '('), (OP, ')'),
                         (OP, ')')
                     ])
             else:

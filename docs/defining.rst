@@ -57,7 +57,7 @@ and then in Python, you can load it as::
    # First we create the registry.
    >>> ureg = UnitRegistry()
    # Then we append the new definitions
-   >>> ureg.add_from_file('/your/path/to/my_def.txt')
+   >>> ureg.define_from_file('/your/path/to/my_def.txt')
 
 If you make a translation of the default units, you don't want to append the translated definitions so you just give the filename to the constructor::
 

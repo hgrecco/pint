@@ -12,8 +12,8 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import sys
-from collections import Iterable
 from numbers import Number
+from collections import Iterable
 
 import logging
 logger = logging.getLogger(__name__)
@@ -200,7 +200,7 @@ def solve_dependencies(dependencies):
     :param dependencies: dependency dictionary. For each key, the value is
                          an iterable indicating its dependencies.
     :return: list of sets, each containing keys of independents tasks dependent
-
+                           only of the previous tasks in the list.
     """
     d = dict((key, set(dependencies[key])) for key in dependencies)
     r = []
