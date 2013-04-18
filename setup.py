@@ -55,7 +55,7 @@ except ImportError:
 
 setup(
     name='Pint',
-    version='0.1.3',
+    version='0.2.dev0',
     description='Physical quantities module',
     long_description=__doc__,
     keywords='physical quantities unit conversion science',
