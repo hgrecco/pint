@@ -256,6 +256,8 @@ class ParserHelper(dict):
         if not input_string:
             return cls()
 
+        input_string = string_preprocessor(input_string)
+
         if '[' in input_string:
             input_string = input_string.replace('[', '__obra__').replace(']', '__cbra__')
             brackets = True
@@ -364,14 +366,16 @@ def string_preprocessor(input_string):
     input_string = input_string.replace(" per ", "/")
 
     # Handle square and cube
-    input_string = re.sub(r"([a-zA-Z]+) squared", r"\1**2", input_string)
-    input_string = re.sub(r"([a-zA-Z]+) cubed", r"\1**3", input_string)
-    input_string = re.sub(r"cubic ([a-zA-Z]+)", r"\1**3", input_string)
-    input_string = re.sub(r"square ([a-zA-Z]+)", r"\1**2", input_string)
-    input_string = re.sub(r"sq ([a-zA-Z]+)", r"\1**2", input_string)
+    input_string = re.sub(r"([_a-zA-Z]+) squared", r"\1**2", input_string)
+    input_string = re.sub(r"([_a-zA-Z]+) cubed", r"\1**3", input_string)
+    input_string = re.sub(r"cubic ([_a-zA-Z]+)", r"\1**3", input_string)
+    input_string = re.sub(r"square ([_a-zA-Z]+)", r"\1**2", input_string)
+    input_string = re.sub(r"sq ([_a-zA-Z]+)", r"\1**2", input_string)
 
     # Handle space for multiplication
-    input_string = re.sub(r"([a-zA-Z0-9])\s+(?=[a-zA-Z0-9])", r"\1*", input_string)
+    input_string = re.sub(r"([_a-zA-Z0-9])\s+(?=[_a-zA-Z0-9])", r"\1*", input_string)
+
+    input_string = re.sub(r"([0-9])(?=[_a-zA-Z][_a-zA-Z0-9]*)(?!(?:[e|E][-+]?[0-9]+))", r"\1*", input_string)
 
     # Handle caret exponentiation
     input_string = input_string.replace("^", "**")

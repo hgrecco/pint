@@ -21,7 +21,8 @@ from numbers import Number
 
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
-from .util import formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies, ParserHelper, string_types, ptok
+from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
+                   ParserHelper, string_types, ptok, string_preprocessor)
 
 PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹·⁻'
 
@@ -727,6 +728,7 @@ class UnitRegistry(object):
         if not input_string:
             return self.Quantity(1)
 
+        input_string = string_preprocessor(input_string)
         gen = ptok(input_string)
         result = []
         unknown = set()
