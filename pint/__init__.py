@@ -14,6 +14,10 @@
 
 from __future__ import with_statement
 
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution('pint').version
+
 from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError
 from .util import formatter, pi_theorem, logger
 from .measurement import Measurement
