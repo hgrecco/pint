@@ -23,26 +23,21 @@ Although there are already a few very good Python packages to handle physical qu
 In other words: as the prefix *kilo* and the unit *meter* are defined, Pint understands *kilometers*.
 This results in a much shorter and maintainable unit definition list as compared to other packages.
 
-**Standalone unit definitions**: units definitions are loaded from simple and easy to edit text file.
+**Standalone unit definitions**: units definitions are loaded from a text file which is simple and easy to edit.
 Adding and changing units and their definitions does not involve changing the code.
 
 **Advanced string formatting**: a quantity can be formatted into string using PEP 3101 syntax.
-Extended conversion flags are given to provide latex and pretty formatting.
+Extended conversion flags are given to provide symbolic, latex and pretty formatting.
 
-**Small codebase**: small and easy to maintain codebase with a flat hierarchy.
-It is a single stand-alone module that can be installed as a package or added side by side to your project.
+**Small codebase**: easy to maintain codebase with a flat hierarchy.
 
 **Dependency free**: it depends only on Python and it's standard library.
 
-**Python 2 and 3**: a single codebase that runs unchanged in Python 2.6+ and Python 3.0+.
+**Python 2 and 3**: a single codebase that runs unchanged in Python 2.7+ and Python 3.0+.
 
-**Experimental advanced NumPy support**: While NumPy is not a requirement for Pint, when available ndarray methods and ufuncs can be used in Quantity objects.
+**NumPy support**: Pint understands NumPy ndarray methods and ufuncs.
 
-
-Soon
-~~~~
-
-**Handle temperature conversion**: it can convert between units with different point of reference, like positions on a map or absolute temperature scales.
+**Handle temperature conversion**: it can convert between units with different reference points, like positions on a map or absolute temperature scales.
 
 
 Where to start
@@ -52,7 +47,10 @@ Where to start
 
     getting
     tutorial
+    numpy
     defining
+    pitheorem
+    contributing
     faq
 
 
