@@ -83,6 +83,8 @@ class _Quantity(object):
             return str(self)
         if '!' in spec:
             fmt, conv = spec.split('!')
+            if conv == 'r':
+                return repr(self)
             conv = '!' + conv
         else:
             fmt, conv = spec, ''
