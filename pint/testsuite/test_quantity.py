@@ -9,10 +9,10 @@ import operator as op
 from pint.unit import UnitsContainer
 from pint import DimensionalityError, UndefinedUnitError
 
-from pint.testsuite import TestCase, string_types, u, PYTHON3
+from pint.testsuite import TestCase, string_types, PYTHON3
 
 
-class TestPint(TestCase):
+class TestQuantity(TestCase):
 
     FORCE_NDARRAY = False
 
@@ -56,47 +56,6 @@ class TestPint(TestCase):
         self.assertAlmostEqual(value2, value2_cpy)
         self.assertNotEqual(id(result), id1)
         self.assertNotEqual(id(result), id2)
-
-    def test_str_errors(self):
-        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{!s}' is not defined in the unit registry".format('rabbits'))
-        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{!s} are not defined in the unit registry".format(('rabbits', 'horses')))
-        self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
-                         "Cannot convert from 'meter' to 'second'")
-        self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),
-                         "Cannot convert from 'meter' (length) to 'second' (time)")
-
-    def test_parse_single(self):
-        self.assertEqual(self.ureg.parse_expression('meter'), self.Q_(1, UnitsContainer(meter=1.)))
-        self.assertEqual(self.ureg.parse_expression('second'), self.Q_(1, UnitsContainer(second=1.)))
-
-    def test_parse_alias(self):
-        self.assertEqual(self.ureg.parse_expression('metre'), self.Q_(1, UnitsContainer(meter=1.)))
-
-    def test_parse_plural(self):
-        self.assertEqual(self.ureg.parse_expression('meters'), self.Q_(1, UnitsContainer(meter=1.)))
-
-    def test_parse_prefix(self):
-        self.assertEqual(self.ureg.parse_expression('kilometer'), self.Q_(1, UnitsContainer(kilometer=1.)))
-        #self.assertEqual(self.ureg._units['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
-
-    def test_parse_complex(self):
-        self.assertEqual(self.ureg.parse_expression('kilometre'), self.Q_(1, UnitsContainer(kilometer=1.)))
-        self.assertEqual(self.ureg.parse_expression('kilometres'), self.Q_(1, UnitsContainer(kilometer=1.)))
-
-    def test_parse_mul_div(self):
-        self.assertEqual(self.ureg.parse_expression('meter*meter'), self.Q_(1, UnitsContainer(meter=2.)))
-        self.assertEqual(self.ureg.parse_expression('meter**2'), self.Q_(1, UnitsContainer(meter=2.)))
-        self.assertEqual(self.ureg.parse_expression('meter*second'), self.Q_(1, UnitsContainer(meter=1., second=1)))
-        self.assertEqual(self.ureg.parse_expression('meter/second'), self.Q_(1, UnitsContainer(meter=1., second=-1)))
-        self.assertEqual(self.ureg.parse_expression('meter/second**2'), self.Q_(1, UnitsContainer(meter=1., second=-2)))
-
-    def test_parse_factor(self):
-        self.assertEqual(self.ureg.parse_expression('42*meter'), self.Q_(42, UnitsContainer(meter=1.)))
-        self.assertEqual(self.ureg.parse_expression('meter*42'), self.Q_(42, UnitsContainer(meter=1.)))
-
-    def test_rep_and_parse(self):
-        q = self.Q_(1, 'g/(m**2*s)')
-        self.assertEqual(self.Q_(q.magnitude, str(q.units)), q)
 
     def test_quantity_creation(self):
         for args in ((4.2, 'meter'),
@@ -336,15 +295,6 @@ class TestPint(TestCase):
         self.assertAlmostEqual(self.Q_(100, 'delta_degK').to('delta_degC'), self.Q_(100, 'delta_degC'))
         self.assertAlmostEqual(self.Q_(100, 'delta_degK').to('delta_degF'), self.Q_(100 * 5 / 9, 'delta_degF'), places=2)
 
-    def test_symbol(self):
-        self.assertEqual(self.ureg.get_symbol('meter'), 'm')
-        self.assertEqual(self.ureg.get_symbol('second'), 's')
-        self.assertEqual(self.ureg.get_symbol('hertz'), 'Hz')
-
-        self.assertEqual(self.ureg.get_symbol('kilometer'), 'km')
-        self.assertEqual(self.ureg.get_symbol('megahertz'), 'MHz')
-        self.assertEqual(self.ureg.get_symbol('millisecond'), 'ms')
-
     def test_pickle(self):
         import pickle
 
@@ -384,20 +334,3 @@ class TestDimensions(TestCase):
         self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'meter')).dimensionless)
         self.assertFalse((self.Q_(42, 'meter') / self.Q_(1, 'second')).dimensionless)
         self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'inch')).dimensionless)
-
-
-
-class TestParsing(TestCase):
-
-    FORCE_NDARRAY = False
-
-    def test_to_delta(self):
-        parse = self.ureg.parse_units
-        self.assertEqual(parse('degK', to_delta=True), UnitsContainer(degK=1))
-        self.assertEqual(parse('degK', to_delta=False), UnitsContainer(degK=1))
-        self.assertEqual(parse('degK**(-1)', to_delta=True), UnitsContainer(degK=-1))
-        self.assertEqual(parse('degK**(-1)', to_delta=False), UnitsContainer(degK=-1))
-        self.assertEqual(parse('degK**2', to_delta=True), UnitsContainer(delta_degK=2))
-        self.assertEqual(parse('degK**2', to_delta=False), UnitsContainer(degK=2))
-        self.assertEqual(parse('degK*meter', to_delta=True), UnitsContainer(delta_degK=1, meter= 1))
-        self.assertEqual(parse('degK*meter', to_delta=False), UnitsContainer(degK=1, meter=1))
