@@ -92,25 +92,39 @@ def _eq(first, second):
     return out
 
 
-def formatter(items, product_symbol=' * ', power_format=' ** {:n}',
-              as_ratio=True, single_denominator=False, parentheses=('(', ')')):
+def _join(fmt, iterable):
+    if not iter:
+        return ''
+    if not '{}' in fmt:
+        return fmt.join(iterable)
+    miter = iter(iterable)
+    first = next(miter)
+    for val in miter:
+        ret = fmt.format(first, val)
+        first = ret
+    return first
+
+
+def formatter(items, as_ratio=True, single_denominator=False,
+              product_fmt=' * ', division_fmt=' / ', power_fmt='{} ** {}',
+              parentheses_fmt='({})', exp_call=lambda x: '{:n}'.format(x)):
     """Format a list of (name, exponent) pairs.
 
     :param items: a list of (name, exponent) pairs.
-    :param product_symbol: the symbol used for multiplication.
-    :param power_format: the symbol used for exponentiation including a,
-                         formatting place holder for the power.
     :param as_ratio: True to display as ratio, False as negative powers.
     :param single_denominator: all with terms with negative exponents are
                                collected together.
-    :param parentheses: tuple with the symbols to open and close parentheses.
+    :param product_fmt: the format used for multiplication.
+    :param division_fmt: the format used for division.
+    :param power_fmt: the format used for exponentiation.
+    :param parentheses_fmt: the format used for parenthesis.
 
     :return: the formula as a string.
     """
     if as_ratio:
-        fun = abs
+        fun = lambda x: exp_call(abs(x))
     else:
-        fun = lambda x: x
+        fun = exp_call
 
     pos_terms, neg_terms = [], []
 
@@ -118,34 +132,33 @@ def formatter(items, product_symbol=' * ', power_format=' ** {:n}',
         if value == 1:
             pos_terms.append(key)
         elif value > 1:
-            pos_terms.append(key + power_format.format(value))
+            pos_terms.append(power_fmt.format(key, fun(value)))
         elif value == -1:
             neg_terms.append(key)
         else:
-            neg_terms.append(key + power_format.format(fun(value)))
+            neg_terms.append(power_fmt.format(key, fun(value)))
 
     if pos_terms:
-        ret = product_symbol.join(pos_terms)
+        pos_ret = _join(product_fmt, pos_terms)
     elif as_ratio and neg_terms:
-        ret = '1'
+        pos_ret = '1'
     else:
-        ret = ''
+        pos_ret = ''
 
-    if neg_terms:
-        if as_ratio:
-            ret += ' / '
-            if single_denominator:
-                if len(neg_terms) > 1:
-                    ret += parentheses[0]
-                ret += product_symbol.join(neg_terms)
-                if len(neg_terms) > 1:
-                    ret += parentheses[1]
-            else:
-                ret += ' / '.join(neg_terms)
+    if not neg_terms:
+        return pos_ret
+
+    if as_ratio:
+        if single_denominator:
+            neg_ret = _join(product_fmt, neg_terms)
+            if len(neg_terms) > 1:
+                neg_ret = parentheses_fmt.format(neg_ret)
         else:
-            ret += product_symbol.join(neg_terms)
+            neg_ret = _join(division_fmt, neg_terms)
+    else:
+        neg_ret = product_fmt.join(neg_terms)
 
-    return ret
+    return _join(division_fmt, [pos_ret, neg_ret])
 
 
 def pi_theorem(quantities, registry=None):

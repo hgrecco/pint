@@ -24,8 +24,6 @@ from tokenize import untokenize, NUMBER, STRING, NAME, OP
 from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
                    ParserHelper, string_types, ptok, string_preprocessor)
 
-PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹·⁻'
-
 
 class UndefinedUnitError(ValueError):
     """Raised when the units are not defined in the unit registry.
@@ -293,18 +291,22 @@ class UnitsContainer(dict):
         elif spec == '!r':
             return repr(self)
         elif spec == '!l':
-            tmp = formatter(self.items(), r' \cdot ', '^[{:n}]', True, True, (r'\left(', r'\right)'))
+            tmp = formatter(self.items(), True, True,
+                            r' \cdot ', r'\frac[{}][{}]', '{}^[{}]',
+                            r'\left( {} \right)')
             tmp = tmp.replace('[', '{').replace(']', '}')
-            if '/' in tmp:
-                return r'\frac{%s}' % tmp.replace(' / ', '}{')
             return tmp
         elif spec == '!p':
-            pretty = '{}'.format(self)
-            for bef, aft in ((' ** ', ''), (' / ', '/'), (' * ', PRETTY[10]), ('-', PRETTY[11])):
-                pretty = pretty.replace(bef, aft)
-            for n in range(10):
-                pretty = pretty.replace(str(n), PRETTY[n])
-            return pretty
+            def fmt_exponent(num):
+                PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹'
+                ret = '{:n}'.format(num).replace('-', '⁻')
+                for n in range(10):
+                    ret = ret.replace(str(n), PRETTY[n])
+                return ret
+            tmp = formatter(self.items(), True, False,
+                            '·', '/', '{}{}',
+                            '({})', fmt_exponent)
+            return tmp
         else:
             raise ValueError('{} is not a valid format for UnitsContainer'.format(spec))
 
