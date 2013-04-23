@@ -3,7 +3,7 @@
     pint.measurement
     ~~~~~~~~~~~~~~~~
 
-    :copyright: 2012 by Hernan E. Grecco.
+    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 

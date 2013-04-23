@@ -1,4 +1,7 @@
 # Default Pint units definition file
+# Based on the International System of Units
+# Language: english
+# :copyright: 2013 by Pint Authors, see AUTHORS for more details.
 
 # decimal prefixes
 yocto- = 1e-24 = y-

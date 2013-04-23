@@ -27,3 +27,20 @@ _DEFAULT_REGISTRY = UnitRegistry()
 
 def _build_quantity(value, units):
     return _DEFAULT_REGISTRY.Quantity(value, units)
+
+
+def run_pyroma(data):
+    import sys
+    from zest.releaser.utils import ask
+    if not ask("Run pyroma on the package before uploading?"):
+        return
+    try:
+        from pyroma import run
+    except ImportError:
+        if not ask("pyroma not available. Continue?"):
+            sys.exit(1)
+
+    result = run(data['tagdir'])
+    if result != 10:
+        if not ask("Continue?"):
+            sys.exit(1)
