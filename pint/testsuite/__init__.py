@@ -10,9 +10,12 @@ import unittest
 try:
     import numpy as np
     HAS_NUMPY = True
+    ndarray = np.ndarray
 except ImportError:
     np = None
     HAS_NUMPY = False
+    class ndarray(object):
+        pass
 
 PYTHON3 = sys.version >= '3'
 
@@ -44,9 +47,9 @@ class TestCase(unittest.TestCase):
         cls.Q_ = cls.ureg.Quantity
 
     def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
-        if isinstance(seq1, np.ndarray):
+        if isinstance(seq1, ndarray):
             seq1 = seq1.tolist()
-        if isinstance(seq2, np.ndarray):
+        if isinstance(seq2, ndarray):
             seq2 = seq2.tolist()
         unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
 

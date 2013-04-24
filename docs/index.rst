@@ -44,6 +44,7 @@ Where to start
 --------------
 
 .. toctree::
+    :maxdepth: 1
 
     getting
     tutorial

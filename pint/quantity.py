@@ -12,13 +12,39 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import copy
 import operator
 import functools
+from collections import Iterable
 
 from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
 from .measurement import Measurement
-from .util import _eq, string_types, _to_magnitude, NUMERIC_TYPES, HAS_NUMPY, ndarray
+from .util import string_types, NUMERIC_TYPES, ndarray
 
-if HAS_NUMPY:
+try:
     import numpy as np
+
+    def _to_magnitude(value, force_ndarray=False):
+        if value is None:
+            return value
+        elif isinstance(value, (list, tuple)):
+            return np.asarray(value)
+        if force_ndarray:
+            return np.asarray(value)
+        return value
+
+except ImportError:
+    def _to_magnitude(value, force_ndarray=False):
+        return value
+
+
+def _eq(first, second):
+    """Comparison of scalars and arrays
+    """
+    out = first == second
+    if isinstance(out, Iterable):
+        if isinstance(out, ndarray):
+            return np.all(out)
+        else:
+            return all(out)
+    return out
 
 
 class _Exception(Exception):

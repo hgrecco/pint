@@ -16,7 +16,7 @@ import sys
 import tokenize
 import operator
 from numbers import Number
-from collections import Iterable
+from fractions import Fraction
 
 import logging
 from token import STRING, NAME, OP, NUMBER
@@ -34,62 +34,95 @@ else:
     string_types = str
     ptok = lambda input_string: tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline)
 
+
+def matrix_to_string(matrix, row_headers=None, col_headers=None, fmtfun=lambda x: str(int(x))):
+    """Takes a 2D matrix (as nested list) and returns a string.
+    """
+    ret = []
+    if col_headers:
+        ret.append('\t' if row_headers else '' + '\t'.join(col_headers))
+    if row_headers:
+        ret += [rh + '\t' + '\t'.join(fmtfun(f) for f in row)
+                for rh, row in zip(row_headers, matrix)]
+    else:
+        ret += ['\t'.join(fmtfun(f) for f in row)
+                for row in matrix]
+
+    return '\n'.join(ret)
+
+
+def transpose(matrix):
+    """Takes a 2D matrix (as nested list) and returns the transposed version.
+    """
+    return [list(val) for val in zip(*matrix)]
+
+
+def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
+    """Calculates the column echelon form using Gaussian elimination.
+
+    :param matrix: a 2D matrix as nested list.
+    :param ntype: the numerical type to use in the calculation.
+    :param transpose_result: indicates if the returned matrix should be transposed.
+    :return: column echelon form, transformed identity matrix, swapped rows
+    """
+    lead = 0
+
+    M = transpose(matrix)
+
+    _transpose = transpose if transpose_result else lambda x: x
+
+    rows, cols = len(M), len(M[0])
+
+    M = [[ntype(x) for x in row] for row in M]
+    I = [[ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)]
+    swapped = []
+
+    for r in range(rows):
+        if lead >= cols:
+            return _transpose(M), _transpose(I), swapped
+        i = r
+        while M[i][lead] == 0:
+            i += 1
+            if i != rows:
+                continue
+            i = r
+            lead += 1
+            if cols == lead:
+                return _transpose(M), _transpose(I), swapped
+
+        M[i], M[r] = M[r], M[i]
+        I[i], I[r] = I[r], I[i]
+
+        swapped.append(i)
+        lv = M[r][lead]
+        M[r] = [mrx / lv for mrx in M[r]]
+        I[r] = [mrx / lv for mrx in I[r]]
+
+        for i in range(rows):
+            if i == r:
+                continue
+            lv = M[i][lead]
+            M[i] = [iv - lv*rv for rv, iv in zip(M[r], M[i])]
+            I[i] = [iv - lv*rv for rv, iv in zip(I[r], I[i])]
+
+        lead += 1
+
+    return _transpose(M), _transpose(I), swapped
+
 try:
     import numpy as np
     from numpy import ndarray
-    from numpy.linalg import svd
 
     HAS_NUMPY = True
     NUMERIC_TYPES = (Number, ndarray)
 
-    def _to_magnitude(value, force_ndarray=False):
-        if value is None:
-            return value
-        elif isinstance(value, (list, tuple)):
-            return np.asarray(value)
-        if force_ndarray:
-            return np.asarray(value)
-        return value
-
-    def nullspace(A, atol=1e-7, rtol=0):
-        """Compute an approximate basis for the nullspace of A.
-
-        The algorithm used by this function is based on the singular value
-        decomposition of `A`.
-        """
-
-        A = np.atleast_2d(A)
-        u, s, vh = svd(A)
-        tol = max(atol, rtol * s[0])
-        nnz = (s >= tol).sum()
-        ns = vh[nnz:].conj().T
-        return ns
-
 except ImportError:
-
-    def nullspace(A, atol=1e-13, rtol=0):
-        raise Exception('NumPy is required for this operation.')
 
     class ndarray(object):
         pass
 
     HAS_NUMPY = False
     NUMERIC_TYPES = (Number, )
-
-    def _to_magnitude(value, force_ndarray=False):
-        return value
-
-
-def _eq(first, second):
-    """Comparison of scalars and arrays
-    """
-    out = first == second
-    if isinstance(out, Iterable):
-        if isinstance(out, ndarray):
-            return np.all(out)
-        else:
-            return all(out)
-    return out
 
 
 def _join(fmt, iterable):
@@ -169,7 +202,7 @@ def pi_theorem(quantities, registry=None):
     :return: a list of dimensionless quantities expressed as dicts
     """
 
-    # Preprocess input
+    # Preprocess input and build the dimensionality Matrix
     quant = []
     dimensions = set()
 
@@ -198,34 +231,24 @@ def pi_theorem(quantities, registry=None):
     dimensions = list(dimensions)
 
     # Calculate dimensionless  quantities
-    M = np.zeros((len(dimensions), len(quant)))
+    M = [[dimensionality[dimension] for name, dimensionality in quant]
+         for dimension in dimensions]
 
-    for row, dimension in enumerate(dimensions):
-        for col, (name, dimensionality) in enumerate(quant):
-            M[row, col] = dimensionality[dimension]
+    M, identity, pivot = column_echelon_form(M, transpose_result=False)
 
-    kernel = np.atleast_2d(nullspace(M))
+    # Collect results
+    # Make all numbers integers and minimize the number of negative exponents.
+    # Remove zeros
+    results = []
+    for rowm, rowi in zip(M, identity):
+        if any(el != 0 for el in rowm):
+            continue
+        max_den = max(f.denominator for f in rowi)
+        neg = -1 if sum(f < 0 for f in rowi) > sum(f > 0 for f in rowi) else 1
+        results.append({q[0]: neg * f.numerator * max_den
+                        for q, f in zip(quant, rowi) if f.numerator != 0})
 
-    # Sanitizing output.
-    _decimals = 7
-    kernel[abs(kernel) < 10.**-_decimals] = 0
-    for col in range(kernel.shape[1]):
-        vector = kernel[:, col]
-        if sum(vector < 0) > sum(vector > 0):
-            vector = -vector
-        vector /= min(abs(vector[vector > 0]))
-        kernel[:, col] = vector
-
-    kernel = np.round(kernel, _decimals)
-
-    result = []
-    for col in range(kernel.shape[1]):
-        r = {}
-        for row in range(kernel.shape[0]):
-            if kernel[row, col] != 0:
-                r[quant[row][0]] = kernel[row, col]
-        result.append(r)
-    return result
+    return results
 
 
 def solve_dependencies(dependencies):

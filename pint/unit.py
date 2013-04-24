@@ -567,7 +567,7 @@ class UnitRegistry(object):
             else:
                 reg = self._units[self.get_name(key)]
                 if reg.is_base:
-                    dims.update(reg.reference ** value)
+                    dims *= reg.reference ** value
                 else:
                     if not isinstance(reg.converter, ScaleConverter):
                         raise ValueError('{} is not a multiplicative unit'.format(reg))

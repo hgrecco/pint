@@ -7,10 +7,9 @@ import itertools
 
 from pint import pi_theorem
 
-from pint.testsuite import TestCase, HAS_NUMPY
+from pint.testsuite import TestCase
 
 
-@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestPiTheorem(TestCase):
 
     FORCE_NDARRAY = False
@@ -18,10 +17,12 @@ class TestPiTheorem(TestCase):
     def test_simple(self):
 
         # simple movement
-        self.assertEqual(pi_theorem({'V': 'm/s', 'T': 's', 'L': 'm'}), [{'V': 1.0, 'T': 1.0, 'L': -1.0}])
+        self.assertEqual(pi_theorem({'V': 'm/s', 'T': 's', 'L': 'm'}),
+                                    [{'V': 1, 'T': 1, 'L': -1}])
 
         # pendulum
-        self.assertEqual(pi_theorem({'T': 's', 'M': 'grams', 'L': 'm', 'g': 'm/s**2'}), [{'g': 1.0, 'T': 2.0, 'L': -1}])
+        self.assertEqual(pi_theorem({'T': 's', 'M': 'grams', 'L': 'm', 'g': 'm/s**2'}),
+                                    [{'g': 1, 'T': 2, 'L': -1}])
 
     def test_inputs(self):
         V = 'km/hour'
@@ -38,4 +39,5 @@ class TestPiTheorem(TestCase):
             qv = fv(V)
             qt = ft(T)
             ql = ft(L)
-            self.assertEqual(self.ureg.pi_theorem({'V': qv, 'T': qt, 'L': ql}), [{'V': 1.0, 'T': 1.0, 'L': -1.0}])
+            self.assertEqual(self.ureg.pi_theorem({'V': qv, 'T': qt, 'L': ql}),
+                             [{'V': 1.0, 'T': 1.0, 'L': -1.0}])
