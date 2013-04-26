@@ -23,14 +23,14 @@ zetta- = 10.0**21  = Z-
 yotta- = 10.0**24  = Y-
 
 # binary_prefixes
-kibi- = 2**10
-mebi- = 2**20
-gibi- = 2**30
-tebi- = 2**40
-pebi- = 2**50
-exbi- = 2**60
-zebi- = 2**70
-yobi- = 2**80
+kibi- = 2**10 = Ki-
+mebi- = 2**20 = Mi-
+gibi- = 2**30 = Gi-
+tebi- = 2**40 = Ti-
+pebi- = 2**50 = Pi-
+exbi- = 2**60 = Ei-
+zebi- = 2**70 = Zi-
+yobi- = 2**80 = Yi-
 
 # reference
 meter = [length] = m = metre
@@ -210,6 +210,7 @@ inch_H2O_60F = inch * water_60F
 footH2O = ft * water
 cmH2O = centimeter * water
 foot_H2O = ft * water = ftH2O
+standard_liter_per_minute = 1.68875 * Pa * m ** 3 / s = slpm = slm
 
 # Radiation
 Bq = Hz = becquerel
