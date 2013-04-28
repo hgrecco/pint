@@ -47,8 +47,6 @@ radian = [] = rad
 bit = []
 count = []
 
-[speed] = [length] / [time]
-
 # acceleration
 [acceleration] = [length] / [time] ** 2
 standard_gravity = 9.806650 * meter / second ** 2 = g_0 = g_n = gravity
@@ -59,6 +57,9 @@ degree = pi / 180 * radian = deg = arcdeg = arcdegree = angular_degree
 arcminute = arcdeg / 60 = arcmin = arc_minute = angular_minute
 arcsecond = arcmin / 60 =  arcsec = arc_second = angular_second
 steradian = radian ** 2 = sr
+
+# Area
+[area] = [length] ** 2
 are = 100 * m**2
 barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
@@ -111,6 +112,7 @@ watt_hour = watt * hour = Wh = watthour
 E_h = 4.35974394e-18 * joule = hartree = hartree_energy
 
 # Force
+[force] = [mass] * [acceleration]
 newton = kilogram * meter / second ** 2 = N
 dyne = gram * centimeter / second ** 2 = dyn
 force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
@@ -194,6 +196,7 @@ hydraulic_horsepower = 550 * feet * lbf / second
 refrigeration_ton = 12000 * btu / hour = ton_of_refrigeration
 
 # Pressure
+[pressure] = [force] / [area]
 Hg = gravity * 13.59510 * gram / centimeter ** 3 = mercury = conventional_mercury
 mercury_60F = gravity * 13.5568 * gram / centimeter ** 3
 H2O = gravity * 1000 * kilogram / meter ** 3 = h2o = water = conventional_water
@@ -225,7 +228,6 @@ Gy = joule / kilogram = gray = Sv = sievert
 rem = 1e-2 * sievert
 rads = 1e-2 * gray
 roentgen = 2.58e-4 * coulomb / kilogram = R
-
 
 # Temperature
 degR = 9 / 5 * degK; offset: 0 = rankine
@@ -260,17 +262,20 @@ work_year = 2056 * hour
 work_month = work_year/12
 
 # Velocity
+[speed] = [length] / [time]
 speed_of_light = 299792458 * meter / second = c
 knot = nautical_mile / hour = kt = knot_international = international_knot = nautical_miles_per_hour
 mph = mile / hour = MPH
 kph = kilometer / hour = KPH
 
 # Viscosity
+[viscosity] = [pressure] * [time]
 poise = 1e-1 * Pa * second = P
 stokes = 1e-4 * meter ** 2 / second = St
 rhe = 10 / (Pa * s)
 
 # Volume
+[volume] = [length] ** 3
 liter = 1e-3 * m ** 3 = l = L = litre
 cc = centimeter ** 3 = cubic_centimeter
 stere = meter ** 3
