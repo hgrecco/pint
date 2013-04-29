@@ -25,4 +25,6 @@ You mention other similar Python libraries. Can you point me to those?
 
 `Units <http://www.arandonohue.com/hg/units>`_
 
+`Pint <https://pint.readthedocs.org/en/latest/>`_
+
 If your are aware of another one, please let me know.
