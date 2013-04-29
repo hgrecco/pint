@@ -115,7 +115,7 @@ class TestUFuncs(TestCase):
     def _testn2(self, func, x1, ok_with, raise_with=()):
         self._test2(func, x1, ok_with, raise_with, output_units=None)
 
-    def _test2(self, func, x1, ok_with, raise_with=(), output_units='same', rtol=1e-6):
+    def _test2(self, func, x1, ok_with, raise_with=(), output_units='same', rtol=1e-6, convert2=True):
         for x2 in ok_with:
             err_msg = 'At {} with {} and {}'.format(func.__name__, x1, x2)
             if output_units == 'same':
@@ -131,7 +131,12 @@ class TestUFuncs(TestCase):
 
             qm = func(x1, x2)
 
-            res = func(x1.magnitude, getattr(x2, 'magnitude', x2))
+            if convert2 and hasattr(x2, 'magnitude'):
+                m2 = x2.to(getattr(x1, 'units', '')).magnitude
+            else:
+                m2 = getattr(x2, 'magnitude', x2)
+
+            res = func(x1.magnitude, m2)
             if ou:
                 res = self.Q_(res, ou)
             if isinstance(res, self.Q_):
@@ -203,7 +208,7 @@ class TestMathUfuncs(TestUFuncs):
                     self.q1,
                     (self.q2, self.qs, self.qless),
                     (),
-                    'div')
+                    'div', convert2=False)
 
     def test_logaddexp(self):
         self._test2(np.logaddexp,
@@ -224,14 +229,14 @@ class TestMathUfuncs(TestUFuncs):
                     self.q1,
                     (self.q2, self.qs, self.qless),
                     (),
-                    'div')
+                    'div', convert2=False)
 
     def test_floor_divide(self):
         self._test2(np.floor_divide,
                     self.q1,
                     (self.q2, self.qs, self.qless),
                     (),
-                    'div')
+                    'div', convert2=False)
 
 
     def test_negative(self):
@@ -244,21 +249,21 @@ class TestMathUfuncs(TestUFuncs):
                     self.q1,
                     (self.q2, self.qs, self.qless),
                     (),
-                    'div')
+                    'div', convert2=False)
 
     def test_mod(self):
         self._test2(np.mod,
                     self.q1,
                     (self.q2, self.qs, self.qless),
                     (),
-                    'same')
+                    'same', convert2=False)
 
     def test_fmod(self):
         self._test2(np.fmod,
                     self.q1,
                     (self.q2, self.qs, self.qless),
                     (),
-                    'same')
+                    'same', convert2=False)
 
     def test_absolute(self):
         self._test1(np.absolute,
@@ -386,6 +391,7 @@ class TestTrigUfuncs(TestUFuncs):
                                ), (self.ureg.m, ), 'radian')
 
     def test_arccos(self):
+        x = np.arange(0, .9, .1) * self.ureg.m
         self._test1(np.arccos, (np.arange(0, .9, .1) * self.ureg.dimensionless,
                                 np.arange(0, .9, .1) * self.ureg.m / self.ureg.m
                                ), (self.ureg.m, ), 'radian')
@@ -408,6 +414,7 @@ class TestTrigUfuncs(TestUFuncs):
 
     def test_hypot(self):
         self.assertTrue(np.hypot(3. * self.ureg.m, 4. * self.ureg.m) ==  5. * self.ureg.m)
+        self.assertTrue(np.hypot(3. * self.ureg.m, 400. * self.ureg.cm) ==  5. * self.ureg.m)
         self.assertRaises(ValueError, np.hypot, 1. * self.ureg.m, 2. * self.ureg.J)
 
     def test_sinh(self):
@@ -571,7 +578,7 @@ class TestFloatingUfuncs(TestUFuncs):
     def test_modf(self):
         self._test1_2o(np.modf,
                        (self.q2, self.qs),
-                      )
+                       )
 
     def test_ldexp(self):
         x1, x2 = np.frexp(self.q2)

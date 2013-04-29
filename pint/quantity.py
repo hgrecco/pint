@@ -93,6 +93,7 @@ class _Quantity(object):
             raise TypeError('units must be of type str, Quantity or '
                             'UnitsContainer; not {}.'.format(type(units)))
 
+        inst.__handling = None
         return inst
 
     def __copy__(self):
@@ -377,6 +378,7 @@ class _Quantity(object):
 
     # NumPy Support
 
+    __same_units = 'equal greater greater_equal less less_equal not_equal arctan2'.split()
     #: Dictionary mapping ufunc/attributes names to the units that they
     #: require (conversion will be tried).
     __require_units = {'cumprod': '',
@@ -387,7 +389,8 @@ class _Quantity(object):
                        'sin': 'radian', 'cos': 'radian', 'tan': 'radian',
                        'sinh': 'radian', 'cosh': 'radian', 'tanh': 'radian',
                        'radians': 'degree', 'degrees': 'radian',
-                       'deg2rad': 'degree', 'rad2deg': 'radian'}
+                       'deg2rad': 'degree', 'rad2deg': 'radian',
+                       'logaddexp': '', 'logaddexp2': ''}
 
     #: Dictionary mapping ufunc/attributes names to the units that they
     #: will set on output.
@@ -407,7 +410,7 @@ class _Quantity(object):
                    'max mean min ptp ravel repeat reshape round ' \
                    'squeeze std sum take trace transpose ' \
                    'ceil floor hypot rint ' \
-                   'add subtract multiply ' \
+                   'add subtract ' \
                    'copysign nextafter trunc ' \
                    'frexp ldexp modf modf__1 ' \
                    'absolute negative remainder fmod mod'.split()
@@ -415,14 +418,19 @@ class _Quantity(object):
     #: Dictionary mapping ufunc/attributes names to the units that they will
     #: set on output. The value is interpreted as the power to which the unit
     #: will be raised.
-    __prod_units = {'var': 2, 'prod': 'size',
+    __prod_units = {'var': 2, 'prod': 'size', 'multiply': 'mul',
                     'true_divide': 'div', 'divide': 'div', 'floor_divide': 'div',
                     'remainder': 'div',
                     'sqrt': .5, 'square': 2, 'reciprocal': -1}
 
-    __skip_other_args = 'ldexp ' \
+    __skip_other_args = 'ldexp multiply ' \
                         'true_divide divide floor_divide fmod mod ' \
                         'remainder'.split()
+
+    __handled = tuple(__same_units) + \
+                tuple(__require_units.keys()) + \
+                tuple(__prod_units.keys()) + \
+                tuple(__copy_units) + tuple(__skip_other_args)
 
     def clip(self, first=None, second=None, out=None, **kwargs):
         min = kwargs.get('min', first)
@@ -551,38 +559,57 @@ class _Quantity(object):
         return [self.__class__(value, units).tolist() if isinstance(value, list) else self.__class__(value, units)
                 for value in self._magnitude.tolist()]
 
-    __array_priority__ = 21
-
-    _MUST_TRANSFORM = {}
+    __array_priority__ = 17
 
     def __array_prepare__(self, obj, context=None):
+        # If this uf is handled by Pint, write it down in the handling dictionary.
+
         uf, objs, huh = context
-        self._MUST_TRANSFORM[id(obj)] = None
-        if uf.__name__ in self.__require_units:
-            dst_units = self.__require_units[uf.__name__]
-            if self.unitless and dst_units == 'radian':
-                pass
-            else:
-                dst_units = self._REGISTRY.parse_expression(dst_units).units
-                if self._units != dst_units:
-                    self._MUST_TRANSFORM[id(obj)] = dst_units
-                    return obj
-        elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
-            to_units = objs[0]
-            objs = (to_units, ) + \
-                   tuple((other if self.units == other.units else other.to(self)
-                          for other in objs[1:]))
-        return self.magnitude.__array_prepare__(obj, (uf, objs, huh))
+        ufname = uf.__name__ if huh == 0 else '{}__{}'.format(uf.__name__, huh)
+        if uf.__name__ in self.__handled and huh == 0:
+            if self.__handling:
+                raise Exception('Cannot handled nested ufuncs.\nCurrent: {}\nNew: {}'.format(context, self.__handling))
+            self.__handling = context
+
+        return obj
 
     def __array_wrap__(self, obj, context=None):
+        uf, objs, huh = context
+
+        if uf.__name__ not in self.__handled:
+            return self.magnitude.__array_wrap__(obj, context)
+
         try:
-            uf, objs, huh = context
-            ufname = uf.__name__ if huh ==0 else '{}__{}'.format(uf.__name__, huh)
-            dst_units = self._MUST_TRANSFORM.get(id(obj), None)
-            if dst_units is not None:
-                out = uf(self._REGISTRY.convert(self.magnitude, self.units, dst_units))
+            ufname = uf.__name__ if huh == 0 else '{}__{}'.format(uf.__name__, huh)
+
+            if huh == 0:
+                dst_units = None
+                if uf.__name__ in self.__require_units:
+                    dst_units = self.__require_units[uf.__name__]
+                    if self.unitless and dst_units == 'radian':
+                        dst_units = None
+                    else:
+                        dst_units = self._REGISTRY.parse_expression(dst_units).units
+                elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
+                    dst_units = objs[0].units
+
+                if dst_units is not None:
+                    mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
+                                                         getattr(other, 'units', ''),
+                                                         dst_units)
+                                  for other in objs)
+                else:
+                    mobjs = tuple(getattr(other, 'magnitude', other)
+                                  for other in objs)
+
+                out = uf(*mobjs)
+
+                if uf.nout > 1:
+                    self.__handling += out
+                    out = out[0]
             else:
-                out = self.magnitude.__array_wrap__(obj, context)
+                out = self.__handling[3 + huh]
+
             if ufname in self.__set_units:
                 try:
                     out = self.__class__(out, self.__set_units[ufname])
@@ -601,8 +628,13 @@ class _Quantity(object):
                     units1 = objs[0].units if isinstance(objs[0], self.__class__) else UnitsContainer()
                     units2 = objs[1].units if isinstance(objs[1], self.__class__) else UnitsContainer()
                     out = self.__class__(out, units1 / units2)
+                elif tmp == 'mul':
+                    units1 = objs[0].units if isinstance(objs[0], self.__class__) else UnitsContainer()
+                    units2 = objs[1].units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                    out = self.__class__(out, units1 * units2)
                 else:
                     out = self.__class__(out, self.units ** tmp)
+
             return out
         except (DimensionalityError, UndefinedUnitError) as ex:
             raise ex
@@ -610,6 +642,10 @@ class _Quantity(object):
             raise ex.internal
         except Exception as ex:
             print(ex)
+        finally:
+            if uf.nout == huh + 1:
+                self.__handling = None
+
         return self.magnitude.__array_wrap__(obj, context)
 
     # Measurement support
