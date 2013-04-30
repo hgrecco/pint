@@ -109,6 +109,8 @@ class TestQuantity(TestCase):
         self.assertEqual(self.Q_(0, 'meter'), self.Q_(0, 'centimeter'))
         self.assertNotEqual(self.Q_(0, 'meter'), self.Q_(0, 'second'))
 
+        self.assertLess(self.Q_(10, 'meter'), self.Q_(5, 'kilometer'))
+
     def test_quantity_comparison_convert(self):
         self.assertEqual(self.Q_(1000, 'millimeter'), self.Q_(1, 'meter'))
         self.assertEqual(self.Q_(1000, 'millimeter/min'), self.Q_(1000/60, 'millimeter/s'))

@@ -368,8 +368,8 @@ class _Quantity(object):
         if self.dimensionality != other.dimensionality:
             raise DimensionalityError(self.units, other.units,
                                       self.dimensionality, other.dimensionality)
-        return operator.lt(self.convert_to_base().magnitude,
-                           self.convert_to_base().magnitude)
+        return operator.lt(self.to_base_units().magnitude,
+                           other.to_base_units().magnitude)
 
     def __bool__(self):
         return bool(self._magnitude)
