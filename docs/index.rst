@@ -50,6 +50,7 @@ Where to start
     tutorial
     numpy
     defining
+    nonmult
     pitheorem
     contributing
     faq
