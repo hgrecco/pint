@@ -34,4 +34,4 @@ website.
 .. _PyPi: http://pypi.python.org/pypi/quantities
 .. _unittest2: http://pypi.python.org/pypi/unittest2
 .. _unittest2py3k: http://pypi.python.org/pypi/unittest2py3k
-.. _github: http://github.com/python-quantities/python-quantities
+.. _github: https://github.com/hgrecco/pint
