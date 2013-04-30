@@ -4,13 +4,24 @@
 Tutorial
 ========
 
+Converting Quantities
+---------------------
+
 Pint has the concept of Unit Registry, an object within which units are defined and handled. You start by creating your registry::
 
    >>> from pint import UnitRegistry
    >>> ureg = UnitRegistry()
 
+.. testsetup:: *
+
+   from pint import UnitRegistry
+   ureg = UnitRegistry()
+   Q_ = ureg.Quantity
+
 If no parameter is given to the constructor, the unit registry is populated with the default list of units and prefixes.
-You can now simply use the registry in the following way::
+You can now simply use the registry in the following way:
+
+.. doctest::
 
    >>> distance = 24.0 * ureg.meter
    >>> print(distance)
@@ -21,37 +32,49 @@ You can now simply use the registry in the following way::
    >>> print(repr(time))
    <Quantity(8.0, 'second')>
 
-In this code `distance` and `time` are physical quantities objects (`Quantity`). Physical quantities can be queried for the magnitude and units::
+In this code `distance` and `time` are physical quantities objects (`Quantity`). Physical quantities can be queried for the magnitude and units:
+
+.. doctest::
 
    >>> print(distance.magnitude)
    24.0
    >>> print(distance.units)
    meter
 
-and can handle mathematical operations between::
+and can handle mathematical operations between:
+
+.. doctest::
 
    >>> speed = distance / time
    >>> print(speed)
    3.0 meter / second
 
-As unit registry knows about the relationship between different units, you can convert quantities to the unit of choice::
+As unit registry knows about the relationship between different units, you can convert quantities to the unit of choice:
+
+.. doctest::
 
    >>> speed.to(ureg.inch / ureg.minute )
    <Quantity(7086.61417323, 'inch / minute')>
 
-This method returns a new object leaving the original intact as can be seen by::
+This method returns a new object leaving the original intact as can be seen by:
+
+.. doctest::
 
    >>> print(speed)
    3.0 meter / second
 
-If you want to convert in-place (i.e. without creating another object), you can use the `ito` method::
+If you want to convert in-place (i.e. without creating another object), you can use the `ito` method:
+
+.. doctest::
 
    >>> speed.ito(ureg.inch / ureg.minute )
    <Quantity(7086.61417323, 'inch / minute')>
    >>> print(speed)
    7086.61417323 inch / minute
 
-If you ask Pint to perform and invalid conversion::
+If you ask Pint to perform and invalid conversion:
+
+.. doctest::
 
    >>> speed.to(ureg.joule)
    Traceback (most recent call last):
@@ -59,13 +82,17 @@ If you ask Pint to perform and invalid conversion::
    pint.pint.DimensionalityError: Cannot convert from 'inch / minute' (length / time) to 'joule' (length ** 2 * mass / time ** 2)
 
 
-In some cases it is useful to define physical quantities objects using the class constructor::
+In some cases it is useful to define physical quantities objects using the class constructor:
+
+.. doctest::
 
    >>> Q_ = ureg.Quantity
    >>> Q_(1.78, ureg.meter) == 1.78 * ureg.meter
    True
 
-(I tend to abbreviate Quantity as `Q_`) The in-built parse allows to recognize prefixed and pluralized units even though they are not in the definition list::
+(I tend to abbreviate Quantity as `Q_`) The in-built parse allows to recognize prefixed and pluralized units even though they are not in the definition list:
+
+.. doctest::
 
    >>> distance = 42 * ureg.kilometers
    >>> print(distance)
@@ -74,6 +101,8 @@ In some cases it is useful to define physical quantities objects using the class
    42000.0 meter
 
 If you try to use a unit which is not in the registry::
+
+.. doctest::
 
    >>> speed = 23 * ureg.snail_speed
    Traceback (most recent call last):
@@ -86,25 +115,33 @@ You can add your own units to the registry or build your own list. More info on 
 String parsing
 --------------
 
-Pint can also handle units provided as strings::
+Pint can also handle units provided as strings:
+
+.. doctest::
 
    >>> 2.54 * ureg['centimeter']
    <Quantity(2.54, 'centimeter')>
 
-or via de `Quantity` constructor::
+or via de `Quantity` constructor:
+
+.. doctest::
 
    >>> Q_(2.54, 'centimeter')
    <Quantity(2.54, 'centimeter')>
 
-Numbers are also parsed::
+Numbers are also parsed:
+
+.. doctest::
 
    >>> Q_('2.54 * centimeter')
    <Quantity(2.54, 'centimeter')>
 
-This enables you to build a simple unit converter in 3 lines::
+This enables you to build a simple unit converter in 3 lines:
 
-   >>> input = '2.54 * centimeter to inch' # this is obtained from user input
-   >>> src, dst = input.split(' to ')
+.. doctest:
+
+   >>> user_input = '2.54 * centimeter to inch'
+   >>> src, dst = user_input.split(' to ')
    >>> Q_(src).to(dst)
    <Quantity(1.0, 'inch')>
 
@@ -114,25 +151,36 @@ Take a look at `qconvert.py` within the examples folder for a full script.
 String formatting
 -----------------
 
-Pint's physical quantities can be easily printed::
+Pint's physical quantities can be easily printed:
+
+.. doctest::
 
    >>> accel = 1.3 * ureg['meter/second**2']
-   >>> 'The str is {:!s}'.format(accel) # The standard string formatting code
-   'The str is 1.3 meter / second ** 2'
-   >>> 'The repr is {:!r}'.format(accel) # The standard representation formatting code
-   'The repr is <Quantity(1.3, 'meter/second**2')>'
-   >>> 'The magnitude is {0.magnitude} with units {0.units}'.format(accel) # Accessing useful attributes
-   'The magnitude is 1.3 with units meter / second ** 2'
+   >>> # The standard string formatting code
+   >>> print('The str is {:!s}'.format(accel))
+   The str is 1.3 meter / second ** 2
+   >>> # The standard representation formatting code
+   >>> print('The repr is {:!r}'.format(accel))
+   The repr is <Quantity(1.3, 'meter / second ** 2')>
+   >>> # Accessing useful attributes
+   >>> print('The magnitude is {0.magnitude} with units {0.units}'.format(accel))
+   The magnitude is 1.3 with units meter / second ** 2
 
-But Pint also extends the standard formatting capabilities for unicode and latex representations::
+But Pint also extends the standard formatting capabilities for unicode and latex representations:
+
+.. doctest::
 
    >>> accel = 1.3 * ureg['meter/second**2']
-   >>> 'The pretty representation is {:!p}'.format(accel) # Pretty print
+   >>> # Pretty print
+   >>> 'The pretty representation is {:!p}'.format(accel)
    'The pretty representation is 1.3 meter/second²'
-   >>> 'The latex representation is {:!l}'.format(accel) # Latex print
+   >>> # Latex print
+   >>> 'The latex representation is {:!l}'.format(accel)
    'The latex representation is 1.3 \\frac{meter}{second^{2}}'
 
 If you want to use abbreviated unit names, suffix the specification with `~`:
+
+.. doctest::
 
    >>> 'The str is {:!s~}'.format(accel)
    'The str is 1.3 m / s ** 2'

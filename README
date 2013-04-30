@@ -34,13 +34,11 @@ Pint to scratch my own itches.
   PEP 3101 syntax. Extended conversion flags are given to provide latex and pretty
   formatting.
 
-- Small codebase: small and easy to maintain codebase with a flat hierarchy.
-  It is a single stand-alone module that can be installed as a package or added
-  side by side to your project.
+- Small codebase: small and easy to maintain with a flat hierarchy.
 
 - Dependency free: it depends only on Python and it's standard library.
 
-- Python 2 and 3: A single codebase that runs unchanged in Python 2.6+ and Python 3.0+.
+- Python 2 and 3: A single codebase that runs unchanged in Python 2.7+ and Python 3.0+.
 
-- Experimental advanced NumPy support: While NumPy is not a requirement for Pint,
+- Advanced NumPy support: While NumPy is not a requirement for Pint,
   when available ndarray methods and ufuncs can be used in Quantity objects.

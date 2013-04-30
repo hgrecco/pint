@@ -3,28 +3,6 @@
 Defining units
 ==============
 
-Programmatically
-----------------
-
-You can easily add units to the registry programmatically. Let's add a dog_year (sometimes writen as dy) equivalent to 52 (human) days::
-
-   >>> from pint import UnitRegistry
-   # We first instantiate the registry.
-   # If we do not provide any parameter, the default unit definitions are used.
-   >>> ureg = UnitRegistry()
-   >>> Q_ = ureg.Quantity
-
-   # Here we add the unit
-   >>> ureg.add_unit('dog_year', Q_(52, 'day'), ('dy', ))
-
-   # We create a quantity based on that unit and we convert to years.
-   >>> lassie_lifespan = Q_(10, 'dog_years')
-   >>> print(lassie_lifespan.to('year'))
-
-Note that we have used the name `dog_years` even though we have not defined the plural form as an alias. Pint takes care of that, so you don't have to.
-
-Units added programmatically are forgotten when the UnitRegistry object is deleted.
-
 
 In a definition file
 --------------------
@@ -51,31 +29,55 @@ Pint is shipped with a default definition file named `default_en.txt` where `en`
 
    dog_year = 52 * day = dy
 
-and then in Python, you can load it as::
+and then in Python, you can load it as:
 
    >>> from pint import UnitRegistry
-   # First we create the registry.
+   >>> # First we create the registry.
    >>> ureg = UnitRegistry()
-   # Then we append the new definitions
-   >>> ureg.add_from_file('/your/path/to/my_def.txt')
+   >>> # Then we append the new definitions
+   >>> ureg.load_definitions('/your/path/to/my_def.txt') # doctest: +SKIP
 
-If you make a translation of the default units, you don't want to append the translated definitions so you just give the filename to the constructor::
+If you make a translation of the default units or define a completely new set, you don't want to append the translated definitions so you just give the filename to the constructor::
 
    >>> from pint import UnitRegistry
    >>> ureg = UnitRegistry('/your/path/to/default_es.txt')
-
-
-Prefixes
---------
-
-You can also add prefixes programmatically::
-
-   >>> ureg.add_prefix('myprefix', 30, 'my')
-
-where the number indicates the multiplication factor.
 
 In the definition file, prefixes are identified by a trailing dash::
 
    yocto- = 10.0**-24 = y-
 
 It is important to note that prefixed defined in this way can be used with any unit, including non-metric ones (e.g. kiloinch is valid for Pint). This simplifies definitions files enormously without introducing major problems. Pint, like Python, believes that we are all consenting adults.
+
+
+Programmatically
+----------------
+
+You can easily add units to the registry programmatically. Let's add a dog_year (sometimes writen as dy) equivalent to 52 (human) days:
+
+.. doctest::
+
+   >>> from pint import UnitRegistry
+   >>> # We first instantiate the registry.
+   >>> # If we do not provide any parameter, the default unit definitions are used.
+   >>> ureg = UnitRegistry()
+   >>> Q_ = ureg.Quantity
+
+   # Here we add the unit
+   >>> ureg.define('dog_year = 52 * day = dy')
+
+   # We create a quantity based on that unit and we convert to years.
+   >>> lassie_lifespan = Q_(10, 'year')
+   >>> print(lassie_lifespan.to('dog_years'))
+   70.238884381 dog_year
+
+Note that we have used the name `dog_years` even though we have not defined the plural form as an alias. Pint takes care of that, so you don't have to.
+
+You can also add prefixes programmatically:
+
+.. doctest::
+
+   >>> ureg.define('myprefix- = 30 = my')
+
+where the number indicates the multiplication factor.
+
+.. warning:: Units and prefixes added programmatically are forgotten when the program ends.

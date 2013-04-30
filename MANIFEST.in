@@ -1,6 +1,6 @@
-include README
-include LICENSE
-include pint/default_en.txt
+include README AUTHORS CHANGES LICENSE
 recursive-include pint *
-global-exclude *.pyc *~ .DS_Store *__pycache__*
-
+recursive-include docs *
+prune docs/_build
+prune docs/_themes/.git
+global-exclude *.pyc *~ .DS_Store *__pycache__* *.pyo

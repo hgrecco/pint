@@ -1,26 +1,29 @@
 # Default Pint units definition file
+# Based on the International System of Units
+# Language: english
+# :copyright: 2013 by Pint Authors, see AUTHORS for more details.
 
 # decimal prefixes
-yocto- = 10.0**-24 = y-
-zepto- = 10.0**-21 = z-
-atto- =  10.0**-18 = a-
-femto- = 10.0**-15 = f-
-pico- =  10.0**-12 = p-
-nano- =  10.0**-9  = n-
-micro- = 10.0**-6  = u-
-milli- = 10.0**-3  = m-
-centi- = 10.0**-2  = c-
-deci- =  10.0**-1  = d-
-deca- =  10.0      = da-
-hecto- = 10.0**2   = h-
-kilo- =  10.0**3   = k-
-mega- =  10.0**6   = M-
-giga- =  10.0**9   = G-
-tera- =  10.0**12  = T-
-peta- =  10.0**15  = P-
-exa- =   10.0**18  = E-
-zetta- = 10.0**21  = Z-
-yotta- = 10.0**24  = Y-
+yocto- = 1e-24 = y-
+zepto- = 1e-21 = z-
+atto- =  1e-18 = a-
+femto- = 1e-15 = f-
+pico- =  1e-12 = p-
+nano- =  1e-9  = n-
+micro- = 1e-6  = u-
+milli- = 1e-3  = m-
+centi- = 1e-2  = c-
+deci- =  1e-1  = d-
+deca- =  1e+1  = da-
+hecto- = 1e2   = h-
+kilo- =  1e3   = k-
+mega- =  1e6   = M-
+giga- =  1e9   = G-
+tera- =  1e12  = T-
+peta- =  1e15  = P-
+exa- =   1e18  = E-
+zetta- = 1e21  = Z-
+yotta- = 1e24  = Y-
 
 # binary_prefixes
 kibi- = 2**10 = Ki-
@@ -39,12 +42,13 @@ ampere = [current] = A = amp
 candela = [luminosity] = cd = candle
 gram = [mass] = g
 mole = [substance] = mol
-degK = [temperature] = K = kelvin
+degK = [temperature]; offset: 0 = K = kelvin
 radian = [] = rad
 bit = []
 count = []
 
 # acceleration
+[acceleration] = [length] / [time] ** 2
 standard_gravity = 9.806650 * meter / second ** 2 = g_0 = g_n = gravity
 
 # Angle
@@ -53,6 +57,9 @@ degree = pi / 180 * radian = deg = arcdeg = arcdegree = angular_degree
 arcminute = arcdeg / 60 = arcmin = arc_minute = angular_minute
 arcsecond = arcmin / 60 =  arcsec = arc_second = angular_second
 steradian = radian ** 2 = sr
+
+# Area
+[area] = [length] ** 2
 are = 100 * m**2
 barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
@@ -105,6 +112,7 @@ watt_hour = watt * hour = Wh = watthour
 E_h = 4.35974394e-18 * joule = hartree = hartree_energy
 
 # Force
+[force] = [mass] * [acceleration]
 newton = kilogram * meter / second ** 2 = N
 dyne = gram * centimeter / second ** 2 = dyn
 force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
@@ -131,13 +139,13 @@ baud = bit / second = Bd = bps
 
 # Length
 angstrom = 1e-10 * meter
-inch = 2.54 * centimeter = international_inch = inches = international_inches
+inch = 2.54 * centimeter = international_inch = inches = international_inches = in
 foot = 12 * inch = international_foot = ft = feet = international_foot = international_feet
 mile = 5280 * foot = mi = international_mile
 yard = 3 * feet = yd = international_yard
 mil = inch / 1000 = thou
 parsec = 3.08568025e16 * meter = pc
-light_year = speed_of_light * julian_year = ly
+light_year = speed_of_light * julian_year = ly = lightyear
 astronomical_unit = 149597870691 * meter = au
 nautical_mile = 1.852e3 * meter = nmi
 printers_point = 127 * millimeter / 360 = point
@@ -188,6 +196,7 @@ hydraulic_horsepower = 550 * feet * lbf / second
 refrigeration_ton = 12000 * btu / hour = ton_of_refrigeration
 
 # Pressure
+[pressure] = [force] / [area]
 Hg = gravity * 13.59510 * gram / centimeter ** 3 = mercury = conventional_mercury
 mercury_60F = gravity * 13.5568 * gram / centimeter ** 3
 H2O = gravity * 1000 * kilogram / meter ** 3 = h2o = water = conventional_water
@@ -221,11 +230,10 @@ rem = 1e-2 * sievert
 rads = 1e-2 * gray
 roentgen = 2.58e-4 * coulomb / kilogram = R
 
-
 # Temperature
-#degR = 9 / 5 * degK = rankine
-#degC = degK = celsius; offset = 273.15
-#degF = 9 / 5 * degK = fahrenheit; offset = 255.372222
+degR = 9 / 5 * degK; offset: 0 = rankine
+degC = degK; offset: 273.15 = celsius
+degF = 9 / 5 * degK; offset: 255.372222 = fahrenheit
 
 # Time
 minute = 60 * second = min
@@ -255,15 +263,20 @@ work_year = 2056 * hour
 work_month = work_year/12
 
 # Velocity
+[speed] = [length] / [time]
 speed_of_light = 299792458 * meter / second = c
 knot = nautical_mile / hour = kt = knot_international = international_knot = nautical_miles_per_hour
+mph = mile / hour = MPH
+kph = kilometer / hour = KPH
 
 # Viscosity
+[viscosity] = [pressure] * [time]
 poise = 1e-1 * Pa * second = P
 stokes = 1e-4 * meter ** 2 / second = St
 rhe = 10 / (Pa * s)
 
 # Volume
+[volume] = [length] ** 3
 liter = 1e-3 * m ** 3 = l = L = litre
 cc = centimeter ** 3 = cubic_centimeter
 stere = meter ** 3

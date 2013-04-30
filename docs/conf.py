@@ -13,6 +13,8 @@
 # serve to show the default.
 
 import sys, os
+import pkg_resources
+import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -26,7 +28,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx', 'sphinx.ext.coverage', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx', 'sphinx.ext.coverage', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -42,7 +44,12 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'pint'
-copyright = '2012, Hernan E. Grecco'
+author = 'Hernan E. Grecco'
+
+version = pkg_resources.get_distribution(project).version
+release = version
+this_year = datetime.date.today().year
+copyright = '%s, %s' % (this_year, author)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -248,10 +255,10 @@ texinfo_documents = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = 'pint'
-epub_author = 'Hernan E. Grecco'
-epub_publisher = 'Hernan E. Grecco'
-epub_copyright = '2012, Hernan E. Grecco'
+epub_title = project
+epub_author = author
+epub_publisher = author
+epub_copyright = copyright
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.
