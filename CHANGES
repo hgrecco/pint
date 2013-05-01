@@ -26,6 +26,8 @@ Pint Changelog
 - smarter parser supporting spaces as multiplications and other nice features.
   (Issue #13, thanks r-barnes)
 - moved testsuite inside package.
+- short forms of binary prefixes, more units and fix to less than comparison.
+  (Issue #20, thanks muggenhor)
 
 
 Version 0.1.3 (2013-01-07)
