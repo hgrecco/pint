@@ -15,6 +15,7 @@ import os
 import copy
 import math
 import itertools
+import pkg_resources
 
 from io import open
 from numbers import Number
@@ -404,9 +405,10 @@ class UnitRegistry(object):
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes = {'': None, 's': ''}
 
-        self._definition_files = []
         if filename == '':
-            self.load_definitions(os.path.join(os.path.dirname(__file__), 'default_en.txt'))
+            # Purposefully *not* using resource_stream as it may return a StringIO object for which we can't specify the encoding
+            data = pkg_resources.resource_string(__name__, 'default_en.txt').decode('utf-8')
+            self.load_definitions(data.splitlines())
         elif filename is not None:
             self.load_definitions(filename)
 
@@ -468,19 +470,22 @@ class UnitRegistry(object):
                                        ScaleConverter(definition.converter.scale),
                                        d_reference, definition.is_base))
 
-    def load_definitions(self, filename):
+    def load_definitions(self, file):
         """Add units and prefixes defined in a definition text file.
         """
-        with open(filename, encoding='utf-8') as fp:
-            for line in fp:
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    continue
-                try:
-                    self.define(Definition.from_string(line))
-                except Exception as ex:
-                    logger.error("Exception: Cannot add '{}' {}".format(line, ex))
-        self._definition_files.append(filename)
+        # Permit both filenames and line-iterables
+        if isinstance(file, string_types):
+            with open(file, encoding='utf-8') as fp:
+                return self.load_definitions(fp)
+
+        for line in file:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            try:
+                self.define(Definition.from_string(line))
+            except Exception as ex:
+                logger.error("Exception: Cannot add '{}' {}".format(line, ex))
 
     def validate(self):
         """Walk the registry and calculate for each unit definition
