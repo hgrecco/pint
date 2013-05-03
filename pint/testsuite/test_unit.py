@@ -233,3 +233,15 @@ class TestRegistry(TestCase):
         self.assertEqual(self.ureg.get_symbol('kilometer'), 'km')
         self.assertEqual(self.ureg.get_symbol('megahertz'), 'MHz')
         self.assertEqual(self.ureg.get_symbol('millisecond'), 'ms')
+
+    @unittest.expectedFailure
+    def test_delta_in_diff(self):
+        """This might be supported in future versions
+        """
+        xk = 1 * self.ureg.degK
+        yk = 2 * self.ureg.degK
+        yf = yk.to('degF')
+        yc = yk.to('degC')
+        self.assertEqual(yk - xk, 1 * self.ureg.delta_degK)
+        self.assertEqual(yf - xk, 1 * self.ureg.delta_degK)
+        self.assertEqual(yc - xk, 1 * self.ureg.delta_degK)

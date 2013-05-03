@@ -388,9 +388,11 @@ class UnitRegistry(object):
                      Empty to load the default definition file.
                      None to leave the UnitRegistry empty.
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
+    :param default_to_delta: In the context of a multiplication of units, interpret
+                             non-multiplicative units as their *delta* counterparts.
     """
 
-    def __init__(self, filename='', force_ndarray=False):
+    def __init__(self, filename='', force_ndarray=False, default_to_delta=True):
         self.Quantity = build_quantity_class(self, force_ndarray)
 
         #: Map dimension name (string) to its definition (DimensionDefinition).
@@ -404,6 +406,10 @@ class UnitRegistry(object):
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes = {'': None, 's': ''}
+
+        #: In the context of a multiplication of units, interpret
+        #: non-multiplicative units as their *delta* counterparts.
+        self.default_to_delta = default_to_delta
 
         if filename == '':
             # Purposefully *not* using resource_stream as it may return a StringIO object for which we can't specify the encoding
@@ -694,7 +700,7 @@ class UnitRegistry(object):
                            self._units[name].name,
                            self._suffixes[suffix])
 
-    def parse_units(self, input_string, to_delta=True):
+    def parse_units(self, input_string, to_delta=None):
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
 
@@ -707,6 +713,9 @@ class UnitRegistry(object):
             :class:`pint.UndefinedUnitError` if a unit is not in the registry
             :class:`ValueError` if the expression is invalid.
         """
+        if to_delta is None:
+            to_delta = self.default_to_delta
+
         if not input_string:
             return UnitsContainer()
 
