@@ -76,7 +76,7 @@ You can also add prefixes programmatically:
 
 .. doctest::
 
-   >>> ureg.define('myprefix- = 30 = my')
+   >>> ureg.define('myprefix- = 30 = my-')
 
 where the number indicates the multiplication factor.
 

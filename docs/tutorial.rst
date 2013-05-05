@@ -188,8 +188,8 @@ If you want to use abbreviated unit names, suffix the specification with `~`:
 The same is true for repr (`r`), latex (`l`) and pretty (`p`) specs.
 
 
-Using it in your projects
--------------------------
+Using Pint in your projects
+---------------------------
 
 If you use Pint in multiple modules within you Python package, you normally want to avoid creating multiple instances of the unit registry.
 The best way to do this is by instantiating the registry in a single place. For example,`you can add the following code to your package `__init__.py`::
