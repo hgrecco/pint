@@ -659,4 +659,4 @@ class _Quantity(object):
             else:
                 error = self.__class__(error, self.units)
 
-        return Measurement(self, error)
+        return Measurement(copy.copy(self), error)
