@@ -195,12 +195,15 @@ If you use Pint in multiple modules within you Python package, you normally want
 The best way to do this is by instantiating the registry in a single place. For example,`you can add the following code to your package `__init__.py`::
 
    from pint import UnitRegistry
-   Q_ = UnitRegistry().Quantity
+   ureg = UnitRegistry()
+   Q_ = ureg.Quantity
+
 
 Then in `yourmodule.py` the code would be::
 
-   from . import Q_
+   from . import ureg, Q_
 
+   length = 10 * ureg.meter
    my_speed = Quantity(20, 'm/s')
 
 

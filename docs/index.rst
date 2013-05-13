@@ -54,6 +54,7 @@ User Guide
     numpy
     nonmult
     pitheorem
+    measurement
     defining
 
 
