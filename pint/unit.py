@@ -604,7 +604,8 @@ class UnitRegistry(object):
         factor = 1.
         units = UnitsContainer()
         for key, value in input_units.items():
-            reg = self._units[self.get_name(key)]
+            key = self.get_name(key)
+            reg = self._units[key]
             if reg.is_base:
                 units.add(key, value)
             else:
