@@ -3,7 +3,7 @@ Pint Changelog
 
 
 
-0.2 (unreleased)
+0.2 (2013-05-13)
 ----------------
 
 - support for Measurement (Quantity +/- error).
