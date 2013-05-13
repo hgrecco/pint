@@ -36,11 +36,10 @@ def run_pyroma(data):
         return
     try:
         from pyroma import run
+        result = run(data['tagdir'])
+        if result != 10:
+            if not ask("Continue?"):
+                sys.exit(1)
     except ImportError:
         if not ask("pyroma not available. Continue?"):
-            sys.exit(1)
-
-    result = run(data['tagdir'])
-    if result != 10:
-        if not ask("Continue?"):
             sys.exit(1)
