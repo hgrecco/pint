@@ -245,3 +245,11 @@ class TestRegistry(TestCase):
         self.assertEqual(yk - xk, 1 * self.ureg.delta_degK)
         self.assertEqual(yf - xk, 1 * self.ureg.delta_degK)
         self.assertEqual(yc - xk, 1 * self.ureg.delta_degK)
+
+    def test_pint(self):
+        p = self.ureg.pint
+        l = self.ureg.liter
+        ip = self.ureg.imperial_pint
+        self.assertLess(p, l)
+        self.assertLess(p, ip)
+
