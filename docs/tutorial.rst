@@ -100,7 +100,7 @@ In some cases it is useful to define physical quantities objects using the class
    >>> print(distance.to(ureg.meter))
    42000.0 meter
 
-If you try to use a unit which is not in the registry::
+If you try to use a unit which is not in the registry:
 
 .. doctest::
 
@@ -192,7 +192,7 @@ Using Pint in your projects
 ---------------------------
 
 If you use Pint in multiple modules within you Python package, you normally want to avoid creating multiple instances of the unit registry.
-The best way to do this is by instantiating the registry in a single place. For example,`you can add the following code to your package `__init__.py`::
+The best way to do this is by instantiating the registry in a single place. For example, you can add the following code to your package `__init__.py`::
 
    from pint import UnitRegistry
    ureg = UnitRegistry()
