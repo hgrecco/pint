@@ -1,4 +1,4 @@
-.. _numpy:
+.. _measurement:
 
 
 Using Measurements

@@ -1,4 +1,4 @@
-.. _defining:
+.. _contributing:
 
 Contributing to Pint
 ====================
