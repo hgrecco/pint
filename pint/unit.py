@@ -429,7 +429,7 @@ class UnitRegistry(object):
     def define(self, definition):
         """Add unit to the registry.
         """
-        if isinstance(definition, str):
+        if isinstance(definition, string_types):
             definition = Definition.from_string(definition)
 
         if isinstance(definition, DimensionDefinition):
@@ -635,13 +635,13 @@ class UnitRegistry(object):
         if src == dst:
             return value
         if len(src) == 1:
-            if not len(dst) == 1:
-                raise DimensionalityError(src, dst,
-                                          self.get_dimensionality(src),
-                                          self.get_dimensionality(dst))
             src_unit, src_value = list(src.items())[0]
             src_unit = self._units[src_unit]
             if not isinstance(src_unit.converter, ScaleConverter):
+                if not len(dst) == 1:
+                    raise DimensionalityError(src, dst,
+                                              self.get_dimensionality(src),
+                                              self.get_dimensionality(dst))
                 dst_unit, dst_value = list(dst.items())[0]
                 dst_unit = self._units[dst_unit]
                 if not type(src_unit.converter) is type(dst_unit.converter):
