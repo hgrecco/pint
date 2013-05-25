@@ -6,7 +6,9 @@ Pint Changelog
 0.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- fix error raised while converting from a single unit to one expressed as
+  the relation between many.
+  (Issue #29)
 
 
 0.2 (2013-05-13)
