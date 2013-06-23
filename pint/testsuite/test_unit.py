@@ -253,3 +253,59 @@ class TestRegistry(TestCase):
         self.assertLess(p, l)
         self.assertLess(p, ip)
 
+    def test_wraps(self):
+        def func(x):
+            return x
+
+        ureg = self.ureg
+
+        f0 = ureg.wraps(None, [None, ])(func)
+        self.assertEqual(f0(3.), 3.)
+
+        f0 = ureg.wraps(None, None, )(func)
+        self.assertEqual(f0(3.), 3.)
+
+        f1 = ureg.wraps(None, ['meter', ])(func)
+        self.assertRaises(ValueError, f1, 3.)
+        self.assertEqual(f1(3. * ureg.centimeter), 0.03)
+        self.assertEqual(f1(3. * ureg.meter), 3.)
+        self.assertRaises(ValueError, f1, 3 * ureg.second)
+
+        f1 = ureg.wraps(None, 'meter')(func)
+        self.assertRaises(ValueError, f1, 3.)
+        self.assertEqual(f1(3. * ureg.centimeter), 0.03)
+        self.assertEqual(f1(3. * ureg.meter), 3.)
+        self.assertRaises(ValueError, f1, 3 * ureg.second)
+
+        f2 = ureg.wraps('centimeter', ['meter', ])(func)
+        self.assertRaises(ValueError, f2, 3.)
+        self.assertEqual(f2(3. * ureg.centimeter), 0.03 * ureg.centimeter)
+        self.assertEqual(f2(3. * ureg.meter), 3 * ureg.centimeter)
+
+        f3 = ureg.wraps('centimeter', ['meter', ], strict=False)(func)
+        self.assertEqual(f3(3), 3 * ureg.centimeter)
+        self.assertEqual(f3(3. * ureg.centimeter), 0.03 * ureg.centimeter)
+        self.assertEqual(f3(3. * ureg.meter), 3. * ureg.centimeter)
+
+        def gfunc(x, y):
+            return x + y
+
+        g0 = ureg.wraps(None, [None, None])(gfunc)
+        self.assertEqual(g0(3, 1), 4)
+
+        g1 = ureg.wraps(None, ['meter', 'centimeter'])(gfunc)
+        self.assertRaises(ValueError, g1, 3 * ureg.meter, 1)
+        self.assertEqual(g1(3 * ureg.meter, 1 * ureg.centimeter), 4)
+        self.assertEqual(g1(3 * ureg.meter, 1 * ureg.meter), 3 + 100)
+
+        def hfunc(x, y):
+            return x, y
+
+        h0 = ureg.wraps(None, [None, None])(hfunc)
+        self.assertEqual(h0(3, 1), (3, 1))
+
+        h1 = ureg.wraps(['meter', 'cm'], [None, None])(hfunc)
+        self.assertEqual(h1(3, 1), [3 * ureg.meter, 1 * ureg.cm])
+
+        h2 = ureg.wraps(('meter', 'cm'), [None, None])(hfunc)
+        self.assertEqual(h2(3, 1), (3 * ureg.meter, 1 * ureg.cm))

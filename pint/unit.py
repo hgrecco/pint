@@ -15,6 +15,7 @@ import os
 import copy
 import math
 import itertools
+import functools
 import pkg_resources
 
 from io import open
@@ -780,6 +781,70 @@ class UnitRegistry(object):
                                         {'REGISTRY': self._units,
                                          'Q_': self.Quantity,
                                          'U_': UnitsContainer})
+
+    def wraps(self, ret, args, strict=True):
+        """Wraps a function to become pint-aware.
+
+        Use it when a function requires a numerical value but in some specific
+        units. The wrapper function will take a pint quantity, convert to the units
+        specified in `args` and then call the wrapped function with the resulting
+        magnitude.
+
+        The value returned by the wrapped function will be converted to the units
+        specified in `ret`.
+
+        Use None to skip argument conversion.
+        Set strict to False, to accept also numerical values.
+
+        :param ret: output units.
+        :param args: iterable of input units.
+        :param strict: boolean to indicate that only quantities are accepted.
+        :return: the wrapped function.
+        :raises:
+            :class:`ValueError` if strict and one of the arguments is not a Quantity.
+        """
+
+        if not isinstance(args, (list, tuple)):
+            args = (args, )
+
+        units = [self.parse_units(arg) if isinstance(arg, string_types) else arg
+                 for arg in args]
+
+        if isinstance(ret, (list, tuple)):
+            ret = ret.__class__(self.parse_units(arg) if isinstance(arg, string_types) else arg
+                                for arg in ret)
+        elif isinstance(ret, string_types):
+            ret = self.parse_units(ret)
+
+        Q_ = self.Quantity
+
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*values, **kw):
+                new_args = []
+                for unit, value in zip(units, values):
+                    if unit is None:
+                        new_args.append(value)
+                    elif isinstance(value, Q_):
+                        new_args.append(self.convert(value.magnitude, value.units, unit))
+                    elif not strict:
+                        new_args.append(value)
+                    else:
+                        raise ValueError('A wrapped function using strict=True requires '
+                                         'quantity for all arguments with not None units. '
+                                         '(error found for {}, {})'.format(unit, value))
+
+                result = func(*new_args, **kw)
+
+                if isinstance(ret, (list, tuple)):
+                    return ret.__class__(Q_(res, unit) if unit is not None else res
+                                         for unit, res in zip(ret, result))
+                elif ret is not None:
+                    return Q_(result, ret)
+
+                return result
+            return wrapper
+        return decorator
 
 
 def build_quantity_class(registry, force_ndarray=False):

@@ -53,6 +53,7 @@ User Guide
     tutorial
     numpy
     nonmult
+    wrapping
     pitheorem
     measurement
     defining
