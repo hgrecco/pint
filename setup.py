@@ -31,8 +31,9 @@ setup(
     zip_safe=True,
     packages=['pint'],
     package_data={
-        'pint': [
-        'default_en.txt']},
+        'pint': ['default_en.txt',
+                 'constants_en.txt']
+      },
     entry_points={
          'zest.releaser.releaser.after_checkout': [
             'pyroma = pint:run_pyroma',

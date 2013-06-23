@@ -413,9 +413,8 @@ class UnitRegistry(object):
         self.default_to_delta = default_to_delta
 
         if filename == '':
-            # Purposefully *not* using resource_stream as it may return a StringIO object for which we can't specify the encoding
-            data = pkg_resources.resource_string(__name__, 'default_en.txt').decode('utf-8')
-            self.load_definitions(data.splitlines())
+            data = pkg_resources.resource_filename(__name__, 'default_en.txt')
+            self.load_definitions(data)
         elif filename is not None:
             self.load_definitions(filename)
 
@@ -488,6 +487,14 @@ class UnitRegistry(object):
         for line in file:
             line = line.strip()
             if not line or line.startswith('#'):
+                continue
+            if line.startswith('@import'):
+                try:
+                    path = os.path.dirname(file.name)
+                except AttributeError:
+                    path = os.getcwd()
+                path = os.path.join(path, os.path.normpath(line[7:].strip()))
+                self.load_definitions(path)
                 continue
             try:
                 self.define(Definition.from_string(line))

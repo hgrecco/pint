@@ -47,9 +47,10 @@ radian = [] = rad
 bit = []
 count = []
 
+@import constants_en.txt
+
 # acceleration
 [acceleration] = [length] / [time] ** 2
-standard_gravity = 9.806650 * meter / second ** 2 = g_0 = g_n = gravity
 
 # Angle
 turn = 2 * pi * radian = revolution = cycle = circle
@@ -94,9 +95,6 @@ statmho = 1.112650e-12 * siemens = statS = stS
 statohm = 8.987554e11 * ohm
 statvolt = 2.997925e2 * volt = statV = stV
 unit_pole = 1.256637e-7 * weber
-vacuum_permeability = 4 * pi * 1e-7 * newton / ampere ** 2 = mu_0 = magnetic_constant
-vacuum_permittivity = 1 / (mu_0 * c **2 ) = epsilon_0 = electric_constant
-Z_0 = mu_0 * c = impedance_of_free_space = characteristic_impedance_of_vacuum
 
 # Energy
 joule = newton * meter = J
@@ -264,7 +262,6 @@ work_month = work_year/12
 
 # Velocity
 [speed] = [length] / [time]
-speed_of_light = 299792458 * meter / second = c
 knot = nautical_mile / hour = kt = knot_international = international_knot = nautical_miles_per_hour
 mph = mile / hour = MPH
 kph = kilometer / hour = KPH
