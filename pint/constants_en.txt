@@ -1,0 +1,51 @@
+# Default Pint constants definition file
+# Based on the International System of Units
+# Language: english
+# Source: http://physics.nist.gov/cuu/Constants/Table/allascii.txt
+# :copyright: 2013 by Pint Authors, see AUTHORS for more details.
+
+speed_of_light = 299792458 * meter / second = c
+standard_gravity = 9.806650 * meter / second ** 2 = g_0 = g_n = gravity
+vacuum_permeability = 4 * pi * 1e-7 * newton / ampere ** 2 = mu_0 = magnetic_constant
+vacuum_permittivity = 1 / (mu_0 * c **2 ) = epsilon_0 = electric_constant
+Z_0 = mu_0 * c = impedance_of_free_space = characteristic_impedance_of_vacuum
+
+# 0.000 000 29 e-34
+planck_constant = 6.62606957e-34 J s = h
+hbar = planck_constant / (2 * pi) = ħ
+
+# 0.000 80 e-11
+newtonian_constant_of_gravitation = 6.67384e-11 m^3 kg^-1 s^-2 = G
+
+# 0.000 000 035 e-19
+elementary_charge = 1.602176565e-19 C = e
+
+# 0.000 0075
+molar_gas_constant = 8.3144621 J mol^-1 K^-1 = R
+
+# 0.000 000 0024 e-3
+fine_structure_constant = 7.2973525698e-3
+
+# 0.000 000 27 e23
+avogadro_number = 6.02214129e23 mol^-1 =N_A
+
+# 0.000 0013 e-23
+boltzmann_constant = 1.3806488e-23 J K^-1 = k
+
+# 0.000 021 e-8
+stefan_boltzmann_constant = 5.670373e-8 W m^-2 K^-4 = σ
+
+# 0.000 0053 e10
+wien_frequency_displacement_law_constant = 5.8789254e10 Hz K^-1
+
+# 0.000 055
+rydberg_constant = 10973731.568539 m^-1
+
+# 0.000 000 40 e-31
+electron_mass = 9.10938291e-31 kg = m_e
+
+# 0.000 000 074 e-27
+neutron_mass = 1.674927351e-27 kg = m_n
+
+# 0.000 000 074 e-27
+proton_mass = 1.672621777e-27 kg = m_p
