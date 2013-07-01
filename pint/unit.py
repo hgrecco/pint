@@ -426,6 +426,13 @@ class UnitRegistry(object):
     def __getitem__(self, item):
         return self.parse_expression(item)
 
+    def __dir__(self):
+        return list(self._units.keys()) + \
+               ['define', 'load_definitions', 'get_name', 'get_symbol',
+                'get_dimensionality', 'Quantity', 'wraps', 'parse_unit',
+                'parse_units', 'parse_expression', 'pi_theorem',
+                'convert', 'get_base_units']
+
     def define(self, definition):
         """Add unit to the registry.
         """
