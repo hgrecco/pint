@@ -6,6 +6,10 @@ Pint Changelog
 0.3 (unreleased)
 ----------------
 
+- support for IPython autocomplete and rich display.
+  (Issues #30 and #31)
+- support for @import directive in definitions file.
+  (Issue #22)
 - support for wrapping functions to make them pint-aware.
   (Issue #16)
 - fix error raised while converting from a single unit to one expressed as
