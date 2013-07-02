@@ -125,6 +125,13 @@ class _Quantity(object):
 
         return format(self.magnitude, fmt) + ' ' + format(units, conv)
 
+    # IPython related code
+    def _repr_html_(self):
+        return self.__format__('!h')
+
+    def _repr_latex_(self):
+        return "$" + self.__format__('!l') + "$"
+
     @property
     def magnitude(self):
         """Quantity's magnitude.
