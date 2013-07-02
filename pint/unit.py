@@ -309,6 +309,11 @@ class UnitsContainer(dict):
                             '·', '/', '{}{}',
                             '({})', fmt_exponent)
             return tmp
+        elif spec == '!h':
+            tmp = formatter(self.items(), True, True,
+                            r'  ', r'{}/{}', '{}<sup>{}</sup>',
+                            r'({})')
+            return tmp
         else:
             raise ValueError('{} is not a valid format for UnitsContainer'.format(spec))
 

@@ -129,9 +129,11 @@ class TestQuantity(TestCase):
                              ('{:.4f}', '{:.4f} {!s}'.format(x.magnitude, x.units)),
                              ('{:!l}', r'4.12345678 \frac{kilogram \cdot meter^{2}}{second}'),
                              ('{:!p}', '4.12345678 kilogram·meter²/second'),
+                             ('{:!h}', '4.12345678 kilogram meter<sup>2</sup>/second'),
                              ('{:!s~}', '4.12345678 kg * m ** 2 / s'),
                              ('{:!l~}', r'4.12345678 \frac{kg \cdot m^{2}}{s}'),
-                             ('{:!p~}', '4.12345678 kg·m²/s')
+                             ('{:!p~}', '4.12345678 kg·m²/s'),
+                             ('{:!h~}', '4.12345678 kg m<sup>2</sup>/s'),
                              ):
             self.assertEqual(spec.format(x), result)
 
