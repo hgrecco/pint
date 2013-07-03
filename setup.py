@@ -20,7 +20,7 @@ __doc__ = long_description
 
 setup(
     name='Pint',
-    version='0.2.1',
+    version='0.3.dev0',
     description='Physical quantities module',
     long_description=long_description,
     keywords='physical quantities unit conversion science',
