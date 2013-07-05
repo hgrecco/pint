@@ -834,7 +834,7 @@ class UnitRegistry(object):
         units = [to_units(arg) for arg in args]
 
         if isinstance(ret, (list, tuple)):
-            ret = ret.__class__(to_units(arg) for arg in ret)
+            ret = ret.__class__([to_units(arg) for arg in ret])
         elif isinstance(ret, string_types):
             ret = self.parse_units(ret)
 
@@ -857,7 +857,7 @@ class UnitRegistry(object):
                 result = func(*new_args, **kw)
 
                 if isinstance(ret, (list, tuple)):
-                    return ret.__class__(Q_(res, unit) if unit is not None else res
+                    return ret.__class__(res if unit is None else Q_(res, unit)
                                          for unit, res in zip(ret, result))
                 elif ret is not None:
                     return Q_(result, ret)
