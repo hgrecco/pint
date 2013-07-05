@@ -157,10 +157,10 @@ Pint's physical quantities can be easily printed:
 
    >>> accel = 1.3 * ureg['meter/second**2']
    >>> # The standard string formatting code
-   >>> print('The str is {:!s}'.format(accel))
+   >>> print('The str is {!s}'.format(accel))
    The str is 1.3 meter / second ** 2
    >>> # The standard representation formatting code
-   >>> print('The repr is {:!r}'.format(accel))
+   >>> print('The repr is {!r}'.format(accel))
    The repr is <Quantity(1.3, 'meter / second ** 2')>
    >>> # Accessing useful attributes
    >>> print('The magnitude is {0.magnitude} with units {0.units}'.format(accel))
@@ -172,20 +172,23 @@ But Pint also extends the standard formatting capabilities for unicode and latex
 
    >>> accel = 1.3 * ureg['meter/second**2']
    >>> # Pretty print
-   >>> 'The pretty representation is {:!p}'.format(accel)
+   >>> 'The pretty representation is {:P}'.format(accel)
    'The pretty representation is 1.3 meter/second²'
    >>> # Latex print
-   >>> 'The latex representation is {:!l}'.format(accel)
+   >>> 'The latex representation is {:L}'.format(accel)
    'The latex representation is 1.3 \\frac{meter}{second^{2}}'
+   >>> # HTML print
+   >>> 'The latex representation is {:H}'.format(accel)
+   'The latex representation is 1.3 meter/second<sup>2</sup>'
 
 If you want to use abbreviated unit names, suffix the specification with `~`:
 
 .. doctest::
 
-   >>> 'The str is {:!s~}'.format(accel)
+   >>> 'The str is {:~}'.format(accel)
    'The str is 1.3 m / s ** 2'
 
-The same is true for repr (`r`), latex (`l`) and pretty (`p`) specs.
+The same is true for latex (`L`), pretty (`P`) and HTML (`H`) specs.
 
 
 Using Pint in your projects
