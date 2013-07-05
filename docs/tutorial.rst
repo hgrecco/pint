@@ -54,7 +54,7 @@ As unit registry knows about the relationship between different units, you can c
 .. doctest::
 
    >>> speed.to(ureg.inch / ureg.minute )
-   <Quantity(7086.61417323, 'inch / minute')>
+   <Quantity(7086.614173228345, 'inch / minute')>
 
 This method returns a new object leaving the original intact as can be seen by:
 
@@ -68,9 +68,9 @@ If you want to convert in-place (i.e. without creating another object), you can 
 .. doctest::
 
    >>> speed.ito(ureg.inch / ureg.minute )
-   <Quantity(7086.61417323, 'inch / minute')>
+   <Quantity(7086.614173228345, 'inch / minute')>
    >>> print(speed)
-   7086.61417323 inch / minute
+   7086.614173228345 inch / minute
 
 If you ask Pint to perform and invalid conversion:
 

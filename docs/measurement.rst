@@ -46,7 +46,7 @@ Measurements support the same formatting codes as Quantity. For example, to pret
 .. doctest::
 
    >>> print('{:.02f!p}'.format(book_length))
-   (2.00 ± 0.20) meter
+   (20.00 ± 2.00) centimeter
 
 
 Mathematical operations with Measurements, return new measurements following the `Propagation of uncertainty`_ rules.

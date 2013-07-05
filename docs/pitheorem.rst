@@ -22,7 +22,7 @@ quantity involving the magnitudes `V`, `T` and `L` with dimensions `[length]/[ti
 
     >>> from pint import pi_theorem
     >>> pi_theorem({'V': '[length]/[time]', 'T': '[time]', 'L': '[length]'})
-    [{'V': 1, 'T': 1, 'L': -1}]
+    [{'V': 1.0, 'T': 1.0, 'L': -1.0}]
 
 The result indicates that a dimensionless quantity can be obtained by
 multiplying `V` by `T` and the inverse of `L`.
@@ -44,14 +44,14 @@ you can use derived dimensions such as speed:
     >>> from pint import UnitRegistry
     >>> ureg = UnitRegistry()
     >>> ureg.pi_theorem({'V': '[speed]', 'T': '[time]', 'L': '[length]'})
-    [{'V': 1, 'T': 1, 'L': -1}]
+    [{'V': 1.0, 'T': 1.0, 'L': -1.0}]
 
 or unit names:
 
 .. doctest::
 
     >>> ureg.pi_theorem({'V': 'meter/second', 'T': 'second', 'L': 'meter'})
-    [{'V': 1, 'T': 1, 'L': -1}]
+    [{'V': 1.0, 'T': 1.0, 'L': -1.0}]
 
 or quantities:
 
@@ -59,7 +59,7 @@ or quantities:
     >>> ureg.pi_theorem({'V': Q_(1, 'meter/second'),
     ...                  'T': Q_(1, 'second'),
     ...                  'L': Q_(1, 'meter')})
-    [{'V': 1, 'T': 1, 'L': -1}]
+    [{'V': 1.0, 'T': 1.0, 'L': -1.0}]
 
 
 Application to the pendulum
@@ -73,7 +73,7 @@ There are 3 fundamental physical units in this equation: time, mass, and length,
     ...                  'M': '[mass]',
     ...                  'L': '[length]',
     ...                  'g': '[acceleration]'})
-    [{'T': 2, 'g': 1, 'L': -1}]
+    [{'T': 2.0, 'g': 1.0, 'L': -1.0}]
 
 which means that the dimensionless quantity is:
 
@@ -104,7 +104,7 @@ What is the pressure loss `p` in a pipe with length `L` and diameter `D` for a f
     ...                  'm': '[viscosity]',
     ...                  'v': '[speed]'
     ...                  })
-    [{'p': 1, 'm': -2, 'd': 1, 'L': 2}, {'v': 1, 'm': -1, 'd': 1, 'L': 1}, {'L': -1, 'D': 1}]
+    [{'p': 1.0, 'm': -2.0, 'd': 1.0, 'L': 2.0}, {'v': 1.0, 'm': -1.0, 'd': 1.0, 'L': 1.0}, {'L': -1.0, 'D': 1.0}]
 
 The second dimensionless quantity is the `Reynolds Number`_
 

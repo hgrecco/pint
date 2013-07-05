@@ -26,14 +26,14 @@ For example, to convert from celsius to fahrenheit:
    >>> ureg = UnitRegistry()
    >>> home = 25.4 * ureg.degC
    >>> print(home.to('degF'))
-   77.7200004 degF
+   77.72000039999993 degF
 
 or to other kelvin or rankine:
 
 .. doctest::
 
     >>> print(home.to('degK'))
-    298.55 degK
+    298.54999999999995 degK
     >>> print(home.to('degR'))
     537.39 degR
 
@@ -49,7 +49,7 @@ is different).
    >>> print(increase.to(ureg.delta_degK))
    12.3 delta_degK
    >>> print(increase.to(ureg.delta_degF))
-   6.83333333333 delta_degF
+   6.833333333333334 delta_degF
 
 ..
     Subtraction of two temperatures also yields a *delta* unit.
