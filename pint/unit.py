@@ -288,17 +288,13 @@ class UnitsContainer(dict):
         return '<UnitsContainer({})>'.format(tmp)
 
     def __format__(self, spec):
-        if spec == '!s' or spec == '':
-            return str(self)
-        elif spec == '!r':
-            return repr(self)
-        elif spec == '!l':
+        if 'L' in spec:
             tmp = formatter(self.items(), True, True,
                             r' \cdot ', r'\frac[{}][{}]', '{}^[{}]',
                             r'\left( {} \right)')
             tmp = tmp.replace('[', '{').replace(']', '}')
             return tmp
-        elif spec == '!p':
+        elif 'P' in spec:
             def fmt_exponent(num):
                 PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹'
                 ret = '{:n}'.format(num).replace('-', '⁻')
@@ -309,13 +305,13 @@ class UnitsContainer(dict):
                             '·', '/', '{}{}',
                             '({})', fmt_exponent)
             return tmp
-        elif spec == '!h':
+        elif 'H' in spec:
             tmp = formatter(self.items(), True, True,
-                            r'  ', r'{}/{}', '{}<sup>{}</sup>',
+                            r' ', r'{}/{}', '{}<sup>{}</sup>',
                             r'({})')
             return tmp
         else:
-            raise ValueError('{} is not a valid format for UnitsContainer'.format(spec))
+            return str(self)
 
     def __copy__(self):
         ret = self.__class__()

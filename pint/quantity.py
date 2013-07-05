@@ -108,22 +108,16 @@ class _Quantity(object):
     def __format__(self, spec):
         if not spec:
             return str(self)
-        if '!' in spec:
-            fmt, conv = spec.split('!')
-            if conv == 'r':
-                return repr(self)
-            conv = '!' + conv
-        else:
-            fmt, conv = spec, ''
 
-        if conv.endswith('~'):
+        if '~' in spec:
             units = UnitsContainer({self._REGISTRY.get_symbol(key): value
                                    for key, value in self.units.items()})
-            conv = conv[:-1]
+            spec = spec.replace('~', '')
         else:
             units = self.units
 
-        return format(self.magnitude, fmt) + ' ' + format(units, conv)
+        return format(self.magnitude, spec.replace('L', '').replace('P', '').replace('H', '')) \
+               + ' ' + format(units, spec)
 
     # IPython related code
     def _repr_html_(self):
