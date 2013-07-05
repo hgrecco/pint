@@ -819,19 +819,24 @@ class UnitRegistry(object):
             :class:`ValueError` if strict and one of the arguments is not a Quantity.
         """
 
+        Q_ = self.Quantity
+
         if not isinstance(args, (list, tuple)):
             args = (args, )
 
-        units = [self.parse_units(arg) if isinstance(arg, string_types) else arg
-                 for arg in args]
+        def to_units(x):
+            if isinstance(x, string_types):
+                return self.parse_units(arg)
+            elif isinstance(x, Q_):
+                return x.units
+            return x
+
+        units = [to_units(arg) for arg in args]
 
         if isinstance(ret, (list, tuple)):
-            ret = ret.__class__(self.parse_units(arg) if isinstance(arg, string_types) else arg
-                                for arg in ret)
+            ret = ret.__class__(to_units(arg) for arg in ret)
         elif isinstance(ret, string_types):
             ret = self.parse_units(ret)
-
-        Q_ = self.Quantity
 
         def decorator(func):
             @functools.wraps(func)
