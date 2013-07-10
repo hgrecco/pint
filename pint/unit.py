@@ -826,7 +826,7 @@ class UnitRegistry(object):
 
         def to_units(x):
             if isinstance(x, string_types):
-                return self.parse_units(arg)
+                return self.parse_units(x)
             elif isinstance(x, Q_):
                 return x.units
             return x
