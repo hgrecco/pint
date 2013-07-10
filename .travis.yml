@@ -13,7 +13,7 @@ env:
 branches:
   only:
     - master
-    - devel
+    - develop
 
 install: 
     - if [ $NUMPY_VERSION != '0' ]; then pip install -q numpy==$NUMPY_VERSION; fi
@@ -28,3 +28,4 @@ matrix:
           env: NUMPY_VERSION=1.6
         - python: "3.3"
           env: NUMPY_VERSION=1.6
+
