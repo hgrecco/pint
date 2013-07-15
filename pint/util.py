@@ -319,6 +319,9 @@ class ParserHelper(dict):
                    {'__builtins__': None},
                    {'L_': cls})
 
+        if isinstance(ret, Number):
+            return ParserHelper(ret)
+
         if not brackets:
             return ret
 
