@@ -12,6 +12,8 @@ Pint Changelog
   (Issue #22)
 - support for wrapping functions to make them pint-aware.
   (Issue #16)
+- support for comparing UnitsContainer to string.
+  (Issue #35)
 - fix error raised while converting from a single unit to one expressed as
   the relation between many.
   (Issue #29)

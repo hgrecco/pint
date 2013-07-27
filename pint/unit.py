@@ -278,6 +278,12 @@ class UnitsContainer(dict):
         else:
             del self[key]
 
+    def __eq__(self, other):
+        if isinstance(other, string_types):
+            other = ParserHelper.from_string(other)
+            other = dict(other.items())
+        return dict.__eq__(self, other)
+
     def __str__(self):
         if not self:
             return 'dimensionless'

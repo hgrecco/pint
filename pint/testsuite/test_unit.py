@@ -167,6 +167,18 @@ class TestUnitsContainer(unittest.TestCase):
         self._test_inplace(op.ipow, z, 2, UnitsContainer(meter=2, second=-4))
         self._test_inplace(op.ipow, z, -2, UnitsContainer(meter=-2, second=4))
 
+    def test_string_comparison(self):
+        x = UnitsContainer(meter=1)
+        y = UnitsContainer(second=1)
+        z = UnitsContainer(meter=1, second=-2)
+        self.assertEqual(x, 'meter')
+        self.assertEqual('meter', x)
+        self.assertNotEqual(x, 'meter ** 2')
+        self.assertNotEqual(x, 'meter * meter')
+        self.assertNotEqual(x, 'second')
+        self.assertEqual(y, 'second')
+        self.assertEqual(z, 'meter/second/second')
+
 
 class TestRegistry(TestCase):
 
