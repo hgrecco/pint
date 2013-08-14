@@ -17,6 +17,8 @@ Pint Changelog
 - fix error raised while converting from a single unit to one expressed as
   the relation between many.
   (Issue #29)
+- fix error raised when unit symbol is missing.
+  (Issue #41)
 
 
 0.2.1 (2013-07-02)

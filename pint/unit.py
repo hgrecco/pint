@@ -148,19 +148,11 @@ class Definition(object):
 
     @property
     def symbol(self):
-        return self._symbol
+        return self._symbol or self._name
 
     @property
     def aliases(self):
         return self._aliases
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def symbol(self):
-        return self._symbol
 
     @property
     def converter(self):
