@@ -11,19 +11,26 @@
     :copyright: (c) 2012 by Hernan E. Grecco.
     :license: BSD, see LICENSE for more details.
 """
-
 from __future__ import with_statement
-
+import os
+import subprocess
 import pkg_resources
-
-__version__ = pkg_resources.get_distribution('pint').version
-
 from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError
 from .util import formatter, pi_theorem, logger
 from .measurement import Measurement
 
 _DEFAULT_REGISTRY = UnitRegistry()
 
+__version__ = "unknown"
+try:  # try to grab the commit version of our package
+    __version__ = (subprocess.check_output(["git", "describe"], 
+                                           cwd=os.path.dirname(os.path.abspath(__file__)))).strip()
+except:  # on any error just try to grab the version that is installed on the system
+    try:
+        __version__ = pkg_resources.get_distribution('pint').version
+    except:
+        pass  # we seem to have a local copy without any repository control or installed without setuptools
+              # so the reported version will be __unknown__  
 
 def _build_quantity(value, units):
     return _DEFAULT_REGISTRY.Quantity(value, units)
