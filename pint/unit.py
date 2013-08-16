@@ -26,6 +26,7 @@ from tokenize import untokenize, NUMBER, STRING, NAME, OP
 from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
                    ParserHelper, string_types, ptok, string_preprocessor)
 
+from decimal import Decimal
 
 class UndefinedUnitError(ValueError):
     """Raised when the units are not defined in the unit registry.
@@ -671,6 +672,11 @@ class UnitRegistry(object):
                                       self.get_dimensionality(src),
                                       self.get_dimensionality(dst))
 
+        # factor is type float and if our magintude is type Decimal then
+        # must first convert to Decimal before we can '*' the values
+        if isinstance(value, Decimal):
+            return Decimal(str(factor)) * value
+        
         return factor * value
 
     def pi_theorem(self, quantities):
