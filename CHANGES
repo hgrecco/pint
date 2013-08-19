@@ -19,7 +19,10 @@ Pint Changelog
   (Issue #29)
 - fix error raised when unit symbol is missing.
   (Issue #41)
-
+- fix error raised when magnitude is Decimal.
+  (Issue #46)
+- support for non-installed pint.
+  (Issue #42)
 
 0.2.1 (2013-07-02)
 ------------------
