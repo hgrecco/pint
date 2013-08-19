@@ -53,3 +53,36 @@ class TestIssuesNP(TestCase):
         self.assertIsInstance(q, ureg.Quantity)
         self.assertSequenceEqual(q.magnitude, x)
         self.assertEquals(q.units, ureg.meter.units)
+
+        m = np.ma.masked_array(2 * np.ones(3,3))
+        qq = q * m
+        self.assertIsInstance(qq, ureg.Quantity)
+        self.assertSequenceEqual(qq.magnitude, x * m)
+        self.assertEquals(qq.units, ureg.meter.units)
+        qq = m * q
+        self.assertIsInstance(qq, ureg.Quantity)
+        self.assertSequenceEqual(qq.magnitude, x * m)
+        self.assertEquals(qq.units, ureg.meter.units)
+
+    @unittest.expectedFailure
+    def test_issue39(self):
+        x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
+        ureg = UnitRegistry()
+        q = ureg.meter * x
+        self.assertIsInstance(q, ureg.Quantity)
+        self.assertSequenceEqual(q.magnitude, x)
+        self.assertEquals(q.units, ureg.meter.units)
+        q = x * ureg.meter
+        self.assertIsInstance(q, ureg.Quantity)
+        self.assertSequenceEqual(q.magnitude, x)
+        self.assertEquals(q.units, ureg.meter.units)
+
+        m = np.matrix(2 * np.ones(3,3))
+        qq = q * m
+        self.assertIsInstance(qq, ureg.Quantity)
+        self.assertSequenceEqual(qq.magnitude, x * m)
+        self.assertEquals(qq.units, ureg.meter.units)
+        qq = m * q
+        self.assertIsInstance(qq, ureg.Quantity)
+        self.assertSequenceEqual(qq.magnitude, x * m)
+        self.assertEquals(qq.units, ureg.meter.units)
