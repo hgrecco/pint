@@ -20,9 +20,9 @@ Pint Changelog
 - fix error raised when unit symbol is missing.
   (Issue #41)
 - fix error raised when magnitude is Decimal.
-  (Issue #46)
+  (Issue #46, thanks danielsokolowski)
 - support for non-installed pint.
-  (Issue #42)
+  (Issue #42, thanks danielsokolowski)
 - support for application of numpy function on non-ndarray magnitudes.
   (Issue #44)
 - support for math operations on dimensionless Quantities (writen with units)
