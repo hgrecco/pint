@@ -213,12 +213,12 @@ class _Quantity(object):
     # Mathematical operations
     def __float__(self):
         if self.dimensionless:
-            return float(self._magnitude)
+            return float(self._REGISTRY.convert(self._magnitude, self.units, UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
     def __complex__(self):
         if self.dimensionless:
-            return complex(self._magnitude)
+            return complex(self._REGISTRY.convert(self._magnitude, self.units, UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
     def iadd_sub(self, other, fun):
@@ -378,7 +378,7 @@ class _Quantity(object):
     __nonzero__ = __bool__
 
     # NumPy Support
-
+    __radian = 'radian'
     __same_units = 'equal greater greater_equal less less_equal not_equal arctan2'.split()
     #: Dictionary mapping ufunc/attributes names to the units that they
     #: require (conversion will be tried).
@@ -387,23 +387,23 @@ class _Quantity(object):
                        'arccosh': '', 'arcsinh': '', 'arctanh': '',
                        'exp': '', 'expm1': '', 'exp2': '',
                        'log': '', 'log10': '', 'log1p': '', 'log2': '',
-                       'sin': 'radian', 'cos': 'radian', 'tan': 'radian',
-                       'sinh': 'radian', 'cosh': 'radian', 'tanh': 'radian',
-                       'radians': 'degree', 'degrees': 'radian',
-                       'deg2rad': 'degree', 'rad2deg': 'radian',
+                       'sin': __radian, 'cos': __radian, 'tan': __radian,
+                       'sinh': __radian, 'cosh': __radian, 'tanh': __radian,
+                       'radians': 'degree', 'degrees': __radian,
+                       'deg2rad': 'degree', 'rad2deg': __radian,
                        'logaddexp': '', 'logaddexp2': ''}
 
     #: Dictionary mapping ufunc/attributes names to the units that they
     #: will set on output.
     __set_units = {'cos': '', 'sin': '', 'tan': '',
                    'cosh': '', 'sinh': '', 'tanh': '',
-                   'arccos': 'radian', 'arcsin': 'radian',
-                   'arctan': 'radian', 'arctan2': 'radian',
-                   'arccosh': 'radian', 'arcsinh': 'radian',
-                   'arctanh': 'radian',
-                   'degrees': 'degree', 'radians': 'radian',
+                   'arccos': __radian, 'arcsin': __radian,
+                   'arctan': __radian, 'arctan2': __radian,
+                   'arccosh': __radian, 'arcsinh': __radian,
+                   'arctanh': __radian,
+                   'degrees': 'degree', 'radians': __radian,
                    'expm1': '', 'cumprod': '',
-                   'rad2deg': 'degree', 'deg2rad': 'radian'}
+                   'rad2deg': 'degree', 'deg2rad': __radian}
 
     #: List of ufunc/attributes names in which units are copied from the
     #: original.
@@ -575,7 +575,9 @@ class _Quantity(object):
         ufname = uf.__name__ if huh == 0 else '{}__{}'.format(uf.__name__, huh)
         if uf.__name__ in self.__handled and huh == 0:
             if self.__handling:
-                raise Exception('Cannot handled nested ufuncs.\nCurrent: {}\nNew: {}'.format(context, self.__handling))
+                raise Exception('Cannot handled nested ufuncs.\n'
+                                'Current: {}\n'
+                                'New: {}'.format(context, self.__handling))
             self.__handling = context
 
         return obj
@@ -591,23 +593,35 @@ class _Quantity(object):
 
             if huh == 0:
                 dst_units = None
+                mobjs = None
                 if uf.__name__ in self.__require_units:
                     dst_units = self.__require_units[uf.__name__]
-                    if self.unitless and dst_units == 'radian':
-                        dst_units = None
+                    if dst_units == 'radian':
+                        mobjs = []
+                        for other in objs:
+                            unt = getattr(other, 'units', '')
+                            if unt == 'radian':
+                                mobjs.append(getattr(other, 'magnitude', other))
+                            else:
+                                factor, units = self._REGISTRY.get_base_units(unt)
+                                if units and units != UnitsContainer({'radian': 1}):
+                                    raise DimensionalityError(units, dst_units)
+                                mobjs.append(getattr(other, 'magnitude', other) * factor)
+                        mobjs = tuple(mobjs)
                     else:
                         dst_units = self._REGISTRY.parse_expression(dst_units).units
                 elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
                     dst_units = objs[0].units
 
-                if dst_units is not None:
-                    mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
-                                                         getattr(other, 'units', ''),
-                                                         dst_units)
-                                  for other in objs)
-                else:
-                    mobjs = tuple(getattr(other, 'magnitude', other)
-                                  for other in objs)
+                if mobjs is None:
+                    if dst_units is not None:
+                        mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
+                                                             getattr(other, 'units', ''),
+                                                             dst_units)
+                                      for other in objs)
+                    else:
+                        mobjs = tuple(getattr(other, 'magnitude', other)
+                                      for other in objs)
 
                 out = uf(*mobjs)
 

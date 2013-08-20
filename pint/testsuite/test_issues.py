@@ -93,3 +93,17 @@ class TestIssuesNP(TestCase):
         np.sqrt(x)
         self.assertAlmostEqual(np.sqrt([4.] * ureg.dimensionless), [2.] * ureg.dimensionless)
         self.assertAlmostEqual(np.sqrt(4. * ureg.dimensionless), 2. * ureg.dimensionless)
+
+    def test_issue45(self):
+        import math
+        ureg = UnitRegistry()
+        self.assertAlmostEqual(math.sqrt(4 * ureg.m/ureg.cm), math.sqrt(4 * 100))
+        self.assertAlmostEqual(float(ureg.V / ureg.mV), 1000.)
+
+    def test_issue45b(self):
+        ureg = UnitRegistry()
+        self.assertAlmostEqual(np.sin([np.pi/2] * ureg.m / ureg.m ), np.sin([np.pi/2] * ureg.dimensionless))
+        self.assertAlmostEqual(np.sin([np.pi/2] * ureg.cm / ureg.m ), np.sin([np.pi/2] * ureg.dimensionless * 0.01))
+
+
+

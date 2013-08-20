@@ -365,7 +365,7 @@ class TestTrigUfuncs(TestUFuncs):
         self._test1(np.sin, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                              np.arange(0, pi/2, pi/4) * self.ureg.radian,
                              np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-                            ), (self.ureg.m, ), '')
+                            ), (self.ureg.m, ), '', results=(None, None, np.sin(np.arange(0, pi/2, pi/4)*0.001)))
         self._test1(np.sin, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
                             ), results=(np.sin(np.arange(0, pi/2, pi/4)), ))
 
@@ -373,7 +373,7 @@ class TestTrigUfuncs(TestUFuncs):
         self._test1(np.cos, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                              np.arange(0, pi/2, pi/4) * self.ureg.radian,
                              np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-                            ), (self.ureg.m, ), '')
+                            ), (self.ureg.m, ), '', results=(None, None, np.cos(np.arange(0, pi/2, pi/4)*0.001)))
         self._test1(np.cos, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
                             ), results=(np.cos(np.arange(0, pi/2, pi/4)), ))
 
@@ -381,7 +381,7 @@ class TestTrigUfuncs(TestUFuncs):
         self._test1(np.tan, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                              np.arange(0, pi/2, pi/4) * self.ureg.radian,
                              np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-                            ), (self.ureg.m, ), '')
+                            ), (self.ureg.m, ), '', results=(None, None, np.tan(np.arange(0, pi/2, pi/4)*0.001)))
         self._test1(np.tan, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
                             ), results=(np.tan(np.arange(0, pi/2, pi/4)), ))
 
@@ -421,7 +421,7 @@ class TestTrigUfuncs(TestUFuncs):
         self._test1(np.sinh, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                               np.arange(0, pi/2, pi/4) * self.ureg.radian,
                               np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-                              ), (self.ureg.m, ), '')
+                              ), (self.ureg.m, ), '', results=(None, None, np.sinh(np.arange(0, pi/2, pi/4)*0.001)))
         self._test1(np.sinh, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
                               ), results=(np.sinh(np.arange(0, pi/2, pi/4)), ))
 
@@ -429,7 +429,7 @@ class TestTrigUfuncs(TestUFuncs):
         self._test1(np.cosh, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                               np.arange(0, pi/2, pi/4) * self.ureg.radian,
                               np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-                             ), (self.ureg.m, ), '')
+                             ), (self.ureg.m, ), '', results=(None, None, np.cosh(np.arange(0, pi/2, pi/4)*0.001)))
         self._test1(np.cosh, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
                              ), results=(np.cosh(np.arange(0, pi/2, pi/4)), ))
 
@@ -437,7 +437,7 @@ class TestTrigUfuncs(TestUFuncs):
         self._test1(np.tanh, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                               np.arange(0, pi/2, pi/4) * self.ureg.radian,
                               np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-                             ), (self.ureg.m, ), '')
+                             ), (self.ureg.m, ), '', results=(None, None, np.tanh(np.arange(0, pi/2, pi/4)*0.001)))
         self._test1(np.tanh, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
                              ), results=(np.tanh(np.arange(0, pi/2, pi/4)), ))
 
@@ -464,7 +464,8 @@ class TestTrigUfuncs(TestUFuncs):
         self._test1(np.rad2deg, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                                  np.arange(0, pi/2, pi/4) * self.ureg.radian,
                                  np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-                                 ), (self.ureg.m, ), 'degree')
+                                 ), (self.ureg.m, ), 'degree', results=(None, None, np.rad2deg(np.arange(0, pi/2, pi/4)*0.001)))
+
 
 
 class TestComparisonUfuncs(TestUFuncs):

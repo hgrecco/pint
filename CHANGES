@@ -25,7 +25,8 @@ Pint Changelog
   (Issue #42)
 - support for application of numpy function on non-ndarray magnitudes.
   (Issue #44)
-
+- support for math operations on dimensionless Quantities (writen with units)
+  (Issue #45)
 
 0.2.1 (2013-07-02)
 ------------------
