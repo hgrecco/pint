@@ -72,6 +72,7 @@ class _Quantity(object):
         if units is None:
             if isinstance(value, string_types):
                 inst = cls._REGISTRY.parse_expression(value)
+                return cls.__new__(cls, inst)
             elif isinstance(value, cls):
                 inst = copy.copy(value)
             else:

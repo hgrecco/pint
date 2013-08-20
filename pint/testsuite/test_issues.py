@@ -105,5 +105,8 @@ class TestIssuesNP(TestCase):
         self.assertAlmostEqual(np.sin([np.pi/2] * ureg.m / ureg.m ), np.sin([np.pi/2] * ureg.dimensionless))
         self.assertAlmostEqual(np.sin([np.pi/2] * ureg.cm / ureg.m ), np.sin([np.pi/2] * ureg.dimensionless * 0.01))
 
-
-
+    def test_issue50(self):
+        ureg = UnitRegistry()
+        Q_ = ureg.Quantity
+        self.assertEqual(Q_(100), 100 * ureg.dimensionless)
+        self.assertEqual(Q_('100'), 100 * ureg.dimensionless)

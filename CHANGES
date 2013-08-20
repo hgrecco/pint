@@ -27,6 +27,9 @@ Pint Changelog
   (Issue #44)
 - support for math operations on dimensionless Quantities (writen with units)
   (Issue #45)
+- fix obtaining dimensionless quantity from string.
+  (Issue #50)
+
 
 0.2.1 (2013-07-02)
 ------------------
