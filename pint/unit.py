@@ -760,6 +760,8 @@ class UnitRegistry(object):
 
     def parse_expression(self, input_string):
         """Parse a mathematical expression including units and return a quantity object.
+        
+        We parse the string and convert it into tokanized format that can be converted to python code and evaluted.
         """
 
         if not input_string:
@@ -796,11 +798,23 @@ class UnitRegistry(object):
 
         if unknown:
             raise UndefinedUnitError(unknown)
-        return eval(untokenize(result), {'__builtins__': None},
+        returned_result = eval(untokenize(result), {'__builtins__': None},
                                         {'REGISTRY': self._units,
                                          'Q_': self.Quantity,
                                          'U_': UnitsContainer})
-
+        # FIXME: The above tokenizer code fails to parse unitless values like '100' or '100.00' as it results in normal
+        # 'int' or 'float' rather then Quanity type - so a value like '100 kg' parses into:
+        # > untokenize([(2, u'100'), (51, u'*'), (1, u'Q_'), (51, u'('), (2, u'1'), (51, u), (1, u'U_'), (51, u'('), (3, u'kilogram'), (51, u'='), (2, u'1'), (51, u')'), (51, u')'), (0, '')])
+        # > 100 *Q_ (1 ,U_ (kilogram=1 ))
+        # but value like '100' parses into:
+        # > untokenize([(2, u'100'), (0, '')])
+        # > 100
+        # so we use a quick workaround instead as my head hurts trying to pick up tokenizer in short time (moc.buhtig@danols.com)
+        if isinstance(returned_result, self.Quantity) == False:
+        	returned_result = self.Quantity(returned_result)
+        assert isinstance(returned_result, self.Quantity), "Returned value must be of type 'Quanity' but is of type" \
+                                         " '{0}', this is a bug and should be reported.".format(type(returned_result))
+        return returned_result
     def wraps(self, ret, args, strict=True):
         """Wraps a function to become pint-aware.
 
