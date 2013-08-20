@@ -517,11 +517,17 @@ class _Quantity(object):
     def __getattr__(self, item):
         if item.startswith('__array_'):
             if isinstance(self._magnitude, ndarray):
-                return getattr(self._magnitude, item)
+                try:
+                    return getattr(self._magnitude, item)
+                except AttributeError:
+                    return getattr(_to_magnitude(self._magnitude, True), item)
             else:
-                raise AttributeError('__array_* attributes are only taken from ndarray objects.')
+                return getattr(_to_magnitude(self._magnitude, True), item)
         try:
-            attr = getattr(self._magnitude, item)
+            try:
+                attr = getattr(self._magnitude, item)
+            except AttributeError:
+                attr = getattr(_to_magnitude(self._magnitude, True), item)
             if callable(attr):
                 return functools.partial(self.__numpy_method_wrap, attr)
             return attr

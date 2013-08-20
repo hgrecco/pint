@@ -23,6 +23,9 @@ Pint Changelog
   (Issue #46)
 - support for non-installed pint.
   (Issue #42)
+- support for application of numpy function on non-ndarray magnitudes.
+  (Issue #44)
+
 
 0.2.1 (2013-07-02)
 ------------------

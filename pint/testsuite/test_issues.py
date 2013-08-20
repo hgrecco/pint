@@ -86,3 +86,10 @@ class TestIssuesNP(TestCase):
         self.assertIsInstance(qq, ureg.Quantity)
         self.assertSequenceEqual(qq.magnitude, x * m)
         self.assertEquals(qq.units, ureg.meter.units)
+
+    def test_issue44(self):
+        ureg = UnitRegistry()
+        x = 4. * ureg.dimensionless
+        np.sqrt(x)
+        self.assertAlmostEqual(np.sqrt([4.] * ureg.dimensionless), [2.] * ureg.dimensionless)
+        self.assertAlmostEqual(np.sqrt(4. * ureg.dimensionless), 2. * ureg.dimensionless)
