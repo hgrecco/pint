@@ -31,6 +31,8 @@ Pint Changelog
   (Issue #50)
 - fix adding and comparing numbers to a dimensionless quantity (written with units).
   (Issue #54)
+- Support for iter in Quantity.
+  (Issue #55, thanks natezb)
 
 
 0.2.1 (2013-07-02)
