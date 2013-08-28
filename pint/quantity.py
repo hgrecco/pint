@@ -522,6 +522,11 @@ class _Quantity(object):
     def __len__(self):
         return len(self._magnitude)
 
+    def __iter__(self):
+        # Allow exception to propagate in case of non-iterable magnitude
+        it_mag = iter(self.magnitude)
+        return iter((self.__class__(mag, self._units) for mag in it_mag))
+
     def __getattr__(self, item):
         if item.startswith('__array_'):
             if isinstance(self._magnitude, ndarray):
