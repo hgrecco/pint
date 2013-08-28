@@ -25,10 +25,12 @@ Pint Changelog
   (Issue #42, thanks danielsokolowski)
 - support for application of numpy function on non-ndarray magnitudes.
   (Issue #44)
-- support for math operations on dimensionless Quantities (writen with units)
+- support for math operations on dimensionless Quantities (written with units).
   (Issue #45)
 - fix obtaining dimensionless quantity from string.
   (Issue #50)
+- fix adding and comparing numbers to a dimensionless quantity (written with units).
+  (Issue #54)
 
 
 0.2.1 (2013-07-02)

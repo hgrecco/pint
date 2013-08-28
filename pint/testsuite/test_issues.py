@@ -35,6 +35,16 @@ class TestIssues(unittest.TestCase):
         self.assertEqual(t.units, UnitsContainer(millimolar=1))
         self.assertEqual(t.to('mole / liter'), 4e-3 * ureg['M'])
 
+    def test_issue54(self):
+        ureg = UnitRegistry()
+        self.assertEqual((ureg.km/ureg.m + 1).magnitude, 1001)
+
+    def test_issue54_related(self):
+        ureg = UnitRegistry()
+        self.assertEqual(ureg.km/ureg.m, 1000)
+        self.assertEqual(1000, ureg.km/ureg.m)
+        self.assertLess(900, ureg.km/ureg.m)
+        self.assertGreater(1100, ureg.km/ureg.m)
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):

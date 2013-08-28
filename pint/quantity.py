@@ -166,6 +166,9 @@ class _Quantity(object):
 
         return self._dimensionality
 
+    def _convert_magnitude(self, other):
+        return self._REGISTRY.convert(self._magnitude, self._units, other)
+
     def ito(self, other=None):
         """Inplace rescale to different units.
 
@@ -176,10 +179,12 @@ class _Quantity(object):
             other = self._REGISTRY.parse_units(other)
         elif isinstance(other, self.__class__):
             other = copy.copy(other.units)
+        elif isinstance(other, UnitsContainer):
+            pass
         else:
             other = UnitsContainer(other)
 
-        self._magnitude = self._REGISTRY.convert(self._magnitude, self._units, other)
+        self._magnitude = self._convert_magnitude(other)
         self._units = other
         return self
 
@@ -199,7 +204,7 @@ class _Quantity(object):
 
         _, other = self._REGISTRY.get_base_units(self.units)
 
-        self._magnitude = self._REGISTRY.convert(self._magnitude, self._units, other)
+        self._magnitude = self._convert_magnitude(other)
         self._units = other
         return self
 
@@ -214,12 +219,12 @@ class _Quantity(object):
     # Mathematical operations
     def __float__(self):
         if self.dimensionless:
-            return float(self._REGISTRY.convert(self._magnitude, self.units, UnitsContainer()))
+            return float(self._convert_magnitude(UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
     def __complex__(self):
         if self.dimensionless:
-            return complex(self._REGISTRY.convert(self._magnitude, self.units, UnitsContainer()))
+            return complex(self._convert_magnitude(UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
     def iadd_sub(self, other, fun):
@@ -233,6 +238,7 @@ class _Quantity(object):
                 self._magnitude = fun(self._magnitude, other.to(self)._magnitude)
         else:
             if self.dimensionless:
+                self.ito(UnitsContainer())
                 self._magnitude = fun(self._magnitude, _to_magnitude(other, self.force_ndarray))
             else:
                 raise DimensionalityError(self.units, 'dimensionless')
@@ -345,7 +351,8 @@ class _Quantity(object):
         # This is class comparison by name is to bypass that
         # each Quantity class is unique.
         if other.__class__.__name__ != self.__class__.__name__:
-            return self.dimensionless and _eq(self.magnitude, other)
+            return (self.dimensionless and
+                    _eq(self._convert_magnitude(UnitsContainer()), other))
 
         if _eq(self._magnitude, 0) and _eq(other._magnitude, 0):
             return self.dimensionality == other.dimensionality
@@ -361,7 +368,7 @@ class _Quantity(object):
     def __lt__(self, other):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
-                return operator.lt(self.magnitude, other)
+                return operator.lt(self._convert_magnitude(UnitsContainer()), other)
             else:
                 raise ValueError('Cannot compare Quantity and {}'.format(type(other)))
 
