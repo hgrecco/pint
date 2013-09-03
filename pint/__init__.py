@@ -23,7 +23,8 @@ _DEFAULT_REGISTRY = UnitRegistry()
 
 __version__ = "unknown"
 try:  # try to grab the commit version of our package
-    __version__ = (subprocess.check_output(["git", "describe"], 
+    __version__ = (subprocess.check_output(["git", "describe"],
+                                           stderr=subprocess.STDOUT,
                                            cwd=os.path.dirname(os.path.abspath(__file__)))).strip()
 except:  # on any error just try to grab the version that is installed on the system
     try:
