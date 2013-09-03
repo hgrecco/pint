@@ -122,10 +122,10 @@ class _Quantity(object):
 
     # IPython related code
     def _repr_html_(self):
-        return self.__format__('!h')
+        return self.__format__('H')
 
     def _repr_latex_(self):
-        return "$" + self.__format__('!l') + "$"
+        return "$" + self.__format__('L') + "$"
 
     @property
     def magnitude(self):
