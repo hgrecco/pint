@@ -317,6 +317,7 @@ class _Quantity(object):
         return ret
 
     __div__ = __truediv__
+    __rdiv__ = __rtruediv__
     __idiv__ = __itruediv__
 
     def __rfloordiv__(self, other):
