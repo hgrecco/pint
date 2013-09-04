@@ -6,7 +6,8 @@ Pint Changelog
 0.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- fix right division on python 2.7
+  (Issue #58, thanks natezb)
 
 
 0.3 (2013-09-02)
