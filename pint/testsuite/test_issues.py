@@ -120,3 +120,8 @@ class TestIssuesNP(TestCase):
         Q_ = ureg.Quantity
         self.assertEqual(Q_(100), 100 * ureg.dimensionless)
         self.assertEqual(Q_('100'), 100 * ureg.dimensionless)
+
+    def test_issue62(self):
+        ureg = UnitRegistry()
+        m = ureg['m**0.5']
+        self.assertEqual(str(m.units), 'meter ** 0.5')
