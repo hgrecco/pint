@@ -8,6 +8,8 @@ Pint Changelog
 
 - fix right division on python 2.7
   (Issue #58, thanks natezb)
+- fix formatting of fractional exponentials between 0 and 1.
+  (Issue #62, thanks jdreaver)
 
 
 0.3 (2013-09-02)
