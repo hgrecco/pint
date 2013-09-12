@@ -164,7 +164,7 @@ def formatter(items, as_ratio=True, single_denominator=False,
     for key, value in sorted(items):
         if value == 1:
             pos_terms.append(key)
-        elif value > 1:
+        elif value > 0:
             pos_terms.append(power_fmt.format(key, fun(value)))
         elif value == -1:
             neg_terms.append(key)
