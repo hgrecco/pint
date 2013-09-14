@@ -2,7 +2,6 @@ Pint Changelog
 ==============
 
 
-
 0.4 (unreleased)
 ----------------
 
@@ -10,6 +9,8 @@ Pint Changelog
   (Issue #58, thanks natezb)
 - fix formatting of fractional exponentials between 0 and 1.
   (Issue #62, thanks jdreaver)
+- fix installation as egg.
+  (Issue #61)
 
 
 0.3 (2013-09-02)
