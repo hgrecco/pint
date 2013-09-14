@@ -22,8 +22,10 @@ try:
     import numpy as np
 
     def _to_magnitude(value, force_ndarray=False):
-        if value is None:
-            return value
+        if isinstance(value, (dict, bool)) or value is None:
+            raise ValueError('Invalid magnitude for Quantity: {!r}'.format(value))
+        elif value == '':
+            raise ValueError('Quantity magnitude cannot be an empty string.')
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
         if force_ndarray:
@@ -32,6 +34,13 @@ try:
 
 except ImportError:
     def _to_magnitude(value, force_ndarray=False):
+        if isinstance(value, (dict, bool)) or value is None:
+            raise ValueError('Invalid magnitude for Quantity: {!r}'.format(value))
+        elif value == '':
+            raise ValueError('Quantity magnitude cannot be an empty string.')
+        elif isinstance(value, (list, tuple)):
+            raise ValueError('lists and tuples are valid magnitudes for '
+                             'Quantity only when NumPy is present.')
         return value
 
 
@@ -71,6 +80,8 @@ class _Quantity(object):
     def __new__(cls, value, units=None):
         if units is None:
             if isinstance(value, string_types):
+                if value == '':
+                    raise ValueError('Quantity magnitude cannot be an empty string.')
                 inst = cls._REGISTRY.parse_expression(value)
                 return cls.__new__(cls, inst)
             elif isinstance(value, cls):

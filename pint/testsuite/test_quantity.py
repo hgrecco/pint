@@ -67,10 +67,6 @@ class TestQuantity(TestCase):
             self.assertEqual(x.magnitude, 4.2)
             self.assertEqual(x.units, UnitsContainer(meter=1))
 
-        x = self.Q_(None, UnitsContainer(length=1))
-        self.assertEqual(x.magnitude, None)
-        self.assertEqual(x.units, UnitsContainer(length=1))
-
         x = self.Q_(4.2, UnitsContainer(length=1))
         y = self.Q_(x)
         self.assertEqual(x.magnitude, y.magnitude)

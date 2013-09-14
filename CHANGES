@@ -11,6 +11,8 @@ Pint Changelog
   (Issue #62, thanks jdreaver)
 - fix installation as egg.
   (Issue #61)
+- fix handling of strange values as input of Quantity.
+  (Issue #53)
 
 
 0.3 (2013-09-02)

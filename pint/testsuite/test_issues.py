@@ -46,6 +46,22 @@ class TestIssues(unittest.TestCase):
         self.assertLess(900, ureg.km/ureg.m)
         self.assertGreater(1100, ureg.km/ureg.m)
 
+    def test_issue61(self):
+        ureg = UnitRegistry()
+        Q_ = ureg.Quantity
+        for value in ({}, {'a': 3}, '', None, True, False):
+            self.assertRaises(ValueError, Q_, value)
+            self.assertRaises(ValueError, Q_, value, 'meter')
+
+    @unittest.skipIf(HAS_NUMPY, 'Numpy present')
+    def test_issue61_notNP(self):
+        ureg = UnitRegistry()
+        Q_ = ureg.Quantity
+        for value in ([1, 2, 3], (1, 2, 3)):
+            self.assertRaises(ValueError, Q_, value)
+            self.assertRaises(ValueError, Q_, value, 'meter')
+
+
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):
 
