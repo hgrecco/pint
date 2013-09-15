@@ -35,6 +35,19 @@ class TestIssues(unittest.TestCase):
         self.assertEqual(t.units, UnitsContainer(millimolar=1))
         self.assertEqual(t.to('mole / liter'), 4e-3 * ureg['M'])
 
+    def test_issue52(self):
+        u1 = UnitRegistry()
+        u2 = UnitRegistry()
+        q1 = u1.meter
+        q2 = u2.meter
+        import operator as op
+        for fun in (op.add, op.iadd,
+                    op.sub, op.isub,
+                    op.mul, op.imul,
+                    op.floordiv, op.ifloordiv,
+                    op.truediv, op.itruediv):
+            self.assertRaises(ValueError, fun, q1, q2)
+
     def test_issue54(self):
         ureg = UnitRegistry()
         self.assertEqual((ureg.km/ureg.m + 1).magnitude, 1001)

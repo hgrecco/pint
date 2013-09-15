@@ -210,3 +210,10 @@ Then in `yourmodule.py` the code would be::
    my_speed = Quantity(20, 'm/s')
 
 
+.. warning:: There are no global units in Pint. All units belong to a registry and you can have multiple registries instantiated at the same time. However, you are not supposed to operate between quantities that belong to different registries. Never do things like this::
+
+    >>> q1 = UnitRegistry().meter
+    >>> q2 = UnitRegistry().meter
+    >>> # q1 and q2 belong to different registries!
+    >>> id(q1._REGISTRY) is id(q2._REGISTRY) # False
+

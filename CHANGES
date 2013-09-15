@@ -13,6 +13,8 @@ Pint Changelog
   (Issue #61)
 - fix handling of strange values as input of Quantity.
   (Issue #53)
+- math operations between quantities of different registries now raise a ValueError.
+  (Issue #52)
 
 
 0.3 (2013-09-02)

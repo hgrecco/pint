@@ -62,6 +62,27 @@ class _Exception(Exception):
         self.internal = internal
 
 
+def _check(q1, other):
+    """Check Quantities before math operations.
+
+    Return True if q1 and other are from the same class.
+    Raise a ValueError if other has a different _REGISTRY than q1.
+
+    In other case, return False.
+    """
+    if isinstance(other, q1.__class__):
+        return True
+    try:
+        reg = other._REGISTRY
+    except AttributeError:
+        return False
+
+    if q1._REGISTRY is reg:
+        return True
+
+    raise ValueError('Cannot operate between quantities of different registries')
+
+
 @functools.total_ordering
 class _Quantity(object):
     """Implements a class to describe a physical quantities:
@@ -239,7 +260,7 @@ class _Quantity(object):
         raise DimensionalityError(self.units, 'dimensionless')
 
     def iadd_sub(self, other, fun):
-        if isinstance(other, self.__class__):
+        if _check(self, other):
             if not self.dimensionality == other.dimensionality:
                 raise DimensionalityError(self.units, other.units,
                                           self.dimensionality, other.dimensionality)
@@ -278,7 +299,7 @@ class _Quantity(object):
     __rsub__ = __sub__
 
     def __imul__(self, other):
-        if isinstance(other, self.__class__):
+        if _check(self, other):
             self._magnitude *= other._magnitude
             self._units *= other._units
         else:
@@ -287,7 +308,7 @@ class _Quantity(object):
         return self
 
     def __mul__(self, other):
-        if isinstance(other, self.__class__):
+        if _check(self, other):
             return self.__class__(self._magnitude * other._magnitude, self._units * other._units)
         else:
             return self.__class__(self._magnitude * other, self._units)
@@ -295,7 +316,7 @@ class _Quantity(object):
     __rmul__ = __mul__
 
     def __itruediv__(self, other):
-        if isinstance(other, self.__class__):
+        if _check(self, other):
             self._magnitude /= other._magnitude
             self._units /= other._units
         else:
@@ -314,7 +335,7 @@ class _Quantity(object):
         raise NotImplementedError
 
     def __ifloordiv__(self, other):
-        if isinstance(other, self.__class__):
+        if _check(self, other):
             self._magnitude //= other._magnitude
             self._units /= other._units
         else:
@@ -332,7 +353,7 @@ class _Quantity(object):
     __idiv__ = __itruediv__
 
     def __rfloordiv__(self, other):
-        if isinstance(other, self.__class__):
+        if _check(self, other):
             return self.__class__(other._magnitude // self._magnitude, other._units / self._units)
         else:
             return self.__class__(other // self._magnitude, 1.0 / self._units)
