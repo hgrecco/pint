@@ -17,16 +17,20 @@ import math
 import itertools
 import functools
 import pkg_resources
+from decimal import Decimal
+from collections import defaultdict
+from contextlib import contextmanager
 
 from io import open
 from numbers import Number
 
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
+from .compat import ChainMap
 from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
                    ParserHelper, string_types, ptok, string_preprocessor)
+from .util import find_shortest_path
 
-from decimal import Decimal
 
 class UndefinedUnitError(ValueError):
     """Raised when the units are not defined in the unit registry.
@@ -165,6 +169,12 @@ class Definition(object):
 
 def _is_dim(name):
     return name.startswith('[') and name.endswith(']')
+
+
+def _freeze(d):
+    """Return a hashable view of dict.
+    """
+    return frozenset(d.items())
 
 
 class PrefixDefinition(Definition):
@@ -408,7 +418,22 @@ class UnitRegistry(object):
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes = {'': None, 's': ''}
 
-        #: In the context of a multiplication of units, interpret
+        # A context defines transformation rules between base dimensions (e.g. time and length).
+        # Transformations are stored in a dict with:
+        # - key: tuple with source and destination dimensions represented
+        #   as set of UnitContainer.items()
+        # - value: conversion function taking a single value.
+
+        #: Map context name (string) or abbreviation to context.
+        self._contexts = {}
+
+        #: Stores active contexts.
+        self._active_ctx = ChainMap()
+
+        #: Store a graph representation of the context.
+        self._active_ctx_graph = None
+
+        #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
         self.default_to_delta = default_to_delta
 
@@ -432,6 +457,52 @@ class UnitRegistry(object):
                 'get_dimensionality', 'Quantity', 'wraps', 'parse_unit',
                 'parse_units', 'parse_expression', 'pi_theorem',
                 'convert', 'get_base_units']
+
+    @contextmanager
+    def context(self, *names):
+        """Used as a context manager, this function enables to activate a context
+        which is removed after usage.
+
+        :param names: name of the context.
+
+        Multiple contexts can be called in single call or nested::
+
+            >>> with ureg.context('one', 'two'):
+            ...     pass
+            >>> with ureg.context('one'):
+            ...     with ureg.context('two'):
+            ...         pass
+
+        """
+
+        # For each name, we first find the corresponding context.
+        ctxs = tuple(self._contexts[name] for name in names)
+
+        # And then add them to the active context.
+        for ctx in ctxs:
+            self._active_ctx = self._active_ctx.new_child(ctx)
+
+        # The graph representing connections between dimensions is rebuilt
+        # from the connections (edges) stored in the context.
+        self._active_ctx_graph = defaultdict(list)
+        for fr_, to_ in self._active_ctx.keys():
+            self._active_ctx_graph[fr_].append(to_)
+
+        try:
+            # After adding the context and rebuilding the graph, the registry
+            # is ready to use.
+            yield self
+        finally:
+            # Upon leaving the with statement,
+            # the added contexts are removed from the active one.
+            for _ in names:
+                self._active_ctx = self._active_ctx.parents
+
+            # The graph representing connections between dimensions is rebuilt
+            # from the connections (edges) remaining in the context.
+            self._active_ctx_graph = defaultdict(list)
+            for fr_, to_ in self._active_ctx.keys():
+                self._active_ctx_graph[fr_].append(to_)
 
     def define(self, definition):
         """Add unit to the registry.
@@ -649,6 +720,22 @@ class UnitRegistry(object):
             dst = ParserHelper.from_string(dst)
         if src == dst:
             return value
+
+        src_dim = self.get_dimensionality(src)
+        dst_dim = self.get_dimensionality(dst)
+
+        # If there is an active context, we look for a path connecting source and
+        # destination dimensionality. If it exists, we transform the source value
+        # by applying sequentially each transformation of the path.
+        if self._active_ctx:
+            path = find_shortest_path(self._active_ctx_graph, _freeze(src_dim), _freeze(dst_dim))
+            if path:
+                src = self.Quantity(value, src)
+                for a, b in zip(path[:-1], path[1:]):
+                    src = self._active_ctx[(a, b)](src)
+
+                value, src = src.magnitude, src.units
+
         if len(src) == 1:
             src_unit, src_value = list(src.items())[0]
             src_unit = self._units[src_unit]
@@ -668,9 +755,7 @@ class UnitRegistry(object):
 
         factor, units = self.get_base_units(src / dst)
         if len(units):
-            raise DimensionalityError(src, dst,
-                                      self.get_dimensionality(src),
-                                      self.get_dimensionality(dst))
+            raise DimensionalityError(src, dst, src_dim, dst_dim)
 
         # factor is type float and if our magintude is type Decimal then
         # must first convert to Decimal before we can '*' the values
