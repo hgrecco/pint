@@ -74,6 +74,24 @@ class TestIssues(unittest.TestCase):
             self.assertRaises(ValueError, Q_, value)
             self.assertRaises(ValueError, Q_, value, 'meter')
 
+    def test_issue66(self):
+        ureg = UnitRegistry()
+        self.assertEqual(ureg.get_dimensionality(UnitsContainer({'[temperature]': 1})),
+                         UnitsContainer({'[temperature]': 1}))
+        self.assertEqual(ureg.get_dimensionality(ureg.degK.units),
+                         UnitsContainer({'[temperature]': 1}))
+        self.assertEqual(ureg.get_dimensionality(ureg.degC.units),
+                         UnitsContainer({'[temperature]': 1}))
+
+    # The behaviour of get_base_units for a non multiplicative unit will be defined
+    # In Pint 0.4
+    @unittest.skip
+    def test_issue66b(self):
+        ureg = UnitRegistry()
+        self.assertEqual(ureg.get_base_units(ureg.degK.units),
+                         (1., UnitsContainer({'degK': 1})))
+        self.assertEqual(ureg.get_base_units(ureg.degC.units),
+                         (1., UnitsContainer({'degC': 1})))
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):
