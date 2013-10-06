@@ -414,7 +414,7 @@ class UnitRegistry(object):
 
         if filename == '':
             data = pkg_resources.resource_filename(__name__, 'default_en.txt')
-            self.load_definitions(data)
+            self.load_definitions(data, True)
         elif filename is not None:
             self.load_definitions(filename)
 
@@ -483,25 +483,28 @@ class UnitRegistry(object):
                                        ScaleConverter(definition.converter.scale),
                                        d_reference, definition.is_base))
 
-    def load_definitions(self, file):
+    def load_definitions(self, file, is_resource=False):
         """Add units and prefixes defined in a definition text file.
         """
         # Permit both filenames and line-iterables
         if isinstance(file, string_types):
             with open(file, encoding='utf-8') as fp:
-                return self.load_definitions(fp)
+                return self.load_definitions(fp, is_resource)
 
         for line in file:
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
             if line.startswith('@import'):
-                try:
-                    path = os.path.dirname(file.name)
-                except AttributeError:
-                    path = os.getcwd()
-                path = os.path.join(path, os.path.normpath(line[7:].strip()))
-                self.load_definitions(path)
+                if is_resource:
+                    path = pkg_resources.resource_filename(__name__, line[7:].strip())
+                else:
+                    try:
+                        path = os.path.dirname(file.name)
+                    except AttributeError:
+                        path = os.getcwd()
+                    path = os.path.join(path, os.path.normpath(line[7:].strip()))
+                self.load_definitions(path, is_resource)
                 continue
             try:
                 self.define(Definition.from_string(line))
