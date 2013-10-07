@@ -277,7 +277,7 @@ def find_shortest_path(graph, start, end, path=[]):
     path = path + [start]
     if start == end:
         return path
-    if not graph.has_key(start):
+    if not start in graph:
         return None
     shortest = None
     for node in graph[start]:

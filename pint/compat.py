@@ -1,5 +1,14 @@
+
+import sys
+
 from collections import MutableMapping
-from thread import get_ident
+if sys.version_info < (3, 0):
+    from thread import get_ident
+elif sys.version_info < (3, 3):
+    from _thread import get_ident
+else:
+    from threading import get_ident
+
 
 def _recursive_repr(fillvalue='...'):
     'Decorator to make a repr function return fillvalue for a recursive call'
