@@ -85,7 +85,7 @@ class TestIssues(unittest.TestCase):
 
     # The behaviour of get_base_units for a non multiplicative unit will be defined
     # In Pint 0.4
-    @unittest.skip
+    @unittest.skip('Behaviour not yet defined')
     def test_issue66b(self):
         ureg = UnitRegistry()
         self.assertEqual(ureg.get_base_units(ureg.degK.units),
