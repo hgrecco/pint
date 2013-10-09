@@ -99,7 +99,7 @@ class ChainMap(MutableMapping):
 
     __copy__ = copy
 
-    def new_child(self, m=None):                # like Django's Context.push()
+    def new_child(self, m=None):                # like Django's _Context.push()
         '''
         New ChainMap with a new map followed by all previous maps. If no
         map is provided, an empty dict is used.
@@ -109,7 +109,7 @@ class ChainMap(MutableMapping):
         return self.__class__(m, *self.maps)
 
     @property
-    def parents(self):                          # like Django's Context.pop()
+    def parents(self):                          # like Django's _Context.pop()
         'New ChainMap from maps[1:].'
         return self.__class__(*self.maps[1:])
 

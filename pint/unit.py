@@ -16,9 +16,10 @@ import copy
 import math
 import itertools
 import functools
+import weakref
 import pkg_resources
 from decimal import Decimal
-from collections import defaultdict
+from collections import defaultdict, MutableMapping
 from contextlib import contextmanager
 
 from io import open
@@ -174,7 +175,133 @@ def _is_dim(name):
 def _freeze(d):
     """Return a hashable view of dict.
     """
+    if isinstance(d, frozenset):
+        return d
     return frozenset(d.items())
+
+
+class _Context(object):
+    """A specialized container that defines transformation functions from
+    one dimension to another. Each Dimension are specified using a UnitsContainer.
+    Simple transformation are given with a function taking a single parameter.
+
+        >>> timedim = UnitsContainer({'[time]': 1})
+        >>> spacedim = UnitsContainer({'[length]': 1})
+        >>> def f(time):
+        ...     'Time to length converter'
+        ...     return 3. * time
+        >>> c = _Context()
+        >>> c.add_transformation(timedim, spacedim, f)
+        >>> c.transform(timedim, spacedim, 2)
+        6
+
+    Conversion functions may take optional keyword arguments and the context can
+    have default values for these arguments.
+
+        >>> def f(time, n):
+        ...     'Time to length converter, n is the index of refraction of the material'
+        ...     return 3. * time / n
+        >>> c = _Context(n=3)
+        >>> c.add_transformation(timedim, spacedim, f)
+        >>> c.transform(timedim, spacedim, 2)
+        2
+
+    """
+
+    def __init__(self, **defaults):
+
+        #: Maps (src, dst) -> transformation function
+        self.funcs = {}
+
+        #: Maps defaults variable names to values
+        self.defaults = defaults
+
+        #: Maps (src, dst) -> self
+        #: Used as a convenience dictionary to be composed by _ContextChain
+        self.refs_to_self = weakref.WeakValueDictionary()
+
+    @classmethod
+    def from_context(cls, context, **defaults):
+        """Creates a new context that shares the funcs dictionary with the original
+        context. The default values are copied from the original context and updated
+        with the new defaults.
+
+        If defaults is empty, return the same context.
+        """
+        if defaults:
+            newdef = dict(context.defaults, **defaults)
+            c = cls(**newdef)
+            c.funcs = context.funcs
+            for edge in context.funcs.keys():
+                c.refs_to_self[edge] = c
+            return c
+        return context
+
+    def add_transformation(self, src, dst, func):
+        """Add a transformation function to the context.
+        """
+        _key = self.__keytransform__(src, dst)
+        self.funcs[_key] = func
+        self.refs_to_self[_key] = self
+
+    def __keytransform__(self, src, dst):
+        return _freeze(src), _freeze(dst)
+
+    def transform(self, src, dst, value):
+        """Transform a value.
+        """
+        _key = self.__keytransform__(src, dst)
+        return self.funcs[_key](value, **self.defaults)
+
+
+class _ContextChain(ChainMap):
+    """A specialized ChainMap for contexts that simplifies finding rules
+    to transform from one dimension to another.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(_ContextChain, self).__init__(*args, **kwargs)
+        self._graph = None
+
+    def insert_contexts(self, *contexts):
+        """Insert one or more contexts in reversed order the chained map.
+        (A rule in last context will take precedence)
+
+        To facilitate the identification of the context with the matching rule,
+        the *refs_to_self* dictionary of the context is used.
+        """
+        self.maps = [ctx.refs_to_self for ctx in reversed(contexts)] + self.maps
+        self._graph = None
+
+    def remove_contexts(self, n):
+        """Remove the last n inserted contexts from the chain.
+        """
+        self.maps = self.maps[n:]
+        self._graph = None
+
+    @property
+    def defaults(self):
+        if self:
+            return list(self.maps[0].values())[0].defaults
+        return {}
+
+    @property
+    def graph(self):
+        """The graph relating
+        """
+        if self._graph is None:
+            self._graph = defaultdict(set)
+            for fr_, to_ in self:
+                self._graph[fr_].add(to_)
+        return self._graph
+
+    def transform(self, src, dst, value):
+        """Transform the value, finding the rule in the chained context.
+        (A rule in last context will take precedence)
+
+        :raises: KeyError if the rule is not found.
+        """
+        return self[(src, dst)].transform(src, dst, value)
 
 
 class PrefixDefinition(Definition):
@@ -418,20 +545,11 @@ class UnitRegistry(object):
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes = {'': None, 's': ''}
 
-        # A context defines transformation rules between base dimensions (e.g. time and length).
-        # Transformations are stored in a dict with:
-        # - key: tuple with source and destination dimensions represented
-        #   as set of UnitContainer.items()
-        # - value: conversion function taking a single value.
-
         #: Map context name (string) or abbreviation to context.
         self._contexts = {}
 
         #: Stores active contexts.
-        self._active_ctx = ChainMap()
-
-        #: Store a graph representation of the context.
-        self._active_ctx_graph = None
+        self._active_ctx = _ContextChain()
 
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
@@ -459,34 +577,54 @@ class UnitRegistry(object):
                 'convert', 'get_base_units']
 
     @contextmanager
-    def context(self, *names):
+    def context(self, *names, **kwargs):
         """Used as a context manager, this function enables to activate a context
         which is removed after usage.
 
         :param names: name of the context.
+        :param kwargs: keyword arguments for the
 
-        Multiple contexts can be called in single call or nested::
+        Context are called by their name::
 
-            >>> with ureg.context('one', 'two'):
-            ...     pass
             >>> with ureg.context('one'):
-            ...     with ureg.context('two'):
+            ...     pass
+
+        If the context has an argument, you can specify it's value as a keyword
+        argument::
+
+            >>> with ureg.context('one', n=1):
+            ...     pass
+
+        Multiple contexts can be entered in single call:
+
+            >>> with ureg.context('one', 'two', n=1):
+            ...     pass
+
+        or nested allowing you to give different values to the same keyword argument::
+
+            >>> with ureg.context('one', n=1):
+            ...     with ureg.context('two', n=2):
+            ...         pass
+
+        A nested context inherits the defaults from the containing context::
+
+            >>> with ureg.context('one', n=1):
+            ...     with ureg.context('two'): # Here n takes the value of the upper context
             ...         pass
 
         """
 
-        # For each name, we first find the corresponding context.
-        ctxs = tuple(self._contexts[name] for name in names)
+        # If present, copy the defaults from the containing contexts
+        if self._active_ctx.defaults:
+            kwargs = dict(self._active_ctx.defaults, **kwargs)
+
+        # For each name, we first find the corresponding context
+        # and create a new one with the new defaults.
+        ctxs = tuple(_Context.from_context(self._contexts[name], **kwargs)
+                     for name in names)
 
         # And then add them to the active context.
-        for ctx in ctxs:
-            self._active_ctx = self._active_ctx.new_child(ctx)
-
-        # The graph representing connections between dimensions is rebuilt
-        # from the connections (edges) stored in the context.
-        self._active_ctx_graph = defaultdict(list)
-        for fr_, to_ in self._active_ctx.keys():
-            self._active_ctx_graph[fr_].append(to_)
+        self._active_ctx.insert_contexts(*ctxs)
 
         try:
             # After adding the context and rebuilding the graph, the registry
@@ -495,14 +633,7 @@ class UnitRegistry(object):
         finally:
             # Upon leaving the with statement,
             # the added contexts are removed from the active one.
-            for _ in names:
-                self._active_ctx = self._active_ctx.parents
-
-            # The graph representing connections between dimensions is rebuilt
-            # from the connections (edges) remaining in the context.
-            self._active_ctx_graph = defaultdict(list)
-            for fr_, to_ in self._active_ctx.keys():
-                self._active_ctx_graph[fr_].append(to_)
+            self._active_ctx.remove_contexts(len(names))
 
     def define(self, definition):
         """Add unit to the registry.
@@ -749,11 +880,11 @@ class UnitRegistry(object):
         # destination dimensionality. If it exists, we transform the source value
         # by applying sequentially each transformation of the path.
         if self._active_ctx:
-            path = find_shortest_path(self._active_ctx_graph, _freeze(src_dim), _freeze(dst_dim))
+            path = find_shortest_path(self._active_ctx.graph, _freeze(src_dim), _freeze(dst_dim))
             if path:
                 src = self.Quantity(value, src)
                 for a, b in zip(path[:-1], path[1:]):
-                    src = self._active_ctx[(a, b)](src)
+                    src = self._active_ctx.transform(a, b, src)
 
                 value, src = src.magnitude, src.units
 
