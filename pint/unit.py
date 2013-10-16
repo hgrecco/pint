@@ -19,7 +19,7 @@ import functools
 import weakref
 import pkg_resources
 from decimal import Decimal
-from collections import defaultdict, MutableMapping
+from collections import defaultdict
 from contextlib import contextmanager
 
 from io import open
@@ -32,6 +32,11 @@ from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependenc
                    ParserHelper, string_types, ptok, string_preprocessor)
 from .util import find_shortest_path
 
+import re
+
+_header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s+(=(?P<aliases>.*))*')
+_varname_re = re.compile('[A-Za-z_][A-Za-z0-9_]*')
+_def_re = re.compile('\s*(\w+)\s*=\s*([\w\d+-/*()]+)\s*')
 
 class UndefinedUnitError(ValueError):
     """Raised when the units are not defined in the unit registry.
@@ -208,13 +213,16 @@ class _Context(object):
 
     """
 
-    def __init__(self, **defaults):
+    def __init__(self, name, aliases=(), defaults=None):
+
+        self.name = name
+        self.aliases = aliases
 
         #: Maps (src, dst) -> transformation function
         self.funcs = {}
 
         #: Maps defaults variable names to values
-        self.defaults = defaults
+        self.defaults = defaults or {}
 
         #: Maps (src, dst) -> self
         #: Used as a convenience dictionary to be composed by _ContextChain
@@ -230,12 +238,64 @@ class _Context(object):
         """
         if defaults:
             newdef = dict(context.defaults, **defaults)
-            c = cls(**newdef)
+            c = cls(context.name, context.aliases, newdef)
             c.funcs = context.funcs
             for edge in context.funcs.keys():
                 c.refs_to_self[edge] = c
             return c
         return context
+
+    @classmethod
+    def from_string(cls, text):
+        lines = text.split('\n')
+        header, lines = lines[0], lines[1:]
+
+        r = _header_re.search(text)
+        name = r.groupdict()['name'].strip()
+        aliases = r.groupdict()['aliases']
+        if aliases:
+            aliases = tuple(a.strip() for a in r.groupdict()['aliases'].split('='))
+        else:
+            aliases = ()
+        defaults = r.groupdict()['defaults']
+
+        if defaults:
+            def to_num(val):
+                val = complex(val)
+                if not val.imag:
+                    return val.real
+                return val
+            defaults = {k: to_num(v) for k, v in _def_re.findall(defaults.strip('()'))}
+            ctx = cls(name, aliases, defaults)
+        else:
+            ctx = cls(name, aliases)
+
+        names = set()
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            rel, eq = line.split('=')
+            names.update(_varname_re.findall(eq))
+
+            func = lambda ureg, value: ureg.parse_expression(eq)
+            if '<->' in rel:
+                src, dst = (ParserHelper.from_string(s) for s in rel.split('<->'))
+                ctx.add_transformation(src, dst, func)
+                ctx.add_transformation(1 / dst, 1 / src, func)
+            elif '->' in rel:
+                src, dst = (ParserHelper.from_string(s) for s in rel.split('->'))
+                ctx.add_transformation(src, dst, func)
+            else:
+                raise ValueError('Relationships must be specified with <-> or ->.')
+
+        if defaults:
+            missing_pars = set(defaults.keys()).difference(set(names))
+            if missing_pars:
+                raise ValueError('Context parameters {} not found in any equation.'.format(missing_pars))
+
+        return ctx
 
     def add_transformation(self, src, dst, func):
         """Add a transformation function to the context.
@@ -244,7 +304,8 @@ class _Context(object):
         self.funcs[_key] = func
         self.refs_to_self[_key] = self
 
-    def __keytransform__(self, src, dst):
+    @staticmethod
+    def __keytransform__(src, dst):
         return _freeze(src), _freeze(dst)
 
     def transform(self, src, dst, value):
@@ -995,7 +1056,7 @@ class UnitRegistry(object):
 
         return ret
 
-    def parse_expression(self, input_string):
+    def parse_expression(self, input_string, values):
         """Parse a mathematical expression including units and return a quantity object.
         """
 
