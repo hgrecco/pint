@@ -5,7 +5,10 @@ Pint Changelog
 0.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Fix get_dimensionality for non multiplicative units.
+  (Issue #66)
+- Proper handling of @import directive inside a file read using pkg_resources.
+  (Issue #68)
 
 
 0.3.1 (2013-09-15)
