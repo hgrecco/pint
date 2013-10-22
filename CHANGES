@@ -2,8 +2,8 @@ Pint Changelog
 ==============
 
 
-0.4 (unreleased)
-----------------
+0.3.2 (2013-10-22)
+------------------
 
 - Fix get_dimensionality for non multiplicative units.
   (Issue #66)
