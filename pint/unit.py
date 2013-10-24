@@ -16,27 +16,18 @@ import copy
 import math
 import itertools
 import functools
-import weakref
 import pkg_resources
 from decimal import Decimal
-from collections import defaultdict
 from contextlib import contextmanager
-
 from io import open
 from numbers import Number
-
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
-from .compat import ChainMap
+from .context import Context, ContextChain
 from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
                    ParserHelper, string_types, ptok, string_preprocessor)
 from .util import find_shortest_path
 
-import re
-
-_header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s+(=(?P<aliases>.*))*')
-_varname_re = re.compile('[A-Za-z_][A-Za-z0-9_]*')
-_def_re = re.compile('\s*(\w+)\s*=\s*([\w\d+-/*()]+)\s*')
 
 class UndefinedUnitError(ValueError):
     """Raised when the units are not defined in the unit registry.
@@ -175,194 +166,6 @@ class Definition(object):
 
 def _is_dim(name):
     return name.startswith('[') and name.endswith(']')
-
-
-def _freeze(d):
-    """Return a hashable view of dict.
-    """
-    if isinstance(d, frozenset):
-        return d
-    return frozenset(d.items())
-
-
-class _Context(object):
-    """A specialized container that defines transformation functions from
-    one dimension to another. Each Dimension are specified using a UnitsContainer.
-    Simple transformation are given with a function taking a single parameter.
-
-        >>> timedim = UnitsContainer({'[time]': 1})
-        >>> spacedim = UnitsContainer({'[length]': 1})
-        >>> def f(time):
-        ...     'Time to length converter'
-        ...     return 3. * time
-        >>> c = _Context()
-        >>> c.add_transformation(timedim, spacedim, f)
-        >>> c.transform(timedim, spacedim, 2)
-        6
-
-    Conversion functions may take optional keyword arguments and the context can
-    have default values for these arguments.
-
-        >>> def f(time, n):
-        ...     'Time to length converter, n is the index of refraction of the material'
-        ...     return 3. * time / n
-        >>> c = _Context(n=3)
-        >>> c.add_transformation(timedim, spacedim, f)
-        >>> c.transform(timedim, spacedim, 2)
-        2
-
-    """
-
-    def __init__(self, name, aliases=(), defaults=None):
-
-        self.name = name
-        self.aliases = aliases
-
-        #: Maps (src, dst) -> transformation function
-        self.funcs = {}
-
-        #: Maps defaults variable names to values
-        self.defaults = defaults or {}
-
-        #: Maps (src, dst) -> self
-        #: Used as a convenience dictionary to be composed by _ContextChain
-        self.refs_to_self = weakref.WeakValueDictionary()
-
-    @classmethod
-    def from_context(cls, context, **defaults):
-        """Creates a new context that shares the funcs dictionary with the original
-        context. The default values are copied from the original context and updated
-        with the new defaults.
-
-        If defaults is empty, return the same context.
-        """
-        if defaults:
-            newdef = dict(context.defaults, **defaults)
-            c = cls(context.name, context.aliases, newdef)
-            c.funcs = context.funcs
-            for edge in context.funcs.keys():
-                c.refs_to_self[edge] = c
-            return c
-        return context
-
-    @classmethod
-    def from_string(cls, text):
-        lines = text.split('\n')
-        header, lines = lines[0], lines[1:]
-
-        r = _header_re.search(text)
-        name = r.groupdict()['name'].strip()
-        aliases = r.groupdict()['aliases']
-        if aliases:
-            aliases = tuple(a.strip() for a in r.groupdict()['aliases'].split('='))
-        else:
-            aliases = ()
-        defaults = r.groupdict()['defaults']
-
-        if defaults:
-            def to_num(val):
-                val = complex(val)
-                if not val.imag:
-                    return val.real
-                return val
-            defaults = {k: to_num(v) for k, v in _def_re.findall(defaults.strip('()'))}
-            ctx = cls(name, aliases, defaults)
-        else:
-            ctx = cls(name, aliases)
-
-        names = set()
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-
-            rel, eq = line.split('=')
-            names.update(_varname_re.findall(eq))
-
-            func = lambda ureg, value: ureg.parse_expression(eq)
-            if '<->' in rel:
-                src, dst = (ParserHelper.from_string(s) for s in rel.split('<->'))
-                ctx.add_transformation(src, dst, func)
-                ctx.add_transformation(1 / dst, 1 / src, func)
-            elif '->' in rel:
-                src, dst = (ParserHelper.from_string(s) for s in rel.split('->'))
-                ctx.add_transformation(src, dst, func)
-            else:
-                raise ValueError('Relationships must be specified with <-> or ->.')
-
-        if defaults:
-            missing_pars = set(defaults.keys()).difference(set(names))
-            if missing_pars:
-                raise ValueError('Context parameters {} not found in any equation.'.format(missing_pars))
-
-        return ctx
-
-    def add_transformation(self, src, dst, func):
-        """Add a transformation function to the context.
-        """
-        _key = self.__keytransform__(src, dst)
-        self.funcs[_key] = func
-        self.refs_to_self[_key] = self
-
-    @staticmethod
-    def __keytransform__(src, dst):
-        return _freeze(src), _freeze(dst)
-
-    def transform(self, src, dst, value):
-        """Transform a value.
-        """
-        _key = self.__keytransform__(src, dst)
-        return self.funcs[_key](value, **self.defaults)
-
-
-class _ContextChain(ChainMap):
-    """A specialized ChainMap for contexts that simplifies finding rules
-    to transform from one dimension to another.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(_ContextChain, self).__init__(*args, **kwargs)
-        self._graph = None
-
-    def insert_contexts(self, *contexts):
-        """Insert one or more contexts in reversed order the chained map.
-        (A rule in last context will take precedence)
-
-        To facilitate the identification of the context with the matching rule,
-        the *refs_to_self* dictionary of the context is used.
-        """
-        self.maps = [ctx.refs_to_self for ctx in reversed(contexts)] + self.maps
-        self._graph = None
-
-    def remove_contexts(self, n):
-        """Remove the last n inserted contexts from the chain.
-        """
-        self.maps = self.maps[n:]
-        self._graph = None
-
-    @property
-    def defaults(self):
-        if self:
-            return list(self.maps[0].values())[0].defaults
-        return {}
-
-    @property
-    def graph(self):
-        """The graph relating
-        """
-        if self._graph is None:
-            self._graph = defaultdict(set)
-            for fr_, to_ in self:
-                self._graph[fr_].add(to_)
-        return self._graph
-
-    def transform(self, src, dst, value):
-        """Transform the value, finding the rule in the chained context.
-        (A rule in last context will take precedence)
-
-        :raises: KeyError if the rule is not found.
-        """
-        return self[(src, dst)].transform(src, dst, value)
 
 
 class PrefixDefinition(Definition):
@@ -610,7 +413,7 @@ class UnitRegistry(object):
         self._contexts = {}
 
         #: Stores active contexts.
-        self._active_ctx = _ContextChain()
+        self._active_ctx = ContextChain()
 
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
@@ -681,7 +484,7 @@ class UnitRegistry(object):
 
         # For each name, we first find the corresponding context
         # and create a new one with the new defaults.
-        ctxs = tuple(_Context.from_context(self._contexts[name], **kwargs)
+        ctxs = tuple(Context.from_context(self._contexts[name], **kwargs)
                      for name in names)
 
         # And then add them to the active context.
@@ -941,7 +744,8 @@ class UnitRegistry(object):
         # destination dimensionality. If it exists, we transform the source value
         # by applying sequentially each transformation of the path.
         if self._active_ctx:
-            path = find_shortest_path(self._active_ctx.graph, _freeze(src_dim), _freeze(dst_dim))
+            path = find_shortest_path(self._active_ctx.graph,
+                                      *Context.__keytransform__(src_dim, dst_dim))
             if path:
                 src = self.Quantity(value, src)
                 for a, b in zip(path[:-1], path[1:]):
@@ -1056,7 +860,7 @@ class UnitRegistry(object):
 
         return ret
 
-    def parse_expression(self, input_string, values):
+    def parse_expression(self, input_string):
         """Parse a mathematical expression including units and return a quantity object.
         """
 

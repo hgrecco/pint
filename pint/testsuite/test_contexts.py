@@ -6,19 +6,20 @@ import unittest
 from collections import defaultdict
 
 from pint import UnitRegistry
-from pint.unit import UnitsContainer, _freeze, _Context
+from pint.context import Context, _freeze
+from pint.unit import UnitsContainer
 
 
 def add_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
-    d = _Context('sp')
+    d = Context('sp')
     d.add_transformation(a, b, lambda x: ureg.speed_of_light / x)
     d.add_transformation(b, a, lambda x: ureg.speed_of_light / x)
 
     ureg._contexts['sp'] = d
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
-    d = _Context('ab')
+    d = Context('ab')
     d.add_transformation(a, b, lambda x: 1 / x)
     d.add_transformation(b, a, lambda x: 1 / x)
 
@@ -27,14 +28,14 @@ def add_ctxs(ureg):
 
 def add_arg_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
-    d = _Context('sp')
+    d = Context('sp')
     d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
     d.add_transformation(b, a, lambda x, n: ureg.speed_of_light / x / n)
 
     ureg._contexts['sp'] = d
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
-    d = _Context('ab')
+    d = Context('ab')
     d.add_transformation(a, b, lambda x: 1 / x)
     d.add_transformation(b, a, lambda x: 1 / x)
 
@@ -43,7 +44,7 @@ def add_arg_ctxs(ureg):
 
 def add_argdef_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
-    d = _Context('sp', defaults=dict(n=1))
+    d = Context('sp', defaults=dict(n=1))
     assert d.defaults == dict(n=1)
 
     d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
@@ -52,7 +53,7 @@ def add_argdef_ctxs(ureg):
     ureg._contexts['sp'] = d
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
-    d = _Context('ab')
+    d = Context('ab')
     d.add_transformation(a, b, lambda x: 1 / x)
     d.add_transformation(b, a, lambda x: 1 / x)
 
@@ -61,7 +62,7 @@ def add_argdef_ctxs(ureg):
 
 def add_sharedargdef_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
-    d = _Context('sp', defaults=dict(n=1))
+    d = Context('sp', defaults=dict(n=1))
     assert d.defaults == dict(n=1)
 
     d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
@@ -70,7 +71,7 @@ def add_sharedargdef_ctxs(ureg):
     ureg._contexts['sp'] = d
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': 1})
-    d = _Context('ab', defaults=dict(n=0))
+    d = Context('ab', defaults=dict(n=0))
     d.add_transformation(a, b, lambda x, n: ureg.ampere * ureg.meter * n / x)
     d.add_transformation(b, a, lambda x, n: ureg.ampere * ureg.meter * n / x)
 
@@ -339,14 +340,14 @@ class TestContexts(unittest.TestCase):
                 self.assertEqual(q.to('Hz'), s / 6)
 
     def test_simple_from_string(self):
-        a = _Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
-        b = _Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
             [length] -> 1 / [time] = 1 / value
             [time] -> 1 / [length] = 1 / value
         """
-        c = _Context.from_string(s)
+        c = Context.from_string(s)
         self.assertEqual(c.name, 'spectral')
         self.assertEqual(c.aliases, ())
         self.assertEqual(c.defaults, {})
@@ -355,7 +356,7 @@ class TestContexts(unittest.TestCase):
         s = """@context spectral = sp
             [time] <-> 1 / [length] = 1 / value
         """
-        c = _Context.from_string(s)
+        c = Context.from_string(s)
         self.assertEqual(c.name, 'spectral')
         self.assertEqual(c.aliases, ('sp', ))
         self.assertEqual(c.defaults, {})
@@ -364,42 +365,42 @@ class TestContexts(unittest.TestCase):
         s = """@context spectral = sp = spe
             [time] <-> 1 / [length] = 1 / value
         """
-        c = _Context.from_string(s)
+        c = Context.from_string(s)
         self.assertEqual(c.name, 'spectral')
         self.assertEqual(c.aliases, ('sp', 'spe', ))
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
 
     def test_auto_inverse_from_string(self):
-        a = _Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
-        b = _Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
             [time] <-> 1 / [length] = 1 / value
         """
-        c = _Context.from_string(s)
+        c = Context.from_string(s)
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
 
     def test_definedvar_from_string(self):
-        a = _Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
-        b = _Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
             [time] <-> 1 / [length] = 1 / value
         """
-        c = _Context.from_string(s)
+        c = Context.from_string(s)
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
 
     def test_parameterized_from_string(self):
-        a = _Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
-        b = _Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context(n=1) spectral
             [time] <-> 1 / [length] = n * c / value
         """
-        c = _Context.from_string(s)
+        c = Context.from_string(s)
         self.assertEqual(c.defaults, {'n': 1})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
 
@@ -407,4 +408,4 @@ class TestContexts(unittest.TestCase):
         s = """@context(n=1) spectral
             [time] <-> 1 / [length] = c / value
         """
-        self.assertRaises(ValueError, _Context.from_string, s)
+        self.assertRaises(ValueError, Context.from_string, s)
