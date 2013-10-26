@@ -77,7 +77,7 @@ class Context(object):
 
         #: Maps (src, dst) -> self
         #: Used as a convenience dictionary to be composed by ContextChain
-        self.refs_to_self = weakref.WeakValueDictionary()
+        self.relation_to_context = weakref.WeakValueDictionary()
 
     @classmethod
     def from_context(cls, context, **defaults):
@@ -92,7 +92,7 @@ class Context(object):
             c = cls(context.name, context.aliases, newdef)
             c.funcs = context.funcs
             for edge in context.funcs.keys():
-                c.refs_to_self[edge] = c
+                c.relation_to_context[edge] = c
             return c
         return context
 
@@ -153,7 +153,7 @@ class Context(object):
         """
         _key = self.__keytransform__(src, dst)
         self.funcs[_key] = func
-        self.refs_to_self[_key] = self
+        self.relation_to_context[_key] = self
 
     @staticmethod
     def __keytransform__(src, dst):
@@ -174,20 +174,23 @@ class ContextChain(ChainMap):
     def __init__(self, *args, **kwargs):
         super(ContextChain, self).__init__(*args, **kwargs)
         self._graph = None
+        self._contexts = []
 
     def insert_contexts(self, *contexts):
         """Insert one or more contexts in reversed order the chained map.
         (A rule in last context will take precedence)
 
         To facilitate the identification of the context with the matching rule,
-        the *refs_to_self* dictionary of the context is used.
+        the *relation_to_context* dictionary of the context is used.
         """
-        self.maps = [ctx.refs_to_self for ctx in reversed(contexts)] + self.maps
+        self._contexts.insert(0, contexts)
+        self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
     def remove_contexts(self, n):
         """Remove the last n inserted contexts from the chain.
         """
+        self._contexts = self._contexts[n:]
         self.maps = self.maps[n:]
         self._graph = None
 
