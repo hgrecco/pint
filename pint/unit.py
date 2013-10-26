@@ -440,13 +440,72 @@ class UnitRegistry(object):
                 'parse_units', 'parse_expression', 'pi_theorem',
                 'convert', 'get_base_units']
 
+    def add_context(self, context):
+        """Add a context object to the registry.
+
+        The context will be accessible by its name and aliases.
+
+        Notice that this method will NOT enable the context. Use `enable_contexts`.
+        """
+        if context.name in self._contexts:
+            logger.warning('The name %s was already registered for another context.',
+                           context.name)
+        self._contexts[context.name] = context
+        for alias in context.aliases:
+            if context.name in self._contexts:
+                logger.warning('The name %s was already registered for another context',
+                               context.name)
+            self._contexts[alias] = context
+
+    def remove_context(self, name_or_alias):
+        """Remove a context from the registry and return it.
+
+        Notice that this methods will not disable the context. Use `disable_contexts`.
+        """
+        context = self._contexts[name_or_alias]
+        name = self._contexts[name_or_alias].aliases
+        aliases = self._contexts[name].aliases
+
+        del self._contexts[name]
+        for alias in aliases:
+            del self._contexts[alias]
+
+        return context
+
+    def enable_contexts(self, *names_or_contexts, **kwargs):
+        """Enable contexts provided by name or by object.
+
+        :param names_or_contexts: sequence of the contexts or contexts names/alias
+        :param kwargs: keyword arguments for the context
+        """
+
+        # If present, copy the defaults from the containing contexts
+        if self._active_ctx.defaults:
+            kwargs = dict(self._active_ctx.defaults, **kwargs)
+
+        # For each name, we first find the corresponding context
+        ctxs = tuple((self._contexts[name] if isinstance(name, string_types) else name)
+                     for name in names_or_contexts)
+
+        # and create a new one with the new defaults.
+        ctxs = tuple(Context.from_context(ctx, **kwargs)
+                     for ctx in ctxs)
+
+        # Finally we add them to the active context.
+        self._active_ctx.insert_contexts(*ctxs)
+
+    def disable_contexts(self, n):
+        """Disable the last n enabled contexts.
+        """
+        self._active_ctx.remove_contexts(n)
+
     @contextmanager
     def context(self, *names, **kwargs):
         """Used as a context manager, this function enables to activate a context
         which is removed after usage.
 
         :param names: name of the context.
-        :param kwargs: keyword arguments for the
+        :param kwargs: keyword arguments for the contexts.
 
         Context are called by their name::
 
@@ -478,17 +537,8 @@ class UnitRegistry(object):
 
         """
 
-        # If present, copy the defaults from the containing contexts
-        if self._active_ctx.defaults:
-            kwargs = dict(self._active_ctx.defaults, **kwargs)
-
-        # For each name, we first find the corresponding context
-        # and create a new one with the new defaults.
-        ctxs = tuple(Context.from_context(self._contexts[name], **kwargs)
-                     for name in names)
-
-        # And then add them to the active context.
-        self._active_ctx.insert_contexts(*ctxs)
+        # Enable the contexts.
+        self.enable_contexts(*names, **kwargs)
 
         try:
             # After adding the context and rebuilding the graph, the registry
@@ -497,7 +547,7 @@ class UnitRegistry(object):
         finally:
             # Upon leaving the with statement,
             # the added contexts are removed from the active one.
-            self._active_ctx.remove_contexts(len(names))
+            self.disable_contexts(len(names))
 
     def define(self, definition):
         """Add unit to the registry.

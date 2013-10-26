@@ -9,6 +9,28 @@ from pint import UnitRegistry
 from pint.context import Context, _freeze
 from pint.unit import UnitsContainer
 
+from pint import logger
+
+from logging.handlers import BufferingHandler
+
+class TestHandler(BufferingHandler):
+    def __init__(self):
+        # BufferingHandler takes a "capacity" argument
+        # so as to know when to flush. As we're overriding
+        # shouldFlush anyway, we can set a capacity of zero.
+        # You can call flush() manually to clear out the
+        # buffer.
+        BufferingHandler.__init__(self, 0)
+
+    def shouldFlush(self):
+        return False
+
+    def emit(self, record):
+        self.buffer.append(record.__dict__)
+
+th = TestHandler()
+logger.addHandler(th)
+
 
 def add_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
@@ -16,14 +38,14 @@ def add_ctxs(ureg):
     d.add_transformation(a, b, lambda x: ureg.speed_of_light / x)
     d.add_transformation(b, a, lambda x: ureg.speed_of_light / x)
 
-    ureg._contexts['sp'] = d
+    ureg.add_context(d)
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
     d.add_transformation(a, b, lambda x: 1 / x)
     d.add_transformation(b, a, lambda x: 1 / x)
 
-    ureg._contexts['ab'] = d
+    ureg.add_context(d)
 
 
 def add_arg_ctxs(ureg):
@@ -32,14 +54,14 @@ def add_arg_ctxs(ureg):
     d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
     d.add_transformation(b, a, lambda x, n: ureg.speed_of_light / x / n)
 
-    ureg._contexts['sp'] = d
+    ureg.add_context(d)
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
     d.add_transformation(a, b, lambda x: 1 / x)
     d.add_transformation(b, a, lambda x: 1 / x)
 
-    ureg._contexts['ab'] = d
+    ureg.add_context(d)
 
 
 def add_argdef_ctxs(ureg):
@@ -50,14 +72,14 @@ def add_argdef_ctxs(ureg):
     d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
     d.add_transformation(b, a, lambda x, n: ureg.speed_of_light / x / n)
 
-    ureg._contexts['sp'] = d
+    ureg.add_context(d)
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
     d.add_transformation(a, b, lambda x: 1 / x)
     d.add_transformation(b, a, lambda x: 1 / x)
 
-    ureg._contexts['ab'] = d
+    ureg.add_context(d)
 
 
 def add_sharedargdef_ctxs(ureg):
@@ -68,14 +90,14 @@ def add_sharedargdef_ctxs(ureg):
     d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
     d.add_transformation(b, a, lambda x, n: ureg.speed_of_light / x / n)
 
-    ureg._contexts['sp'] = d
+    ureg.add_context(d)
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': 1})
     d = Context('ab', defaults=dict(n=0))
     d.add_transformation(a, b, lambda x, n: ureg.ampere * ureg.meter * n / x)
     d.add_transformation(b, a, lambda x, n: ureg.ampere * ureg.meter * n / x)
 
-    ureg._contexts['ab'] = d
+    ureg.add_context(d)
 
 
 class TestContexts(unittest.TestCase):
@@ -86,6 +108,32 @@ class TestContexts(unittest.TestCase):
         with ureg.context('sp'):
             self.assertTrue(ureg._active_ctx)
             self.assertTrue(ureg._active_ctx.graph)
+
+        self.assertFalse(ureg._active_ctx)
+        self.assertFalse(ureg._active_ctx.graph)
+
+        with ureg.context('sp', n=1):
+            self.assertTrue(ureg._active_ctx)
+            self.assertTrue(ureg._active_ctx.graph)
+
+        self.assertFalse(ureg._active_ctx)
+        self.assertFalse(ureg._active_ctx.graph)
+
+    def test_known_context_enable(self):
+        ureg = UnitRegistry()
+        add_ctxs(ureg)
+        ureg.enable_contexts('sp')
+        self.assertTrue(ureg._active_ctx)
+        self.assertTrue(ureg._active_ctx.graph)
+        ureg.disable_contexts(1)
+
+        self.assertFalse(ureg._active_ctx)
+        self.assertFalse(ureg._active_ctx.graph)
+
+        ureg.enable_contexts('sp', n=1)
+        self.assertTrue(ureg._active_ctx)
+        self.assertTrue(ureg._active_ctx.graph)
+        ureg.disable_contexts(1)
 
         self.assertFalse(ureg._active_ctx)
         self.assertFalse(ureg._active_ctx.graph)
@@ -113,6 +161,9 @@ class TestContexts(unittest.TestCase):
         with ureg.context('sp'):
             self.assertEqual(ureg._active_ctx.graph, g_sp)
 
+        with ureg.context('sp', n=1):
+            self.assertEqual(ureg._active_ctx.graph, g_sp)
+
         with ureg.context('ab'):
             self.assertEqual(ureg._active_ctx.graph, g_ab)
 
@@ -129,6 +180,56 @@ class TestContexts(unittest.TestCase):
 
         with ureg.context('ab', 'sp'):
             self.assertEqual(ureg._active_ctx.graph, g)
+
+    def test_graph_enable(self):
+        ureg = UnitRegistry()
+        add_ctxs(ureg)
+        l = _freeze({'[length]': 1.})
+        t = _freeze({'[time]': -1.})
+        c = _freeze({'[current]': -1.})
+
+        g_sp = defaultdict(set)
+        g_sp.update({l: {t, },
+                     t: {l, }})
+
+        g_ab = defaultdict(set)
+        g_ab.update({l: {c, },
+                     c: {l, }})
+
+        g = defaultdict(set)
+        g.update({l: {t, c},
+                  t: {l, },
+                  c: {l, }})
+
+        ureg.enable_contexts('sp')
+        self.assertEqual(ureg._active_ctx.graph, g_sp)
+        ureg.disable_contexts(1)
+
+        ureg.enable_contexts('sp', n=1)
+        self.assertEqual(ureg._active_ctx.graph, g_sp)
+        ureg.disable_contexts(1)
+
+        ureg.enable_contexts('ab')
+        self.assertEqual(ureg._active_ctx.graph, g_ab)
+        ureg.disable_contexts(1)
+
+        ureg.enable_contexts('sp')
+        ureg.enable_contexts('ab')
+        self.assertEqual(ureg._active_ctx.graph, g)
+        ureg.disable_contexts(2)
+
+        ureg.enable_contexts('ab')
+        ureg.enable_contexts('sp')
+        self.assertEqual(ureg._active_ctx.graph, g)
+        ureg.disable_contexts(2)
+
+        ureg.enable_contexts('sp', 'ab')
+        self.assertEqual(ureg._active_ctx.graph, g)
+        ureg.disable_contexts(2)
+
+        ureg.enable_contexts('ab', 'sp')
+        self.assertEqual(ureg._active_ctx.graph, g)
+        ureg.disable_contexts(2)
 
     def test_known_nested_context(self):
         ureg = UnitRegistry()
@@ -261,6 +362,36 @@ class TestContexts(unittest.TestCase):
 
         with ureg.context('sp'):
             self.assertRaises(TypeError, q.to, 'Hz')
+
+    def test_enable_context_with_arg(self):
+
+        ureg = UnitRegistry()
+
+        add_arg_ctxs(ureg)
+
+        q = 500 * ureg.meter
+        s = (ureg.speed_of_light / q).to('Hz')
+
+        self.assertRaises(ValueError, q.to, 'Hz')
+        ureg.enable_contexts('sp', n=1)
+        self.assertEqual(q.to('Hz'), s)
+        ureg.enable_contexts('ab')
+        self.assertEqual(q.to('Hz'), s)
+        self.assertEqual(q.to('Hz'), s)
+        ureg.disable_contexts(1)
+        ureg.disable_contexts(1)
+
+        ureg.enable_contexts('ab')
+        self.assertRaises(ValueError, q.to, 'Hz')
+        ureg.enable_contexts('sp', n=1)
+        self.assertEqual(q.to('Hz'), s)
+        ureg.disable_contexts(1)
+        self.assertRaises(ValueError, q.to, 'Hz')
+        ureg.disable_contexts(1)
+
+        ureg.enable_contexts('sp')
+        self.assertRaises(TypeError, q.to, 'Hz')
+        ureg.disable_contexts(1)
 
 
     def test_context_with_arg_def(self):
@@ -409,3 +540,22 @@ class TestContexts(unittest.TestCase):
             [time] <-> 1 / [length] = c / value
         """
         self.assertRaises(ValueError, Context.from_string, s)
+
+    def test_warnings(self):
+
+        ureg = UnitRegistry()
+
+        add_ctxs(ureg)
+
+        d = Context('ab')
+        ureg.add_context(d)
+
+        self.assertEqual(len(th.buffer), 1)
+        self.assertIn("ab", str(th.buffer[-1]['message']))
+
+        d = Context('ab1', aliases=('ab',))
+        ureg.add_context(d)
+
+        self.assertEqual(len(th.buffer), 2)
+        self.assertIn("ab", str(th.buffer[-1]['message']))
+
