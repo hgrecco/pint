@@ -2,6 +2,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import math
 import copy
 import unittest
 import operator as op
@@ -183,6 +184,13 @@ class TestUnitsContainer(unittest.TestCase):
 class TestRegistry(TestCase):
 
     FORCE_NDARRAY = False
+
+    def test_parse_number(self):
+        self.assertEqual(self.ureg.parse_expression('pi'), math.pi)
+        self.assertEqual(self.ureg.parse_expression('x', x=2), 2)
+        self.assertEqual(self.ureg.parse_expression('x', x=2.3), 2.3)
+        self.assertEqual(self.ureg.parse_expression('x * y', x=2.3, y=3), 2.3 * 3)
+        self.assertEqual(self.ureg.parse_expression('x', x=(1+1j)), (1+1j))
 
     def test_parse_single(self):
         self.assertEqual(self.ureg.parse_expression('meter'), self.Q_(1, UnitsContainer(meter=1.)))

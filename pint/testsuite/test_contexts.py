@@ -28,22 +28,18 @@ class TestHandler(BufferingHandler):
     def emit(self, record):
         self.buffer.append(record.__dict__)
 
-th = TestHandler()
-logger.addHandler(th)
-
-
 def add_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
     d = Context('sp')
-    d.add_transformation(a, b, lambda x: ureg.speed_of_light / x)
-    d.add_transformation(b, a, lambda x: ureg.speed_of_light / x)
+    d.add_transformation(a, b, lambda ureg, x: ureg.speed_of_light / x)
+    d.add_transformation(b, a, lambda ureg, x: ureg.speed_of_light / x)
 
     ureg.add_context(d)
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
-    d.add_transformation(a, b, lambda x: 1 / x)
-    d.add_transformation(b, a, lambda x: 1 / x)
+    d.add_transformation(a, b, lambda ureg, x: 1 / x)
+    d.add_transformation(b, a, lambda ureg, x: 1 / x)
 
     ureg.add_context(d)
 
@@ -51,15 +47,15 @@ def add_ctxs(ureg):
 def add_arg_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
     d = Context('sp')
-    d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
-    d.add_transformation(b, a, lambda x, n: ureg.speed_of_light / x / n)
+    d.add_transformation(a, b, lambda ureg, x, n: ureg.speed_of_light / x / n)
+    d.add_transformation(b, a, lambda ureg, x, n: ureg.speed_of_light / x / n)
 
     ureg.add_context(d)
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
-    d.add_transformation(a, b, lambda x: 1 / x)
-    d.add_transformation(b, a, lambda x: 1 / x)
+    d.add_transformation(a, b, lambda ureg, x: 1 / x)
+    d.add_transformation(b, a, lambda ureg, x: 1 / x)
 
     ureg.add_context(d)
 
@@ -69,15 +65,15 @@ def add_argdef_ctxs(ureg):
     d = Context('sp', defaults=dict(n=1))
     assert d.defaults == dict(n=1)
 
-    d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
-    d.add_transformation(b, a, lambda x, n: ureg.speed_of_light / x / n)
+    d.add_transformation(a, b, lambda ureg, x, n: ureg.speed_of_light / x / n)
+    d.add_transformation(b, a, lambda ureg, x, n: ureg.speed_of_light / x / n)
 
     ureg.add_context(d)
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
-    d.add_transformation(a, b, lambda x: 1 / x)
-    d.add_transformation(b, a, lambda x: 1 / x)
+    d.add_transformation(a, b, lambda ureg, x: 1 / x)
+    d.add_transformation(b, a, lambda ureg, x: 1 / x)
 
     ureg.add_context(d)
 
@@ -87,15 +83,15 @@ def add_sharedargdef_ctxs(ureg):
     d = Context('sp', defaults=dict(n=1))
     assert d.defaults == dict(n=1)
 
-    d.add_transformation(a, b, lambda x, n: ureg.speed_of_light / x / n)
-    d.add_transformation(b, a, lambda x, n: ureg.speed_of_light / x / n)
+    d.add_transformation(a, b, lambda ureg, x, n: ureg.speed_of_light / x / n)
+    d.add_transformation(b, a, lambda ureg, x, n: ureg.speed_of_light / x / n)
 
     ureg.add_context(d)
 
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': 1})
     d = Context('ab', defaults=dict(n=0))
-    d.add_transformation(a, b, lambda x, n: ureg.ampere * ureg.meter * n / x)
-    d.add_transformation(b, a, lambda x, n: ureg.ampere * ureg.meter * n / x)
+    d.add_transformation(a, b, lambda ureg, x, n: ureg.ampere * ureg.meter * n / x)
+    d.add_transformation(b, a, lambda ureg, x, n: ureg.ampere * ureg.meter * n / x)
 
     ureg.add_context(d)
 
@@ -470,59 +466,75 @@ class TestContexts(unittest.TestCase):
             with ureg.context('sp', n=6):
                 self.assertEqual(q.to('Hz'), s / 6)
 
+    def _test_ctx(self, ctx):
+        ureg = UnitRegistry()
+        q = 500 * ureg.meter
+        s = (ureg.speed_of_light / q).to('Hz')
+        ureg.add_context(ctx)
+        with ureg.context(ctx.name):
+            self.assertEqual(q.to('Hz'), s)
+
     def test_simple_from_string(self):
+
         a = Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
         b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
-            [length] -> 1 / [time] = 1 / value
-            [time] -> 1 / [length] = 1 / value
+            [length] -> 1 / [time] = c / value
+            [time] -> 1 / [length] = c / value
         """
+
         c = Context.from_string(s)
         self.assertEqual(c.name, 'spectral')
         self.assertEqual(c.aliases, ())
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self._test_ctx(c)
 
         s = """@context spectral = sp
-            [time] <-> 1 / [length] = 1 / value
+            [time] <-> 1 / [length] = c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.name, 'spectral')
         self.assertEqual(c.aliases, ('sp', ))
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self._test_ctx(c)
 
         s = """@context spectral = sp = spe
-            [time] <-> 1 / [length] = 1 / value
+            [time] <-> 1 / [length] = c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.name, 'spectral')
         self.assertEqual(c.aliases, ('sp', 'spe', ))
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self._test_ctx(c)
 
     def test_auto_inverse_from_string(self):
+
         a = Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
         b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
-            [time] <-> 1 / [length] = 1 / value
+            [time] <-> 1 / [length] = c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self._test_ctx(c)
 
     def test_definedvar_from_string(self):
         a = Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
         b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
-            [time] <-> 1 / [length] = 1 / value
+            [time] <-> 1 / [length] = c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self._test_ctx(c)
 
     def test_parameterized_from_string(self):
         a = Context.__keytransform__(UnitsContainer({'[time]': 1}), UnitsContainer({'[length]': -1}))
@@ -534,6 +546,7 @@ class TestContexts(unittest.TestCase):
         c = Context.from_string(s)
         self.assertEqual(c.defaults, {'n': 1})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self._test_ctx(c)
 
         # If the variable is not present in the definition, then raise an error
         s = """@context(n=1) spectral
@@ -544,6 +557,9 @@ class TestContexts(unittest.TestCase):
     def test_warnings(self):
 
         ureg = UnitRegistry()
+
+        th = TestHandler()
+        logger.addHandler(th)
 
         add_ctxs(ureg)
 

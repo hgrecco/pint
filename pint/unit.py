@@ -799,7 +799,7 @@ class UnitRegistry(object):
             if path:
                 src = self.Quantity(value, src)
                 for a, b in zip(path[:-1], path[1:]):
-                    src = self._active_ctx.transform(a, b, src)
+                    src = self._active_ctx.transform(a, b, self, src)
 
                 value, src = src.magnitude, src.units
 
@@ -910,8 +910,11 @@ class UnitRegistry(object):
 
         return ret
 
-    def parse_expression(self, input_string):
+    def parse_expression(self, input_string, **values):
         """Parse a mathematical expression including units and return a quantity object.
+
+        Numerical constants can be specified as keyword arguments and will take precedence
+        over the names defined in the registry.
         """
 
         if not input_string:
@@ -922,10 +925,10 @@ class UnitRegistry(object):
         result = []
         unknown = set()
         for toknum, tokval, _, _, _ in gen:
-            if toknum in (STRING, NAME):  # replace NUMBER tokens
+            if toknum == NAME:
                 # TODO: Integrate math better, Replace eval
-                if tokval == 'pi':
-                    result.append((toknum, str(math.pi)))
+                if tokval == 'pi' or tokval in values:
+                    result.append((toknum, tokval))
                     continue
                 try:
                     tokval = self.get_name(tokval)
@@ -948,10 +951,14 @@ class UnitRegistry(object):
 
         if unknown:
             raise UndefinedUnitError(unknown)
-        return eval(untokenize(result), {'__builtins__': None},
-                                        {'REGISTRY': self._units,
-                                         'Q_': self.Quantity,
-                                         'U_': UnitsContainer})
+        return eval(untokenize(result),
+                    {'__builtins__': None,
+                     'REGISTRY': self._units,
+                     'Q_': self.Quantity,
+                     'U_': UnitsContainer,
+                     'pi': math.pi},
+                    values
+                    )
 
     def wraps(self, ret, args, strict=True):
         """Wraps a function to become pint-aware.

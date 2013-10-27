@@ -130,7 +130,9 @@ class Context(object):
             rel, eq = line.split('=')
             names.update(_varname_re.findall(eq))
 
-            func = lambda ureg, value: ureg.parse_expression(eq)
+            def func(ureg, value, **kwargs):
+                return ureg.parse_expression(eq, value=value, **kwargs)
+
             if '<->' in rel:
                 src, dst = (ParserHelper.from_string(s) for s in rel.split('<->'))
                 ctx.add_transformation(src, dst, func)
@@ -159,11 +161,11 @@ class Context(object):
     def __keytransform__(src, dst):
         return _freeze(src), _freeze(dst)
 
-    def transform(self, src, dst, value):
+    def transform(self, src, dst, registry, value):
         """Transform a value.
         """
         _key = self.__keytransform__(src, dst)
-        return self.funcs[_key](value, **self.defaults)
+        return self.funcs[_key](registry, value, **self.defaults)
 
 
 class ContextChain(ChainMap):
@@ -210,10 +212,10 @@ class ContextChain(ChainMap):
                 self._graph[fr_].add(to_)
         return self._graph
 
-    def transform(self, src, dst, value):
+    def transform(self, src, dst, registry, value):
         """Transform the value, finding the rule in the chained context.
         (A rule in last context will take precedence)
 
         :raises: KeyError if the rule is not found.
         """
-        return self[(src, dst)].transform(src, dst, value)
+        return self[(src, dst)].transform(src, dst, registry, value)
