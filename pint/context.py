@@ -127,7 +127,7 @@ class Context(object):
             if not line:
                 continue
 
-            rel, eq = line.split('=')
+            rel, eq = line.split(':')
             names.update(_varname_re.findall(eq))
 
             def func(ureg, value, **kwargs):

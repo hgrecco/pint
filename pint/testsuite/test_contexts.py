@@ -480,8 +480,8 @@ class TestContexts(unittest.TestCase):
         b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
-            [length] -> 1 / [time] = c / value
-            [time] -> 1 / [length] = c / value
+            [length] -> 1 / [time]: c / value
+            [time] -> 1 / [length]: c / value
         """
 
         c = Context.from_string(s)
@@ -492,7 +492,7 @@ class TestContexts(unittest.TestCase):
         self._test_ctx(c)
 
         s = """@context spectral = sp
-            [time] <-> 1 / [length] = c / value
+            [time] <-> 1 / [length]: c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.name, 'spectral')
@@ -502,7 +502,7 @@ class TestContexts(unittest.TestCase):
         self._test_ctx(c)
 
         s = """@context spectral = sp = spe
-            [time] <-> 1 / [length] = c / value
+            [time] <-> 1 / [length]: c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.name, 'spectral')
@@ -517,7 +517,7 @@ class TestContexts(unittest.TestCase):
         b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
-            [time] <-> 1 / [length] = c / value
+            [time] <-> 1 / [length]: c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.defaults, {})
@@ -529,7 +529,7 @@ class TestContexts(unittest.TestCase):
         b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context spectral
-            [time] <-> 1 / [length] = c / value
+            [time] <-> 1 / [length]: c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.defaults, {})
@@ -541,7 +541,7 @@ class TestContexts(unittest.TestCase):
         b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = """@context(n=1) spectral
-            [time] <-> 1 / [length] = n * c / value
+            [time] <-> 1 / [length]: n * c / value
         """
         c = Context.from_string(s)
         self.assertEqual(c.defaults, {'n': 1})
@@ -550,7 +550,7 @@ class TestContexts(unittest.TestCase):
 
         # If the variable is not present in the definition, then raise an error
         s = """@context(n=1) spectral
-            [time] <-> 1 / [length] = c / value
+            [time] <-> 1 / [length]: c / value
         """
         self.assertRaises(ValueError, Context.from_string, s)
 
