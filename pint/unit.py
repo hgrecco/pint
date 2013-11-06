@@ -452,7 +452,7 @@ class UnitRegistry(object):
                            context.name)
         self._contexts[context.name] = context
         for alias in context.aliases:
-            if context.name in self._contexts:
+            if alias in self._contexts:
                 logger.warning('The name %s was already registered for another context',
                                context.name)
             self._contexts[alias] = context
@@ -486,6 +486,19 @@ class UnitRegistry(object):
         # For each name, we first find the corresponding context
         ctxs = tuple((self._contexts[name] if isinstance(name, string_types) else name)
                      for name in names_or_contexts)
+
+        # Check if the contexts have been checked first, if not we make sure
+        # that dimensions are expressed in terms of base dimensions.
+        for ctx in ctxs:
+            if getattr(ctx, '_checked', False):
+                continue
+            for (src, dst), func in ctx.funcs.items():
+                src_ = self.get_dimensionality(dict(src))
+                dst_ = self.get_dimensionality(dict(dst))
+                if src != src_ or dst != dst_:
+                    ctx.remove_transformation(src, dst)
+                    ctx.add_transformation(src_, dst_, func)
+            ctx._checked = True
 
         # and create a new one with the new defaults.
         ctxs = tuple(Context.from_context(ctx, **kwargs)
@@ -604,10 +617,14 @@ class UnitRegistry(object):
         """
         # Permit both filenames and line-iterables
         if isinstance(file, string_types):
-            with open(file, encoding='utf-8') as fp:
-                return self.load_definitions(fp, is_resource)
+            try:
+                with open(file, encoding='utf-8') as fp:
+                    return self.load_definitions(fp, is_resource)
+            except Exception as e:
+                raise ValueError('While opening {}\n{}'.format(file, e.message))
 
-        for line in file:
+        ifile = enumerate(file)
+        for no, line in ifile:
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
@@ -622,10 +639,29 @@ class UnitRegistry(object):
                     path = os.path.join(path, os.path.normpath(line[7:].strip()))
                 self.load_definitions(path, is_resource)
                 continue
+            if line.startswith('@context'):
+                # Like Python code, contexts block are identified by their indentation
+                context = [line, ]
+                no, line = next(ifile)
+                indent_level = len(line) - len(line.lstrip())
+                if not indent_level:
+                    raise ValueError('In line {}, expected an indented block for the context:\n{}'.format(no, line))
+                for no, line in ifile:
+                    line = line.rstrip()
+                    level = len(line) - len(line.lstrip())
+                    if level:
+                        if level != indent_level:
+                            raise ValueError('In line {}, the indentation level ({}) does not match '
+                                             'the context indentation level ({}) in:\n{}'.format(no, level, indent_level, line))
+                        context.append(line)
+                    else:
+                        break
+                self.add_context(Context.from_lines(context))
+                continue
             try:
                 self.define(Definition.from_string(line))
             except Exception as ex:
-                logger.error("Exception: Cannot add '{}' {}".format(line, ex))
+                logger.error("Cannot add '{}' {}".format(line, ex))
 
     def validate(self):
         """Walk the registry and calculate for each unit definition

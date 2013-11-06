@@ -49,6 +49,13 @@ count = []
 
 @import constants_en.txt
 
+@context spectroscopy = sp
+    # n index of refraction of the medium.
+    [length] <-> [frequency]: speed_of_light / value
+    [frequency] -> [energy]: planck_constant * value
+    [energy] -> [frequency]: value / planck_constant
+    [length] <-> 1 / [length]: 1 / value
+
 # acceleration
 [acceleration] = [length] / [time] ** 2
 
@@ -97,6 +104,7 @@ statvolt = 2.997925e2 * volt = statV = stV
 unit_pole = 1.256637e-7 * weber
 
 # Energy
+[energy] = [force] * [length]
 joule = newton * meter = J
 erg = dyne * centimeter
 btu = 1.05505585262e3 * joule = Btu = BTU = british_thermal_unit
@@ -122,6 +130,7 @@ poundal = lb * feet / second ** 2 = pdl
 kip = 1000*lbf
 
 # Frequency
+[frequency] = 1 / [time]
 hertz = 1 / second = Hz = rps
 revolutions_per_minute = revolution / minute = rpm
 counts_per_second = count / second = cps
@@ -185,6 +194,7 @@ tex = gram/ (1000 * meter)
 dtex = decitex
 
 # Power
+[power] = [energy] / [time]
 watt = joule / second = W = volt_ampere = VA
 horsepower = 33000 * ft * lbf / min = hp = UK_horsepower = British_horsepower
 boiler_horsepower = 33475 * btu / hour

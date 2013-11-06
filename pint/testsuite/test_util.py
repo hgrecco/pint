@@ -3,8 +3,9 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import unittest
+import collections
 
-from pint.util import string_preprocessor
+from pint.util import string_preprocessor, find_shortest_path
 
 
 class TestStringProcessor(unittest.TestCase):
@@ -40,3 +41,27 @@ class TestStringProcessor(unittest.TestCase):
         self._test('1g0', '1*g0')
         self._test('g', 'g')
         self._test('1g', '1*g')
+
+    def test_shortest_path(self):
+        g = collections.defaultdict(list)
+        g[1] = {2,}
+        g[2] = {3,}
+        p = find_shortest_path(g, 1, 2)
+        self.assertEqual(p, [1, 2])
+        p = find_shortest_path(g, 1, 3)
+        self.assertEqual(p, [1, 2, 3])
+        p = find_shortest_path(g, 3, 1)
+        self.assertIs(p, None)
+
+        g = collections.defaultdict(list)
+        g[1] = {2,}
+        g[2] = {3, 1}
+        g[3] = {2, }
+        p = find_shortest_path(g, 1, 2)
+        self.assertEqual(p, [1, 2])
+        p = find_shortest_path(g, 1, 3)
+        self.assertEqual(p, [1, 2, 3])
+        p = find_shortest_path(g, 3, 1)
+        self.assertEqual(p, [3, 2, 1])
+        p = find_shortest_path(g, 2, 1)
+        self.assertEqual(p, [2, 1])

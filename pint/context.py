@@ -19,7 +19,7 @@ from pint.compat import ChainMap
 from pint.util import ParserHelper
 
 #: Regex to match the header parts of a context.
-_header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s+(=(?P<aliases>.*))*')
+_header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
 
 #: Reqex to match the different parts of a relation definition.
 _def_re = re.compile('\s*(\w+)\s*=\s*([\w\d+-/*()]+)\s*')
@@ -34,6 +34,12 @@ def _freeze(d):
     if isinstance(d, frozenset):
         return d
     return frozenset(d.items())
+
+
+def _expression_to_function(eq):
+    def func(ureg, value, **kwargs):
+        return ureg.parse_expression(eq, value=value, **kwargs)
+    return func
 
 
 class Context(object):
@@ -97,11 +103,10 @@ class Context(object):
         return context
 
     @classmethod
-    def from_string(cls, text):
-        lines = text.split('\n')
+    def from_lines(cls, lines):
         header, lines = lines[0], lines[1:]
 
-        r = _header_re.search(text)
+        r = _header_re.search(header)
         name = r.groupdict()['name'].strip()
         aliases = r.groupdict()['aliases']
         if aliases:
@@ -124,19 +129,18 @@ class Context(object):
         names = set()
         for line in lines:
             line = line.strip()
-            if not line:
+            if not line or line.startswith('#'):
                 continue
 
             rel, eq = line.split(':')
             names.update(_varname_re.findall(eq))
 
-            def func(ureg, value, **kwargs):
-                return ureg.parse_expression(eq, value=value, **kwargs)
+            func = _expression_to_function(eq)
 
             if '<->' in rel:
                 src, dst = (ParserHelper.from_string(s) for s in rel.split('<->'))
                 ctx.add_transformation(src, dst, func)
-                ctx.add_transformation(1 / dst, 1 / src, func)
+                ctx.add_transformation(dst, src, func)
             elif '->' in rel:
                 src, dst = (ParserHelper.from_string(s) for s in rel.split('->'))
                 ctx.add_transformation(src, dst, func)
@@ -156,6 +160,13 @@ class Context(object):
         _key = self.__keytransform__(src, dst)
         self.funcs[_key] = func
         self.relation_to_context[_key] = self
+
+    def remove_transformation(self, src, dst):
+        """Add a transformation function to the context.
+        """
+        _key = self.__keytransform__(src, dst)
+        del self.funcs[_key]
+        del self.relation_to_context[_key]
 
     @staticmethod
     def __keytransform__(src, dst):

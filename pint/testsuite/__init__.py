@@ -69,6 +69,21 @@ class TestCase(unittest.TestCase):
         else:
             unittest.TestCase.assertAlmostEqual(self, first, second, places, msg, delta)
 
+    def assertAlmostEqualRelError(self, first, second, rel, msg=None):
+        if isinstance(first, self.Q_) and isinstance(second, self.Q_):
+            second = second.to(first)
+            val = abs((second - first) / (second + first))
+        elif isinstance(first, self.Q_):
+            self.assertTrue(first.dimensionless)
+            first = first.to('')
+            val = abs((second - first) / (second + first))
+        elif isinstance(second, self.Q_):
+            self.assertTrue(second.dimensionless)
+            second = second.to('')
+            val = abs((second - first) / (second + first))
+        else:
+            val = abs((second - first) / (second + first))
+        self.assertLess(val, rel, msg=msg)
 
 def testsuite():
     """A testsuite that has all the pyflim tests.
