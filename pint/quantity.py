@@ -94,6 +94,9 @@ class _Quantity(object):
     :type units: UnitsContainer, str or Quantity.
     """
 
+    #: Default formatting string.
+    default_format = ''
+
     def __reduce__(self):
         from . import _build_quantity
         return _build_quantity, (self.magnitude, self.units)
@@ -139,8 +142,7 @@ class _Quantity(object):
         return "<Quantity({}, '{}')>".format(self._magnitude, self._units)
 
     def __format__(self, spec):
-        if not spec:
-            return str(self)
+        spec = spec or self.default_format
 
         if '~' in spec:
             units = UnitsContainer({self._REGISTRY.get_symbol(key): value

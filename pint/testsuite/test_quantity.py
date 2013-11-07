@@ -7,7 +7,7 @@ import math
 import operator as op
 
 from pint.unit import UnitsContainer
-from pint import DimensionalityError, UndefinedUnitError
+from pint import DimensionalityError, UndefinedUnitError, UnitRegistry
 
 from pint.testsuite import TestCase, string_types, PYTHON3
 
@@ -132,6 +132,20 @@ class TestQuantity(TestCase):
                              ('{:H~}', '4.12345678 kg m<sup>2</sup>/s'),
                              ):
             self.assertEqual(spec.format(x), result)
+
+    def test_default_formatting(self):
+        ureg = UnitRegistry()
+        x = ureg.Quantity(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
+        for spec, result in (('L', r'4.12345678 \frac{kilogram \cdot meter^{2}}{second}'),
+                             ('P', '4.12345678 kilogram·meter²/second'),
+                             ('H', '4.12345678 kilogram meter<sup>2</sup>/second'),
+                             ('~', '4.12345678 kg * m ** 2 / s'),
+                             ('L~', r'4.12345678 \frac{kg \cdot m^{2}}{s}'),
+                             ('P~', '4.12345678 kg·m²/s'),
+                             ('H~', '4.12345678 kg m<sup>2</sup>/s'),
+                             ):
+            ureg.default_format = spec
+            self.assertEqual('{}'.format(x), result)
 
     def test_quantity_add_sub(self):
         x = self.Q_(1., 'centimeter')

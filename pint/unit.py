@@ -440,6 +440,16 @@ class UnitRegistry(object):
                 'parse_units', 'parse_expression', 'pi_theorem',
                 'convert', 'get_base_units']
 
+    @property
+    def default_format(self):
+        """Default formatting string for quantities.
+        """
+        return self.Quantity.default_format
+
+    @default_format.setter
+    def default_format(self, value):
+        self.Quantity.default_format = value
+
     def add_context(self, context):
         """Add a context object to the registry.
 
