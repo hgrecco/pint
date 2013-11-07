@@ -19,7 +19,7 @@ from numbers import Number
 from fractions import Fraction
 
 import logging
-from token import STRING, NAME, OP, NUMBER
+from token import STRING, NAME, OP
 from tokenize import untokenize
 
 logger = logging.getLogger(__name__)
@@ -285,6 +285,17 @@ class ParserHelper(dict):
         dict.__init__(self, *args, **kwargs)
 
     @classmethod
+    def from_word(cls, input_word):
+        """Creates a ParserHelper object with a single variable with exponent one.
+
+        Equivalent to: ParserHelper({'word': 1})
+
+        """
+        ret = cls()
+        ret.add(input_word, 1)
+        return ret
+
+    @classmethod
     def from_string(cls, input_string):
         """Parse linear expression mathematical units and return a quantity object.
         """
@@ -296,20 +307,20 @@ class ParserHelper(dict):
 
         if '[' in input_string:
             input_string = input_string.replace('[', '__obra__').replace(']', '__cbra__')
-            brackets = True
+            reps = True
         else:
-            brackets = False
+            reps = False
 
         gen = ptok(input_string)
         result = []
         for toknum, tokval, _, _, _ in gen:
-            if toknum in (STRING, NAME):
+            if toknum == NAME:
                 if not tokval:
                     continue
                 result.extend([
                     (NAME, 'L_'),
                     (OP, '('),
-                    (STRING, tokval), (OP, '='), (NUMBER, '1'),
+                    (STRING, '"' + tokval + '"'),
                     (OP, ')')
                 ])
             else:
@@ -317,12 +328,11 @@ class ParserHelper(dict):
 
         ret = eval(untokenize(result),
                    {'__builtins__': None},
-                   {'L_': cls})
-
+                   {'L_': cls.from_word})
         if isinstance(ret, Number):
             return ParserHelper(ret)
 
-        if not brackets:
+        if not reps:
             return ret
 
         return ParserHelper(ret.scale,
@@ -399,22 +409,27 @@ class ParserHelper(dict):
         return self
 
 
+#: List of regex substitution pairs.
+_subs_re = [(r"({0}) squared", r"\1**2"),  # Handle square and cube
+            (r"({0}) cubed", r"\1**3"),
+            (r"cubic ({0})", r"\1**3"),
+            (r"square ({0})", r"\1**2"),
+            (r"sq ({0})", r"\1**2"),
+            (r"(\w)\s+(?=\w)", r"\1*"),  # Handle space for multiplication
+            (r"([0-9])(?={0})(?!(?:[e|E][-+]?[0-9]+))", r"\1*")
+            ]
+
+#: Compiles the regex and replace {0} by a regex that matches an identifier.
+_subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
+
+
 def string_preprocessor(input_string):
 
     input_string = input_string.replace(",", "")
     input_string = input_string.replace(" per ", "/")
 
-    # Handle square and cube
-    input_string = re.sub(r"([_a-zA-Z]+) squared", r"\1**2", input_string)
-    input_string = re.sub(r"([_a-zA-Z]+) cubed", r"\1**3", input_string)
-    input_string = re.sub(r"cubic ([_a-zA-Z]+)", r"\1**3", input_string)
-    input_string = re.sub(r"square ([_a-zA-Z]+)", r"\1**2", input_string)
-    input_string = re.sub(r"sq ([_a-zA-Z]+)", r"\1**2", input_string)
-
-    # Handle space for multiplication
-    input_string = re.sub(r"([_a-zA-Z0-9])\s+(?=[_a-zA-Z0-9])", r"\1*", input_string)
-
-    input_string = re.sub(r"([0-9])(?=[_a-zA-Z][_a-zA-Z0-9]*)(?!(?:[e|E][-+]?[0-9]+))", r"\1*", input_string)
+    for a, b in _subs_re:
+        input_string = a.sub(b, input_string)
 
     # Handle caret exponentiation
     input_string = input_string.replace("^", "**")
