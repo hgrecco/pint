@@ -93,6 +93,12 @@ class TestIssues(unittest.TestCase):
         self.assertEqual(ureg.get_base_units(ureg.degC.units),
                          (1., UnitsContainer({'degC': 1})))
 
+    def test_issue69(self):
+        ureg = UnitRegistry()
+        q = ureg['m'].to(ureg['in'])
+        self.assertEqual(q, ureg['m'].to('in'))
+
+
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):
 
