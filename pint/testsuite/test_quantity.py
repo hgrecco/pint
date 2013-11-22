@@ -88,14 +88,21 @@ class TestQuantity(TestCase):
         y = self.Q_(4.2, 'meter')
         z = self.Q_(5, 'meter')
         j = self.Q_(5, 'meter*meter')
+
+        # identity for single object
         self.assertTrue(x == x)
         self.assertFalse(x != x)
+
+        # identity for multiple objects with same value
+        self.assertTrue(x == y)
+        self.assertFalse(x != y)
 
         self.assertTrue(x <= y)
         self.assertTrue(x >= y)
         self.assertFalse(x < y)
         self.assertFalse(x > y)
 
+        self.assertFalse(x == z)
         self.assertTrue(x != z)
         self.assertTrue(x < z)
 
