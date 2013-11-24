@@ -9,6 +9,7 @@ env:
   - NUMPY_VERSION=0
   - NUMPY_VERSION=1.6
   - NUMPY_VERSION=1.7
+  - NUMPY_VERSION=1.8
 
 branches:
   only:
@@ -29,3 +30,10 @@ matrix:
           env: NUMPY_VERSION=1.6
         - python: "3.3"
           env: NUMPY_VERSION=1.6
+    allow_failures:
+        - python: "2.7"
+          env: NUMPY_VERSION=1.8
+        - python: "3.2"
+          env: NUMPY_VERSION=1.8
+        - python: "3.3"
+          env: NUMPY_VERSION=1.8
