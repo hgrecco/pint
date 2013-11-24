@@ -16,7 +16,7 @@ branches:
     - develop
 
 install: 
-    - if [ $NUMPY_VERSION != '0' ]; then pip install -q numpy==$NUMPY_VERSION; fi
+    - if [ $NUMPY_VERSION = '0' ]; then pip uninstall -y numpy || true; else pip install numpy==$NUMPY_VERSION; fi
     - pip install . --use-mirrors
     - pip list --pre
 
