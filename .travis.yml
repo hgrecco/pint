@@ -18,6 +18,7 @@ branches:
 install: 
     - if [ $NUMPY_VERSION != '0' ]; then pip install -q numpy==$NUMPY_VERSION; fi
     - pip install . --use-mirrors
+    - pip list --pre
 
 script: python setup.py test
 
