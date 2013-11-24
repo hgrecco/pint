@@ -21,11 +21,10 @@ install:
 
 script: python setup.py test
 
-# Permit failures for these as these NumPy packages don't seem to be installable with Travis
 matrix:
-    allow_failures:
+    # Don't run with these version combinations as these NumPy packages don't seem to be installable with Travis
+    exclude:
         - python: "3.2"
           env: NUMPY_VERSION=1.6
         - python: "3.3"
           env: NUMPY_VERSION=1.6
-
