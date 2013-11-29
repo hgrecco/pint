@@ -7,6 +7,10 @@ Pint Changelog
 
 - ParseHelper can now parse units named like python keywords.
   (Issue #69)
+- Fix comparison of quantities.
+  (Issue #74)
+- Fix Inequality operator.
+  (Issue #70)
 
 
 0.3.2 (2013-10-22)
