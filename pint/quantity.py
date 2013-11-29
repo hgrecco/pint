@@ -83,7 +83,6 @@ def _check(q1, other):
     raise ValueError('Cannot operate between quantities of different registries')
 
 
-@functools.total_ordering
 class _Quantity(object):
     """Implements a class to describe a physical quantities:
     the product of a numerical value and a unit of measurement.
@@ -400,20 +399,28 @@ class _Quantity(object):
         except DimensionalityError:
             return False
 
-    def __lt__(self, other):
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def compare(self, other, op):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
-                return operator.lt(self._convert_magnitude(UnitsContainer()), other)
+                return op(self._convert_magnitude(UnitsContainer()), other)
             else:
                 raise ValueError('Cannot compare Quantity and {}'.format(type(other)))
 
         if self.units == other.units:
-            return operator.lt(self._magnitude, other._magnitude)
+            return op(self._magnitude, other._magnitude)
         if self.dimensionality != other.dimensionality:
             raise DimensionalityError(self.units, other.units,
                                       self.dimensionality, other.dimensionality)
-        return operator.lt(self.to_base_units().magnitude,
-                           other.to_base_units().magnitude)
+        return op(self.to_base_units().magnitude,
+                  other.to_base_units().magnitude)
+
+    __lt__ = lambda self, other: self.compare(other, op=operator.lt)
+    __le__ = lambda self, other: self.compare(other, op=operator.le)
+    __ge__ = lambda self, other: self.compare(other, op=operator.ge)
+    __gt__ = lambda self, other: self.compare(other, op=operator.gt)
 
     def __bool__(self):
         return bool(self._magnitude)

@@ -178,3 +178,42 @@ class TestIssuesNP(TestCase):
         ureg = UnitRegistry()
         m = ureg['m**0.5']
         self.assertEqual(str(m.units), 'meter ** 0.5')
+
+    def test_issue74(self):
+        ureg = UnitRegistry()
+        v1 = np.asarray([1, 2, 3])
+        v2 = np.asarray([3, 2, 1])
+        q1 = v1 * ureg.ms
+        q2 = v2 * ureg.ms
+
+        self.assertSequenceEqual(q1 < q2, v1 < v2)
+        self.assertSequenceEqual(q1 > q2, v1 > v2)
+
+        self.assertSequenceEqual(q1 <= q2, v1 <= v2)
+        self.assertSequenceEqual(q1 >= q2, v1 >= v2)
+
+        q2s = np.asarray([0.003, 0.002, 0.001]) * ureg.s
+        v2s = q2s.to('ms').magnitude
+
+        self.assertSequenceEqual(q1 < q2s, v1 < v2s)
+        self.assertSequenceEqual(q1 > q2s, v1 > v2s)
+
+        self.assertSequenceEqual(q1 <= q2s, v1 <= v2s)
+        self.assertSequenceEqual(q1 >= q2s, v1 >= v2s)
+
+    @unittest.skip('Fixing this will break compatibility.')
+    def test_issueXX(self):
+        ureg = UnitRegistry()
+        v1 = np.asarray([1, 2, 3])
+        v2 = np.asarray([3, 2, 1])
+        q1 = v1 * ureg.ms
+        q2 = v2 * ureg.ms
+
+        self.assertSequenceEqual(q1 == q2, v1 == v2)
+        self.assertSequenceEqual(q1 != q2, v1 != v2)
+
+        q2s = np.asarray([0.003, 0.002, 0.001]) * ureg.s
+        v2s = q2s.to('ms').magnitude
+
+        self.assertSequenceEqual(q1 == q2s, v1 == v2s)
+        self.assertSequenceEqual(q1 != q2s, v1 != v2s)

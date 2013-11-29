@@ -9,6 +9,7 @@ env:
   - NUMPY_VERSION=0
   - NUMPY_VERSION=1.6
   - NUMPY_VERSION=1.7
+  - NUMPY_VERSION=1.8
 
 branches:
   only:
@@ -16,16 +17,23 @@ branches:
     - develop
 
 install: 
-    - if [ $NUMPY_VERSION != '0' ]; then pip install -q numpy==$NUMPY_VERSION; fi
+    - if [ $NUMPY_VERSION = '0' ]; then pip uninstall -y numpy || true; else pip install numpy==$NUMPY_VERSION; fi
     - pip install . --use-mirrors
+    - pip list --pre
 
 script: python setup.py test
 
-# Permit failures for these as these NumPy packages don't seem to be installable with Travis
 matrix:
-    allow_failures:
+    # Don't run with these version combinations as these NumPy packages don't seem to be installable with Travis
+    exclude:
         - python: "3.2"
           env: NUMPY_VERSION=1.6
         - python: "3.3"
           env: NUMPY_VERSION=1.6
-
+    allow_failures:
+        - python: "2.7"
+          env: NUMPY_VERSION=1.8
+        - python: "3.2"
+          env: NUMPY_VERSION=1.8
+        - python: "3.3"
+          env: NUMPY_VERSION=1.8
