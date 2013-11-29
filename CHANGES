@@ -2,8 +2,8 @@ Pint Changelog
 ==============
 
 
-0.4 (unreleased)
-----------------
+0.3.3 (2013-11-29)
+------------------
 
 - ParseHelper can now parse units named like python keywords.
   (Issue #69)
