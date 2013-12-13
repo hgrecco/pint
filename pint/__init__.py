@@ -18,6 +18,7 @@ import pkg_resources
 from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError
 from .util import formatter, pi_theorem, logger
 from .measurement import Measurement
+from .context import Context
 
 _DEFAULT_REGISTRY = UnitRegistry()
 

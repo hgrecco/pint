@@ -54,7 +54,6 @@ count = []
     [length] <-> [frequency]: speed_of_light / n / value
     [frequency] -> [energy]: planck_constant * value
     [energy] -> [frequency]: value / planck_constant
-    [length] <-> 1 / [length]: 1 / value
 @end
 
 @context boltzmann

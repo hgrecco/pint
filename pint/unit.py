@@ -517,9 +517,11 @@ class UnitRegistry(object):
         # Finally we add them to the active context.
         self._active_ctx.insert_contexts(*ctxs)
 
-    def disable_contexts(self, n):
+    def disable_contexts(self, n=None):
         """Disable the last n enabled contexts.
         """
+        if n is None:
+            n = len(self._contexts)
         self._active_ctx.remove_contexts(n)
 
     @contextmanager

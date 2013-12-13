@@ -595,7 +595,7 @@ class TestDefinedContexts(TestCase):
 
     def test_spectroscopy(self):
         ureg = self.ureg
-        eq = (532. * ureg.nm, 563.5 * ureg.terahertz, 2.33053 * ureg.eV, 1.88 * 10**6 / ureg.meter)
+        eq = (532. * ureg.nm, 563.5 * ureg.terahertz, 2.33053 * ureg.eV)
         with ureg.context('sp'):
             from pint.util import find_shortest_path
             for a, b in itertools.product(eq, eq):
@@ -605,3 +605,7 @@ class TestDefinedContexts(TestCase):
                 self.assertTrue(p)
                 msg = '{} <-> {}'.format(a, b)
                 self.assertAlmostEqualRelError(a, b, rel=.01, msg=msg)
+
+
+        #for a, b in itertools.product(eq, eq):
+        #    self.assertAlmostEqualRelError(a.to(b.units, ctx='sp'), b, rel=.01, msg=msg)

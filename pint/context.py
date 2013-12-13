@@ -16,7 +16,7 @@ import re
 from collections import defaultdict
 import weakref
 from pint.compat import ChainMap
-from pint.util import ParserHelper
+from pint.util import ParserHelper, string_types
 
 #: Regex to match the header parts of a context.
 _header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
@@ -31,6 +31,8 @@ _varname_re = re.compile('[A-Za-z_][A-Za-z0-9_]*')
 def _freeze(d):
     """Return a hashable view of dict.
     """
+    if isinstance(d, string_types):
+        d = ParserHelper.from_string(d)
     if isinstance(d, frozenset):
         return d
     return frozenset(d.items())
