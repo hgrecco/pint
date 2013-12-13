@@ -55,6 +55,7 @@ User Guide
     nonmult
     wrapping
     pitheorem
+    contexts
     measurement
     defining
 
