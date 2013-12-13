@@ -49,12 +49,18 @@ count = []
 
 @import constants_en.txt
 
-@context spectroscopy = sp
+@context(n=1) spectroscopy = sp
     # n index of refraction of the medium.
-    [length] <-> [frequency]: speed_of_light / value
+    [length] <-> [frequency]: speed_of_light / n / value
     [frequency] -> [energy]: planck_constant * value
     [energy] -> [frequency]: value / planck_constant
     [length] <-> 1 / [length]: 1 / value
+@end
+
+@context boltzmann
+    [temperature] -> [energy]: boltzmann_constant * value
+    [energy] -> [temperature]: value / boltzmann_constant
+@end
 
 # acceleration
 [acceleration] = [length] / [time] ** 2
