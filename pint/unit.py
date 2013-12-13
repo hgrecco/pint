@@ -648,30 +648,21 @@ class UnitRegistry(object):
                         path = os.getcwd()
                     path = os.path.join(path, os.path.normpath(line[7:].strip()))
                 self.load_definitions(path, is_resource)
-                continue
-            if line.startswith('@context'):
-                # Like Python code, contexts block are identified by their indentation
+            elif line.startswith('@context'):
                 context = [line, ]
-                no, line = next(ifile)
-                indent_level = len(line) - len(line.lstrip())
-                if not indent_level:
-                    raise ValueError('In line {}, expected an indented block for the context:\n{}'.format(no, line))
                 for no, line in ifile:
-                    line = line.rstrip()
-                    level = len(line) - len(line.lstrip())
-                    if level:
-                        if level != indent_level:
-                            raise ValueError('In line {}, the indentation level ({}) does not match '
-                                             'the context indentation level ({}) in:\n{}'.format(no, level, indent_level, line))
-                        context.append(line)
-                    else:
+                    line = line.strip()
+                    if line.startswith('@end'):
+                        self.add_context(Context.from_lines(context))
                         break
-                self.add_context(Context.from_lines(context))
-                continue
-            try:
-                self.define(Definition.from_string(line))
-            except Exception as ex:
-                logger.error("Cannot add '{}' {}".format(line, ex))
+                    elif line.startswith('@'):
+                        raise ValueError('In line {}, cannot nest @ directives:\n{}'.format(no, line))
+                    context.append(line)
+            else:
+                try:
+                    self.define(Definition.from_string(line))
+                except Exception as ex:
+                    logger.error("In line {}, cannot add '{}' {}".format(no, line, ex))
 
     def validate(self):
         """Walk the registry and calculate for each unit definition
