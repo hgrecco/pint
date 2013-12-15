@@ -199,10 +199,14 @@ class _Quantity(object):
 
         return self._dimensionality
 
-    def _convert_magnitude(self, other):
+    def _convert_magnitude(self, other, *contexts, **ctx_kwargs):
+        if contexts:
+            with self._REGISTRY.context(*contexts, **ctx_kwargs):
+                return self._REGISTRY.convert(self._magnitude, self._units, other)
+
         return self._REGISTRY.convert(self._magnitude, self._units, other)
 
-    def ito(self, other=None):
+    def ito(self, other=None, *contexts, **ctx_kwargs):
         """Inplace rescale to different units.
 
         :param other: destination units.
@@ -217,18 +221,18 @@ class _Quantity(object):
         else:
             other = UnitsContainer(other)
 
-        self._magnitude = self._convert_magnitude(other)
+        self._magnitude = self._convert_magnitude(other, *contexts, **ctx_kwargs)
         self._units = other
         return self
 
-    def to(self, other=None):
+    def to(self, other=None, *contexts, **ctx_kwargs):
         """Return Quantity rescaled to different units.
 
         :param other: destination units.
         :type other: Quantity, str or dict
         """
         ret = copy.copy(self)
-        ret.ito(other)
+        ret.ito(other, *contexts, **ctx_kwargs)
         return ret
 
     def ito_base_units(self):
