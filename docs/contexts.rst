@@ -29,28 +29,20 @@ You need to use the relation `wavelength = speed_of_light * frequency`:
 
 To make this task easy, Pint has the concept of `contexts` which provides convertion
 rules between dimensions. For example, the relation between wavelength and frequency is
-defined in the spectroscopy context. You can tell pint to use this context when you
-convert a quantity to different units.
+defined in the `spectroscopy` context (abbreviated `sp`). You can tell pint to use
+this context when you convert a quantity to different units.
 
 ..doctest::
 
-    >>> q.to('Hz', context='spectroscopy')
+    >>> q.to('Hz', 'spectroscopy')
     <Quantity(5.99584916e+14, 'hertz')>
 
 or with the abbreviated form:
 
 ..doctest::
 
-    >>> q.to('Hz', context='sp')
-    <Quantity(5.99584916e+14, 'hertz')>
-
-or even shorter:
-
-..doctest::
-
     >>> q.to('Hz', 'sp')
     <Quantity(5.99584916e+14, 'hertz')>
-
 
 Contexts can be also enabled for blocks of code using the `with` statement:
 
