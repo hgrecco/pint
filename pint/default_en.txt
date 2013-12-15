@@ -49,18 +49,6 @@ count = []
 
 @import constants_en.txt
 
-@context(n=1) spectroscopy = sp
-    # n index of refraction of the medium.
-    [length] <-> [frequency]: speed_of_light / n / value
-    [frequency] -> [energy]: planck_constant * value
-    [energy] -> [frequency]: value / planck_constant
-@end
-
-@context boltzmann
-    [temperature] -> [energy]: boltzmann_constant * value
-    [energy] -> [temperature]: value / boltzmann_constant
-@end
-
 # acceleration
 [acceleration] = [length] / [time] ** 2
 
@@ -318,3 +306,16 @@ teaspoon = tablespoon / 3 = tsp
 peck = bushel / 4 = pk
 fluid_dram = floz / 8 = fldr = fluidram
 firkin = barrel / 4
+
+
+@context(n=1) spectroscopy = sp
+    # n index of refraction of the medium.
+    [length] <-> [frequency]: speed_of_light / n / value
+    [frequency] -> [energy]: planck_constant * value
+    [energy] -> [frequency]: value / planck_constant
+@end
+
+@context boltzmann
+    [temperature] -> [energy]: boltzmann_constant * value
+    [energy] -> [temperature]: value / boltzmann_constant
+@end
