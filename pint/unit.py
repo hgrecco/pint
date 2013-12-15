@@ -633,7 +633,8 @@ class UnitRegistry(object):
                 with open(file, encoding='utf-8') as fp:
                     return self.load_definitions(fp, is_resource)
             except Exception as e:
-                raise ValueError('While opening {}\n{}'.format(file, e.message))
+                msg = getattr(e, 'message', str(e))
+                raise ValueError('While opening {}\n{}'.format(file, msg))
 
         ifile = enumerate(file)
         for no, line in ifile:
@@ -655,7 +656,10 @@ class UnitRegistry(object):
                 for no, line in ifile:
                     line = line.strip()
                     if line.startswith('@end'):
-                        self.add_context(Context.from_lines(context))
+                        try:
+                            self.add_context(Context.from_lines(context, self.get_dimensionality))
+                        except KeyError as e:
+                            raise ValueError('Unknown dimension {}'.format(str(e)))
                         break
                     elif line.startswith('@'):
                         raise ValueError('In line {}, cannot nest @ directives:\n{}'.format(no, line))

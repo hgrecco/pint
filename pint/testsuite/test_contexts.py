@@ -599,13 +599,18 @@ class TestDefinedContexts(TestCase):
         with ureg.context('sp'):
             from pint.util import find_shortest_path
             for a, b in itertools.product(eq, eq):
-                da, db = Context.__keytransform__(a.dimensionality,
-                                                  b.dimensionality)
-                p = find_shortest_path(ureg._active_ctx.graph, da, db)
-                self.assertTrue(p)
-                msg = '{} <-> {}'.format(a, b)
-                self.assertAlmostEqualRelError(a, b, rel=.01, msg=msg)
+                for x in range(2):
+                    if x == 1:
+                        a = a.to_base_units()
+                        b = b.to_base_units()
+                    da, db = Context.__keytransform__(a.dimensionality,
+                                                      b.dimensionality)
+                    p = find_shortest_path(ureg._active_ctx.graph, da, db)
+                    self.assertTrue(p)
+                    msg = '{} <-> {}'.format(a, b)
+                    # assertAlmostEqualRelError converts second to first
+                    self.assertAlmostEqualRelError(b, a, rel=.01, msg=msg)
 
 
-        #for a, b in itertools.product(eq, eq):
-        #    self.assertAlmostEqualRelError(a.to(b.units, ctx='sp'), b, rel=.01, msg=msg)
+        for a, b in itertools.product(eq, eq):
+            self.assertAlmostEqualRelError(a.to(b.units, 'sp'), b, rel=.01, msg=msg)

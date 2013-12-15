@@ -105,7 +105,7 @@ class Context(object):
         return context
 
     @classmethod
-    def from_lines(cls, lines):
+    def from_lines(cls, lines, to_base_func=None):
         header, lines = lines[0], lines[1:]
 
         r = _header_re.search(header)
@@ -141,10 +141,16 @@ class Context(object):
 
             if '<->' in rel:
                 src, dst = (ParserHelper.from_string(s) for s in rel.split('<->'))
+                if to_base_func:
+                    src = to_base_func(src)
+                    dst = to_base_func(dst)
                 ctx.add_transformation(src, dst, func)
                 ctx.add_transformation(dst, src, func)
             elif '->' in rel:
                 src, dst = (ParserHelper.from_string(s) for s in rel.split('->'))
+                if to_base_func:
+                    src = to_base_func(src)
+                    dst = to_base_func(dst)
                 ctx.add_transformation(src, dst, func)
             else:
                 raise ValueError('Relationships must be specified with <-> or ->.')
