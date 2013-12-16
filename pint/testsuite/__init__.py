@@ -47,6 +47,18 @@ class TestCase(unittest.TestCase):
         cls.Q_ = cls.ureg.Quantity
 
     def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
+        if isinstance(seq1, self.Q_):
+            if isinstance(seq2, self.Q_):
+                seq2 = seq2.to(seq1).magnitude
+                seq1 = seq1.magnitude
+            else:
+                seq1 = seq1.to('').magnitude
+        if isinstance(seq2, self.Q_):
+            if isinstance(seq1, self.Q_):
+                seq1 = seq1.to(seq2).magnitude
+                seq2 = seq2.magnitude
+            else:
+                seq2 = seq2.to('').magnitude
         if isinstance(seq1, ndarray):
             seq1 = seq1.tolist()
         if isinstance(seq2, ndarray):

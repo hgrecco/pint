@@ -44,11 +44,11 @@ except ImportError:
         return value
 
 
-def _eq(first, second):
+def _eq(first, second, check_all):
     """Comparison of scalars and arrays
     """
     out = first == second
-    if isinstance(out, Iterable):
+    if check_all and isinstance(out, Iterable):
         if isinstance(out, ndarray):
             return np.all(out)
         else:
@@ -264,27 +264,27 @@ class _Quantity(object):
             return complex(self._convert_magnitude(UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
-    def iadd_sub(self, other, fun):
+    def iadd_sub(self, other, op):
         if _check(self, other):
             if not self.dimensionality == other.dimensionality:
                 raise DimensionalityError(self.units, other.units,
                                           self.dimensionality, other.dimensionality)
             if self._units == other._units:
-                self._magnitude = fun(self._magnitude, other._magnitude)
+                self._magnitude = op(self._magnitude, other._magnitude)
             else:
-                self._magnitude = fun(self._magnitude, other.to(self)._magnitude)
+                self._magnitude = op(self._magnitude, other.to(self)._magnitude)
         else:
             if self.dimensionless:
                 self.ito(UnitsContainer())
-                self._magnitude = fun(self._magnitude, _to_magnitude(other, self.force_ndarray))
+                self._magnitude = op(self._magnitude, _to_magnitude(other, self.force_ndarray))
             else:
                 raise DimensionalityError(self.units, 'dimensionless')
 
         return self
 
-    def add_sub(self, other, fun):
+    def add_sub(self, other, op):
         ret = copy.copy(self)
-        fun(ret, other)
+        op(ret, other)
         return ret
 
     def __iadd__(self, other):
@@ -390,21 +390,24 @@ class _Quantity(object):
         # each Quantity class is unique.
         if other.__class__.__name__ != self.__class__.__name__:
             return (self.dimensionless and
-                    _eq(self._convert_magnitude(UnitsContainer()), other))
+                    _eq(self._convert_magnitude(UnitsContainer()), other, False))
 
-        if _eq(self._magnitude, 0) and _eq(other._magnitude, 0):
+        if _eq(self._magnitude, 0, True) and _eq(other._magnitude, 0, True):
             return self.dimensionality == other.dimensionality
 
         if self._units == other._units:
-            return _eq(self._magnitude, other._magnitude)
+            return _eq(self._magnitude, other._magnitude, False)
 
         try:
-            return _eq(self.to(other).magnitude, other._magnitude)
+            return _eq(self.to(other).magnitude, other._magnitude, False)
         except DimensionalityError:
             return False
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        out = self.__eq__(other)
+        if isinstance(out, ndarray):
+            return np.logical_not(out)
+        return not out
 
     def compare(self, other, op):
         if not isinstance(other, self.__class__):

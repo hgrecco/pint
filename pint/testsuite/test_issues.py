@@ -12,6 +12,26 @@ from pint.testsuite import HAS_NUMPY, np, TestCase
 
 class TestIssues(unittest.TestCase):
 
+
+    def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
+        if isinstance(seq1, self.Q_):
+            if isinstance(seq2, self.Q_):
+                seq2 = seq2.to(seq1).magnitude
+                seq1 = seq1.magnitude
+            else:
+                seq1 = seq1.to('').magnitude
+        if isinstance(seq2, self.Q_):
+            if isinstance(seq1, self.Q_):
+                seq1 = seq1.to(seq2).magnitude
+                seq2 = seq2.magnitude
+            else:
+                seq2 = seq2.to('').magnitude
+        if isinstance(seq1, ndarray):
+            seq1 = seq1.tolist()
+        if isinstance(seq2, ndarray):
+            seq2 = seq2.tolist()
+        unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
+
     @unittest.expectedFailure
     def test_issue25(self):
         x = ParserHelper.from_string('10 %')
@@ -201,8 +221,7 @@ class TestIssuesNP(TestCase):
         self.assertSequenceEqual(q1 <= q2s, v1 <= v2s)
         self.assertSequenceEqual(q1 >= q2s, v1 >= v2s)
 
-    @unittest.skip('Fixing this will break compatibility.')
-    def test_issueXX(self):
+    def test_issue75(self):
         ureg = UnitRegistry()
         v1 = np.asarray([1, 2, 3])
         v2 = np.asarray([3, 2, 1])
