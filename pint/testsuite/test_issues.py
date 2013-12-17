@@ -8,29 +8,9 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.testsuite import HAS_NUMPY, np, TestCase
+from pint.testsuite import HAS_NUMPY, np, TestCase, ndarray
 
 class TestIssues(unittest.TestCase):
-
-
-    def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
-        if isinstance(seq1, self.Q_):
-            if isinstance(seq2, self.Q_):
-                seq2 = seq2.to(seq1).magnitude
-                seq1 = seq1.magnitude
-            else:
-                seq1 = seq1.to('').magnitude
-        if isinstance(seq2, self.Q_):
-            if isinstance(seq1, self.Q_):
-                seq1 = seq1.to(seq2).magnitude
-                seq2 = seq2.magnitude
-            else:
-                seq2 = seq2.to('').magnitude
-        if isinstance(seq1, ndarray):
-            seq1 = seq1.tolist()
-        if isinstance(seq2, ndarray):
-            seq2 = seq2.tolist()
-        unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
 
     @unittest.expectedFailure
     def test_issue25(self):
@@ -103,15 +83,12 @@ class TestIssues(unittest.TestCase):
         self.assertEqual(ureg.get_dimensionality(ureg.degC.units),
                          UnitsContainer({'[temperature]': 1}))
 
-    # The behaviour of get_base_units for a non multiplicative unit will be defined
-    # In Pint 0.4
-    @unittest.skip('Behaviour not yet defined')
     def test_issue66b(self):
         ureg = UnitRegistry()
         self.assertEqual(ureg.get_base_units(ureg.degK.units),
-                         (1., UnitsContainer({'degK': 1})))
+                         (None, UnitsContainer({'degK': 1})))
         self.assertEqual(ureg.get_base_units(ureg.degC.units),
-                         (1., UnitsContainer({'degC': 1})))
+                         (None, UnitsContainer({'degK': 1})))
 
     def test_issue69(self):
         ureg = UnitRegistry()
