@@ -190,6 +190,14 @@ If you want to use abbreviated unit names, suffix the specification with `~`:
 
 The same is true for latex (`L`), pretty (`P`) and HTML (`H`) specs.
 
+Finally, you can specify a default format specification:
+
+   >>> 'The acceleration is {}'.format(accel)
+   'The acceleration is 1.3 meter / second ** 2'
+   >>> ureg.default_format = 'P'
+   >>> 'The acceleration is {}'.format(accel)
+   'The acceleration is  1.3 meter/second²'
+
 
 Using Pint in your projects
 ---------------------------
