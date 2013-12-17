@@ -8,7 +8,7 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.testsuite import HAS_NUMPY, np, TestCase, ndarray
+from pint.testsuite import HAS_NUMPY, np, TestCase, ndarray, NUMPY_VER
 
 class TestIssues(unittest.TestCase):
 

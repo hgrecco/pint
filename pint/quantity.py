@@ -301,7 +301,8 @@ class _Quantity(object):
     def __sub__(self, other):
         return self.add_sub(other, operator.isub)
 
-    __rsub__ = __sub__
+    def __rsub__(self, other):
+        return -self.add_sub(other, operator.isub)
 
     def __imul__(self, other):
         if _check(self, other):

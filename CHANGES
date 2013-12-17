@@ -12,6 +12,8 @@ Pint Changelog
 - Implemented default formatting for quantities.
 - Changed comparison between Quantities containing NumPy arrays.
   (Issue #75) - BACKWARDS INCOMPATIBLE CHANGE
+- Fixes for NumPy 1.8 due to changes in handling binary ops.
+  (Issue #73)
 
 
 0.3.3 (2013-11-29)
@@ -22,7 +24,9 @@ Pint Changelog
 - Fix comparison of quantities.
   (Issue #74)
 - Fix Inequality operator.
-  (Issue #70)
+  (Issue #70, thanks muggenhor)
+- Improved travis configuration.
+  (thanks muggenhor)
 
 
 0.3.2 (2013-10-22)

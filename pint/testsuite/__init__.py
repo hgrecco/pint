@@ -11,9 +11,11 @@ try:
     import numpy as np
     HAS_NUMPY = True
     ndarray = np.ndarray
+    NUMPY_VER = np.__version__
 except ImportError:
     np = None
     HAS_NUMPY = False
+    NUMPY_VER = 0
     class ndarray(object):
         pass
 
