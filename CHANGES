@@ -2,7 +2,7 @@ Pint Changelog
 ==============
 
 
-0.4 (unreleased)
+0.4 (2013-12-17)
 ----------------
 
 - Introduced Contexts: relation between incompatible dimensions.
