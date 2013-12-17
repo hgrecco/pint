@@ -4,22 +4,24 @@ Contexts
 ========
 
 If you work frequently on certain topics, you will probably find the need
-to convert between units based some pre-established (physical) relationships.
-For example, if you are working in spectroscopy you need to transform
-wavelength to frequency. These are incompatible units and therefore Pint
-will raise an error if your do this directly:
+to convert between dimensions based on some pre-established (physical) relationships.
+For example, in spectroscopy you need to transform from wavelength to frequency.
+These are incompatible units and therefore Pint will raise an error if your do
+this directly:
 
 .. doctest::
 
+    >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> q = 500 * ureg.nm
     >>> q.to('Hz')
     Traceback (most recent call last):
     ...
-    pint.unit.DimensionalityError: Cannot convert from 'nanometer' ([length]) to 'hertz' (1 / [time])
+    pint.unit.DimensionalityError: Cannot convert
+    from 'nanometer' ([length]) to 'hertz' (1 / [time])
 
 
-You need to use the relation `wavelength = speed_of_light * frequency`:
+You probably want to use the relation `frequency = speed_of_light / wavelength`:
 
 .. doctest::
 
@@ -27,29 +29,29 @@ You need to use the relation `wavelength = speed_of_light * frequency`:
     <Quantity(5.99584916e+14, 'hertz')>
 
 
-To make this task easy, Pint has the concept of `contexts` which provides convertion
+To make this task easy, Pint has the concept of `contexts` which provides conversion
 rules between dimensions. For example, the relation between wavelength and frequency is
 defined in the `spectroscopy` context (abbreviated `sp`). You can tell pint to use
 this context when you convert a quantity to different units.
 
-..doctest::
+.. doctest::
 
     >>> q.to('Hz', 'spectroscopy')
     <Quantity(5.99584916e+14, 'hertz')>
 
 or with the abbreviated form:
 
-..doctest::
+.. doctest::
 
     >>> q.to('Hz', 'sp')
     <Quantity(5.99584916e+14, 'hertz')>
 
 Contexts can be also enabled for blocks of code using the `with` statement:
 
-..doctest::
+.. doctest::
 
     >>> with ureg.context('sp'):
-    >>>     q.to('Hz')
+    ...     q.to('Hz')
     <Quantity(5.99584916e+14, 'hertz')>
 
 If you need a particular context in all your code, you can enable it for all
@@ -65,27 +67,31 @@ To disable the context, just call::
 Enabling multiple contexts
 --------------------------
 
-Using a tuple of contexts names you can enable multiple contexts:
+You can enable multiple contexts:
 
-    >>> q.to('Hz', context=('sp', 'boltzmann'))
+    >>> q.to('Hz', 'sp', 'boltzmann')
+    <Quantity(5.99584916e+14, 'hertz')>
 
 This works also using the `with` statement:
 
     >>> with ureg.context('sp', 'boltzmann'):
     ...     q.to('Hz')
+    <Quantity(5.99584916e+14, 'hertz')>
 
 or in the registry:
 
     >>> ureg.enable_contexts('sp', 'boltzmann')
     >>> q.to('Hz')
+    <Quantity(5.99584916e+14, 'hertz')>
 
 If a conversion rule between two dimensions appears in more than one context,
-those in the last context have precedence. This is easy to remember if you think
+the one in the last context has precedence. This is easy to remember if you think
 that the previous syntax is equivalent to nest contexts:
 
     >>> with ureg.context('sp'):
     ...     with ureg.context('boltzmann') :
     ...         q.to('Hz')
+    <Quantity(5.99584916e+14, 'hertz')>
 
 
 Parameterized contexts
@@ -95,12 +101,12 @@ Contexts can also take named parameters. For example, in the spectroscopy you
 can specify the index of refraction of the medium (`n`). In this way you can
 calculate, for example, the wavelength in water of a laser which on air is 530 nm.
 
-..doctest::
+.. doctest::
 
     >>> wl = 530. * ureg.nm
     >>> f = wl.to('Hz', 'sp')
-    >>> f.to('wl', 'sp', n=1.33)
-
+    >>> f.to('nm', 'sp', n=1.33)
+    <Quantity(398.496240602, 'nanometer')>
 
 
 
@@ -108,7 +114,7 @@ Defining contexts in a file
 ---------------------------
 
 Like all units and dimensions in Pint, `contexts` are defined using an easy to
-understand text syntax. For example, the definition of the spectroscopy
+read text syntax. For example, the definition of the spectroscopy
 context is::
 
     @context(n=1) spectroscopy = sp
@@ -118,11 +124,12 @@ context is::
         [energy] -> [frequency]: value / planck_constant
     @end
 
-The `@context` directive indicates the beginning of the definitions which are finished by an
+The `@context` directive indicates the beginning of the transformations which are finished by the
 `@end` statement. You can optionally specify parameters for the context in parenthesis.
 All parameters are named and default values are mandatory. Multiple parameters
-are separated by commas (like in a python function definition). Finally you provide the name
-of the context and, optionally, a short version of the name separated by an equal sign.
+are separated by commas (like in a python function definition). Finally, you provide the name
+of the context (e.g. spectroscopy) and, optionally, a short version of the name (e.g. sp)
+separated by an equal sign.
 
 Conversions rules are specified by providing source and destination dimensions separated
 using a colon (`:`) from the equation. A special variable named `value` will be replaced
@@ -140,10 +147,12 @@ Defining contexts programmatically
 You can create `Context` object, and populate the conversion rules using python functions.
 For example:
 
-..doctest::
+.. doctest::
 
     >>> ureg = pint.UnitRegistry()
     >>> c = pint.Context('ab')
-    >>> c.add_transformation('[length]', '[time]', lambda ureg, x: ureg.speed_of_light / x)
-    >>> c.add_transformation('[time]', '[length]', lambda ureg, x: ureg.speed_of_light * x)
+    >>> c.add_transformation('[length]', '[time]',
+    ...                      lambda ureg, x: ureg.speed_of_light / x)
+    >>> c.add_transformation('[time]', '[length]',
+    ...                      lambda ureg, x: ureg.speed_of_light * x)
     >>> ureg.add_context(c)
