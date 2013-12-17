@@ -5,7 +5,13 @@ Pint Changelog
 0.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Introduced Contexts: relation between incompatible dimensions.
+  (Issue #65)
+- Fixed get_base_units for non multiplicative units.
+  (Related to issue #66)
+- Implemented default formatting for quantities.
+- Changed comparison between Quantities containing NumPy arrays.
+  (Issue #75) - BACKWARDS INCOMPATIBLE CHANGE
 
 
 0.3.3 (2013-11-29)
