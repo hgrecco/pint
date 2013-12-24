@@ -323,8 +323,9 @@ class _Quantity(object):
 
     def __itruediv__(self, other):
         if _check(self, other):
-            # We use a = a / b instead of a /= b because of an issue
-            # with numpy integer division in the first case.
+            # We use a = a / b instead of a /= b because a /= b causes
+            # inplace integer division if the first array is an
+            # integer array.
             self._magnitude = self._magnitude / other._magnitude
             self._units /= other._units
         else:
