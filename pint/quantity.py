@@ -323,10 +323,7 @@ class _Quantity(object):
 
     def __itruediv__(self, other):
         if _check(self, other):
-            # We use a = a / b instead of a /= b because a /= b causes
-            # inplace integer division if the first array is an
-            # integer array.
-            self._magnitude = self._magnitude / other._magnitude
+            self._magnitude /= other._magnitude
             self._units /= other._units
         else:
             self._magnitude /= _to_magnitude(other, self.force_ndarray)
@@ -335,7 +332,13 @@ class _Quantity(object):
 
     def __truediv__(self, other):
         ret = copy.copy(self)
-        ret /= other
+        if _check(ret, other):
+            ret._magnitude = ret._magnitude / other._magnitude
+            ret._units /= other._units
+        else:
+            ret._magnitude = (ret._magnitude /
+                              _to_magnitude(other, ret.force_ndarray))
+
         return ret
 
     def __rtruediv__(self, other):
@@ -354,7 +357,12 @@ class _Quantity(object):
 
     def __floordiv__(self, other):
         ret = copy.copy(self)
-        ret //= other
+        if _check(ret, other):
+            ret._magnitude = ret._magnitude // other._magnitude
+            ret._units /= other._units
+        else:
+            ret._magnitude = (ret._magnitude //
+                              _to_magnitude(other, ret.force_ndarray))
         return ret
 
     __div__ = __truediv__

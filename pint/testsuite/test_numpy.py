@@ -163,8 +163,11 @@ class TestNumpyMethods(TestCase):
     def test_integer_div(self):
         a = [1] * self.ureg.m
         b = [2] * self.ureg.m
-        c = a/b
+        c = a/b  # Should be float division
         self.assertEqual(c.magnitude[0], 0.5)
+
+        a /= b  # Should be integer division
+        self.assertEqual(a.magnitude[0], 0)
 
     def test_conj(self):
         self.assertSequenceEqual((self.q*(1+1j)).conj(), self.q*(1-1j))
