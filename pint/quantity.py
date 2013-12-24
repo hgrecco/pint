@@ -323,7 +323,9 @@ class _Quantity(object):
 
     def __itruediv__(self, other):
         if _check(self, other):
-            self._magnitude /= other._magnitude
+            # We use a = a / b instead of a /= b because of an issue
+            # with numpy integer division in the first case.
+            self._magnitude = self._magnitude / other._magnitude
             self._units /= other._units
         else:
             self._magnitude /= _to_magnitude(other, self.force_ndarray)

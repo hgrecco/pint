@@ -160,6 +160,12 @@ class TestNumpyMethods(TestCase):
         self.assertRaises(ValueError, self.q.cumprod)
         self.assertSequenceEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
 
+    def test_integer_div(self):
+        a = [1] * self.ureg.m
+        b = [2] * self.ureg.m
+        c = a/b
+        self.assertEqual(c.magnitude[0], 0.5)
+
     def test_conj(self):
         self.assertSequenceEqual((self.q*(1+1j)).conj(), self.q*(1-1j))
         self.assertSequenceEqual((self.q*(1+1j)).conjugate(), self.q*(1-1j))
@@ -376,4 +382,3 @@ class TestBitTwiddlingUfuncs(TestUFuncs):
                     (self.qless, 2),
                     (self.q1, self.q2, self.qs, ),
                     'same')
-
