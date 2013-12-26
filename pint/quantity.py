@@ -331,15 +331,10 @@ class _Quantity(object):
         return self
 
     def __truediv__(self, other):
-        ret = copy.copy(self)
-        if _check(ret, other):
-            ret._magnitude = ret._magnitude / other._magnitude
-            ret._units /= other._units
+        if _check(self, other):
+            return self.__class__(self._magnitude / other._magnitude, self._units / other._units)
         else:
-            ret._magnitude = (ret._magnitude /
-                              _to_magnitude(other, ret.force_ndarray))
-
-        return ret
+            return self.__class__(self._magnitude / other, self._units)
 
     def __rtruediv__(self, other):
         if isinstance(other, NUMERIC_TYPES):
@@ -356,14 +351,10 @@ class _Quantity(object):
         return self
 
     def __floordiv__(self, other):
-        ret = copy.copy(self)
-        if _check(ret, other):
-            ret._magnitude = ret._magnitude // other._magnitude
-            ret._units /= other._units
+        if _check(self, other):
+            return self.__class__(self._magnitude // other._magnitude, self._units / other._units)
         else:
-            ret._magnitude = (ret._magnitude //
-                              _to_magnitude(other, ret.force_ndarray))
-        return ret
+            return self.__class__(self._magnitude // other, self._units)
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__

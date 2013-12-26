@@ -5,7 +5,8 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Integer Division with Arrays
+  (Issue #80, thanks jdreaver)
 
 
 0.4 (2013-12-17)
