@@ -5,8 +5,12 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
-- Integer Division with Arrays
+- Integer Division with Arrays.
   (Issue #80, thanks jdreaver)
+- Improved Documentation.
+  (Issue #83, thanks choloepus)
+- Removed h alias for hour due to conflict with Planck's constant.
+  (Issue #82, thanks choloepus)
 
 
 0.4 (2013-12-17)
