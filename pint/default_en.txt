@@ -238,7 +238,7 @@ degF = 9 / 5 * degK; offset: 255.372222 = fahrenheit
 
 # Time
 minute = 60 * second = min
-hour = 60 * minute = h = hr
+hour = 60 * minute = hr
 day = 24 * hour
 week = 7 * day
 fortnight = 2 * week
