@@ -32,7 +32,7 @@ You can now simply use the registry in the following way:
    >>> print(repr(time))
    <Quantity(8.0, 'second')>
 
-In this code `distance` and `time` are physical quantities objects (`Quantity`). Physical quantities can be queried for the magnitude and units:
+In this code `distance` and `time` are physical quantities objects (`Quantity`). Physical quantities can be queried for the magnitude, units, and dimensionality:
 
 .. doctest::
 
@@ -40,6 +40,8 @@ In this code `distance` and `time` are physical quantities objects (`Quantity`).
    24.0
    >>> print(distance.units)
    meter
+   >>> print(distance.dimensionality)
+   [length]
 
 and can handle mathematical operations between:
 
@@ -80,6 +82,23 @@ If you ask Pint to perform and invalid conversion:
    Traceback (most recent call last):
    ...
    pint.pint.DimensionalityError: Cannot convert from 'inch / minute' (length / time) to 'joule' (length ** 2 * mass / time ** 2)
+
+
+There are also methods 'to_base_units' and 'ito_base_units' which automatically convert to the reference units with the correct dimensionality:
+
+.. doctest::
+
+   >>>height = 5.0 * ureg.foot + 9.0 * ureg.inch
+   >>>print(height)
+   5.75 foot
+   >>>print(height.to_base_units())
+   1.7526 meter
+   >>>print(height)
+   5.75 foot
+   >>>height.ito_base_units()
+   <Quantity(1.7526, 'meter')>
+   >>>print(height)
+   1.7526 meter
 
 
 In some cases it is useful to define physical quantities objects using the class constructor:
