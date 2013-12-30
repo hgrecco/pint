@@ -264,6 +264,13 @@ class _Quantity(object):
         raise DimensionalityError(self.units, 'dimensionless')
 
     def iadd_sub(self, other, op):
+        """Perform addition or subtraction operation in-place and return the result.
+
+        Arguments:
+        other -- object to be added to / subtracted from self
+        op -- operator function (e.g. operator.add, operator.isub)
+
+        """
         if _check(self, other):
             if not self.dimensionality == other.dimensionality:
                 raise DimensionalityError(self.units, other.units,
@@ -273,9 +280,13 @@ class _Quantity(object):
             else:
                 self._magnitude = op(self._magnitude, other.to(self)._magnitude)
         else:
+            try:
+                other_magnitude = _to_magnitude(other, self.force_ndarray)
+            except TypeError:
+                return NotImplemented
             if self.dimensionless:
                 self.ito(UnitsContainer())
-                self._magnitude = op(self._magnitude, _to_magnitude(other, self.force_ndarray))
+                self._magnitude = op(self._magnitude, other_magnitude)
             else:
                 raise DimensionalityError(self.units, 'dimensionless')
 
@@ -283,8 +294,7 @@ class _Quantity(object):
 
     def add_sub(self, other, op):
         ret = copy.copy(self)
-        op(ret, other)
-        return ret
+        return op(ret, other)
 
     def __iadd__(self, other):
         return self.iadd_sub(other, operator.iadd)
