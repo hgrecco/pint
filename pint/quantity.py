@@ -266,10 +266,10 @@ class _Quantity(object):
     def iadd_sub(self, other, op):
         """Perform addition or subtraction operation in-place and return the result.
 
-        Arguments:
-        other -- object to be added to / subtracted from self
-        op -- operator function (e.g. operator.add, operator.isub)
-
+        :param other: object to be added to / subtracted from self
+        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :param op: operator function (e.g. operator.add, operator.isub)
+        :type op: function
         """
         if _check(self, other):
             if not self.dimensionality == other.dimensionality:
@@ -316,11 +316,12 @@ class _Quantity(object):
     def _imul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation in-place and return the result.
 
-        Arguments:
-        other -- object to be multiplied/divided with self
-        magnitude_op -- operator function to perform on the magnitudes (e.g. operator.mul)
-        units_op -- operator function to perform on the units; if None, magnitude_op is used
-
+        :param other: object to be multiplied/divided with self
+        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :param magnitude_op: operator function to perform on the magnitudes (e.g. operator.mul)
+        :type magnitude_op: function
+        :param units_op: operator function to perform on the units; if None, *magnitude_op* is used
+        :type units_op: function or None
         """
         if units_op is None:
             units_op = magnitude_op
