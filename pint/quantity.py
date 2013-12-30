@@ -384,10 +384,9 @@ class _Quantity(object):
             other_magnitude = _to_magnitude(other, self.force_ndarray)
         except TypeError:
             return NotImplemented
-        else:
-            self._magnitude **= _to_magnitude(other, self.force_ndarray)
-            self._units **= other
-            return self
+        self._magnitude **= other_magnitude
+        self._units **= other_magnitude
+        return self
 
     def __pow__(self, other):
         ret = copy.copy(self)
