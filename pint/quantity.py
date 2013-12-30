@@ -22,26 +22,25 @@ try:
     import numpy as np
 
     def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, (dict, bool)) or value is None:
-            raise ValueError('Invalid magnitude for Quantity: {!r}'.format(value))
-        elif value == '':
-            raise ValueError('Quantity magnitude cannot be an empty string.')
+        if isinstance(value, NUMERIC_TYPES):
+            if force_ndarray:
+                return np.asarray(value)
+            else:
+                return value
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
-        if force_ndarray:
-            return np.asarray(value)
-        return value
+        else:
+            raise TypeError('Invalid type of magnitude for Quantity: {}'.format(type(value)))
 
 except ImportError:
     def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, (dict, bool)) or value is None:
-            raise ValueError('Invalid magnitude for Quantity: {!r}'.format(value))
-        elif value == '':
-            raise ValueError('Quantity magnitude cannot be an empty string.')
+        if isinstance(value, NUMERIC_TYPES):
+            return value
         elif isinstance(value, (list, tuple)):
-            raise ValueError('lists and tuples are valid magnitudes for '
-                             'Quantity only when NumPy is present.')
-        return value
+            raise TypeError('lists and tuples are valid magnitudes for '
+                            'Quantity only when NumPy is present.')
+        else:
+            raise TypeError('Invalid type of magnitude for Quantity: {}'.format(type(value)))
 
 
 def _eq(first, second, check_all):
@@ -104,7 +103,7 @@ class _Quantity(object):
         if units is None:
             if isinstance(value, string_types):
                 if value == '':
-                    raise ValueError('Quantity magnitude cannot be an empty string.')
+                    raise ValueError('Expression to parse as Quantity cannot be an empty string.')
                 inst = cls._REGISTRY.parse_expression(value)
                 return cls.__new__(cls, inst)
             elif isinstance(value, cls):
