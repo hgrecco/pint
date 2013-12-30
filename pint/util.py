@@ -17,6 +17,7 @@ import tokenize
 import operator
 from numbers import Number
 from fractions import Fraction
+from decimal import Decimal
 
 import logging
 from token import STRING, NAME, OP
@@ -114,7 +115,7 @@ try:
     from numpy import ndarray
 
     HAS_NUMPY = True
-    NUMERIC_TYPES = (Number, ndarray)
+    NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
 except ImportError:
 
@@ -122,7 +123,7 @@ except ImportError:
         pass
 
     HAS_NUMPY = False
-    NUMERIC_TYPES = (Number, )
+    NUMERIC_TYPES = (Number, Decimal)
 
 
 def _join(fmt, iterable):

@@ -62,17 +62,19 @@ class TestIssues(unittest.TestCase):
     def test_issue61(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
-        for value in ({}, {'a': 3}, '', None, True, False):
-            self.assertRaises(ValueError, Q_, value)
-            self.assertRaises(ValueError, Q_, value, 'meter')
+        for value in ({}, {'a': 3}, None):
+            self.assertRaises(TypeError, Q_, value)
+            self.assertRaises(TypeError, Q_, value, 'meter')
+        self.assertRaises(TypeError, Q_, '', 'meter')
+        self.assertRaises(ValueError, Q_, '')
 
     @unittest.skipIf(HAS_NUMPY, 'Numpy present')
     def test_issue61_notNP(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
         for value in ([1, 2, 3], (1, 2, 3)):
-            self.assertRaises(ValueError, Q_, value)
-            self.assertRaises(ValueError, Q_, value, 'meter')
+            self.assertRaises(TypeError, Q_, value)
+            self.assertRaises(TypeError, Q_, value, 'meter')
 
     def test_issue66(self):
         ureg = UnitRegistry()
