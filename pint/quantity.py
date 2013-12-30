@@ -313,77 +313,85 @@ class _Quantity(object):
     def __rsub__(self, other):
         return -self.add_sub(other, operator.isub)
 
-    def __imul__(self, other):
+    def _imul_div(self, other, magnitude_op, units_op=None):
+        """Perform multiplication or division operation in-place and return the result.
+
+        Arguments:
+        other -- object to be multiplied/divided with self
+        magnitude_op -- operator function to perform on the magnitudes (e.g. operator.mul)
+        units_op -- operator function to perform on the units; if None, magnitude_op is used
+
+        """
+        if units_op is None:
+            units_op = magnitude_op
         if _check(self, other):
-            self._magnitude *= other._magnitude
-            self._units *= other._units
+            self._magnitude = magnitude_op(self._magnitude, other._magnitude)
+            self._units = units_op(self._units, other._units)
         else:
-            self._magnitude *= _to_magnitude(other, self.force_ndarray)
+            try:
+                other_magnitude = _to_magnitude(other, self.force_ndarray)
+            except TypeError:
+                return NotImplemented
+            self._magnitude = magnitude_op(self._magnitude, other_magnitude)
+            self._units = units_op(self._units, UnitsContainer())
 
         return self
 
+    def _mul_div(self, other, magnitude_op, units_op=None):
+        ret = copy.copy(self)
+        return ret._imul_div(other, magnitude_op, units_op)
+
+    def __imul__(self, other):
+        return self._imul_div(other, operator.imul)
+
     def __mul__(self, other):
-        if _check(self, other):
-            return self.__class__(self._magnitude * other._magnitude, self._units * other._units)
-        else:
-            return self.__class__(self._magnitude * other, self._units)
+        return self._mul_div(other, operator.mul)
 
     __rmul__ = __mul__
 
     def __itruediv__(self, other):
-        if _check(self, other):
-            self._magnitude /= other._magnitude
-            self._units /= other._units
-        else:
-            self._magnitude /= _to_magnitude(other, self.force_ndarray)
-
-        return self
+        return self._imul_div(other, operator.itruediv)
 
     def __truediv__(self, other):
-        if _check(self, other):
-            return self.__class__(self._magnitude / other._magnitude, self._units / other._units)
-        else:
-            return self.__class__(self._magnitude / other, self._units)
-
-    def __rtruediv__(self, other):
-        if isinstance(other, NUMERIC_TYPES):
-            return self.__class__(other / self._magnitude, 1 / self._units)
-        raise NotImplementedError
+        return self._mul_div(other, operator.truediv)
 
     def __ifloordiv__(self, other):
-        if _check(self, other):
-            self._magnitude //= other._magnitude
-            self._units /= other._units
-        else:
-            self._magnitude //= _to_magnitude(other, self.force_ndarray)
-
-        return self
+        return self._imul_div(other, operator.ifloordiv, units_op=operator.itruediv)
 
     def __floordiv__(self, other):
-        if _check(self, other):
-            return self.__class__(self._magnitude // other._magnitude, self._units / other._units)
-        else:
-            return self.__class__(self._magnitude // other, self._units)
+        return self._mul_div(other, operator.floordiv, units_op=operator.truediv)
+
+    def __rtruediv__(self, other):
+        try:
+            other_magnitude = _to_magnitude(other, self.force_ndarray)
+        except TypeError:
+            return NotImplemented
+        return self.__class__(other_magnitude / self._magnitude, 1 / self._units)
+
+    def __rfloordiv__(self, other):
+        try:
+            other_magnitude = _to_magnitude(other, self.force_ndarray)
+        except TypeError:
+            return NotImplemented
+        return self.__class__(other_magnitude // self._magnitude, 1 / self._units)
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
     __idiv__ = __itruediv__
 
-    def __rfloordiv__(self, other):
-        if _check(self, other):
-            return self.__class__(other._magnitude // self._magnitude, other._units / self._units)
-        else:
-            return self.__class__(other // self._magnitude, 1.0 / self._units)
-
     def __ipow__(self, other):
-        self._magnitude **= _to_magnitude(other, self.force_ndarray)
-        self._units **= other
-        return self
+        try:
+            other_magnitude = _to_magnitude(other, self.force_ndarray)
+        except TypeError:
+            return NotImplemented
+        else:
+            self._magnitude **= _to_magnitude(other, self.force_ndarray)
+            self._units **= other
+            return self
 
     def __pow__(self, other):
         ret = copy.copy(self)
-        ret **= other
-        return ret
+        return operator.ipow(ret, other)
 
     def __abs__(self):
         return self.__class__(abs(self._magnitude), self._units)
