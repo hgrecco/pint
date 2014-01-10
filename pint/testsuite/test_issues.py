@@ -112,6 +112,43 @@ class TestIssues(unittest.TestCase):
 
         self.assertAlmostEqual(va.to_base_units(), vb.to_base_units())
 
+    def test_issue86(self):
+        def parts(q):
+            return q.magnitude, q.units
+
+        ureg = UnitRegistry()
+
+        q1 = 10. * ureg.degC
+        q2 = 10. * ureg.kelvin
+
+        k1 = q1.to_base_units()
+
+        q3 = 3. * ureg.meter
+
+        q1m, q1u = parts(q1)
+        q2m, q2u = parts(q2)
+        q3m, q3u = parts(q3)
+
+        k1m, k1u = parts(k1)
+
+        self.assertEqual(parts(q2 * q3), (q2m * q3m, q2u * q3u))
+        self.assertEqual(parts(q2 / q3), (q2m / q3m, q2u / q3u))
+        self.assertEqual(parts(q3 * q2), (q3m * q2m, q3u * q2u))
+        self.assertEqual(parts(q3 / q2), (q3m / q2m, q3u / q2u))
+        self.assertEqual(parts(q2 **  1), (q2m **  1, q2u **  1))
+        self.assertEqual(parts(q2 ** -1), (q2m ** -1, q2u ** -1))
+        self.assertEqual(parts(q2 **  2), (q2m **  2, q2u **  2))
+        self.assertEqual(parts(q2 ** -2), (q2m ** -2, q2u ** -2))
+
+        self.assertEqual(parts(q1 * q3), (k1m * q3m, k1u * q3u))
+        self.assertEqual(parts(q1 / q3), (k1m / q3m, k1u / q3u))
+        self.assertEqual(parts(q3 * q1), (q3m * k1m, q3u * k1u))
+        self.assertEqual(parts(q3 / q1), (q3m / k1m, q3u / k1u))
+        self.assertEqual(parts(q1 **  1), (k1m **  1, k1u **  1))
+        self.assertEqual(parts(q1 ** -1), (k1m ** -1, k1u ** -1))
+        self.assertEqual(parts(q1 **  2), (k1m **  2, k1u **  2))
+        self.assertEqual(parts(q1 ** -2), (k1m ** -2, k1u ** -2))
+
     def _test_issueXX(self):
         ureg = UnitRegistry()
         try:

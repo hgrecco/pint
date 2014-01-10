@@ -83,6 +83,19 @@ def _check(q1, other):
     raise ValueError('Cannot operate between quantities of different registries')
 
 
+def _has_multiplicative_units(q):
+    """Check if the quantity has non-multiplicative units.
+    """
+
+    # Compound units are never multiplicative
+    if len(q.units) != 1:
+        return True
+
+    unit = list(q.units.keys())[0]
+
+    return q._REGISTRY._units[unit].is_multiplicative
+
+
 class _Quantity(object):
     """Implements a class to describe a physical quantities:
     the product of a numerical value and a unit of measurement.
@@ -316,6 +329,10 @@ class _Quantity(object):
         if units_op is None:
             units_op = magnitude_op
         if _check(self, other):
+            if not _has_multiplicative_units(self):
+                self.ito_base_units()
+            if not _has_multiplicative_units(other):
+                other = other.to_base_units()
             self._magnitude = magnitude_op(self._magnitude, other._magnitude)
             self._units = units_op(self._units, other._units)
         else:
@@ -376,6 +393,8 @@ class _Quantity(object):
         except TypeError:
             return NotImplemented
         else:
+            if not _has_multiplicative_units(self):
+                self.ito_base_units()
             self._magnitude **= _to_magnitude(other, self.force_ndarray)
             self._units **= other
             return self
