@@ -53,12 +53,13 @@ class DimensionalityError(ValueError):
     """Raised when trying to convert between incompatible units.
     """
 
-    def __init__(self, units1, units2, dim1=None, dim2=None):
+    def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=None):
         super(DimensionalityError, self).__init__()
         self.units1 = units1
         self.units2 = units2
         self.dim1 = dim1
         self.dim2 = dim2
+        self.extra_msg = extra_msg
 
     def __str__(self):
         if self.dim1 or self.dim2:
@@ -67,8 +68,13 @@ class DimensionalityError(ValueError):
         else:
             dim1 = ''
             dim2 = ''
-        return "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
 
+        msg = "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
+
+        if self.extra_msg:
+            return msg + self.extra_msg
+
+        return msg
 
 class Converter(object):
     """Base class for value converters.
@@ -850,28 +856,45 @@ class UnitRegistry(object):
 
                 value, src = src.magnitude, src.units
 
+                src_dim = self.get_dimensionality(src)
+
+        # If the source and destination dimensionality are different,
+        # then the conversion cannot be performed.
+
+        if src_dim != dst_dim:
+            raise DimensionalityError(src, dst, src_dim, dst_dim)
+
         if len(src) == 1:
+            # If the source has a single element, it might be a non-multiplicative unit
+            # and therefore it is treated differently.
             src_unit, src_value = list(src.items())[0]
             src_unit = self._units[src_unit]
+
+            # We only continue if is a ScaleConverter,
+            # if not just exit to use the standard src / dst.
+            # TODO: This will fail and should not degK * meter / nanometer -> degC
             if not isinstance(src_unit.converter, ScaleConverter):
-                if not len(dst) == 1:
-                    raise DimensionalityError(src, dst,
-                                              self.get_dimensionality(src),
-                                              self.get_dimensionality(dst))
+
+                if len(dst) > 1:
+                    # If the destination has more than one element,
+                    # then the conversion is not possible.
+                    # TODO: This will fail and should not degC -> degK * meter / nanometer
+                    raise DimensionalityError(src, dst, src_dim, dst_dim)
+
                 dst_unit, dst_value = list(dst.items())[0]
                 dst_unit = self._units[dst_unit]
                 if not type(src_unit.converter) is type(dst_unit.converter):
-                    raise DimensionalityError(src, dst,
-                                              self.get_dimensionality(src),
-                                              self.get_dimensionality(dst))
+                    raise DimensionalityError(src, dst, src_dim, dst_dim)
 
                 return dst_unit.converter.from_reference(src_unit.converter.to_reference(value))
 
         factor, units = self.get_base_units(src / dst)
-        if len(units):
-            raise DimensionalityError(src, dst, src_dim, dst_dim)
 
-        # factor is type float and if our magintude is type Decimal then
+        if factor is None:
+            raise DimensionalityError(src, dst, src_dim, dst_dim,
+                                      'Non-multiplicative unit found.')
+
+        # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
         if isinstance(value, Decimal):
             return Decimal(str(factor)) * value
