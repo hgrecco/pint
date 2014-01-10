@@ -749,40 +749,18 @@ class UnitRegistry(object):
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
 
-        if len(input_units) == 1:
-            key, value = list(input_units.items())[0]
-            if _is_dim(key):
-                reg = self._dimensions[key]
-                if reg.is_base:
-                    dims.add(key, value)
-                else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
-            else:
-                reg = self._units[self.get_name(key)]
-                if reg.is_base:
-                    dims *= reg.reference ** value
-                else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
-            if '[]' in dims:
-                del dims['[]']
-            return dims
-
         for key, value in input_units.items():
             if _is_dim(key):
                 reg = self._dimensions[key]
                 if reg.is_base:
                     dims.add(key, value)
                 else:
-                    if reg.converter and not isinstance(reg.converter, ScaleConverter):
-                        raise ValueError('{} is not a multiplicative unit'.format(reg))
                     dims *= self.get_dimensionality(reg.reference) ** value
             else:
                 reg = self._units[self.get_name(key)]
                 if reg.is_base:
                     dims *= reg.reference ** value
                 else:
-                    if not isinstance(reg.converter, ScaleConverter):
-                        raise ValueError('{} is not a multiplicative unit'.format(reg))
                     dims *= self.get_dimensionality(reg.reference) ** value
 
         if '[]' in dims:
