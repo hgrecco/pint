@@ -768,13 +768,17 @@ class UnitRegistry(object):
 
         return dims
 
-    def get_base_units(self, input_units):
+    def get_base_units(self, input_units, check_nonmult=True):
         """Convert unit or dict of units to the base units.
 
-        If the unit is non multiplicative, None is returned as
-        the multiplicative factor.
+        If any unit is non multiplicative and check_converter is True,
+        then None is returned as the multiplicative factor.
 
-        :param input_units:
+        :param input_units: units
+        :type input_units: UnitsContainer or str
+        :param check_nonmult: if True None will be returned as the multiplicative factor
+                              is a non-multiplicative units is found in the final
+                              Units.
         :return: multiplicative factor, base units
         """
         if not input_units:
@@ -788,15 +792,19 @@ class UnitRegistry(object):
         for key, value in input_units.items():
             key = self.get_name(key)
             reg = self._units[key]
-            if not isinstance(reg.converter, ScaleConverter):
-                factor = None
             if reg.is_base:
                 units.add(key, value)
             else:
-                fac, uni = self.get_base_units(reg.reference)
+                fac, uni = self.get_base_units(reg.reference, check_nonmult=False)
                 if factor is not None:
                     factor *= (reg.converter.scale * fac) ** value
                 units *= uni ** value
+
+        # Check if any of the final units is non multiplicative and return non instead.
+        if check_nonmult:
+            for unit in units.keys():
+                if not isinstance(self._units[unit].converter, ScaleConverter):
+                    return None, units
 
         return factor, units
 

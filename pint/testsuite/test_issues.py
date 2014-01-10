@@ -95,6 +95,30 @@ class TestIssues(unittest.TestCase):
         q = ureg['m'].to(ureg['in'])
         self.assertEqual(q, ureg['m'].to('in'))
 
+    def test_issue85(self):
+        ureg = UnitRegistry()
+
+        T = 4. * ureg.degK
+        m = 1. * ureg.amu
+        va = 2. * ureg.k * T / m
+
+        try:
+            va.to_base_units()
+        except:
+            self.assertTrue(False, 'Error while trying to get base units for {}'.format(va))
+
+        boltmk = 1.3806488e-23*ureg.J/ureg.K
+        vb = 2. * boltmk * T / m
+
+        self.assertAlmostEqual(va.to_base_units(), vb.to_base_units())
+
+    def _test_issueXX(self):
+        ureg = UnitRegistry()
+        try:
+            ureg.convert(1, ureg.degC, ureg.degK * ureg.meter / ureg.nanometer)
+        except:
+            self.assertTrue(False,
+                            'Error while trying to convert {} to {}'.format(ureg.degC, ureg.degK * ureg.meter / ureg.nanometer))
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):
