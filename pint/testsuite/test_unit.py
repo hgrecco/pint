@@ -240,9 +240,9 @@ class TestRegistry(TestCase):
         self.assertEqual(parse('degK', to_delta=False), UnitsContainer(degK=1))
         self.assertEqual(parse('degK**(-1)', to_delta=True), UnitsContainer(degK=-1))
         self.assertEqual(parse('degK**(-1)', to_delta=False), UnitsContainer(degK=-1))
-        self.assertEqual(parse('degK**2', to_delta=True), UnitsContainer(delta_degK=2))
+        self.assertEqual(parse('degK**2', to_delta=True), UnitsContainer(degK=2))
         self.assertEqual(parse('degK**2', to_delta=False), UnitsContainer(degK=2))
-        self.assertEqual(parse('degK*meter', to_delta=True), UnitsContainer(delta_degK=1, meter= 1))
+        self.assertEqual(parse('degK*meter', to_delta=True), UnitsContainer(degK=1, meter= 1))
         self.assertEqual(parse('degK*meter', to_delta=False), UnitsContainer(degK=1, meter=1))
 
     def test_symbol(self):

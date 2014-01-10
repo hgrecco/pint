@@ -76,9 +76,12 @@ class DimensionalityError(ValueError):
 
         return msg
 
+
 class Converter(object):
     """Base class for value converters.
     """
+
+    is_multiplicative = True
 
     def to_reference(self, value):
         return value
@@ -90,6 +93,8 @@ class Converter(object):
 class ScaleConverter(Converter):
     """A linear transformation
     """
+
+    is_multiplicative = True
 
     def __init__(self, scale):
         self.scale = scale
@@ -108,6 +113,10 @@ class OffsetConverter(Converter):
     def __init__(self, scale, offset):
         self.scale = scale
         self.offset = offset
+
+    @property
+    def is_multiplicative(self):
+        return self.offset == 0
 
     def to_reference(self, value):
         return value / self.scale + self.offset
@@ -130,6 +139,10 @@ class Definition(object):
         self._symbol = symbol
         self._aliases = aliases
         self._converter = converter
+
+    @property
+    def is_multiplicative(self):
+        return self._converter.is_multiplicative
 
     @classmethod
     def from_string(cls, definition):
@@ -960,7 +973,7 @@ class UnitRegistry(object):
                 continue
             if to_delta and (many or (not many and abs(value) != 1)):
                 definition = self._units[cname]
-                if not isinstance(definition.converter, ScaleConverter):
+                if not definition.is_multiplicative:
                     cname = 'delta_' + cname
             ret[cname] = value
 
