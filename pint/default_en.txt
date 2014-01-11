@@ -229,7 +229,7 @@ rutherford = 1e6*Bq = rd = Rd
 Gy = joule / kilogram = gray = Sv = sievert
 rem = 1e-2 * sievert
 rads = 1e-2 * gray
-roentgen = 2.58e-4 * coulomb / kilogram = R
+roentgen = 2.58e-4 * coulomb / kilogram
 
 # Temperature
 degR = 9 / 5 * degK; offset: 0 = rankine
