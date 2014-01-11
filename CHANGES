@@ -9,8 +9,17 @@ Pint Changelog
   (Issue #80, thanks jdreaver)
 - Improved Documentation.
   (Issue #83, thanks choloepus)
-- Removed h alias for hour due to conflict with Planck's constant.
+- Removed 'h' alias for hour due to conflict with Planck's constant.
   (Issue #82, thanks choloepus)
+- Improved get_base_units for non-multiplicative units.
+  (Issue #85, thanks exxus)
+- Refactored code for multiplication.
+  (Issue #84, thanks jturner314)
+- Removed 'R' alias for roentgen as it collides with molar_gas_constant.
+  (Issue #87, thanks rsking84)
+- Improved naming of temperature units and multiplication of non-multiplicative units.
+  (Issue #86, tahsnk exxus)
+
 
 
 0.4 (2013-12-17)
