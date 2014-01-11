@@ -10,7 +10,9 @@ from pint.util import ParserHelper
 
 from pint.testsuite import HAS_NUMPY, np, TestCase, ndarray, NUMPY_VER
 
-class TestIssues(unittest.TestCase):
+class TestIssues(TestCase):
+
+    FORCE_NDARRAY = False
 
     @unittest.expectedFailure
     def test_issue25(self):
@@ -78,17 +80,17 @@ class TestIssues(unittest.TestCase):
         ureg = UnitRegistry()
         self.assertEqual(ureg.get_dimensionality(UnitsContainer({'[temperature]': 1})),
                          UnitsContainer({'[temperature]': 1}))
-        self.assertEqual(ureg.get_dimensionality(ureg.degK.units),
+        self.assertEqual(ureg.get_dimensionality(ureg.kelvin.units),
                          UnitsContainer({'[temperature]': 1}))
         self.assertEqual(ureg.get_dimensionality(ureg.degC.units),
                          UnitsContainer({'[temperature]': 1}))
 
     def test_issue66b(self):
         ureg = UnitRegistry()
-        self.assertEqual(ureg.get_base_units(ureg.degK.units),
-                         (None, UnitsContainer({'degK': 1})))
+        self.assertEqual(ureg.get_base_units(ureg.kelvin.units),
+                         (None, UnitsContainer({'kelvin': 1})))
         self.assertEqual(ureg.get_base_units(ureg.degC.units),
-                         (None, UnitsContainer({'degK': 1})))
+                         (None, UnitsContainer({'kelvin': 1})))
 
     def test_issue69(self):
         ureg = UnitRegistry()
@@ -98,7 +100,7 @@ class TestIssues(unittest.TestCase):
     def test_issue85(self):
         ureg = UnitRegistry()
 
-        T = 4. * ureg.degK
+        T = 4. * ureg.kelvin
         m = 1. * ureg.amu
         va = 2. * ureg.k * T / m
 
@@ -149,13 +151,28 @@ class TestIssues(unittest.TestCase):
         self.assertEqual(parts(q1 **  2), (k1m **  2, k1u **  2))
         self.assertEqual(parts(q1 ** -2), (k1m ** -2, k1u ** -2))
 
+    def test_issues86b(self):
+        ureg = self.ureg
+
+        T1 = 200. * ureg.degC
+        T2 = T1.to(ureg.kelvin)
+        m = 132.9054519 * ureg.amu
+        v1 = 2 * ureg.k * T1 / m
+        v2 = 2 * ureg.k * T2 / m
+
+        self.assertAlmostEqual(v1, v2)
+        self.assertAlmostEqual(v1, v2.to_base_units())
+        self.assertAlmostEqual(v1.to_base_units(), v2)
+        self.assertAlmostEqual(v1.to_base_units(), v2.to_base_units())
+
     def _test_issueXX(self):
         ureg = UnitRegistry()
         try:
-            ureg.convert(1, ureg.degC, ureg.degK * ureg.meter / ureg.nanometer)
+            ureg.convert(1, ureg.degC, ureg.kelvin * ureg.meter / ureg.nanometer)
         except:
             self.assertTrue(False,
-                            'Error while trying to convert {} to {}'.format(ureg.degC, ureg.degK * ureg.meter / ureg.nanometer))
+                            'Error while trying to convert {} to {}'.format(ureg.degC, ureg.kelvin * ureg.meter / ureg.nanometer))
+
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):

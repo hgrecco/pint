@@ -73,13 +73,13 @@ class TestDefinition(unittest.TestCase):
         self.assertEqual(x.converter.scale,  96485.3399)
         self.assertEqual(x.reference, UnitsContainer(coulomb=1))
 
-        x = Definition.from_string('degF = 9 / 5 * degK; offset: 255.372222')
+        x = Definition.from_string('degF = 9 / 5 * kelvin; offset: 255.372222')
         self.assertIsInstance(x, UnitDefinition)
         self.assertFalse(x.is_base)
         self.assertIsInstance(x.converter, OffsetConverter)
         self.assertEqual(x.converter.scale, 9/5)
         self.assertEqual(x.converter.offset, 255.372222)
-        self.assertEqual(x.reference, UnitsContainer(degK=1))
+        self.assertEqual(x.reference, UnitsContainer(kelvin=1))
 
     def test_dimension_definition(self):
         x = Definition.from_string('[speed] = [length]/[time]')
@@ -236,14 +236,14 @@ class TestRegistry(TestCase):
 
     def test_to_delta(self):
         parse = self.ureg.parse_units
-        self.assertEqual(parse('degK', to_delta=True), UnitsContainer(degK=1))
-        self.assertEqual(parse('degK', to_delta=False), UnitsContainer(degK=1))
-        self.assertEqual(parse('degK**(-1)', to_delta=True), UnitsContainer(degK=-1))
-        self.assertEqual(parse('degK**(-1)', to_delta=False), UnitsContainer(degK=-1))
-        self.assertEqual(parse('degK**2', to_delta=True), UnitsContainer(degK=2))
-        self.assertEqual(parse('degK**2', to_delta=False), UnitsContainer(degK=2))
-        self.assertEqual(parse('degK*meter', to_delta=True), UnitsContainer(degK=1, meter= 1))
-        self.assertEqual(parse('degK*meter', to_delta=False), UnitsContainer(degK=1, meter=1))
+        self.assertEqual(parse('kelvin', to_delta=True), UnitsContainer(kelvin=1))
+        self.assertEqual(parse('kelvin', to_delta=False), UnitsContainer(kelvin=1))
+        self.assertEqual(parse('kelvin**(-1)', to_delta=True), UnitsContainer(kelvin=-1))
+        self.assertEqual(parse('kelvin**(-1)', to_delta=False), UnitsContainer(kelvin=-1))
+        self.assertEqual(parse('kelvin**2', to_delta=True), UnitsContainer(kelvin=2))
+        self.assertEqual(parse('kelvin**2', to_delta=False), UnitsContainer(kelvin=2))
+        self.assertEqual(parse('kelvin*meter', to_delta=True), UnitsContainer(kelvin=1, meter= 1))
+        self.assertEqual(parse('kelvin*meter', to_delta=False), UnitsContainer(kelvin=1, meter=1))
 
     def test_symbol(self):
         self.assertEqual(self.ureg.get_symbol('meter'), 'm')
@@ -258,13 +258,13 @@ class TestRegistry(TestCase):
     def test_delta_in_diff(self):
         """This might be supported in future versions
         """
-        xk = 1 * self.ureg.degK
-        yk = 2 * self.ureg.degK
+        xk = 1 * self.ureg.kelvin
+        yk = 2 * self.ureg.kelvin
         yf = yk.to('degF')
         yc = yk.to('degC')
-        self.assertEqual(yk - xk, 1 * self.ureg.delta_degK)
-        self.assertEqual(yf - xk, 1 * self.ureg.delta_degK)
-        self.assertEqual(yc - xk, 1 * self.ureg.delta_degK)
+        self.assertEqual(yk - xk, 1 * self.ureg.kelvin)
+        self.assertEqual(yf - xk, 1 * self.ureg.kelvin)
+        self.assertEqual(yc - xk, 1 * self.ureg.kelvin)
 
     def test_pint(self):
         p = self.ureg.pint
