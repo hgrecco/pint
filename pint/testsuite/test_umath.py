@@ -372,10 +372,18 @@ class TestTrigUfuncs(TestUFuncs):
     def test_cos(self):
         self._test1(np.cos, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,
                              np.arange(0, pi/2, pi/4) * self.ureg.radian,
-                             np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m
-                            ), (self.ureg.m, ), '', results=(None, None, np.cos(np.arange(0, pi/2, pi/4)*0.001)))
-        self._test1(np.cos, (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
-                            ), results=(np.cos(np.arange(0, pi/2, pi/4)), ))
+                             np.arange(0, pi/2, pi/4) * self.ureg.mm / self.ureg.m,
+                            ), (self.ureg.m, ), '',
+                    results=(None,
+                             None,
+                             np.cos(np.arange(0, pi/2, pi/4)*0.001),
+                    )
+        )
+        self._test1(np.cos,
+                    (np.rad2deg(np.arange(0, pi/2, pi/4)) * self.ureg.degrees,
+                     ),
+                    results=(np.cos(np.arange(0, pi/2, pi/4)), )
+        )
 
     def test_tan(self):
         self._test1(np.tan, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,

@@ -53,12 +53,13 @@ class DimensionalityError(ValueError):
     """Raised when trying to convert between incompatible units.
     """
 
-    def __init__(self, units1, units2, dim1=None, dim2=None):
+    def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=None):
         super(DimensionalityError, self).__init__()
         self.units1 = units1
         self.units2 = units2
         self.dim1 = dim1
         self.dim2 = dim2
+        self.extra_msg = extra_msg
 
     def __str__(self):
         if self.dim1 or self.dim2:
@@ -67,12 +68,20 @@ class DimensionalityError(ValueError):
         else:
             dim1 = ''
             dim2 = ''
-        return "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
+
+        msg = "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
+
+        if self.extra_msg:
+            return msg + self.extra_msg
+
+        return msg
 
 
 class Converter(object):
     """Base class for value converters.
     """
+
+    is_multiplicative = True
 
     def to_reference(self, value):
         return value
@@ -84,6 +93,8 @@ class Converter(object):
 class ScaleConverter(Converter):
     """A linear transformation
     """
+
+    is_multiplicative = True
 
     def __init__(self, scale):
         self.scale = scale
@@ -102,6 +113,10 @@ class OffsetConverter(Converter):
     def __init__(self, scale, offset):
         self.scale = scale
         self.offset = offset
+
+    @property
+    def is_multiplicative(self):
+        return self.offset == 0
 
     def to_reference(self, value):
         return value / self.scale + self.offset
@@ -124,6 +139,10 @@ class Definition(object):
         self._symbol = symbol
         self._aliases = aliases
         self._converter = converter
+
+    @property
+    def is_multiplicative(self):
+        return self._converter.is_multiplicative
 
     @classmethod
     def from_string(cls, definition):
@@ -743,40 +762,18 @@ class UnitRegistry(object):
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
 
-        if len(input_units) == 1:
-            key, value = list(input_units.items())[0]
-            if _is_dim(key):
-                reg = self._dimensions[key]
-                if reg.is_base:
-                    dims.add(key, value)
-                else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
-            else:
-                reg = self._units[self.get_name(key)]
-                if reg.is_base:
-                    dims *= reg.reference ** value
-                else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
-            if '[]' in dims:
-                del dims['[]']
-            return dims
-
         for key, value in input_units.items():
             if _is_dim(key):
                 reg = self._dimensions[key]
                 if reg.is_base:
                     dims.add(key, value)
                 else:
-                    if reg.converter and not isinstance(reg.converter, ScaleConverter):
-                        raise ValueError('{} is not a multiplicative unit'.format(reg))
                     dims *= self.get_dimensionality(reg.reference) ** value
             else:
                 reg = self._units[self.get_name(key)]
                 if reg.is_base:
                     dims *= reg.reference ** value
                 else:
-                    if not isinstance(reg.converter, ScaleConverter):
-                        raise ValueError('{} is not a multiplicative unit'.format(reg))
                     dims *= self.get_dimensionality(reg.reference) ** value
 
         if '[]' in dims:
@@ -784,13 +781,17 @@ class UnitRegistry(object):
 
         return dims
 
-    def get_base_units(self, input_units):
+    def get_base_units(self, input_units, check_nonmult=True):
         """Convert unit or dict of units to the base units.
 
-        If the unit is non multiplicative, None is returned as
-        the multiplicative factor.
+        If any unit is non multiplicative and check_converter is True,
+        then None is returned as the multiplicative factor.
 
-        :param input_units:
+        :param input_units: units
+        :type input_units: UnitsContainer or str
+        :param check_nonmult: if True None will be returned as the multiplicative factor
+                              is a non-multiplicative units is found in the final
+                              Units.
         :return: multiplicative factor, base units
         """
         if not input_units:
@@ -804,15 +805,19 @@ class UnitRegistry(object):
         for key, value in input_units.items():
             key = self.get_name(key)
             reg = self._units[key]
-            if not isinstance(reg.converter, ScaleConverter):
-                factor = None
             if reg.is_base:
                 units.add(key, value)
             else:
-                fac, uni = self.get_base_units(reg.reference)
+                fac, uni = self.get_base_units(reg.reference, check_nonmult=False)
                 if factor is not None:
                     factor *= (reg.converter.scale * fac) ** value
                 units *= uni ** value
+
+        # Check if any of the final units is non multiplicative and return non instead.
+        if check_nonmult:
+            for unit in units.keys():
+                if not isinstance(self._units[unit].converter, ScaleConverter):
+                    return None, units
 
         return factor, units
 
@@ -850,28 +855,45 @@ class UnitRegistry(object):
 
                 value, src = src.magnitude, src.units
 
+                src_dim = self.get_dimensionality(src)
+
+        # If the source and destination dimensionality are different,
+        # then the conversion cannot be performed.
+
+        if src_dim != dst_dim:
+            raise DimensionalityError(src, dst, src_dim, dst_dim)
+
         if len(src) == 1:
+            # If the source has a single element, it might be a non-multiplicative unit
+            # and therefore it is treated differently.
             src_unit, src_value = list(src.items())[0]
             src_unit = self._units[src_unit]
+
+            # We only continue if is a ScaleConverter,
+            # if not just exit to use the standard src / dst.
+            # TODO: This will fail and should not degK * meter / nanometer -> degC
             if not isinstance(src_unit.converter, ScaleConverter):
-                if not len(dst) == 1:
-                    raise DimensionalityError(src, dst,
-                                              self.get_dimensionality(src),
-                                              self.get_dimensionality(dst))
+
+                if len(dst) > 1:
+                    # If the destination has more than one element,
+                    # then the conversion is not possible.
+                    # TODO: This will fail and should not degC -> degK * meter / nanometer
+                    raise DimensionalityError(src, dst, src_dim, dst_dim)
+
                 dst_unit, dst_value = list(dst.items())[0]
                 dst_unit = self._units[dst_unit]
                 if not type(src_unit.converter) is type(dst_unit.converter):
-                    raise DimensionalityError(src, dst,
-                                              self.get_dimensionality(src),
-                                              self.get_dimensionality(dst))
+                    raise DimensionalityError(src, dst, src_dim, dst_dim)
 
                 return dst_unit.converter.from_reference(src_unit.converter.to_reference(value))
 
         factor, units = self.get_base_units(src / dst)
-        if len(units):
-            raise DimensionalityError(src, dst, src_dim, dst_dim)
 
-        # factor is type float and if our magintude is type Decimal then
+        if factor is None:
+            raise DimensionalityError(src, dst, src_dim, dst_dim,
+                                      'Non-multiplicative unit found.')
+
+        # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
         if isinstance(value, Decimal):
             return Decimal(str(factor)) * value
@@ -951,7 +973,7 @@ class UnitRegistry(object):
                 continue
             if to_delta and (many or (not many and abs(value) != 1)):
                 definition = self._units[cname]
-                if not isinstance(definition.converter, ScaleConverter):
+                if not definition.is_multiplicative:
                     cname = 'delta_' + cname
             ret[cname] = value
 
