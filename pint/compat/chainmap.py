@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-    pint.compat
-    ~~~~~~~~~~~
+    pint.compat.chainmap
+    ~~~~~~~~~~~~~~~~~~~~
 
-    Compatibility layer.
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+    From https://code.activestate.com/recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
+
+    :copyright: 2004, Raymond Hettinger,
+    :license: MIT License
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
