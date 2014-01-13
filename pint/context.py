@@ -15,8 +15,9 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import re
 from collections import defaultdict
 import weakref
-from pint.compat import ChainMap
-from pint.util import ParserHelper, string_types
+
+from .compat import ChainMap
+from .util import ParserHelper, string_types
 
 #: Regex to match the header parts of a context.
 _header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')

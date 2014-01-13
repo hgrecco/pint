@@ -6,10 +6,10 @@ import copy
 import math
 import operator as op
 
+from pint import DimensionalityError, UnitRegistry
 from pint.unit import UnitsContainer
-from pint import DimensionalityError, UndefinedUnitError, UnitRegistry
-
-from pint.testsuite import TestCase, string_types, PYTHON3
+from pint.compat import string_types, PYTHON3
+from pint.testsuite import TestCase
 
 
 class TestQuantity(TestCase):

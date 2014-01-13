@@ -8,7 +8,9 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.testsuite import HAS_NUMPY, np, TestCase, ndarray, NUMPY_VER
+from pint.compat import HAS_NUMPY, np
+from pint.testsuite import TestCase
+
 
 class TestIssues(TestCase):
 

@@ -3,33 +3,10 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import os
-import sys
 import logging
 import unittest
 
-try:
-    import numpy as np
-    HAS_NUMPY = True
-    ndarray = np.ndarray
-    NUMPY_VER = np.__version__
-except ImportError:
-    np = None
-    HAS_NUMPY = False
-    NUMPY_VER = 0
-    class ndarray(object):
-        pass
-
-PYTHON3 = sys.version >= '3'
-
-if PYTHON3:
-    string_types = str
-    def u(x):
-        return x
-else:
-    import codecs
-    string_types = basestring
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
+from pint.compat import ndarray
 
 from pint import logger, UnitRegistry
 

@@ -16,31 +16,7 @@ from collections import Iterable
 
 from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
 from .measurement import Measurement
-from .util import string_types, NUMERIC_TYPES, ndarray
-
-try:
-    import numpy as np
-
-    def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, NUMERIC_TYPES):
-            if force_ndarray:
-                return np.asarray(value)
-            else:
-                return value
-        elif isinstance(value, (list, tuple)):
-            return np.asarray(value)
-        else:
-            raise TypeError('Invalid type of magnitude for Quantity: {}'.format(type(value)))
-
-except ImportError:
-    def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, NUMERIC_TYPES):
-            return value
-        elif isinstance(value, (list, tuple)):
-            raise TypeError('lists and tuples are valid magnitudes for '
-                            'Quantity only when NumPy is present.')
-        else:
-            raise TypeError('Invalid type of magnitude for Quantity: {}'.format(type(value)))
+from .compat import string_types, ndarray, np, _to_magnitude
 
 
 def _eq(first, second, check_all):

@@ -12,28 +12,18 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import re
-import sys
-import tokenize
 import operator
 from numbers import Number
 from fractions import Fraction
-from decimal import Decimal
 
 import logging
 from token import STRING, NAME, OP
 from tokenize import untokenize
 
+from .compat import string_types, tokenizer, lru_cache
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-
-if sys.version < '3':
-    from StringIO import StringIO
-    string_types = basestring
-    ptok = lambda input_string: tokenize.generate_tokens(StringIO(input_string).readline)
-else:
-    from io import BytesIO
-    string_types = str
-    ptok = lambda input_string: tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline)
 
 
 def matrix_to_string(matrix, row_headers=None, col_headers=None, fmtfun=lambda x: str(int(x))):
@@ -109,21 +99,6 @@ def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
         lead += 1
 
     return _transpose(M), _transpose(I), swapped
-
-try:
-    import numpy as np
-    from numpy import ndarray
-
-    HAS_NUMPY = True
-    NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
-
-except ImportError:
-
-    class ndarray(object):
-        pass
-
-    HAS_NUMPY = False
-    NUMERIC_TYPES = (Number, Decimal)
 
 
 def _join(fmt, iterable):
@@ -313,6 +288,7 @@ class ParserHelper(dict):
         return ret
 
     @classmethod
+    @lru_cache()
     def from_string(cls, input_string):
         """Parse linear expression mathematical units and return a quantity object.
         """
@@ -328,7 +304,7 @@ class ParserHelper(dict):
         else:
             reps = False
 
-        gen = ptok(input_string)
+        gen = tokenizer(input_string)
         result = []
         for toknum, tokval, _, _, _ in gen:
             if toknum == NAME:

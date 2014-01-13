@@ -11,7 +11,9 @@ from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
                        DimensionDefinition)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.testsuite import TestCase, u
+from pint.compat import u
+from pint.testsuite import TestCase
+
 
 class TestConverter(unittest.TestCase):
 
@@ -24,6 +26,7 @@ class TestConverter(unittest.TestCase):
         c = OffsetConverter(20., 2)
         self.assertEqual(c.from_reference(c.to_reference(100)), 100)
         self.assertEqual(c.to_reference(c.from_reference(100)), 100)
+
 
 class TestDefinition(unittest.TestCase):
 

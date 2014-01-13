@@ -2,7 +2,6 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import unittest
 import itertools
 
 from pint import pi_theorem

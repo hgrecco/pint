@@ -22,11 +22,12 @@ from contextlib import contextmanager
 from io import open
 from numbers import Number
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
+from collections import defaultdict
 
 from .context import Context, ContextChain
-from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
-                   ParserHelper, string_types, ptok, string_preprocessor)
-from .util import find_shortest_path
+from .util import (formatter, logger, pi_theorem, solve_dependencies,
+                   ParserHelper, string_preprocessor, find_shortest_path)
+from .compat import tokenizer, string_types, NUMERIC_TYPES
 
 
 class UndefinedUnitError(ValueError):
@@ -434,6 +435,9 @@ class UnitRegistry(object):
         #: Stores active contexts.
         self._active_ctx = ContextChain()
 
+        #: Maps dimensionality (_freeze(UnitsContainer) to Units (_freeze(UnitsContainer))
+        self._dimensional_equivalents = defaultdict(set)
+
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
         self.default_to_delta = default_to_delta
@@ -821,6 +825,14 @@ class UnitRegistry(object):
 
         return factor, units
 
+
+    def get_equivalent_units(self, input_units):
+        if not input_units:
+            return 1., UnitsContainer()
+
+        if isinstance(input_units, string_types):
+            input_units = ParserHelper.from_string(input_units)
+
     def convert(self, value, src, dst):
         """Convert value from some source to destination units.
 
@@ -990,7 +1002,7 @@ class UnitRegistry(object):
             return self.Quantity(1)
 
         input_string = string_preprocessor(input_string)
-        gen = ptok(input_string)
+        gen = tokenizer(input_string)
         result = []
         unknown = set()
         for toknum, tokval, _, _, _ in gen:
