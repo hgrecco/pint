@@ -3,11 +3,10 @@
     pint.compat.chainmap
     ~~~~~~~~~~~~~~~~~~~~
 
+    Taken from the Python 3.3 source code.
 
-    From https://code.activestate.com/recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
-
-    :copyright: 2004, Raymond Hettinger,
-    :license: MIT License
+    :copyright: 2013, PSF
+    :license: PSF License
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import

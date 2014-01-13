@@ -3,6 +3,7 @@
     pint.compat.lrucache
     ~~~~~~~~~~~~~~~~~~~~
 
+    LRU (least recently used) cache backport.
 
     From https://code.activestate.com/recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 
