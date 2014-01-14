@@ -40,12 +40,17 @@ else:
 
 try:
     from collections import Chainmap
-except:
+except ImportError:
     from .chainmap import ChainMap
 
 try:
+    from collections import TransformDict
+except ImportError:
+    from .transformdict import TransformDict
+
+try:
     from functools import lru_cache
-except:
+except ImportError:
     from .lrucache import lru_cache
 
 try:
