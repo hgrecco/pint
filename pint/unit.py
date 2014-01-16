@@ -22,12 +22,11 @@ from contextlib import contextmanager
 from io import open
 from numbers import Number
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
-from collections import defaultdict
 
-from .context import Context, ContextChain
+from .context import Context, ContextChain, _freeze
 from .util import (formatter, logger, pi_theorem, solve_dependencies,
                    ParserHelper, string_preprocessor, find_shortest_path)
-from .compat import tokenizer, string_types, NUMERIC_TYPES
+from .compat import tokenizer, string_types, NUMERIC_TYPES, TransformDict
 
 
 class UndefinedUnitError(ValueError):
@@ -435,8 +434,13 @@ class UnitRegistry(object):
         #: Stores active contexts.
         self._active_ctx = ContextChain()
 
-        #: Maps dimensionality (_freeze(UnitsContainer) to Units (_freeze(UnitsContainer))
-        self._dimensional_equivalents = defaultdict(set)
+        #: Maps dimensionality (_freeze(UnitsContainer)) to Units (str)
+        self._dimensional_equivalents = TransformDict(_freeze)
+
+        #: Maps dimensionality (_freeze(UnitsContainer)) to Dimensionality (_freeze(UnitsContainer))
+        self._base_units_cache = TransformDict(_freeze)
+        #: Maps dimensionality (_freeze(UnitsContainer)) to Units (_freeze(UnitsContainer))
+        self._dimensionality_cache = TransformDict(_freeze)
 
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
@@ -449,6 +453,8 @@ class UnitRegistry(object):
             self.load_definitions(filename)
 
         self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
+
+        self._build_cache()
 
     def __getattr__(self, item):
         return self.Quantity(1, item)
@@ -693,18 +699,36 @@ class UnitRegistry(object):
                 except Exception as ex:
                     logger.error("In line {}, cannot add '{}' {}".format(no, line, ex))
 
-    def validate(self):
-        """Walk the registry and calculate for each unit definition
-        the corresponding base units and dimensionality.
+    def _build_cache(self):
+        """Build a cache of dimensionality and base units.
         """
 
-        deps = {name: set(definition.reference.keys())
+        deps = {name: set(definition.reference.keys() if definition.reference else {})
                 for name, definition in self._units.items()}
 
         for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
-                bu = self.get_base_units(unit_name)
-                di = self.get_dimensionality(bu)
+                prefixed = False
+                for p in self._prefixes.keys():
+                    if p and unit_name.startswith(p):
+                        prefixed = True
+                        break
+                if '[' in unit_name:
+                    continue
+                try:
+                    uc = ParserHelper.from_word(unit_name)
+
+                    bu = self.get_base_units(uc)
+                    di = self.get_dimensionality(uc)
+
+                    if not prefixed and di not in self._dimensional_equivalents:
+                        self._dimensional_equivalents[di] = set()
+
+                    self._dimensional_equivalents[di].add(self._units[unit_name].name)
+                    self._base_units_cache[uc] = bu
+                    self._dimensionality_cache[uc] = di
+                except Exception as e:
+                    logger.warning('Could not resolve {}: {}'.format(unit_name, e))
 
     def get_name(self, name_or_alias):
         """Return the canonical name of a unit.
@@ -825,13 +849,14 @@ class UnitRegistry(object):
 
         return factor, units
 
-
     def get_equivalent_units(self, input_units):
         if not input_units:
             return 1., UnitsContainer()
 
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
+
+        return self._dimensional_equivalents[self.get_dimensionality(input_units)]
 
     def convert(self, value, src, dst):
         """Convert value from some source to destination units.
