@@ -169,6 +169,12 @@ class TestIssues(TestCase):
         self.assertAlmostEqual(v1.to_base_units(), v2)
         self.assertAlmostEqual(v1.to_base_units(), v2.to_base_units())
 
+    def test_issue86c(self):
+        ureg = self.ureg
+        T = ureg.degC
+        T = 100. * T
+        self.assertAlmostEqual(ureg.k*2*T, ureg.k*(2*T))
+
     def _test_issueXX(self):
         ureg = UnitRegistry()
         try:

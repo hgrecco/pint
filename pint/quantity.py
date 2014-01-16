@@ -58,7 +58,7 @@ def _check(q1, other):
     raise ValueError('Cannot operate between quantities of different registries')
 
 
-def _has_multiplicative_units(q):
+def _only_multiplicative_units(q):
     """Check if the quantity has non-multiplicative units.
     """
 
@@ -116,11 +116,18 @@ class _Quantity(object):
             raise TypeError('units must be of type str, Quantity or '
                             'UnitsContainer; not {}.'.format(type(units)))
 
+        inst.__used = False
         inst.__handling = None
         return inst
 
+    @property
+    def debug_used(self):
+        return self.__used
+
     def __copy__(self):
-        return self.__class__(copy.copy(self._magnitude), copy.copy(self._units))
+        ret = self.__class__(copy.copy(self._magnitude), copy.copy(self._units))
+        ret.__used = self.__used
+        return ret
 
     def __str__(self):
         return '{} {}'.format(self._magnitude, self._units)
@@ -314,10 +321,15 @@ class _Quantity(object):
         """
         if units_op is None:
             units_op = magnitude_op
-        if _check(self, other):
-            if not _has_multiplicative_units(self):
+
+        if self.__used:
+            if not _only_multiplicative_units(self):
                 self.ito_base_units()
-            if not _has_multiplicative_units(other):
+        else:
+            self.__used = True
+
+        if _check(self, other):
+            if not _only_multiplicative_units(other):
                 other = other.to_base_units()
             self._magnitude = magnitude_op(self._magnitude, other._magnitude)
             self._units = units_op(self._units, other._units)
@@ -379,7 +391,7 @@ class _Quantity(object):
         except TypeError:
             return NotImplemented
         else:
-            if not _has_multiplicative_units(self):
+            if not _only_multiplicative_units(self):
                 self.ito_base_units()
             self._magnitude **= _to_magnitude(other, self.force_ndarray)
             self._units **= other
