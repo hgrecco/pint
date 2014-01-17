@@ -1,0 +1,11 @@
+
+
+- name: Base
+  files: bench_base.yaml
+- name: NumPy
+  setup: |
+          import numpy as np
+          import pint
+          ureg = pint.UnitRegistry()
+  files: bench_numpy.yaml
+
