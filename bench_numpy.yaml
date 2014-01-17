@@ -1,17 +1,23 @@
 
 
-- name: cosine
+- name: NumPy
   setup: |
-          d = np.arange(0, 90, 10)
-          r = np.deg2rad(d)
-  base: np.cos(r)
+          import numpy as np
+          import pint
+          ureg = pint.UnitRegistry()
   stmts:
-    - name: radian
-      setup: x = r * ureg.radian
-      stmt: np.cos(x)
-    - name: dimensionless
-      setup: x = r * ureg.dimensionless
-      stmt: np.cos(x)
-    - name: degree
-      setup: x = d * ureg.degree
-      stmt: np.cos(x)
+    - name: cosine
+      setup: |
+              d = np.arange(0, 90, 10)
+              r = np.deg2rad(d)
+      base: np.cos(r)
+      stmts:
+        - name: radian
+          setup: x = r * ureg.radian
+          stmt: np.cos(x)
+        - name: dimensionless
+          setup: x = r * ureg.dimensionless
+          stmt: np.cos(x)
+        - name: degree
+          setup: x = d * ureg.degree
+          stmt: np.cos(x)

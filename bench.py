@@ -1,4 +1,8 @@
 
+
+from __future__ import division, unicode_literals, print_function, absolute_import
+
+import glob
 import copy
 from timeit import Timer
 
@@ -52,8 +56,7 @@ def build_task(task, name='', setup='', number=0, repeat=3):
     return nt
 
 
-def time_task(name, stmt='pass', setup='pass', number=0, repeat=3,
-              stmts='', files=None, base=''):
+def time_task(name, stmt='pass', setup='pass', number=0, repeat=3, stmts='', base=''):
 
     if base:
         nvalue = time_stmt(stmt=base, setup=setup, number=number, repeat=repeat)
@@ -66,15 +69,6 @@ def time_task(name, stmt='pass', setup='pass', number=0, repeat=3,
     if stmt:
         value = time_stmt(stmt=stmt, setup=setup, number=number, repeat=repeat)
         yield name, value / nvalue
-
-    if files:
-        if isinstance(files, list):
-            for filename_ in files:
-                for task_name, value in time_file(filename_, name, setup, number, repeat):
-                    yield task_name, value / nvalue
-        else:
-            for task_name, value in time_file(files, name, setup, number, repeat):
-                yield task_name, value / nvalue
 
     for task in stmts:
         new_task = build_task(task, name, setup, number, repeat)
@@ -96,9 +90,18 @@ def time_file(filename, name='', setup='', number=0, repeat=3):
             yield task_name, value
 
 
-def main(filename='bench.yaml'):
-    for task_name, value in time_file(filename):
-        print(task_name, value)
+def main(filenames=None):
+    if not filenames:
+        filenames = glob.iglob('bench_*.yaml')
+    elif isinstance(filenames, basestring):
+        filenames = [filenames, ]
 
+    for filename in filenames:
+        print(filename)
+        print('-' * len(filename))
+        print()
+        for task_name, value in time_file(filename):
+            print('%.2e   %s' % (value, task_name))
+        print()
 
 main()
