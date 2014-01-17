@@ -9,7 +9,7 @@ import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
-                       DimensionDefinition)
+                       DimensionDefinition, _freeze)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u
 from pint.testsuite import TestCase
@@ -332,3 +332,46 @@ class TestRegistry(TestCase):
 
         h2 = ureg.wraps(('meter', 'cm'), [None, None])(hfunc)
         self.assertEqual(h2(3, 1), (3 * ureg.meter, 1 * ureg.cm))
+
+
+class TestEquivalents(TestCase):
+
+    FORCE_NDARRAY= False
+
+    def _test(self, input_units):
+        gd = self.ureg.get_dimensionality
+        dim = gd(input_units)
+        equiv = self.ureg.get_equivalent_units(input_units)
+        for eq in equiv:
+            self.assertEqual(gd(eq), dim)
+        self.assertEqual(equiv, self.ureg.get_equivalent_units(dim))
+
+    def _test2(self, units1, units2):
+        equiv1 = self.ureg.get_equivalent_units(units1)
+        equiv2 = self.ureg.get_equivalent_units(units2)
+        self.assertEqual(equiv1, equiv2)
+
+    def test_many(self):
+        self._test(self.ureg.meter.units)
+        self._test(self.ureg.seconds.units)
+        self._test(self.ureg.newton.units)
+        self._test(self.ureg.kelvin.units)
+
+    def test_context_sp(self):
+
+
+        gd = self.ureg.get_dimensionality
+
+        # length, frequency, energy
+        valid = [gd(self.ureg.meter.units), gd(self.ureg.hertz.units), gd(self.ureg.joule.units)]
+
+        with self.ureg.context('sp'):
+            equiv = self.ureg.get_equivalent_units(self.ureg.meter.units)
+            result = set()
+            for eq in equiv:
+                dim = gd(eq)
+                result.add(_freeze(dim))
+                self.assertIn(dim, valid)
+
+            self.assertEqual(len(result), len(valid))
+

@@ -24,8 +24,8 @@ from numbers import Number
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
 from .context import Context, ContextChain, _freeze
-from .util import (formatter, logger, pi_theorem, solve_dependencies,
-                   ParserHelper, string_preprocessor, find_shortest_path)
+from .util import (formatter, logger, pi_theorem, solve_dependencies, ParserHelper,
+                   string_preprocessor, find_connected_nodes, find_shortest_path)
 from .compat import tokenizer, string_types, NUMERIC_TYPES, TransformDict
 
 
@@ -856,7 +856,18 @@ class UnitRegistry(object):
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
 
-        return self._dimensional_equivalents[self.get_dimensionality(input_units)]
+        src_dim = self.get_dimensionality(input_units)
+
+        ret = self._dimensional_equivalents[src_dim]
+
+        if self._active_ctx:
+            nodes = find_connected_nodes(self._active_ctx.graph, _freeze(src_dim))
+            ret = set()
+            if nodes:
+                for node in nodes:
+                    ret |= self._dimensional_equivalents[node]
+
+        return ret
 
     def convert(self, value, src, dst):
         """Convert value from some source to destination units.

@@ -249,8 +249,8 @@ def solve_dependencies(dependencies):
     return r
 
 
-def find_shortest_path(graph, start, end, path=[]):
-    path = path + [start]
+def find_shortest_path(graph, start, end, path=None):
+    path = (path or []) + [start]
     if start == end:
         return path
     if not start in graph:
@@ -263,6 +263,20 @@ def find_shortest_path(graph, start, end, path=[]):
                 if not shortest or len(newpath) < len(shortest):
                     shortest = newpath
     return shortest
+
+
+def find_connected_nodes(graph, start, visited=None):
+    if not start in graph:
+        return None
+
+    visited = (visited or set())
+    visited.add(start)
+
+    for node in graph[start]:
+        if node not in visited:
+            find_connected_nodes(graph, node, visited)
+
+    return visited
 
 
 class ParserHelper(dict):
