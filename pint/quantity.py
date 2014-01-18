@@ -194,6 +194,13 @@ class _Quantity(object):
 
         return self._dimensionality
 
+    def compatible_units(self, *contexts):
+        if contexts:
+            with self._REGISTRY.context(*contexts):
+                return self._REGISTRY.get_compatible_units(self._units)
+
+        return self._REGISTRY.get_compatible_units(self._units)
+
     def _convert_magnitude(self, other, *contexts, **ctx_kwargs):
         if contexts:
             with self._REGISTRY.context(*contexts, **ctx_kwargs):

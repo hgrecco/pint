@@ -849,7 +849,7 @@ class UnitRegistry(object):
 
         return factor, units
 
-    def get_equivalent_units(self, input_units):
+    def get_compatible_units(self, input_units):
         if not input_units:
             return 1., UnitsContainer()
 

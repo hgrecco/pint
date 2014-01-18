@@ -341,14 +341,14 @@ class TestEquivalents(TestCase):
     def _test(self, input_units):
         gd = self.ureg.get_dimensionality
         dim = gd(input_units)
-        equiv = self.ureg.get_equivalent_units(input_units)
+        equiv = self.ureg.get_compatible_units(input_units)
         for eq in equiv:
             self.assertEqual(gd(eq), dim)
-        self.assertEqual(equiv, self.ureg.get_equivalent_units(dim))
+        self.assertEqual(equiv, self.ureg.get_compatible_units(dim))
 
     def _test2(self, units1, units2):
-        equiv1 = self.ureg.get_equivalent_units(units1)
-        equiv2 = self.ureg.get_equivalent_units(units2)
+        equiv1 = self.ureg.get_compatible_units(units1)
+        equiv2 = self.ureg.get_compatible_units(units2)
         self.assertEqual(equiv1, equiv2)
 
     def test_many(self):
@@ -366,7 +366,7 @@ class TestEquivalents(TestCase):
         valid = [gd(self.ureg.meter.units), gd(self.ureg.hertz.units), gd(self.ureg.joule.units)]
 
         with self.ureg.context('sp'):
-            equiv = self.ureg.get_equivalent_units(self.ureg.meter.units)
+            equiv = self.ureg.get_compatible_units(self.ureg.meter.units)
             result = set()
             for eq in equiv:
                 dim = gd(eq)
