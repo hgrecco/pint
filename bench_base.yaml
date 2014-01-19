@@ -1,0 +1,28 @@
+
+
+- name: importing
+  stmt: import pint
+
+- name: empty registry
+  setup: import pint
+  stmt: ureg = pint.UnitRegistry(None)
+
+- name: default registry
+  setup: import pint
+  stmt: ureg = pint.UnitRegistry()
+
+- name: finding meter
+  setup: |
+         import pint
+         ureg = pint.UnitRegistry()
+  stmts:
+    - name: (attr)
+      stmt: q = ureg.meter
+    - name: (item)
+      stmt: q = ureg['meter']
+
+- name: build cache
+  setup: |
+         import pint
+         ureg = pint.UnitRegistry()
+  stmt: ureg._build_cache()
