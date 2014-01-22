@@ -5,7 +5,8 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Add links to AUR packages in docs.
+  (Issue #91, thanks jturner314)
 
 
 0.4.1 (2014-01-12)
