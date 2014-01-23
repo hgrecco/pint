@@ -607,11 +607,16 @@ class _Quantity(object):
         return iter((self.__class__(mag, self._units) for mag in it_mag))
 
     def __getattr__(self, item):
+        # Attributes starting with `__array_` are common attributes of NumPy ndarray.
+        # They are requested by numpy functions.
         if item.startswith('__array_'):
             if isinstance(self._magnitude, ndarray):
                 return getattr(self._magnitude, item)
             else:
-                return getattr(_to_magnitude(self._magnitude, True), item)
+                # If an `__array_` attributes is requested but the magnitude is not an ndarray,
+                # we convert the magnitude to a numpy ndarray.
+                self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
+                return getattr(self._magnitude, item)
         try:
             try:
                 attr = getattr(self._magnitude, item)
