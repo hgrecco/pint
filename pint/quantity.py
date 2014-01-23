@@ -609,10 +609,7 @@ class _Quantity(object):
     def __getattr__(self, item):
         if item.startswith('__array_'):
             if isinstance(self._magnitude, ndarray):
-                try:
-                    return getattr(self._magnitude, item)
-                except AttributeError:
-                    return getattr(_to_magnitude(self._magnitude, True), item)
+                return getattr(self._magnitude, item)
             else:
                 return getattr(_to_magnitude(self._magnitude, True), item)
         try:
