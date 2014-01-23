@@ -621,7 +621,8 @@ class _Quantity(object):
             try:
                 attr = getattr(self._magnitude, item)
             except AttributeError:
-                attr = getattr(_to_magnitude(self._magnitude, True), item)
+                self._magnitude = _to_magnitude(self._magnitude, True)
+                attr = getattr(self._magnitude, item)
             if callable(attr):
                 return functools.partial(self.__numpy_method_wrap, attr)
             return attr
