@@ -21,6 +21,20 @@
     - name: (item)
       stmt: q = ureg['meter']
 
+- name: base units
+  setup: |
+         import pint
+         ureg = pint.UnitRegistry()
+  stmts:
+    - name: meter
+      stmt: ureg.get_base_units('meter')
+    - name: yard
+      stmt: ureg.get_base_units('yard')
+    - name: meter / second
+      stmt: ureg.get_base_units('meter / second')
+    - name: yard / minute
+      stmt: ureg.get_base_units('yard / minute')
+
 - name: build cache
   setup: |
          import pint

@@ -790,6 +790,9 @@ class UnitRegistry(object):
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
 
+        if input_units in self._base_units_cache:
+            return self._dimensionality_cache[input_units]
+
         for key, value in input_units.items():
             if _is_dim(key):
                 reg = self._dimensions[key]
@@ -827,6 +830,9 @@ class UnitRegistry(object):
 
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
+
+        if input_units in self._base_units_cache:
+            return self._base_units_cache[input_units]
 
         factor = 1.
         units = UnitsContainer()
