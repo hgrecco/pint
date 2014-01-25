@@ -7,6 +7,8 @@ Pint Changelog
 
 - Add links to AUR packages in docs.
   (Issue #91, thanks jturner314)
+- Fixed garbage collection related problem.
+  (Issue #92, thanks jturner314)
 
 
 0.4.1 (2014-01-12)
