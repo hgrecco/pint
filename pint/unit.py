@@ -790,7 +790,7 @@ class UnitRegistry(object):
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
 
-        if input_units in self._base_units_cache:
+        if input_units in self._dimensionality_cache:
             return self._dimensionality_cache[input_units]
 
         for key, value in input_units.items():
