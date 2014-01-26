@@ -791,7 +791,7 @@ class UnitRegistry(object):
             input_units = ParserHelper.from_string(input_units)
 
         if input_units in self._dimensionality_cache:
-            return self._dimensionality_cache[input_units]
+            return copy.copy(self._dimensionality_cache[input_units])
 
         for key, value in input_units.items():
             if _is_dim(key):
@@ -832,7 +832,7 @@ class UnitRegistry(object):
             input_units = ParserHelper.from_string(input_units)
 
         if input_units in self._base_units_cache:
-            return self._base_units_cache[input_units]
+            return copy.deepcopy(self._base_units_cache[input_units])
 
         factor = 1.
         units = UnitsContainer()
