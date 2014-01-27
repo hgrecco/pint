@@ -16,31 +16,51 @@ class TestStringProcessor(unittest.TestCase):
             a = pattern.format(aft)
             self.assertEqual(string_preprocessor(b), a)
 
-    def test_rules(self):
+    def test_square_cube(self):
         self._test('bcd^3', 'bcd**3')
+        self._test('bcd^ 3', 'bcd** 3')
+        self._test('bcd ^3', 'bcd **3')
+        self._test('bcd squared', 'bcd**2')
         self._test('bcd squared', 'bcd**2')
         self._test('bcd cubed', 'bcd**3')
         self._test('sq bcd', 'bcd**2')
         self._test('square bcd', 'bcd**2')
         self._test('cubic bcd', 'bcd**3')
         self._test('bcd efg', 'bcd*efg')
-        self._test('bcd  efg', 'bcd*efg')
+        
+    def test_per(self):
         self._test('miles per hour', 'miles/hour')
+
+    def test_numbers(self):
         self._test('1,234,567', '1234567')
-        self._test('1hour', '1*hour')
-        self._test('1.1hour', '1.1*hour')
         self._test('1e-24', '1e-24')
         self._test('1e+24', '1e+24')
         self._test('1e24', '1e24')
         self._test('1E-24', '1E-24')
         self._test('1E+24', '1E+24')
         self._test('1E24', '1E24')
+
+    def test_space_multiplication(self):
+        self._test('bcd efg', 'bcd*efg')
+        self._test('bcd  efg', 'bcd*efg')
+        self._test('1 hour', '1*hour')
+        self._test('1. hour', '1.*hour')
+        self._test('1.1 hour', '1.1*hour')
+        self._test('1E24 hour', '1E24*hour')
+        self._test('1E-24 hour', '1E-24*hour')
+        self._test('1E+24 hour', '1E+24*hour')
+        self._test('1.2E24 hour', '1.2E24*hour')
+        self._test('1.2E-24 hour', '1.2E-24*hour')
+        self._test('1.2E+24 hour', '1.2E+24*hour')
+
+    def names(self):
         self._test('g_0', 'g_0')
-        self._test('1g_0', '1*g_0')
         self._test('g0', 'g0')
-        self._test('1g0', '1*g0')
         self._test('g', 'g')
-        self._test('1g', '1*g')
+        self._test('water_60F', 'water_60F')
+
+
+class TestGraph(unittest.TestCase):
 
     def test_shortest_path(self):
         g = collections.defaultdict(list)

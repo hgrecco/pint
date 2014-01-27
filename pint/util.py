@@ -417,13 +417,13 @@ class ParserHelper(dict):
 
 
 #: List of regex substitution pairs.
-_subs_re = [(r"({0}) squared", r"\1**2"),  # Handle square and cube
+_subs_re = [(r"([\w\.\-\+\*\\\^])\s+", r"\1 "), # merge multiple spaces
+            (r"({0}) squared", r"\1**2"),  # Handle square and cube
             (r"({0}) cubed", r"\1**3"),
             (r"cubic ({0})", r"\1**3"),
             (r"square ({0})", r"\1**2"),
             (r"sq ({0})", r"\1**2"),
-            (r"(\w)\s+(?=\w)", r"\1*"),  # Handle space for multiplication
-            (r"([0-9])(?={0})(?!(?:[e|E][-+]?[0-9]+))", r"\1*")
+            (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
             ]
 
 #: Compiles the regex and replace {0} by a regex that matches an identifier.
