@@ -23,8 +23,8 @@ class Measurement(object):
     """
 
     def __init__(self, value, error):
-        if not (value/error).unitless:
-            raise ValueError('{} and {} have incompatible units'.format(value, error))
+        if not (value / error).unitless:
+            raise ValueError('{0} and {1} have incompatible units'.format(value, error))
         try:
             emag = error.magnitude
         except AttributeError:
@@ -51,7 +51,7 @@ class Measurement(object):
     def _add_sub(self, other, operator):
         result = self.value + other.value
         if isinstance(other, self.__class__):
-            error = (self.error ** 2.0 + other.error ** 2.0) ** (1/2)
+            error = (self.error ** 2.0 + other.error ** 2.0) ** (1 / 2)
         else:
             error = self.error
         return result.plus_minus(error)
@@ -69,7 +69,7 @@ class Measurement(object):
     def _mul_div(self, other, operator):
         if isinstance(other, self.__class__):
             result = operator(self.value, other.value)
-            return result.plus_minus((self.rel ** 2.0 + other.rel ** 2.0) ** (1/2), relative=True)
+            return result.plus_minus((self.rel ** 2.0 + other.rel ** 2.0) ** (1 / 2), relative=True)
         else:
             result = operator(self.value, other)
             return result.plus_minus(abs(operator(self.error, other)))
@@ -91,7 +91,7 @@ class Measurement(object):
         return '{}'.format(self)
 
     def __repr__(self):
-        return "<Measurement({:!r}, {:!r})>".format(self._value, self._error)
+        return "<Measurement({0:!r}, {1:!r})>".format(self._value, self._error)
 
     def __format__(self, spec):
         if '!' in spec:
@@ -121,4 +121,4 @@ class Measurement(object):
         else:
             vmag, emag, units = self.value, self.error, ''
 
-        return left + vmag + ' ' + pm + ' ' +  emag + right + units if units else ''
+        return left + vmag + ' ' + pm + ' ' + emag + right + units if units else ''

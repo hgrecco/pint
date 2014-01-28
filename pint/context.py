@@ -123,7 +123,12 @@ class Context(object):
                 if not val.imag:
                     return val.real
                 return val
-            defaults = {k: to_num(v) for k, v in _def_re.findall(defaults.strip('()'))}
+
+            new_defaults = {}
+            for k, v in _def_re.findall(defaults.strip('()')):
+                new_defaults[k] = to_num(v)
+            defaults = new_defaults
+
             ctx = cls(name, aliases, defaults)
         else:
             ctx = cls(name, aliases)
@@ -158,7 +163,7 @@ class Context(object):
         if defaults:
             missing_pars = set(defaults.keys()).difference(set(names))
             if missing_pars:
-                raise ValueError('Context parameters {} not found in any equation.'.format(missing_pars))
+                raise ValueError('Context parameters {0} not found in any equation.'.format(missing_pars))
 
         return ctx
 

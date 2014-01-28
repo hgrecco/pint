@@ -22,8 +22,30 @@ import logging
 from token import STRING, NAME, OP
 from tokenize import untokenize
 
+if hasattr(logging, "NullHandler"):
+    NullHandler = logging.NullHandler
+else:
+    class NullHandler(logging.Handler):
+        """
+        This handler does nothing. It's intended to be used to avoid the
+        "No handlers could be found for logger XXX" one-off warning. This is
+        important for library code, which may contain code to log events. If a user
+        of the library does not configure logging, the one-off warning might be
+        produced; to avoid this, the library developer simply needs to instantiate
+        a NullHandler and add it to the top-level logger of the library module or
+        package.
+        """
+        def handle(self, record):
+            pass
+
+        def emit(self, record):
+            pass
+
+        def createLock(self):
+            self.lock = None
+
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger.addHandler(NullHandler())
 
 if sys.version < '3':
     from StringIO import StringIO
@@ -102,8 +124,8 @@ def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
             if i == r:
                 continue
             lv = M[i][lead]
-            M[i] = [iv - lv*rv for rv, iv in zip(M[r], M[i])]
-            I[i] = [iv - lv*rv for rv, iv in zip(I[r], I[i])]
+            M[i] = [iv - lv * rv for rv, iv in zip(M[r], M[i])]
+            I[i] = [iv - lv * rv for rv, iv in zip(I[r], I[i])]
 
         lead += 1
 
@@ -122,7 +144,7 @@ except ImportError:
         pass
 
     HAS_NUMPY = False
-    NUMERIC_TYPES = (Number, )
+    NUMERIC_TYPES = (Number,)
 
 
 def _join(fmt, iterable):
@@ -139,8 +161,8 @@ def _join(fmt, iterable):
 
 
 def formatter(items, as_ratio=True, single_denominator=False,
-              product_fmt=' * ', division_fmt=' / ', power_fmt='{} ** {}',
-              parentheses_fmt='({})', exp_call=lambda x: '{:n}'.format(x)):
+              product_fmt=' * ', division_fmt=' / ', power_fmt='{0} ** {1}',
+              parentheses_fmt='({0})', exp_call=lambda x: '{0:n}'.format(x)):
     """Format a list of (name, exponent) pairs.
 
     :param items: a list of (name, exponent) pairs.
@@ -223,7 +245,7 @@ def pi_theorem(quantities, registry=None):
 
         if not registry and any(not key.startswith('[') for key in dims):
             logger.warning('A non dimension was found and a registry was not provided. '
-                           'Assuming that it is a dimension name: {}.'.format(dims))
+                           'Assuming that it is a dimension name: {0}.'.format(dims))
 
         quant.append((name, dims))
         dimensions = dimensions.union(dims.keys())
@@ -245,8 +267,12 @@ def pi_theorem(quantities, registry=None):
             continue
         max_den = max(f.denominator for f in rowi)
         neg = -1 if sum(f < 0 for f in rowi) > sum(f > 0 for f in rowi) else 1
-        results.append({q[0]: neg * f.numerator * max_den / f.denominator
-                        for q, f in zip(quant, rowi) if f.numerator != 0})
+
+        result = {}
+        for q, f in zip(quant, rowi):
+            if f.numerator != 0:
+                result[q[0]] = neg * f.numerator * max_den / f.denominator
+        results.append(result)
 
     return results
 
@@ -294,7 +320,7 @@ class ParserHelper(dict):
     their respective exponent and implements the corresponding operations.
     """
 
-    __slots__ = ('scale', )
+    __slots__ = ('scale',)
 
     def __init__(self, scale=1, *args, **kwargs):
         self.scale = scale
@@ -351,9 +377,11 @@ class ParserHelper(dict):
         if not reps:
             return ret
 
-        return ParserHelper(ret.scale,
-                            {key.replace('__obra__', '[').replace('__cbra__', ']'): value
-                            for key, value in ret.items()})
+        data = {}
+        for key, value in ret.items():
+            data[key.replace('__obra__', '[').replace('__cbra__', ']')] = value
+
+        return ParserHelper(ret.scale, data)
 
     def __missing__(self, key):
         return 0.0
@@ -375,12 +403,12 @@ class ParserHelper(dict):
                 del self[key]
 
     def __str__(self):
-        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
+        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
         return '{} {}'.format(self.scale, tmp)
 
     def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
-        return '<ParserHelper({}, {})>'.format(self.scale, tmp)
+        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
+        return '<ParserHelper({0}, {1})>'.format(self.scale, tmp)
 
     def __mul__(self, other):
         if isinstance(other, string_types):
