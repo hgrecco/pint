@@ -721,14 +721,17 @@ class UnitRegistry(object):
                     bu = self.get_base_units(uc)
                     di = self.get_dimensionality(uc)
 
-                    if not prefixed and di not in self._dimensional_equivalents:
-                        self._dimensional_equivalents[di] = set()
-
-                    self._dimensional_equivalents[di].add(self._units[unit_name].name)
                     self._base_units_cache[uc] = bu
                     self._dimensionality_cache[uc] = di
+
+                    if not prefixed:
+                        if di not in self._dimensional_equivalents:
+                            self._dimensional_equivalents[di] = set()
+
+                        self._dimensional_equivalents[di].add(self._units[unit_name].name)
+
                 except Exception as e:
-                    logger.warning('Could not resolve {}: {}'.format(unit_name, e))
+                    logger.warning('Could not resolve {}: {!r}'.format(unit_name, e))
 
     def get_name(self, name_or_alias):
         """Return the canonical name of a unit.
