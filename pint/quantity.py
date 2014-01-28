@@ -297,14 +297,13 @@ class _Quantity(object):
 
     def add_sub(self, other, op):
         ret = copy.copy(self)
-        op(ret, other)
-        return ret
+        return ret.iadd_sub(other, op)
 
     def __iadd__(self, other):
         return self.iadd_sub(other, operator.iadd)
 
     def __add__(self, other):
-        return self.add_sub(other, operator.iadd)
+        return self.add_sub(other, operator.add)
 
     __radd__ = __add__
 
@@ -312,10 +311,10 @@ class _Quantity(object):
         return self.iadd_sub(other, operator.isub)
 
     def __sub__(self, other):
-        return self.add_sub(other, operator.isub)
+        return self.add_sub(other, operator.sub)
 
     def __rsub__(self, other):
-        return -self.add_sub(other, operator.isub)
+        return -self.add_sub(other, operator.sub)
 
     def _imul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation in-place and return the result.
