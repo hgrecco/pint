@@ -823,9 +823,8 @@ class UnitRegistry(object):
 
         :param input_units: units
         :type input_units: UnitsContainer or str
-        :param check_nonmult: if True None will be returned as the multiplicative factor
-                              is a non-multiplicative units is found in the final
-                              Units.
+        :param check_nonmult: if True, None will be returned as the multiplicative factor
+                              is a non-multiplicative units is found in the final Units.
         :return: multiplicative factor, base units
         """
         if not input_units:
@@ -834,7 +833,8 @@ class UnitRegistry(object):
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
 
-        if input_units in self._base_units_cache:
+        # The cache is only done for check_nonmult=True
+        if check_nonmult and input_units in self._base_units_cache:
             return copy.deepcopy(self._base_units_cache[input_units])
 
         factor = 1.
@@ -850,7 +850,7 @@ class UnitRegistry(object):
                     factor *= (reg.converter.scale * fac) ** value
                 units *= uni ** value
 
-        # Check if any of the final units is non multiplicative and return non instead.
+        # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
             for unit in units.keys():
                 if not isinstance(self._units[unit].converter, ScaleConverter):
