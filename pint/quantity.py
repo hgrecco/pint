@@ -277,7 +277,7 @@ class _Quantity(object):
             return complex(self._convert_magnitude(UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
-    def iadd_sub(self, other, op):
+    def _iadd_sub(self, other, op):
         if _check(self, other):
             if not self.dimensionality == other.dimensionality:
                 raise DimensionalityError(self.units, other.units,
@@ -295,27 +295,27 @@ class _Quantity(object):
 
         return self
 
-    def add_sub(self, other, op):
+    def _add_sub(self, other, op):
         ret = copy.copy(self)
         op(ret, other)
         return ret
 
     def __iadd__(self, other):
-        return self.iadd_sub(other, operator.iadd)
+        return self._iadd_sub(other, operator.iadd)
 
     def __add__(self, other):
-        return self.add_sub(other, operator.iadd)
+        return self._add_sub(other, operator.iadd)
 
     __radd__ = __add__
 
     def __isub__(self, other):
-        return self.iadd_sub(other, operator.isub)
+        return self._iadd_sub(other, operator.isub)
 
     def __sub__(self, other):
-        return self.add_sub(other, operator.isub)
+        return self._add_sub(other, operator.isub)
 
     def __rsub__(self, other):
-        return -self.add_sub(other, operator.isub)
+        return -self._add_sub(other, operator.isub)
 
     def _imul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation in-place and return the result.
