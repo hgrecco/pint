@@ -24,7 +24,7 @@ try:
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
             raise ValueError('Invalid magnitude for Quantity: {!r}'.format(value))
-        elif value == '':
+        elif isinstance(value, string_types) and value == '':
             raise ValueError('Quantity magnitude cannot be an empty string.')
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
@@ -36,7 +36,7 @@ except ImportError:
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
             raise ValueError('Invalid magnitude for Quantity: {!r}'.format(value))
-        elif value == '':
+        elif isinstance(value, string_types) and value == '':
             raise ValueError('Quantity magnitude cannot be an empty string.')
         elif isinstance(value, (list, tuple)):
             raise ValueError('lists and tuples are valid magnitudes for '
