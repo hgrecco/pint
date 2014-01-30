@@ -1071,7 +1071,9 @@ class UnitRegistry(object):
             ret = self.parse_units(ret)
 
         def decorator(func):
-            @functools.wraps(func)
+            assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
+            updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
+            @functools.wraps(func, assigned=assigned, updated=updated)
             def wrapper(*values, **kw):
                 new_args = []
                 for unit, value in zip(units, values):
