@@ -5,6 +5,8 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
+- Stop raising AttributeError when wrapping funcs without all of the attributes.
+  (Issue #100, thanks jturner314)
 - Fixed warning appearing in Py2.x when comparing a Numpy Array with an empty string.
   (Issue #98, thanks jturner314)
 - Add links to AUR packages in docs.
