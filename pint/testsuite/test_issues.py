@@ -291,3 +291,13 @@ class TestIssuesNP(TestCase):
 
         self.assertSequenceEqual(q1 == q2s, v1 == v2s)
         self.assertSequenceEqual(q1 != q2s, v1 != v2s)
+
+    def test_issue94(self):
+        ureg = UnitRegistry()
+        v1 = np.array(5) * ureg.meter
+        v2 = 0.1 * ureg.meter
+        v3 = np.array(5) * ureg.meter
+        v3 += v2
+
+        self.assertAlmostEqual(v1 + v2, np.array(5.1) * ureg.meter)
+        self.assertEqual(v3, np.array(5) * ureg.meter)
