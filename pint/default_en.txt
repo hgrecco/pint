@@ -139,8 +139,8 @@ baud = bit / second = Bd = bps
 
 # Length
 angstrom = 1e-10 * meter
-inch = 2.54 * centimeter = international_inch = inches = international_inches = in
-foot = 12 * inch = international_foot = ft = feet = international_foot = international_feet
+inch = 2.54 * centimeter = in = international_inch = inches = international_inches 
+foot = 12 * inch = ft = international_foot = feet = international_feet
 mile = 5280 * foot = mi = international_mile
 yard = 3 * feet = yd = international_yard
 mil = inch / 1000 = thou

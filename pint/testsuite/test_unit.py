@@ -254,6 +254,14 @@ class TestRegistry(TestCase):
         self.assertEqual(self.ureg.get_symbol('megahertz'), 'MHz')
         self.assertEqual(self.ureg.get_symbol('millisecond'), 'ms')
 
+    def test_imperial_symbol(self):
+        self.assertEqual(self.ureg.get_symbol('inch'), 'in')
+        self.assertEqual(self.ureg.get_symbol('foot'), 'ft')
+        self.assertEqual(self.ureg.get_symbol('inches'), 'in')
+        self.assertEqual(self.ureg.get_symbol('feet'), 'ft')
+        self.assertEqual(self.ureg.get_symbol('international_foot'), 'ft')
+        self.assertEqual(self.ureg.get_symbol('international_inch'), 'in')
+
     @unittest.expectedFailure
     def test_delta_in_diff(self):
         """This might be supported in future versions
