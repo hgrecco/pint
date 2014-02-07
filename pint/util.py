@@ -22,8 +22,10 @@ import logging
 from token import STRING, NAME, OP
 from tokenize import untokenize
 
+from .compat import NullHandler
+
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger.addHandler(NullHandler())
 
 if sys.version < '3':
     from StringIO import StringIO
