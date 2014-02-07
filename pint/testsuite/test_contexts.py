@@ -31,14 +31,14 @@ class TestHandler(BufferingHandler):
         self.buffer.append(record.__dict__)
 
 def add_ctxs(ureg):
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]':-1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
     d = Context('lc')
     d.add_transformation(a, b, lambda ureg, x: ureg.speed_of_light / x)
     d.add_transformation(b, a, lambda ureg, x: ureg.speed_of_light / x)
 
     ureg.add_context(d)
 
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]':-1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
     d.add_transformation(a, b, lambda ureg, x: 1 / x)
     d.add_transformation(b, a, lambda ureg, x: 1 / x)
@@ -47,14 +47,14 @@ def add_ctxs(ureg):
 
 
 def add_arg_ctxs(ureg):
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]':-1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
     d = Context('lc')
     d.add_transformation(a, b, lambda ureg, x, n: ureg.speed_of_light / x / n)
     d.add_transformation(b, a, lambda ureg, x, n: ureg.speed_of_light / x / n)
 
     ureg.add_context(d)
 
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]':-1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
     d.add_transformation(a, b, lambda ureg, x: 1 / x)
     d.add_transformation(b, a, lambda ureg, x: 1 / x)
@@ -63,7 +63,7 @@ def add_arg_ctxs(ureg):
 
 
 def add_argdef_ctxs(ureg):
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]':-1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
     d = Context('lc', defaults=dict(n=1))
     assert d.defaults == dict(n=1)
 
@@ -72,7 +72,7 @@ def add_argdef_ctxs(ureg):
 
     ureg.add_context(d)
 
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]':-1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
     d = Context('ab')
     d.add_transformation(a, b, lambda ureg, x: 1 / x)
     d.add_transformation(b, a, lambda ureg, x: 1 / x)
@@ -81,7 +81,7 @@ def add_argdef_ctxs(ureg):
 
 
 def add_sharedargdef_ctxs(ureg):
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]':-1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
     d = Context('lc', defaults=dict(n=1))
     assert d.defaults == dict(n=1)
 
@@ -140,21 +140,21 @@ class TestContexts(unittest.TestCase):
         ureg = UnitRegistry()
         add_ctxs(ureg)
         l = _freeze({'[length]': 1.})
-        t = _freeze({'[time]':-1.})
-        c = _freeze({'[current]':-1.})
+        t = _freeze({'[time]': -1.})
+        c = _freeze({'[current]': -1.})
 
         g_sp = defaultdict(set)
-        g_sp.update({l: set((t,)),
-                     t: set((l,))})
+        g_sp.update({l: {t, },
+                     t: {l, }})
 
         g_ab = defaultdict(set)
-        g_ab.update({l: set((c,)),
-                     c: set((l,))})
+        g_ab.update({l: {c, },
+                     c: {l, }})
 
         g = defaultdict(set)
-        g.update({l: set((t, c)),
-                  t: set((l,)),
-                  c: set((l,))})
+        g.update({l: {t, c},
+                  t: {l, },
+                  c: {l, }})
 
         with ureg.context('lc'):
             self.assertEqual(ureg._active_ctx.graph, g_sp)
@@ -183,21 +183,22 @@ class TestContexts(unittest.TestCase):
         ureg = UnitRegistry()
         add_ctxs(ureg)
         l = _freeze({'[length]': 1.})
-        t = _freeze({'[time]':-1.})
-        c = _freeze({'[current]':-1.})
+        t = _freeze({'[time]': -1.})
+        c = _freeze({'[current]': -1.})
 
         g_sp = defaultdict(set)
-        g_sp.update({l: set((t,)),
-                     t: set((l,))})
+        g_sp.update({l: {t, },
+                     t: {l, }})
 
         g_ab = defaultdict(set)
-        g_ab.update({l: set((c,)),
-                     c: set((l,))})
+        g_ab.update({l: {c, },
+                     c: {l, }})
 
         g = defaultdict(set)
-        g.update({l: set((t, c)),
-                  t: set((l,)),
-                  c: set((l,))})
+        g.update({l: {t, c},
+                  t: {l, },
+                  c: {l, }})
+
         ureg.enable_contexts('lc')
         self.assertEqual(ureg._active_ctx.graph, g_sp)
         ureg.disable_contexts(1)
@@ -478,8 +479,8 @@ class TestContexts(unittest.TestCase):
 
     def test_parse_simple(self):
 
-        a = Context.__keytransform__(UnitsContainer({'[time]':-1}), UnitsContainer({'[length]': 1}))
-        b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]':-1}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': -1}), UnitsContainer({'[length]': 1}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1}))
 
         s = ['@context longcontextname',
              '[length] -> 1 / [time]: c / value',
@@ -497,7 +498,7 @@ class TestContexts(unittest.TestCase):
 
         c = Context.from_lines(s)
         self.assertEqual(c.name, 'longcontextname')
-        self.assertEqual(c.aliases, ('lc',))
+        self.assertEqual(c.aliases, ('lc', ))
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
         self._test_ctx(c)
@@ -507,15 +508,15 @@ class TestContexts(unittest.TestCase):
 
         c = Context.from_lines(s)
         self.assertEqual(c.name, 'longcontextname')
-        self.assertEqual(c.aliases, ('lc', 'lcn',))
+        self.assertEqual(c.aliases, ('lc', 'lcn', ))
         self.assertEqual(c.defaults, {})
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
         self._test_ctx(c)
 
     def test_parse_auto_inverse(self):
 
-        a = Context.__keytransform__(UnitsContainer({'[time]':-1.}), UnitsContainer({'[length]': 1.}))
-        b = Context.__keytransform__(UnitsContainer({'[length]': 1.}), UnitsContainer({'[time]':-1.}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': -1.}), UnitsContainer({'[length]': 1.}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1.}), UnitsContainer({'[time]': -1.}))
 
         s = ['@context longcontextname',
              '[length] <-> 1 / [time]: c / value']
@@ -526,8 +527,8 @@ class TestContexts(unittest.TestCase):
         self._test_ctx(c)
 
     def test_parse_define(self):
-        a = Context.__keytransform__(UnitsContainer({'[time]':-1}), UnitsContainer({'[length]': 1.}))
-        b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]':-1.}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': -1}), UnitsContainer({'[length]': 1.}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1.}))
 
         s = ['@context longcontextname',
              '[length] <-> 1 / [time]: c / value']
@@ -537,8 +538,8 @@ class TestContexts(unittest.TestCase):
         self._test_ctx(c)
 
     def test_parse_parameterized(self):
-        a = Context.__keytransform__(UnitsContainer({'[time]':-1.}), UnitsContainer({'[length]': 1.}))
-        b = Context.__keytransform__(UnitsContainer({'[length]': 1.}), UnitsContainer({'[time]':-1.}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': -1.}), UnitsContainer({'[length]': 1.}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1.}), UnitsContainer({'[time]': -1.}))
 
         s = ['@context(n=1) longcontextname',
              '[length] <-> 1 / [time]: n * c / value']
@@ -584,8 +585,8 @@ class TestDefinedContexts(TestCase):
         with ureg.context('sp'):
             pass
 
-        a = Context.__keytransform__(UnitsContainer({'[time]':-1.}), UnitsContainer({'[length]': 1.}))
-        b = Context.__keytransform__(UnitsContainer({'[length]': 1.}), UnitsContainer({'[time]':-1.}))
+        a = Context.__keytransform__(UnitsContainer({'[time]': -1.}), UnitsContainer({'[length]': 1.}))
+        b = Context.__keytransform__(UnitsContainer({'[length]': 1.}), UnitsContainer({'[time]': -1.}))
         self.assertIn(a, ureg._contexts['sp'].funcs)
         self.assertIn(b, ureg._contexts['sp'].funcs)
         with ureg.context('sp'):

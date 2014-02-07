@@ -44,8 +44,8 @@ class TestStringProcessor(unittest.TestCase):
 
     def test_shortest_path(self):
         g = collections.defaultdict(list)
-        g[1] = set((2,))
-        g[2] = set((3,))
+        g[1] = {2,}
+        g[2] = {3,}
         p = find_shortest_path(g, 1, 2)
         self.assertEqual(p, [1, 2])
         p = find_shortest_path(g, 1, 3)
@@ -54,9 +54,9 @@ class TestStringProcessor(unittest.TestCase):
         self.assertIs(p, None)
 
         g = collections.defaultdict(list)
-        g[1] = set((2,))
-        g[2] = set((3, 1))
-        g[3] = set((2,))
+        g[1] = {2,}
+        g[2] = {3, 1}
+        g[3] = {2, }
         p = find_shortest_path(g, 1, 2)
         self.assertEqual(p, [1, 2])
         p = find_shortest_path(g, 1, 3)
