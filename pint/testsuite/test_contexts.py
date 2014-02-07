@@ -144,17 +144,17 @@ class TestContexts(unittest.TestCase):
         c = _freeze({'[current]': -1.})
 
         g_sp = defaultdict(set)
-        g_sp.update({l: {t, },
-                     t: {l, }})
+        g_sp.update({l: set((t,)),
+                     t: set((l,))})
 
         g_ab = defaultdict(set)
-        g_ab.update({l: {c, },
-                     c: {l, }})
+        g_ab.update({l: set((c,)),
+                     c: set((l,))})
 
         g = defaultdict(set)
-        g.update({l: {t, c},
-                  t: {l, },
-                  c: {l, }})
+        g.update({l: set((t, c)),
+                  t: set((l,)),
+                  c: set((l,))})
 
         with ureg.context('lc'):
             self.assertEqual(ureg._active_ctx.graph, g_sp)
@@ -187,17 +187,17 @@ class TestContexts(unittest.TestCase):
         c = _freeze({'[current]': -1.})
 
         g_sp = defaultdict(set)
-        g_sp.update({l: {t, },
-                     t: {l, }})
+        g_sp.update({l: set((t,)),
+                     t: set((l,))})
 
         g_ab = defaultdict(set)
-        g_ab.update({l: {c, },
-                     c: {l, }})
+        g_ab.update({l: set((c,)),
+                     c: set((l,))})
 
         g = defaultdict(set)
-        g.update({l: {t, c},
-                  t: {l, },
-                  c: {l, }})
+        g.update({l: set((t, c)),
+                  t: set((l,)),
+                  c: set((l,))})
 
         ureg.enable_contexts('lc')
         self.assertEqual(ureg._active_ctx.graph, g_sp)

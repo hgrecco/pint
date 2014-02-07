@@ -214,8 +214,10 @@ class UnitDefinition(Definition):
         if isinstance(converter, string_types):
             if ';' in converter:
                 [converter, modifiers] = converter.split(';', 2)
-                modifiers = {key.strip(): eval(value) for key, value in
-                             (part.split(':') for part in modifiers.split(';'))}
+                new_modifiers = {}
+                for key, value in (part.split(':') for part in modifiers.split(';')):
+                    new_modifiers[key.strip()] = eval(value)
+                modifiers = new_modifiers
             else:
                 modifiers = {}
 
@@ -637,8 +639,11 @@ class UnitRegistry(object):
                     return '[delta_' + _name[1:]
                 return 'delta_' + _name
 
-            d_reference = UnitsContainer({prep(ref): value
-                                          for ref, value in definition.reference.items()})
+            container = {}
+            for ref, value in definition.reference.items():
+                container[prep(ref)] = value
+            d_reference = UnitsContainer(container)
+
             self.define(UnitDefinition(d_name, d_symbol, d_aliases,
                                        ScaleConverter(definition.converter.scale),
                                        d_reference, definition.is_base))
@@ -694,8 +699,9 @@ class UnitRegistry(object):
         the corresponding base units and dimensionality.
         """
 
-        deps = {name: set(definition.reference.keys())
-                for name, definition in self._units.items()}
+        deps = {}
+        for name, definition in self._units.items():
+            deps[name] = set(definition.reference.keys())
 
         for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
