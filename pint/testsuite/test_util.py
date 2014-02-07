@@ -2,11 +2,10 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import unittest
 import collections
 
 from pint.util import string_preprocessor, find_shortest_path
-
+from pint.testsuite import unittest
 
 class TestStringProcessor(unittest.TestCase):
 

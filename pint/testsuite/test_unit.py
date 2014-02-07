@@ -4,14 +4,13 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import math
 import copy
-import unittest
 import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
                        DimensionDefinition)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.testsuite import TestCase, u
+from pint.testsuite import TestCase, u, unittest
 
 class TestConverter(unittest.TestCase):
 

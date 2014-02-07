@@ -2,12 +2,11 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import unittest
 import itertools
 
 from pint import pi_theorem
 
-from pint.testsuite import TestCase
+from pint.testsuite import TestCase, unittest
 
 
 class TestPiTheorem(TestCase):

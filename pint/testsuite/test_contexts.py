@@ -3,13 +3,12 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import itertools
-import unittest
 from collections import defaultdict
 
 from pint import UnitRegistry
 from pint.context import Context, _freeze
 from pint.unit import UnitsContainer
-from pint.testsuite import TestCase
+from pint.testsuite import TestCase, unittest
 
 from pint import logger
 
