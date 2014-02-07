@@ -161,7 +161,7 @@ class Context(object):
         if defaults:
             missing_pars = set(defaults.keys()).difference(set(names))
             if missing_pars:
-                raise ValueError('Context parameters {} not found in any equation.'.format(missing_pars))
+                raise ValueError('Context parameters {0} not found in any equation.'.format(missing_pars))
 
         return ctx
 

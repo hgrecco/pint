@@ -10,7 +10,7 @@ from pint.testsuite import unittest
 class TestStringProcessor(unittest.TestCase):
 
     def _test(self, bef, aft):
-        for pattern in ('{}', '+{}+'):
+        for pattern in ('{0}', '+{0}+'):
             b = pattern.format(bef)
             a = pattern.format(aft)
             self.assertEqual(string_preprocessor(b), a)

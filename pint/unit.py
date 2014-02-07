@@ -39,14 +39,14 @@ class UndefinedUnitError(ValueError):
 
     def __str__(self):
         if isinstance(self.unit_names, string_types):
-            return "'{}' is not defined in the unit registry".format(self.unit_names)
+            return "'{0}' is not defined in the unit registry".format(self.unit_names)
         elif isinstance(self.unit_names, (list, tuple)) and len(self.unit_names) == 1:
-            return "'{}' is not defined in the unit registry".format(self.unit_names[0])
+            return "'{0}' is not defined in the unit registry".format(self.unit_names[0])
         elif isinstance(self.unit_names, set) and len(self.unit_names) == 1:
             uname = list(self.unit_names)[0]
-            return "'{}' is not defined in the unit registry".format(uname)
+            return "'{0}' is not defined in the unit registry".format(uname)
         else:
-            return '{} are not defined in the unit registry'.format(self.unit_names)
+            return '{0} are not defined in the unit registry'.format(self.unit_names)
 
 
 class DimensionalityError(ValueError):
@@ -63,13 +63,13 @@ class DimensionalityError(ValueError):
 
     def __str__(self):
         if self.dim1 or self.dim2:
-            dim1 = ' ({})'.format(self.dim1)
-            dim2 = ' ({})'.format(self.dim2)
+            dim1 = ' ({0})'.format(self.dim1)
+            dim2 = ' ({0})'.format(self.dim2)
         else:
             dim1 = ''
             dim2 = ''
 
-        msg = "Cannot convert from '{}'{} to '{}'{}".format(self.units1, dim1, self.units2, dim2)
+        msg = "Cannot convert from '{0}'{1} to '{2}'{3}".format(self.units1, dim1, self.units2, dim2)
 
         if self.extra_msg:
             return msg + self.extra_msg
@@ -270,9 +270,9 @@ class UnitsContainer(dict):
         dict.__init__(self, *args, **kwargs)
         for key, value in self.items():
             if not isinstance(key, string_types):
-                raise TypeError('key must be a str, not {}'.format(type(key)))
+                raise TypeError('key must be a str, not {0}'.format(type(key)))
             if not isinstance(value, Number):
-                raise TypeError('value must be a number, not {}'.format(type(value)))
+                raise TypeError('value must be a number, not {0}'.format(type(value)))
             if not isinstance(value, float):
                 self[key] = float(value)
 
@@ -281,9 +281,9 @@ class UnitsContainer(dict):
 
     def __setitem__(self, key, value):
         if not isinstance(key, string_types):
-            raise TypeError('key must be a str, not {}'.format(type(key)))
+            raise TypeError('key must be a str, not {0}'.format(type(key)))
         if not isinstance(value, NUMERIC_TYPES):
-            raise TypeError('value must be a NUMERIC_TYPES, not {}'.format(type(value)))
+            raise TypeError('value must be a NUMERIC_TYPES, not {0}'.format(type(value)))
         dict.__setitem__(self, key, float(value))
 
     def add(self, key, value):
@@ -305,31 +305,31 @@ class UnitsContainer(dict):
         return formatter(self.items())
 
     def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
-        return '<UnitsContainer({})>'.format(tmp)
+        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
+        return '<UnitsContainer({0})>'.format(tmp)
 
     def __format__(self, spec):
         if 'L' in spec:
             tmp = formatter(self.items(), True, True,
-                            r' \cdot ', r'\frac[{}][{}]', '{}^[{}]',
-                            r'\left( {} \right)')
+                            r' \cdot ', r'\frac[{0}][{1}]', '{0}^[{1}]',
+                            r'\left( {0} \right)')
             tmp = tmp.replace('[', '{').replace(']', '}')
             return tmp
         elif 'P' in spec:
             def fmt_exponent(num):
                 PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹'
-                ret = '{:n}'.format(num).replace('-', '⁻')
+                ret = '{0:n}'.format(num).replace('-', '⁻')
                 for n in range(10):
                     ret = ret.replace(str(n), PRETTY[n])
                 return ret
             tmp = formatter(self.items(), True, False,
-                            '·', '/', '{}{}',
-                            '({})', fmt_exponent)
+                            '·', '/', '{0}{1}',
+                            '({0})', fmt_exponent)
             return tmp
         elif 'H' in spec:
             tmp = formatter(self.items(), True, True,
-                            r' ', r'{}/{}', '{}<sup>{}</sup>',
-                            r'({})')
+                            r' ', r'{0}/{1}', '{0}<sup>{1}</sup>',
+                            r'({0})')
             return tmp
         else:
             return str(self)
@@ -341,7 +341,7 @@ class UnitsContainer(dict):
 
     def __imul__(self, other):
         if not isinstance(other, self.__class__):
-            raise TypeError('Cannot multiply UnitsContainer by {}'.format(type(other)))
+            raise TypeError('Cannot multiply UnitsContainer by {0}'.format(type(other)))
         for key, value in other.items():
             self[key] += value
         keys = [key for key, value in self.items() if value == 0]
@@ -352,7 +352,7 @@ class UnitsContainer(dict):
 
     def __mul__(self, other):
         if not isinstance(other, self.__class__):
-            raise TypeError('Cannot multiply UnitsContainer by {}'.format(type(other)))
+            raise TypeError('Cannot multiply UnitsContainer by {0}'.format(type(other)))
         ret = copy.copy(self)
         ret *= other
         return ret
@@ -361,21 +361,21 @@ class UnitsContainer(dict):
 
     def __ipow__(self, other):
         if not isinstance(other, NUMERIC_TYPES):
-            raise TypeError('Cannot power UnitsContainer by {}'.format(type(other)))
+            raise TypeError('Cannot power UnitsContainer by {0}'.format(type(other)))
         for key, value in self.items():
             self[key] *= other
         return self
 
     def __pow__(self, other):
         if not isinstance(other, NUMERIC_TYPES):
-            raise TypeError('Cannot power UnitsContainer by {}'.format(type(other)))
+            raise TypeError('Cannot power UnitsContainer by {0}'.format(type(other)))
         ret = copy.copy(self)
         ret **= other
         return ret
 
     def __itruediv__(self, other):
         if not isinstance(other, self.__class__):
-            raise TypeError('Cannot divide UnitsContainer by {}'.format(type(other)))
+            raise TypeError('Cannot divide UnitsContainer by {0}'.format(type(other)))
 
         for key, value in other.items():
             self[key] -= value
@@ -388,7 +388,7 @@ class UnitsContainer(dict):
 
     def __truediv__(self, other):
         if not isinstance(other, self.__class__):
-            raise TypeError('Cannot divide UnitsContainer by {}'.format(type(other)))
+            raise TypeError('Cannot divide UnitsContainer by {0}'.format(type(other)))
 
         ret = copy.copy(self)
         ret /= other
@@ -396,7 +396,7 @@ class UnitsContainer(dict):
 
     def __rtruediv__(self, other):
         if not isinstance(other, self.__class__) and other != 1:
-            raise TypeError('Cannot divide {} by UnitsContainer'.format(type(other)))
+            raise TypeError('Cannot divide {0} by UnitsContainer'.format(type(other)))
 
         ret = copy.copy(self)
         ret **= -1
@@ -614,7 +614,7 @@ class UnitRegistry(object):
         elif isinstance(definition, PrefixDefinition):
             d = self._prefixes
         else:
-            raise TypeError('{} is not a valid definition.'.format(definition))
+            raise TypeError('{0} is not a valid definition.'.format(definition))
 
         d[definition.name] = definition
 
@@ -658,7 +658,7 @@ class UnitRegistry(object):
                     return self.load_definitions(fp, is_resource)
             except Exception as e:
                 msg = getattr(e, 'message', str(e))
-                raise ValueError('While opening {}\n{}'.format(file, msg))
+                raise ValueError('While opening {0}\n{1}'.format(file, msg))
 
         ifile = enumerate(file)
         for no, line in ifile:
@@ -683,16 +683,16 @@ class UnitRegistry(object):
                         try:
                             self.add_context(Context.from_lines(context, self.get_dimensionality))
                         except KeyError as e:
-                            raise ValueError('Unknown dimension {}'.format(str(e)))
+                            raise ValueError('Unknown dimension {0}'.format(str(e)))
                         break
                     elif line.startswith('@'):
-                        raise ValueError('In line {}, cannot nest @ directives:\n{}'.format(no, line))
+                        raise ValueError('In line {0}, cannot nest @ directives:\n{1}'.format(no, line))
                     context.append(line)
             else:
                 try:
                     self.define(Definition.from_string(line))
                 except Exception as ex:
-                    logger.error("In line {}, cannot add '{}' {}".format(no, line, ex))
+                    logger.error("In line {0}, cannot add '{1}' {2}".format(no, line, ex))
 
     def validate(self):
         """Walk the registry and calculate for each unit definition
@@ -726,8 +726,8 @@ class UnitRegistry(object):
         elif len(candidates) == 1:
             prefix, unit_name, _ = candidates[0]
         else:
-            logger.warning('Parsing {} yield multiple results. '
-                           'Options are: {}'.format(name_or_alias, candidates))
+            logger.warning('Parsing {0} yield multiple results. '
+                           'Options are: {1}'.format(name_or_alias, candidates))
             prefix, unit_name, _ = candidates[0]
 
         if prefix:
@@ -749,8 +749,8 @@ class UnitRegistry(object):
         elif len(candidates) == 1:
             prefix, unit_name, _ = candidates[0]
         else:
-            logger.warning('Parsing {} yield multiple results. '
-                           'Options are: {!r}'.format(name_or_alias, candidates))
+            logger.warning('Parsing {0} yield multiple results. '
+                           'Options are: {1!r}'.format(name_or_alias, candidates))
             prefix, unit_name, _ = candidates[0]
 
         return self._prefixes[prefix].symbol + self._units[unit_name].symbol
@@ -1090,7 +1090,7 @@ class UnitRegistry(object):
                     else:
                         raise ValueError('A wrapped function using strict=True requires '
                                          'quantity for all arguments with not None units. '
-                                         '(error found for {}, {})'.format(unit, value))
+                                         '(error found for {0}, {1})'.format(unit, value))
 
                 result = func(*new_args, **kw)
 

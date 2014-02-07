@@ -211,8 +211,8 @@ class TestRegistry(TestCase):
 
 
     def test_str_errors(self):
-        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{!s}' is not defined in the unit registry".format('rabbits'))
-        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{!s} are not defined in the unit registry".format(('rabbits', 'horses')))
+        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{0!s}' is not defined in the unit registry".format('rabbits'))
+        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{0!s} are not defined in the unit registry".format(('rabbits', 'horses')))
         self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
                          "Cannot convert from 'meter' to 'second'")
         self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),

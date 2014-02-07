@@ -606,7 +606,7 @@ class TestDefinedContexts(TestCase):
                                                       b.dimensionality)
                     p = find_shortest_path(ureg._active_ctx.graph, da, db)
                     self.assertTrue(p)
-                    msg = '{} <-> {}'.format(a, b)
+                    msg = '{0} <-> {1}'.format(a, b)
                     # assertAlmostEqualRelError converts second to first
                     self.assertAlmostEqualRelError(b, a, rel=.01, msg=msg)
 
