@@ -38,6 +38,13 @@ else:
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
 
+
+if sys.version_info < (2, 7):
+    import unittest2 as unittest
+else:
+    import unittest
+
+
 try:
     from collections import Chainmap
 except ImportError:
@@ -54,6 +61,11 @@ except ImportError:
     from .lrucache import lru_cache
 
 try:
+    from logging import NullHandler
+except ImportError:
+    from .nullhandler import NullHandler
+
+try:
     import numpy as np
     from numpy import ndarray
 
@@ -62,15 +74,15 @@ try:
     NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
     def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, NUMERIC_TYPES):
-            if force_ndarray:
-                return np.asarray(value)
-            else:
-                return value
+        if isinstance(value, (dict, bool)) or value is None:
+            raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
+        elif isinstance(value, string_types) and value == '':
+            raise ValueError('Quantity magnitude cannot be an empty string.')
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
-        else:
-            raise TypeError('Invalid type of magnitude for Quantity: {}'.format(type(value)))
+        if force_ndarray:
+            return np.asarray(value)
+        return value
 
 except ImportError:
 
@@ -84,10 +96,11 @@ except ImportError:
     NUMERIC_TYPES = (Number, Decimal)
 
     def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, NUMERIC_TYPES):
-            return value
+        if isinstance(value, (dict, bool)) or value is None:
+            raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
+        elif isinstance(value, string_types) and value == '':
+            raise ValueError('Quantity magnitude cannot be an empty string.')
         elif isinstance(value, (list, tuple)):
             raise TypeError('lists and tuples are valid magnitudes for '
-                            'Quantity only when NumPy is present.')
-        else:
-            raise TypeError('Invalid type of magnitude for Quantity: {}'.format(type(value)))
+                             'Quantity only when NumPy is present.')
+        return value

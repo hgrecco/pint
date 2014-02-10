@@ -2,13 +2,11 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import unittest
-
 from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import HAS_NUMPY, np
+from pint.compat import HAS_NUMPY, np, unittest
 from pint.testsuite import TestCase
 
 
@@ -69,7 +67,7 @@ class TestIssues(TestCase):
         for value in ({}, {'a': 3}, None):
             self.assertRaises(TypeError, Q_, value)
             self.assertRaises(TypeError, Q_, value, 'meter')
-        self.assertRaises(TypeError, Q_, '', 'meter')
+        self.assertRaises(ValueError, Q_, '', 'meter')
         self.assertRaises(ValueError, Q_, '')
 
     @unittest.skipIf(HAS_NUMPY, 'Numpy present')

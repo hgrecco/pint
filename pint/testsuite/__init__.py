@@ -4,9 +4,8 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import os
 import logging
-import unittest
 
-from pint.compat import ndarray
+from pint.compat import ndarray, unittest
 
 from pint import logger, UnitRegistry
 

@@ -2,9 +2,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import unittest
-
-from pint.compat import HAS_NUMPY, np
+from pint.compat import HAS_NUMPY, np, unittest
 from pint.testsuite import TestCase
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')

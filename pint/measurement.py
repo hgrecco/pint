@@ -24,7 +24,7 @@ class Measurement(object):
 
     def __init__(self, value, error):
         if not (value/error).unitless:
-            raise ValueError('{} and {} have incompatible units'.format(value, error))
+            raise ValueError('{0} and {1} have incompatible units'.format(value, error))
         try:
             emag = error.magnitude
         except AttributeError:
@@ -91,7 +91,7 @@ class Measurement(object):
         return '{}'.format(self)
 
     def __repr__(self):
-        return "<Measurement({:!r}, {:!r})>".format(self._value, self._error)
+        return "<Measurement({0:!r}, {1:!r})>".format(self._value, self._error)
 
     def __format__(self, spec):
         if '!' in spec:

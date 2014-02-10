@@ -5,6 +5,23 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
+- Python 2.6 support
+  (Issue #96, thanks tiagocoutinho)
+- Fixed symbol for inch.
+  (Issue #102, thanks cybertoast)
+- Stop raising AttributeError when wrapping funcs without all of the attributes.
+  (Issue #100, thanks jturner314)
+- Fixed warning appearing in Py2.x when comparing a Numpy Array with an empty string.
+  (Issue #98, thanks jturner314)
+- Add links to AUR packages in docs.
+  (Issue #91, thanks jturner314)
+- Fixed garbage collection related problem.
+  (Issue #92, thanks jturner314)
+
+
+0.4.1 (2014-01-12)
+------------------
+
 - Integer Division with Arrays.
   (Issue #80, thanks jdreaver)
 - Improved Documentation.

@@ -2,9 +2,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import unittest
-
-from pint.compat import HAS_NUMPY, np
+from pint.compat import HAS_NUMPY, np, unittest
 from pint.testsuite import TestCase
 
 # Following http://docs.scipy.org/doc/numpy/reference/ufuncs.html
@@ -48,11 +46,11 @@ class TestUFuncs(TestCase):
     def assertRaisesMsg(self, msg, ExcType, func, *args, **kwargs):
         try:
             func(*args, **kwargs)
-            self.assertFalse(True, msg='Exception {} not raised {}'.format(ExcType, msg))
+            self.assertFalse(True, msg='Exception {0} not raised {1}'.format(ExcType, msg))
         except ExcType as e:
             pass
         except Exception as e:
-            self.assertFalse(True, msg='{} not raised but {}\n{}'.format(ExcType, e, msg))
+            self.assertFalse(True, msg='{0} not raised but {1}\n{2}'.format(ExcType, e, msg))
 
     def _testn(self, func,  ok_with, raise_with=(), results=None):
         self._test1(func, ok_with, raise_with, output_units=None, results=results)
@@ -61,7 +59,7 @@ class TestUFuncs(TestCase):
         if results is None:
             results = [None, ] * len(ok_with)
         for x1, res in zip(ok_with, results):
-            err_msg = 'At {} with {}'.format(func.__name__, x1)
+            err_msg = 'At {0} with {1}'.format(func.__name__, x1)
             if output_units == 'same':
                 ou = x1.units
             elif isinstance(output_units, int):
@@ -75,13 +73,13 @@ class TestUFuncs(TestCase):
                 if ou:
                     res = self.Q_(res, ou)
             if isinstance(res, self.Q_):
-                self.assertIsInstance(qm, self.Q_, msg=err_msg + ' {!r} is not Quantity'.format(qm))
+                self.assertIsInstance(qm, self.Q_, msg=err_msg + ' {0!r} is not Quantity'.format(qm))
                 qm = qm.magnitude
                 res = res.magnitude
             np.testing.assert_allclose(qm, res, rtol=rtol, err_msg=err_msg)
 
         for x1 in raise_with:
-            self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
+            self.assertRaisesMsg('At {0} with {1}'.format(func.__name__, x1),
                                  ValueError, func, x1)
 
     def _test1_2o(self, func, ok_with, raise_with=(), output_units=('same', 'same'),
@@ -89,7 +87,7 @@ class TestUFuncs(TestCase):
         if results is None:
             results = [None, ] * len(ok_with)
         for x1, res in zip(ok_with, results):
-            err_msg = 'At {} with {}'.format(func.__name__, x1)
+            err_msg = 'At {0} with {1}'.format(func.__name__, x1)
             qms = func(x1)
             if res is None:
                 res = func(x1.magnitude)
@@ -110,7 +108,7 @@ class TestUFuncs(TestCase):
                 np.testing.assert_allclose(qm, re, rtol=rtol, err_msg=err_msg)
 
         for x1 in raise_with:
-            self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
+            self.assertRaisesMsg('At {0} with {1}'.format(func.__name__, x1),
                                  ValueError, func, x1)
 
     def _testn2(self, func, x1, ok_with, raise_with=()):
@@ -118,7 +116,7 @@ class TestUFuncs(TestCase):
 
     def _test2(self, func, x1, ok_with, raise_with=(), output_units='same', rtol=1e-6, convert2=True):
         for x2 in ok_with:
-            err_msg = 'At {} with {} and {}'.format(func.__name__, x1, x2)
+            err_msg = 'At {0} with {1} and {2}'.format(func.__name__, x1, x2)
             if output_units == 'same':
                 ou = x1.units
             elif output_units == 'prod':
@@ -147,7 +145,7 @@ class TestUFuncs(TestCase):
             np.testing.assert_allclose(qm, res, rtol=rtol, err_msg=err_msg)
 
         for x2 in raise_with:
-            self.assertRaisesMsg('At {} with {} and {}'.format(func.__name__, x1, x2),
+            self.assertRaisesMsg('At {0} with {1} and {2}'.format(func.__name__, x1, x2),
                                  ValueError, func, x1, x2)
 
 

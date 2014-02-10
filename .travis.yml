@@ -1,6 +1,7 @@
 language: python
 
 python:
+  - "2.6"
   - "2.7"
   - "3.2"
   - "3.3"
@@ -17,6 +18,7 @@ branches:
     - develop
 
 install: 
+    - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors unittest2; fi
     - if [ $NUMPY_VERSION = '0' ]; then pip uninstall -y numpy || true; else pip install numpy==$NUMPY_VERSION; fi
     - pip install . --use-mirrors
     - pip list --pre

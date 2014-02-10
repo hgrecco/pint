@@ -125,18 +125,18 @@ class TestQuantity(TestCase):
 
     def test_quantity_format(self):
         x = self.Q_(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
-        for spec, result in (('{}', str(x)), ('{!s}', str(x)), ('{!r}', repr(x)),
+        for spec, result in (('{0}', str(x)), ('{0!s}', str(x)), ('{0!r}', repr(x)),
                              ('{0.magnitude}',  str(x.magnitude)), ('{0.units}',  str(x.units)),
                              ('{0.magnitude!s}',  str(x.magnitude)), ('{0.units!s}',  str(x.units)),
                              ('{0.magnitude!r}',  repr(x.magnitude)), ('{0.units!r}',  repr(x.units)),
-                             ('{:.4f}', '{:.4f} {!s}'.format(x.magnitude, x.units)),
-                             ('{:L}', r'4.12345678 \frac{kilogram \cdot meter^{2}}{second}'),
-                             ('{:P}', '4.12345678 kilogram·meter²/second'),
-                             ('{:H}', '4.12345678 kilogram meter<sup>2</sup>/second'),
-                             ('{:~}', '4.12345678 kg * m ** 2 / s'),
-                             ('{:L~}', r'4.12345678 \frac{kg \cdot m^{2}}{s}'),
-                             ('{:P~}', '4.12345678 kg·m²/s'),
-                             ('{:H~}', '4.12345678 kg m<sup>2</sup>/s'),
+                             ('{0:.4f}', '{0:.4f} {1!s}'.format(x.magnitude, x.units)),
+                             ('{0:L}', r'4.12345678 \frac{kilogram \cdot meter^{2}}{second}'),
+                             ('{0:P}', '4.12345678 kilogram·meter²/second'),
+                             ('{0:H}', '4.12345678 kilogram meter<sup>2</sup>/second'),
+                             ('{0:~}', '4.12345678 kg * m ** 2 / s'),
+                             ('{0:L~}', r'4.12345678 \frac{kg \cdot m^{2}}{s}'),
+                             ('{0:P~}', '4.12345678 kg·m²/s'),
+                             ('{0:H~}', '4.12345678 kg m<sup>2</sup>/s'),
                              ):
             self.assertEqual(spec.format(x), result)
 
@@ -152,7 +152,7 @@ class TestQuantity(TestCase):
                              ('H~', '4.12345678 kg m<sup>2</sup>/s'),
                              ):
             ureg.default_format = spec
-            self.assertEqual('{}'.format(x), result)
+            self.assertEqual('{0}'.format(x), result)
 
     def test_quantity_add_sub(self):
         x = self.Q_(1., 'centimeter')
@@ -234,10 +234,10 @@ class TestQuantity(TestCase):
             zy = self.Q_(fun(y.magnitude), 'meter')
             rx = fun(x)
             ry = fun(y)
-            self.assertEqual(rx, zx, 'while testing {}'.format(fun))
-            self.assertEqual(ry, zy, 'while testing {}'.format(fun))
-            self.assertIsNot(rx, zx, 'while testing {}'.format(fun))
-            self.assertIsNot(ry, zy, 'while testing {}'.format(fun))
+            self.assertEqual(rx, zx, 'while testing {0}'.format(fun))
+            self.assertEqual(ry, zy, 'while testing {0}'.format(fun))
+            self.assertIsNot(rx, zx, 'while testing {0}'.format(fun))
+            self.assertIsNot(ry, zy, 'while testing {0}'.format(fun))
 
     def test_quantity_float_complex(self):
         x = self.Q_(-4.2, None)

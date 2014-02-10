@@ -4,14 +4,13 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import math
 import copy
-import unittest
 import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
                        DimensionDefinition, _freeze)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.compat import u
+from pint.compat import u, unittest
 from pint.testsuite import TestCase
 
 
@@ -215,8 +214,8 @@ class TestRegistry(TestCase):
 
 
     def test_str_errors(self):
-        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{!s}' is not defined in the unit registry".format('rabbits'))
-        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{!s} are not defined in the unit registry".format(('rabbits', 'horses')))
+        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{0!s}' is not defined in the unit registry".format('rabbits'))
+        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{0!s} are not defined in the unit registry".format(('rabbits', 'horses')))
         self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
                          "Cannot convert from 'meter' to 'second'")
         self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),
@@ -256,6 +255,14 @@ class TestRegistry(TestCase):
         self.assertEqual(self.ureg.get_symbol('kilometer'), 'km')
         self.assertEqual(self.ureg.get_symbol('megahertz'), 'MHz')
         self.assertEqual(self.ureg.get_symbol('millisecond'), 'ms')
+
+    def test_imperial_symbol(self):
+        self.assertEqual(self.ureg.get_symbol('inch'), 'in')
+        self.assertEqual(self.ureg.get_symbol('foot'), 'ft')
+        self.assertEqual(self.ureg.get_symbol('inches'), 'in')
+        self.assertEqual(self.ureg.get_symbol('feet'), 'ft')
+        self.assertEqual(self.ureg.get_symbol('international_foot'), 'ft')
+        self.assertEqual(self.ureg.get_symbol('international_inch'), 'in')
 
     @unittest.expectedFailure
     def test_delta_in_diff(self):
