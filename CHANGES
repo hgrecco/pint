@@ -5,6 +5,8 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
+- Python 2.6 support
+  (Issue #96, thanks tiagocoutinho)
 - Fixed symbol for inch.
   (Issue #102, thanks cybertoast)
 - Stop raising AttributeError when wrapping funcs without all of the attributes.
