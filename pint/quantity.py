@@ -157,11 +157,8 @@ class _Quantity(object):
         spec = spec or self.default_format
 
         if '~' in spec:
-            container = {}
-            for key, value in self.units.items():
-                container[self._REGISTRY.get_symbol(key)] = value
-
-            units = UnitsContainer(container)
+            units = UnitsContainer(dict((self._REGISTRY.get_symbol(key), value)
+                                   for key, value in self.units.items()))
             spec = spec.replace('~', '')
         else:
             units = self.units

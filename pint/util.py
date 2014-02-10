@@ -261,11 +261,8 @@ def pi_theorem(quantities, registry=None):
             continue
         max_den = max(f.denominator for f in rowi)
         neg = -1 if sum(f < 0 for f in rowi) > sum(f > 0 for f in rowi) else 1
-        result = {}
-        for q, f in zip(quant, rowi):
-            if f.numerator != 0:
-                result[q[0]] = neg * f.numerator * max_den / f.denominator
-        results.append(result)
+        results.append(dict((q[0], neg * f.numerator * max_den / f.denominator)
+                            for q, f in zip(quant, rowi) if f.numerator != 0))
     return results
 
 
@@ -369,10 +366,9 @@ class ParserHelper(dict):
         if not reps:
             return ret
 
-        data = {}
-        for key, value in ret.items():
-            data[key.replace('__obra__', '[').replace('__cbra__', ']')] = value
-
+        return ParserHelper(ret.scale,
+                            dict((key.replace('__obra__', '[').replace('__cbra__', ']'), value)
+                                 for key, value in ret.items()))
         return ParserHelper(ret.scale, data)
 
     def __missing__(self, key):

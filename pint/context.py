@@ -123,10 +123,7 @@ class Context(object):
                 if not val.imag:
                     return val.real
                 return val
-            new_defaults = {}
-            for k, v in _def_re.findall(defaults.strip('()')):
-                new_defaults[k] = to_num(v)
-            defaults = new_defaults
+            defaults = dict((k, to_num(v)) for k, v in _def_re.findall(defaults.strip('()')))
             ctx = cls(name, aliases, defaults)
         else:
             ctx = cls(name, aliases)
