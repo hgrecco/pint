@@ -22,8 +22,10 @@ import logging
 from token import STRING, NAME, OP
 from tokenize import untokenize
 
+from .compat import NullHandler
+
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger.addHandler(NullHandler())
 
 if sys.version < '3':
     from StringIO import StringIO
@@ -73,7 +75,19 @@ def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
 
     rows, cols = len(M), len(M[0])
 
-    M = [[ntype(x) for x in row] for row in M]
+    new_M = []
+    for row in M:
+        r = []
+        for x in row:
+            if isinstance(x, float):
+                x = ntype.from_float(x)
+            else:
+                x = ntype(x)
+            r.append(x)
+        new_M.append(r)
+    M = new_M
+
+#    M = [[ntype(x) for x in row] for row in M]
     I = [[ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)]
     swapped = []
 
@@ -125,10 +139,12 @@ except ImportError:
     NUMERIC_TYPES = (Number, )
 
 
+__JOIN_REG_EXP = re.compile("\{\d*\}")
+
 def _join(fmt, iterable):
     if not iter:
         return ''
-    if not '{}' in fmt:
+    if not __JOIN_REG_EXP.search(fmt):
         return fmt.join(iterable)
     miter = iter(iterable)
     first = next(miter)
@@ -139,8 +155,8 @@ def _join(fmt, iterable):
 
 
 def formatter(items, as_ratio=True, single_denominator=False,
-              product_fmt=' * ', division_fmt=' / ', power_fmt='{} ** {}',
-              parentheses_fmt='({})', exp_call=lambda x: '{:n}'.format(x)):
+              product_fmt=' * ', division_fmt=' / ', power_fmt='{0} ** {1}',
+              parentheses_fmt='({0})', exp_call=lambda x: '{0:n}'.format(x)):
     """Format a list of (name, exponent) pairs.
 
     :param items: a list of (name, exponent) pairs.
@@ -223,7 +239,7 @@ def pi_theorem(quantities, registry=None):
 
         if not registry and any(not key.startswith('[') for key in dims):
             logger.warning('A non dimension was found and a registry was not provided. '
-                           'Assuming that it is a dimension name: {}.'.format(dims))
+                           'Assuming that it is a dimension name: {0}.'.format(dims))
 
         quant.append((name, dims))
         dimensions = dimensions.union(dims.keys())
@@ -245,9 +261,8 @@ def pi_theorem(quantities, registry=None):
             continue
         max_den = max(f.denominator for f in rowi)
         neg = -1 if sum(f < 0 for f in rowi) > sum(f > 0 for f in rowi) else 1
-        results.append({q[0]: neg * f.numerator * max_den / f.denominator
-                        for q, f in zip(quant, rowi) if f.numerator != 0})
-
+        results.append(dict((q[0], neg * f.numerator * max_den / f.denominator)
+                            for q, f in zip(quant, rowi) if f.numerator != 0))
     return results
 
 
@@ -352,8 +367,9 @@ class ParserHelper(dict):
             return ret
 
         return ParserHelper(ret.scale,
-                            {key.replace('__obra__', '[').replace('__cbra__', ']'): value
-                            for key, value in ret.items()})
+                            dict((key.replace('__obra__', '[').replace('__cbra__', ']'), value)
+                                 for key, value in ret.items()))
+        return ParserHelper(ret.scale, data)
 
     def __missing__(self, key):
         return 0.0
@@ -375,8 +391,8 @@ class ParserHelper(dict):
                 del self[key]
 
     def __str__(self):
-        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
-        return '{} {}'.format(self.scale, tmp)
+        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
+        return '{0} {1}'.format(self.scale, tmp)
 
     def __repr__(self):
         tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])

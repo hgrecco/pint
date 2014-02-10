@@ -2,16 +2,15 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import unittest
 import collections
 
 from pint.util import string_preprocessor, find_shortest_path
-
+from pint.testsuite import unittest
 
 class TestStringProcessor(unittest.TestCase):
 
     def _test(self, bef, aft):
-        for pattern in ('{}', '+{}+'):
+        for pattern in ('{0}', '+{0}+'):
             b = pattern.format(bef)
             a = pattern.format(aft)
             self.assertEqual(string_preprocessor(b), a)
@@ -44,8 +43,8 @@ class TestStringProcessor(unittest.TestCase):
 
     def test_shortest_path(self):
         g = collections.defaultdict(list)
-        g[1] = {2,}
-        g[2] = {3,}
+        g[1] = set((2,))
+        g[2] = set((3,))
         p = find_shortest_path(g, 1, 2)
         self.assertEqual(p, [1, 2])
         p = find_shortest_path(g, 1, 3)
@@ -54,9 +53,9 @@ class TestStringProcessor(unittest.TestCase):
         self.assertIs(p, None)
 
         g = collections.defaultdict(list)
-        g[1] = {2,}
-        g[2] = {3, 1}
-        g[3] = {2, }
+        g[1] = set((2,))
+        g[2] = set((3, 1))
+        g[3] = set((2,))
         p = find_shortest_path(g, 1, 2)
         self.assertEqual(p, [1, 2])
         p = find_shortest_path(g, 1, 3)

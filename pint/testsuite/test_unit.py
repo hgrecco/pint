@@ -4,14 +4,13 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import math
 import copy
-import unittest
 import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
                        DimensionDefinition)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.testsuite import TestCase, u
+from pint.testsuite import TestCase, u, unittest
 
 class TestConverter(unittest.TestCase):
 
@@ -212,8 +211,8 @@ class TestRegistry(TestCase):
 
 
     def test_str_errors(self):
-        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{!s}' is not defined in the unit registry".format('rabbits'))
-        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{!s} are not defined in the unit registry".format(('rabbits', 'horses')))
+        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{0!s}' is not defined in the unit registry".format('rabbits'))
+        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{0!s} are not defined in the unit registry".format(('rabbits', 'horses')))
         self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
                          "Cannot convert from 'meter' to 'second'")
         self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),

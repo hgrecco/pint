@@ -139,7 +139,7 @@ class _Quantity(object):
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
         else:
             raise TypeError('units must be of type str, Quantity or '
-                            'UnitsContainer; not {}.'.format(type(units)))
+                            'UnitsContainer; not {0}.'.format(type(units)))
 
         inst.__handling = None
         return inst
@@ -148,17 +148,17 @@ class _Quantity(object):
         return self.__class__(copy.copy(self._magnitude), copy.copy(self._units))
 
     def __str__(self):
-        return '{} {}'.format(self._magnitude, self._units)
+        return '{0} {1}'.format(self._magnitude, self._units)
 
     def __repr__(self):
-        return "<Quantity({}, '{}')>".format(self._magnitude, self._units)
+        return "<Quantity({0}, '{1}')>".format(self._magnitude, self._units)
 
     def __format__(self, spec):
         spec = spec or self.default_format
 
         if '~' in spec:
-            units = UnitsContainer({self._REGISTRY.get_symbol(key): value
-                                   for key, value in self.units.items()})
+            units = UnitsContainer(dict((self._REGISTRY.get_symbol(key), value)
+                                   for key, value in self.units.items()))
             spec = spec.replace('~', '')
         else:
             units = self.units
@@ -444,7 +444,7 @@ class _Quantity(object):
             if self.dimensionless:
                 return op(self._convert_magnitude(UnitsContainer()), other)
             else:
-                raise ValueError('Cannot compare Quantity and {}'.format(type(other)))
+                raise ValueError('Cannot compare Quantity and {0}'.format(type(other)))
 
         if self.units == other.units:
             return op(self._magnitude, other._magnitude)
@@ -627,15 +627,15 @@ class _Quantity(object):
                 return functools.partial(self.__numpy_method_wrap, attr)
             return attr
         except AttributeError as ex:
-            raise AttributeError("Neither Quantity object nor its magnitude ({})"
-                                 "has attribute '{}'".format(self._magnitude, item))
+            raise AttributeError("Neither Quantity object nor its magnitude ({0})"
+                                 "has attribute '{1}'".format(self._magnitude, item))
 
     def __getitem__(self, key):
         try:
             value = self._magnitude[key]
             return self.__class__(value, self._units)
         except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({})"
+            raise TypeError("Neither Quantity object nor its magnitude ({0})"
                             "supports indexing".format(self._magnitude))
 
     def __setitem__(self, key, value):
@@ -653,7 +653,7 @@ class _Quantity(object):
                 self._magnitude[key] = factor
 
         except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({})"
+            raise TypeError("Neither Quantity object nor its magnitude ({0})"
                             "supports indexing".format(self._magnitude))
 
     def tolist(self):
@@ -667,12 +667,12 @@ class _Quantity(object):
         # If this uf is handled by Pint, write it down in the handling dictionary.
 
         uf, objs, huh = context
-        ufname = uf.__name__ if huh == 0 else '{}__{}'.format(uf.__name__, huh)
+        ufname = uf.__name__ if huh == 0 else '{0}__{1}'.format(uf.__name__, huh)
         if uf.__name__ in self.__handled and huh == 0:
             if self.__handling:
                 raise Exception('Cannot handled nested ufuncs.\n'
-                                'Current: {}\n'
-                                'New: {}'.format(context, self.__handling))
+                                'Current: {0}\n'
+                                'New: {1}'.format(context, self.__handling))
             self.__handling = context
 
         return obj
@@ -684,7 +684,7 @@ class _Quantity(object):
             return self.magnitude.__array_wrap__(obj, context)
 
         try:
-            ufname = uf.__name__ if huh == 0 else '{}__{}'.format(uf.__name__, huh)
+            ufname = uf.__name__ if huh == 0 else '{0}__{1}'.format(uf.__name__, huh)
 
             if huh == 0:
                 dst_units = None
@@ -768,7 +768,7 @@ class _Quantity(object):
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):
             if relative:
-                raise ValueError('{} is not a valid relative error.'.format(error))
+                raise ValueError('{0} is not a valid relative error.'.format(error))
         else:
             if relative:
                 error = error * abs(self)

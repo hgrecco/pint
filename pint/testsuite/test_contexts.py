@@ -3,13 +3,12 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import itertools
-import unittest
 from collections import defaultdict
 
 from pint import UnitRegistry
 from pint.context import Context, _freeze
 from pint.unit import UnitsContainer
-from pint.testsuite import TestCase
+from pint.testsuite import TestCase, unittest
 
 from pint import logger
 
@@ -144,17 +143,17 @@ class TestContexts(unittest.TestCase):
         c = _freeze({'[current]': -1.})
 
         g_sp = defaultdict(set)
-        g_sp.update({l: {t, },
-                     t: {l, }})
+        g_sp.update({l: set((t,)),
+                     t: set((l,))})
 
         g_ab = defaultdict(set)
-        g_ab.update({l: {c, },
-                     c: {l, }})
+        g_ab.update({l: set((c,)),
+                     c: set((l,))})
 
         g = defaultdict(set)
-        g.update({l: {t, c},
-                  t: {l, },
-                  c: {l, }})
+        g.update({l: set((t, c)),
+                  t: set((l,)),
+                  c: set((l,))})
 
         with ureg.context('lc'):
             self.assertEqual(ureg._active_ctx.graph, g_sp)
@@ -187,17 +186,17 @@ class TestContexts(unittest.TestCase):
         c = _freeze({'[current]': -1.})
 
         g_sp = defaultdict(set)
-        g_sp.update({l: {t, },
-                     t: {l, }})
+        g_sp.update({l: set((t,)),
+                     t: set((l,))})
 
         g_ab = defaultdict(set)
-        g_ab.update({l: {c, },
-                     c: {l, }})
+        g_ab.update({l: set((c,)),
+                     c: set((l,))})
 
         g = defaultdict(set)
-        g.update({l: {t, c},
-                  t: {l, },
-                  c: {l, }})
+        g.update({l: set((t, c)),
+                  t: set((l,)),
+                  c: set((l,))})
 
         ureg.enable_contexts('lc')
         self.assertEqual(ureg._active_ctx.graph, g_sp)
@@ -607,7 +606,7 @@ class TestDefinedContexts(TestCase):
                                                       b.dimensionality)
                     p = find_shortest_path(ureg._active_ctx.graph, da, db)
                     self.assertTrue(p)
-                    msg = '{} <-> {}'.format(a, b)
+                    msg = '{0} <-> {1}'.format(a, b)
                     # assertAlmostEqualRelError converts second to first
                     self.assertAlmostEqualRelError(b, a, rel=.01, msg=msg)
 

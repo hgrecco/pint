@@ -2,13 +2,11 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import unittest
-
 from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.testsuite import HAS_NUMPY, np, TestCase, ndarray, NUMPY_VER
+from pint.testsuite import HAS_NUMPY, np, TestCase, ndarray, NUMPY_VER, unittest
 
 class TestIssues(TestCase):
 
