@@ -163,6 +163,16 @@ class TestIssues(TestCase):
         self.assertAlmostEqual(v1.to_base_units(), v2)
         self.assertAlmostEqual(v1.to_base_units(), v2.to_base_units())
 
+    def test_issue93(self):
+        ureg = UnitRegistry()
+        x = 5 * ureg.meter
+        y = 0.1 * ureg.meter
+        z = 5 * ureg.meter
+        z += y
+
+        self.assertAlmostEqual(x + y, 5.1 * ureg.meter)
+        self.assertAlmostEqual(z, 5.1 * ureg.meter)
+
     def _test_issueXX(self):
         ureg = UnitRegistry()
         try:
