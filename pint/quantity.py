@@ -616,15 +616,15 @@ class _Quantity(object):
                 # we convert the magnitude to a numpy ndarray.
                 self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
                 return getattr(self._magnitude, item)
-        try:
-            try:
-                attr = getattr(self._magnitude, item)
-            except AttributeError:
+        elif item in self.__handled:
+            if not isinstance(self._magnitude, ndarray):
                 self._magnitude = _to_magnitude(self._magnitude, True)
-                attr = getattr(self._magnitude, item)
+            attr = getattr(self._magnitude, item)
             if callable(attr):
                 return functools.partial(self.__numpy_method_wrap, attr)
             return attr
+        try:
+            return getattr(self._magnitude, item)
         except AttributeError as ex:
             raise AttributeError("Neither Quantity object nor its magnitude ({0})"
                                  "has attribute '{1}'".format(self._magnitude, item))
