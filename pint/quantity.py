@@ -266,7 +266,7 @@ class _Quantity(object):
             return complex(self._convert_magnitude(UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
-    def iadd_sub(self, other, op):
+    def _iadd_sub(self, other, op):
         """Perform addition or subtraction operation in-place and return the result.
 
         :param other: object to be added to / subtracted from self
@@ -295,26 +295,50 @@ class _Quantity(object):
 
         return self
 
-    def add_sub(self, other, op):
-        ret = copy.copy(self)
-        return op(ret, other)
+    def _add_sub(self, other, op):
+        """Perform addition or subtraction operation and return the result.
+
+        :param other: object to be added to / subtracted from self
+        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :param op: operator function (e.g. operator.add, operator.isub)
+        :type op: function
+        """
+        if _check(self, other):
+            if not self.dimensionality == other.dimensionality:
+                raise DimensionalityError(self.units, other.units,
+                                          self.dimensionality, other.dimensionality)
+            if self._units == other._units:
+                magnitude = op(self._magnitude, other._magnitude)
+            else:
+                magnitude = op(self._magnitude, other.to(self)._magnitude)
+
+            units = copy.copy(self.units)
+        else:
+            if self.dimensionless:
+                units = UnitsContainer()
+                magnitude = op(self.to(units)._magnitude,
+                               _to_magnitude(other, self.force_ndarray))
+            else:
+                raise DimensionalityError(self.units, 'dimensionless')
+
+        return self.__class__(magnitude, units)
 
     def __iadd__(self, other):
-        return self.iadd_sub(other, operator.iadd)
+        return self._iadd_sub(other, operator.iadd)
 
     def __add__(self, other):
-        return self.add_sub(other, operator.iadd)
+        return self._add_sub(other, operator.add)
 
     __radd__ = __add__
 
     def __isub__(self, other):
-        return self.iadd_sub(other, operator.isub)
+        return self._iadd_sub(other, operator.isub)
 
     def __sub__(self, other):
-        return self.add_sub(other, operator.isub)
+        return self._add_sub(other, operator.sub)
 
     def __rsub__(self, other):
-        return -self.add_sub(other, operator.isub)
+        return -self._add_sub(other, operator.sub)
 
     def _imul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation in-place and return the result.
@@ -622,15 +646,15 @@ class _Quantity(object):
                 # we convert the magnitude to a numpy ndarray.
                 self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
                 return getattr(self._magnitude, item)
-        try:
-            try:
-                attr = getattr(self._magnitude, item)
-            except AttributeError:
+        elif item in self.__handled:
+            if not isinstance(self._magnitude, ndarray):
                 self._magnitude = _to_magnitude(self._magnitude, True)
-                attr = getattr(self._magnitude, item)
+            attr = getattr(self._magnitude, item)
             if callable(attr):
                 return functools.partial(self.__numpy_method_wrap, attr)
             return attr
+        try:
+            return getattr(self._magnitude, item)
         except AttributeError as ex:
             raise AttributeError("Neither Quantity object nor its magnitude ({0})"
                                  "has attribute '{1}'".format(self._magnitude, item))
