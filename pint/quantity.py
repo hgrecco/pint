@@ -296,14 +296,31 @@ class _Quantity(object):
         return self
 
     def _add_sub(self, other, op):
-        ret = copy.copy(self)
-        return ret.iadd_sub(other, op)
+        if _check(self, other):
+            if not self.dimensionality == other.dimensionality:
+                raise DimensionalityError(self.units, other.units,
+                                          self.dimensionality, other.dimensionality)
+            if self._units == other._units:
+                magnitude = op(self._magnitude, other._magnitude)
+            else:
+                magnitude = op(self._magnitude, other.to(self)._magnitude)
+
+            units = copy.copy(self.units)
+        else:
+            if self.dimensionless:
+                units = UnitsContainer()
+                magnitude = op(self.to(units)._magnitude,
+                               _to_magnitude(other, self.force_ndarray))
+            else:
+                raise DimensionalityError(self.units, 'dimensionless')
+
+        return self.__class__(magnitude, units)
 
     def __iadd__(self, other):
         return self._iadd_sub(other, operator.iadd)
 
     def __add__(self, other):
-        return self._add_sub(other, operator.iadd)
+        return self._add_sub(other, operator.add)
 
     __radd__ = __add__
 
@@ -311,10 +328,10 @@ class _Quantity(object):
         return self._iadd_sub(other, operator.isub)
 
     def __sub__(self, other):
-        return self._add_sub(other, operator.isub)
+        return self._add_sub(other, operator.sub)
 
     def __rsub__(self, other):
-        return -self._add_sub(other, operator.isub)
+        return -self._add_sub(other, operator.sub)
 
     def _imul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation in-place and return the result.
