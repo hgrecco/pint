@@ -103,8 +103,9 @@ class TestCase(unittest.TestCase):
             val = abs((second - first) / (second + first))
         self.assertLess(val, rel, msg=msg)
 
+
 def testsuite():
-    """A testsuite that has all the pyflim tests.
+    """A testsuite that has all the pint tests.
     """
     return unittest.TestLoader().discover(os.path.dirname(__file__))
 
@@ -115,3 +116,10 @@ def main():
         unittest.main()
     except Exception as e:
         print('Error: %s' % e)
+
+
+def run():
+    """Run all tests i
+    """
+    test_runner = unittest.TextTestRunner()
+    test_runner.run(testsuite())
