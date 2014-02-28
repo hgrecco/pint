@@ -64,17 +64,24 @@ class TestMeasurement(TestCase):
         for factor, m in zip((3, -3, 3, -3), (m1, m3, m1, m3)):
             r = factor * m
             self.assertAlmostEqual(r.value.magnitude, factor * m.value.magnitude)
+            self.assertAlmostEqual(r.error.magnitude, abs(factor * m.error.magnitude))
             self.assertEqual(r.value.units, m.value.units)
 
         for ml, mr in zip((m1, m1, m1, m3), (m1, m2, m3, m3)):
             r = ml + mr
             self.assertAlmostEqual(r.value.magnitude, ml.value.magnitude + mr.value.magnitude)
+            self.assertAlmostEqual(r.error.magnitude,
+                                   ml.error.magnitude + mr.error.magnitude if ml is mr else
+                                   (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** .5)
             self.assertEqual(r.value.units, ml.value.units)
 
         for ml, mr in zip((m1, m1, m1, m3), (m1, m2, m3, m3)):
             r = ml - mr
-            self.assertAlmostEqual(r.value.magnitude,
-                                   0 if ml.value is mr.value else ml.value.magnitude - mr.value.magnitude)
+            print(ml, mr, ml is mr, r)
+            self.assertAlmostEqual(r.value.magnitude, ml.value.magnitude - mr.value.magnitude)
+            self.assertAlmostEqual(r.error.magnitude,
+                                   0 if ml is mr else
+                                   (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** .5)
             self.assertEqual(r.value.units, ml.value.units)
 
     def test_propagate_product(self):
