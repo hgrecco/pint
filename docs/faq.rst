@@ -25,4 +25,6 @@ You mention other similar Python libraries. Can you point me to those?
 
 `Units <https://bitbucket.org/adonohue/units/>`_
 
+`udunitspy <https://github.com/blazetopher/udunitspy>`_
+
 If your are aware of another one, please let me know.
