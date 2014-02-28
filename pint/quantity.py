@@ -797,11 +797,10 @@ class _Quantity(object):
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):
             if relative:
-                raise ValueError('{0} is not a valid relative error.'.format(error))
+                raise ValueError('{} is not a valid relative error.'.format(error))
+            error = error.to(self.units).magnitude
         else:
             if relative:
-                error = error * abs(self)
-            else:
-                error = self.__class__(error, self.units)
+                error = error * abs(self.magnitude)
 
-        return Measurement(copy.copy(self), error)
+        return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self.units)

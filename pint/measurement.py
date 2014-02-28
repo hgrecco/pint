@@ -9,44 +9,51 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-
+from .compat import ufloat
 import operator
 
+MISSING = object()
 
-class Measurement(object):
+class _Measurement(object):
     """Implements a class to describe a quantity with uncertainty.
 
     :param value: The most likely value of the measurement.
     :type value: Quantity or Number
     :param error: The error or uncertainty of the measurement.
-    :type value: Quantity or Number
+    :type error: Quantity or Number
     """
 
-    def __init__(self, value, error):
-        if not (value/error).unitless:
-            raise ValueError('{0} and {1} have incompatible units'.format(value, error))
+    def __new__(cls, value, error, units=MISSING):
+        if units is MISSING:
+            try:
+                value, units = value.magnitude, value.units
+            except AttributeError:
+                try:
+                    value, error, units = value.nominal_value, value.std_dev, error
+                except AttributeError:
+                    units = ''
         try:
-            emag = error.magnitude
+            error = error.to(units).magnitude
         except AttributeError:
-            emag = error
+            pass
 
-        if emag < 0:
+        inst = super(_Measurement, cls).__new__(cls, ufloat(value, error), units)
+
+        if error < 0:
             raise ValueError('The magnitude of the error cannot be negative'.format(value, error))
-
-        self._value = value
-        self._error = error
+        return inst
 
     @property
     def value(self):
-        return self._value
+        return self._REGISTRY.Quantity(self.magnitude.nominal_value, self.units)
 
     @property
     def error(self):
-        return self._error
+        return self._REGISTRY.Quantity(self.magnitude.std_dev, self.units)
 
     @property
     def rel(self):
-        return float(abs(self._error / self._value))
+        return float(abs(self.magnitude.std_dev / self.magnitude.nominal_value))
 
     def _add_sub(self, other, operator):
         result = self.value + other.value

@@ -2,21 +2,28 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pint import Measurement
-from pint.testsuite import TestCase
+from pint.compat import ufloat
+from pint.testsuite import TestCase, unittest
 
-
+@unittest.skipIf(ufloat is None)
 class TestMeasurement(TestCase):
 
     FORCE_NDARRAY = False
 
-    def test_build(self):
-        v, u = self.Q_(4.0, 's'), self.Q_(.1, 's')
+    def test_simple(self):
+        M_ = self.ureg.Measurement
+        M_(4.0, 0.1, 's')
 
-        ms = (Measurement(v, u),
+    def test_build(self):
+        M_ = self.ureg.Measurement
+        v, u = self.Q_(4.0, 's'), self.Q_(.1, 's')
+        M_(v.magnitude, u.magnitude, 's')
+        ms = (M_(v.magnitude, u.magnitude, 's'),
+              M_(v, u.magnitude),
+              M_(v, u),
               v.plus_minus(.1),
               v.plus_minus(0.025, True),
-              v.plus_minus(u))
+              v.plus_minus(u),)
 
         for m in ms:
             self.assertEqual(m.value, v)
@@ -25,7 +32,7 @@ class TestMeasurement(TestCase):
 
     def _test_format(self):
         v, u = self.Q_(4.0, 's'), self.Q_(.1, 's')
-        m = Measurement(v, u)
+        m = self.ureg.Measurement(v, u)
         print(str(m))
         print(repr(m))
         print('{:!s}'.format(m))
@@ -39,8 +46,8 @@ class TestMeasurement(TestCase):
         v, u = self.Q_(1.0, 's'), self.Q_(.1, 's')
         o = self.Q_(.1, 'm')
 
-        self.assertRaises(ValueError, Measurement, u, 1)
-        self.assertRaises(ValueError, Measurement, u, o)
+        M_ = self.ureg.Measurement
+        self.assertRaises(ValueError, M_, v, o)
         self.assertRaises(ValueError, v.plus_minus, o)
         self.assertRaises(ValueError, v.plus_minus, u, True)
 
@@ -56,18 +63,18 @@ class TestMeasurement(TestCase):
 
         for factor, m in zip((3, -3, 3, -3), (m1, m3, m1, m3)):
             r = factor * m
-            self.assertAlmostEqual(r.value, factor * m.value)
-            self.assertAlmostEqual(r.error ** 2.0, (factor * m.error) **2.0)
+            self.assertAlmostEqual(r.value.magnitude, factor * m.value.magnitude)
+            self.assertEqual(r.value.units, m.value.units)
 
         for ml, mr in zip((m1, m1, m1, m3), (m1, m2, m3, m3)):
             r = ml + mr
-            self.assertAlmostEqual(r.value, ml.value + mr.value)
-            self.assertAlmostEqual(r.error ** 2.0, ml.error **2.0 + mr.error ** 2.0)
+            self.assertAlmostEqual(r.value.magnitude, ml.value.magnitude + mr.value.magnitude)
+            self.assertEqual(r.value.units, ml.value.units)
 
         for ml, mr in zip((m1, m1, m1, m3), (m1, m2, m3, m3)):
             r = ml - mr
-            self.assertAlmostEqual(r.value, ml.value + mr.value)
-            self.assertAlmostEqual(r.error ** 2.0, ml.error **2.0 + mr.error ** 2.0)
+            self.assertAlmostEqual(r.value.magnitude, ml.value.magnitude - mr.value.magnitude)
+            self.assertEqual(r.value.units, ml.value.units)
 
     def test_propagate_product(self):
 
@@ -84,10 +91,10 @@ class TestMeasurement(TestCase):
 
         for ml, mr in zip((m1, m1, m1, m3, m4), (m1, m2, m3, m3, m5)):
             r = ml * mr
-            self.assertAlmostEqual(r.value, ml.value * mr.value)
-            self.assertAlmostEqual(r.rel ** 2.0, ml.rel ** 2.0 + mr.rel ** 2.0)
+            self.assertAlmostEqual(r.value.magnitude, ml.value.magnitude * mr.value.magnitude)
+            self.assertEqual(r.value.units, ml.value.units * mr.value.units)
 
         for ml, mr in zip((m1, m1, m1, m3, m4), (m1, m2, m3, m3, m5)):
             r = ml / mr
-            self.assertAlmostEqual(r.value, ml.value / mr.value)
-            self.assertAlmostEqual(r.rel ** 2.0, ml.rel ** 2.0 + mr.rel ** 2.0)
+            self.assertAlmostEqual(r.value.magnitude, ml.value.magnitude / mr.value.magnitude)
+            self.assertEqual(r.value.units, ml.value.units / mr.value.units)

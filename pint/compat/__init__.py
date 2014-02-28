@@ -104,3 +104,9 @@ except ImportError:
             raise TypeError('lists and tuples are valid magnitudes for '
                              'Quantity only when NumPy is present.')
         return value
+
+try:
+    from uncertainties import ufloat
+except ImportError:
+    ufloat = None
+

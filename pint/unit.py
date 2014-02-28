@@ -415,6 +415,7 @@ class UnitRegistry(object):
 
     def __init__(self, filename='', force_ndarray=False, default_to_delta=True):
         self.Quantity = build_quantity_class(self, force_ndarray)
+        self.Measurement = build_measurement_class(self, force_ndarray)
 
         #: Map dimension name (string) to its definition (DimensionDefinition).
         self._dimensions = {}
@@ -1169,3 +1170,22 @@ def build_quantity_class(registry, force_ndarray=False):
     Quantity.force_ndarray = force_ndarray
 
     return Quantity
+
+
+def build_measurement_class(registry, force_ndarray=False):
+    from .measurement import _Measurement, ufloat
+
+    if ufloat is None:
+        class Measurement(object):
+
+            def __init__(self, *args):
+                raise RuntimeError("Pint requires the 'uncertainties' package to create a Measurement object.")
+
+    else:
+        class Measurement(_Measurement, registry.Quantity):
+            pass
+
+    Measurement._REGISTRY = registry
+    Measurement.force_ndarray = force_ndarray
+
+    return Measurement

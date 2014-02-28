@@ -7,10 +7,14 @@ python:
   - "3.3"
 
 env:
-  - NUMPY_VERSION=0
-  - NUMPY_VERSION=1.6
-  - NUMPY_VERSION=1.7
-  - NUMPY_VERSION=1.8
+  - UNCERTAINTIES="N" NUMPY_VERSION=0
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.6
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.7
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.8
+  - UNCERTAINTIES="Y" NUMPY_VERSION=0
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.6
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.7
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.8
 
 branches:
   only:
@@ -19,6 +23,7 @@ branches:
 
 install: 
     - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors unittest2; fi
+    - if [[ UNCERTAINTIES == 'Y' ]]; then pip install --use-mirrors uncertainties; fi
     - if [ $NUMPY_VERSION = '0' ]; then pip uninstall -y numpy || true; else pip install numpy==$NUMPY_VERSION; fi
     - pip install . --use-mirrors
     - pip list --pre
