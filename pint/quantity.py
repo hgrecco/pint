@@ -15,7 +15,6 @@ import functools
 from collections import Iterable
 
 from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
-from .measurement import Measurement
 from .compat import string_types, ndarray, np, _to_magnitude
 
 
