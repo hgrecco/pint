@@ -10,7 +10,6 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 from .compat import ufloat
-import operator
 
 MISSING = object()
 
@@ -54,9 +53,6 @@ class _Measurement(object):
     @property
     def rel(self):
         return float(abs(self.magnitude.std_dev / self.magnitude.nominal_value))
-
-    def __str__(self):
-        return '{}'.format(self)
 
     def __repr__(self):
         return "<Measurement({0:!r}, {1:!r})>".format(self._value, self._error)
