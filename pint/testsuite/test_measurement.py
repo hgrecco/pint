@@ -73,7 +73,8 @@ class TestMeasurement(TestCase):
 
         for ml, mr in zip((m1, m1, m1, m3), (m1, m2, m3, m3)):
             r = ml - mr
-            self.assertAlmostEqual(r.value.magnitude, ml.value.magnitude - mr.value.magnitude)
+            self.assertAlmostEqual(r.value.magnitude,
+                                   0 if ml.value is mr.value else ml.value.magnitude - mr.value.magnitude)
             self.assertEqual(r.value.units, ml.value.units)
 
     def test_propagate_product(self):
