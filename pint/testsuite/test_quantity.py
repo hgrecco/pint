@@ -137,6 +137,8 @@ class TestQuantity(TestCase):
                              ('{0:L~}', r'4.12345678 \frac{kg \cdot m^{2}}{s}'),
                              ('{0:P~}', '4.12345678 kg·m²/s'),
                              ('{0:H~}', '4.12345678 kg m<sup>2</sup>/s'),
+                             ('{0:C}', '4.12345678 kilogram*meter**2/second'),
+                             ('{0:C~}', '4.12345678 kg*m**2/s'),
                              ):
             self.assertEqual(spec.format(x), result)
 

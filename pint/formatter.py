@@ -174,3 +174,9 @@ def format_unit(unit, spec):
     if spec == 'L':
         result = result.replace('[', '{').replace(']', '}')
     return result
+
+def remove_custom_flags(spec):
+    for flag in _FORMATS.keys():
+         if flag:
+             spec = spec.replace(flag, '')
+    return spec
