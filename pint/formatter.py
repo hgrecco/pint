@@ -35,50 +35,54 @@ def _pretty_fmt_exponent(num):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
 
-_PRETTY_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': False,
-    'product_fmt': '·',
-    'division_fmt': '/',
-    'power_fmt': '{0}{1}',
-    'parentheses_fmt': '({0})',
-    'exp_call': _pretty_fmt_exponent,
-    }
+# _FORMATS maps format specifications to the corresponding argument set to
+# formatter().
+_FORMATS = {
+    'P': {   # Pretty format.
+        'as_ratio': True,
+        'single_denominator': False,
+        'product_fmt': '·',
+        'division_fmt': '/',
+        'power_fmt': '{0}{1}',
+        'parentheses_fmt': '({0})',
+        'exp_call': _pretty_fmt_exponent,
+        },
 
-_LATEX_PRINT_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': True,
-    'product_fmt': r' \cdot ',
-    'division_fmt': r'\frac[{0}][{1}]',
-    'power_fmt': '{0}^[{1}]',
-    'parentheses_fmt': '{0}^[{1}]',
-    }
+    'L': {   # Latex print format.
+        'as_ratio': True,
+        'single_denominator': True,
+        'product_fmt': r' \cdot ',
+        'division_fmt': r'\frac[{0}][{1}]',
+        'power_fmt': '{0}^[{1}]',
+        'parentheses_fmt': '{0}^[{1}]',
+        },
 
-_LATEX_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': True,
-    'product_fmt': r' ',
-    'division_fmt': r'{0}/{1}',
-    'power_fmt': '{0}<sup>{1}</sup>',
-    'parentheses_fmt': r'({0})',
-    }
+    'H': {   # Latex format.
+        'as_ratio': True,
+        'single_denominator': True,
+        'product_fmt': r' ',
+        'division_fmt': r'{0}/{1}',
+        'power_fmt': '{0}<sup>{1}</sup>',
+        'parentheses_fmt': r'({0})',
+        },
 
-_DEFAULT_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': False,
-    'product_fmt': ' * ',
-    'division_fmt': ' / ',
-    'power_fmt': '{0} ** {1}',
-    'parentheses_fmt': r'({0})',
-    }
+    '': {   # Default format.
+        'as_ratio': True,
+        'single_denominator': False,
+        'product_fmt': ' * ',
+        'division_fmt': ' / ',
+        'power_fmt': '{0} ** {1}',
+        'parentheses_fmt': r'({0})',
+        },
 
-_COMPACT_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': False,
-    'product_fmt': '*',  # TODO: Should this just be ''?
-    'division_fmt': '/',
-    'power_fmt': '{0}**{1}',
-    'parentheses_fmt': r'({0})',
+     'C': {  # Compact format.
+        'as_ratio': True,
+        'single_denominator': False,
+        'product_fmt': '*',  # TODO: Should this just be ''?
+        'division_fmt': '/',
+        'power_fmt': '{0}**{1}',
+        'parentheses_fmt': r'({0})',
+        },
     }
 
 def formatter(items, as_ratio=True, single_denominator=False,
@@ -136,19 +140,37 @@ def formatter(items, as_ratio=True, single_denominator=False,
 
     return _join(division_fmt, [pos_ret, neg_ret])
 
+# Extract just the type from the specification mini-langage: see
+# http://docs.python.org/2/library/string.html#format-specification-mini-language
+
+_BASIC_TYPES = frozenset('bcdeEfFgGnosxX%')
+_KNOWN_TYPES = frozenset(_FORMATS.keys())
+
+def _parse_spec(spec):
+    result = ''
+    for ch in reversed(spec):
+        if ch == '~' or ch in _BASIC_TYPES:
+            continue
+        elif ch in _KNOWN_TYPES:
+            if result:
+                raise ValueError("expected ':' after format specifier")
+            else:
+                result = ch
+        elif ch.isalpha():
+            raise ValueError("Unknown conversion specified " + ch)
+        else:
+             break
+    return result
 
 def format_unit(unit, spec):
     if not unit:
         return 'dimensionless'
-    if len(spec) > 1:
-        raise ValueError("expected ':' after format specifier"
-    if 'L' in spec:
-        tmp = formatter(unit.items(), **_LATEX_PRINT_FORMAT)
-        tmp = tmp.replace('[', '{').replace(']', '}')
-        return tmp
-    elif 'H' in spec:
-        return formatter(unit.items(), **_LATEX_FORMAT)
-    elif 'P' in spec:
-        return formatter(unit.items(), **_PRETTY_FORMAT)
-    else:
-        return formatter(unit.items(), **_DEFAULT_FORMAT)
+    spec = _parse_spec(spec)
+    fmt = _FORMATS.get(spec)
+    if not fmt:
+        raise ValueError('Unknown conversion specifier ' + spec)
+
+    result = formatter(unit.items(), **fmt)
+    if spec == 'L':
+        result = result.replace('[', '{').replace(']', '}')
+    return result
