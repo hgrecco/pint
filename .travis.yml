@@ -34,6 +34,10 @@ matrix:
     # Don't run with these version combinations as these NumPy packages don't seem to be installable with Travis
     exclude:
         - python: "3.2"
-          env: NUMPY_VERSION=1.6
+          env: UNCERTAINTIES="N" NUMPY_VERSION=1.6
+        - python: "3.2"
+          env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6
         - python: "3.3"
-          env: NUMPY_VERSION=1.6
+          env: UNCERTAINTIES="N" NUMPY_VERSION=1.6
+        - python: "3.3"
+          env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6
