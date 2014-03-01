@@ -24,7 +24,7 @@ from numbers import Number
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
 from .context import Context, ContextChain
-from .formatter import formatter
+from .formatter import format_unit
 from .util import (logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
                    ParserHelper, string_types, ptok, string_preprocessor)
 from .util import find_shortest_path
@@ -258,51 +258,6 @@ class DimensionDefinition(Definition):
 
         super(DimensionDefinition, self).__init__(name, symbol, aliases, converter=None)
 
-_PRETTY_EXPONENTS = '⁰¹²³⁴⁵⁶⁷⁸⁹'
-
-def _pretty_fmt_exponent(num):
-    ret = '{0:n}'.format(num).replace('-', '⁻')
-    for n in range(10):
-        ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
-    return ret
-
-_PRETTY_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': False,
-    'product_fmt': '·',
-    'division_fmt': '/',
-    'power_fmt': '{0}{1}',
-    'parentheses_fmt': '({0})',
-    'exp_call': _pretty_fmt_exponent,
-    }
-
-_LATEX_PRINT_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': True,
-    'product_fmt': r' \cdot ',
-    'division_fmt': r'\frac[{0}][{1}]',
-    'power_fmt': '{0}^[{1}]',
-    'parentheses_fmt': '{0}^[{1}]',
-    }
-
-_LATEX_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': True,
-    'product_fmt': r' ',
-    'division_fmt': r'{0}/{1}',
-    'power_fmt': '{0}<sup>{1}</sup>',
-    'parentheses_fmt': r'({0})',
-    }
-
-_DEFAULT_FORMAT = {
-    'as_ratio': True,
-    'single_denominator': False,
-    'product_fmt': ' * ',
-    'division_fmt': ' / ',
-    'power_fmt': '{0} ** {1}',
-    'parentheses_fmt': r'({0})',
-    }
-
 
 class UnitsContainer(dict):
     """The UnitsContainer stores the product of units and their respective
@@ -351,18 +306,7 @@ class UnitsContainer(dict):
         return '<UnitsContainer({0})>'.format(tmp)
 
     def __format__(self, spec):
-        if not self:
-            return 'dimensionless'
-        if 'L' in spec:
-            tmp = formatter(self.items(), **_LATEX_PRINT_FORMAT)
-            tmp = tmp.replace('[', '{').replace(']', '}')
-            return tmp
-        elif 'H' in spec:
-            return formatter(self.items(), **_LATEX_FORMAT)
-        elif 'P' in spec:
-            return formatter(self.items(), **_PRETTY_FORMAT)
-        else:
-            return formatter(self.items(), **_DEFAULT_FORMAT)
+        return format_unit(self, spec)
 
     def __copy__(self):
         ret = self.__class__()
