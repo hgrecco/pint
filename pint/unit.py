@@ -293,6 +293,15 @@ _LATEX_FORMAT = {
     'parentheses_fmt': r'({0})',
     }
 
+_DEFAULT_FORMAT = {
+    'as_ratio': True,
+    'single_denominator': False,
+    'product_fmt': ' * ',
+    'division_fmt': ' / ',
+    'power_fmt': '{0} ** {1}',
+    'parentheses_fmt': r'({0})',
+    }
+
 
 class UnitsContainer(dict):
     """The UnitsContainer stores the product of units and their respective
@@ -334,25 +343,25 @@ class UnitsContainer(dict):
         return dict.__eq__(self, other)
 
     def __str__(self):
-        if not self:
-            return 'dimensionless'
-        return formatter(self.items())
+      return self.__format__('')
 
     def __repr__(self):
         tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
         return '<UnitsContainer({0})>'.format(tmp)
 
     def __format__(self, spec):
+        if not self:
+            return 'dimensionless'
         if 'L' in spec:
             tmp = formatter(self.items(), **_LATEX_PRINT_FORMAT)
             tmp = tmp.replace('[', '{').replace(']', '}')
             return tmp
-        elif 'P' in spec:
-            return formatter(self.items(), **_PRETTY_FORMAT)
         elif 'H' in spec:
             return formatter(self.items(), **_LATEX_FORMAT)
+        elif 'P' in spec:
+            return formatter(self.items(), **_PRETTY_FORMAT)
         else:
-            return str(self)
+            return formatter(self.items(), **_DEFAULT_FORMAT)
 
     def __copy__(self):
         ret = self.__class__()
