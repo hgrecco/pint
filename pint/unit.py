@@ -24,7 +24,8 @@ from numbers import Number
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
 from .context import Context, ContextChain
-from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
+from .formatter import formatter
+from .util import (logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
                    ParserHelper, string_types, ptok, string_preprocessor)
 from .util import find_shortest_path
 
