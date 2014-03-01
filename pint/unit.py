@@ -24,7 +24,8 @@ from numbers import Number
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
 from .context import Context, ContextChain
-from .util import (formatter, logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
+from .formatter import format_unit
+from .util import (logger, NUMERIC_TYPES, pi_theorem, solve_dependencies,
                    ParserHelper, string_types, ptok, string_preprocessor)
 from .util import find_shortest_path
 
@@ -298,39 +299,14 @@ class UnitsContainer(dict):
         return dict.__eq__(self, other)
 
     def __str__(self):
-        if not self:
-            return 'dimensionless'
-        return formatter(self.items())
+      return self.__format__('')
 
     def __repr__(self):
         tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
         return '<UnitsContainer({0})>'.format(tmp)
 
     def __format__(self, spec):
-        if 'L' in spec:
-            tmp = formatter(self.items(), True, True,
-                            r' \cdot ', r'\frac[{0}][{1}]', '{0}^[{1}]',
-                            r'\left( {0} \right)')
-            tmp = tmp.replace('[', '{').replace(']', '}')
-            return tmp
-        elif 'P' in spec:
-            def fmt_exponent(num):
-                PRETTY = '⁰¹²³⁴⁵⁶⁷⁸⁹'
-                ret = '{0:n}'.format(num).replace('-', '⁻')
-                for n in range(10):
-                    ret = ret.replace(str(n), PRETTY[n])
-                return ret
-            tmp = formatter(self.items(), True, False,
-                            '·', '/', '{0}{1}',
-                            '({0})', fmt_exponent)
-            return tmp
-        elif 'H' in spec:
-            tmp = formatter(self.items(), True, True,
-                            r' ', r'{0}/{1}', '{0}<sup>{1}</sup>',
-                            r'({0})')
-            return tmp
-        else:
-            return str(self)
+        return format_unit(self, spec)
 
     def __copy__(self):
         ret = self.__class__()
@@ -898,7 +874,7 @@ class UnitRegistry(object):
         # must first convert to Decimal before we can '*' the values
         if isinstance(value, Decimal):
             return Decimal(str(factor)) * value
-        
+
         return factor * value
 
     def pi_theorem(self, quantities):
