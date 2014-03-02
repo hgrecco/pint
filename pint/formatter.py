@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     pint.formatter
-    ~~~~~~~~~
+    ~~~~~~~~~~~~~~
 
     Format units for pint.
 
