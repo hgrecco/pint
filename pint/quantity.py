@@ -14,6 +14,7 @@ import operator
 import functools
 from collections import Iterable
 
+from .formatter import remove_custom_flags
 from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
 from .compat import string_types, ndarray, np, _to_magnitude
 
@@ -144,8 +145,8 @@ class _Quantity(object):
         else:
             units = self.units
 
-        return format(self.magnitude, spec.replace('L', '').replace('P', '').replace('H', '')) \
-               + ' ' + format(units, spec)
+        return '%s %s' % (format(self.magnitude, remove_custom_flags(spec)),
+                          format(units, spec))
 
     # IPython related code
     def _repr_html_(self):

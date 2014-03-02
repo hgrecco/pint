@@ -5,6 +5,12 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
+- Nothing changed yet.
+
+
+0.4.2 (2014-02-14)
+------------------
+
 - Python 2.6 support
   (Issue #96, thanks tiagocoutinho)
 - Fixed symbol for inch.
