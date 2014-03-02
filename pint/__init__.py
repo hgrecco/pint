@@ -15,8 +15,9 @@ from __future__ import with_statement
 import os
 import subprocess
 import pkg_resources
+from .formatter import formatter
 from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError
-from .util import formatter, pi_theorem, logger
+from .util import pi_theorem, logger
 from .measurement import Measurement
 from .context import Context
 
@@ -32,7 +33,7 @@ except:  # on any error just try to grab the version that is installed on the sy
         __version__ = pkg_resources.get_distribution('pint').version
     except:
         pass  # we seem to have a local copy without any repository control or installed without setuptools
-              # so the reported version will be __unknown__  
+              # so the reported version will be __unknown__
 
 def _build_quantity(value, units):
     return _DEFAULT_REGISTRY.Quantity(value, units)
