@@ -10,6 +10,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 from .compat import ufloat
+from .formatter import _FORMATS
 
 MISSING = object()
 
@@ -55,5 +56,39 @@ class _Measurement(object):
         return float(abs(self.magnitude.std_dev / self.magnitude.nominal_value))
 
     def __repr__(self):
-        return "<Measurement({0:!r}, {1:!r})>".format(self._value, self._error)
+        return "<Measurement({0:.2f}, {1:.2f}, {2})>".format(self.magnitude.nominal_value,
+                                                             self.magnitude.std_dev,
+                                                             self.units)
 
+    def __str__(self):
+        return '{0}'.format(self)
+
+    def __format__(self, spec):
+
+        if 'L' in spec:
+            newpm = pm = r'  \pm  '
+            pars = _FORMATS['L']['parentheses_fmt']
+        elif 'P' in spec:
+            newpm = pm = '±'
+            pars = _FORMATS['P']['parentheses_fmt']
+        else:
+            newpm = pm = '+/-'
+            pars = _FORMATS['']['parentheses_fmt']
+
+        if 'C' in spec:
+            sp = ''
+            newspec = spec.replace('C', '')
+            pars = _FORMATS['C']['parentheses_fmt']
+        else:
+            sp = ' '
+            newspec = spec
+
+        if 'H' in spec:
+            newpm = '&plusmn;'
+            newspec = spec.replace('H', '')
+            pars = _FORMATS['H']['parentheses_fmt']
+
+
+        mag = format(self.magnitude, newspec).replace(pm, sp + newpm + sp)
+
+        return pars.format(mag) + ' ' + format(self.units, spec)

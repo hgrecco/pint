@@ -30,17 +30,18 @@ class TestMeasurement(TestCase):
             self.assertEqual(m.error, u)
             self.assertEqual(m.rel, m.error / abs(m.value))
 
-    def _test_format(self):
-        v, u = self.Q_(4.0, 's'), self.Q_(.1, 's')
+    def test_format(self):
+        v, u = self.Q_(4.0, 's ** 2'), self.Q_(.1, 's ** 2')
         m = self.ureg.Measurement(v, u)
-        print(str(m))
-        print(repr(m))
-        print('{:!s}'.format(m))
-        print('{:!r}'.format(m))
-        print('{:!l}'.format(m))
-        print('{:!p}'.format(m))
-        print('{:.02f!l}'.format(m))
-        print('{:.02f!p}'.format(m))
+        self.assertEqual(str(m), '(4.00 +/- 0.10) second ** 2')
+        self.assertEqual(repr(m), '<Measurement(4.00, 0.10, second ** 2)>')
+        #self.assertEqual('{:!s}'.format(m), '(4.00 +/- 0.10) second ** 2')
+        #self.assertEqual('{:!r}'.format(m), '<Measurement(4.0-, 0.10, second ** 2)>')
+        self.assertEqual('{0:!P}'.format(m), '(4.00 ± 0.10) second²')
+        self.assertEqual('{0:!L}'.format(m), r'\left(4.00 \pm 0.10\right) second^{2}')
+        self.assertEqual('{0:!H}'.format(m), '(4.00 &plusmn; 0.10) second<sup>2</sup>')
+        self.assertEqual('{0:!C}'.format(m), '(4.00+/-0.10) second**2')
+        self.assertEqual('{0:.1f}'.format(m), '(4.0 +/- 0.1) second ** 2')
 
     def test_raise_build(self):
         v, u = self.Q_(1.0, 's'), self.Q_(.1, 's')
