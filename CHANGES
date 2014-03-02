@@ -5,7 +5,17 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added condensed format.
+  (Issue #107, thanks rec)
+- Raise error when invalid formatting code is given.
+  (Issue #111, thanks rec)
+- Fixed representation of dimensionless quantities.
+  (Issue #112, thanks rec)
+- Implemented API to list compatible units.
+  (Issue #89)
+- Implemented cache of key UnitRegistry methods.
+- Rewrote the Measurement class to use uncertainties.
+  (Issue #24)
 
 
 0.4.2 (2014-02-14)
