@@ -45,7 +45,7 @@ Measurements support the same formatting codes as Quantity. For example, to pret
 
 .. doctest::
 
-   >>> print('{:.02f!p}'.format(book_length))
+   >>> print('{:.02fP}'.format(book_length))
    (20.00 ± 2.00) centimeter
 
 

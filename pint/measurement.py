@@ -64,7 +64,6 @@ class _Measurement(object):
         return '{0}'.format(self)
 
     def __format__(self, spec):
-
         if 'L' in spec:
             newpm = pm = r'  \pm  '
             pars = _FORMATS['L']['parentheses_fmt']
@@ -87,7 +86,6 @@ class _Measurement(object):
             newpm = '&plusmn;'
             newspec = spec.replace('H', '')
             pars = _FORMATS['H']['parentheses_fmt']
-
 
         mag = format(self.magnitude, newspec).replace(pm, sp + newpm + sp)
 
