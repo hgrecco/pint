@@ -54,7 +54,7 @@ _FORMATS = {
         'product_fmt': r' \cdot ',
         'division_fmt': r'\frac[{0}][{1}]',
         'power_fmt': '{0}^[{1}]',
-        'parentheses_fmt': '{0}^[{1}]',
+        'parentheses_fmt': r'\left({0}\right)',
         },
 
     'H': {   # Latex format.
