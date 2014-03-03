@@ -26,7 +26,7 @@ install:
     - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors unittest2; fi
     - if [[ $UNCERTAINTIES == 'Y' ]]; then pip install --use-mirrors uncertainties; fi
     - if [ $NUMPY_VERSION = '0' ]; then pip uninstall -y numpy || true; else pip install numpy==$NUMPY_VERSION; fi
-    - pip install . --use-mirrors
+    - if [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]]; then python setup.py install; else pip install . --use-mirrors; fi
     - pip list --pre
 
 script: python setup.py test
