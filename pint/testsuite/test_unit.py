@@ -382,3 +382,11 @@ class TestEquivalents(TestCase):
 
             self.assertEqual(len(result), len(valid))
 
+
+class TestRegistryWithDefaultRegistry(TestRegistry):
+
+    @classmethod
+    def setUpClass(cls):
+        from pint import _DEFAULT_REGISTRY
+        cls.ureg = _DEFAULT_REGISTRY
+        cls.Q_ = cls.ureg.Quantity

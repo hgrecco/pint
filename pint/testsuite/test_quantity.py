@@ -359,3 +359,21 @@ class TestDimensions(TestCase):
         self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'meter')).dimensionless)
         self.assertFalse((self.Q_(42, 'meter') / self.Q_(1, 'second')).dimensionless)
         self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'inch')).dimensionless)
+
+
+class TestQuantityWithDefaultRegistry(TestDimensions):
+
+    @classmethod
+    def setUpClass(cls):
+        from pint import _DEFAULT_REGISTRY
+        cls.ureg = _DEFAULT_REGISTRY
+        cls.Q_ = cls.ureg.Quantity
+
+
+class TestDimensionsWithDefaultRegistry(TestDimensions):
+
+    @classmethod
+    def setUpClass(cls):
+        from pint import _DEFAULT_REGISTRY
+        cls.ureg = _DEFAULT_REGISTRY
+        cls.Q_ = cls.ureg.Quantity

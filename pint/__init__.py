@@ -16,12 +16,12 @@ import os
 import subprocess
 import pkg_resources
 from .formatter import formatter
-from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError
+from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError, LazyRegistry
 from .util import pi_theorem, logger
 
 from .context import Context
 
-_DEFAULT_REGISTRY = UnitRegistry()
+_DEFAULT_REGISTRY = LazyRegistry()
 
 __version__ = "unknown"
 try:  # try to grab the commit version of our package

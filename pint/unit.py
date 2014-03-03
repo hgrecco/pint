@@ -1165,3 +1165,31 @@ def build_measurement_class(registry, force_ndarray=False):
     Measurement.force_ndarray = force_ndarray
 
     return Measurement
+
+
+class LazyRegistry(object):
+
+    def __init__(self, args=None, kwargs=None):
+        self.__dict__['params'] = args or (), kwargs or {}
+
+    def __init(self):
+        args, kwargs = self.__dict__['params']
+        self.__class__ = UnitRegistry
+        self.__init__(*args, **kwargs)
+
+    def __getattr__(self, item):
+        self.__init()
+        return getattr(self, item)
+
+    def __setattr__(self, key, value):
+        if key == '__class__':
+            super(LazyRegistry, self).__setattr__(key, value)
+        else:
+            self.__init()
+            setattr(self, key, value)
+
+    def __getitem__(self, item):
+        self.__init()
+        return self[item]
+
+
