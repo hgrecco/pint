@@ -854,7 +854,7 @@ class UnitRegistry(object):
                 for node in nodes:
                     ret |= self._dimensional_equivalents[node]
 
-        return ret
+        return frozenset(ret)
 
     def convert(self, value, src, dst):
         """Convert value from some source to destination units.
