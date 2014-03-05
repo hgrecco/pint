@@ -12,43 +12,59 @@
     :license: BSD, see LICENSE for more details.
 """
 from __future__ import with_statement
+
 import os
-import subprocess
 import pkg_resources
-from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError
-from .util import formatter, pi_theorem, logger
-from .measurement import Measurement
-from .context import Context
+import subprocess
+import sys
 
-_DEFAULT_REGISTRY = UnitRegistry()
+class Pint(object):
+    from .context import Context
+    from .measurement import Measurement
+    from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError
+    from .util import formatter, pi_theorem, logger
 
-__version__ = "unknown"
-try:  # try to grab the commit version of our package
-    __version__ = (subprocess.check_output(["git", "describe"],
-                                           stderr=subprocess.STDOUT,
-                                           cwd=os.path.dirname(os.path.abspath(__file__)))).strip()
-except:  # on any error just try to grab the version that is installed on the system
+    __version__ = "unknown"
+
     try:
-        __version__ = pkg_resources.get_distribution('pint').version
+        # try to grab the commit version of our package
+        __version__ = (
+          subprocess.check_output(["git", "describe"],
+                                  stderr=subprocess.STDOUT,
+                                  cwd=os.path.dirname(os.path.abspath(__file__)))).strip()
     except:
-        pass  # we seem to have a local copy without any repository control or installed without setuptools
-              # so the reported version will be __unknown__  
+        # on any error just try to grab the version that is installed on the system
+        try:
+            __version__ = pkg_resources.get_distribution('pint').version
+        except:
+            # we seem to have a local copy without any repository control or installed without setuptool
+            # so the reported version will be __unknown__
 
-def _build_quantity(value, units):
-    return _DEFAULT_REGISTRY.Quantity(value, units)
+            pass
 
+    def _build_quantity(self, value, units):
+        return _DEFAULT_REGISTRY.Quantity(value, units)
 
-def run_pyroma(data):
-    import sys
-    from zest.releaser.utils import ask
-    if not ask("Run pyroma on the package before uploading?"):
-        return
-    try:
-        from pyroma import run
-        result = run(data['tagdir'])
-        if result != 10:
-            if not ask("Continue?"):
+    def run_pyroma(self, data):
+        import sys
+        from zest.releaser.utils import ask
+        if not ask("Run pyroma on the package before uploading?"):
+            return
+        try:
+            from pyroma import run
+            result = run(data['tagdir'])
+            if result != 10:
+                if not ask("Continue?"):
+                    sys.exit(1)
+        except ImportError:
+            if not ask("pyroma not available. Continue?"):
                 sys.exit(1)
-    except ImportError:
-        if not ask("pyroma not available. Continue?"):
-            sys.exit(1)
+
+    def __getattr__(self, name):
+        if name != 'Registry':
+            raise AttributeError('Module pint has no attribute ' + name)
+        self.Registry = self.UnitRegistry()
+        return self.Registry
+
+# See http://stackoverflow.com/a/7668273/43839
+sys.modules[__name__] = Pint()
