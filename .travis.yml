@@ -27,9 +27,15 @@ install:
     - if [[ $UNCERTAINTIES == 'Y' ]]; then pip install uncertainties; fi
     - if [ $NUMPY_VERSION = '0' ]; then pip uninstall -y numpy || true; else pip install numpy==$NUMPY_VERSION; fi
     - if [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]]; then python setup.py install; else pip install . ; fi
+    - pip install coverage coveralls
     - pip list --pre
 
-script: python setup.py test
+script:
+  - coverage run -p --source=pint setup.py test
+  - coverage combine
+  - coverage report -m
+after_script:
+  coveralls --verbose
 
 matrix:
     # Don't run with these version combinations as these NumPy packages don't seem to be installable with Travis
