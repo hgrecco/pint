@@ -100,6 +100,17 @@ def add_sharedargdef_ctxs(ureg):
 
 class TestContexts(unittest.TestCase):
 
+    def test_freeze(self):
+        self.assertEqual(_freeze('meter'), frozenset([('meter', 1)]))
+        self.assertEqual(_freeze('meter/second'), frozenset((('meter', 1), ('second', -1))))
+        x = frozenset((('meter', 1)))
+        self.assertIs(_freeze(x), x)
+        self.assertEqual(_freeze({'meter': 1}),
+                         frozenset([('meter', 1)]))
+        self.assertEqual(_freeze({'meter': -1, 'second': -1}),
+                         frozenset((('meter', -1), ('second', -1))))
+
+
     def test_known_context(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
@@ -476,6 +487,13 @@ class TestContexts(unittest.TestCase):
         with ureg.context(ctx.name):
             self.assertEqual(q.to('Hz'), s)
             self.assertEqual(s.to('meter'), q)
+
+    def test_parse_invalid(self):
+        s = ['@context longcontextname',
+             '[length] = 1 / [time]: c / value',
+             '1 / [time] = [length]: c / value']
+
+        self.assertRaises(ValueError, Context.from_lines, s)
 
     def test_parse_simple(self):
 

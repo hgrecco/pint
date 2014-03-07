@@ -4,8 +4,52 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import collections
 
-from pint.util import string_preprocessor, find_shortest_path
+from pint.util import (string_preprocessor, find_shortest_path, matrix_to_string,
+                       transpose, find_connected_nodes, ParserHelper)
+
 from pint.compat import unittest
+
+
+class TestParseHelper(unittest.TestCase):
+
+    def test_basic(self):
+        # Parse Helper ar mutables, so we build one everytime
+        x = lambda: ParserHelper(1, meter=2)
+        xp = lambda: ParserHelper(1, meter=2)
+        y = lambda: ParserHelper(2, meter=2)
+
+        self.assertEqual(x(), xp())
+        self.assertNotEqual(x(), y())
+        self.assertEqual(ParserHelper.from_string(''), ParserHelper())
+        self.assertEqual(repr(x()), "<ParserHelper(1, {'meter': 2})>")
+
+        self.assertEqual(ParserHelper(2), 2)
+
+        self.assertEqual(x(), dict(meter=2))
+        self.assertEqual(x(), 'meter ** 2')
+        self.assertNotEqual(y(), dict(meter=2))
+        self.assertNotEqual(y(), 'meter ** 2')
+
+        self.assertNotEqual(xp(), object())
+
+    def test_calculate(self):
+        # Parse Helper ar mutables, so we build one everytime
+        x = lambda: ParserHelper(1., meter=2)
+        y = lambda: ParserHelper(2., meter=-2)
+        z = lambda: ParserHelper(2., meter=2)
+
+        self.assertEqual(x() * 4., ParserHelper(4., meter=2))
+        self.assertEqual(x() * y(), ParserHelper(2.))
+        self.assertEqual(x() * 'second', ParserHelper(1., meter=2, second=1))
+
+        self.assertEqual(x() / 4., ParserHelper(0.25, meter=2))
+        self.assertEqual(x() / 'second', ParserHelper(1., meter=2, second=-1))
+        self.assertEqual(x() / z(), ParserHelper(0.5))
+
+        self.assertEqual(4. / z(), ParserHelper(2., meter=-2))
+        self.assertEqual('seconds' / z(), ParserHelper(0.5, seconds=1, meter=-2))
+        self.assertEqual(dict(seconds=1) / z(), ParserHelper(0.5, seconds=1, meter=-2))
+
 
 class TestStringProcessor(unittest.TestCase):
 
@@ -61,6 +105,12 @@ class TestStringProcessor(unittest.TestCase):
 
 class TestGraph(unittest.TestCase):
 
+    def test_start_not_in_graph(self):
+        g = collections.defaultdict(list)
+        g[1] = set((2,))
+        g[2] = set((3,))
+        self.assertIs(find_connected_nodes(g, 9), None)
+
     def test_shortest_path(self):
         g = collections.defaultdict(list)
         g[1] = set((2,))
@@ -84,3 +134,45 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(p, [3, 2, 1])
         p = find_shortest_path(g, 2, 1)
         self.assertEqual(p, [2, 1])
+
+
+class TestMatrix(unittest.TestCase):
+
+    def test_matrix_to_string(self):
+
+        self.assertEqual(matrix_to_string([[1, 2], [3, 4]],
+                                          row_headers=None,
+                                          col_headers=None),
+                         '1\t2\n'
+                         '3\t4')
+
+        self.assertEqual(matrix_to_string([[1, 2], [3, 4]],
+                                          row_headers=None,
+                                          col_headers=None,
+                                          fmtfun=lambda x: '{0:.2f}'.format(x)),
+                         '1.00\t2.00\n'
+                         '3.00\t4.00')
+
+        self.assertEqual(matrix_to_string([[1, 2], [3, 4]],
+                                          row_headers=['c', 'd'],
+                                          col_headers=None),
+                         'c\t1\t2\n'
+                         'd\t3\t4')
+
+        self.assertEqual(matrix_to_string([[1, 2], [3, 4]],
+                                          row_headers=None,
+                                          col_headers=['a', 'b']),
+                         'a\tb\n'
+                         '1\t2\n'
+                         '3\t4')
+
+        self.assertEqual(matrix_to_string([[1, 2], [3, 4]],
+                                          row_headers=['c', 'd'],
+                                          col_headers=['a', 'b']),
+                         '\ta\tb\n'
+                         'c\t1\t2\n'
+                         'd\t3\t4')
+
+    def test_transpose(self):
+
+        self.assertEqual(transpose([[1, 2], [3, 4]]), [[1, 3], [2, 4]])

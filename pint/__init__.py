@@ -31,7 +31,7 @@ try:  # try to grab the commit version of our package
 except:  # on any error just try to grab the version that is installed on the system
     try:
         __version__ = pkg_resources.get_distribution('pint').version
-    except:
+    except:             # pragma: no cover
         pass  # we seem to have a local copy without any repository control or installed without setuptools
               # so the reported version will be __unknown__
 
@@ -39,7 +39,7 @@ def _build_quantity(value, units):
     return _DEFAULT_REGISTRY.Quantity(value, units)
 
 
-def run_pyroma(data):
+def run_pyroma(data):   # pragma: no cover
     import sys
     from zest.releaser.utils import ask
     if not ask("Run pyroma on the package before uploading?"):

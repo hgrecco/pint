@@ -8,13 +8,19 @@ import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
-                       DimensionDefinition, _freeze)
+                       DimensionDefinition, _freeze, Converter)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, unittest
 from pint.testsuite import TestCase
 
 
 class TestConverter(unittest.TestCase):
+
+    def test_converter(self):
+        c = Converter()
+        self.assertTrue(c.is_multiplicative)
+        self.assertTrue(c.to_reference(8))
+        self.assertTrue(c.from_reference(8))
 
     def test_multiplicative_converter(self):
         c = ScaleConverter(20.)
@@ -37,6 +43,7 @@ class TestDefinition(unittest.TestCase):
             self.assertEqual(x.aliases, ())
             self.assertEqual(x.converter.to_reference(.001), 1)
             self.assertEqual(x.converter.from_reference(1000), 1)
+            self.assertEqual(str(x), 'm')
 
         x = Definition.from_string('kilo- = 1e-3 = k-')
         self.assertIsInstance(x, PrefixDefinition)
@@ -390,3 +397,17 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         from pint import _DEFAULT_REGISTRY
         cls.ureg = _DEFAULT_REGISTRY
         cls.Q_ = cls.ureg.Quantity
+
+
+class TestErrors(unittest.TestCase):
+
+    def test_errors(self):
+        x = ('meter', )
+        msg = "'meter' is not defined in the unit registry"
+        self.assertEqual(str(UndefinedUnitError(x)), msg)
+        self.assertEqual(str(UndefinedUnitError(list(x))), msg)
+        self.assertEqual(str(UndefinedUnitError(set(x))), msg)
+
+        msg = "Cannot convert from 'a' (c) to 'b' (d)msg"
+        ex = DimensionalityError('a', 'b', 'c', 'd', 'msg')
+        self.assertEqual(str(ex), msg)
