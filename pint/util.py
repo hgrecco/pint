@@ -31,7 +31,7 @@ def matrix_to_string(matrix, row_headers=None, col_headers=None, fmtfun=lambda x
     """
     ret = []
     if col_headers:
-        ret.append('\t' if row_headers else '' + '\t'.join(col_headers))
+        ret.append(('\t' if row_headers else '') + '\t'.join(col_headers))
     if row_headers:
         ret += [rh + '\t' + '\t'.join(fmtfun(f) for f in row)
                 for rh, row in zip(row_headers, matrix)]
@@ -292,6 +292,21 @@ class ParserHelper(dict):
     def __missing__(self, key):
         return 0.0
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.scale == other.scale and super(ParserHelper, self).__eq__(other)
+        elif isinstance(other, dict):
+            return self.scale == 1 and super(ParserHelper, self).__eq__(other)
+        elif isinstance(other, string_types):
+            return self == ParserHelper.from_string(other)
+        elif isinstance(other, Number):
+            return self.scale == other and not len(self)
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def add(self, key, value):
         newval = self.__getitem__(key) + value
         if newval:
@@ -313,14 +328,17 @@ class ParserHelper(dict):
         return '{0} {1}'.format(self.scale, tmp)
 
     def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value) for key, value in sorted(self.items())])
-        return '<ParserHelper({}, {})>'.format(self.scale, tmp)
+        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
+        return '<ParserHelper({0}, {1})>'.format(self.scale, tmp)
 
     def __mul__(self, other):
         if isinstance(other, string_types):
             self.add(other, 1)
         elif isinstance(other, Number):
             self.scale *= other
+        elif isinstance(other, self.__class__):
+            self.scale *= other.scale
+            self.operate(other.items())
         else:
             self.operate(other.items())
         return self
@@ -341,6 +359,9 @@ class ParserHelper(dict):
             self.add(other, -1)
         elif isinstance(other, Number):
             self.scale /= other
+        elif isinstance(other, self.__class__):
+            self.scale /= other.scale
+            self.operate(other.items(), operator.sub)
         else:
             self.operate(other.items(), operator.sub)
         return self
@@ -354,6 +375,9 @@ class ParserHelper(dict):
             self.add(other, 1)
         elif isinstance(other, Number):
             self.scale *= other
+        elif isinstance(other, self.__class__):
+            self.scale *= other.scale
+            self.operate(other.items(), operator.add)
         else:
             self.operate(other.items(), operator.add)
         return self
