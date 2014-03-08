@@ -8,7 +8,7 @@ import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
-                       DimensionDefinition, _freeze, Converter)
+                       DimensionDefinition, _freeze, Converter, UnitRegistry)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, unittest
 from pint.testsuite import TestCase
@@ -34,6 +34,10 @@ class TestConverter(unittest.TestCase):
 
 
 class TestDefinition(unittest.TestCase):
+
+    def test_invalid(self):
+        self.assertRaises(ValueError, Definition.from_string, 'x = [time] * meter')
+        self.assertRaises(ValueError, Definition.from_string, '[x] = [time] * meter')
 
     def test_prefix_definition(self):
         for definition in ('m- = 1e-3', 'm- = 10**-3', 'm- = 0.001'):
@@ -91,6 +95,10 @@ class TestDefinition(unittest.TestCase):
         self.assertEqual(x.reference, UnitsContainer(kelvin=1))
 
     def test_dimension_definition(self):
+        x = Definition.from_string('[time]')
+        self.assertTrue(x.is_base)
+        self.assertEqual(x.name, '[time]')
+
         x = Definition.from_string('[speed] = [length]/[time]')
         self.assertIsInstance(x, DimensionDefinition)
         self.assertEqual(x.reference, UnitsContainer({'[length]': 1, '[time]': -1}))
@@ -189,10 +197,46 @@ class TestUnitsContainer(unittest.TestCase):
         self.assertEqual(y, 'second')
         self.assertEqual(z, 'meter/second/second')
 
+    def test_invalid(self):
+        self.assertRaises(TypeError, UnitsContainer, {1: 2})
+        self.assertRaises(TypeError, UnitsContainer, {1: '2'})
+        d = UnitsContainer()
+        self.assertRaises(TypeError, d.__setitem__, 1, 2)
+        self.assertRaises(TypeError, d.__setitem__, 1, '2')
+        self.assertRaises(TypeError, d.__mul__, list())
+        self.assertRaises(TypeError, d.__imul__, list())
+        self.assertRaises(TypeError, d.__pow__, list())
+        self.assertRaises(TypeError, d.__ipow__, list())
+        self.assertRaises(TypeError, d.__truediv__, list())
+        self.assertRaises(TypeError, d.__itruediv__, list())
+        self.assertRaises(TypeError, d.__rtruediv__, list())
+
 
 class TestRegistry(TestCase):
 
     FORCE_NDARRAY = False
+
+    def test_base(self):
+        ureg = UnitRegistry(None)
+        self.assertIsInstance(dir(ureg), list)
+        self.assertGreater(dir(ureg), 0)
+
+    def test_load(self):
+        import pkg_resources
+        data = pkg_resources.resource_filename(__name__, 'default_en.txt')
+        ureg1 = UnitRegistry()
+        ureg2 = UnitRegistry(data)
+        self.assertEqual(dir(ureg1), dir(ureg2))
+
+    def test_default_format(self):
+        ureg = UnitRegistry()
+        q = ureg.meter
+        s1 = '{0}'.format(q)
+        s2 = '{0:~}'.format(q)
+        ureg.default_format = '~'
+        s3 = '{0}'.format(q)
+        self.assertEqual(s2, s3)
+        self.assertNotEqual(s1, s3)
 
     def test_parse_number(self):
         self.assertEqual(self.ureg.parse_expression('pi'), math.pi)

@@ -483,10 +483,14 @@ class TestContexts(unittest.TestCase):
         ureg = UnitRegistry()
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
+        nctx = len(ureg._contexts)
         ureg.add_context(ctx)
+        self.assertEqual(len(ureg._contexts), nctx + 1)
         with ureg.context(ctx.name):
             self.assertEqual(q.to('Hz'), s)
             self.assertEqual(s.to('meter'), q)
+        ureg.remove_context(ctx)
+        self.assertEqual(len(ureg._contexts), nctx)
 
     def test_parse_invalid(self):
         s = ['@context longcontextname',
