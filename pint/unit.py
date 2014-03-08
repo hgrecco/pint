@@ -480,11 +480,9 @@ class UnitRegistry(object):
         Notice that this methods will not disable the context. Use `disable_contexts`.
         """
         context = self._contexts[name_or_alias]
-        name = self._contexts[name_or_alias].aliases
-        aliases = self._contexts[name].aliases
 
-        del self._contexts[name]
-        for alias in aliases:
+        del self._contexts[context.name]
+        for alias in context.aliases:
             del self._contexts[alias]
 
         return context
@@ -641,7 +639,7 @@ class UnitRegistry(object):
                 with open(file, encoding='utf-8') as fp:
                     return self.load_definitions(fp, is_resource)
             except Exception as e:
-                msg = getattr(e, 'message', str(e))
+                msg = getattr(e, 'message', '') or str(e)
                 raise ValueError('While opening {0}\n{1}'.format(file, msg))
 
         ifile = enumerate(file)

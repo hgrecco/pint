@@ -95,7 +95,7 @@ class TestDefinition(unittest.TestCase):
         self.assertEqual(x.reference, UnitsContainer(kelvin=1))
 
     def test_dimension_definition(self):
-        x = Definition.from_string('[time]')
+        x = DimensionDefinition('[time]', '', (), converter='')
         self.assertTrue(x.is_base)
         self.assertEqual(x.name, '[time]')
 
@@ -219,11 +219,12 @@ class TestRegistry(TestCase):
     def test_base(self):
         ureg = UnitRegistry(None)
         self.assertIsInstance(dir(ureg), list)
-        self.assertGreater(dir(ureg), 0)
+        self.assertGreater(len(dir(ureg)), 0)
 
     def test_load(self):
         import pkg_resources
-        data = pkg_resources.resource_filename(__name__, 'default_en.txt')
+        from pint import unit
+        data = pkg_resources.resource_filename(unit.__name__, 'default_en.txt')
         ureg1 = UnitRegistry()
         ureg2 = UnitRegistry(data)
         self.assertEqual(dir(ureg1), dir(ureg2))
