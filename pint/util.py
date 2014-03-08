@@ -287,7 +287,6 @@ class ParserHelper(dict):
         return ParserHelper(ret.scale,
                             dict((key.replace('__obra__', '[').replace('__cbra__', ']'), value)
                                  for key, value in ret.items()))
-        return ParserHelper(ret.scale, data)
 
     def __missing__(self, key):
         return 0.0
