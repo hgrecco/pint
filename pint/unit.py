@@ -226,8 +226,9 @@ class UnitDefinition(Definition):
             elif not any(_is_dim(key) for key in converter.keys()):
                 self.is_base = False
             else:
-                raise ValueError('Base units must be referenced only to dimensions. '
-                                 'Derived units must not be referenced to dimensions.')
+                raise ValueError('Cannot mix dimensions and units in the same definition. '
+                                 'Base units must be referenced only to dimensions. '
+                                 'Derived units must be referenced only to units.')
             self.reference = UnitsContainer(converter.items())
             if 'offset' in modifiers:
                 converter = OffsetConverter(converter.scale, modifiers['offset'])
