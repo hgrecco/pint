@@ -14,7 +14,7 @@ import operator
 import functools
 from collections import Iterable
 
-from .formatter import remove_custom_flags
+from .formatting import remove_custom_flags
 from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
 from .compat import string_types, ndarray, np, _to_magnitude
 

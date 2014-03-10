@@ -27,7 +27,7 @@ from .context import Context, ContextChain, _freeze
 from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes, find_shortest_path)
 from .compat import tokenizer, string_types, NUMERIC_TYPES, TransformDict
-from .formatter import format_unit
+from .formatting import format_unit
 
 
 class UndefinedUnitError(ValueError):

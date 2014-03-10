@@ -15,8 +15,15 @@ import re
 
 __JOIN_REG_EXP = re.compile("\{\d*\}")
 
+
 def _join(fmt, iterable):
-    if not iter:
+    """Join an iterable with the format specified in fmt.
+
+    The format can be specified in two ways:
+    - PEP3101 format with two replacement fields (eg. '{0} * {1}')
+    - The concatenating string (eg. ' * ')
+    """
+    if not iterable:
         return ''
     if not __JOIN_REG_EXP.search(fmt):
         return fmt.join(iterable)
@@ -29,14 +36,19 @@ def _join(fmt, iterable):
 
 _PRETTY_EXPONENTS = '⁰¹²³⁴⁵⁶⁷⁸⁹'
 
+
 def _pretty_fmt_exponent(num):
+    """Format an number into a pretty printed exponent.
+    """
+    # TODO: Will not work for decimals
     ret = '{0:n}'.format(num).replace('-', '⁻')
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
 
-# _FORMATS maps format specifications to the corresponding argument set to
-# formatter().
+
+#: _FORMATS maps format specifications to the corresponding argument set to
+#: formatter().
 _FORMATS = {
     'P': {   # Pretty format.
         'as_ratio': True,
@@ -48,7 +60,7 @@ _FORMATS = {
         'exp_call': _pretty_fmt_exponent,
         },
 
-    'L': {   # Latex print format.
+    'L': {   # Latex format.
         'as_ratio': True,
         'single_denominator': True,
         'product_fmt': r' \cdot ',
@@ -57,7 +69,7 @@ _FORMATS = {
         'parentheses_fmt': r'\left({0}\right)',
         },
 
-    'H': {   # Latex format.
+    'H': {   # HTML format.
         'as_ratio': True,
         'single_denominator': True,
         'product_fmt': r' ',
@@ -75,7 +87,7 @@ _FORMATS = {
         'parentheses_fmt': r'({0})',
         },
 
-     'C': {  # Compact format.
+    'C': {  # Compact format.
         'as_ratio': True,
         'single_denominator': False,
         'product_fmt': '*',  # TODO: Should this just be ''?
@@ -84,6 +96,7 @@ _FORMATS = {
         'parentheses_fmt': r'({0})',
         },
     }
+
 
 def formatter(items, as_ratio=True, single_denominator=False,
               product_fmt=' * ', division_fmt=' / ', power_fmt='{0} ** {1}',
@@ -101,6 +114,10 @@ def formatter(items, as_ratio=True, single_denominator=False,
 
     :return: the formula as a string.
     """
+
+    if not items:
+        return ''
+
     if as_ratio:
         fun = lambda x: exp_call(abs(x))
     else:
@@ -113,30 +130,27 @@ def formatter(items, as_ratio=True, single_denominator=False,
             pos_terms.append(key)
         elif value > 0:
             pos_terms.append(power_fmt.format(key, fun(value)))
-        elif value == -1:
+        elif value == -1 and as_ratio:
             neg_terms.append(key)
         else:
             neg_terms.append(power_fmt.format(key, fun(value)))
 
-    if pos_terms:
-        pos_ret = _join(product_fmt, pos_terms)
-    elif as_ratio and neg_terms:
-        pos_ret = '1'
-    else:
-        pos_ret = ''
+    if not as_ratio:
+        # Show as Product: positive * negative terms ** -1
+        return _join(product_fmt, pos_terms + neg_terms)
+
+    # Show as Ratio: positive terms / negative terms
+    pos_ret = _join(product_fmt, pos_terms) or '1'
 
     if not neg_terms:
         return pos_ret
 
-    if as_ratio:
-        if single_denominator:
-            neg_ret = _join(product_fmt, neg_terms)
-            if len(neg_terms) > 1:
-                neg_ret = parentheses_fmt.format(neg_ret)
-        else:
-            neg_ret = _join(division_fmt, neg_terms)
+    if single_denominator:
+        neg_ret = _join(product_fmt, neg_terms)
+        if len(neg_terms) > 1:
+            neg_ret = parentheses_fmt.format(neg_ret)
     else:
-        neg_ret = product_fmt.join(neg_terms)
+        neg_ret = _join(division_fmt, neg_terms)
 
     return _join(division_fmt, [pos_ret, neg_ret])
 
@@ -162,18 +176,21 @@ def _parse_spec(spec):
              break
     return result
 
+
 def format_unit(unit, spec):
     if not unit:
         return 'dimensionless'
     spec = _parse_spec(spec)
-    fmt = _FORMATS.get(spec)
-    if not fmt:
+    try:
+        fmt = _FORMATS.get(spec)
+    except KeyError:
         raise ValueError('Unknown conversion specifier ' + spec)
 
     result = formatter(unit.items(), **fmt)
     if spec == 'L':
         result = result.replace('[', '{').replace(']', '}')
     return result
+
 
 def remove_custom_flags(spec):
     for flag in _FORMATS.keys():

@@ -10,7 +10,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 from .compat import ufloat
-from .formatter import _FORMATS
+from .formatting import _FORMATS
 
 MISSING = object()
 

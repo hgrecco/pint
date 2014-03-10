@@ -15,7 +15,7 @@ from __future__ import with_statement
 import os
 import subprocess
 import pkg_resources
-from .formatter import formatter
+from .formatting import formatter
 from .unit import UnitRegistry, DimensionalityError, UndefinedUnitError, LazyRegistry
 from .util import pi_theorem, logger
 
