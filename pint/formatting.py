@@ -180,11 +180,9 @@ def _parse_spec(spec):
 def format_unit(unit, spec):
     if not unit:
         return 'dimensionless'
+    
     spec = _parse_spec(spec)
-    try:
-        fmt = _FORMATS.get(spec)
-    except KeyError:
-        raise ValueError('Unknown conversion specifier ' + spec)
+    fmt = _FORMATS[spec]
 
     result = formatter(unit.items(), **fmt)
     if spec == 'L':
