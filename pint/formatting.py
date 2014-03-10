@@ -180,7 +180,7 @@ def _parse_spec(spec):
 def format_unit(unit, spec):
     if not unit:
         return 'dimensionless'
-    
+
     spec = _parse_spec(spec)
     fmt = _FORMATS[spec]
 

@@ -31,7 +31,7 @@ install:
     - pip list --pre
 
 script:
-  - coverage run -p --source=pint setup.py test
+  - coverage run -p --source=pint --omit="*test*","*compat*" setup.py test
   - coverage combine
   - coverage report -m
 after_script:
