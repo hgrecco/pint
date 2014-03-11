@@ -453,7 +453,7 @@ _subs_re = [(r"({0}) squared", r"\1**2"),  # Handle square and cube
 
 #: Compiles the regex and replace {0} by a regex that matches an identifier.
 _subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
-
+_pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
 
 def string_preprocessor(input_string):
 
@@ -462,6 +462,17 @@ def string_preprocessor(input_string):
 
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)
+
+    # Replace pretty format characters
+    input_string = input_string.replace('·', '*')
+    m = _pretty_exp_re.search(input_string)
+    while m:
+        exp = '**' + m.group()
+        exp = exp.replace('⁻', '-')
+        for i, c in enumerate('⁰¹²³⁴⁵⁶⁷⁸⁹'):
+            exp = exp.replace(c, str(i))
+        input_string = input_string.replace(m.group(), exp)
+        m = _pretty_exp_re.search(input_string)
 
     # Handle caret exponentiation
     input_string = input_string.replace("^", "**")
