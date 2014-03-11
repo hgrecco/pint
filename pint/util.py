@@ -455,6 +455,7 @@ _subs_re = [(r"({0}) squared", r"\1**2"),  # Handle square and cube
 _subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
 _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
 
+
 def string_preprocessor(input_string):
 
     input_string = input_string.replace(",", "")
