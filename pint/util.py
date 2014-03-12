@@ -455,7 +455,7 @@ _subs_re = [(r"({0}) squared", r"\1**2"),  # Handle square and cube
 
 #: Compiles the regex and replace {0} by a regex that matches an identifier.
 _subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
-_pretty_table = maketrans(u'⁰¹²³⁴⁵⁶⁷⁸⁹·⁻', '0123456789*-')
+_pretty_table = maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹·⁻', '0123456789*-')
 _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
 
 
