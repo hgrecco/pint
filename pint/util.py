@@ -20,7 +20,7 @@ import logging
 from token import STRING, NAME, OP
 from tokenize import untokenize
 
-from .compat import string_types, tokenizer, lru_cache, NullHandler
+from .compat import string_types, tokenizer, lru_cache, NullHandler, maketrans
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -394,6 +394,8 @@ _subs_re = [(r"([\w\.\-\+\*\\\^])\s+", r"\1 "), # merge multiple spaces
 
 #: Compiles the regex and replace {0} by a regex that matches an identifier.
 _subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
+_pretty_table = maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹·⁻', '0123456789*-')
+_pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
 
 
 def string_preprocessor(input_string):
@@ -403,6 +405,12 @@ def string_preprocessor(input_string):
 
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)
+
+    # Replace pretty format characters
+    for pretty_exp in _pretty_exp_re.findall(input_string):
+        exp = '**' + pretty_exp.translate(_pretty_table)
+        input_string = input_string.replace(pretty_exp, exp)
+    input_string = input_string.translate(_pretty_table)
 
     # Handle caret exponentiation
     input_string = input_string.replace("^", "**")

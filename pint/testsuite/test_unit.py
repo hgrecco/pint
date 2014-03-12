@@ -280,6 +280,18 @@ class TestRegistry(TestCase):
         self.assertEqual(self.ureg.parse_expression('meter/second'), self.Q_(1, UnitsContainer(meter=1., second=-1)))
         self.assertEqual(self.ureg.parse_expression('meter/second**2'), self.Q_(1, UnitsContainer(meter=1., second=-2)))
 
+    def test_parse_pretty(self):
+        self.assertEqual(self.ureg.parse_expression('meter/second²'),
+                         self.Q_(1, UnitsContainer(meter=1., second=-2)))
+        self.assertEqual(self.ureg.parse_expression('m³/s³'),
+                         self.Q_(1, UnitsContainer(meter=3., second=-3)))
+        self.assertEqual(self.ureg.parse_expression('meter² · second'),
+                         self.Q_(1, UnitsContainer(meter=2., second=1)))
+        self.assertEqual(self.ureg.parse_expression('meter⁰.⁵·second'),
+                         self.Q_(1, UnitsContainer(meter=0.5, second=1)))
+        self.assertEqual(self.ureg.parse_expression('meter³⁷/second⁴.³²¹'),
+                         self.Q_(1, UnitsContainer(meter=37, second=-4.321)))
+
     def test_parse_factor(self):
         self.assertEqual(self.ureg.parse_expression('42*meter'), self.Q_(42, UnitsContainer(meter=1.)))
         self.assertEqual(self.ureg.parse_expression('meter*42'), self.Q_(42, UnitsContainer(meter=1.)))

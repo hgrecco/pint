@@ -27,6 +27,8 @@ if PYTHON3:
 
     def u(x):
         return x
+
+    maketrans = str.maketrans
 else:
     from StringIO import StringIO
     string_types = basestring
@@ -38,6 +40,7 @@ else:
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
 
+    maketrans = lambda f, t: dict((ord(a), b) for a, b in zip(f, t))
 
 if sys.version_info < (2, 7):
     import unittest2 as unittest
