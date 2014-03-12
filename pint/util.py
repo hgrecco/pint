@@ -31,10 +31,12 @@ if sys.version < '3':
     from StringIO import StringIO
     string_types = basestring
     ptok = lambda input_string: tokenize.generate_tokens(StringIO(input_string).readline)
+    maketrans = lambda f, t: dict((ord(a), b) for a, b in zip(f, t))
 else:
     from io import BytesIO
     string_types = str
     ptok = lambda input_string: tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline)
+    maketrans = str.maketrans
 
 
 def matrix_to_string(matrix, row_headers=None, col_headers=None, fmtfun=lambda x: str(int(x))):
@@ -453,6 +455,8 @@ _subs_re = [(r"({0}) squared", r"\1**2"),  # Handle square and cube
 
 #: Compiles the regex and replace {0} by a regex that matches an identifier.
 _subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
+_pretty_table = maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹·⁻', '0123456789*-')
+_pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
 
 
 def string_preprocessor(input_string):
@@ -462,6 +466,12 @@ def string_preprocessor(input_string):
 
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)
+
+    # Replace pretty format characters
+    for pretty_exp in _pretty_exp_re.findall(input_string):
+        exp = '**' + pretty_exp.translate(_pretty_table)
+        input_string = input_string.replace(pretty_exp, exp)
+    input_string = input_string.translate(_pretty_table)
 
     # Handle caret exponentiation
     input_string = input_string.replace("^", "**")
