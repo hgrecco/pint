@@ -19,7 +19,7 @@ import functools
 import pkg_resources
 from decimal import Decimal
 from contextlib import contextmanager
-from io import open
+from io import open, StringIO
 from numbers import Number
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
@@ -439,8 +439,7 @@ class UnitRegistry(object):
         self.default_to_delta = default_to_delta
 
         if filename == '':
-            data = pkg_resources.resource_filename(__name__, 'default_en.txt')
-            self.load_definitions(data, True)
+            self.load_definitions('default_en.txt', True)
         elif filename is not None:
             self.load_definitions(filename)
 
@@ -650,8 +649,12 @@ class UnitRegistry(object):
         # Permit both filenames and line-iterables
         if isinstance(file, string_types):
             try:
-                with open(file, encoding='utf-8') as fp:
-                    return self.load_definitions(fp, is_resource)
+                if is_resource:
+                    rbytes = pkg_resources.resource_stream(__name__, file).read()
+                    return self.load_definitions(StringIO(rbytes.decode('utf-8')), is_resource)
+                else:
+                    with open(file, encoding='utf-8') as fp:
+                        return self.load_definitions(fp, is_resource)
             except Exception as e:
                 msg = getattr(e, 'message', str(e))
                 raise ValueError('While opening {0}\n{1}'.format(file, msg))
@@ -663,7 +666,7 @@ class UnitRegistry(object):
                 continue
             if line.startswith('@import'):
                 if is_resource:
-                    path = pkg_resources.resource_filename(__name__, line[7:].strip())
+                    path = line[7:].strip()
                 else:
                     try:
                         path = os.path.dirname(file.name)
