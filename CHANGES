@@ -5,6 +5,10 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
+- Implemented parsing of pretty printed units.
+  (Issue #117, thanks jpgrayson)
+- Reimplemented loading of default definitions to allow Pint in a cx_freeze or similar package.
+  (Issue #118, thanks jbmohler)
 - Added condensed format.
   (Issue #107, thanks rec)
 - Raise error when invalid formatting code is given.
