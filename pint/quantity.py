@@ -317,10 +317,10 @@ class _Quantity(object):
         return self.__class__(magnitude, units)
 
     def __iadd__(self, other):
-        return self._iadd_sub(other, operator.iadd)
+        return self if other == 0 else self._iadd_sub(other, operator.iadd)
 
     def __add__(self, other):
-        return self._add_sub(other, operator.add)
+        return self if other == 0 else self._add_sub(other, operator.add)
 
     __radd__ = __add__
 
