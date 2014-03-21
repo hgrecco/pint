@@ -12,26 +12,23 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import copy
 import operator
 import functools
-from collections import Iterable
 
 from .formatting import remove_custom_flags
 from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
 from .compat import string_types, ndarray, np, _to_magnitude
+from .util import logger
 
 
 def _eq(first, second, check_all):
     """Comparison of scalars and arrays
     """
     out = first == second
-    if check_all and isinstance(out, Iterable):
-        if isinstance(out, ndarray):
-            return np.all(out)
-        else:
-            return all(out)
+    if check_all and isinstance(out, ndarray):
+        return np.all(out)
     return out
 
 
-class _Exception(Exception):
+class _Exception(Exception):            # pragma: no cover
 
     def __init__(self, internal):
         self.internal = internal
@@ -45,17 +42,16 @@ def _check(q1, other):
 
     In other case, return False.
     """
+
     if isinstance(other, q1.__class__):
+        # Both quantities are the same class and therefore from the same registry.
+        # (Each registry has its own Quantity class)
         return True
-    try:
-        reg = other._REGISTRY
-    except AttributeError:
-        return False
+    elif isinstance(other, _Quantity):
+        # The other object is a Quantity but from another registry.
+        raise ValueError('Cannot operate between quantities of different registries')
 
-    if q1._REGISTRY is reg:
-        return True
-
-    raise ValueError('Cannot operate between quantities of different registries')
+    return False
 
 
 def _only_multiplicative_units(q):
@@ -110,6 +106,8 @@ class _Quantity(object):
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)
         elif isinstance(units, cls):
+            if units.magnitude != 1:
+                logger.warning('Creating new Quantity using a non unity Quantity as units.')
             inst = copy.copy(units)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
         else:
@@ -445,9 +443,9 @@ class _Quantity(object):
         return self.__class__(operator.neg(self._magnitude), self._units)
 
     def __eq__(self, other):
-        # This is class comparison by name is to bypass that
+        # We compare to the base class of Quantity because
         # each Quantity class is unique.
-        if other.__class__.__name__ != self.__class__.__name__:
+        if not isinstance(other, _Quantity):
             return (self.dimensionless and
                     _eq(self._convert_magnitude(UnitsContainer()), other, False))
 

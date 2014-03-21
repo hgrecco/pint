@@ -5,6 +5,17 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 from pint.compat import ufloat
 from pint.testsuite import TestCase, unittest
 
+
+@unittest.skipIf(ufloat is not None, 'Uncertainties installed.')
+class TestNotMeasurement(TestCase):
+
+    FORCE_NDARRAY = False
+
+    def test_instantiate(self):
+        M_ = self.ureg.Measurement
+        self.assertRaises(RuntimeError, M_, 4.0, 0.1, 's')
+
+
 @unittest.skipIf(ufloat is None, 'Uncertainties not installed.')
 class TestMeasurement(TestCase):
 

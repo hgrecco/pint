@@ -8,7 +8,8 @@ import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
-                       DimensionDefinition, _freeze, Converter, UnitRegistry)
+                       DimensionDefinition, _freeze, Converter, UnitRegistry,
+                       LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, unittest
 from pint.testsuite import TestCase
@@ -199,10 +200,10 @@ class TestUnitsContainer(unittest.TestCase):
 
     def test_invalid(self):
         self.assertRaises(TypeError, UnitsContainer, {1: 2})
-        self.assertRaises(TypeError, UnitsContainer, {1: '2'})
+        self.assertRaises(TypeError, UnitsContainer, {'1': '2'})
         d = UnitsContainer()
         self.assertRaises(TypeError, d.__setitem__, 1, 2)
-        self.assertRaises(TypeError, d.__setitem__, 1, '2')
+        self.assertRaises(TypeError, d.__setitem__, '1', '2')
         self.assertRaises(TypeError, d.__mul__, list())
         self.assertRaises(TypeError, d.__imul__, list())
         self.assertRaises(TypeError, d.__pow__, list())
@@ -218,6 +219,13 @@ class TestRegistry(TestCase):
 
     def test_base(self):
         ureg = UnitRegistry(None)
+        ureg.define('meter = [length]')
+        self.assertRaises(ValueError, ureg.define, 'meter = [length]')
+        self.assertRaises(TypeError, ureg.define, list())
+        x = ureg.define('degC = kelvin; offset: 273.15')
+
+    def test_define(self):
+        ureg = UnitRegistry(None)
         self.assertIsInstance(dir(ureg), list)
         self.assertGreater(len(dir(ureg)), 0)
 
@@ -228,6 +236,7 @@ class TestRegistry(TestCase):
         ureg1 = UnitRegistry()
         ureg2 = UnitRegistry(data)
         self.assertEqual(dir(ureg1), dir(ureg2))
+        self.assertRaises(ValueError, UnitRegistry(None).load_definitions, 'notexisting')
 
     def test_default_format(self):
         ureg = UnitRegistry()
@@ -238,6 +247,7 @@ class TestRegistry(TestCase):
         s3 = '{0}'.format(q)
         self.assertEqual(s2, s3)
         self.assertNotEqual(s1, s3)
+        self.assertEqual(ureg.default_format, '~')
 
     def test_parse_number(self):
         self.assertEqual(self.ureg.parse_expression('pi'), math.pi)
@@ -311,7 +321,12 @@ class TestRegistry(TestCase):
         self.assertEqual(parse('kelvin*meter', to_delta=True), UnitsContainer(kelvin=1, meter= 1))
         self.assertEqual(parse('kelvin*meter', to_delta=False), UnitsContainer(kelvin=1, meter=1))
 
+    def test_name(self):
+        self.assertRaises(UndefinedUnitError, self.ureg.get_name, 'asdf')
+
     def test_symbol(self):
+        self.assertRaises(UndefinedUnitError, self.ureg.get_symbol, 'asdf')
+
         self.assertEqual(self.ureg.get_symbol('meter'), 'm')
         self.assertEqual(self.ureg.get_symbol('second'), 's')
         self.assertEqual(self.ureg.get_symbol('hertz'), 'Hz')
@@ -364,6 +379,12 @@ class TestRegistry(TestCase):
         self.assertEqual(f1(3. * ureg.centimeter), 0.03)
         self.assertEqual(f1(3. * ureg.meter), 3.)
         self.assertRaises(ValueError, f1, 3 * ureg.second)
+
+        f1b = ureg.wraps(None, [ureg.meter, ])(func)
+        self.assertRaises(ValueError, f1b, 3.)
+        self.assertEqual(f1b(3. * ureg.centimeter), 0.03)
+        self.assertEqual(f1b(3. * ureg.meter), 3.)
+        self.assertRaises(ValueError, f1b, 3 * ureg.second)
 
         f1 = ureg.wraps(None, 'meter')(func)
         self.assertRaises(ValueError, f1, 3.)
@@ -446,6 +467,26 @@ class TestEquivalents(TestCase):
 
             self.assertEqual(len(result), len(valid))
 
+    def test_get_base_units(self):
+        ureg = UnitRegistry()
+        self.assertEqual(ureg.get_base_units(''), (1, UnitsContainer()))
+        self.assertEqual(ureg.get_base_units('meter'), ureg.get_base_units(ParserHelper(meter=1)))
+
+    def test_get_compatible_units(self):
+        ureg = UnitRegistry()
+        self.assertEqual(ureg.get_compatible_units(''), (1, UnitsContainer()))
+        self.assertEqual(ureg.get_compatible_units('meter'), ureg.get_compatible_units(ParserHelper(meter=1)))
+
+    def test_convert(self):
+        ureg = self.ureg
+        self.assertEqual(ureg.convert(1, 'meter', 'inch'),
+                         ureg.convert(1, UnitsContainer(meter=1), UnitsContainer(inch=1)))
+
+    def test_parse_units(self):
+        ureg = self.ureg
+        self.assertEqual(ureg.parse_units(''), UnitsContainer())
+        self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
+
 
 class TestRegistryWithDefaultRegistry(TestRegistry):
 
@@ -454,6 +495,14 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         from pint import _DEFAULT_REGISTRY
         cls.ureg = _DEFAULT_REGISTRY
         cls.Q_ = cls.ureg.Quantity
+
+    def test_lazy(self):
+        x = LazyRegistry()
+        x.test = 'test'
+        self.assertIsInstance(x, UnitRegistry)
+        y = LazyRegistry()
+        q = y['meter']
+        self.assertIsInstance(y, UnitRegistry)
 
 
 class TestErrors(unittest.TestCase):

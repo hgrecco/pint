@@ -24,11 +24,13 @@ from .context import Context
 _DEFAULT_REGISTRY = LazyRegistry()
 
 __version__ = "unknown"
-try:  # try to grab the commit version of our package
+try:                    # pragma: no cover
+    # try to grab the commit version of our package
     __version__ = (subprocess.check_output(["git", "describe"],
                                            stderr=subprocess.STDOUT,
                                            cwd=os.path.dirname(os.path.abspath(__file__)))).strip()
-except:  # on any error just try to grab the version that is installed on the system
+except:                 # pragma: no cover
+    # on any error just try to grab the version that is installed on the system
     try:
         __version__ = pkg_resources.get_distribution('pint').version
     except:             # pragma: no cover
