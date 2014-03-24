@@ -94,7 +94,7 @@ To define a new temperature, you need to specify the offset. For example,
 this is the definition of the celsius and fahrenheit::
 
     degC = degK; offset: 273.15 = celsius
-    degF = 9 / 5 * degK; offset: 255.372222 = fahrenheit
+    degF = 5 / 9 * degK; offset: 255.372222 = fahrenheit
 
 You do not need to define *delta* units, as they are defined automatically.
 
