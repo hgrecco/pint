@@ -351,7 +351,7 @@ class TestIssuesNP(TestCase):
         self.assertSequenceEqual((v1 + v2).magnitude, np.array([5.1, 5.1]))
         self.assertSequenceEqual(v3.magnitude, np.array([5, 5]))
 
-    @unittest.skipIf(NUMPY_VER < (1, 8, 0), 'NumPy is older than 1.8')
+    @unittest.skipIf(NUMPY_VER < '1.8', 'NumPy is older than 1.8')
     def test_issue121(self):
         sh = (2, 1)
         ureg = UnitRegistry()

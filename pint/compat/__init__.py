@@ -95,7 +95,7 @@ except ImportError:
         pass
 
     HAS_NUMPY = False
-    NUMPY_VER = 0
+    NUMPY_VER = '0'
     NUMERIC_TYPES = (Number, Decimal)
 
     def _to_magnitude(value, force_ndarray=False):
