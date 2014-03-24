@@ -54,6 +54,7 @@ User Guide
     numpy
     nonmult
     wrapping
+    serialization
     pitheorem
     contexts
     measurement
