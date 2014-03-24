@@ -6,7 +6,7 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import HAS_NUMPY, np, unittest
+from pint.compat import HAS_NUMPY, np, unittest, NUMPY_VER
 from pint.testsuite import TestCase
 
 
@@ -351,6 +351,7 @@ class TestIssuesNP(TestCase):
         self.assertSequenceEqual((v1 + v2).magnitude, np.array([5.1, 5.1]))
         self.assertSequenceEqual(v3.magnitude, np.array([5, 5]))
 
+    @unittest.skipIf(NUMPY_VER < (1, 8, 0), 'NumPy is older than 1.8')
     def test_issue121(self):
         sh = (2, 1)
         ureg = UnitRegistry()
