@@ -437,6 +437,8 @@ class UnitRegistry(object):
         return self.Quantity(1, item)
 
     def __getitem__(self, item):
+        logger.warning('Calling the getitem method from a UnitRegistry is deprecated. '
+                       'use `parse_expression` method or use the registry as a callable.')
         return self.parse_expression(item)
 
     def __dir__(self):
@@ -1065,6 +1067,8 @@ class UnitRegistry(object):
                      'pi': math.pi},
                     values
                     )
+
+    __call__ = parse_expression
 
     def wraps(self, ret, args, strict=True):
         """Wraps a function to become pint-aware.

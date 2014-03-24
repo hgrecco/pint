@@ -88,16 +88,16 @@ There are also methods 'to_base_units' and 'ito_base_units' which automatically 
 
 .. doctest::
 
-   >>>height = 5.0 * ureg.foot + 9.0 * ureg.inch
-   >>>print(height)
+   >>> height = 5.0 * ureg.foot + 9.0 * ureg.inch
+   >>> print(height)
    5.75 foot
-   >>>print(height.to_base_units())
+   >>> print(height.to_base_units())
    1.7526 meter
-   >>>print(height)
+   >>> print(height)
    5.75 foot
-   >>>height.ito_base_units()
+   >>> height.ito_base_units()
    <Quantity(1.7526, 'meter')>
-   >>>print(height)
+   >>> print(height)
    1.7526 meter
 
 
@@ -134,21 +134,35 @@ You can add your own units to the registry or build your own list. More info on 
 String parsing
 --------------
 
-Pint can also handle units provided as strings:
+Pint can also handle units and units provided as strings:
 
 .. doctest::
 
-   >>> 2.54 * ureg['centimeter']
+   >>> 2.54 * ureg.parse_expression('centimeter')
    <Quantity(2.54, 'centimeter')>
 
-or via de `Quantity` constructor:
+or using the registry as a callable for a short form:
+
+.. doctest::
+
+   >>> 2.54 * ureg('centimeter')
+   <Quantity(2.54, 'centimeter')>
+
+or using the `Quantity` constructor:
 
 .. doctest::
 
    >>> Q_(2.54, 'centimeter')
    <Quantity(2.54, 'centimeter')>
 
-Numbers are also parsed:
+Numbers are also parsed, so you can use an expression:
+
+.. doctest::
+
+   >>> ureg('2.54 * centimeter')
+   <Quantity(2.54, 'centimeter')>
+
+or:
 
 .. doctest::
 
@@ -157,7 +171,7 @@ Numbers are also parsed:
 
 This enables you to build a simple unit converter in 3 lines:
 
-.. doctest:
+.. doctest::
 
    >>> user_input = '2.54 * centimeter to inch'
    >>> src, dst = user_input.split(' to ')
@@ -165,6 +179,9 @@ This enables you to build a simple unit converter in 3 lines:
    <Quantity(1.0, 'inch')>
 
 Take a look at `qconvert.py` within the examples folder for a full script.
+
+.. warning:: Pint currently uses eval_ under the hood.
+   Do not use this approach from untrusted sources as it is dangerous_.
 
 
 String formatting
@@ -215,7 +232,7 @@ Finally, you can specify a default format specification:
    'The acceleration is 1.3 meter / second ** 2'
    >>> ureg.default_format = 'P'
    >>> 'The acceleration is {}'.format(accel)
-   'The acceleration is  1.3 meter/second²'
+   'The acceleration is 1.3 meter/second²'
 
 
 Using Pint in your projects
@@ -244,3 +261,5 @@ Then in `yourmodule.py` the code would be::
     >>> # q1 and q2 belong to different registries!
     >>> id(q1._REGISTRY) is id(q2._REGISTRY) # False
 
+.. _eval: http://docs.python.org/3/library/functions.html#eval
+.. _dangerous: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
