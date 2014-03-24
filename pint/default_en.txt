@@ -232,9 +232,9 @@ rads = 1e-2 * gray
 roentgen = 2.58e-4 * coulomb / kilogram
 
 # Temperature
-degR = 9 / 5 * kelvin; offset: 0 = rankine
 degC = kelvin; offset: 273.15 = celsius
-degF = 9 / 5 * kelvin; offset: 255.372222 = fahrenheit
+degR = 5 / 9 * kelvin; offset: 0 = rankine
+degF = 5 / 9 * kelvin; offset: 255.372222 = fahrenheit
 
 # Time
 minute = 60 * second = min

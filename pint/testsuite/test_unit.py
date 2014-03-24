@@ -425,6 +425,14 @@ class TestRegistry(TestCase):
         h2 = ureg.wraps(('meter', 'cm'), [None, None])(hfunc)
         self.assertEqual(h2(3, 1), (3 * ureg.meter, 1 * ureg.cm))
 
+    def test_to_ref_vs_to(self):
+        q = 8. * self.ureg.inch
+        t = 8. * self.ureg.degF
+        dt = 8. * self.ureg.delta_degF
+        self.assertEqual(q.to('cm').magnitude, self.ureg._units['inch'].converter.to_reference(8.))
+        self.assertEqual(t.to('kelvin').magnitude, self.ureg._units['degF'].converter.to_reference(8.))
+        self.assertEqual(dt.to('delta_kelvin').magnitude, self.ureg._units['delta_degF'].converter.to_reference(8.))
+
 
 class TestEquivalents(TestCase):
 

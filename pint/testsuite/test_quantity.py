@@ -311,19 +311,33 @@ class TestQuantity(TestCase):
         self.assertAlmostEqual(self.Q_(32, 'degF').to('degC'), self.Q_(0, 'degC'), 2)
         self.assertAlmostEqual(self.Q_(100, 'degC').to('degF'), self.Q_(212, 'degF'), 2)
 
+        self.assertAlmostEqual(self.Q_(54, 'degF').to('degC'), self.Q_(12.2222, 'degC'), 2)
+        self.assertAlmostEqual(self.Q_(12, 'degC').to('degF'), self.Q_(53.6, 'degF'), 2)
+
+        self.assertAlmostEqual(self.Q_(12, 'kelvin').to('degC'), self.Q_(-261.15, 'degC'), 2)
+        self.assertAlmostEqual(self.Q_(12, 'degC').to('kelvin'), self.Q_(285.15, 'kelvin'), 2)
+
+        self.assertAlmostEqual(self.Q_(12, 'kelvin').to('degR'), self.Q_(21.6, 'degR'), 2)
+        self.assertAlmostEqual(self.Q_(12, 'degR').to('kelvin'), self.Q_(6.66666667, 'kelvin'), 2)
+
+        self.assertAlmostEqual(self.Q_(12, 'degC').to('degR'), self.Q_(513.27, 'degR'), 2)
+        self.assertAlmostEqual(self.Q_(12, 'degR').to('degC'), self.Q_(-266.483333, 'degC'), 2)
+
+
     def test_offset_delta(self):
         self.assertAlmostEqual(self.Q_(0, 'delta_kelvin').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'))
         self.assertAlmostEqual(self.Q_(0, 'delta_degC').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'))
         self.assertAlmostEqual(self.Q_(0, 'delta_degF').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'), places=2)
 
         self.assertAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_kelvin'), self.Q_(100, 'delta_kelvin'))
-        self.assertAlmostEqual(self.Q_(100, 'delta_degC').to('delta_kelvin'), self.Q_(100, 'delta_kelvin'))
-        self.assertAlmostEqual(self.Q_(100, 'delta_degF').to('delta_kelvin'), self.Q_(100 * 9 / 5, 'delta_kelvin'), places=2)
-
-        self.assertAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_kelvin'), self.Q_(100, 'delta_kelvin'))
         self.assertAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degC'), self.Q_(100, 'delta_degC'))
-        #self.assertAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degF'), self.Q_(100 * 1.8, 'delta_degF'), places=2)
-        #self.assertAlmostEqual(self.Q_(100, 'delta_degC').to('delta_degF'), self.Q_(100 * 180, 'delta_degF'), places=2)
+        self.assertAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degF'), self.Q_(180, 'delta_degF'), places=2)
+        self.assertAlmostEqual(self.Q_(100, 'delta_degF').to('delta_kelvin'), self.Q_(55.55555556, 'delta_kelvin'), places=2)
+        self.assertAlmostEqual(self.Q_(100, 'delta_degC').to('delta_degF'), self.Q_(180, 'delta_degF'), places=2)
+        self.assertAlmostEqual(self.Q_(100, 'delta_degF').to('delta_degC'), self.Q_(55.55555556, 'delta_degC'), places=2)
+
+        self.assertAlmostEqual(self.Q_(12.3, 'delta_degC').to('delta_degF'), self.Q_(22.14, 'delta_degF'), places=2)
+
 
     def test_pickle(self):
         import pickle

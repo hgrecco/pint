@@ -101,10 +101,10 @@ class ScaleConverter(Converter):
         self.scale = scale
 
     def to_reference(self, value):
-        return value / self.scale
+        return value * self.scale
 
     def from_reference(self, value):
-        return value * self.scale
+        return value / self.scale
 
 
 class OffsetConverter(Converter):
@@ -120,10 +120,10 @@ class OffsetConverter(Converter):
         return self.offset == 0
 
     def to_reference(self, value):
-        return value / self.scale + self.offset
+        return value * self.scale + self.offset
 
     def from_reference(self, value):
-        return (value - self.offset) * self.scale
+        return (value - self.offset) / self.scale
 
 
 class Definition(object):
