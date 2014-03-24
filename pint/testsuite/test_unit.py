@@ -4,6 +4,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import math
 import copy
+import warnings
 import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
@@ -495,6 +496,20 @@ class TestEquivalents(TestCase):
         self.assertEqual(ureg.parse_units(''), UnitsContainer())
         self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
 
+    def test_redefinition(self):
+        d = UnitRegistry().define
+
+        with warnings.catch_warnings(record=True) as w:
+            d('meter = [time]')
+            d('kilo- = 1000')
+            d('[speed] = [length]')
+
+            # aliases
+            d('bla = 3.2 meter = inch')
+            d('myk- = 1000 = kilo-')
+
+            self.assertEqual(len(w), 5)
+
 
 class TestRegistryWithDefaultRegistry(TestRegistry):
 
@@ -511,6 +526,17 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         y = LazyRegistry()
         q = y['meter']
         self.assertIsInstance(y, UnitRegistry)
+
+    def test_redefinition(self):
+        d = self.ureg.define
+        self.assertRaises(ValueError, d, 'meter = [time]')
+        self.assertRaises(ValueError, d, 'kilo- = 1000')
+        self.assertRaises(ValueError, d, '[speed] = [length]')
+
+        # aliases
+        self.assertIn('inch', self.ureg._units)
+        self.assertRaises(ValueError, d, 'bla = 3.2 meter = inch')
+        self.assertRaises(ValueError, d, 'myk- = 1000 = kilo-')
 
 
 class TestErrors(unittest.TestCase):

@@ -173,6 +173,10 @@ class Definition(object):
         return self._symbol or self._name
 
     @property
+    def has_symbol(self):
+        return bool(self._symbol)
+
+    @property
     def aliases(self):
         return self._aliases
 
@@ -388,12 +392,16 @@ class UnitRegistry(object):
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
     :param default_to_delta: In the context of a multiplication of units, interpret
                              non-multiplicative units as their *delta* counterparts.
+    :param on_redefinition: action to take in case a unit is redefined.
+                            'warn', 'raise', 'ignore'
+    :type on_redefintion: str
     """
 
-    def __init__(self, filename='', force_ndarray=False, default_to_delta=True):
+    def __init__(self, filename='', force_ndarray=False, default_to_delta=True, on_redefinition='warn'):
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
 
+        self._on_redefinition = on_redefinition
         #: Map dimension name (string) to its definition (DimensionDefinition).
         self._dimensions = {}
 
@@ -592,8 +600,11 @@ class UnitRegistry(object):
             d = self._units
             if definition.is_base:
                 for dimension in definition.reference.keys():
-                    if dimension != '[]' and dimension in self._dimensions:
-                        raise ValueError('Only one unit per dimension can be a base unit.')
+                    if dimension in self._dimensions:
+                        if dimension != '[]':
+                            raise ValueError('Only one unit per dimension can be a base unit.')
+                        continue
+
                     self.define(DimensionDefinition(dimension, '', (), None, is_base=True))
 
         elif isinstance(definition, PrefixDefinition):
@@ -601,15 +612,26 @@ class UnitRegistry(object):
         else:
             raise TypeError('{0} is not a valid definition.'.format(definition))
 
-        d[definition.name] = definition
+        def _adder(key, value, action=self._on_redefinition, selected_dict=d):
+            if key in selected_dict:
+                if action == 'raise':
+                    raise ValueError("Cannot redefine '%s' (%s) in the default registry"
+                                     % (key, type(value)))
+                elif action == 'warn':
+                    logger.warning("Redefining '%s' (%s)", key, type(value))
 
-        if definition.symbol:
-            d[definition.symbol] = definition
+            selected_dict[key] = value
+
+        _adder(definition.name, definition)
+
+        if definition.has_symbol:
+            _adder(definition.symbol, definition)
 
         for alias in definition.aliases:
             if ' ' in alias:
                 logger.warn('Alias cannot contain a space: ' + alias)
-            d[alias] = definition
+
+            _adder(alias, definition)
 
         if isinstance(definition.converter, OffsetConverter):
             d_name = 'delta_' + definition.name
@@ -1180,10 +1202,13 @@ class LazyRegistry(object):
 
     def __init(self):
         args, kwargs = self.__dict__['params']
+        kwargs['on_redefinition'] = 'raise'
         self.__class__ = UnitRegistry
         self.__init__(*args, **kwargs)
 
     def __getattr__(self, item):
+        if item == '_on_redefinition':
+            return 'raise'
         self.__init()
         return getattr(self, item)
 
