@@ -196,6 +196,16 @@ class TestIssues(TestCase):
             self.assertTrue(False,
                             'Error while trying to convert {} to {}'.format(ureg.degC, ureg.kelvin * ureg.meter / ureg.nanometer))
 
+    def test_issue121(self):
+        sh = (2, 1)
+        ureg = UnitRegistry()
+        z, v = 0, 2.
+        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
+        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
+        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
+        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
+
+        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):
@@ -340,3 +350,37 @@ class TestIssuesNP(TestCase):
 
         self.assertSequenceEqual((v1 + v2).magnitude, np.array([5.1, 5.1]))
         self.assertSequenceEqual(v3.magnitude, np.array([5, 5]))
+
+    def test_issue121(self):
+        sh = (2, 1)
+        ureg = UnitRegistry()
+
+        z, v = 0, 2.
+        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
+        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
+        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
+        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
+
+        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
+
+        z, v = np.zeros(sh), 2. * np.ones(sh)
+        self.assertSequenceEqual(z + v * ureg.meter, v * ureg.meter)
+        self.assertSequenceEqual(z - v * ureg.meter, -v * ureg.meter)
+        self.assertSequenceEqual(v * ureg.meter + z, v * ureg.meter)
+        self.assertSequenceEqual(v * ureg.meter - z, v * ureg.meter)
+
+        z, v = np.zeros((3, 1)), 2. * np.ones(sh)
+        for x, y in ((z, v),
+                     (z, v * ureg.meter),
+                     (v * ureg.meter, z)
+                     ):
+            try:
+                w = x + y
+                self.assertTrue(False, "ValueError not raised")
+            except ValueError:
+                pass
+            try:
+                w = x - y
+                self.assertTrue(False, "ValueError not raised")
+            except ValueError:
+                pass

@@ -8,6 +8,7 @@ import logging
 from pint.compat import ndarray, unittest
 
 from pint import logger, UnitRegistry
+from pint.quantity import _Quantity
 
 h = logging.StreamHandler()
 f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
@@ -25,14 +26,14 @@ class TestCase(unittest.TestCase):
         cls.Q_ = cls.ureg.Quantity
 
     def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
-        if isinstance(seq1, self.Q_):
-            if isinstance(seq2, self.Q_):
+        if isinstance(seq1, _Quantity):
+            if isinstance(seq2, _Quantity):
                 seq2 = seq2.to(seq1).magnitude
                 seq1 = seq1.magnitude
             else:
                 seq1 = seq1.to('').magnitude
-        if isinstance(seq2, self.Q_):
-            if isinstance(seq1, self.Q_):
+        if isinstance(seq2, _Quantity):
+            if isinstance(seq1, _Quantity):
                 seq1 = seq1.to(seq2).magnitude
                 seq2 = seq2.magnitude
             else:
@@ -44,15 +45,15 @@ class TestCase(unittest.TestCase):
         unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
 
     def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
-        if isinstance(first, self.Q_) and isinstance(second, self.Q_):
+        if isinstance(first, _Quantity) and isinstance(second, _Quantity):
             second = second.to(first)
             unittest.TestCase.assertAlmostEqual(self, first.magnitude, second.magnitude, places, msg, delta)
             self.assertEqual(first.units, second.units)
-        elif isinstance(first, self.Q_):
+        elif isinstance(first, _Quantity):
             self.assertTrue(first.dimensionless)
             first = first.to('')
             unittest.TestCase.assertAlmostEqual(self, first.magnitude, second, places, msg, delta)
-        elif isinstance(second, self.Q_):
+        elif isinstance(second, _Quantity):
             self.assertTrue(second.dimensionless)
             second = second.to('')
             unittest.TestCase.assertAlmostEqual(self, first, second.magnitude, places, msg, delta)
@@ -60,14 +61,14 @@ class TestCase(unittest.TestCase):
             unittest.TestCase.assertAlmostEqual(self, first, second, places, msg, delta)
 
     def assertAlmostEqualRelError(self, first, second, rel, msg=None):
-        if isinstance(first, self.Q_) and isinstance(second, self.Q_):
+        if isinstance(first, _Quantity) and isinstance(second, _Quantity):
             second = second.to(first)
             val = abs((second - first) / (second + first))
-        elif isinstance(first, self.Q_):
+        elif isinstance(first, _Quantity):
             self.assertTrue(first.dimensionless)
             first = first.to('')
             val = abs((second - first) / (second + first))
-        elif isinstance(second, self.Q_):
+        elif isinstance(second, _Quantity):
             self.assertTrue(second.dimensionless)
             second = second.to('')
             val = abs((second - first) / (second + first))

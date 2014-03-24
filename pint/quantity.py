@@ -285,7 +285,13 @@ class _Quantity(object):
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
             except TypeError:
                 return NotImplemented
-            if self.dimensionless:
+            if _eq(other, 0, True):
+                # If the other value is 0 (but not Quantity 0)
+                # do the operation without checking units.
+                # We do the calculation instead of just returning the same value to
+                # enforce any shape checking and type casting due to the operation.
+                self._magnitude = op(self._magnitude, other_magnitude)
+            elif self.dimensionless:
                 self.ito(UnitsContainer())
                 self._magnitude = op(self._magnitude, other_magnitude)
             else:
@@ -312,7 +318,15 @@ class _Quantity(object):
 
             units = copy.copy(self.units)
         else:
-            if self.dimensionless:
+            if _eq(other, 0, True):
+                # If the other value is 0 (but not Quantity 0)
+                # do the operation without checking units.
+                # We do the calculation instead of just returning the same value to
+                # enforce any shape checking and type casting due to the operation.
+                units = self.units
+                magnitude = op(self._magnitude,
+                               _to_magnitude(other, self.force_ndarray))
+            elif self.dimensionless:
                 units = UnitsContainer()
                 magnitude = op(self.to(units)._magnitude,
                                _to_magnitude(other, self.force_ndarray))
