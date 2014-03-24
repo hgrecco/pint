@@ -46,8 +46,8 @@ class TestDefinition(unittest.TestCase):
             self.assertIsInstance(x, PrefixDefinition)
             self.assertEqual(x.name, 'm')
             self.assertEqual(x.aliases, ())
-            self.assertEqual(x.converter.to_reference(.001), 1)
-            self.assertEqual(x.converter.from_reference(1000), 1)
+            self.assertEqual(x.converter.to_reference(1000), 1)
+            self.assertEqual(x.converter.from_reference(0.001), 1)
             self.assertEqual(str(x), 'm')
 
         x = Definition.from_string('kilo- = 1e-3 = k-')
@@ -55,16 +55,16 @@ class TestDefinition(unittest.TestCase):
         self.assertEqual(x.name, 'kilo')
         self.assertEqual(x.aliases, ())
         self.assertEqual(x.symbol, 'k')
-        self.assertEqual(x.converter.to_reference(.001), 1)
-        self.assertEqual(x.converter.from_reference(1000), 1)
+        self.assertEqual(x.converter.to_reference(1000), 1)
+        self.assertEqual(x.converter.from_reference(.001), 1)
 
         x = Definition.from_string('kilo- = 1e-3 = k- = anotherk-')
         self.assertIsInstance(x, PrefixDefinition)
         self.assertEqual(x.name, 'kilo')
         self.assertEqual(x.aliases, ('anotherk', ))
         self.assertEqual(x.symbol, 'k')
-        self.assertEqual(x.converter.to_reference(.001), 1)
-        self.assertEqual(x.converter.from_reference(1000), 1)
+        self.assertEqual(x.converter.to_reference(1000), 1)
+        self.assertEqual(x.converter.from_reference(.001), 1)
 
     def test_baseunit_definition(self):
         x = Definition.from_string('meter = [length]')
