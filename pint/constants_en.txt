@@ -18,7 +18,7 @@ hbar = planck_constant / (2 * pi) = ħ
 newtonian_constant_of_gravitation = 6.67384e-11 m^3 kg^-1 s^-2 = G
 
 # 0.000 000 035 e-19
-elementary_charge = 1.602176565e-19 C = e
+# elementary_charge = 1.602176565e-19 C = e
 
 # 0.000 0075
 molar_gas_constant = 8.3144621 J mol^-1 K^-1 = R
