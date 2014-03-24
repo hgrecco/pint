@@ -72,7 +72,7 @@ US_survey_acre = 160 * rod ** 2
 esu = 1 * erg**0.5 * centimeter**0.5 = statcoulombs = statC = franklin = Fr
 esu_per_second = 1 * esu / second = statampere
 ampere_turn = 1 * A
-gilbert = 10 / (4 * pi ) * ampere_turn = G
+gilbert = 10 / (4 * pi ) * ampere_turn
 coulomb = ampere * second = C
 volt = joule / coulomb = V
 farad = coulomb / volt = F

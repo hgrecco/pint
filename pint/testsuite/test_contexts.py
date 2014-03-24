@@ -8,27 +8,10 @@ from collections import defaultdict
 from pint import UnitRegistry
 from pint.context import Context, _freeze
 from pint.unit import UnitsContainer
-from pint.testsuite import TestCase
+from pint.testsuite import TestCase, TestHandler
 from pint.compat import unittest
 
 from pint import logger
-
-from logging.handlers import BufferingHandler
-
-class TestHandler(BufferingHandler):
-    def __init__(self):
-        # BufferingHandler takes a "capacity" argument
-        # so as to know when to flush. As we're overriding
-        # shouldFlush anyway, we can set a capacity of zero.
-        # You can call flush() manually to clear out the
-        # buffer.
-        BufferingHandler.__init__(self, 0)
-
-    def shouldFlush(self):
-        return False
-
-    def emit(self, record):
-        self.buffer.append(record.__dict__)
 
 def add_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})

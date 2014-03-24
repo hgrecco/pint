@@ -4,7 +4,6 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import math
 import copy
-import warnings
 import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
@@ -13,7 +12,7 @@ from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, unittest
-from pint.testsuite import TestCase
+from pint.testsuite import TestCase, logger, TestHandler
 
 
 class TestConverter(unittest.TestCase):
@@ -434,6 +433,21 @@ class TestRegistry(TestCase):
         self.assertEqual(t.to('kelvin').magnitude, self.ureg._units['degF'].converter.to_reference(8.))
         self.assertEqual(dt.to('delta_kelvin').magnitude, self.ureg._units['delta_degF'].converter.to_reference(8.))
 
+    def test_redefinition(self):
+        d = UnitRegistry().define
+
+        th = TestHandler()
+        logger.addHandler(th)
+        d('meter = [fruits]')
+        d('kilo- = 1000')
+        d('[speed] = [vegetables]')
+
+        # aliases
+        d('bla = 3.2 meter = inch')
+        d('myk- = 1000 = kilo-')
+
+        self.assertEqual(len(th.buffer), 5)
+
 
 class TestEquivalents(TestCase):
 
@@ -495,20 +509,6 @@ class TestEquivalents(TestCase):
         ureg = self.ureg
         self.assertEqual(ureg.parse_units(''), UnitsContainer())
         self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
-
-    def test_redefinition(self):
-        d = UnitRegistry().define
-
-        with warnings.catch_warnings(record=True) as w:
-            d('meter = [time]')
-            d('kilo- = 1000')
-            d('[speed] = [length]')
-
-            # aliases
-            d('bla = 3.2 meter = inch')
-            d('myk- = 1000 = kilo-')
-
-            self.assertEqual(len(w), 5)
 
 
 class TestRegistryWithDefaultRegistry(TestRegistry):

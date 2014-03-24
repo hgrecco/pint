@@ -9,6 +9,7 @@ from pint.compat import ndarray, unittest
 
 from pint import logger, UnitRegistry
 from pint.quantity import _Quantity
+from logging.handlers import BufferingHandler
 
 h = logging.StreamHandler()
 f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
@@ -16,6 +17,22 @@ h.setLevel(logging.DEBUG)
 h.setFormatter(f)
 logger.addHandler(h)
 logger.setLevel(logging.DEBUG)
+
+
+class TestHandler(BufferingHandler):
+    def __init__(self):
+        # BufferingHandler takes a "capacity" argument
+        # so as to know when to flush. As we're overriding
+        # shouldFlush anyway, we can set a capacity of zero.
+        # You can call flush() manually to clear out the
+        # buffer.
+        BufferingHandler.__init__(self, 0)
+
+    def shouldFlush(self):
+        return False
+
+    def emit(self, record):
+        self.buffer.append(record.__dict__)
 
 
 class TestCase(unittest.TestCase):
