@@ -6,7 +6,7 @@ from pint.compat import ufloat
 from pint.testsuite import TestCase, unittest
 
 
-@unittest.skipIf(ufloat is not None, 'Uncertainties installed.')
+@unittest.skipUnless(ufloat is None, 'Requires that Uncertainties is not installed')
 class TestNotMeasurement(TestCase):
 
     FORCE_NDARRAY = False
@@ -16,7 +16,7 @@ class TestNotMeasurement(TestCase):
         self.assertRaises(RuntimeError, M_, 4.0, 0.1, 's')
 
 
-@unittest.skipIf(ufloat is None, 'Uncertainties not installed.')
+@unittest.skipUnless(ufloat is not None, 'Requires that Uncertainties is installed')
 class TestMeasurement(TestCase):
 
     FORCE_NDARRAY = False
@@ -57,6 +57,44 @@ class TestMeasurement(TestCase):
         self.assertEqual('{0:.1fL}'.format(m), r'\left(4.0 \pm 0.1\right) second^{2}')
         self.assertEqual('{0:.1fH}'.format(m), '(4.0 &plusmn; 0.1) second<sup>2</sup>')
         self.assertEqual('{0:.1fC}'.format(m), '(4.0+/-0.1) second**2')
+
+    def test_format_paru(self):
+        v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
+        m = self.ureg.Measurement(v, u)
+        self.assertEqual('{0:uS}'.format(m), '0.200(10) second ** 2')
+        self.assertEqual('{0:.3uS}'.format(m), '0.2000(100) second ** 2')
+        self.assertEqual('{0:.3uSP}'.format(m), '0.2000(100) second²')
+        self.assertEqual('{0:.3uSL}'.format(m), r'0.2000\left(100\right) second^{2}')
+        self.assertEqual('{0:.3uSH}'.format(m), '0.2000(100) second<sup>2</sup>')
+        self.assertEqual('{0:.3uSC}'.format(m), '0.2000(100) second**2')
+
+    def test_format_u(self):
+        v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
+        m = self.ureg.Measurement(v, u)
+        self.assertEqual('{0:.3u}'.format(m), '(0.2000 +/- 0.0100) second ** 2')
+        self.assertEqual('{0:.3uP}'.format(m), '(0.2000 ± 0.0100) second²')
+        self.assertEqual('{0:.3uL}'.format(m), r'\left(0.2000 \pm 0.0100\right) second^{2}')
+        self.assertEqual('{0:.3uH}'.format(m), '(0.2000 &plusmn; 0.0100) second<sup>2</sup>')
+        self.assertEqual('{0:.3uC}'.format(m), '(0.2000+/-0.0100) second**2')
+
+    def test_format_percu(self):
+        self.test_format_perce()
+        v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
+        m = self.ureg.Measurement(v, u)
+        self.assertEqual('{0:.1u%}'.format(m), '(20 +/- 1)% second ** 2')
+        self.assertEqual('{0:.1u%P}'.format(m), '(20 ± 1)% second²')
+        self.assertEqual('{0:.1u%L}'.format(m), r'\left(20 \pm 1\right) \% second^{2}')
+        self.assertEqual('{0:.1u%H}'.format(m), '(20 &plusmn; 1)% second<sup>2</sup>')
+        self.assertEqual('{0:.1u%C}'.format(m), '(20+/-1)% second**2')
+
+    def test_format_perce(self):
+        v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
+        m = self.ureg.Measurement(v, u)
+        self.assertEqual('{0:.1ue}'.format(m), '(2.0 +/- 0.1)e-01 second ** 2')
+        self.assertEqual('{0:.1ueP}'.format(m), '(2.0 ± 0.1)×10⁻¹ second²')
+        self.assertEqual('{0:.1ueL}'.format(m), r'\left(2.0 \pm 0.1\right) \times 10^{-1} second^{2}')
+        self.assertEqual('{0:.1ueH}'.format(m), '(2.0 &plusmn; 0.1)e-01 second<sup>2</sup>')
+        self.assertEqual('{0:.1ueC}'.format(m), '(2.0+/-0.1)e-01 second**2')
 
     def test_raise_build(self):
         v, u = self.Q_(1.0, 's'), self.Q_(.1, 's')

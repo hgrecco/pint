@@ -156,8 +156,8 @@ def formatter(items, as_ratio=True, single_denominator=False,
 
 # Extract just the type from the specification mini-langage: see
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
-
-_BASIC_TYPES = frozenset('bcdeEfFgGnosxX%')
+# We also add uS for uncertainties.
+_BASIC_TYPES = frozenset('bcdeEfFgGnosxX%uS')
 _KNOWN_TYPES = frozenset(_FORMATS.keys())
 
 def _parse_spec(spec):

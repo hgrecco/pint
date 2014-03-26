@@ -89,4 +89,13 @@ class _Measurement(object):
 
         mag = format(self.magnitude, newspec).replace(pm, sp + newpm + sp)
 
-        return pars.format(mag) + ' ' + format(self.units, spec)
+        if 'L' in newspec and 'S' in newspec:
+            mag = mag.replace('(', r'\left(').replace(')', r'\right)')
+
+        if 'uS' in newspec or 'ue' in newspec or 'u%' in newspec:
+            return mag + ' ' + format(self.units, spec)
+        else:
+            return pars.format(mag) + ' ' + format(self.units, spec)
+
+
+
