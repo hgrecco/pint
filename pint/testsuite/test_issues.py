@@ -6,7 +6,7 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import HAS_NUMPY, np, unittest, NUMPY_VER
+from pint.compat import HAS_NUMPY, np, unittest, NUMPY_VER, ufloat
 from pint.testsuite import TestCase
 
 
@@ -99,6 +99,7 @@ class TestIssues(TestCase):
         q = ureg['m'].to(ureg['in'])
         self.assertEqual(q, ureg['m'].to('in'))
 
+    @unittest.skipIf(ufloat is None, 'Requires uncertainties')
     def test_issue77(self):
         ureg = UnitRegistry()
         acc = (5.0 * ureg('m/s/s')).plus_minus(0.25)
