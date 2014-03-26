@@ -99,6 +99,13 @@ class TestIssues(TestCase):
         q = ureg['m'].to(ureg['in'])
         self.assertEqual(q, ureg['m'].to('in'))
 
+    def test_issue77(self):
+        ureg = UnitRegistry()
+        acc = (5.0 * ureg('m/s/s')).plus_minus(0.25)
+        tim = (37.0 * ureg('s')).plus_minus(0.16)
+        dis = acc * tim ** 2 / 2
+        self.assertEqual(dis.value, acc.value * tim.value ** 2 / 2)
+
     def test_issue85(self):
         ureg = UnitRegistry()
 
