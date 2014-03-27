@@ -774,7 +774,7 @@ class UnitRegistry(object):
                         self._dimensional_equivalents[di].add(self._units[unit_name].name)
 
                 except Exception as e:
-                    logger.warning('Could not resolve {}: {!r}'.format(unit_name, e))
+                    logger.warning('Could not resolve {0}: {1!r}'.format(unit_name, e))
 
     def get_name(self, name_or_alias):
         """Return the canonical name of a unit.
