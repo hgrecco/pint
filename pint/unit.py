@@ -30,6 +30,38 @@ from .compat import tokenizer, string_types, NUMERIC_TYPES, TransformDict
 from .formatting import format_unit
 
 
+class DefinitionSyntaxError(ValueError):
+    """Raised when a textual definition has a syntax error.
+    """
+
+    def __init__(self, msg, filename=None, lineno=None):
+        super(ValueError, self).__init__()
+        self.msg = msg
+        self.filename = None
+        self.lineno = None
+
+    def __str__(self):
+        return "While opening {0}, in line {1}: ".format(self.filename, self.lineno) + self.msg
+
+
+class RedefinitionError(ValueError):
+    """Raised when a unit or prefix is redefined.
+    """
+
+    def __init__(self, name, definition_type):
+        super(ValueError, self).__init__()
+        self.name = name
+        self.definition_type = definition_type
+        self.filename = None
+        self.lineno = None
+
+    def __str__(self):
+        msg = "cannot redefine '{0}' ({1})".format(self.name, self.definition_type)
+        if self.filename:
+            return "While opening {0}, in line {1}: ".format(self.filename, self.lineno) + msg
+        return msg
+
+
 class UndefinedUnitError(ValueError):
     """Raised when the units are not defined in the unit registry.
     """
@@ -602,7 +634,7 @@ class UnitRegistry(object):
                 for dimension in definition.reference.keys():
                     if dimension in self._dimensions:
                         if dimension != '[]':
-                            raise ValueError('Only one unit per dimension can be a base unit.')
+                            raise DefinitionSyntaxError('only one unit per dimension can be a base unit.')
                         continue
 
                     self.define(DimensionDefinition(dimension, '', (), None, is_base=True))
@@ -615,8 +647,7 @@ class UnitRegistry(object):
         def _adder(key, value, action=self._on_redefinition, selected_dict=d):
             if key in selected_dict:
                 if action == 'raise':
-                    raise ValueError("Cannot redefine '%s' (%s) in the default registry"
-                                     % (key, type(value)))
+                    raise RedefinitionError(key, type(value))
                 elif action == 'warn':
                     logger.warning("Redefining '%s' (%s)", key, type(value))
 
@@ -665,11 +696,15 @@ class UnitRegistry(object):
                 else:
                     with open(file, encoding='utf-8') as fp:
                         return self.load_definitions(fp, is_resource)
+            except (RedefinitionError, DefinitionSyntaxError) as e:
+                if e.filename is None:
+                    e.filename = file
+                raise e
             except Exception as e:
                 msg = getattr(e, 'message', '') or str(e)
                 raise ValueError('While opening {0}\n{1}'.format(file, msg))
 
-        ifile = enumerate(file)
+        ifile = enumerate(file, 1)
         for no, line in ifile:
             line = line.strip()
             if not line or line.startswith('#'):
@@ -692,14 +727,18 @@ class UnitRegistry(object):
                         try:
                             self.add_context(Context.from_lines(context, self.get_dimensionality))
                         except KeyError as e:
-                            raise ValueError('Unknown dimension {0}'.format(str(e)))
+                            raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
                         break
                     elif line.startswith('@'):
-                        raise ValueError('In line {0}, cannot nest @ directives:\n{1}'.format(no, line))
+                        raise DefinitionSyntaxError('cannot nest @ directives', lineno=no)
                     context.append(line)
             else:
                 try:
                     self.define(Definition.from_string(line))
+                except (RedefinitionError, DefinitionSyntaxError) as ex:
+                    if ex.lineno is None:
+                        ex.lineno = no
+                    raise ex
                 except Exception as ex:
                     logger.error("In line {0}, cannot add '{1}' {2}".format(no, line, ex))
 
