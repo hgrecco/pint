@@ -336,7 +336,10 @@ class _Quantity(object):
         return self.__class__(magnitude, units)
 
     def __iadd__(self, other):
-        return self._iadd_sub(other, operator.iadd)
+        if not isinstance(self._magnitude, ndarray):
+            return self._add_sub(other, operator.add)
+        else:
+            return self._iadd_sub(other, operator.iadd)
 
     def __add__(self, other):
         return self._add_sub(other, operator.add)
@@ -344,7 +347,10 @@ class _Quantity(object):
     __radd__ = __add__
 
     def __isub__(self, other):
-        return self._iadd_sub(other, operator.isub)
+        if not isinstance(self._magnitude, ndarray):
+            return self._add_sub(other, operator.sub)
+        else:
+            return self._iadd_sub(other, operator.isub)
 
     def __sub__(self, other):
         return self._add_sub(other, operator.sub)
@@ -387,11 +393,45 @@ class _Quantity(object):
         return self
 
     def _mul_div(self, other, magnitude_op, units_op=None):
-        ret = copy.copy(self)
-        return ret._imul_div(other, magnitude_op, units_op)
+        """Perform multiplication or division operation and return the result.
+
+        :param other: object to be multiplied/divided with self
+        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :param magnitude_op: operator function to perform on the magnitudes (e.g. operator.mul)
+        :type magnitude_op: function
+        :param units_op: operator function to perform on the units; if None, *magnitude_op* is used
+        :type units_op: function or None
+        """
+        if units_op is None:
+            units_op = magnitude_op
+
+        new_self = self
+        if self.__used:
+            if not _only_multiplicative_units(self):
+                new_self = self.to_base_units()
+
+        if _check(self, other):
+            if not _only_multiplicative_units(other):
+                other = other.to_base_units()
+            magnitude = magnitude_op(new_self._magnitude, other._magnitude)
+            units = units_op(new_self._units, other._units)
+        else:
+            try:
+                other_magnitude = _to_magnitude(other, self.force_ndarray)
+            except TypeError:
+                return NotImplemented
+            magnitude = magnitude_op(new_self._magnitude, other_magnitude)
+            units = units_op(new_self._units, UnitsContainer())
+
+        ret = self.__class__(magnitude, units)
+        ret.__used = True
+        return ret
 
     def __imul__(self, other):
-        return self._imul_div(other, operator.imul)
+        if not isinstance(self._magnitude, ndarray):
+            return self._mul_div(other, operator.mul)
+        else:
+            return self._imul_div(other, operator.imul)
 
     def __mul__(self, other):
         return self._mul_div(other, operator.mul)
@@ -399,13 +439,19 @@ class _Quantity(object):
     __rmul__ = __mul__
 
     def __itruediv__(self, other):
-        return self._imul_div(other, operator.itruediv)
+        if not isinstance(self._magnitude, ndarray):
+            return self._mul_div(other, operator.truediv)
+        else:
+            return self._imul_div(other, operator.itruediv)
 
     def __truediv__(self, other):
         return self._mul_div(other, operator.truediv)
 
     def __ifloordiv__(self, other):
-        return self._imul_div(other, operator.ifloordiv, units_op=operator.itruediv)
+        if not isinstance(self._magnitude, ndarray):
+            return self._mul_div(other, operator.floordiv, units_op=operator.itruediv)
+        else:
+            return self._imul_div(other, operator.ifloordiv, units_op=operator.itruediv)
 
     def __floordiv__(self, other):
         return self._mul_div(other, operator.floordiv, units_op=operator.truediv)
@@ -429,6 +475,9 @@ class _Quantity(object):
     __idiv__ = __itruediv__
 
     def __ipow__(self, other):
+        if not isinstance(self._magnitude, ndarray):
+            return self.__pow__(other)
+
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
         except TypeError:
@@ -441,8 +490,18 @@ class _Quantity(object):
             return self
 
     def __pow__(self, other):
-        ret = copy.copy(self)
-        return operator.ipow(ret, other)
+        try:
+            other_magnitude = _to_magnitude(other, self.force_ndarray)
+        except TypeError:
+            return NotImplemented
+        else:
+            new_self = self
+            if not _only_multiplicative_units(self):
+                new_self = self.to_base_units()
+
+            magnitude = new_self._magnitude ** _to_magnitude(other, self.force_ndarray)
+            units = new_self._units ** other
+            return self.__class__(magnitude, units)
 
     def __abs__(self):
         return self.__class__(abs(self._magnitude), self._units)

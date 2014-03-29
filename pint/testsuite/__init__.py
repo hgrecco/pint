@@ -5,7 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import os
 import logging
 
-from pint.compat import ndarray, unittest
+from pint.compat import ndarray, unittest, np
 
 from pint import logger, UnitRegistry
 from pint.quantity import _Quantity
@@ -37,6 +37,8 @@ class TestHandler(BufferingHandler):
 
 class TestCase(unittest.TestCase):
 
+    FORCE_NDARRAY = False
+
     @classmethod
     def setUpClass(cls):
         cls.ureg = UnitRegistry(force_ndarray=cls.FORCE_NDARRAY)
@@ -60,6 +62,35 @@ class TestCase(unittest.TestCase):
         if isinstance(seq2, ndarray):
             seq2 = seq2.tolist()
         unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
+
+    def assertQuantityAlmostEqual(self, first, second, places=None, msg=None, delta=None):
+        if msg is None:
+            msg = 'Comparing %r and %r. ' % (first, second)
+
+        if isinstance(first, _Quantity) and isinstance(second, _Quantity):
+            second = second.to(first)
+            m1, m2 = first.magnitude, second.magnitude
+            self.assertEqual(first.units, second.units, msg=msg + 'Units are not equal.')
+        elif isinstance(first, _Quantity):
+            self.assertTrue(first.dimensionless, msg=msg + 'The first is not dimensionless.')
+            first = first.to('')
+            m1, m2 = first.magnitude, second
+        elif isinstance(second, _Quantity):
+            self.assertTrue(second.dimensionless, msg=msg + 'The second is not dimensionless.')
+            second = second.to('')
+            m1, m2 = first, second.magnitude
+        else:
+            m1, m2 = first, second
+
+        if isinstance(m1, ndarray) or isinstance(m2, ndarray):
+            if delta is not None:
+                rtol, atol = 0, delta
+            else:
+                places = places or 7
+                rtol, atol = 10 ** (-places), 0
+            np.testing.assert_allclose(m1, m2, rtol=rtol, atol=atol, err_msg=msg)
+        else:
+            unittest.TestCase.assertAlmostEqual(self, m1, m2, places, msg, delta)
 
     def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
         if isinstance(first, _Quantity) and isinstance(second, _Quantity):

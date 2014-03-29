@@ -8,54 +8,13 @@ import operator as op
 
 from pint import DimensionalityError, UnitRegistry
 from pint.unit import UnitsContainer
-from pint.compat import string_types, PYTHON3
-from pint.testsuite import TestCase
+from pint.compat import string_types, PYTHON3, HAS_NUMPY, np
+from pint.testsuite import TestCase, unittest
 
 
 class TestQuantity(TestCase):
 
     FORCE_NDARRAY = False
-
-    def _test_inplace(self, operator, value1, value2, expected_result):
-        if isinstance(value1, string_types):
-            value1 = self.Q_(value1)
-        if isinstance(value2, string_types):
-            value2 = self.Q_(value2)
-        if isinstance(expected_result, string_types):
-            expected_result = self.Q_(expected_result)
-
-        value1 = copy.copy(value1)
-        value2 = copy.copy(value2)
-        id1 = id(value1)
-        id2 = id(value2)
-        value1 = operator(value1, value2)
-        value2_cpy = copy.copy(value2)
-        self.assertAlmostEqual(value1, expected_result)
-        self.assertEqual(id1, id(value1))
-        self.assertAlmostEqual(value2, value2_cpy)
-        self.assertEqual(id2, id(value2))
-
-    def _test_not_inplace(self, operator, value1, value2, expected_result):
-        if isinstance(value1, string_types):
-            value1 = self.Q_(value1)
-        if isinstance(value2, string_types):
-            value2 = self.Q_(value2)
-        if isinstance(expected_result, string_types):
-            expected_result = self.Q_(expected_result)
-
-        id1 = id(value1)
-        id2 = id(value2)
-
-        value1_cpy = copy.copy(value1)
-        value2_cpy = copy.copy(value2)
-
-        result = operator(value1, value2)
-
-        self.assertAlmostEqual(expected_result, result)
-        self.assertAlmostEqual(value1, value1_cpy)
-        self.assertAlmostEqual(value2, value2_cpy)
-        self.assertNotEqual(id(result), id1)
-        self.assertNotEqual(id(result), id2)
 
     def test_quantity_creation(self):
         for args in ((4.2, 'meter'),
@@ -162,100 +121,6 @@ class TestQuantity(TestCase):
             ureg.default_format = spec
             self.assertEqual('{0}'.format(x), result)
 
-    def test_quantity_add_sub(self):
-        x = self.Q_(1., 'centimeter')
-        y = self.Q_(1., 'inch')
-        z = self.Q_(1., 'second')
-        a = self.Q_(1., None)
-
-        self._test_not_inplace(op.add, x, x, self.Q_(2., 'centimeter'))
-        self._test_not_inplace(op.add, x, y, self.Q_(1 + 2.54, 'centimeter'))
-        self._test_not_inplace(op.add, y, x, self.Q_(1 + 1 / 2.54, 'inch'))
-        self._test_not_inplace(op.add, a, 1, self.Q_(1 + 1, None))
-        self.assertRaises(DimensionalityError, op.add, 10, x)
-        self.assertRaises(DimensionalityError, op.add, x, 10)
-        self.assertRaises(DimensionalityError, op.add, x, z)
-
-        self._test_not_inplace(op.sub, x, x, self.Q_(0., 'centimeter'))
-        self._test_not_inplace(op.sub, x, y, self.Q_(1 - 2.54, 'centimeter'))
-        self._test_not_inplace(op.sub, y, x, self.Q_(1 - 1 / 2.54, 'inch'))
-        self._test_not_inplace(op.sub, a, 1, self.Q_(1 - 1, None))
-        self.assertRaises(DimensionalityError, op.sub, 10, x)
-        self.assertRaises(DimensionalityError, op.sub, x, 10)
-        self.assertRaises(DimensionalityError, op.sub, x, z)
-
-    def test_quantity_iadd_isub(self):
-        x = self.Q_(1., 'centimeter')
-        y = self.Q_(1., 'inch')
-        z = self.Q_(1., 'second')
-        a = self.Q_(1., None)
-
-        self._test_inplace(op.iadd, x, x, self.Q_(2., 'centimeter'))
-        self._test_inplace(op.iadd, x, y, self.Q_(1 + 2.54, 'centimeter'))
-        self._test_inplace(op.iadd, y, x, self.Q_(1 + 1 / 2.54, 'inch'))
-        self._test_inplace(op.iadd, a, 1, self.Q_(1 + 1, None))
-        self.assertRaises(DimensionalityError, op.iadd, 10, x)
-        self.assertRaises(DimensionalityError, op.iadd, x, 10)
-        self.assertRaises(DimensionalityError, op.iadd, x, z)
-
-        self._test_inplace(op.isub, x, x, self.Q_(0., 'centimeter'))
-        self._test_inplace(op.isub, x, y, self.Q_(1 - 2.54, 'centimeter'))
-        self._test_inplace(op.isub, y, x, self.Q_(1 - 1 / 2.54, 'inch'))
-        self._test_inplace(op.isub, a, 1, self.Q_(1 - 1, None))
-        self.assertRaises(DimensionalityError, op.sub, 10, x)
-        self.assertRaises(DimensionalityError, op.sub, x, 10)
-        self.assertRaises(DimensionalityError, op.sub, x, z)
-
-    def test_quantity_mul_div(self):
-        self._test_not_inplace(op.mul, 10.0, '4.2*meter', '42*meter')
-        self._test_not_inplace(op.mul, '4.2*meter', 10.0, '42*meter')
-        self._test_not_inplace(op.mul, '4.2*meter', '10*inch', '42*meter*inch')
-        self._test_not_inplace(op.truediv, 42, '4.2*meter', '10/meter')
-        self._test_not_inplace(op.truediv, '4.2*meter', 10.0, '0.42*meter')
-        self._test_not_inplace(op.truediv, '4.2*meter', '10*inch', '0.42*meter/inch')
-
-    def test_quantity_imul_idiv(self):
-        #self._test_inplace(op.imul, 10.0, '4.2*meter', '42*meter')
-        self._test_inplace(op.imul, '4.2*meter', 10.0, '42*meter')
-        self._test_inplace(op.imul, '4.2*meter', '10*inch', '42*meter*inch')
-        #self._test_not_inplace(op.truediv, 42, '4.2*meter', '10/meter')
-        self._test_inplace(op.itruediv, '4.2*meter', 10.0, '0.42*meter')
-        self._test_inplace(op.itruediv, '4.2*meter', '10*inch', '0.42*meter/inch')
-
-    def test_quantity_floordiv(self):
-        self._test_not_inplace(op.floordiv, 10.0, '4.2*meter', '2/meter')
-        self._test_not_inplace(op.floordiv, '24*meter', 10.0, '2*meter')
-        self._test_not_inplace(op.floordiv, '10*meter', '4.2*inch', '2*meter/inch')
-
-        #self._test_inplace(op.ifloordiv, 10.0, '4.2*meter', '2/meter')
-        self._test_inplace(op.ifloordiv, '24*meter', 10.0, '2*meter')
-        self._test_inplace(op.ifloordiv, '10*meter', '4.2*inch', '2*meter/inch')
-
-    def test_quantity_abs_round(self):
-
-        x = self.Q_(-4.2, 'meter')
-        y = self.Q_(4.2, 'meter')
-        # In Python 3+ round of x is delegated to x.__round__, instead of round(x.__float__)
-        # and therefore it can be properly implemented by Pint
-        for fun in (abs, op.pos, op.neg) + (round, ) if PYTHON3 else ():
-            zx = self.Q_(fun(x.magnitude), 'meter')
-            zy = self.Q_(fun(y.magnitude), 'meter')
-            rx = fun(x)
-            ry = fun(y)
-            self.assertEqual(rx, zx, 'while testing {0}'.format(fun))
-            self.assertEqual(ry, zy, 'while testing {0}'.format(fun))
-            self.assertIsNot(rx, zx, 'while testing {0}'.format(fun))
-            self.assertIsNot(ry, zy, 'while testing {0}'.format(fun))
-
-    def test_quantity_float_complex(self):
-        x = self.Q_(-4.2, None)
-        y = self.Q_(4.2, None)
-        z = self.Q_(1, 'meter')
-        for fun in (float, complex):
-            self.assertEqual(fun(x), fun(x.magnitude))
-            self.assertEqual(fun(y), fun(y.magnitude))
-            self.assertRaises(DimensionalityError, fun, z)
-
     def test_to_base_units(self):
         x = self.Q_('1*inch')
         self.assertAlmostEqual(x.to_base_units(), self.Q_(0.0254, 'meter'))
@@ -349,6 +214,176 @@ class TestQuantity(TestCase):
         pickle_test(self.Q_(2.4, ''))
         pickle_test(self.Q_(32, 'm/s'))
         pickle_test(self.Q_(2.4, 'm/s'))
+
+
+class TestQuantityBasicMath(TestCase):
+
+    FORCE_NDARRAY = False
+
+    def _test_inplace(self, operator, value1, value2, expected_result, unit=None):
+        if isinstance(value1, string_types):
+            value1 = self.Q_(value1)
+        if isinstance(value2, string_types):
+            value2 = self.Q_(value2)
+        if isinstance(expected_result, string_types):
+            expected_result = self.Q_(expected_result)
+
+        if not unit is None:
+            value1 = value1 * unit
+            value2 = value2 * unit
+            expected_result = expected_result * unit
+
+        value1 = copy.copy(value1)
+        value2 = copy.copy(value2)
+        id1 = id(value1)
+        id2 = id(value2)
+        value1 = operator(value1, value2)
+        value2_cpy = copy.copy(value2)
+        self.assertQuantityAlmostEqual(value1, expected_result)
+        self.assertEqual(id1, id(value1))
+        self.assertQuantityAlmostEqual(value2, value2_cpy)
+        self.assertEqual(id2, id(value2))
+
+    def _test_not_inplace(self, operator, value1, value2, expected_result, unit=None):
+        if isinstance(value1, string_types):
+            value1 = self.Q_(value1)
+        if isinstance(value2, string_types):
+            value2 = self.Q_(value2)
+        if isinstance(expected_result, string_types):
+            expected_result = self.Q_(expected_result)
+
+        if not unit is None:
+            value1 = value1 * unit
+            value2 = value2 * unit
+            expected_result = expected_result * unit
+
+        id1 = id(value1)
+        id2 = id(value2)
+
+        value1_cpy = copy.copy(value1)
+        value2_cpy = copy.copy(value2)
+
+        result = operator(value1, value2)
+
+        self.assertQuantityAlmostEqual(expected_result, result)
+        self.assertQuantityAlmostEqual(value1, value1_cpy)
+        self.assertQuantityAlmostEqual(value2, value2_cpy)
+        self.assertNotEqual(id(result), id1)
+        self.assertNotEqual(id(result), id2)
+
+    def _test_quantity_add_sub(self, unit, func):
+        x = self.Q_(unit, 'centimeter')
+        y = self.Q_(unit, 'inch')
+        z = self.Q_(unit, 'second')
+        a = self.Q_(unit, None)
+
+        func(op.add, x, x, self.Q_(unit + unit, 'centimeter'))
+        func(op.add, x, y, self.Q_(unit + 2.54 * unit, 'centimeter'))
+        func(op.add, y, x, self.Q_(unit + unit / (2.54 * unit), 'inch'))
+        func(op.add, a, unit, self.Q_(unit + unit, None))
+        self.assertRaises(DimensionalityError, op.add, 10, x)
+        self.assertRaises(DimensionalityError, op.add, x, 10)
+        self.assertRaises(DimensionalityError, op.add, x, z)
+
+        func(op.sub, x, x, self.Q_(unit - unit, 'centimeter'))
+        func(op.sub, x, y, self.Q_(unit - 2.54 * unit, 'centimeter'))
+        func(op.sub, y, x, self.Q_(unit - unit / (2.54 * unit), 'inch'))
+        func(op.sub, a, unit, self.Q_(unit - unit, None))
+        self.assertRaises(DimensionalityError, op.sub, 10, x)
+        self.assertRaises(DimensionalityError, op.sub, x, 10)
+        self.assertRaises(DimensionalityError, op.sub, x, z)
+
+    def _test_quantity_iadd_isub(self, unit, func):
+        x = self.Q_(unit, 'centimeter')
+        y = self.Q_(unit, 'inch')
+        z = self.Q_(unit, 'second')
+        a = self.Q_(unit, None)
+
+        func(op.iadd, x, x, self.Q_(unit + unit, 'centimeter'))
+        func(op.iadd, x, y, self.Q_(unit + 2.54 * unit, 'centimeter'))
+        func(op.iadd, y, x, self.Q_(unit + unit / 2.54, 'inch'))
+        func(op.iadd, a, unit, self.Q_(unit + unit, None))
+        self.assertRaises(DimensionalityError, op.iadd, 10, x)
+        self.assertRaises(DimensionalityError, op.iadd, x, 10)
+        self.assertRaises(DimensionalityError, op.iadd, x, z)
+
+        func(op.isub, x, x, self.Q_(unit - unit, 'centimeter'))
+        func(op.isub, x, y, self.Q_(unit - 2.54, 'centimeter'))
+        func(op.isub, y, x, self.Q_(unit - unit / 2.54, 'inch'))
+        func(op.isub, a, unit, self.Q_(unit - unit, None))
+        self.assertRaises(DimensionalityError, op.sub, 10, x)
+        self.assertRaises(DimensionalityError, op.sub, x, 10)
+        self.assertRaises(DimensionalityError, op.sub, x, z)
+
+    def _test_quantity_mul_div(self, unit, func):
+        func(op.mul, unit * 10.0, '4.2*meter', '42*meter', unit)
+        func(op.mul, '4.2*meter', unit * 10.0, '42*meter', unit)
+        func(op.mul, '4.2*meter', '10*inch', '42*meter*inch', unit)
+        func(op.truediv, unit * 42, '4.2*meter', '10/meter', unit)
+        func(op.truediv, '4.2*meter', unit * 10.0, '0.42*meter', unit)
+        func(op.truediv, '4.2*meter', '10*inch', '0.42*meter/inch', unit)
+
+    def _test_quantity_imul_idiv(self, unit, func):
+        #func(op.imul, 10.0, '4.2*meter', '42*meter')
+        func(op.imul, '4.2*meter', 10.0, '42*meter', unit)
+        func(op.imul, '4.2*meter', '10*inch', '42*meter*inch', unit)
+        #func(op.truediv, 42, '4.2*meter', '10/meter')
+        func(op.itruediv, '4.2*meter', unit * 10.0, '0.42*meter', unit)
+        func(op.itruediv, '4.2*meter', '10*inch', '0.42*meter/inch', unit)
+
+    def _test_quantity_floordiv(self, unit, func):
+        func(op.floordiv, unit * 10.0, '4.2*meter', '2/meter', unit)
+        func(op.floordiv, '24*meter', unit * 10.0, '2*meter', unit)
+        func(op.floordiv, '10*meter', '4.2*inch', '2*meter/inch', unit)
+
+    def _test_quantity_ifloordiv(self, unit, func):
+        func(op.ifloordiv, 10.0, '4.2*meter', '2/meter', unit)
+        func(op.ifloordiv, '24*meter', 10.0, '2*meter', unit)
+        func(op.ifloordiv, '10*meter', '4.2*inch', '2*meter/inch', unit)
+
+    def _test_numeric(self, unit, ifunc):
+        self._test_quantity_add_sub(unit, self._test_not_inplace)
+        self._test_quantity_iadd_isub(unit, ifunc)
+        self._test_quantity_mul_div(unit, self._test_not_inplace)
+        self._test_quantity_imul_idiv(unit, ifunc)
+        self._test_quantity_floordiv(unit, self._test_not_inplace)
+        #self._test_quantity_ifloordiv(unit, ifunc)
+
+    def test_float(self):
+        self._test_numeric(1., self._test_not_inplace)
+
+    def test_fraction(self):
+        import fractions
+        self._test_numeric(fractions.Fraction(1, 1), self._test_not_inplace)
+
+    @unittest.skipUnless(HAS_NUMPY, 'Requires Numpy')
+    def test_nparray(self):
+        self._test_numeric(np.ones((1, 3)), self._test_inplace)
+
+    def test_quantity_abs_round(self):
+
+        x = self.Q_(-4.2, 'meter')
+        y = self.Q_(4.2, 'meter')
+        # In Python 3+ round of x is delegated to x.__round__, instead of round(x.__float__)
+        # and therefore it can be properly implemented by Pint
+        for fun in (abs, op.pos, op.neg) + (round, ) if PYTHON3 else ():
+            zx = self.Q_(fun(x.magnitude), 'meter')
+            zy = self.Q_(fun(y.magnitude), 'meter')
+            rx = fun(x)
+            ry = fun(y)
+            self.assertEqual(rx, zx, 'while testing {0}'.format(fun))
+            self.assertEqual(ry, zy, 'while testing {0}'.format(fun))
+            self.assertIsNot(rx, zx, 'while testing {0}'.format(fun))
+            self.assertIsNot(ry, zy, 'while testing {0}'.format(fun))
+
+    def test_quantity_float_complex(self):
+        x = self.Q_(-4.2, None)
+        y = self.Q_(4.2, None)
+        z = self.Q_(1, 'meter')
+        for fun in (float, complex):
+            self.assertEqual(fun(x), fun(x.magnitude))
+            self.assertEqual(fun(y), fun(y.magnitude))
+            self.assertRaises(DimensionalityError, fun, z)
 
 
 class TestDimensions(TestCase):

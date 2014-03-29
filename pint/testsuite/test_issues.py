@@ -228,6 +228,26 @@ class TestIssues(TestCase):
             self.assertRaises(ValueError, func, 'METER')
             self.assertEqual(val, func('METER', False))
 
+    def test_issue104(self):
+        ureg = UnitRegistry()
+
+        x = [ureg('1 meter'), ureg('1 meter'), ureg('1 meter')]
+        y = [ureg('1 meter')] * 3
+
+        def summer(values):
+            if not values:
+                return 0
+            total = values[0]
+            for v in values[1:]:
+                total += v
+
+            return total
+
+        self.assertQuantityAlmostEqual(summer(x), ureg.Quantity(3, 'meter'))
+        self.assertQuantityAlmostEqual(x[0], ureg.Quantity(1, 'meter'))
+        self.assertQuantityAlmostEqual(summer(y), ureg.Quantity(3, 'meter'))
+        self.assertQuantityAlmostEqual(y[0], ureg.Quantity(1, 'meter'))
+
 
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):
