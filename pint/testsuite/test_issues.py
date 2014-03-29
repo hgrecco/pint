@@ -215,6 +215,20 @@ class TestIssues(TestCase):
 
         self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
 
+    def test_issue105(self):
+        ureg = UnitRegistry()
+
+        func = ureg.parse_unit_name
+        val = list(func('meter'))
+        self.assertEqual(list(func('METER')), [])
+        self.assertEqual(val, list(func('METER', False)))
+
+        for func in (ureg.get_name, ureg.parse_expression):
+            val = func('meter')
+            self.assertRaises(ValueError, func, 'METER')
+            self.assertEqual(val, func('METER', False))
+
+
 @unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
 class TestIssuesNP(TestCase):
 
