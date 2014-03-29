@@ -214,8 +214,8 @@ But Pint also extends the standard formatting capabilities for unicode and latex
    >>> 'The latex representation is {:L}'.format(accel)
    'The latex representation is 1.3 \\frac{meter}{second^{2}}'
    >>> # HTML print
-   >>> 'The latex representation is {:H}'.format(accel)
-   'The latex representation is 1.3 meter/second<sup>2</sup>'
+   >>> 'The HTML representation is {:H}'.format(accel)
+   'The HTML representation is 1.3 meter/second<sup>2</sup>'
 
 If you want to use abbreviated unit names, suffix the specification with `~`:
 
