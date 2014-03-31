@@ -4,6 +4,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import math
 import copy
+import itertools
 import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
@@ -11,7 +12,7 @@ from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        DimensionDefinition, _freeze, Converter, UnitRegistry,
                        LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.compat import u, unittest
+from pint.compat import u, unittest, HAS_NUMPY, np
 from pint.testsuite import TestCase, logger, TestHandler
 
 
@@ -32,6 +33,19 @@ class TestConverter(unittest.TestCase):
         c = OffsetConverter(20., 2)
         self.assertEqual(c.from_reference(c.to_reference(100)), 100)
         self.assertEqual(c.to_reference(c.from_reference(100)), 100)
+
+    @unittest.skipUnless(HAS_NUMPY, 'NumPy required')
+    def test_converter_inplace(self):
+        for c in (ScaleConverter(20.), OffsetConverter(20., 2)):
+            fun1 = lambda x, y: c.from_reference(c.to_reference(x, y), y)
+            fun2 = lambda x, y: c.to_reference(c.from_reference(x, y), y)
+            for fun, (inplace, comp) in itertools.product((fun1, fun2),
+                                                          ((True, self.assertIs), (False, self.assertIsNot))):
+                a = np.ones((1, 10))
+                ac = np.ones((1, 10))
+                r = fun(a, inplace)
+                np.testing.assert_allclose(r, ac)
+                comp(a, r)
 
 
 class TestDefinition(unittest.TestCase):
@@ -448,8 +462,41 @@ class TestRegistry(TestCase):
 
         self.assertEqual(len(th.buffer), 5)
 
+    def test_convert_parse_str(self):
+        ureg = self.ureg
+        self.assertEqual(ureg.convert(1, 'meter', 'inch'),
+                         ureg.convert(1, UnitsContainer(meter=1), UnitsContainer(inch=1)))
 
-class TestEquivalents(TestCase):
+
+    @unittest.skipUnless(HAS_NUMPY, 'NumPy Required.')
+    def test_convert_inplace(self):
+        ureg = self.ureg
+
+        # Conversions with single units take a different codepath than
+        # Conversions with more than one unit.
+        src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
+        src_dst2 = UnitsContainer(meter=1, seconds=-1), UnitsContainer(inch=1, minutes=-1)
+        for src, dst in (src_dst1, src_dst2):
+            v = ureg.convert(1, src, dst),
+
+            a = np.ones((3, 1))
+            ac = np.ones((3, 1))
+
+            r1 = ureg.convert(a, src, dst)
+            np.testing.assert_allclose(r1, v * ac)
+            self.assertIsNot(r1, a)
+
+            r2 = ureg.convert(a, src, dst, inplace=True)
+            np.testing.assert_allclose(r2, v * ac)
+            self.assertIs(r2, a)
+
+    def test_parse_units(self):
+        ureg = self.ureg
+        self.assertEqual(ureg.parse_units(''), UnitsContainer())
+        self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
+
+
+class TestCompatibleUnits(TestCase):
 
     FORCE_NDARRAY= False
 
@@ -499,16 +546,6 @@ class TestEquivalents(TestCase):
         ureg = UnitRegistry()
         self.assertEqual(ureg.get_compatible_units(''), (1, UnitsContainer()))
         self.assertEqual(ureg.get_compatible_units('meter'), ureg.get_compatible_units(ParserHelper(meter=1)))
-
-    def test_convert(self):
-        ureg = self.ureg
-        self.assertEqual(ureg.convert(1, 'meter', 'inch'),
-                         ureg.convert(1, UnitsContainer(meter=1), UnitsContainer(inch=1)))
-
-    def test_parse_units(self):
-        ureg = self.ureg
-        self.assertEqual(ureg.parse_units(''), UnitsContainer())
-        self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
 
 
 class TestRegistryWithDefaultRegistry(TestRegistry):

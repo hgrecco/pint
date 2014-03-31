@@ -117,10 +117,10 @@ class Converter(object):
 
     is_multiplicative = True
 
-    def to_reference(self, value):
+    def to_reference(self, value, inplace=False):
         return value
 
-    def from_reference(self, value):
+    def from_reference(self, value, inplace=False):
         return value
 
 
@@ -133,11 +133,21 @@ class ScaleConverter(Converter):
     def __init__(self, scale):
         self.scale = scale
 
-    def to_reference(self, value):
-        return value * self.scale
+    def to_reference(self, value, inplace=False):
+        if inplace:
+            value *= self.scale
+        else:
+            value = value * self.scale
 
-    def from_reference(self, value):
-        return value / self.scale
+        return value
+
+    def from_reference(self, value, inplace=False):
+        if inplace:
+            value /= self.scale
+        else:
+            value = value / self.scale
+
+        return value
 
 
 class OffsetConverter(Converter):
@@ -152,11 +162,23 @@ class OffsetConverter(Converter):
     def is_multiplicative(self):
         return self.offset == 0
 
-    def to_reference(self, value):
-        return value * self.scale + self.offset
+    def to_reference(self, value, inplace=False):
+        if inplace:
+            value *= self.scale
+            value += self.offset
+        else:
+            value = value * self.scale + self.offset
 
-    def from_reference(self, value):
-        return (value - self.offset) / self.scale
+        return value
+
+    def from_reference(self, value, inplace=False):
+        if inplace:
+            value -= self.offset
+            value /= self.scale
+        else:
+            value = (value - self.offset) / self.scale
+
+        return value
 
 
 class Definition(object):
@@ -932,7 +954,7 @@ class UnitRegistry(object):
 
         return frozenset(ret)
 
-    def convert(self, value, src, dst):
+    def convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
 
         :param value: value
@@ -996,7 +1018,7 @@ class UnitRegistry(object):
                 if not type(src_unit.converter) is type(dst_unit.converter):
                     raise DimensionalityError(src, dst, src_dim, dst_dim)
 
-                return dst_unit.converter.from_reference(src_unit.converter.to_reference(value))
+                return dst_unit.converter.from_reference(src_unit.converter.to_reference(value, inplace), inplace)
 
         factor, units = self.get_base_units(src / dst)
 
@@ -1007,9 +1029,14 @@ class UnitRegistry(object):
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
         if isinstance(value, Decimal):
-            return Decimal(str(factor)) * value
+            factor = Decimal(str(factor))
 
-        return factor * value
+        if inplace:
+            value *= factor
+        else:
+            value = value * factor
+
+        return value
 
     def pi_theorem(self, quantities):
         """Builds dimensionless quantities using the Buckingham π theorem
