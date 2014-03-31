@@ -110,6 +110,8 @@ except ImportError:
 
 try:
     from uncertainties import ufloat
+    HAS_UNCERTAINTIES = True
 except ImportError:
     ufloat = None
+    HAS_UNCERTAINTIES = False
 

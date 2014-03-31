@@ -2,11 +2,10 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pint.compat import ufloat
-from pint.testsuite import TestCase, unittest
+from pint.testsuite import TestCase, helpers
 
 
-@unittest.skipUnless(ufloat is None, 'Requires that Uncertainties is not installed')
+@helpers.requires_not_uncertainties()
 class TestNotMeasurement(TestCase):
 
     FORCE_NDARRAY = False
@@ -16,7 +15,7 @@ class TestNotMeasurement(TestCase):
         self.assertRaises(RuntimeError, M_, 4.0, 0.1, 's')
 
 
-@unittest.skipUnless(ufloat is not None, 'Requires that Uncertainties is installed')
+@helpers.requires_uncertainties()
 class TestMeasurement(TestCase):
 
     FORCE_NDARRAY = False

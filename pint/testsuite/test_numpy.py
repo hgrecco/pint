@@ -2,10 +2,10 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pint.compat import HAS_NUMPY, np, unittest
-from pint.testsuite import TestCase
+from pint.compat import np, unittest
+from pint.testsuite import TestCase, helpers
 
-@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+@helpers.requires_numpy()
 class TestNumpyMethods(TestCase):
 
     FORCE_NDARRAY = True

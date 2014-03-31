@@ -6,8 +6,8 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import HAS_NUMPY, np, unittest, NUMPY_VER, ufloat
-from pint.testsuite import TestCase
+from pint.compat import np, unittest
+from pint.testsuite import TestCase, helpers
 
 
 class TestIssues(TestCase):
@@ -70,7 +70,7 @@ class TestIssues(TestCase):
         self.assertRaises(ValueError, Q_, '', 'meter')
         self.assertRaises(ValueError, Q_, '')
 
-    @unittest.skipIf(HAS_NUMPY, 'Numpy present')
+    @helpers.requires_numpy()
     def test_issue61_notNP(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
@@ -99,7 +99,7 @@ class TestIssues(TestCase):
         q = ureg['m'].to(ureg['in'])
         self.assertEqual(q, ureg['m'].to('in'))
 
-    @unittest.skipIf(ufloat is None, 'Requires uncertainties')
+    @helpers.requires_uncertainties()
     def test_issue77(self):
         ureg = UnitRegistry()
         acc = (5.0 * ureg('m/s/s')).plus_minus(0.25)
@@ -249,7 +249,7 @@ class TestIssues(TestCase):
         self.assertQuantityAlmostEqual(y[0], ureg.Quantity(1, 'meter'))
 
 
-@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+@helpers.requires_numpy()
 class TestIssuesNP(TestCase):
 
     FORCE_NDARRAY = False
@@ -393,7 +393,7 @@ class TestIssuesNP(TestCase):
         self.assertSequenceEqual((v1 + v2).magnitude, np.array([5.1, 5.1]))
         self.assertSequenceEqual(v3.magnitude, np.array([5, 5]))
 
-    @unittest.skipIf(NUMPY_VER < '1.8', 'NumPy is older than 1.8')
+    @helpers.requires_numpy18()
     def test_issue121(self):
         sh = (2, 1)
         ureg = UnitRegistry()

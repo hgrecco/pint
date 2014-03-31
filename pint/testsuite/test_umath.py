@@ -2,8 +2,8 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pint.compat import HAS_NUMPY, np, unittest
-from pint.testsuite import TestCase
+from pint.compat import np
+from pint.testsuite import TestCase, helpers
 
 # Following http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
@@ -11,7 +11,7 @@ if np:
     pi = np.pi
 
 
-@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+@helpers.requires_numpy()
 class TestUFuncs(TestCase):
 
     FORCE_NDARRAY = True
@@ -149,7 +149,7 @@ class TestUFuncs(TestCase):
                                  ValueError, func, x1, x2)
 
 
-@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+@helpers.requires_numpy()
 class TestMathUfuncs(TestUFuncs):
     """Universal functions (ufunc) > Math operations
 
@@ -336,7 +336,8 @@ class TestMathUfuncs(TestUFuncs):
                     (),
                     2)
 
-@unittest.skipUnless(HAS_NUMPY, 'Numpy not present')
+
+@helpers.requires_numpy()
 class TestTrigUfuncs(TestUFuncs):
     """Universal functions (ufunc) > Trigonometric functions
 

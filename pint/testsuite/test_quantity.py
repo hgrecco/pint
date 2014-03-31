@@ -8,8 +8,8 @@ import operator as op
 
 from pint import DimensionalityError, UnitRegistry
 from pint.unit import UnitsContainer
-from pint.compat import string_types, PYTHON3, HAS_NUMPY, np
-from pint.testsuite import TestCase, unittest
+from pint.compat import string_types, PYTHON3, np
+from pint.testsuite import TestCase, helpers
 
 
 class TestQuantity(TestCase):
@@ -142,7 +142,7 @@ class TestQuantity(TestCase):
         self.assertAlmostEqual(x.to('inch').magnitude, 1)
         self.assertAlmostEqual(self.Q_(2, 'second').to('millisecond').magnitude, 2000)
 
-    @unittest.skipUnless(HAS_NUMPY, 'Numpy Required')
+    @helpers.requires_numpy()
     def test_convert(self):
 
         # Conversions with single units take a different codepath than
@@ -374,7 +374,7 @@ class TestQuantityBasicMath(TestCase):
         import fractions
         self._test_numeric(fractions.Fraction(1, 1), self._test_not_inplace)
 
-    @unittest.skipUnless(HAS_NUMPY, 'Requires Numpy')
+    @helpers.requires_numpy()
     def test_nparray(self):
         self._test_numeric(np.ones((1, 3)), self._test_inplace)
 

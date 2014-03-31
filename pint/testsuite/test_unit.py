@@ -12,8 +12,8 @@ from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        DimensionDefinition, _freeze, Converter, UnitRegistry,
                        LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.compat import u, unittest, HAS_NUMPY, np
-from pint.testsuite import TestCase, logger, TestHandler
+from pint.compat import u, unittest, np
+from pint.testsuite import TestCase, logger, TestHandler, helpers
 
 
 class TestConverter(unittest.TestCase):
@@ -34,7 +34,7 @@ class TestConverter(unittest.TestCase):
         self.assertEqual(c.from_reference(c.to_reference(100)), 100)
         self.assertEqual(c.to_reference(c.from_reference(100)), 100)
 
-    @unittest.skipUnless(HAS_NUMPY, 'NumPy required')
+    @helpers.requires_numpy()
     def test_converter_inplace(self):
         for c in (ScaleConverter(20.), OffsetConverter(20., 2)):
             fun1 = lambda x, y: c.from_reference(c.to_reference(x, y), y)
@@ -467,8 +467,7 @@ class TestRegistry(TestCase):
         self.assertEqual(ureg.convert(1, 'meter', 'inch'),
                          ureg.convert(1, UnitsContainer(meter=1), UnitsContainer(inch=1)))
 
-
-    @unittest.skipUnless(HAS_NUMPY, 'NumPy Required.')
+    @helpers.requires_numpy()
     def test_convert_inplace(self):
         ureg = self.ureg
 
