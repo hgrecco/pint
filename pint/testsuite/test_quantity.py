@@ -142,6 +142,24 @@ class TestQuantity(TestCase):
         self.assertAlmostEqual(x.to('inch').magnitude, 1)
         self.assertAlmostEqual(self.Q_(2, 'second').to('millisecond').magnitude, 2000)
 
+    @unittest.skipUnless(HAS_NUMPY, 'Numpy Required')
+    def test_convert(self):
+
+        # Conversions with single units take a different codepath than
+        # Conversions with more than one unit.
+        src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
+        src_dst2 = UnitsContainer(meter=1, seconds=-1), UnitsContainer(inch=1, minutes=-1)
+        for src, dst in (src_dst1, src_dst2):
+            a = np.ones((3, 1))
+            ac = np.ones((3, 1))
+
+            q = self.Q_(a, src)
+            qac = self.Q_(ac, src).to(dst)
+            r = q.ito(dst)
+            self.assertQuantityAlmostEqual(qac, r)
+            self.assertIs(r, q)
+            self.assertIs(r._magnitude, a)
+
     def test_context_attr(self):
         self.assertEqual(self.ureg.meter, self.Q_(1, 'meter'))
 

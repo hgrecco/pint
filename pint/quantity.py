@@ -204,7 +204,8 @@ class _Quantity(object):
             with self._REGISTRY.context(*contexts, **ctx_kwargs):
                 return self._REGISTRY.convert(self._magnitude, self._units, other)
 
-        return self._REGISTRY.convert(self._magnitude, self._units, other)
+        return self._REGISTRY.convert(self._magnitude, self._units, other,
+                                      inplace=isinstance(self._magnitude, ndarray))
 
     def ito(self, other=None, *contexts, **ctx_kwargs):
         """Inplace rescale to different units.
