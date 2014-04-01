@@ -202,8 +202,8 @@ class TestNumpyMethods(TestCase):
         self.assertSequenceEqual(q, [1000, 1,2,3])
 
         q = [0.,1.,2.,3.] * self.ureg.m/self.ureg.mm
-        q[0] = 1
-        self.assertSequenceEqual(q, [0.001,1,2,3]*self.ureg.m/self.ureg.mm)
+        q[0] = 1.
+        self.assertQuantityEqual(q, [0.001,1,2,3]*self.ureg.m/self.ureg.mm)
 
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):

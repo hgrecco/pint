@@ -44,6 +44,24 @@ class TestCase(unittest.TestCase):
         cls.ureg = UnitRegistry(force_ndarray=cls.FORCE_NDARRAY)
         cls.Q_ = cls.ureg.Quantity
 
+    def _get_comparable_magnitudes(self, first, second, msg):
+        if isinstance(first, _Quantity) and isinstance(second, _Quantity):
+            second = second.to(first)
+            self.assertEqual(first.units, second.units, msg=msg + 'Units are not equal.')
+            m1, m2 = first.magnitude, second.magnitude
+        elif isinstance(first, _Quantity):
+            self.assertTrue(first.dimensionless, msg=msg + 'The first is not dimensionless.')
+            first = first.to('')
+            m1, m2 = first.magnitude, second
+        elif isinstance(second, _Quantity):
+            self.assertTrue(second.dimensionless, msg=msg + 'The second is not dimensionless.')
+            second = second.to('')
+            m1, m2 = first, second.magnitude
+        else:
+            m1, m2 = first, second
+
+        return m1, m2
+
     def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
         if isinstance(seq1, _Quantity):
             if isinstance(seq2, _Quantity):
@@ -63,24 +81,22 @@ class TestCase(unittest.TestCase):
             seq2 = seq2.tolist()
         unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
 
+    def assertQuantityEqual(self, first, second, msg=None):
+        if msg is None:
+            msg = 'Comparing %r and %r. ' % (first, second)
+
+        m1, m2 = self._get_comparable_magnitudes(first, second, msg)
+
+        if isinstance(m1, ndarray) or isinstance(m2, ndarray):
+            np.testing.assert_array_equal(m1, m2, err_msg=msg)
+        else:
+            unittest.TestCase.assertEqual(self, m1, m2, msg, )
+
     def assertQuantityAlmostEqual(self, first, second, places=None, msg=None, delta=None):
         if msg is None:
             msg = 'Comparing %r and %r. ' % (first, second)
 
-        if isinstance(first, _Quantity) and isinstance(second, _Quantity):
-            second = second.to(first)
-            m1, m2 = first.magnitude, second.magnitude
-            self.assertEqual(first.units, second.units, msg=msg + 'Units are not equal.')
-        elif isinstance(first, _Quantity):
-            self.assertTrue(first.dimensionless, msg=msg + 'The first is not dimensionless.')
-            first = first.to('')
-            m1, m2 = first.magnitude, second
-        elif isinstance(second, _Quantity):
-            self.assertTrue(second.dimensionless, msg=msg + 'The second is not dimensionless.')
-            second = second.to('')
-            m1, m2 = first, second.magnitude
-        else:
-            m1, m2 = first, second
+        m1, m2 = self._get_comparable_magnitudes(first, second, msg)
 
         if isinstance(m1, ndarray) or isinstance(m2, ndarray):
             if delta is not None:

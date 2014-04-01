@@ -70,7 +70,7 @@ class TestIssues(TestCase):
         self.assertRaises(ValueError, Q_, '', 'meter')
         self.assertRaises(ValueError, Q_, '')
 
-    @helpers.requires_numpy()
+    @helpers.requires_not_numpy()
     def test_issue61_notNP(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
@@ -331,8 +331,8 @@ class TestIssuesNP(TestCase):
 
     def test_issue74(self):
         ureg = UnitRegistry()
-        v1 = np.asarray([1, 2, 3])
-        v2 = np.asarray([3, 2, 1])
+        v1 = np.asarray([1., 2., 3.])
+        v2 = np.asarray([3., 2., 1.])
         q1 = v1 * ureg.ms
         q2 = v2 * ureg.ms
 
@@ -353,8 +353,8 @@ class TestIssuesNP(TestCase):
 
     def test_issue75(self):
         ureg = UnitRegistry()
-        v1 = np.asarray([1, 2, 3])
-        v2 = np.asarray([3, 2, 1])
+        v1 = np.asarray([1., 2., 3.])
+        v2 = np.asarray([3., 2., 1.])
         q1 = v1 * ureg.ms
         q2 = v2 * ureg.ms
 
