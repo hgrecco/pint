@@ -1307,4 +1307,7 @@ class LazyRegistry(object):
         self.__init()
         return self[item]
 
+    def __call__(self, *args, **kwargs):
+        self.__init()
+        return self(*args, **kwargs)
 
