@@ -16,12 +16,14 @@ class TestPiTheorem(QuantityTestCase):
     def test_simple(self):
 
         # simple movement
-        self.assertEqual(pi_theorem({'V': 'm/s', 'T': 's', 'L': 'm'}),
-                                    [{'V': 1, 'T': 1, 'L': -1}])
+        with self.capture_log() as buffer:
+            self.assertEqual(pi_theorem({'V': 'm/s', 'T': 's', 'L': 'm'}),
+                                        [{'V': 1, 'T': 1, 'L': -1}])
 
-        # pendulum
-        self.assertEqual(pi_theorem({'T': 's', 'M': 'grams', 'L': 'm', 'g': 'm/s**2'}),
-                                    [{'g': 1, 'T': 2, 'L': -1}])
+            # pendulum
+            self.assertEqual(pi_theorem({'T': 's', 'M': 'grams', 'L': 'm', 'g': 'm/s**2'}),
+                                        [{'g': 1, 'T': 2, 'L': -1}])
+            self.assertEqual(len(buffer), 7)
 
     def test_inputs(self):
         V = 'km/hour'

@@ -3,10 +3,10 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 from pint import formatting as fmt
-from pint.compat import unittest
+from pint.testsuite import QuantityTestCase
 
 
-class TestFormatter(unittest.TestCase):
+class TestFormatter(QuantityTestCase):
 
     def test_join(self):
         for empty in (tuple(), []):

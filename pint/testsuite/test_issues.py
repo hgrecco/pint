@@ -32,10 +32,10 @@ class TestIssues(QuantityTestCase):
     def test_issue29(self):
         ureg = UnitRegistry()
         ureg.define('molar = mole / liter = M')
-        t = 4 * ureg['mM']
+        t = 4 * ureg('mM')
         self.assertEqual(t.magnitude, 4)
         self.assertEqual(t.units, UnitsContainer(millimolar=1))
-        self.assertEqual(t.to('mole / liter'), 4e-3 * ureg['M'])
+        self.assertEqual(t.to('mole / liter'), 4e-3 * ureg('M'))
 
     def test_issue52(self):
         u1 = UnitRegistry()
@@ -96,8 +96,8 @@ class TestIssues(QuantityTestCase):
 
     def test_issue69(self):
         ureg = UnitRegistry()
-        q = ureg['m'].to(ureg['in'])
-        self.assertEqual(q, ureg['m'].to('in'))
+        q = ureg('m').to(ureg('in'))
+        self.assertEqual(q, ureg('m').to('in'))
 
     @helpers.requires_uncertainties()
     def test_issue77(self):
@@ -326,7 +326,7 @@ class TestIssuesNP(QuantityTestCase):
 
     def test_issue62(self):
         ureg = UnitRegistry()
-        m = ureg['m**0.5']
+        m = ureg('m**0.5')
         self.assertEqual(str(m.units), 'meter ** 0.5')
 
     def test_issue74(self):

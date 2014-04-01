@@ -37,8 +37,9 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(x.magnitude, 4.2)
         self.assertEqual(x.units, UnitsContainer())
 
-        # TODO This emits a warning:
-        self.assertEqual(4.2 * self.ureg.meter, self.Q_(4.2, 2 * self.ureg.meter))
+        with self.capture_log() as buffer:
+            self.assertEqual(4.2 * self.ureg.meter, self.Q_(4.2, 2 * self.ureg.meter))
+            self.assertEqual(len(buffer), 1)
 
     def test_quantity_bool(self):
         self.assertTrue(self.Q_(1, None))

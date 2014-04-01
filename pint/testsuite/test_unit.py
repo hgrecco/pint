@@ -559,7 +559,7 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         x.test = 'test'
         self.assertIsInstance(x, UnitRegistry)
         y = LazyRegistry()
-        q = y['meter']
+        q = y('meter')
         self.assertIsInstance(y, UnitRegistry)
 
     def test_redefinition(self):

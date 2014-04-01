@@ -44,7 +44,7 @@ class QuantityTestCase(unittest.TestCase):
 
     FORCE_NDARRAY = False
 
-    CHECK_NO_WARNING = False
+    CHECK_NO_WARNING = True
 
     @classmethod
     def setUpClass(cls):
@@ -56,7 +56,11 @@ class QuantityTestCase(unittest.TestCase):
         th = TestHandler()
         th.setLevel(level)
         logger.addHandler(th)
+        if self._test_handler is not None:
+            l = len(self._test_handler.buffer)
         yield th.buffer
+        if self._test_handler is not None:
+            self._test_handler.buffer = self._test_handler.buffer[:l]
 
     def setUp(self):
         self._test_handler = None
@@ -67,8 +71,10 @@ class QuantityTestCase(unittest.TestCase):
 
     def tearDown(self):
         if self._test_handler is not None:
-            l = len(self._test_handler.buffer)
-            self.assertEqual(l, 0, msg='%d warnings raised.')
+            buf = self._test_handler.buffer
+            l = len(buf)
+            msg = '\n'.join(record.get('msg', str(record)) for record in buf)
+            self.assertEqual(l, 0, msg='%d warnings raised.\n%s' % (l, msg))
 
     def _get_comparable_magnitudes(self, first, second, msg):
         if isinstance(first, _Quantity) and isinstance(second, _Quantity):
