@@ -3,7 +3,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 from pint.compat import np
-from pint.testsuite import TestCase, helpers
+from pint.testsuite import QuantityTestCase, helpers
 
 # Following http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
@@ -12,7 +12,7 @@ if np:
 
 
 @helpers.requires_numpy()
-class TestUFuncs(TestCase):
+class TestUFuncs(QuantityTestCase):
 
     FORCE_NDARRAY = True
 

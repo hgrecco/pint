@@ -6,10 +6,10 @@ import itertools
 
 from pint import pi_theorem
 
-from pint.testsuite import TestCase
+from pint.testsuite import QuantityTestCase
 
 
-class TestPiTheorem(TestCase):
+class TestPiTheorem(QuantityTestCase):
 
     FORCE_NDARRAY = False
 

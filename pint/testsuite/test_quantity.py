@@ -9,10 +9,10 @@ import operator as op
 from pint import DimensionalityError, UnitRegistry
 from pint.unit import UnitsContainer
 from pint.compat import string_types, PYTHON3, np
-from pint.testsuite import TestCase, helpers
+from pint.testsuite import QuantityTestCase, helpers
 
 
-class TestQuantity(TestCase):
+class TestQuantity(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
@@ -123,24 +123,24 @@ class TestQuantity(TestCase):
 
     def test_to_base_units(self):
         x = self.Q_('1*inch')
-        self.assertAlmostEqual(x.to_base_units(), self.Q_(0.0254, 'meter'))
+        self.assertQuantityAlmostEqual(x.to_base_units(), self.Q_(0.0254, 'meter'))
         x = self.Q_('1*inch*inch')
-        self.assertAlmostEqual(x.to_base_units(), self.Q_(0.0254 ** 2.0, 'meter*meter'))
+        self.assertQuantityAlmostEqual(x.to_base_units(), self.Q_(0.0254 ** 2.0, 'meter*meter'))
         x = self.Q_('1*inch/minute')
-        self.assertAlmostEqual(x.to_base_units(), self.Q_(0.0254 / 60., 'meter/second'))
+        self.assertQuantityAlmostEqual(x.to_base_units(), self.Q_(0.0254 / 60., 'meter/second'))
 
     def test_convert(self):
         x = self.Q_('2*inch')
-        self.assertAlmostEqual(x.to('meter'), self.Q_(2. * 0.0254, 'meter'))
+        self.assertQuantityAlmostEqual(x.to('meter'), self.Q_(2. * 0.0254, 'meter'))
         x = self.Q_('2*meter')
-        self.assertAlmostEqual(x.to('inch'), self.Q_(2. / 0.0254, 'inch'))
+        self.assertQuantityAlmostEqual(x.to('inch'), self.Q_(2. / 0.0254, 'inch'))
         x = self.Q_('2*sidereal_second')
-        self.assertAlmostEqual(x.to('second'), self.Q_(1.994539133 , 'second'))
+        self.assertQuantityAlmostEqual(x.to('second'), self.Q_(1.994539133 , 'second'))
         x = self.Q_('2.54*centimeter/second')
-        self.assertAlmostEqual(x.to('inch/second'), self.Q_(1, 'inch/second'))
+        self.assertQuantityAlmostEqual(x.to('inch/second'), self.Q_(1, 'inch/second'))
         x = self.Q_('2.54*centimeter')
-        self.assertAlmostEqual(x.to('inch').magnitude, 1)
-        self.assertAlmostEqual(self.Q_(2, 'second').to('millisecond').magnitude, 2000)
+        self.assertQuantityAlmostEqual(x.to('inch').magnitude, 1)
+        self.assertQuantityAlmostEqual(self.Q_(2, 'second').to('millisecond').magnitude, 2000)
 
     @helpers.requires_numpy()
     def test_convert(self):
@@ -178,48 +178,48 @@ class TestQuantity(TestCase):
         self.assertEqual((self.Q_(1, 'meter')/self.Q_(1, 'mm')).to(''), 1000)
 
     def test_offset(self):
-        self.assertAlmostEqual(self.Q_(0, 'kelvin').to('kelvin'), self.Q_(0, 'kelvin'))
-        self.assertAlmostEqual(self.Q_(0, 'degC').to('kelvin'), self.Q_(273.15, 'kelvin'))
-        self.assertAlmostEqual(self.Q_(0, 'degF').to('kelvin'), self.Q_(255.372222, 'kelvin'), places=2)
+        self.assertQuantityAlmostEqual(self.Q_(0, 'kelvin').to('kelvin'), self.Q_(0, 'kelvin'))
+        self.assertQuantityAlmostEqual(self.Q_(0, 'degC').to('kelvin'), self.Q_(273.15, 'kelvin'))
+        self.assertQuantityAlmostEqual(self.Q_(0, 'degF').to('kelvin'), self.Q_(255.372222, 'kelvin'), rtol=0.01)
 
-        self.assertAlmostEqual(self.Q_(100, 'kelvin').to('kelvin'), self.Q_(100, 'kelvin'))
-        self.assertAlmostEqual(self.Q_(100, 'degC').to('kelvin'), self.Q_(373.15, 'kelvin'))
-        self.assertAlmostEqual(self.Q_(100, 'degF').to('kelvin'), self.Q_(310.92777777, 'kelvin'), places=2)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'kelvin').to('kelvin'), self.Q_(100, 'kelvin'))
+        self.assertQuantityAlmostEqual(self.Q_(100, 'degC').to('kelvin'), self.Q_(373.15, 'kelvin'))
+        self.assertQuantityAlmostEqual(self.Q_(100, 'degF').to('kelvin'), self.Q_(310.92777777, 'kelvin'), rtol=0.01)
 
-        self.assertAlmostEqual(self.Q_(0, 'kelvin').to('degC'), self.Q_(-273.15, 'degC'))
-        self.assertAlmostEqual(self.Q_(100, 'kelvin').to('degC'), self.Q_(-173.15, 'degC'))
-        self.assertAlmostEqual(self.Q_(0, 'kelvin').to('degF'), self.Q_(-459.67, 'degF'), 2)
-        self.assertAlmostEqual(self.Q_(100, 'kelvin').to('degF'), self.Q_(-279.67, 'degF'), 2)
+        self.assertQuantityAlmostEqual(self.Q_(0, 'kelvin').to('degC'), self.Q_(-273.15, 'degC'))
+        self.assertQuantityAlmostEqual(self.Q_(100, 'kelvin').to('degC'), self.Q_(-173.15, 'degC'))
+        self.assertQuantityAlmostEqual(self.Q_(0, 'kelvin').to('degF'), self.Q_(-459.67, 'degF'), rtol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'kelvin').to('degF'), self.Q_(-279.67, 'degF'), rtol=0.01)
 
-        self.assertAlmostEqual(self.Q_(32, 'degF').to('degC'), self.Q_(0, 'degC'), 2)
-        self.assertAlmostEqual(self.Q_(100, 'degC').to('degF'), self.Q_(212, 'degF'), 2)
+        self.assertQuantityAlmostEqual(self.Q_(32, 'degF').to('degC'), self.Q_(0, 'degC'), atol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'degC').to('degF'), self.Q_(212, 'degF'), atol=0.01)
 
-        self.assertAlmostEqual(self.Q_(54, 'degF').to('degC'), self.Q_(12.2222, 'degC'), 2)
-        self.assertAlmostEqual(self.Q_(12, 'degC').to('degF'), self.Q_(53.6, 'degF'), 2)
+        self.assertQuantityAlmostEqual(self.Q_(54, 'degF').to('degC'), self.Q_(12.2222, 'degC'), atol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(12, 'degC').to('degF'), self.Q_(53.6, 'degF'), atol=0.01)
 
-        self.assertAlmostEqual(self.Q_(12, 'kelvin').to('degC'), self.Q_(-261.15, 'degC'), 2)
-        self.assertAlmostEqual(self.Q_(12, 'degC').to('kelvin'), self.Q_(285.15, 'kelvin'), 2)
+        self.assertQuantityAlmostEqual(self.Q_(12, 'kelvin').to('degC'), self.Q_(-261.15, 'degC'), atol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(12, 'degC').to('kelvin'), self.Q_(285.15, 'kelvin'), atol=0.01)
 
-        self.assertAlmostEqual(self.Q_(12, 'kelvin').to('degR'), self.Q_(21.6, 'degR'), 2)
-        self.assertAlmostEqual(self.Q_(12, 'degR').to('kelvin'), self.Q_(6.66666667, 'kelvin'), 2)
+        self.assertQuantityAlmostEqual(self.Q_(12, 'kelvin').to('degR'), self.Q_(21.6, 'degR'), atol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(12, 'degR').to('kelvin'), self.Q_(6.66666667, 'kelvin'), atol=0.01)
 
-        self.assertAlmostEqual(self.Q_(12, 'degC').to('degR'), self.Q_(513.27, 'degR'), 2)
-        self.assertAlmostEqual(self.Q_(12, 'degR').to('degC'), self.Q_(-266.483333, 'degC'), 2)
+        self.assertQuantityAlmostEqual(self.Q_(12, 'degC').to('degR'), self.Q_(513.27, 'degR'), atol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(12, 'degR').to('degC'), self.Q_(-266.483333, 'degC'), atol=0.01)
 
 
     def test_offset_delta(self):
-        self.assertAlmostEqual(self.Q_(0, 'delta_kelvin').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'))
-        self.assertAlmostEqual(self.Q_(0, 'delta_degC').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'))
-        self.assertAlmostEqual(self.Q_(0, 'delta_degF').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'), places=2)
+        self.assertQuantityAlmostEqual(self.Q_(0, 'delta_kelvin').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'))
+        self.assertQuantityAlmostEqual(self.Q_(0, 'delta_degC').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'))
+        self.assertQuantityAlmostEqual(self.Q_(0, 'delta_degF').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'), rtol=0.01)
 
-        self.assertAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_kelvin'), self.Q_(100, 'delta_kelvin'))
-        self.assertAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degC'), self.Q_(100, 'delta_degC'))
-        self.assertAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degF'), self.Q_(180, 'delta_degF'), places=2)
-        self.assertAlmostEqual(self.Q_(100, 'delta_degF').to('delta_kelvin'), self.Q_(55.55555556, 'delta_kelvin'), places=2)
-        self.assertAlmostEqual(self.Q_(100, 'delta_degC').to('delta_degF'), self.Q_(180, 'delta_degF'), places=2)
-        self.assertAlmostEqual(self.Q_(100, 'delta_degF').to('delta_degC'), self.Q_(55.55555556, 'delta_degC'), places=2)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_kelvin'), self.Q_(100, 'delta_kelvin'))
+        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degC'), self.Q_(100, 'delta_degC'))
+        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degF'), self.Q_(180, 'delta_degF'), rtol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_degF').to('delta_kelvin'), self.Q_(55.55555556, 'delta_kelvin'), rtol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_degC').to('delta_degF'), self.Q_(180, 'delta_degF'), rtol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_degF').to('delta_degC'), self.Q_(55.55555556, 'delta_degC'), rtol=0.01)
 
-        self.assertAlmostEqual(self.Q_(12.3, 'delta_degC').to('delta_degF'), self.Q_(22.14, 'delta_degF'), places=2)
+        self.assertQuantityAlmostEqual(self.Q_(12.3, 'delta_degC').to('delta_degF'), self.Q_(22.14, 'delta_degF'), rtol=0.01)
 
 
     def test_pickle(self):
@@ -234,7 +234,7 @@ class TestQuantity(TestCase):
         pickle_test(self.Q_(2.4, 'm/s'))
 
 
-class TestQuantityBasicMath(TestCase):
+class TestQuantityBasicMath(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
@@ -404,7 +404,7 @@ class TestQuantityBasicMath(TestCase):
             self.assertRaises(DimensionalityError, fun, z)
 
 
-class TestDimensions(TestCase):
+class TestDimensions(QuantityTestCase):
 
     FORCE_NDARRAY = False
 

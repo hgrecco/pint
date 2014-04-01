@@ -8,10 +8,8 @@ from collections import defaultdict
 from pint import UnitRegistry
 from pint.context import Context, _freeze
 from pint.unit import UnitsContainer
-from pint.testsuite import TestCase, TestHandler
-from pint.compat import unittest
+from pint.testsuite import QuantityTestCase
 
-from pint import logger
 
 def add_ctxs(ureg):
     a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[time]': -1})
@@ -81,7 +79,7 @@ def add_sharedargdef_ctxs(ureg):
     ureg.add_context(d)
 
 
-class TestContexts(unittest.TestCase):
+class TestContexts(QuantityTestCase):
 
     def test_freeze(self):
         self.assertEqual(_freeze('meter'), frozenset([('meter', 1)]))
@@ -571,25 +569,24 @@ class TestContexts(unittest.TestCase):
 
         ureg = UnitRegistry()
 
-        th = TestHandler()
-        logger.addHandler(th)
+        with self.capture_log() as buffer:
+            print(buffer)
+            add_ctxs(ureg)
 
-        add_ctxs(ureg)
+            d = Context('ab')
+            ureg.add_context(d)
 
-        d = Context('ab')
-        ureg.add_context(d)
+            self.assertEqual(len(buffer), 1)
+            self.assertIn("ab", str(buffer[-1]))
 
-        self.assertEqual(len(th.buffer), 1)
-        self.assertIn("ab", str(th.buffer[-1]['message']))
+            d = Context('ab1', aliases=('ab',))
+            ureg.add_context(d)
 
-        d = Context('ab1', aliases=('ab',))
-        ureg.add_context(d)
-
-        self.assertEqual(len(th.buffer), 2)
-        self.assertIn("ab", str(th.buffer[-1]['message']))
+            self.assertEqual(len(buffer), 2)
+            self.assertIn("ab", str(buffer[-1]))
 
 
-class TestDefinedContexts(TestCase):
+class TestDefinedContexts(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
@@ -622,8 +619,8 @@ class TestDefinedContexts(TestCase):
                     self.assertTrue(p)
                     msg = '{0} <-> {1}'.format(a, b)
                     # assertAlmostEqualRelError converts second to first
-                    self.assertAlmostEqualRelError(b, a, rel=.01, msg=msg)
+                    self.assertQuantityAlmostEqual(b, a, rtol=0.01, msg=msg)
 
 
         for a, b in itertools.product(eq, eq):
-            self.assertAlmostEqualRelError(a.to(b.units, 'sp'), b, rel=.01, msg=msg)
+            self.assertQuantityAlmostEqual(a.to(b.units, 'sp'), b, rtol=0.01)

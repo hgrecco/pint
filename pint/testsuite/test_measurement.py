@@ -2,11 +2,11 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pint.testsuite import TestCase, helpers
+from pint.testsuite import QuantityTestCase, helpers
 
 
 @helpers.requires_not_uncertainties()
-class TestNotMeasurement(TestCase):
+class TestNotMeasurement(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
@@ -16,7 +16,7 @@ class TestNotMeasurement(TestCase):
 
 
 @helpers.requires_uncertainties()
-class TestMeasurement(TestCase):
+class TestMeasurement(QuantityTestCase):
 
     FORCE_NDARRAY = False
 

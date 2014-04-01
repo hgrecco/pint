@@ -13,7 +13,7 @@ from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, unittest, np
-from pint.testsuite import TestCase, logger, TestHandler, helpers
+from pint.testsuite import QuantityTestCase, helpers
 
 
 class TestConverter(unittest.TestCase):
@@ -119,7 +119,7 @@ class TestDefinition(unittest.TestCase):
         self.assertEqual(x.reference, UnitsContainer({'[length]': 1, '[time]': -1}))
 
 
-class TestUnitsContainer(unittest.TestCase):
+class TestUnitsContainer(QuantityTestCase):
 
     def _test_inplace(self, operator, value1, value2, expected_result):
         value1 = copy.copy(value1)
@@ -128,9 +128,9 @@ class TestUnitsContainer(unittest.TestCase):
         id2 = id(value2)
         value1 = operator(value1, value2)
         value2_cpy = copy.copy(value2)
-        self.assertAlmostEqual(value1, expected_result)
+        self.assertEqual(value1, expected_result)
         self.assertEqual(id1, id(value1))
-        self.assertAlmostEqual(value2, value2_cpy)
+        self.assertEqual(value2, value2_cpy)
         self.assertEqual(id2, id(value2))
 
     def _test_not_inplace(self, operator, value1, value2, expected_result):
@@ -142,9 +142,9 @@ class TestUnitsContainer(unittest.TestCase):
 
         result = operator(value1, value2)
 
-        self.assertAlmostEqual(expected_result, result)
-        self.assertAlmostEqual(value1, value1_cpy)
-        self.assertAlmostEqual(value2, value2_cpy)
+        self.assertEqual(expected_result, result)
+        self.assertEqual(value1, value1_cpy)
+        self.assertEqual(value2, value2_cpy)
         self.assertNotEqual(id(result), id1)
         self.assertNotEqual(id(result), id2)
 
@@ -227,7 +227,7 @@ class TestUnitsContainer(unittest.TestCase):
         self.assertRaises(TypeError, d.__rtruediv__, list())
 
 
-class TestRegistry(TestCase):
+class TestRegistry(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
@@ -450,17 +450,16 @@ class TestRegistry(TestCase):
     def test_redefinition(self):
         d = UnitRegistry().define
 
-        th = TestHandler()
-        logger.addHandler(th)
-        d('meter = [fruits]')
-        d('kilo- = 1000')
-        d('[speed] = [vegetables]')
+        with self.capture_log() as buffer:
+            d('meter = [fruits]')
+            d('kilo- = 1000')
+            d('[speed] = [vegetables]')
 
-        # aliases
-        d('bla = 3.2 meter = inch')
-        d('myk- = 1000 = kilo-')
+            # aliases
+            d('bla = 3.2 meter = inch')
+            d('myk- = 1000 = kilo-')
 
-        self.assertEqual(len(th.buffer), 5)
+            self.assertEqual(len(buffer), 5)
 
     def test_convert_parse_str(self):
         ureg = self.ureg
@@ -495,7 +494,7 @@ class TestRegistry(TestCase):
         self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
 
 
-class TestCompatibleUnits(TestCase):
+class TestCompatibleUnits(QuantityTestCase):
 
     FORCE_NDARRAY= False
 
