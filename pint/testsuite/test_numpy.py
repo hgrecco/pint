@@ -14,13 +14,21 @@ class TestNumpyMethods(TestCase):
     def q(self):
         return [[1,2],[3,4]] * self.ureg.m
 
+    def qnan(self):
+        return [[1,2],[3,4],[np.nan,np.nan]] * self.ureg.m    
+
     def test_tolist(self):
         self.assertEqual(self.q.tolist(), [[1*self.ureg.m, 2*self.ureg.m], [3*self.ureg.m, 4*self.ureg.m]])
 
     def test_sum(self):
         self.assertEqual(self.q.sum(), 10*self.ureg.m)
-        self.assertSequenceEqual(self.q.sum(0), [4,     6]*self.ureg.m)
+        self.assertSequenceEqual(self.q.sum(0), [4, 6]*self.ureg.m)
         self.assertSequenceEqual(self.q.sum(1), [3, 7]*self.ureg.m)
+
+    def test_nansum(self):
+        self.assertEqual(self.qnan.nansum(), 10*self.ureg.m)
+        self.assertSequenceEqual(self.qnan.nansum(0), [4, 6]*self.ureg.m)
+        self.assertSequenceEqual(self.qnan.nansum(1), [3, 7, np.nan]*self.ureg.m)
 
     def test_fill(self):
         tmp = self.q
@@ -106,12 +114,28 @@ class TestNumpyMethods(TestCase):
     def test_argmax(self):
         self.assertEqual(self.q.argmax(), 3)
 
+    def test_nanargmax(self):
+        self.assertEqual(self.qnan.nanargmax(), 3)
+        
+    def test_nanmax(self):
+        self.assertEqual(self.qnan.nanmax(), np.nanmax(self))
+        self.assertEqual(self.qnan.nanmax(axis=0), np.nanmax(self, axis=0))
+        self.assertEqual(self.qnan.nanmax(axis=1), np.nanmax(self, axis=1))
+
     def test_min(self):
         self.assertEqual(self.q.min(), 1 * self.ureg.m)
+
+    def test_nanmin(self):
+        self.assertEqual(self.qnan.nanmin(), np.nanmin(self))
+        self.assertEqual(self.qnan.nanmin(axis=0), np.nanmin(self, axis=0))
+        self.assertEqual(self.qnan.nanmin(axis=1), np.nanmin(self, axis=1))
 
     def test_argmin(self):
         self.assertEqual(self.q.argmin(), 0)
 
+    def test_nanargmin(self):
+        self.assertEqual(self.qnan.nanargmin(), 0)
+        
     def test_ptp(self):
         self.assertEqual(self.q.ptp(), 3 * self.ureg.m)
 
@@ -146,12 +170,20 @@ class TestNumpyMethods(TestCase):
     def test_mean(self):
         self.assertEqual(self.q.mean(), 2.5 * self.ureg.m)
 
+    def test_nanmean(self):
+        self.assertEqual(self.qnan.nanmean(), np.nanmean(self))
+        self.assertEqual(self.qnan.nanmean(axis=0), np.nanmean(self, axis=0))
+        self.assertEqual(self.qnan.nanmean(axis=1), np.nanmean(self, axis=1))
+        
     def test_var(self):
         self.assertEqual(self.q.var(), 1.25*self.ureg.m**2)
 
     def test_std(self):
         self.assertAlmostEqual(self.q.std(), 1.11803*self.ureg.m, delta=1e-5)
 
+    def test_nanstd(self):
+        self.assertAlmostEqual(self.qnan.nanstd(), 1.11803*self.ureg.m, delta=1e-5)
+        
     def test_prod(self):
         self.assertEqual(self.q.prod(), 24 * self.ureg.m**4)
 

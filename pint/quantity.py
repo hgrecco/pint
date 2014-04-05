@@ -538,6 +538,8 @@ class _Quantity(object):
     __copy_units = 'compress conj conjugate copy cumsum diagonal flatten ' \
                    'max mean min ptp ravel repeat reshape round ' \
                    'squeeze std sum take trace transpose ' \
+                   'nanmean nansum nanstd '\
+                   'nanmin nanmax '\
                    'ceil floor hypot rint ' \
                    'add subtract ' \
                    'copysign nextafter trunc ' \
@@ -816,3 +818,25 @@ class _Quantity(object):
                 error = error * abs(self.magnitude)
 
         return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self.units)
+
+    # NaN support
+    def nanmin(self, axis=None):
+        return self.__class__(np.nanmin(self, axis=axis), self._units)
+
+    def nanmean(self, axis=None):
+        return self.__class__(np.nanmean(self, axis=axis), self._units)
+        
+    def nanmax(self, axis=None):
+        return self.__class__(np.nanmax(self, axis=axis), self._units)
+
+    def nansum(self, axis=None):
+        return self.__class__(np.nansum(self,axis=axis), self._units)
+
+    def nanstd(self, axis=None):
+        return self.__class__(np.nanstd(self,axis=axis), self._units)
+    
+    def nanargmin(self,axis=None, out=None):
+        return self.__class__(np.nanargmin(self,axis=axis), self._units)
+        
+    def nanargmax(self,axis=None, out=None):
+        return self.__class__(np.nanargmax(self,axis=axis), self._units)
