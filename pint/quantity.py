@@ -128,7 +128,7 @@ class _Quantity(object):
         return ret
 
     def __str__(self):
-        return '{0} {1}'.format(self._magnitude, self._units)
+        return format(self)
 
     def __repr__(self):
         return "<Quantity({0}, '{1}')>".format(self._magnitude, self._units)
