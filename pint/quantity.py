@@ -767,9 +767,16 @@ class _Quantity(object):
     def __array_prepare__(self, obj, context=None):
         # If this uf is handled by Pint, write it down in the handling dictionary.
 
+        # name of the ufunc, argument of the ufunc, domain of the ufunc
+        # In ufuncs with multiple outputs, domain indicates which output
+        # is currently being prepared (eg. see modf).
+        # In ufuncs with a single output, domain is 0
         uf, objs, huh = context
-        ufname = uf.__name__ if huh == 0 else '{0}__{1}'.format(uf.__name__, huh)
+
         if uf.__name__ in self.__handled and huh == 0:
+            # Only one ufunc should be handled at a time.
+            # If a ufunc is already being handled (and this is not another domain),
+            # something is wrong..
             if self.__handling:
                 raise Exception('Cannot handled nested ufuncs.\n'
                                 'Current: {0}\n'
@@ -781,16 +788,30 @@ class _Quantity(object):
     def __array_wrap__(self, obj, context=None):
         uf, objs, huh = context
 
+        # if this ufunc is not handled by Pint, pass it to the magnitude.
         if uf.__name__ not in self.__handled:
             return self.magnitude.__array_wrap__(obj, context)
 
         try:
             ufname = uf.__name__ if huh == 0 else '{0}__{1}'.format(uf.__name__, huh)
 
+            # First, we check the units of the input arguments.
+
             if huh == 0:
+                # Do this only when the wrap is called for the first ouput.
+
+                # Store the destination units
                 dst_units = None
+                # List of magnitudes of Quantities with the right units
+                # to be used as argument of the ufunc
                 mobjs = None
+
                 if uf.__name__ in self.__require_units:
+                    # ufuncs in __require_units
+                    # require specific units
+                    # This is more complex that it should be due to automatic
+                    # conversion between radians/dimensionless
+                    # TODO: maybe could be simplified using Contexts
                     dst_units = self.__require_units[uf.__name__]
                     if dst_units == 'radian':
                         mobjs = []
@@ -806,9 +827,13 @@ class _Quantity(object):
                         mobjs = tuple(mobjs)
                     else:
                         dst_units = self._REGISTRY.parse_expression(dst_units).units
+
                 elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
+                    # ufunc with multiple arguments require that all inputs have
+                    # the same arguments unless they are in __skip_other_args
                     dst_units = objs[0].units
 
+                # Do the conversion (if needed) and extract the magnitude for each input.
                 if mobjs is None:
                     if dst_units is not None:
                         mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
@@ -819,14 +844,22 @@ class _Quantity(object):
                         mobjs = tuple(getattr(other, 'magnitude', other)
                                       for other in objs)
 
+                # call the ufunc
                 out = uf(*mobjs)
 
+                # If there are multiple outputs,
+                # store them in __handling (uf, objs, huh, out0, out1, ...)
+                # and return the first
                 if uf.nout > 1:
                     self.__handling += out
                     out = out[0]
             else:
+                # If this is not the first output,
+                # just grab the result that was previously calculated.
                 out = self.__handling[3 + huh]
 
+
+            # Second, we set the units of the output value.
             if ufname in self.__set_units:
                 try:
                     out = self.__class__(out, self.__set_units[ufname])
@@ -860,6 +893,8 @@ class _Quantity(object):
         except Exception as ex:
             print(ex)
         finally:
+            # If this is the last output argument for the ufunc,
+            # we are done handling this ufunc.
             if uf.nout == huh + 1:
                 self.__handling = None
 
