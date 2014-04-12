@@ -35,7 +35,6 @@ else:
     tokenizer = lambda input_string: tokenize.generate_tokens(StringIO(input_string).readline)
 
     import codecs
-    string_types = basestring
 
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
