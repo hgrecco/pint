@@ -5,16 +5,31 @@ Pint Changelog
 0.5 (unreleased)
 ----------------
 
-- Implemented parsing of pretty printed units.
-  (Issue #117, thanks jpgrayson)
+- Improved test suite helper functions.
+- Print honors default format w/o format().
+  (Issue #132, thanks mankoff)
+- Fixed sum() by treating number zero as a special case.
+  (Issue #122, thanks rec)
+- Improved behaviour in ScaleConverter, OffsetConverter and Quantity.to.
+  (Issue #120)
 - Reimplemented loading of default definitions to allow Pint in a cx_freeze or similar package.
   (Issue #118, thanks jbmohler)
-- Added condensed format.
-  (Issue #107, thanks rec)
-- Raise error when invalid formatting code is given.
-  (Issue #111, thanks rec)
+- Implemented parsing of pretty printed units.
+  (Issue #117, thanks jpgrayson)
 - Fixed representation of dimensionless quantities.
   (Issue #112, thanks rec)
+- Raise error when invalid formatting code is given.
+  (Issue #111, thanks rec)
+- Default registry to lazy load, raise error on redefinition
+  (Issue #108, thanks rec, aepsil0n)
+- Added condensed format.
+  (Issue #107, thanks rec)
+- Added UnitRegistry () operator to parse expression replacing [].
+  (Issue #106, thanks rec)
+- Optional case insensitive unit parsing. 
+  (Issue #105, thanks rec, jeremyfreeman, dbrnz)
+- Change the Quantity mutability depending on magnitude type.
+  (Issue #104, thanks rec)
 - Implemented API to list compatible units.
   (Issue #89)
 - Implemented cache of key UnitRegistry methods.
