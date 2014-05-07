@@ -389,6 +389,7 @@ _subs_re = [(r"([\w\.\-\+\*\\\^])\s+", r"\1 "), # merge multiple spaces
             (r"cubic ({0})", r"\1**3"),
             (r"square ({0})", r"\1**2"),
             (r"sq ({0})", r"\1**2"),
+            (r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])", r"\1*"),  # Handle numberLetter for multiplication
             (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
             ]
 

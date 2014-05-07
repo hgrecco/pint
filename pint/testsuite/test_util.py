@@ -96,7 +96,15 @@ class TestStringProcessor(unittest.TestCase):
         self._test('1.2E-24 hour', '1.2E-24*hour')
         self._test('1.2E+24 hour', '1.2E+24*hour')
 
-    def names(self):
+    def test_joined_multiplication(self):
+        self._test('1hour', '1*hour')
+        self._test('1.hour', '1.*hour')
+        self._test('1.1hour', '1.1*hour')
+        self._test('1h', '1*h')
+        self._test('1.h', '1.*h')
+        self._test('1.1h', '1.1*h')
+
+    def test_names(self):
         self._test('g_0', 'g_0')
         self._test('g0', 'g0')
         self._test('g', 'g')
