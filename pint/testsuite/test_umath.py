@@ -462,7 +462,7 @@ class TestTrigUfuncs(TestUFuncs):
     def test_arctanh(self):
         self._test1(np.arctanh, (np.arange(0, .9, .1) * self.ureg.dimensionless,
                                  np.arange(0, .9, .1) * self.ureg.m / self.ureg.m
-                                ), (self.ureg.m, ), 'radian')
+                                ), (.1 * self.ureg.m, ), 'radian')
 
     def test_deg2rad(self):
         self._test1(np.deg2rad, (np.arange(0, pi/2, pi/4) * self.ureg.degrees,
