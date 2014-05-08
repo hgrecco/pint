@@ -570,7 +570,6 @@ class TestContexts(QuantityTestCase):
         ureg = UnitRegistry()
 
         with self.capture_log() as buffer:
-            print(buffer)
             add_ctxs(ureg)
 
             d = Context('ab')

@@ -130,7 +130,6 @@ class TestMeasurement(QuantityTestCase):
 
         for ml, mr in zip((m1, m1, m1, m3), (m1, m2, m3, m3)):
             r = ml - mr
-            print(ml, mr, ml is mr, r)
             self.assertAlmostEqual(r.value.magnitude, ml.value.magnitude - mr.value.magnitude)
             self.assertAlmostEqual(r.error.magnitude,
                                    0 if ml is mr else
