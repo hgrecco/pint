@@ -13,10 +13,10 @@ from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, unittest, np
-from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite import QuantityTestCase, helpers, BaseTestCase
 
 
-class TestConverter(unittest.TestCase):
+class TestConverter(BaseTestCase):
 
     def test_converter(self):
         c = Converter()
@@ -48,7 +48,7 @@ class TestConverter(unittest.TestCase):
                 comp(a, r)
 
 
-class TestDefinition(unittest.TestCase):
+class TestDefinition(BaseTestCase):
 
     def test_invalid(self):
         self.assertRaises(ValueError, Definition.from_string, 'x = [time] * meter')
@@ -574,7 +574,7 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         self.assertRaises(ValueError, d, 'myk- = 1000 = kilo-')
 
 
-class TestErrors(unittest.TestCase):
+class TestErrors(BaseTestCase):
 
     def test_errors(self):
         x = ('meter', )

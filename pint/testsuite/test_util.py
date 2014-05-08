@@ -4,13 +4,12 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import collections
 
+from pint.testsuite import BaseTestCase
 from pint.util import (string_preprocessor, find_shortest_path, matrix_to_string,
                        transpose, find_connected_nodes, ParserHelper)
 
-from pint.compat import unittest
 
-
-class TestParseHelper(unittest.TestCase):
+class TestParseHelper(BaseTestCase):
 
     def test_basic(self):
         # Parse Helper ar mutables, so we build one everytime
@@ -51,7 +50,7 @@ class TestParseHelper(unittest.TestCase):
         self.assertEqual(dict(seconds=1) / z(), ParserHelper(0.5, seconds=1, meter=-2))
 
 
-class TestStringProcessor(unittest.TestCase):
+class TestStringProcessor(BaseTestCase):
 
     def _test(self, bef, aft):
         for pattern in ('{0}', '+{0}+'):
@@ -111,7 +110,7 @@ class TestStringProcessor(unittest.TestCase):
         self._test('water_60F', 'water_60F')
 
 
-class TestGraph(unittest.TestCase):
+class TestGraph(BaseTestCase):
 
     def test_start_not_in_graph(self):
         g = collections.defaultdict(list)
@@ -144,7 +143,7 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(p, [2, 1])
 
 
-class TestMatrix(unittest.TestCase):
+class TestMatrix(BaseTestCase):
 
     def test_matrix_to_string(self):
 

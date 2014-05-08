@@ -12,13 +12,6 @@ from pint import logger, UnitRegistry
 from pint.quantity import _Quantity
 from logging.handlers import BufferingHandler
 
-#h = logging.StreamHandler()
-#f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
-#h.setLevel(logging.DEBUG)
-#h.setFormatter(f)
-#logger.addHandler(h)
-#logger.setLevel(logging.DEBUG)
-
 
 class TestHandler(BufferingHandler):
 
@@ -40,16 +33,9 @@ class TestHandler(BufferingHandler):
         self.buffer.append(record.__dict__)
 
 
-class QuantityTestCase(unittest.TestCase):
-
-    FORCE_NDARRAY = False
+class BaseTestCase(unittest.TestCase):
 
     CHECK_NO_WARNING = True
-
-    @classmethod
-    def setUpClass(cls):
-        cls.ureg = UnitRegistry(force_ndarray=cls.FORCE_NDARRAY)
-        cls.Q_ = cls.ureg.Quantity
 
     @contextmanager
     def capture_log(self, level=logging.DEBUG):
@@ -75,6 +61,16 @@ class QuantityTestCase(unittest.TestCase):
             l = len(buf)
             msg = '\n'.join(record.get('msg', str(record)) for record in buf)
             self.assertEqual(l, 0, msg='%d warnings raised.\n%s' % (l, msg))
+
+
+class QuantityTestCase(BaseTestCase):
+
+    FORCE_NDARRAY = False
+
+    @classmethod
+    def setUpClass(cls):
+        cls.ureg = UnitRegistry(force_ndarray=cls.FORCE_NDARRAY)
+        cls.Q_ = cls.ureg.Quantity
 
     def _get_comparable_magnitudes(self, first, second, msg):
         if isinstance(first, _Quantity) and isinstance(second, _Quantity):
