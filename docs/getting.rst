@@ -16,10 +16,17 @@ or using easy_install_::
 That's all! You can check that Pint is correctly installed by starting up python, and importing pint:
 
     >>> import pint
+    >>> pint.__version__
+    0.5
 
 .. note:: If you have an old system installation of Python and you don't want to
    mess with it, you can try `Anaconda CE`_. It is a free Python distribution by
    Continuum Analytics that includes many scientific packages.
+
+You can check the installation with the following command:
+
+    >>> pint.test()
+
 
 On Arch Linux, you can alternatively install Pint from the Arch User Repository
 (AUR). The latest release is available as `python-pint`_, and packages tracking

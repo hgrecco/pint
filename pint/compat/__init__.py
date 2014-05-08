@@ -42,7 +42,10 @@ else:
     maketrans = lambda f, t: dict((ord(a), b) for a, b in zip(f, t))
 
 if sys.version_info < (2, 7):
-    import unittest2 as unittest
+    try:
+        import unittest2 as unittest
+    except ImportError:
+        raise Exception("Testing Pint in Python 2.6 requires package 'unittest2'")
 else:
     import unittest
 

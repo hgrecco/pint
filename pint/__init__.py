@@ -55,3 +55,8 @@ def run_pyroma(data):   # pragma: no cover
     except ImportError:
         if not ask("pyroma not available. Continue?"):
             sys.exit(1)
+
+
+def test():
+    from .testsuite import run
+    run()

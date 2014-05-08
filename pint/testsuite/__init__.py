@@ -124,7 +124,8 @@ def testsuite():
 
 
 def main():
-    """Runs the testsuite as command line application."""
+    """Runs the testsuite as command line application.
+    """
     try:
         unittest.main()
     except Exception as e:
@@ -132,7 +133,7 @@ def main():
 
 
 def run():
-    """Run all tests i
+    """Run all tests.
     """
     test_runner = unittest.TextTestRunner()
     test_runner.run(testsuite())
