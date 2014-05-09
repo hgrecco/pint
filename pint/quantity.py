@@ -224,7 +224,8 @@ class _Quantity(object):
 
         self._magnitude = self._convert_magnitude(other, *contexts, **ctx_kwargs)
         self._units = other
-        return self
+
+        return None
 
     def to(self, other=None, *contexts, **ctx_kwargs):
         """Return Quantity rescaled to different units.
@@ -244,7 +245,8 @@ class _Quantity(object):
 
         self._magnitude = self._convert_magnitude(other)
         self._units = other
-        return self
+
+        return None
 
     def to_base_units(self):
         """Return Quantity rescaled to base units
