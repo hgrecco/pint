@@ -765,7 +765,10 @@ class _Quantity(object):
             if math.isnan(value):
                 self._magnitude[key] = value
                 return
+        except (TypeError, DimensionalityError):
+            pass
 
+        try:
             if isinstance(value, self.__class__):
                 factor = self.__class__(value.magnitude, value.units / self.units).to_base_units()
             else:
