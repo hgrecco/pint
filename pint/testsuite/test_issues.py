@@ -2,6 +2,8 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import math
+
 from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
@@ -427,3 +429,12 @@ class TestIssuesNP(QuantityTestCase):
                 self.assertTrue(False, "ValueError not raised")
             except ValueError:
                 pass
+
+    def test_issue127(self):
+        q = [1., 2., 3., 4.] * self.ureg.meter
+        q[0] = np.nan
+        self.assertNotEqual(q[0], 1.)
+        self.assertTrue(math.isnan(q[0].magnitude))
+        q[1] = float('NaN')
+        self.assertNotEqual(q[1], 2.)
+        self.assertTrue(math.isnan(q[1].magnitude))

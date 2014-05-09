@@ -10,6 +10,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import copy
+import math
 import operator
 import functools
 
@@ -761,6 +762,10 @@ class _Quantity(object):
 
     def __setitem__(self, key, value):
         try:
+            if math.isnan(value):
+                self._magnitude[key] = value
+                return
+
             if isinstance(value, self.__class__):
                 factor = self.__class__(value.magnitude, value.units / self.units).to_base_units()
             else:
