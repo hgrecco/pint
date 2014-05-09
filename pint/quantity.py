@@ -199,6 +199,13 @@ class _Quantity(object):
 
         return self._REGISTRY.get_compatible_units(self._units)
 
+    def _convert_magnitude_not_inplace(self, other, *contexts, **ctx_kwargs):
+        if contexts:
+            with self._REGISTRY.context(*contexts, **ctx_kwargs):
+                return self._REGISTRY.convert(self._magnitude, self._units, other)
+
+        return self._REGISTRY.convert(self._magnitude, self._units, other)
+
     def _convert_magnitude(self, other, *contexts, **ctx_kwargs):
         if contexts:
             with self._REGISTRY.context(*contexts, **ctx_kwargs):
@@ -233,9 +240,18 @@ class _Quantity(object):
         :param other: destination units.
         :type other: Quantity, str or dict
         """
-        ret = copy.copy(self)
-        ret.ito(other, *contexts, **ctx_kwargs)
-        return ret
+        if isinstance(other, string_types):
+            other = self._REGISTRY.parse_units(other)
+        elif isinstance(other, self.__class__):
+            other = copy.copy(other.units)
+        elif isinstance(other, UnitsContainer):
+            pass
+        else:
+            other = UnitsContainer(other)
+
+        magnitude = self._convert_magnitude_not_inplace(other, *contexts, **ctx_kwargs)
+
+        return self.__class__(magnitude, other)
 
     def ito_base_units(self):
         """Return Quantity rescaled to base units
@@ -252,19 +268,21 @@ class _Quantity(object):
         """Return Quantity rescaled to base units
         """
 
-        ret = copy.copy(self)
-        ret.ito_base_units()
-        return ret
+        _, other = self._REGISTRY.get_base_units(self.units)
+
+        magnitude = self._convert_magnitude_not_inplace(other)
+
+        return self.__class__(magnitude, other)
 
     # Mathematical operations
     def __float__(self):
         if self.dimensionless:
-            return float(self._convert_magnitude(UnitsContainer()))
+            return float(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
     def __complex__(self):
         if self.dimensionless:
-            return complex(self._convert_magnitude(UnitsContainer()))
+            return complex(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self.units, 'dimensionless')
 
     def _iadd_sub(self, other, op):
@@ -545,7 +563,7 @@ class _Quantity(object):
     def compare(self, other, op):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
-                return op(self._convert_magnitude(UnitsContainer()), other)
+                return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
             else:
                 raise ValueError('Cannot compare Quantity and {0}'.format(type(other)))
 

@@ -156,10 +156,10 @@ class TestQuantity(QuantityTestCase):
 
             q = self.Q_(a, src)
             qac = self.Q_(ac, src).to(dst)
-            r = q.ito(dst)
+            r = q.to(dst)
             self.assertQuantityAlmostEqual(qac, r)
-            self.assertIs(r, q)
-            self.assertIs(r._magnitude, a)
+            self.assertIsNot(r, q)
+            self.assertIsNot(r._magnitude, a)
 
     def test_context_attr(self):
         self.assertEqual(self.ureg.meter, self.Q_(1, 'meter'))
