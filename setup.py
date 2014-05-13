@@ -8,7 +8,7 @@ except:
     pass
 
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup
 
@@ -36,7 +36,7 @@ setup(
     url='https://github.com/hgrecco/pint',
     test_suite='pint.testsuite.testsuite',
     zip_safe=True,
-    packages=['pint'],
+    packages=find_packages(),
     package_data={
         'pint': ['default_en.txt',
                  'constants_en.txt']
