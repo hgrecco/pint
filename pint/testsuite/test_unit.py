@@ -488,6 +488,11 @@ class TestRegistry(QuantityTestCase):
             np.testing.assert_allclose(r2, v * ac)
             self.assertIs(r2, a)
 
+    def test_repeated_convert(self):
+        # Because of caching, repeated conversions were failing.
+        self.ureg.convert(1, "m", "ft")
+        self.ureg.convert(1, "m", "ft")
+
     def test_parse_units(self):
         ureg = self.ureg
         self.assertEqual(ureg.parse_units(''), UnitsContainer())

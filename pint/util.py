@@ -244,8 +244,12 @@ class ParserHelper(dict):
         return ret
 
     @classmethod
-    @lru_cache()
     def from_string(cls, input_string):
+        return cls._from_string(input_string).copy()
+
+    @classmethod
+    @lru_cache()
+    def _from_string(cls, input_string):
         """Parse linear expression mathematical units and return a quantity object.
         """
 
@@ -287,6 +291,9 @@ class ParserHelper(dict):
         return ParserHelper(ret.scale,
                             dict((key.replace('__obra__', '[').replace('__cbra__', ']'), value)
                                  for key, value in ret.items()))
+
+    def copy(self):
+        return ParserHelper(scale=self.scale, **self)
 
     def __missing__(self, key):
         return 0.0
