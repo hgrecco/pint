@@ -82,5 +82,9 @@ def _run_pyroma(data):   # pragma: no cover
 
 
 def test():
+    """Run all tests.
+
+    :return: a :class:`unittest.TestResult` object
+    """
     from .testsuite import run
-    run()
+    return run()
