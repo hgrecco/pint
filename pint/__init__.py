@@ -63,7 +63,9 @@ def set_application_registry(registry):
     _APP_REGISTRY = registry
 
 
-def run_pyroma(data):   # pragma: no cover
+def _run_pyroma(data):   # pragma: no cover
+    """Run pyroma (used to perform checks before releasing a new version).
+    """
     import sys
     from zest.releaser.utils import ask
     if not ask("Run pyroma on the package before uploading?"):
