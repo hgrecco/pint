@@ -21,7 +21,6 @@ from .util import pi_theorem, logger
 
 from .context import Context
 
-_DEFAULT_REGISTRY = LazyRegistry()
 
 __version__ = "unknown"
 try:                    # pragma: no cover
@@ -37,8 +36,31 @@ except:                 # pragma: no cover
         pass  # we seem to have a local copy without any repository control or installed without setuptools
               # so the reported version will be __unknown__
 
+
+#: A Registry with the default units and constants.
+_DEFAULT_REGISTRY = LazyRegistry()
+
+#: Registry used for unpickling operations.
+_APP_REGISTRY = _DEFAULT_REGISTRY
+
+
 def _build_quantity(value, units):
-    return _DEFAULT_REGISTRY.Quantity(value, units)
+    """Build Quantity using the Application registry.
+    Used only for unpickling operations.
+    """
+    global _APP_REGISTRY
+    return _APP_REGISTRY.Quantity(value, units)
+
+
+def set_application_registry(registry):
+    """Set the application registry which is used for unpickling operations.
+
+    :param registry: a UnitRegistry instance.
+    """
+    assert isinstance(registry, UnitRegistry)
+    global _APP_REGISTRY
+    logger.debug('Changing app registry from %r to %r.', _APP_REGISTRY, registry)
+    _APP_REGISTRY = registry
 
 
 def run_pyroma(data):   # pragma: no cover
