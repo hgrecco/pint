@@ -178,7 +178,6 @@ This enables you to build a simple unit converter in 3 lines:
    >>> Q_(src).to(dst)
    <Quantity(1.0, 'inch')>
 
-Take a look at `qconvert.py` within the examples folder for a full script.
 
 .. warning:: Pint currently uses eval_ under the hood.
    Do not use this approach from untrusted sources as it is dangerous_.
