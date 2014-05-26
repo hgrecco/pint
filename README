@@ -7,7 +7,7 @@ It allows arithmetic operations between them and conversions from and
 to different units.
 
 It is distributed with a comprehensive list of physical units, prefixes
-and constants. Due to it's modular design, you to extend (or even rewrite!)
+and constants. Due to its modular design, you to extend (or even rewrite!)
 the complete list without changing the source code.
 
 It has a complete test coverage. It runs in Python 2.7 and 3.X

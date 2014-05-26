@@ -614,7 +614,7 @@ class UnitRegistry(object):
             >>> with ureg.context('one'):
             ...     pass
 
-        If the context has an argument, you can specify it's value as a keyword
+        If the context has an argument, you can specify its value as a keyword
         argument::
 
             >>> with ureg.context('one', n=1):
