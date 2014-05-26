@@ -74,7 +74,7 @@ If you want to convert in-place (i.e. without creating another object), you can 
    >>> print(speed)
    7086.614173228345 inch / minute
 
-If you ask Pint to perform and invalid conversion:
+If you ask Pint to perform an invalid conversion:
 
 .. doctest::
 
