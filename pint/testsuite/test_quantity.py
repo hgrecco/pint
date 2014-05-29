@@ -640,8 +640,11 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected == 'DimError':
             self.assertRaises(DimensionalityError, op.add, q1, q2)
+            self.assertRaises(DimensionalityError, op.iadd, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.add(q1, q2), self.Q_(*expected),
+                                           atol=0.01)
+            self.assertQuantityAlmostEqual(op.iadd(q1, q2), self.Q_(*expected),
                                            atol=0.01)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
@@ -651,6 +654,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected != 'DimError':
             self.assertEqual(op.add(q1, q2).units, self.Q_(*expected).units)
+            self.assertEqual(op.iadd(q1, q2).units, self.Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         subtractions)
@@ -659,8 +663,11 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected == 'DimError':
             self.assertRaises(DimensionalityError, op.sub, q1, q2)
+            self.assertRaises(DimensionalityError, op.isub, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.sub(q1, q2), self.Q_(*expected),
+                                           atol=0.01)
+            self.assertQuantityAlmostEqual(op.isub(q1, q2), self.Q_(*expected),
                                            atol=0.01)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
@@ -670,6 +677,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected != 'DimError':
             self.assertEqual(op.sub(q1, q2).units, self.Q_(*expected).units)
+            self.assertEqual(op.isub(q1, q2).units, self.Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         multiplications)
@@ -678,8 +686,11 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected == 'DimError':
             self.assertRaises(DimensionalityError, op.mul, q1, q2)
+            self.assertRaises(DimensionalityError, op.imul, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.mul(q1, q2), self.Q_(*expected),
+                                           atol=0.01)
+            self.assertQuantityAlmostEqual(op.imul(q1, q2), self.Q_(*expected),
                                            atol=0.01)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
@@ -689,6 +700,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected != 'DimError':
             self.assertEqual(op.mul(q1, q2).units, self.Q_(*expected).units)
+            self.assertEqual(op.imul(q1, q2).units, self.Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         divisions)
@@ -697,8 +709,12 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected == 'DimError':
             self.assertRaises(DimensionalityError, op.truediv, q1, q2)
+            self.assertRaises(DimensionalityError, op.itruediv, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.truediv(q1, q2), 
+                                           self.Q_(*expected),
+                                           atol=0.01)
+            self.assertQuantityAlmostEqual(op.itruediv(q1, q2), 
                                            self.Q_(*expected),
                                            atol=0.01)
 
@@ -709,4 +725,6 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected != 'DimError':
             self.assertEqual(op.truediv(q1, q2).units, 
+                             self.Q_(*expected).units)
+            self.assertEqual(op.itruediv(q1, q2).units, 
                              self.Q_(*expected).units)
