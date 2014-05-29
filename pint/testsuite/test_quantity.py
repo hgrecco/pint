@@ -545,6 +545,94 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         (((100, 'delta_degF'), (10, 'delta_degF')), (90, 'delta_degF')),
         ]
 
+    multiplications = [
+        (((100, 'kelvin'), (10, 'kelvin')),     (1000, 'kelvin**2')),
+        (((100, 'kelvin'), (10, 'degC')),       'DimError'),
+        (((100, 'kelvin'), (10, 'degF')),       'DimError'),
+        (((100, 'kelvin'), (10, 'degR')),       (1000, 'kelvin*degR')),
+        (((100, 'kelvin'), (10, 'delta_degC')), (1000, 'kelvin*delta_degC')),
+        (((100, 'kelvin'), (10, 'delta_degF')), (1000, 'kelvin*delta_degF')),
+
+        (((100, 'degC'), (10, 'kelvin')),      'DimError'),
+        (((100, 'degC'), (10, 'degC')),        'DimError'),
+        (((100, 'degC'), (10, 'degF')),        'DimError'),
+        (((100, 'degC'), (10, 'degR')),        'DimError'),
+        (((100, 'degC'), (10, 'delta_degC')),  'DimError'),
+        (((100, 'degC'), (10, 'delta_degF')),  'DimError'),
+
+        (((100, 'degF'), (10, 'kelvin')),      'DimError'),
+        (((100, 'degF'), (10, 'degC')),        'DimError'),
+        (((100, 'degF'), (10, 'degF')),        'DimError'),
+        (((100, 'degF'), (10, 'degR')),        'DimError'),
+        (((100, 'degF'), (10, 'delta_degC')),  'DimError'),
+        (((100, 'degF'), (10, 'delta_degF')),  'DimError'),
+
+        (((100, 'degR'), (10, 'kelvin')),      (1000, 'degR*kelvin')),
+        (((100, 'degR'), (10, 'degC')),        'DimError'),
+        (((100, 'degR'), (10, 'degF')),        'DimError'),
+        (((100, 'degR'), (10, 'degR')),        (1000, 'degR**2')),
+        (((100, 'degR'), (10, 'delta_degC')),  (1000, 'degR*delta_degC')),
+        (((100, 'degR'), (10, 'delta_degF')),  (1000, 'degR*delta_degF')),
+
+        (((100, 'delta_degC'), (10, 'kelvin')),     (1000, 'delta_degC*kelvin')),
+        (((100, 'delta_degC'), (10, 'degC')),       'DimError'),
+        (((100, 'delta_degC'), (10, 'degF')),       'DimError'),
+        (((100, 'delta_degC'), (10, 'degR')),       (1000, 'delta_degC*degR')),
+        (((100, 'delta_degC'), (10, 'delta_degC')), (1000, 'delta_degC**2')),
+        (((100, 'delta_degC'), (10, 'delta_degF')), (1000, 'delta_degC*delta_degF')),
+
+        (((100, 'delta_degF'), (10, 'kelvin')),     (1000, 'delta_degF*kelvin')),
+        (((100, 'delta_degF'), (10, 'degC')),       'DimError'),
+        (((100, 'delta_degF'), (10, 'degF')),       'DimError'),
+        (((100, 'delta_degF'), (10, 'degR')),       (1000, 'delta_degF*degR')),
+        (((100, 'delta_degF'), (10, 'delta_degC')), (1000, 'delta_degF*delta_degC')),
+        (((100, 'delta_degF'), (10, 'delta_degF')), (1000, 'delta_degF**2')),
+        ]
+
+    divisions = [
+        (((100, 'kelvin'), (10, 'kelvin')),     (10, '')),
+        (((100, 'kelvin'), (10, 'degC')),       'DimError'),
+        (((100, 'kelvin'), (10, 'degF')),       'DimError'),
+        (((100, 'kelvin'), (10, 'degR')),       (10, 'kelvin/degR')),
+        (((100, 'kelvin'), (10, 'delta_degC')), (10, 'kelvin/delta_degC')),
+        (((100, 'kelvin'), (10, 'delta_degF')), (10, 'kelvin/delta_degF')),
+
+        (((100, 'degC'), (10, 'kelvin')),      'DimError'),
+        (((100, 'degC'), (10, 'degC')),        'DimError'),
+        (((100, 'degC'), (10, 'degF')),        'DimError'),
+        (((100, 'degC'), (10, 'degR')),        'DimError'),
+        (((100, 'degC'), (10, 'delta_degC')),  'DimError'),
+        (((100, 'degC'), (10, 'delta_degF')),  'DimError'),
+
+        (((100, 'degF'), (10, 'kelvin')),      'DimError'),
+        (((100, 'degF'), (10, 'degC')),        'DimError'),
+        (((100, 'degF'), (10, 'degF')),        'DimError'),
+        (((100, 'degF'), (10, 'degR')),        'DimError'),
+        (((100, 'degF'), (10, 'delta_degC')),  'DimError'),
+        (((100, 'degF'), (10, 'delta_degF')),  'DimError'),
+
+        (((100, 'degR'), (10, 'kelvin')),      (10, 'degR/kelvin')),
+        (((100, 'degR'), (10, 'degC')),        'DimError'),
+        (((100, 'degR'), (10, 'degF')),        'DimError'),
+        (((100, 'degR'), (10, 'degR')),        (10, '')),
+        (((100, 'degR'), (10, 'delta_degC')),  (10, 'degR/delta_degC')),
+        (((100, 'degR'), (10, 'delta_degF')),  (10, 'degR/delta_degF')),
+
+        (((100, 'delta_degC'), (10, 'kelvin')),     (10, 'delta_degC/kelvin')),
+        (((100, 'delta_degC'), (10, 'degC')),       'DimError'),
+        (((100, 'delta_degC'), (10, 'degF')),       'DimError'),
+        (((100, 'delta_degC'), (10, 'degR')),       (10, 'delta_degC/degR')),
+        (((100, 'delta_degC'), (10, 'delta_degC')), (10, '')),
+        (((100, 'delta_degC'), (10, 'delta_degF')), (10, 'delta_degC/delta_degF')),
+
+        (((100, 'delta_degF'), (10, 'kelvin')),     (10, 'delta_degF/kelvin')),
+        (((100, 'delta_degF'), (10, 'degC')),       'DimError'),
+        (((100, 'delta_degF'), (10, 'degF')),       'DimError'),
+        (((100, 'delta_degF'), (10, 'degR')),       (10, 'delta_degF/degR')),
+        (((100, 'delta_degF'), (10, 'delta_degC')), (10, 'delta_degF/delta_degC')),
+        (((100, 'delta_degF'), (10, 'delta_degF')), (10, '')),
+        ]
+
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         additions)
     def test_addition_for_qty(self, input_tuple, expected):
@@ -582,3 +670,43 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected != 'DimError':
             self.assertEqual(op.sub(q1, q2).units, self.Q_(*expected).units)
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        multiplications)
+    def test_multiplication_for_qty(self, input_tuple, expected):
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        if expected == 'DimError':
+            self.assertRaises(DimensionalityError, op.mul, q1, q2)
+        else:
+            self.assertQuantityAlmostEqual(op.mul(q1, q2), self.Q_(*expected),
+                                           atol=0.01)
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        multiplications)
+    def test_multiplication_for_units(self, input_tuple, expected):
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        if expected != 'DimError':
+            self.assertEqual(op.mul(q1, q2).units, self.Q_(*expected).units)
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        divisions)
+    def test_truedivision_for_qty(self, input_tuple, expected):
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        if expected == 'DimError':
+            self.assertRaises(DimensionalityError, op.truediv, q1, q2)
+        else:
+            self.assertQuantityAlmostEqual(op.truediv(q1, q2), 
+                                           self.Q_(*expected),
+                                           atol=0.01)
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        divisions)
+    def test_truedivision_for_units(self, input_tuple, expected):
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        if expected != 'DimError':
+            self.assertEqual(op.truediv(q1, q2).units, 
+                             self.Q_(*expected).units)
