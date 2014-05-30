@@ -15,7 +15,8 @@ import operator
 import functools
 
 from .formatting import remove_custom_flags
-from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
+from .unit import (DimensionalityError, OffsetUnitCalculusError,
+                   UnitsContainer, UnitDefinition, UndefinedUnitError)
 from .compat import string_types, ndarray, np, _to_magnitude
 from .util import logger
 
@@ -59,7 +60,7 @@ def _only_multiplicative_units(q):
     """Check if the quantity has non-multiplicative units.
     """
 
-    # Compound units are never multiplicative
+    # Compound units are never non-multiplicative
     if len(q.units) != 1:
         return True
 
@@ -68,8 +69,21 @@ def _only_multiplicative_units(q):
     return q._REGISTRY._units[unit].is_multiplicative
 
 
+def _has_offset_unit(q):
+    """Check if the quantity has a unit with non-zero offset
+    """
+    return not _only_multiplicative_units(q)
+
+
+def _has_delta_unit(q):
+    """Check if the quantity has a delta_unit
+    """
+    delta_units = [u for u in q.units.keys() if u.startswith("delta_")]
+    return len(delta_units) > 0
+
+
 class _Quantity(object):
-    """Implements a class to describe a physical quantities:
+    """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
     :param value: value of the physical quantity to be created.
@@ -294,15 +308,31 @@ class _Quantity(object):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
-        if _check(self, other):
+        if _check(self, other):  # DL other is a Quantity from same registry
             if not self.dimensionality == other.dimensionality:
                 raise DimensionalityError(self.units, other.units,
-                                          self.dimensionality, other.dimensionality)
-            if self._units == other._units:
-                self._magnitude = op(self._magnitude, other._magnitude)
+                                          self.dimensionality, 
+                                          other.dimensionality)
+#            if self._units == other._units:
+#                self._magnitude = op(self._magnitude, other._magnitude)
+#            else:
+#                self._magnitude = op(self._magnitude, other.to(self)._magnitude)
+
+            if ((_has_offset_unit(self) or _has_offset_unit(other))
+                    and not(_has_delta_unit(self) or _has_delta_unit(other))):
+                raise OffsetUnitCalculusError(self.units, other.units)
             else:
-                self._magnitude = op(self._magnitude, other.to(self)._magnitude)
-        else:
+                if self._units == other._units:
+                    self.magnitude = op(self._magnitude, other._magnitude)
+                elif _has_delta_unit(self) and not _has_delta_unit(other):
+                    # special case where other determines unit of result
+                    self.magnitude = op(self.ito(other)._magnitude, 
+                                        other._magnitude)
+                    self.units = copy.copy(other.units)
+                else:
+                    self.magnitude = op(self._magnitude, 
+                                        other.ito(self)._magnitude)
+        else:  # DL other is not a Quantity (but e.g. a scalar, list, tuple or ndarray)
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
             except TypeError:
@@ -314,7 +344,7 @@ class _Quantity(object):
                 # enforce any shape checking and type casting due to the operation.
                 self._magnitude = op(self._magnitude, other_magnitude)
             elif self.dimensionless:
-                self.ito(UnitsContainer())
+                self.ito(UnitsContainer())  # DL why? What is dimensionless and has no units? Constants?
                 self._magnitude = op(self._magnitude, other_magnitude)
             else:
                 raise DimensionalityError(self.units, 'dimensionless')
@@ -332,13 +362,30 @@ class _Quantity(object):
         if _check(self, other):
             if not self.dimensionality == other.dimensionality:
                 raise DimensionalityError(self.units, other.units,
-                                          self.dimensionality, other.dimensionality)
-            if self._units == other._units:
-                magnitude = op(self._magnitude, other._magnitude)
+                                          self.dimensionality, 
+                                          other.dimensionality)
+#            if self._units == other._units:
+#                magnitude = op(self._magnitude, other._magnitude)
+#            else:
+#                magnitude = op(self._magnitude, other.to(self)._magnitude)
+#
+#            units = copy.copy(self.units)
+# <-- new -->
+            if ((_has_offset_unit(self) or _has_offset_unit(other))
+                    and not(_has_delta_unit(self) or _has_delta_unit(other))):
+                raise OffsetUnitCalculusError(self.units, other.units)
             else:
-                magnitude = op(self._magnitude, other.to(self)._magnitude)
-
-            units = copy.copy(self.units)
+                if self._units == other._units:
+                    magnitude = op(self._magnitude, other._magnitude)
+                    units = copy.copy(self.units)
+                elif _has_delta_unit(self) and not _has_delta_unit(other):
+                    # special case where other determines unit of result
+                    magnitude = op(self.to(other)._magnitude, other._magnitude)
+                    units = copy.copy(other.units)
+                else:
+                    magnitude = op(self._magnitude, other.to(self)._magnitude)
+                    units = copy.copy(self.units)
+# <-- /new -->
         else:
             if _eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
