@@ -87,7 +87,7 @@ class DimensionalityError(ValueError):
     """Raised when trying to convert between incompatible units.
     """
 
-    def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=None):
+    def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=''):
         super(DimensionalityError, self).__init__()
         self.units1 = units1
         self.units2 = units2
@@ -103,12 +103,24 @@ class DimensionalityError(ValueError):
             dim1 = ''
             dim2 = ''
 
-        msg = "Cannot convert from '{0}'{1} to '{2}'{3}".format(self.units1, dim1, self.units2, dim2)
+        msg = "Cannot convert from '{0}'{1} to '{2}'{3}." + self.extra_msg
 
-        if self.extra_msg:
-            return msg + self.extra_msg
+        return msg.format(self.units1, dim1, self.units2, dim2)
 
-        return msg
+
+class OffsetUnitCalculusError(ValueError):
+    """Raised on ambiguous operations with offset units.
+    """
+    def __init__(self, units1, units2, extra_msg=''):
+        super(ValueError, self).__init__()
+        self.units1 = units1
+        self.units2 = units2
+        self.extra_msg = extra_msg
+
+    def __str__(self):
+        msg = ("Ambiguous operation with offset unit ('{0}', '{1}')."
+               + self.extra_msg)
+        return msg.format(self.units1, self.units2)
 
 
 class Converter(object):

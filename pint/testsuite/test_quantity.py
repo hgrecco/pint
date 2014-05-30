@@ -6,7 +6,7 @@ import copy
 import math
 import operator as op
 
-from pint import DimensionalityError, UnitRegistry
+from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.unit import UnitsContainer
 from pint.compat import string_types, PYTHON3, np
 from pint.testsuite import QuantityTestCase, helpers
@@ -459,29 +459,29 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
     additions = [
         (((100, 'kelvin'), (10, 'kelvin')),      (110, 'kelvin')),
-        (((100, 'kelvin'), (10, 'degC')),        'DimError'),
-        (((100, 'kelvin'), (10, 'degF')),        'DimError'),
+        (((100, 'kelvin'), (10, 'degC')),        'error'),
+        (((100, 'kelvin'), (10, 'degF')),        'error'),
         (((100, 'kelvin'), (10, 'degR')),        (105.56, 'kelvin')),
         (((100, 'kelvin'), (10, 'delta_degC')),  (110, 'kelvin')),
         (((100, 'kelvin'), (10, 'delta_degF')),  (105.56, 'kelvin')),
 
-        (((100, 'degC'), (10, 'kelvin')),      'DimError'),
-        (((100, 'degC'), (10, 'degC')),        'DimError'),
-        (((100, 'degC'), (10, 'degF')),        'DimError'),
-        (((100, 'degC'), (10, 'degR')),        'DimError'),
+        (((100, 'degC'), (10, 'kelvin')),      'error'),
+        (((100, 'degC'), (10, 'degC')),        'error'),
+        (((100, 'degC'), (10, 'degF')),        'error'),
+        (((100, 'degC'), (10, 'degR')),        'error'),
         (((100, 'degC'), (10, 'delta_degC')),  (110, 'degC')),
         (((100, 'degC'), (10, 'delta_degF')),  (105.56, 'degC')),
 
-        (((100, 'degF'), (10, 'kelvin')),      'DimError'),
-        (((100, 'degF'), (10, 'degC')),        'DimError'),
-        (((100, 'degF'), (10, 'degF')),        'DimError'),
-        (((100, 'degF'), (10, 'degR')),        'DimError'),
+        (((100, 'degF'), (10, 'kelvin')),      'error'),
+        (((100, 'degF'), (10, 'degC')),        'error'),
+        (((100, 'degF'), (10, 'degF')),        'error'),
+        (((100, 'degF'), (10, 'degR')),        'error'),
         (((100, 'degF'), (10, 'delta_degC')),  (118, 'degF')),
         (((100, 'degF'), (10, 'delta_degF')),  (110, 'degF')),
 
         (((100, 'degR'), (10, 'kelvin')),      (118, 'degR')),
-        (((100, 'degR'), (10, 'degC')),        'DimError'),
-        (((100, 'degR'), (10, 'degF')),        'DimError'),
+        (((100, 'degR'), (10, 'degC')),        'error'),
+        (((100, 'degR'), (10, 'degF')),        'error'),
         (((100, 'degR'), (10, 'degR')),        (110, 'degR')),
         (((100, 'degR'), (10, 'delta_degC')),  (118, 'degR')),
         (((100, 'degR'), (10, 'delta_degF')),  (110, 'degR')),
@@ -503,29 +503,29 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
     subtractions = [
         (((100, 'kelvin'), (10, 'kelvin')),      (90, 'kelvin')),
-        (((100, 'kelvin'), (10, 'degC')),        'DimError'),
-        (((100, 'kelvin'), (10, 'degF')),        'DimError'),
+        (((100, 'kelvin'), (10, 'degC')),        'error'),
+        (((100, 'kelvin'), (10, 'degF')),        'error'),
         (((100, 'kelvin'), (10, 'degR')),        (94.44, 'kelvin')),
         (((100, 'kelvin'), (10, 'delta_degC')),  (90, 'kelvin')),
         (((100, 'kelvin'), (10, 'delta_degF')),  (94.44, 'kelvin')),
 
-        (((100, 'degC'), (10, 'kelvin')),      'DimError'),
-        (((100, 'degC'), (10, 'degC')),        'DimError'),
-        (((100, 'degC'), (10, 'degF')),        'DimError'),
-        (((100, 'degC'), (10, 'degR')),        'DimError'),
+        (((100, 'degC'), (10, 'kelvin')),      'error'),
+        (((100, 'degC'), (10, 'degC')),        'error'),
+        (((100, 'degC'), (10, 'degF')),        'error'),
+        (((100, 'degC'), (10, 'degR')),        'error'),
         (((100, 'degC'), (10, 'delta_degC')),  (90, 'degC')),
         (((100, 'degC'), (10, 'delta_degF')),  (94.44, 'degC')),
 
-        (((100, 'degF'), (10, 'kelvin')),      'DimError'),
-        (((100, 'degF'), (10, 'degC')),        'DimError'),
-        (((100, 'degF'), (10, 'degF')),        'DimError'),
-        (((100, 'degF'), (10, 'degR')),        'DimError'),
+        (((100, 'degF'), (10, 'kelvin')),      'error'),
+        (((100, 'degF'), (10, 'degC')),        'error'),
+        (((100, 'degF'), (10, 'degF')),        'error'),
+        (((100, 'degF'), (10, 'degR')),        'error'),
         (((100, 'degF'), (10, 'delta_degC')),  (82, 'degF')),
         (((100, 'degF'), (10, 'delta_degF')),  (90, 'degF')),
 
         (((100, 'degR'), (10, 'kelvin')),      (82, 'degR')),
-        (((100, 'degR'), (10, 'degC')),        'DimError'),
-        (((100, 'degR'), (10, 'degF')),        'DimError'),
+        (((100, 'degR'), (10, 'degC')),        'error'),
+        (((100, 'degR'), (10, 'degF')),        'error'),
         (((100, 'degR'), (10, 'degR')),        (90, 'degR')),
         (((100, 'degR'), (10, 'delta_degC')),  (82, 'degR')),
         (((100, 'degR'), (10, 'delta_degF')),  (90, 'degR')),
@@ -547,43 +547,43 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
     multiplications = [
         (((100, 'kelvin'), (10, 'kelvin')),     (1000, 'kelvin**2')),
-        (((100, 'kelvin'), (10, 'degC')),       'DimError'),
-        (((100, 'kelvin'), (10, 'degF')),       'DimError'),
+        (((100, 'kelvin'), (10, 'degC')),       'error'),
+        (((100, 'kelvin'), (10, 'degF')),       'error'),
         (((100, 'kelvin'), (10, 'degR')),       (1000, 'kelvin*degR')),
         (((100, 'kelvin'), (10, 'delta_degC')), (1000, 'kelvin*delta_degC')),
         (((100, 'kelvin'), (10, 'delta_degF')), (1000, 'kelvin*delta_degF')),
 
-        (((100, 'degC'), (10, 'kelvin')),      'DimError'),
-        (((100, 'degC'), (10, 'degC')),        'DimError'),
-        (((100, 'degC'), (10, 'degF')),        'DimError'),
-        (((100, 'degC'), (10, 'degR')),        'DimError'),
-        (((100, 'degC'), (10, 'delta_degC')),  'DimError'),
-        (((100, 'degC'), (10, 'delta_degF')),  'DimError'),
+        (((100, 'degC'), (10, 'kelvin')),      'error'),
+        (((100, 'degC'), (10, 'degC')),        'error'),
+        (((100, 'degC'), (10, 'degF')),        'error'),
+        (((100, 'degC'), (10, 'degR')),        'error'),
+        (((100, 'degC'), (10, 'delta_degC')),  'error'),
+        (((100, 'degC'), (10, 'delta_degF')),  'error'),
 
-        (((100, 'degF'), (10, 'kelvin')),      'DimError'),
-        (((100, 'degF'), (10, 'degC')),        'DimError'),
-        (((100, 'degF'), (10, 'degF')),        'DimError'),
-        (((100, 'degF'), (10, 'degR')),        'DimError'),
-        (((100, 'degF'), (10, 'delta_degC')),  'DimError'),
-        (((100, 'degF'), (10, 'delta_degF')),  'DimError'),
+        (((100, 'degF'), (10, 'kelvin')),      'error'),
+        (((100, 'degF'), (10, 'degC')),        'error'),
+        (((100, 'degF'), (10, 'degF')),        'error'),
+        (((100, 'degF'), (10, 'degR')),        'error'),
+        (((100, 'degF'), (10, 'delta_degC')),  'error'),
+        (((100, 'degF'), (10, 'delta_degF')),  'error'),
 
         (((100, 'degR'), (10, 'kelvin')),      (1000, 'degR*kelvin')),
-        (((100, 'degR'), (10, 'degC')),        'DimError'),
-        (((100, 'degR'), (10, 'degF')),        'DimError'),
+        (((100, 'degR'), (10, 'degC')),        'error'),
+        (((100, 'degR'), (10, 'degF')),        'error'),
         (((100, 'degR'), (10, 'degR')),        (1000, 'degR**2')),
         (((100, 'degR'), (10, 'delta_degC')),  (1000, 'degR*delta_degC')),
         (((100, 'degR'), (10, 'delta_degF')),  (1000, 'degR*delta_degF')),
 
         (((100, 'delta_degC'), (10, 'kelvin')),     (1000, 'delta_degC*kelvin')),
-        (((100, 'delta_degC'), (10, 'degC')),       'DimError'),
-        (((100, 'delta_degC'), (10, 'degF')),       'DimError'),
+        (((100, 'delta_degC'), (10, 'degC')),       'error'),
+        (((100, 'delta_degC'), (10, 'degF')),       'error'),
         (((100, 'delta_degC'), (10, 'degR')),       (1000, 'delta_degC*degR')),
         (((100, 'delta_degC'), (10, 'delta_degC')), (1000, 'delta_degC**2')),
         (((100, 'delta_degC'), (10, 'delta_degF')), (1000, 'delta_degC*delta_degF')),
 
         (((100, 'delta_degF'), (10, 'kelvin')),     (1000, 'delta_degF*kelvin')),
-        (((100, 'delta_degF'), (10, 'degC')),       'DimError'),
-        (((100, 'delta_degF'), (10, 'degF')),       'DimError'),
+        (((100, 'delta_degF'), (10, 'degC')),       'error'),
+        (((100, 'delta_degF'), (10, 'degF')),       'error'),
         (((100, 'delta_degF'), (10, 'degR')),       (1000, 'delta_degF*degR')),
         (((100, 'delta_degF'), (10, 'delta_degC')), (1000, 'delta_degF*delta_degC')),
         (((100, 'delta_degF'), (10, 'delta_degF')), (1000, 'delta_degF**2')),
@@ -591,43 +591,43 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
     divisions = [
         (((100, 'kelvin'), (10, 'kelvin')),     (10, '')),
-        (((100, 'kelvin'), (10, 'degC')),       'DimError'),
-        (((100, 'kelvin'), (10, 'degF')),       'DimError'),
+        (((100, 'kelvin'), (10, 'degC')),       'error'),
+        (((100, 'kelvin'), (10, 'degF')),       'error'),
         (((100, 'kelvin'), (10, 'degR')),       (10, 'kelvin/degR')),
         (((100, 'kelvin'), (10, 'delta_degC')), (10, 'kelvin/delta_degC')),
         (((100, 'kelvin'), (10, 'delta_degF')), (10, 'kelvin/delta_degF')),
 
-        (((100, 'degC'), (10, 'kelvin')),      'DimError'),
-        (((100, 'degC'), (10, 'degC')),        'DimError'),
-        (((100, 'degC'), (10, 'degF')),        'DimError'),
-        (((100, 'degC'), (10, 'degR')),        'DimError'),
-        (((100, 'degC'), (10, 'delta_degC')),  'DimError'),
-        (((100, 'degC'), (10, 'delta_degF')),  'DimError'),
+        (((100, 'degC'), (10, 'kelvin')),      'error'),
+        (((100, 'degC'), (10, 'degC')),        'error'),
+        (((100, 'degC'), (10, 'degF')),        'error'),
+        (((100, 'degC'), (10, 'degR')),        'error'),
+        (((100, 'degC'), (10, 'delta_degC')),  'error'),
+        (((100, 'degC'), (10, 'delta_degF')),  'error'),
 
-        (((100, 'degF'), (10, 'kelvin')),      'DimError'),
-        (((100, 'degF'), (10, 'degC')),        'DimError'),
-        (((100, 'degF'), (10, 'degF')),        'DimError'),
-        (((100, 'degF'), (10, 'degR')),        'DimError'),
-        (((100, 'degF'), (10, 'delta_degC')),  'DimError'),
-        (((100, 'degF'), (10, 'delta_degF')),  'DimError'),
+        (((100, 'degF'), (10, 'kelvin')),      'error'),
+        (((100, 'degF'), (10, 'degC')),        'error'),
+        (((100, 'degF'), (10, 'degF')),        'error'),
+        (((100, 'degF'), (10, 'degR')),        'error'),
+        (((100, 'degF'), (10, 'delta_degC')),  'error'),
+        (((100, 'degF'), (10, 'delta_degF')),  'error'),
 
         (((100, 'degR'), (10, 'kelvin')),      (10, 'degR/kelvin')),
-        (((100, 'degR'), (10, 'degC')),        'DimError'),
-        (((100, 'degR'), (10, 'degF')),        'DimError'),
+        (((100, 'degR'), (10, 'degC')),        'error'),
+        (((100, 'degR'), (10, 'degF')),        'error'),
         (((100, 'degR'), (10, 'degR')),        (10, '')),
         (((100, 'degR'), (10, 'delta_degC')),  (10, 'degR/delta_degC')),
         (((100, 'degR'), (10, 'delta_degF')),  (10, 'degR/delta_degF')),
 
         (((100, 'delta_degC'), (10, 'kelvin')),     (10, 'delta_degC/kelvin')),
-        (((100, 'delta_degC'), (10, 'degC')),       'DimError'),
-        (((100, 'delta_degC'), (10, 'degF')),       'DimError'),
+        (((100, 'delta_degC'), (10, 'degC')),       'error'),
+        (((100, 'delta_degC'), (10, 'degF')),       'error'),
         (((100, 'delta_degC'), (10, 'degR')),       (10, 'delta_degC/degR')),
         (((100, 'delta_degC'), (10, 'delta_degC')), (10, '')),
         (((100, 'delta_degC'), (10, 'delta_degF')), (10, 'delta_degC/delta_degF')),
 
         (((100, 'delta_degF'), (10, 'kelvin')),     (10, 'delta_degF/kelvin')),
-        (((100, 'delta_degF'), (10, 'degC')),       'DimError'),
-        (((100, 'delta_degF'), (10, 'degF')),       'DimError'),
+        (((100, 'delta_degF'), (10, 'degC')),       'error'),
+        (((100, 'delta_degF'), (10, 'degF')),       'error'),
         (((100, 'delta_degF'), (10, 'degR')),       (10, 'delta_degF/degR')),
         (((100, 'delta_degF'), (10, 'delta_degC')), (10, 'delta_degF/delta_degC')),
         (((100, 'delta_degF'), (10, 'delta_degF')), (10, '')),
@@ -638,9 +638,9 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     def test_addition_for_qty(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected == 'DimError':
-            self.assertRaises(DimensionalityError, op.add, q1, q2)
-            self.assertRaises(DimensionalityError, op.iadd, q1, q2)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.add, q1, q2)
+            self.assertRaises(OffsetUnitCalculusError, op.iadd, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.add(q1, q2), self.Q_(*expected),
                                            atol=0.01)
@@ -652,7 +652,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     def test_addition_for_units(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected != 'DimError':
+        if expected != 'error':
             self.assertEqual(op.add(q1, q2).units, self.Q_(*expected).units)
             self.assertEqual(op.iadd(q1, q2).units, self.Q_(*expected).units)
 
@@ -661,9 +661,9 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     def test_subtraction_for_qty(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected == 'DimError':
-            self.assertRaises(DimensionalityError, op.sub, q1, q2)
-            self.assertRaises(DimensionalityError, op.isub, q1, q2)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.sub, q1, q2)
+            self.assertRaises(OffsetUnitCalculusError, op.isub, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.sub(q1, q2), self.Q_(*expected),
                                            atol=0.01)
@@ -675,7 +675,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     def test_subtraction_for_units(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected != 'DimError':
+        if expected != 'error':
             self.assertEqual(op.sub(q1, q2).units, self.Q_(*expected).units)
             self.assertEqual(op.isub(q1, q2).units, self.Q_(*expected).units)
 
@@ -684,9 +684,9 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     def test_multiplication_for_qty(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected == 'DimError':
-            self.assertRaises(DimensionalityError, op.mul, q1, q2)
-            self.assertRaises(DimensionalityError, op.imul, q1, q2)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.mul, q1, q2)
+            self.assertRaises(OffsetUnitCalculusError, op.imul, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.mul(q1, q2), self.Q_(*expected),
                                            atol=0.01)
@@ -698,7 +698,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     def test_multiplication_for_units(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected != 'DimError':
+        if expected != 'error':
             self.assertEqual(op.mul(q1, q2).units, self.Q_(*expected).units)
             self.assertEqual(op.imul(q1, q2).units, self.Q_(*expected).units)
 
@@ -707,14 +707,14 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     def test_truedivision_for_qty(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected == 'DimError':
-            self.assertRaises(DimensionalityError, op.truediv, q1, q2)
-            self.assertRaises(DimensionalityError, op.itruediv, q1, q2)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.truediv, q1, q2)
+            self.assertRaises(OffsetUnitCalculusError, op.itruediv, q1, q2)
         else:
-            self.assertQuantityAlmostEqual(op.truediv(q1, q2), 
+            self.assertQuantityAlmostEqual(op.truediv(q1, q2),
                                            self.Q_(*expected),
                                            atol=0.01)
-            self.assertQuantityAlmostEqual(op.itruediv(q1, q2), 
+            self.assertQuantityAlmostEqual(op.itruediv(q1, q2),
                                            self.Q_(*expected),
                                            atol=0.01)
 
@@ -723,8 +723,8 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     def test_truedivision_for_units(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected != 'DimError':
-            self.assertEqual(op.truediv(q1, q2).units, 
+        if expected != 'error':
+            self.assertEqual(op.truediv(q1, q2).units,
                              self.Q_(*expected).units)
-            self.assertEqual(op.itruediv(q1, q2).units, 
+            self.assertEqual(op.itruediv(q1, q2).units,
                              self.Q_(*expected).units)
