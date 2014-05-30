@@ -493,8 +493,8 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         (((100, 'delta_degC'), (10, 'delta_degC')), (110, 'delta_degC')),
         (((100, 'delta_degC'), (10, 'delta_degF')), (105.56, 'delta_degC')),
 
-        (((100, 'delta_degF'), (10, 'kelvin')),     (105.56, 'kelvin')),
-        (((100, 'delta_degF'), (10, 'degC')),       (105.56, 'degC')),
+        (((100, 'delta_degF'), (10, 'kelvin')),     (65.56, 'kelvin')),
+        (((100, 'delta_degF'), (10, 'degC')),       (65.56, 'degC')),
         (((100, 'delta_degF'), (10, 'degF')),       (110, 'degF')),
         (((100, 'delta_degF'), (10, 'degR')),       (110, 'degR')),
         (((100, 'delta_degF'), (10, 'delta_degC')), (118, 'delta_degF')),
