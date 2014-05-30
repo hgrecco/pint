@@ -709,7 +709,8 @@ class UnitRegistry(object):
 
             _adder(alias, definition)
 
-        if isinstance(definition.converter, OffsetConverter):
+        # define additional "delta_" units for units with an offset
+        if getattr(definition.converter, "offset", 0.0) != 0.0:
             d_name = 'delta_' + definition.name
             if definition.symbol:
                 d_symbol = 'Δ' + definition.symbol
@@ -722,7 +723,7 @@ class UnitRegistry(object):
                     return '[delta_' + _name[1:]
                 return 'delta_' + _name
 
-            d_reference = UnitsContainer(dict((prep(ref), value)
+            d_reference = UnitsContainer(dict((ref, value)
                                          for ref, value in definition.reference.items()))
 
             self.define(UnitDefinition(d_name, d_symbol, d_aliases,
