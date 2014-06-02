@@ -59,14 +59,9 @@ def _check(q1, other):
 def _only_multiplicative_units(q):
     """Check if the quantity has non-multiplicative units.
     """
-
-    # Compound units are never non-multiplicative
-    if len(q.units) != 1:
-        return True
-
-    unit = list(q.units.keys())[0]
-
-    return q._REGISTRY._units[unit].is_multiplicative
+    non_multiplic_units = [unit for unit in q.units.keys()
+                           if not q._REGISTRY._units[unit].is_multiplicative]
+    return len(non_multiplic_units) == 0
 
 
 def _has_offset_unit(q):
