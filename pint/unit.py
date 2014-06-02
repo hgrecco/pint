@@ -301,7 +301,7 @@ class UnitDefinition(Definition):
                                  'Base units must be referenced only to dimensions. '
                                  'Derived units must be referenced only to units.')
             self.reference = UnitsContainer(converter.items())
-            if 'offset' in modifiers:
+            if modifiers.get('offset', 0.) != 0.:
                 converter = OffsetConverter(converter.scale, modifiers['offset'])
             else:
                 converter = ScaleConverter(converter.scale)
