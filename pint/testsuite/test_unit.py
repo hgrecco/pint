@@ -473,7 +473,7 @@ class TestRegistry(QuantityTestCase):
         # Conversions with single units take a different codepath than
         # Conversions with more than one unit.
         src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
-        src_dst2 = UnitsContainer(meter=1, seconds=-1), UnitsContainer(inch=1, minutes=-1)
+        src_dst2 = UnitsContainer(meter=1, second=-1), UnitsContainer(inch=1, minute=-1)
         for src, dst in (src_dst1, src_dst2):
             v = ureg.convert(1, src, dst),
 

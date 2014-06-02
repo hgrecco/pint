@@ -101,7 +101,8 @@ class _Quantity(object):
         elif isinstance(units, (UnitsContainer, UnitDefinition)):
             inst = object.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
-            inst._units = units
+            inst._units = UnitsContainer([(inst._REGISTRY.get_name(u), v) 
+                                          for u, v in units.items()])
         elif isinstance(units, string_types):
             inst = object.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)

@@ -27,7 +27,7 @@ class TestQuantity(QuantityTestCase):
             self.assertEqual(x.magnitude, 4.2)
             self.assertEqual(x.units, UnitsContainer(meter=1))
 
-        x = self.Q_(4.2, UnitsContainer(length=1))
+        x = self.Q_(4.2, UnitsContainer(meter=1))
         y = self.Q_(x)
         self.assertEqual(x.magnitude, y.magnitude)
         self.assertEqual(x.units, y.units)
@@ -149,7 +149,7 @@ class TestQuantity(QuantityTestCase):
         # Conversions with single units take a different codepath than
         # Conversions with more than one unit.
         src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
-        src_dst2 = UnitsContainer(meter=1, seconds=-1), UnitsContainer(inch=1, minutes=-1)
+        src_dst2 = UnitsContainer(meter=1, second=-1), UnitsContainer(inch=1, minute=-1)
         for src, dst in (src_dst1, src_dst2):
             a = np.ones((3, 1))
             ac = np.ones((3, 1))
