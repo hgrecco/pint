@@ -92,9 +92,9 @@ class TestIssues(QuantityTestCase):
     def test_issue66b(self):
         ureg = UnitRegistry()
         self.assertEqual(ureg.get_base_units(ureg.kelvin.units),
-                         (None, UnitsContainer({'kelvin': 1})))
+                         (1.0, UnitsContainer({'kelvin': 1})))
         self.assertEqual(ureg.get_base_units(ureg.degC.units),
-                         (None, UnitsContainer({'kelvin': 1})))
+                         (1.0, UnitsContainer({'kelvin': 1})))
 
     def test_issue69(self):
         ureg = UnitRegistry()
