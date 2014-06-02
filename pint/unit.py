@@ -103,7 +103,7 @@ class DimensionalityError(ValueError):
             dim1 = ''
             dim2 = ''
 
-        msg = "Cannot convert from '{0}'{1} to '{2}'{3}." + self.extra_msg
+        msg = "Cannot convert from '{0}'{1} to '{2}'{3}" + self.extra_msg
 
         return msg.format(self.units1, dim1, self.units2, dim2)
 
