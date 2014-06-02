@@ -1009,33 +1009,79 @@ class UnitRegistry(object):
         if src_dim != dst_dim:
             raise DimensionalityError(src, dst, src_dim, dst_dim)
 
-        if len(src) == 1:
+        # Conversion needs to consider if non-multiplicatvie (AKA offset
+        # units) are involved. Conversion is only possible if src and dst
+        # have at most one offset unit per dimension.
+        src_offset_units = [(u, e) for u, e in src.items()
+                            if not self._units[u].is_multiplicative]
+        dst_offset_units = [(u, e) for u, e in dst.items()
+                            if not self._units[u].is_multiplicative]
+
+        if src_offset_units or dst_offset_units:
+            # Validate that we have at most one offset unit per Dimension
+            src_offset_dim = [self.get_dimensionality(u).keys()[0]
+                              for u, _e in src_offset_units]
+            dst_offset_dim = [self.get_dimensionality(u).keys()[0]
+                              for u, _e in dst_offset_units]
+            if (len(src_offset_dim) > len(set(src_offset_dim))
+                    or len(dst_offset_dim) > len(dst_offset_dim)):
+                raise DimensionalityError(
+                    src, dst, src_dim, dst_dim,
+                    extra_msg=('More than one offset unit per dimension.'))
+
+            # Validate that all offset units have orders not above one.
+            any_higher_order = [u for u, e in itertools.chain(
+                                src_offset_units, dst_offset_units) if e > 1]
+            if any_higher_order:
+                raise DimensionalityError(
+                    src, dst, src_dim, dst_dim,
+                    extra_msg='Found offset units of higher order.'
+                    )
+
+        # Here we convert only the offset quantities. Any remaining scaled
+        # quantities will be converted later.
+
+        # clean src from offset units by converting to reference
+        for u, _e in src_offset_units:
+            value = self._units[u].converter.to_reference(value, inplace)
+            src.pop(u)
+
+        # clean dst units from offset units
+        for u, _e in dst_offset_units:
+            dst.pop(u)
+
             # If the source has a single element, it might be a non-multiplicative unit
             # and therefore it is treated differently.
-            src_unit, src_value = list(src.items())[0]
-            src_unit = self._units[src_unit]
+#            src_unit, src_value = list(src.items())[0]
+#            src_unit = self._units[src_unit]
 
             # We only continue if is a ScaleConverter,
             # if not just exit to use the standard src / dst.
             # TODO: This will fail and should not degK * meter / nanometer -> degC
-            if not isinstance(src_unit.converter, ScaleConverter):
+#            if (not isinstance(src_unit.converter, ScaleConverter)
+#                    or not isinstance(dst_unit.converter, ScaleConverter)
+#                    ):
 
-                if len(dst) > 1:
+#                if len(dst) > 1:
                     # If the destination has more than one element,
                     # then the conversion is not possible.
                     # TODO: This will fail and should not degC -> degK * meter / nanometer
-                    raise DimensionalityError(src, dst, src_dim, dst_dim)
+#                    raise DimensionalityError(src, dst, src_dim, dst_dim)
 
-                dst_unit, dst_value = list(dst.items())[0]
-                dst_unit = self._units[dst_unit]
-                if not type(src_unit.converter) is type(dst_unit.converter):
-                    raise DimensionalityError(src, dst, src_dim, dst_dim)
+#                dst_unit, dst_value = list(dst.items())[0]
+#                dst_unit = self._units[dst_unit]
+                # DL Why is the folowing check required?
+#                if not type(src_unit.converter) is type(dst_unit.converter):
+#                    raise DimensionalityError(src, dst, src_dim, dst_dim)
+#                tempsrc = src_unit.converter.to_reference(value, inplace)
+#                temp = dst_unit.converter.from_reference(tempsrc, inplace)
+#                print( '\n(using offset converter)',)
+#                return temp
 
-                return dst_unit.converter.from_reference(src_unit.converter.to_reference(value, inplace), inplace)
-
+        # here src and dst have only multiplicative units left.
         factor, units = self.get_base_units(src / dst)
 
-        if factor is None:
+        if factor is None:  # should never happen
             raise DimensionalityError(src, dst, src_dim, dst_dim,
                                       'Non-multiplicative unit found.')
 
@@ -1048,6 +1094,16 @@ class UnitRegistry(object):
             value *= factor
         else:
             value = value * factor
+
+        # Finally convert to offset units specified in destination
+        for u, _e in dst_offset_units:
+            value = self._units[u].converter.from_reference(value, inplace)
+            # add back offset units to dst
+            dst[u] = e
+
+        # restore offset conversion of src units
+        for u, e in src_offset_units:
+            src[u] = e
 
         return value
 

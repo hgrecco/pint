@@ -303,31 +303,26 @@ class _Quantity(object):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
-        if _check(self, other):  # DL other is a Quantity from same registry
+        if _check(self, other):
             if not self.dimensionality == other.dimensionality:
                 raise DimensionalityError(self.units, other.units,
-                                          self.dimensionality, 
+                                          self.dimensionality,
                                           other.dimensionality)
-#            if self._units == other._units:
-#                self._magnitude = op(self._magnitude, other._magnitude)
-#            else:
-#                self._magnitude = op(self._magnitude, other.to(self)._magnitude)
-
             if ((_has_offset_unit(self) or _has_offset_unit(other))
                     and not(_has_delta_unit(self) or _has_delta_unit(other))):
                 raise OffsetUnitCalculusError(self.units, other.units)
             else:
                 if self._units == other._units:
-                    self.magnitude = op(self._magnitude, other._magnitude)
+                    self._magnitude = op(self._magnitude, other._magnitude)
                 elif _has_delta_unit(self) and not _has_delta_unit(other):
                     # special case where other determines unit of result
-                    self.magnitude = op(self.ito(other)._magnitude, 
+                    self._magnitude = op(self.ito(other)._magnitude,
                                         other._magnitude)
                     self.units = copy.copy(other.units)
                 else:
-                    self.magnitude = op(self._magnitude, 
+                    self._magnitude = op(self._magnitude,
                                         other.ito(self)._magnitude)
-        else:  # DL other is not a Quantity (but e.g. a scalar, list, tuple or ndarray)
+        else:
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
             except TypeError:
@@ -357,15 +352,9 @@ class _Quantity(object):
         if _check(self, other):
             if not self.dimensionality == other.dimensionality:
                 raise DimensionalityError(self.units, other.units,
-                                          self.dimensionality, 
+                                          self.dimensionality,
                                           other.dimensionality)
-#            if self._units == other._units:
-#                magnitude = op(self._magnitude, other._magnitude)
-#            else:
-#                magnitude = op(self._magnitude, other.to(self)._magnitude)
-#
-#            units = copy.copy(self.units)
-# <-- new -->
+
             if ((_has_offset_unit(self) or _has_offset_unit(other))
                     and not(_has_delta_unit(self) or _has_delta_unit(other))):
                 raise OffsetUnitCalculusError(self.units, other.units)
@@ -375,12 +364,35 @@ class _Quantity(object):
                     units = copy.copy(self.units)
                 elif _has_delta_unit(self) and not _has_delta_unit(other):
                     # special case where other determines unit of result
-                    magnitude = op(self.to(other)._magnitude, other._magnitude)
+                    offset_units = [unit for unit in other.units.keys()
+                                 if not other._REGISTRY._units[unit].is_multiplicative]
+                    if len(offset_units) > 1:
+                        raise DimensionalityError(self.units, other.units,
+                                                  extra_msg='More than one offset unit.')
+                    elif len(offset_units) == 1:
+                        to_unit = copy.copy(other.units)
+                        #  replace offset unit by the correspondig delta unit
+                        to_unit['delta_'+offset_units[0]] = to_unit.pop(offset_units[0])
+                    else:
+                        to_unit = other
+                    magnitude = op(self.to(to_unit)._magnitude, other._magnitude)
                     units = copy.copy(other.units)
                 else:
-                    magnitude = op(self._magnitude, other.to(self)._magnitude)
+                    # XXX need to check if delta and offset unit have same
+                    #     dimensionality!
+                    offset_units = [unit for unit in self.units.keys()
+                                 if not self._REGISTRY._units[unit].is_multiplicative]
+                    if len(offset_units) > 1:
+                        raise DimensionalityError(self.units, other.units,
+                                                  extra_msg='More than one offset unit.')
+                    elif len(offset_units) == 1:
+                        to_unit = copy.copy(self.units)
+                        #  replace offset unit by the correspondig delta unit
+                        to_unit['delta_'+offset_units[0]] = to_unit.pop(offset_units[0])
+                    else:
+                        to_unit = self
+                    magnitude = op(self._magnitude, other.to(to_unit)._magnitude)
                     units = copy.copy(self.units)
-# <-- /new -->
         else:
             if _eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
