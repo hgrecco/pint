@@ -1009,7 +1009,7 @@ class UnitRegistry(object):
         if src_dim != dst_dim:
             raise DimensionalityError(src, dst, src_dim, dst_dim)
 
-        # Conversion needs to consider if non-multiplicatvie (AKA offset
+        # Conversion needs to consider if non-multiplicative (AKA offset
         # units) are involved. Conversion is only possible if src and dst
         # have at most one offset unit per dimension.
         src_offset_units = [(u, e) for u, e in src.items()
@@ -1050,40 +1050,9 @@ class UnitRegistry(object):
         for u, _e in dst_offset_units:
             dst.pop(u)
 
-            # If the source has a single element, it might be a non-multiplicative unit
-            # and therefore it is treated differently.
-#            src_unit, src_value = list(src.items())[0]
-#            src_unit = self._units[src_unit]
-
-            # We only continue if is a ScaleConverter,
-            # if not just exit to use the standard src / dst.
-            # TODO: This will fail and should not degK * meter / nanometer -> degC
-#            if (not isinstance(src_unit.converter, ScaleConverter)
-#                    or not isinstance(dst_unit.converter, ScaleConverter)
-#                    ):
-
-#                if len(dst) > 1:
-                    # If the destination has more than one element,
-                    # then the conversion is not possible.
-                    # TODO: This will fail and should not degC -> degK * meter / nanometer
-#                    raise DimensionalityError(src, dst, src_dim, dst_dim)
-
-#                dst_unit, dst_value = list(dst.items())[0]
-#                dst_unit = self._units[dst_unit]
-                # DL Why is the folowing check required?
-#                if not type(src_unit.converter) is type(dst_unit.converter):
-#                    raise DimensionalityError(src, dst, src_dim, dst_dim)
-#                tempsrc = src_unit.converter.to_reference(value, inplace)
-#                temp = dst_unit.converter.from_reference(tempsrc, inplace)
-#                print( '\n(using offset converter)',)
-#                return temp
-
-        # here src and dst have only multiplicative units left.
+        # Here src and dst have only multiplicative units left. Thus we can
+        # convert with a factor.
         factor, units = self.get_base_units(src / dst)
-
-        if factor is None:  # should never happen
-            raise DimensionalityError(src, dst, src_dim, dst_dim,
-                                      'Non-multiplicative unit found.')
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
