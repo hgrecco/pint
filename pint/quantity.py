@@ -354,10 +354,22 @@ class _Quantity(object):
                 raise DimensionalityError(self.units, other.units,
                                           self.dimensionality,
                                           other.dimensionality)
-
+            _dbg1 = [_has_offset_unit(self), _has_offset_unit(other), 
+                     _has_delta_unit(self), _has_delta_unit(other)]
             if ((_has_offset_unit(self) or _has_offset_unit(other))
                     and not(_has_delta_unit(self) or _has_delta_unit(other))):
-                raise OffsetUnitCalculusError(self.units, other.units)
+                if (_has_offset_unit(self) and _has_offset_unit(other)
+                        and (op == operator.sub or op == operator.isub) 
+                        and sum(self.units.values())==1 
+                        and sum(other.units.values())==1
+                        and self.units.keys() == other.units.keys()):
+                    # the if case should be improved this is too complicated and too strict (sum(..)=1)
+                    magnitude = op(self._magnitude, other._magnitude)
+                    units = copy.copy(self.units)
+                    unit = units.keys()[0]
+                    units['delta_' + unit] = units.pop(unit)
+                else:
+                    raise OffsetUnitCalculusError(self.units, other.units)
             else:
                 if self._units == other._units:
                     magnitude = op(self._magnitude, other._magnitude)

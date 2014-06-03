@@ -150,7 +150,7 @@ class TestQuantity(QuantityTestCase):
         # Conversions with single units take a different codepath than
         # Conversions with more than one unit.
         src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
-        src_dst2 = UnitsContainer(meter=1, seconds=-1), UnitsContainer(inch=1, minutes=-1)
+        src_dst2 = UnitsContainer(meter=1, second=-1), UnitsContainer(inch=1, minute=-1)
         for src, dst in (src_dst1, src_dst2):
             a = np.ones((3, 1))
             ac = np.ones((3, 1))
@@ -508,7 +508,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         (((100, 'kelvin'), (10, 'delta_degF')),  (94.44, 'kelvin')),
 
         (((100, 'degC'), (10, 'kelvin')),      'error'),
-        (((100, 'degC'), (10, 'degC')),        'error'),
+        (((100, 'degC'), (10, 'degC')),        (90, 'delta_degC')),
         (((100, 'degC'), (10, 'degF')),        'error'),
         (((100, 'degC'), (10, 'degR')),        'error'),
         (((100, 'degC'), (10, 'delta_degC')),  (90, 'degC')),
@@ -516,7 +516,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
         (((100, 'degF'), (10, 'kelvin')),      'error'),
         (((100, 'degF'), (10, 'degC')),        'error'),
-        (((100, 'degF'), (10, 'degF')),        'error'),
+        (((100, 'degF'), (10, 'degF')),        (90, 'delta_degF')),
         (((100, 'degF'), (10, 'degR')),        'error'),
         (((100, 'degF'), (10, 'delta_degC')),  (82, 'degF')),
         (((100, 'degF'), (10, 'delta_degF')),  (90, 'degF')),
@@ -633,100 +633,113 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         additions)
-    def test_addition_for_qty(self, input_tuple, expected):
+    def test_addition(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.add, q1, q2)
-            self.assertRaises(OffsetUnitCalculusError, op.iadd, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.add(q1, q2), self.Q_(*expected),
                                            atol=0.01)
-            self.assertQuantityAlmostEqual(op.iadd(q1, q2), self.Q_(*expected),
-                                           atol=0.01)
+            self.assertEqual(op.add(q1, q2).units, self.Q_(*expected).units)
 
+    @unittest.expectedFailure
+    @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         additions)
-    def test_addition_for_units(self, input_tuple, expected):
-        qin1, qin2 = input_tuple
-        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected != 'error':
-            self.assertEqual(op.add(q1, q2).units, self.Q_(*expected).units)
+    def test_inplace_addition(self, input_tuple, expected):
+        Q_ = self.Q_
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        q1, q2 = Q_(np.array([q1v]*2), q1u), Q_(np.array([q2v]*2), q2u)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.iadd, q1, q2)
+        else:
+            expected = np.array([expected[0]]*2), expected[1]
+            self.assertQuantityAlmostEqual(op.iadd(q1, q2), Q_(*expected),
+                                           atol=0.01)
             self.assertEqual(op.iadd(q1, q2).units, self.Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         subtractions)
-    def test_subtraction_for_qty(self, input_tuple, expected):
+    def test_subtraction(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.sub, q1, q2)
-            self.assertRaises(OffsetUnitCalculusError, op.isub, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.sub(q1, q2), self.Q_(*expected),
                                            atol=0.01)
-            self.assertQuantityAlmostEqual(op.isub(q1, q2), self.Q_(*expected),
-                                           atol=0.01)
+            self.assertEqual(op.sub(q1, q2).units, self.Q_(*expected).units)
 
+    @unittest.expectedFailure
+    @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         subtractions)
-    def test_subtraction_for_units(self, input_tuple, expected):
-        qin1, qin2 = input_tuple
-        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected != 'error':
-            self.assertEqual(op.sub(q1, q2).units, self.Q_(*expected).units)
-            self.assertEqual(op.isub(q1, q2).units, self.Q_(*expected).units)
+    def test_inplace_subtraction(self, input_tuple, expected):
+        Q_ = self.Q_
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        q1, q2 = Q_(np.array([q1v]*2), q1u), Q_(np.array([q2v]*2), q2u)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.isub, q1, q2)
+        else:
+            expected = np.array([expected[0]]*2), expected[1]
+            self.assertQuantityAlmostEqual(op.isub(q1, q2), Q_(*expected),
+                                           atol=0.01)
+            self.assertEqual(op.isub(q1, q2).units, Q_(*expected).units)
 
     @unittest.expectedFailure
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         multiplications)
-    def test_multiplication_for_qty(self, input_tuple, expected):
+    def test_multiplication(self, input_tuple, expected):
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.mul, q1, q2)
-            self.assertRaises(OffsetUnitCalculusError, op.imul, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.mul(q1, q2), self.Q_(*expected),
                                            atol=0.01)
-            self.assertQuantityAlmostEqual(op.imul(q1, q2), self.Q_(*expected),
-                                           atol=0.01)
+            self.assertEqual(op.mul(q1, q2).units, self.Q_(*expected).units)
 
     @unittest.expectedFailure
+    @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         multiplications)
-    def test_multiplication_for_units(self, input_tuple, expected):
-        qin1, qin2 = input_tuple
-        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected != 'error':
-            self.assertEqual(op.mul(q1, q2).units, self.Q_(*expected).units)
-            self.assertEqual(op.imul(q1, q2).units, self.Q_(*expected).units)
+    def test_inplace_multiplication(self, input_tuple, expected):
+        Q_ = self.Q_
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        q1, q2 = Q_(np.array([q1v]*2), q1u), Q_(np.array([q2v]*2), q2u)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.imul, q1, q2)
+        else:
+            self.assertQuantityAlmostEqual(op.imul(q1, q2), Q_(*expected),
+                                           atol=0.01)
+            self.assertEqual(op.imul(q1, q2).units, Q_(*expected).units)
 
     @unittest.expectedFailure
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         divisions)
-    def test_truedivision_for_qty(self, input_tuple, expected):
+    def test_truedivision(self, input_tuple, expected):
+        Q_ = self.Q_
         qin1, qin2 = input_tuple
-        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        q1, q2 = Q_(*qin1), Q_(*qin2)
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.truediv, q1, q2)
-            self.assertRaises(OffsetUnitCalculusError, op.itruediv, q1, q2)
         else:
-            self.assertQuantityAlmostEqual(op.truediv(q1, q2),
-                                           self.Q_(*expected),
+            self.assertQuantityAlmostEqual(op.truediv(q1, q2), Q_(*expected),
                                            atol=0.01)
-            self.assertQuantityAlmostEqual(op.itruediv(q1, q2),
-                                           self.Q_(*expected),
-                                           atol=0.01)
+            self.assertEqual(op.truediv(q1, q2).units, Q_(*expected).units)
 
     @unittest.expectedFailure
+    @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         divisions)
-    def test_truedivision_for_units(self, input_tuple, expected):
-        qin1, qin2 = input_tuple
-        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
-        if expected != 'error':
-            self.assertEqual(op.truediv(q1, q2).units,
-                             self.Q_(*expected).units)
-            self.assertEqual(op.itruediv(q1, q2).units,
-                             self.Q_(*expected).units)
+    def test_inplace_truedivision(self, input_tuple, expected):
+        Q_ = self.Q_
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        q1, q2 = Q_(np.array([q1v]*2), q1u), Q_(np.array([q2v]*2), q2u)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.itruediv, q1, q2)
+        else:
+            self.assertQuantityAlmostEqual(op.itruediv(q1, q2), Q_(*expected),
+                                           atol=0.01)
+            self.assertEqual(op.itruediv(q1, q2).units, Q_(*expected).units)
