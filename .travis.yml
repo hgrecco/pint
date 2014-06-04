@@ -3,6 +3,7 @@ language: python
 python:
   - "2.6"
   - "2.7"
+  - "3.2"
   - "3.3"
   - "3.4"
 
@@ -33,8 +34,8 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 
 install:
-  - conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip
-  - source activate env_name
+  - if [ $TRAVIS_PYTHON_VERSION != '3.2' ]; then conda create --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip; fi
+  - if [ $TRAVIS_PYTHON_VERSION != '3.2' ]; then source activate env_name; fi
   - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install uncertainties; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
@@ -50,6 +51,19 @@ after_script:
 
 matrix:
   exclude:
+    - python: "3.2"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+    - python: "3.2"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
+    - python: "3.2"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.8.1
+    - python: "3.2"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.2"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+    - python: "3.2"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.8.1
+
     - python: "3.3"
       env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
     - python: "3.4"
