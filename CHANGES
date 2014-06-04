@@ -2,8 +2,8 @@ Pint Changelog
 ==============
 
 
-0.6 (unreleased)
-----------------
+0.5.1 (2014-06-03)
+------------------
 
 - Implemented a standard way to change the registry used in unpickling operations.
   (Issue #148)
