@@ -5,7 +5,16 @@ Pint Changelog
 0.6 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Implemented a standard way to change the registry used in unpickling operations.
+  (Issue #148)
+- Fix bug where conversion would fail due to caching.
+  (Issue #140, thanks jdreaver)
+- Allow assigning Not a Number to a quantity array.
+  (Issue #127)
+- Decoupled Quantity in place and not in place unit conversion methods.
+- Return None in functions that modify quantities in place.
+- Improved testing infrastructure to check for unwanted warnings.
+- Added test function at the package level to run all tests.
 
 
 0.5 (2014-05-07)
