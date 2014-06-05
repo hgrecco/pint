@@ -643,20 +643,25 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
                                            atol=0.01)
             self.assertEqual(op.add(q1, q2).units, self.Q_(*expected).units)
 
-    @unittest.expectedFailure
     @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         additions)
     def test_inplace_addition(self, input_tuple, expected):
-        Q_ = self.Q_
         (q1v, q1u), (q2v, q2u) = input_tuple
-        q1, q2 = Q_(np.array([q1v]*2), q1u), Q_(np.array([q2v]*2), q2u)
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u), 
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_copy = copy.copy(q1)
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.iadd, q1, q2)
         else:
-            expected = np.array([expected[0]]*2), expected[1]
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
             self.assertQuantityAlmostEqual(op.iadd(q1, q2), Q_(*expected),
                                            atol=0.01)
+            q1 = q1_copy
             self.assertEqual(op.iadd(q1, q2).units, self.Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
@@ -671,20 +676,25 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
                                            atol=0.01)
             self.assertEqual(op.sub(q1, q2).units, self.Q_(*expected).units)
 
-    @unittest.expectedFailure
     @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         subtractions)
     def test_inplace_subtraction(self, input_tuple, expected):
-        Q_ = self.Q_
         (q1v, q1u), (q2v, q2u) = input_tuple
-        q1, q2 = Q_(np.array([q1v]*2), q1u), Q_(np.array([q2v]*2), q2u)
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u), 
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_copy = copy.copy(q1)
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.isub, q1, q2)
         else:
-            expected = np.array([expected[0]]*2), expected[1]
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
             self.assertQuantityAlmostEqual(op.isub(q1, q2), Q_(*expected),
                                            atol=0.01)
+            q1 = q1_copy
             self.assertEqual(op.isub(q1, q2).units, Q_(*expected).units)
 
     @unittest.expectedFailure
@@ -705,14 +715,21 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         multiplications)
     def test_inplace_multiplication(self, input_tuple, expected):
-        Q_ = self.Q_
         (q1v, q1u), (q2v, q2u) = input_tuple
-        q1, q2 = Q_(np.array([q1v]*2), q1u), Q_(np.array([q2v]*2), q2u)
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u), 
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_copy = copy.copy(q1)
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.imul, q1, q2)
         else:
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
             self.assertQuantityAlmostEqual(op.imul(q1, q2), Q_(*expected),
                                            atol=0.01)
+            q1 = q1_copy
             self.assertEqual(op.imul(q1, q2).units, Q_(*expected).units)
 
     @unittest.expectedFailure
@@ -734,12 +751,19 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         divisions)
     def test_inplace_truedivision(self, input_tuple, expected):
-        Q_ = self.Q_
         (q1v, q1u), (q2v, q2u) = input_tuple
-        q1, q2 = Q_(np.array([q1v]*2), q1u), Q_(np.array([q2v]*2), q2u)
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u), 
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_copy = copy.copy(q1)
         if expected == 'error':
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
             self.assertRaises(OffsetUnitCalculusError, op.itruediv, q1, q2)
         else:
             self.assertQuantityAlmostEqual(op.itruediv(q1, q2), Q_(*expected),
                                            atol=0.01)
+            q1 = q1_copy
             self.assertEqual(op.itruediv(q1, q2).units, Q_(*expected).units)
