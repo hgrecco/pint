@@ -59,22 +59,36 @@ def _check(q1, other):
 def _only_multiplicative_units(q):
     """Check if the quantity has non-multiplicative units.
     """
-    non_multiplic_units = [unit for unit in q.units.keys()
-                           if not q._REGISTRY._units[unit].is_multiplicative]
-    return len(non_multiplic_units) == 0
+    return not _get_non_multiplicative_units(q)
 
 
-def _has_offset_unit(q):
+def _get_non_multiplicative_units(q):
     """Check if the quantity has a unit with non-zero offset
     """
-    return not _only_multiplicative_units(q)
+    offset_units = [unit for unit in q.units.keys()
+                    if not q._REGISTRY._units[unit].is_multiplicative]
+    return offset_units
 
 
-def _has_delta_unit(q):
+def _get_delta_units(q):
     """Check if the quantity has a delta_unit
     """
     delta_units = [u for u in q.units.keys() if u.startswith("delta_")]
-    return len(delta_units) > 0
+    return delta_units
+
+
+def _has_compatible_delta(q, unit):
+    """"Check if quantity has a delta_unit that is compatible with unit
+    """
+    deltas = _get_delta_units(q)
+    if 'delta_' + unit in deltas:
+        return True
+    else:  # Look for delta units with same dimension as the offset unit
+        offset_unit_dim = q._REGISTRY._units[unit].reference
+        for d in deltas:
+            if q._REGISTRY._units[d].reference == offset_unit_dim:
+                return True
+    return False
 
 
 class _Quantity(object):
@@ -303,26 +317,7 @@ class _Quantity(object):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
-        if _check(self, other):
-            if not self.dimensionality == other.dimensionality:
-                raise DimensionalityError(self.units, other.units,
-                                          self.dimensionality,
-                                          other.dimensionality)
-            if ((_has_offset_unit(self) or _has_offset_unit(other))
-                    and not(_has_delta_unit(self) or _has_delta_unit(other))):
-                raise OffsetUnitCalculusError(self.units, other.units)
-            else:
-                if self._units == other._units:
-                    self._magnitude = op(self._magnitude, other._magnitude)
-                elif _has_delta_unit(self) and not _has_delta_unit(other):
-                    # special case where other determines unit of result
-                    self._magnitude = op(self.ito(other)._magnitude,
-                                        other._magnitude)
-                    self.units = copy.copy(other.units)
-                else:
-                    self._magnitude = op(self._magnitude,
-                                        other.ito(self)._magnitude)
-        else:
+        if not _check(self, other):  # other not from same Registry or not a Quantity
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
             except TypeError:
@@ -334,10 +329,69 @@ class _Quantity(object):
                 # enforce any shape checking and type casting due to the operation.
                 self._magnitude = op(self._magnitude, other_magnitude)
             elif self.dimensionless:
-                self.ito(UnitsContainer())  # DL why? What is dimensionless and has no units? Constants?
+                self.ito(UnitsContainer())
                 self._magnitude = op(self._magnitude, other_magnitude)
             else:
                 raise DimensionalityError(self.units, 'dimensionless')
+            return self
+
+        if not self.dimensionality == other.dimensionality:
+            raise DimensionalityError(self.units, other.units,
+                                      self.dimensionality,
+                                      other.dimensionality)
+
+        # Next we define some variables to make if-clauses more readable.
+        reg = self._REGISTRY._units
+        # For self:
+        self_non_mul_units = _get_non_multiplicative_units(self)
+        is_self_multiplicative = len(self_non_mul_units) == 0
+        if len(self_non_mul_units) == 1:
+            self_non_mul_unit = self_non_mul_units[0]
+        # For other:
+        other_non_mul_units = _get_non_multiplicative_units(other)
+        is_other_multiplicative = len(other_non_mul_units) == 0
+        if len(other_non_mul_units) == 1:
+            other_non_mul_unit = other_non_mul_units[0]
+
+        # Presence of non-multiplicative units gives rise to several cases.
+        if is_self_multiplicative and is_other_multiplicative:
+            # If only self has a delta unit, other determines unit of result.
+            if _get_delta_units(self) and not _get_delta_units(other):
+                self._magnitude = op(self.to(other)._magnitude, other._magnitude)
+                self._units = copy.copy(other.units)
+            else:
+                self._magnitude = op(self._magnitude, other.to(self)._magnitude)
+        elif (len(self_non_mul_units) == 1 and len(other_non_mul_units) == 1
+                # order of the dimension of offset units == 1 ?
+                and reg[self_non_mul_unit].reference.values()[0] == 1
+                and reg[other_non_mul_unit].reference.values()[0] == 1
+                and self_non_mul_unit == other_non_mul_unit
+                and op == operator.isub):
+            # subtraction of two quantities with same offset unit is
+            # allowed and gives a result in the corresponding delta_unit
+            self._magnitude = op(self._magnitude, other._magnitude)
+            self._units['delta_' + self_non_mul_unit] = self.units.pop(self_non_mul_unit)
+        elif (len(self_non_mul_units) == 1
+                # order of the dimension of offset unit == 1 ?
+                and reg[self_non_mul_unit].reference.values()[0] == 1
+                and _has_compatible_delta(other, self_non_mul_unit)):
+            tu = copy.copy(self.units)
+            # Replace offset unit in self by the corresponding delta unit.
+            # This is done to prevent a shift by offset in the to()-call.
+            tu['delta_' + self_non_mul_unit] = tu.pop(self_non_mul_unit)
+            self._magnitude = op(self._magnitude, other.to(tu)._magnitude)
+        elif (len(other_non_mul_units) == 1
+                # order of the dimension of offset unit == 1 ?
+                and reg[other_non_mul_unit].reference.values()[0] == 1
+                and _has_compatible_delta(self, other_non_mul_unit)):
+            tu = copy.copy(other.units)
+            # Replace offset unit in other by the corresponding delta unit.
+            # This is done to prevent a shift by offset in the to()-call.
+            tu['delta_' + other_non_mul_unit] = tu.pop(other_non_mul_unit)
+            self._magnitude = op(self.to(tu)._magnitude, other._magnitude)
+            self._units = copy.copy(other.units)
+        else:
+            raise OffsetUnitCalculusError(self.units, other.units)
 
         return self
 
@@ -349,63 +403,7 @@ class _Quantity(object):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
-        if _check(self, other):
-            if not self.dimensionality == other.dimensionality:
-                raise DimensionalityError(self.units, other.units,
-                                          self.dimensionality,
-                                          other.dimensionality)
-            _dbg1 = [_has_offset_unit(self), _has_offset_unit(other), 
-                     _has_delta_unit(self), _has_delta_unit(other)]
-            if ((_has_offset_unit(self) or _has_offset_unit(other))
-                    and not(_has_delta_unit(self) or _has_delta_unit(other))):
-                if (_has_offset_unit(self) and _has_offset_unit(other)
-                        and (op == operator.sub or op == operator.isub) 
-                        and sum(self.units.values())==1 
-                        and sum(other.units.values())==1
-                        and self.units.keys() == other.units.keys()):
-                    # the if case should be improved this is too complicated and too strict (sum(..)=1)
-                    magnitude = op(self._magnitude, other._magnitude)
-                    units = copy.copy(self.units)
-                    unit = units.keys()[0]
-                    units['delta_' + unit] = units.pop(unit)
-                else:
-                    raise OffsetUnitCalculusError(self.units, other.units)
-            else:
-                if self._units == other._units:
-                    magnitude = op(self._magnitude, other._magnitude)
-                    units = copy.copy(self.units)
-                elif _has_delta_unit(self) and not _has_delta_unit(other):
-                    # special case where other determines unit of result
-                    offset_units = [unit for unit in other.units.keys()
-                                 if not other._REGISTRY._units[unit].is_multiplicative]
-                    if len(offset_units) > 1:
-                        raise DimensionalityError(self.units, other.units,
-                                                  extra_msg='More than one offset unit.')
-                    elif len(offset_units) == 1:
-                        to_unit = copy.copy(other.units)
-                        #  replace offset unit by the correspondig delta unit
-                        to_unit['delta_'+offset_units[0]] = to_unit.pop(offset_units[0])
-                    else:
-                        to_unit = other
-                    magnitude = op(self.to(to_unit)._magnitude, other._magnitude)
-                    units = copy.copy(other.units)
-                else:
-                    # XXX need to check if delta and offset unit have same
-                    #     dimensionality!
-                    offset_units = [unit for unit in self.units.keys()
-                                 if not self._REGISTRY._units[unit].is_multiplicative]
-                    if len(offset_units) > 1:
-                        raise DimensionalityError(self.units, other.units,
-                                                  extra_msg='More than one offset unit.')
-                    elif len(offset_units) == 1:
-                        to_unit = copy.copy(self.units)
-                        #  replace offset unit by the correspondig delta unit
-                        to_unit['delta_'+offset_units[0]] = to_unit.pop(offset_units[0])
-                    else:
-                        to_unit = self
-                    magnitude = op(self._magnitude, other.to(to_unit)._magnitude)
-                    units = copy.copy(self.units)
-        else:
+        if not _check(self, other):  # other not from same Registry or not a Quantity
             if _eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
                 # do the operation without checking units.
@@ -420,7 +418,69 @@ class _Quantity(object):
                                _to_magnitude(other, self.force_ndarray))
             else:
                 raise DimensionalityError(self.units, 'dimensionless')
+            return self.__class__(magnitude, units)
 
+        if not self.dimensionality == other.dimensionality:
+            raise DimensionalityError(self.units, other.units,
+                                      self.dimensionality,
+                                      other.dimensionality)
+
+        # Next we define some variables to make if-clauses more readable.
+        reg = self._REGISTRY._units
+        # For self:
+        self_non_mul_units = _get_non_multiplicative_units(self)
+        is_self_multiplicative = len(self_non_mul_units) == 0
+        if len(self_non_mul_units) == 1:
+            self_non_mul_unit = self_non_mul_units[0]
+        # For other:
+        other_non_mul_units = _get_non_multiplicative_units(other)
+        is_other_multiplicative = len(other_non_mul_units) == 0
+        if len(other_non_mul_units) == 1:
+            other_non_mul_unit = other_non_mul_units[0]
+
+        # Presence of non-multiplicative units gives rise to several cases.
+        if is_self_multiplicative and is_other_multiplicative:
+            # If only self has a delta unit, other determines unit of result.
+            if _get_delta_units(self) and not _get_delta_units(other):
+                magnitude = op(self.to(other)._magnitude, other._magnitude)
+                units = copy.copy(other.units)
+            else:
+                units = copy.copy(self.units)
+                magnitude = op(self._magnitude, other.to(self)._magnitude)
+        elif (len(self_non_mul_units) == 1 and len(other_non_mul_units) == 1
+                # order of the dimension of offset units == 1 ?
+                and reg[self_non_mul_unit].reference.values()[0] == 1
+                and reg[other_non_mul_unit].reference.values()[0] == 1
+                and self_non_mul_unit == other_non_mul_unit
+                and op == operator.sub):
+            # subtraction of two quantities with same offset unit is
+            # allowed and gives a result in the corresponding delta_unit
+            magnitude = op(self._magnitude, other._magnitude)
+            units = copy.copy(self.units)
+            units['delta_' + self_non_mul_unit] = units.pop(self_non_mul_unit)
+        elif (len(self_non_mul_units) == 1
+                # order of the dimension of offset unit == 1 ?
+                and reg[self_non_mul_unit].reference.values()[0] == 1
+                and _has_compatible_delta(other, self_non_mul_unit)):
+            tu = copy.copy(self.units)
+            # Replace offset unit in self by the corresponding delta unit.
+            # This is done to prevent a shift by offset in the to()-call.
+            tu['delta_' + self_non_mul_unit] = tu.pop(self_non_mul_unit)
+            magnitude = op(self._magnitude, other.to(tu)._magnitude)
+            units = copy.copy(self.units)
+        elif (len(other_non_mul_units) == 1
+                # order of the dimension of offset unit == 1 ?
+                and reg[other_non_mul_unit].reference.values()[0] == 1
+                and _has_compatible_delta(self, other_non_mul_unit)):
+            tu = copy.copy(other.units)
+            # Replace offset unit in other by the corresponding delta unit.
+            # This is done to prevent a shift by offset in the to()-call.
+            tu['delta_' + other_non_mul_unit] = tu.pop(other_non_mul_unit)
+            magnitude = op(self.to(tu)._magnitude, other._magnitude)
+            units = copy.copy(other.units)
+        else:
+            raise OffsetUnitCalculusError(self.units, other.units)
+            
         return self.__class__(magnitude, units)
 
     def __iadd__(self, other):
