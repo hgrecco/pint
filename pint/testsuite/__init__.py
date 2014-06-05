@@ -130,7 +130,9 @@ def main():
 
 def run():
     """Run all tests.
+
+    :return: a :class:`unittest.TestResult` object
     """
     test_runner = unittest.TextTestRunner()
-    test_runner.run(testsuite())
+    return test_runner.run(testsuite())
 

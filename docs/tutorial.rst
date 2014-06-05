@@ -74,7 +74,7 @@ If you want to convert in-place (i.e. without creating another object), you can 
    >>> print(speed)
    7086.614173228345 inch / minute
 
-If you ask Pint to perform and invalid conversion:
+If you ask Pint to perform an invalid conversion:
 
 .. doctest::
 
@@ -178,7 +178,6 @@ This enables you to build a simple unit converter in 3 lines:
    >>> Q_(src).to(dst)
    <Quantity(1.0, 'inch')>
 
-Take a look at `qconvert.py` within the examples folder for a full script.
 
 .. warning:: Pint currently uses eval_ under the hood.
    Do not use this approach from untrusted sources as it is dangerous_.

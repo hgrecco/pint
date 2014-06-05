@@ -44,7 +44,7 @@ setup(
     include_package_data=True,
     entry_points={
          'zest.releaser.releaser.after_checkout': [
-            'pyroma = pint:run_pyroma',
+            'pyroma = pint:_run_pyroma',
          ],
       },
     license='BSD',
