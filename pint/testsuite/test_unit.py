@@ -493,6 +493,13 @@ class TestRegistry(QuantityTestCase):
         self.ureg.convert(1, "m", "ft")
         self.ureg.convert(1, "m", "ft")
 
+    def test_singular_SI_prefix_convert(self):
+        # Fix for issue 156
+        self.ureg.convert(1, 'mm', 'm')
+        self.ureg.convert(1, 'ms', 's')
+        self.ureg.convert(1, 'm', 'mm')
+        self.ureg.convert(1, 's', 'ms')
+
     def test_parse_units(self):
         ureg = self.ureg
         self.assertEqual(ureg.parse_units(''), UnitsContainer())
