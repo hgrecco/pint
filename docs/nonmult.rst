@@ -86,10 +86,15 @@ You can override this behaviour:
 
 .. doctest::
 
-    >>> print(ureg.parse_units('degC/meter', to_delta=False))
+    >>> print(ureg.parse_units('degC/meter', as_delta=False))
     degC / meter
 
+Note that the magnitude is left unchanged:
 
+.. doctest::
+    >>> Q_(10, 'degC/meter')
+    <Quantity(10, 'delta_degC / meter')>
+    
 To define a new temperature, you need to specify the offset. For example,
 this is the definition of the celsius and fahrenheit::
 

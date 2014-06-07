@@ -324,16 +324,16 @@ class TestRegistry(QuantityTestCase):
         q = self.Q_(1, 'g/(m**2*s)')
         self.assertEqual(self.Q_(q.magnitude, str(q.units)), q)
 
-    def test_to_delta(self):
+    def test_as_delta(self):
         parse = self.ureg.parse_units
-        self.assertEqual(parse('kelvin', to_delta=True), UnitsContainer(kelvin=1))
-        self.assertEqual(parse('kelvin', to_delta=False), UnitsContainer(kelvin=1))
-        self.assertEqual(parse('kelvin**(-1)', to_delta=True), UnitsContainer(kelvin=-1))
-        self.assertEqual(parse('kelvin**(-1)', to_delta=False), UnitsContainer(kelvin=-1))
-        self.assertEqual(parse('kelvin**2', to_delta=True), UnitsContainer(kelvin=2))
-        self.assertEqual(parse('kelvin**2', to_delta=False), UnitsContainer(kelvin=2))
-        self.assertEqual(parse('kelvin*meter', to_delta=True), UnitsContainer(kelvin=1, meter= 1))
-        self.assertEqual(parse('kelvin*meter', to_delta=False), UnitsContainer(kelvin=1, meter=1))
+        self.assertEqual(parse('kelvin', as_delta=True), UnitsContainer(kelvin=1))
+        self.assertEqual(parse('kelvin', as_delta=False), UnitsContainer(kelvin=1))
+        self.assertEqual(parse('kelvin**(-1)', as_delta=True), UnitsContainer(kelvin=-1))
+        self.assertEqual(parse('kelvin**(-1)', as_delta=False), UnitsContainer(kelvin=-1))
+        self.assertEqual(parse('kelvin**2', as_delta=True), UnitsContainer(kelvin=2))
+        self.assertEqual(parse('kelvin**2', as_delta=False), UnitsContainer(kelvin=2))
+        self.assertEqual(parse('kelvin*meter', as_delta=True), UnitsContainer(kelvin=1, meter= 1))
+        self.assertEqual(parse('kelvin*meter', as_delta=False), UnitsContainer(kelvin=1, meter=1))
 
     def test_name(self):
         self.assertRaises(UndefinedUnitError, self.ureg.get_name, 'asdf')
