@@ -250,6 +250,12 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(summer(y), ureg.Quantity(3, 'meter'))
         self.assertQuantityAlmostEqual(y[0], ureg.Quantity(1, 'meter'))
 
+    def test_issue153(self):
+        ureg = UnitRegistry()
+        u = UnitsContainer(meters=1)
+        q = ureg.Quantity(1, u)
+        self.assertEqual(q.to_base_units(), ureg.Quantity(1, 'meter'))
+
 
 @helpers.requires_numpy()
 class TestIssuesNP(QuantityTestCase):
