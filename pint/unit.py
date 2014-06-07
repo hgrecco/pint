@@ -1000,7 +1000,7 @@ class UnitRegistry(object):
             # If the source has a single element, it might be a non-multiplicative unit
             # and therefore it is treated differently.
             src_unit, src_value = list(src.items())[0]
-            src_unit = self._units[src_unit]
+            src_unit = self._units[self.get_name(src_unit)]
 
             # We only continue if is a ScaleConverter,
             # if not just exit to use the standard src / dst.
@@ -1014,7 +1014,7 @@ class UnitRegistry(object):
                     raise DimensionalityError(src, dst, src_dim, dst_dim)
 
                 dst_unit, dst_value = list(dst.items())[0]
-                dst_unit = self._units[dst_unit]
+                dst_unit = self._units[self.get_name(dst_unit)]
                 if not type(src_unit.converter) is type(dst_unit.converter):
                     raise DimensionalityError(src, dst, src_dim, dst_dim)
 
@@ -1310,4 +1310,3 @@ class LazyRegistry(object):
     def __call__(self, *args, **kwargs):
         self.__init()
         return self(*args, **kwargs)
-
