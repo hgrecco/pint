@@ -357,18 +357,6 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(self.ureg.get_symbol('international_foot'), 'ft')
         self.assertEqual(self.ureg.get_symbol('international_inch'), 'in')
 
-    @unittest.expectedFailure
-    def test_delta_in_diff(self):
-        """This might be supported in future versions
-        """
-        xk = 1 * self.ureg.kelvin
-        yk = 2 * self.ureg.kelvin
-        yf = yk.to('degF')
-        yc = yk.to('degC')
-        self.assertEqual(yk - xk, 1 * self.ureg.kelvin)
-        self.assertEqual(yf - xk, 1 * self.ureg.kelvin)
-        self.assertEqual(yc - xk, 1 * self.ureg.kelvin)
-
     def test_pint(self):
         p = self.ureg.pint
         l = self.ureg.liter
