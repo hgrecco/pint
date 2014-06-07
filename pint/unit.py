@@ -979,9 +979,9 @@ class UnitRegistry(object):
         :return: converted value
         """
         if isinstance(src, string_types):
-            src = ParserHelper.from_string(src)
+            src = self.parse_units(src)
         if isinstance(dst, string_types):
-            dst = ParserHelper.from_string(dst)
+            dst = self.parse_units(dst)
         if src == dst:
             return value
 
