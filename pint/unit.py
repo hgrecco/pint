@@ -1017,37 +1017,44 @@ class UnitRegistry(object):
         dst_offset_units = [(u, e) for u, e in dst.items()
                             if not self._units[u].is_multiplicative]
 
+        # For offset units we need to check if the conversion is allowed.
         if src_offset_units or dst_offset_units:
-            # Validate that we have at most one offset unit per Dimension
-            src_offset_dim = [self.get_dimensionality(u).keys()[0]
-                              for u, _e in src_offset_units]
-            dst_offset_dim = [self.get_dimensionality(u).keys()[0]
-                              for u, _e in dst_offset_units]
-            if (len(src_offset_dim) > len(set(src_offset_dim))
-                    or len(dst_offset_dim) > len(dst_offset_dim)):
-                raise DimensionalityError(
-                    src, dst, src_dim, dst_dim,
-                    extra_msg=('More than one offset unit per dimension.'))
 
-            # Validate that all offset units have orders not above one.
-            any_higher_order = [u for u, e in itertools.chain(
-                                src_offset_units, dst_offset_units) if e > 1]
-            if any_higher_order:
+            # Validate that not more than one offset unit is present
+            if len(src_offset_units) > 1 or len(dst_offset_units) > 1:
                 raise DimensionalityError(
                     src, dst, src_dim, dst_dim,
-                    extra_msg='Found offset units of higher order.'
-                    )
+                    extra_msg=' - more than one offset unit.')
+                    
+            # validate that offset unit is not used in multiplicative context
+            if ((len(src_offset_units) == 1 and len(src) > 1)
+                    or (len(dst_offset_units) == 1 and len(dst) > 1)):
+                raise DimensionalityError(
+                    src, dst, src_dim, dst_dim,
+                    extra_msg=' - offset unit used in multiplicative context.')
+                    
+            # Validate that order of offset unit is not above one.
+            if src_offset_units:
+                if src_offset_units[0][1] > 1:
+                    raise DimensionalityError(
+                        src, dst, src_dim, dst_dim,
+                        extra_msg=' - offset units in higher order.')
+            else:
+                if dst_offset_units[0][1] > 1:
+                    raise DimensionalityError(
+                        src, dst, src_dim, dst_dim,
+                        extra_msg=' - offset units in higher order.')
 
         # Here we convert only the offset quantities. Any remaining scaled
         # quantities will be converted later.
 
         # clean src from offset units by converting to reference
-        for u, _e in src_offset_units:
+        for u, e in src_offset_units:
             value = self._units[u].converter.to_reference(value, inplace)
             src.pop(u)
 
         # clean dst units from offset units
-        for u, _e in dst_offset_units:
+        for u, e in dst_offset_units:
             dst.pop(u)
 
         # Here src and dst have only multiplicative units left. Thus we can
@@ -1065,7 +1072,7 @@ class UnitRegistry(object):
             value = value * factor
 
         # Finally convert to offset units specified in destination
-        for u, _e in dst_offset_units:
+        for u, e in dst_offset_units:
             value = self._units[u].converter.from_reference(value, inplace)
             # add back offset units to dst
             dst[u] = e

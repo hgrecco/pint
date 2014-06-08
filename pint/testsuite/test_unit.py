@@ -12,8 +12,9 @@ from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        DimensionDefinition, _freeze, Converter, UnitRegistry,
                        LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.compat import u, unittest, np
+from pint.compat import u, unittest, np, string_types
 from pint.testsuite import QuantityTestCase, helpers, BaseTestCase
+from pint.testsuite.parameterized import ParameterizedTestCase
 
 
 class TestConverter(BaseTestCase):
@@ -586,3 +587,53 @@ class TestErrors(BaseTestCase):
         msg = "Cannot convert from 'a' (c) to 'b' (d)msg"
         ex = DimensionalityError('a', 'b', 'c', 'd', 'msg')
         self.assertEqual(str(ex), msg)
+
+
+class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
+
+
+    # The dicts in convert_with_offset are used to create a UnitsContainer.
+    # We create UnitsContainer to avoid any auto-conversion of units.
+    convert_with_offset = [
+        (({'degC': 1}, {'degC': 1}), 10),
+        (({'degC': 1}, {'kelvin': 1}), 283.15),
+        (({'degC': 1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
+        (({'degC': 1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 283150),
+
+        (({'kelvin': 1}, {'degC': 1}), -263.15),
+        (({'kelvin': 1}, {'kelvin': 1}), 10),
+        (({'kelvin': 1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
+        (({'kelvin': 1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 10000),
+
+        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1}), 'error'),
+        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1}), 'error'),
+        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 10),
+        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 'error'),
+
+        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1}), -273.14),
+        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1}), 0.01),
+        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
+        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 10),
+
+        (({'degC': 2}, {'kelvin': 2}), 'error'),
+        (({'degC': 1, 'degF': 1}, {'kelvin': 2}), 'error'),
+        (({'degC': 1, 'kelvin': 1}, {'kelvin': 2}), 'error'),
+        ]
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        convert_with_offset)
+    def test_to_and_from_offset_units(self, input_tuple, expected):
+        src, dst = input_tuple
+        src, dst = UnitsContainer(src), UnitsContainer(dst)
+        value = 10.
+        convert = UnitRegistry().convert
+        if isinstance(expected, string_types):
+            self.assertRaises(DimensionalityError, convert, value, src, dst)
+            if src != dst:
+                self.assertRaises(DimensionalityError, convert, value, dst, src)
+        else:
+            self.assertQuantityAlmostEqual(convert(value, src, dst),
+                                           expected, atol=0.001)
+            if src != dst:
+                self.assertQuantityAlmostEqual(convert(expected, dst, src),
+                                               value, atol=0.001)
