@@ -457,14 +457,14 @@ class UnitRegistry(object):
                      Empty to load the default definition file.
                      None to leave the UnitRegistry empty.
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
-    :param default_to_delta: In the context of a multiplication of units, interpret
+    :param default_as_delta: In the context of a multiplication of units, interpret
                              non-multiplicative units as their *delta* counterparts.
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
     :type on_redefintion: str
     """
 
-    def __init__(self, filename='', force_ndarray=False, default_to_delta=True, on_redefinition='warn'):
+    def __init__(self, filename='', force_ndarray=False, default_as_delta=True, on_redefinition='warn'):
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
 
@@ -505,7 +505,7 @@ class UnitRegistry(object):
 
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
-        self.default_to_delta = default_to_delta
+        self.default_as_delta = default_as_delta
 
         if filename == '':
             self.load_definitions('default_en.txt', True)
@@ -1132,21 +1132,21 @@ class UnitRegistry(object):
                                self._units[real_name].name,
                                self._suffixes[suffix])
 
-    def parse_units(self, input_string, to_delta=None):
+    def parse_units(self, input_string, as_delta=None):
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
 
         The expression can only contain products, ratios and powers of units.
 
-        :param to_delta: if the expression has multiple units, the parser will
+        :param as_delta: if the expression has multiple units, the parser will
                          interpret non multiplicative units as their `delta_` counterparts.
 
         :raises:
             :class:`pint.UndefinedUnitError` if a unit is not in the registry
             :class:`ValueError` if the expression is invalid.
         """
-        if to_delta is None:
-            to_delta = self.default_to_delta
+        if as_delta is None:
+            as_delta = self.default_as_delta
 
         if not input_string:
             return UnitsContainer()
@@ -1161,7 +1161,7 @@ class UnitRegistry(object):
             cname = self.get_name(name)
             if not cname:
                 continue
-            if to_delta and (many or (not many and abs(value) != 1)):
+            if as_delta and (many or (not many and abs(value) != 1)):
                 definition = self._units[cname]
                 if not definition.is_multiplicative:
                     cname = 'delta_' + cname
@@ -1355,4 +1355,3 @@ class LazyRegistry(object):
     def __call__(self, *args, **kwargs):
         self.__init()
         return self(*args, **kwargs)
-
