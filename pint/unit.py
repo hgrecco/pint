@@ -459,12 +459,17 @@ class UnitRegistry(object):
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
     :param default_as_delta: In the context of a multiplication of units, interpret
                              non-multiplicative units as their *delta* counterparts.
+    :autoconvert_offset_to_baseunit: If True converts offset units in quantites are
+                                     converted to their base units in multiplicative
+                                     context. If False no conversion happens.
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
     :type on_redefintion: str
     """
 
-    def __init__(self, filename='', force_ndarray=False, default_as_delta=True, on_redefinition='warn'):
+    def __init__(self, filename='', force_ndarray=False, default_as_delta=True, 
+                 autoconvert_offset_to_baseunit=False, 
+                 on_redefinition='warn'):
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
 
@@ -506,7 +511,11 @@ class UnitRegistry(object):
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
         self.default_as_delta = default_as_delta
-
+        
+        # Determines if quantities with offset units are converted to their 
+        # base units on multiplication and division.
+        self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
+        
         if filename == '':
             self.load_definitions('default_en.txt', True)
         elif filename is not None:
@@ -1028,7 +1037,8 @@ class UnitRegistry(object):
                     
             # validate that offset unit is not used in multiplicative context
             if ((len(src_offset_units) == 1 and len(src) > 1)
-                    or (len(dst_offset_units) == 1 and len(dst) > 1)):
+                    or (len(dst_offset_units) == 1 and len(dst) > 1)
+                    and not self.autoconvert_offset_to_baseunit):
                 raise DimensionalityError(
                     src, dst, src_dim, dst_dim,
                     extra_msg=' - offset unit used in multiplicative context.')

@@ -15,6 +15,9 @@ from pint.testsuite import QuantityTestCase, helpers
 class TestIssues(QuantityTestCase):
 
     FORCE_NDARRAY = False
+    
+    def setup(self):
+        self.ureg.autoconvert_offset_to_baseunit = False
 
     @unittest.expectedFailure
     def test_issue25(self):
@@ -127,10 +130,11 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(va.to_base_units(), vb.to_base_units())
 
     def test_issue86(self):
+        ureg = self.ureg
+        ureg.autoconvert_offset_to_baseunit = True
+
         def parts(q):
             return q.magnitude, q.units
-
-        ureg = UnitRegistry()
 
         q1 = 10. * ureg.degC
         q2 = 10. * ureg.kelvin
@@ -177,8 +181,10 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(v1.to_base_units(), v2)
         self.assertQuantityAlmostEqual(v1.to_base_units(), v2.to_base_units())
 
+    @unittest.expectedFailure
     def test_issue86c(self):
         ureg = self.ureg
+        ureg.autoconvert_offset_to_baseunit = True
         T = ureg.degC
         T = 100. * T
         self.assertQuantityAlmostEqual(ureg.k*2*T, ureg.k*(2*T))
