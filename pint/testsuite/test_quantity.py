@@ -658,8 +658,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         (((100, 'delta_degF'), (10, 'degF')), (26092.78, 'delta_degF*kelvin')),
         ]
 
-    @classmethod
-    def tearDownClass(cls):
+    def setup(self):
         cls.ureg.autoconvert_offset_to_baseunit = False
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
