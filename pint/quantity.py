@@ -91,6 +91,27 @@ def _has_compatible_delta(q, unit):
     return False
 
 
+def _ok_for_muldiv(q, no_offset_units=None):
+    """Checks if quantity q can be multiplied with or divided
+
+    :q: quantity object that is checked
+    :no_offset_units: number of offset units in q
+    """
+    is_ok = True
+    if no_offset_units is None:
+        no_offset_units = len(_get_non_multiplicative_units(q))
+    if no_offset_units > 1:
+        is_ok = False
+    if no_offset_units == 1:
+        if len(q.units) > 1:
+            is_ok = False
+        if (len(q.units) == 1
+                and not q._REGISTRY.autoconvert_offset_to_baseunit):
+            is_ok = False
+        # XXX check also for order?
+    return is_ok
+
+
 class _Quantity(object):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
@@ -519,20 +540,15 @@ class _Quantity(object):
         if units_op is None:
             units_op = magnitude_op
 
-        no_offset_units_self = len(_get_non_multiplicative_units(self))
+        offset_units_self = _get_non_multiplicative_units(self)
+        no_offset_units_self = len(offset_units_self)
 
         if not _check(self, other):
-            if no_offset_units_self > 1:
-                raise OffsetUnitCalculusError(self.units, other.units)
-            if no_offset_units_self == 1:
-                if len(self.units) > 1:
-                    raise OffsetUnitCalculusError(self.units,
-                                                  getattr(other, 'units', ''))
-                if (len(self.units) == 1
-                        and not self._REGISTRY.autoconvert_offset_to_baseunit):
-                    raise OffsetUnitCalculusError(self.units,
-                                                  getattr(other, 'units', ''))
-                if (self.units[offset_units_self[0]] != 1 
+            if not _ok_for_muldiv(self, no_offset_units_self):
+                raise OffsetUnitCalculusError(self.units,
+                                              getattr(other, 'units', ''))
+            if len(offset_units_self) == 1:
+                if (self.units[offset_units_self[0]] != 1
                         or magnitude_op not in [operator.mul, operator.imul]):
                     raise OffsetUnitCalculusError(self.units,
                                                   getattr(other, 'units', ''))
@@ -544,26 +560,17 @@ class _Quantity(object):
             self._units = units_op(self._units, UnitsContainer())
             return self
 
-        if no_offset_units_self > 1:
+        if not _ok_for_muldiv(self, no_offset_units_self):
             raise OffsetUnitCalculusError(self.units, other.units)
-        if no_offset_units_self == 1 and len(self.units) > 1:
-            raise OffsetUnitCalculusError(self.units, other.units)
-        if no_offset_units_self == 1 and len(self.units) == 1:
-            if self._REGISTRY.autoconvert_offset_to_baseunit:
+        elif no_offset_units_self == 1 and len(self.units) == 1:
                 self.ito_base_units()
-            else:
-                raise OffsetUnitCalculusError(self.units, other.units)
 
         no_offset_units_other = len(_get_non_multiplicative_units(other))
-        if no_offset_units_other > 1:
+
+        if not _ok_for_muldiv(other, no_offset_units_other):
             raise OffsetUnitCalculusError(self.units, other.units)
-        if no_offset_units_other == 1 and len(self.units) > 1:
-            raise OffsetUnitCalculusError(self.units, other.units)
-        if no_offset_units_other == 1 and len(other.units) == 1:
-            if self._REGISTRY.autoconvert_offset_to_baseunit:
+        elif no_offset_units_other == 1 and len(other.units) == 1:
                 other.ito_base_units()
-            else:
-                raise OffsetUnitCalculusError(self.units, other.units)
 
         self._magnitude = magnitude_op(self._magnitude, other._magnitude)
         self._units = units_op(self._units, other._units)
@@ -580,28 +587,18 @@ class _Quantity(object):
         :param units_op: operator function to perform on the units; if None, *magnitude_op* is used
         :type units_op: function or None
         """
-
-        # XXX here and in _imul_div we use three times the same if sequence
-        # --> make new function! (_prepare_for_muldiv ?)
-
         if units_op is None:
             units_op = magnitude_op
-            
+
         offset_units_self = _get_non_multiplicative_units(self)
         no_offset_units_self = len(offset_units_self)
 
         if not _check(self, other):
-            if no_offset_units_self > 1:
-                raise OffsetUnitCalculusError(self.units, other.units)
-            if no_offset_units_self == 1:
-                if len(self.units) > 1:
-                    raise OffsetUnitCalculusError(self.units,
-                                                  getattr(other, 'units', ''))
-                if (len(self.units) == 1
-                        and not self._REGISTRY.autoconvert_offset_to_baseunit):
-                    raise OffsetUnitCalculusError(self.units,
-                                                  getattr(other, 'units', ''))
-                if (self.units[offset_units_self[0]] != 1 
+            if not _ok_for_muldiv(self, no_offset_units_self):
+                raise OffsetUnitCalculusError(self.units,
+                                              getattr(other, 'units', ''))
+            if len(offset_units_self) == 1:
+                if (self.units[offset_units_self[0]] != 1
                         or magnitude_op not in [operator.mul, operator.imul]):
                     raise OffsetUnitCalculusError(self.units,
                                                   getattr(other, 'units', ''))
@@ -616,26 +613,18 @@ class _Quantity(object):
             return self.__class__(magnitude, units)
 
         new_self = self
-        if no_offset_units_self > 1:
+
+        if not _ok_for_muldiv(self, no_offset_units_self):
             raise OffsetUnitCalculusError(self.units, other.units)
-        if no_offset_units_self == 1 and len(self.units) > 1:
-            raise OffsetUnitCalculusError(self.units, other.units)
-        if no_offset_units_self == 1 and len(self.units) == 1:
-            if self._REGISTRY.autoconvert_offset_to_baseunit:
-                new_self = self.to_base_units()
-            else:
-                raise OffsetUnitCalculusError(self.units, other.units)
+        elif no_offset_units_self == 1 and len(self.units) == 1:
+            new_self = self.to_base_units()
 
         no_offset_units_other = len(_get_non_multiplicative_units(other))
-        if no_offset_units_other > 1:
+
+        if not _ok_for_muldiv(other, no_offset_units_other):
             raise OffsetUnitCalculusError(self.units, other.units)
-        if no_offset_units_other == 1 and len(self.units) > 1:
-            raise OffsetUnitCalculusError(self.units, other.units)
-        if no_offset_units_other == 1 and len(other.units) == 1:
-            if self._REGISTRY.autoconvert_offset_to_baseunit:
-                other = other.to_base_units()
-            else:
-                raise OffsetUnitCalculusError(self.units, other.units)
+        elif no_offset_units_other == 1 and len(other.units) == 1:
+            other = other.to_base_units()
 
         magnitude = magnitude_op(new_self._magnitude, other._magnitude)
         units = units_op(new_self._units, other._units)
