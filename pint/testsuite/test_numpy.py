@@ -4,6 +4,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 from pint.compat import np, unittest
 from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite.test_umath import TestUFuncs
 
 
 @helpers.requires_numpy()
@@ -189,9 +190,11 @@ class TestNumpyMethods(QuantityTestCase):
         q[0] = 1*self.ureg.m
         self.assertQuantityEqual(q, [[1,1],[3,4]]*self.ureg.m)
 
-        q[0] = (1,2)*self.ureg.m
-        self.assertQuantityEqual(q, self.q)
+        q = self.q.copy()
+        q.__setitem__(Ellipsis, 1*self.ureg.m)
+        self.assertQuantityEqual(q, [[1,1],[1,1]]*self.ureg.m)
 
+        q = self.q.copy()
         q[:] = 1*self.ureg.m
         self.assertQuantityEqual(q, [[1,1],[1,1]]*self.ureg.m)
 
@@ -239,23 +242,25 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertQuantityEqual(u == 1, u.magnitude == 1)
 
 
-from pint.testsuite.test_umath import TestUFuncs
-@unittest.skip
-class TestNumpyNotSupported(TestUFuncs):
+@unittest.expectedFailure
+class TestNumpyNeedsSubclassing(TestUFuncs):
 
     FORCE_NDARRAY = True
 
+    @property
+    def q(self):
+        return [1. ,2., 3., 4.] * self.ureg.J
 
     def test_unwrap(self):
         """unwrap depends on diff
         """
-        self.assertEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
-        self.assertEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
+        self.assertQuantityEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
+        self.assertQuantityEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
 
     def test_trapz(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
-        self.assertEqual(np.trapz(self.q, dx = 1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
+        self.assertQuantityEqual(np.trapz(self.q, dx=1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
 
     def test_diff(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
@@ -265,13 +270,13 @@ class TestNumpyNotSupported(TestUFuncs):
     def test_ediff1d(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
-        self.assertEqual(np.ediff1d(self.q, 1), [1, 1, 1] * self.ureg.J)
+        self.assertQuantityEqual(np.ediff1d(self.q, 1 * self.ureg.J), [1, 1, 1] * self.ureg.J)
 
     def test_fix(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
-        self.assertEqual(np.fix(3.14 * self.ureg.m), 3.0 * self.ureg.m)
-        self.assertEqual(np.fix(3.0 * self.ureg.m), 3.0 * self.ureg.m)
+        self.assertQuantityEqual(np.fix(3.14 * self.ureg.m), 3.0 * self.ureg.m)
+        self.assertQuantityEqual(np.fix(3.0 * self.ureg.m), 3.0 * self.ureg.m)
         self.assertQuantityEqual(
             np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.m),
             [2., 2., -2., -2.] * self.ureg.m
@@ -281,15 +286,15 @@ class TestNumpyNotSupported(TestUFuncs):
         """shape is a property not a function
         """
         l = np.gradient([[1,1],[3,4]] * self.ureg.J, 1 * self.ureg.m)
-        self.assertEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.J / self.ureg.m)
-        self.assertEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.J / self.ureg.m)
+        self.assertQuantityEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.J / self.ureg.m)
+        self.assertQuantityEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.J / self.ureg.m)
 
     def test_cross(self):
         """Units are erased by asarray, Quantity does not inherit from NDArray
         """
-        a = [3,-3, 1] * self.ureg.kPa
-        b = [4, 9, 2] * self.ureg.m**2
-        self.assertQuantityEqual(np.cross(a,b), [-15,-2,39]*self.ureg.kPa*self.ureg.m**2)
+        a = [[3,-3, 1]] * self.ureg.kPa
+        b = [[4, 9, 2]] * self.ureg.m**2
+        self.assertQuantityEqual(np.cross(a, b), [-15, -2, 39] * self.ureg.kPa * self.ureg.m**2)
 
     def test_power(self):
         """This is not supported as different elements might end up with different units
@@ -311,7 +316,7 @@ class TestNumpyNotSupported(TestUFuncs):
                     2)
 
 
-@unittest.skip
+@unittest.expectedFailure
 class TestBitTwiddlingUfuncs(TestUFuncs):
     """Universal functions (ufuncs) >  Bittwiddling functions
 
