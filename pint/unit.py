@@ -1044,14 +1044,14 @@ class UnitRegistry(object):
                     src, dst, src_dim, dst_dim,
                     extra_msg=' - offset unit used in multiplicative context.')
 
-            # Validate that order of offset unit is not above one.
+            # Validate that order of offset unit is exactly one.
             if src_offset_units:
-                if src_offset_units[0][1] > 1:
+                if src_offset_units[0][1] != 1:
                     raise DimensionalityError(
                         src, dst, src_dim, dst_dim,
                         extra_msg=' - offset units in higher order.')
             else:
-                if dst_offset_units[0][1] > 1:
+                if dst_offset_units[0][1] != 1:
                     raise DimensionalityError(
                         src, dst, src_dim, dst_dim,
                         extra_msg=' - offset units in higher order.')

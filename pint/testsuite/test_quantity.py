@@ -659,7 +659,8 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         ]
 
     def setup(self):
-        cls.ureg.autoconvert_offset_to_baseunit = False
+        self.ureg.autoconvert_offset_to_baseunit = False
+        self.ureg.default_as_delta = True
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         additions)
@@ -667,12 +668,15 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         self.ureg.autoconvert_offset_to_baseunit = False
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        # update input tuple with new values to have correct values on failure
+        input_tuple = q1, q2
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.add, q1, q2)
         else:
-            self.assertQuantityAlmostEqual(op.add(q1, q2), self.Q_(*expected),
+            expected = self.Q_(*expected)
+            self.assertEqual(op.add(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.add(q1, q2), expected,
                                            atol=0.01)
-            self.assertEqual(op.add(q1, q2).units, self.Q_(*expected).units)
 
     @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
@@ -691,10 +695,10 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
             self.assertRaises(OffsetUnitCalculusError, op.iadd, q1, q2)
         else:
             expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.iadd(q1, q2).units, Q_(*expected).units)
+            q1 = q1_copy
             self.assertQuantityAlmostEqual(op.iadd(q1, q2), Q_(*expected),
                                            atol=0.01)
-            q1 = q1_copy
-            self.assertEqual(op.iadd(q1, q2).units, self.Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         subtractions)
@@ -702,12 +706,14 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         self.ureg.autoconvert_offset_to_baseunit = False
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        input_tuple = q1, q2
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.sub, q1, q2)
         else:
-            self.assertQuantityAlmostEqual(op.sub(q1, q2), self.Q_(*expected),
+            expected = self.Q_(*expected)
+            self.assertEqual(op.sub(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.sub(q1, q2), expected,
                                            atol=0.01)
-            self.assertEqual(op.sub(q1, q2).units, self.Q_(*expected).units)
 
     @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
@@ -726,10 +732,10 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
             self.assertRaises(OffsetUnitCalculusError, op.isub, q1, q2)
         else:
             expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.isub(q1, q2).units, Q_(*expected).units)
+            q1 = q1_copy
             self.assertQuantityAlmostEqual(op.isub(q1, q2), Q_(*expected),
                                            atol=0.01)
-            q1 = q1_copy
-            self.assertEqual(op.isub(q1, q2).units, Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         multiplications)
@@ -737,12 +743,14 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         self.ureg.autoconvert_offset_to_baseunit = False
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        input_tuple = q1, q2
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.mul, q1, q2)
         else:
-            self.assertQuantityAlmostEqual(op.mul(q1, q2), self.Q_(*expected),
+            expected = self.Q_(*expected)
+            self.assertEqual(op.mul(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.mul(q1, q2), expected,
                                            atol=0.01)
-            self.assertEqual(op.mul(q1, q2).units, self.Q_(*expected).units)
 
     @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
@@ -761,24 +769,25 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
             self.assertRaises(OffsetUnitCalculusError, op.imul, q1, q2)
         else:
             expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.imul(q1, q2).units, Q_(*expected).units)
+            q1 = q1_copy
             self.assertQuantityAlmostEqual(op.imul(q1, q2), Q_(*expected),
                                            atol=0.01)
-            q1 = q1_copy
-            self.assertEqual(op.imul(q1, q2).units, Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
                                         divisions)
     def test_truedivision(self, input_tuple, expected):
         self.ureg.autoconvert_offset_to_baseunit = False
-        Q_ = self.Q_
         qin1, qin2 = input_tuple
-        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        input_tuple = q1, q2
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.truediv, q1, q2)
         else:
-            self.assertQuantityAlmostEqual(op.truediv(q1, q2), Q_(*expected),
+            expected = self.Q_(*expected)
+            self.assertEqual(op.truediv(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.truediv(q1, q2), expected,
                                            atol=0.01)
-            self.assertEqual(op.truediv(q1, q2).units, Q_(*expected).units)
 
     @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(("input", "expected_output"),
@@ -797,10 +806,10 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
             self.assertRaises(OffsetUnitCalculusError, op.itruediv, q1, q2)
         else:
             expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.itruediv(q1, q2).units, Q_(*expected).units)
+            q1 = q1_copy
             self.assertQuantityAlmostEqual(op.itruediv(q1, q2), Q_(*expected),
                                            atol=0.01)
-            q1 = q1_copy
-            self.assertEqual(op.itruediv(q1, q2).units, Q_(*expected).units)
 
     @ParameterizedTestCase.parameterize(
         ("input", "expected_output"),
@@ -809,12 +818,14 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
         self.ureg.autoconvert_offset_to_baseunit = True
         qin1, qin2 = input_tuple
         q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        input_tuple = q1, q2
         if expected == 'error':
             self.assertRaises(OffsetUnitCalculusError, op.mul, q1, q2)
         else:
-            self.assertQuantityAlmostEqual(op.mul(q1, q2), self.Q_(*expected),
+            expected = self.Q_(*expected)
+            self.assertEqual(op.mul(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.mul(q1, q2), expected,
                                            atol=0.01)
-            self.assertEqual(op.mul(q1, q2).units, self.Q_(*expected).units)
 
     @helpers.requires_numpy()
     @ParameterizedTestCase.parameterize(
@@ -834,7 +845,68 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
             self.assertRaises(OffsetUnitCalculusError, op.imul, q1, q2)
         else:
             expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.imul(q1, q2).units, Q_(*expected).units)
+            q1 = q1_copy
             self.assertQuantityAlmostEqual(op.imul(q1, q2), Q_(*expected),
                                            atol=0.01)
-            q1 = q1_copy
-            self.assertEqual(op.imul(q1, q2).units, Q_(*expected).units)
+
+    multiplications_with_scalar = [
+        (((10, 'kelvin'),    2),    (20., 'kelvin')),
+        (((10, 'kelvin**2'), 2),    (20., 'kelvin**2')),
+        (((10, 'degC'),      2),    (20., 'degC')),
+        (((10, '1/degC'),    2),    'error'),
+        (((10, 'degC**0.5'),   2),  'error'),
+        (((10, 'degC**2'),   2),    'error'),
+        (((10, 'degC**-2'),  2),    'error'),
+        ]
+
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), multiplications_with_scalar)
+    def test_multiplication_with_scalar(self, input_tuple, expected):
+        self.ureg.default_as_delta = False
+        in1, in2 = input_tuple
+        if type(in1) is tuple:
+            in1, in2 = self.Q_(*in1), in2
+        else:
+            in1, in2 = in1, self.Q_(*in2)
+        input_tuple = in1, in2  # update input_tuple for better tracebacks
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.mul, in1, in2)
+        else:
+            expected = self.Q_(*expected)
+            self.assertEqual(op.mul(in1, in2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.mul(in1, in2), expected,
+                                           atol=0.01)
+
+    divisions_with_scalar = [   # without / with autoconvert to base unit
+        (((10, 'kelvin'), 2),       [(5., 'kelvin'), (5., 'kelvin')]),
+        (((10, 'kelvin**2'), 2),    [(5., 'kelvin**2'), (5., 'kelvin**2')]),
+        (((10, 'degC'), 2),         ['error', 'error']),
+        (((10, 'degC**2'), 2),      ['error', 'error']),
+        (((10, 'degC**-2'), 2),     ['error', 'error']),
+
+        ((2, (10, 'kelvin')),       [(0.2, '1/kelvin'), (0.2, '1/kelvin')]),
+        ((2, (10, 'degC')),         ['error', (2/283.15, '1/kelvin')]),
+        ((2, (10, 'degC**2')),      ['error', 'error']),
+        ((2, (10, 'degC**-2')),     ['error', 'error']),
+        ]
+
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), divisions_with_scalar)
+    def test_division_with_scalar(self, input_tuple, expected):
+        self.ureg.default_as_delta = False
+        in1, in2 = input_tuple
+        if type(in1) is tuple:
+            in1, in2 = self.Q_(*in1), in2
+        else:
+            in1, in2 = in1, self.Q_(*in2)
+        input_tuple = in1, in2  # update input_tuple for better tracebacks
+        expected_copy = expected[:]
+        for i, mode in enumerate([False, True]):
+            self.ureg.autoconvert_offset_to_baseunit = mode
+            if expected_copy[i] == 'error':
+                self.assertRaises(OffsetUnitCalculusError, op.truediv, in1, in2)
+            else:
+                expected = self.Q_(*expected_copy[i])
+                self.assertEqual(op.truediv(in1, in2).units, expected.units)
+                self.assertQuantityAlmostEqual(op.truediv(in1, in2), expected)

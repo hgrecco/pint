@@ -113,8 +113,7 @@ def _ok_for_muldiv(q, no_offset_units=None):
         if (len(q.units) == 1
                 and not q._REGISTRY.autoconvert_offset_to_baseunit):
             is_ok = False
-        if (q.units[0] != 1
-                and not q._REGISTRY.autoconvert_offset_to_baseunit):
+        if q.units.values()[0] != 1:
             is_ok = False
     return is_ok
 
