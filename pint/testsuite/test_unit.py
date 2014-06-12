@@ -595,7 +595,6 @@ class TestErrors(BaseTestCase):
 
 class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
 
-
     # The dicts in convert_with_offset are used to create a UnitsContainer.
     # We create UnitsContainer to avoid any auto-conversion of units.
     convert_with_offset = [

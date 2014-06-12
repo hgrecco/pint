@@ -56,30 +56,34 @@ def _check(q1, other):
     return False
 
 
-def _only_multiplicative_units(q):
-    """Check if the quantity has non-multiplicative units.
+def _is_multiplicative(q):  # renamed from _only_multiplicative_units
+    """Check if the Quantity object has only multiplicative units.
     """
+    # XXX Turn this into a method/property of _Quantity?
     return not _get_non_multiplicative_units(q)
 
 
 def _get_non_multiplicative_units(q):
-    """Check if the quantity has a unit with non-zero offset
+    """Return a list of the of non-multiplicative units of the Quantity object
     """
+    # XXX Turn this into a method/property of _Quantity?
     offset_units = [unit for unit in q.units.keys()
                     if not q._REGISTRY._units[unit].is_multiplicative]
     return offset_units
 
 
 def _get_delta_units(q):
-    """Check if the quantity has a delta_unit
+    """Return list of delta units ot the Quantity object
     """
+    # XXX Turn this into a method/property of _Quantity? a class mathod?
     delta_units = [u for u in q.units.keys() if u.startswith("delta_")]
     return delta_units
 
 
 def _has_compatible_delta(q, unit):
-    """"Check if quantity has a delta_unit that is compatible with unit
+    """"Check if Quantity object has a delta_unit that is compatible with unit
     """
+    # XXX Turn this into a method/property of _Quantity?
     deltas = _get_delta_units(q)
     if 'delta_' + unit in deltas:
         return True
@@ -92,11 +96,12 @@ def _has_compatible_delta(q, unit):
 
 
 def _ok_for_muldiv(q, no_offset_units=None):
-    """Checks if quantity q can be multiplied with or divided
+    """Checks if Quantity object can be multiplied or divided
 
     :q: quantity object that is checked
     :no_offset_units: number of offset units in q
     """
+    # XXX Turn this into a method/property of _Quantity?
     is_ok = True
     if no_offset_units is None:
         no_offset_units = len(_get_non_multiplicative_units(q))
@@ -108,7 +113,9 @@ def _ok_for_muldiv(q, no_offset_units=None):
         if (len(q.units) == 1
                 and not q._REGISTRY.autoconvert_offset_to_baseunit):
             is_ok = False
-        # XXX check also for order?
+        if (q.units[0] != 1
+                and not q._REGISTRY.autoconvert_offset_to_baseunit):
+            is_ok = False
     return is_ok
 
 
@@ -665,6 +672,13 @@ class _Quantity(object):
             other_magnitude = _to_magnitude(other, self.force_ndarray)
         except TypeError:
             return NotImplemented
+
+        no_offset_units_self = len(_get_non_multiplicative_units(self))
+        if not _ok_for_muldiv(self, no_offset_units_self):
+            raise OffsetUnitCalculusError(self.units, '')
+        elif no_offset_units_self == 1 and len(self.units) == 1:
+            self = self.to_base_units()
+
         return self.__class__(other_magnitude / self._magnitude, 1 / self._units)
 
     def __rfloordiv__(self, other):
@@ -672,6 +686,13 @@ class _Quantity(object):
             other_magnitude = _to_magnitude(other, self.force_ndarray)
         except TypeError:
             return NotImplemented
+
+        no_offset_units_self = len(_get_non_multiplicative_units(self))
+        if not _ok_for_muldiv(self, no_offset_units_self):
+            raise OffsetUnitCalculusError(self.units, '')
+        elif no_offset_units_self == 1 and len(self.units) == 1:
+            self = self.to_base_units()
+
         return self.__class__(other_magnitude // self._magnitude, 1 / self._units)
 
     __div__ = __truediv__
@@ -687,7 +708,7 @@ class _Quantity(object):
         except TypeError:
             return NotImplemented
         else:
-            if not _only_multiplicative_units(self):
+            if not _is_multiplicative(self):
                 self.ito_base_units()
             self._magnitude **= _to_magnitude(other, self.force_ndarray)
             self._units **= other
@@ -700,7 +721,7 @@ class _Quantity(object):
             return NotImplemented
         else:
             new_self = self
-            if not _only_multiplicative_units(self):
+            if not _is_multiplicative(self):
                 new_self = self.to_base_units()
 
             magnitude = new_self._magnitude ** _to_magnitude(other, self.force_ndarray)

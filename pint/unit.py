@@ -118,7 +118,8 @@ class OffsetUnitCalculusError(ValueError):
         self.extra_msg = extra_msg
 
     def __str__(self):
-        msg = ("Ambiguous operation with offset unit ('{0}', '{1}')."
+        msg = ("Ambiguous operation with offset unit (%s)." %
+               ', '.join(['%s' % u for u in [self.units1, self.units2] if u])
                + self.extra_msg)
         return msg.format(self.units1, self.units2)
 
@@ -467,8 +468,8 @@ class UnitRegistry(object):
     :type on_redefintion: str
     """
 
-    def __init__(self, filename='', force_ndarray=False, default_as_delta=True, 
-                 autoconvert_offset_to_baseunit=False, 
+    def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
+                 autoconvert_offset_to_baseunit=False,
                  on_redefinition='warn'):
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
@@ -511,11 +512,11 @@ class UnitRegistry(object):
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
         self.default_as_delta = default_as_delta
-        
-        # Determines if quantities with offset units are converted to their 
+
+        # Determines if quantities with offset units are converted to their
         # base units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
-        
+
         if filename == '':
             self.load_definitions('default_en.txt', True)
         elif filename is not None:
@@ -1034,7 +1035,7 @@ class UnitRegistry(object):
                 raise DimensionalityError(
                     src, dst, src_dim, dst_dim,
                     extra_msg=' - more than one offset unit.')
-                    
+
             # validate that offset unit is not used in multiplicative context
             if ((len(src_offset_units) == 1 and len(src) > 1)
                     or (len(dst_offset_units) == 1 and len(dst) > 1)
@@ -1042,7 +1043,7 @@ class UnitRegistry(object):
                 raise DimensionalityError(
                     src, dst, src_dim, dst_dim,
                     extra_msg=' - offset unit used in multiplicative context.')
-                    
+
             # Validate that order of offset unit is not above one.
             if src_offset_units:
                 if src_offset_units[0][1] > 1:
@@ -1171,7 +1172,7 @@ class UnitRegistry(object):
             cname = self.get_name(name)
             if not cname:
                 continue
-            if as_delta and (many or (not many and abs(value) != 1)):
+            if as_delta and (many or (not many and value != 1)):
                 definition = self._units[cname]
                 if not definition.is_multiplicative:
                     cname = 'delta_' + cname
@@ -1195,7 +1196,7 @@ class UnitRegistry(object):
         unknown = set()
         for toknum, tokval, _, _, _ in gen:
             if toknum == NAME:
-                # TODO: Integrate math better, Replace eval
+                # TODO: Integrate math better, Replace eval, make as_delta-aware
                 if tokval == 'pi' or tokval in values:
                     result.append((toknum, tokval))
                     continue
