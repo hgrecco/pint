@@ -111,7 +111,7 @@ class DimensionalityError(ValueError):
 class OffsetUnitCalculusError(ValueError):
     """Raised on ambiguous operations with offset units.
     """
-    def __init__(self, units1, units2, extra_msg=''):
+    def __init__(self, units1, units2='', extra_msg=''):
         super(ValueError, self).__init__()
         self.units1 = units1
         self.units2 = units2

@@ -15,7 +15,7 @@ from pint.testsuite import QuantityTestCase, helpers
 class TestIssues(QuantityTestCase):
 
     FORCE_NDARRAY = False
-    
+
     def setup(self):
         self.ureg.autoconvert_offset_to_baseunit = False
 
@@ -162,7 +162,6 @@ class TestIssues(QuantityTestCase):
         self.assertEqual(parts(q1 / q3), (k1m / q3m, k1u / q3u))
         self.assertEqual(parts(q3 * q1), (q3m * k1m, q3u * k1u))
         self.assertEqual(parts(q3 / q1), (q3m / k1m, q3u / k1u))
-        self.assertEqual(parts(q1 **  1), (k1m **  1, k1u **  1))
         self.assertEqual(parts(q1 ** -1), (k1m ** -1, k1u ** -1))
         self.assertEqual(parts(q1 **  2), (k1m **  2, k1u **  2))
         self.assertEqual(parts(q1 ** -2), (k1m ** -2, k1u ** -2))

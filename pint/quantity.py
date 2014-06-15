@@ -663,10 +663,36 @@ class _Quantity(object):
         except TypeError:
             return NotImplemented
         else:
-            if not self._is_multiplicative:
-                self.ito_base_units()
+            if not self._ok_for_muldiv:
+                raise OffsetUnitCalculusError(self.units)
+
+            if isinstance(getattr(other, '_magnitude', other), ndarray):
+                # arrays are refused as exponent, because they would create
+                #  len(array) quanitites of len(set(array)) different units
+                if np.size(other) > 1:
+                    raise DimensionalityError(self.units, 'dimensionless')
+
+            new_self = self
+            if other == 1:
+                return self
+            elif other == 0:
+                self._units = UnitsContainer()
+            else:
+                if not self._is_multiplicative:
+                    if self._REGISTRY.autoconvert_offset_to_baseunit:
+                        self.ito_base_units()
+                    else:
+                        raise OffsetUnitCalculusError(self.units)
+
+                if getattr(other, 'dimensionless', False):
+                    other = other.to_base_units()
+                    self._units **= other.magnitude
+                elif not getattr(other, 'dimensionless', True):
+                    raise DimensionalityError(self.units, 'dimensionless')
+                else:
+                    self._units **= other
+
             self._magnitude **= _to_magnitude(other, self.force_ndarray)
-            self._units **= other
             return self
 
     def __pow__(self, other):
@@ -675,13 +701,50 @@ class _Quantity(object):
         except TypeError:
             return NotImplemented
         else:
+            if not self._ok_for_muldiv:
+                raise OffsetUnitCalculusError(self.units)
+
+            if isinstance(getattr(other, '_magnitude', other), ndarray):
+                # arrays are refused as exponent, because they would create
+                #  len(array) quantities of len(set(array)) different units
+                if np.size(other) > 1:
+                    raise DimensionalityError(self.units, 'dimensionless')
+
             new_self = self
-            if not self._is_multiplicative:
-                new_self = self.to_base_units()
+            if other == 1:
+                return self
+            elif other == 0:
+                units = UnitsContainer()
+            else:
+                if not self._is_multiplicative:
+                    if self._REGISTRY.autoconvert_offset_to_baseunit:
+                        new_self = self.to_base_units()
+                    else:
+                        raise OffsetUnitCalculusError(self.units)
+
+                if getattr(other, 'dimensionless', False):
+                    units = new_self._units ** other.to_base_units().magnitude
+                elif not getattr(other, 'dimensionless', True):
+                    raise DimensionalityError(self.units, 'dimensionless')
+                else:
+                    units = new_self._units ** other
 
             magnitude = new_self._magnitude ** _to_magnitude(other, self.force_ndarray)
-            units = new_self._units ** other
             return self.__class__(magnitude, units)
+
+    def __rpow__(self, other):
+        try:
+            other_magnitude = _to_magnitude(other, self.force_ndarray)
+        except TypeError:
+            return NotImplemented
+        else:
+            if not self.dimensionless:
+                raise DimensionalityError(self.units, 'dimensionless')
+            if isinstance(self._magnitude, ndarray):
+                if np.size(self._magnitude) > 1:
+                    raise DimensionalityError(self.units, 'dimensionless')
+            new_self = self.to_base_units()
+            return other**new_self._magnitude
 
     def __abs__(self):
         return self.__class__(abs(self._magnitude), self._units)

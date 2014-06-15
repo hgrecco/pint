@@ -911,3 +911,85 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
                 expected = self.Q_(*expected_copy[i])
                 self.assertEqual(op.truediv(in1, in2).units, expected.units)
                 self.assertQuantityAlmostEqual(op.truediv(in1, in2), expected)
+
+    exponentiation = [                  # resuls without / with autoconvert
+        (((10, 'degC'),    1),          [(10, 'degC'), (10, 'degC')]),
+        (((10, 'degC'),    0.5),        ['error', (283.15**0.5, 'kelvin**0.5')]),
+        (((10, 'degC'),    0),          [(1., ''), (1., '')]),
+        (((10, 'degC'),   -1),          ['error', (1/(10+273.15), 'kelvin**-1')]),
+        (((10, 'degC'),   -2),          ['error', (1/(10+273.15)**2., 'kelvin**-2')]),
+        ((( 0, 'degC'),   -2),          ['error', (1/(273.15)**2, 'kelvin**-2')]),
+        (((10, 'degC'),   (2, '')),     ['error', ((283.15)**2, 'kelvin**2')]),
+        (((10, 'degC'),  (10, 'degK')), ['error', 'error']),
+
+        (((10, 'kelvin'), (2, '')),     [(100., 'kelvin**2'), (100., 'kelvin**2')]),
+
+        ((  2,          (2, 'kelvin')), ['error', 'error']),
+        ((  2,          (500., 'millikelvin/kelvin')), [2**0.5, 2**0.5]),
+        ((  2,          (0.5, 'kelvin/kelvin')),      [2**0.5, 2**0.5]),
+        (((10, 'degC'), (500., 'millikelvin/kelvin')),
+                                        ['error', (283.15**0.5, 'kelvin**0.5')]),
+         ]
+
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), exponentiation)
+    def test_exponentiation(self, input_tuple, expected):
+        self.ureg.default_as_delta = False
+        in1, in2 = input_tuple
+        if type(in1) is tuple and type(in2) is tuple:
+            in1, in2 = self.Q_(*in1), self.Q_(*in2)
+        elif not type(in1) is tuple and type(in2) is tuple:
+            in2 = self.Q_(*in2)
+        else:
+            in1 = self.Q_(*in1)
+        input_tuple = in1, in2
+        expected_copy = expected[:]
+        for i, mode in enumerate([False, True]):
+            self.ureg.autoconvert_offset_to_baseunit = mode
+            if expected_copy[i] == 'error':
+                self.assertRaises((OffsetUnitCalculusError,
+                                   DimensionalityError), op.pow, in1, in2)
+            else:
+                if type(expected_copy[i]) is tuple:
+                    expected = self.Q_(*expected_copy[i])
+                    self.assertEqual(op.pow(in1, in2).units, expected.units)
+                else:
+                    expected = expected_copy[i]
+                self.assertQuantityAlmostEqual(op.pow(in1, in2), expected)
+
+    @helpers.requires_numpy()
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), exponentiation)
+    def test_inplace_exponentiation(self, input_tuple, expected):
+        self.ureg.default_as_delta = False
+        in1, in2 = input_tuple
+        if type(in1) is tuple and type(in2) is tuple:
+            (q1v, q1u), (q2v, q2u) = in1, in2
+            in1 = self.Q_(*(np.array([q1v]*2, dtype=np.float), q1u))
+            in2 = self.Q_(q2v, q2u)
+        elif not type(in1) is tuple and type(in2) is tuple:
+            in2 = self.Q_(*in2)
+        else:
+            in1 = self.Q_(*in1)
+
+        input_tuple = in1, in2
+
+        expected_copy = expected[:]
+        for i, mode in enumerate([False, True]):
+            self.ureg.autoconvert_offset_to_baseunit = mode
+            in1_cp = copy.copy(in1)
+            if expected_copy[i] == 'error':
+                self.assertRaises((OffsetUnitCalculusError,
+                                   DimensionalityError), op.ipow, in1_cp, in2)
+            else:
+                if type(expected_copy[i]) is tuple:
+                    expected = self.Q_(np.array([expected_copy[i][0]]*2,
+                                                dtype=np.float),
+                                       expected_copy[i][1])
+                    self.assertEqual(op.ipow(in1_cp, in2).units, expected.units)
+                else:
+                    expected = np.array([expected_copy[i]]*2, dtype=np.float)
+
+
+                in1_cp = copy.copy(in1)
+                self.assertQuantityAlmostEqual(op.ipow(in1_cp, in2), expected)
