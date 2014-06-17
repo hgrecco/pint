@@ -3,9 +3,14 @@
 # Adds Parameterized tests for Python's unittest module
 #
 # Code from: parameterizedtestcase, version: 0.1.0
-# Home-page: https://github.com/msabramo/python_unittest_parameterized_test_case
+# Homepage: https://github.com/msabramo/python_unittest_parameterized_test_case
 # Author: Marc Abramowitz, email: marc@marc-abramowitz.com
 # License: MIT
+#
+# Fixed for to work in Python 2 & 3 with "add_metaclass" decorator from six
+# https://pypi.python.org/pypi/six
+# Author: Benjamin Peterson
+# License: MIT 
 #
 # Use like this:
 #
@@ -30,6 +35,22 @@ except ImportError:  # pragma: no cover
 
 from functools import wraps
 import collections
+
+
+def add_metaclass(metaclass):
+    """Class decorator for creating a class with a metaclass."""
+    def wrapper(cls):
+        orig_vars = cls.__dict__.copy()
+        orig_vars.pop('__dict__', None)
+        orig_vars.pop('__weakref__', None)
+        slots = orig_vars.get('__slots__')
+        if slots is not None:
+            if isinstance(slots, str):
+                slots = [slots]
+            for slots_var in slots:
+                orig_vars.pop(slots_var)
+        return metaclass(cls.__name__, cls.__bases__, orig_vars)
+    return wrapper
 
 
 def augment_method_docstring(method, new_class_dict, classname,
@@ -99,8 +120,8 @@ class ParameterizedTestCaseMetaClass(type):
 
         return new_method
 
-
-class ParameterizedTestMixin(object, metaclass=ParameterizedTestCaseMetaClass):
+@add_metaclass(ParameterizedTestCaseMetaClass)
+class ParameterizedTestMixin(object):
     @classmethod
     def parameterize(cls, param_names, data,
                      func_name_format='{func_name}_{case_num:05d}'):
@@ -126,6 +147,6 @@ class ParameterizedTestMixin(object, metaclass=ParameterizedTestCaseMetaClass):
 
         return decorator
 
-
-class ParameterizedTestCase(unittest.TestCase, ParameterizedTestMixin, metaclass=ParameterizedTestCaseMetaClass):
+@add_metaclass(ParameterizedTestCaseMetaClass)
+class ParameterizedTestCase(unittest.TestCase, ParameterizedTestMixin):
     pass
