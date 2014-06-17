@@ -1212,6 +1212,6 @@ class _Quantity(object):
             if (len(self._units) == 1
                     and not self._REGISTRY.autoconvert_offset_to_baseunit):
                 is_ok = False
-            if self._units.values()[0] != 1:
+            if next(iter(self._units.values())) != 1:
                 is_ok = False
         return is_ok

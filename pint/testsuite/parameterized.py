@@ -2,8 +2,10 @@
 #
 # Adds Parameterized tests for Python's unittest module
 #
-# Code taken from: parameterizedtestcase
-# Author: Marc Abramowitz, License: MIT
+# Code from: parameterizedtestcase, version: 0.1.0
+# Home-page: https://github.com/msabramo/python_unittest_parameterized_test_case
+# Author: Marc Abramowitz, email: marc@marc-abramowitz.com
+# License: MIT
 #
 # Use like this:
 #
@@ -27,6 +29,7 @@ except ImportError:  # pragma: no cover
     import unittest
 
 from functools import wraps
+import collections
 
 
 def augment_method_docstring(method, new_class_dict, classname,
@@ -49,8 +52,8 @@ class ParameterizedTestCaseMetaClass(type):
     def __new__(meta, classname, bases, class_dict):
         new_class_dict = {}
 
-        for attr_name, attr_value in class_dict.items():
-            if callable(attr_value) and hasattr(attr_value, 'param_names'):
+        for attr_name, attr_value in list(class_dict.items()):
+            if isinstance(attr_value, collections.Callable) and hasattr(attr_value, 'param_names'):
                 # print("Processing attr_name = %r; attr_value = %r" % (
                 #     attr_name, attr_value))
 
@@ -77,7 +80,7 @@ class ParameterizedTestCaseMetaClass(type):
             new_method = cls.new_method(method, param_values)
             method_counter[method.__name__] = \
                 method_counter.get(method.__name__, 0) + 1
-            case_data = dict(zip(param_names, param_values))
+            case_data = dict(list(zip(param_names, param_values)))
             case_data['func_name'] = method.__name__
             case_data['case_num'] = method_counter[method.__name__]
 
@@ -97,9 +100,7 @@ class ParameterizedTestCaseMetaClass(type):
         return new_method
 
 
-class ParameterizedTestMixin(object):
-    __metaclass__ = ParameterizedTestCaseMetaClass
-
+class ParameterizedTestMixin(object, metaclass=ParameterizedTestCaseMetaClass):
     @classmethod
     def parameterize(cls, param_names, data,
                      func_name_format='{func_name}_{case_num:05d}'):
@@ -126,5 +127,5 @@ class ParameterizedTestMixin(object):
         return decorator
 
 
-class ParameterizedTestCase(unittest.TestCase, ParameterizedTestMixin):
-    __metaclass__ = ParameterizedTestCaseMetaClass
+class ParameterizedTestCase(unittest.TestCase, ParameterizedTestMixin, metaclass=ParameterizedTestCaseMetaClass):
+    pass
