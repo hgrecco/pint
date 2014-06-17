@@ -402,9 +402,6 @@ class TestNDArrayQunatityMath(QuantityTestCase):
             q_cp = copy.copy(q)
             self.assertRaises(DimensionalityError, op_, 2., q_cp)
             arr_cp = copy.copy(arr)
-            q_cp = copy.copy(q)
-            # this fails for op.ipow ! (--> next test))
-            self.assertRaises(DimensionalityError, op.pow, arr_cp, q_cp)
             arr_cp = copy.copy(arr)
             q_cp = copy.copy(q)
             self.assertRaises(DimensionalityError, op_, q_cp, arr_cp)
@@ -420,6 +417,11 @@ class TestNDArrayQunatityMath(QuantityTestCase):
         q = self.Q_(copy.copy(arr), 'meter')
         arr_cp = copy.copy(arr)
         q_cp = copy.copy(q)
-        # q_cp is treated as if it is an array. The units are completely ignored
+        # this fails as expected since numpy 1.8.0 but...
+        self.assertRaises(DimensionalityError, op.pow, arr_cp, q_cp)
+        # ..not for op.ipow !
+        # q_cp is treated as if it is an array. The units are ignored.
         # _Quantity.__ipow__ is never called
+        arr_cp = copy.copy(arr)
+        q_cp = copy.copy(q)
         self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)
