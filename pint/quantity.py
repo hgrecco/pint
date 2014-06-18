@@ -318,8 +318,10 @@ class _Quantity(object):
 
         # Presence of non-multiplicative units gives rise to several cases.
         if is_self_multiplicative and is_other_multiplicative:
+            if self._units == other._units:
+                self._magnitude = op(self._magnitude, other._magnitude)
             # If only self has a delta unit, other determines unit of result.
-            if self._get_delta_units() and not other._get_delta_units():
+            elif self._get_delta_units() and not other._get_delta_units():
                 self._magnitude = op(self._convert_magnitude(other.units),
                                      other._magnitude)
                 self._units = copy.copy(other.units)
@@ -412,8 +414,11 @@ class _Quantity(object):
 
         # Presence of non-multiplicative units gives rise to several cases.
         if is_self_multiplicative and is_other_multiplicative:
+            if self._units == other._units:
+                magnitude = op(self._magnitude, other._magnitude)
+                units = copy.copy(self.units)
             # If only self has a delta unit, other determines unit of result.
-            if self._get_delta_units() and not other._get_delta_units():
+            elif self._get_delta_units() and not other._get_delta_units():
                 magnitude = op(self._convert_magnitude(other.units),
                                other._magnitude)
                 units = copy.copy(other.units)
