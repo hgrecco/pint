@@ -2,8 +2,8 @@ Pint Changelog
 ==============
 
 
-0.6 (unreleased)
-----------------
+0.5.2 (unreleased)
+------------------
 
 - Changed travis config to use miniconda for faster testing.
 - Added wheel configuration to setup.cfg.
