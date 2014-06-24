@@ -5,11 +5,16 @@ Pint Changelog
 0.6 (unreleased)
 ----------------
 
-- Changed travis config to use miniconda for faster testing.
-- Added wheel configuration to setup.cfg.
 - Renamed ureg.parse_units parameter "to_delta" to "as_delta" to make clear 
   that no conversion happens. Accordingly, the parameter/property 
   "default_to_delta" of UnitRegistry was renamed to "default_as_delta".
+
+
+0.5.2 (unreleased)
+------------------
+
+- Changed travis config to use miniconda for faster testing.
+- Added wheel configuration to setup.cfg.
 
 
 0.5.1 (2014-06-03)
