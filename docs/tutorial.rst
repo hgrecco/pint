@@ -96,7 +96,6 @@ There are also methods 'to_base_units' and 'ito_base_units' which automatically 
    >>> print(height)
    5.75 foot
    >>> height.ito_base_units()
-   <Quantity(1.7526, 'meter')>
    >>> print(height)
    1.7526 meter
 

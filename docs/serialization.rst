@@ -19,7 +19,7 @@ The easiest way to do this is by converting the quantity to a string:
    >>> import pint
    >>> ureg = pint.UnitRegistry()
    >>> duration = 24.2 * ureg.years
-   >>> print(duration)
+   >>> duration
    <Quantity(24.2, 'year')>
    >>> serialized = str(duration)
    >>> print(serialized)
@@ -37,7 +37,7 @@ to recover it in another process/machine, you just:
    >>> ureg = pint.UnitRegistry()
    >>> duration = ureg('24.2 year')
    >>> print(duration)
-   <Quantity(24.2, 'year')>
+   24.2 year
 
 Notice that the serialized quantity is likely to be parsed in **another** registry
 as shown in this example. Pint Quantities do not exist on their own but they are
@@ -72,6 +72,7 @@ To unpickle, just
 
     >>> magnitude, units = pickle.loads(serialized)
     >>> ureg.Quantity(magnitude, units)
+    <Quantity(24.2, 'year')>
 
 You can use the same mechanism with any serialization protocol, not only with binary ones.
 (In fact, version 0 of the Pickle protocol is ascii). Other common serialization protocols/packages

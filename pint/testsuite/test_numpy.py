@@ -2,6 +2,10 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import copy
+import operator as op
+
+from pint import DimensionalityError
 from pint.compat import np, unittest
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.test_umath import TestUFuncs
@@ -399,3 +403,39 @@ class TestBitTwiddlingUfuncs(TestUFuncs):
                     (self.qless, 2),
                     (self.q1, self.q2, self.qs, ),
                     'same')
+
+
+class TestNDArrayQunatityMath(QuantityTestCase):
+
+    @helpers.requires_numpy()
+    def test_exponentiation_array_exp(self):
+        arr = np.array(range(3), dtype=np.float)
+        q = self.Q_(arr, None)
+
+        for op_ in [op.pow, op.ipow]:
+            q_cp = copy.copy(q)
+            self.assertRaises(DimensionalityError, op_, 2., q_cp)
+            arr_cp = copy.copy(arr)
+            arr_cp = copy.copy(arr)
+            q_cp = copy.copy(q)
+            self.assertRaises(DimensionalityError, op_, q_cp, arr_cp)
+            q_cp = copy.copy(q)
+            q2_cp = copy.copy(q)
+            self.assertRaises(DimensionalityError, op_, q_cp, q2_cp)
+
+    @unittest.expectedFailure
+    @helpers.requires_numpy()
+    def test_exponentiation_array_exp_2(self):
+        arr = np.array(range(3), dtype=np.float)
+        #q = self.Q_(copy.copy(arr), None)
+        q = self.Q_(copy.copy(arr), 'meter')
+        arr_cp = copy.copy(arr)
+        q_cp = copy.copy(q)
+        # this fails as expected since numpy 1.8.0 but...
+        self.assertRaises(DimensionalityError, op.pow, arr_cp, q_cp)
+        # ..not for op.ipow !
+        # q_cp is treated as if it is an array. The units are ignored.
+        # _Quantity.__ipow__ is never called
+        arr_cp = copy.copy(arr)
+        q_cp = copy.copy(q)
+        self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)

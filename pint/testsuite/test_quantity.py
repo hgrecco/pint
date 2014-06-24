@@ -6,10 +6,11 @@ import copy
 import math
 import operator as op
 
-from pint import DimensionalityError, UnitRegistry
+from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.unit import UnitsContainer
-from pint.compat import string_types, PYTHON3, np
+from pint.compat import string_types, PYTHON3, np, unittest
 from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite.parameterized import ParameterizedTestCase
 
 
 class TestQuantity(QuantityTestCase):
@@ -149,7 +150,7 @@ class TestQuantity(QuantityTestCase):
         # Conversions with single units take a different codepath than
         # Conversions with more than one unit.
         src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
-        src_dst2 = UnitsContainer(meter=1, seconds=-1), UnitsContainer(inch=1, minutes=-1)
+        src_dst2 = UnitsContainer(meter=1, second=-1), UnitsContainer(inch=1, minute=-1)
         for src, dst in (src_dst1, src_dst2):
             a = np.ones((3, 1))
             ac = np.ones((3, 1))
@@ -209,14 +210,12 @@ class TestQuantity(QuantityTestCase):
 
 
     def test_offset_delta(self):
-        self.assertQuantityAlmostEqual(self.Q_(0, 'delta_kelvin').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'))
-        self.assertQuantityAlmostEqual(self.Q_(0, 'delta_degC').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'))
-        self.assertQuantityAlmostEqual(self.Q_(0, 'delta_degF').to('delta_kelvin'), self.Q_(0, 'delta_kelvin'), rtol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(0, 'delta_degC').to('kelvin'), self.Q_(0, 'kelvin'))
+        self.assertQuantityAlmostEqual(self.Q_(0, 'delta_degF').to('kelvin'), self.Q_(0, 'kelvin'), rtol=0.01)
 
-        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_kelvin'), self.Q_(100, 'delta_kelvin'))
-        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degC'), self.Q_(100, 'delta_degC'))
-        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_kelvin').to('delta_degF'), self.Q_(180, 'delta_degF'), rtol=0.01)
-        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_degF').to('delta_kelvin'), self.Q_(55.55555556, 'delta_kelvin'), rtol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'kelvin').to('delta_degC'), self.Q_(100, 'delta_degC'))
+        self.assertQuantityAlmostEqual(self.Q_(100, 'kelvin').to('delta_degF'), self.Q_(180, 'delta_degF'), rtol=0.01)
+        self.assertQuantityAlmostEqual(self.Q_(100, 'delta_degF').to('kelvin'), self.Q_(55.55555556, 'kelvin'), rtol=0.01)
         self.assertQuantityAlmostEqual(self.Q_(100, 'delta_degC').to('delta_degF'), self.Q_(180, 'delta_degF'), rtol=0.01)
         self.assertQuantityAlmostEqual(self.Q_(100, 'delta_degF').to('delta_degC'), self.Q_(55.55555556, 'delta_degC'), rtol=0.01)
 
@@ -450,3 +449,547 @@ class TestDimensionsWithDefaultRegistry(TestDimensions):
         from pint import _DEFAULT_REGISTRY
         cls.ureg = _DEFAULT_REGISTRY
         cls.Q_ = cls.ureg.Quantity
+
+
+class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
+
+    def setup(self):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        self.ureg.default_as_delta = True
+
+    additions = [
+        # --- input tuple -------------------- | -- expected result --
+        (((100, 'kelvin'), (10, 'kelvin')),      (110, 'kelvin')),
+        (((100, 'kelvin'), (10, 'degC')),        'error'),
+        (((100, 'kelvin'), (10, 'degF')),        'error'),
+        (((100, 'kelvin'), (10, 'degR')),        (105.56, 'kelvin')),
+        (((100, 'kelvin'), (10, 'delta_degC')),  (110, 'kelvin')),
+        (((100, 'kelvin'), (10, 'delta_degF')),  (105.56, 'kelvin')),
+
+        (((100, 'degC'), (10, 'kelvin')),      'error'),
+        (((100, 'degC'), (10, 'degC')),        'error'),
+        (((100, 'degC'), (10, 'degF')),        'error'),
+        (((100, 'degC'), (10, 'degR')),        'error'),
+        (((100, 'degC'), (10, 'delta_degC')),  (110, 'degC')),
+        (((100, 'degC'), (10, 'delta_degF')),  (105.56, 'degC')),
+
+        (((100, 'degF'), (10, 'kelvin')),      'error'),
+        (((100, 'degF'), (10, 'degC')),        'error'),
+        (((100, 'degF'), (10, 'degF')),        'error'),
+        (((100, 'degF'), (10, 'degR')),        'error'),
+        (((100, 'degF'), (10, 'delta_degC')),  (118, 'degF')),
+        (((100, 'degF'), (10, 'delta_degF')),  (110, 'degF')),
+
+        (((100, 'degR'), (10, 'kelvin')),      (118, 'degR')),
+        (((100, 'degR'), (10, 'degC')),        'error'),
+        (((100, 'degR'), (10, 'degF')),        'error'),
+        (((100, 'degR'), (10, 'degR')),        (110, 'degR')),
+        (((100, 'degR'), (10, 'delta_degC')),  (118, 'degR')),
+        (((100, 'degR'), (10, 'delta_degF')),  (110, 'degR')),
+
+        (((100, 'delta_degC'), (10, 'kelvin')),     (110, 'kelvin')),
+        (((100, 'delta_degC'), (10, 'degC')),       (110, 'degC')),
+        (((100, 'delta_degC'), (10, 'degF')),       (190, 'degF')),
+        (((100, 'delta_degC'), (10, 'degR')),       (190, 'degR')),
+        (((100, 'delta_degC'), (10, 'delta_degC')), (110, 'delta_degC')),
+        (((100, 'delta_degC'), (10, 'delta_degF')), (105.56, 'delta_degC')),
+
+        (((100, 'delta_degF'), (10, 'kelvin')),     (65.56, 'kelvin')),
+        (((100, 'delta_degF'), (10, 'degC')),       (65.56, 'degC')),
+        (((100, 'delta_degF'), (10, 'degF')),       (110, 'degF')),
+        (((100, 'delta_degF'), (10, 'degR')),       (110, 'degR')),
+        (((100, 'delta_degF'), (10, 'delta_degC')), (118, 'delta_degF')),
+        (((100, 'delta_degF'), (10, 'delta_degF')), (110, 'delta_degF')),
+        ]
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        additions)
+    def test_addition(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        # update input tuple with new values to have correct values on failure
+        input_tuple = q1, q2
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.add, q1, q2)
+        else:
+            expected = self.Q_(*expected)
+            self.assertEqual(op.add(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.add(q1, q2), expected,
+                                           atol=0.01)
+
+    @helpers.requires_numpy()
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        additions)
+    def test_inplace_addition(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u),
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_cp = copy.copy(q1)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.iadd, q1_cp, q2)
+        else:
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.iadd(q1_cp, q2).units, Q_(*expected).units)
+            q1_cp = copy.copy(q1)
+            self.assertQuantityAlmostEqual(op.iadd(q1_cp, q2), Q_(*expected),
+                                           atol=0.01)
+
+    subtractions = [
+        (((100, 'kelvin'), (10, 'kelvin')),      (90, 'kelvin')),
+        (((100, 'kelvin'), (10, 'degC')),        (-183.15, 'kelvin')),
+        (((100, 'kelvin'), (10, 'degF')),        (-160.93, 'kelvin')),
+        (((100, 'kelvin'), (10, 'degR')),        (94.44, 'kelvin')),
+        (((100, 'kelvin'), (10, 'delta_degC')),  (90, 'kelvin')),
+        (((100, 'kelvin'), (10, 'delta_degF')),  (94.44, 'kelvin')),
+
+        (((100, 'degC'), (10, 'kelvin')),      (363.15, 'delta_degC')),
+        (((100, 'degC'), (10, 'degC')),        (90, 'delta_degC')),
+        (((100, 'degC'), (10, 'degF')),        (112.22, 'delta_degC')),
+        (((100, 'degC'), (10, 'degR')),        (367.59, 'delta_degC')),
+        (((100, 'degC'), (10, 'delta_degC')),  (90, 'degC')),
+        (((100, 'degC'), (10, 'delta_degF')),  (94.44, 'degC')),
+
+        (((100, 'degF'), (10, 'kelvin')),      (541.67, 'delta_degF')),
+        (((100, 'degF'), (10, 'degC')),        (50, 'delta_degF')),
+        (((100, 'degF'), (10, 'degF')),        (90, 'delta_degF')),
+        (((100, 'degF'), (10, 'degR')),        (549.67, 'delta_degF')),
+        (((100, 'degF'), (10, 'delta_degC')),  (82, 'degF')),
+        (((100, 'degF'), (10, 'delta_degF')),  (90, 'degF')),
+
+        (((100, 'degR'), (10, 'kelvin')),      (82, 'degR')),
+        (((100, 'degR'), (10, 'degC')),        (-409.67, 'degR')),
+        (((100, 'degR'), (10, 'degF')),        (-369.67, 'degR')),
+        (((100, 'degR'), (10, 'degR')),        (90, 'degR')),
+        (((100, 'degR'), (10, 'delta_degC')),  (82, 'degR')),
+        (((100, 'degR'), (10, 'delta_degF')),  (90, 'degR')),
+
+        (((100, 'delta_degC'), (10, 'kelvin')),     (90, 'kelvin')),
+        (((100, 'delta_degC'), (10, 'degC')),       (90, 'degC')),
+        (((100, 'delta_degC'), (10, 'degF')),       (170, 'degF')),
+        (((100, 'delta_degC'), (10, 'degR')),       (170, 'degR')),
+        (((100, 'delta_degC'), (10, 'delta_degC')), (90, 'delta_degC')),
+        (((100, 'delta_degC'), (10, 'delta_degF')), (94.44, 'delta_degC')),
+
+        (((100, 'delta_degF'), (10, 'kelvin')),     (45.56, 'kelvin')),
+        (((100, 'delta_degF'), (10, 'degC')),       (45.56, 'degC')),
+        (((100, 'delta_degF'), (10, 'degF')),       (90, 'degF')),
+        (((100, 'delta_degF'), (10, 'degR')),       (90, 'degR')),
+        (((100, 'delta_degF'), (10, 'delta_degC')), (82, 'delta_degF')),
+        (((100, 'delta_degF'), (10, 'delta_degF')), (90, 'delta_degF')),
+        ]
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        subtractions)
+    def test_subtraction(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        input_tuple = q1, q2
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.sub, q1, q2)
+        else:
+            expected = self.Q_(*expected)
+            self.assertEqual(op.sub(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.sub(q1, q2), expected,
+                                           atol=0.01)
+
+#    @unittest.expectedFailure
+    @helpers.requires_numpy()
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        subtractions)
+    def test_inplace_subtraction(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u),
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_cp = copy.copy(q1)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.isub, q1_cp, q2)
+        else:
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.isub(q1_cp, q2).units, Q_(*expected).units)
+            q1_cp = copy.copy(q1)
+            self.assertQuantityAlmostEqual(op.isub(q1_cp, q2), Q_(*expected),
+                                           atol=0.01)
+
+    multiplications = [
+        (((100, 'kelvin'), (10, 'kelvin')),     (1000, 'kelvin**2')),
+        (((100, 'kelvin'), (10, 'degC')),       'error'),
+        (((100, 'kelvin'), (10, 'degF')),       'error'),
+        (((100, 'kelvin'), (10, 'degR')),       (1000, 'kelvin*degR')),
+        (((100, 'kelvin'), (10, 'delta_degC')), (1000, 'kelvin*delta_degC')),
+        (((100, 'kelvin'), (10, 'delta_degF')), (1000, 'kelvin*delta_degF')),
+
+        (((100, 'degC'), (10, 'kelvin')),      'error'),
+        (((100, 'degC'), (10, 'degC')),        'error'),
+        (((100, 'degC'), (10, 'degF')),        'error'),
+        (((100, 'degC'), (10, 'degR')),        'error'),
+        (((100, 'degC'), (10, 'delta_degC')),  'error'),
+        (((100, 'degC'), (10, 'delta_degF')),  'error'),
+
+        (((100, 'degF'), (10, 'kelvin')),      'error'),
+        (((100, 'degF'), (10, 'degC')),        'error'),
+        (((100, 'degF'), (10, 'degF')),        'error'),
+        (((100, 'degF'), (10, 'degR')),        'error'),
+        (((100, 'degF'), (10, 'delta_degC')),  'error'),
+        (((100, 'degF'), (10, 'delta_degF')),  'error'),
+
+        (((100, 'degR'), (10, 'kelvin')),      (1000, 'degR*kelvin')),
+        (((100, 'degR'), (10, 'degC')),        'error'),
+        (((100, 'degR'), (10, 'degF')),        'error'),
+        (((100, 'degR'), (10, 'degR')),        (1000, 'degR**2')),
+        (((100, 'degR'), (10, 'delta_degC')),  (1000, 'degR*delta_degC')),
+        (((100, 'degR'), (10, 'delta_degF')),  (1000, 'degR*delta_degF')),
+
+        (((100, 'delta_degC'), (10, 'kelvin')),     (1000, 'delta_degC*kelvin')),
+        (((100, 'delta_degC'), (10, 'degC')),       'error'),
+        (((100, 'delta_degC'), (10, 'degF')),       'error'),
+        (((100, 'delta_degC'), (10, 'degR')),       (1000, 'delta_degC*degR')),
+        (((100, 'delta_degC'), (10, 'delta_degC')), (1000, 'delta_degC**2')),
+        (((100, 'delta_degC'), (10, 'delta_degF')), (1000, 'delta_degC*delta_degF')),
+
+        (((100, 'delta_degF'), (10, 'kelvin')),     (1000, 'delta_degF*kelvin')),
+        (((100, 'delta_degF'), (10, 'degC')),       'error'),
+        (((100, 'delta_degF'), (10, 'degF')),       'error'),
+        (((100, 'delta_degF'), (10, 'degR')),       (1000, 'delta_degF*degR')),
+        (((100, 'delta_degF'), (10, 'delta_degC')), (1000, 'delta_degF*delta_degC')),
+        (((100, 'delta_degF'), (10, 'delta_degF')), (1000, 'delta_degF**2')),
+        ]
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        multiplications)
+    def test_multiplication(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        input_tuple = q1, q2
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.mul, q1, q2)
+        else:
+            expected = self.Q_(*expected)
+            self.assertEqual(op.mul(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.mul(q1, q2), expected,
+                                           atol=0.01)
+
+    @helpers.requires_numpy()
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        multiplications)
+    def test_inplace_multiplication(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u),
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_cp = copy.copy(q1)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.imul, q1_cp, q2)
+        else:
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.imul(q1_cp, q2).units, Q_(*expected).units)
+            q1_cp = copy.copy(q1)
+            self.assertQuantityAlmostEqual(op.imul(q1_cp, q2), Q_(*expected),
+                                           atol=0.01)
+
+    divisions = [
+        (((100, 'kelvin'), (10, 'kelvin')),     (10, '')),
+        (((100, 'kelvin'), (10, 'degC')),       'error'),
+        (((100, 'kelvin'), (10, 'degF')),       'error'),
+        (((100, 'kelvin'), (10, 'degR')),       (10, 'kelvin/degR')),
+        (((100, 'kelvin'), (10, 'delta_degC')), (10, 'kelvin/delta_degC')),
+        (((100, 'kelvin'), (10, 'delta_degF')), (10, 'kelvin/delta_degF')),
+
+        (((100, 'degC'), (10, 'kelvin')),      'error'),
+        (((100, 'degC'), (10, 'degC')),        'error'),
+        (((100, 'degC'), (10, 'degF')),        'error'),
+        (((100, 'degC'), (10, 'degR')),        'error'),
+        (((100, 'degC'), (10, 'delta_degC')),  'error'),
+        (((100, 'degC'), (10, 'delta_degF')),  'error'),
+
+        (((100, 'degF'), (10, 'kelvin')),      'error'),
+        (((100, 'degF'), (10, 'degC')),        'error'),
+        (((100, 'degF'), (10, 'degF')),        'error'),
+        (((100, 'degF'), (10, 'degR')),        'error'),
+        (((100, 'degF'), (10, 'delta_degC')),  'error'),
+        (((100, 'degF'), (10, 'delta_degF')),  'error'),
+
+        (((100, 'degR'), (10, 'kelvin')),      (10, 'degR/kelvin')),
+        (((100, 'degR'), (10, 'degC')),        'error'),
+        (((100, 'degR'), (10, 'degF')),        'error'),
+        (((100, 'degR'), (10, 'degR')),        (10, '')),
+        (((100, 'degR'), (10, 'delta_degC')),  (10, 'degR/delta_degC')),
+        (((100, 'degR'), (10, 'delta_degF')),  (10, 'degR/delta_degF')),
+
+        (((100, 'delta_degC'), (10, 'kelvin')),     (10, 'delta_degC/kelvin')),
+        (((100, 'delta_degC'), (10, 'degC')),       'error'),
+        (((100, 'delta_degC'), (10, 'degF')),       'error'),
+        (((100, 'delta_degC'), (10, 'degR')),       (10, 'delta_degC/degR')),
+        (((100, 'delta_degC'), (10, 'delta_degC')), (10, '')),
+        (((100, 'delta_degC'), (10, 'delta_degF')), (10, 'delta_degC/delta_degF')),
+
+        (((100, 'delta_degF'), (10, 'kelvin')),     (10, 'delta_degF/kelvin')),
+        (((100, 'delta_degF'), (10, 'degC')),       'error'),
+        (((100, 'delta_degF'), (10, 'degF')),       'error'),
+        (((100, 'delta_degF'), (10, 'degR')),       (10, 'delta_degF/degR')),
+        (((100, 'delta_degF'), (10, 'delta_degC')), (10, 'delta_degF/delta_degC')),
+        (((100, 'delta_degF'), (10, 'delta_degF')), (10, '')),
+        ]
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        divisions)
+    def test_truedivision(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        input_tuple = q1, q2
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.truediv, q1, q2)
+        else:
+            expected = self.Q_(*expected)
+            self.assertEqual(op.truediv(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.truediv(q1, q2), expected,
+                                           atol=0.01)
+
+    @helpers.requires_numpy()
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        divisions)
+    def test_inplace_truedivision(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u),
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_cp = copy.copy(q1)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.itruediv, q1_cp, q2)
+        else:
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.itruediv(q1_cp, q2).units, Q_(*expected).units)
+            q1_cp = copy.copy(q1)
+            self.assertQuantityAlmostEqual(op.itruediv(q1_cp, q2),
+                                           Q_(*expected), atol=0.01)
+
+    multiplications_with_autoconvert_to_baseunit = [
+        (((100, 'kelvin'), (10, 'degC')),     (28315., 'kelvin**2')),
+        (((100, 'kelvin'), (10, 'degF')),     (26092.78, 'kelvin**2')),
+
+        (((100, 'degC'), (10, 'kelvin')),     (3731.5, 'kelvin**2')),
+        (((100, 'degC'), (10, 'degC')),       (105657.42, 'kelvin**2')),
+        (((100, 'degC'), (10, 'degF')),       (97365.20, 'kelvin**2')),
+        (((100, 'degC'), (10, 'degR')),       (3731.5, 'kelvin*degR')),
+        (((100, 'degC'), (10, 'delta_degC')), (3731.5, 'kelvin*delta_degC')),
+        (((100, 'degC'), (10, 'delta_degF')), (3731.5, 'kelvin*delta_degF')),
+
+        (((100, 'degF'), (10, 'kelvin')),     (3109.28, 'kelvin**2')),
+        (((100, 'degF'), (10, 'degC')),       (88039.20, 'kelvin**2')),
+        (((100, 'degF'), (10, 'degF')),       (81129.69, 'kelvin**2')),
+        (((100, 'degF'), (10, 'degR')),       (3109.28, 'kelvin*degR')),
+        (((100, 'degF'), (10, 'delta_degC')), (3109.28, 'kelvin*delta_degC')),
+        (((100, 'degF'), (10, 'delta_degF')), (3109.28, 'kelvin*delta_degF')),
+
+        (((100, 'degR'), (10, 'degC')),       (28315., 'degR*kelvin')),
+        (((100, 'degR'), (10, 'degF')),       (26092.78, 'degR*kelvin')),
+
+        (((100, 'delta_degC'), (10, 'degC')), (28315., 'delta_degC*kelvin')),
+        (((100, 'delta_degC'), (10, 'degF')), (26092.78, 'delta_degC*kelvin')),
+
+        (((100, 'delta_degF'), (10, 'degC')), (28315., 'delta_degF*kelvin')),
+        (((100, 'delta_degF'), (10, 'degF')), (26092.78, 'delta_degF*kelvin')),
+        ]
+
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"),
+        multiplications_with_autoconvert_to_baseunit)
+    def test_multiplication_with_autoconvert(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = True
+        qin1, qin2 = input_tuple
+        q1, q2 = self.Q_(*qin1), self.Q_(*qin2)
+        input_tuple = q1, q2
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.mul, q1, q2)
+        else:
+            expected = self.Q_(*expected)
+            self.assertEqual(op.mul(q1, q2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.mul(q1, q2), expected,
+                                           atol=0.01)
+
+    @helpers.requires_numpy()
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"),
+        multiplications_with_autoconvert_to_baseunit)
+    def test_inplace_multiplication_with_autoconvert(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = True
+        (q1v, q1u), (q2v, q2u) = input_tuple
+        # update input tuple with new values to have correct values on failure
+        input_tuple = ((np.array([q1v]*2, dtype=np.float), q1u),
+                       (np.array([q2v]*2, dtype=np.float), q2u))
+        Q_ = self.Q_
+        qin1, qin2 = input_tuple
+        q1, q2 = Q_(*qin1), Q_(*qin2)
+        q1_cp = copy.copy(q1)
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.imul, q1_cp, q2)
+        else:
+            expected = np.array([expected[0]]*2, dtype=np.float), expected[1]
+            self.assertEqual(op.imul(q1_cp, q2).units, Q_(*expected).units)
+            q1_cp = copy.copy(q1)
+            self.assertQuantityAlmostEqual(op.imul(q1_cp, q2), Q_(*expected),
+                                           atol=0.01)
+
+    multiplications_with_scalar = [
+        (((10, 'kelvin'),    2),    (20., 'kelvin')),
+        (((10, 'kelvin**2'), 2),    (20., 'kelvin**2')),
+        (((10, 'degC'),      2),    (20., 'degC')),
+        (((10, '1/degC'),    2),    'error'),
+        (((10, 'degC**0.5'),   2),  'error'),
+        (((10, 'degC**2'),   2),    'error'),
+        (((10, 'degC**-2'),  2),    'error'),
+        ]
+
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), multiplications_with_scalar)
+    def test_multiplication_with_scalar(self, input_tuple, expected):
+        self.ureg.default_as_delta = False
+        in1, in2 = input_tuple
+        if type(in1) is tuple:
+            in1, in2 = self.Q_(*in1), in2
+        else:
+            in1, in2 = in1, self.Q_(*in2)
+        input_tuple = in1, in2  # update input_tuple for better tracebacks
+        if expected == 'error':
+            self.assertRaises(OffsetUnitCalculusError, op.mul, in1, in2)
+        else:
+            expected = self.Q_(*expected)
+            self.assertEqual(op.mul(in1, in2).units, expected.units)
+            self.assertQuantityAlmostEqual(op.mul(in1, in2), expected,
+                                           atol=0.01)
+
+    divisions_with_scalar = [   # without / with autoconvert to base unit
+        (((10, 'kelvin'), 2),       [(5., 'kelvin'), (5., 'kelvin')]),
+        (((10, 'kelvin**2'), 2),    [(5., 'kelvin**2'), (5., 'kelvin**2')]),
+        (((10, 'degC'), 2),         ['error', 'error']),
+        (((10, 'degC**2'), 2),      ['error', 'error']),
+        (((10, 'degC**-2'), 2),     ['error', 'error']),
+
+        ((2, (10, 'kelvin')),       [(0.2, '1/kelvin'), (0.2, '1/kelvin')]),
+        ((2, (10, 'degC')),         ['error', (2/283.15, '1/kelvin')]),
+        ((2, (10, 'degC**2')),      ['error', 'error']),
+        ((2, (10, 'degC**-2')),     ['error', 'error']),
+        ]
+
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), divisions_with_scalar)
+    def test_division_with_scalar(self, input_tuple, expected):
+        self.ureg.default_as_delta = False
+        in1, in2 = input_tuple
+        if type(in1) is tuple:
+            in1, in2 = self.Q_(*in1), in2
+        else:
+            in1, in2 = in1, self.Q_(*in2)
+        input_tuple = in1, in2  # update input_tuple for better tracebacks
+        expected_copy = expected[:]
+        for i, mode in enumerate([False, True]):
+            self.ureg.autoconvert_offset_to_baseunit = mode
+            if expected_copy[i] == 'error':
+                self.assertRaises(OffsetUnitCalculusError, op.truediv, in1, in2)
+            else:
+                expected = self.Q_(*expected_copy[i])
+                self.assertEqual(op.truediv(in1, in2).units, expected.units)
+                self.assertQuantityAlmostEqual(op.truediv(in1, in2), expected)
+
+    exponentiation = [                  # resuls without / with autoconvert
+        (((10, 'degC'),    1),          [(10, 'degC'), (10, 'degC')]),
+        (((10, 'degC'),    0.5),        ['error', (283.15**0.5, 'kelvin**0.5')]),
+        (((10, 'degC'),    0),          [(1., ''), (1., '')]),
+        (((10, 'degC'),   -1),          ['error', (1/(10+273.15), 'kelvin**-1')]),
+        (((10, 'degC'),   -2),          ['error', (1/(10+273.15)**2., 'kelvin**-2')]),
+        ((( 0, 'degC'),   -2),          ['error', (1/(273.15)**2, 'kelvin**-2')]),
+        (((10, 'degC'),   (2, '')),     ['error', ((283.15)**2, 'kelvin**2')]),
+        (((10, 'degC'),  (10, 'degK')), ['error', 'error']),
+
+        (((10, 'kelvin'), (2, '')),     [(100., 'kelvin**2'), (100., 'kelvin**2')]),
+
+        ((  2,          (2, 'kelvin')), ['error', 'error']),
+        ((  2,          (500., 'millikelvin/kelvin')), [2**0.5, 2**0.5]),
+        ((  2,          (0.5, 'kelvin/kelvin')),      [2**0.5, 2**0.5]),
+        (((10, 'degC'), (500., 'millikelvin/kelvin')),
+                                        ['error', (283.15**0.5, 'kelvin**0.5')]),
+         ]
+
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), exponentiation)
+    def test_exponentiation(self, input_tuple, expected):
+        self.ureg.default_as_delta = False
+        in1, in2 = input_tuple
+        if type(in1) is tuple and type(in2) is tuple:
+            in1, in2 = self.Q_(*in1), self.Q_(*in2)
+        elif not type(in1) is tuple and type(in2) is tuple:
+            in2 = self.Q_(*in2)
+        else:
+            in1 = self.Q_(*in1)
+        input_tuple = in1, in2
+        expected_copy = expected[:]
+        for i, mode in enumerate([False, True]):
+            self.ureg.autoconvert_offset_to_baseunit = mode
+            if expected_copy[i] == 'error':
+                self.assertRaises((OffsetUnitCalculusError,
+                                   DimensionalityError), op.pow, in1, in2)
+            else:
+                if type(expected_copy[i]) is tuple:
+                    expected = self.Q_(*expected_copy[i])
+                    self.assertEqual(op.pow(in1, in2).units, expected.units)
+                else:
+                    expected = expected_copy[i]
+                self.assertQuantityAlmostEqual(op.pow(in1, in2), expected)
+
+    @helpers.requires_numpy()
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), exponentiation)
+    def test_inplace_exponentiation(self, input_tuple, expected):
+        self.ureg.default_as_delta = False
+        in1, in2 = input_tuple
+        if type(in1) is tuple and type(in2) is tuple:
+            (q1v, q1u), (q2v, q2u) = in1, in2
+            in1 = self.Q_(*(np.array([q1v]*2, dtype=np.float), q1u))
+            in2 = self.Q_(q2v, q2u)
+        elif not type(in1) is tuple and type(in2) is tuple:
+            in2 = self.Q_(*in2)
+        else:
+            in1 = self.Q_(*in1)
+
+        input_tuple = in1, in2
+
+        expected_copy = expected[:]
+        for i, mode in enumerate([False, True]):
+            self.ureg.autoconvert_offset_to_baseunit = mode
+            in1_cp = copy.copy(in1)
+            if expected_copy[i] == 'error':
+                self.assertRaises((OffsetUnitCalculusError,
+                                   DimensionalityError), op.ipow, in1_cp, in2)
+            else:
+                if type(expected_copy[i]) is tuple:
+                    expected = self.Q_(np.array([expected_copy[i][0]]*2,
+                                                dtype=np.float),
+                                       expected_copy[i][1])
+                    self.assertEqual(op.ipow(in1_cp, in2).units, expected.units)
+                else:
+                    expected = np.array([expected_copy[i]]*2, dtype=np.float)
+
+
+                in1_cp = copy.copy(in1)
+                self.assertQuantityAlmostEqual(op.ipow(in1_cp, in2), expected)
