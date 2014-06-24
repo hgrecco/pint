@@ -87,7 +87,7 @@ class DimensionalityError(ValueError):
     """Raised when trying to convert between incompatible units.
     """
 
-    def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=None):
+    def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=''):
         super(DimensionalityError, self).__init__()
         self.units1 = units1
         self.units2 = units2
@@ -103,12 +103,25 @@ class DimensionalityError(ValueError):
             dim1 = ''
             dim2 = ''
 
-        msg = "Cannot convert from '{0}'{1} to '{2}'{3}".format(self.units1, dim1, self.units2, dim2)
+        msg = "Cannot convert from '{0}'{1} to '{2}'{3}" + self.extra_msg
 
-        if self.extra_msg:
-            return msg + self.extra_msg
+        return msg.format(self.units1, dim1, self.units2, dim2)
 
-        return msg
+
+class OffsetUnitCalculusError(ValueError):
+    """Raised on ambiguous operations with offset units.
+    """
+    def __init__(self, units1, units2='', extra_msg=''):
+        super(ValueError, self).__init__()
+        self.units1 = units1
+        self.units2 = units2
+        self.extra_msg = extra_msg
+
+    def __str__(self):
+        msg = ("Ambiguous operation with offset unit (%s)." %
+               ', '.join(['%s' % u for u in [self.units1, self.units2] if u])
+               + self.extra_msg)
+        return msg.format(self.units1, self.units2)
 
 
 class Converter(object):
@@ -289,7 +302,7 @@ class UnitDefinition(Definition):
                                  'Base units must be referenced only to dimensions. '
                                  'Derived units must be referenced only to units.')
             self.reference = UnitsContainer(converter.items())
-            if 'offset' in modifiers:
+            if modifiers.get('offset', 0.) != 0.:
                 converter = OffsetConverter(converter.scale, modifiers['offset'])
             else:
                 converter = ScaleConverter(converter.scale)
@@ -447,12 +460,17 @@ class UnitRegistry(object):
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
     :param default_as_delta: In the context of a multiplication of units, interpret
                              non-multiplicative units as their *delta* counterparts.
+    :autoconvert_offset_to_baseunit: If True converts offset units in quantites are
+                                     converted to their base units in multiplicative
+                                     context. If False no conversion happens.
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
     :type on_redefintion: str
     """
 
-    def __init__(self, filename='', force_ndarray=False, default_as_delta=True, on_redefinition='warn'):
+    def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
+                 autoconvert_offset_to_baseunit=False,
+                 on_redefinition='warn'):
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
 
@@ -494,6 +512,10 @@ class UnitRegistry(object):
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
         self.default_as_delta = default_as_delta
+
+        # Determines if quantities with offset units are converted to their
+        # base units on multiplication and division.
+        self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
         if filename == '':
             self.load_definitions('default_en.txt', True)
@@ -697,7 +719,8 @@ class UnitRegistry(object):
 
             _adder(alias, definition)
 
-        if isinstance(definition.converter, OffsetConverter):
+        # define additional "delta_" units for units with an offset
+        if getattr(definition.converter, "offset", 0.0) != 0.0:
             d_name = 'delta_' + definition.name
             if definition.symbol:
                 d_symbol = 'Δ' + definition.symbol
@@ -710,7 +733,7 @@ class UnitRegistry(object):
                     return '[delta_' + _name[1:]
                 return 'delta_' + _name
 
-            d_reference = UnitsContainer(dict((prep(ref), value)
+            d_reference = UnitsContainer(dict((ref, value)
                                          for ref, value in definition.reference.items()))
 
             self.define(UnitDefinition(d_name, d_symbol, d_aliases,
@@ -966,9 +989,9 @@ class UnitRegistry(object):
         :return: converted value
         """
         if isinstance(src, string_types):
-            src = ParserHelper.from_string(src)
+            src = self.parse_units(src)
         if isinstance(dst, string_types):
-            dst = ParserHelper.from_string(dst)
+            dst = self.parse_units(dst)
         if src == dst:
             return value
 
@@ -996,35 +1019,58 @@ class UnitRegistry(object):
         if src_dim != dst_dim:
             raise DimensionalityError(src, dst, src_dim, dst_dim)
 
-        if len(src) == 1:
-            # If the source has a single element, it might be a non-multiplicative unit
-            # and therefore it is treated differently.
-            src_unit, src_value = list(src.items())[0]
-            src_unit = self._units[self.get_name(src_unit)]
+        # Conversion needs to consider if non-multiplicative (AKA offset
+        # units) are involved. Conversion is only possible if src and dst
+        # have at most one offset unit per dimension.
+        src_offset_units = [(u, e) for u, e in src.items()
+                            if not self._units[u].is_multiplicative]
+        dst_offset_units = [(u, e) for u, e in dst.items()
+                            if not self._units[u].is_multiplicative]
 
-            # We only continue if is a ScaleConverter,
-            # if not just exit to use the standard src / dst.
-            # TODO: This will fail and should not degK * meter / nanometer -> degC
-            if not isinstance(src_unit.converter, ScaleConverter):
+        # For offset units we need to check if the conversion is allowed.
+        if src_offset_units or dst_offset_units:
 
-                if len(dst) > 1:
-                    # If the destination has more than one element,
-                    # then the conversion is not possible.
-                    # TODO: This will fail and should not degC -> degK * meter / nanometer
-                    raise DimensionalityError(src, dst, src_dim, dst_dim)
+            # Validate that not more than one offset unit is present
+            if len(src_offset_units) > 1 or len(dst_offset_units) > 1:
+                raise DimensionalityError(
+                    src, dst, src_dim, dst_dim,
+                    extra_msg=' - more than one offset unit.')
 
-                dst_unit, dst_value = list(dst.items())[0]
-                dst_unit = self._units[self.get_name(dst_unit)]
-                if not type(src_unit.converter) is type(dst_unit.converter):
-                    raise DimensionalityError(src, dst, src_dim, dst_dim)
+            # validate that offset unit is not used in multiplicative context
+            if ((len(src_offset_units) == 1 and len(src) > 1)
+                    or (len(dst_offset_units) == 1 and len(dst) > 1)
+                    and not self.autoconvert_offset_to_baseunit):
+                raise DimensionalityError(
+                    src, dst, src_dim, dst_dim,
+                    extra_msg=' - offset unit used in multiplicative context.')
 
-                return dst_unit.converter.from_reference(src_unit.converter.to_reference(value, inplace), inplace)
+            # Validate that order of offset unit is exactly one.
+            if src_offset_units:
+                if src_offset_units[0][1] != 1:
+                    raise DimensionalityError(
+                        src, dst, src_dim, dst_dim,
+                        extra_msg=' - offset units in higher order.')
+            else:
+                if dst_offset_units[0][1] != 1:
+                    raise DimensionalityError(
+                        src, dst, src_dim, dst_dim,
+                        extra_msg=' - offset units in higher order.')
 
+        # Here we convert only the offset quantities. Any remaining scaled
+        # quantities will be converted later.
+
+        # clean src from offset units by converting to reference
+        for u, e in src_offset_units:
+            value = self._units[u].converter.to_reference(value, inplace)
+            src.pop(u)
+
+        # clean dst units from offset units
+        for u, e in dst_offset_units:
+            dst.pop(u)
+
+        # Here src and dst have only multiplicative units left. Thus we can
+        # convert with a factor.
         factor, units = self.get_base_units(src / dst)
-
-        if factor is None:
-            raise DimensionalityError(src, dst, src_dim, dst_dim,
-                                      'Non-multiplicative unit found.')
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
@@ -1035,6 +1081,16 @@ class UnitRegistry(object):
             value *= factor
         else:
             value = value * factor
+
+        # Finally convert to offset units specified in destination
+        for u, e in dst_offset_units:
+            value = self._units[u].converter.from_reference(value, inplace)
+            # add back offset units to dst
+            dst[u] = e
+
+        # restore offset conversion of src units
+        for u, e in src_offset_units:
+            src[u] = e
 
         return value
 
@@ -1116,7 +1172,7 @@ class UnitRegistry(object):
             cname = self.get_name(name)
             if not cname:
                 continue
-            if as_delta and (many or (not many and abs(value) != 1)):
+            if as_delta and (many or (not many and value != 1)):
                 definition = self._units[cname]
                 if not definition.is_multiplicative:
                     cname = 'delta_' + cname
@@ -1140,7 +1196,7 @@ class UnitRegistry(object):
         unknown = set()
         for toknum, tokval, _, _, _ in gen:
             if toknum == NAME:
-                # TODO: Integrate math better, Replace eval
+                # TODO: Integrate math better, Replace eval, make as_delta-aware
                 if tokval == 'pi' or tokval in values:
                     result.append((toknum, tokval))
                     continue
