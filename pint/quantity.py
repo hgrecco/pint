@@ -16,8 +16,9 @@ import functools
 
 from .formatting import remove_custom_flags
 from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
-from .compat import string_types, ndarray, np, _to_magnitude
+from .compat import string_types, ndarray, np, _to_magnitude, _new_quantity
 from .util import logger
+from .helpers import Arrayterator
 
 
 def _eq(first, second, check_all):
@@ -68,7 +69,7 @@ def _only_multiplicative_units(q):
     return q._REGISTRY._units[unit].is_multiplicative
 
 
-class _Quantity(object):
+class _Quantity(ndarray):
     """Implements a class to describe a physical quantities:
     the product of a numerical value and a unit of measurement.
 
@@ -95,15 +96,15 @@ class _Quantity(object):
             elif isinstance(value, cls):
                 inst = copy.copy(value)
             else:
-                inst = object.__new__(cls)
+                inst = _new_quantity(cls)
                 inst._magnitude = _to_magnitude(value, inst.force_ndarray)
                 inst._units = UnitsContainer()
         elif isinstance(units, (UnitsContainer, UnitDefinition)):
-            inst = object.__new__(cls)
+            inst = _new_quantity(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = units
         elif isinstance(units, string_types):
-            inst = object.__new__(cls)
+            inst = _new_quantity(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)
         elif isinstance(units, cls):
@@ -563,7 +564,9 @@ class _Quantity(object):
 
     def compare(self, other, op):
         if not isinstance(other, self.__class__):
-            if self.dimensionless:
+            if other == 0:
+                return op(self.magnitude, 0)
+            elif self.dimensionless:
                 return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
             else:
                 raise ValueError('Cannot compare Quantity and {0}'.format(type(other)))
@@ -588,7 +591,7 @@ class _Quantity(object):
 
     # NumPy Support
     __radian = 'radian'
-    __same_units = 'equal greater greater_equal less less_equal not_equal arctan2'.split()
+    __same_units = 'abs equal greater greater_equal less less_equal not_equal arctan2'.split()
     #: Dictionary mapping ufunc/attributes names to the units that they
     #: require (conversion will be tried).
     __require_units = {'cumprod': '',
@@ -611,8 +614,11 @@ class _Quantity(object):
                    'arccosh': __radian, 'arcsinh': __radian,
                    'arctanh': __radian,
                    'degrees': 'degree', 'radians': __radian,
-                   'expm1': '', 'cumprod': '',
-                   'rad2deg': 'degree', 'deg2rad': __radian}
+                   'exp': '', 'expm1': '', 'exp2': '', 'cumprod': '',
+                   'log': '', 'log10': '', 'log2': '',
+                   'logaddex': '', 'logaddepexp2': '',
+                   'rad2deg': 'degree', 'deg2rad': __radian,
+                   'isnan': '', 'isinf': ''}
 
     #: List of ufunc/attributes names in which units are copied from the
     #: original.
@@ -636,6 +642,8 @@ class _Quantity(object):
     __skip_other_args = 'ldexp multiply ' \
                         'true_divide divide floor_divide fmod mod ' \
                         'remainder'.split()
+
+    __no_units = 'argmax argmin argsort nonzero dtype shape real imag'.split()
 
     __handled = tuple(__same_units) + \
                 tuple(__require_units.keys()) + \
@@ -676,14 +684,18 @@ class _Quantity(object):
         self._units = value.units
         return self.magnitude.fill(value.magnitude)
 
+    @property
+    def flat(self):
+        return Arrayterator(self.magnitude, self.units)
+
     def put(self, indices, values, mode='raise'):
         if isinstance(values, self.__class__):
             values = values.to(self).magnitude
         elif self.dimensionless:
-            values = self.__class__(values, '').to(self)
+            values = self.__class__(values, '').to(self).magnitude
         else:
             raise DimensionalityError('dimensionless', self.units)
-        self.magnitude.put(indices, values, mode)
+        self._magnitude.put(indices, values, mode)
 
     def searchsorted(self, v, side='left'):
         if isinstance(v, self.__class__):
@@ -693,6 +705,9 @@ class _Quantity(object):
         else:
             raise DimensionalityError('dimensionless', self.units)
         return self.magnitude.searchsorted(v, side)
+
+    def sort(self, axis=-1, kind='quicksort', order=None):
+        self._magnitude.sort(axis=axis, kind=kind, order=order)
 
     def __ito_if_needed(self, to_units):
         if self.unitless and to_units == 'radian':
@@ -728,36 +743,74 @@ class _Quantity(object):
         it_mag = iter(self.magnitude)
         return iter((self.__class__(mag, self._units) for mag in it_mag))
 
-    def __getattr__(self, item):
+    _ndarray_attrs = 'shape'.split()
+
+    _wrapped = tuple(__no_units) + __handled
+
+    _magnitude = None
+    _units = None
+
+    def __getattribute__(self, name):
+        # setup, make it easier to get attributes we need
+        get = super(_Quantity, self).__getattribute__
+        wrapped = get('_wrapped')
+        ndarray_attrs = get('_ndarray_attrs')
+        magnitude = get('_magnitude')
+
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
-        if item.startswith('__array_'):
-            if isinstance(self._magnitude, ndarray):
-                return getattr(self._magnitude, item)
-            else:
+        if name.startswith('__array_'):
+            if not isinstance(magnitude, ndarray):
                 # If an `__array_` attributes is requested but the magnitude is not an ndarray,
                 # we convert the magnitude to a numpy ndarray.
-                self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
-                return getattr(self._magnitude, item)
-        elif item in self.__handled:
-            if not isinstance(self._magnitude, ndarray):
-                self._magnitude = _to_magnitude(self._magnitude, True)
-            attr = getattr(self._magnitude, item)
+                self._magnitude = magnitude = _to_magnitude(magnitude, force_ndarray=True)
+            if name in ('__array_priority__', '__array_prepare__', '__array_wrap__'):
+                return get(name)
+            return getattr(magnitude, name)
+
+        if name in wrapped:
+            # rule 1, attribute is specifically listed
+            attr = getattr(magnitude, name)
+            if not isinstance(magnitude, ndarray):
+                self._magnitude = _to_magnitude(magnitude, force_ndarray=True)
             if callable(attr):
                 return functools.partial(self.__numpy_method_wrap, attr)
             return attr
+        elif name in ndarray_attrs:
+            return getattr(magnitude, name)
+
         try:
-            return getattr(self._magnitude, item)
-        except AttributeError as ex:
-            raise AttributeError("Neither Quantity object nor its magnitude ({0})"
-                                 "has attribute '{1}'".format(self._magnitude, item))
+            # rule 2, try attribute on self
+            return get(name)
+        except AttributeError:
+            # rule 3, fall back to self.obj
+            try:
+                return getattr(magnitude, name)
+            except AttributeError as ex:
+                raise AttributeError("Neither Quantity object nor its magnitude ({0})"
+                                     "has attribute '{1}'".format(magnitude, name))
+
+    def __contains__(self, item):
+        try:
+            if isinstance(item, self.__class__):
+                value = item.to(self.units).magnitude
+            else:
+                if not self.dimensionless:
+                    raise False
+                value = item
+            return value in self._magntiude
+
+        except TypeError:
+            raise TypeError("Neither Quantity object nor its magnitude ({0})"
+                            "supports contains".format(self._magnitude))
+
 
     def __getitem__(self, key):
         try:
             value = self._magnitude[key]
             return self.__class__(value, self._units)
         except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({0})"
+            raise TypeError("Neither Quantity object nor its magnitude ({0}) "
                             "supports indexing".format(self._magnitude))
 
     def __setitem__(self, key, value):
@@ -772,6 +825,12 @@ class _Quantity(object):
             if isinstance(value, self.__class__):
                 factor = self.__class__(value.magnitude, value.units / self.units).to_base_units()
             else:
+                if isinstance(value, ndarray):
+                    try:
+                        if not len(value):
+                            return
+                    except:
+                        pass
                 factor = self.__class__(value, self._units ** (-1)).to_base_units()
 
             if isinstance(factor, self.__class__):
@@ -782,8 +841,14 @@ class _Quantity(object):
                 self._magnitude[key] = factor
 
         except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({0})"
+            raise TypeError("Neither Quantity object nor its magnitude ({0}) "
                             "supports indexing".format(self._magnitude))
+
+    def __setslice__(self, i, j, seq):
+        self.__setitem__(slice(i, j), seq)
+
+    def __getslice__(self, i, j):
+        self.__getitem__(slice(i, j))
 
     def tolist(self):
         units = self._units
@@ -817,6 +882,9 @@ class _Quantity(object):
         uf, objs, huh = context
 
         # if this ufunc is not handled by Pint, pass it to the magnitude.
+        if uf.__name__ in 'isinf isnan signbit'.split():
+            return uf(self._magnitude)
+
         if uf.__name__ not in self.__handled:
             return self.magnitude.__array_wrap__(obj, context)
 

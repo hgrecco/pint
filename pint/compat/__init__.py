@@ -89,6 +89,9 @@ try:
             return np.asarray(value)
         return value
 
+    def _new_quantity(cls):
+        return np.asarray([]).view(cls)
+
 except ImportError:
 
     np = None
@@ -109,6 +112,9 @@ except ImportError:
             raise TypeError('lists and tuples are valid magnitudes for '
                              'Quantity only when NumPy is present.')
         return value
+
+    def _new_quantity(cls):
+        return object.__new__(cls)
 
 try:
     from uncertainties import ufloat

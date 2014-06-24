@@ -34,12 +34,13 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 
 install:
-  - conda create -c mwcraig --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip
-  - source activate env_name
+  - env_name=Python${TRAVIS_PYTHON_VERSION}_NumPy${NUMPY_VERSION}_U${UNCERTAINTIES}
+  - conda create -c mwcraig --yes -n $env_name python=$TRAVIS_PYTHON_VERSION pip
+  - source activate $env_name
   - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install uncertainties; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install -c mwcraig --yes numpy==$NUMPY_VERSION; fi
-  - pip install coverage coveralls
+  - pip install coverage
 
 script:
   - coverage run -p --source=pint --omit="*test*","*compat*" setup.py test
@@ -47,6 +48,7 @@ script:
   - coverage report -m
 
 after_script:
+  - pip install coveralls
   - coveralls --verbose
 
 matrix:

@@ -649,7 +649,9 @@ class TestFloatingUfuncs(TestUFuncs):
                        )
 
     def test_ldexp(self):
-        x1, x2 = np.frexp(self.q2)
+        #x1, x2 = np.frexp(self.q2)
+        x1 = [0.5,  0.5, 0.75, 0.5] * self.ureg.joule
+        x2 = np.asarray([2, 3, 3, 4]) * self.ureg.dimensionless
         self._test2(np.ldexp,
                     x1,
                     (x2, ))
