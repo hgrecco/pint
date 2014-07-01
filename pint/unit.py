@@ -936,18 +936,24 @@ class UnitRegistry(object):
         if check_nonmult and input_units in self._base_units_cache:
             return copy.deepcopy(self._base_units_cache[input_units])
 
-        factor = 1.
-        units = UnitsContainer()
-        for key, value in input_units.items():
-            key = self.get_name(key)
-            reg = self._units[key]
-            if reg.is_base:
-                units.add(key, value)
-            else:
-                fac, uni = self.get_base_units(reg.reference, check_nonmult=False)
-                if factor is not None:
-                    factor *= (reg.converter.scale * fac) ** value
-                units *= uni ** value
+        factor_nl = [1.] # create as list to deal with python2 lack of 'nonlocal'
+        units_template = defaultdict(lambda: 0.0)
+        def _base_recurse(ref, exp):
+            for key, value in ref.items():
+                key = self.get_name(key)
+                reg = self._units[key]
+                exp2 = exp*value
+                if reg.is_base:
+                    units_template[key] += exp2
+                else:
+                    factor_nl[0] *= reg.converter.scale ** exp2
+                    if reg.reference != None:
+                        _base_recurse(reg.reference, exp2)
+
+        _base_recurse(input_units, 1.0)
+        factor = factor_nl[0]
+
+        units = UnitsContainer(dict((k, v) for k, v in units_template.items() if v != 0.))
 
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
