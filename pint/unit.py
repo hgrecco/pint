@@ -257,7 +257,7 @@ class Definition(object):
 
 
 def _is_dim(name):
-    return name.startswith('[') and name.endswith(']')
+    return name[:1] == '[' and name[-1:] == ']'
 
 
 class PrefixDefinition(Definition):
