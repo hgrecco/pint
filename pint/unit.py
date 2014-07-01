@@ -885,9 +885,8 @@ class UnitRegistry(object):
         :param input_units:
         :return: dimensionality
         """
-        dims = UnitsContainer()
         if not input_units:
-            return dims
+            return UnitsContainer()
 
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
@@ -895,24 +894,29 @@ class UnitRegistry(object):
         if input_units in self._dimensionality_cache:
             return copy.copy(self._dimensionality_cache[input_units])
 
-        for key, value in input_units.items():
-            if _is_dim(key):
-                reg = self._dimensions[key]
-                if reg.is_base:
-                    dims.add(key, value)
-                else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
-            else:
-                reg = self._units[self.get_name(key)]
-                if reg.is_base:
-                    dims *= reg.reference ** value
-                else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
+        accumulator = defaultdict(lambda: 0.0)
+        self._get_dimensionality_recurse(input_units, 1.0, accumulator)
+
+        dims = UnitsContainer(dict((k, v) for k, v in accumulator.items() if v != 0.))
 
         if '[]' in dims:
             del dims['[]']
 
         return dims
+
+    def _get_dimensionality_recurse(self, ref, exp, accumulator):
+        for key, value in ref.items():
+            exp2 = exp*value
+            if _is_dim(key):
+                reg = self._dimensions[key]
+                if reg.is_base:
+                    accumulator[key] += exp2
+                elif reg.reference != None:
+                    self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
+            else:
+                reg = self._units[self.get_name(key)]
+                if reg.reference != None:
+                    self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
     def get_base_units(self, input_units, check_nonmult=True):
         """Convert unit or dict of units to the base units.
