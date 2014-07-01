@@ -881,9 +881,8 @@ class UnitRegistry(object):
         :param input_units:
         :return: dimensionality
         """
-        dims = UnitsContainer()
         if not input_units:
-            return dims
+            return UnitsContainer()
 
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
@@ -891,19 +890,24 @@ class UnitRegistry(object):
         if input_units in self._dimensionality_cache:
             return copy.copy(self._dimensionality_cache[input_units])
 
-        for key, value in input_units.items():
-            if _is_dim(key):
-                reg = self._dimensions[key]
-                if reg.is_base:
-                    dims.add(key, value)
+        dims_template = defaultdict(lambda: 0.0)
+        def _base_recurse(ref, exp):
+            for key, value in ref.items():
+                exp2 = exp*value
+                if _is_dim(key):
+                    reg = self._dimensions[key]
+                    if reg.is_base:
+                        dims_template[key] += exp2
+                    elif reg.reference != None:
+                        _base_recurse(reg.reference, exp2)
                 else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
-            else:
-                reg = self._units[self.get_name(key)]
-                if reg.is_base:
-                    dims *= reg.reference ** value
-                else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
+                    reg = self._units[self.get_name(key)]
+                    if reg.reference != None:
+                        _base_recurse(reg.reference, exp2)
+
+        _base_recurse(input_units, 1.0)
+
+        dims = UnitsContainer(dict((k, v) for k, v in dims_template.items() if v != 0.))
 
         if '[]' in dims:
             del dims['[]']
