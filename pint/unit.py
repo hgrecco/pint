@@ -489,6 +489,7 @@ class UnitRegistry(object):
         #: e.g: 'hz' - > set('Hz', )
         self._units_casei = defaultdict(set)
 
+        self._prefix_prefixes = None
         #: Map prefix name (string) to its definition (PrefixDefinition).
         self._prefixes = {'': PrefixDefinition('', '', (), 1)}
 
@@ -828,6 +829,13 @@ class UnitRegistry(object):
                 except Exception as e:
                     logger.warning('Could not resolve {0}: {1!r}'.format(unit_name, e))
 
+        self._prefix_prefixes = {}
+        for key, grp in itertools.groupby(sorted(self._prefixes.keys()), key=lambda x: x[:1]):
+            self._prefix_prefixes[key] = list(grp)
+        for k, v in self._prefix_prefixes.items():
+            if k != '':
+                v.insert(0, '')
+
     def get_name(self, name_or_alias, case_sensitive=True):
         """Return the canonical name of a unit.
         """
@@ -1127,7 +1135,12 @@ class UnitRegistry(object):
         by walking the list of prefix and suffix.
         """
 
-        for suffix, prefix in itertools.product(self._suffixes.keys(), self._prefixes.keys()):
+        if self._prefix_prefixes != None:
+            prefix_subset = self._prefix_prefixes.get(unit_name[:1], [''])
+        else:
+            prefix_subset = self._prefixes.keys()
+
+        for suffix, prefix in itertools.product(self._suffixes.keys(), prefix_subset):
             if unit_name.startswith(prefix) and unit_name.endswith(suffix):
                 name = unit_name[len(prefix):]
                 if suffix:
