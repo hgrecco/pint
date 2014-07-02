@@ -257,7 +257,7 @@ class Definition(object):
 
 
 def _is_dim(name):
-    return name.startswith('[') and name.endswith(']')
+    return name[:1] == '[' and name[-1:] == ']'
 
 
 class PrefixDefinition(Definition):
@@ -489,6 +489,7 @@ class UnitRegistry(object):
         #: e.g: 'hz' - > set('Hz', )
         self._units_casei = defaultdict(set)
 
+        self._prefix_prefixes = None
         #: Map prefix name (string) to its definition (PrefixDefinition).
         self._prefixes = {'': PrefixDefinition('', '', (), 1)}
 
@@ -504,8 +505,6 @@ class UnitRegistry(object):
         #: Maps dimensionality (_freeze(UnitsContainer)) to Units (str)
         self._dimensional_equivalents = TransformDict(_freeze)
 
-        #: Maps dimensionality (_freeze(UnitsContainer)) to Dimensionality (_freeze(UnitsContainer))
-        self._base_units_cache = TransformDict(_freeze)
         #: Maps dimensionality (_freeze(UnitsContainer)) to Units (_freeze(UnitsContainer))
         self._dimensionality_cache = TransformDict(_freeze)
 
@@ -817,10 +816,8 @@ class UnitRegistry(object):
                 try:
                     uc = ParserHelper.from_word(unit_name)
 
-                    bu = self.get_base_units(uc)
                     di = self.get_dimensionality(uc)
 
-                    self._base_units_cache[uc] = bu
                     self._dimensionality_cache[uc] = di
 
                     if not prefixed:
@@ -831,6 +828,13 @@ class UnitRegistry(object):
 
                 except Exception as e:
                     logger.warning('Could not resolve {0}: {1!r}'.format(unit_name, e))
+
+        self._prefix_prefixes = {}
+        for key, grp in itertools.groupby(sorted(self._prefixes.keys()), key=lambda x: x[:1]):
+            self._prefix_prefixes[key] = list(grp)
+        for k, v in self._prefix_prefixes.items():
+            if k != '':
+                v.insert(0, '')
 
     def get_name(self, name_or_alias, case_sensitive=True):
         """Return the canonical name of a unit.
@@ -885,9 +889,8 @@ class UnitRegistry(object):
         :param input_units:
         :return: dimensionality
         """
-        dims = UnitsContainer()
         if not input_units:
-            return dims
+            return UnitsContainer()
 
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
@@ -895,19 +898,24 @@ class UnitRegistry(object):
         if input_units in self._dimensionality_cache:
             return copy.copy(self._dimensionality_cache[input_units])
 
-        for key, value in input_units.items():
-            if _is_dim(key):
-                reg = self._dimensions[key]
-                if reg.is_base:
-                    dims.add(key, value)
+        dims_template = defaultdict(lambda: 0.0)
+        def _base_recurse(ref, exp):
+            for key, value in ref.items():
+                exp2 = exp*value
+                if _is_dim(key):
+                    reg = self._dimensions[key]
+                    if reg.is_base:
+                        dims_template[key] += exp2
+                    elif reg.reference != None:
+                        _base_recurse(reg.reference, exp2)
                 else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
-            else:
-                reg = self._units[self.get_name(key)]
-                if reg.is_base:
-                    dims *= reg.reference ** value
-                else:
-                    dims *= self.get_dimensionality(reg.reference) ** value
+                    reg = self._units[self.get_name(key)]
+                    if reg.reference != None:
+                        _base_recurse(reg.reference, exp2)
+
+        _base_recurse(input_units, 1.0)
+
+        dims = UnitsContainer(dict((k, v) for k, v in dims_template.items() if v != 0.))
 
         if '[]' in dims:
             del dims['[]']
@@ -932,22 +940,24 @@ class UnitRegistry(object):
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
 
-        # The cache is only done for check_nonmult=True
-        if check_nonmult and input_units in self._base_units_cache:
-            return copy.deepcopy(self._base_units_cache[input_units])
+        factor_nl = [1.] # create as list to deal with python2 lack of 'nonlocal'
+        units_template = defaultdict(lambda: 0.0)
+        def _base_recurse(ref, exp):
+            for key, value in ref.items():
+                key = self.get_name(key)
+                reg = self._units[key]
+                exp2 = exp*value
+                if reg.is_base:
+                    units_template[key] += exp2
+                else:
+                    factor_nl[0] *= reg.converter.scale ** exp2
+                    if reg.reference != None:
+                        _base_recurse(reg.reference, exp2)
 
-        factor = 1.
-        units = UnitsContainer()
-        for key, value in input_units.items():
-            key = self.get_name(key)
-            reg = self._units[key]
-            if reg.is_base:
-                units.add(key, value)
-            else:
-                fac, uni = self.get_base_units(reg.reference, check_nonmult=False)
-                if factor is not None:
-                    factor *= (reg.converter.scale * fac) ** value
-                units *= uni ** value
+        _base_recurse(input_units, 1.0)
+        factor = factor_nl[0]
+
+        units = UnitsContainer(dict((k, v) for k, v in units_template.items() if v != 0.))
 
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
@@ -1125,7 +1135,12 @@ class UnitRegistry(object):
         by walking the list of prefix and suffix.
         """
 
-        for suffix, prefix in itertools.product(self._suffixes.keys(), self._prefixes.keys()):
+        if self._prefix_prefixes != None:
+            prefix_subset = self._prefix_prefixes.get(unit_name[:1], [''])
+        else:
+            prefix_subset = self._prefixes.keys()
+
+        for suffix, prefix in itertools.product(self._suffixes.keys(), prefix_subset):
             if unit_name.startswith(prefix) and unit_name.endswith(suffix):
                 name = unit_name[len(prefix):]
                 if suffix:
