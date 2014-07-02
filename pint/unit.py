@@ -504,8 +504,6 @@ class UnitRegistry(object):
         #: Maps dimensionality (_freeze(UnitsContainer)) to Units (str)
         self._dimensional_equivalents = TransformDict(_freeze)
 
-        #: Maps dimensionality (_freeze(UnitsContainer)) to Dimensionality (_freeze(UnitsContainer))
-        self._base_units_cache = TransformDict(_freeze)
         #: Maps dimensionality (_freeze(UnitsContainer)) to Units (_freeze(UnitsContainer))
         self._dimensionality_cache = TransformDict(_freeze)
 
@@ -817,10 +815,8 @@ class UnitRegistry(object):
                 try:
                     uc = ParserHelper.from_word(unit_name)
 
-                    bu = self.get_base_units(uc)
                     di = self.get_dimensionality(uc)
 
-                    self._base_units_cache[uc] = bu
                     self._dimensionality_cache[uc] = di
 
                     if not prefixed:
@@ -931,10 +927,6 @@ class UnitRegistry(object):
 
         if isinstance(input_units, string_types):
             input_units = ParserHelper.from_string(input_units)
-
-        # The cache is only done for check_nonmult=True
-        if check_nonmult and input_units in self._base_units_cache:
-            return copy.deepcopy(self._base_units_cache[input_units])
 
         factor_nl = [1.] # create as list to deal with python2 lack of 'nonlocal'
         units_template = defaultdict(lambda: 0.0)
