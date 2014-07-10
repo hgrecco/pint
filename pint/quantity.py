@@ -16,7 +16,7 @@ import functools
 
 from .formatting import remove_custom_flags
 from .unit import DimensionalityError, UnitsContainer, UnitDefinition, UndefinedUnitError
-from .compat import string_types, ndarray, np, _to_magnitude
+from .compat import string_types, ndarray, np, _to_magnitude, long_type
 from .util import logger
 
 
@@ -276,6 +276,16 @@ class _Quantity(object):
         return self.__class__(magnitude, other)
 
     # Mathematical operations
+    def __int__(self):
+        if self.dimensionless:
+            return int(self._convert_magnitude_not_inplace(UnitsContainer()))
+        raise DimensionalityError(self.units, 'dimensionless')
+
+    def __long__(self):
+        if self.dimensionless:
+            return long_type(self._convert_magnitude_not_inplace(UnitsContainer()))
+        raise DimensionalityError(self.units, 'dimensionless')
+
     def __float__(self):
         if self.dimensionless:
             return float(self._convert_magnitude_not_inplace(UnitsContainer()))

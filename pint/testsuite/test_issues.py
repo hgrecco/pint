@@ -8,7 +8,7 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import np, unittest
+from pint.compat import np, unittest, long_type
 from pint.testsuite import QuantityTestCase, helpers
 
 
@@ -249,6 +249,21 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(x[0], ureg.Quantity(1, 'meter'))
         self.assertQuantityAlmostEqual(summer(y), ureg.Quantity(3, 'meter'))
         self.assertQuantityAlmostEqual(y[0], ureg.Quantity(1, 'meter'))
+
+    def test_issue170(self):
+        Q_ = UnitRegistry().Quantity
+        q = Q_('1 kHz')/Q_('100 Hz')
+        iq = int(q)
+        self.assertEqual(iq, 10)
+        self.assertIsInstance(iq, int)
+
+    @helpers.requires_python2()
+    def test_issue170b(self):
+        Q_ = UnitRegistry().Quantity
+        q = Q_('1 kHz')/Q_('100 Hz')
+        iq = long(q)
+        self.assertEqual(iq, long(10))
+        self.assertIsInstance(iq, long)
 
 
 @helpers.requires_numpy()

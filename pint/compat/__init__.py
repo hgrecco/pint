@@ -29,6 +29,8 @@ if PYTHON3:
         return x
 
     maketrans = str.maketrans
+
+    long_type = int
 else:
     from StringIO import StringIO
     string_types = basestring
@@ -40,6 +42,8 @@ else:
         return codecs.unicode_escape_decode(x)[0]
 
     maketrans = lambda f, t: dict((ord(a), b) for a, b in zip(f, t))
+
+    long_type = long
 
 if sys.version_info < (2, 7):
     try:
