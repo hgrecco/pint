@@ -695,6 +695,18 @@ class _Quantity(object):
             raise DimensionalityError('dimensionless', self.units)
         self.magnitude.put(indices, values, mode)
 
+    @property
+    def real(self):
+        return self.__class__(self._magnitude.real, self.units)
+
+    @property
+    def imag(self):
+        return self.__class__(self._magnitude.imag, self.units)
+
+    @property
+    def T(self):
+        return self.__class__(self._magnitude.T, self.units)
+
     def searchsorted(self, v, side='left'):
         if isinstance(v, self.__class__):
             v = v.to(self).magnitude
