@@ -7,6 +7,15 @@ Pint Changelog
 
 - Changed travis config to use miniconda for faster testing.
 - Added wheel configuration to setup.cfg.
+- Ensure resource streams are closed after reading.
+- Require setuptools.
+  (Issue #169)
+- Implemented real, imag and T Quantity properties.
+  (Issue #171)
+- Implemented __int__ and __long__ for Quantity
+  (Issue #170)
+- Fixed SI prefix error on ureg.convert.
+  (Issue #156, thanks jdreaver)
 
 
 0.5.1 (2014-06-03)
