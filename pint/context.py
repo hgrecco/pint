@@ -22,9 +22,6 @@ from .util import ParserHelper, string_types
 #: Regex to match the header parts of a context.
 _header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
 
-#: Reqex to match the different parts of a relation definition.
-_def_re = re.compile('\s*(\w+)\s*=\s*([\w\d+-/*()]+)\s*')
-
 #: Regex to match variable names in an equation.
 _varname_re = re.compile('[A-Za-z_][A-Za-z0-9_]*')
 
