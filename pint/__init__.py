@@ -17,7 +17,7 @@ import subprocess
 import pkg_resources
 from .formatting import formatter
 from .unit import (UnitRegistry, DimensionalityError, OffsetUnitCalculusError,
-                   UndefinedUnitError, LazyRegistry)
+                   UndefinedUnitError, LazyRegistry, to_common)
 from .util import pi_theorem, logger
 
 from .context import Context
