@@ -18,7 +18,7 @@ import itertools
 import functools
 import pkg_resources
 from decimal import Decimal
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 from io import open, StringIO
 from numbers import Number
 from collections import defaultdict
@@ -747,7 +747,8 @@ class UnitRegistry(object):
         if isinstance(file, string_types):
             try:
                 if is_resource:
-                    rbytes = pkg_resources.resource_stream(__name__, file).read()
+                    with closing(pkg_resources.resource_stream(__name__, file)) as fp:
+                        rbytes = fp.read()
                     return self.load_definitions(StringIO(rbytes.decode('utf-8')), is_resource)
                 else:
                     with open(file, encoding='utf-8') as fp:

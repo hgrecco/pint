@@ -8,7 +8,7 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import np, unittest
+from pint.compat import np, unittest, long_type
 from pint.testsuite import QuantityTestCase, helpers
 
 
@@ -255,6 +255,21 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(summer(y), ureg.Quantity(3, 'meter'))
         self.assertQuantityAlmostEqual(y[0], ureg.Quantity(1, 'meter'))
 
+    def test_issue170(self):
+        Q_ = UnitRegistry().Quantity
+        q = Q_('1 kHz')/Q_('100 Hz')
+        iq = int(q)
+        self.assertEqual(iq, 10)
+        self.assertIsInstance(iq, int)
+
+    @helpers.requires_python2()
+    def test_issue170b(self):
+        Q_ = UnitRegistry().Quantity
+        q = Q_('1 kHz')/Q_('100 Hz')
+        iq = long(q)
+        self.assertEqual(iq, long(10))
+        self.assertIsInstance(iq, long)
+
 
 @helpers.requires_numpy()
 class TestIssuesNP(QuantityTestCase):
@@ -443,3 +458,16 @@ class TestIssuesNP(QuantityTestCase):
         q[1] = float('NaN')
         self.assertNotEqual(q[1], 2.)
         self.assertTrue(math.isnan(q[1].magnitude))
+
+    def test_issue171_real_imag(self):
+        qr = [1., 2., 3., 4.] * self.ureg.meter
+        qi = [4., 3., 2., 1.] * self.ureg.meter
+        q = qr + 1j * qi
+        self.assertQuantityEqual(q.real, qr)
+        self.assertQuantityEqual(q.imag, qi)
+
+    def test_issue171_T(self):
+        a = np.asarray([[1., 2., 3., 4.],[4., 3., 2., 1.]])
+        q1 = a * self.ureg.meter
+        q2 = a.T * self.ureg.meter
+        self.assertQuantityEqual(q1.T, q2)

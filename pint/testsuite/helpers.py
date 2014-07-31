@@ -2,7 +2,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pint.compat import unittest, HAS_NUMPY, HAS_UNCERTAINTIES, NUMPY_VER
+from pint.compat import unittest, HAS_NUMPY, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
 
 
 def requires_numpy18():
@@ -24,3 +24,10 @@ def requires_uncertainties():
 def requires_not_uncertainties():
     return unittest.skipIf(HAS_UNCERTAINTIES, 'Requires Uncertainties is not installed.')
 
+
+def requires_python2():
+    return unittest.skipIf(PYTHON3, 'Requires Python 2.X.')
+
+
+def requires_python3():
+    return unittest.skipUnless(PYTHON3, 'Requires Python 3.X.')

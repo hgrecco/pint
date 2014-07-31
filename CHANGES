@@ -2,26 +2,28 @@ Pint Changelog
 ==============
 
 
-0.6 (unreleased)
-----------------
+0.5.3 (unreleased)
+------------------
 
-- Optimized "get_dimensionality" and "get_base_name".
-  (Issue #166 and #167, thanks jbmohler)
-- Renamed ureg.parse_units parameter "to_delta" to "as_delta" to make clear 
-  that no conversion happens. Accordingly, the parameter/property 
-  "default_to_delta" of UnitRegistry was renamed to "default_as_delta".
-  (Issue #158, thanks dalit)
-- Fixed problem when adding two uncertainties.
-  (thanks dalito)
-- Full support for Offset units (e.g. temperature)
-  (Issue #88, #143, #147 and #161, thanks dalito)
+- Nothing changed yet.
 
 
-0.5.2 (unreleased)
+0.5.2 (2014-07-31)
 ------------------
 
 - Changed travis config to use miniconda for faster testing.
 - Added wheel configuration to setup.cfg.
+- Ensure resource streams are closed after reading.
+- Require setuptools.
+  (Issue #169)
+- Implemented real, imag and T Quantity properties.
+  (Issue #171)
+- Implemented __int__ and __long__ for Quantity
+  (Issue #170)
+- Fixed SI prefix error on ureg.convert.
+  (Issue #156, thanks jdreaver)
+- Fixed parsing of multiparemeter contexts.
+  (Issue #174)
 
 
 0.5.1 (2014-06-03)

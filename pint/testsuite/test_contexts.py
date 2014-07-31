@@ -560,6 +560,13 @@ class TestContexts(QuantityTestCase):
         self.assertEqual(set(c.funcs.keys()), set((a, b)))
         self._test_ctx(c)
 
+        s = ['@context(n=1, bla=2) longcontextname',
+             '[length] <-> 1 / [time]: n * c / value / bla']
+
+        c = Context.from_lines(s)
+        self.assertEqual(c.defaults, {'n': 1, 'bla': 2})
+        self.assertEqual(set(c.funcs.keys()), set((a, b)))
+
         # If the variable is not present in the definition, then raise an error
         s = ['@context(n=1) longcontextname',
              '[length] <-> 1 / [time]: c / value']
