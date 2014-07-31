@@ -16,6 +16,8 @@ Pint Changelog
   (Issue #170)
 - Fixed SI prefix error on ureg.convert.
   (Issue #156, thanks jdreaver)
+- Fixed parsing of multiparemeter contexts.
+  (Issue #174)
 
 
 0.5.1 (2014-06-03)
