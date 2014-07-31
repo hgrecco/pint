@@ -2,7 +2,7 @@ Pint Changelog
 ==============
 
 
-0.5.2 (unreleased)
+0.5.2 (2014-07-31)
 ------------------
 
 - Changed travis config to use miniconda for faster testing.
