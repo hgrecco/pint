@@ -1,0 +1,15 @@
+
+0.6 (unreleased)
+----------------
+
+- Optimized "get_dimensionality" and "get_base_name".
+  (Issue #166 and #167, thanks jbmohler)
+- Renamed ureg.parse_units parameter "to_delta" to "as_delta" to make clear 
+  that no conversion happens. Accordingly, the parameter/property 
+  "default_to_delta" of UnitRegistry was renamed to "default_as_delta".
+  (Issue #158, thanks dalit)
+- Fixed problem when adding two uncertainties.
+  (thanks dalito)
+- Full support for Offset units (e.g. temperature)
+  (Issue #88, #143, #147 and #161, thanks dalito)
+
