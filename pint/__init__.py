@@ -115,11 +115,11 @@ def _check_travis(data):   # pragma: no cover
         result = json.loads(get(url % (username, repo, commit)))['state']
         print('Travis says: %s' % result)
         if result != 'success':
-            if not ask('Do you want to continue anyway?'):
+            if not ask('Do you want to continue anyway?', default=False):
                 sys.exit(1)
     except Exception:
         print('Could not determine the commit state with Travis.')
-        if ask('Do you want to continue anyway?'):
+        if ask('Do you want to continue anyway?', default=False):
             sys.exit(1)
 
 
