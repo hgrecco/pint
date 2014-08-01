@@ -1,4 +1,4 @@
-include README AUTHORS CHANGES LICENSE
+include README AUTHORS CHANGES LICENSE CHANGES_DEV
 recursive-include pint *
 recursive-include docs *
 recursive-include bench *
