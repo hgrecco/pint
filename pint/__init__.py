@@ -22,19 +22,12 @@ from .util import pi_theorem, logger
 from .context import Context
 
 
-__version__ = "unknown"
-try:                    # pragma: no cover
-    # try to grab the commit version of our package
-    __version__ = (subprocess.check_output(["git", "describe"],
-                                           stderr=subprocess.STDOUT,
-                                           cwd=os.path.dirname(os.path.abspath(__file__)))).strip()
-except:                 # pragma: no cover
-    # on any error just try to grab the version that is installed on the system
-    try:
-        __version__ = pkg_resources.get_distribution('pint').version
-    except:             # pragma: no cover
-        pass  # we seem to have a local copy without any repository control or installed without setuptools
-              # so the reported version will be __unknown__
+try:                # pragma: no cover
+    __version__ = pkg_resources.get_distribution('pint').version
+except:             # pragma: no cover
+    # we seem to have a local copy not installed without setuptools
+    # so the reported version will be unknown
+    __version__ = "unknown"
 
 
 #: A Registry with the default units and constants.
