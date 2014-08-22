@@ -880,6 +880,9 @@ class UnitRegistry(object):
 
         return self._prefixes[prefix].symbol + self._units[unit_name].symbol
 
+    def _get_symbol(self, name):
+        return self._units[name].symbol
+
     def get_dimensionality(self, input_units):
         """Convert unit or dict of units or dimensions to a dict of base dimensions
 
