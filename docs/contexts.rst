@@ -108,6 +108,15 @@ calculate, for example, the wavelength in water of a laser which on air is 530 n
     >>> f.to('nm', 'sp', n=1.33)
     <Quantity(398.496240602, 'nanometer')>
 
+Contexts can also accept Pint Quantity objects as parameters. For example, the 'chemistry' 
+context accepts the molecular weight of a substance (as a Quantity with dimensions of 
+[mass]/[substance]) to allow conversion between moles and mass.
+
+.. doctest::
+
+    >>> substance = 95 * ureg('g')
+    >>> moles = substance.to('moles', 'chemistry', mw = 5 * ureg('g/mol'))
+    <Quantity(19.0, 'mole')>
 
 
 Defining contexts in a file
@@ -129,7 +138,8 @@ The `@context` directive indicates the beginning of the transformations which ar
 All parameters are named and default values are mandatory. Multiple parameters
 are separated by commas (like in a python function definition). Finally, you provide the name
 of the context (e.g. spectroscopy) and, optionally, a short version of the name (e.g. sp)
-separated by an equal sign.
+separated by an equal sign. See the definition of the 'chemistry' context in default_en.txt 
+for an example of a multiple-parameter context.
 
 Conversions rules are specified by providing source and destination dimensions separated
 using a colon (`:`) from the equation. A special variable named `value` will be replaced
@@ -140,6 +150,8 @@ A single forward arrow (`->`) indicates that the equations is used to transform
 from the first dimension to the second one. A double arrow (`<->`) is used to
 indicate that the transformation operates both ways.
 
+Context definitions are stored and imported exactly like custom units definition file 
+(and can be included in the same file as unit definitions). See "Defining units" for details.
 
 Defining contexts programmatically
 ----------------------------------

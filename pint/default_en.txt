@@ -318,3 +318,26 @@ firkin = barrel / 4
     [temperature] -> [energy]: boltzmann_constant * value
     [energy] -> [temperature]: value / boltzmann_constant
 @end
+
+@context(mw=0,volume=0,solvent_mass=0) chemistry = chem
+    # mw is the molecular weight of the species
+    # volume is the volume of the solution
+    # solvent_mass is the mass of solvent (usually water) in the solution
+    
+    # moles -> mass require the molecular weight
+    [substance] -> [mass]: value * mw
+    [mass] -> [substance]: value / mw
+
+    # moles/volume -> moles require the solution volume
+    [substance] / [volume] -> [substance]: value * volume
+    [substance] -> [substance] / [volume]: value / volume
+
+    # moles/kg solvent -> moles require the solvent (usually water) mass
+    [substance] / [mass] -> [substance]: value * solvent_mass
+    [substance] -> [substance] / [mass]: value / solvent_mass
+
+    # moles/kg solvent -> moles/volume require the solvent mass and the volume
+    [substance] / [mass] -> [substance]/[volume]: value * solvent_mass / volume
+    [substance] -> [substance] / [mass]: value / solvent_mass * volume
+
+@end
