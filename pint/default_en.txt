@@ -322,24 +322,29 @@ firkin = barrel / 4
 @context(mw=0,volume=0,solvent_mass=0) chemistry = chem
     # mw is the molecular weight of the species
     # volume is the volume of the solution
-    # solvent_mass is the mass of solvent (usually water) in the solution
+    # solvent_mass is the mass of solvent in the solution
     
     # moles -> mass require the molecular weight
     [substance] -> [mass]: value * mw
     [mass] -> [substance]: value / mw
 
-    # moles/volume -> moles require the solution volume
-    [substance] / [volume] -> [substance]: value * volume
+    # moles/volume -> mass/volume and moles/mass -> mass / mass 
+    # require the  molecular weight
+    [substance] / [volume] -> [mass] / [volume]: value * mw
+    [mass] / [volume] -> [substance] / [volume]: value / mw
+    [substance] / [mass] -> [mass] / [mass]: value * mw
+    [mass] / [mass] -> [substance] / [mass]: value / mw
+
+    # moles/volume -> moles requires the solution volume
+    [substance] / [length] -> [substance]: value * volume
     [substance] -> [substance] / [volume]: value / volume
 
-    # moles/kg solvent -> moles require the solvent (usually water) mass
+    # moles/mass -> moles requires the solvent (usually water) mass
     [substance] / [mass] -> [substance]: value * solvent_mass
     [substance] -> [substance] / [mass]: value / solvent_mass
 
-    # moles/kg solvent -> moles/volume require the solvent mass and the volume
-    [substance] / [mass] -> [substance] / [volume]: value * solvent_mass / 
-volume
-    [substance] / [volume] -> [substance] / [mass]: value / solvent_mass * 
-volume
+    # moles/mass -> moles/volume require the solvent mass and the volume
+    [substance] / [mass] -> [substance]/[volume]: value * solvent_mass / volume
+    [substance] -> [substance] / [mass]: value / solvent_mass * volume
 
 @end
