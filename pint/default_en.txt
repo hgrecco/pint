@@ -345,6 +345,7 @@ firkin = barrel / 4
 
     # moles/mass -> moles/volume require the solvent mass and the volume
     [substance] / [mass] -> [substance]/[volume]: value * solvent_mass / volume
-    [substance] -> [substance] / [mass]: value / solvent_mass * volume
+    [substance] / [volume] -> [substance] / [mass]: value / solvent_mass * 
+volume
 
 @end
