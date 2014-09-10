@@ -291,7 +291,7 @@ quart = gallon / 4 = liquid_quart = US_liquid_quart
 pint = quart / 2 = pt = liquid_pint = US_liquid_pint
 cup = pint / 2 = liquid_cup = US_liquid_cup
 gill = cup / 2 = liquid_gill = US_liquid_gill
-floz = gill / 4 = fluid_ounce = US_fluid_ounce = US_liquid_ounce
+fluid_ounce = gill / 4 = floz = US_fluid_ounce = US_liquid_ounce
 imperial_bushel = 36.36872 * liter = UK_bushel
 imperial_gallon = imperial_bushel / 8 = UK_gallon
 imperial_quart = imperial_gallon / 4 = UK_quart
