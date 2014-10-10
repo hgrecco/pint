@@ -257,7 +257,7 @@ class Definition(object):
 
 
 def _is_dim(name):
-    return name.startswith('[') and name.endswith(']')
+    return name[0] == u'[' and name[-1] == u']'
 
 
 class PrefixDefinition(Definition):
@@ -841,7 +841,7 @@ class UnitRegistry(object):
             return ''
 
         try:
-            return self._units[name_or_alias].name
+            return self._units[name_or_alias]._name
         except KeyError:
             pass
 
@@ -898,10 +898,10 @@ class UnitRegistry(object):
         if input_units in self._dimensionality_cache:
             return copy.copy(self._dimensionality_cache[input_units])
 
-        accumulator = defaultdict(lambda: 0.0)
+        accumulator = defaultdict(float)
         self._get_dimensionality_recurse(input_units, 1.0, accumulator)
 
-        dims = UnitsContainer(dict((k, v) for k, v in accumulator.items() if v != 0.))
+        dims = UnitsContainer({k: v for k, v in accumulator.items() if v != 0.})
 
         if '[]' in dims:
             del dims['[]']
@@ -909,17 +909,17 @@ class UnitRegistry(object):
         return dims
 
     def _get_dimensionality_recurse(self, ref, exp, accumulator):
-        for key, value in ref.items():
-            exp2 = exp*value
+        for key in ref:
+            exp2 = exp*ref[key]
             if _is_dim(key):
                 reg = self._dimensions[key]
                 if reg.is_base:
                     accumulator[key] += exp2
-                elif reg.reference != None:
+                elif reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
             else:
                 reg = self._units[self.get_name(key)]
-                if reg.reference != None:
+                if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
     def get_base_units(self, input_units, check_nonmult=True):
@@ -944,7 +944,7 @@ class UnitRegistry(object):
         if check_nonmult and input_units in self._base_units_cache:
             return copy.deepcopy(self._base_units_cache[input_units])
 
-        accumulators = [1., defaultdict(lambda: 0.0)]
+        accumulators = [1., defaultdict(float)]
         self._get_base_units(input_units, 1.0, accumulators)
 
         factor = accumulators[0]
@@ -953,21 +953,21 @@ class UnitRegistry(object):
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
             for unit in units.keys():
-                if not isinstance(self._units[unit].converter, ScaleConverter):
+                if not self._units[unit].converter.is_multiplicative:
                     return None, units
 
         return factor, units
 
     def _get_base_units(self, ref, exp, accumulators):
-        for key, value in ref.items():
+        for key in ref:
+            exp2 = exp*ref[key]
             key = self.get_name(key)
             reg = self._units[key]
-            exp2 = exp*value
             if reg.is_base:
                 accumulators[1][key] += exp2
             else:
-                accumulators[0] *= reg.converter.scale ** exp2
-                if reg.reference != None:
+                accumulators[0] *= reg._converter.scale ** exp2
+                if reg.reference is not None:
                     self._get_base_units(reg.reference, exp2, accumulators)
 
     def get_compatible_units(self, input_units):
