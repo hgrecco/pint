@@ -509,6 +509,9 @@ class UnitRegistry(object):
         #: Maps dimensionality (_freeze(UnitsContainer)) to Units (_freeze(UnitsContainer))
         self._dimensionality_cache = TransformDict(_freeze)
 
+        #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
+        self._parse_unit_cache = dict()
+
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
         self.default_as_delta = default_as_delta
@@ -906,6 +909,8 @@ class UnitRegistry(object):
         if '[]' in dims:
             del dims['[]']
 
+        self._dimensionality_cache[input_units] = copy.copy(dims)
+
         return dims
 
     def _get_dimensionality_recurse(self, ref, exp, accumulator):
@@ -1137,9 +1142,10 @@ class UnitRegistry(object):
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
         """
-
-        for suffix, prefix in itertools.product(self._suffixes.keys(), self._prefixes.keys()):
-            if unit_name.startswith(prefix) and unit_name.endswith(suffix):
+        stw = unit_name.startswith
+        edw = unit_name.endswith
+        for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
+            if stw(prefix) and edw(suffix):
                 name = unit_name[len(prefix):]
                 if suffix:
                     name = name[:-len(suffix)]
@@ -1147,13 +1153,13 @@ class UnitRegistry(object):
                         continue
                 if case_sensitive:
                     if name in self._units:
-                        yield (self._prefixes[prefix].name,
-                               self._units[name].name,
+                        yield (self._prefixes[prefix]._name,
+                               self._units[name]._name,
                                self._suffixes[suffix])
                 else:
                     for real_name in self._units_casei.get(name.lower(), ()):
-                        yield (self._prefixes[prefix].name,
-                               self._units[real_name].name,
+                        yield (self._prefixes[prefix]._name,
+                               self._units[real_name]._name,
                                self._suffixes[suffix])
 
     def parse_units(self, input_string, as_delta=None):
@@ -1169,6 +1175,9 @@ class UnitRegistry(object):
             :class:`pint.UndefinedUnitError` if a unit is not in the registry
             :class:`ValueError` if the expression is invalid.
         """
+        if input_string in self._parse_unit_cache:
+            return self._parse_unit_cache[input_string]
+
         if as_delta is None:
             as_delta = self.default_as_delta
 
@@ -1181,8 +1190,9 @@ class UnitRegistry(object):
 
         ret = UnitsContainer()
         many = len(units) > 1
-        for name, value in units.items():
+        for name in units:
             cname = self.get_name(name)
+            value = units[name]
             if not cname:
                 continue
             if as_delta and (many or (not many and value != 1)):
@@ -1190,6 +1200,8 @@ class UnitRegistry(object):
                 if not definition.is_multiplicative:
                     cname = 'delta_' + cname
             ret[cname] = value
+
+        self._parse_unit_cache[input_string] = ret
 
         return ret
 
