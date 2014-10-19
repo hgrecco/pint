@@ -257,7 +257,7 @@ class Definition(object):
 
 
 def _is_dim(name):
-    return name.startswith('[') and name.endswith(']')
+    return name[0] == '[' and name[-1] == ']'
 
 
 class PrefixDefinition(Definition):
@@ -508,6 +508,9 @@ class UnitRegistry(object):
         self._base_units_cache = TransformDict(_freeze)
         #: Maps dimensionality (_freeze(UnitsContainer)) to Units (_freeze(UnitsContainer))
         self._dimensionality_cache = TransformDict(_freeze)
+
+        #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
+        self._parse_unit_cache = dict()
 
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
@@ -841,7 +844,7 @@ class UnitRegistry(object):
             return ''
 
         try:
-            return self._units[name_or_alias].name
+            return self._units[name_or_alias]._name
         except KeyError:
             pass
 
@@ -898,7 +901,7 @@ class UnitRegistry(object):
         if input_units in self._dimensionality_cache:
             return copy.copy(self._dimensionality_cache[input_units])
 
-        accumulator = defaultdict(lambda: 0.0)
+        accumulator = defaultdict(float)
         self._get_dimensionality_recurse(input_units, 1.0, accumulator)
 
         dims = UnitsContainer(dict((k, v) for k, v in accumulator.items() if v != 0.))
@@ -906,20 +909,22 @@ class UnitRegistry(object):
         if '[]' in dims:
             del dims['[]']
 
+        self._dimensionality_cache[input_units] = copy.copy(dims)
+
         return dims
 
     def _get_dimensionality_recurse(self, ref, exp, accumulator):
-        for key, value in ref.items():
-            exp2 = exp*value
+        for key in ref:
+            exp2 = exp*ref[key]
             if _is_dim(key):
                 reg = self._dimensions[key]
                 if reg.is_base:
                     accumulator[key] += exp2
-                elif reg.reference != None:
+                elif reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
             else:
                 reg = self._units[self.get_name(key)]
-                if reg.reference != None:
+                if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
     def get_base_units(self, input_units, check_nonmult=True):
@@ -944,7 +949,7 @@ class UnitRegistry(object):
         if check_nonmult and input_units in self._base_units_cache:
             return copy.deepcopy(self._base_units_cache[input_units])
 
-        accumulators = [1., defaultdict(lambda: 0.0)]
+        accumulators = [1., defaultdict(float)]
         self._get_base_units(input_units, 1.0, accumulators)
 
         factor = accumulators[0]
@@ -953,21 +958,21 @@ class UnitRegistry(object):
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
             for unit in units.keys():
-                if not isinstance(self._units[unit].converter, ScaleConverter):
+                if not self._units[unit].converter.is_multiplicative:
                     return None, units
 
         return factor, units
 
     def _get_base_units(self, ref, exp, accumulators):
-        for key, value in ref.items():
+        for key in ref:
+            exp2 = exp*ref[key]
             key = self.get_name(key)
             reg = self._units[key]
-            exp2 = exp*value
             if reg.is_base:
                 accumulators[1][key] += exp2
             else:
-                accumulators[0] *= reg.converter.scale ** exp2
-                if reg.reference != None:
+                accumulators[0] *= reg._converter.scale ** exp2
+                if reg.reference is not None:
                     self._get_base_units(reg.reference, exp2, accumulators)
 
     def get_compatible_units(self, input_units):
@@ -1137,9 +1142,10 @@ class UnitRegistry(object):
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
         """
-
-        for suffix, prefix in itertools.product(self._suffixes.keys(), self._prefixes.keys()):
-            if unit_name.startswith(prefix) and unit_name.endswith(suffix):
+        stw = unit_name.startswith
+        edw = unit_name.endswith
+        for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
+            if stw(prefix) and edw(suffix):
                 name = unit_name[len(prefix):]
                 if suffix:
                     name = name[:-len(suffix)]
@@ -1147,13 +1153,13 @@ class UnitRegistry(object):
                         continue
                 if case_sensitive:
                     if name in self._units:
-                        yield (self._prefixes[prefix].name,
-                               self._units[name].name,
+                        yield (self._prefixes[prefix]._name,
+                               self._units[name]._name,
                                self._suffixes[suffix])
                 else:
                     for real_name in self._units_casei.get(name.lower(), ()):
-                        yield (self._prefixes[prefix].name,
-                               self._units[real_name].name,
+                        yield (self._prefixes[prefix]._name,
+                               self._units[real_name]._name,
                                self._suffixes[suffix])
 
     def parse_units(self, input_string, as_delta=None):
@@ -1169,6 +1175,9 @@ class UnitRegistry(object):
             :class:`pint.UndefinedUnitError` if a unit is not in the registry
             :class:`ValueError` if the expression is invalid.
         """
+        if input_string in self._parse_unit_cache:
+            return self._parse_unit_cache[input_string]
+
         if as_delta is None:
             as_delta = self.default_as_delta
 
@@ -1181,8 +1190,9 @@ class UnitRegistry(object):
 
         ret = UnitsContainer()
         many = len(units) > 1
-        for name, value in units.items():
+        for name in units:
             cname = self.get_name(name)
+            value = units[name]
             if not cname:
                 continue
             if as_delta and (many or (not many and value != 1)):
@@ -1190,6 +1200,8 @@ class UnitRegistry(object):
                 if not definition.is_multiplicative:
                     cname = 'delta_' + cname
             ret[cname] = value
+
+        self._parse_unit_cache[input_string] = ret
 
         return ret
 
