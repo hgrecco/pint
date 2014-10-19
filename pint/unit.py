@@ -257,7 +257,7 @@ class Definition(object):
 
 
 def _is_dim(name):
-    return name[0] == u'[' and name[-1] == u']'
+    return name[0] == '[' and name[-1] == ']'
 
 
 class PrefixDefinition(Definition):
@@ -904,7 +904,7 @@ class UnitRegistry(object):
         accumulator = defaultdict(float)
         self._get_dimensionality_recurse(input_units, 1.0, accumulator)
 
-        dims = UnitsContainer({k: v for k, v in accumulator.items() if v != 0.})
+        dims = UnitsContainer(dict((k, v) for k, v in accumulator.items() if v != 0.))
 
         if '[]' in dims:
             del dims['[]']
