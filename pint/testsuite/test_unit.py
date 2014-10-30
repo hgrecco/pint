@@ -12,8 +12,9 @@ from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        DimensionDefinition, _freeze, Converter, UnitRegistry,
                        LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.compat import u, unittest, np
+from pint.compat import u, unittest, np, string_types
 from pint.testsuite import QuantityTestCase, helpers, BaseTestCase
+from pint.testsuite.parameterized import ParameterizedTestCase
 
 
 class TestConverter(BaseTestCase):
@@ -231,6 +232,9 @@ class TestRegistry(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
+    def setup(self):
+        self.ureg.autoconvert_offset_to_baseunit = False
+
     def test_base(self):
         ureg = UnitRegistry(None)
         ureg.define('meter = [length]')
@@ -324,16 +328,16 @@ class TestRegistry(QuantityTestCase):
         q = self.Q_(1, 'g/(m**2*s)')
         self.assertEqual(self.Q_(q.magnitude, str(q.units)), q)
 
-    def test_to_delta(self):
+    def test_as_delta(self):
         parse = self.ureg.parse_units
-        self.assertEqual(parse('kelvin', to_delta=True), UnitsContainer(kelvin=1))
-        self.assertEqual(parse('kelvin', to_delta=False), UnitsContainer(kelvin=1))
-        self.assertEqual(parse('kelvin**(-1)', to_delta=True), UnitsContainer(kelvin=-1))
-        self.assertEqual(parse('kelvin**(-1)', to_delta=False), UnitsContainer(kelvin=-1))
-        self.assertEqual(parse('kelvin**2', to_delta=True), UnitsContainer(kelvin=2))
-        self.assertEqual(parse('kelvin**2', to_delta=False), UnitsContainer(kelvin=2))
-        self.assertEqual(parse('kelvin*meter', to_delta=True), UnitsContainer(kelvin=1, meter= 1))
-        self.assertEqual(parse('kelvin*meter', to_delta=False), UnitsContainer(kelvin=1, meter=1))
+        self.assertEqual(parse('kelvin', as_delta=True), UnitsContainer(kelvin=1))
+        self.assertEqual(parse('kelvin', as_delta=False), UnitsContainer(kelvin=1))
+        self.assertEqual(parse('kelvin**(-1)', as_delta=True), UnitsContainer(kelvin=-1))
+        self.assertEqual(parse('kelvin**(-1)', as_delta=False), UnitsContainer(kelvin=-1))
+        self.assertEqual(parse('kelvin**2', as_delta=True), UnitsContainer(kelvin=2))
+        self.assertEqual(parse('kelvin**2', as_delta=False), UnitsContainer(kelvin=2))
+        self.assertEqual(parse('kelvin*meter', as_delta=True), UnitsContainer(kelvin=1, meter= 1))
+        self.assertEqual(parse('kelvin*meter', as_delta=False), UnitsContainer(kelvin=1, meter=1))
 
     def test_name(self):
         self.assertRaises(UndefinedUnitError, self.ureg.get_name, 'asdf')
@@ -356,18 +360,6 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(self.ureg.get_symbol('feet'), 'ft')
         self.assertEqual(self.ureg.get_symbol('international_foot'), 'ft')
         self.assertEqual(self.ureg.get_symbol('international_inch'), 'in')
-
-    @unittest.expectedFailure
-    def test_delta_in_diff(self):
-        """This might be supported in future versions
-        """
-        xk = 1 * self.ureg.kelvin
-        yk = 2 * self.ureg.kelvin
-        yf = yk.to('degF')
-        yc = yk.to('degC')
-        self.assertEqual(yk - xk, 1 * self.ureg.kelvin)
-        self.assertEqual(yf - xk, 1 * self.ureg.kelvin)
-        self.assertEqual(yc - xk, 1 * self.ureg.kelvin)
 
     def test_pint(self):
         p = self.ureg.pint
@@ -440,12 +432,13 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(h2(3, 1), (3 * ureg.meter, 1 * ureg.cm))
 
     def test_to_ref_vs_to(self):
+        self.ureg.autoconvert_offset_to_baseunit = True
         q = 8. * self.ureg.inch
         t = 8. * self.ureg.degF
         dt = 8. * self.ureg.delta_degF
         self.assertEqual(q.to('cm').magnitude, self.ureg._units['inch'].converter.to_reference(8.))
         self.assertEqual(t.to('kelvin').magnitude, self.ureg._units['degF'].converter.to_reference(8.))
-        self.assertEqual(dt.to('delta_kelvin').magnitude, self.ureg._units['delta_degF'].converter.to_reference(8.))
+        self.assertEqual(dt.to('kelvin').magnitude, self.ureg._units['delta_degF'].converter.to_reference(8.))
 
     def test_redefinition(self):
         d = UnitRegistry().define
@@ -473,7 +466,7 @@ class TestRegistry(QuantityTestCase):
         # Conversions with single units take a different codepath than
         # Conversions with more than one unit.
         src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
-        src_dst2 = UnitsContainer(meter=1, seconds=-1), UnitsContainer(inch=1, minutes=-1)
+        src_dst2 = UnitsContainer(meter=1, second=-1), UnitsContainer(inch=1, minute=-1)
         for src, dst in (src_dst1, src_dst2):
             v = ureg.convert(1, src, dst),
 
@@ -598,3 +591,52 @@ class TestErrors(BaseTestCase):
         msg = "Cannot convert from 'a' (c) to 'b' (d)msg"
         ex = DimensionalityError('a', 'b', 'c', 'd', 'msg')
         self.assertEqual(str(ex), msg)
+
+
+class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
+
+    # The dicts in convert_with_offset are used to create a UnitsContainer.
+    # We create UnitsContainer to avoid any auto-conversion of units.
+    convert_with_offset = [
+        (({'degC': 1}, {'degC': 1}), 10),
+        (({'degC': 1}, {'kelvin': 1}), 283.15),
+        (({'degC': 1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
+        (({'degC': 1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 283150),
+
+        (({'kelvin': 1}, {'degC': 1}), -263.15),
+        (({'kelvin': 1}, {'kelvin': 1}), 10),
+        (({'kelvin': 1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
+        (({'kelvin': 1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 10000),
+
+        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1}), 'error'),
+        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1}), 'error'),
+        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 10),
+        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 'error'),
+
+        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1}), -273.14),
+        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1}), 0.01),
+        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
+        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 10),
+
+        (({'degC': 2}, {'kelvin': 2}), 'error'),
+        (({'degC': 1, 'degF': 1}, {'kelvin': 2}), 'error'),
+        (({'degC': 1, 'kelvin': 1}, {'kelvin': 2}), 'error'),
+        ]
+
+    @ParameterizedTestCase.parameterize(("input", "expected_output"),
+                                        convert_with_offset)
+    def test_to_and_from_offset_units(self, input_tuple, expected):
+        src, dst = input_tuple
+        src, dst = UnitsContainer(src), UnitsContainer(dst)
+        value = 10.
+        convert = self.ureg.convert
+        if isinstance(expected, string_types):
+            self.assertRaises(DimensionalityError, convert, value, src, dst)
+            if src != dst:
+                self.assertRaises(DimensionalityError, convert, value, dst, src)
+        else:
+            self.assertQuantityAlmostEqual(convert(value, src, dst),
+                                           expected, atol=0.001)
+            if src != dst:
+                self.assertQuantityAlmostEqual(convert(expected, dst, src),
+                                               value, atol=0.001)

@@ -33,9 +33,11 @@ before_install:
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
 
+  - export ENV_NAME=travis
+
 install:
-  - conda create -c mwcraig --yes -n env_name python=$TRAVIS_PYTHON_VERSION pip
-  - source activate env_name
+  - conda create -c mwcraig --yes -n $ENV_NAME python=$TRAVIS_PYTHON_VERSION pip
+  - source activate $ENV_NAME
   - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install uncertainties; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install -c mwcraig --yes numpy==$NUMPY_VERSION; fi

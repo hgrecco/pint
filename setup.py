@@ -29,7 +29,7 @@ __doc__ = long_description
 
 setup(
     name='Pint',
-    version='0.5.3.dev0',
+    version='0.6.dev0',
     description='Physical quantities module',
     long_description=long_description,
     keywords='physical quantities unit conversion science',
@@ -47,6 +47,9 @@ setup(
     entry_points={
          'zest.releaser.releaser.after_checkout': [
             'pyroma = pint:_run_pyroma',
+         ],
+         'zest.releaser.prereleaser.before': [
+            'travis = pint:_check_travis',
          ],
       },
     license='BSD',
