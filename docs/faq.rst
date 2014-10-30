@@ -13,6 +13,8 @@ Pint is a unit and sounds like Python in the first syllable. Most important, it 
 You mention other similar Python libraries. Can you point me to those?
 ----------------------------------------------------------------------
 
+`natu <http://kdavies4.github.io/natu/>`_
+
 `Buckingham <https://code.google.com/p/buckingham/>`_
 
 `Magnitude <http://github.com/juanre/magnitude.git>`_
