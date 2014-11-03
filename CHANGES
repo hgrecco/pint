@@ -5,8 +5,10 @@ Pint Changelog
 0.6 (unreleased)
 ----------------
 
-- Faster conversions through caching and other performance improvements
+- Faster conversions through caching and other performance improvements.
   (Issue #193, thanks MatthieuDartiailh)
+- Better error messages on Quantity.__setitem__.
+  (Issue #191)
 - Fixed abbreviation of fluid_ounce.
   (Issue #187, thanks hsoft)
 - Defined Angstrom symbol.
@@ -19,7 +21,7 @@ Pint Changelog
   (Issue #179, thanks rsking84)
 - Optimized "get_dimensionality" and "get_base_name".
   (Issue #166 and #167, thanks jbmohler)
-- Renamed ureg.parse_units parameter "to_delta" to "as_delta" to make clear
+- Renamed ureg.parse_units parameter "to_delta" to "as_delta" to make clear.
   that no conversion happens. Accordingly, the parameter/property
   "default_to_delta" of UnitRegistry was renamed to "default_as_delta".
   (Issue #158, thanks dalit)

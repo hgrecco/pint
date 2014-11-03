@@ -1024,7 +1024,10 @@ class _Quantity(object):
 
             if isinstance(factor, self.__class__):
                 if not factor.dimensionless:
-                    raise ValueError
+                    raise DimensionalityError(value, self.units,
+                                              extra_msg='. Assign a quantity with the same dimensionality or '
+                                                        'access the magnitude directly as '
+                                                        '`obj.magnitude[%s] = %s`' % (key, value))
                 self._magnitude[key] = factor.magnitude
             else:
                 self._magnitude[key] = factor
