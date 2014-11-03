@@ -48,9 +48,6 @@ setup(
          'zest.releaser.releaser.after_checkout': [
             'pyroma = pint:_run_pyroma',
          ],
-         'zest.releaser.prereleaser.before': [
-            'travis = pint:_check_travis',
-         ],
       },
     license='BSD',
     classifiers=[
