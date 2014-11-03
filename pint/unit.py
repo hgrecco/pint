@@ -529,6 +529,9 @@ class UnitRegistry(object):
 
         self._build_cache()
 
+    def __name__(self):
+        return 'UnitRegistry'
+
     def __getattr__(self, item):
         return self.Quantity(1, item)
 

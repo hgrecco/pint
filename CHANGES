@@ -19,6 +19,8 @@ Pint Changelog
   (Issue #176 and 179, thanks rsking84)
 - Added Chemistry context.
   (Issue #179, thanks rsking84)
+- Fix help(UnitRegisty)
+  (Issue #168)
 - Optimized "get_dimensionality" and "get_base_name".
   (Issue #166 and #167, thanks jbmohler)
 - Renamed ureg.parse_units parameter "to_delta" to "as_delta" to make clear.
