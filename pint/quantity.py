@@ -49,6 +49,8 @@ def _check(q1, other):
         # Both quantities are the same class and therefore from the same registry.
         # (Each registry has its own Quantity class)
         return True
+    elif q1._REGISTRY is getattr(other, '_REGISTRY', None):
+        return True
     elif isinstance(other, _Quantity):
         # The other object is a Quantity but from another registry.
         raise ValueError('Cannot operate between quantities of different registries')
