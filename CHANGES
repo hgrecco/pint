@@ -5,6 +5,8 @@ Pint Changelog
 0.6 (unreleased)
 ----------------
 
+- Fix operations with measurments and user defined units.
+  (Issue #204)
 - Faster conversions through caching and other performance improvements.
   (Issue #193, thanks MatthieuDartiailh)
 - Better error messages on Quantity.__setitem__.
