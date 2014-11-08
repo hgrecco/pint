@@ -9,7 +9,7 @@ Pint: a Python units library
 
 Pint is Python package to define, operate and manipulate **physical quantities**: the product of a numerical value and a unit of measurement. It allows arithmetic operations between them and conversions from and to different units.
 
-It is distributed with a comprehensive list of physical units, prefixes and constants. Due to its modular design, you can extend (or even rewrite!) the complete list without changing the source code.
+It is distributed with a comprehensive list of physical units, prefixes and constants. Due to its modular design, you can extend (or even rewrite!) the complete list without changing the source code. It supports a lot of numpy mathematical operations without monkey patching or wrapping numpy.
 
 It has a complete test coverage. It runs in Python 2.6+ and 3.2+ with no other dependency. It licensed under BSD.
 
