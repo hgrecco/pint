@@ -44,7 +44,8 @@ install:
   - pip install coverage coveralls
 
 script:
-  - python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test
+  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
+  - if [ $TRAVIS_PYTHON_VERSION != '2.6' ]; python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
   - coverage combine
   - coverage report -m
 
