@@ -32,7 +32,7 @@ You can now simply use the registry in the following way:
    >>> print(repr(time))
    <Quantity(8.0, 'second')>
 
-In this code `distance` and `time` are physical quantities objects (`Quantity`). Physical quantities can be queried for the magnitude, units, and dimensionality:
+In this code `distance` and `time` are physical quantity objects (`Quantity`). Physical quantities can be queried for their magnitude, units, and dimensionality:
 
 .. doctest::
 
@@ -108,7 +108,7 @@ In some cases it is useful to define physical quantities objects using the class
    >>> Q_(1.78, ureg.meter) == 1.78 * ureg.meter
    True
 
-(I tend to abbreviate Quantity as `Q_`) The in-built parse allows to recognize prefixed and pluralized units even though they are not in the definition list:
+(I tend to abbreviate Quantity as `Q_`) The built-in parser recognizes prefixed and pluralized units even though they are not in the definition list:
 
 .. doctest::
 
@@ -133,7 +133,7 @@ You can add your own units to the registry or build your own list. More info on 
 String parsing
 --------------
 
-Pint can also handle units and units provided as strings:
+Pint can also handle units provided as strings:
 
 .. doctest::
 
@@ -215,14 +215,17 @@ But Pint also extends the standard formatting capabilities for unicode and latex
    >>> 'The HTML representation is {:H}'.format(accel)
    'The HTML representation is 1.3 meter/second<sup>2</sup>'
 
-If you want to use abbreviated unit names, suffix the specification with `~`:
+If you want to use abbreviated unit names, prefix the specification with `~`:
 
 .. doctest::
 
    >>> 'The str is {:~}'.format(accel)
    'The str is 1.3 m / s ** 2'
+   >>> print('The pretty representation is {:~P}'.format(accel))
+   The pretty representation is 1.3 m²/s
 
-The same is true for latex (`L`), pretty (`P`) and HTML (`H`) specs.
+
+The same is true for latex (`L`) and HTML (`H`) specs.
 
 Finally, you can specify a default format specification:
 
@@ -236,7 +239,7 @@ Finally, you can specify a default format specification:
 Using Pint in your projects
 ---------------------------
 
-If you use Pint in multiple modules within you Python package, you normally want to avoid creating multiple instances of the unit registry.
+If you use Pint in multiple modules within your Python package, you normally want to avoid creating multiple instances of the unit registry.
 The best way to do this is by instantiating the registry in a single place. For example, you can add the following code to your package `__init__.py`::
 
    from pint import UnitRegistry
