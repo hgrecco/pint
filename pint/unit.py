@@ -21,7 +21,7 @@ from decimal import Decimal
 from contextlib import contextmanager, closing
 from io import open, StringIO
 from numbers import Number
-from collections import defaultdict
+from collections import defaultdict, Counter
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
 from .context import Context, ContextChain, _freeze
@@ -1394,3 +1394,16 @@ class LazyRegistry(object):
     def __call__(self, *args, **kwargs):
         self.__init()
         return self(*args, **kwargs)
+
+
+def to_common(quantities):
+    """
+    Given: an iterable of Quantities
+    Return: the quantities converted to the unit most frequently
+            occuring
+    """
+    quants = list(quantities)
+    data = Counter(str(q.units) for q in quants)
+    most_common = data.most_common(1)[0][0]
+    return [q.to(most_common) for q in quants]
+
