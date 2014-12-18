@@ -206,7 +206,7 @@ But Pint also extends the standard formatting capabilities for unicode and latex
 
    >>> accel = 1.3 * ureg['meter/second**2']
    >>> # Pretty print
-   >>> 'The pretty representation is {:P}'.format(accel)
+   >>> print('The pretty representation is {:P}'.format(accel))
    'The pretty representation is 1.3 meter/second²'
    >>> # Latex print
    >>> 'The latex representation is {:L}'.format(accel)
@@ -214,6 +214,10 @@ But Pint also extends the standard formatting capabilities for unicode and latex
    >>> # HTML print
    >>> 'The HTML representation is {:H}'.format(accel)
    'The HTML representation is 1.3 meter/second<sup>2</sup>'
+
+.. note:: 
+   In Python 2, run ``from __future__ import unicode_literals``
+   or prefix pretty  formatted strings with `u` to prevent ``UnicodeEncodeError``.
 
 If you want to use abbreviated unit names, prefix the specification with `~`:
 
