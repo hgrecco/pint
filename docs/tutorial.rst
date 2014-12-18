@@ -200,6 +200,12 @@ Pint's physical quantities can be easily printed:
    >>> print('The magnitude is {0.magnitude} with units {0.units}'.format(accel))
    The magnitude is 1.3 with units meter / second ** 2
 
+
+.. note::
+   In Python 2.6, unnumbered placeholders are invalid. Therefore you need to write `{0}` instead
+   of `{}`, `{0!s}` instead of `{!s}` in string formatting operations.
+
+
 But Pint also extends the standard formatting capabilities for unicode and latex representations:
 
 .. doctest::
