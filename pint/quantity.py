@@ -19,7 +19,7 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError)
 from .definitions import UnitDefinition
 from .compat import string_types, ndarray, np, _to_magnitude, long_type
-from .util import logger,UnitsContainer
+from .util import logger, UnitsContainer, SharedRegistryObject
 
 
 def _eq(first, second, check_all):
@@ -37,29 +37,7 @@ class _Exception(Exception):            # pragma: no cover
         self.internal = internal
 
 
-def _check(q1, other):
-    """Check Quantities before math operations.
-
-    Return True if q1 and other are from the same class.
-    Raise a ValueError if other has a different _REGISTRY than q1.
-
-    In other case, return False.
-    """
-
-    if isinstance(other, q1.__class__):
-        # Both quantities are the same class and therefore from the same registry.
-        # (Each registry has its own Quantity class)
-        return True
-    elif q1._REGISTRY is getattr(other, '_REGISTRY', None):
-        return True
-    elif isinstance(other, _Quantity):
-        # The other object is a Quantity but from another registry.
-        raise ValueError('Cannot operate between quantities of different registries')
-
-    return False
-
-
-class _Quantity(object):
+class _Quantity(SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -295,7 +273,7 @@ class _Quantity(object):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
-        if not _check(self, other):
+        if not self._check(other):
             # other not from same Registry or not a Quantity
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
@@ -392,7 +370,7 @@ class _Quantity(object):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
-        if not _check(self, other):
+        if not self._check(other):
             # other not from same Registry or not a Quantity
             if _eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
@@ -523,7 +501,7 @@ class _Quantity(object):
         offset_units_self = self._get_non_multiplicative_units()
         no_offset_units_self = len(offset_units_self)
 
-        if not _check(self, other):
+        if not self._check(other):
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units,
                                               getattr(other, 'units', ''))
@@ -573,7 +551,7 @@ class _Quantity(object):
         offset_units_self = self._get_non_multiplicative_units()
         no_offset_units_self = len(offset_units_self)
 
-        if not _check(self, other):
+        if not self._check(other):
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units,
                                               getattr(other, 'units', ''))

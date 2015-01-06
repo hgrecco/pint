@@ -577,3 +577,25 @@ def string_preprocessor(input_string):
 
 def _is_dim(name):
     return name[0] == '[' and name[-1] == ']'
+
+
+class SharedRegistryObject(object):
+
+    def _check(self, other):
+        """Check if the other object use a registry and if so that it is the
+        same registry.
+
+        Return True is both use a registry and they use the same, False is
+        other don't use a registry and raise ValueError if other don't use the
+        same unit registry.
+
+        """
+        if self._REGISTRY is getattr(other, '_REGISTRY', None):
+            return True
+
+        elif isinstance(other, SharedRegistryObject):
+            mess = 'Cannot operate with {0} and {1} of different registries.'
+            raise ValueError(mess.format(self.__class__.__name__,
+                                         other.__class__.__name__))
+        else:
+            return False
