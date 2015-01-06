@@ -3,13 +3,11 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import math
-import copy
 import itertools
-import operator as op
 
 from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
                        Definition, PrefixDefinition, UnitDefinition,
-                       DimensionDefinition, _freeze, Converter, UnitRegistry,
+                       DimensionDefinition, Converter, UnitRegistry,
                        LazyRegistry, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, unittest, np, string_types
@@ -118,114 +116,6 @@ class TestDefinition(BaseTestCase):
         x = Definition.from_string('[speed] = [length]/[time]')
         self.assertIsInstance(x, DimensionDefinition)
         self.assertEqual(x.reference, UnitsContainer({'[length]': 1, '[time]': -1}))
-
-
-class TestUnitsContainer(QuantityTestCase):
-
-    def _test_inplace(self, operator, value1, value2, expected_result):
-        value1 = copy.copy(value1)
-        value2 = copy.copy(value2)
-        id1 = id(value1)
-        id2 = id(value2)
-        value1 = operator(value1, value2)
-        value2_cpy = copy.copy(value2)
-        self.assertEqual(value1, expected_result)
-        self.assertEqual(id1, id(value1))
-        self.assertEqual(value2, value2_cpy)
-        self.assertEqual(id2, id(value2))
-
-    def _test_not_inplace(self, operator, value1, value2, expected_result):
-        id1 = id(value1)
-        id2 = id(value2)
-
-        value1_cpy = copy.copy(value1)
-        value2_cpy = copy.copy(value2)
-
-        result = operator(value1, value2)
-
-        self.assertEqual(expected_result, result)
-        self.assertEqual(value1, value1_cpy)
-        self.assertEqual(value2, value2_cpy)
-        self.assertNotEqual(id(result), id1)
-        self.assertNotEqual(id(result), id2)
-
-    def test_unitcontainer_creation(self):
-        x = UnitsContainer(meter=1, second=2)
-        y = UnitsContainer({'meter': 1.0, 'second': 2.0})
-        self.assertIsInstance(x['meter'], float)
-        self.assertEqual(x, y)
-        self.assertIsNot(x, y)
-        z = copy.copy(x)
-        self.assertEqual(x, z)
-        self.assertIsNot(x, z)
-        z = UnitsContainer(x)
-        self.assertEqual(x, z)
-        self.assertIsNot(x, z)
-
-    def test_unitcontainer_repr(self):
-        x = UnitsContainer()
-        self.assertEqual(str(x), 'dimensionless')
-        self.assertEqual(repr(x), '<UnitsContainer({})>')
-        x = UnitsContainer(meter=1, second=2)
-        self.assertEqual(str(x), 'meter * second ** 2')
-        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1.0, 'second': 2.0})>")
-        x = UnitsContainer(meter=1, second=2.5)
-        self.assertEqual(str(x), 'meter * second ** 2.5')
-        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1.0, 'second': 2.5})>")
-
-    def test_unitcontainer_bool(self):
-        self.assertTrue(UnitsContainer(meter=1, second=2))
-        self.assertFalse(UnitsContainer())
-
-    def test_unitcontainer_comp(self):
-        x = UnitsContainer(meter=1, second=2)
-        y = UnitsContainer(meter=1., second=2)
-        z = UnitsContainer(meter=1, second=3)
-        self.assertTrue(x == y)
-        self.assertFalse(x != y)
-        self.assertFalse(x == z)
-        self.assertTrue(x != z)
-
-    def test_unitcontainer_arithmetic(self):
-        x = UnitsContainer(meter=1)
-        y = UnitsContainer(second=1)
-        z = UnitsContainer(meter=1, second=-2)
-
-        self._test_not_inplace(op.mul, x, y, UnitsContainer(meter=1, second=1))
-        self._test_not_inplace(op.truediv, x, y, UnitsContainer(meter=1, second=-1))
-        self._test_not_inplace(op.pow, z, 2, UnitsContainer(meter=2, second=-4))
-        self._test_not_inplace(op.pow, z, -2, UnitsContainer(meter=-2, second=4))
-
-        self._test_inplace(op.imul, x, y, UnitsContainer(meter=1, second=1))
-        self._test_inplace(op.itruediv, x, y, UnitsContainer(meter=1, second=-1))
-        self._test_inplace(op.ipow, z, 2, UnitsContainer(meter=2, second=-4))
-        self._test_inplace(op.ipow, z, -2, UnitsContainer(meter=-2, second=4))
-
-    def test_string_comparison(self):
-        x = UnitsContainer(meter=1)
-        y = UnitsContainer(second=1)
-        z = UnitsContainer(meter=1, second=-2)
-        self.assertEqual(x, 'meter')
-        self.assertEqual('meter', x)
-        self.assertNotEqual(x, 'meter ** 2')
-        self.assertNotEqual(x, 'meter * meter')
-        self.assertNotEqual(x, 'second')
-        self.assertEqual(y, 'second')
-        self.assertEqual(z, 'meter/second/second')
-
-    def test_invalid(self):
-        self.assertRaises(TypeError, UnitsContainer, {1: 2})
-        self.assertRaises(TypeError, UnitsContainer, {'1': '2'})
-        d = UnitsContainer()
-        self.assertRaises(TypeError, d.__setitem__, 1, 2)
-        self.assertRaises(TypeError, d.__setitem__, '1', '2')
-        self.assertRaises(TypeError, d.__mul__, list())
-        self.assertRaises(TypeError, d.__imul__, list())
-        self.assertRaises(TypeError, d.__pow__, list())
-        self.assertRaises(TypeError, d.__ipow__, list())
-        self.assertRaises(TypeError, d.__truediv__, list())
-        self.assertRaises(TypeError, d.__itruediv__, list())
-        self.assertRaises(TypeError, d.__rtruediv__, list())
 
 
 class TestRegistry(QuantityTestCase):
@@ -524,18 +414,18 @@ class TestCompatibleUnits(QuantityTestCase):
 
     def test_context_sp(self):
 
-
         gd = self.ureg.get_dimensionality
 
         # length, frequency, energy
-        valid = [gd(self.ureg.meter.units), gd(self.ureg.hertz.units), gd(self.ureg.joule.units)]
+        valid = [gd(self.ureg.meter.units), gd(self.ureg.hertz.units),
+                 gd(self.ureg.joule.units)]
 
         with self.ureg.context('sp'):
             equiv = self.ureg.get_compatible_units(self.ureg.meter.units)
             result = set()
             for eq in equiv:
                 dim = gd(eq)
-                result.add(_freeze(dim))
+                result.add(dim)
                 self.assertIn(dim, valid)
 
             self.assertEqual(len(result), len(valid))

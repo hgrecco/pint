@@ -12,7 +12,6 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import os
-import copy
 import math
 import itertools
 import functools
@@ -20,15 +19,14 @@ import pkg_resources
 from decimal import Decimal
 from contextlib import contextmanager, closing
 from io import open, StringIO
-from numbers import Number
 from collections import defaultdict
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 
-from .context import Context, ContextChain, _freeze
+from .context import Context, ContextChain
 from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
-                   string_preprocessor, find_connected_nodes, find_shortest_path)
-from .compat import tokenizer, string_types, NUMERIC_TYPES, TransformDict
-from .formatting import format_unit
+                   string_preprocessor, find_connected_nodes,
+                   find_shortest_path, UnitsContainer)
+from .compat import tokenizer, string_types
 
 
 class DefinitionSyntaxError(ValueError):
@@ -301,9 +299,10 @@ class UnitDefinition(Definition):
                 raise ValueError('Cannot mix dimensions and units in the same definition. '
                                  'Base units must be referenced only to dimensions. '
                                  'Derived units must be referenced only to units.')
-            self.reference = UnitsContainer(converter.items())
+            self.reference = UnitsContainer(converter)
             if modifiers.get('offset', 0.) != 0.:
-                converter = OffsetConverter(converter.scale, modifiers['offset'])
+                converter = OffsetConverter(converter.scale,
+                                            modifiers['offset'])
             else:
                 converter = ScaleConverter(converter.scale)
 
@@ -327,127 +326,9 @@ class DimensionDefinition(Definition):
             else:
                 raise ValueError('Base dimensions must be referenced to None. '
                                  'Derived dimensions must only be referenced to dimensions.')
-            self.reference = UnitsContainer(converter.items())
+            self.reference = UnitsContainer(converter)
 
         super(DimensionDefinition, self).__init__(name, symbol, aliases, converter=None)
-
-
-class UnitsContainer(dict):
-    """The UnitsContainer stores the product of units and their respective
-    exponent and implements the corresponding operations
-    """
-    __slots__ = ()
-
-    def __init__(self, *args, **kwargs):
-        dict.__init__(self, *args, **kwargs)
-        for key, value in self.items():
-            if not isinstance(key, string_types):
-                raise TypeError('key must be a str, not {0}'.format(type(key)))
-            if not isinstance(value, Number):
-                raise TypeError('value must be a number, not {0}'.format(type(value)))
-            if not isinstance(value, float):
-                self[key] = float(value)
-
-    def __missing__(self, key):
-        return 0.0
-
-    def __setitem__(self, key, value):
-        if not isinstance(key, string_types):
-            raise TypeError('key must be a str, not {0}'.format(type(key)))
-        if not isinstance(value, NUMERIC_TYPES):
-            raise TypeError('value must be a NUMERIC_TYPES, not {0}'.format(type(value)))
-        dict.__setitem__(self, key, float(value))
-
-    def add(self, key, value):
-        newval = self.__getitem__(key) + value
-        if newval:
-            self.__setitem__(key, newval)
-        else:
-            del self[key]
-
-    def __eq__(self, other):
-        if isinstance(other, string_types):
-            other = ParserHelper.from_string(other)
-            other = dict(other.items())
-        return dict.__eq__(self, other)
-
-    def __str__(self):
-      return self.__format__('')
-
-    def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
-        return '<UnitsContainer({0})>'.format(tmp)
-
-    def __format__(self, spec):
-        return format_unit(self, spec)
-
-    def __copy__(self):
-        ret = self.__class__()
-        ret.update(self)
-        return ret
-
-    def __imul__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError('Cannot multiply UnitsContainer by {0}'.format(type(other)))
-        for key, value in other.items():
-            self[key] += value
-        keys = [key for key, value in self.items() if value == 0]
-        for key in keys:
-            del self[key]
-
-        return self
-
-    def __mul__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError('Cannot multiply UnitsContainer by {0}'.format(type(other)))
-        ret = copy.copy(self)
-        ret *= other
-        return ret
-
-    __rmul__ = __mul__
-
-    def __ipow__(self, other):
-        if not isinstance(other, NUMERIC_TYPES):
-            raise TypeError('Cannot power UnitsContainer by {0}'.format(type(other)))
-        for key, value in self.items():
-            self[key] *= other
-        return self
-
-    def __pow__(self, other):
-        if not isinstance(other, NUMERIC_TYPES):
-            raise TypeError('Cannot power UnitsContainer by {0}'.format(type(other)))
-        ret = copy.copy(self)
-        ret **= other
-        return ret
-
-    def __itruediv__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError('Cannot divide UnitsContainer by {0}'.format(type(other)))
-
-        for key, value in other.items():
-            self[key] -= value
-
-        keys = [key for key, value in self.items() if value == 0]
-        for key in keys:
-            del self[key]
-
-        return self
-
-    def __truediv__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError('Cannot divide UnitsContainer by {0}'.format(type(other)))
-
-        ret = copy.copy(self)
-        ret /= other
-        return ret
-
-    def __rtruediv__(self, other):
-        if not isinstance(other, self.__class__) and other != 1:
-            raise TypeError('Cannot divide {0} by UnitsContainer'.format(type(other)))
-
-        ret = copy.copy(self)
-        ret **= -1
-        return ret
 
 
 class UnitRegistry(object):
@@ -501,13 +382,14 @@ class UnitRegistry(object):
         #: Stores active contexts.
         self._active_ctx = ContextChain()
 
-        #: Maps dimensionality (_freeze(UnitsContainer)) to Units (str)
-        self._dimensional_equivalents = TransformDict(_freeze)
+        #: Maps dimensionality (UnitsContainer) to Units (str)
+        self._dimensional_equivalents = dict()
 
-        #: Maps dimensionality (_freeze(UnitsContainer)) to Dimensionality (_freeze(UnitsContainer))
-        self._base_units_cache = TransformDict(_freeze)
-        #: Maps dimensionality (_freeze(UnitsContainer)) to Units (_freeze(UnitsContainer))
-        self._dimensionality_cache = TransformDict(_freeze)
+        #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
+        self._base_units_cache = dict()
+
+        #: Maps dimensionality (UnitsContainer) to Units (UnitsContainer)
+        self._dimensionality_cache = dict()
 
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self._parse_unit_cache = dict()
@@ -608,8 +490,8 @@ class UnitRegistry(object):
             if getattr(ctx, '_checked', False):
                 continue
             for (src, dst), func in ctx.funcs.items():
-                src_ = self.get_dimensionality(dict(src))
-                dst_ = self.get_dimensionality(dict(dst))
+                src_ = self.get_dimensionality(UnitsContainer(src))
+                dst_ = self.get_dimensionality(UnitsContainer(dst))
                 if src != src_ or dst != dst_:
                     ctx.remove_transformation(src, dst)
                     ctx.add_transformation(src_, dst_, func)
@@ -902,17 +784,18 @@ class UnitRegistry(object):
             input_units = ParserHelper.from_string(input_units)
 
         if input_units in self._dimensionality_cache:
-            return copy.copy(self._dimensionality_cache[input_units])
+            return self._dimensionality_cache[input_units]
 
         accumulator = defaultdict(float)
         self._get_dimensionality_recurse(input_units, 1.0, accumulator)
 
-        dims = UnitsContainer(dict((k, v) for k, v in accumulator.items() if v != 0.))
+        if '[]' in accumulator:
+            del accumulator['[]']
 
-        if '[]' in dims:
-            del dims['[]']
+        dims = UnitsContainer(dict((k, v) for k, v in accumulator.items()
+                                   if v != 0.0))
 
-        self._dimensionality_cache[input_units] = copy.copy(dims)
+        self._dimensionality_cache[input_units] = dims
 
         return dims
 
@@ -939,7 +822,7 @@ class UnitRegistry(object):
         :param input_units: units
         :type input_units: UnitsContainer or str
         :param check_nonmult: if True, None will be returned as the multiplicative factor
-                              is a non-multiplicative units is found in the final Units.
+                              if a non-multiplicative units is found in the final Units.
         :return: multiplicative factor, base units
         """
         if not input_units:
@@ -950,13 +833,14 @@ class UnitRegistry(object):
 
         # The cache is only done for check_nonmult=True
         if check_nonmult and input_units in self._base_units_cache:
-            return copy.deepcopy(self._base_units_cache[input_units])
+            return self._base_units_cache[input_units]
 
         accumulators = [1., defaultdict(float)]
         self._get_base_units(input_units, 1.0, accumulators)
 
         factor = accumulators[0]
-        units = UnitsContainer(dict((k, v) for k, v in accumulators[1].items() if v != 0.))
+        units = UnitsContainer(dict((k, v) for k, v in accumulators[1].items()
+                                    if v != 0.))
 
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
@@ -990,7 +874,7 @@ class UnitRegistry(object):
         ret = self._dimensional_equivalents[src_dim]
 
         if self._active_ctx:
-            nodes = find_connected_nodes(self._active_ctx.graph, _freeze(src_dim))
+            nodes = find_connected_nodes(self._active_ctx.graph, src_dim)
             ret = set()
             if nodes:
                 for node in nodes:
@@ -1083,11 +967,10 @@ class UnitRegistry(object):
         # clean src from offset units by converting to reference
         for u, e in src_offset_units:
             value = self._units[u].converter.to_reference(value, inplace)
-            src.pop(u)
+        src = src.remove([u for u, e in src_offset_units])
 
         # clean dst units from offset units
-        for u, e in dst_offset_units:
-            dst.pop(u)
+        dst = dst.remove([u for u, e in dst_offset_units])
 
         # Here src and dst have only multiplicative units left. Thus we can
         # convert with a factor.
@@ -1106,12 +989,6 @@ class UnitRegistry(object):
         # Finally convert to offset units specified in destination
         for u, e in dst_offset_units:
             value = self._units[u].converter.from_reference(value, inplace)
-            # add back offset units to dst
-            dst[u] = e
-
-        # restore offset conversion of src units
-        for u, e in src_offset_units:
-            src[u] = e
 
         return value
 
@@ -1191,7 +1068,7 @@ class UnitRegistry(object):
         if units.scale != 1:
             raise ValueError('Unit expression cannot have a scaling factor.')
 
-        ret = UnitsContainer()
+        ret = {}
         many = len(units) > 1
         for name in units:
             cname = self.get_name(name)
@@ -1203,6 +1080,8 @@ class UnitRegistry(object):
                 if not definition.is_multiplicative:
                     cname = 'delta_' + cname
             ret[cname] = value
+
+        ret = UnitsContainer(ret)
 
         self._parse_unit_cache[input_string] = ret
 

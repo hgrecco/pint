@@ -17,7 +17,7 @@ from collections import defaultdict
 import weakref
 
 from .compat import ChainMap
-from .util import ParserHelper, string_types
+from .util import ParserHelper, UnitsContainer, string_types
 
 #: Regex to match the header parts of a context.
 _header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
@@ -146,14 +146,14 @@ class Context(object):
             func = _expression_to_function(eq)
 
             if '<->' in rel:
-                src, dst = (ParserHelper.from_string(s) for s in rel.split('<->'))
+                src, dst = (UnitsContainer(ParserHelper.from_string(s)) for s in rel.split('<->'))
                 if to_base_func:
                     src = to_base_func(src)
                     dst = to_base_func(dst)
                 ctx.add_transformation(src, dst, func)
                 ctx.add_transformation(dst, src, func)
             elif '->' in rel:
-                src, dst = (ParserHelper.from_string(s) for s in rel.split('->'))
+                src, dst = (UnitsContainer(ParserHelper.from_string(s)) for s in rel.split('->'))
                 if to_base_func:
                     src = to_base_func(src)
                     dst = to_base_func(dst)
@@ -184,7 +184,7 @@ class Context(object):
 
     @staticmethod
     def __keytransform__(src, dst):
-        return _freeze(src), _freeze(dst)
+        return UnitsContainer(src), UnitsContainer(dst)
 
     def transform(self, src, dst, registry, value):
         """Transform a value.

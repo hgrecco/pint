@@ -3,10 +3,118 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import collections
-
-from pint.testsuite import BaseTestCase
+import copy
+import operator as op
+from pint.testsuite import BaseTestCase, QuantityTestCase
 from pint.util import (string_preprocessor, find_shortest_path, matrix_to_string,
-                       transpose, find_connected_nodes, ParserHelper)
+                       transpose, find_connected_nodes, ParserHelper,
+                       UnitsContainer)
+
+
+class TestUnitsContainer(QuantityTestCase):
+
+    def _test_inplace(self, operator, value1, value2, expected_result):
+        value1 = copy.copy(value1)
+        value2 = copy.copy(value2)
+        id1 = id(value1)
+        id2 = id(value2)
+        value1 = operator(value1, value2)
+        value2_cpy = copy.copy(value2)
+        self.assertEqual(value1, expected_result)
+        # Inplace operation creates copies
+        self.assertNotEqual(id1, id(value1))
+        self.assertEqual(value2, value2_cpy)
+        self.assertEqual(id2, id(value2))
+
+    def _test_not_inplace(self, operator, value1, value2, expected_result):
+        id1 = id(value1)
+        id2 = id(value2)
+
+        value1_cpy = copy.copy(value1)
+        value2_cpy = copy.copy(value2)
+
+        result = operator(value1, value2)
+
+        self.assertEqual(expected_result, result)
+        self.assertEqual(value1, value1_cpy)
+        self.assertEqual(value2, value2_cpy)
+        self.assertNotEqual(id(result), id1)
+        self.assertNotEqual(id(result), id2)
+
+    def test_unitcontainer_creation(self):
+        x = UnitsContainer(meter=1, second=2)
+        y = UnitsContainer({'meter': 1.0, 'second': 2.0})
+        self.assertIsInstance(x['meter'], float)
+        self.assertEqual(x, y)
+        self.assertIsNot(x, y)
+        z = copy.copy(x)
+        self.assertEqual(x, z)
+        self.assertIsNot(x, z)
+        z = UnitsContainer(x)
+        self.assertEqual(x, z)
+        self.assertIsNot(x, z)
+
+    def test_unitcontainer_repr(self):
+        x = UnitsContainer()
+        self.assertEqual(str(x), 'dimensionless')
+        self.assertEqual(repr(x), '<UnitsContainer({})>')
+        x = UnitsContainer(meter=1, second=2)
+        self.assertEqual(str(x), 'meter * second ** 2')
+        self.assertEqual(repr(x),
+                         "<UnitsContainer({'meter': 1.0, 'second': 2.0})>")
+        x = UnitsContainer(meter=1, second=2.5)
+        self.assertEqual(str(x), 'meter * second ** 2.5')
+        self.assertEqual(repr(x),
+                         "<UnitsContainer({'meter': 1.0, 'second': 2.5})>")
+
+    def test_unitcontainer_bool(self):
+        self.assertTrue(UnitsContainer(meter=1, second=2))
+        self.assertFalse(UnitsContainer())
+
+    def test_unitcontainer_comp(self):
+        x = UnitsContainer(meter=1, second=2)
+        y = UnitsContainer(meter=1., second=2)
+        z = UnitsContainer(meter=1, second=3)
+        self.assertTrue(x == y)
+        self.assertFalse(x != y)
+        self.assertFalse(x == z)
+        self.assertTrue(x != z)
+
+    def test_unitcontainer_arithmetic(self):
+        x = UnitsContainer(meter=1)
+        y = UnitsContainer(second=1)
+        z = UnitsContainer(meter=1, second=-2)
+
+        self._test_not_inplace(op.mul, x, y, UnitsContainer(meter=1, second=1))
+        self._test_not_inplace(op.truediv, x, y, UnitsContainer(meter=1, second=-1))
+        self._test_not_inplace(op.pow, z, 2, UnitsContainer(meter=2, second=-4))
+        self._test_not_inplace(op.pow, z, -2, UnitsContainer(meter=-2, second=4))
+
+        self._test_inplace(op.imul, x, y, UnitsContainer(meter=1, second=1))
+        self._test_inplace(op.itruediv, x, y, UnitsContainer(meter=1, second=-1))
+        self._test_inplace(op.ipow, z, 2, UnitsContainer(meter=2, second=-4))
+        self._test_inplace(op.ipow, z, -2, UnitsContainer(meter=-2, second=4))
+
+    def test_string_comparison(self):
+        x = UnitsContainer(meter=1)
+        y = UnitsContainer(second=1)
+        z = UnitsContainer(meter=1, second=-2)
+        self.assertEqual(x, 'meter')
+        self.assertEqual('meter', x)
+        self.assertNotEqual(x, 'meter ** 2')
+        self.assertNotEqual(x, 'meter * meter')
+        self.assertNotEqual(x, 'second')
+        self.assertEqual(y, 'second')
+        self.assertEqual(z, 'meter/second/second')
+
+    def test_invalid(self):
+        self.assertRaises(TypeError, UnitsContainer, {1: 2})
+        self.assertRaises(TypeError, UnitsContainer, {'1': '2'})
+        d = UnitsContainer()
+        self.assertRaises(TypeError, d.__mul__, list())
+        self.assertRaises(TypeError, d.__pow__, list())
+        self.assertRaises(TypeError, d.__truediv__, list())
+        self.assertRaises(TypeError, d.__rtruediv__, list())
 
 
 class TestParseHelper(BaseTestCase):
@@ -20,7 +128,7 @@ class TestParseHelper(BaseTestCase):
         self.assertEqual(x(), xp())
         self.assertNotEqual(x(), y())
         self.assertEqual(ParserHelper.from_string(''), ParserHelper())
-        self.assertEqual(repr(x()), "<ParserHelper(1, {'meter': 2})>")
+        self.assertEqual(repr(x()), "<ParserHelper(1, {'meter': 2.0})>")
 
         self.assertEqual(ParserHelper(2), 2)
 
@@ -46,8 +154,10 @@ class TestParseHelper(BaseTestCase):
         self.assertEqual(x() / z(), ParserHelper(0.5))
 
         self.assertEqual(4. / z(), ParserHelper(2., meter=-2))
-        self.assertEqual('seconds' / z(), ParserHelper(0.5, seconds=1, meter=-2))
-        self.assertEqual(dict(seconds=1) / z(), ParserHelper(0.5, seconds=1, meter=-2))
+        self.assertEqual('seconds' / z(),
+                         ParserHelper(0.5, seconds=1, meter=-2))
+        self.assertEqual(dict(seconds=1) / z(),
+                         ParserHelper(0.5, seconds=1, meter=-2))
 
 
 class TestStringProcessor(BaseTestCase):
@@ -69,7 +179,7 @@ class TestStringProcessor(BaseTestCase):
         self._test('square bcd', 'bcd**2')
         self._test('cubic bcd', 'bcd**3')
         self._test('bcd efg', 'bcd*efg')
-        
+
     def test_per(self):
         self._test('miles per hour', 'miles/hour')
 

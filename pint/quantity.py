@@ -73,7 +73,7 @@ class _Quantity(object):
 
     def __reduce__(self):
         from . import _build_quantity
-        return _build_quantity, (self.magnitude, self.units)
+        return _build_quantity, (self.magnitude, self._units)
 
     def __new__(cls, value, units=None):
         if units is None:
@@ -114,7 +114,7 @@ class _Quantity(object):
         return self.__used
 
     def __copy__(self):
-        ret = self.__class__(copy.copy(self._magnitude), copy.copy(self._units))
+        ret = self.__class__(copy.copy(self._magnitude), self._units)
         ret.__used = self.__used
         return ret
 
@@ -129,10 +129,10 @@ class _Quantity(object):
 
         if '~' in spec:
             units = UnitsContainer(dict((self._REGISTRY._get_symbol(key), value)
-                                   for key, value in self.units.items()))
+                                   for key, value in self._units.items()))
             spec = spec.replace('~', '')
         else:
-            units = self.units
+            units = self._units
 
         return '%s %s' % (format(self.magnitude, remove_custom_flags(spec)),
                           format(units, spec))
@@ -162,13 +162,13 @@ class _Quantity(object):
     def unitless(self):
         """Return true if the quantity does not have units.
         """
-        return not bool(self.to_base_units().units)
+        return not bool(self.to_base_units()._units)
 
     @property
     def dimensionless(self):
         """Return true if the quantity is dimensionless.
         """
-        tmp = copy.copy(self).to_base_units()
+        tmp = self.to_base_units()
 
         return not bool(tmp.dimensionality)
 
@@ -179,7 +179,7 @@ class _Quantity(object):
         try:
             return self._dimensionality
         except AttributeError:
-            self._dimensionality = self._REGISTRY.get_dimensionality(self.units)
+            self._dimensionality = self._REGISTRY.get_dimensionality(self._units)
 
         return self._dimensionality
 
@@ -214,13 +214,14 @@ class _Quantity(object):
         if isinstance(other, string_types):
             other = self._REGISTRY.parse_units(other)
         elif isinstance(other, self.__class__):
-            other = copy.copy(other.units)
+            other = other._units
         elif isinstance(other, UnitsContainer):
             pass
         else:
             other = UnitsContainer(other)
 
-        self._magnitude = self._convert_magnitude(other, *contexts, **ctx_kwargs)
+        self._magnitude = self._convert_magnitude(other, *contexts,
+                                                  **ctx_kwargs)
         self._units = other
 
         return None
@@ -234,7 +235,7 @@ class _Quantity(object):
         if isinstance(other, string_types):
             other = self._REGISTRY.parse_units(other)
         elif isinstance(other, self.__class__):
-            other = copy.copy(other.units)
+            other = other._units
         elif isinstance(other, UnitsContainer):
             pass
         else:
@@ -248,7 +249,7 @@ class _Quantity(object):
         """Return Quantity rescaled to base units
         """
 
-        _, other = self._REGISTRY.get_base_units(self.units)
+        _, other = self._REGISTRY.get_base_units(self._units)
 
         self._magnitude = self._convert_magnitude(other)
         self._units = other
@@ -258,8 +259,7 @@ class _Quantity(object):
     def to_base_units(self):
         """Return Quantity rescaled to base units
         """
-
-        _, other = self._REGISTRY.get_base_units(self.units)
+        _, other = self._REGISTRY.get_base_units(self._units)
 
         magnitude = self._convert_magnitude_not_inplace(other)
 
@@ -269,22 +269,22 @@ class _Quantity(object):
     def __int__(self):
         if self.dimensionless:
             return int(self._convert_magnitude_not_inplace(UnitsContainer()))
-        raise DimensionalityError(self.units, 'dimensionless')
+        raise DimensionalityError(self._units, 'dimensionless')
 
     def __long__(self):
         if self.dimensionless:
             return long_type(self._convert_magnitude_not_inplace(UnitsContainer()))
-        raise DimensionalityError(self.units, 'dimensionless')
+        raise DimensionalityError(self._units, 'dimensionless')
 
     def __float__(self):
         if self.dimensionless:
             return float(self._convert_magnitude_not_inplace(UnitsContainer()))
-        raise DimensionalityError(self.units, 'dimensionless')
+        raise DimensionalityError(self._units, 'dimensionless')
 
     def __complex__(self):
         if self.dimensionless:
             return complex(self._convert_magnitude_not_inplace(UnitsContainer()))
-        raise DimensionalityError(self.units, 'dimensionless')
+        raise DimensionalityError(self._units, 'dimensionless')
 
     def _iadd_sub(self, other, op):
         """Perform addition or subtraction operation in-place and return the result.
@@ -310,11 +310,11 @@ class _Quantity(object):
                 self.ito(UnitsContainer())
                 self._magnitude = op(self._magnitude, other_magnitude)
             else:
-                raise DimensionalityError(self.units, 'dimensionless')
+                raise DimensionalityError(self._units, 'dimensionless')
             return self
 
         if not self.dimensionality == other.dimensionality:
-            raise DimensionalityError(self.units, other.units,
+            raise DimensionalityError(self._units, other._units,
                                       self.dimensionality,
                                       other.dimensionality)
 
@@ -334,52 +334,52 @@ class _Quantity(object):
                 self._magnitude = op(self._magnitude, other._magnitude)
             # If only self has a delta unit, other determines unit of result.
             elif self._get_delta_units() and not other._get_delta_units():
-                self._magnitude = op(self._convert_magnitude(other.units),
+                self._magnitude = op(self._convert_magnitude(other._units),
                                      other._magnitude)
-                self._units = copy.copy(other.units)
+                self._units = other._units
             else:
                 self._magnitude = op(self._magnitude,
-                                     other.to(self.units)._magnitude)
+                                     other.to(self._units)._magnitude)
 
         elif (op == operator.isub and len(self_non_mul_units) == 1
-                and self.units[self_non_mul_unit] == 1
+                and self._units[self_non_mul_unit] == 1
                 and not other._has_compatible_delta(self_non_mul_unit)):
-            if self.units == other.units:
+            if self._units == other._units:
                 self._magnitude = op(self._magnitude, other._magnitude)
             else:
                 self._magnitude = op(self._magnitude,
-                                     other.to(self.units)._magnitude)
-            self.units['delta_' + self_non_mul_unit
-                       ] = self.units.pop(self_non_mul_unit)
+                                     other.to(self._units)._magnitude)
+            self._units = self._units.rename(self_non_mul_unit,
+                                             'delta_' + self_non_mul_unit)
 
         elif (op == operator.isub and len(other_non_mul_units) == 1
-                and other.units[other_non_mul_unit] == 1
+                and other._units[other_non_mul_unit] == 1
                 and not self._has_compatible_delta(other_non_mul_unit)):
             # we convert to self directly since it is multiplicative
             self._magnitude = op(self._magnitude,
-                                other.to(self.units)._magnitude)
+                                 other.to(self._units)._magnitude)
 
         elif (len(self_non_mul_units) == 1
                 # order of the dimension of offset unit == 1 ?
                 and self._units[self_non_mul_unit] == 1
                 and other._has_compatible_delta(self_non_mul_unit)):
-            tu = copy.copy(self.units)
             # Replace offset unit in self by the corresponding delta unit.
             # This is done to prevent a shift by offset in the to()-call.
-            tu['delta_' + self_non_mul_unit] = tu.pop(self_non_mul_unit)
+            tu = self._units.rename(self_non_mul_unit,
+                                    'delta_' + self_non_mul_unit)
             self._magnitude = op(self._magnitude, other.to(tu)._magnitude)
         elif (len(other_non_mul_units) == 1
                 # order of the dimension of offset unit == 1 ?
                 and other._units[other_non_mul_unit] == 1
                 and self._has_compatible_delta(other_non_mul_unit)):
-            tu = copy.copy(other.units)
             # Replace offset unit in other by the corresponding delta unit.
             # This is done to prevent a shift by offset in the to()-call.
-            tu['delta_' + other_non_mul_unit] = tu.pop(other_non_mul_unit)
+            tu = other._units.rename(other_non_mul_unit,
+                                     'delta_' + other_non_mul_unit)
             self._magnitude = op(self._convert_magnitude(tu), other._magnitude)
-            self._units = copy.copy(other.units)
+            self._units = other._units
         else:
-            raise OffsetUnitCalculusError(self.units, other.units)
+            raise OffsetUnitCalculusError(self._units, other._units)
 
         return self
 
@@ -398,7 +398,7 @@ class _Quantity(object):
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same value to
                 # enforce any shape checking and type casting due to the operation.
-                units = self.units
+                units = self._units
                 magnitude = op(self._magnitude,
                                _to_magnitude(other, self.force_ndarray))
             elif self.dimensionless:
@@ -406,11 +406,11 @@ class _Quantity(object):
                 magnitude = op(self.to(units)._magnitude,
                                _to_magnitude(other, self.force_ndarray))
             else:
-                raise DimensionalityError(self.units, 'dimensionless')
+                raise DimensionalityError(self._units, 'dimensionless')
             return self.__class__(magnitude, units)
 
         if not self.dimensionality == other.dimensionality:
-            raise DimensionalityError(self.units, other.units,
+            raise DimensionalityError(self._units, other._units,
                                       self.dimensionality,
                                       other.dimensionality)
 
@@ -428,58 +428,58 @@ class _Quantity(object):
         if is_self_multiplicative and is_other_multiplicative:
             if self._units == other._units:
                 magnitude = op(self._magnitude, other._magnitude)
-                units = copy.copy(self.units)
+                units = self._units
             # If only self has a delta unit, other determines unit of result.
             elif self._get_delta_units() and not other._get_delta_units():
-                magnitude = op(self._convert_magnitude(other.units),
+                magnitude = op(self._convert_magnitude(other._units),
                                other._magnitude)
-                units = copy.copy(other.units)
+                units = other._units
             else:
-                units = copy.copy(self.units)
+                units = self._units
                 magnitude = op(self._magnitude,
-                               other.to(self.units).magnitude)
+                               other.to(self._units).magnitude)
 
         elif (op == operator.sub and len(self_non_mul_units) == 1
-                and self.units[self_non_mul_unit] == 1
+                and self._units[self_non_mul_unit] == 1
                 and not other._has_compatible_delta(self_non_mul_unit)):
-            if self.units == other.units:
+            if self._units == other._units:
                 magnitude = op(self._magnitude, other._magnitude)
             else:
                 magnitude = op(self._magnitude,
-                               other.to(self.units)._magnitude)
-            units = copy.copy(self.units)
-            units['delta_' + self_non_mul_unit] = units.pop(self_non_mul_unit)
+                               other.to(self._units)._magnitude)
+            units = self._units.rename(self_non_mul_unit,
+                                      'delta_' + self_non_mul_unit)
 
         elif (op == operator.sub and len(other_non_mul_units) == 1
-                and other.units[other_non_mul_unit] == 1
+                and other._units[other_non_mul_unit] == 1
                 and not self._has_compatible_delta(other_non_mul_unit)):
             # we convert to self directly since it is multiplicative
             magnitude = op(self._magnitude,
-                           other.to(self.units)._magnitude)
-            units = copy.copy(self.units)
+                           other.to(self._units)._magnitude)
+            units = self._units
 
         elif (len(self_non_mul_units) == 1
                 # order of the dimension of offset unit == 1 ?
                 and self._units[self_non_mul_unit] == 1
                 and other._has_compatible_delta(self_non_mul_unit)):
-            tu = copy.copy(self.units)
             # Replace offset unit in self by the corresponding delta unit.
             # This is done to prevent a shift by offset in the to()-call.
-            tu['delta_' + self_non_mul_unit] = tu.pop(self_non_mul_unit)
+            tu = self._units.rename(self_non_mul_unit,
+                                   'delta_' + self_non_mul_unit)
             magnitude = op(self._magnitude, other.to(tu).magnitude)
-            units = copy.copy(self.units)
+            units = self._units
         elif (len(other_non_mul_units) == 1
                 # order of the dimension of offset unit == 1 ?
                 and other._units[other_non_mul_unit] == 1
                 and self._has_compatible_delta(other_non_mul_unit)):
-            tu = copy.copy(other.units)
             # Replace offset unit in other by the corresponding delta unit.
             # This is done to prevent a shift by offset in the to()-call.
-            tu['delta_' + other_non_mul_unit] = tu.pop(other_non_mul_unit)
+            tu = other._units.rename(other_non_mul_unit,
+                                    'delta_' + other_non_mul_unit)
             magnitude = op(self._convert_magnitude(tu), other._magnitude)
-            units = copy.copy(other.units)
+            units = other._units
         else:
-            raise OffsetUnitCalculusError(self.units, other.units)
+            raise OffsetUnitCalculusError(self._units, other._units)
 
         return self.__class__(magnitude, units)
 
@@ -524,12 +524,12 @@ class _Quantity(object):
 
         if not _check(self, other):
             if not self._ok_for_muldiv(no_offset_units_self):
-                raise OffsetUnitCalculusError(self.units,
+                raise OffsetUnitCalculusError(self._units,
                                               getattr(other, 'units', ''))
             if len(offset_units_self) == 1:
-                if (self.units[offset_units_self[0]] != 1
+                if (self._units[offset_units_self[0]] != 1
                         or magnitude_op not in [operator.mul, operator.imul]):
-                    raise OffsetUnitCalculusError(self.units,
+                    raise OffsetUnitCalculusError(self._units,
                                                   getattr(other, 'units', ''))
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
@@ -540,15 +540,15 @@ class _Quantity(object):
             return self
 
         if not self._ok_for_muldiv(no_offset_units_self):
-            raise OffsetUnitCalculusError(self.units, other.units)
-        elif no_offset_units_self == 1 and len(self.units) == 1:
+            raise OffsetUnitCalculusError(self._units, other._units)
+        elif no_offset_units_self == 1 and len(self._units) == 1:
                 self.ito_base_units()
 
         no_offset_units_other = len(other._get_non_multiplicative_units())
 
         if not other._ok_for_muldiv(no_offset_units_other):
-            raise OffsetUnitCalculusError(self.units, other.units)
-        elif no_offset_units_other == 1 and len(other.units) == 1:
+            raise OffsetUnitCalculusError(self._units, other._units)
+        elif no_offset_units_other == 1 and len(other._units) == 1:
             other.ito_base_units()
 
         self._magnitude = magnitude_op(self._magnitude, other._magnitude)
@@ -574,12 +574,12 @@ class _Quantity(object):
 
         if not _check(self, other):
             if not self._ok_for_muldiv(no_offset_units_self):
-                raise OffsetUnitCalculusError(self.units,
+                raise OffsetUnitCalculusError(self._units,
                                               getattr(other, 'units', ''))
             if len(offset_units_self) == 1:
-                if (self.units[offset_units_self[0]] != 1
+                if (self._units[offset_units_self[0]] != 1
                         or magnitude_op not in [operator.mul, operator.imul]):
-                    raise OffsetUnitCalculusError(self.units,
+                    raise OffsetUnitCalculusError(self._units,
                                                   getattr(other, 'units', ''))
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
@@ -594,15 +594,15 @@ class _Quantity(object):
         new_self = self
 
         if not self._ok_for_muldiv(no_offset_units_self):
-            raise OffsetUnitCalculusError(self.units, other.units)
-        elif no_offset_units_self == 1 and len(self.units) == 1:
+            raise OffsetUnitCalculusError(self._units, other._units)
+        elif no_offset_units_self == 1 and len(self._units) == 1:
             new_self = self.to_base_units()
 
         no_offset_units_other = len(other._get_non_multiplicative_units())
 
         if not other._ok_for_muldiv(no_offset_units_other):
-            raise OffsetUnitCalculusError(self.units, other.units)
-        elif no_offset_units_other == 1 and len(other.units) == 1:
+            raise OffsetUnitCalculusError(self._units, other._units)
+        elif no_offset_units_other == 1 and len(other._units) == 1:
             other = other.to_base_units()
 
         magnitude = magnitude_op(new_self._magnitude, other._magnitude)
@@ -647,8 +647,8 @@ class _Quantity(object):
 
         no_offset_units_self = len(self._get_non_multiplicative_units())
         if not self._ok_for_muldiv(no_offset_units_self):
-            raise OffsetUnitCalculusError(self.units, '')
-        elif no_offset_units_self == 1 and len(self.units) == 1:
+            raise OffsetUnitCalculusError(self._units, '')
+        elif no_offset_units_self == 1 and len(self._units) == 1:
             self = self.to_base_units()
 
         return self.__class__(other_magnitude / self._magnitude, 1 / self._units)
@@ -661,8 +661,8 @@ class _Quantity(object):
 
         no_offset_units_self = len(self._get_non_multiplicative_units())
         if not self._ok_for_muldiv(no_offset_units_self):
-            raise OffsetUnitCalculusError(self.units, '')
-        elif no_offset_units_self == 1 and len(self.units) == 1:
+            raise OffsetUnitCalculusError(self._units, '')
+        elif no_offset_units_self == 1 and len(self._units) == 1:
             self = self.to_base_units()
 
         return self.__class__(other_magnitude // self._magnitude, 1 / self._units)
@@ -681,13 +681,13 @@ class _Quantity(object):
             return NotImplemented
         else:
             if not self._ok_for_muldiv:
-                raise OffsetUnitCalculusError(self.units)
+                raise OffsetUnitCalculusError(self._units)
 
             if isinstance(getattr(other, '_magnitude', other), ndarray):
                 # arrays are refused as exponent, because they would create
                 #  len(array) quanitites of len(set(array)) different units
                 if np.size(other) > 1:
-                    raise DimensionalityError(self.units, 'dimensionless')
+                    raise DimensionalityError(self._units, 'dimensionless')
 
             new_self = self
             if other == 1:
@@ -699,13 +699,13 @@ class _Quantity(object):
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
                         self.ito_base_units()
                     else:
-                        raise OffsetUnitCalculusError(self.units)
+                        raise OffsetUnitCalculusError(self._units)
 
                 if getattr(other, 'dimensionless', False):
                     other = other.to_base_units()
                     self._units **= other.magnitude
                 elif not getattr(other, 'dimensionless', True):
-                    raise DimensionalityError(self.units, 'dimensionless')
+                    raise DimensionalityError(self._units, 'dimensionless')
                 else:
                     self._units **= other
 
@@ -719,13 +719,13 @@ class _Quantity(object):
             return NotImplemented
         else:
             if not self._ok_for_muldiv:
-                raise OffsetUnitCalculusError(self.units)
+                raise OffsetUnitCalculusError(self._units)
 
             if isinstance(getattr(other, '_magnitude', other), ndarray):
                 # arrays are refused as exponent, because they would create
                 #  len(array) quantities of len(set(array)) different units
                 if np.size(other) > 1:
-                    raise DimensionalityError(self.units, 'dimensionless')
+                    raise DimensionalityError(self._units, 'dimensionless')
 
             new_self = self
             if other == 1:
@@ -737,12 +737,12 @@ class _Quantity(object):
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
                         new_self = self.to_base_units()
                     else:
-                        raise OffsetUnitCalculusError(self.units)
+                        raise OffsetUnitCalculusError(self._units)
 
                 if getattr(other, 'dimensionless', False):
                     units = new_self._units ** other.to_base_units().magnitude
                 elif not getattr(other, 'dimensionless', True):
-                    raise DimensionalityError(self.units, 'dimensionless')
+                    raise DimensionalityError(self._units, 'dimensionless')
                 else:
                     units = new_self._units ** other
 
@@ -756,10 +756,10 @@ class _Quantity(object):
             return NotImplemented
         else:
             if not self.dimensionless:
-                raise DimensionalityError(self.units, 'dimensionless')
+                raise DimensionalityError(self._units, 'dimensionless')
             if isinstance(self._magnitude, ndarray):
                 if np.size(self._magnitude) > 1:
-                    raise DimensionalityError(self.units, 'dimensionless')
+                    raise DimensionalityError(self._units, 'dimensionless')
             new_self = self.to_base_units()
             return other**new_self._magnitude
 
@@ -806,10 +806,10 @@ class _Quantity(object):
             else:
                 raise ValueError('Cannot compare Quantity and {0}'.format(type(other)))
 
-        if self.units == other.units:
+        if self._units == other._units:
             return op(self._magnitude, other._magnitude)
         if self.dimensionality != other.dimensionality:
-            raise DimensionalityError(self.units, other.units,
+            raise DimensionalityError(self._units, other._units,
                                       self.dimensionality, other.dimensionality)
         return op(self.to_base_units().magnitude,
                   other.to_base_units().magnitude)
@@ -898,7 +898,7 @@ class _Quantity(object):
             elif self.dimensionless:
                 kwargs['min'] = min
             else:
-                raise DimensionalityError('dimensionless', self.units)
+                raise DimensionalityError('dimensionless', self._units)
 
         if max is not None:
             if isinstance(max, self.__class__):
@@ -906,12 +906,12 @@ class _Quantity(object):
             elif self.dimensionless:
                 kwargs['max'] = max
             else:
-                raise DimensionalityError('dimensionless', self.units)
+                raise DimensionalityError('dimensionless', self._units)
 
         return self.__class__(self.magnitude.clip(**kwargs), self._units)
 
     def fill(self, value):
-        self._units = value.units
+        self._units = value._units
         return self.magnitude.fill(value.magnitude)
 
     def put(self, indices, values, mode='raise'):
@@ -920,20 +920,20 @@ class _Quantity(object):
         elif self.dimensionless:
             values = self.__class__(values, '').to(self)
         else:
-            raise DimensionalityError('dimensionless', self.units)
+            raise DimensionalityError('dimensionless', self._units)
         self.magnitude.put(indices, values, mode)
 
     @property
     def real(self):
-        return self.__class__(self._magnitude.real, self.units)
+        return self.__class__(self._magnitude.real, self._units)
 
     @property
     def imag(self):
-        return self.__class__(self._magnitude.imag, self.units)
+        return self.__class__(self._magnitude.imag, self._units)
 
     @property
     def T(self):
-        return self.__class__(self._magnitude.T, self.units)
+        return self.__class__(self._magnitude.T, self._units)
 
     def searchsorted(self, v, side='left'):
         if isinstance(v, self.__class__):
@@ -941,7 +941,7 @@ class _Quantity(object):
         elif self.dimensionless:
             v = self.__class__(v, '').to(self)
         else:
-            raise DimensionalityError('dimensionless', self.units)
+            raise DimensionalityError('dimensionless', self._units)
         return self.magnitude.searchsorted(v, side)
 
     def __ito_if_needed(self, to_units):
@@ -999,7 +999,7 @@ class _Quantity(object):
         try:
             return getattr(self._magnitude, item)
         except AttributeError as ex:
-            raise AttributeError("Neither Quantity object nor its magnitude ({0})"
+            raise AttributeError("Neither Quantity object nor its magnitude ({0}) "
                                  "has attribute '{1}'".format(self._magnitude, item))
 
     def __getitem__(self, key):
@@ -1020,7 +1020,7 @@ class _Quantity(object):
 
         try:
             if isinstance(value, self.__class__):
-                factor = self.__class__(value.magnitude, value.units / self.units).to_base_units()
+                factor = self.__class__(value.magnitude, value._units / self._units).to_base_units()
             else:
                 factor = self.__class__(value, self._units ** (-1)).to_base_units()
 
@@ -1107,12 +1107,12 @@ class _Quantity(object):
                                 mobjs.append(getattr(other, 'magnitude', other) * factor)
                         mobjs = tuple(mobjs)
                     else:
-                        dst_units = self._REGISTRY.parse_expression(dst_units).units
+                        dst_units = self._REGISTRY.parse_expression(dst_units)._units
 
                 elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
                     # ufunc with multiple arguments require that all inputs have
                     # the same arguments unless they are in __skip_other_args
-                    dst_units = objs[0].units
+                    dst_units = objs[0]._units
 
                 # Do the conversion (if needed) and extract the magnitude for each input.
                 if mobjs is None:
@@ -1148,23 +1148,23 @@ class _Quantity(object):
                     raise _Exception(ValueError)
             elif ufname in self.__copy_units:
                 try:
-                    out = self.__class__(out, self.units)
+                    out = self.__class__(out, self._units)
                 except:
                     raise _Exception(ValueError)
             elif ufname in self.__prod_units:
                 tmp = self.__prod_units[ufname]
                 if tmp == 'size':
-                    out = self.__class__(out, self.units ** self._magnitude.size)
+                    out = self.__class__(out, self._units ** self._magnitude.size)
                 elif tmp == 'div':
-                    units1 = objs[0].units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                    units2 = objs[1].units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                    units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
+                    units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
                     out = self.__class__(out, units1 / units2)
                 elif tmp == 'mul':
-                    units1 = objs[0].units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                    units2 = objs[1].units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                    units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
+                    units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
                     out = self.__class__(out, units1 * units2)
                 else:
-                    out = self.__class__(out, self.units ** tmp)
+                    out = self.__class__(out, self._units ** tmp)
 
             return out
         except (DimensionalityError, UndefinedUnitError) as ex:
@@ -1186,12 +1186,12 @@ class _Quantity(object):
         if isinstance(error, self.__class__):
             if relative:
                 raise ValueError('{} is not a valid relative error.'.format(error))
-            error = error.to(self.units).magnitude
+            error = error.to(self._units).magnitude
         else:
             if relative:
                 error = error * abs(self.magnitude)
 
-        return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self.units)
+        return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
 
     # methods/properties that help for math operations with offset units
     @property
@@ -1204,14 +1204,14 @@ class _Quantity(object):
     def _get_non_multiplicative_units(self):
         """Return a list of the of non-multiplicative units of the Quantity object
         """
-        offset_units = [unit for unit in self.units.keys()
+        offset_units = [unit for unit in self._units.keys()
                         if not self._REGISTRY._units[unit].is_multiplicative]
         return offset_units
 
     def _get_delta_units(self):
         """Return list of delta units ot the Quantity object
         """
-        delta_units = [u for u in self.units.keys() if u.startswith("delta_")]
+        delta_units = [u for u in self._units.keys() if u.startswith("delta_")]
         return delta_units
 
     def _has_compatible_delta(self, unit):
