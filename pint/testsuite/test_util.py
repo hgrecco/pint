@@ -127,13 +127,13 @@ class TestToUnitsContainer(BaseTestCase):
         self.assertIs(to_units_container(a), a)
 
     def test_quantity_conversion(self):
-        from ..unit import UnitRegistry
+        from pint.unit import UnitRegistry
         ureg = UnitRegistry()
         self.assertEqual(to_units_container(ureg.Quantity(1, UnitsContainer(m=1))),
                          UnitsContainer(m=1))
 
     def test_unit_conversion(self):
-        from ..unit import _Unit
+        from pint.unit import _Unit
         self.assertEqual(to_units_container(_Unit(UnitsContainer(m=1))),
                          UnitsContainer(m=1))
 
