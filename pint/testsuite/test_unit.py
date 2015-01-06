@@ -399,7 +399,7 @@ class TestRegistry(QuantityTestCase):
 
     def test_parse_units(self):
         ureg = self.ureg
-        self.assertEqual(ureg.parse_units(''), UnitsContainer())
+        self.assertEqual(ureg.parse_units(''), ureg.Unit(''))
         self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
 
 
@@ -421,21 +421,21 @@ class TestCompatibleUnits(QuantityTestCase):
         self.assertEqual(equiv1, equiv2)
 
     def test_many(self):
-        self._test(self.ureg.meter.units)
-        self._test(self.ureg.seconds.units)
-        self._test(self.ureg.newton.units)
-        self._test(self.ureg.kelvin.units)
+        self._test(self.ureg.meter)
+        self._test(self.ureg.seconds)
+        self._test(self.ureg.newton)
+        self._test(self.ureg.kelvin)
 
     def test_context_sp(self):
 
         gd = self.ureg.get_dimensionality
 
         # length, frequency, energy
-        valid = [gd(self.ureg.meter.units), gd(self.ureg.hertz.units),
-                 gd(self.ureg.joule.units)]
+        valid = [gd(self.ureg.meter), gd(self.ureg.hertz),
+                 gd(self.ureg.joule)]
 
         with self.ureg.context('sp'):
-            equiv = self.ureg.get_compatible_units(self.ureg.meter.units)
+            equiv = self.ureg.get_compatible_units(self.ureg.meter)
             result = set()
             for eq in equiv:
                 dim = gd(eq)
@@ -446,13 +446,14 @@ class TestCompatibleUnits(QuantityTestCase):
 
     def test_get_base_units(self):
         ureg = UnitRegistry()
-        self.assertEqual(ureg.get_base_units(''), (1, UnitsContainer()))
+        self.assertEqual(ureg.get_base_units(''), (1, ureg.Unit('')))
         self.assertEqual(ureg.get_base_units('meter'), ureg.get_base_units(ParserHelper(meter=1)))
 
     def test_get_compatible_units(self):
         ureg = UnitRegistry()
-        self.assertEqual(ureg.get_compatible_units(''), (1, UnitsContainer()))
-        self.assertEqual(ureg.get_compatible_units('meter'), ureg.get_compatible_units(ParserHelper(meter=1)))
+        self.assertEqual(ureg.get_compatible_units(''), frozenset())
+        self.assertEqual(ureg.get_compatible_units('meter'),
+                         ureg.get_compatible_units(ParserHelper(meter=1)))
 
 
 class TestRegistryWithDefaultRegistry(TestRegistry):

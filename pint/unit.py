@@ -27,7 +27,7 @@ from .context import Context, ContextChain
 from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
                    find_shortest_path, UnitsContainer, _is_dim,
-                   SharedRegistryObject)
+                   SharedRegistryObject, to_units_container)
 from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
@@ -55,7 +55,7 @@ class _Unit(SharedRegistryObject):
         if isinstance(units, (UnitsContainer, UnitDefinition)):
             inst._units = units
         elif isinstance(units, string_types):
-            inst._units = inst._REGISTRY.parse_units(units)
+            inst._units = inst._REGISTRY.parse_units(units)._units
         elif isinstance(units, _Unit):
             inst._units = units._units
         else:
@@ -116,7 +116,7 @@ class _Unit(SharedRegistryObject):
         try:
             return self._dimensionality
         except AttributeError:
-            dim = self._REGISTRY.get_dimensionality(self._units)
+            dim = self._REGISTRY._get_dimensionality(self._units)
             self._dimensionality = dim
 
         return self._dimensionality
@@ -155,6 +155,8 @@ class _Unit(SharedRegistryObject):
         # only be called for something different.
         if isinstance(other, NUMERIC_TYPES):
             return self._REGISTRY.Quantity(other, 1/self._units)
+        elif isinstance(other, UnitsContainer):
+            return self.__class__(other/self._units)
         else:
             return NotImplemented
 
@@ -182,7 +184,6 @@ class _Unit(SharedRegistryObject):
                 return other == self._REGISTRY.Quantity(1, self._units)
 
         elif isinstance(other, NUMERIC_TYPES):
-            print(other)
             return other == self._REGISTRY.Quantity(1, self._units)
 
         else:
@@ -316,7 +317,7 @@ class UnitRegistry(object):
         return 'UnitRegistry'
 
     def __getattr__(self, item):
-        return self.Quantity(1, item)
+        return self.Unit(item)
 
     def __getitem__(self, item):
         logger.warning('Calling the getitem method from a UnitRegistry is deprecated. '
@@ -325,10 +326,10 @@ class UnitRegistry(object):
 
     def __dir__(self):
         return list(self._units.keys()) + \
-               ['define', 'load_definitions', 'get_name', 'get_symbol',
-                'get_dimensionality', 'Quantity', 'wraps', 'parse_unit',
-                'parse_units', 'parse_expression', 'pi_theorem',
-                'convert', 'get_base_units']
+            ['define', 'load_definitions', 'get_name', 'get_symbol',
+             'get_dimensionality', 'Quantity', 'wraps',
+             'parse_units', 'parse_expression', 'pi_theorem',
+             'convert', 'get_base_units']
 
     @property
     def default_format(self):
@@ -392,8 +393,8 @@ class UnitRegistry(object):
             if getattr(ctx, '_checked', False):
                 continue
             for (src, dst), func in ctx.funcs.items():
-                src_ = self.get_dimensionality(UnitsContainer(src))
-                dst_ = self.get_dimensionality(UnitsContainer(dst))
+                src_ = self._get_dimensionality(src)
+                dst_ = self._get_dimensionality(dst)
                 if src != src_ or dst != dst_:
                     ctx.remove_transformation(src, dst)
                     ctx.add_transformation(src_, dst_, func)
@@ -608,8 +609,8 @@ class UnitRegistry(object):
                 try:
                     uc = ParserHelper.from_word(unit_name)
 
-                    bu = self.get_base_units(uc)
-                    di = self.get_dimensionality(uc)
+                    bu = self._get_base_units(uc)
+                    di = self._get_dimensionality(uc)
 
                     self._base_units_cache[uc] = bu
                     self._dimensionality_cache[uc] = di
@@ -618,7 +619,7 @@ class UnitRegistry(object):
                         if di not in self._dimensional_equivalents:
                             self._dimensional_equivalents[di] = set()
 
-                        self._dimensional_equivalents[di].add(self._units[unit_name].name)
+                        self._dimensional_equivalents[di].add(self._units[unit_name]._name)
 
                 except Exception as e:
                     logger.warning('Could not resolve {0}: {1!r}'.format(unit_name, e))
@@ -675,15 +676,23 @@ class UnitRegistry(object):
 
     def get_dimensionality(self, input_units):
         """Convert unit or dict of units or dimensions to a dict of base dimensions
+        dimensions
+
+        :param input_units:
+        :return: dimensionality
+        """
+        input_units = to_units_container(input_units)
+
+        return self._get_dimensionality(input_units)
+
+    def _get_dimensionality(self, input_units):
+        """ Convert a UnitsContainer to base dimensions.
 
         :param input_units:
         :return: dimensionality
         """
         if not input_units:
             return UnitsContainer()
-
-        if isinstance(input_units, string_types):
-            input_units = ParserHelper.from_string(input_units)
 
         if input_units in self._dimensionality_cache:
             return self._dimensionality_cache[input_units]
@@ -723,22 +732,39 @@ class UnitRegistry(object):
 
         :param input_units: units
         :type input_units: UnitsContainer or str
-        :param check_nonmult: if True, None will be returned as the multiplicative factor
-                              if a non-multiplicative units is found in the final Units.
+        :param check_nonmult: if True, None will be returned as the
+                              multiplicative factor if a non-multiplicative
+                              units is found in the final Units.
+        :return: multiplicative factor, base units
+        """
+        input_units = to_units_container(input_units)
+
+        f, units = self._get_base_units(input_units, check_nonmult=True)
+
+        return f, self.Unit(units)
+
+    def _get_base_units(self, input_units, check_nonmult=True):
+        """Convert unit or dict of units to the base units.
+
+        If any unit is non multiplicative and check_converter is True,
+        then None is returned as the multiplicative factor.
+
+        :param input_units: units
+        :type input_units: UnitsContainer or dict
+        :param check_nonmult: if True, None will be returned as the
+                              multiplicative factor if a non-multiplicative
+                              units is found in the final Units.
         :return: multiplicative factor, base units
         """
         if not input_units:
             return 1., UnitsContainer()
-
-        if isinstance(input_units, string_types):
-            input_units = ParserHelper.from_string(input_units)
 
         # The cache is only done for check_nonmult=True
         if check_nonmult and input_units in self._base_units_cache:
             return self._base_units_cache[input_units]
 
         accumulators = [1., defaultdict(float)]
-        self._get_base_units(input_units, 1.0, accumulators)
+        self._get_base_units_recurse(input_units, 1.0, accumulators)
 
         factor = accumulators[0]
         units = UnitsContainer(dict((k, v) for k, v in accumulators[1].items()
@@ -752,7 +778,7 @@ class UnitRegistry(object):
 
         return factor, units
 
-    def _get_base_units(self, ref, exp, accumulators):
+    def _get_base_units_recurse(self, ref, exp, accumulators):
         for key in ref:
             exp2 = exp*ref[key]
             key = self.get_name(key)
@@ -762,16 +788,25 @@ class UnitRegistry(object):
             else:
                 accumulators[0] *= reg._converter.scale ** exp2
                 if reg.reference is not None:
-                    self._get_base_units(reg.reference, exp2, accumulators)
+                    self._get_base_units_recurse(reg.reference, exp2,
+                                                 accumulators)
 
     def get_compatible_units(self, input_units):
+        """
+        """
+        input_units = to_units_container(input_units)
+
+        equiv = self._get_compatible_units(input_units)
+
+        return frozenset(self.Unit(eq) for eq in equiv)
+
+    def _get_compatible_units(self, input_units):
+        """
+        """
         if not input_units:
-            return 1., UnitsContainer()
+            return frozenset()
 
-        if isinstance(input_units, string_types):
-            input_units = ParserHelper.from_string(input_units)
-
-        src_dim = self.get_dimensionality(input_units)
+        src_dim = self._get_dimensionality(input_units)
 
         ret = self._dimensional_equivalents[src_dim]
 
@@ -789,36 +824,48 @@ class UnitRegistry(object):
 
         :param value: value
         :param src: source units.
-        :type src: UnitsContainer or str
+        :type src: Quantity or str
         :param dst: destination units.
-        :type dst: UnitsContainer or str
+        :type dst: Quantity or str
 
         :return: converted value
         """
-        if isinstance(src, string_types):
-            src = self.parse_units(src)
-        if isinstance(dst, string_types):
-            dst = self.parse_units(dst)
+        src = to_units_container(src, self)
+
+        dst = to_units_container(dst, self)
+
+        return self._convert(value, src, dst, inplace)
+
+    def _convert(self, value, src, dst, inplace=False):
+        """Convert value from some source to destination units.
+
+        :param value: value
+        :param src: source units.
+        :type src: UnitsContainer
+        :param dst: destination units.
+        :type dst: UnitsContainer
+
+        :return: converted value
+        """
         if src == dst:
             return value
 
-        src_dim = self.get_dimensionality(src)
-        dst_dim = self.get_dimensionality(dst)
+        src_dim = self._get_dimensionality(src)
+        dst_dim = self._get_dimensionality(dst)
 
         # If there is an active context, we look for a path connecting source and
         # destination dimensionality. If it exists, we transform the source value
         # by applying sequentially each transformation of the path.
         if self._active_ctx:
-            path = find_shortest_path(self._active_ctx.graph,
-                                      *Context.__keytransform__(src_dim, dst_dim))
+            path = find_shortest_path(self._active_ctx.graph, src_dim, dst_dim)
             if path:
                 src = self.Quantity(value, src)
                 for a, b in zip(path[:-1], path[1:]):
                     src = self._active_ctx.transform(a, b, self, src)
 
-                value, src = src.magnitude, src.units
+                value, src = src._magnitude, src._units
 
-                src_dim = self.get_dimensionality(src)
+                src_dim = self._get_dimensionality(src)
 
         # If the source and destination dimensionality are different,
         # then the conversion cannot be performed.
@@ -876,7 +923,7 @@ class UnitRegistry(object):
 
         # Here src and dst have only multiplicative units left. Thus we can
         # convert with a factor.
-        factor, units = self.get_base_units(src / dst)
+        factor, units = self._get_base_units(src / dst)
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
@@ -956,6 +1003,12 @@ class UnitRegistry(object):
         :raises:
             :class:`pint.UndefinedUnitError` if a unit is not in the registry
             :class:`ValueError` if the expression is invalid.
+        """
+        units = self._parse_units(input_string, as_delta)
+        return self.Unit(units)
+
+    def _parse_units(self, input_string, as_delta=None):
+        """
         """
         if input_string in self._parse_unit_cache:
             return self._parse_unit_cache[input_string]
@@ -1068,17 +1121,10 @@ class UnitRegistry(object):
         if not isinstance(args, (list, tuple)):
             args = (args, )
 
-        def to_units(x):
-            if isinstance(x, string_types):
-                return self.parse_units(x)
-            elif isinstance(x, Q_):
-                return x.units
-            return x
-
-        units = [to_units(arg) for arg in args]
+        units = [to_units_container(arg, self) for arg in args]
 
         if isinstance(ret, (list, tuple)):
-            ret = ret.__class__([to_units(arg) for arg in ret])
+            ret = ret.__class__([to_units_container(arg, self) for arg in ret])
         elif isinstance(ret, string_types):
             ret = self.parse_units(ret)
 
@@ -1092,7 +1138,8 @@ class UnitRegistry(object):
                     if unit is None:
                         new_args.append(value)
                     elif isinstance(value, Q_):
-                        new_args.append(self.convert(value.magnitude, value.units, unit))
+                        new_args.append(self._convert(value._magnitude,
+                                                      value._units, unit))
                     elif not strict:
                         new_args.append(value)
                     else:

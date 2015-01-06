@@ -580,6 +580,12 @@ def _is_dim(name):
 
 
 class SharedRegistryObject(object):
+    """Base class for object keeping a refrence to the registree.
+
+    Such object are for now _Quantity and _Unit, in a number of places it is
+    that an object from this class has a '_units' attribute.
+
+    """
 
     def _check(self, other):
         """Check if the other object use a registry and if so that it is the
@@ -599,3 +605,20 @@ class SharedRegistryObject(object):
                                          other.__class__.__name__))
         else:
             return False
+
+def to_units_container(unit_like, registry=None):
+    """ Convert a unit compatible type to a UnitsContainer.
+
+    """
+    mro = type(unit_like).mro()
+    if UnitsContainer in mro:
+        return unit_like
+    elif SharedRegistryObject in mro:
+        return unit_like._units
+    elif string_types in mro:
+        if registry:
+            return registry._parse_units(unit_like)
+        else:
+            return ParserHelper.from_string(unit_like)
+    elif dict in mro:
+        return UnitsContainer(unit_like)

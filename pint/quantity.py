@@ -19,7 +19,8 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError)
 from .definitions import UnitDefinition
 from .compat import string_types, ndarray, np, _to_magnitude, long_type
-from .util import logger, UnitsContainer, SharedRegistryObject
+from .util import (logger, UnitsContainer, SharedRegistryObject,
+                   to_units_container)
 
 
 def _eq(first, second, check_all):
@@ -74,7 +75,7 @@ class _Quantity(SharedRegistryObject):
         elif isinstance(units, string_types):
             inst = object.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
-            inst._units = inst._REGISTRY.parse_units(units)
+            inst._units = inst._REGISTRY.parse_units(units)._units
         elif isinstance(units, SharedRegistryObject):
             if isinstance(units, _Quantity) and units.magnitude != 1:
                 inst = copy.copy(units)
@@ -138,7 +139,7 @@ class _Quantity(SharedRegistryObject):
 
         :rtype: UnitContainer
         """
-        return self._units
+        return self._REGISTRY.Unit(self._units)
 
     @property
     def unitless(self):
@@ -161,7 +162,7 @@ class _Quantity(SharedRegistryObject):
         try:
             return self._dimensionality
         except AttributeError:
-            self._dimensionality = self._REGISTRY.get_dimensionality(self._units)
+            self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
 
         return self._dimensionality
 
@@ -193,14 +194,7 @@ class _Quantity(SharedRegistryObject):
         :param other: destination units.
         :type other: Quantity, str or dict
         """
-        if isinstance(other, string_types):
-            other = self._REGISTRY.parse_units(other)
-        elif isinstance(other, self.__class__):
-            other = other._units
-        elif isinstance(other, UnitsContainer):
-            pass
-        else:
-            other = UnitsContainer(other)
+        other = to_units_container(other, self._REGISTRY)
 
         self._magnitude = self._convert_magnitude(other, *contexts,
                                                   **ctx_kwargs)
@@ -214,14 +208,7 @@ class _Quantity(SharedRegistryObject):
         :param other: destination units.
         :type other: Quantity, str or dict
         """
-        if isinstance(other, string_types):
-            other = self._REGISTRY.parse_units(other)
-        elif isinstance(other, self.__class__):
-            other = other._units
-        elif isinstance(other, UnitsContainer):
-            pass
-        else:
-            other = UnitsContainer(other)
+        other = to_units_container(other, self._REGISTRY)
 
         magnitude = self._convert_magnitude_not_inplace(other, *contexts, **ctx_kwargs)
 
@@ -231,7 +218,7 @@ class _Quantity(SharedRegistryObject):
         """Return Quantity rescaled to base units
         """
 
-        _, other = self._REGISTRY.get_base_units(self._units)
+        _, other = self._REGISTRY._get_base_units(self._units)
 
         self._magnitude = self._convert_magnitude(other)
         self._units = other
@@ -241,7 +228,7 @@ class _Quantity(SharedRegistryObject):
     def to_base_units(self):
         """Return Quantity rescaled to base units
         """
-        _, other = self._REGISTRY.get_base_units(self._units)
+        _, other = self._REGISTRY._get_base_units(self._units)
 
         magnitude = self._convert_magnitude_not_inplace(other)
 
@@ -505,6 +492,7 @@ class _Quantity(SharedRegistryObject):
         no_offset_units_self = len(offset_units_self)
 
         if not self._check(other):
+
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units,
                                               getattr(other, 'units', ''))
@@ -519,6 +507,11 @@ class _Quantity(SharedRegistryObject):
                 return NotImplemented
             self._magnitude = magnitude_op(self._magnitude, other_magnitude)
             self._units = units_op(self._units, UnitsContainer())
+            return self
+
+        if not isinstance(other, _Quantity):
+            self._magnitude = magnitude_op(self._magnitude, 1)
+            self._units = units_op(self._units, other._units)
             return self
 
         if not self._ok_for_muldiv(no_offset_units_self):
@@ -555,6 +548,7 @@ class _Quantity(SharedRegistryObject):
         no_offset_units_self = len(offset_units_self)
 
         if not self._check(other):
+
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units,
                                               getattr(other, 'units', ''))
@@ -571,6 +565,11 @@ class _Quantity(SharedRegistryObject):
             magnitude = magnitude_op(self._magnitude, other_magnitude)
             units = units_op(self._units, UnitsContainer())
 
+            return self.__class__(magnitude, units)
+
+        if not isinstance(other, _Quantity):
+            magnitude = self._magnitude
+            units = units_op(self._units, other._units)
             return self.__class__(magnitude, units)
 
         new_self = self
@@ -771,7 +770,8 @@ class _Quantity(SharedRegistryObject):
             return _eq(self._magnitude, other._magnitude, False)
 
         try:
-            return _eq(self.to(other).magnitude, other._magnitude, False)
+            return _eq(self._convert_magnitude_not_inplace(other._units),
+                       other._magnitude, False)
         except DimensionalityError:
             return False
 
@@ -1079,11 +1079,11 @@ class _Quantity(SharedRegistryObject):
                     if dst_units == 'radian':
                         mobjs = []
                         for other in objs:
-                            unt = getattr(other, 'units', '')
+                            unt = getattr(other, '_units', '')
                             if unt == 'radian':
                                 mobjs.append(getattr(other, 'magnitude', other))
                             else:
-                                factor, units = self._REGISTRY.get_base_units(unt)
+                                factor, units = self._REGISTRY._get_base_units(unt)
                                 if units and units != UnitsContainer({'radian': 1}):
                                     raise DimensionalityError(units, dst_units)
                                 mobjs.append(getattr(other, 'magnitude', other) * factor)
@@ -1120,7 +1120,6 @@ class _Quantity(SharedRegistryObject):
                 # If this is not the first output,
                 # just grab the result that was previously calculated.
                 out = self.__handling[3 + huh]
-
 
             # Second, we set the units of the output value.
             if ufname in self.__set_units:
@@ -1180,7 +1179,6 @@ class _Quantity(SharedRegistryObject):
     def _is_multiplicative(self):
         """Check if the Quantity object has only multiplicative units.
         """
-        # XXX Turn this into a method/property of _Quantity?
         return not self._get_non_multiplicative_units()
 
     def _get_non_multiplicative_units(self):

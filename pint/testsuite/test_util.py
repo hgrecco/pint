@@ -8,7 +8,7 @@ import operator as op
 from pint.testsuite import BaseTestCase, QuantityTestCase
 from pint.util import (string_preprocessor, find_shortest_path, matrix_to_string,
                        transpose, find_connected_nodes, ParserHelper,
-                       UnitsContainer)
+                       UnitsContainer, to_units_container)
 
 
 class TestUnitsContainer(QuantityTestCase):
@@ -115,6 +115,30 @@ class TestUnitsContainer(QuantityTestCase):
         self.assertRaises(TypeError, d.__pow__, list())
         self.assertRaises(TypeError, d.__truediv__, list())
         self.assertRaises(TypeError, d.__rtruediv__, list())
+
+
+class TestToUnitsContainer(BaseTestCase):
+
+    def test_str_conversion(self):
+        self.assertEqual(to_units_container('m'), UnitsContainer(m=1))
+
+    def test_uc_conversion(self):
+        a = UnitsContainer(m=1)
+        self.assertIs(to_units_container(a), a)
+
+    def test_quantity_conversion(self):
+        from ..unit import UnitRegistry
+        ureg = UnitRegistry()
+        self.assertEqual(to_units_container(ureg.Quantity(1, UnitsContainer(m=1))),
+                         UnitsContainer(m=1))
+
+    def test_unit_conversion(self):
+        from ..unit import _Unit
+        self.assertEqual(to_units_container(_Unit(UnitsContainer(m=1))),
+                         UnitsContainer(m=1))
+
+    def test_dict_conversion(self):
+        self.assertEqual(to_units_container(dict(m=1)), UnitsContainer(m=1))
 
 
 class TestParseHelper(BaseTestCase):
