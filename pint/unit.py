@@ -15,6 +15,7 @@ import os
 import math
 import itertools
 import functools
+import operator
 import pkg_resources
 from decimal import Decimal
 from contextlib import contextmanager, closing
@@ -25,13 +26,209 @@ from tokenize import untokenize, NUMBER, STRING, NAME, OP
 from .context import Context, ContextChain
 from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
-                   find_shortest_path, UnitsContainer, _is_dim)
-from .compat import tokenizer, string_types
+                   find_shortest_path, UnitsContainer, _is_dim,
+                   SharedRegistryObject)
+from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
 from .converters import ScaleConverter
 from .errors import (DimensionalityError, UndefinedUnitError,
                      DefinitionSyntaxError, RedefinitionError)
+
+
+class _Unit(SharedRegistryObject):
+    """Implements a class to describe a unit supporting math operations.
+
+    :type units: UnitsContainer, str, Unit or Quantity.
+
+    """
+
+    #: Default formatting string.
+    default_format = ''
+
+    def __reduce__(self):
+        from . import _build_unit
+        return _build_unit, (self._units)
+
+    def __new__(cls, units):
+        inst = object.__new__(cls)
+        if isinstance(units, (UnitsContainer, UnitDefinition)):
+            inst._units = units
+        elif isinstance(units, string_types):
+            inst._units = inst._REGISTRY.parse_units(units)
+        elif isinstance(units, _Unit):
+            inst._units = units._units
+        else:
+            raise TypeError('units must be of type str, Unit or '
+                            'UnitsContainer; not {0}.'.format(type(units)))
+
+        inst.__used = False
+        inst.__handling = None
+        return inst
+
+    @property
+    def debug_used(self):
+        return self.__used
+
+    def __copy__(self):
+        ret = self.__class__(self._units)
+        ret.__used = self.__used
+        return ret
+
+    def __str__(self):
+        return format(self)
+
+    def __repr__(self):
+        return "<Unit('{0}')>".format(self._units)
+
+    def __format__(self, spec):
+        spec = spec or self.default_format
+
+        if '~' in spec:
+            units = UnitsContainer(dict((self._REGISTRY._get_symbol(key),
+                                         value)
+                                   for key, value in self._units.items()))
+            spec = spec.replace('~', '')
+        else:
+            units = self._units
+
+        return '%s' % (format(units, spec))
+
+    # IPython related code
+    def _repr_html_(self):
+        return self.__format__('H')
+
+    def _repr_latex_(self):
+        return "$" + self.__format__('L') + "$"
+
+    @property
+    def dimensionless(self):
+        """Return true if the Unit is dimensionless.
+
+        """
+        return not bool(self.dimensionality)
+
+    @property
+    def dimensionality(self):
+        """Unit's dimensionality (e.g. {length: 1, time: -1})
+
+        """
+        try:
+            return self._dimensionality
+        except AttributeError:
+            dim = self._REGISTRY.get_dimensionality(self._units)
+            self._dimensionality = dim
+
+        return self._dimensionality
+
+    def compatible_units(self, *contexts):
+        if contexts:
+            with self._REGISTRY.context(*contexts):
+                return self._REGISTRY.get_compatible_units(self)
+
+        return self._REGISTRY.get_compatible_units(self)
+
+    def __mul__(self, other):
+        if self._check(other):
+            if isinstance(other, self.__class__):
+                return self.__class__(self._units*other._units)
+            else:
+                return self._REGISTRY.Quantity(other._magnitude,
+                                               self._units*other._units)
+
+        return self._REGISTRY.Quantity(other, self._units)
+
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        if self._check(other):
+            if isinstance(other, self.__class__):
+                return self.__class__(self._units/other._units)
+            else:
+                return self._REGISTRY.Quantity(1/other._magnitude,
+                                           self._units/other._units)
+
+        return self._REGISTRY.Quantity(1/other, self._units)
+
+    def __rtruediv__(self, other):
+        # As Unit and Quantity both handle truediv with each other rtruediv can
+        # only be called for something different.
+        if isinstance(other, NUMERIC_TYPES):
+            return self._REGISTRY.Quantity(other, 1/self._units)
+        else:
+            return NotImplemented
+
+    __div__ = __truediv__
+    __rdiv__ = __rtruediv__
+
+    def __pow__(self, other):
+        if isinstance(other, NUMERIC_TYPES):
+            return self.__class__(self._units**other)
+
+        else:
+            mess = 'Cannot power Unit by {}'.format(type(other))
+            raise TypeError(mess)
+
+    def __hash__(self):
+        return self._units.__hash__()
+
+    def __eq__(self, other):
+        # We compare to the base class of Unit because each Unit class is
+        # unique.
+        if self._check(other):
+            if isinstance(other, self.__class__):
+                return self._units == other._units
+            else:
+                return other == self._REGISTRY.Quantity(1, self._units)
+
+        elif isinstance(other, NUMERIC_TYPES):
+            print(other)
+            return other == self._REGISTRY.Quantity(1, self._units)
+
+        else:
+            return self._units == other
+
+    def compare(self, other, op):
+        self_q = self._REGISTRY.Quantity(1, self)
+
+        if isinstance(other, NUMERIC_TYPES):
+            return self_q.compare(other, op)
+        elif isinstance(other, (_Unit, UnitsContainer, dict)):
+            return self_q.compare(self._REGISTRY.Quantity(1, other), op)
+        else:
+            return NotImplemented
+
+    __lt__ = lambda self, other: self.compare(other, op=operator.lt)
+    __le__ = lambda self, other: self.compare(other, op=operator.le)
+    __ge__ = lambda self, other: self.compare(other, op=operator.ge)
+    __gt__ = lambda self, other: self.compare(other, op=operator.gt)
+
+    def __int__(self):
+        return int(self._REGISTRY.Quantity(1, self._units))
+
+    def __long__(self):
+        return long_type(self._REGISTRY.Quantity(1, self._units))
+
+    def __float__(self):
+        return float(self._REGISTRY.Quantity(1, self._units))
+
+    def __complex__(self):
+        return complex(self._REGISTRY.Quantity(1, self._units))
+
+    __array_priority__ = 17
+
+    def __array_prepare__(self, array, context=None):
+        return 1
+
+    def __array_wrap__(self, array, context=None):
+        uf, objs, huh = context
+
+        if uf.__name__ in ('true_divide', 'divide', 'floor_divide'):
+            return self._REGISTRY.Quantity(array, 1/self._units)
+        elif uf.__name__ in ('multiply',):
+            return self._REGISTRY.Quantity(array, self._units)
+        else:
+            raise ValueError('Unsupproted operation for Unit')
 
 
 class UnitRegistry(object):
@@ -55,6 +252,7 @@ class UnitRegistry(object):
     def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
                  autoconvert_offset_to_baseunit=False,
                  on_redefinition='warn'):
+        self.Unit = build_unit_class(self)
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
 
@@ -140,6 +338,7 @@ class UnitRegistry(object):
 
     @default_format.setter
     def default_format(self, value):
+        self.Unit.default_format = value
         self.Quantity.default_format = value
 
     def add_context(self, context):
@@ -912,6 +1111,15 @@ class UnitRegistry(object):
                 return result
             return wrapper
         return decorator
+
+
+def build_unit_class(registry):
+
+    class Unit(_Unit):
+        pass
+
+    Unit._REGISTRY = registry
+    return Unit
 
 
 def build_quantity_class(registry, force_ndarray=False):

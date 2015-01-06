@@ -75,10 +75,13 @@ class _Quantity(SharedRegistryObject):
             inst = object.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)
-        elif isinstance(units, cls):
-            if units.magnitude != 1:
+        elif isinstance(units, SharedRegistryObject):
+            if isinstance(units, _Quantity) and units.magnitude != 1:
+                inst = copy.copy(units)
                 logger.warning('Creating new Quantity using a non unity Quantity as units.')
-            inst = copy.copy(units)
+            else:
+                inst = object.__new__(cls)
+                inst._units = units._units
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
         else:
             raise TypeError('units must be of type str, Quantity or '

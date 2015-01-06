@@ -71,6 +71,7 @@ class QuantityTestCase(BaseTestCase):
     def setUpClass(cls):
         cls.ureg = UnitRegistry(force_ndarray=cls.FORCE_NDARRAY)
         cls.Q_ = cls.ureg.Quantity
+        cls.U_ = cls.ureg.Unit
 
     def _get_comparable_magnitudes(self, first, second, msg):
         if isinstance(first, _Quantity) and isinstance(second, _Quantity):

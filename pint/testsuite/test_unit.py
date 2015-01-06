@@ -12,6 +12,126 @@ from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
 
 
+class TestUnit(QuantityTestCase):
+
+    def test_creation(self):
+        for arg in ('meter', UnitsContainer(meter=1), self.U_('m')):
+            self.assertEqual(self.U_(arg)._units, UnitsContainer(meter=1))
+        self.assertRaises(TypeError, self.U_, 1)
+
+    def test_unit_repr(self):
+        x = self.U_(UnitsContainer(meter=1))
+        self.assertEqual(str(x), 'meter')
+        self.assertEqual(repr(x), "<Unit('meter')>")
+
+    def test_unit_formatting(self):
+        x = self.U_(UnitsContainer(meter=2, kilogram=1, second=-1))
+        for spec, result in (('{0}', str(x)), ('{0!s}', str(x)),
+                             ('{0!r}', repr(x)),
+                             ('{0:L}', r'\frac{kilogram \cdot meter^{2}}{second}'),
+                             ('{0:P}', 'kilogram·meter²/second'),
+                             ('{0:H}', 'kilogram meter<sup>2</sup>/second'),
+                             ('{0:C}', 'kilogram*meter**2/second'),
+                             ('{0:~}', 'kg * m ** 2 / s'),
+                             ('{0:L~}', r'\frac{kg \cdot m^{2}}{s}'),
+                             ('{0:P~}', 'kg·m²/s'),
+                             ('{0:H~}', 'kg m<sup>2</sup>/s'),
+                             ('{0:C~}', 'kg*m**2/s'),
+                             ):
+            self.assertEqual(spec.format(x), result)
+
+    def test_unit_default_formatting(self):
+        ureg = UnitRegistry()
+        x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
+        for spec, result in (('L', r'\frac{kilogram \cdot meter^{2}}{second}'),
+                             ('P', 'kilogram·meter²/second'),
+                             ('H', 'kilogram meter<sup>2</sup>/second'),
+                             ('C', 'kilogram*meter**2/second'),
+                             ('~', 'kg * m ** 2 / s'),
+                             ('L~', r'\frac{kg \cdot m^{2}}{s}'),
+                             ('P~', 'kg·m²/s'),
+                             ('H~', 'kg m<sup>2</sup>/s'),
+                             ('C~', 'kg*m**2/s'),
+                             ):
+            ureg.default_format = spec
+            self.assertEqual('{0}'.format(x), result,
+                             'Failed for {0}, {1}'.format(spec, result))
+
+    def test_unit_mul(self):
+        x = self.U_('m')
+        self.assertEqual(x*1, self.Q_(1, 'm'))
+        self.assertEqual(x*0.5, self.Q_(0.5, 'm'))
+        self.assertEqual(x*self.Q_(1, 'm'), self.Q_(1, 'm**2'))
+        self.assertEqual(1*x, self.Q_(1, 'm'))
+
+    def test_unit_div(self):
+        x = self.U_('m')
+        self.assertEqual(x/1, self.Q_(1, 'm'))
+        self.assertEqual(x/0.5, self.Q_(2.0, 'm'))
+        self.assertEqual(x/self.Q_(1, 'm'), self.Q_(1))
+
+    def test_unit_rdiv(self):
+        x = self.U_('m')
+        self.assertEqual(1/x, self.Q_(1, '1/m'))
+
+    def test_unit_pow(self):
+        x = self.U_('m')
+        self.assertEqual(x**2, self.U_('m**2'))
+
+    def test_unit_hash(self):
+        x = self.U_('m')
+        self.assertEqual(hash(x), hash(x._units))
+
+    def test_unit_eqs(self):
+        x = self.U_('m')
+        self.assertEqual(x, self.U_('m'))
+        self.assertNotEqual(x, self.U_('cm'))
+
+        self.assertEqual(x, self.Q_(1, 'm'))
+        self.assertNotEqual(x, self.Q_(2, 'm'))
+
+        self.assertEqual(x, UnitsContainer({'meter': 1}))
+
+        y = self.U_('cm/m')
+        self.assertEqual(y, 0.01)
+
+    def test_unit_cmp(self):
+
+        x = self.U_('m')
+        self.assertLess(x, self.U_('km'))
+        self.assertGreater(x, self.U_('mm'))
+
+        y = self.U_('m/mm')
+        self.assertGreater(y, 1)
+        self.assertLess(y, 1e6)
+
+    def test_dimensionality(self):
+
+        x = self.U_('m')
+        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1}))
+
+    def test_dimensionless(self):
+
+        self.assertTrue(self.U_('m/mm').dimensionless)
+        self.assertFalse(self.U_('m').dimensionless)
+
+    def test_unit_casting(self):
+
+        self.assertEqual(int(self.U_('m/mm')), 1000)
+        self.assertEqual(float(self.U_('mm/m')), 1e-3)
+        self.assertEqual(complex(self.U_('mm/mm')), 1+0j)
+
+    @helpers.requires_numpy()
+    def test_array_interface(self):
+        import numpy as np
+
+        x = self.U_('m')
+        arr = np.ones(10)
+        self.assertQuantityEqual(arr*x, self.Q_(arr, 'm'))
+        self.assertQuantityEqual(arr/x, self.Q_(arr, '1/m'))
+        self.assertQuantityEqual(x/arr, self.Q_(arr, 'm'))
+
+
 class TestRegistry(QuantityTestCase):
 
     FORCE_NDARRAY = False
