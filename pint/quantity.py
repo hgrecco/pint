@@ -15,10 +15,11 @@ import operator
 import functools
 
 from .formatting import remove_custom_flags
-from .unit import (DimensionalityError, OffsetUnitCalculusError,
-                   UnitsContainer, UnitDefinition, UndefinedUnitError)
+from .errors import (DimensionalityError, OffsetUnitCalculusError,
+                     UndefinedUnitError)
+from .definitions import UnitDefinition
 from .compat import string_types, ndarray, np, _to_magnitude, long_type
-from .util import logger
+from .util import logger,UnitsContainer
 
 
 def _eq(first, second, check_all):

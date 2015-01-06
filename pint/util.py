@@ -573,3 +573,7 @@ def string_preprocessor(input_string):
     # Handle caret exponentiation
     input_string = input_string.replace("^", "**")
     return input_string
+
+
+def _is_dim(name):
+    return name[0] == '[' and name[-1] == ']'
