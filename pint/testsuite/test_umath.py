@@ -40,9 +40,6 @@ class TestUFuncs(QuantityTestCase):
     def qi(self):
         return np.asarray([1 + 1j, 2 + 2j, 3 + 3j, 4 + 4j]) * self.ureg.m
 
-    def assertEqual(self, first, second, msg=None):
-        np.testing.assert_equal(first, second, msg)
-
     def assertRaisesMsg(self, msg, ExcType, func, *args, **kwargs):
         try:
             func(*args, **kwargs)

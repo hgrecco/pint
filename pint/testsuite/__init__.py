@@ -76,14 +76,14 @@ class QuantityTestCase(BaseTestCase):
     def _get_comparable_magnitudes(self, first, second, msg):
         if isinstance(first, _Quantity) and isinstance(second, _Quantity):
             second = second.to(first)
-            self.assertEqual(first.units, second.units, msg=msg + 'Units are not equal.')
+            self.assertEqual(first.units, second.units, msg=msg + ' Units are not equal.')
             m1, m2 = first.magnitude, second.magnitude
         elif isinstance(first, _Quantity):
-            self.assertTrue(first.dimensionless, msg=msg + 'The first is not dimensionless.')
+            self.assertTrue(first.dimensionless, msg=msg + ' The first is not dimensionless.')
             first = first.to('')
             m1, m2 = first.magnitude, second
         elif isinstance(second, _Quantity):
-            self.assertTrue(second.dimensionless, msg=msg + 'The second is not dimensionless.')
+            self.assertTrue(second.dimensionless, msg=msg + ' The second is not dimensionless.')
             second = second.to('')
             m1, m2 = first, second.magnitude
         else:
