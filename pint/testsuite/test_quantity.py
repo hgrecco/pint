@@ -8,7 +8,7 @@ import operator as op
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.unit import UnitsContainer
-from pint.compat import string_types, PYTHON3, np, unittest
+from pint.compat import string_types, PYTHON3, np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
 
