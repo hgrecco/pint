@@ -16,6 +16,12 @@ class TestNumpyMethods(QuantityTestCase):
 
     FORCE_NDARRAY = True
 
+    @classmethod
+    def setUpClass(cls):
+        from pint import _DEFAULT_REGISTRY
+        cls.ureg = _DEFAULT_REGISTRY
+        cls.Q_ = cls.ureg.Quantity
+
     @property
     def q(self):
         return [[1,2],[3,4]] * self.ureg.m

@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from pint import UnitRegistry
 from pint.context import Context, _freeze
-from pint.unit import UnitsContainer
+from pint.util import UnitsContainer
 from pint.testsuite import QuantityTestCase
 
 
@@ -131,9 +131,9 @@ class TestContexts(QuantityTestCase):
     def test_graph(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
-        l = _freeze({'[length]': 1.})
-        t = _freeze({'[time]': -1.})
-        c = _freeze({'[current]': -1.})
+        l = UnitsContainer({'[length]': 1.})
+        t = UnitsContainer({'[time]': -1.})
+        c = UnitsContainer({'[current]': -1.})
 
         g_sp = defaultdict(set)
         g_sp.update({l: set((t,)),
@@ -174,9 +174,9 @@ class TestContexts(QuantityTestCase):
     def test_graph_enable(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
-        l = _freeze({'[length]': 1.})
-        t = _freeze({'[time]': -1.})
-        c = _freeze({'[current]': -1.})
+        l = UnitsContainer({'[length]': 1.})
+        t = UnitsContainer({'[time]': -1.})
+        c = UnitsContainer({'[current]': -1.})
 
         g_sp = defaultdict(set)
         g_sp.update({l: set((t,)),
