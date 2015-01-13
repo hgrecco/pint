@@ -274,8 +274,8 @@ class _Quantity(SharedRegistryObject):
 
         magnitude = q_base.magnitude
         # Only changes the prefix on the first unit in the UnitContainer
-        unit_str = q_base._units.items()[0][0]
-        unit_power = q_base._units.items()[0][1]
+        unit_str = list(q_base._units.items())[0][0]
+        unit_power = list(q_base._units.items())[0][1]
 
         if unit_power > 0:
             power = math.floor((math.log(magnitude, 1000) / unit_power)) * 3
