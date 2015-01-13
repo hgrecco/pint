@@ -234,6 +234,53 @@ class TestQuantity(QuantityTestCase):
         pickle_test(self.Q_(2.4, 'm/s'))
 
 
+class TestQuantityCompactMethod(QuantityTestCase):
+
+    def assertQuantityAlmostIdentical(self, q1, q2):
+        self.assertEqual(q1.units, q2.units)
+        self.assertAlmostEqual(q1.magnitude, q2.magnitude)
+
+    def compareQuantity_compact(self, q, exp_q_compact, unit=None):
+        self.assertQuantityAlmostIdentical(q.compact(unit=unit), exp_q_compact)
+
+    def test_dimensionally_simple_units(self):
+        ureg = self.ureg
+        self.compareQuantity_compact(1*ureg.m, 1*ureg.m)
+        self.compareQuantity_compact(1e-9*ureg.m, 1*ureg.nm)
+
+    def test_power_units(self):
+        ureg = self.ureg
+        self.compareQuantity_compact(900*ureg.m**2, 900*ureg.m**2)
+        self.compareQuantity_compact(1e7*ureg.m**2, 10*ureg.km**2)
+
+    def test_inverse_units(self):
+        ureg = self.ureg
+        self.compareQuantity_compact(1/ureg.m, 1/ureg.m)
+        self.compareQuantity_compact(100e9/ureg.m, 100/ureg.nm)
+
+    def test_inverse_square_units(self):
+        ureg = self.ureg
+        self.compareQuantity_compact(1/ureg.m**2, 1/ureg.m**2)
+        self.compareQuantity_compact(1e11/ureg.m**2, 1e5/ureg.mm**2)
+
+    def test_fractional_exponent_units(self):
+        ureg = self.ureg
+        self.compareQuantity_compact(1*ureg.m**0.5, 1*ureg.m**0.5)
+        self.compareQuantity_compact(1e-2*ureg.m**0.5, 10*ureg.um**0.5)
+
+    def test_derived_units(self):
+        ureg = self.ureg
+        self.compareQuantity_compact(0.5*ureg.megabyte, 500*ureg.kilobyte)
+        self.compareQuantity_compact(1e-11*ureg.N, 10*ureg.pN)
+
+    def test_unit_parameter(self):
+        ureg = self.ureg
+        self.compareQuantity_compact(self.Q_(100e-9, 'kg m / s^2'),
+            100*ureg.nN, ureg.N)
+        self.compareQuantity_compact(self.Q_(101.3e3, 'kg/m/s^2'),
+            101.3*ureg.kPa, ureg.Pa)
+
+
 class TestQuantityBasicMath(QuantityTestCase):
 
     FORCE_NDARRAY = False

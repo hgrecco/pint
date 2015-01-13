@@ -10,6 +10,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import copy
+import re
 import math
 import operator
 import functools
@@ -233,6 +234,75 @@ class _Quantity(SharedRegistryObject):
         magnitude = self._convert_magnitude_not_inplace(other)
 
         return self.__class__(magnitude, other)
+
+    def compact(self, unit=None):
+        """Return Quantity rescaled to compact, human-readable units.
+
+        To get output in terms of a different unit, use the unit parameter.
+
+        >>> import pint
+        >>> ureg = pint.UnitRegistry()
+        >>> (200e-9*ureg.s).compact()
+        <Quantity(200.0, 'nanosecond')>
+        >>> (1e-2*ureg('kg m/s^2')).compact('N')
+        <Quantity(10.0, 'millinewton')>
+        """
+        _base_powers = {-24: 'yocto',
+                        -21: 'zepto',
+                        -18: 'atto',
+                        -15: 'femto',
+                        -12: 'pico',
+                         -9: 'nano',
+                         -6: 'micro',
+                         -3: 'milli',
+                          0: '',
+                          3: 'kilo',
+                          6: 'mega',
+                          9: 'giga',
+                         12: 'tera',
+                         15: 'peta',
+                         18: 'exa',
+                         21: 'zetta',
+                         24: 'yotta'}
+
+        if self.unitless:
+            return self
+
+        if unit is None:
+            q_base = self.to_base_units()
+        else:
+            q_base = self.to(unit)
+
+        magnitude = q_base.magnitude
+        unit_items = q_base._units.items()
+        unit_str = unit_items[0][0]
+        unit_power = unit_items[0][1]
+
+        if unit_power > 0:
+            power = math.floor((math.log(magnitude, 1000) / unit_power)) * 3
+        else:
+            power = math.ceil((math.log(magnitude, 1000) / unit_power)) * 3
+
+        if power <= -24:
+            prefix = 'yocto'
+        elif power >= 24:
+            prefix = 'yotta'
+        else:
+            prefix = _base_powers[power]
+
+        new_unit = "{prefix}{unit_str}**{unit_power}".format(
+            prefix=prefix, unit_str=unit_str, unit_power=unit_power)
+        if len(unit_items) == 1:
+            return self.to(new_unit)
+        else:
+            # If there are more units in the registry, combine them now.
+            # This unit might not make a lot of sense,
+            # but it will at least be valid
+            combined_new_unit = self._REGISTRY(new_unit)
+            for unit, power in unit_items[1:]:
+                combined_new_unit *= getattr(self._REGISTRY, unit) ** power
+
+            return self.to(combined_new_unit)
 
     # Mathematical operations
     def __int__(self):
