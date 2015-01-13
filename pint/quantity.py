@@ -21,7 +21,7 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
 from .definitions import UnitDefinition
 from .compat import string_types, ndarray, np, _to_magnitude, long_type
 from .util import (logger, UnitsContainer, SharedRegistryObject,
-                   to_units_container)
+                   to_units_container, infer_base_unit)
 
 
 def _eq(first, second, check_all):
@@ -269,14 +269,14 @@ class _Quantity(SharedRegistryObject):
             return self
 
         if unit is None:
-            q_base = self.to_base_units()
-        else:
-            q_base = self.to(unit)
+            unit = infer_base_unit(self)
+
+        q_base = self.to(unit)
 
         magnitude = q_base.magnitude
-        unit_items = q_base._units.items()
-        unit_str = unit_items[0][0]
-        unit_power = unit_items[0][1]
+        # Only changes the prefix on the first unit in the UnitContainer
+        unit_str = q_base._units.items()[0][0]
+        unit_power = q_base._units.items()[0][1]
 
         if unit_power > 0:
             power = math.floor((math.log(magnitude, 1000) / unit_power)) * 3
@@ -290,19 +290,10 @@ class _Quantity(SharedRegistryObject):
         else:
             prefix = _base_powers[power]
 
-        new_unit = "{prefix}{unit_str}**{unit_power}".format(
-            prefix=prefix, unit_str=unit_str, unit_power=unit_power)
-        if len(unit_items) == 1:
-            return self.to(new_unit)
-        else:
-            # If there are more units in the registry, combine them now.
-            # This unit might not make a lot of sense,
-            # but it will at least be valid
-            combined_new_unit = self._REGISTRY(new_unit)
-            for unit, power in unit_items[1:]:
-                combined_new_unit *= getattr(self._REGISTRY, unit) ** power
+        new_unit_str = prefix+unit_str
+        new_unit_container = q_base._units.rename(unit_str, new_unit_str)
 
-            return self.to(combined_new_unit)
+        return self.to(new_unit_container)
 
     # Mathematical operations
     def __int__(self):

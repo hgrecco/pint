@@ -622,3 +622,43 @@ def to_units_container(unit_like, registry=None):
             return ParserHelper.from_string(unit_like)
     elif dict in mro:
         return UnitsContainer(unit_like)
+
+_prefixes = {'atto',
+            'exa',
+            'femto',
+            'giga',
+            'kilo',
+            'mega',
+            'micro',
+            'milli',
+            'nano',
+            'peta',
+            'pico',
+            'tera',
+            'yocto',
+            'yotta',
+            'zepto',
+            'zetta',
+            'centi',
+            'deci',
+            'deca',
+            'hecto',
+            'kibi',
+            'mebi',
+            'gibi',
+            'tebi',
+            'pebi',
+            'exbi',
+            'zebi',
+            'yobi'}
+
+_prefixes_regex = '^('+'|'.join(_prefixes)+')+'
+_find_prefixes = re.compile(_prefixes_regex)
+
+
+def infer_base_unit(q):
+    """Return UnitsContainer of q with all prefixes stripped."""
+    return UnitsContainer(
+        dict((_find_prefixes.sub('', unit), power) for
+        unit, power in q._units.items())
+        )
