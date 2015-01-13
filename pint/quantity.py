@@ -10,7 +10,6 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import copy
-import re
 import math
 import operator
 import functools
