@@ -234,16 +234,16 @@ class _Quantity(SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
-    def compact(self, unit=None):
+    def to_compact(self, unit=None):
         """Return Quantity rescaled to compact, human-readable units.
 
         To get output in terms of a different unit, use the unit parameter.
 
         >>> import pint
         >>> ureg = pint.UnitRegistry()
-        >>> (200e-9*ureg.s).compact()
+        >>> (200e-9*ureg.s).to_compact()
         <Quantity(200.0, 'nanosecond')>
-        >>> (1e-2*ureg('kg m/s^2')).compact('N')
+        >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
         <Quantity(10.0, 'millinewton')>
         """
         _base_powers = {-24: 'yocto',

@@ -234,14 +234,15 @@ class TestQuantity(QuantityTestCase):
         pickle_test(self.Q_(2.4, 'm/s'))
 
 
-class TestQuantityCompactMethod(QuantityTestCase):
+class TestQuantityToCompact(QuantityTestCase):
 
     def assertQuantityAlmostIdentical(self, q1, q2):
         self.assertEqual(q1.units, q2.units)
         self.assertAlmostEqual(q1.magnitude, q2.magnitude)
 
-    def compareQuantity_compact(self, q, exp_q_compact, unit=None):
-        self.assertQuantityAlmostIdentical(q.compact(unit=unit), exp_q_compact)
+    def compareQuantity_compact(self, q, expected_compact, unit=None):
+        self.assertQuantityAlmostIdentical(q.to_compact(unit=unit),
+                                           expected_compact)
 
     def test_dimensionally_simple_units(self):
         ureg = self.ureg
