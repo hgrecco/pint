@@ -623,7 +623,7 @@ def to_units_container(unit_like, registry=None):
     elif dict in mro:
         return UnitsContainer(unit_like)
 
-_prefixes = {'atto',
+_prefixes = ('atto',
             'exa',
             'femto',
             'giga',
@@ -650,7 +650,7 @@ _prefixes = {'atto',
             'pebi',
             'exbi',
             'zebi',
-            'yobi'}
+            'yobi')
 
 _prefixes_regex = '^('+'|'.join(_prefixes)+')+'
 _find_prefixes = re.compile(_prefixes_regex)
