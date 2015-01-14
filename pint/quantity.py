@@ -13,6 +13,7 @@ import copy
 import math
 import operator
 import functools
+import bisect
 
 from .formatting import remove_custom_flags
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
@@ -246,26 +247,23 @@ class _Quantity(SharedRegistryObject):
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
         <Quantity(10.0, 'millinewton')>
         """
-        _base_powers = {-24: 'yocto',
-                        -21: 'zepto',
-                        -18: 'atto',
-                        -15: 'femto',
-                        -12: 'pico',
-                         -9: 'nano',
-                         -6: 'micro',
-                         -3: 'milli',
-                          0: '',
-                          3: 'kilo',
-                          6: 'mega',
-                          9: 'giga',
-                         12: 'tera',
-                         15: 'peta',
-                         18: 'exa',
-                         21: 'zetta',
-                         24: 'yotta'}
-
         if self.unitless:
             return self
+
+        SI_prefixes = {}
+        for prefix in self._REGISTRY._prefixes.values():
+            try:
+                scale = prefix.converter.scale
+                # Kludgy way to check if this is an SI prefix
+                log10_scale = int(math.log10(scale))
+                if log10_scale == math.log10(scale):
+                    SI_prefixes[log10_scale] = prefix.name
+            except:
+                SI_prefixes[0] = ''
+
+        SI_prefixes = sorted(SI_prefixes.items())
+        SI_powers = [item[0] for item in SI_prefixes]
+        SI_bases = [item[1] for item in SI_prefixes]
 
         if unit is None:
             unit = infer_base_unit(self)
@@ -278,16 +276,11 @@ class _Quantity(SharedRegistryObject):
         unit_power = list(q_base._units.items())[0][1]
 
         if unit_power > 0:
-            power = math.floor((math.log(magnitude, 1000) / unit_power)) * 3
+            power = int(math.floor(math.log10(magnitude) / unit_power / 3)) * 3
         else:
-            power = math.ceil((math.log(magnitude, 1000) / unit_power)) * 3
+            power = int(math.ceil(math.log10(magnitude) / unit_power / 3)) * 3
 
-        if power <= -24:
-            prefix = 'yocto'
-        elif power >= 24:
-            prefix = 'yotta'
-        else:
-            prefix = _base_powers[power]
+        prefix = SI_bases[bisect.bisect_left(SI_powers, power)]
 
         new_unit_str = prefix+unit_str
         new_unit_container = q_base._units.rename(unit_str, new_unit_str)
