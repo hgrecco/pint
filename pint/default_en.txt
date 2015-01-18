@@ -138,7 +138,7 @@ byte = 8 * bit = Bo = octet
 baud = bit / second = Bd = bps
 
 # Length
-angstrom = 1e-10 * meter = ångström = Å
+angstrom = 1e-10 * meter = Å = ångström = Å
 inch = 2.54 * centimeter = in = international_inch = inches = international_inches 
 foot = 12 * inch = ft = international_foot = feet = international_feet
 mile = 5280 * foot = mi = international_mile
