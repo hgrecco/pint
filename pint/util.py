@@ -253,6 +253,9 @@ class UnitsContainer(Mapping):
                 d[key] = float(value)
         self._hash = hash(frozenset(self._d.items()))
 
+    def copy(self):
+        return self.__copy__()
+
     def add(self, key, value):
         newval = self._d[key] + value
         new = self.copy()
