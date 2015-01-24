@@ -9,6 +9,7 @@ from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
 from pint.compat import np, unittest, long_type
+from pint.errors import UndefinedUnitError
 from pint.testsuite import QuantityTestCase, helpers
 
 
@@ -268,6 +269,27 @@ class TestIssues(QuantityTestCase):
         iq = long(q)
         self.assertEqual(iq, long(10))
         self.assertIsInstance(iq, long)
+
+    def test_angstrom_creation(self):
+        ureg = UnitRegistry()
+        try:
+            ureg.Quantity(2, 'Å')
+        except SyntaxError:
+            self.fail('Quantity with Å could not be created.')
+
+    def test_alternative_angstrom_definition(self):
+        ureg = UnitRegistry()
+        try:
+            ureg.Quantity(2, '\u212B')
+        except UndefinedUnitError:
+            self.fail('Quantity with Å could not be created.')
+
+    def test_micro_creation(self):
+        ureg = UnitRegistry()
+        try:
+            ureg.Quantity(2, 'µm')
+        except SyntaxError:
+            self.fail('Quantity with µ prefix could not be created.')
 
 
 @helpers.requires_numpy()
