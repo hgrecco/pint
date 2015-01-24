@@ -42,8 +42,10 @@ except:
 
 try:
     unicode
-    _name_re = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*$")
+    _name_re = re.compile(r"\w*$", re.UNICODE)
     def isidentifier(s):
+        if s[0] in '0123456789':
+            return False
         return bool(_name_re.match(s))
 except NameError:
     def isidentifier(s):
