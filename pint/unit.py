@@ -913,6 +913,8 @@ class UnitRegistry(object):
         # Here we convert only the offset quantities. Any remaining scaled
         # quantities will be converted later.
 
+        # TODO: Shouldn't this (until factor, units) be inside the If above?
+
         # clean src from offset units by converting to reference
         for u, e in src_offset_units:
             value = self._units[u].converter.to_reference(value, inplace)
