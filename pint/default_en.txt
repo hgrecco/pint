@@ -138,6 +138,10 @@ counts_per_second = count / second = cps
 byte = 8 * bit = Bo = octet
 baud = bit / second = Bd = bps
 
+# Irradiance
+peak_sun_hour = 1000 * watt_hour / meter**2 = PSH
+langley = thermochemical_calorie / centimeter**2 = Langley
+
 # Length
 angstrom = 1e-10 * meter = ångström = Å
 inch = 2.54 * centimeter = in = international_inch = inches = international_inches 
