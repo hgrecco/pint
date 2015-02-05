@@ -186,6 +186,10 @@ denier =  gram / (9000 * meter)
 tex = gram/ (1000 * meter)
 dtex = decitex
 
+# Photometry
+lumen = candela * steradian = lm
+lux = lumen / meter ** 2 = lx
+
 # Power
 [power] = [energy] / [time]
 watt = joule / second = W = volt_ampere = VA
