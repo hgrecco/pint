@@ -134,8 +134,11 @@ class _Quantity(object):
         else:
             units = self.units
 
-        return '%s %s' % (format(self.magnitude, remove_custom_flags(spec)),
-                          format(units, spec))
+        if 'u' in spec:
+            return format(units, spec.replace('u', ''))
+        else:
+            return '%s %s' % (format(self.magnitude, remove_custom_flags(spec)),
+                              format(units, spec))
 
     # IPython related code
     def _repr_html_(self):
