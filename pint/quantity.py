@@ -109,16 +109,9 @@ class _Quantity(SharedRegistryObject):
 
     def __format__(self, spec):
         spec = spec or self.default_format
-
-        if '~' in spec:
-            units = UnitsContainer(dict((self._REGISTRY._get_symbol(key), value)
-                                   for key, value in self._units.items()))
-            spec = spec.replace('~', '')
-        else:
-            units = self._units
-
-        return '%s %s' % (format(self.magnitude, remove_custom_flags(spec)),
-                          format(units, spec))
+        return '{0} {1}'.format(
+            format(self.magnitude, remove_custom_flags(spec)),
+            format(self.units, spec))
 
     # IPython related code
     def _repr_html_(self):
