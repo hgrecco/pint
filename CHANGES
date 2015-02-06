@@ -5,7 +5,13 @@ Pint Changelog
 0.7 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added photometric units : lumen & lux.
+  (Issue #230, thanks janpipek)
+- Added hectare and peak sun hour.
+  (Issue #229, thanks edschofield)
+-
+- Improved docs.
+  (thanks Ryan Dwyer)
 
 
 0.6 (2014-11-07)
