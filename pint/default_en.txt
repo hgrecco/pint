@@ -66,6 +66,7 @@ barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
 darcy = 9.869233e-13 * m ** 2
 acre = 4046.8564224 * m ** 2 = international_acre
+hectare = 100 * are
 US_survey_acre = 160 * rod ** 2
 
 # EM
@@ -136,6 +137,10 @@ counts_per_second = count / second = cps
 # Information
 byte = 8 * bit = Bo = octet
 baud = bit / second = Bd = bps
+
+# Irradiance
+peak_sun_hour = 1000 * watt_hour / meter**2 = PSH
+langley = thermochemical_calorie / centimeter**2 = Langley
 
 # Length
 angstrom = 1e-10 * meter = ångström = Å
