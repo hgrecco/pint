@@ -27,16 +27,6 @@ _header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?
 _varname_re = re.compile('[A-Za-z_][A-Za-z0-9_]*')
 
 
-def _freeze(d):
-    """Return a hashable view of dict.
-    """
-    if isinstance(d, string_types):
-        d = ParserHelper.from_string(d)
-    if isinstance(d, frozenset):
-        return d
-    return frozenset(d.items())
-
-
 def _expression_to_function(eq):
     def func(ureg, value, **kwargs):
         return ureg.parse_expression(eq, value=value, **kwargs)

@@ -66,11 +66,6 @@ except ImportError:
     from .chainmap import ChainMap
 
 try:
-    from collections import TransformDict
-except ImportError:
-    from .transformdict import TransformDict
-
-try:
     from functools import lru_cache
 except ImportError:
     from .lrucache import lru_cache
