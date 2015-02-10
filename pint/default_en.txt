@@ -66,7 +66,7 @@ barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
 darcy = 9.869233e-13 * m ** 2
 acre = 4046.8564224 * m ** 2 = international_acre
-hectare = 100 * are
+hectare = 100 * are = ha
 US_survey_acre = 160 * rod ** 2
 
 # EM
@@ -102,6 +102,7 @@ unit_pole = 1.256637e-7 * weber
 joule = newton * meter = J
 erg = dyne * centimeter
 btu = 1.05505585262e3 * joule = Btu = BTU = british_thermal_unit
+quad = 10**15 * btu = quadrillion_btu
 eV = 1.60217653e-19 * J = electron_volt
 thm = 100000 * BTU = therm = EC_therm
 cal = 4.184 * joule = calorie = thermochemical_calorie
