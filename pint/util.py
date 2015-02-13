@@ -630,9 +630,9 @@ def to_units_container(unit_like, registry=None):
 def infer_base_unit(q):
     """Return UnitsContainer of q with all prefixes stripped."""
     d = {}
+    parse = q._REGISTRY.parse_unit_name
     for unit_name, power in q._units.items():
-        completely_parsed_unit = list(
-            q._REGISTRY.parse_unit_name(unit_name))[-1]) 
+        completely_parsed_unit = list(parse(unit_name))[-1]
 
         _, base_unit, __ = completely_parsed_unit
         d[base_unit] = power
