@@ -13,6 +13,7 @@ import copy
 import math
 import operator
 import functools
+import bisect
 
 from .formatting import remove_custom_flags
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
@@ -20,7 +21,7 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
 from .definitions import UnitDefinition
 from .compat import string_types, ndarray, np, _to_magnitude, long_type
 from .util import (logger, UnitsContainer, SharedRegistryObject,
-                   to_units_container)
+                   to_units_container, infer_base_unit)
 
 
 def _eq(first, second, check_all):
@@ -226,6 +227,58 @@ class _Quantity(SharedRegistryObject):
         magnitude = self._convert_magnitude_not_inplace(other)
 
         return self.__class__(magnitude, other)
+
+    def to_compact(self, unit=None):
+        """Return Quantity rescaled to compact, human-readable units.
+
+        To get output in terms of a different unit, use the unit parameter.
+
+        >>> import pint
+        >>> ureg = pint.UnitRegistry()
+        >>> (200e-9*ureg.s).to_compact()
+        <Quantity(200.0, 'nanosecond')>
+        >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
+        <Quantity(10.0, 'millinewton')>
+        """
+        if self.unitless:
+            return self
+
+        SI_prefixes = {}
+        for prefix in self._REGISTRY._prefixes.values():
+            try:
+                scale = prefix.converter.scale
+                # Kludgy way to check if this is an SI prefix
+                log10_scale = int(math.log10(scale))
+                if log10_scale == math.log10(scale):
+                    SI_prefixes[log10_scale] = prefix.name
+            except:
+                SI_prefixes[0] = ''
+
+        SI_prefixes = sorted(SI_prefixes.items())
+        SI_powers = [item[0] for item in SI_prefixes]
+        SI_bases = [item[1] for item in SI_prefixes]
+
+        if unit is None:
+            unit = infer_base_unit(self)
+
+        q_base = self.to(unit)
+
+        magnitude = q_base.magnitude
+        # Only changes the prefix on the first unit in the UnitContainer
+        unit_str = list(q_base._units.items())[0][0]
+        unit_power = list(q_base._units.items())[0][1]
+
+        if unit_power > 0:
+            power = int(math.floor(math.log10(magnitude) / unit_power / 3)) * 3
+        else:
+            power = int(math.ceil(math.log10(magnitude) / unit_power / 3)) * 3
+
+        prefix = SI_bases[bisect.bisect_left(SI_powers, power)]
+
+        new_unit_str = prefix+unit_str
+        new_unit_container = q_base._units.rename(unit_str, new_unit_str)
+
+        return self.to(new_unit_container)
 
     # Mathematical operations
     def __int__(self):
