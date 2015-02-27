@@ -135,7 +135,7 @@ counts_per_second = count / second = cps
 #R_value = foot ** 2 * degF * hour / btu
 
 # Information
-byte = 8 * bit = Bo = octet
+byte = 8 * bit = B = octet
 baud = bit / second = Bd = bps
 
 # Irradiance
