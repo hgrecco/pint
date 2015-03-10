@@ -491,3 +491,11 @@ class TestIssuesNP(QuantityTestCase):
         q1 = a * self.ureg.meter
         q2 = a.T * self.ureg.meter
         self.assertQuantityEqual(q1.T, q2)
+
+    def test_issue250(self):
+        a = self.ureg.V
+        b = self.ureg.mV
+        self.assertEqual(np.float16(a/b), 1000.)
+        self.assertEqual(np.float32(a/b), 1000.)
+        self.assertEqual(np.float64(a/b), 1000.)
+        self.assertEqual(np.float128(a/b), 1000.)
