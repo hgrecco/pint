@@ -3,6 +3,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import math
+import copy
 
 from pint import UnitRegistry
 from pint.unit import UnitsContainer
@@ -471,3 +472,9 @@ class TestIssuesNP(QuantityTestCase):
         q1 = a * self.ureg.meter
         q2 = a.T * self.ureg.meter
         self.assertQuantityEqual(q1.T, q2)
+
+    def test_issue252(self):
+        ur = UnitRegistry()
+        t = copy.deepcopy(ur("3 F"))
+        u = t.to(ur.mF)
+
