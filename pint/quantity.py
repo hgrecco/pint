@@ -118,6 +118,12 @@ class _Quantity(object):
         ret.__used = self.__used
         return ret
 
+    def __deepcopy__(self, memo):
+        ret = self.__class__(copy.deepcopy(self._magnitude, memo), 
+                copy.deepcopy(self._units, memo))
+        ret.__used = self.__used
+        return ret
+
     def __str__(self):
         return format(self)
 
