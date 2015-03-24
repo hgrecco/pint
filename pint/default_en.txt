@@ -144,7 +144,7 @@ langley = thermochemical_calorie / centimeter**2 = Langley
 
 # Length
 angstrom = 1e-10 * meter = ångström = Å
-inch = 2.54 * centimeter = in = international_inch = inches = international_inches 
+inch = 2.54 * centimeter = in = international_inch = inches = international_inches
 foot = 12 * inch = ft = international_foot = feet = international_feet
 mile = 5280 * foot = mi = international_mile
 yard = 3 * feet = yd = international_yard
@@ -178,7 +178,7 @@ short_hundredweight = 100 * lb
 metric_ton = 1000 * kilogram = t = tonne
 pennyweight = 24 * gram = dwt
 slug = 14.59390 * kilogram
-troy_ounce = 480 * gram = toz = apounce = apothecary_ounce
+troy_ounce = 480 * grain = toz = apounce = apothecary_ounce
 troy_pound = 12 * toz = tlb = appound = apothecary_pound
 drachm = 60 * gram = apdram = apothecary_dram
 atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
@@ -332,12 +332,12 @@ firkin = barrel / 4
     # mw is the molecular weight of the species
     # volume is the volume of the solution
     # solvent_mass is the mass of solvent in the solution
-    
+
     # moles -> mass require the molecular weight
     [substance] -> [mass]: value * mw
     [mass] -> [substance]: value / mw
 
-    # moles/volume -> mass/volume and moles/mass -> mass / mass 
+    # moles/volume -> mass/volume and moles/mass -> mass / mass
     # require the  molecular weight
     [substance] / [volume] -> [mass] / [volume]: value * mw
     [mass] / [volume] -> [substance] / [volume]: value / mw
