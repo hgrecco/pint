@@ -66,6 +66,7 @@ barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
 darcy = 9.869233e-13 * m ** 2
 acre = 4046.8564224 * m ** 2 = international_acre
+hectare = 100 * are
 US_survey_acre = 160 * rod ** 2
 
 # EM
@@ -137,9 +138,13 @@ counts_per_second = count / second = cps
 byte = 8 * bit = Bo = octet
 baud = bit / second = Bd = bps
 
+# Irradiance
+peak_sun_hour = 1000 * watt_hour / meter**2 = PSH
+langley = thermochemical_calorie / centimeter**2 = Langley
+
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
-inch = 2.54 * centimeter = in = international_inch = inches = international_inches 
+inch = 2.54 * centimeter = in = international_inch = inches = international_inches
 foot = 12 * inch = ft = international_foot = feet = international_feet
 mile = 5280 * foot = mi = international_mile
 yard = 3 * feet = yd = international_yard
@@ -173,7 +178,7 @@ short_hundredweight = 100 * lb
 metric_ton = 1000 * kilogram = t = tonne
 pennyweight = 24 * gram = dwt
 slug = 14.59390 * kilogram
-troy_ounce = 480 * gram = toz = apounce = apothecary_ounce
+troy_ounce = 480 * grain = toz = apounce = apothecary_ounce
 troy_pound = 12 * toz = tlb = appound = apothecary_pound
 drachm = 60 * gram = apdram = apothecary_dram
 atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
@@ -185,6 +190,10 @@ ton = 2000 * lb = short_ton
 denier =  gram / (9000 * meter)
 tex = gram/ (1000 * meter)
 dtex = decitex
+
+# Photometry
+lumen = candela * steradian = lm
+lux = lumen / meter ** 2 = lx
 
 # Power
 [power] = [energy] / [time]
@@ -323,12 +332,12 @@ firkin = barrel / 4
     # mw is the molecular weight of the species
     # volume is the volume of the solution
     # solvent_mass is the mass of solvent in the solution
-    
+
     # moles -> mass require the molecular weight
     [substance] -> [mass]: value * mw
     [mass] -> [substance]: value / mw
 
-    # moles/volume -> mass/volume and moles/mass -> mass / mass 
+    # moles/volume -> mass/volume and moles/mass -> mass / mass
     # require the  molecular weight
     [substance] / [volume] -> [mass] / [volume]: value * mw
     [mass] / [volume] -> [substance] / [volume]: value / mw
