@@ -129,13 +129,27 @@ class _Quantity(SharedRegistryObject):
 
     @property
     def magnitude(self):
-        """Quantity's magnitude.
+        """Quantity's magnitude. Long form for `m`
+        """
+        return self._magnitude
+
+    @property
+    def m(self):
+        """Quantity's magnitude. Short form for `magnitude`
         """
         return self._magnitude
 
     @property
     def units(self):
-        """Quantity's units.
+        """Quantity's units. Long form for `u`
+
+        :rtype: UnitContainer
+        """
+        return self._REGISTRY.Unit(self._units)
+
+    @property
+    def u(self):
+        """Quantity's units. Short form for `units`
 
         :rtype: UnitContainer
         """
