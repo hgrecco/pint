@@ -9,7 +9,7 @@ Pint: a Python units library
 
 Pint is Python package to define, operate and manipulate **physical quantities**: the product of a numerical value and a unit of measurement. It allows arithmetic operations between them and conversions from and to different units.
 
-It is distributed with a comprehensive list of physical units, prefixes and constants. Due to its modular design, you can extend (or even rewrite!) the complete list without changing the source code. It supports a lot of numpy mathematical operations **without monkey patching or wrapping numpy**.
+It is distributed with a `comprehensive list of physical units, prefixes and constants`_. Due to its modular design, you can extend (or even rewrite!) the complete list without changing the source code. It supports a lot of numpy mathematical operations **without monkey patching or wrapping numpy**.
 
 It has a complete test coverage. It runs in Python 2.6+ and 3.2+ with no other dependency. It licensed under BSD.
 
@@ -29,9 +29,11 @@ Adding and changing units and their definitions does not involve changing the co
 **Advanced string formatting**: a quantity can be formatted into string using PEP 3101 syntax.
 Extended conversion flags are given to provide symbolic, latex and pretty formatting.
 
-**Free to choose the numerical type**: You can use any numerical type (`fraction`, `float`, `decimal`, `numpy.ndarray`, etc). NumPy is not required but supported.
+**Free to choose the numerical type**: You can use any numerical type (`fraction`, `float`, `decimal`, `numpy.ndarray`, etc). NumPy_ is not required but supported.
 
-**NumPy integration**: When you choose to use a NumPy ndarray, its methods and ufuncs are supported including automatic conversion of units. For example `numpy.arccos(q)` will require a dimensionless `q` and the units of the output quantity will be radian.
+**NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and ufuncs are supported including automatic conversion of units. For example `numpy.arccos(q)` will require a dimensionless `q` and the units of the output quantity will be radian.
+
+**Uncertainties integration**:  transparently handles calculations with quantities with uncertainties (like 3.14±0.01) meter via the `uncertainties package`_.
 
 **Handle temperature**: conversion between units with different reference points, like positions on a map or absolute temperature scales.
 
@@ -83,3 +85,6 @@ One last thing
 
 
 
+.. _`comprehensive list of physical units, prefixes and constants`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
+.. _`uncertainties package`: https://pythonhosted.org/uncertainties/
+.. _`NumPy`: http://www.numpy.org/
