@@ -102,14 +102,14 @@ unit_pole = 1.256637e-7 * weber
 joule = newton * meter = J
 erg = dyne * centimeter
 btu = 1.05505585262e3 * joule = Btu = BTU = british_thermal_unit
-eV = 1.60217653e-19 * J = electron_volt
+electron_volt = 1.60217653e-19 * J = eV
 thm = 100000 * BTU = therm = EC_therm
 cal = 4.184 * joule = calorie = thermochemical_calorie
 international_steam_table_calorie = 4.1868 * joule
 ton_TNT = 4.184e9 * joule = tTNT
 US_therm = 1.054804e8 * joule
 watt_hour = watt * hour = Wh = watthour
-E_h = 4.35974394e-18 * joule = hartree = hartree_energy
+hartree = 4.35974394e-18 * joule = E_h = hartree_energy
 
 # Force
 [force] = [mass] * [acceleration]
