@@ -139,6 +139,14 @@ class _Quantity(SharedRegistryObject):
         """
         return self._magnitude
 
+    def m_as(self, unit):
+        """Quantity's magnitude expressed in particular units.
+
+        :param other: destination units.
+        :type other: Quantity, str or dict
+        """
+        return (self / unit).to('').magnitude
+
     @property
     def units(self):
         """Quantity's units. Long form for `u`
