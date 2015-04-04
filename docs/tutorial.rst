@@ -264,6 +264,12 @@ Then in `yourmodule.py` the code would be::
    length = 10 * ureg.meter
    my_speed = Q_(20, 'm/s')
 
+If you are pickling and unplicking Quantities within your project, you should also define the registry as the application registry::
+
+   from pint import UnitRegistry, set_application_registry
+   ureg = UnitRegistry()
+   set_application_registry(ureg)
+
 
 .. warning:: There are no global units in Pint. All units belong to a registry and you can have multiple registries instantiated at the same time. However, you are not supposed to operate between quantities that belong to different registries. Never do things like this::
 
