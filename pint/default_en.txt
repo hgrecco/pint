@@ -180,9 +180,9 @@ pennyweight = 24 * gram = dwt
 slug = 14.59390 * kilogram
 troy_ounce = 480 * grain = toz = apounce = apothecary_ounce
 troy_pound = 12 * toz = tlb = appound = apothecary_pound
-drachm = 60 * gram = apdram = apothecary_dram
+drachm = 60 * grain = apdram = apothecary_dram
 atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
-scruple = 20 * gram
+scruple = 20 * grain
 bag = 94 * lb
 ton = 2000 * lb = short_ton
 
