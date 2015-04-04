@@ -262,7 +262,7 @@ Then in `yourmodule.py` the code would be::
    from . import ureg, Q_
 
    length = 10 * ureg.meter
-   my_speed = Quantity(20, 'm/s')
+   my_speed = Q_(20, 'm/s')
 
 
 .. warning:: There are no global units in Pint. All units belong to a registry and you can have multiple registries instantiated at the same time. However, you are not supposed to operate between quantities that belong to different registries. Never do things like this::
