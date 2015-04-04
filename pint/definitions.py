@@ -149,7 +149,8 @@ class DimensionDefinition(Definition):
                 self.is_base = False
             else:
                 raise ValueError('Base dimensions must be referenced to None. '
-                                 'Derived dimensions must only be referenced to dimensions.')
+                                 'Derived dimensions must only be referenced '
+                                 'to dimensions.')
             self.reference = UnitsContainer(converter)
 
         super(DimensionDefinition, self).__init__(name, symbol, aliases,

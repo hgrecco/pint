@@ -7,41 +7,61 @@ Pint: a Python units library
    :alt: Pint: **physical quantities**
    :class: floatingflask
 
-Pint is Python package to define, operate and manipulate **physical quantities**: the product of a numerical value and a unit of measurement. It allows arithmetic operations between them and conversions from and to different units.
+Pint is Python package to define, operate and manipulate **physical quantities**:
+the product of a numerical value and a unit of measurement. It allows
+arithmetic operations between them and conversions from and to different units.
 
-It is distributed with a `comprehensive list of physical units, prefixes and constants`_. Due to its modular design, you can extend (or even rewrite!) the complete list without changing the source code. It supports a lot of numpy mathematical operations **without monkey patching or wrapping numpy**.
+It is distributed with a `comprehensive list of physical units, prefixes and constants`_.
+Due to its modular design, you can extend (or even rewrite!) the complete list
+without changing the source code. It supports a lot of numpy mathematical
+operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 2.6+ and 3.2+ with no other dependency. It licensed under BSD.
+It has a complete test coverage. It runs in Python 2.6+ and 3.2+ with no other
+dependency. It licensed under BSD.
 
 
 Design principles
 -----------------
 
-Although there are already a few very good Python packages to handle physical quantities, no one was really fitting my needs. Like most developers, I programed Pint to scratch my own itches.
+Although there are already a few very good Python packages to handle physical
+quantities, no one was really fitting my needs. Like most developers, I
+programmed Pint to scratch my own itches.
 
-**Unit parsing**: prefixed and pluralized forms of units are recognized without explicitly defining them.
-In other words: as the prefix *kilo* and the unit *meter* are defined, Pint understands *kilometers*.
-This results in a much shorter and maintainable unit definition list as compared to other packages.
+**Unit parsing**: prefixed and pluralized forms of units are recognized without
+explicitly defining them. In other words: as the prefix *kilo* and the unit
+*meter* are defined, Pint understands *kilometers*. This results in a much
+shorter and maintainable unit definition list as compared to other packages.
 
-**Standalone unit definitions**: units definitions are loaded from a text file which is simple and easy to edit.
-Adding and changing units and their definitions does not involve changing the code.
+**Standalone unit definitions**: units definitions are loaded from a text file
+which is simple and easy to edit. Adding and changing units and their
+definitions does not involve changing the code.
 
-**Advanced string formatting**: a quantity can be formatted into string using PEP 3101 syntax.
-Extended conversion flags are given to provide symbolic, latex and pretty formatting.
+**Advanced string formatting**: a quantity can be formatted into string using
+`PEP 3101`_ syntax. Extended conversion flags are given to provide symbolic,
+LaTeX and pretty formatting.
 
-**Free to choose the numerical type**: You can use any numerical type (`fraction`, `float`, `decimal`, `numpy.ndarray`, etc). NumPy_ is not required but supported.
+**Free to choose the numerical type**: You can use any numerical type
+(`fraction`, `float`, `decimal`, `numpy.ndarray`, etc). NumPy_ is not required
+but supported.
 
-**NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and ufuncs are supported including automatic conversion of units. For example `numpy.arccos(q)` will require a dimensionless `q` and the units of the output quantity will be radian.
+**NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and
+ufuncs are supported including automatic conversion of units. For example
+`numpy.arccos(q)` will require a dimensionless `q` and the units of the output
+quantity will be radian.
 
-**Uncertainties integration**:  transparently handles calculations with quantities with uncertainties (like 3.14±0.01) meter via the `uncertainties package`_.
+**Uncertainties integration**:  transparently handles calculations with
+quantities with uncertainties (like 3.14±0.01) meter via the `uncertainties
+package`_.
 
-**Handle temperature**: conversion between units with different reference points, like positions on a map or absolute temperature scales.
+**Handle temperature**: conversion between units with different reference
+points, like positions on a map or absolute temperature scales.
 
 **Small codebase**: easy to maintain codebase with a flat hierarchy.
 
 **Dependency free**: it depends only on Python and its standard library.
 
-**Python 2 and 3**: a single codebase that runs unchanged in Python 2.7+ and Python 3.0+.
+**Python 2 and 3**: a single codebase that runs unchanged in Python 2.7+ and
+Python 3.0+.
 
 
 
@@ -88,3 +108,4 @@ One last thing
 .. _`comprehensive list of physical units, prefixes and constants`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
 .. _`uncertainties package`: https://pythonhosted.org/uncertainties/
 .. _`NumPy`: http://www.numpy.org/
+.. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/

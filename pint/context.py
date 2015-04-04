@@ -34,8 +34,8 @@ def _expression_to_function(eq):
 
 
 class Context(object):
-    """A specialized container that defines transformation functions from
-    one dimension to another. Each Dimension are specified using a UnitsContainer.
+    """A specialized container that defines transformation functions from one
+    dimension to another. Each Dimension are specified using a UnitsContainer.
     Simple transformation are given with a function taking a single parameter.
 
         >>> timedim = UnitsContainer({'[time]': 1})
@@ -48,8 +48,8 @@ class Context(object):
         >>> c.transform(timedim, spacedim, 2)
         6
 
-    Conversion functions may take optional keyword arguments and the context can
-    have default values for these arguments.
+    Conversion functions may take optional keyword arguments and the context
+    can have default values for these arguments.
 
         >>> def f(time, n):
         ...     'Time to length converter, n is the index of refraction of the material'
@@ -78,9 +78,9 @@ class Context(object):
 
     @classmethod
     def from_context(cls, context, **defaults):
-        """Creates a new context that shares the funcs dictionary with the original
-        context. The default values are copied from the original context and updated
-        with the new defaults.
+        """Creates a new context that shares the funcs dictionary with the
+        original context. The default values are copied from the original
+        context and updated with the new defaults.
 
         If defaults is empty, return the same context.
         """

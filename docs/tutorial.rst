@@ -7,7 +7,8 @@ Tutorial
 Converting Quantities
 ---------------------
 
-Pint has the concept of Unit Registry, an object within which units are defined and handled. You start by creating your registry::
+Pint has the concept of Unit Registry, an object within which units are defined
+and handled. You start by creating your registry::
 
    >>> from pint import UnitRegistry
    >>> ureg = UnitRegistry()
@@ -18,7 +19,8 @@ Pint has the concept of Unit Registry, an object within which units are defined 
    ureg = UnitRegistry()
    Q_ = ureg.Quantity
 
-If no parameter is given to the constructor, the unit registry is populated with the default list of units and prefixes.
+If no parameter is given to the constructor, the unit registry is populated
+with the default list of units and prefixes.
 You can now simply use the registry in the following way:
 
 .. doctest::
@@ -32,7 +34,9 @@ You can now simply use the registry in the following way:
    >>> print(repr(time))
    <Quantity(8.0, 'second')>
 
-In this code `distance` and `time` are physical quantity objects (`Quantity`). Physical quantities can be queried for their magnitude, units, and dimensionality:
+In this code `distance` and `time` are physical quantity objects (`Quantity`).
+Physical quantities can be queried for their magnitude, units, and
+dimensionality:
 
 .. doctest::
 
@@ -51,7 +55,8 @@ and can handle mathematical operations between:
    >>> print(speed)
    3.0 meter / second
 
-As unit registry knows about the relationship between different units, you can convert quantities to the unit of choice:
+As unit registry knows about the relationship between different units, you can
+convert quantities to the unit of choice:
 
 .. doctest::
 
@@ -65,7 +70,8 @@ This method returns a new object leaving the original intact as can be seen by:
    >>> print(speed)
    3.0 meter / second
 
-If you want to convert in-place (i.e. without creating another object), you can use the `ito` method:
+If you want to convert in-place (i.e. without creating another object), you can
+use the `ito` method:
 
 .. doctest::
 
@@ -84,7 +90,8 @@ If you ask Pint to perform an invalid conversion:
    pint.pint.DimensionalityError: Cannot convert from 'inch / minute' (length / time) to 'joule' (length ** 2 * mass / time ** 2)
 
 
-There are also methods 'to_base_units' and 'ito_base_units' which automatically convert to the reference units with the correct dimensionality:
+There are also methods 'to_base_units' and 'ito_base_units' which automatically
+convert to the reference units with the correct dimensionality:
 
 .. doctest::
 
@@ -100,7 +107,8 @@ There are also methods 'to_base_units' and 'ito_base_units' which automatically 
    1.7526 meter
 
 
-In some cases it is useful to define physical quantities objects using the class constructor:
+In some cases it is useful to define physical quantities objects using the
+class constructor:
 
 .. doctest::
 
@@ -108,7 +116,8 @@ In some cases it is useful to define physical quantities objects using the class
    >>> Q_(1.78, ureg.meter) == 1.78 * ureg.meter
    True
 
-(I tend to abbreviate Quantity as `Q_`) The built-in parser recognizes prefixed and pluralized units even though they are not in the definition list:
+(I tend to abbreviate Quantity as `Q_`) The built-in parser recognizes prefixed
+and pluralized units even though they are not in the definition list:
 
 .. doctest::
 
@@ -127,7 +136,8 @@ If you try to use a unit which is not in the registry:
    ...
    pint.pint.UndefinedUnitError: 'snail_speed' is not defined in the unit registry
 
-You can add your own units to the registry or build your own list. More info on that :ref:`defining`
+You can add your own units to the registry or build your own list. More info on
+that :ref:`defining`
 
 
 String parsing
@@ -206,7 +216,8 @@ Pint's physical quantities can be easily printed:
    of `{}`, `{0!s}` instead of `{!s}` in string formatting operations.
 
 
-But Pint also extends the standard formatting capabilities for unicode and latex representations:
+But Pint also extends the standard formatting capabilities for unicode and
+LaTeX representations:
 
 .. doctest::
 
@@ -221,7 +232,7 @@ But Pint also extends the standard formatting capabilities for unicode and latex
    >>> 'The HTML representation is {:H}'.format(accel)
    'The HTML representation is 1.3 meter/second<sup>2</sup>'
 
-.. note:: 
+.. note::
    In Python 2, run ``from __future__ import unicode_literals``
    or prefix pretty  formatted strings with `u` to prevent ``UnicodeEncodeError``.
 
@@ -249,8 +260,10 @@ Finally, you can specify a default format specification:
 Using Pint in your projects
 ---------------------------
 
-If you use Pint in multiple modules within your Python package, you normally want to avoid creating multiple instances of the unit registry.
-The best way to do this is by instantiating the registry in a single place. For example, you can add the following code to your package `__init__.py`::
+If you use Pint in multiple modules within your Python package, you normally
+want to avoid creating multiple instances of the unit registry.
+The best way to do this is by instantiating the registry in a single place. For
+example, you can add the following code to your package `__init__.py`::
 
    from pint import UnitRegistry
    ureg = UnitRegistry()
@@ -264,7 +277,8 @@ Then in `yourmodule.py` the code would be::
    length = 10 * ureg.meter
    my_speed = Q_(20, 'm/s')
 
-If you are pickling and unplicking Quantities within your project, you should also define the registry as the application registry::
+If you are pickling and unplicking Quantities within your project, you should
+also define the registry as the application registry::
 
    from pint import UnitRegistry, set_application_registry
    ureg = UnitRegistry()

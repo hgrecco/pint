@@ -60,7 +60,8 @@ class _Quantity(SharedRegistryObject):
         if units is None:
             if isinstance(value, string_types):
                 if value == '':
-                    raise ValueError('Expression to parse as Quantity cannot be an empty string.')
+                    raise ValueError('Expression to parse as Quantity cannot '
+                                     'be an empty string.')
                 inst = cls._REGISTRY.parse_expression(value)
                 return cls.__new__(cls, inst)
             elif isinstance(value, cls):
@@ -80,7 +81,8 @@ class _Quantity(SharedRegistryObject):
         elif isinstance(units, SharedRegistryObject):
             if isinstance(units, _Quantity) and units.magnitude != 1:
                 inst = copy.copy(units)
-                logger.warning('Creating new Quantity using a non unity Quantity as units.')
+                logger.warning('Creating new Quantity using a non unity '
+                               'Quantity as units.')
             else:
                 inst = object.__new__(cls)
                 inst._units = units._units
@@ -103,8 +105,8 @@ class _Quantity(SharedRegistryObject):
         return ret
 
     def __deepcopy__(self, memo):
-        ret = self.__class__(copy.deepcopy(self._magnitude, memo), 
-                copy.deepcopy(self._units, memo))
+        ret = self.__class__(copy.deepcopy(self._magnitude, memo),
+                             copy.deepcopy(self._units, memo))
         ret.__used = self.__used
         return ret
 
@@ -346,8 +348,9 @@ class _Quantity(SharedRegistryObject):
             if _eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
                 # do the operation without checking units.
-                # We do the calculation instead of just returning the same value to
-                # enforce any shape checking and type casting due to the operation.
+                # We do the calculation instead of just returning the same
+                # value to enforce any shape checking and type casting due to
+                # the operation.
                 self._magnitude = op(self._magnitude, other_magnitude)
             elif self.dimensionless:
                 self.ito(UnitsContainer())
@@ -439,8 +442,9 @@ class _Quantity(SharedRegistryObject):
             if _eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
                 # do the operation without checking units.
-                # We do the calculation instead of just returning the same value to
-                # enforce any shape checking and type casting due to the operation.
+                # We do the calculation instead of just returning the same
+                # value to enforce any shape checking and type casting due to
+                # the operation.
                 units = self._units
                 magnitude = op(self._magnitude,
                                _to_magnitude(other, self.force_ndarray))
@@ -508,7 +512,7 @@ class _Quantity(SharedRegistryObject):
             # Replace offset unit in self by the corresponding delta unit.
             # This is done to prevent a shift by offset in the to()-call.
             tu = self._units.rename(self_non_mul_unit,
-                                   'delta_' + self_non_mul_unit)
+                                    'delta_' + self_non_mul_unit)
             magnitude = op(self._magnitude, other.to(tu).magnitude)
             units = self._units
         elif (len(other_non_mul_units) == 1
@@ -518,7 +522,7 @@ class _Quantity(SharedRegistryObject):
             # Replace offset unit in other by the corresponding delta unit.
             # This is done to prevent a shift by offset in the to()-call.
             tu = other._units.rename(other_non_mul_unit,
-                                    'delta_' + other_non_mul_unit)
+                                     'delta_' + other_non_mul_unit)
             magnitude = op(self._convert_magnitude(tu), other._magnitude)
             units = other._units
         else:
@@ -550,13 +554,16 @@ class _Quantity(SharedRegistryObject):
         return -self._add_sub(other, operator.sub)
 
     def _imul_div(self, other, magnitude_op, units_op=None):
-        """Perform multiplication or division operation in-place and return the result.
+        """Perform multiplication or division operation in-place and return the
+        result.
 
         :param other: object to be multiplied/divided with self
         :type other: Quantity or any type accepted by :func:`_to_magnitude`
-        :param magnitude_op: operator function to perform on the magnitudes (e.g. operator.mul)
+        :param magnitude_op: operator function to perform on the magnitudes
+            (e.g. operator.mul)
         :type magnitude_op: function
-        :param units_op: operator function to perform on the units; if None, *magnitude_op* is used
+        :param units_op: operator function to perform on the units; if None,
+            *magnitude_op* is used
         :type units_op: function or None
         """
         if units_op is None:
@@ -610,9 +617,11 @@ class _Quantity(SharedRegistryObject):
 
         :param other: object to be multiplied/divided with self
         :type other: Quantity or any type accepted by :func:`_to_magnitude`
-        :param magnitude_op: operator function to perform on the magnitudes (e.g. operator.mul)
+        :param magnitude_op: operator function to perform on the magnitudes
+            (e.g. operator.mul)
         :type magnitude_op: function
-        :param units_op: operator function to perform on the units; if None, *magnitude_op* is used
+        :param units_op: operator function to perform on the units; if None,
+            *magnitude_op* is used
         :type units_op: function or None
         """
         if units_op is None:
@@ -744,7 +753,6 @@ class _Quantity(SharedRegistryObject):
                 if np.size(other) > 1:
                     raise DimensionalityError(self._units, 'dimensionless')
 
-            new_self = self
             if other == 1:
                 return self
             elif other == 0:

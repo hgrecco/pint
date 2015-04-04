@@ -121,13 +121,30 @@ And the following `ndarrays methods`_ and functions:
 Comments
 --------
 
-What follows is a short discussion about how NumPy support is implemented in Pint's `Quantity` Object.
+What follows is a short discussion about how NumPy support is implemented in
+Pint's `Quantity` Object.
 
-For the supported functions, Pint expects certain units and attempts to convert the input (or inputs). For example, the argument of the exponential function (`numpy.exp`) must be dimensionless. Units will be simplified (converting the magnitude appropriately) and `numpy.exp` will be applied to the resulting magnitude. If the input is not dimensionless, a `DimensionalityError` exception will be raised.
+For the supported functions, Pint expects certain units and attempts to convert
+the input (or inputs). For example, the argument of the exponential function
+(`numpy.exp`) must be dimensionless. Units will be simplified (converting the
+magnitude appropriately) and `numpy.exp` will be applied to the resulting
+magnitude. If the input is not dimensionless, a `DimensionalityError` exception
+will be raised.
 
-In some functions that take 2 or more arguments (e.g. `arctan2`), the second argument is converted to the units of the first. Again, a `DimensionalityError` exception will be raised if this is not possible.
+In some functions that take 2 or more arguments (e.g. `arctan2`), the second
+argument is converted to the units of the first. Again, a `DimensionalityError`
+exception will be raised if this is not possible.
 
-This behaviour introduces some performance penalties and increased memory usage. Quantities that must be converted to other units require additional memory and cpu cycles. On top of this, all `ufuncs` are implemented in the `Quantity` class by overriding `__array_wrap__`, a NumPy hook that is executed after the calculation and before returning the value. To our knowledge, there is no way to signal back to NumPy that our code will take care of the calculation. For this reason the calculation is actually done twice: first in the original ndarray and then in then in the one that has been converted to the right units. Therefore, for numerically intensive code, you might want to convert the objects first and then use directly the magnitude.
+This behaviour introduces some performance penalties and increased memory
+usage. Quantities that must be converted to other units require additional
+memory and CPU cycles. On top of this, all `ufuncs` are implemented in the
+`Quantity` class by overriding `__array_wrap__`, a NumPy hook that is executed
+after the calculation and before returning the value. To our knowledge, there
+is no way to signal back to NumPy that our code will take care of the
+calculation. For this reason the calculation is actually done twice:
+first in the original ndarray and then in then in the one that has been
+converted to the right units. Therefore, for numerically intensive code, you
+might want to convert the objects first and then use directly the magnitude.
 
 
 

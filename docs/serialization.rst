@@ -75,7 +75,7 @@ To unpickle, just
     <Quantity(24.2, 'year')>
 
 You can use the same mechanism with any serialization protocol, not only with binary ones.
-(In fact, version 0 of the Pickle protocol is ascii). Other common serialization protocols/packages
+(In fact, version 0 of the Pickle protocol is ASCII). Other common serialization protocols/packages
 are json_, yaml_, shelve_, hdf5_ (or via PyTables_) and dill_.
 Notice that not all of these packages will serialize properly the magnitude (which can be any
 numerical type such as `numpy.ndarray`)
