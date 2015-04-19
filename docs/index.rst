@@ -81,6 +81,7 @@ User Guide
     contexts
     measurement
     defining
+    performance
 
 
 More information
