@@ -22,6 +22,7 @@ from contextlib import contextmanager, closing
 from io import open, StringIO
 from collections import defaultdict
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
+from numbers import Number
 
 from .context import Context, ContextChain
 from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
@@ -35,6 +36,7 @@ from .converters import ScaleConverter
 from .errors import (DimensionalityError, UndefinedUnitError,
                      DefinitionSyntaxError, RedefinitionError)
 
+from .pint_eval import build_eval_tree
 
 class _Unit(SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
@@ -1043,6 +1045,22 @@ class UnitRegistry(object):
         self._parse_unit_cache[input_string] = ret
 
         return ret
+    
+    def _eval_token(self, token, case_sensitive=True, **values):
+        token_type = token[0]
+        token_text = token[1]
+        if token_type == NAME:
+            if token_text == 'pi':
+                return self.Quantity(math.pi)
+            elif token_text in values:
+                return self.Quantity(values[token_text])
+            else:
+                return self.Quantity(1, UnitsContainer({self.get_name(token_text, 
+                                                                      case_sensitive=case_sensitive) : 1}))
+        elif token_type == NUMBER:
+            return ParserHelper.eval_token(token)
+        else:
+            raise Exception('unknown token type')
 
     def parse_expression(self, input_string, case_sensitive=True, **values):
         """Parse a mathematical expression including units and return a quantity object.
@@ -1050,49 +1068,15 @@ class UnitRegistry(object):
         Numerical constants can be specified as keyword arguments and will take precedence
         over the names defined in the registry.
         """
-
+        
         if not input_string:
             return self.Quantity(1)
 
         input_string = string_preprocessor(input_string)
         gen = tokenizer(input_string)
-        result = []
-        unknown = set()
-        for toknum, tokval, _, _, _ in gen:
-            if toknum == NAME:
-                # TODO: Integrate math better, Replace eval, make as_delta-aware
-                if tokval == 'pi' or tokval in values:
-                    result.append((toknum, tokval))
-                    continue
-                try:
-                    tokval = self.get_name(tokval, case_sensitive)
-                except UndefinedUnitError as ex:
-                    unknown.add(ex.unit_names)
-                if tokval:
-                    result.extend([
-                        (NAME, 'Q_'), (OP, '('), (NUMBER, '1'), (OP, ','),
-                        (NAME, 'U_'),  (OP, '('), (STRING, tokval), (OP, '='), (NUMBER, '1'), (OP, ')'),
-                        (OP, ')')
-                    ])
-                else:
-                    result.extend([
-                        (NAME, 'Q_'), (OP, '('), (NUMBER, '1'), (OP, ','),
-                        (NAME, 'U_'), (OP, '('), (OP, ')'),
-                        (OP, ')')
-                    ])
-            else:
-                result.append((toknum, tokval))
-
-        if unknown:
-            raise UndefinedUnitError(unknown)
-        return eval(untokenize(result),
-                    {'__builtins__': None,
-                     'REGISTRY': self._units,
-                     'Q_': self.Quantity,
-                     'U_': UnitsContainer,
-                     'pi': math.pi},
-                    values
-                    )
+        
+        return build_eval_tree(gen).evaluate(lambda x : self._eval_token(x, case_sensitive=case_sensitive,
+                                                                          **values))
 
     __call__ = parse_expression
 

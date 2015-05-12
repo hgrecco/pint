@@ -8,13 +8,13 @@ from decimal import Decimal
 import math
 import operator
 
-from pint.util import ParserHelper, UnitsContainer
-
 import token as tokenlib
 
 #for controlling order of operations
 _OP_PRIORITY = {
-    '**' : 2,
+    '**' : 3,
+    '^' : 3,
+    'unary' : 2,
     '*' : 1,
     '' : 1, #operator for implicit ops
     '/' : 1,
@@ -63,7 +63,7 @@ class EvalTreeNode(object):
             return self.left[1]
         return '(%s)' % ' '.join(comps)
     
-    def evaluate(self, define_op, bin_op, un_op):
+    def evaluate(self, define_op, bin_op=_BINARY_OPERATOR_MAP, un_op=_UNARY_OPERATOR_MAP):
         '''
         define_op is a callable that translates tokens into objects
         bin_op and un_op provide functions for performing binary and unary operations
@@ -87,7 +87,7 @@ class EvalTreeNode(object):
             return define_op(self.left)
         
 
-def build_eval_tree(tokens, op_priority, index=0, depth=0, prev_op=None, ):
+def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=None, ):
     '''
     Params:
     Index, depth, and prev_op used recursively, so don't touch.
@@ -139,7 +139,12 @@ def build_eval_tree(tokens, op_priority, index=0, depth=0, prev_op=None, ):
                     result = right
             elif token_text in op_priority:
                 if result:
-                    if op_priority[token_text] <= op_priority.get(prev_op, -1):
+                    #equal-priority operators are grouped in a left-to-right order, unless they're
+                    #exponentiation, in which case they're grouped right-to-left
+                    #this allows us to get the expected behavior for multiple exponents 
+                    #    (2^3^4)  --> (2^(3^4))
+                    #    (2 * 3 / 4) --> ((2 * 3) / 4)
+                    if op_priority[token_text] <= op_priority.get(prev_op, -1) and token_text not in ['**', '^']:
                         #previous operator is higher priority, so end previous binary op
                         return result, index - 1
                     #get right side of binary op
@@ -147,7 +152,7 @@ def build_eval_tree(tokens, op_priority, index=0, depth=0, prev_op=None, ):
                     result = EvalTreeNode(left=result, operator=current_token, right=right)
                 else:
                     #unary operator
-                    right, index = build_eval_tree(tokens, op_priority, index+1, depth+1, token_text)
+                    right, index = build_eval_tree(tokens, op_priority, index+1, depth+1, 'unary')
                     result = EvalTreeNode(left=right, operator=current_token)
         elif token_type == tokenlib.NUMBER or token_type == tokenlib.NAME:
             if result:
@@ -176,47 +181,6 @@ def build_eval_tree(tokens, op_priority, index=0, depth=0, prev_op=None, ):
             raise Exception('unexpected end to tokens')
         
         index += 1
-        
-def parser_helper_eval_token(token, use_decimal=False):
-    token_type = token[0]
-    token_text = token[1]
-    if token_type == tokenlib.NUMBER:
-        if '.' in token_text:
-            if use_decimal:
-                return Decimal(token_text)
-            return float(token_text)
-        return int(token_text)
-    elif token_type == tokenlib.NAME:
-        return ParserHelper.from_word(token_text)
-    else:
-        raise Exception('unknown token type')
-
-def quantity_eval_token(token, registry):
-    token_type = token[0]
-    token_text = token[1]
-    if token_text == 'pi':
-        return registry.Quantity(math.pi)
-    elif token_type == tokenlib.NUMBER:
-        return registry.Quantity(token_text)
-    elif token_type == tokenlib.NAME:
-        return registry.Quantity(1, UnitsContainer({registry.get_name(token_text) : 1}))
-    else:
-        raise Exception('unknown token type')
-    
-
-def eval_tokens(tokens, registry=None, op_priority=_OP_PRIORITY, 
-                bin_op=_BINARY_OPERATOR_MAP, un_op=_UNARY_OPERATOR_MAP):
-    '''
-    op_priority, bin_op, and un_op are provided as a hook to modify eval functionality,
-    just in case somebody wants to do that
-    '''
-    tree = build_eval_tree(tokens, op_priority)
-    if registry:
-        #return quantities from registry
-        return tree.evaluate(lambda x : quantity_eval_token(x, registry), bin_op, un_op)
-    else:
-        #return parserhelper instances
-        return tree.evaluate(parser_helper_eval_token, bin_op, un_op)
 
 def _test_build_tree(input_text):
     '''
@@ -262,36 +226,31 @@ def _test_build_tree(input_text):
     u'((3 ** 4) 5)'
     >>> _test_build_tree('3 (4 ** 5)') #implicit with parentheses
     u'(3 (4 ** 5))'
-
+    >>> _test_build_tree('3e-1') #exponent with e
+    u'3e-1'
+    
+    >>> _test_build_tree('kg ** 1 * s ** 2') #multiple units with exponents
+    u'((kg ** 1) * (s ** 2))'
+    >>> _test_build_tree('kg ** -1 * s ** -2') #multiple units with neg exponents
+    u'((kg ** (- 1)) * (s ** (- 2)))'
+    >>> _test_build_tree('kg^-1 * s^-2') #multiple units with neg exponents
+    u'((kg ^ (- 1)) * (s ^ (- 2)))'
+    >>> _test_build_tree('kg^-1 s^-2') #multiple units with neg exponents, implicit op
+    u'((kg ^ (- 1)) (s ^ (- 2)))'
+    
+    >>> _test_build_tree('2 ^ 3 ^ 2') #nested power
+    u'(2 ^ (3 ^ 2))'
+    
+    >>> _test_build_tree('gram * second / meter ** 2') #nested power
+    u'((gram * second) / (meter ** 2))'
+    >>> _test_build_tree('gram / meter ** 2 / second') #nested power
+    u'((gram / (meter ** 2)) / second)'
     
     #units should behave like numbers, so we don't need a bunch of extra tests for them
     >>> _test_build_tree('3 kg + 5') #implicit op, then addition
     u'((3 kg) + 5)'
     '''
-    return build_eval_tree(tokenizer(input_text), _OP_PRIORITY).to_string()
-
-def _test_eval(input_text, registry=None):
-    '''
-    >>> _test_eval('3')
-    3
-    >>> _test_eval('kg')
-    <ParserHelper(1, {'kg': 1.0})>
-    >>> _test_eval('3 kg')
-    <ParserHelper(3, {'kg': 1.0})>
-    >>> _test_eval('3 kg ** 2')
-    <ParserHelper(3, {'kg': 2.0})>
-    >>> _test_eval('3 kg ** 2 / m')
-    <ParserHelper(3.0, {'kg': 2.0, 'm': -1.0})>
-    
-    >>> _test_eval('3 kg ** 2 / m', pint.UnitRegistry())
-    <Quantity(3.0, 'kilogram ** 2 / meter')>
-    '''
-    tree = build_eval_tree(tokenizer(input_text), _OP_PRIORITY)
-    if registry:
-        return tree.evaluate(lambda x : quantity_eval_token(x, registry), _BINARY_OPERATOR_MAP, 
-                             _UNARY_OPERATOR_MAP)
-    else:
-        return tree.evaluate(parser_helper_eval_token, _BINARY_OPERATOR_MAP, _UNARY_OPERATOR_MAP)
+    return build_eval_tree(tokenizer(input_text)).to_string()
 
 if __name__ == "__main__":
     import doctest, pint
