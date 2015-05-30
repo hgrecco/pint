@@ -18,11 +18,12 @@ from fractions import Fraction
 from collections import Mapping
 
 import logging
-from token import STRING, NAME, OP
+from token import STRING, NAME, OP, NUMBER
 from tokenize import untokenize
 
 from .compat import string_types, tokenizer, lru_cache, NullHandler, maketrans, NUMERIC_TYPES
 from .formatting import format_unit
+from .pint_eval import build_eval_tree
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -402,7 +403,22 @@ class ParserHelper(UnitsContainer):
     @classmethod
     def from_string(cls, input_string):
         return cls._from_string(input_string)
-
+    
+    @classmethod
+    def eval_token(cls, token, use_decimal=False):
+        token_type = token[0]
+        token_text = token[1]
+        if token_type == NUMBER:
+            if '.' in token_text or 'e' in token_text:
+                if use_decimal:
+                    return Decimal(token_text)
+                return float(token_text)
+            return int(token_text)
+        elif token_type == NAME:
+            return ParserHelper.from_word(token_text)
+        else:
+            raise Exception('unknown token type')
+    
     @classmethod
     @lru_cache()
     def _from_string(cls, input_string):
@@ -420,23 +436,8 @@ class ParserHelper(UnitsContainer):
             reps = False
 
         gen = tokenizer(input_string)
-        result = []
-        for toknum, tokval, _, _, _ in gen:
-            if toknum == NAME:
-                if not tokval:
-                    continue
-                result.extend([
-                    (NAME, 'L_'),
-                    (OP, '('),
-                    (STRING, '"' + tokval + '"'),
-                    (OP, ')')
-                ])
-            else:
-                result.append((toknum, tokval))
+        ret = build_eval_tree(gen).evaluate(cls.eval_token)
 
-        ret = eval(untokenize(result),
-                   {'__builtins__': None},
-                   {'L_': cls.from_word})
         if isinstance(ret, Number):
             return ParserHelper(ret)
 
