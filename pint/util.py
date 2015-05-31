@@ -11,6 +11,8 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import locale
+import sys
 import re
 import operator
 from numbers import Number
@@ -638,3 +640,16 @@ def infer_base_unit(q):
         _, base_unit, __ = completely_parsed_unit
         d[base_unit] = power
     return UnitsContainer(d)
+
+
+def fix_str_conversions(cls):
+    """Enable python2/3 compatible behaviour for __str__."""
+    def __bytes__(self):
+        return self.__unicode__().encode(locale.getpreferredencoding())
+    cls.__unicode__ = __unicode__ = cls.__str__
+    cls.__bytes__ = __bytes__
+    if sys.version_info[0] == 2:
+        cls.__str__ = __bytes__
+    else:
+        cls.__str__ = __unicode__
+    return cls

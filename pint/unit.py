@@ -28,7 +28,8 @@ from .context import Context, ContextChain
 from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
                    find_shortest_path, UnitsContainer, _is_dim,
-                   SharedRegistryObject, to_units_container)
+                   SharedRegistryObject, to_units_container,
+                   fix_str_conversions)
 from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
@@ -38,6 +39,8 @@ from .errors import (DimensionalityError, UndefinedUnitError,
 
 from .pint_eval import build_eval_tree
 
+
+@fix_str_conversions
 class _Unit(SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
 
