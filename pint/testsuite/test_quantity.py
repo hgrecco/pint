@@ -107,6 +107,21 @@ class TestQuantity(QuantityTestCase):
                              ):
             self.assertEqual(spec.format(x), result)
 
+    def test_format_compact(self):
+        q1 = (200e-9 * self.ureg.s).to_compact()
+        q1b = self.Q_(200., 'nanosecond')
+        self.assertAlmostEqual(q1.magnitude, q1b.magnitude)
+        self.assertEqual(q1.units, q1b.units)
+
+        q2 = (1e-2 * self.ureg('kg m/s^2')).to_compact('N')
+        q2b = self.Q_(10., 'millinewton')
+        self.assertEqual(q2.magnitude, q2b.magnitude)
+        self.assertEqual(q2.units, q2b.units)
+
+        self.assertEqual('{0:#.1f}'.format(q1), '{0}'.format(q1b))
+        self.assertEqual('{0:#.1f}'.format(q2), '{0}'.format(q2b))
+
+
     def test_default_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Quantity(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))

@@ -118,9 +118,14 @@ class _Quantity(SharedRegistryObject):
 
     def __format__(self, spec):
         spec = spec or self.default_format
+        if '#' in spec:
+            spec = spec.replace('#', '')
+            obj = self.to_compact()
+        else:
+            obj = self
         return '{0} {1}'.format(
-            format(self.magnitude, remove_custom_flags(spec)),
-            format(self.units, spec))
+            format(obj.magnitude, remove_custom_flags(spec)),
+            format(obj.units, spec))
 
     # IPython related code
     def _repr_html_(self):
