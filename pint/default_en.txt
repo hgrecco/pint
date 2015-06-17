@@ -321,6 +321,7 @@ firkin = barrel / 4
     [length] <-> [frequency]: speed_of_light / n / value
     [frequency] -> [energy]: planck_constant * value
     [energy] -> [frequency]: value / planck_constant
+    [frequency] <-> 1/[length]: value * n / speed_of_light
 @end
 
 @context boltzmann
