@@ -29,7 +29,7 @@ from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
                    find_shortest_path, UnitsContainer, _is_dim,
                    SharedRegistryObject, to_units_container)
-from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type
+from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type, zip_longest
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
 from .converters import ScaleConverter
@@ -1166,11 +1166,10 @@ class UnitRegistry(object):
 
             @functools.wraps(func, assigned=assigned, updated=updated)
             def wrapper(*values, **kwargs):
-                for dim, value in itertools.izip_longest(dimensions, values):
+                for dim, value in zip_longest(dimensions, values):
                     if dim and value.dimensionality != dim:
-                        raise TypeError(
-                            'Expected units of %s, got %s' %
-                            (dim, value.dimensionality))
+                        raise DimensionalityError(value, 'a quantity of',
+                                                  value.dimensionality, dim)
                 return func(*values, **kwargs)
             return wrapper
         return decorator

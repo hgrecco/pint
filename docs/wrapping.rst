@@ -150,7 +150,6 @@ To avoid the conversion of an argument or return value, use None
 Checking units
 ==============
 
-<to be written>
 When you want pint quantities to be used as inputs to your functions, pint provides a wrapper to ensure units are of
 correct type - or more precisely, they match the expected dimensionality of the physical quantity.
 
@@ -164,7 +163,7 @@ In the decorator format:
 
 .. doctest::
 
-    >>>@ureg.wraps('[length]')
+    >>>@ureg.check('[length]')
     ... def pendulum_period(length):
     ...     return 2*math.pi*math.sqrt(length/G)
 

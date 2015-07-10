@@ -344,12 +344,12 @@ class TestRegistry(QuantityTestCase):
         f0 = ureg.check('[length]')(func)
         self.assertRaises(AttributeError, f0, 3.)
         self.assertEqual(f0(3. * ureg.centimeter), 0.03 * ureg.meter)
-        self.assertRaises(TypeError, f0, 3. * ureg.kilogram)
+        self.assertRaises(DimensionalityError, f0, 3. * ureg.kilogram)
 
         f0b = ureg.check(ureg.meter)(func)
         self.assertRaises(AttributeError, f0b, 3.)
         self.assertEqual(f0b(3. * ureg.centimeter), 0.03 * ureg.meter)
-        self.assertRaises(TypeError, f0b, 3. * ureg.kilogram)
+        self.assertRaises(DimensionalityError, f0b, 3. * ureg.kilogram)
 
         def gfunc(x, y):
             return x / y
@@ -360,19 +360,19 @@ class TestRegistry(QuantityTestCase):
 
         g1 = ureg.check('[speed]', '[time]')(gfunc)
         self.assertRaises(AttributeError, g1, 3.0, 1)
-        self.assertRaises(TypeError, g1, 1 * ureg.parsec, 1 * ureg.angstrom)
+        self.assertRaises(DimensionalityError, g1, 1 * ureg.parsec, 1 * ureg.angstrom)
         self.assertRaises(TypeError, g1, 1 * ureg.km / ureg.hour, 1 * ureg.hour, 3.0)
-        self.assertEquals(g1(3.6 * ureg.km / ureg.hour, 1 * ureg.second), 1 * ureg.meter / ureg.second ** 2)
+        self.assertEqual(g1(3.6 * ureg.km / ureg.hour, 1 * ureg.second), 1 * ureg.meter / ureg.second ** 2)
 
         g2 = ureg.check('[speed]')(gfunc)
         self.assertRaises(AttributeError, g2, 3.0, 1)
-        self.assertRaises(TypeError, g2, 2 * ureg.parsec)
-        self.assertRaises(TypeError, g2, 2 * ureg.parsec, 1.0)
-        self.assertEquals(g2(2.0 * ureg.km / ureg.hour, 2), 1 * ureg.km / ureg.hour)
+        self.assertRaises(DimensionalityError, g2, 2 * ureg.parsec)
+        self.assertRaises(DimensionalityError, g2, 2 * ureg.parsec, 1.0)
+        self.assertEqual(g2(2.0 * ureg.km / ureg.hour, 2), 1 * ureg.km / ureg.hour)
 
         g3 = ureg.check('[speed]', '[time]', '[mass]')(gfunc)
-        self.assertRaises(TypeError, g3, 1 * ureg.parsec, 1 * ureg.angstrom)
-        self.assertRaises(TypeError, g3, 1 * ureg.parsec, 1 * ureg.angstrom, 1 * ureg.kilogram)
+        self.assertRaises(DimensionalityError, g3, 1 * ureg.parsec, 1 * ureg.angstrom)
+        self.assertRaises(DimensionalityError, g3, 1 * ureg.parsec, 1 * ureg.angstrom, 1 * ureg.kilogram)
 
     def test_to_ref_vs_to(self):
         self.ureg.autoconvert_offset_to_baseunit = True
