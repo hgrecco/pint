@@ -122,6 +122,13 @@ class _Quantity(SharedRegistryObject):
     def __repr__(self):
         return "<Quantity({0}, '{1}')>".format(self._magnitude, self._units)
 
+    def __hash__(self):
+        self_base = self.to_base_units()
+        if self_base.dimensionless:
+            return hash(self_base.magnitude)
+        else:
+            return hash((self_base.__class__, self_base.magnitude, self_base.units))
+
     def __format__(self, spec):
         spec = spec or self.default_format
 
@@ -373,7 +380,7 @@ class _Quantity(SharedRegistryObject):
             warnings.warn(w, stacklevel=2)
             return self
 
-        if (self.unitless or self.magnitude==0 or 
+        if (self.unitless or self.magnitude==0 or
             math.isnan(self.magnitude) or math.isinf(self.magnitude)):
             return self
 
