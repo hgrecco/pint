@@ -4,7 +4,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 
 from pint import UnitRegistry
-from pint.systems import Group, get_compatible_units, get_group, System, get_base_units
+from pint.systems import Group, System
 
 from pint.testsuite import QuantityTestCase
 
@@ -187,9 +187,9 @@ class TestGroup(QuantityTestCase):
     def test_get_compatible_units(self):
         ureg = UnitRegistry()
 
-        g = get_group(ureg, 'imperial')
+        g = ureg.get_group('imperial')
         g.add_units('inch', 'yard', 'pint')
-        c = get_compatible_units(ureg, 'meter', 'imperial')
+        c = ureg.get_compatible_units('meter', 'imperial')
         self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
 
 
@@ -238,10 +238,10 @@ class TestSystem(QuantityTestCase):
         sysname = 'mysys1'
         ureg = UnitRegistry()
 
-        g = get_group(ureg, 'imperial')
+        g = ureg.get_group('imperial')
 
         g.add_units('inch', 'yard', 'pint')
-        c = get_compatible_units(ureg, 'meter', 'imperial')
+        c = ureg.get_compatible_units('meter', 'imperial')
         self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
 
         lines = ['@system %s using imperial' % sysname,
@@ -249,7 +249,7 @@ class TestSystem(QuantityTestCase):
                  ]
 
         s = System.from_lines(lines, lambda x: x, g._groups_systems)
-        c = get_compatible_units(ureg, 'meter', sysname)
+        c = ureg.get_compatible_units('meter', sysname)
         self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
 
     def test_get_base_units(self):
@@ -257,7 +257,7 @@ class TestSystem(QuantityTestCase):
 
         ureg = UnitRegistry()
 
-        g = get_group(ureg, 'imperial')
+        g = ureg.get_group('imperial')
         g.add_units('inch', 'yard', 'pint')
 
         lines = ['@system %s using imperial' % sysname,
@@ -267,11 +267,11 @@ class TestSystem(QuantityTestCase):
         s = System.from_lines(lines, ureg.get_base_units, g._groups_systems)
 
         # base_factor, destination_units
-        c = get_base_units(ureg, 'inch', system=sysname)
+        c = ureg.get_base_units('inch', system=sysname)
         self.assertAlmostEqual(c[0], 1)
         self.assertEqual(c[1], {'inch': 1})
 
-        c = get_base_units(ureg, 'cm', system=sysname)
+        c = ureg.get_base_units('cm', system=sysname)
         self.assertAlmostEqual(c[0], 1./2.54)
         self.assertEqual(c[1], {'inch': 1})
 
@@ -280,9 +280,9 @@ class TestSystem(QuantityTestCase):
 
         ureg = UnitRegistry()
 
-        g = get_group(ureg, 'imperial')
+        g = ureg.get_group('imperial')
         g.add_units('inch', 'yard', 'pint')
-        c = get_compatible_units(ureg, 'meter', 'imperial')
+        c = ureg.get_compatible_units('meter', 'imperial')
 
         lines = ['@system %s using imperial' % sysname,
                  'pint:meter',
@@ -291,19 +291,19 @@ class TestSystem(QuantityTestCase):
         s = System.from_lines(lines, ureg.get_base_units, g._groups_systems)
 
         # base_factor, destination_units
-        c = get_base_units(ureg, 'inch', system=sysname)
+        c = ureg.get_base_units('inch', system=sysname)
         self.assertAlmostEqual(c[0], 0.326, places=3)
         self.assertEqual(c[1], {'pint': 1./3})
 
-        c = get_base_units(ureg, 'cm', system=sysname)
+        c = ureg.get_base_units('cm', system=sysname)
         self.assertAlmostEqual(c[0], 0.1283, places=3)
         self.assertEqual(c[1], {'pint': 1./3})
 
-        c = get_base_units(ureg, 'inch**2', system=sysname)
+        c = ureg.get_base_units('inch**2', system=sysname)
         self.assertAlmostEqual(c[0], 0.326**2, places=3)
         self.assertEqual(c[1], {'pint': 2./3})
 
-        c = get_base_units(ureg, 'cm**2', system=sysname)
+        c = ureg.get_base_units('cm**2', system=sysname)
         self.assertAlmostEqual(c[0], 0.1283**2, places=3)
         self.assertEqual(c[1], {'pint': 2./3})
 
@@ -312,7 +312,7 @@ class TestSystem(QuantityTestCase):
 
         ureg = UnitRegistry()
 
-        g = get_group(ureg, 'imperial')
+        g = ureg.get_group('imperial')
         g.add_units('inch', 'yard', 'pint')
 
         lines = ['@system %s using imperial' % sysname,
@@ -322,10 +322,10 @@ class TestSystem(QuantityTestCase):
         s = System.from_lines(lines, ureg.get_base_units, g._groups_systems)
 
         # base_factor, destination_units
-        c = get_base_units(ureg, 'inch', system=sysname)
+        c = ureg.get_base_units('inch', system=sysname)
         self.assertAlmostEqual(c[0], 0.0568, places=3)
         self.assertEqual(c[1], {'mph': 1, 'second': 1})
 
-        c = get_base_units(ureg, 'kph', system=sysname)
+        c = ureg.get_base_units('kph', system=sysname)
         self.assertAlmostEqual(c[0], .6214, places=4)
         self.assertEqual(c[1], {'mph': 1})

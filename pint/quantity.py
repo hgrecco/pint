@@ -174,13 +174,13 @@ class _Quantity(SharedRegistryObject):
     def unitless(self):
         """Return true if the quantity does not have units.
         """
-        return not bool(self.to_base_units()._units)
+        return not bool(self.to_root_units()._units)
 
     @property
     def dimensionless(self):
         """Return true if the quantity is dimensionless.
         """
-        tmp = self.to_base_units()
+        tmp = self.to_root_units()
 
         return not bool(tmp.dimensionality)
 
@@ -243,6 +243,26 @@ class _Quantity(SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
+    def ito_root_units(self):
+        """Return Quantity rescaled to base units
+        """
+
+        _, other = self._REGISTRY._get_root_units(self._units)
+
+        self._magnitude = self._convert_magnitude(other)
+        self._units = other
+
+        return None
+
+    def to_root_units(self):
+        """Return Quantity rescaled to base units
+        """
+        _, other = self._REGISTRY._get_root_units(self._units)
+
+        magnitude = self._convert_magnitude_not_inplace(other)
+
+        return self.__class__(magnitude, other)
+
     def ito_base_units(self):
         """Return Quantity rescaled to base units
         """
@@ -262,6 +282,7 @@ class _Quantity(SharedRegistryObject):
         magnitude = self._convert_magnitude_not_inplace(other)
 
         return self.__class__(magnitude, other)
+
 
     def to_compact(self, unit=None):
         """Return Quantity rescaled to compact, human-readable units.
@@ -603,14 +624,14 @@ class _Quantity(SharedRegistryObject):
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, other._units)
         elif no_offset_units_self == 1 and len(self._units) == 1:
-                self.ito_base_units()
+                self.ito_root_units()
 
         no_offset_units_other = len(other._get_non_multiplicative_units())
 
         if not other._ok_for_muldiv(no_offset_units_other):
             raise OffsetUnitCalculusError(self._units, other._units)
         elif no_offset_units_other == 1 and len(other._units) == 1:
-            other.ito_base_units()
+            other.ito_root_units()
 
         self._magnitude = magnitude_op(self._magnitude, other._magnitude)
         self._units = units_op(self._units, other._units)
@@ -665,14 +686,14 @@ class _Quantity(SharedRegistryObject):
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, other._units)
         elif no_offset_units_self == 1 and len(self._units) == 1:
-            new_self = self.to_base_units()
+            new_self = self.to_root_units()
 
         no_offset_units_other = len(other._get_non_multiplicative_units())
 
         if not other._ok_for_muldiv(no_offset_units_other):
             raise OffsetUnitCalculusError(self._units, other._units)
         elif no_offset_units_other == 1 and len(other._units) == 1:
-            other = other.to_base_units()
+            other = other.to_root_units()
 
         magnitude = magnitude_op(new_self._magnitude, other._magnitude)
         units = units_op(new_self._units, other._units)
@@ -718,7 +739,7 @@ class _Quantity(SharedRegistryObject):
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, '')
         elif no_offset_units_self == 1 and len(self._units) == 1:
-            self = self.to_base_units()
+            self = self.to_root_units()
 
         return self.__class__(other_magnitude / self._magnitude, 1 / self._units)
 
@@ -732,7 +753,7 @@ class _Quantity(SharedRegistryObject):
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, '')
         elif no_offset_units_self == 1 and len(self._units) == 1:
-            self = self.to_base_units()
+            self = self.to_root_units()
 
         return self.__class__(other_magnitude // self._magnitude, 1 / self._units)
 
@@ -803,12 +824,12 @@ class _Quantity(SharedRegistryObject):
             else:
                 if not self._is_multiplicative:
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
-                        new_self = self.to_base_units()
+                        new_self = self.to_root_units()
                     else:
                         raise OffsetUnitCalculusError(self._units)
 
                 if getattr(other, 'dimensionless', False):
-                    units = new_self._units ** other.to_base_units().magnitude
+                    units = new_self._units ** other.to_root_units().magnitude
                 elif not getattr(other, 'dimensionless', True):
                     raise DimensionalityError(self._units, 'dimensionless')
                 else:
@@ -828,7 +849,7 @@ class _Quantity(SharedRegistryObject):
             if isinstance(self._magnitude, ndarray):
                 if np.size(self._magnitude) > 1:
                     raise DimensionalityError(self._units, 'dimensionless')
-            new_self = self.to_base_units()
+            new_self = self.to_root_units()
             return other**new_self._magnitude
 
     def __abs__(self):
@@ -880,8 +901,8 @@ class _Quantity(SharedRegistryObject):
         if self.dimensionality != other.dimensionality:
             raise DimensionalityError(self._units, other._units,
                                       self.dimensionality, other.dimensionality)
-        return op(self.to_base_units().magnitude,
-                  other.to_base_units().magnitude)
+        return op(self.to_root_units().magnitude,
+                  other.to_root_units().magnitude)
 
     __lt__ = lambda self, other: self.compare(other, op=operator.lt)
     __le__ = lambda self, other: self.compare(other, op=operator.le)
@@ -1089,9 +1110,9 @@ class _Quantity(SharedRegistryObject):
 
         try:
             if isinstance(value, self.__class__):
-                factor = self.__class__(value.magnitude, value._units / self._units).to_base_units()
+                factor = self.__class__(value.magnitude, value._units / self._units).to_root_units()
             else:
-                factor = self.__class__(value, self._units ** (-1)).to_base_units()
+                factor = self.__class__(value, self._units ** (-1)).to_root_units()
 
             if isinstance(factor, self.__class__):
                 if not factor.dimensionless:
@@ -1170,7 +1191,7 @@ class _Quantity(SharedRegistryObject):
                             if unt == 'radian':
                                 mobjs.append(getattr(other, 'magnitude', other))
                             else:
-                                factor, units = self._REGISTRY._get_base_units(unt)
+                                factor, units = self._REGISTRY._get_root_units(unt)
                                 if units and units != UnitsContainer({'radian': 1}):
                                     raise DimensionalityError(units, dst_units)
                                 mobjs.append(getattr(other, 'magnitude', other) * factor)

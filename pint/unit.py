@@ -37,6 +37,7 @@ from .errors import (DimensionalityError, UndefinedUnitError,
                      DefinitionSyntaxError, RedefinitionError)
 
 from .pint_eval import build_eval_tree
+from . import systems
 
 class _Unit(SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
@@ -265,6 +266,9 @@ class UnitRegistry(object):
         #: Map dimension name (string) to its definition (DimensionDefinition).
         self._dimensions = {}
 
+        #: :type: systems.GSManager
+        self._gsmanager = systems.GSManager()
+
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
         self._units = {}
@@ -288,6 +292,9 @@ class UnitRegistry(object):
 
         #: Maps dimensionality (UnitsContainer) to Units (str)
         self._dimensional_equivalents = dict()
+
+        #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
+        self._root_units_cache = dict()
 
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self._base_units_cache = dict()
@@ -343,6 +350,25 @@ class UnitRegistry(object):
     def default_format(self, value):
         self.Unit.default_format = value
         self.Quantity.default_format = value
+
+    def get_group(self, name, create_if_needed=True):
+        """Return a Group.
+
+        :param name: Name of the group to be
+        :param create_if_needed: Create a group if not Found. If False, raise an Exception.
+        :return: Group
+        """
+        return self._gsmanager.get_group(name, create_if_needed)
+
+    def get_system(self, name, create_if_needed=True):
+        """Return a Group.
+
+        :param registry:
+        :param name: Name of the group to be
+        :param create_if_needed: Create a group if not Found. If False, raise an Exception.
+        :return: System
+        """
+        return self._gsmanager.get_system(name, create_if_needed)
 
     def add_context(self, context):
         """Add a context object to the registry.
@@ -611,10 +637,10 @@ class UnitRegistry(object):
                 try:
                     uc = ParserHelper.from_word(unit_name)
 
-                    bu = self._get_base_units(uc)
+                    bu = self._get_root_units(uc)
                     di = self._get_dimensionality(uc)
 
-                    self._base_units_cache[uc] = bu
+                    self._root_units_cache[uc] = bu
                     self._dimensionality_cache[uc] = di
 
                     if not prefixed:
@@ -726,8 +752,8 @@ class UnitRegistry(object):
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
-    def get_base_units(self, input_units, check_nonmult=True):
-        """Convert unit or dict of units to the base units.
+    def get_root_units(self, input_units, check_nonmult=True):
+        """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
@@ -741,12 +767,12 @@ class UnitRegistry(object):
         """
         input_units = to_units_container(input_units)
 
-        f, units = self._get_base_units(input_units, check_nonmult=True)
+        f, units = self._get_root_units(input_units, check_nonmult)
 
         return f, self.Unit(units)
 
-    def _get_base_units(self, input_units, check_nonmult=True):
-        """Convert unit or dict of units to the base units.
+    def _get_root_units(self, input_units, check_nonmult=True):
+        """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
@@ -762,11 +788,11 @@ class UnitRegistry(object):
             return 1., UnitsContainer()
 
         # The cache is only done for check_nonmult=True
-        if check_nonmult and input_units in self._base_units_cache:
-            return self._base_units_cache[input_units]
+        if check_nonmult and input_units in self._root_units_cache:
+            return self._root_units_cache[input_units]
 
         accumulators = [1., defaultdict(float)]
-        self._get_base_units_recurse(input_units, 1.0, accumulators)
+        self._get_root_units_recurse(input_units, 1.0, accumulators)
 
         factor = accumulators[0]
         units = UnitsContainer(dict((k, v) for k, v in accumulators[1].items()
@@ -780,7 +806,63 @@ class UnitRegistry(object):
 
         return factor, units
 
-    def _get_base_units_recurse(self, ref, exp, accumulators):
+    def get_base_units(self, input_units, check_nonmult=True, system=None):
+        """Convert unit or dict of units to the base units.
+
+        If any unit is non multiplicative and check_converter is True,
+        then None is returned as the multiplicative factor.
+
+        :param input_units: units
+        :type input_units: UnitsContainer or str
+        :param check_nonmult: if True, None will be returned as the
+                              multiplicative factor if a non-multiplicative
+                              units is found in the final Units.
+        :return: multiplicative factor, base units
+        """
+        input_units = to_units_container(input_units)
+
+        f, units = self._get_base_units(input_units, check_nonmult, system)
+
+        return f, self.Unit(units)
+
+    def _get_base_units(self, input_units, check_nonmult=True, system=None):
+        """
+        :param registry:
+        :param input_units:
+        :param check_nonmult:
+        :param system: System
+        :return:
+        """
+
+        # The cache is only done for check_nonmult=True
+        if check_nonmult and input_units in self._base_units_cache:
+            return self._base_units_cache[input_units]
+
+        factor, units = self.get_root_units(input_units, check_nonmult)
+
+        if not system:
+            return factor, units
+
+        # This will not be necessary after integration with the registry as it has a UnitsContainer intermediate
+        units = to_units_container(units, self)
+
+        destination_units = UnitsContainer()
+
+        bu = self._gsmanager.get_system(system, False).base_units
+
+        for unit, value in units.items():
+            if unit in bu:
+                new_unit = bu[unit]
+                new_unit = to_units_container(new_unit, self)
+                destination_units *= new_unit ** value
+            else:
+                destination_units *= UnitsContainer({unit: value})
+
+        base_factor = self.convert(factor, units, destination_units)
+
+        return base_factor, destination_units
+
+    def _get_root_units_recurse(self, ref, exp, accumulators):
         for key in ref:
             exp2 = exp*ref[key]
             key = self.get_name(key)
@@ -790,19 +872,19 @@ class UnitRegistry(object):
             else:
                 accumulators[0] *= reg._converter.scale ** exp2
                 if reg.reference is not None:
-                    self._get_base_units_recurse(reg.reference, exp2,
+                    self._get_root_units_recurse(reg.reference, exp2,
                                                  accumulators)
 
-    def get_compatible_units(self, input_units):
+    def get_compatible_units(self, input_units, group_or_system=None):
         """
         """
         input_units = to_units_container(input_units)
 
-        equiv = self._get_compatible_units(input_units)
+        equiv = self._get_compatible_units(input_units, group_or_system)
 
         return frozenset(self.Unit(eq) for eq in equiv)
 
-    def _get_compatible_units(self, input_units):
+    def _get_compatible_units(self, input_units, group_or_system=None):
         """
         """
         if not input_units:
@@ -819,7 +901,11 @@ class UnitRegistry(object):
                 for node in nodes:
                     ret |= self._dimensional_equivalents[node]
 
-        return frozenset(ret)
+        if group_or_system:
+            members = self._gsmanager[group_or_system].members
+            return frozenset(ret.intersection(members))
+
+        return ret
 
     def convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
@@ -927,7 +1013,7 @@ class UnitRegistry(object):
 
         # Here src and dst have only multiplicative units left. Thus we can
         # convert with a factor.
-        factor, units = self._get_base_units(src / dst)
+        factor, units = self._get_root_units(src / dst)
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values

@@ -370,108 +370,48 @@ class System(object):
         return system
 
 
-#: These dictionaries will be part of the registry
-#: :type: dict[str, Group | System]
-_groups_systems = dict()
-_root_group = Group('root', _groups_systems)
+class GSManager(object):
 
+    def __init__(self):
+        #: :type: dict[str, Group | System]
+        self._groups_systems = dict()
+        self._root_group = Group('root', self._groups_systems)
 
-# These methods will be included in the registry, upgrading the existing ones.
+    def get_group(self, name, create_if_needed=True):
+        """Return a Group.
 
-def get_group(registry, name, create_if_needed=True):
-    """Return a Group.
+        :param name: Name of the group.
+        :param create_if_needed: Create a group if not Found. If False, raise an Exception.
+        :return: Group
+        """
+        try:
+            return self._groups_systems[name]
+        except KeyError:
+            if create_if_needed:
+                if name == 'root':
+                    raise ValueError('The name root is reserved.')
+                return Group(name, self._groups_systems)
+            else:
+                raise KeyError('No group %s found.' % name)
 
-    :param registry:
-    :param name: Name of the group to be
-    :param create_if_needed: Create a group if not Found. If False, raise an Exception.
-    :return: Group
-    """
-    if name == 'root':
-        raise ValueError('The name root is reserved.')
+    def get_system(self, name, create_if_needed=True):
+        """Return a Group.
 
-    try:
-        return _groups_systems[name]
-    except KeyError:
-        if create_if_needed:
-            return Group(name, _groups_systems)
-        else:
-            raise KeyError('No group %s found.' % name)
+        :param name: Name of the system
+        :param create_if_needed: Create a group if not Found. If False, raise an Exception.
+        :return: System
+        """
 
+        try:
+            return self._groups_systems[name]
+        except KeyError:
+            if create_if_needed:
+                return System(name, self._groups_systems)
+            else:
+                raise KeyError('No system found named %s.' % name)
 
-def get_system(registry, name, create_if_needed=True):
-    """Return a Group.
+    def __getitem__(self, item):
+        if item in self._groups_systems:
+            return self._groups_systems[item]
 
-    :param registry:
-    :param name: Name of the group to be
-    :param create_if_needed: Create a group if not Found. If False, raise an Exception.
-    :return: System
-    """
-
-    try:
-        return _groups_systems[name]
-    except KeyError:
-        if create_if_needed:
-            return System(name, _groups_systems)
-        else:
-            raise KeyError('No system %s found.' % name)
-
-
-def get_compatible_units(registry, input_units, group_or_system=None):
-    """
-    :param registry:
-    :param input_units:
-    :param group_or_system:
-    :type group_or_system: Group | System
-    :return:
-    """
-    ret = registry.get_compatible_units(input_units)
-
-    if not group_or_system:
-        return ret
-
-    members = _groups_systems[group_or_system].members
-
-    # This will not be necessary after integration with the registry as it has a strings intermediate
-    members = frozenset((getattr(registry, member) for member in members))
-
-    return ret.intersection(members)
-
-
-# Current get_base_units will be renamed to get_root_units
-#
-# Not sure yet how to deal with the cache.
-# Should we cache get_root_units, get_base_units or both?
-# - get_base_units will need to be invalidated when the system is changed (How often will this happen?)
-# - get_root_units will not need to be invalidated.
-
-def get_base_units(registry, input_units, check_nonmult=True, system=None):
-    """
-    :param registry:
-    :param input_units:
-    :param check_nonmult:
-    :param system: System
-    :return:
-    """
-    factor, units = registry.get_base_units(input_units, check_nonmult)
-
-    if not system:
-        return factor, units
-
-    # This will not be necessary after integration with the registry as it has a UnitsContainer intermediate
-    units = to_units_container(units, registry)
-
-    destination_units = UnitsContainer()
-
-    bu = _groups_systems[system].base_units
-
-    for unit, value in units.items():
-        if unit in bu:
-            new_unit = bu[unit]
-            new_unit = to_units_container(new_unit, registry)
-            destination_units *= new_unit ** value
-        else:
-            destination_units *= UnitsContainer({unit: value})
-
-    base_factor = registry.convert(factor, units, destination_units)
-
-    return base_factor, destination_units
+        raise KeyError('No group or system found named %s.' % item)
