@@ -10,7 +10,7 @@
 # Fixed for to work in Python 2 & 3 with "add_metaclass" decorator from six
 # https://pypi.python.org/pypi/six
 # Author: Benjamin Peterson
-# License: MIT 
+# License: MIT
 #
 # Use like this:
 #

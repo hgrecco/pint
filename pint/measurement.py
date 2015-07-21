@@ -14,6 +14,7 @@ from .formatting import _FORMATS
 
 MISSING = object()
 
+
 class _Measurement(object):
     """Implements a class to describe a quantity with uncertainty.
 
@@ -96,6 +97,3 @@ class _Measurement(object):
             return mag + ' ' + format(self.units, spec)
         else:
             return pars.format(mag) + ' ' + format(self.units, spec)
-
-
-

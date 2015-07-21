@@ -15,12 +15,15 @@ import re
 import operator
 from numbers import Number
 from fractions import Fraction
+from collections import Mapping
 
 import logging
-from token import STRING, NAME, OP
+from token import STRING, NAME, OP, NUMBER
 from tokenize import untokenize
 
-from .compat import string_types, tokenizer, lru_cache, NullHandler, maketrans
+from .compat import string_types, tokenizer, lru_cache, NullHandler, maketrans, NUMERIC_TYPES
+from .formatting import format_unit
+from .pint_eval import build_eval_tree
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -134,7 +137,7 @@ def pi_theorem(quantities, registry=None):
         if isinstance(value, string_types):
             value = ParserHelper.from_string(value)
         if isinstance(value, dict):
-            dims = getdim(value)
+            dims = getdim(UnitsContainer(value))
         elif not hasattr(value, 'dimensionality'):
             dims = getdim(value)
         else:
@@ -221,16 +224,172 @@ def find_connected_nodes(graph, start, visited=None):
     return visited
 
 
-class ParserHelper(dict):
-    """The ParserHelper stores in place the product of variables and
+class udict(dict):
+    """ Custom dict implementing __missing__.
+
+    """
+    def __missing__(self, key):
+        return 0.
+
+
+class UnitsContainer(Mapping):
+    """The UnitsContainer stores the product of units and their respective
+    exponent and implements the corresponding operations.
+
+    UnitsContainer is a read-only mapping. All operations (even in place ones)
+    return new instances.
+
+    """
+    __slots__ = ('_d', '_hash')
+
+    def __init__(self, *args, **kwargs):
+        d = udict(*args, **kwargs)
+        self._d = d
+        for key, value in d.items():
+            if not isinstance(key, string_types):
+                raise TypeError('key must be a str, not {0}'.format(type(key)))
+            if not isinstance(value, Number):
+                raise TypeError('value must be a number, not {0}'.format(type(value)))
+            if not isinstance(value, float):
+                d[key] = float(value)
+        self._hash = hash(frozenset(self._d.items()))
+
+    def copy(self):
+        return self.__copy__()
+
+    def add(self, key, value):
+        newval = self._d[key] + value
+        new = self.copy()
+        if newval:
+            new._d[key] = newval
+        else:
+            del new._d[key]
+
+        return new
+
+    def remove(self, keys):
+        """ Create a new UnitsContainer purged from given keys.
+
+        """
+        d = udict(self._d)
+        return UnitsContainer(((key, d[key]) for key in d if key not in keys))
+
+    def rename(self, oldkey, newkey):
+        """ Create a new UnitsContainer in which an entry has been renamed.
+
+        """
+        d = udict(self._d)
+        d[newkey] = d.pop(oldkey)
+        return UnitsContainer(d)
+
+    def __iter__(self):
+        return iter(self._d)
+
+    def __len__(self):
+        return len(self._d)
+
+    def __getitem__(self, key):
+        return self._d[key]
+
+    def __hash__(self):
+        return self._hash
+
+    def __getstate__(self):
+        return {'_d': self._d, '_hash': self._hash}
+
+    def __setstate__(self, state):
+        self._d = state['_d']
+        self._hash = state['_hash']
+
+    def __eq__(self, other):
+        if isinstance(other, UnitsContainer):
+            other = other._d
+        elif isinstance(other, string_types):
+            other = ParserHelper.from_string(other)
+            other = other._d
+
+        return dict.__eq__(self._d, other)
+
+    def __str__(self):
+        return self.__format__('')
+
+    def __repr__(self):
+        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value)
+                                  for key, value in sorted(self._d.items())])
+        return '<UnitsContainer({0})>'.format(tmp)
+
+    def __format__(self, spec):
+        return format_unit(self, spec)
+
+    def __copy__(self):
+        return UnitsContainer(self._d)
+
+    def __mul__(self, other):
+        d = udict(self._d)
+        if not isinstance(other, self.__class__):
+            err = 'Cannot multiply UnitsContainer by {0}'
+            raise TypeError(err.format(type(other)))
+        for key, value in other.items():
+            d[key] += value
+        keys = [key for key, value in d.items() if value == 0]
+        for key in keys:
+            del d[key]
+
+        return UnitsContainer(d)
+
+    __rmul__ = __mul__
+
+    def __pow__(self, other):
+        if not isinstance(other, NUMERIC_TYPES):
+            err = 'Cannot power UnitsContainer by {0}'
+            raise TypeError(err.format(type(other)))
+        d = udict(self._d)
+        for key, value in d.items():
+            d[key] *= other
+        return UnitsContainer(d)
+
+    def __truediv__(self, other):
+        if not isinstance(other, self.__class__):
+            err = 'Cannot divide UnitsContainer by {0}'
+            raise TypeError(err.format(type(other)))
+
+        d = udict(self._d)
+
+        for key, value in other.items():
+            d[key] -= value
+
+        keys = [key for key, value in d.items() if value == 0]
+        for key in keys:
+            del d[key]
+
+        return UnitsContainer(d)
+
+    def __rtruediv__(self, other):
+        if not isinstance(other, self.__class__) and other != 1:
+            err = 'Cannot divide {0} by UnitsContainer'
+            raise TypeError(err.format(type(other)))
+
+        return self**-1
+
+
+class ParserHelper(UnitsContainer):
+    """ The ParserHelper stores in place the product of variables and
     their respective exponent and implements the corresponding operations.
+
+    ParserHelper is a read-only mapping. All operations (even in place ones)
+    return new instances.
+
+    WARNING : The hash value used does not take into account the scale
+    attribute so be careful if you use it as a dict key and then two unequal
+    object can have the same hash.
+
     """
 
     __slots__ = ('scale', )
 
     def __init__(self, scale=1, *args, **kwargs):
+        super(ParserHelper, self).__init__(*args, **kwargs)
         self.scale = scale
-        dict.__init__(self, *args, **kwargs)
 
     @classmethod
     def from_word(cls, input_word):
@@ -239,25 +398,37 @@ class ParserHelper(dict):
         Equivalent to: ParserHelper({'word': 1})
 
         """
-        ret = cls()
-        ret.add(input_word, 1)
-        return ret
+        return cls(1, [(input_word, 1)])
 
     @classmethod
     def from_string(cls, input_string):
-        return cls._from_string(input_string).copy()
-
+        return cls._from_string(input_string)
+    
+    @classmethod
+    def eval_token(cls, token, use_decimal=False):
+        token_type = token[0]
+        token_text = token[1]
+        if token_type == NUMBER:
+            if '.' in token_text or 'e' in token_text:
+                if use_decimal:
+                    return Decimal(token_text)
+                return float(token_text)
+            return int(token_text)
+        elif token_type == NAME:
+            return ParserHelper.from_word(token_text)
+        else:
+            raise Exception('unknown token type')
+    
     @classmethod
     @lru_cache()
     def _from_string(cls, input_string):
         """Parse linear expression mathematical units and return a quantity object.
-        """
 
+        """
         if not input_string:
             return cls()
 
         input_string = string_preprocessor(input_string)
-
         if '[' in input_string:
             input_string = input_string.replace('[', '__obra__').replace(']', '__cbra__')
             reps = True
@@ -265,23 +436,8 @@ class ParserHelper(dict):
             reps = False
 
         gen = tokenizer(input_string)
-        result = []
-        for toknum, tokval, _, _, _ in gen:
-            if toknum == NAME:
-                if not tokval:
-                    continue
-                result.extend([
-                    (NAME, 'L_'),
-                    (OP, '('),
-                    (STRING, '"' + tokval + '"'),
-                    (OP, ')')
-                ])
-            else:
-                result.append((toknum, tokval))
+        ret = build_eval_tree(gen).evaluate(cls.eval_token)
 
-        ret = eval(untokenize(result),
-                   {'__builtins__': None},
-                   {'L_': cls.from_word})
         if isinstance(ret, Number):
             return ParserHelper(ret)
 
@@ -292,101 +448,99 @@ class ParserHelper(dict):
                             dict((key.replace('__obra__', '[').replace('__cbra__', ']'), value)
                                  for key, value in ret.items()))
 
-    def copy(self):
+    def __copy__(self):
         return ParserHelper(scale=self.scale, **self)
 
-    def __missing__(self, key):
-        return 0.0
+    def copy(self):
+        return self.__copy__()
+
+    def __hash__(self):
+        if self.scale != 1.0:
+            mess = 'Only scale 1.0 ParserHelper instance should be considered hashable'
+            raise ValueError(mess)
+        return self._hash
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.scale == other.scale and super(ParserHelper, self).__eq__(other)
-        elif isinstance(other, dict):
-            return self.scale == 1 and super(ParserHelper, self).__eq__(other)
+            return self.scale == other.scale and\
+                super(ParserHelper, self).__eq__(other)
         elif isinstance(other, string_types):
             return self == ParserHelper.from_string(other)
         elif isinstance(other, Number):
-            return self.scale == other and not len(self)
+            return self.scale == other and not len(self._d)
         else:
-            return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def add(self, key, value):
-        newval = self.__getitem__(key) + value
-        if newval:
-            self.__setitem__(key, newval)
-        else:
-            del self[key]
+            return self.scale == 1. and super(ParserHelper, self).__eq__(other)
 
     def operate(self, items, op=operator.iadd, cleanup=True):
+        d = udict(self._d)
         for key, value in items:
-            self[key] = op(self[key], value)
+            d[key] = op(d[key], value)
 
         if cleanup:
-            keys = [key for key, value in self.items() if value == 0]
+            keys = [key for key, value in d.items() if value == 0]
             for key in keys:
-                del self[key]
+                del d[key]
+
+        return self.__class__(self.scale, d)
 
     def __str__(self):
-        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
+        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value)
+                                  for key, value in sorted(self._d.items())])
         return '{0} {1}'.format(self.scale, tmp)
 
     def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value) for key, value in sorted(self.items())])
+        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value)
+                                  for key, value in sorted(self._d.items())])
         return '<ParserHelper({0}, {1})>'.format(self.scale, tmp)
 
     def __mul__(self, other):
         if isinstance(other, string_types):
-            self.add(other, 1)
+            new = self.add(other, 1)
         elif isinstance(other, Number):
-            self.scale *= other
+            new = self.copy()
+            new.scale *= other
         elif isinstance(other, self.__class__):
-            self.scale *= other.scale
-            self.operate(other.items())
+            new = self.operate(other.items())
+            new.scale *= other.scale
         else:
-            self.operate(other.items())
-        return self
+            new = self.operate(other.items())
+        return new
 
-    __imul__ = __mul__
     __rmul__ = __mul__
 
     def __pow__(self, other):
-        self.scale **= other
-        for key in self.keys():
-            self[key] *= other
-        return self
-
-    __ipow__ = __pow__
+        d = self._d.copy()
+        for key in self._d:
+            d[key] *= other
+        return self.__class__(self.scale**other, d)
 
     def __truediv__(self, other):
         if isinstance(other, string_types):
-            self.add(other, -1)
+            new = self.add(other, -1)
         elif isinstance(other, Number):
-            self.scale /= other
+            new = self.copy()
+            new.scale /= other
         elif isinstance(other, self.__class__):
-            self.scale /= other.scale
-            self.operate(other.items(), operator.sub)
+            new = self.operate(other.items(), operator.sub)
+            new.scale /= other.scale
         else:
-            self.operate(other.items(), operator.sub)
-        return self
+            new = self.operate(other.items(), operator.sub)
+        return new
 
-    __itruediv__ = __truediv__
     __floordiv__ = __truediv__
 
     def __rtruediv__(self, other):
-        self.__pow__(-1)
+        new = self.__pow__(-1)
         if isinstance(other, string_types):
-            self.add(other, 1)
+            new = new.add(other, 1)
         elif isinstance(other, Number):
-            self.scale *= other
+            new.scale *= other
         elif isinstance(other, self.__class__):
-            self.scale *= other.scale
-            self.operate(other.items(), operator.add)
+            new = self.operate(other.items(), operator.add)
+            new.scale *= other.scale
         else:
-            self.operate(other.items(), operator.add)
-        return self
+            new = new.operate(other.items(), operator.add)
+        return new
 
 
 #: List of regex substitution pairs.
@@ -423,3 +577,64 @@ def string_preprocessor(input_string):
     # Handle caret exponentiation
     input_string = input_string.replace("^", "**")
     return input_string
+
+
+def _is_dim(name):
+    return name[0] == '[' and name[-1] == ']'
+
+
+class SharedRegistryObject(object):
+    """Base class for object keeping a refrence to the registree.
+
+    Such object are for now _Quantity and _Unit, in a number of places it is
+    that an object from this class has a '_units' attribute.
+
+    """
+
+    def _check(self, other):
+        """Check if the other object use a registry and if so that it is the
+        same registry.
+
+        Return True is both use a registry and they use the same, False is
+        other don't use a registry and raise ValueError if other don't use the
+        same unit registry.
+
+        """
+        if self._REGISTRY is getattr(other, '_REGISTRY', None):
+            return True
+
+        elif isinstance(other, SharedRegistryObject):
+            mess = 'Cannot operate with {0} and {1} of different registries.'
+            raise ValueError(mess.format(self.__class__.__name__,
+                                         other.__class__.__name__))
+        else:
+            return False
+
+def to_units_container(unit_like, registry=None):
+    """ Convert a unit compatible type to a UnitsContainer.
+
+    """
+    mro = type(unit_like).mro()
+    if UnitsContainer in mro:
+        return unit_like
+    elif SharedRegistryObject in mro:
+        return unit_like._units
+    elif string_types in mro:
+        if registry:
+            return registry._parse_units(unit_like)
+        else:
+            return ParserHelper.from_string(unit_like)
+    elif dict in mro:
+        return UnitsContainer(unit_like)
+
+
+def infer_base_unit(q):
+    """Return UnitsContainer of q with all prefixes stripped."""
+    d = {}
+    parse = q._REGISTRY.parse_unit_name
+    for unit_name, power in q._units.items():
+        completely_parsed_unit = list(parse(unit_name))[-1]
+
+        _, base_unit, __ = completely_parsed_unit
+        d[base_unit] = power
+    return UnitsContainer(d)

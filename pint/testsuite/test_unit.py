@@ -3,229 +3,133 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import math
-import copy
-import itertools
-import operator as op
 
-from pint.unit import (ScaleConverter, OffsetConverter, UnitsContainer,
-                       Definition, PrefixDefinition, UnitDefinition,
-                       DimensionDefinition, _freeze, Converter, UnitRegistry,
-                       LazyRegistry, ParserHelper)
+from pint.unit import (UnitRegistry, LazyRegistry)
+from pint.util import (UnitsContainer, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.compat import u, unittest, np, string_types
-from pint.testsuite import QuantityTestCase, helpers, BaseTestCase
+from pint.compat import u, np, string_types
+from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
 
 
-class TestConverter(BaseTestCase):
+class TestUnit(QuantityTestCase):
 
-    def test_converter(self):
-        c = Converter()
-        self.assertTrue(c.is_multiplicative)
-        self.assertTrue(c.to_reference(8))
-        self.assertTrue(c.from_reference(8))
+    def test_creation(self):
+        for arg in ('meter', UnitsContainer(meter=1), self.U_('m')):
+            self.assertEqual(self.U_(arg)._units, UnitsContainer(meter=1))
+        self.assertRaises(TypeError, self.U_, 1)
 
-    def test_multiplicative_converter(self):
-        c = ScaleConverter(20.)
-        self.assertEqual(c.from_reference(c.to_reference(100)), 100)
-        self.assertEqual(c.to_reference(c.from_reference(100)), 100)
+    def test_unit_repr(self):
+        x = self.U_(UnitsContainer(meter=1))
+        self.assertEqual(str(x), 'meter')
+        self.assertEqual(repr(x), "<Unit('meter')>")
 
-    def test_offset_converter(self):
-        c = OffsetConverter(20., 2)
-        self.assertEqual(c.from_reference(c.to_reference(100)), 100)
-        self.assertEqual(c.to_reference(c.from_reference(100)), 100)
+    def test_unit_formatting(self):
+        x = self.U_(UnitsContainer(meter=2, kilogram=1, second=-1))
+        for spec, result in (('{0}', str(x)), ('{0!s}', str(x)),
+                             ('{0!r}', repr(x)),
+                             ('{0:L}', r'\frac{kilogram \cdot meter^{2}}{second}'),
+                             ('{0:P}', 'kilogram·meter²/second'),
+                             ('{0:H}', 'kilogram meter<sup>2</sup>/second'),
+                             ('{0:C}', 'kilogram*meter**2/second'),
+                             ('{0:~}', 'kg * m ** 2 / s'),
+                             ('{0:L~}', r'\frac{kg \cdot m^{2}}{s}'),
+                             ('{0:P~}', 'kg·m²/s'),
+                             ('{0:H~}', 'kg m<sup>2</sup>/s'),
+                             ('{0:C~}', 'kg*m**2/s'),
+                             ):
+            self.assertEqual(spec.format(x), result)
+
+    def test_unit_default_formatting(self):
+        ureg = UnitRegistry()
+        x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
+        for spec, result in (('L', r'\frac{kilogram \cdot meter^{2}}{second}'),
+                             ('P', 'kilogram·meter²/second'),
+                             ('H', 'kilogram meter<sup>2</sup>/second'),
+                             ('C', 'kilogram*meter**2/second'),
+                             ('~', 'kg * m ** 2 / s'),
+                             ('L~', r'\frac{kg \cdot m^{2}}{s}'),
+                             ('P~', 'kg·m²/s'),
+                             ('H~', 'kg m<sup>2</sup>/s'),
+                             ('C~', 'kg*m**2/s'),
+                             ):
+            ureg.default_format = spec
+            self.assertEqual('{0}'.format(x), result,
+                             'Failed for {0}, {1}'.format(spec, result))
+
+    def test_unit_mul(self):
+        x = self.U_('m')
+        self.assertEqual(x*1, self.Q_(1, 'm'))
+        self.assertEqual(x*0.5, self.Q_(0.5, 'm'))
+        self.assertEqual(x*self.Q_(1, 'm'), self.Q_(1, 'm**2'))
+        self.assertEqual(1*x, self.Q_(1, 'm'))
+
+    def test_unit_div(self):
+        x = self.U_('m')
+        self.assertEqual(x/1, self.Q_(1, 'm'))
+        self.assertEqual(x/0.5, self.Q_(2.0, 'm'))
+        self.assertEqual(x/self.Q_(1, 'm'), self.Q_(1))
+
+    def test_unit_rdiv(self):
+        x = self.U_('m')
+        self.assertEqual(1/x, self.Q_(1, '1/m'))
+
+    def test_unit_pow(self):
+        x = self.U_('m')
+        self.assertEqual(x**2, self.U_('m**2'))
+
+    def test_unit_hash(self):
+        x = self.U_('m')
+        self.assertEqual(hash(x), hash(x._units))
+
+    def test_unit_eqs(self):
+        x = self.U_('m')
+        self.assertEqual(x, self.U_('m'))
+        self.assertNotEqual(x, self.U_('cm'))
+
+        self.assertEqual(x, self.Q_(1, 'm'))
+        self.assertNotEqual(x, self.Q_(2, 'm'))
+
+        self.assertEqual(x, UnitsContainer({'meter': 1}))
+
+        y = self.U_('cm/m')
+        self.assertEqual(y, 0.01)
+
+    def test_unit_cmp(self):
+
+        x = self.U_('m')
+        self.assertLess(x, self.U_('km'))
+        self.assertGreater(x, self.U_('mm'))
+
+        y = self.U_('m/mm')
+        self.assertGreater(y, 1)
+        self.assertLess(y, 1e6)
+
+    def test_dimensionality(self):
+
+        x = self.U_('m')
+        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1}))
+
+    def test_dimensionless(self):
+
+        self.assertTrue(self.U_('m/mm').dimensionless)
+        self.assertFalse(self.U_('m').dimensionless)
+
+    def test_unit_casting(self):
+
+        self.assertEqual(int(self.U_('m/mm')), 1000)
+        self.assertEqual(float(self.U_('mm/m')), 1e-3)
+        self.assertEqual(complex(self.U_('mm/mm')), 1+0j)
 
     @helpers.requires_numpy()
-    def test_converter_inplace(self):
-        for c in (ScaleConverter(20.), OffsetConverter(20., 2)):
-            fun1 = lambda x, y: c.from_reference(c.to_reference(x, y), y)
-            fun2 = lambda x, y: c.to_reference(c.from_reference(x, y), y)
-            for fun, (inplace, comp) in itertools.product((fun1, fun2),
-                                                          ((True, self.assertIs), (False, self.assertIsNot))):
-                a = np.ones((1, 10))
-                ac = np.ones((1, 10))
-                r = fun(a, inplace)
-                np.testing.assert_allclose(r, ac)
-                comp(a, r)
+    def test_array_interface(self):
+        import numpy as np
 
-
-class TestDefinition(BaseTestCase):
-
-    def test_invalid(self):
-        self.assertRaises(ValueError, Definition.from_string, 'x = [time] * meter')
-        self.assertRaises(ValueError, Definition.from_string, '[x] = [time] * meter')
-
-    def test_prefix_definition(self):
-        for definition in ('m- = 1e-3', 'm- = 10**-3', 'm- = 0.001'):
-            x = Definition.from_string(definition)
-            self.assertIsInstance(x, PrefixDefinition)
-            self.assertEqual(x.name, 'm')
-            self.assertEqual(x.aliases, ())
-            self.assertEqual(x.converter.to_reference(1000), 1)
-            self.assertEqual(x.converter.from_reference(0.001), 1)
-            self.assertEqual(str(x), 'm')
-
-        x = Definition.from_string('kilo- = 1e-3 = k-')
-        self.assertIsInstance(x, PrefixDefinition)
-        self.assertEqual(x.name, 'kilo')
-        self.assertEqual(x.aliases, ())
-        self.assertEqual(x.symbol, 'k')
-        self.assertEqual(x.converter.to_reference(1000), 1)
-        self.assertEqual(x.converter.from_reference(.001), 1)
-
-        x = Definition.from_string('kilo- = 1e-3 = k- = anotherk-')
-        self.assertIsInstance(x, PrefixDefinition)
-        self.assertEqual(x.name, 'kilo')
-        self.assertEqual(x.aliases, ('anotherk', ))
-        self.assertEqual(x.symbol, 'k')
-        self.assertEqual(x.converter.to_reference(1000), 1)
-        self.assertEqual(x.converter.from_reference(.001), 1)
-
-    def test_baseunit_definition(self):
-        x = Definition.from_string('meter = [length]')
-        self.assertIsInstance(x, UnitDefinition)
-        self.assertTrue(x.is_base)
-        self.assertEqual(x.reference, UnitsContainer({'[length]': 1}))
-
-    def test_unit_definition(self):
-        x = Definition.from_string('coulomb = ampere * second')
-        self.assertIsInstance(x, UnitDefinition)
-        self.assertFalse(x.is_base)
-        self.assertIsInstance(x.converter, ScaleConverter)
-        self.assertEqual(x.converter.scale, 1)
-        self.assertEqual(x.reference, UnitsContainer(ampere=1, second=1))
-
-        x = Definition.from_string('faraday =  96485.3399 * coulomb')
-        self.assertIsInstance(x, UnitDefinition)
-        self.assertFalse(x.is_base)
-        self.assertIsInstance(x.converter, ScaleConverter)
-        self.assertEqual(x.converter.scale,  96485.3399)
-        self.assertEqual(x.reference, UnitsContainer(coulomb=1))
-
-        x = Definition.from_string('degF = 9 / 5 * kelvin; offset: 255.372222')
-        self.assertIsInstance(x, UnitDefinition)
-        self.assertFalse(x.is_base)
-        self.assertIsInstance(x.converter, OffsetConverter)
-        self.assertEqual(x.converter.scale, 9/5)
-        self.assertEqual(x.converter.offset, 255.372222)
-        self.assertEqual(x.reference, UnitsContainer(kelvin=1))
-
-    def test_dimension_definition(self):
-        x = DimensionDefinition('[time]', '', (), converter='')
-        self.assertTrue(x.is_base)
-        self.assertEqual(x.name, '[time]')
-
-        x = Definition.from_string('[speed] = [length]/[time]')
-        self.assertIsInstance(x, DimensionDefinition)
-        self.assertEqual(x.reference, UnitsContainer({'[length]': 1, '[time]': -1}))
-
-
-class TestUnitsContainer(QuantityTestCase):
-
-    def _test_inplace(self, operator, value1, value2, expected_result):
-        value1 = copy.copy(value1)
-        value2 = copy.copy(value2)
-        id1 = id(value1)
-        id2 = id(value2)
-        value1 = operator(value1, value2)
-        value2_cpy = copy.copy(value2)
-        self.assertEqual(value1, expected_result)
-        self.assertEqual(id1, id(value1))
-        self.assertEqual(value2, value2_cpy)
-        self.assertEqual(id2, id(value2))
-
-    def _test_not_inplace(self, operator, value1, value2, expected_result):
-        id1 = id(value1)
-        id2 = id(value2)
-
-        value1_cpy = copy.copy(value1)
-        value2_cpy = copy.copy(value2)
-
-        result = operator(value1, value2)
-
-        self.assertEqual(expected_result, result)
-        self.assertEqual(value1, value1_cpy)
-        self.assertEqual(value2, value2_cpy)
-        self.assertNotEqual(id(result), id1)
-        self.assertNotEqual(id(result), id2)
-
-    def test_unitcontainer_creation(self):
-        x = UnitsContainer(meter=1, second=2)
-        y = UnitsContainer({'meter': 1.0, 'second': 2.0})
-        self.assertIsInstance(x['meter'], float)
-        self.assertEqual(x, y)
-        self.assertIsNot(x, y)
-        z = copy.copy(x)
-        self.assertEqual(x, z)
-        self.assertIsNot(x, z)
-        z = UnitsContainer(x)
-        self.assertEqual(x, z)
-        self.assertIsNot(x, z)
-
-    def test_unitcontainer_repr(self):
-        x = UnitsContainer()
-        self.assertEqual(str(x), 'dimensionless')
-        self.assertEqual(repr(x), '<UnitsContainer({})>')
-        x = UnitsContainer(meter=1, second=2)
-        self.assertEqual(str(x), 'meter * second ** 2')
-        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1.0, 'second': 2.0})>")
-        x = UnitsContainer(meter=1, second=2.5)
-        self.assertEqual(str(x), 'meter * second ** 2.5')
-        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1.0, 'second': 2.5})>")
-
-    def test_unitcontainer_bool(self):
-        self.assertTrue(UnitsContainer(meter=1, second=2))
-        self.assertFalse(UnitsContainer())
-
-    def test_unitcontainer_comp(self):
-        x = UnitsContainer(meter=1, second=2)
-        y = UnitsContainer(meter=1., second=2)
-        z = UnitsContainer(meter=1, second=3)
-        self.assertTrue(x == y)
-        self.assertFalse(x != y)
-        self.assertFalse(x == z)
-        self.assertTrue(x != z)
-
-    def test_unitcontainer_arithmetic(self):
-        x = UnitsContainer(meter=1)
-        y = UnitsContainer(second=1)
-        z = UnitsContainer(meter=1, second=-2)
-
-        self._test_not_inplace(op.mul, x, y, UnitsContainer(meter=1, second=1))
-        self._test_not_inplace(op.truediv, x, y, UnitsContainer(meter=1, second=-1))
-        self._test_not_inplace(op.pow, z, 2, UnitsContainer(meter=2, second=-4))
-        self._test_not_inplace(op.pow, z, -2, UnitsContainer(meter=-2, second=4))
-
-        self._test_inplace(op.imul, x, y, UnitsContainer(meter=1, second=1))
-        self._test_inplace(op.itruediv, x, y, UnitsContainer(meter=1, second=-1))
-        self._test_inplace(op.ipow, z, 2, UnitsContainer(meter=2, second=-4))
-        self._test_inplace(op.ipow, z, -2, UnitsContainer(meter=-2, second=4))
-
-    def test_string_comparison(self):
-        x = UnitsContainer(meter=1)
-        y = UnitsContainer(second=1)
-        z = UnitsContainer(meter=1, second=-2)
-        self.assertEqual(x, 'meter')
-        self.assertEqual('meter', x)
-        self.assertNotEqual(x, 'meter ** 2')
-        self.assertNotEqual(x, 'meter * meter')
-        self.assertNotEqual(x, 'second')
-        self.assertEqual(y, 'second')
-        self.assertEqual(z, 'meter/second/second')
-
-    def test_invalid(self):
-        self.assertRaises(TypeError, UnitsContainer, {1: 2})
-        self.assertRaises(TypeError, UnitsContainer, {'1': '2'})
-        d = UnitsContainer()
-        self.assertRaises(TypeError, d.__setitem__, 1, 2)
-        self.assertRaises(TypeError, d.__setitem__, '1', '2')
-        self.assertRaises(TypeError, d.__mul__, list())
-        self.assertRaises(TypeError, d.__imul__, list())
-        self.assertRaises(TypeError, d.__pow__, list())
-        self.assertRaises(TypeError, d.__ipow__, list())
-        self.assertRaises(TypeError, d.__truediv__, list())
-        self.assertRaises(TypeError, d.__itruediv__, list())
-        self.assertRaises(TypeError, d.__rtruediv__, list())
+        x = self.U_('m')
+        arr = np.ones(10)
+        self.assertQuantityEqual(arr*x, self.Q_(arr, 'm'))
+        self.assertQuantityEqual(arr/x, self.Q_(arr, '1/m'))
+        self.assertQuantityEqual(x/arr, self.Q_(arr, 'm'))
 
 
 class TestRegistry(QuantityTestCase):
@@ -295,7 +199,7 @@ class TestRegistry(QuantityTestCase):
 
     def test_str_errors(self):
         self.assertEqual(str(UndefinedUnitError('rabbits')), "'{0!s}' is not defined in the unit registry".format('rabbits'))
-        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "{0!s} are not defined in the unit registry".format(('rabbits', 'horses')))
+        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "'{0!s}' are not defined in the unit registry".format(('rabbits', 'horses')))
         self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
                          "Cannot convert from 'meter' to 'second'")
         self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),
@@ -495,7 +399,7 @@ class TestRegistry(QuantityTestCase):
 
     def test_parse_units(self):
         ureg = self.ureg
-        self.assertEqual(ureg.parse_units(''), UnitsContainer())
+        self.assertEqual(ureg.parse_units(''), ureg.Unit(''))
         self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
 
 
@@ -517,38 +421,39 @@ class TestCompatibleUnits(QuantityTestCase):
         self.assertEqual(equiv1, equiv2)
 
     def test_many(self):
-        self._test(self.ureg.meter.units)
-        self._test(self.ureg.seconds.units)
-        self._test(self.ureg.newton.units)
-        self._test(self.ureg.kelvin.units)
+        self._test(self.ureg.meter)
+        self._test(self.ureg.seconds)
+        self._test(self.ureg.newton)
+        self._test(self.ureg.kelvin)
 
     def test_context_sp(self):
-
 
         gd = self.ureg.get_dimensionality
 
         # length, frequency, energy
-        valid = [gd(self.ureg.meter.units), gd(self.ureg.hertz.units), gd(self.ureg.joule.units)]
+        valid = [gd(self.ureg.meter), gd(self.ureg.hertz),
+                 gd(self.ureg.joule)]
 
         with self.ureg.context('sp'):
-            equiv = self.ureg.get_compatible_units(self.ureg.meter.units)
+            equiv = self.ureg.get_compatible_units(self.ureg.meter)
             result = set()
             for eq in equiv:
                 dim = gd(eq)
-                result.add(_freeze(dim))
+                result.add(dim)
                 self.assertIn(dim, valid)
 
             self.assertEqual(len(result), len(valid))
 
     def test_get_base_units(self):
         ureg = UnitRegistry()
-        self.assertEqual(ureg.get_base_units(''), (1, UnitsContainer()))
+        self.assertEqual(ureg.get_base_units(''), (1, ureg.Unit('')))
         self.assertEqual(ureg.get_base_units('meter'), ureg.get_base_units(ParserHelper(meter=1)))
 
     def test_get_compatible_units(self):
         ureg = UnitRegistry()
-        self.assertEqual(ureg.get_compatible_units(''), (1, UnitsContainer()))
-        self.assertEqual(ureg.get_compatible_units('meter'), ureg.get_compatible_units(ParserHelper(meter=1)))
+        self.assertEqual(ureg.get_compatible_units(''), frozenset())
+        self.assertEqual(ureg.get_compatible_units('meter'),
+                         ureg.get_compatible_units(ParserHelper(meter=1)))
 
 
 class TestRegistryWithDefaultRegistry(TestRegistry):
@@ -577,20 +482,6 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         self.assertIn('inch', self.ureg._units)
         self.assertRaises(ValueError, d, 'bla = 3.2 meter = inch')
         self.assertRaises(ValueError, d, 'myk- = 1000 = kilo-')
-
-
-class TestErrors(BaseTestCase):
-
-    def test_errors(self):
-        x = ('meter', )
-        msg = "'meter' is not defined in the unit registry"
-        self.assertEqual(str(UndefinedUnitError(x)), msg)
-        self.assertEqual(str(UndefinedUnitError(list(x))), msg)
-        self.assertEqual(str(UndefinedUnitError(set(x))), msg)
-
-        msg = "Cannot convert from 'a' (c) to 'b' (d)msg"
-        ex = DimensionalityError('a', 'b', 'c', 'd', 'msg')
-        self.assertEqual(str(ex), msg)
 
 
 class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):

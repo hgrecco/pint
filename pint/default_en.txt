@@ -66,7 +66,7 @@ barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
 darcy = 9.869233e-13 * m ** 2
 acre = 4046.8564224 * m ** 2 = international_acre
-hectare = 100 * are
+hectare = 100 * are = ha
 US_survey_acre = 160 * rod ** 2
 
 # EM
@@ -102,14 +102,15 @@ unit_pole = 1.256637e-7 * weber
 joule = newton * meter = J
 erg = dyne * centimeter
 btu = 1.05505585262e3 * joule = Btu = BTU = british_thermal_unit
-eV = 1.60217653e-19 * J = electron_volt
+electron_volt = 1.60217653e-19 * J = eV
+quadrillion_btu = 10**15 * btu = quad
 thm = 100000 * BTU = therm = EC_therm
 cal = 4.184 * joule = calorie = thermochemical_calorie
 international_steam_table_calorie = 4.1868 * joule
 ton_TNT = 4.184e9 * joule = tTNT
 US_therm = 1.054804e8 * joule
 watt_hour = watt * hour = Wh = watthour
-E_h = 4.35974394e-18 * joule = hartree = hartree_energy
+hartree = 4.35974394e-18 * joule = E_h = hartree_energy
 
 # Force
 [force] = [mass] * [acceleration]
@@ -143,8 +144,8 @@ peak_sun_hour = 1000 * watt_hour / meter**2 = PSH
 langley = thermochemical_calorie / centimeter**2 = Langley
 
 # Length
-angstrom = 1e-10 * meter = ångström = Å
-inch = 2.54 * centimeter = in = international_inch = inches = international_inches 
+angstrom = 1e-10 * meter = Å = ångström = Å
+inch = 2.54 * centimeter = in = international_inch = inches = international_inches
 foot = 12 * inch = ft = international_foot = feet = international_feet
 mile = 5280 * foot = mi = international_mile
 yard = 3 * feet = yd = international_yard
@@ -178,11 +179,11 @@ short_hundredweight = 100 * lb
 metric_ton = 1000 * kilogram = t = tonne
 pennyweight = 24 * gram = dwt
 slug = 14.59390 * kilogram
-troy_ounce = 480 * gram = toz = apounce = apothecary_ounce
+troy_ounce = 480 * grain = toz = apounce = apothecary_ounce
 troy_pound = 12 * toz = tlb = appound = apothecary_pound
-drachm = 60 * gram = apdram = apothecary_dram
+drachm = 60 * grain = apdram = apothecary_dram
 atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
-scruple = 20 * gram
+scruple = 20 * grain
 bag = 94 * lb
 ton = 2000 * lb = short_ton
 
@@ -332,12 +333,12 @@ firkin = barrel / 4
     # mw is the molecular weight of the species
     # volume is the volume of the solution
     # solvent_mass is the mass of solvent in the solution
-    
+
     # moles -> mass require the molecular weight
     [substance] -> [mass]: value * mw
     [mass] -> [substance]: value / mw
 
-    # moles/volume -> mass/volume and moles/mass -> mass / mass 
+    # moles/volume -> mass/volume and moles/mass -> mass / mass
     # require the  molecular weight
     [substance] / [volume] -> [mass] / [volume]: value * mw
     [mass] / [volume] -> [substance] / [volume]: value / mw

@@ -3,12 +3,14 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import math
+import copy
 
 from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
 from pint.compat import np, unittest, long_type
+from pint.errors import UndefinedUnitError
 from pint.testsuite import QuantityTestCase, helpers
 
 
@@ -39,14 +41,14 @@ class TestIssues(QuantityTestCase):
         ureg.define('molar = mole / liter = M')
         t = 4 * ureg('mM')
         self.assertEqual(t.magnitude, 4)
-        self.assertEqual(t.units, UnitsContainer(millimolar=1))
+        self.assertEqual(t._units, UnitsContainer(millimolar=1))
         self.assertEqual(t.to('mole / liter'), 4e-3 * ureg('M'))
 
     def test_issue52(self):
         u1 = UnitRegistry()
         u2 = UnitRegistry()
-        q1 = u1.meter
-        q2 = u2.meter
+        q1 = 1*u1.meter
+        q2 = 1*u2.meter
         import operator as op
         for fun in (op.add, op.iadd,
                     op.sub, op.isub,
@@ -57,7 +59,7 @@ class TestIssues(QuantityTestCase):
 
     def test_issue54(self):
         ureg = UnitRegistry()
-        self.assertEqual((ureg.km/ureg.m + 1).magnitude, 1001)
+        self.assertEqual((1*ureg.km/ureg.m + 1).magnitude, 1001)
 
     def test_issue54_related(self):
         ureg = UnitRegistry()
@@ -87,17 +89,17 @@ class TestIssues(QuantityTestCase):
         ureg = UnitRegistry()
         self.assertEqual(ureg.get_dimensionality(UnitsContainer({'[temperature]': 1})),
                          UnitsContainer({'[temperature]': 1}))
-        self.assertEqual(ureg.get_dimensionality(ureg.kelvin.units),
+        self.assertEqual(ureg.get_dimensionality(ureg.kelvin),
                          UnitsContainer({'[temperature]': 1}))
-        self.assertEqual(ureg.get_dimensionality(ureg.degC.units),
+        self.assertEqual(ureg.get_dimensionality(ureg.degC),
                          UnitsContainer({'[temperature]': 1}))
 
     def test_issue66b(self):
         ureg = UnitRegistry()
-        self.assertEqual(ureg.get_base_units(ureg.kelvin.units),
-                         (1.0, UnitsContainer({'kelvin': 1})))
-        self.assertEqual(ureg.get_base_units(ureg.degC.units),
-                         (1.0, UnitsContainer({'kelvin': 1})))
+        self.assertEqual(ureg.get_base_units(ureg.kelvin),
+                         (1.0, ureg.Unit(UnitsContainer({'kelvin': 1}))))
+        self.assertEqual(ureg.get_base_units(ureg.degC),
+                         (1.0, ureg.Unit(UnitsContainer({'kelvin': 1}))))
 
     def test_issue69(self):
         ureg = UnitRegistry()
@@ -190,7 +192,6 @@ class TestIssues(QuantityTestCase):
 
     def test_issue93(self):
         ureg = UnitRegistry()
-        self.assertIsInstance(ureg.meter.magnitude, int)
         x = 5 * ureg.meter
         self.assertIsInstance(x.magnitude, int)
         y = 0.1 * ureg.meter
@@ -269,6 +270,27 @@ class TestIssues(QuantityTestCase):
         iq = long(q)
         self.assertEqual(iq, long(10))
         self.assertIsInstance(iq, long)
+
+    def test_angstrom_creation(self):
+        ureg = UnitRegistry()
+        try:
+            ureg.Quantity(2, 'Å')
+        except SyntaxError:
+            self.fail('Quantity with Å could not be created.')
+
+    def test_alternative_angstrom_definition(self):
+        ureg = UnitRegistry()
+        try:
+            ureg.Quantity(2, '\u212B')
+        except UndefinedUnitError:
+            self.fail('Quantity with Å could not be created.')
+
+    def test_micro_creation(self):
+        ureg = UnitRegistry()
+        try:
+            ureg.Quantity(2, 'µm')
+        except SyntaxError:
+            self.fail('Quantity with µ prefix could not be created.')
 
 
 @helpers.requires_numpy()
@@ -391,7 +413,6 @@ class TestIssuesNP(QuantityTestCase):
 
     def test_issue93(self):
         ureg = UnitRegistry()
-        self.assertIsInstance(ureg.meter.magnitude, int)
         x = 5 * ureg.meter
         self.assertIsInstance(x.magnitude, int)
         y = 0.1 * ureg.meter
@@ -471,3 +492,18 @@ class TestIssuesNP(QuantityTestCase):
         q1 = a * self.ureg.meter
         q2 = a.T * self.ureg.meter
         self.assertQuantityEqual(q1.T, q2)
+
+    def test_issue250(self):
+        a = self.ureg.V
+        b = self.ureg.mV
+        self.assertEqual(np.float16(a/b), 1000.)
+        self.assertEqual(np.float32(a/b), 1000.)
+        self.assertEqual(np.float64(a/b), 1000.)
+        self.assertEqual(np.float128(a/b), 1000.)
+
+    def test_issue252(self):
+        ur = UnitRegistry()
+        q = ur("3 F")
+        t = copy.deepcopy(q)
+        u = t.to(ur.mF)
+        self.assertQuantityEqual(q.to(ur.mF), u)

@@ -2,7 +2,8 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-import glob
+import fnmatch
+import os
 import copy
 from timeit import Timer
 
@@ -90,9 +91,15 @@ def time_file(filename, name='', setup='', number=0, repeat=3):
             yield task_name, value
 
 
+def recursive_glob(rootdir='.', pattern='*'):
+    return [os.path.join(looproot, filename)
+            for looproot, _, filenames in os.walk(rootdir)
+            for filename in filenames
+            if fnmatch.fnmatch(filename, pattern)]
+
 def main(filenames=None):
     if not filenames:
-        filenames = glob.iglob('bench_*.yaml')
+        filenames = recursive_glob('.', 'bench_*.yaml')
     elif isinstance(filenames, basestring):
         filenames = [filenames, ]
 

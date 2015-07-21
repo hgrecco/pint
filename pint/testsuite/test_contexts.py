@@ -6,8 +6,8 @@ import itertools
 from collections import defaultdict
 
 from pint import UnitRegistry
-from pint.context import Context, _freeze
-from pint.unit import UnitsContainer
+from pint.context import Context
+from pint.util import UnitsContainer
 from pint.testsuite import QuantityTestCase
 
 
@@ -81,17 +81,6 @@ def add_sharedargdef_ctxs(ureg):
 
 class TestContexts(QuantityTestCase):
 
-    def test_freeze(self):
-        self.assertEqual(_freeze('meter'), frozenset([('meter', 1)]))
-        self.assertEqual(_freeze('meter/second'), frozenset((('meter', 1), ('second', -1))))
-        x = frozenset((('meter', 1)))
-        self.assertIs(_freeze(x), x)
-        self.assertEqual(_freeze({'meter': 1}),
-                         frozenset([('meter', 1)]))
-        self.assertEqual(_freeze({'meter': -1, 'second': -1}),
-                         frozenset((('meter', -1), ('second', -1))))
-
-
     def test_known_context(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
@@ -131,9 +120,9 @@ class TestContexts(QuantityTestCase):
     def test_graph(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
-        l = _freeze({'[length]': 1.})
-        t = _freeze({'[time]': -1.})
-        c = _freeze({'[current]': -1.})
+        l = UnitsContainer({'[length]': 1.})
+        t = UnitsContainer({'[time]': -1.})
+        c = UnitsContainer({'[current]': -1.})
 
         g_sp = defaultdict(set)
         g_sp.update({l: set((t,)),
@@ -174,9 +163,9 @@ class TestContexts(QuantityTestCase):
     def test_graph_enable(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
-        l = _freeze({'[length]': 1.})
-        t = _freeze({'[time]': -1.})
-        c = _freeze({'[current]': -1.})
+        l = UnitsContainer({'[length]': 1.})
+        t = UnitsContainer({'[time]': -1.})
+        c = UnitsContainer({'[current]': -1.})
 
         g_sp = defaultdict(set)
         g_sp.update({l: set((t,)),

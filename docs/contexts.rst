@@ -3,11 +3,11 @@
 Contexts
 ========
 
-If you work frequently on certain topics, you will probably find the need
-to convert between dimensions based on some pre-established (physical) relationships.
-For example, in spectroscopy you need to transform from wavelength to frequency.
-These are incompatible units and therefore Pint will raise an error if your do
-this directly:
+If you work frequently on certain topics, you will probably find the need to
+convert between dimensions based on some pre-established (physical)
+relationships. For example, in spectroscopy you need to transform from
+wavelength to frequency. These are incompatible units and therefore Pint will
+raise an error if your do this directly:
 
 .. doctest::
 
@@ -29,10 +29,11 @@ You probably want to use the relation `frequency = speed_of_light / wavelength`:
     <Quantity(5.99584916e+14, 'hertz')>
 
 
-To make this task easy, Pint has the concept of `contexts` which provides conversion
-rules between dimensions. For example, the relation between wavelength and frequency is
-defined in the `spectroscopy` context (abbreviated `sp`). You can tell pint to use
-this context when you convert a quantity to different units.
+To make this task easy, Pint has the concept of `contexts` which provides
+conversion rules between dimensions. For example, the relation between
+wavelength and frequency is defined in the `spectroscopy` context (abbreviated
+`sp`). You can tell pint to use this context when you convert a quantity to
+different units.
 
 .. doctest::
 
@@ -85,8 +86,8 @@ or in the registry:
     <Quantity(5.99584916e+14, 'hertz')>
 
 If a conversion rule between two dimensions appears in more than one context,
-the one in the last context has precedence. This is easy to remember if you think
-that the previous syntax is equivalent to nest contexts:
+the one in the last context has precedence. This is easy to remember if you
+think that the previous syntax is equivalent to nest contexts:
 
     >>> with ureg.context('sp'):
     ...     with ureg.context('boltzmann') :
@@ -108,9 +109,10 @@ calculate, for example, the wavelength in water of a laser which on air is 530 n
     >>> f.to('nm', 'sp', n=1.33)
     <Quantity(398.496240602, 'nanometer')>
 
-Contexts can also accept Pint Quantity objects as parameters. For example, the 'chemistry' 
-context accepts the molecular weight of a substance (as a Quantity with dimensions of 
-[mass]/[substance]) to allow conversion between moles and mass.
+Contexts can also accept Pint Quantity objects as parameters. For example, the
+'chemistry' context accepts the molecular weight of a substance (as a Quantity
+with dimensions of [mass]/[substance]) to allow conversion between moles and
+mass.
 
 .. doctest::
 
@@ -133,31 +135,33 @@ context is::
         [energy] -> [frequency]: value / planck_constant
     @end
 
-The `@context` directive indicates the beginning of the transformations which are finished by the
-`@end` statement. You can optionally specify parameters for the context in parenthesis.
-All parameters are named and default values are mandatory. Multiple parameters
-are separated by commas (like in a python function definition). Finally, you provide the name
-of the context (e.g. spectroscopy) and, optionally, a short version of the name (e.g. sp)
-separated by an equal sign. See the definition of the 'chemistry' context in default_en.txt 
-for an example of a multiple-parameter context.
+The `@context` directive indicates the beginning of the transformations which
+are finished by the `@end` statement. You can optionally specify parameters for
+the context in parenthesis. All parameters are named and default values are
+mandatory. Multiple parameters are separated by commas (like in a python
+function definition). Finally, you provide the name of the context (e.g.
+spectroscopy) and, optionally, a short version of the name (e.g. sp) separated
+by an equal sign. See the definition of the 'chemistry' context in
+default_en.txt for an example of a multiple-parameter context.
 
-Conversions rules are specified by providing source and destination dimensions separated
-using a colon (`:`) from the equation. A special variable named `value` will be replaced
-by the source quantity. Other names will be looked first in the context arguments and
-then in registry.
+Conversions rules are specified by providing source and destination dimensions
+separated using a colon (`:`) from the equation. A special variable named
+`value` will be replaced by the source quantity. Other names will be looked
+first in the context arguments and then in registry.
 
 A single forward arrow (`->`) indicates that the equations is used to transform
 from the first dimension to the second one. A double arrow (`<->`) is used to
 indicate that the transformation operates both ways.
 
-Context definitions are stored and imported exactly like custom units definition file 
-(and can be included in the same file as unit definitions). See "Defining units" for details.
+Context definitions are stored and imported exactly like custom units
+definition file (and can be included in the same file as unit definitions). See
+"Defining units" for details.
 
 Defining contexts programmatically
 ----------------------------------
 
-You can create `Context` object, and populate the conversion rules using python functions.
-For example:
+You can create `Context` object, and populate the conversion rules using python
+functions. For example:
 
 .. doctest::
 
