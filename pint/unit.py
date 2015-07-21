@@ -29,7 +29,7 @@ from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
                    find_shortest_path, UnitsContainer, _is_dim,
                    SharedRegistryObject, to_units_container)
-from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type
+from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type, zip_longest
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
 from .converters import ScaleConverter
@@ -1142,6 +1142,35 @@ class UnitRegistry(object):
                     return Q_(result, ret)
 
                 return result
+            return wrapper
+        return decorator
+
+    def check(self, *args):
+        """Decorator to for quantity type checking for function inputs.
+
+        Use it to ensure that the decorated function input parameters match
+        the expected type of pint quantity.
+
+        Use None to skip argument checking.
+
+        :param args: iterable of input units.
+        :return: the wrapped function.
+        :raises:
+            :class:`TypeError` if the parameters don't match dimensions
+        """
+        dimensions = [self.get_dimensionality(dim) for dim in args]
+
+        def decorator(func):
+            assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
+            updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
+
+            @functools.wraps(func, assigned=assigned, updated=updated)
+            def wrapper(*values, **kwargs):
+                for dim, value in zip_longest(dimensions, values):
+                    if dim and value.dimensionality != dim:
+                        raise DimensionalityError(value, 'a quantity of',
+                                                  value.dimensionality, dim)
+                return func(*values, **kwargs)
             return wrapper
         return decorator
 
