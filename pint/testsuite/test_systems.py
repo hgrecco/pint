@@ -187,9 +187,9 @@ class TestGroup(QuantityTestCase):
     def test_get_compatible_units(self):
         ureg = UnitRegistry()
 
-        g = ureg.get_group('imperial')
+        g = ureg.get_group('test-imperial')
         g.add_units('inch', 'yard', 'pint')
-        c = ureg.get_compatible_units('meter', 'imperial')
+        c = ureg.get_compatible_units('meter', 'test-imperial')
         self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
 
 
@@ -238,13 +238,13 @@ class TestSystem(QuantityTestCase):
         sysname = 'mysys1'
         ureg = UnitRegistry()
 
-        g = ureg.get_group('imperial')
+        g = ureg.get_group('test-imperial')
 
         g.add_units('inch', 'yard', 'pint')
-        c = ureg.get_compatible_units('meter', 'imperial')
+        c = ureg.get_compatible_units('meter', 'test-imperial')
         self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
 
-        lines = ['@system %s using imperial' % sysname,
+        lines = ['@system %s using test-imperial' % sysname,
                  'inch',
                  ]
 
@@ -257,10 +257,10 @@ class TestSystem(QuantityTestCase):
 
         ureg = UnitRegistry()
 
-        g = ureg.get_group('imperial')
+        g = ureg.get_group('test-imperial')
         g.add_units('inch', 'yard', 'pint')
 
-        lines = ['@system %s using imperial' % sysname,
+        lines = ['@system %s using test-imperial' % sysname,
                  'inch',
                  ]
 
@@ -280,11 +280,11 @@ class TestSystem(QuantityTestCase):
 
         ureg = UnitRegistry()
 
-        g = ureg.get_group('imperial')
+        g = ureg.get_group('test-imperial')
         g.add_units('inch', 'yard', 'pint')
-        c = ureg.get_compatible_units('meter', 'imperial')
+        c = ureg.get_compatible_units('meter', 'test-imperial')
 
-        lines = ['@system %s using imperial' % sysname,
+        lines = ['@system %s using test-imperial' % sysname,
                  'pint:meter',
                  ]
 
@@ -312,10 +312,10 @@ class TestSystem(QuantityTestCase):
 
         ureg = UnitRegistry()
 
-        g = ureg.get_group('imperial')
+        g = ureg.get_group('test-imperial')
         g.add_units('inch', 'yard', 'pint')
 
-        lines = ['@system %s using imperial' % sysname,
+        lines = ['@system %s using test-imperial' % sysname,
                  'mph:meter',
                  ]
 
