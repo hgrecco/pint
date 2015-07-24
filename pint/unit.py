@@ -39,6 +39,19 @@ from .errors import (DimensionalityError, UndefinedUnitError,
 from .pint_eval import build_eval_tree
 from . import systems
 
+
+def _capture_till_end(ifile):
+    context = []
+    for no, line in ifile:
+        line = line.strip()
+        if line.startswith('@end'):
+            break
+        elif line.startswith('@'):
+            raise DefinitionSyntaxError('cannot nest @ directives', lineno=no)
+        context.append(line)
+    return context
+
+
 class _Unit(SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
 
@@ -255,7 +268,7 @@ class UnitRegistry(object):
 
     def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
                  autoconvert_offset_to_baseunit=False,
-                 on_redefinition='warn'):
+                 on_redefinition='warn', system=None):
         self.Unit = build_unit_class(self)
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
@@ -309,6 +322,9 @@ class UnitRegistry(object):
         #: non-multiplicative units as their *delta* counterparts.
         self.default_as_delta = default_as_delta
 
+        #: System name to be used by default.
+        self._default_system_name = None
+
         # Determines if quantities with offset units are converted to their
         # base units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
@@ -321,6 +337,8 @@ class UnitRegistry(object):
         self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
 
         self._build_cache()
+
+        self.set_default_system(system)
 
     def __name__(self):
         return 'UnitRegistry'
@@ -369,6 +387,13 @@ class UnitRegistry(object):
         :return: System
         """
         return self._gsmanager.get_system(name, create_if_needed)
+
+    def set_default_system(self, name):
+        # Test if exists
+        if name:
+            system = self._gsmanager.get_system(name, False)
+            self._default_system_name = name
+            self._base_units_cache = {}
 
     def add_context(self, context):
         """Add a context object to the registry.
@@ -596,18 +621,23 @@ class UnitRegistry(object):
                     path = os.path.join(path, os.path.normpath(line[7:].strip()))
                 self.load_definitions(path, is_resource)
             elif line.startswith('@context'):
-                context = [line, ]
-                for no, line in ifile:
-                    line = line.strip()
-                    if line.startswith('@end'):
-                        try:
-                            self.add_context(Context.from_lines(context, self.get_dimensionality))
-                        except KeyError as e:
-                            raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
-                        break
-                    elif line.startswith('@'):
-                        raise DefinitionSyntaxError('cannot nest @ directives', lineno=no)
-                    context.append(line)
+                context = [line, ] + _capture_till_end(ifile)
+                try:
+                    self.add_context(Context.from_lines(context, self.get_dimensionality))
+                except KeyError as e:
+                    raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
+            elif line.startswith('@system'):
+                context = [line, ] + _capture_till_end(ifile)
+                try:
+                    self._gsmanager.add_system_from_lines(context, self.get_root_units)
+                except KeyError as e:
+                    raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
+            elif line.startswith('@group'):
+                context = [line, ] + _capture_till_end(ifile)
+                try:
+                    self._gsmanager.add_group_from_lines(context, self.define)
+                except KeyError as e:
+                    raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
             else:
                 try:
                     self.define(Definition.from_string(line))
@@ -842,6 +872,9 @@ class UnitRegistry(object):
             return self._base_units_cache[input_units]
 
         factor, units = self.get_root_units(input_units, check_nonmult)
+
+        if system is None:
+            system = self._default_system_name
 
         if not system:
             return factor, units

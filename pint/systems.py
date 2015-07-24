@@ -377,6 +377,12 @@ class GSManager(object):
         self._groups_systems = dict()
         self._root_group = Group('root', self._groups_systems)
 
+    def add_system_from_lines(self, lines, get_root_func):
+        System.from_lines(lines, get_root_func, self._groups_systems)
+
+    def add_group_from_lines(self, lines, define_func):
+        Group.from_lines(lines, define_func, self._groups_systems)
+
     def get_group(self, name, create_if_needed=True):
         """Return a Group.
 
