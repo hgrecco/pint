@@ -804,6 +804,9 @@ class UnitRegistry(object):
                 if not self._units[unit].converter.is_multiplicative:
                     return None, units
 
+        if check_nonmult:
+            self._root_units_cache[input_units] = factor, units
+
         return factor, units
 
     def get_base_units(self, input_units, check_nonmult=True, system=None):
@@ -859,6 +862,9 @@ class UnitRegistry(object):
                 destination_units *= UnitsContainer({unit: value})
 
         base_factor = self.convert(factor, units, destination_units)
+
+        if check_nonmult:
+            self._base_units_cache[input_units] = base_factor, destination_units
 
         return base_factor, destination_units
 
@@ -1242,7 +1248,7 @@ class UnitRegistry(object):
         :param args: iterable of input units.
         :return: the wrapped function.
         :raises:
-            :class:`TypeError` if the parameters don't match dimensions
+            :class:`DimensionalityError` if the parameters don't match dimensions
         """
         dimensions = [self.get_dimensionality(dim) for dim in args]
 
