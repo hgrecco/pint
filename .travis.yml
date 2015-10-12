@@ -43,7 +43,8 @@ install:
   - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install uncertainties; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install -c mwcraig --yes numpy==$NUMPY_VERSION; fi
-  - pip install coverage coveralls
+  - if [ $TRAVIS_PYTHON_VERSION == '3.2' ]; then pip install coverage==3.7.1; else pip install coverage; fi
+  - pip install coveralls
 
 script:
   - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
