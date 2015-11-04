@@ -189,7 +189,7 @@ ton = 2000 * lb = short_ton
 
 # Textile
 denier =  gram / (9000 * meter)
-tex = gram/ (1000 * meter)
+tex = gram / (1000 * meter)
 dtex = decitex
 
 # Photometry
@@ -253,12 +253,12 @@ day = 24 * hour
 week = 7 * day
 fortnight = 2 * week
 year = 31556925.9747 * second
-month = year/12
+month = year / 12
 shake = 1e-8 * second
 sidereal_day = day / 1.00273790935079524
-sidereal_hour = sidereal_day/24
-sidereal_minute=sidereal_hour/60
-sidereal_second =sidereal_minute/60
+sidereal_hour = sidereal_day / 24
+sidereal_minute = sidereal_hour / 60
+sidereal_second = sidereal_minute / 60
 sidereal_year = 366.25636042 * sidereal_day
 sidereal_month = 27.321661 * sidereal_day
 tropical_month = 27.321661 * day
@@ -270,7 +270,7 @@ gregorian_year = 365.2425 * day
 millenium = 1000 * year = millenia = milenia = milenium
 eon = 1e9 * year
 work_year = 2056 * hour
-work_month = work_year/12
+work_month = work_year / 12
 
 # Velocity
 [speed] = [length] / [time]
