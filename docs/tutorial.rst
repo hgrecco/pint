@@ -290,7 +290,7 @@ also define the registry as the application registry::
     >>> q1 = UnitRegistry().meter
     >>> q2 = UnitRegistry().meter
     >>> # q1 and q2 belong to different registries!
-    >>> id(q1._REGISTRY) is id(q2._REGISTRY) # False
+    >>> id(q1._REGISTRY) == id(q2._REGISTRY) # False
 
 .. _eval: http://docs.python.org/3/library/functions.html#eval
 .. _dangerous: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
