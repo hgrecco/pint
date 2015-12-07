@@ -15,7 +15,7 @@ import operator
 import functools
 import bisect
 
-from .formatting import remove_custom_flags
+from .formatting import remove_custom_flags, siunitx_format_unit
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError)
 from .definitions import UnitDefinition
@@ -118,6 +118,18 @@ class _Quantity(SharedRegistryObject):
 
     def __format__(self, spec):
         spec = spec or self.default_format
+
+        # special cases
+        if 'Lx' in spec: # the LaTeX siunitx code
+          spec = spec.replace('Lx','')
+          # todo: add support for extracting options
+          opts = ''
+          mstr = format(self.magnitude,spec)
+          ustr = siunitx_format_unit(self.units)
+          ret = r'\SI[%s]{%s}{%s}'%( opts, mstr, ustr )
+          return ret
+
+        # standard cases
         if '#' in spec:
             spec = spec.replace('#', '')
             obj = self.to_compact()

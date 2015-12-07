@@ -30,6 +30,7 @@ from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    find_shortest_path, UnitsContainer, _is_dim,
                    SharedRegistryObject, to_units_container)
 from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type, zip_longest
+from .formatting import siunitx_format_unit
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
 from .converters import ScaleConverter
@@ -99,6 +100,13 @@ class _Unit(SharedRegistryObject):
 
     def __format__(self, spec):
         spec = spec or self.default_format
+        # special cases
+        if 'Lx' in spec: # the LaTeX siunitx code
+          opts = ''
+          ustr = siunitx_format_unit(self)
+          ret = r'\si[%s]{%s}'%( opts, ustr )
+          return ret
+
 
         if '~' in spec:
             units = UnitsContainer(dict((self._REGISTRY._get_symbol(key),
