@@ -29,4 +29,6 @@ You mention other similar Python libraries. Can you point me to those?
 
 `udunitspy <https://github.com/blazetopher/udunitspy>`_
 
+`SymPy <http://docs.sympy.org/dev/modules/physics/units.html>`_
+
 If your are aware of another one, please let me know.
