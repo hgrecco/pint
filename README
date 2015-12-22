@@ -1,3 +1,22 @@
+    [![Build Status](https://travis-ci.org/hgrecco/pint.svg?branch=master)](https://travis-ci.org/hgrecco/pint)
+
+    [![Downloads](https://pypip.in/download/pint/badge.svg)](https://pypi.python.org/pypi/pint/)
+
+    [![Latest Version](https://pypip.in/version/pint/badge.svg)](https://pypi.python.org/pypi/pint/)
+
+    [![Supported Python versions](https://pypip.in/py_versions/pint/badge.svg)](https://pypi.python.org/pypi/pint/)
+
+    [![Supported Python implementations](https://pypip.in/implementation/pint/badge.svg)](https://pypi.python.org/pypi/pint/)
+
+    [![Development Status](https://pypip.in/status/pint/badge.svg)](https://pypi.python.org/pypi/pint/)
+
+    [![Download format](https://pypip.in/format/pint/badge.svg)](https://pypi.python.org/pypi/pint/)
+
+    [![License](https://pypip.in/license/pint/badge.svg)](https://pypi.python.org/pypi/pint/)
+
+    [![Coverage Status](https://coveralls.io/repos/hgrecco/pint/badge.png)](https://coveralls.io/r/hgrecco/pint)
+
+
 Pint: a Python units library
 ============================
 
