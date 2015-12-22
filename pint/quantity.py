@@ -21,7 +21,8 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
 from .definitions import UnitDefinition
 from .compat import string_types, ndarray, np, _to_magnitude, long_type
 from .util import (logger, UnitsContainer, SharedRegistryObject,
-                   to_units_container, infer_base_unit)
+                   to_units_container, infer_base_unit,
+                   fix_str_conversions)
 
 
 def _eq(first, second, check_all):
@@ -39,6 +40,7 @@ class _Exception(Exception):            # pragma: no cover
         self.internal = internal
 
 
+@fix_str_conversions
 class _Quantity(SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
