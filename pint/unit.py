@@ -101,6 +101,8 @@ class _Unit(SharedRegistryObject):
         spec = spec or self.default_format
 
         if '~' in spec:
+            if self.dimensionless:
+                return ''
             units = UnitsContainer(dict((self._REGISTRY._get_symbol(key),
                                          value)
                                    for key, value in self._units.items()))
