@@ -32,6 +32,7 @@ class TestUnit(QuantityTestCase):
                              ('{0:P}', 'kilogram·meter²/second'),
                              ('{0:H}', 'kilogram meter<sup>2</sup>/second'),
                              ('{0:C}', 'kilogram*meter**2/second'),
+                             ('{0:Lx}', r'\si[]{\kilo\gram\meter\squared\per\second}'),
                              ('{0:~}', 'kg * m ** 2 / s'),
                              ('{0:L~}', r'\frac{kg \cdot m^{2}}{s}'),
                              ('{0:P~}', 'kg·m²/s'),

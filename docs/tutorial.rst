@@ -248,6 +248,15 @@ If you want to use abbreviated unit names, prefix the specification with `~`:
 
 The same is true for latex (`L`) and HTML (`H`) specs.
 
+Pint also supports the LaTeX siunitx package:
+
+.. doctest::
+
+   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> # siunitx Latex print
+   >>> print('The siunitx representation is {:Lx}'.format(accel))
+   The siunitx representation is \SI[]{1.3}{\meter\per\second\squared}
+
 Finally, you can specify a default format specification:
 
    >>> 'The acceleration is {}'.format(accel)

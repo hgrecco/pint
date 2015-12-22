@@ -22,7 +22,7 @@ from token import STRING, NAME, OP, NUMBER
 from tokenize import untokenize
 
 from .compat import string_types, tokenizer, lru_cache, NullHandler, maketrans, NUMERIC_TYPES
-from .formatting import format_unit
+from .formatting import format_unit,siunitx_format_unit
 from .pint_eval import build_eval_tree
 
 logger = logging.getLogger(__name__)

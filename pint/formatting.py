@@ -190,6 +190,43 @@ def format_unit(unit, spec):
     return result
 
 
+def siunitx_format_unit(units):
+  '''Returns LaTeX code for the unit that can be put into an siunitx command.'''
+  # NOTE: unit registry is required to identify unit prefixes.
+  registry = units._REGISTRY
+
+  def _tothe(power):
+    if power == 1:
+      return ''
+    elif power == 2:
+      return r'\squared'
+    elif power == 3:
+      return r'\cubed'
+    else:
+      return r'\tothe{%d}' % (power)
+
+  l = []
+  # loop through all units in the container
+  for unit, power in sorted(units._units.items()):
+    # remove unit prefix if it exists
+    # siunit supports \prefix commands
+    prefix = None
+    for p in registry._prefixes.values():
+      p = str(p)
+      if len(p) > 0 and unit.find(p) == 0:
+        prefix = p
+        unit = unit.replace( prefix, '', 1 )
+        
+    if power < 0:
+      l.append(r'\per')
+    if not prefix is None:
+      l.append(r'\{0}'.format(prefix))
+    l.append(r'\{0}'.format(unit))
+    l.append(r'{0}'.format(_tothe(abs(power))))
+
+  return ''.join(l)
+
+
 def remove_custom_flags(spec):
     for flag in _KNOWN_TYPES:
          if flag:
