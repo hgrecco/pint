@@ -269,6 +269,8 @@ stere = meter ** 3
     [length] <-> [frequency]: speed_of_light / n / value
     [frequency] -> [energy]: planck_constant * value
     [energy] -> [frequency]: value / planck_constant
+    # allow wavenumber / kayser
+    1 / [length] <-> [length]: 1 / value
 @end
 
 @context boltzmann
