@@ -171,6 +171,7 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertRaises(ValueError, self.q.cumprod)
         self.assertQuantityEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
 
+    @helpers.requires_numpy_previous_than('1.10')
     def test_integer_div(self):
         a = [1] * self.ureg.m
         b = [2] * self.ureg.m

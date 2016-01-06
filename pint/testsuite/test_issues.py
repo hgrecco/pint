@@ -425,7 +425,7 @@ class TestIssuesNP(QuantityTestCase):
         self.assertQuantityAlmostEqual(x + y, 5.1 * ureg.meter)
         self.assertQuantityAlmostEqual(z, 5.1 * ureg.meter)
 
-
+    @helpers.requires_numpy_previous_than('1.10')
     def test_issue94(self):
         ureg = UnitRegistry()
         v1 = np.array([5, 5]) * ureg.meter
