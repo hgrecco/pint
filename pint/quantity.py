@@ -209,6 +209,13 @@ class _Quantity(SharedRegistryObject):
 
         return self._dimensionality
 
+    @classmethod
+    def from_tuple(cls, tup):
+        return cls(tup[0], UnitsContainer(tup[1]))
+
+    def to_tuple(self):
+        return self.m, tuple(self._units.items())
+
     def compatible_units(self, *contexts):
         if contexts:
             with self._REGISTRY.context(*contexts):
