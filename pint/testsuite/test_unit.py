@@ -380,7 +380,7 @@ class TestRegistry(QuantityTestCase):
         q = 8. * self.ureg.inch
         t = 8. * self.ureg.degF
         dt = 8. * self.ureg.delta_degF
-        self.assertEqual(q.to('cm').magnitude, self.ureg._units['inch'].converter.to_reference(8.))
+        self.assertEqual(q.to('yard').magnitude, self.ureg._units['inch'].converter.to_reference(8.))
         self.assertEqual(t.to('kelvin').magnitude, self.ureg._units['degF'].converter.to_reference(8.))
         self.assertEqual(dt.to('kelvin').magnitude, self.ureg._units['delta_degF'].converter.to_reference(8.))
 

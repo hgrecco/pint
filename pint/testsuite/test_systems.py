@@ -4,20 +4,20 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 
 from pint import UnitRegistry
-from pint.systems import Group, System
 
 from pint.testsuite import QuantityTestCase
 
 
 class TestGroup(QuantityTestCase):
 
-    def _build_root(self, d):
-        root = Group('root', d)
-        return root
+    def _build_empty_reg_root(self):
+        ureg = UnitRegistry(None)
+        return ureg, ureg.get_group('root')
 
     def test_units_programatically(self):
-        d = {}
-        root = self._build_root(d)
+        ureg, root = self._build_empty_reg_root()
+        d  = ureg._groups
+
         self.assertEqual(root._used_groups, set())
         self.assertEqual(root._used_by, set())
         root.add_units('meter', 'second', 'meter')
@@ -27,10 +27,9 @@ class TestGroup(QuantityTestCase):
         self.assertEqual(set(d.keys()), set(['root']))
 
     def test_cyclic(self):
-        d = {}
-        root = self._build_root(d)
-        g2 = Group('g2', d)
-        g3 = Group('g3', d)
+        ureg, root = self._build_empty_reg_root()
+        g2 = ureg.Group('g2')
+        g3 = ureg.Group('g3')
         g2.add_groups('g3')
 
         self.assertRaises(ValueError, g2.add_groups, 'root')
@@ -38,9 +37,9 @@ class TestGroup(QuantityTestCase):
         self.assertRaises(ValueError, g3.add_groups, 'root')
 
     def test_groups_programatically(self):
-        d = {}
-        root = self._build_root(d)
-        g2 = Group('g2', d)
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
+        g2 = ureg.Group('g2')
 
         self.assertEqual(set(d.keys()), set(['root', 'g2']))
 
@@ -57,10 +56,10 @@ class TestGroup(QuantityTestCase):
                  'second',
                  ]
 
-        d = {}
-        root = self._build_root(d)
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
 
-        grp = Group.from_lines(lines, lambda x: None, d)
+        grp = ureg.Group.from_lines(lines, lambda x: None)
 
         self.assertEqual(set(d.keys()), set(['root', 'mygroup']))
 
@@ -76,11 +75,11 @@ class TestGroup(QuantityTestCase):
                  'second',
                  ]
 
-        d = {}
-        root = self._build_root(d)
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
 
-        g = Group('group1', d)
-        grp = Group.from_lines(lines, lambda x: None, d)
+        g = ureg.Group('group1')
+        grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertEqual(grp.name, 'mygroup')
         self.assertEqual(grp._unit_names, set(['meter', 'second']))
         self.assertEqual(grp._used_groups, set(['group1']))
@@ -92,13 +91,12 @@ class TestGroup(QuantityTestCase):
                  'second',
                  ]
 
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
 
-        d = {}
-        root = self._build_root(d)
-
-        Group('group1', d)
-        Group('group2', d)
-        grp = Group.from_lines(lines, lambda x: None, d)
+        ureg.Group('group1')
+        ureg.Group('group2')
+        grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertEqual(grp.name, 'mygroup')
         self.assertEqual(grp._unit_names, set(['meter', 'second']))
         self.assertEqual(grp._used_groups, set(['group1', 'group2']))
@@ -110,13 +108,12 @@ class TestGroup(QuantityTestCase):
                  ' second  ',
                  ]
 
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
 
-        d = {}
-        root = self._build_root(d)
-
-        Group('group1', d)
-        Group('group2', d)
-        grp = Group.from_lines(lines, lambda x: None, d)
+        ureg.Group('group1')
+        ureg.Group('group2')
+        grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertEqual(grp.name, 'mygroup')
         self.assertEqual(grp._unit_names, set(['meter', 'second']))
         self.assertEqual(grp._used_groups, set(['group1', 'group2']))
@@ -128,11 +125,11 @@ class TestGroup(QuantityTestCase):
                  'second',
                  ]
 
-        d = {}
-        root = self._build_root(d)
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
 
-        g1 = Group('group1', d)
-        grp = Group.from_lines(lines, lambda x: None, d)
+        g1 = ureg.Group('group1')
+        grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertIs(root._computed_members, None)
         self.assertIs(grp._computed_members, None)
         self.assertEqual(grp.members, frozenset(['meter', 'second']))
@@ -157,25 +154,25 @@ class TestGroup(QuantityTestCase):
         def define(ud):
             defs.append(ud.name)
 
-        d = {}
-        root = self._build_root(d)
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
 
-        grp = Group.from_lines(lines, define, d)
+        grp = ureg.Group.from_lines(lines, define)
 
         self.assertEqual(['kings_leg', 'kings_head'], defs)
 
     def test_members_including(self):
 
-        d = {}
-        root = self._build_root(d)
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
 
-        g1 = Group('group1', d)
+        g1 = ureg.Group('group1')
 
         g1.add_units('second', 'inch')
-        g2 = Group('group2', d)
+        g2 = ureg.Group('group2')
         g2.add_units('second', 'newton')
 
-        g3 = Group('group3', d)
+        g3 = ureg.Group('group3')
         g3.add_units('meter', 'second')
         g3.add_groups('group1', 'group2')
 
@@ -196,9 +193,10 @@ class TestGroup(QuantityTestCase):
 
 class TestSystem(QuantityTestCase):
 
-    def _build_root(self, d):
-        root = Group('root', d)
-        return root
+    def _build_empty_reg_root(self):
+        ureg = UnitRegistry(None)
+        return ureg, ureg.get_group('root')
+
 
     def test_implicit_root(self):
         lines = ['@system mks',
@@ -206,9 +204,11 @@ class TestSystem(QuantityTestCase):
                  'kilogram',
                  'second',
                  ]
-        d = {}
-        root = self._build_root(d)
-        s = System.from_lines(lines, lambda x: x, d)
+
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
+
+        s = ureg.System.from_lines(lines, lambda x: x)
         s._used_groups = set(['root'])
 
     def test_simple_using(self):
@@ -217,9 +217,11 @@ class TestSystem(QuantityTestCase):
                  'kilogram',
                  'second',
                  ]
-        d = {}
-        root = self._build_root(d)
-        s = System.from_lines(lines, lambda x: x, d)
+
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
+
+        s = ureg.System.from_lines(lines, lambda x: x)
         s._used_groups = set(['root', 'g1'])
 
 
@@ -228,10 +230,12 @@ class TestSystem(QuantityTestCase):
                  'meter',
                  'kilogram',
                  ]
-        d = {}
-        root = self._build_root(d)
+
+        ureg, root = self._build_empty_reg_root()
+        d = ureg._groups
+
         root.add_units('second')
-        s = System.from_lines(lines, lambda x: x, d)
+        s = ureg.System.from_lines(lines, lambda x: x)
         self.assertEqual(s.members, frozenset(['second']))
 
     def test_get_compatible_units(self):
@@ -248,7 +252,7 @@ class TestSystem(QuantityTestCase):
                  'inch',
                  ]
 
-        s = System.from_lines(lines, lambda x: x, g._groups_systems)
+        s = ureg.System.from_lines(lines, lambda x: x)
         c = ureg.get_compatible_units('meter', sysname)
         self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
 
@@ -264,7 +268,8 @@ class TestSystem(QuantityTestCase):
                  'inch',
                  ]
 
-        s = System.from_lines(lines, ureg.get_base_units, g._groups_systems)
+        s = ureg.System.from_lines(lines, ureg.get_base_units)
+        ureg._systems[s.name] = s
 
         # base_factor, destination_units
         c = ureg.get_base_units('inch', system=sysname)
@@ -288,7 +293,8 @@ class TestSystem(QuantityTestCase):
                  'pint:meter',
                  ]
 
-        s = System.from_lines(lines, ureg.get_base_units, g._groups_systems)
+        s = ureg.System.from_lines(lines, ureg.get_base_units)
+        ureg._systems[s.name] = s
 
         # base_factor, destination_units
         c = ureg.get_base_units('inch', system=sysname)
@@ -319,13 +325,13 @@ class TestSystem(QuantityTestCase):
                  'mph:meter',
                  ]
 
-        s = System.from_lines(lines, ureg.get_base_units, g._groups_systems)
-
+        s = ureg.System.from_lines(lines, ureg.get_base_units)
+        ureg._systems[s.name] = s
         # base_factor, destination_units
         c = ureg.get_base_units('inch', system=sysname)
-        self.assertAlmostEqual(c[0], 0.0568, places=3)
+        self.assertAlmostEqual(c[0], 0.056, places=2)
         self.assertEqual(c[1], {'mph': 1, 'second': 1})
 
         c = ureg.get_base_units('kph', system=sysname)
-        self.assertAlmostEqual(c[0], .6214, places=4)
+        self.assertAlmostEqual(c[0], 0.6213, places=3)
         self.assertEqual(c[1], {'mph': 1})
