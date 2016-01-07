@@ -8,6 +8,8 @@ from pint.compat import unittest, HAS_NUMPY, HAS_UNCERTAINTIES, NUMPY_VER, PYTHO
 
 
 def requires_numpy18():
+    if not HAS_NUMPY:
+        return unittest.skip('Requires NumPy')
     return unittest.skipUnless(StrictVersion(NUMPY_VER) >= StrictVersion('1.8'), 'Requires NumPy >= 1.8')
 
 
