@@ -29,7 +29,7 @@ from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
                    find_shortest_path, UnitsContainer, _is_dim,
                    SharedRegistryObject, to_units_container,
-                   fix_str_conversions)
+                   fix_str_conversions, SourceIterator)
 
 from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type, zip_longest
 from .formatting import siunitx_format_unit
@@ -41,19 +41,6 @@ from .errors import (DimensionalityError, UndefinedUnitError,
 
 from .pint_eval import build_eval_tree
 from . import systems
-
-
-def _capture_till_end(ifile):
-    context = []
-    for no, line in ifile:
-        line = line.strip()
-        if line.startswith('@end'):
-            break
-        elif line.startswith('@'):
-            raise DefinitionSyntaxError('cannot nest @ directives', lineno=no)
-        context.append(line)
-    return context
-
 
 
 @fix_str_conversions
@@ -68,8 +55,7 @@ class _Unit(SharedRegistryObject):
     default_format = ''
 
     def __reduce__(self):
-        from . import _build_unit
-        return _build_unit, (self._units)
+        return self.Unit, (self._units)
 
     def __new__(cls, units):
         inst = object.__new__(cls)
@@ -283,6 +269,7 @@ class UnitRegistry(object):
     def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
                  autoconvert_offset_to_baseunit=False,
                  on_redefinition='warn', system=None):
+
         self.Unit = build_unit_class(self)
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
@@ -290,11 +277,23 @@ class UnitRegistry(object):
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
 
+        #: Map between name (string) and value (string) of defaults stored in the definitions file.
+        self._defaults = {}
+
         #: Map dimension name (string) to its definition (DimensionDefinition).
         self._dimensions = {}
 
-        #: :type: systems.GSManager
-        self._gsmanager = systems.GSManager()
+        #: Map system name to system.
+        #: :type: dict[ str | System]
+        self._systems = {}
+
+        #: Map group name to group.
+        #: :type: dict[ str | Group]
+        self._groups = {}
+        self.Group = systems.build_group_class(self)
+        self._groups['root'] = self.Group('root')
+        self.System = systems.build_system_class(self)
+
 
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
@@ -336,9 +335,6 @@ class UnitRegistry(object):
         #: non-multiplicative units as their *delta* counterparts.
         self.default_as_delta = default_as_delta
 
-        #: System name to be used by default.
-        self._default_system_name = None
-
         # Determines if quantities with offset units are converted to their
         # base units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
@@ -350,9 +346,15 @@ class UnitRegistry(object):
 
         self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
 
-        self._build_cache()
+        #: Copy units in root group to the default group
+        if 'group' in self._defaults:
+            grp = self.get_group(self._defaults['group'], True)
+            grp.add_units(*self.get_group('root', False).non_inherited_unit_names)
 
-        self.set_default_system(system)
+        #: System name to be used by default.
+        self._system = system or self._defaults.get('system', None)
+
+        self._build_cache()
 
     def __name__(self):
         return 'UnitRegistry'
@@ -390,24 +392,46 @@ class UnitRegistry(object):
         :param create_if_needed: Create a group if not Found. If False, raise an Exception.
         :return: Group
         """
-        return self._gsmanager.get_group(name, create_if_needed)
+        if name in self._groups:
+            return self._groups[name]
+
+        if not create_if_needed:
+            raise ValueError('Unkown group %s' % name)
+
+        return self.Group(name)
+
+    @property
+    def systems(self):
+        return set(self._systems.keys())
+
+    @property
+    def system(self):
+        return self._system
+
+    @system.setter
+    def system(self, name):
+        if name:
+            if name not in self._systems:
+                raise ValueError('Unknown system %s' % name)
+
+            self._base_units_cache = {}
+
+        self._system = name
 
     def get_system(self, name, create_if_needed=True):
         """Return a Group.
 
-        :param registry:
         :param name: Name of the group to be
         :param create_if_needed: Create a group if not Found. If False, raise an Exception.
         :return: System
         """
-        return self._gsmanager.get_system(name, create_if_needed)
+        if name in self._systems:
+            return self._systems[name]
 
-    def set_default_system(self, name):
-        # Test if exists
-        if name:
-            system = self._gsmanager.get_system(name, False)
-            self._default_system_name = name
-            self._base_units_cache = {}
+        if not create_if_needed:
+            raise ValueError('Unkown system %s' % name)
+
+        return self.System(name)
 
     def add_context(self, context):
         """Add a context object to the registry.
@@ -531,12 +555,11 @@ class UnitRegistry(object):
             # the added contexts are removed from the active one.
             self.disable_contexts(len(names))
 
-    def define(self, definition):
+    def define(self, definition, add_to_root_group=False):
         """Add unit to the registry.
         """
         if isinstance(definition, string_types):
             definition = Definition.from_string(definition)
-
         if isinstance(definition, DimensionDefinition):
             d, di = self._dimensions, None
         elif isinstance(definition, UnitDefinition):
@@ -549,6 +572,10 @@ class UnitRegistry(object):
                         continue
 
                     self.define(DimensionDefinition(dimension, '', (), None, is_base=True))
+
+            # We add all units to the root group
+            if add_to_root_group:
+                self.get_group('root').add_units(definition.name)
 
         elif isinstance(definition, PrefixDefinition):
             d, di = self._prefixes, None
@@ -596,7 +623,8 @@ class UnitRegistry(object):
 
             self.define(UnitDefinition(d_name, d_symbol, d_aliases,
                                        ScaleConverter(definition.converter.scale),
-                                       d_reference, definition.is_base))
+                                       d_reference, definition.is_base),
+                        add_to_root_group=True)
 
     def load_definitions(self, file, is_resource=False):
         """Add units and prefixes defined in a definition text file.
@@ -619,11 +647,8 @@ class UnitRegistry(object):
                 msg = getattr(e, 'message', '') or str(e)
                 raise ValueError('While opening {0}\n{1}'.format(file, msg))
 
-        ifile = enumerate(file, 1)
+        ifile = SourceIterator(file)
         for no, line in ifile:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
             if line.startswith('@import'):
                 if is_resource:
                     path = line[7:].strip()
@@ -634,27 +659,30 @@ class UnitRegistry(object):
                         path = os.getcwd()
                     path = os.path.join(path, os.path.normpath(line[7:].strip()))
                 self.load_definitions(path, is_resource)
+
+            elif line.startswith('@defaults'):
+                next(ifile)
+                for lineno, part in ifile.block_iter():
+                    k, v = part.split('=')
+                    self._defaults[k.strip()] = v.strip()
+
             elif line.startswith('@context'):
-                context = [line, ] + _capture_till_end(ifile)
                 try:
-                    self.add_context(Context.from_lines(context, self.get_dimensionality))
+                    self.add_context(Context.from_lines(ifile.block_iter(),
+                                                        self.get_dimensionality))
                 except KeyError as e:
                     raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
-            elif line.startswith('@system'):
-                context = [line, ] + _capture_till_end(ifile)
-                try:
-                    self._gsmanager.add_system_from_lines(context, self.get_root_units)
-                except KeyError as e:
-                    raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
+
             elif line.startswith('@group'):
-                context = [line, ] + _capture_till_end(ifile)
-                try:
-                    self._gsmanager.add_group_from_lines(context, self.define)
-                except KeyError as e:
-                    raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
+                self.Group.from_lines(ifile.block_iter(), self.define)
+
+            elif line.startswith('@system'):
+                self.System.from_lines(ifile.block_iter(), self.get_root_units)
+
             else:
                 try:
-                    self.define(Definition.from_string(line))
+                    self.define(Definition.from_string(line),
+                                add_to_root_group=True)
                 except (RedefinitionError, DefinitionSyntaxError) as ex:
                     if ex.lineno is None:
                         ex.lineno = no
@@ -881,14 +909,14 @@ class UnitRegistry(object):
         :return:
         """
 
-        # The cache is only done for check_nonmult=True
-        if check_nonmult and input_units in self._base_units_cache:
+        if system is None:
+            system = self._system
+
+        # The cache is only done for check_nonmult=True and the current system.
+        if check_nonmult and system == self._system and input_units in self._base_units_cache:
             return self._base_units_cache[input_units]
 
         factor, units = self.get_root_units(input_units, check_nonmult)
-
-        if system is None:
-            system = self._default_system_name
 
         if not system:
             return factor, units
@@ -898,7 +926,7 @@ class UnitRegistry(object):
 
         destination_units = UnitsContainer()
 
-        bu = self._gsmanager.get_system(system, False).base_units
+        bu = self.get_system(system, False).base_units
 
         for unit, value in units.items():
             if unit in bu:
@@ -933,11 +961,14 @@ class UnitRegistry(object):
         """
         input_units = to_units_container(input_units)
 
+        if group_or_system is None:
+            group_or_system = self._system
+
         equiv = self._get_compatible_units(input_units, group_or_system)
 
         return frozenset(self.Unit(eq) for eq in equiv)
 
-    def _get_compatible_units(self, input_units, group_or_system=None):
+    def _get_compatible_units(self, input_units, group_or_system):
         """
         """
         if not input_units:
@@ -955,7 +986,12 @@ class UnitRegistry(object):
                     ret |= self._dimensional_equivalents[node]
 
         if group_or_system:
-            members = self._gsmanager[group_or_system].members
+            if group_or_system in self._systems:
+                members = self._systems[group_or_system].members
+            elif group_or_system in self._groups:
+                members = self._groups[group_or_system].members
+            else:
+                raise ValueError("Unknown Group o System with name '%s'" % group_or_system)
             return frozenset(ret.intersection(members))
 
         return ret
