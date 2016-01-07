@@ -12,6 +12,8 @@ def requires_numpy18():
 
 
 def requires_numpy_previous_than(version):
+    if not HAS_NUMPY:
+        return unittest.skip('Requires NumPy')
     return unittest.skipUnless(StrictVersion(NUMPY_VER) < StrictVersion(version), 'Requires NumPy < %s' % version)
 
 
