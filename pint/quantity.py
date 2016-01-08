@@ -198,13 +198,13 @@ class _Quantity(SharedRegistryObject):
 
         return not bool(tmp.dimensionality)
 
+    _dimensionality = None
+
     @property
     def dimensionality(self):
         """Quantity's dimensionality (e.g. {length: 1, time: -1})
         """
-        try:
-            return self._dimensionality
-        except AttributeError:
+        if self._dimensionality is None:
             self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
 
         return self._dimensionality
