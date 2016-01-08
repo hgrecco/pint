@@ -693,6 +693,8 @@ class SourceIterator(object):
         self.last = lineno, line
         return lineno, line
 
+    next = __next__
+
     def block_iter(self):
         """Iterate block including header.
         """
@@ -723,3 +725,5 @@ class BlockIterator(SourceIterator):
             raise DefinitionSyntaxError('cannot nest @ directives', lineno=lineno)
 
         return lineno, line
+
+    next = __next__
