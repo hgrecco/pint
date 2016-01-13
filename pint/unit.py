@@ -18,6 +18,7 @@ import functools
 import operator
 import pkg_resources
 from decimal import Decimal
+from fractions import Fraction
 from contextlib import contextmanager, closing
 from io import open, StringIO
 from collections import defaultdict
@@ -1108,6 +1109,9 @@ class UnitRegistry(object):
         # must first convert to Decimal before we can '*' the values
         if isinstance(value, Decimal):
             factor = Decimal(str(factor))
+
+        if isinstance(value, Fraction):
+            factor = Fraction(Decimal(str(factor)))
 
         if inplace:
             value *= factor

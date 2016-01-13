@@ -507,3 +507,9 @@ class TestIssuesNP(QuantityTestCase):
         t = copy.deepcopy(q)
         u = t.to(ur.mF)
         self.assertQuantityEqual(q.to(ur.mF), u)
+
+    def test_issue323(self):
+        from fractions import Fraction as F
+        self.assertEqual((self.Q_(F(2,3), 's')).to('ms'), self.Q_(F(2000,3), 'ms'))
+        self.assertEqual((self.Q_(F(2,3), 'm')).to('km'), self.Q_(F(1,1500), 'km'))
+
