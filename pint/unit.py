@@ -1111,7 +1111,7 @@ class UnitRegistry(object):
             factor = Decimal(str(factor))
 
         if isinstance(value, Fraction):
-            factor = Fraction(Decimal(str(factor)))
+            factor = Fraction(str(factor))
 
         if inplace:
             value *= factor
