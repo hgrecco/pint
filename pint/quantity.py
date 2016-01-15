@@ -317,7 +317,7 @@ class _Quantity(SharedRegistryObject):
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
         <Quantity(10.0, 'millinewton')>
         """
-        if self.unitless:
+        if self.unitless or self.magnitude==0:
             return self
 
         SI_prefixes = {}
