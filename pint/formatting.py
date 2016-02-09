@@ -196,14 +196,18 @@ def siunitx_format_unit(units):
   registry = units._REGISTRY
 
   def _tothe(power):
-    if power == 1:
-      return ''
-    elif power == 2:
-      return r'\squared'
-    elif power == 3:
-      return r'\cubed'
+    if power.is_integer():
+      if power == 1:
+        return ''
+      elif power == 2:
+        return r'\squared'
+      elif power == 3:
+        return r'\cubed'
+      else:
+        return r'\tothe{{{:d}}}'.format(int(power))
     else:
-      return r'\tothe{%d}' % (power)
+      # limit float powers to 3 decimal places
+      return r'\tothe{{{:.3f}}}'.format(power).rstrip('0')
 
   l = []
   # loop through all units in the container
