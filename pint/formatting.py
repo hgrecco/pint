@@ -196,7 +196,7 @@ def siunitx_format_unit(units):
     registry = units._REGISTRY
 
     def _tothe(power):
-        if power.is_integer():
+        if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
             if power == 1:
                 return ''
             elif power == 2:
