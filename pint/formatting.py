@@ -221,12 +221,12 @@ def siunitx_format_unit(units):
                 prefix = p
                 unit = unit.replace(prefix, '', 1)
 
-            if power < 0:
-                l.append(r'\per')
-            if prefix is not None:
-                l.append(r'\{0}'.format(prefix))
-            l.append(r'\{0}'.format(unit))
-            l.append(r'{0}'.format(_tothe(abs(power))))
+        if power < 0:
+            l.append(r'\per')
+        if prefix is not None:
+            l.append(r'\{0}'.format(prefix))
+        l.append(r'\{0}'.format(unit))
+        l.append(r'{0}'.format(_tothe(abs(power))))
 
     return ''.join(l)
 
