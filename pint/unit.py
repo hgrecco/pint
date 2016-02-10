@@ -943,7 +943,7 @@ class UnitRegistry(object):
         return base_factor, destination_units
 
     def _get_root_units_recurse(self, ref, exp, accumulators):
-        for key in ref:
+        for key in sorted(ref):
             exp2 = exp*ref[key]
             key = self.get_name(key)
             reg = self._units[key]
