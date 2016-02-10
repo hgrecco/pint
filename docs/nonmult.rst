@@ -18,6 +18,7 @@ For example, to convert from celsius to fahrenheit:
 
    from pint import UnitRegistry
    ureg = UnitRegistry()
+   ureg.default_format = '.3f'
    Q_ = ureg.Quantity
 
 .. doctest::

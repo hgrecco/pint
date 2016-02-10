@@ -17,8 +17,7 @@ raise an error if your do this directly:
     >>> q.to('Hz')
     Traceback (most recent call last):
     ...
-    pint.unit.DimensionalityError: Cannot convert
-    from 'nanometer' ([length]) to 'hertz' (1 / [time])
+    pint.errors.DimensionalityError: Cannot convert from 'nanometer' ([length]) to 'hertz' (1 / [time])
 
 
 You probably want to use the relation `frequency = speed_of_light / wavelength`:

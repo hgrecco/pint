@@ -163,7 +163,7 @@ In the decorator format:
 
 .. doctest::
 
-    >>>@ureg.check('[length]')
+    >>> @ureg.check('[length]')
     ... def pendulum_period(length):
     ...     return 2*math.pi*math.sqrt(length/G)
 

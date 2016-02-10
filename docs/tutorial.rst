@@ -76,6 +76,7 @@ use the `ito` method:
 .. doctest::
 
    >>> speed.ito(ureg.inch / ureg.minute )
+   >>> speed
    <Quantity(7086.614173228345, 'inch / minute')>
    >>> print(speed)
    7086.614173228345 inch / minute
@@ -134,7 +135,7 @@ If you try to use a unit which is not in the registry:
    >>> speed = 23 * ureg.snail_speed
    Traceback (most recent call last):
    ...
-   pint.pint.UndefinedUnitError: 'snail_speed' is not defined in the unit registry
+   pint.errors.UndefinedUnitError: 'snail_speed' is not defined in the unit registry
 
 You can add your own units to the registry or build your own list. More info on
 that :ref:`defining`
@@ -223,7 +224,7 @@ LaTeX representations:
 
    >>> accel = 1.3 * ureg['meter/second**2']
    >>> # Pretty print
-   >>> print('The pretty representation is {:P}'.format(accel))
+   >>> 'The pretty representation is {:P}'.format(accel)
    'The pretty representation is 1.3 meter/second²'
    >>> # Latex print
    >>> 'The latex representation is {:L}'.format(accel)
@@ -242,8 +243,8 @@ If you want to use abbreviated unit names, prefix the specification with `~`:
 
    >>> 'The str is {:~}'.format(accel)
    'The str is 1.3 m / s ** 2'
-   >>> print('The pretty representation is {:~P}'.format(accel))
-   The pretty representation is 1.3 m²/s
+   >>> 'The pretty representation is {:~P}'.format(accel)
+   'The pretty representation is 1.3 m/s²'
 
 
 The same is true for latex (`L`) and HTML (`H`) specs.
@@ -300,6 +301,7 @@ also define the registry as the application registry::
     >>> q2 = UnitRegistry().meter
     >>> # q1 and q2 belong to different registries!
     >>> id(q1._REGISTRY) == id(q2._REGISTRY) # False
+    False
 
 .. _eval: http://docs.python.org/3/library/functions.html#eval
 .. _dangerous: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html

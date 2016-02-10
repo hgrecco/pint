@@ -7,7 +7,7 @@ Pint Unit Registry has the concept of system, which is a group of units
 
     >>> import pint
     >>> ureg = pint.UnitRegistry(system='mks')
-    >>> ureg.system
+    >>> ureg.default_system
     'mks'
 
 This has an effect in the base units. For example:
@@ -23,13 +23,13 @@ We can take a look for the available systems
 
 But if you change to cgs:
 
-    >>> ureg.system = 'cgs'
+    >>> ureg.default_system = 'cgs'
     >>> q.to_base_units()
     <Quantity(100.0, 'centimeter / second')>
 
 or more drastically to:
 
-    >>> ureg.system = 'imperial'
+    >>> ureg.default_system = 'imperial'
     >>> '{:.3f}'.format(q.to_base_units())
     '1.094 yard / second'
 
@@ -41,16 +41,30 @@ or more drastically to:
 
 You can also use system to narrow down the list of compatible units:
 
-    >>> ureg.system = 'mks'
+    >>> ureg.default_system = 'mks'
     >>> ureg.get_compatible_units('meter')
-    frozenset({<Unit('light_year')>, <Unit('angstrom')>, <Unit('US_survey_mile')>, <Unit('yard')>, <Unit('US_survey_foot')>, <Unit('US_survey_yard')>, <Unit('inch')>, <Unit('rod')>, <Unit('mile')>, <Unit('barleycorn')>, <Unit('foot')>, <Unit('mil')>})
+    frozenset({<Unit('light_year')>, <Unit('angstrom')>})
 
+or for imperial units:
 
-    >>> ureg.system = 'imperial'
+    >>> ureg.default_system = 'imperial'
     >>> ureg.get_compatible_units('meter')
-    frozenset({<Unit('US_survey_mile')>, <Unit('angstrom')>, <Unit('inch')>, <Unit('light_year')>, <Unit('barleycorn')>, <Unit('mile')>, <Unit('US_survey_foot')>, <Unit('rod')>, <Unit('US_survey_yard')>, <Unit('yard')>, <Unit('mil')>, <Unit('foot')>})
+    frozenset({<Unit('thou')>, <Unit('league')>, <Unit('nautical_mile')>, <Unit('inch')>, <Unit('mile')>, <Unit('yard')>, <Unit('foot')>})
 
-    >>> ureg.imperial.pint
-    bla
 
-    >>> ureg.us.pint
+You can check which unit systems are available:
+
+    >>> dir(ureg.sys)
+    ['US', 'cgs', 'imperial', 'mks']
+
+Or which units are available within a particular system:
+
+    >>> dir(ureg.sys.imperial)
+    ['acre', 'acre_foot', 'board_foot', 'cable', 'chain', 'fathom', 'foot', 'furlong', 'imperial_bushel', 'imperial_cup', 'imperial_fluid_ounce', 'imperial_gallon', 'imperial_gill', 'imperial_pint', 'imperial_quart', 'inch', 'league', 'mile', 'nautical_mile', 'perch', 'pica', 'point', 'rood', 'square_foot', 'square_yard', 'thou', 'yard']
+
+Notice that this give you the opportunity to choose within units with colliding names:
+
+    >>> (1 * ureg.sys.imperial.pint).to('liter')
+    <Quantity(0.5682612500000002, 'liter')>
+    >>> (1 * ureg.sys.US.pint).to('liter')
+    <Quantity(0.47317647300000004, 'liter')>
