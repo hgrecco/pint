@@ -189,8 +189,9 @@ This enables you to build a simple unit converter in 3 lines:
    <Quantity(1.0, 'inch')>
 
 
-.. warning:: Pint currently uses eval_ under the hood.
-   Do not use this approach from untrusted sources as it is dangerous_.
+.. note:: Since version 0.7, Pint **does not** uses eval_ under the hood.
+   This change removes the `serious security problem`_ that the system is
+   exposed when parsing information from untrusted sources.
 
 
 String formatting
@@ -304,4 +305,4 @@ also define the registry as the application registry::
     False
 
 .. _eval: http://docs.python.org/3/library/functions.html#eval
-.. _dangerous: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
+.. _`serious security problems`: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
