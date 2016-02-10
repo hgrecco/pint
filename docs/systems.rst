@@ -68,3 +68,5 @@ Notice that this give you the opportunity to choose within units with colliding 
     <Quantity(0.5682612500000002, 'liter')>
     >>> (1 * ureg.sys.US.pint).to('liter')
     <Quantity(0.47317647300000004, 'liter')>
+    >>> (1 * ureg.sys.US.pint).to(ureg.sys.imperial.pint)
+    <Quantity(0.8326741846289889, 'imperial_pint')>
