@@ -389,6 +389,7 @@ stere = meter ** 3
     gallon = 128 * fluid_ounce = gal = liquid_gallon = US_liquid_gallon
     barrel = 31.5 * gallon = bbl
     oil_barrel = 42 * gallon = oil_bbl
+    beer_barrel = 31 * gallon = beer_bbl
     hogshead = 63 * gallon
 
     # Dry Volume
@@ -413,6 +414,7 @@ stere = meter ** 3
     imperial_quart = 2 * imperial_pint = imperial_qt = UK_quart
     imperial_gallon = 8 * imperial_pint = imperial_gal = UK_gallon
     imperial_bushel = 64 * imperial_pint = imperial_bu = UK_bushel
+    imperial_barrel = 288 * imperial_pint = imperial_bbl = UK_bbl
 @end
 
 @system mks using international
