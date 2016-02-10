@@ -427,7 +427,7 @@ stere = meter ** 3
     second
 @end
 
-@system imperial using imperial_group
+@system imperial using imperial
     yard
     pound
 @end
