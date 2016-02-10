@@ -294,7 +294,6 @@ class UnitRegistry(object):
         self._groups['root'] = self.Group('root')
         self.System = systems.build_system_class(self)
 
-
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
         self._units = {}
@@ -352,7 +351,7 @@ class UnitRegistry(object):
             grp.add_units(*self.get_group('root', False).non_inherited_unit_names)
 
         #: System name to be used by default.
-        self._system = system or self._defaults.get('system', None)
+        self._default_system = system or self._defaults.get('system', None)
 
         self._build_cache()
 
@@ -401,22 +400,22 @@ class UnitRegistry(object):
         return self.Group(name)
 
     @property
-    def systems(self):
-        return set(self._systems.keys())
+    def sys(self):
+        return systems.Lister(self._systems)
 
     @property
-    def system(self):
-        return self._system
+    def default_system(self):
+        return self._default_system
 
-    @system.setter
-    def system(self, name):
+    @default_system.setter
+    def default_system(self, name):
         if name:
             if name not in self._systems:
                 raise ValueError('Unknown system %s' % name)
 
             self._base_units_cache = {}
 
-        self._system = name
+        self._default_system = name
 
     def get_system(self, name, create_if_needed=True):
         """Return a Group.
@@ -910,10 +909,10 @@ class UnitRegistry(object):
         """
 
         if system is None:
-            system = self._system
+            system = self._default_system
 
         # The cache is only done for check_nonmult=True and the current system.
-        if check_nonmult and system == self._system and input_units in self._base_units_cache:
+        if check_nonmult and system == self._default_system and input_units in self._base_units_cache:
             return self._base_units_cache[input_units]
 
         factor, units = self.get_root_units(input_units, check_nonmult)
@@ -962,7 +961,7 @@ class UnitRegistry(object):
         input_units = to_units_container(input_units)
 
         if group_or_system is None:
-            group_or_system = self._system
+            group_or_system = self._default_system
 
         equiv = self._get_compatible_units(input_units, group_or_system)
 

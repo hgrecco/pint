@@ -286,6 +286,15 @@ class _System(SharedRegistryObject):
         # Add this system to the system dictionary
         self._REGISTRY._systems[self.name] = self
 
+    def __dir__(self):
+        return list(self.members)
+
+    def __getattr__(self, item):
+        u = getattr(self._REGISTRY, self.name + '_' + item, None)
+        if u is not None:
+            return u
+        return getattr(self._REGISTRY, item)
+
     @property
     def members(self):
         d = self._REGISTRY._groups
@@ -395,6 +404,18 @@ class _System(SharedRegistryObject):
         system.derived_units |= set(derived_unit_names)
 
         return system
+
+
+class Lister(object):
+
+    def __init__(self, d):
+        self.d = d
+
+    def __dir__(self):
+        return frozenset(self.d.keys())
+
+    def __getattr__(self, item):
+        return self.d[item]
 
 
 def build_group_class(registry):
