@@ -248,6 +248,15 @@ class _Unit(SharedRegistryObject):
         else:
             raise ValueError('Unsupproted operation for Unit')
 
+    @property
+    def systems(self):
+        out = set()
+        for uname in self._units.keys():
+            for sname, sys in self._REGISTRY._systems.items():
+                if uname in sys.members:
+                    out.add(sname)
+        return frozenset(out)
+
 
 class UnitRegistry(object):
     """The unit registry stores the definitions and relationships between
