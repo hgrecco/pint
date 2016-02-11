@@ -41,6 +41,7 @@ from .errors import (DimensionalityError, UndefinedUnitError,
                      DefinitionSyntaxError, RedefinitionError)
 
 from .pint_eval import build_eval_tree
+from .quantity import _Quantity
 from . import systems
 
 
@@ -1232,7 +1233,7 @@ class UnitRegistry(object):
         self._parse_unit_cache[input_string] = ret
 
         return ret
-    
+
     def _eval_token(self, token, case_sensitive=True, **values):
         token_type = token[0]
         token_text = token[1]
@@ -1242,7 +1243,7 @@ class UnitRegistry(object):
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:
-                return self.Quantity(1, UnitsContainer({self.get_name(token_text, 
+                return self.Quantity(1, UnitsContainer({self.get_name(token_text,
                                                                       case_sensitive=case_sensitive) : 1}))
         elif token_type == NUMBER:
             return ParserHelper.eval_token(token)
@@ -1255,13 +1256,13 @@ class UnitRegistry(object):
         Numerical constants can be specified as keyword arguments and will take precedence
         over the names defined in the registry.
         """
-        
+
         if not input_string:
             return self.Quantity(1)
 
         input_string = string_preprocessor(input_string)
         gen = tokenizer(input_string)
-        
+
         return build_eval_tree(gen).evaluate(lambda x : self._eval_token(x, case_sensitive=case_sensitive,
                                                                           **values))
 
@@ -1289,8 +1290,6 @@ class UnitRegistry(object):
             :class:`ValueError` if strict and one of the arguments is not a Quantity.
         """
 
-        Q_ = self.Quantity
-
         if not isinstance(args, (list, tuple)):
             args = (args, )
 
@@ -1310,7 +1309,7 @@ class UnitRegistry(object):
                 for unit, value in zip(units, values):
                     if unit is None:
                         new_args.append(value)
-                    elif isinstance(value, Q_):
+                    elif isinstance(value, _Quantity):
                         new_args.append(self._convert(value._magnitude,
                                                       value._units, unit))
                     elif not strict:
@@ -1372,7 +1371,6 @@ def build_unit_class(registry):
 
 
 def build_quantity_class(registry, force_ndarray=False):
-    from .quantity import _Quantity
 
     class Quantity(_Quantity):
         pass
