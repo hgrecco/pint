@@ -3,7 +3,7 @@
     pint.quantity
     ~~~~~~~~~~~~~
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 

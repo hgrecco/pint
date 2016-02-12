@@ -5,7 +5,7 @@
 
     Functions and classes related to unit definitions and conversions.
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 from __future__ import (division, unicode_literals, print_function,

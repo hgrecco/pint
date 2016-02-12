@@ -8,7 +8,7 @@
     unit of measurement. It allows arithmetic operations between them
     and conversions from and to different units.
 
-    :copyright: (c) 2012 by Hernan E. Grecco.
+    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 from __future__ import with_statement
