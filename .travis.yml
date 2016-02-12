@@ -61,7 +61,7 @@ script:
   - coverage combine
   - coverage report -m
 
-after_script:
+after_success:
   - coveralls --verbose
 
 matrix:
