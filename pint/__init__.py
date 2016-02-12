@@ -12,8 +12,8 @@
     :license: BSD, see LICENSE for more details.
 """
 from __future__ import with_statement
-import os
-import subprocess
+
+
 import pkg_resources
 from .formatting import formatter
 from .unit import (UnitRegistry, LazyRegistry)
