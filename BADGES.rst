@@ -16,9 +16,14 @@
 
 .. image:: https://travis-ci.org/hgrecco/pint.svg?branch=master
     :target: https://travis-ci.org/hgrecco/pint
+    :alt: CI
 
 .. image:: https://coveralls.io/repos/github/hgrecco/pint/badge.svg?branch=master 
     :target: https://coveralls.io/github/hgrecco/pint?branch=master
     :alt: Coverage
+
+.. image:: https://readthedocs.org/projects/pint/badge/
+    :target: http://pint.readthedocs.org/
+    :alt: Docs
 
 
