@@ -6,7 +6,7 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
-
+  - "3.5"
 env:
   - UNCERTAINTIES="N" NUMPY_VERSION=0
   - UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
@@ -88,6 +88,10 @@ matrix:
       env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
     - python: "3.4"
       env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+    - python: "3.5"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.5"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
     - python: "3.2"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
     - python: "3.2"
@@ -97,4 +101,8 @@ matrix:
     - python: "3.4"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
     - python: "3.4"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
+    - python: "3.5"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+    - python: "3.5"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
