@@ -1,7 +1,7 @@
 .. _wrapping:
 
-Wrapping functions
-==================
+Wrapping and checking functions
+===============================
 
 In some cases you might want to use pint with a pre-existing web service or library
 which is not units aware. Or you might want to write a fast implementation of a
@@ -136,6 +136,30 @@ Or if the function has multiple outputs:
     >>> mypp3 = ureg.wraps((ureg.second, ureg.meter / ureg.second),
     ...                    (ureg.meter, ureg.radians))(pendulum_period_maxspeed)
     ...
+
+
+Specifying relations between arguments
+--------------------------------------
+
+In certain cases the actual units but just their relation. This is done using string
+starting with the equal sign `=`:
+
+.. doctest::
+
+    >>> @ureg.wraps('=A**2', ('=A', '=A'))
+    ... def sqsum(x, y):
+    ...     return x * x  + 2 * x * y + y * y
+
+which can be read as the first argument (`x`) has certain units (we labeled them `A`),
+the second argument (`y`) has the same units as the first (`A` again). The return value
+has the unit of `x` squared (`A**2`)
+
+You can use more than one labels.
+
+    >>> @ureg.wraps('=A**2*B', ('=A', '=A*B', '=B'))
+    ... def some_function(x, y, z):
+
+
 
 Ignoring an argument or return value
 ------------------------------------

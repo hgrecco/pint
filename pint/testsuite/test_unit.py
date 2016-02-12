@@ -330,11 +330,44 @@ class TestRegistry(QuantityTestCase):
         h0 = ureg.wraps(None, [None, None])(hfunc)
         self.assertEqual(h0(3, 1), (3, 1))
 
-        h1 = ureg.wraps(['meter', 'cm'], [None, None])(hfunc)
+        h1 = ureg.wraps(['meter', 'centimeter'], [None, None])(hfunc)
         self.assertEqual(h1(3, 1), [3 * ureg.meter, 1 * ureg.cm])
 
-        h2 = ureg.wraps(('meter', 'cm'), [None, None])(hfunc)
+        h2 = ureg.wraps(('meter', 'centimeter'), [None, None])(hfunc)
         self.assertEqual(h2(3, 1), (3 * ureg.meter, 1 * ureg.cm))
+
+    def test_wrap_referencing(self):
+
+        ureg = self.ureg
+
+        def gfunc(x, y):
+            return x + y
+
+        def gfunc2(x, y):
+            return x ** 2 + y
+
+        def gfunc3(x, y):
+            return x ** 2 * y
+
+        rst = 3. * ureg.meter + 1. * ureg.centimeter
+
+        g0 = ureg.wraps('=A', ['=A', '=A'])(gfunc)
+        self.assertEqual(g0(3. * ureg.meter, 1. * ureg.centimeter), rst.to('meter'))
+
+        g1 = ureg.wraps('=A', ['=A', '=A'])(gfunc)
+        self.assertEqual(g1(3. * ureg.meter, 1. * ureg.centimeter), rst.to('centimeter'))
+
+        g2 = ureg.wraps('=A', ['=A', '=A'])(gfunc)
+        self.assertEqual(g2(3. * ureg.meter, 1. * ureg.centimeter), rst.to('meter'))
+
+        g3 = ureg.wraps('=A**2', ['=A', '=A**2'])(gfunc2)
+        a = 3. * ureg.meter
+        b = (2. * ureg.centimeter) ** 2
+        self.assertEqual(g3(a, b), gfunc2(a, b))
+
+        g4 = ureg.wraps('=A**2 * B', ['=A', '=B'])(gfunc3)
+        self.assertEqual(g4(3. * ureg.meter, 2. * ureg.second), ureg('(3*meter)**2 * 2 *second'))
+
 
     def test_check(self):
         def func(x):

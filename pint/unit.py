@@ -14,7 +14,6 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import os
 import math
 import itertools
-import functools
 import operator
 import pkg_resources
 from decimal import Decimal
@@ -25,6 +24,7 @@ from collections import defaultdict
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 from numbers import Number
 
+from . import registry_helpers
 from .context import Context, ContextChain
 from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
@@ -32,7 +32,7 @@ from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    SharedRegistryObject, to_units_container,
                    fix_str_conversions, SourceIterator)
 
-from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type, zip_longest
+from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type
 from .formatting import siunitx_format_unit
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
@@ -1267,99 +1267,9 @@ class UnitRegistry(object):
 
     __call__ = parse_expression
 
-    def wraps(self, ret, args, strict=True):
-        """Wraps a function to become pint-aware.
+    wraps = registry_helpers.wraps
 
-        Use it when a function requires a numerical value but in some specific
-        units. The wrapper function will take a pint quantity, convert to the units
-        specified in `args` and then call the wrapped function with the resulting
-        magnitude.
-
-        The value returned by the wrapped function will be converted to the units
-        specified in `ret`.
-
-        Use None to skip argument conversion.
-        Set strict to False, to accept also numerical values.
-
-        :param ret: output units.
-        :param args: iterable of input units.
-        :param strict: boolean to indicate that only quantities are accepted.
-        :return: the wrapped function.
-        :raises:
-            :class:`ValueError` if strict and one of the arguments is not a Quantity.
-        """
-
-        Q_ = self.Quantity
-
-        if not isinstance(args, (list, tuple)):
-            args = (args, )
-
-        units = [to_units_container(arg, self) for arg in args]
-
-        if isinstance(ret, (list, tuple)):
-            ret = ret.__class__([to_units_container(arg, self) for arg in ret])
-        elif isinstance(ret, string_types):
-            ret = self.parse_units(ret)
-
-        def decorator(func):
-            assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
-            updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
-            @functools.wraps(func, assigned=assigned, updated=updated)
-            def wrapper(*values, **kw):
-                new_args = []
-                for unit, value in zip(units, values):
-                    if unit is None:
-                        new_args.append(value)
-                    elif isinstance(value, Q_):
-                        new_args.append(self._convert(value._magnitude,
-                                                      value._units, unit))
-                    elif not strict:
-                        new_args.append(value)
-                    else:
-                        raise ValueError('A wrapped function using strict=True requires '
-                                         'quantity for all arguments with not None units. '
-                                         '(error found for {0}, {1})'.format(unit, value))
-
-                result = func(*new_args, **kw)
-
-                if isinstance(ret, (list, tuple)):
-                    return ret.__class__(res if unit is None else Q_(res, unit)
-                                         for unit, res in zip(ret, result))
-                elif ret is not None:
-                    return Q_(result, ret)
-
-                return result
-            return wrapper
-        return decorator
-
-    def check(self, *args):
-        """Decorator to for quantity type checking for function inputs.
-
-        Use it to ensure that the decorated function input parameters match
-        the expected type of pint quantity.
-
-        Use None to skip argument checking.
-
-        :param args: iterable of input units.
-        :return: the wrapped function.
-        :raises:
-            :class:`DimensionalityError` if the parameters don't match dimensions
-        """
-        dimensions = [self.get_dimensionality(dim) for dim in args]
-
-        def decorator(func):
-            assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
-            updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
-
-            @functools.wraps(func, assigned=assigned, updated=updated)
-            def wrapper(*values, **kwargs):
-                for dim, value in zip_longest(dimensions, values):
-                    if dim and value.dimensionality != dim:
-                        raise DimensionalityError(value, 'a quantity of',
-                                                  value.dimensionality, dim)
-                return func(*values, **kwargs)
-            return wrapper
-        return decorator
+    check = registry_helpers.check
 
 
 def build_unit_class(registry):

@@ -11,6 +11,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+from decimal import Decimal
 import locale
 import sys
 import re
