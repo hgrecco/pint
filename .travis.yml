@@ -12,13 +12,14 @@ env:
   - UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
   - UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
   - UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
-  - UNCERTAINTIES="N" NUMPY_VERSION=1.9.1
-  - UNCERTAINTIES="N" NUMPY_VERSION=1.10.2
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
   - UNCERTAINTIES="Y" NUMPY_VERSION=0
   - UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
   - UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
   - UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
-  - UNCERTAINTIES="Y" NUMPY_VERSION=1.10.2
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
 
 branches:
   only:
@@ -66,43 +67,44 @@ after_success:
 
 matrix:
   exclude:
-    - python: "2.6"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.2
-    - python: "3.2"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.2
-    - python: "3.3"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.2
-    - python: "2.6"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.2
-    - python: "3.2"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.2
-    - python: "3.3"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.2
-    - python: "3.2"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
-    - python: "3.2"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.1
-    - python: "3.3"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-    - python: "3.4"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-    - python: "3.4"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+# Do not edit after this line
     - python: "3.5"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
     - python: "3.5"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
-    - python: "3.2"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
-    - python: "3.2"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.1
+    - python: "3.5"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.5"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+    - python: "3.5"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
+    - python: "3.5"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+    - python: "3.4"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
+    - python: "3.4"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.4"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+    - python: "3.4"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+    - python: "3.3"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.3"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
+    - python: "3.3"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
+    - python: "3.3"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
+    - python: "3.3"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
     - python: "3.3"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
-    - python: "3.4"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
-    - python: "3.4"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
-    - python: "3.5"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
-    - python: "3.5"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
+    - python: "2.6"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
+    - python: "2.6"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
+    - python: "2.6"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
+    - python: "2.6"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
