@@ -123,8 +123,14 @@ def testsuite():
     """
     suite = unittest.TestLoader().discover(os.path.dirname(__file__))
     from pint.compat import HAS_NUMPY, HAS_UNCERTAINTIES
-    if HAS_NUMPY and HAS_UNCERTAINTIES and sys.version_info[0:2] == (3, 5):
-        add_docs(suite)
+
+    # TESTING THE DOCUMENTATION requires pyyaml, serialize, numpy and uncertainties
+    if HAS_NUMPY and HAS_UNCERTAINTIES:
+        try:
+            import yaml, serialize
+            add_docs(suite)
+        except ImportError:
+            pass
     return suite
 
 
