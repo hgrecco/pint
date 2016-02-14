@@ -150,10 +150,13 @@ class _Unit(SharedRegistryObject):
             if isinstance(other, self.__class__):
                 return self.__class__(self._units*other._units)
             else:
-                qself = 1.0 * self
+                qself = self._REGISTRY.Quantity(1.0, self._units)
                 return qself * other
 
-        return self._REGISTRY.Quantity(other, self._units)
+        if isinstance(other, Number) and other == 1:
+            return self._REGISTRY.Quantity(other, self._units)
+
+        return self._REGISTRY.Quantity(1, self._units) * other
 
     __rmul__ = __mul__
 
@@ -1201,11 +1204,11 @@ class UnitRegistry(object):
     def _parse_units(self, input_string, as_delta=None):
         """
         """
-        if input_string in self._parse_unit_cache:
-            return self._parse_unit_cache[input_string]
-
         if as_delta is None:
             as_delta = self.default_as_delta
+
+        if as_delta and input_string in self._parse_unit_cache:
+            return self._parse_unit_cache[input_string]
 
         if not input_string:
             return UnitsContainer()
@@ -1229,7 +1232,8 @@ class UnitRegistry(object):
 
         ret = UnitsContainer(ret)
 
-        self._parse_unit_cache[input_string] = ret
+        if as_delta:
+            self._parse_unit_cache[input_string] = ret
 
         return ret
     
