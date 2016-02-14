@@ -191,9 +191,11 @@ This enables you to build a simple unit converter in 3 lines:
 
 
 .. note:: Since version 0.7, Pint **does not** uses eval_ under the hood.
-   This change removes the `serious security problem`_ that the system is
+   This change removes the `serious security problems`_ that the system is
    exposed when parsing information from untrusted sources.
 
+
+.. _sec-string-formatting:
 
 String formatting
 -----------------

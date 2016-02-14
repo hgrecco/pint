@@ -26,7 +26,7 @@ The easiest way to do this is by converting the quantity to a string:
    24.2 year
 
 Remember that you can easily control the number of digits in the representation
-as shown in `String formatting`_.
+as shown in :ref:`sec-string-formatting`.
 
 You dump/store/transmit the content of serialized ('24.2 year'). When you want
 to recover it in another process/machine, you just:

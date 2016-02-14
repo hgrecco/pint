@@ -3,8 +3,10 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import doctest
-import os
 import logging
+import os
+import sys
+
 from contextlib import contextmanager
 
 from pint.compat import ndarray, unittest, np
@@ -120,7 +122,9 @@ def testsuite():
     """A testsuite that has all the pint tests.
     """
     suite = unittest.TestLoader().discover(os.path.dirname(__file__))
-    #add_docs(suite)
+    from pint.compat import HAS_NUMPY, HAS_UNCERTAINTIES
+    if HAS_NUMPY and HAS_UNCERTAINTIES and sys.version_info[0:2] == (3, 5):
+        add_docs(suite)
     return suite
 
 

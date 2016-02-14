@@ -54,7 +54,6 @@ is different).
    >>> print(increase.to(ureg.delta_degF))
    22.14 delta_degF
 
-..
 Subtraction of two temperatures given in offset units yields a *delta* unit:
 
 .. doctest::
