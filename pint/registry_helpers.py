@@ -174,7 +174,7 @@ def wraps(ureg, ret, args, strict=True):
                 return ret.__class__(res if unit is None else ureg.Quantity(res, unit)
                                      for unit, res in zip(out_units, result))
 
-            if ret is None:
+            if ret[0] is None:
                 return result
 
             return ureg.Quantity(result,
