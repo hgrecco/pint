@@ -50,7 +50,13 @@ author = 'Hernan E. Grecco'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-version = pkg_resources.get_distribution(project).version
+try:                # pragma: no cover
+    version = pkg_resources.get_distribution(project).version
+except:             # pragma: no cover
+    # we seem to have a local copy not installed without setuptools
+    # so the reported version will be unknown
+    version = "unknown"
+
 release = version
 this_year = datetime.date.today().year
 copyright = '%s, %s' % (this_year, author)

@@ -63,15 +63,18 @@ Pint provides a more convenient way to do this:
 
     >>> mypp = ureg.wraps(ureg.second, ureg.meter)(pendulum_period)
 
-To understand the syntax, consider the usage in the decorator format:
+Or in the decorator format:
 
 .. doctest::
 
     >>> @ureg.wraps(ureg.second, ureg.meter)
     ... def mypp(length):
     ...     return pendulum_period(length)
+    >>> mypp(100 * ureg.centimeter)
+    <Quantity(2.0064092925890407, 'second')>
 
-`wraps` takes 3 input arguments::
+
+`wraps` takes 3 input arguments:
 
     - **ret**: the return units.
                Use None to skip conversion.
@@ -80,8 +83,7 @@ To understand the syntax, consider the usage in the decorator format:
     - **strict**: if `True` all convertible arguments must be a Quantity
                   and others will raise a ValueError (True by default)
 
-    >>> mypp(100 * ureg.centimeter)
-    <Quantity(2.0064092925890407, 'second')>
+
 
 Strict Mode
 -----------
@@ -154,11 +156,11 @@ which can be read as the first argument (`x`) has certain units (we labeled them
 the second argument (`y`) has the same units as the first (`A` again). The return value
 has the unit of `x` squared (`A**2`)
 
-You can use more than one labels.
+You can use more than one label:
 
     >>> @ureg.wraps('=A**2*B', ('=A', '=A*B', '=B'))
     ... def some_function(x, y, z):
-
+    ...     pass
 
 
 Ignoring an argument or return value

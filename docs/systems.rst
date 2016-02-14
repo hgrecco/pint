@@ -1,4 +1,4 @@
-.. systems_:
+.. _systems:
 
 Different Unit Systems (and default units)
 ==========================================
@@ -15,11 +15,6 @@ This has an effect in the base units. For example:
     >>> q = 3600. * ureg.meter / ureg.hour
     >>> q.to_base_units()
     <Quantity(1.0, 'meter / second')>
-
-We can take a look for the available systems
-
-    >>> ureg.systems
-    frozenset({'US', 'mks', 'imperial', 'cgs'})
 
 But if you change to cgs:
 
@@ -60,7 +55,7 @@ You can check which unit systems are available:
 Or which units are available within a particular system:
 
     >>> dir(ureg.sys.imperial)
-    ['acre', 'acre_foot', 'board_foot', 'cable', 'chain', 'fathom', 'foot', 'furlong', 'imperial_bushel', 'imperial_cup', 'imperial_fluid_ounce', 'imperial_gallon', 'imperial_gill', 'imperial_pint', 'imperial_quart', 'inch', 'league', 'mile', 'nautical_mile', 'perch', 'pica', 'point', 'rood', 'square_foot', 'square_yard', 'thou', 'yard']
+    ['acre', 'acre_foot', 'board_foot', 'cable', 'chain', 'fathom', 'foot', 'furlong', 'imperial_barrel', 'imperial_bushel', 'imperial_cup', 'imperial_fluid_ounce', 'imperial_gallon', 'imperial_gill', 'imperial_pint', 'imperial_quart', 'inch', 'league', 'mile', 'nautical_mile', 'perch', 'pica', 'point', 'rood', 'square_foot', 'square_yard', 'thou', 'yard']
 
 Notice that this give you the opportunity to choose within units with colliding names:
 

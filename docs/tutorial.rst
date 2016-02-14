@@ -19,6 +19,7 @@ and handled. You start by creating your registry::
    ureg = UnitRegistry()
    Q_ = ureg.Quantity
 
+
 If no parameter is given to the constructor, the unit registry is populated
 with the default list of units and prefixes.
 You can now simply use the registry in the following way:
@@ -88,7 +89,7 @@ If you ask Pint to perform an invalid conversion:
    >>> speed.to(ureg.joule)
    Traceback (most recent call last):
    ...
-   pint.pint.DimensionalityError: Cannot convert from 'inch / minute' (length / time) to 'joule' (length ** 2 * mass / time ** 2)
+   pint.errors.DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
 
 
 There are also methods 'to_base_units' and 'ito_base_units' which automatically

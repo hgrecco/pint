@@ -116,7 +116,7 @@ mass.
 .. doctest::
 
     >>> substance = 95 * ureg('g')
-    >>> moles = substance.to('moles', 'chemistry', mw = 5 * ureg('g/mol'))
+    >>> substance.to('moles', 'chemistry', mw = 5 * ureg('g/mol'))
     <Quantity(19.0, 'mole')>
 
 
