@@ -152,10 +152,8 @@ def wraps(ureg, ret, args, strict=True):
 
     if isinstance(ret, (list, tuple)):
         container, ret = True, ret.__class__([_to_units_container(arg) for arg in ret])
-    elif isinstance(ret, string_types):
-        container, ret = False, _to_units_container(ret)
     else:
-        container = False
+        container, ret = False, _to_units_container(ret)
 
     def decorator(func):
         assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
