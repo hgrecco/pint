@@ -16,10 +16,12 @@ or using easy_install_::
 That's all! You can check that Pint is correctly installed by starting up python, and importing pint:
 
 .. testcode::
-    >>> import pint
-    >>> pint.__version__
+
+    >>> import pint             # doctest: +SKIP
+    >>> pint.__version__        # doctest: +SKIP
 
 .. testoutput::
+
     |version|
 
 .. note:: If you have an old system installation of Python and you don't want to

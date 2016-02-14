@@ -120,10 +120,11 @@ to be explicitly created:
 
 .. doctest::
 
+    >>> ureg = UnitRegistry()
     >>> home = 25.4 * ureg.degC
     Traceback (most recent call last):
         ...
-    pint.unit.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
+    pint.errors.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
     >>> Q_(25.4, ureg.degC)
     <Quantity(25.4, 'degC')>
 
