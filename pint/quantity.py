@@ -637,10 +637,8 @@ class _Quantity(SharedRegistryObject):
             self._units = units_op(self._units, UnitsContainer())
             return self
 
-        if not isinstance(other, _Quantity):
-            self._magnitude = magnitude_op(self._magnitude, 1)
-            self._units = units_op(self._units, other._units)
-            return self
+        if isinstance(other, self._REGISTRY.Unit):
+            other = 1.0 * other
 
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, other._units)
@@ -697,10 +695,8 @@ class _Quantity(SharedRegistryObject):
 
             return self.__class__(magnitude, units)
 
-        if not isinstance(other, _Quantity):
-            magnitude = self._magnitude
-            units = units_op(self._units, other._units)
-            return self.__class__(magnitude, units)
+        if isinstance(other, self._REGISTRY.Unit):
+            other = 1.0 * other
 
         new_self = self
 

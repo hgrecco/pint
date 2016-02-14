@@ -150,8 +150,8 @@ class _Unit(SharedRegistryObject):
             if isinstance(other, self.__class__):
                 return self.__class__(self._units*other._units)
             else:
-                return self._REGISTRY.Quantity(other._magnitude,
-                                               self._units*other._units)
+                qself = 1.0 * self
+                return qself * other
 
         return self._REGISTRY.Quantity(other, self._units)
 
@@ -162,8 +162,8 @@ class _Unit(SharedRegistryObject):
             if isinstance(other, self.__class__):
                 return self.__class__(self._units/other._units)
             else:
-                return self._REGISTRY.Quantity(1/other._magnitude,
-                                           self._units/other._units)
+                qself = 1.0 * self
+                return qself / other
 
         return self._REGISTRY.Quantity(1/other, self._units)
 
