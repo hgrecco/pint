@@ -139,7 +139,7 @@ class _Quantity(SharedRegistryObject):
             obj = self
         return '{0} {1}'.format(
             format(obj.magnitude, remove_custom_flags(spec)),
-            format(obj.units, spec))
+            format(obj.units, spec)).replace('\n', '')
 
     # IPython related code
     def _repr_html_(self):
