@@ -1,13 +1,13 @@
 :orphan:
 
-Pint: a Python units library
-============================
+Pint: makes units easy
+======================
 
 .. image:: _static/logo-full.jpg
    :alt: Pint: **physical quantities**
    :class: floatingflask
 
-Pint is Python package to define, operate and manipulate **physical quantities**:
+Pint is a Python package to define, operate and manipulate **physical quantities**:
 the product of a numerical value and a unit of measurement. It allows
 arithmetic operations between them and conversions from and to different units.
 
@@ -18,6 +18,39 @@ operations **without monkey patching or wrapping numpy**.
 
 It has a complete test coverage. It runs in Python 2.6+ and 3.2+ with no other
 dependency. It is licensed under BSD.
+
+
+It is extremely easy and natural to use:
+
+.. code-block:: python
+
+    >>> import pint
+    >>> ureg = pint.UnitRegistry()
+    >>> 3 * ureg.meter + 4 * ureg.cm
+    <Quantity(3.04, 'meter')>
+
+and you can make good use of numpy if you want:
+
+.. code-block:: python
+
+    >>> import numpy
+    >>> [3, 4] * ureg.meter + [4, 3] * ureg.cm
+    <Quantity([ 3.04  4.03], 'meter')>
+    >>> np.sum(_)
+    <Quantity(7.07, 'meter')>
+
+
+Quick Installation
+------------------
+
+To install Pint, simply:
+
+.. code-block:: bash
+
+    $ pip install pint
+
+and then simply enjoy it!
+
 
 Design principles
 -----------------
