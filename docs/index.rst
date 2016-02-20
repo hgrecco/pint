@@ -33,7 +33,7 @@ and you can make good use of numpy if you want:
 
 .. code-block:: python
 
-    >>> import numpy
+    >>> import numpy as np
     >>> [3, 4] * ureg.meter + [4, 3] * ureg.cm
     <Quantity([ 3.04  4.03], 'meter')>
     >>> np.sum(_)
