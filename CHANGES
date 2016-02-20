@@ -6,7 +6,9 @@ Pint Changelog
 ----------------
 
 - Added Systems and groups.
-  (Issue #215)
+  (Issue #215, #315)
+- Implemented references for wraps decorator.
+  (Issue #195)
 - Added check decorator to UnitRegistry.
   (Issue #283, thanks kaidokert)
 - Added compact conversion.
@@ -46,7 +48,15 @@ Pint Changelog
   (thanks Ed Schofield)
 - Added photometric units: lumen & lux.
   (Issue #230, thanks janpipek)
-
+- A fraction magnitude quantity is conserved
+  (Issue #323, thanks emilienkofman)
+- Improved conversion performance by removing unnecessart try/except.
+  (Issue #251)
+- Added to_tuple and from_tuple to facilitate serialization.
+- Fixed support for NumPy 1.10 due to a change in the Default casting rule
+  (Issue #320)
+- Infrastructure: Added doctesting.
+- Infrastructure: Better way to specify exclude matrix in travis.
 
 
 0.6 (2014-11-07)
