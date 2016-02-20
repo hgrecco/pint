@@ -17,8 +17,7 @@ raise an error if your do this directly:
     >>> q.to('Hz')
     Traceback (most recent call last):
     ...
-    pint.unit.DimensionalityError: Cannot convert
-    from 'nanometer' ([length]) to 'hertz' (1 / [time])
+    pint.errors.DimensionalityError: Cannot convert from 'nanometer' ([length]) to 'hertz' (1 / [time])
 
 
 You probably want to use the relation `frequency = speed_of_light / wavelength`:
@@ -117,7 +116,7 @@ mass.
 .. doctest::
 
     >>> substance = 95 * ureg('g')
-    >>> moles = substance.to('moles', 'chemistry', mw = 5 * ureg('g/mol'))
+    >>> substance.to('moles', 'chemistry', mw = 5 * ureg('g/mol'))
     <Quantity(19.0, 'mole')>
 
 

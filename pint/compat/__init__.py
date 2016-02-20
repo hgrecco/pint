@@ -76,6 +76,11 @@ except ImportError:
     from .nullhandler import NullHandler
 
 try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
+
+try:
     import numpy as np
     from numpy import ndarray
 

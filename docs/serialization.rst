@@ -26,7 +26,7 @@ The easiest way to do this is by converting the quantity to a string:
    24.2 year
 
 Remember that you can easily control the number of digits in the representation
-as shown in `String formatting`_.
+as shown in :ref:`sec-string-formatting`.
 
 You dump/store/transmit the content of serialized ('24.2 year'). When you want
 to recover it in another process/machine, you just:
@@ -57,30 +57,40 @@ best way is to create a tuple with the magnitude and the units:
 
 .. doctest::
 
-    >>> to_serialize = duration.magnitude, duration.units
+    >>> to_serialize = duration.to_tuple()
+    >>> print(to_serialize)
+    (24.2, (('year', 1.0),))
 
-Or the most robust way which avoids Pint classes::
-
-    >>> to_serialize = duration.magnitude, tuple(duration.units.items())
-
-and then use your usual serialization function. For example, using the pickle protocol.
+And then you can just pickle that:
 
     >>> import pickle
     >>> serialized = pickle.dumps(to_serialize, -1)
 
 To unpickle, just
 
-    >>> magnitude, units = pickle.loads(serialized)
-    >>> ureg.Quantity(magnitude, units)
+    >>> loaded = pickle.loads(serialized)
+    >>> ureg.Quantity.from_tuple(loaded)
     <Quantity(24.2, 'year')>
+
+(To pickle to and from a file just use the dump and load method as described in _Pickle)
 
 You can use the same mechanism with any serialization protocol, not only with binary ones.
 (In fact, version 0 of the Pickle protocol is ASCII). Other common serialization protocols/packages
 are json_, yaml_, shelve_, hdf5_ (or via PyTables_) and dill_.
 Notice that not all of these packages will serialize properly the magnitude (which can be any
-numerical type such as `numpy.ndarray`)
+numerical type such as `numpy.ndarray`).
+
+Using the serialize_ package you can load and read from multiple formats:
+
+    >>> from serialize import dump, load, register_class
+    >>> register_class(ureg.Quantity, ureg.Quantity.to_tuple, ureg.Quantity.from_tuple)
+    >>> dump(duration, 'output.yaml')
+    >>> r = load('output.yaml')
+
+(Check out the serialize_ docs for more information)
 
 
+.. _serialize: https://github.com/hgrecco/serialize
 .. _Pickle: http://docs.python.org/3/library/pickle.html
 .. _json: http://docs.python.org/3/library/json.html
 .. _yaml: http://pyyaml.org/

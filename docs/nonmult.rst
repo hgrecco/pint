@@ -18,6 +18,7 @@ For example, to convert from celsius to fahrenheit:
 
    from pint import UnitRegistry
    ureg = UnitRegistry()
+   ureg.default_format = '.3f'
    Q_ = ureg.Quantity
 
 .. doctest::
@@ -53,7 +54,6 @@ is different).
    >>> print(increase.to(ureg.delta_degF))
    22.14 delta_degF
 
-..
 Subtraction of two temperatures given in offset units yields a *delta* unit:
 
 .. doctest::
@@ -79,7 +79,7 @@ If you want to add a quantity with absolute unit to one with offset unit, like h
     >>> Q_(10., ureg.degC) + heating_rate * Q_(30, ureg.min)
     Traceback (most recent call last):
             ...
-    pint.unit.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC, kelvin).
+    pint.errors.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC, kelvin).
 
 you have to avoid the ambiguity by either converting the offset unit to the
 absolute unit before addition
@@ -119,10 +119,11 @@ to be explicitly created:
 
 .. doctest::
 
+    >>> ureg = UnitRegistry()
     >>> home = 25.4 * ureg.degC
     Traceback (most recent call last):
         ...
-    pint.unit.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
+    pint.errors.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
     >>> Q_(25.4, ureg.degC)
     <Quantity(25.4, 'degC')>
 
@@ -156,7 +157,7 @@ You can change the behaviour at any time:
     >>> 1/T
     Traceback (most recent call last):
         ...
-    pint.unit.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
+    pint.errors.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
 
 The parser knows about *delta* units and uses them when a temperature unit
 is found in a multiplicative context. For example, here:

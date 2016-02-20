@@ -1,7 +1,7 @@
 .. _wrapping:
 
-Wrapping functions
-==================
+Wrapping and checking functions
+===============================
 
 In some cases you might want to use pint with a pre-existing web service or library
 which is not units aware. Or you might want to write a fast implementation of a
@@ -63,15 +63,18 @@ Pint provides a more convenient way to do this:
 
     >>> mypp = ureg.wraps(ureg.second, ureg.meter)(pendulum_period)
 
-To understand the syntax, consider the usage in the decorator format:
+Or in the decorator format:
 
 .. doctest::
 
     >>> @ureg.wraps(ureg.second, ureg.meter)
     ... def mypp(length):
     ...     return pendulum_period(length)
+    >>> mypp(100 * ureg.centimeter)
+    <Quantity(2.0064092925890407, 'second')>
 
-`wraps` takes 3 input arguments::
+
+`wraps` takes 3 input arguments:
 
     - **ret**: the return units.
                Use None to skip conversion.
@@ -80,8 +83,7 @@ To understand the syntax, consider the usage in the decorator format:
     - **strict**: if `True` all convertible arguments must be a Quantity
                   and others will raise a ValueError (True by default)
 
-    >>> mypp(100 * ureg.centimeter)
-    <Quantity(2.0064092925890407, 'second')>
+
 
 Strict Mode
 -----------
@@ -137,6 +139,30 @@ Or if the function has multiple outputs:
     ...                    (ureg.meter, ureg.radians))(pendulum_period_maxspeed)
     ...
 
+
+Specifying relations between arguments
+--------------------------------------
+
+In certain cases the actual units but just their relation. This is done using string
+starting with the equal sign `=`:
+
+.. doctest::
+
+    >>> @ureg.wraps('=A**2', ('=A', '=A'))
+    ... def sqsum(x, y):
+    ...     return x * x  + 2 * x * y + y * y
+
+which can be read as the first argument (`x`) has certain units (we labeled them `A`),
+the second argument (`y`) has the same units as the first (`A` again). The return value
+has the unit of `x` squared (`A**2`)
+
+You can use more than one label:
+
+    >>> @ureg.wraps('=A**2*B', ('=A', '=A*B', '=B'))
+    ... def some_function(x, y, z):
+    ...     pass
+
+
 Ignoring an argument or return value
 ------------------------------------
 
@@ -147,5 +173,23 @@ To avoid the conversion of an argument or return value, use None
     >>> mypp3 = ureg.wraps((ureg.second, None), ureg.meter)(pendulum_period_error)
 
 
+Checking units
+==============
 
+When you want pint quantities to be used as inputs to your functions, pint provides a wrapper to ensure units are of
+correct type - or more precisely, they match the expected dimensionality of the physical quantity.
+
+Similar to wraps(), you can pass None to skip checking of some parameters, but the return parameter type is not checked.
+
+.. doctest::
+
+    >>> mypp = ureg.check('[length]')(pendulum_period)
+
+In the decorator format:
+
+.. doctest::
+
+    >>> @ureg.check('[length]')
+    ... def pendulum_period(length):
+    ...     return 2*math.pi*math.sqrt(length/G)
 

@@ -3,14 +3,14 @@
     pint.measurement
     ~~~~~~~~~~~~~~~~
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 from .compat import ufloat
-from .formatting import _FORMATS
+from .formatting import _FORMATS, siunitx_format_unit
 
 MISSING = object()
 
@@ -65,6 +65,22 @@ class _Measurement(object):
         return '{0}'.format(self)
 
     def __format__(self, spec):
+        # special cases
+        if 'Lx' in spec: # the LaTeX siunitx code
+          # the uncertainties module supports formatting 
+          # numbers in value(unc) notation (i.e. 1.23(45) instead of 1.23 +/- 0.45),
+          # which siunitx actually accepts as input. we just need to give the 'S'
+          # formatting option for the uncertainties module.
+          spec = spec.replace('Lx','S')
+          # todo: add support for extracting options
+          opts = 'separate-uncertainty=true'
+          mstr = format( self.magnitude, spec )
+          ustr = siunitx_format_unit(self.units)
+          ret = r'\SI[%s]{%s}{%s}'%( opts, mstr, ustr )
+          return ret
+
+
+        # standard cases
         if 'L' in spec:
             newpm = pm = r'  \pm  '
             pars = _FORMATS['L']['parentheses_fmt']

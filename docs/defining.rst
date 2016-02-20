@@ -57,7 +57,7 @@ you don't want to append the translated definitions so you just give the
 filename to the constructor::
 
    >>> from pint import UnitRegistry
-   >>> ureg = UnitRegistry('/your/path/to/default_es.txt')
+   >>> ureg = UnitRegistry('/your/path/to/default_es.txt') # doctest: +SKIP
 
 In the definition file, prefixes are identified by a trailing dash::
 

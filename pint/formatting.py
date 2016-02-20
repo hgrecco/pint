@@ -5,7 +5,7 @@
 
     Format units for pint.
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -188,6 +188,47 @@ def format_unit(unit, spec):
     if spec == 'L':
         result = result.replace('[', '{').replace(']', '}')
     return result
+
+
+def siunitx_format_unit(units):
+    '''Returns LaTeX code for the unit that can be put into an siunitx command.'''
+    # NOTE: unit registry is required to identify unit prefixes.
+    registry = units._REGISTRY
+
+    def _tothe(power):
+        if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
+            if power == 1:
+                return ''
+            elif power == 2:
+                return r'\squared'
+            elif power == 3:
+                return r'\cubed'
+            else:
+                return r'\tothe{{{:d}}}'.format(int(power))
+        else:
+            # limit float powers to 3 decimal places
+            return r'\tothe{{{:.3f}}}'.format(power).rstrip('0')
+
+    l = []
+    # loop through all units in the container
+    for unit, power in sorted(units._units.items()):
+        # remove unit prefix if it exists
+        # siunitx supports \prefix commands
+        prefix = None
+        for p in registry._prefixes.values():
+            p = str(p)
+            if len(p) > 0 and unit.find(p) == 0:
+                prefix = p
+                unit = unit.replace(prefix, '', 1)
+
+        if power < 0:
+            l.append(r'\per')
+        if prefix is not None:
+            l.append(r'\{0}'.format(prefix))
+        l.append(r'\{0}'.format(unit))
+        l.append(r'{0}'.format(_tothe(abs(power))))
+
+    return ''.join(l)
 
 
 def remove_custom_flags(spec):

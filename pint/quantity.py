@@ -3,7 +3,7 @@
     pint.quantity
     ~~~~~~~~~~~~~
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -15,7 +15,7 @@ import operator
 import functools
 import bisect
 
-from .formatting import remove_custom_flags
+from .formatting import remove_custom_flags, siunitx_format_unit
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError)
 from .definitions import UnitDefinition
@@ -120,6 +120,18 @@ class _Quantity(SharedRegistryObject):
 
     def __format__(self, spec):
         spec = spec or self.default_format
+
+        # special cases
+        if 'Lx' in spec: # the LaTeX siunitx code
+          spec = spec.replace('Lx','')
+          # todo: add support for extracting options
+          opts = ''
+          mstr = format(self.magnitude,spec)
+          ustr = siunitx_format_unit(self.units)
+          ret = r'\SI[%s]{%s}{%s}'%( opts, mstr, ustr )
+          return ret
+
+        # standard cases
         if '#' in spec:
             spec = spec.replace('#', '')
             obj = self.to_compact()
@@ -127,7 +139,7 @@ class _Quantity(SharedRegistryObject):
             obj = self
         return '{0} {1}'.format(
             format(obj.magnitude, remove_custom_flags(spec)),
-            format(obj.units, spec))
+            format(obj.units, spec)).replace('\n', '')
 
     # IPython related code
     def _repr_html_(self):
@@ -148,13 +160,13 @@ class _Quantity(SharedRegistryObject):
         """
         return self._magnitude
 
-    def m_as(self, unit):
+    def m_as(self, units):
         """Quantity's magnitude expressed in particular units.
 
-        :param other: destination units.
-        :type other: Quantity, str or dict
+        :param units: destination units
+        :type units: Quantity, str or dict
         """
-        return (self / unit).to('').magnitude
+        return self.to(units).magnitude
 
     @property
     def units(self):
@@ -176,26 +188,33 @@ class _Quantity(SharedRegistryObject):
     def unitless(self):
         """Return true if the quantity does not have units.
         """
-        return not bool(self.to_base_units()._units)
+        return not bool(self.to_root_units()._units)
 
     @property
     def dimensionless(self):
         """Return true if the quantity is dimensionless.
         """
-        tmp = self.to_base_units()
+        tmp = self.to_root_units()
 
         return not bool(tmp.dimensionality)
+
+    _dimensionality = None
 
     @property
     def dimensionality(self):
         """Quantity's dimensionality (e.g. {length: 1, time: -1})
         """
-        try:
-            return self._dimensionality
-        except AttributeError:
+        if self._dimensionality is None:
             self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
 
         return self._dimensionality
+
+    @classmethod
+    def from_tuple(cls, tup):
+        return cls(tup[0], UnitsContainer(tup[1]))
+
+    def to_tuple(self):
+        return self.m, tuple(self._units.items())
 
     def compatible_units(self, *contexts):
         if contexts:
@@ -245,6 +264,26 @@ class _Quantity(SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
+    def ito_root_units(self):
+        """Return Quantity rescaled to base units
+        """
+
+        _, other = self._REGISTRY._get_root_units(self._units)
+
+        self._magnitude = self._convert_magnitude(other)
+        self._units = other
+
+        return None
+
+    def to_root_units(self):
+        """Return Quantity rescaled to base units
+        """
+        _, other = self._REGISTRY._get_root_units(self._units)
+
+        magnitude = self._convert_magnitude_not_inplace(other)
+
+        return self.__class__(magnitude, other)
+
     def ito_base_units(self):
         """Return Quantity rescaled to base units
         """
@@ -265,6 +304,7 @@ class _Quantity(SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
+
     def to_compact(self, unit=None):
         """Return Quantity rescaled to compact, human-readable units.
 
@@ -277,7 +317,7 @@ class _Quantity(SharedRegistryObject):
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
         <Quantity(10.0, 'millinewton')>
         """
-        if self.unitless:
+        if self.unitless or self.magnitude==0:
             return self
 
         SI_prefixes = {}
@@ -597,22 +637,20 @@ class _Quantity(SharedRegistryObject):
             self._units = units_op(self._units, UnitsContainer())
             return self
 
-        if not isinstance(other, _Quantity):
-            self._magnitude = magnitude_op(self._magnitude, 1)
-            self._units = units_op(self._units, other._units)
-            return self
+        if isinstance(other, self._REGISTRY.Unit):
+            other = 1.0 * other
 
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, other._units)
         elif no_offset_units_self == 1 and len(self._units) == 1:
-                self.ito_base_units()
+                self.ito_root_units()
 
         no_offset_units_other = len(other._get_non_multiplicative_units())
 
         if not other._ok_for_muldiv(no_offset_units_other):
             raise OffsetUnitCalculusError(self._units, other._units)
         elif no_offset_units_other == 1 and len(other._units) == 1:
-            other.ito_base_units()
+            other.ito_root_units()
 
         self._magnitude = magnitude_op(self._magnitude, other._magnitude)
         self._units = units_op(self._units, other._units)
@@ -657,24 +695,22 @@ class _Quantity(SharedRegistryObject):
 
             return self.__class__(magnitude, units)
 
-        if not isinstance(other, _Quantity):
-            magnitude = self._magnitude
-            units = units_op(self._units, other._units)
-            return self.__class__(magnitude, units)
+        if isinstance(other, self._REGISTRY.Unit):
+            other = 1.0 * other
 
         new_self = self
 
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, other._units)
         elif no_offset_units_self == 1 and len(self._units) == 1:
-            new_self = self.to_base_units()
+            new_self = self.to_root_units()
 
         no_offset_units_other = len(other._get_non_multiplicative_units())
 
         if not other._ok_for_muldiv(no_offset_units_other):
             raise OffsetUnitCalculusError(self._units, other._units)
         elif no_offset_units_other == 1 and len(other._units) == 1:
-            other = other.to_base_units()
+            other = other.to_root_units()
 
         magnitude = magnitude_op(new_self._magnitude, other._magnitude)
         units = units_op(new_self._units, other._units)
@@ -720,7 +756,7 @@ class _Quantity(SharedRegistryObject):
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, '')
         elif no_offset_units_self == 1 and len(self._units) == 1:
-            self = self.to_base_units()
+            self = self.to_root_units()
 
         return self.__class__(other_magnitude / self._magnitude, 1 / self._units)
 
@@ -734,7 +770,7 @@ class _Quantity(SharedRegistryObject):
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, '')
         elif no_offset_units_self == 1 and len(self._units) == 1:
-            self = self.to_base_units()
+            self = self.to_root_units()
 
         return self.__class__(other_magnitude // self._magnitude, 1 / self._units)
 
@@ -805,12 +841,12 @@ class _Quantity(SharedRegistryObject):
             else:
                 if not self._is_multiplicative:
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
-                        new_self = self.to_base_units()
+                        new_self = self.to_root_units()
                     else:
                         raise OffsetUnitCalculusError(self._units)
 
                 if getattr(other, 'dimensionless', False):
-                    units = new_self._units ** other.to_base_units().magnitude
+                    units = new_self._units ** other.to_root_units().magnitude
                 elif not getattr(other, 'dimensionless', True):
                     raise DimensionalityError(self._units, 'dimensionless')
                 else:
@@ -830,7 +866,7 @@ class _Quantity(SharedRegistryObject):
             if isinstance(self._magnitude, ndarray):
                 if np.size(self._magnitude) > 1:
                     raise DimensionalityError(self._units, 'dimensionless')
-            new_self = self.to_base_units()
+            new_self = self.to_root_units()
             return other**new_self._magnitude
 
     def __abs__(self):
@@ -882,8 +918,8 @@ class _Quantity(SharedRegistryObject):
         if self.dimensionality != other.dimensionality:
             raise DimensionalityError(self._units, other._units,
                                       self.dimensionality, other.dimensionality)
-        return op(self.to_base_units().magnitude,
-                  other.to_base_units().magnitude)
+        return op(self.to_root_units().magnitude,
+                  other.to_root_units().magnitude)
 
     __lt__ = lambda self, other: self.compare(other, op=operator.lt)
     __le__ = lambda self, other: self.compare(other, op=operator.le)
@@ -1091,9 +1127,9 @@ class _Quantity(SharedRegistryObject):
 
         try:
             if isinstance(value, self.__class__):
-                factor = self.__class__(value.magnitude, value._units / self._units).to_base_units()
+                factor = self.__class__(value.magnitude, value._units / self._units).to_root_units()
             else:
-                factor = self.__class__(value, self._units ** (-1)).to_base_units()
+                factor = self.__class__(value, self._units ** (-1)).to_root_units()
 
             if isinstance(factor, self.__class__):
                 if not factor.dimensionless:
@@ -1172,7 +1208,7 @@ class _Quantity(SharedRegistryObject):
                             if unt == 'radian':
                                 mobjs.append(getattr(other, 'magnitude', other))
                             else:
-                                factor, units = self._REGISTRY._get_base_units(unt)
+                                factor, units = self._REGISTRY._get_root_units(unt)
                                 if units and units != UnitsContainer({'radian': 1}):
                                     raise DimensionalityError(units, dst_units)
                                 mobjs.append(getattr(other, 'magnitude', other) * factor)

@@ -3,11 +3,6 @@
 # Language: english
 # :copyright: 2013 by Pint Authors, see AUTHORS for more details.
 
-@defaults
-    group = international
-    system = mks
-@end
-
 # decimal prefixes
 yocto- = 1e-24 = y-
 zepto- = 1e-21 = z-
@@ -70,7 +65,9 @@ are = 100 * m**2
 barn = 1e-28 * m ** 2 = b
 cmil = 5.067075e-10 * m ** 2 = circular_mils
 darcy = 9.869233e-13 * m ** 2
+acre = 4046.8564224 * m ** 2 = international_acre
 hectare = 100 * are = ha
+US_survey_acre = 160 * rod ** 2
 
 # EM
 esu = 1 * erg**0.5 * centimeter**0.5 = statcoulombs = statC = franklin = Fr
@@ -148,16 +145,47 @@ langley = thermochemical_calorie / centimeter**2 = Langley
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
+inch = 2.54 * centimeter = in = international_inch = inches = international_inches
+foot = 12 * inch = ft = international_foot = feet = international_feet
+mile = 5280 * foot = mi = international_mile
+yard = 3 * feet = yd = international_yard
+mil = inch / 1000 = thou
 parsec = 3.08568025e16 * meter = pc
 light_year = speed_of_light * julian_year = ly = lightyear
 astronomical_unit = 149597870691 * meter = au
+nautical_mile = 1.852e3 * meter = nmi
+printers_point = 127 * millimeter / 360 = point
+printers_pica = 12 * printers_point = pica
+US_survey_foot = 1200 * meter / 3937
+US_survey_yard =  3 * US_survey_foot
+US_survey_mile = 5280 * US_survey_foot = US_statute_mile
+rod = 16.5 * US_survey_foot = pole = perch
+furlong = 660 * US_survey_foot
+fathom = 6 * US_survey_foot
+chain = 66 * US_survey_foot
+barleycorn = inch / 3
+arpentlin = 191.835 * feet
+kayser = 1 / centimeter = wavenumber
 
 # Mass
+dram = oz / 16 = dr = avoirdupois_dram
+ounce = 28.349523125 * gram = oz = avoirdupois_ounce
+pound = 0.45359237 * kilogram = lb = avoirdupois_pound
+stone = 14 * lb = st
 carat = 200 * milligram
+grain = 64.79891 * milligram = gr
+long_hundredweight = 112 * lb
+short_hundredweight = 100 * lb
 metric_ton = 1000 * kilogram = t = tonne
+pennyweight = 24 * gram = dwt
+slug = 14.59390 * kilogram
+troy_ounce = 480 * grain = toz = apounce = apothecary_ounce
+troy_pound = 12 * toz = tlb = appound = apothecary_pound
+drachm = 60 * grain = apdram = apothecary_dram
 atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
 scruple = 20 * grain
 bag = 94 * lb
+ton = 2000 * lb = short_ton
 
 # Textile
 denier =  gram / (9000 * meter)
@@ -261,6 +289,33 @@ rhe = 10 / (Pa * s)
 liter = 1e-3 * m ** 3 = l = L = litre
 cc = centimeter ** 3 = cubic_centimeter
 stere = meter ** 3
+gross_register_ton = 100 * foot ** 3 = register_ton = GRT
+acre_foot = acre * foot = acre_feet
+board_foot = foot ** 2 * inch = FBM
+bushel = 2150.42 * inch ** 3 = bu = US_bushel
+dry_gallon = bushel / 8 = US_dry_gallon
+dry_quart = dry_gallon / 4 = US_dry_quart
+dry_pint = dry_quart / 2 = US_dry_pint
+gallon = 231 * inch ** 3 = liquid_gallon = US_liquid_gallon
+quart = gallon / 4 = liquid_quart = US_liquid_quart
+pint = quart / 2 = pt = liquid_pint = US_liquid_pint
+cup = pint / 2 = liquid_cup = US_liquid_cup
+gill = cup / 2 = liquid_gill = US_liquid_gill
+fluid_ounce = gill / 4 = floz = US_fluid_ounce = US_liquid_ounce
+imperial_bushel = 36.36872 * liter = UK_bushel
+imperial_gallon = imperial_bushel / 8 = UK_gallon
+imperial_quart = imperial_gallon / 4 = UK_quart
+imperial_pint = imperial_quart / 2 = UK_pint
+imperial_cup = imperial_pint / 2 = UK_cup
+imperial_gill = imperial_cup / 2 = UK_gill
+imperial_floz = imperial_gill / 5 = UK_fluid_ounce = imperial_fluid_ounce
+barrel = 42 * gallon = bbl
+tablespoon = floz / 2 = tbsp = Tbsp = Tblsp = tblsp = tbs = Tbl
+teaspoon = tablespoon / 3 = tsp
+peck = bushel / 4 = pk
+fluid_dram = floz / 8 = fldr = fluidram
+firkin = barrel / 4
+
 
 @context(n=1) spectroscopy = sp
     # n index of refraction of the medium.
@@ -304,137 +359,19 @@ stere = meter ** 3
 
 @end
 
-@group Commonwealth1959
-    # Length
-    point = yard / 216 / 12 = pp = printers_point
-    thou = yard / 36000 = th = mil
-    pica = yard / 216 = P̸ = printers_pica
-    inch = yard / 36 = in = international_inch = inches = international_inches
-    foot = yard / 3 = ft = international_foot = feet = international_feet
-    yard = 0.9144 * metres = international_yard
-    chain = 22 * yard = ch
-    furlong = 220 * yard = fur
-    mile = 1760 * yard = mi = international_mile
-    league = 5280 * yard = lea
-
-    # Length Maritime units
-    fathom = 2.0266 * yards = ftm
-    cable = 202.66 * yards
-    nautical_mile = 2026.6 * yards = nmi = NM
-
-    # Area
-    square_foot = 1 * foot ** 2 = sq_ft = square_feet
-    square_yard = 1 * yard ** 2 = sq_yd
-    perch = 1 * rod ** 2
-    rood = 1210 * yards ** 2
-    acre = 4840 * yards ** 2
-
-    # Volume
-    acre_foot = acre * foot = acre_feet
-    board_foot = foot ** 2 * inch = FBM
-@end
-
-# https://en.wikipedia.org/wiki/Imperial_and_US_customary_measurement_systems
-@group Avoirdupois
-    # Mass and weight
-    grain = 1 / 7000 pound = gr
-    drachm = 1 / 256 pound = dr = avoirdupois_dram
-    ounce = 1 /16 pound = oz = avoirdupois_ounce
-    # By definition
-    pound = 453.59237 * gram = lb = avoirdupois_pound
-    stone = 14 * pound = st
-    quarter = 28 * pound = qr = qtr
-@end
-
-@group AvoirdupoisUS using Avoirdupois
-    US_hundredweight = 100 * pound = US_cwt = short_hundredweight
-    US_ton = 2000 * pound = short_ton
-@end
-
-@group AvoirdupoisUK using Avoirdupois
-    cental = 100 * pound
-    hundredweight = 112 * pound = cwt = long_hundredweight
-    ton = 2240 * pound = long_tone
-@end
-
-# https://en.wikipedia.org/wiki/Imperial_and_US_customary_measurement_systems
-@group Troy
-    pennyweight = 24 * gram = dwt
-    troy_ounce = 480 * grain = toz = apounce = apothecary_ounce
-    troy_pound = 12 * toz = tlb = appound = apothecary_pound
-@end
-
-# https://en.wikipedia.org/wiki/United_States_customary_units
-@group US using Commonwealth1959
-
-    # Gunter' survey units
-    link = 7.92 * inches
-    rod = 25 * link
-
-    # survey
-    square_rod = 2721*.25 foot ** 2
-    survey_foot = 1200 / 3937 m = sft
-    survey_mile = 8 * furlong
-
-    # Volume
-    fluid_dram = floz / 8 = fldr = fluidram
-    teaspoon = tablespoon / 3 = tsp
-    tablespoon = floz / 2 = tbsp = Tbsp = Tblsp = tblsp = tbs = Tbl
-    fluid_ounce =  1/20 * pint = floz = US_fluid_ounce = US_liquid_ounce
-    shot = 3 * tablespoon = jig
-    gill = 4 * fluid_ounce = gi = liquid_gill = US_liquid_gill
-    cup = 8 * fluid_ounce = cp = liquid_cup = US_liquid_cup
-    pint = 473.176473 * milliliter = pt = liquid_pint = US_pint
-    quart = 32 * fluid_ounce = qt = liquid_quart = US_liquid_quart
-    gallon = 128 * fluid_ounce = gal = liquid_gallon = US_liquid_gallon
-    barrel = 31.5 * gallon = bbl
-    oil_barrel = 42 * gallon = oil_bbl
-    beer_barrel = 31 * gallon = beer_bbl
-    hogshead = 63 * gallon
-
-    # Dry Volume
-    dry_pint = 33.60 * inch ** 3 = dpt = US_dry_pit
-    dry_quart = 2 * dry_pint = dqt = US_dry_quart
-    dry_gallon = 8 * dry_pint = dgal = US_dry_gallon
-    peck = 16 * dry_pint = pk
-    dry_barrel = 7065 * inch ** 3 = US_dry_barrel
-
-    # gravitational
-    slug = 14.59390 * kilogram
-@end
-
-# See https://en.wikipedia.org/wiki/Imperial_units
-@group imperial using Commonwealth1959
-
-    # Volume
-    imperial_fluid_ounce =  1/20 * imperial_pint = imperial_floz = UK_fluid_ounce
-    imperial_gill = 1/4 * imperial_pint = imperial_gi = UK_gill
-    imperial_cup = imperial_pint / 2 = imperial_cp = UK_cup
-    imperial_pint = 568.26125 * milliliter = imperial_pt = UK_pint
-    imperial_quart = 2 * imperial_pint = imperial_qt = UK_quart
-    imperial_gallon = 8 * imperial_pint = imperial_gal = UK_gallon
-    imperial_bushel = 64 * imperial_pint = imperial_bu = UK_bushel
-    imperial_barrel = 288 * imperial_pint = imperial_bbl = UK_bbl
-@end
-
-@system mks using international
+@system mks
     meter
     kilogram
     second
 @end
 
-@system cgs using international
+@system cgs
     centimeter
     gram
     second
 @end
 
-@system imperial using imperial
-    yard
-    pound
-@end
-
-@system US using US
+@system imperial
     yard
     pound
 @end

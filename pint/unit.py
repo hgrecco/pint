@@ -5,7 +5,7 @@
 
     Functions and classes related to unit definitions and conversions.
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -14,23 +14,26 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import os
 import math
 import itertools
-import functools
 import operator
 import pkg_resources
 from decimal import Decimal
+from fractions import Fraction
 from contextlib import contextmanager, closing
 from io import open, StringIO
 from collections import defaultdict
 from tokenize import untokenize, NUMBER, STRING, NAME, OP
 from numbers import Number
 
+from . import registry_helpers
 from .context import Context, ContextChain
 from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
                    find_shortest_path, UnitsContainer, _is_dim,
                    SharedRegistryObject, to_units_container,
-                   fix_str_conversions)
+                   fix_str_conversions, SourceIterator)
+
 from .compat import tokenizer, string_types, NUMERIC_TYPES, long_type
+from .formatting import siunitx_format_unit
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
 from .converters import ScaleConverter
@@ -38,6 +41,7 @@ from .errors import (DimensionalityError, UndefinedUnitError,
                      DefinitionSyntaxError, RedefinitionError)
 
 from .pint_eval import build_eval_tree
+from . import systems
 
 
 @fix_str_conversions
@@ -52,8 +56,7 @@ class _Unit(SharedRegistryObject):
     default_format = ''
 
     def __reduce__(self):
-        from . import _build_unit
-        return _build_unit, (self._units)
+        return self.Unit, (self._units)
 
     def __new__(cls, units):
         inst = object.__new__(cls)
@@ -88,8 +91,17 @@ class _Unit(SharedRegistryObject):
 
     def __format__(self, spec):
         spec = spec or self.default_format
+        # special cases
+        if 'Lx' in spec: # the LaTeX siunitx code
+          opts = ''
+          ustr = siunitx_format_unit(self)
+          ret = r'\si[%s]{%s}'%( opts, ustr )
+          return ret
+
 
         if '~' in spec:
+            if self.dimensionless:
+                return ''
             units = UnitsContainer(dict((self._REGISTRY._get_symbol(key),
                                          value)
                                    for key, value in self._units.items()))
@@ -138,10 +150,13 @@ class _Unit(SharedRegistryObject):
             if isinstance(other, self.__class__):
                 return self.__class__(self._units*other._units)
             else:
-                return self._REGISTRY.Quantity(other._magnitude,
-                                               self._units*other._units)
+                qself = self._REGISTRY.Quantity(1.0, self._units)
+                return qself * other
 
-        return self._REGISTRY.Quantity(other, self._units)
+        if isinstance(other, Number) and other == 1:
+            return self._REGISTRY.Quantity(other, self._units)
+
+        return self._REGISTRY.Quantity(1, self._units) * other
 
     __rmul__ = __mul__
 
@@ -150,8 +165,8 @@ class _Unit(SharedRegistryObject):
             if isinstance(other, self.__class__):
                 return self.__class__(self._units/other._units)
             else:
-                return self._REGISTRY.Quantity(1/other._magnitude,
-                                           self._units/other._units)
+                qself = 1.0 * self
+                return qself / other
 
         return self._REGISTRY.Quantity(1/other, self._units)
 
@@ -236,6 +251,15 @@ class _Unit(SharedRegistryObject):
         else:
             raise ValueError('Unsupproted operation for Unit')
 
+    @property
+    def systems(self):
+        out = set()
+        for uname in self._units.keys():
+            for sname, sys in self._REGISTRY._systems.items():
+                if uname in sys.members:
+                    out.add(sname)
+        return frozenset(out)
+
 
 class UnitRegistry(object):
     """The unit registry stores the definitions and relationships between
@@ -257,7 +281,8 @@ class UnitRegistry(object):
 
     def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
                  autoconvert_offset_to_baseunit=False,
-                 on_redefinition='warn'):
+                 on_redefinition='warn', system=None):
+
         self.Unit = build_unit_class(self)
         self.Quantity = build_quantity_class(self, force_ndarray)
         self.Measurement = build_measurement_class(self, force_ndarray)
@@ -265,8 +290,22 @@ class UnitRegistry(object):
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
 
+        #: Map between name (string) and value (string) of defaults stored in the definitions file.
+        self._defaults = {}
+
         #: Map dimension name (string) to its definition (DimensionDefinition).
         self._dimensions = {}
+
+        #: Map system name to system.
+        #: :type: dict[ str | System]
+        self._systems = {}
+
+        #: Map group name to group.
+        #: :type: dict[ str | Group]
+        self._groups = {}
+        self.Group = systems.build_group_class(self)
+        self._groups['root'] = self.Group('root')
+        self.System = systems.build_system_class(self)
 
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
@@ -293,6 +332,9 @@ class UnitRegistry(object):
         self._dimensional_equivalents = dict()
 
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
+        self._root_units_cache = dict()
+
+        #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self._base_units_cache = dict()
 
         #: Maps dimensionality (UnitsContainer) to Units (UnitsContainer)
@@ -315,6 +357,14 @@ class UnitRegistry(object):
             self.load_definitions(filename)
 
         self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
+
+        #: Copy units in root group to the default group
+        if 'group' in self._defaults:
+            grp = self.get_group(self._defaults['group'], True)
+            grp.add_units(*self.get_group('root', False).non_inherited_unit_names)
+
+        #: System name to be used by default.
+        self._default_system = system or self._defaults.get('system', None)
 
         self._build_cache()
 
@@ -346,6 +396,54 @@ class UnitRegistry(object):
     def default_format(self, value):
         self.Unit.default_format = value
         self.Quantity.default_format = value
+
+    def get_group(self, name, create_if_needed=True):
+        """Return a Group.
+
+        :param name: Name of the group to be
+        :param create_if_needed: Create a group if not Found. If False, raise an Exception.
+        :return: Group
+        """
+        if name in self._groups:
+            return self._groups[name]
+
+        if not create_if_needed:
+            raise ValueError('Unkown group %s' % name)
+
+        return self.Group(name)
+
+    @property
+    def sys(self):
+        return systems.Lister(self._systems)
+
+    @property
+    def default_system(self):
+        return self._default_system
+
+    @default_system.setter
+    def default_system(self, name):
+        if name:
+            if name not in self._systems:
+                raise ValueError('Unknown system %s' % name)
+
+            self._base_units_cache = {}
+
+        self._default_system = name
+
+    def get_system(self, name, create_if_needed=True):
+        """Return a Group.
+
+        :param name: Name of the group to be
+        :param create_if_needed: Create a group if not Found. If False, raise an Exception.
+        :return: System
+        """
+        if name in self._systems:
+            return self._systems[name]
+
+        if not create_if_needed:
+            raise ValueError('Unkown system %s' % name)
+
+        return self.System(name)
 
     def add_context(self, context):
         """Add a context object to the registry.
@@ -469,12 +567,11 @@ class UnitRegistry(object):
             # the added contexts are removed from the active one.
             self.disable_contexts(len(names))
 
-    def define(self, definition):
+    def define(self, definition, add_to_root_group=False):
         """Add unit to the registry.
         """
         if isinstance(definition, string_types):
             definition = Definition.from_string(definition)
-
         if isinstance(definition, DimensionDefinition):
             d, di = self._dimensions, None
         elif isinstance(definition, UnitDefinition):
@@ -487,6 +584,10 @@ class UnitRegistry(object):
                         continue
 
                     self.define(DimensionDefinition(dimension, '', (), None, is_base=True))
+
+            # We add all units to the root group
+            if add_to_root_group:
+                self.get_group('root').add_units(definition.name)
 
         elif isinstance(definition, PrefixDefinition):
             d, di = self._prefixes, None
@@ -534,7 +635,8 @@ class UnitRegistry(object):
 
             self.define(UnitDefinition(d_name, d_symbol, d_aliases,
                                        ScaleConverter(definition.converter.scale),
-                                       d_reference, definition.is_base))
+                                       d_reference, definition.is_base),
+                        add_to_root_group=True)
 
     def load_definitions(self, file, is_resource=False):
         """Add units and prefixes defined in a definition text file.
@@ -557,11 +659,8 @@ class UnitRegistry(object):
                 msg = getattr(e, 'message', '') or str(e)
                 raise ValueError('While opening {0}\n{1}'.format(file, msg))
 
-        ifile = enumerate(file, 1)
+        ifile = SourceIterator(file)
         for no, line in ifile:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
             if line.startswith('@import'):
                 if is_resource:
                     path = line[7:].strip()
@@ -572,22 +671,30 @@ class UnitRegistry(object):
                         path = os.getcwd()
                     path = os.path.join(path, os.path.normpath(line[7:].strip()))
                 self.load_definitions(path, is_resource)
+
+            elif line.startswith('@defaults'):
+                next(ifile)
+                for lineno, part in ifile.block_iter():
+                    k, v = part.split('=')
+                    self._defaults[k.strip()] = v.strip()
+
             elif line.startswith('@context'):
-                context = [line, ]
-                for no, line in ifile:
-                    line = line.strip()
-                    if line.startswith('@end'):
-                        try:
-                            self.add_context(Context.from_lines(context, self.get_dimensionality))
-                        except KeyError as e:
-                            raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
-                        break
-                    elif line.startswith('@'):
-                        raise DefinitionSyntaxError('cannot nest @ directives', lineno=no)
-                    context.append(line)
+                try:
+                    self.add_context(Context.from_lines(ifile.block_iter(),
+                                                        self.get_dimensionality))
+                except KeyError as e:
+                    raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)), lineno=no)
+
+            elif line.startswith('@group'):
+                self.Group.from_lines(ifile.block_iter(), self.define)
+
+            elif line.startswith('@system'):
+                self.System.from_lines(ifile.block_iter(), self.get_root_units)
+
             else:
                 try:
-                    self.define(Definition.from_string(line))
+                    self.define(Definition.from_string(line),
+                                add_to_root_group=True)
                 except (RedefinitionError, DefinitionSyntaxError) as ex:
                     if ex.lineno is None:
                         ex.lineno = no
@@ -614,10 +721,10 @@ class UnitRegistry(object):
                 try:
                     uc = ParserHelper.from_word(unit_name)
 
-                    bu = self._get_base_units(uc)
+                    bu = self._get_root_units(uc)
                     di = self._get_dimensionality(uc)
 
-                    self._base_units_cache[uc] = bu
+                    self._root_units_cache[uc] = bu
                     self._dimensionality_cache[uc] = di
 
                     if not prefixed:
@@ -729,8 +836,8 @@ class UnitRegistry(object):
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
-    def get_base_units(self, input_units, check_nonmult=True):
-        """Convert unit or dict of units to the base units.
+    def get_root_units(self, input_units, check_nonmult=True):
+        """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
@@ -744,12 +851,12 @@ class UnitRegistry(object):
         """
         input_units = to_units_container(input_units)
 
-        f, units = self._get_base_units(input_units, check_nonmult=True)
+        f, units = self._get_root_units(input_units, check_nonmult)
 
         return f, self.Unit(units)
 
-    def _get_base_units(self, input_units, check_nonmult=True):
-        """Convert unit or dict of units to the base units.
+    def _get_root_units(self, input_units, check_nonmult=True):
+        """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
@@ -765,11 +872,11 @@ class UnitRegistry(object):
             return 1., UnitsContainer()
 
         # The cache is only done for check_nonmult=True
-        if check_nonmult and input_units in self._base_units_cache:
-            return self._base_units_cache[input_units]
+        if check_nonmult and input_units in self._root_units_cache:
+            return self._root_units_cache[input_units]
 
         accumulators = [1., defaultdict(float)]
-        self._get_base_units_recurse(input_units, 1.0, accumulators)
+        self._get_root_units_recurse(input_units, 1.0, accumulators)
 
         factor = accumulators[0]
         units = UnitsContainer(dict((k, v) for k, v in accumulators[1].items()
@@ -781,10 +888,75 @@ class UnitRegistry(object):
                 if not self._units[unit].converter.is_multiplicative:
                     return None, units
 
+        if check_nonmult:
+            self._root_units_cache[input_units] = factor, units
+
         return factor, units
 
-    def _get_base_units_recurse(self, ref, exp, accumulators):
-        for key in ref:
+    def get_base_units(self, input_units, check_nonmult=True, system=None):
+        """Convert unit or dict of units to the base units.
+
+        If any unit is non multiplicative and check_converter is True,
+        then None is returned as the multiplicative factor.
+
+        :param input_units: units
+        :type input_units: UnitsContainer or str
+        :param check_nonmult: if True, None will be returned as the
+                              multiplicative factor if a non-multiplicative
+                              units is found in the final Units.
+        :return: multiplicative factor, base units
+        """
+        input_units = to_units_container(input_units)
+
+        f, units = self._get_base_units(input_units, check_nonmult, system)
+
+        return f, self.Unit(units)
+
+    def _get_base_units(self, input_units, check_nonmult=True, system=None):
+        """
+        :param registry:
+        :param input_units:
+        :param check_nonmult:
+        :param system: System
+        :return:
+        """
+
+        if system is None:
+            system = self._default_system
+
+        # The cache is only done for check_nonmult=True and the current system.
+        if check_nonmult and system == self._default_system and input_units in self._base_units_cache:
+            return self._base_units_cache[input_units]
+
+        factor, units = self.get_root_units(input_units, check_nonmult)
+
+        if not system:
+            return factor, units
+
+        # This will not be necessary after integration with the registry as it has a UnitsContainer intermediate
+        units = to_units_container(units, self)
+
+        destination_units = UnitsContainer()
+
+        bu = self.get_system(system, False).base_units
+
+        for unit, value in units.items():
+            if unit in bu:
+                new_unit = bu[unit]
+                new_unit = to_units_container(new_unit, self)
+                destination_units *= new_unit ** value
+            else:
+                destination_units *= UnitsContainer({unit: value})
+
+        base_factor = self.convert(factor, units, destination_units)
+
+        if check_nonmult:
+            self._base_units_cache[input_units] = base_factor, destination_units
+
+        return base_factor, destination_units
+
+    def _get_root_units_recurse(self, ref, exp, accumulators):
+        for key in sorted(ref):
             exp2 = exp*ref[key]
             key = self.get_name(key)
             reg = self._units[key]
@@ -793,19 +965,22 @@ class UnitRegistry(object):
             else:
                 accumulators[0] *= reg._converter.scale ** exp2
                 if reg.reference is not None:
-                    self._get_base_units_recurse(reg.reference, exp2,
+                    self._get_root_units_recurse(reg.reference, exp2,
                                                  accumulators)
 
-    def get_compatible_units(self, input_units):
+    def get_compatible_units(self, input_units, group_or_system=None):
         """
         """
         input_units = to_units_container(input_units)
 
-        equiv = self._get_compatible_units(input_units)
+        if group_or_system is None:
+            group_or_system = self._default_system
+
+        equiv = self._get_compatible_units(input_units, group_or_system)
 
         return frozenset(self.Unit(eq) for eq in equiv)
 
-    def _get_compatible_units(self, input_units):
+    def _get_compatible_units(self, input_units, group_or_system):
         """
         """
         if not input_units:
@@ -822,7 +997,16 @@ class UnitRegistry(object):
                 for node in nodes:
                     ret |= self._dimensional_equivalents[node]
 
-        return frozenset(ret)
+        if group_or_system:
+            if group_or_system in self._systems:
+                members = self._systems[group_or_system].members
+            elif group_or_system in self._groups:
+                members = self._groups[group_or_system].members
+            else:
+                raise ValueError("Unknown Group o System with name '%s'" % group_or_system)
+            return frozenset(ret.intersection(members))
+
+        return ret
 
     def convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
@@ -930,12 +1114,15 @@ class UnitRegistry(object):
 
         # Here src and dst have only multiplicative units left. Thus we can
         # convert with a factor.
-        factor, units = self._get_base_units(src / dst)
+        factor, units = self._get_root_units(src / dst)
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
         if isinstance(value, Decimal):
             factor = Decimal(str(factor))
+
+        if isinstance(value, Fraction):
+            factor = Fraction(str(factor))
 
         if inplace:
             value *= factor
@@ -1017,11 +1204,11 @@ class UnitRegistry(object):
     def _parse_units(self, input_string, as_delta=None):
         """
         """
-        if input_string in self._parse_unit_cache:
-            return self._parse_unit_cache[input_string]
-
         if as_delta is None:
             as_delta = self.default_as_delta
+
+        if as_delta and input_string in self._parse_unit_cache:
+            return self._parse_unit_cache[input_string]
 
         if not input_string:
             return UnitsContainer()
@@ -1045,7 +1232,8 @@ class UnitRegistry(object):
 
         ret = UnitsContainer(ret)
 
-        self._parse_unit_cache[input_string] = ret
+        if as_delta:
+            self._parse_unit_cache[input_string] = ret
 
         return ret
     
@@ -1083,70 +1271,9 @@ class UnitRegistry(object):
 
     __call__ = parse_expression
 
-    def wraps(self, ret, args, strict=True):
-        """Wraps a function to become pint-aware.
+    wraps = registry_helpers.wraps
 
-        Use it when a function requires a numerical value but in some specific
-        units. The wrapper function will take a pint quantity, convert to the units
-        specified in `args` and then call the wrapped function with the resulting
-        magnitude.
-
-        The value returned by the wrapped function will be converted to the units
-        specified in `ret`.
-
-        Use None to skip argument conversion.
-        Set strict to False, to accept also numerical values.
-
-        :param ret: output units.
-        :param args: iterable of input units.
-        :param strict: boolean to indicate that only quantities are accepted.
-        :return: the wrapped function.
-        :raises:
-            :class:`ValueError` if strict and one of the arguments is not a Quantity.
-        """
-
-        Q_ = self.Quantity
-
-        if not isinstance(args, (list, tuple)):
-            args = (args, )
-
-        units = [to_units_container(arg, self) for arg in args]
-
-        if isinstance(ret, (list, tuple)):
-            ret = ret.__class__([to_units_container(arg, self) for arg in ret])
-        elif isinstance(ret, string_types):
-            ret = self.parse_units(ret)
-
-        def decorator(func):
-            assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
-            updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
-            @functools.wraps(func, assigned=assigned, updated=updated)
-            def wrapper(*values, **kw):
-                new_args = []
-                for unit, value in zip(units, values):
-                    if unit is None:
-                        new_args.append(value)
-                    elif isinstance(value, Q_):
-                        new_args.append(self._convert(value._magnitude,
-                                                      value._units, unit))
-                    elif not strict:
-                        new_args.append(value)
-                    else:
-                        raise ValueError('A wrapped function using strict=True requires '
-                                         'quantity for all arguments with not None units. '
-                                         '(error found for {0}, {1})'.format(unit, value))
-
-                result = func(*new_args, **kw)
-
-                if isinstance(ret, (list, tuple)):
-                    return ret.__class__(res if unit is None else Q_(res, unit)
-                                         for unit, res in zip(ret, result))
-                elif ret is not None:
-                    return Q_(result, ret)
-
-                return result
-            return wrapper
-        return decorator
+    check = registry_helpers.check
 
 
 def build_unit_class(registry):

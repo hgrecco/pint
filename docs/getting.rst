@@ -5,19 +5,16 @@ Installation
 
 Pint has no dependencies except Python_ itself. In runs on Python 2.6 and 3.0+.
 
-You can install it using pip_::
+You can install it (or upgrade to the latest version) using pip_::
 
-    $ pip install pint
-
-or using easy_install_::
-
-    $ easy_install pint
+    $ pip install -U pint
 
 That's all! You can check that Pint is correctly installed by starting up python, and importing pint:
 
-    >>> import pint
-    >>> pint.__version__
-    0.5
+.. testcode::
+
+    >>> import pint             # doctest: +SKIP
+    >>> pint.__version__        # doctest: +SKIP
 
 .. note:: If you have an old system installation of Python and you don't want to
    mess with it, you can try `Anaconda CE`_. It is a free Python distribution by
@@ -25,7 +22,7 @@ That's all! You can check that Pint is correctly installed by starting up python
 
 You can check the installation with the following command:
 
-    >>> pint.test()
+    >>> pint.test()                 # doctest: +SKIP
 
 
 On Arch Linux, you can alternatively install Pint from the Arch User Repository

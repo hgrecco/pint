@@ -19,6 +19,7 @@ and handled. You start by creating your registry::
    ureg = UnitRegistry()
    Q_ = ureg.Quantity
 
+
 If no parameter is given to the constructor, the unit registry is populated
 with the default list of units and prefixes.
 You can now simply use the registry in the following way:
@@ -76,6 +77,7 @@ use the `ito` method:
 .. doctest::
 
    >>> speed.ito(ureg.inch / ureg.minute )
+   >>> speed
    <Quantity(7086.614173228345, 'inch / minute')>
    >>> print(speed)
    7086.614173228345 inch / minute
@@ -87,7 +89,7 @@ If you ask Pint to perform an invalid conversion:
    >>> speed.to(ureg.joule)
    Traceback (most recent call last):
    ...
-   pint.pint.DimensionalityError: Cannot convert from 'inch / minute' (length / time) to 'joule' (length ** 2 * mass / time ** 2)
+   pint.errors.DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
 
 
 There are also methods 'to_base_units' and 'ito_base_units' which automatically
@@ -134,7 +136,7 @@ If you try to use a unit which is not in the registry:
    >>> speed = 23 * ureg.snail_speed
    Traceback (most recent call last):
    ...
-   pint.pint.UndefinedUnitError: 'snail_speed' is not defined in the unit registry
+   pint.errors.UndefinedUnitError: 'snail_speed' is not defined in the unit registry
 
 You can add your own units to the registry or build your own list. More info on
 that :ref:`defining`
@@ -188,9 +190,12 @@ This enables you to build a simple unit converter in 3 lines:
    <Quantity(1.0, 'inch')>
 
 
-.. warning:: Pint currently uses eval_ under the hood.
-   Do not use this approach from untrusted sources as it is dangerous_.
+.. note:: Since version 0.7, Pint **does not** uses eval_ under the hood.
+   This change removes the `serious security problems`_ that the system is
+   exposed when parsing information from untrusted sources.
 
+
+.. _sec-string-formatting:
 
 String formatting
 -----------------
@@ -223,7 +228,7 @@ LaTeX representations:
 
    >>> accel = 1.3 * ureg['meter/second**2']
    >>> # Pretty print
-   >>> print('The pretty representation is {:P}'.format(accel))
+   >>> 'The pretty representation is {:P}'.format(accel)
    'The pretty representation is 1.3 meter/second²'
    >>> # Latex print
    >>> 'The latex representation is {:L}'.format(accel)
@@ -242,11 +247,20 @@ If you want to use abbreviated unit names, prefix the specification with `~`:
 
    >>> 'The str is {:~}'.format(accel)
    'The str is 1.3 m / s ** 2'
-   >>> print('The pretty representation is {:~P}'.format(accel))
-   The pretty representation is 1.3 m²/s
+   >>> 'The pretty representation is {:~P}'.format(accel)
+   'The pretty representation is 1.3 m/s²'
 
 
 The same is true for latex (`L`) and HTML (`H`) specs.
+
+Pint also supports the LaTeX siunitx package:
+
+.. doctest::
+
+   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> # siunitx Latex print
+   >>> print('The siunitx representation is {:Lx}'.format(accel))
+   The siunitx representation is \SI[]{1.3}{\meter\per\second\squared}
 
 Finally, you can specify a default format specification:
 
@@ -290,7 +304,8 @@ also define the registry as the application registry::
     >>> q1 = UnitRegistry().meter
     >>> q2 = UnitRegistry().meter
     >>> # q1 and q2 belong to different registries!
-    >>> id(q1._REGISTRY) is id(q2._REGISTRY) # False
+    >>> id(q1._REGISTRY) == id(q2._REGISTRY) # False
+    False
 
 .. _eval: http://docs.python.org/3/library/functions.html#eval
-.. _dangerous: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
+.. _`serious security problems`: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
