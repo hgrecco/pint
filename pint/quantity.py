@@ -141,6 +141,21 @@ class _Quantity(SharedRegistryObject):
             format(obj.magnitude, remove_custom_flags(spec)),
             format(obj.units, spec)).replace('\n', '')
 
+    def format_babel(self, spec='', **kwspec):
+        spec = spec or self.default_format
+
+        # standard cases
+        if '#' in spec:
+            spec = spec.replace('#', '')
+            obj = self.to_compact()
+        else:
+            obj = self
+        kwspec = dict(kwspec)
+        kwspec['plural_form'] = kwspec['locale'].plural_form(obj.magnitude)
+        return '{0} {1}'.format(
+            format(obj.magnitude, remove_custom_flags(spec)),
+            obj.units.format_babel(spec, **kwspec)).replace('\n', '')
+
     # IPython related code
     def _repr_html_(self):
         return self.__format__('H')

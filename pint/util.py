@@ -325,6 +325,9 @@ class UnitsContainer(Mapping):
     def __format__(self, spec):
         return format_unit(self, spec)
 
+    def format_babel(self, spec, **kwspec):
+        return format_unit(self, spec, **kwspec)
+
     def __copy__(self):
         return UnitsContainer(self._d)
 
