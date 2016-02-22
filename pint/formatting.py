@@ -114,6 +114,9 @@ def formatter(items, as_ratio=True, single_denominator=False,
     :param division_fmt: the format used for division.
     :param power_fmt: the format used for exponentiation.
     :param parentheses_fmt: the format used for parenthesis.
+    :param locale: the locale object as defined in babel.
+    :param form: the length of the translated unit, as defined in babel cldr.
+    :param plural_form: the plural form, calculated as defined in babel.
 
     :return: the formula as a string.
     """
@@ -129,7 +132,7 @@ def formatter(items, as_ratio=True, single_denominator=False,
     pos_terms, neg_terms = [], []
 
     for key, value in sorted(items):
-        if locale and form and plural_form:
+        if locale and form and plural_form and hasattr(locale, 'unit_patterns'):
             _key = babel_units.get(key)
             if _key:
                 patterns = locale.unit_patterns

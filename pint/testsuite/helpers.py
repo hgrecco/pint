@@ -7,7 +7,7 @@ import doctest
 from distutils.version import StrictVersion
 import re
 
-from pint.compat import unittest, HAS_NUMPY, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
+from pint.compat import unittest, HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
 
 
 def requires_numpy18():
@@ -28,6 +28,10 @@ def requires_numpy():
 
 def requires_not_numpy():
     return unittest.skipIf(HAS_NUMPY, 'Requires NumPy is not installed.')
+
+
+def requires_proper_babel():
+    return unittest.skipUnless(HAS_PROPER_BABEL, 'Requires Babel with units support')
 
 
 def requires_uncertainties():
