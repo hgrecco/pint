@@ -55,7 +55,7 @@ You can check which unit systems are available:
 Or which units are available within a particular system:
 
     >>> dir(ureg.sys.imperial)
-    ['acre', 'acre_foot', 'board_foot', 'cable', 'chain', 'fathom', 'foot', 'furlong', 'imperial_barrel', 'imperial_bushel', 'imperial_cup', 'imperial_fluid_ounce', 'imperial_gallon', 'imperial_gill', 'imperial_pint', 'imperial_quart', 'inch', 'league', 'mile', 'nautical_mile', 'perch', 'pica', 'point', 'rood', 'square_foot', 'square_yard', 'thou', 'yard']
+    ['UK_hundredweight', 'UK_ton', 'acre_foot', 'cubic_foot', 'cubic_inch', 'cubic_yard', 'drachm', 'foot', 'grain', 'imperial_barrel', 'imperial_bushel', 'imperial_cup', 'imperial_fluid_drachm', 'imperial_fluid_ounce', 'imperial_gallon', 'imperial_gill', 'imperial_peck', 'imperial_pint', 'imperial_quart', 'inch', 'long_hunderweight', 'long_ton', 'mile', 'ounce', 'pound', 'quarter', 'short_hunderdweight', 'short_ton', 'square_foot', 'square_inch', 'square_mile', 'square_yard', 'stone', 'yard']
 
 Notice that this give you the opportunity to choose within units with colliding names:
 

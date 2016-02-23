@@ -397,14 +397,14 @@ stere = meter ** 3
     apothecary_pound = 12 apothecary_ounce = ap_lb
 @end
 
-@group AvoirdupoisUK using Avoirdupois, Apothecary, Troy
+@group AvoirdupoisUK using Avoirdupois
     stone = 14 pound
     quarter = 28 stone
     UK_hundredweight = long_hunderweight = UK_cwt
     UK_ton = long_ton
 @end
 
-@group AvoirdupoisUS using Avoirdupois, Apothecary, Troy
+@group AvoirdupoisUS using Avoirdupois
     US_hundredweight = short_hunderdweight = US_cwt
     US_ton = short_ton = ton
 @end
