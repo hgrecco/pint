@@ -2,8 +2,8 @@ Pint Changelog
 ==============
 
 
-0.8 (unreleased)
-----------------
+0.7.1 (2016-02-23)
+------------------
 
 - Use NIST as source for most of the unit information.
 - Added message to assertQuantityEqual.
