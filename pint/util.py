@@ -192,6 +192,8 @@ def solve_dependencies(dependencies):
         # and keys without value (items without dep)
         t.update(k for k, v in d.items() if not v)
         # can be done right away
+        if not t:
+            raise ValueError('Cyclic dependencies exist among these items: {}'.format(', '.join(repr(x) for x in d.items())))
         r.append(t)
         # and cleaned up
         d = dict(((k, v - t) for k, v in d.items() if v))
