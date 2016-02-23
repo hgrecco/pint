@@ -5,7 +5,9 @@ Pint Changelog
 0.8 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Use NIST as source for most of the unit information.
+- Added message to assertQuantityEqual.
+- Added detection of circular dependencies in definitions.
 
 
 0.7 (2016-02-20)
