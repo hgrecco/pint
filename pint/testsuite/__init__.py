@@ -115,7 +115,7 @@ class QuantityTestCase(BaseTestCase):
         if isinstance(m1, ndarray) or isinstance(m2, ndarray):
             np.testing.assert_allclose(m1, m2, rtol=rtol, atol=atol, err_msg=msg)
         else:
-            self.assertLessEqual(abs(m1 - m2), atol + rtol * abs(m2))
+            self.assertLessEqual(abs(m1 - m2), atol + rtol * abs(m2), msg=msg)
 
 
 def testsuite():
