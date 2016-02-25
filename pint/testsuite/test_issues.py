@@ -513,3 +513,9 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual((self.Q_(F(2,3), 's')).to('ms'), self.Q_(F(2000,3), 'ms'))
         self.assertEqual((self.Q_(F(2,3), 'm')).to('km'), self.Q_(F(1,1500), 'km'))
 
+    def test_issue339(self):
+        q1 = self.ureg('')
+        self.assertEqual(q1.magnitude, 1)
+        self.assertEqual(q1.units, self.ureg.dimensionless)
+        q2 = self.ureg('1 dimensionless')
+        self.assertEqual(q1, q2)

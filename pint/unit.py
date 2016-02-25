@@ -1243,6 +1243,8 @@ class UnitRegistry(object):
         if token_type == NAME:
             if token_text == 'pi':
                 return self.Quantity(math.pi)
+            elif token_text == 'dimensionless':
+                return 1 * self.dimensionless
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:
