@@ -516,7 +516,7 @@ class TestCompatibleUnits(QuantityTestCase):
 
         # length, frequency, energy
         valid = [gd(self.ureg.meter), gd(self.ureg.hertz),
-                 gd(self.ureg.joule)]
+                 gd(self.ureg.joule), 1/gd(self.ureg.meter)]
 
         with self.ureg.context('sp'):
             equiv = self.ureg.get_compatible_units(self.ureg.meter)
