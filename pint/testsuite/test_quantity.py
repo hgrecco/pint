@@ -5,6 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import copy
 import math
 import operator as op
+import warnings
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.unit import UnitsContainer
@@ -311,6 +312,15 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compareQuantity_compact(self.Q_(101.3e3, 'kg/m/s^2'),
             101.3*ureg.kPa, ureg.Pa)
 
+    def test_limits_magnitudes(self):
+        ureg = self.ureg
+        self.compareQuantity_compact(0*ureg.m, 0*ureg.m)
+        self.compareQuantity_compact(float('inf')*ureg.m, float('inf')*ureg.m)
+
+    def test_nonnumeric_magnitudes(self):
+        ureg = self.ureg
+        x = "some string"*ureg.m
+        self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
 
 class TestQuantityBasicMath(QuantityTestCase):
 
