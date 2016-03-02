@@ -3,6 +3,7 @@ Pint Changelog
 
 0.8 (unreleased)
 ----------------
+- Fixed backward incompatibility problem when parsing dimensionless units.
 
 
 0.7.1 (2016-02-23)
