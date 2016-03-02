@@ -44,11 +44,6 @@ setup(
                  'constants_en.txt']
       },
     include_package_data=True,
-    entry_points={
-         'zest.releaser.releaser.after_checkout': [
-            'pyroma = pint:_run_pyroma',
-         ],
-      },
     license='BSD',
     classifiers=[
         'Development Status :: 4 - Beta',
