@@ -14,6 +14,8 @@ import math
 import operator
 import functools
 import bisect
+import warnings
+import numbers
 
 from .formatting import remove_custom_flags, siunitx_format_unit
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
@@ -317,7 +319,15 @@ class _Quantity(SharedRegistryObject):
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
         <Quantity(10.0, 'millinewton')>
         """
-        if self.unitless or self.magnitude==0:
+        if not isinstance(self.magnitude, numbers.Number):
+            msg = ("to_compact applied to non numerical types "
+                    "has an undefined behavior.")
+            w = RuntimeWarning(msg)
+            warnings.warn(w, stacklevel=2)
+            return self
+
+        if (self.unitless or self.magnitude==0 or 
+            math.isnan(self.magnitude) or math.isinf(self.magnitude)):
             return self
 
         SI_prefixes = {}
