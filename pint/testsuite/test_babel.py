@@ -18,20 +18,16 @@ class TestBabel(BaseTestCase):
         distance = 24.0 * ureg.meter
         self.assertEqual(
             distance.format_babel(locale=locale, form='long'),
-            u'24.0 mètres'
-        )
+            u'24.0 mètres')
         time = 8.0 * ureg.second
         self.assertEqual(
             time.format_babel(locale=locale, form='long'),
-            u'8.0 secondes'
-        )
+            u'8.0 secondes')
         velocity = distance / time ** 2
         self.assertEqual(
             velocity.format_babel(locale=locale, form='long'),
-            u'0.375 mètre par seconde²'
-        )
+            u'0.375 mètre par seconde²')
         mks = ureg.get_system('mks')
         self.assertEqual(
             mks.format_babel(locale=locale),
-            u'métrique'
-        )
+            u'métrique')
