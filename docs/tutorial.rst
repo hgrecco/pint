@@ -10,6 +10,8 @@ Converting Quantities
 Pint has the concept of Unit Registry, an object within which units are defined
 and handled. You start by creating your registry::
 
+.. doctest::
+
    >>> from pint import UnitRegistry
    >>> ureg = UnitRegistry()
 
@@ -152,7 +154,7 @@ Pint can also handle units provided as strings:
    >>> 2.54 * ureg.parse_expression('centimeter')
    <Quantity(2.54, 'centimeter')>
 
-or using the registry as a callable for a short form:
+or using the registry as a callable for a short form for `parse_expression`:
 
 .. doctest::
 
@@ -165,6 +167,7 @@ or using the `Quantity` constructor:
 
    >>> Q_(2.54, 'centimeter')
    <Quantity(2.54, 'centimeter')>
+
 
 Numbers are also parsed, so you can use an expression:
 
@@ -180,6 +183,13 @@ or:
    >>> Q_('2.54 * centimeter')
    <Quantity(2.54, 'centimeter')>
 
+or leave out the `*` altogether:
+
+.. doctest::
+
+   >>> Q_('2.54cm')
+   <Quantity(2.54, 'centimeter')>
+
 This enables you to build a simple unit converter in 3 lines:
 
 .. doctest::
@@ -189,6 +199,23 @@ This enables you to build a simple unit converter in 3 lines:
    >>> Q_(src).to(dst)
    <Quantity(1.0, 'inch')>
 
+Dimensionless quantities can also be parsed into an appropriate obkect:
+
+.. doctest::
+
+   >>> ureg('2.54')
+   >>> type(ureg('2.54'))
+   2.54
+   <class 'float'>
+
+or 
+
+.. doctest::
+
+   >>> Q_('2.54')
+   >>> type(Q_('2.54'))
+   <Quantity(2.54, 'dimensionless')>
+   <class 'pint.unit.build_quantity_class.<locals>.Quantity'>
 
 .. note:: Since version 0.7, Pint **does not** uses eval_ under the hood.
    This change removes the `serious security problems`_ that the system is
@@ -264,6 +291,8 @@ Pint also supports the LaTeX siunitx package:
 
 Finally, you can specify a default format specification:
 
+.. doctest::
+
    >>> 'The acceleration is {}'.format(accel)
    'The acceleration is 1.3 meter / second ** 2'
    >>> ureg.default_format = 'P'
@@ -278,6 +307,8 @@ If you use Pint in multiple modules within your Python package, you normally
 want to avoid creating multiple instances of the unit registry.
 The best way to do this is by instantiating the registry in a single place. For
 example, you can add the following code to your package `__init__.py`::
+
+.. doctest::
 
    from pint import UnitRegistry
    ureg = UnitRegistry()
@@ -294,6 +325,8 @@ Then in `yourmodule.py` the code would be::
 If you are pickling and unplicking Quantities within your project, you should
 also define the registry as the application registry::
 
+.. doctest::
+
    from pint import UnitRegistry, set_application_registry
    ureg = UnitRegistry()
    set_application_registry(ureg)
@@ -304,7 +337,7 @@ also define the registry as the application registry::
     >>> q1 = UnitRegistry().meter
     >>> q2 = UnitRegistry().meter
     >>> # q1 and q2 belong to different registries!
-    >>> id(q1._REGISTRY) == id(q2._REGISTRY) # False
+    >>> id(q1._REGISTRY) == id(q2._REGISTRY)
     False
 
 .. _eval: http://docs.python.org/3/library/functions.html#eval
