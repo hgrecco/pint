@@ -61,7 +61,7 @@ Bear in mind that altering computations like this **loses the benefits of automa
 
 A safer method: wrapping
 ------------------------
-A better way to use magnitudes is to use pint's wraps decorator (See :ref:`wrapping`). By decorating a function with wraps, you pass only the magnitude fo an argument to the function body according to units you specify. As such this method is safer in that you are sure the magnitude is supplied in the correct units.
+A better way to use magnitudes is to use pint's wraps decorator (See :ref:`wrapping`). By decorating a function with wraps, you pass only the magnitude of an argument to the function body according to units you specify. As such this method is safer in that you are sure the magnitude is supplied in the correct units.
 
 .. doctest::
 
