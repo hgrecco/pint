@@ -8,9 +8,7 @@ Converting Quantities
 ---------------------
 
 Pint has the concept of Unit Registry, an object within which units are defined
-and handled. You start by creating your registry::
-
-.. doctest::
+and handled. You start by creating your registry:
 
    >>> from pint import UnitRegistry
    >>> ureg = UnitRegistry()
@@ -199,7 +197,7 @@ This enables you to build a simple unit converter in 3 lines:
    >>> Q_(src).to(dst)
    <Quantity(1.0, 'inch')>
 
-Dimensionless quantities can also be parsed into an appropriate obkect:
+Dimensionless quantities can also be parsed into an appropriate object:
 
 .. doctest::
 
@@ -308,8 +306,6 @@ want to avoid creating multiple instances of the unit registry.
 The best way to do this is by instantiating the registry in a single place. For
 example, you can add the following code to your package `__init__.py`::
 
-.. doctest::
-
    from pint import UnitRegistry
    ureg = UnitRegistry()
    Q_ = ureg.Quantity
@@ -325,14 +321,14 @@ Then in `yourmodule.py` the code would be::
 If you are pickling and unplicking Quantities within your project, you should
 also define the registry as the application registry::
 
-.. doctest::
-
    from pint import UnitRegistry, set_application_registry
    ureg = UnitRegistry()
    set_application_registry(ureg)
 
 
-.. warning:: There are no global units in Pint. All units belong to a registry and you can have multiple registries instantiated at the same time. However, you are not supposed to operate between quantities that belong to different registries. Never do things like this::
+.. warning:: There are no global units in Pint. All units belong to a registry and you can have multiple registries instantiated at the same time. However, you are not supposed to operate between quantities that belong to different registries. Never do things like this:
+
+.. doctest::
 
     >>> q1 = UnitRegistry().meter
     >>> q2 = UnitRegistry().meter
