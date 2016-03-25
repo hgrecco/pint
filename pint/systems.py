@@ -15,6 +15,7 @@ import re
 
 from .unit import Definition, UnitDefinition, DefinitionSyntaxError, RedefinitionError
 from .util import to_units_container, SharedRegistryObject, SourceIterator
+from .babel_names import babel_systems
 
 
 class _Group(SharedRegistryObject):
@@ -330,6 +331,16 @@ class _System(SharedRegistryObject):
         self._used_groups -= set(group_names)
 
         self.invalidate_members()
+
+    def format_babel(self, locale):
+        """translate the name of the system
+        
+        :type locale: Locale
+        """
+        if locale and self.name in babel_systems:
+            name = babel_systems[self.name]
+            return locale.measurement_systems[name]
+        return self.name
 
     @classmethod
     def from_lines(cls, lines, get_root_func):

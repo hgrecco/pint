@@ -135,5 +135,11 @@ babel_units = dict(
 	radian='angle-radian',
 )
 
+babel_systems = dict(
+	mks='metric',
+	imperial='uksystem',
+	US='ussystem',
+)
+
 babel_forms = ['narrow', 'short', 'long']
 

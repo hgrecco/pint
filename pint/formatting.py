@@ -13,7 +13,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import re
 
-from .babel_units import babel_units, babel_forms
+from .babel_names import babel_units, babel_forms
 
 __JOIN_REG_EXP = re.compile("\{\d*\}")
 
