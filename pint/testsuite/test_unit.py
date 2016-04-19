@@ -336,6 +336,9 @@ class TestRegistry(QuantityTestCase):
         h2 = ureg.wraps(('meter', 'centimeter'), [None, None])(hfunc)
         self.assertEqual(h2(3, 1), (3 * ureg.meter, 1 * ureg.cm))
 
+        h3 = ureg.wraps((None,), (None, None))(hfunc)
+        self.assertEqual(h3(3, 1), (3, 1))
+
     def test_wrap_referencing(self):
 
         ureg = self.ureg

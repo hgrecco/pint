@@ -10,6 +10,7 @@
 """
 
 import functools
+from itertools import izip_longest
 
 from .compat import string_types, zip_longest
 from .errors import DimensionalityError
@@ -168,14 +169,11 @@ def wraps(ureg, ret, args, strict=True):
 
             result = func(*new_values, **kw)
 
-            # if more results than return units, append None so extra results are not tuncated
-            extra_results = (None, ) * (len(result) - len(ret))
-
             if container:
                 out_units = (_replace_units(r, values_by_name) if is_ref else r
-                             for (r, is_ref) in ret + extra_results)
+                             for (r, is_ref) in ret)
                 return ret.__class__(res if unit is None else ureg.Quantity(res, unit)
-                                     for unit, res in zip(out_units, result))
+                                     for unit, res in izip_longest(out_units, result))
 
             if ret[0] is None:
                 return result
