@@ -245,7 +245,7 @@ work_month = work_year / 12
 
 # Velocity
 [speed] = [length] / [time]
-nautical_mile = 1852 m = nmi # exact
+nautical_mile = 1852 m = nmi
 knot = nautical_mile / hour = kt = knot_international = international_knot = nautical_miles_per_hour
 mph = mile / hour = MPH
 kph = kilometer / hour = KPH
