@@ -519,3 +519,12 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual(q1.units, self.ureg.dimensionless)
         q2 = self.ureg('1 dimensionless')
         self.assertEqual(q1, q2)
+
+    def test_issue354_356_370(self):
+        q = 1 * self.ureg.second / self.ureg.millisecond
+        self.assertEqual('{0:~}'.format(1 * self.ureg.second / self.ureg.millisecond),
+                         '1.0 s / ms')
+        self.assertEqual("{0:~}".format(1 * self.ureg.count),
+                         '1 count')
+        self.assertEqual('{0:~}'.format(1 * self.ureg('MiB')),
+                         '1 MiB')
