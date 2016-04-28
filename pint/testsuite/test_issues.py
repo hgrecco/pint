@@ -499,7 +499,8 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual(np.float16(a/b), 1000.)
         self.assertEqual(np.float32(a/b), 1000.)
         self.assertEqual(np.float64(a/b), 1000.)
-        self.assertEqual(np.float128(a/b), 1000.)
+        if "float128" in dir(np):
+            self.assertEqual(np.float128(a/b), 1000.)
 
     def test_issue252(self):
         ur = UnitRegistry()
