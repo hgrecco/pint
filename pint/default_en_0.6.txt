@@ -358,20 +358,3 @@ firkin = barrel / 4
     [substance] / [volume] -> [substance] / [mass]: value / solvent_mass * volume
 
 @end
-
-@system mks
-    meter
-    kilogram
-    second
-@end
-
-@system cgs
-    centimeter
-    gram
-    second
-@end
-
-@system imperial
-    yard
-    pound
-@end
