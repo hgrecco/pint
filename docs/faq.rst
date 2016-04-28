@@ -33,4 +33,6 @@ You mention other similar Python libraries. Can you point me to those?
 
 `Units <https://bitbucket.org/adonohue/units/>`_
 
-If your are aware of another one, please let me know.
+`cf units <https://github.com/SciTools/cf_units>`_
+
+If your are aware of another one, please contribute a patch to the docs.
