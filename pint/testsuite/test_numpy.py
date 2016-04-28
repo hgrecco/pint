@@ -256,6 +256,11 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertQuantityEqual(u == u, u.magnitude == u.magnitude)
         self.assertQuantityEqual(u == 1, u.magnitude == 1)
 
+    def test_shape(self):
+        u = self.Q_(np.arange(12))
+        u.shape = 4, 3
+        self.assertEqual(u.magnitude.shape, (4, 3))
+
 
 @helpers.requires_numpy()
 class TestNumpyNeedsSubclassing(TestUFuncs):

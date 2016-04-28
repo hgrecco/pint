@@ -1047,6 +1047,14 @@ class _Quantity(SharedRegistryObject):
         for v in self._magnitude.flat:
             yield self.__class__(v, self._units)
 
+    @property
+    def shape(self):
+        return self._magnitude.shape
+
+    @shape.setter
+    def shape(self, value):
+        self._magnitude.shape = value
+
     def searchsorted(self, v, side='left'):
         if isinstance(v, self.__class__):
             v = v.to(self).magnitude
