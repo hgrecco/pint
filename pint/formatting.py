@@ -236,3 +236,42 @@ def remove_custom_flags(spec):
          if flag:
              spec = spec.replace(flag, '')
     return spec
+
+
+def vector_to_latex(vec, fmtfun=lambda x: format(x, '.2f')):
+    return matrix_to_latex([vec], fmtfun)
+
+
+def matrix_to_latex(matrix, fmtfun=lambda x: format('.2f', x)):
+    ret = []
+
+    for row in matrix:
+        ret += [' & '.join(fmtfun(f) for f in row)]
+
+    return r'\begin{pmatrix}%s\end{pmatrix}' % '\\\\ \n'.join(ret)
+
+
+def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, '.2f'), dim=()):
+    if isinstance(fmtfun, str):
+        fmt = fmtfun
+        fmtfun = lambda x: format(x, fmt)
+
+    if ndarr.ndim == 1:
+        return [vector_to_latex(ndarr, fmtfun)]
+    if ndarr.ndim == 2:
+        return [matrix_to_latex(ndarr, fmtfun)]
+    else:
+        ret = []
+        if ndarr.ndim == 3:
+            header = ('arr[%s,' % ','.join('%d' % d for d in dim)) + '%d,:,:]'
+            for elno, el in enumerate(ndarr):
+                ret += [header % elno + ' = ' + matrix_to_latex(el, fmtfun)]
+        else:
+            for elno, el in enumerate(ndarr):
+                ret += ndarray_to_latex_parts(el, fmtfun, dim + (elno, ))
+
+        return ret
+
+
+def ndarray_to_latex(ndarr, fmtfun=lambda x: format(x, '.2f'), dim=()):
+        return '\n'.join(ndarray_to_latex_parts(ndarr, fmtfun, dim))
