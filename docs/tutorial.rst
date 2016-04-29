@@ -202,8 +202,8 @@ Dimensionless quantities can also be parsed into an appropriate object:
 .. doctest::
 
    >>> ureg('2.54')
-   >>> type(ureg('2.54'))
    2.54
+   >>> type(ureg('2.54'))
    <class 'float'>
 
 or 
@@ -211,8 +211,8 @@ or
 .. doctest::
 
    >>> Q_('2.54')
-   >>> type(Q_('2.54'))
    <Quantity(2.54, 'dimensionless')>
+   >>> type(Q_('2.54'))
    <class 'pint.unit.build_quantity_class.<locals>.Quantity'>
 
 .. note:: Since version 0.7, Pint **does not** uses eval_ under the hood.
