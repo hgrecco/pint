@@ -13,7 +13,8 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import re
 
-from .unit import Definition, UnitDefinition, DefinitionSyntaxError, RedefinitionError
+from .definitions import Definition, UnitDefinition
+from .errors import DefinitionSyntaxError, RedefinitionError
 from .util import to_units_container, SharedRegistryObject, SourceIterator
 
 
