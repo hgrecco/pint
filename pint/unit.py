@@ -243,3 +243,11 @@ class _Unit(SharedRegistryObject):
                     out.add(sname)
         return frozenset(out)
 
+
+def build_unit_class(registry):
+
+    class Unit(_Unit):
+        pass
+
+    Unit._REGISTRY = registry
+    return Unit

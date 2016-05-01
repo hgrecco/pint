@@ -189,6 +189,10 @@ class _Group(SharedRegistryObject):
         lineno, header = next(lines)
 
         r = cls._header_re.search(header)
+
+        if r is None:
+            raise ValueError("Invalid Group header syntax: '%s'" % header)
+
         name = r.groupdict()['name'].strip()
         groups = r.groupdict()['used_groups']
         if groups:
@@ -339,6 +343,10 @@ class _System(SharedRegistryObject):
         lineno, header = next(lines)
 
         r = cls._header_re.search(header)
+
+        if r is None:
+            raise ValueError("Invalid System header syntax '%s'" % header)
+
         name = r.groupdict()['name'].strip()
         groups = r.groupdict()['used_groups']
 
