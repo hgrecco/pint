@@ -210,17 +210,26 @@ class BaseRegistry(object):
     def define(self, definition):
         """Add unit to the registry.
 
-        This method defines only multiplicative units, converting any other type
-        to `delta_` units.
-
         :param definition: a dimension, unit or prefix definition.
         :type definition: str | Definition
-        :return: Definition instance, case sensitive unit dict, case insensitive unit dict.
-        :rtype: Definition, dict, dict
         """
 
         if isinstance(definition, string_types):
             definition = Definition.from_string(definition)
+
+        self._define(definition)
+
+    def _define(self, definition):
+        """Add unit to the registry.
+
+        This method defines only multiplicative units, converting any other type
+        to `delta_` units.
+
+        :param definition: a dimension, unit or prefix definition.
+        :type definition: Definition
+        :return: Definition instance, case sensitive unit dict, case insensitive unit dict.
+        :rtype: Definition, dict, dict
+        """
 
         if isinstance(definition, DimensionDefinition):
             d, di = self._dimensions, None
@@ -269,26 +278,26 @@ class BaseRegistry(object):
         else:
             d_def = definition
 
-        self._define(d_def, d, di)
+        self._define_adder(d_def, d, di)
 
         return definition, d, di
 
-    def _define(self, definition, unit_dict, casei_unit_dict):
+    def _define_adder(self, definition, unit_dict, casei_unit_dict):
         """Helper function to store a definition in the internal dictionaries.
         It stores the definition under its name, symbol and aliases.
         """
-        self._define_adder(definition.name, definition, unit_dict, casei_unit_dict)
+        self._define_single_adder(definition.name, definition, unit_dict, casei_unit_dict)
 
         if definition.has_symbol:
-            self._define_adder(definition.symbol, definition, unit_dict, casei_unit_dict)
+            self._define_single_adder(definition.symbol, definition, unit_dict, casei_unit_dict)
 
         for alias in definition.aliases:
             if ' ' in alias:
                 logger.warn('Alias cannot contain a space: ' + alias)
 
-            self._define_adder(alias, definition, unit_dict, casei_unit_dict)
+            self._define_single_adder(alias, definition, unit_dict, casei_unit_dict)
 
-    def _define_adder(self, key, value, unit_dict, casei_unit_dict):
+    def _define_single_adder(self, key, value, unit_dict, casei_unit_dict):
         """Helper function to store a definition in the internal dictionaries.
 
         It warns or raise error on redefinition.
@@ -635,9 +644,6 @@ class BaseRegistry(object):
         if not input_units:
             return frozenset()
 
-        if group_or_system is None:
-            group_or_system = self._default_system
-
         src_dim = self._get_dimensionality(input_units)
 
         ret = self._dimensional_equivalents[src_dim]
@@ -750,7 +756,7 @@ class BaseRegistry(object):
         """
         """
         if as_delta is None:
-            as_delta = self.default_as_delta
+            as_delta = True
 
         if as_delta and input_string in self._parse_unit_cache:
             return self._parse_unit_cache[input_string]
@@ -844,7 +850,15 @@ class NonMultiplicativeRegistry(BaseRegistry):
         # base units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
-    def define(self, definition):
+    def _parse_units(self, input_string, as_delta=None):
+        """
+        """
+        if as_delta is None:
+            as_delta = self.default_as_delta
+
+        return super(NonMultiplicativeRegistry, self)._parse_units(input_string, as_delta)
+
+    def _define(self, definition):
         """Add unit to the registry.
 
         In addition to what is done by the BaseRegistry,
@@ -856,11 +870,11 @@ class NonMultiplicativeRegistry(BaseRegistry):
         :rtype: Definition, dict, dict
         """
 
-        definition, d, di = super(NonMultiplicativeRegistry, self).define(definition)
+        definition, d, di = super(NonMultiplicativeRegistry, self)._define(definition)
 
         # define additional units for units with an offset
         if getattr(definition.converter, "offset", 0.0) != 0.0:
-            self._define(definition, d, di)
+            self._define_adder(definition, d, di)
 
         return definition, d, di
 
@@ -1265,12 +1279,12 @@ class SystemRegistry(BaseRegistry):
 
         return self.System(name)
 
-    def define(self, definition):
+    def _define(self, definition):
 
         # In addition to the what is done by the BaseRegistry,
         # this adds all units to the `root` group.
 
-        definition, d, di = super(SystemRegistry, self).define(definition)
+        definition, d, di = super(SystemRegistry, self)._define(definition)
 
         if isinstance(definition, UnitDefinition):
             # We add all units to the root group
@@ -1341,6 +1355,10 @@ class SystemRegistry(BaseRegistry):
     def _get_compatible_units(self, input_units, group_or_system):
         """
         """
+
+        if group_or_system is None:
+            group_or_system = self._default_system
+
         ret = super(SystemRegistry, self)._get_compatible_units(input_units, group_or_system)
 
         if group_or_system:
