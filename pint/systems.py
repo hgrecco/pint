@@ -13,7 +13,8 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import re
 
-from .unit import Definition, UnitDefinition, DefinitionSyntaxError, RedefinitionError
+from .definitions import Definition, UnitDefinition
+from .errors import DefinitionSyntaxError, RedefinitionError
 from .util import to_units_container, SharedRegistryObject, SourceIterator
 
 
@@ -188,6 +189,10 @@ class _Group(SharedRegistryObject):
         lineno, header = next(lines)
 
         r = cls._header_re.search(header)
+
+        if r is None:
+            raise ValueError("Invalid Group header syntax: '%s'" % header)
+
         name = r.groupdict()['name'].strip()
         groups = r.groupdict()['used_groups']
         if groups:
@@ -338,6 +343,10 @@ class _System(SharedRegistryObject):
         lineno, header = next(lines)
 
         r = cls._header_re.search(header)
+
+        if r is None:
+            raise ValueError("Invalid System header syntax '%s'" % header)
+
         name = r.groupdict()['name'].strip()
         groups = r.groupdict()['used_groups']
 

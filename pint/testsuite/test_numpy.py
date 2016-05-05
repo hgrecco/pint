@@ -50,6 +50,10 @@ class TestNumpyMethods(QuantityTestCase):
     def test_flatten(self):
         self.assertQuantityEqual(self.q.flatten(), [1, 2, 3, 4] * self.ureg.m)
 
+    def test_flat(self):
+        for q, v in zip(self.q.flat, [1, 2, 3, 4]):
+            self.assertEqual(q, v * self.ureg.m)
+
     def test_ravel(self):
         self.assertQuantityEqual(self.q.ravel(), [1, 2, 3, 4] * self.ureg.m)
 
@@ -251,6 +255,11 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertQuantityEqual(u, u)
         self.assertQuantityEqual(u == u, u.magnitude == u.magnitude)
         self.assertQuantityEqual(u == 1, u.magnitude == 1)
+
+    def test_shape(self):
+        u = self.Q_(np.arange(12))
+        u.shape = 4, 3
+        self.assertEqual(u.magnitude.shape, (4, 3))
 
 
 @helpers.requires_numpy()
