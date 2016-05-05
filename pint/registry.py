@@ -1212,13 +1212,18 @@ class SystemRegistry(BaseRegistry):
         self._groups['root'] = self.Group('root')
         self.System = systems.build_system_class(self)
 
+        self._default_system = system
+
+    def _after_init(self):
+        super(SystemRegistry, self)._after_init()
+
         #: Copy units in root group to the default group
         if 'group' in self._defaults:
             grp = self.get_group(self._defaults['group'], True)
             grp.add_units(*self.get_group('root', False).non_inherited_unit_names)
 
         #: System name to be used by default.
-        self._default_system = system or self._defaults.get('system', None)
+        self._default_system = self._default_system or self._defaults.get('system', None)
 
     def _register_parsers(self):
         super(SystemRegistry, self)._register_parsers()
