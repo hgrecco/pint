@@ -1216,6 +1216,9 @@ class UnitRegistry(object):
         if as_delta and input_string in self._parse_unit_cache:
             return self._parse_unit_cache[input_string]
 
+        # Sanitize input_string with whitespaces.
+        input_string = input_string.strip()
+
         if not input_string:
             return UnitsContainer()
 
