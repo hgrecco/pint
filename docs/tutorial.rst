@@ -257,7 +257,7 @@ LaTeX representations:
    'The pretty representation is 1.3 meter/second²'
    >>> # Latex print
    >>> 'The latex representation is {:L}'.format(accel)
-   'The latex representation is 1.3 \\frac{meter}{second^{2}}'
+   'The latex representation is 1.3\\ \\frac{\\mathrm{meter}}{\\mathrm{second}^{2}}'
    >>> # HTML print
    >>> 'The HTML representation is {:H}'.format(accel)
    'The HTML representation is 1.3 meter/second<sup>2</sup>'
