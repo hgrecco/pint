@@ -37,6 +37,7 @@ setup(
     author_email='hernan.grecco@gmail.com',
     url='https://github.com/hgrecco/pint',
     test_suite='pint.testsuite.testsuite',
+    tests_require=["unittest2 ; python_version < '2.7'"],
     zip_safe=True,
     packages=['pint'],
     package_data={
