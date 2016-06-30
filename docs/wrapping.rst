@@ -139,6 +139,15 @@ Or if the function has multiple outputs:
     ...                    (ureg.meter, ureg.radians))(pendulum_period_maxspeed)
     ...
 
+If there are more return values than specified units, ``None`` is assumed for
+the extra outputs. For example, given the NREL SOLPOS calculator that outputs
+solar zenith, azimuth and air mass, the following wrapper assumes no units for
+airmass::
+
+    @UREG.wraps(('deg', 'deg'), ('deg', 'deg', 'millibar', 'degC')
+    def solar_position(lat, lon, press, tamb, timestamp):
+        pass
+
 
 Specifying relations between arguments
 --------------------------------------
