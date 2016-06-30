@@ -11,6 +11,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import copy
 import os
 import math
 import itertools
@@ -83,6 +84,11 @@ class _Unit(SharedRegistryObject):
         ret.__used = self.__used
         return ret
 
+    def __deepcopy__(self, memo):
+      ret = self.__class__(copy.deepcopy(self._units))
+      ret.__used = self.__used
+      return ret
+
     def __str__(self):
         return format(self)
 
@@ -100,7 +106,7 @@ class _Unit(SharedRegistryObject):
 
 
         if '~' in spec:
-            if self.dimensionless:
+            if not self._units:
                 return ''
             units = UnitsContainer(dict((self._REGISTRY._get_symbol(key),
                                          value)

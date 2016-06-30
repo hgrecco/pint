@@ -691,7 +691,7 @@ class SourceIterator(object):
         line = ''
         while not line or line.startswith('#'):
             lineno, line = next(self.internal)
-            line = line.strip()
+            line = line.split('#', 1)[0].strip()
 
         self.last = lineno, line
         return lineno, line

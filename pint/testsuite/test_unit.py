@@ -2,6 +2,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import copy
 import math
 
 from pint.unit import (UnitRegistry, LazyRegistry)
@@ -18,6 +19,10 @@ class TestUnit(QuantityTestCase):
         for arg in ('meter', UnitsContainer(meter=1), self.U_('m')):
             self.assertEqual(self.U_(arg)._units, UnitsContainer(meter=1))
         self.assertRaises(TypeError, self.U_, 1)
+
+    def test_deepcopy(self):
+      x = self.U_(UnitsContainer(meter=1))
+      self.assertEqual(x, copy.deepcopy(x))
 
     def test_unit_repr(self):
         x = self.U_(UnitsContainer(meter=1))

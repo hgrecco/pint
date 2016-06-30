@@ -104,7 +104,7 @@ class QuantityTestCase(BaseTestCase):
         if isinstance(m1, ndarray) or isinstance(m2, ndarray):
             np.testing.assert_array_equal(m1, m2, err_msg=msg)
         else:
-            unittest.TestCase.assertEqual(self, m1, m2, msg)
+            self.assertEqual(m1, m2, msg)
 
     def assertQuantityAlmostEqual(self, first, second, rtol=1e-07, atol=0, msg=None):
         if msg is None:

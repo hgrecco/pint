@@ -15,7 +15,8 @@ import operator
 import functools
 import bisect
 
-from .formatting import remove_custom_flags, siunitx_format_unit
+from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_latex,
+                         ndarray_to_latex_parts)
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError)
 from .definitions import UnitDefinition
@@ -121,25 +122,45 @@ class _Quantity(SharedRegistryObject):
     def __format__(self, spec):
         spec = spec or self.default_format
 
-        # special cases
-        if 'Lx' in spec: # the LaTeX siunitx code
-          spec = spec.replace('Lx','')
-          # todo: add support for extracting options
-          opts = ''
-          mstr = format(self.magnitude,spec)
-          ustr = siunitx_format_unit(self.units)
-          ret = r'\SI[%s]{%s}{%s}'%( opts, mstr, ustr )
-          return ret
+        allf = '{0} {1}'
+        mstr, ustr = None, None
 
-        # standard cases
+        # If Compact is selected, do it at the beginning
         if '#' in spec:
             spec = spec.replace('#', '')
             obj = self.to_compact()
         else:
             obj = self
-        return '{0} {1}'.format(
-            format(obj.magnitude, remove_custom_flags(spec)),
-            format(obj.units, spec)).replace('\n', '')
+
+        # the LaTeX siunitx code
+        if 'Lx' in spec:
+            spec = spec.replace('Lx','')
+            # todo: add support for extracting options
+            opts = ''
+            ustr = siunitx_format_unit(obj.units)
+            allf = r'\SI[%s]{{{0}}}{{{1}}}'% opts
+        else:
+            ustr = format(obj.units, spec)
+
+        mspec = remove_custom_flags(spec)
+        if isinstance(self.magnitude, ndarray):
+            if 'L' in spec:
+                mstr = ndarray_to_latex(obj.magnitude, mspec)
+            elif 'H' in spec:
+                # this is required to have the magnitude and unit in the same line
+                allf = r'\[{0} {1}\]'
+                parts = ndarray_to_latex_parts(obj.magnitude, mspec)
+
+                if len(parts) > 1:
+                    return '\n'.join(allf.format(part, ustr) for part in parts)
+
+                mstr = parts[0]
+            else:
+                mstr = format(obj.magnitude, mspec).replace('\n', '')
+        else:
+            mstr = format(obj.magnitude, mspec).replace('\n', '')
+
+        return allf.format(mstr, ustr).strip()
 
     # IPython related code
     def _repr_html_(self):
@@ -1041,6 +1062,19 @@ class _Quantity(SharedRegistryObject):
     @property
     def T(self):
         return self.__class__(self._magnitude.T, self._units)
+
+    @property
+    def flat(self):
+        for v in self._magnitude.flat:
+            yield self.__class__(v, self._units)
+
+    @property
+    def shape(self):
+        return self._magnitude.shape
+
+    @shape.setter
+    def shape(self, value):
+        self._magnitude.shape = value
 
     def searchsorted(self, v, side='left'):
         if isinstance(v, self.__class__):
