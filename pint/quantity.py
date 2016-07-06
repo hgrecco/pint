@@ -984,7 +984,7 @@ class _Quantity(SharedRegistryObject):
     #: original.
     __copy_units = 'compress conj conjugate copy cumsum diagonal flatten ' \
                    'max mean min ptp ravel repeat reshape round ' \
-                   'squeeze std sum take trace transpose ' \
+                   'squeeze std sum swapaxes take trace transpose ' \
                    'ceil floor hypot rint ' \
                    'add subtract ' \
                    'copysign nextafter trunc ' \
