@@ -114,6 +114,7 @@ ton_TNT = 4.184e9 * joule = tTNT
 US_therm = 1.054804e8 * joule
 watt_hour = watt * hour = Wh = watthour
 hartree = 4.35974394e-18 * joule = E_h = hartree_energy
+toe = 41.868e9 * joule = tonne_of_oil_equivalent
 
 # Force
 [force] = [mass] * [acceleration]
