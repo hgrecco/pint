@@ -215,6 +215,9 @@ class _Unit(SharedRegistryObject):
         else:
             return self._units == other
 
+    def __ne__(self, other):
+        return not (self == other)
+
     def compare(self, other, op):
         self_q = self._REGISTRY.Quantity(1, self)
 
