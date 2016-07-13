@@ -101,6 +101,9 @@ class TestUnit(QuantityTestCase):
         y = self.U_('cm/m')
         self.assertEqual(y, 0.01)
 
+        self.assertEqual(self.U_('byte') == self.U_('byte'), True)
+        self.assertEqual(self.U_('byte') != self.U_('byte'), False)
+
     def test_unit_cmp(self):
 
         x = self.U_('m')
