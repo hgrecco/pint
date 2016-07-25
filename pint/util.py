@@ -643,7 +643,7 @@ def infer_base_unit(q):
 
         _, base_unit, __ = completely_parsed_unit
         d[base_unit] += power
-    return UnitsContainer(d)
+    return UnitsContainer(dict((k, v) for k, v in d.items() if v != 0))  # remove values that added to a power of zero
 
 
 def fix_str_conversions(cls):
