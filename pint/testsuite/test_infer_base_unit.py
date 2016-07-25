@@ -14,5 +14,5 @@ class TestInferBaseUnit(QuantityTestCase):
         r = Q(1000000000, 'm') * Q(1, 'mm') / Q(1, 's') / Q(1, 'ms')
         compact_r = r.to_compact()
         expected = Q(1000., 'kilometer**2 / second**2')
-        self.assertEqual(compact_r, expected)
+        self.assertQuantityAlmostEqual(compact_r, expected)
 
