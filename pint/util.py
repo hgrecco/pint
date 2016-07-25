@@ -18,7 +18,7 @@ import re
 import operator
 from numbers import Number
 from fractions import Fraction
-from collections import Mapping
+from collections import Mapping, defaultdict
 
 import logging
 from token import STRING, NAME, OP, NUMBER
@@ -636,13 +636,13 @@ def to_units_container(unit_like, registry=None):
 
 def infer_base_unit(q):
     """Return UnitsContainer of q with all prefixes stripped."""
-    d = {}
+    d = defaultdict(lambda:0)
     parse = q._REGISTRY.parse_unit_name
     for unit_name, power in q._units.items():
         completely_parsed_unit = list(parse(unit_name))[-1]
 
         _, base_unit, __ = completely_parsed_unit
-        d[base_unit] = power
+        d[base_unit] += power
     return UnitsContainer(d)
 
 
