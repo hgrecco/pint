@@ -7,7 +7,8 @@ import doctest
 from distutils.version import StrictVersion
 import re
 
-from pint.compat import unittest, HAS_NUMPY, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
+from pint.compat import HAS_NUMPY, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
+from pint.testsuite.compat import unittest
 
 
 def requires_numpy18():

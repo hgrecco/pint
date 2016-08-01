@@ -6,8 +6,9 @@ import copy
 import operator as op
 
 from pint import DimensionalityError
-from pint.compat import np, unittest
+from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite.compat import unittest
 from pint.testsuite.test_umath import TestUFuncs
 
 
