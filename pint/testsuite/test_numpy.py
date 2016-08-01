@@ -5,7 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import copy
 import operator as op
 
-from pint import DimensionalityError
+from pint import DimensionalityError, set_application_registry
 from pint.compat import np, unittest
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.test_umath import TestUFuncs
@@ -240,7 +240,7 @@ class TestNumpyMethods(QuantityTestCase):
 
     def test_pickle(self):
         import pickle
-
+        set_application_registry(self.ureg)
         def pickle_test(q):
             pq = pickle.loads(pickle.dumps(q))
             np.testing.assert_array_equal(q.magnitude, pq.magnitude)

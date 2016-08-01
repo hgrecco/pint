@@ -5,7 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import copy
 import math
 
-from pint.unit import (UnitRegistry, LazyRegistry)
+from pint.registry import (UnitRegistry, LazyRegistry)
 from pint.util import (UnitsContainer, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, np, string_types
@@ -100,6 +100,9 @@ class TestUnit(QuantityTestCase):
 
         y = self.U_('cm/m')
         self.assertEqual(y, 0.01)
+
+        self.assertEqual(self.U_('byte') == self.U_('byte'), True)
+        self.assertEqual(self.U_('byte') != self.U_('byte'), False)
 
     def test_unit_cmp(self):
 
@@ -340,6 +343,9 @@ class TestRegistry(QuantityTestCase):
 
         h2 = ureg.wraps(('meter', 'centimeter'), [None, None])(hfunc)
         self.assertEqual(h2(3, 1), (3 * ureg.meter, 1 * ureg.cm))
+
+        h3 = ureg.wraps((None,), (None, None))(hfunc)
+        self.assertEqual(h3(3, 1), (3, 1))
 
     def test_wrap_referencing(self):
 
