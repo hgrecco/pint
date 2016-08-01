@@ -113,3 +113,21 @@ class _Measurement(object):
             return mag + ' ' + format(self.units, spec)
         else:
             return pars.format(mag) + ' ' + format(self.units, spec)
+
+
+def build_measurement_class(registry, force_ndarray=False):
+
+    if ufloat is None:
+        class Measurement(object):
+
+            def __init__(self, *args):
+                raise RuntimeError("Pint requires the 'uncertainties' package to create a Measurement object.")
+
+    else:
+        class Measurement(_Measurement, registry.Quantity):
+            pass
+
+    Measurement._REGISTRY = registry
+    Measurement.force_ndarray = force_ndarray
+
+    return Measurement
