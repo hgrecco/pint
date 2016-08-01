@@ -146,7 +146,7 @@ airmass::
 
     @UREG.wraps(('deg', 'deg'), ('deg', 'deg', 'millibar', 'degC')
     def solar_position(lat, lon, press, tamb, timestamp):
-        pass
+        return zenith, azimuth, airmass
 
 
 Specifying relations between arguments
