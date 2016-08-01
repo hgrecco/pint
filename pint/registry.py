@@ -764,6 +764,9 @@ class BaseRegistry(object):
         if not input_string:
             return UnitsContainer()
 
+        # Sanitize input_string with whitespaces.
+        input_string = input_string.strip()
+
         units = ParserHelper.from_string(input_string)
         if units.scale != 1:
             raise ValueError('Unit expression cannot have a scaling factor.')
