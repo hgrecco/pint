@@ -5,7 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import copy
 import math
 
-from pint.unit import (UnitRegistry, LazyRegistry)
+from pint.registry import (UnitRegistry, LazyRegistry)
 from pint.util import (UnitsContainer, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import u, np, string_types
