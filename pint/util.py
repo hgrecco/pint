@@ -636,14 +636,14 @@ def to_units_container(unit_like, registry=None):
 
 def infer_base_unit(q):
     """Return UnitsContainer of q with all prefixes stripped."""
-    d = {}
+    d = udict()
     parse = q._REGISTRY.parse_unit_name
     for unit_name, power in q._units.items():
         completely_parsed_unit = list(parse(unit_name))[-1]
 
         _, base_unit, __ = completely_parsed_unit
-        d[base_unit] = power
-    return UnitsContainer(d)
+        d[base_unit] += power
+    return UnitsContainer(dict((k, v) for k, v in d.items() if v != 0))  # remove values that resulted in a power of 0
 
 
 def fix_str_conversions(cls):

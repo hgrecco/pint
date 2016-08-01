@@ -213,7 +213,7 @@ or
    >>> Q_('2.54')
    <Quantity(2.54, 'dimensionless')>
    >>> type(Q_('2.54'))
-   <class 'pint.unit.build_quantity_class.<locals>.Quantity'>
+   <class 'pint.quantity.build_quantity_class.<locals>.Quantity'>
 
 .. note:: Since version 0.7, Pint **does not** uses eval_ under the hood.
    This change removes the `serious security problems`_ that the system is

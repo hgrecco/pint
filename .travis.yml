@@ -3,7 +3,6 @@ language: python
 python:
   - "2.6"
   - "2.7"
-  - "3.2"
   - "3.3"
   - "3.4"
   - "3.5"
@@ -70,29 +69,29 @@ matrix:
   exclude:
 # Do not edit after this line
     - python: "3.5"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
+    - python: "3.5"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
     - python: "3.5"
       env: UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
     - python: "3.5"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
     - python: "3.5"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
     - python: "3.5"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
-    - python: "3.5"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-    - python: "3.4"
       env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
     - python: "3.4"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
     - python: "3.4"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.4"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
     - python: "3.4"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-    - python: "3.3"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
     - python: "3.3"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+    - python: "3.3"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
     - python: "3.3"
       env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
     - python: "3.3"
@@ -100,26 +99,6 @@ matrix:
     - python: "3.3"
       env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
     - python: "3.3"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
-    - python: "3.2"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
-    - python: "3.2"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
-    - python: "3.2"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
-    - python: "3.2"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
-    - python: "3.2"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
-    - python: "3.2"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
-    - python: "3.2"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
-    - python: "3.2"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-    - python: "3.2"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
-    - python: "3.2"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
     - python: "2.6"
       env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
