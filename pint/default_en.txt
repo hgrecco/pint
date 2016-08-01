@@ -264,7 +264,7 @@ cc = centimeter ** 3 = cubic_centimeter
 stere = meter ** 3
 
 # Image/printing
-pixel = dot = px = pel = picture_element
+pixel = [printing_unit] = dot = px = pel = picture_element
 pixels_per_centimeter = pixel / cm = PPCM
 pixels_per_inch = pixel / inch = dots_per_inch = PPI = ppi = DPI = dpi
 bits_per_pixel = bit / pixel = bpp
