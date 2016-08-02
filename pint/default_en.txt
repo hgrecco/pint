@@ -114,6 +114,7 @@ ton_TNT = 4.184e9 * joule = tTNT
 US_therm = 1.054804e8 * joule
 watt_hour = watt * hour = Wh = watthour
 hartree = 4.35974394e-18 * joule = E_h = hartree_energy
+toe = 41.868e9 * joule = tonne_of_oil_equivalent
 
 # Force
 [force] = [mass] * [acceleration]
@@ -261,6 +262,7 @@ rhe = 10 / (Pa * s)
 liter = 1e-3 * m ** 3 = l = L = litre
 cc = centimeter ** 3 = cubic_centimeter
 stere = meter ** 3
+
 
 @context(n=1) spectroscopy = sp
     # n index of refraction of the medium.
@@ -411,6 +413,11 @@ stere = meter ** 3
 
 @group Printer
     # Length
+    pixel = [printing_unit] = dot = px = pel = picture_element
+    pixels_per_centimeter = pixel / cm = PPCM
+    pixels_per_inch = pixel / inch = dots_per_inch = PPI = ppi = DPI = printers_dpi
+    bits_per_pixel = bit / pixel = bpp
+
     point = yard / 216 / 12 = pp = printers_point
     thou = yard / 36000 = th = mil
     pica = yard / 216 = P̸ = printers_pica
