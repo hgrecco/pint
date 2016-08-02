@@ -263,11 +263,6 @@ liter = 1e-3 * m ** 3 = l = L = litre
 cc = centimeter ** 3 = cubic_centimeter
 stere = meter ** 3
 
-# Image/printing
-pixel = [printing_unit] = dot = px = pel = picture_element
-pixels_per_centimeter = pixel / cm = PPCM
-pixels_per_inch = pixel / inch = dots_per_inch = PPI = ppi = DPI = dpi
-bits_per_pixel = bit / pixel = bpp
 
 @context(n=1) spectroscopy = sp
     # n index of refraction of the medium.
@@ -418,6 +413,11 @@ bits_per_pixel = bit / pixel = bpp
 
 @group Printer
     # Length
+    pixel = [printing_unit] = dot = px = pel = picture_element
+    pixels_per_centimeter = pixel / cm = PPCM
+    pixels_per_inch = pixel / inch = dots_per_inch = PPI = ppi = DPI = printers_dpi
+    bits_per_pixel = bit / pixel = bpp
+
     point = yard / 216 / 12 = pp = printers_point
     thou = yard / 36000 = th = mil
     pica = yard / 216 = P̸ = printers_pica
