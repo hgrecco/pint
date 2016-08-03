@@ -33,13 +33,13 @@ class TestUnit(QuantityTestCase):
         x = self.U_(UnitsContainer(meter=2, kilogram=1, second=-1))
         for spec, result in (('{0}', str(x)), ('{0!s}', str(x)),
                              ('{0!r}', repr(x)),
-                             ('{0:L}', r'\frac{kilogram \cdot meter^{2}}{second}'),
+                             ('{0:L}', r'\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
                              ('{0:P}', 'kilogram·meter²/second'),
                              ('{0:H}', 'kilogram meter<sup>2</sup>/second'),
                              ('{0:C}', 'kilogram*meter**2/second'),
                              ('{0:Lx}', r'\si[]{\kilo\gram\meter\squared\per\second}'),
                              ('{0:~}', 'kg * m ** 2 / s'),
-                             ('{0:L~}', r'\frac{kg \cdot m^{2}}{s}'),
+                             ('{0:L~}', r'\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
                              ('{0:P~}', 'kg·m²/s'),
                              ('{0:H~}', 'kg m<sup>2</sup>/s'),
                              ('{0:C~}', 'kg*m**2/s'),
@@ -49,12 +49,12 @@ class TestUnit(QuantityTestCase):
     def test_unit_default_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        for spec, result in (('L', r'\frac{kilogram \cdot meter^{2}}{second}'),
+        for spec, result in (('L', r'\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
                              ('P', 'kilogram·meter²/second'),
                              ('H', 'kilogram meter<sup>2</sup>/second'),
                              ('C', 'kilogram*meter**2/second'),
                              ('~', 'kg * m ** 2 / s'),
-                             ('L~', r'\frac{kg \cdot m^{2}}{s}'),
+                             ('L~', r'\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
                              ('P~', 'kg·m²/s'),
                              ('H~', 'kg m<sup>2</sup>/s'),
                              ('C~', 'kg*m**2/s'),

@@ -122,7 +122,11 @@ class _Quantity(SharedRegistryObject):
     def __format__(self, spec):
         spec = spec or self.default_format
 
-        allf = plain_allf = '{0} {1}'
+        if 'L' in spec:
+            allf = plain_allf = r'{0}\ {1}'
+        else:
+            allf = plain_allf = '{0} {1}'
+
         mstr, ustr = None, None
 
         # If Compact is selected, do it at the beginning
