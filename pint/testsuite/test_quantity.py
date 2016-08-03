@@ -107,6 +107,9 @@ class TestQuantity(QuantityTestCase):
                              ('{0:Lx}', r'\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}'),
                              ):
             self.assertEqual(spec.format(x), result)
+        # Check the special case that prevents e.g. '3 1 / second'
+        x = self.Q_(3, UnitsContainer(second=-1))
+        self.assertEqual('{0}'.format(x), '3 / second')
 
     def test_format_compact(self):
         q1 = (200e-9 * self.ureg.s).to_compact()

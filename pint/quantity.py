@@ -122,7 +122,7 @@ class _Quantity(SharedRegistryObject):
     def __format__(self, spec):
         spec = spec or self.default_format
 
-        allf = '{0} {1}'
+        allf = plain_allf = '{0} {1}'
         mstr, ustr = None, None
 
         # If Compact is selected, do it at the beginning
@@ -160,6 +160,9 @@ class _Quantity(SharedRegistryObject):
         else:
             mstr = format(obj.magnitude, mspec).replace('\n', '')
 
+        if allf == plain_allf and ustr.startswith('1 /'):
+            # Write e.g. "3 / s" instead of "3 1 / s"
+            ustr = ustr[2:]
         return allf.format(mstr, ustr).strip()
 
     # IPython related code
