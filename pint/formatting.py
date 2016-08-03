@@ -184,7 +184,11 @@ def format_unit(unit, spec):
     spec = _parse_spec(spec)
     fmt = _FORMATS[spec]
 
-    result = formatter(unit.items(), **fmt)
+    if spec == 'L':
+        rm = [(r'\mathrm{{{0}}}'.format(u), p) for u, p in unit.items()]
+        result = formatter(rm, **fmt)
+    else:
+        result = formatter(unit.items(), **fmt)
     if spec == 'L':
         result = result.replace('[', '{').replace(']', '}')
     return result
