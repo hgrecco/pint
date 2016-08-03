@@ -67,7 +67,7 @@ class _Measurement(object):
     def __format__(self, spec):
         # special cases
         if 'Lx' in spec: # the LaTeX siunitx code
-          # the uncertainties module supports formatting 
+          # the uncertainties module supports formatting
           # numbers in value(unc) notation (i.e. 1.23(45) instead of 1.23 +/- 0.45),
           # which siunitx actually accepts as input. we just need to give the 'S'
           # formatting option for the uncertainties module.
@@ -109,10 +109,15 @@ class _Measurement(object):
         if 'L' in newspec and 'S' in newspec:
             mag = mag.replace('(', r'\left(').replace(')', r'\right)')
 
-        if 'uS' in newspec or 'ue' in newspec or 'u%' in newspec:
-            return mag + ' ' + format(self.units, spec)
+        if 'L' in newspec:
+            space = r'\ '
         else:
-            return pars.format(mag) + ' ' + format(self.units, spec)
+            space = ' '
+
+        if 'uS' in newspec or 'ue' in newspec or 'u%' in newspec:
+            return mag + space + format(self.units, spec)
+        else:
+            return pars.format(mag) + space + format(self.units, spec)
 
 
 def build_measurement_class(registry, force_ndarray=False):
