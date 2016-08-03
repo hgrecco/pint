@@ -181,6 +181,17 @@ class TestQuantity(QuantityTestCase):
             self.assertIsNot(r, q)
             self.assertIsNot(r._magnitude, a)
 
+    @helpers.requires_numpy()
+    def test_retain_unit(self):
+        # Test that methods correctly retain units and do not degrade into
+        # ordinary ndarrays.  List contained in __copy_units.
+        a = np.ones((3, 2))
+        q = self.Q_(a, "km")
+        self.assertEqual(q.u, q.reshape(2, 3).u)
+        self.assertEqual(q.u, q.swapaxes(0, 1).u)
+        self.assertEqual(q.u, q.mean().u)
+        self.assertEqual(q.u, np.compress((q==q[0,0]).any(0), q).u)
+
     def test_context_attr(self):
         self.assertEqual(self.ureg.meter, self.Q_(1, 'meter'))
 
