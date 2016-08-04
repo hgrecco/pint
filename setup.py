@@ -14,6 +14,10 @@ except ImportError:
     print('Please install or upgrade setuptools or pip to continue')
     sys.exit(1)
 
+tests_require = []
+if sys.version_info < (2, 7):
+   tests_require.append('unittest2')
+
 import codecs
 
 
@@ -37,7 +41,7 @@ setup(
     author_email='hernan.grecco@gmail.com',
     url='https://github.com/hgrecco/pint',
     test_suite='pint.testsuite.testsuite',
-    tests_require=["unittest2 ; python_version < '2.7'"],
+    tests_require=tests_require,
     zip_safe=True,
     packages=['pint'],
     package_data={
