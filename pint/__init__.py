@@ -44,6 +44,13 @@ def _build_quantity(value, units):
     Used only for unpickling operations.
     """
     global _APP_REGISTRY
+
+    # Prefixed units are defined within the registry
+    # on parsing (which does not happen here).
+    # We need to make sure that this happens before using.
+    for name in units._units:
+        _APP_REGISTRY.parse_units(name)
+
     return _APP_REGISTRY.Quantity(value, units)
 
 
@@ -52,6 +59,13 @@ def _build_unit(units):
     Used only for unpickling operations.
     """
     global _APP_REGISTRY
+
+    # Prefixed units are defined within the registry
+    # on parsing (which does not happen here).
+    # We need to make sure that this happens before using.
+    for name in units._units:
+        _APP_REGISTRY.parse_units(name)
+
     return _APP_REGISTRY.Unit(units)
 
 
