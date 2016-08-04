@@ -43,13 +43,16 @@ def _build_quantity(value, units):
     """Build Quantity using the Application registry.
     Used only for unpickling operations.
     """
+    from .unit import UnitsContainer
+
     global _APP_REGISTRY
 
     # Prefixed units are defined within the registry
     # on parsing (which does not happen here).
     # We need to make sure that this happens before using.
-    for name in units._units:
-        _APP_REGISTRY.parse_units(name)
+    if isinstance(units, UnitsContainer):
+        for name in units.keys():
+            _APP_REGISTRY.parse_units(name)
 
     return _APP_REGISTRY.Quantity(value, units)
 
@@ -58,13 +61,16 @@ def _build_unit(units):
     """Build Unit using the Application registry.
     Used only for unpickling operations.
     """
+    from .unit import UnitsContainer
+
     global _APP_REGISTRY
 
     # Prefixed units are defined within the registry
     # on parsing (which does not happen here).
     # We need to make sure that this happens before using.
-    for name in units._units:
-        _APP_REGISTRY.parse_units(name)
+    if isinstance(units, UnitsContainer):
+        for name in units.keys():
+            _APP_REGISTRY.parse_units(name)
 
     return _APP_REGISTRY.Unit(units)
 
