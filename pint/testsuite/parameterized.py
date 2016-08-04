@@ -28,10 +28,7 @@
 #        def test_eval(self, input, expected_output):
 #            self.assertEqual(eval(input), expected_output)
 
-try:
-    import unittest2 as unittest
-except ImportError:  # pragma: no cover
-    import unittest
+from pint.testsuite.compat import unittest
 
 from functools import wraps
 import collections

@@ -2,8 +2,9 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from pint.compat import unittest, tokenizer
+from pint.compat import tokenizer
 from pint.pint_eval import build_eval_tree
+from pint.testsuite.compat import unittest
 
 
 class TestPintEval(unittest.TestCase):

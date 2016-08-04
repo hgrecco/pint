@@ -9,9 +9,10 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import np, unittest, long_type
+from pint.compat import np, long_type
 from pint.errors import UndefinedUnitError
 from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite.compat import unittest
 
 
 class TestIssues(QuantityTestCase):
