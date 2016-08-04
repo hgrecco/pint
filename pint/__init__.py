@@ -47,6 +47,14 @@ def _build_quantity(value, units):
     return _APP_REGISTRY.Quantity(value, units)
 
 
+def _build_unit(units):
+    """Build Unit using the Application registry.
+    Used only for unpickling operations.
+    """
+    global _APP_REGISTRY
+    return _APP_REGISTRY.Unit(units)
+
+
 def set_application_registry(registry):
     """Set the application registry which is used for unpickling operations.
 
