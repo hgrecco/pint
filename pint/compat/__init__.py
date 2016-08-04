@@ -127,3 +127,12 @@ except ImportError:
     ufloat = None
     HAS_UNCERTAINTIES = False
 
+try:
+    from babel import Locale as Loc
+    HAS_BABEL = True
+    HAS_PROPER_BABEL = hasattr(Loc, 'unit_patterns')
+except ImportError:
+    HAS_PROPER_BABEL = HAS_BABEL = False
+
+if not HAS_PROPER_BABEL:
+    Loc = None

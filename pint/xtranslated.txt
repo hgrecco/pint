@@ -1,0 +1,26 @@
+
+# a few unit definitions added to use the translations by unicode cldr
+
+dietary_calorie = 1000 * calorie = Calorie
+metric_cup = liter / 4
+mps = meter / second
+square_inch = inch ** 2 = sq_in
+square_mile = mile ** 2 = sq_mile
+square_meter = kilometer ** 2 = sq_m
+square_kilometer = kilometer ** 2 = sq_km
+mile_scandinavian = 10000 * meter
+century = 100 * year
+cubic_mile = 1 * mile ** 3 = cu_mile = cubic_miles
+cubic_yard = 1 * yard ** 3 = cu_yd = cubic_yards
+cubic_foot = 1 * foot ** 3 = cu_ft = cubic_feet
+cubic_inch = 1 * inch ** 3 = cu_in = cubic_inches
+cubic_meter = 1 * meter ** 3 = cu_m
+cubic_kilometer = 1 * kilometer ** 3 = cu_km
+karat = [purity] = Karat
+
+[consumption] = [volume] / [length]
+liter_per_kilometer = liter / kilometer
+liter_per_100kilometers = liter / (100 * kilometers)
+
+[US_consumption] = [length] / [volume]
+MPG = mile / gallon

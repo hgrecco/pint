@@ -13,6 +13,8 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import re
 
+from .babel_names import babel_units, babel_forms
+
 __JOIN_REG_EXP = re.compile("\{\d*\}")
 
 
@@ -100,7 +102,8 @@ _FORMATS = {
 
 def formatter(items, as_ratio=True, single_denominator=False,
               product_fmt=' * ', division_fmt=' / ', power_fmt='{0} ** {1}',
-              parentheses_fmt='({0})', exp_call=lambda x: '{0:n}'.format(x)):
+              parentheses_fmt='({0})', exp_call=lambda x: '{0:n}'.format(x),
+              locale=None, form='long', plural_form='one'):
     """Format a list of (name, exponent) pairs.
 
     :param items: a list of (name, exponent) pairs.
@@ -111,6 +114,9 @@ def formatter(items, as_ratio=True, single_denominator=False,
     :param division_fmt: the format used for division.
     :param power_fmt: the format used for exponentiation.
     :param parentheses_fmt: the format used for parenthesis.
+    :param locale: the locale object as defined in babel.
+    :param form: the length of the translated unit, as defined in babel cldr.
+    :param plural_form: the plural form, calculated as defined in babel.
 
     :return: the formula as a string.
     """
@@ -126,6 +132,24 @@ def formatter(items, as_ratio=True, single_denominator=False,
     pos_terms, neg_terms = [], []
 
     for key, value in sorted(items):
+        if locale and form and plural_form and hasattr(locale, 'unit_patterns'):
+            _key = babel_units.get(key)
+            if _key:
+                patterns = locale.unit_patterns
+                for _form in [form] + babel_forms:
+                    pattern_key = _key + ':' + _form
+                    if pattern_key in patterns:
+                        plural = plural_form
+                        if value <= 0:
+                            plural = 'one'
+                        pattern = patterns[pattern_key][plural]
+                        key = pattern.replace('{0}', '').strip()
+                        break
+                per_form = 'compound:per:' + form
+                if per_form in patterns:
+                    division_fmt = patterns[per_form]
+                power_fmt = '{0}{1}'
+                exp_call = _pretty_fmt_exponent
         if value == 1:
             pos_terms.append(key)
         elif value > 0:
@@ -177,12 +201,13 @@ def _parse_spec(spec):
     return result
 
 
-def format_unit(unit, spec):
+def format_unit(unit, spec, **kwspec):
     if not unit:
         return 'dimensionless'
 
     spec = _parse_spec(spec)
-    fmt = _FORMATS[spec]
+    fmt = dict(_FORMATS[spec])
+    fmt.update(kwspec)
 
     if spec == 'L':
         rm = [(r'\mathrm{{{0}}}'.format(u), p) for u, p in unit.items()]
