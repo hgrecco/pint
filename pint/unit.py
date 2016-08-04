@@ -34,7 +34,8 @@ class _Unit(SharedRegistryObject):
     default_format = ''
 
     def __reduce__(self):
-        return self.Unit, (self._units)
+        from . import _build_unit
+        return _build_unit, (self._units, )
 
     def __new__(cls, units):
         inst = object.__new__(cls)
