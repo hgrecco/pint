@@ -330,11 +330,15 @@ also define the registry as the application registry::
 
 .. doctest::
 
-    >>> q1 = UnitRegistry().meter
-    >>> q2 = UnitRegistry().meter
-    >>> # q1 and q2 belong to different registries!
-    >>> id(q1._REGISTRY) == id(q2._REGISTRY)
-    False
+   >>> q1 = 10 * UnitRegistry().meter
+   >>> q2 = 10 * UnitRegistry().meter
+   >>> q1 + q2
+   Traceback (most recent call last):
+   ...
+   ValueError: Cannot operate with Quantity and Quantity of different registries.
+   >>> id(q1._REGISTRY) == id(q2._REGISTRY)
+   False
+
 
 .. _eval: http://docs.python.org/3/library/functions.html#eval
 .. _`serious security problems`: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
