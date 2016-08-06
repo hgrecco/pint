@@ -7,7 +7,9 @@
     :license: BSD, see LICENSE for more details.
 """
 
-babel_units = dict(
+from pint.compat import HAS_PROPER_BABEL
+
+_babel_units = dict(
    	standard_gravity='acceleration-g-force',
 	millibar='pressure-millibar',
 	metric_ton='mass-metric-ton',
@@ -135,11 +137,14 @@ babel_units = dict(
 	radian='angle-radian',
 )
 
-babel_systems = dict(
+if not HAS_PROPER_BABEL:
+    _babel_units = dict()
+
+_babel_systems = dict(
 	mks='metric',
 	imperial='uksystem',
 	US='ussystem',
 )
 
-babel_forms = ['narrow', 'short', 'long']
+_babel_lengths = ['narrow', 'short', 'long']
 

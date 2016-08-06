@@ -15,7 +15,8 @@ import re
 
 from .unit import Definition, UnitDefinition, DefinitionSyntaxError, RedefinitionError
 from .util import to_units_container, SharedRegistryObject, SourceIterator
-from .babel_names import babel_systems
+from .babel_names import _babel_systems
+from pint.compat import Loc
 
 
 class _Group(SharedRegistryObject):
@@ -337,8 +338,9 @@ class _System(SharedRegistryObject):
         
         :type locale: Locale
         """
-        if locale and self.name in babel_systems:
-            name = babel_systems[self.name]
+        if locale and self.name in _babel_systems:
+            name = _babel_systems[self.name]
+            locale = Loc.parse(locale)
             return locale.measurement_systems[name]
         return self.name
 
