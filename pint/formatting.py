@@ -182,7 +182,10 @@ def format_unit(unit, spec):
         return 'dimensionless'
 
     spec = _parse_spec(spec)
-    fmt = _FORMATS[spec]
+    fmt = {}
+    # Convert keys and values to str to avoid a bug in Python2.6
+    for k, v in _FORMATS[spec].items():
+        fmt[str(k)] = str(v)
 
     if spec == 'L':
         rm = [(r'\mathrm{{{0}}}'.format(u), p) for u, p in unit.items()]
