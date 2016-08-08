@@ -118,3 +118,13 @@ except ImportError:
     ufloat = None
     HAS_UNCERTAINTIES = False
 
+try:
+    from babel import Locale as Loc
+    from babel import units as babel_units
+    HAS_BABEL = True
+    HAS_PROPER_BABEL = hasattr(babel_units, 'format_unit')
+except ImportError:
+    HAS_PROPER_BABEL = HAS_BABEL = False
+
+if not HAS_PROPER_BABEL:
+    Loc = babel_units = None

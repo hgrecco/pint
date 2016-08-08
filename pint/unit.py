@@ -95,6 +95,21 @@ class _Unit(SharedRegistryObject):
 
         return '%s' % (format(units, spec))
 
+    def format_babel(self, spec='', **kwspec):
+        spec = spec or self.default_format
+
+        if '~' in spec:
+            if self.dimensionless:
+                return ''
+            units = UnitsContainer(dict((self._REGISTRY._get_symbol(key),
+                                         value)
+                                   for key, value in self._units.items()))
+            spec = spec.replace('~', '')
+        else:
+            units = self._units
+
+        return '%s' % (units.format_babel(spec, **kwspec))
+
     # IPython related code
     def _repr_html_(self):
         return self.__format__('H')

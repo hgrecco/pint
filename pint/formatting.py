@@ -13,6 +13,9 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import re
 
+from .babel_names import _babel_units, _babel_lengths
+from pint.compat import babel_units, Loc
+
 __JOIN_REG_EXP = re.compile("\{\d*\}")
 
 
@@ -100,7 +103,8 @@ _FORMATS = {
 
 def formatter(items, as_ratio=True, single_denominator=False,
               product_fmt=' * ', division_fmt=' / ', power_fmt='{0} ** {1}',
-              parentheses_fmt='({0})', exp_call=lambda x: '{0:n}'.format(x)):
+              parentheses_fmt='({0})', exp_call=lambda x: '{0:n}'.format(x),
+              locale=None, babel_length='long', babel_plural_form='one'):
     """Format a list of (name, exponent) pairs.
 
     :param items: a list of (name, exponent) pairs.
@@ -111,6 +115,9 @@ def formatter(items, as_ratio=True, single_denominator=False,
     :param division_fmt: the format used for division.
     :param power_fmt: the format used for exponentiation.
     :param parentheses_fmt: the format used for parenthesis.
+    :param locale: the locale object as defined in babel.
+    :param babel_length: the length of the translated unit, as defined in babel cldr.
+    :param babel_plural_form: the plural form, calculated as defined in babel.
 
     :return: the formula as a string.
     """
@@ -126,6 +133,28 @@ def formatter(items, as_ratio=True, single_denominator=False,
     pos_terms, neg_terms = [], []
 
     for key, value in sorted(items):
+        if locale and babel_length and babel_plural_form and key in _babel_units:
+            _key = _babel_units[key]
+            locale = Loc.parse(locale)
+            unit_patterns = locale._data['unit_patterns']
+            compound_unit_patterns = locale._data["compound_unit_patterns"]
+            plural = 'one' if abs(value) <= 0 else babel_plural_form
+            if babel_length not in _babel_lengths:
+                other_lengths = [
+                    _babel_length for _babel_length in reversed(_babel_lengths) \
+                    if babel_length != _babel_length
+                ]
+            else:
+                other_lengths = []
+            for _babel_length in [babel_length] + other_lengths:
+                pat = unit_patterns.get(_key, {}).get(_babel_length, {}).get(plural)
+                print(plural, _babel_length, pat)
+                if pat is not None:
+                    key = pat.replace('{0}', '').strip()
+                    break
+            division_fmt = compound_unit_patterns.get("per", {}).get(babel_length, division_fmt)
+            power_fmt = '{0}{1}'
+            exp_call = _pretty_fmt_exponent
         if value == 1:
             pos_terms.append(key)
         elif value > 0:
@@ -177,12 +206,13 @@ def _parse_spec(spec):
     return result
 
 
-def format_unit(unit, spec):
+def format_unit(unit, spec, **kwspec):
     if not unit:
         return 'dimensionless'
 
     spec = _parse_spec(spec)
-    fmt = _FORMATS[spec]
+    fmt = dict(_FORMATS[spec])
+    fmt.update(kwspec)
 
     if spec == 'L':
         rm = [(r'\mathrm{{{0}}}'.format(u), p) for u, p in unit.items()]

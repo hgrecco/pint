@@ -26,6 +26,7 @@ from .compat import string_types, ndarray, np, _to_magnitude, long_type
 from .util import (logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit,
                    fix_str_conversions)
+from pint.compat import Loc
 
 
 def _eq(first, second, check_all):
@@ -170,6 +171,24 @@ class _Quantity(SharedRegistryObject):
             # Write e.g. "3 / s" instead of "3 1 / s"
             ustr = ustr[2:]
         return allf.format(mstr, ustr).strip()
+
+    def format_babel(self, spec='', **kwspec):
+        spec = spec or self.default_format
+
+        # standard cases
+        if '#' in spec:
+            spec = spec.replace('#', '')
+            obj = self.to_compact()
+        else:
+            obj = self
+        kwspec = dict(kwspec)
+        if 'length' in kwspec:
+            kwspec['babel_length'] = kwspec.pop('length')
+        kwspec['locale'] = Loc.parse(kwspec['locale'])
+        kwspec['babel_plural_form'] = kwspec['locale'].plural_form(obj.magnitude)
+        return '{0} {1}'.format(
+            format(obj.magnitude, remove_custom_flags(spec)),
+            obj.units.format_babel(spec, **kwspec)).replace('\n', '')
 
     # IPython related code
     def _repr_html_(self):
