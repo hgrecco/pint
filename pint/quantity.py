@@ -1224,6 +1224,8 @@ class _Quantity(SharedRegistryObject):
 
     def __array_prepare__(self, obj, context=None):
         # If this uf is handled by Pint, write it down in the handling dictionary.
+        if context is None:
+            return obj
 
         # name of the ufunc, argument of the ufunc, domain of the ufunc
         # In ufuncs with multiple outputs, domain indicates which output
