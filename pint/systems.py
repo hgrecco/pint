@@ -434,7 +434,7 @@ class Lister(object):
         self.d = d
 
     def __dir__(self):
-        return frozenset(self.d.keys())
+        return list(self.d.keys())
 
     def __getattr__(self, item):
         return self.d[item]
