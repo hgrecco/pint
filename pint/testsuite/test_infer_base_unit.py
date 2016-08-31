@@ -24,6 +24,17 @@ class TestInferBaseUnit(QuantityTestCase):
         r = (Q(1, 'm') * Q(1, 'mm') / Q(1, 'm') / Q(2, 'um') * Q(2, 's')).to_compact()
         self.assertQuantityAlmostEqual(r, Q(1000, 's'))
 
+    def test_negative_to_compact(self):
+        r = Q(-1000000000, 'm') * Q(1, 'mm') / Q(1, 's') / Q(1, 'ms')
+        compact_r = r.to_compact()
+        expected = Q(-1000., 'kilometer**2 / second**2')
+        self.assertQuantityAlmostEqual(compact_r, expected)
+
+        r = (Q(-1, 'm') * Q(1, 'mm') / Q(1, 'm') / Q(2, 'um') * Q(2, 's')).to_compact()
+        self.assertQuantityAlmostEqual(r, Q(-1000, 's'))
+
+        self.assertQuantityAlmostEqual(Q(-1000, 'Hz'), Q(-1, 'kHz'))
+
     def test_volts(self):
         from pint.util import infer_base_unit
         r = Q(1, 'V') * Q(1, 'mV') / Q(1, 'kV')
