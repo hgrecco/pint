@@ -108,7 +108,7 @@ btu = 1.05505585262e3 * joule = Btu = BTU = british_thermal_unit
 electron_volt = 1.60217653e-19 * J = eV
 quadrillion_btu = 10**15 * btu = quad
 thm = 100000 * BTU = therm = EC_therm
-cal = 4.184 * joule = calorie = thermochemical_calorie
+calorie = 4.184 * joule = cal = thermochemical_calorie
 international_steam_table_calorie = 4.1868 * joule
 ton_TNT = 4.184e9 * joule = tTNT
 US_therm = 1.054804e8 * joule
