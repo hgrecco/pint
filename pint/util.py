@@ -418,7 +418,7 @@ class ParserHelper(UnitsContainer):
         token_type = token[0]
         token_text = token[1]
         if token_type == NUMBER:
-            if '.' in token_text or 'e' in token_text:
+            if '.' in token_text or 'e' or 'E' in token_text:
                 if use_decimal:
                     return Decimal(token_text)
                 return float(token_text)
