@@ -5,9 +5,10 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import collections
 import copy
 import operator as op
+from decimal import Decimal
 from pint.testsuite import BaseTestCase, QuantityTestCase
 from pint.util import (string_preprocessor, find_shortest_path, matrix_to_string,
-                       transpose, find_connected_nodes, ParserHelper,
+                       transpose, tokenizer, find_connected_nodes, ParserHelper,
                        UnitsContainer, to_units_container)
 
 
@@ -182,6 +183,21 @@ class TestParseHelper(BaseTestCase):
                          ParserHelper(0.5, seconds=1, meter=-2))
         self.assertEqual(dict(seconds=1) / z(),
                          ParserHelper(0.5, seconds=1, meter=-2))
+
+    def _test_eval_token(self, expected, expression, use_decimal=False):
+        token = next(tokenizer(expression))
+        actual = ParserHelper.eval_token(token, use_decimal=use_decimal)
+        self.assertEqual(expected, actual)
+        self.assertEqual(type(expected), type(actual))
+
+
+    def test_eval_token(self):
+        self._test_eval_token(1000.0, '1e3')
+        self._test_eval_token(1000.0, '1E3')
+        self._test_eval_token(Decimal(1000), '1e3', use_decimal=True)
+        self._test_eval_token(1000, '1000')
+        # integer numbers are represented as ints, not Decimals
+        self._test_eval_token(1000, '1000', use_decimal=True)
 
 
 class TestStringProcessor(BaseTestCase):
