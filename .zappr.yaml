@@ -1,9 +1,7 @@
 approvals:
-  minimum: 1
-  ignore: none
-  pattern: "^(:\\+1:|👍)$"
-  veto:
-    pattern: "^(:\\-1:|👎)$"
-  from:
-    users:
-      - hgrecco
+  groups:
+    core:
+      minimum: 1
+        from:    
+          users:
+            - hgrecco
