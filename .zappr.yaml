@@ -2,6 +2,6 @@ approvals:
   groups:
     core:
       minimum: 1
-        from:    
-          users:
-            - hgrecco
+      from:
+        users:
+          - hgrecco
