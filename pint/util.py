@@ -415,14 +415,15 @@ class ParserHelper(UnitsContainer):
     
     @classmethod
     def eval_token(cls, token, use_decimal=False):
-        token_type = token[0]
-        token_text = token[1]
+        token_type = token.type
+        token_text = token.string
         if token_type == NUMBER:
-            if '.' in token_text or 'e' in token_text:
+            try:
+                return int(token_text)
+            except ValueError:
                 if use_decimal:
                     return Decimal(token_text)
                 return float(token_text)
-            return int(token_text)
         elif token_type == NAME:
             return ParserHelper.from_word(token_text)
         else:
