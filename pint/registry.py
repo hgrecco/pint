@@ -64,7 +64,33 @@ from . import systems
 _BLOCK_RE = re.compile(r' |\(')
 
 
-class BaseRegistry(object):
+def _with_metaclass(meta, *bases):
+    """Create a base class with a metaclass."""
+    # This requires a bit of explanation: the basic idea is to make a dummy
+    # metaclass for one level of class instantiation that replaces itself with
+    # the actual metaclass.
+
+    # Taken from six
+
+    class metaclass(meta):
+
+        def __new__(cls, name, this_bases, d):
+            return meta(name, bases, d)
+    return type.__new__(metaclass, 'temporary_class', (), {})
+
+
+class _Meta(type):
+    """This is just to call after_init at the right time
+    instead of asking the developer to do it when subclassing.
+    """
+
+    def __call__(cls, *args, **kwargs):
+         obj = type.__call__(cls, *args, **kwargs)
+         obj._after_init()
+         return obj
+
+
+class BaseRegistry(_with_metaclass(_Meta)):
     """Base class for all registries.
 
     Capabilities:
@@ -75,9 +101,6 @@ class BaseRegistry(object):
     - Parse expressions.
     - Parse a definition file.
     - Allow extending the definition file parser by registering @ directives.
-
-    Its methods, `_after_init` should be called.
-    TODO: Make this unnecessary by using metaclasses
 
     :param filename: path of the units definition file to load.
                      Empty to load the default definition file.
@@ -155,8 +178,6 @@ class BaseRegistry(object):
 
     def _after_init(self):
         """This should be called after all __init__
-
-         TODO: Implement this with metaclasses or similar to avoid missing the call.
         """
         if self._filename == '':
             self.load_definitions('default_en.txt', True)
@@ -1407,8 +1428,6 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
                                            default_as_delta=default_as_delta,
                                            autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
                                            system=system)
-
-        self._after_init()
 
     def pi_theorem(self, quantities):
         """Builds dimensionless quantities using the Buckingham π theorem
