@@ -422,9 +422,8 @@ class TestBitTwiddlingUfuncs(TestUFuncs):
                     'same')
 
 
-class TestNDArrayQunatityMath(QuantityTestCase):
-
-    @helpers.requires_numpy()
+@helpers.requires_numpy()
+class TestNDArrayQuantityMath(QuantityTestCase):
     def test_exponentiation_array_exp(self):
         arr = np.array(range(3), dtype=np.float)
         q = self.Q_(arr, None)
@@ -441,7 +440,6 @@ class TestNDArrayQunatityMath(QuantityTestCase):
             self.assertRaises(DimensionalityError, op_, q_cp, q2_cp)
 
     @unittest.expectedFailure
-    @helpers.requires_numpy()
     def test_exponentiation_array_exp_2(self):
         arr = np.array(range(3), dtype=np.float)
         #q = self.Q_(copy.copy(arr), None)
@@ -456,3 +454,21 @@ class TestNDArrayQunatityMath(QuantityTestCase):
         arr_cp = copy.copy(arr)
         q_cp = copy.copy(q)
         self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)
+
+    def test_maximum(self):
+        a = np.arange(4) * self.ureg.m
+        b = 2 * np.ones(4) * self.ureg.m
+        # this line would previously throw an error
+        x = np.maximum(a, b)
+        # TODO
+        # self.assertEqual(x.units, ureg.m * ureg.s)
+
+    @unittest.expectedFailure
+    def test_linalg_solve(self):
+        ureg = self.ureg
+        A = np.eye(2) * ureg.s
+        b = np.ones(2) * ureg.m
+        # this line would previously throw an error
+        x = np.linalg.solve(A, b)
+        # TODO
+        # self.assertEqual(x.units, ureg.m * ureg.s)
