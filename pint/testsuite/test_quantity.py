@@ -123,8 +123,14 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(q2.magnitude, q2b.magnitude)
         self.assertEqual(q2.units, q2b.units)
 
+        q3 = (-1000.0 * self.ureg('meters')).to_compact()
+        q3b = self.Q_(-1., 'kilometer')
+        self.assertEqual(q3.magnitude, q3b.magnitude)
+        self.assertEqual(q3.units, q3b.units)
+
         self.assertEqual('{0:#.1f}'.format(q1), '{0}'.format(q1b))
         self.assertEqual('{0:#.1f}'.format(q2), '{0}'.format(q2b))
+        self.assertEqual('{0:#.1f}'.format(q3), '{0}'.format(q3b))
 
 
     def test_default_formatting(self):
