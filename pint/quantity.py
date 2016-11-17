@@ -1223,7 +1223,7 @@ class _Quantity(SharedRegistryObject):
     __array_priority__ = 17
 
     def __array_prepare__(self, obj, context=None):
-        # If this uf is handled by Pint, write it down in the handling dictionary.
+        # If we have no context, assume this is unhandled
         if context is None:
             return obj
 
@@ -1246,6 +1246,10 @@ class _Quantity(SharedRegistryObject):
         return obj
 
     def __array_wrap__(self, obj, context=None):
+        # If we have no context, assume this is unhandled
+        if context is None:
+            return self.magnitude.__array_wrap__(obj, context)
+
         uf, objs, huh = context
 
         # if this ufunc is not handled by Pint, pass it to the magnitude.

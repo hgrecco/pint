@@ -463,7 +463,6 @@ class TestNDArrayQuantityMath(QuantityTestCase):
         # TODO
         # self.assertEqual(x.units, ureg.m * ureg.s)
 
-    @unittest.expectedFailure
     def test_linalg_solve(self):
         ureg = self.ureg
         A = np.eye(2) * ureg.s
