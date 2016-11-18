@@ -51,7 +51,7 @@ from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    find_shortest_path, UnitsContainer, _is_dim,
                    to_units_container, SourceIterator)
 
-from .compat import tokenizer, string_types
+from .compat import tokenizer, string_types, meta
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
 from .converters import ScaleConverter
@@ -64,7 +64,18 @@ from . import systems
 _BLOCK_RE = re.compile(r' |\(')
 
 
-class BaseRegistry(object):
+class _Meta(type):
+    """This is just to call after_init at the right time
+    instead of asking the developer to do it when subclassing.
+    """
+
+    def __call__(self, *args, **kwargs):
+        obj = super(_Meta, self).__call__(*args, **kwargs)
+        obj._after_init()
+        return obj
+
+
+class BaseRegistry(meta.with_metaclass(_Meta)):
     """Base class for all registries.
 
     Capabilities:
@@ -75,9 +86,6 @@ class BaseRegistry(object):
     - Parse expressions.
     - Parse a definition file.
     - Allow extending the definition file parser by registering @ directives.
-
-    Its methods, `_after_init` should be called.
-    TODO: Make this unnecessary by using metaclasses
 
     :param filename: path of the units definition file to load.
                      Empty to load the default definition file.
@@ -153,10 +161,10 @@ class BaseRegistry(object):
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self._parse_unit_cache = dict()
 
+        self._initialized = False
+
     def _after_init(self):
         """This should be called after all __init__
-
-         TODO: Implement this with metaclasses or similar to avoid missing the call.
         """
         if self._filename == '':
             self.load_definitions('default_en.txt', True)
@@ -166,6 +174,7 @@ class BaseRegistry(object):
         self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
 
         self._build_cache()
+        self._initialized = True
 
     def _register_parsers(self):
         self._register_parser('@defaults', self._parse_defaults)
@@ -1408,8 +1417,6 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
                                            autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
                                            system=system)
 
-        self._after_init()
-
     def pi_theorem(self, quantities):
         """Builds dimensionless quantities using the Buckingham π theorem
         :param quantities: mapping between variable name and units
@@ -1433,6 +1440,7 @@ class LazyRegistry(object):
         kwargs['on_redefinition'] = 'raise'
         self.__class__ = UnitRegistry
         self.__init__(*args, **kwargs)
+        self._after_init()
 
     def __getattr__(self, item):
         if item == '_on_redefinition':
