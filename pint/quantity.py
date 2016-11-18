@@ -1229,9 +1229,9 @@ class _Quantity(SharedRegistryObject):
         # In ufuncs with multiple outputs, domain indicates which output
         # is currently being prepared (eg. see modf).
         # In ufuncs with a single output, domain is 0
-        uf, objs, huh = context
+        uf, objs, i_out = context
 
-        if uf.__name__ in self.__handled and huh == 0:
+        if uf.__name__ in self.__handled and i_out == 0:
             # Only one ufunc should be handled at a time.
             # If a ufunc is already being handled (and this is not another domain),
             # something is wrong..
@@ -1244,18 +1244,18 @@ class _Quantity(SharedRegistryObject):
         return obj
 
     def __array_wrap__(self, obj, context=None):
-        uf, objs, huh = context
+        uf, objs, i_out = context
 
         # if this ufunc is not handled by Pint, pass it to the magnitude.
         if uf.__name__ not in self.__handled:
             return self.magnitude.__array_wrap__(obj, context)
 
         try:
-            ufname = uf.__name__ if huh == 0 else '{0}__{1}'.format(uf.__name__, huh)
+            ufname = uf.__name__ if i_out == 0 else '{0}__{1}'.format(uf.__name__, i_out)
 
             # First, we check the units of the input arguments.
 
-            if huh == 0:
+            if i_out == 0:
                 # Do this only when the wrap is called for the first ouput.
 
                 # Store the destination units
@@ -1306,7 +1306,7 @@ class _Quantity(SharedRegistryObject):
                 out = uf(*mobjs)
 
                 # If there are multiple outputs,
-                # store them in __handling (uf, objs, huh, out0, out1, ...)
+                # store them in __handling (uf, objs, i_out, out0, out1, ...)
                 # and return the first
                 if uf.nout > 1:
                     self.__handling += out
@@ -1314,7 +1314,7 @@ class _Quantity(SharedRegistryObject):
             else:
                 # If this is not the first output,
                 # just grab the result that was previously calculated.
-                out = self.__handling[3 + huh]
+                out = self.__handling[3 + i_out]
 
             # Second, we set the units of the output value.
             if ufname in self.__set_units:
@@ -1352,7 +1352,7 @@ class _Quantity(SharedRegistryObject):
         finally:
             # If this is the last output argument for the ufunc,
             # we are done handling this ufunc.
-            if uf.nout == huh + 1:
+            if uf.nout == i_out + 1:
                 self.__handling = None
 
         return self.magnitude.__array_wrap__(obj, context)

@@ -243,11 +243,14 @@ def siunitx_format_unit(units):
             # limit float powers to 3 decimal places
             return r'\tothe{{{:.3f}}}'.format(power).rstrip('0')
 
-    l = []
+    lpos = []
+    lneg = []
     # loop through all units in the container
     for unit, power in sorted(units._units.items()):
         # remove unit prefix if it exists
         # siunitx supports \prefix commands
+
+        l = lpos if power >= 0 else lneg
         prefix = None
         for p in registry._prefixes.values():
             p = str(p)
@@ -262,7 +265,7 @@ def siunitx_format_unit(units):
         l.append(r'\{0}'.format(unit))
         l.append(r'{0}'.format(_tothe(abs(power))))
 
-    return ''.join(l)
+    return ''.join(lpos) + ''.join(lneg)
 
 
 def remove_custom_flags(spec):
