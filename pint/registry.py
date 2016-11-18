@@ -51,7 +51,7 @@ from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
                    find_shortest_path, UnitsContainer, _is_dim,
                    to_units_container, SourceIterator)
 
-from .compat import tokenizer, string_types
+from .compat import tokenizer, string_types, meta
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition)
 from .converters import ScaleConverter
@@ -62,21 +62,6 @@ from .pint_eval import build_eval_tree
 from . import systems
 
 _BLOCK_RE = re.compile(r' |\(')
-
-
-def _with_metaclass(meta, *bases):
-    """Create a base class with a metaclass."""
-    # This requires a bit of explanation: the basic idea is to make a dummy
-    # metaclass for one level of class instantiation that replaces itself with
-    # the actual metaclass.
-
-    # Taken from six
-
-    class metaclass(meta):
-
-        def __new__(cls, name, this_bases, d):
-            return meta(name, bases, d)
-    return type.__new__(metaclass, 'temporary_class', (), {})
 
 
 class _Meta(type):
@@ -90,7 +75,7 @@ class _Meta(type):
          return obj
 
 
-class BaseRegistry(_with_metaclass(_Meta)):
+class BaseRegistry(meta.with_metaclass(_Meta)):
     """Base class for all registries.
 
     Capabilities:
