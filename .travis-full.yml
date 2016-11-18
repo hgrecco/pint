@@ -1,0 +1,110 @@
+language: python
+
+python:
+  - "2.6"
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+env:
+  - UNCERTAINTIES="N" NUMPY_VERSION=0
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
+  - UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
+  - UNCERTAINTIES="Y" NUMPY_VERSION=0
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
+  - UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
+
+branches:
+  only:
+    - master
+    - develop
+
+before_install:
+  - sudo apt-get update
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
+  - sudo rm -rf /dev/shm
+  - sudo ln -s /run/shm /dev/shm
+
+  - export ENV_NAME=travis
+
+install:
+  - conda create -c mwcraig --yes -n $ENV_NAME python=$TRAVIS_PYTHON_VERSION pip
+  - source activate $ENV_NAME
+  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
+  - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
+  - if [ $NUMPY_VERSION != '0' ]; then conda install -c mwcraig --yes numpy==$NUMPY_VERSION; fi
+  - if [ $TRAVIS_PYTHON_VERSION == '3.2' ]; then pip install coverage==3.7.1; else pip install coverage; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.10.4 && $UNCERTAINTIES == "Y" ]]; then pip install serialize pyyaml; fi
+  - pip install coveralls
+
+script:
+  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
+  - if [ $TRAVIS_PYTHON_VERSION != '2.6' ]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
+  - coverage combine
+  - coverage report -m
+
+after_success:
+  - coveralls --verbose
+
+matrix:
+  exclude:
+# Do not edit after this line
+    - python: "3.5"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
+    - python: "3.5"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+    - python: "3.5"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
+    - python: "3.5"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.5"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
+    - python: "3.5"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+    - python: "3.4"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+    - python: "3.4"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.4"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
+    - python: "3.4"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
+    - python: "3.3"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
+    - python: "3.3"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
+    - python: "3.3"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
+    - python: "3.3"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
+    - python: "3.3"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
+    - python: "3.3"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
+    - python: "2.6"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
+    - python: "2.6"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
+    - python: "2.6"
+      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
+    - python: "2.6"
+      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.4

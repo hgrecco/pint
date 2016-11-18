@@ -1,24 +1,14 @@
 language: python
 
-python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
 env:
-  - UNCERTAINTIES="N" NUMPY_VERSION=0
-  - UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
-  - UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
-  - UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
-  - UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
-  - UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
-  - UNCERTAINTIES="Y" NUMPY_VERSION=0
-  - UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-  - UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
-  - UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
-  - UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
-  - UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
+  - UNCERTAINTIES="N" PYTHON="2.6" NUMPY_VERSION=1.9.2
+  - UNCERTAINTIES="N" PYTHON="2.7" NUMPY_VERSION=1.11.2
+  - UNCERTAINTIES="N" PYTHON="3.3" NUMPY_VERSION=1.9.2
+  - UNCERTAINTIES="N" PYTHON="3.4" NUMPY_VERSION=1.11.2
+  - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=1.11.2
+  - UNCERTAINTIES="Y" PYTHON="3.5" NUMPY_VERSION=1.11.2
+  - UNCERTAINTIES="N" PYTHON="2.7" NUMPY_VERSION=0
+  - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=0
 
 branches:
   only:
@@ -27,7 +17,7 @@ branches:
 
 before_install:
   - sudo apt-get update
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+  - if [[ "$PYTHON" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     else
       wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -47,64 +37,20 @@ before_install:
   - export ENV_NAME=travis
 
 install:
-  - conda create -c mwcraig --yes -n $ENV_NAME python=$TRAVIS_PYTHON_VERSION pip
+  - conda create --yes -n $ENV_NAME python=$PYTHON pip
   - source activate $ENV_NAME
-  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
+  - if [ $PYTHON == '2.6' ]; then pip install unittest2; fi
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
-  - if [ $NUMPY_VERSION != '0' ]; then conda install -c mwcraig --yes numpy==$NUMPY_VERSION; fi
-  - if [ $TRAVIS_PYTHON_VERSION == '3.2' ]; then pip install coverage==3.7.1; else pip install coverage; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.10.4 && $UNCERTAINTIES == "Y" ]]; then pip install serialize pyyaml; fi
+  - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
+  - if [ $PYTHON == '3.2' ]; then pip install coverage==3.7.1; else pip install coverage; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install serialize pyyaml; fi
   - pip install coveralls
 
 script:
-  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
-  - if [ $TRAVIS_PYTHON_VERSION != '2.6' ]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
+  - if [ $PYTHON == '2.6' ]; then coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
+  - if [ $PYTHON != '2.6' ]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
   - coverage combine
   - coverage report -m
 
 after_success:
   - coveralls --verbose
-
-matrix:
-  exclude:
-# Do not edit after this line
-    - python: "3.5"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.8.2
-    - python: "3.5"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
-    - python: "3.5"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.8.2
-    - python: "3.5"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-    - python: "3.5"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
-    - python: "3.5"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
-    - python: "3.4"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
-    - python: "3.4"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-    - python: "3.4"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.7.1
-    - python: "3.4"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.7.1
-    - python: "3.3"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.6.2
-    - python: "3.3"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
-    - python: "3.3"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
-    - python: "3.3"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.6.2
-    - python: "3.3"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
-    - python: "3.3"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
-    - python: "2.6"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.9.3
-    - python: "2.6"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.10.4
-    - python: "2.6"
-      env: UNCERTAINTIES="Y" NUMPY_VERSION=1.9.3
-    - python: "2.6"
-      env: UNCERTAINTIES="N" NUMPY_VERSION=1.10.4
