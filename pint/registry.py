@@ -69,10 +69,10 @@ class _Meta(type):
     instead of asking the developer to do it when subclassing.
     """
 
-    def __call__(cls, *args, **kwargs):
-         obj = type.__call__(cls, *args, **kwargs)
-         obj._after_init()
-         return obj
+    def __call__(self, *args, **kwargs):
+        obj = super(_Meta, self).__call__(*args, **kwargs)
+        obj._after_init()
+        return obj
 
 
 class BaseRegistry(meta.with_metaclass(_Meta)):
@@ -161,6 +161,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self._parse_unit_cache = dict()
 
+        self._initialized = False
+
     def _after_init(self):
         """This should be called after all __init__
         """
@@ -172,6 +174,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
 
         self._build_cache()
+        self._initialized = True
 
     def _register_parsers(self):
         self._register_parser('@defaults', self._parse_defaults)
@@ -1437,6 +1440,7 @@ class LazyRegistry(object):
         kwargs['on_redefinition'] = 'raise'
         self.__class__ = UnitRegistry
         self.__init__(*args, **kwargs)
+        self._after_init()
 
     def __getattr__(self, item):
         if item == '_on_redefinition':
