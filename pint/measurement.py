@@ -50,6 +50,7 @@ class _Measurement(object):
             
         inst = super(_Measurement, cls).__new__(cls, mag, units)
         return inst
+    
     @property
     def value(self):
         return self._REGISTRY.Quantity(self.magnitude.nominal_value, self.units)
