@@ -13,7 +13,7 @@ import functools
 
 from .compat import string_types, zip_longest
 from .errors import DimensionalityError
-from .util import to_units_container
+from .util import to_units_container, UnitsContainer
 
 
 def _replace_units(original_units, values_by_name):
@@ -26,7 +26,7 @@ def _replace_units(original_units, values_by_name):
     for arg_name, exponent in original_units.items():
         q = q * values_by_name[arg_name] ** exponent
 
-    return to_units_container(q)
+    return getattr(q, "_units", UnitsContainer({}))
 
 
 def _to_units_container(a):
@@ -95,13 +95,16 @@ def _parse_wrap_args(args):
 
         # first pass: Grab named values
         for ndx in defs_args_ndx:
-            values_by_name[args_as_uc[ndx][0]] = values[ndx]
-            new_values[ndx] = values[ndx]._magnitude
+            value = values[ndx]
+            values_by_name[args_as_uc[ndx][0]] = value
+            new_values[ndx] = getattr(value, "_magnitude", value)
 
         # second pass: calculate derived values based on named values
         for ndx in dependent_args_ndx:
-            new_values[ndx] = ureg._convert(values[ndx]._magnitude,
-                                            values[ndx]._units,
+            value = values[ndx]
+            assert _replace_units(args_as_uc[ndx][0], values_by_name) is not None
+            new_values[ndx] = ureg._convert(getattr(value, "_magnitude", value),
+                                            getattr(value, "_units", UnitsContainer({})),
                                             _replace_units(args_as_uc[ndx][0], values_by_name))
 
         # third pass: convert other arguments
