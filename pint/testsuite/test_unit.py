@@ -364,6 +364,7 @@ class TestRegistry(QuantityTestCase):
 
         g0 = ureg.wraps('=A', ['=A', '=A'])(gfunc)
         self.assertEqual(g0(3. * ureg.meter, 1. * ureg.centimeter), rst.to('meter'))
+        self.assertEqual(g0(3, 1), 4)
 
         g1 = ureg.wraps('=A', ['=A', '=A'])(gfunc)
         self.assertEqual(g1(3. * ureg.meter, 1. * ureg.centimeter), rst.to('centimeter'))
@@ -375,9 +376,12 @@ class TestRegistry(QuantityTestCase):
         a = 3. * ureg.meter
         b = (2. * ureg.centimeter) ** 2
         self.assertEqual(g3(a, b), gfunc2(a, b))
+        self.assertEqual(g3(3, 2), gfunc2(3, 2))
 
         g4 = ureg.wraps('=A**2 * B', ['=A', '=B'])(gfunc3)
         self.assertEqual(g4(3. * ureg.meter, 2. * ureg.second), ureg('(3*meter)**2 * 2 *second'))
+        self.assertEqual(g4(3. * ureg.meter, 2.), ureg('(3*meter)**2 * 2'))
+        self.assertEqual(g4(3., 2. * ureg.second), ureg('3**2 * 2 * second'))
 
 
     def test_check(self):
