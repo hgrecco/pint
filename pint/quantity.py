@@ -22,7 +22,7 @@ from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_la
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError)
 from .definitions import UnitDefinition
-from .compat import string_types, ndarray, np, _to_magnitude, long_type
+from .compat import string_types, ndarray, np, _to_magnitude, long_type, ufloat
 from .util import (logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit,
                    fix_str_conversions)
@@ -63,6 +63,9 @@ class _Quantity(SharedRegistryObject):
         return _build_quantity, (self.magnitude, self._units)
 
     def __new__(cls, value, units=None):
+        if isinstance(value, ufloat) and cls is not cls._REGISTRY.Measurement:
+            cls = cls._REGISTRY.Measurement
+
         if units is None:
             if isinstance(value, string_types):
                 if value == '':

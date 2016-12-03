@@ -49,6 +49,7 @@ setup(
                  'constants_en.txt']
       },
     include_package_data=True,
+    install_requires=['autograd'],
     license='BSD',
     classifiers=[
         'Development Status :: 4 - Beta',

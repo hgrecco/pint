@@ -25,12 +25,14 @@ class _Measurement(object):
     """
 
     def __new__(cls, value, error, units=MISSING):
+
+        newvalue = value
         if units is MISSING:
             try:
-                value, units = value.magnitude, value.units
+                newvalue, units = value.magnitude, value.units
             except AttributeError:
                 try:
-                    value, error, units = value.nominal_value, value.std_dev, error
+                    newvalue, error, units = value.nominal_value, value.std_dev, error
                 except AttributeError:
                     units = ''
         try:
@@ -38,7 +40,10 @@ class _Measurement(object):
         except AttributeError:
             pass
 
-        inst = super(_Measurement, cls).__new__(cls, ufloat(value, error), units)
+        if not isinstance(value, ufloat):
+            value = ufloat(newvalue, error)
+
+        inst = super(_Measurement, cls).__new__(cls, value, units)
 
         if error < 0:
             raise ValueError('The magnitude of the error cannot be negative'.format(value, error))

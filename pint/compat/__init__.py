@@ -112,7 +112,8 @@ except ImportError:
         return value
 
 try:
-    from uncertainties import ufloat
+    # from uncertainties import ufloat
+    from .stochastic_math import RandomVariable as ufloat
     HAS_UNCERTAINTIES = True
 except ImportError:
     ufloat = None
