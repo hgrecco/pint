@@ -794,15 +794,6 @@ class _Quantity(SharedRegistryObject):
     def __truediv__(self, other):
         return self._mul_div(other, operator.truediv)
 
-    def __ifloordiv__(self, other):
-        if not isinstance(self._magnitude, ndarray):
-            return self._mul_div(other, operator.floordiv, units_op=operator.itruediv)
-        else:
-            return self._imul_div(other, operator.ifloordiv, units_op=operator.itruediv)
-
-    def __floordiv__(self, other):
-        return self._mul_div(other, operator.floordiv, units_op=operator.truediv)
-
     def __rtruediv__(self, other):
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
@@ -816,6 +807,18 @@ class _Quantity(SharedRegistryObject):
             self = self.to_root_units()
 
         return self.__class__(other_magnitude / self._magnitude, 1 / self._units)
+    __div__ = __truediv__
+    __rdiv__ = __rtruediv__
+    __idiv__ = __itruediv__
+
+    def __ifloordiv__(self, other):
+        if not isinstance(self._magnitude, ndarray):
+            return self._mul_div(other, operator.floordiv, units_op=operator.itruediv)
+        else:
+            return self._imul_div(other, operator.ifloordiv, units_op=operator.itruediv)
+
+    def __floordiv__(self, other):
+        return self._mul_div(other, operator.floordiv, units_op=operator.truediv)
 
     def __rfloordiv__(self, other):
         try:
@@ -830,10 +833,6 @@ class _Quantity(SharedRegistryObject):
             self = self.to_root_units()
 
         return self.__class__(other_magnitude // self._magnitude, 1 / self._units)
-
-    __div__ = __truediv__
-    __rdiv__ = __rtruediv__
-    __idiv__ = __itruediv__
 
     def __ipow__(self, other):
         if not isinstance(self._magnitude, ndarray):
