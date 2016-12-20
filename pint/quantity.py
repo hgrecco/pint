@@ -861,6 +861,24 @@ class _Quantity(SharedRegistryObject):
         else:
             raise DimensionalityError(self._units, 'dimensionless')
 
+    def __divmod__(self, other):
+        if not self._check(other):
+            other = self.__class__(other, UnitsContainer({}))
+        q, r = divmod(self._magnitude, other.to(self._units)._magnitude)
+        return (self.__class__(q, UnitsContainer({})),
+                self.__class__(r, self._units))
+
+    def __rdivmod__(self, other):
+        if self._check(other):
+            q, r = divmod(other._magnitude, self.to(other._units)._magnitude)
+            unit = other._units
+        elif self.dimensionless:
+            q, r = divmod(other, self.to('')._magnitude)
+            unit = UnitsContainer({})
+        else:
+            raise DimensionalityError(self._units, 'dimensionless')
+        return (self.__class__(q, UnitsContainer({})), self.__class__(r, unit))
+
     def __ipow__(self, other):
         if not isinstance(self._magnitude, ndarray):
             return self.__pow__(other)
