@@ -812,27 +812,32 @@ class _Quantity(SharedRegistryObject):
     __idiv__ = __itruediv__
 
     def __ifloordiv__(self, other):
-        if not isinstance(self._magnitude, ndarray):
-            return self._mul_div(other, operator.floordiv, units_op=operator.itruediv)
+        if self._check(other):
+            self._magnitude //= other.to(self._units)._magnitude
+        elif self.dimensionless:
+            self._magnitude = self.to('')._magnitude // other
         else:
-            return self._imul_div(other, operator.ifloordiv, units_op=operator.itruediv)
+            raise DimensionalityError(self._units, 'dimensionless')
+        self._units = UnitsContainer({})
+        return self
 
     def __floordiv__(self, other):
-        return self._mul_div(other, operator.floordiv, units_op=operator.truediv)
+        if self._check(other):
+            magnitude = self._magnitude // other.to(self._units)._magnitude
+        elif self.dimensionless:
+            magnitude = self.to('')._magnitude // other
+        else:
+            raise DimensionalityError(self._units, 'dimensionless')
+        return self.__class__(magnitude, UnitsContainer({}))
 
     def __rfloordiv__(self, other):
-        try:
-            other_magnitude = _to_magnitude(other, self.force_ndarray)
-        except TypeError:
-            return NotImplemented
-
-        no_offset_units_self = len(self._get_non_multiplicative_units())
-        if not self._ok_for_muldiv(no_offset_units_self):
-            raise OffsetUnitCalculusError(self._units, '')
-        elif no_offset_units_self == 1 and len(self._units) == 1:
-            self = self.to_root_units()
-
-        return self.__class__(other_magnitude // self._magnitude, 1 / self._units)
+        if self._check(other):
+            magnitude = other._magnitude // self.to(other._units)._magnitude
+        elif self.dimensionless:
+            magnitude = other // self.to('')._magnitude
+        else:
+            raise DimensionalityError(self._units, 'dimensionless')
+        return self.__class__(magnitude, UnitsContainer({}))
 
     def __ipow__(self, other):
         if not isinstance(self._magnitude, ndarray):

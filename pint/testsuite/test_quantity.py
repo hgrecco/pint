@@ -216,6 +216,11 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(self.Q_(1, 'meter')/self.Q_(1, 'meter'), 1)
         self.assertEqual((self.Q_(1, 'meter')/self.Q_(1, 'mm')).to(''), 1000)
 
+        self.assertEqual(self.Q_(10) // self.Q_(360, 'degree'), 1)
+        self.assertEqual(self.Q_(400, 'degree') // self.Q_(2 * math.pi), 1)
+        self.assertEqual(self.Q_(400, 'degree') // (2 * math.pi), 1)
+        self.assertEqual(7 // self.Q_(360, 'degree'), 1)
+
     def test_offset(self):
         self.assertQuantityAlmostEqual(self.Q_(0, 'kelvin').to('kelvin'), self.Q_(0, 'kelvin'))
         self.assertQuantityAlmostEqual(self.Q_(0, 'degC').to('kelvin'), self.Q_(273.15, 'kelvin'))
@@ -444,9 +449,8 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.itruediv, '4.2*meter', '10*inch', '0.42*meter/inch', unit)
 
     def _test_quantity_floordiv(self, unit, func):
-        func(op.floordiv, unit * 10.0, '4.2*meter', '2/meter', unit)
-        func(op.floordiv, '24*meter', unit * 10.0, '2*meter', unit)
-        func(op.floordiv, '10*meter', '4.2*inch', '2*meter/inch', unit)
+        func(op.floordiv, unit * 10.0, '4.2*meter/meter', 2, unit)
+        func(op.floordiv, '10*meter', '4.2*inch', 93, unit)
 
     def _test_quantity_ifloordiv(self, unit, func):
         func(op.ifloordiv, 10.0, '4.2*meter', '2/meter', unit)
