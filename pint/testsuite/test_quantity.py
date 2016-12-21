@@ -457,7 +457,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.ifloordiv, '10*meter', '4.2*inch', 93, unit)
 
     def _test_quantity_divmod_one(self, a, b):
-        if isinstance(a, str):
+        if isinstance(a, string_types):
             a = self.Q_(a)
         b = self.Q_(b)
 
