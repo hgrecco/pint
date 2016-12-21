@@ -453,9 +453,45 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.floordiv, '10*meter', '4.2*inch', 93, unit)
 
     def _test_quantity_ifloordiv(self, unit, func):
-        func(op.ifloordiv, 10.0, '4.2*meter', '2/meter', unit)
-        func(op.ifloordiv, '24*meter', 10.0, '2*meter', unit)
-        func(op.ifloordiv, '10*meter', '4.2*inch', '2*meter/inch', unit)
+        func(op.ifloordiv, 10.0, '4.2*meter/meter', 2, unit)
+        func(op.ifloordiv, '10*meter', '4.2*inch', 93, unit)
+
+    def _test_quantity_divmod_one(self, a, b):
+        if isinstance(a, str):
+            a = self.Q_(a)
+        b = self.Q_(b)
+
+        q, r = divmod(a, b)
+        self.assertEqual(q, a // b)
+        self.assertEqual(r, a % b)
+        self.assertEqual(a, (q * b) + r)
+        self.assertEqual(q, math.floor(q))
+        if b > (0 * b):
+            self.assertTrue((0 * b) <= r < b)
+        else:
+            self.assertTrue((0 * b) >= r > b)
+        if isinstance(a, self.Q_):
+            self.assertEqual(r.units, a.units)
+        else:
+            self.assertTrue(r.unitless)
+        self.assertTrue(q.unitless)
+
+        copy_a = copy.copy(a)
+        a %= b
+        self.assertEqual(a, r)
+        copy_a //= b
+        self.assertEqual(copy_a, q)
+
+    def _test_quantity_divmod(self):
+        self._test_quantity_divmod_one('10*meter', '4.2*inch')
+        self._test_quantity_divmod_one('-10*meter', '4.2*inch')
+        self._test_quantity_divmod_one('-10*meter', '-4.2*inch')
+        self._test_quantity_divmod_one('10*meter', '-4.2*inch')
+
+        self._test_quantity_divmod_one('400*degree', '3')
+        self._test_quantity_divmod_one('4', '180 degree')
+        self._test_quantity_divmod_one(4, '180 degree')
+        self._test_quantity_divmod_one('300*degree', '100 degree')
 
     def _test_numeric(self, unit, ifunc):
         self._test_quantity_add_sub(unit, self._test_not_inplace)
@@ -463,6 +499,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         self._test_quantity_mul_div(unit, self._test_not_inplace)
         self._test_quantity_imul_idiv(unit, ifunc)
         self._test_quantity_floordiv(unit, self._test_not_inplace)
+        self._test_quantity_divmod()
         #self._test_quantity_ifloordiv(unit, ifunc)
 
     def test_float(self):
