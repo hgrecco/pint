@@ -49,12 +49,12 @@ class RedefinitionError(ValueError):
         return msg
 
 
-class UndefinedUnitError(ValueError):
+class UndefinedUnitError(AttributeError):
     """Raised when the units are not defined in the unit registry.
     """
 
     def __init__(self, unit_names):
-        super(ValueError, self).__init__()
+        super(UndefinedUnitError, self).__init__()
         self.unit_names = unit_names
 
     def __str__(self):
