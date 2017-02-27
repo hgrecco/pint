@@ -19,7 +19,7 @@ class DefinitionSyntaxError(ValueError):
     """
 
     def __init__(self, msg, filename=None, lineno=None):
-        super(ValueError, self).__init__()
+        super(DefinitionSyntaxError, self).__init__()
         self.msg = msg
         self.filename = None
         self.lineno = None
@@ -34,7 +34,7 @@ class RedefinitionError(ValueError):
     """
 
     def __init__(self, name, definition_type):
-        super(ValueError, self).__init__()
+        super(RedefinitionError, self).__init__()
         self.name = name
         self.definition_type = definition_type
         self.filename = None
