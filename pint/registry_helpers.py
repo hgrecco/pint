@@ -40,6 +40,13 @@ def _to_units_container(a):
         return to_units_container(a.split('=', 1)[1]), True
     return to_units_container(a), False
 
+def _retvals(args):
+    retvals = [1.0]*len(args);
+    for i,v in enumerate(retvals):
+        try:
+            retvals[i] = args[i]._magnitude
+        except: pass
+    return retvals
 
 def _parse_wrap_args(args):
 
@@ -56,6 +63,7 @@ def _parse_wrap_args(args):
 
     # _to_units_container
     args_as_uc = [_to_units_container(arg) for arg in args]
+    retvals = _retvals(args)
 
     # Check for references in args, remove None values
     for ndx, (arg, is_ref) in enumerate(args_as_uc):
@@ -113,7 +121,7 @@ def _parse_wrap_args(args):
             if isinstance(values[ndx], ureg.Quantity):
                 new_values[ndx] = ureg._convert(values[ndx]._magnitude,
                                                 values[ndx]._units,
-                                                args_as_uc[ndx][0])
+                                                args_as_uc[ndx][0])/retvals[ndx]
             else:
                 if strict:
                     raise ValueError('A wrapped function using strict=True requires '
@@ -154,8 +162,10 @@ def wraps(ureg, ret, args, strict=True):
     converter = _parse_wrap_args(args)
 
     if isinstance(ret, (list, tuple)):
+        retvals = _retvals(ret)
         container, ret = True, ret.__class__([_to_units_container(arg) for arg in ret])
     else:
+        retvals = _retvals([ret])
         container, ret = False, _to_units_container(ret)
 
     def decorator(func):
@@ -174,13 +184,13 @@ def wraps(ureg, ret, args, strict=True):
             if container:
                 out_units = (_replace_units(r, values_by_name) if is_ref else r
                              for (r, is_ref) in ret)
-                return ret.__class__(res if unit is None else ureg.Quantity(res, unit)
-                                     for unit, res in zip_longest(out_units, result))
+                return ret.__class__(res if unit is None else ureg.Quantity(res*retval, unit)
+                                     for unit, res, retval in zip_longest(out_units, result, retvals))
 
             if ret[0] is None:
                 return result
 
-            return ureg.Quantity(result,
+            return ureg.Quantity(result*retvals[0],
                                  _replace_units(ret[0], values_by_name) if ret[1] else ret[0])
 
         return wrapper

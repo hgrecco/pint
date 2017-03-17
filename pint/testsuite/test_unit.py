@@ -321,6 +321,12 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(f3(3. * ureg.centimeter), 0.03 * ureg.centimeter)
         self.assertEqual(f3(3. * ureg.meter), 3. * ureg.centimeter)
 
+        f4 = ureg.wraps(10*ureg.uA, [None, ], strict=False)(func)
+        self.assertEqual(f4(3.), 30 * ureg.uA)
+
+        f5 = ureg.wraps(10*ureg.uA, [5*ureg.uA, ], strict=False)(func)
+        self.assertEqual(f5(10*ureg.uA), 20*ureg.uA)
+
         def gfunc(x, y):
             return x + y
 
@@ -346,6 +352,9 @@ class TestRegistry(QuantityTestCase):
 
         h3 = ureg.wraps((None,), (None, None))(hfunc)
         self.assertEqual(h3(3, 1), (3, 1))
+
+        h4 = ureg.wraps((10 * ureg.meter, 50 * ureg.centimeter), (None, None))(hfunc)
+        self.assertEqual(h4(3, 2), (30 * ureg.meter, 1 * ureg.meter))
 
     def test_wrap_referencing(self):
 
