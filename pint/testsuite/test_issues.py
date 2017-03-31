@@ -234,7 +234,7 @@ class TestIssues(QuantityTestCase):
 
         for func in (ureg.get_name, ureg.parse_expression):
             val = func('meter')
-            self.assertRaises(ValueError, func, 'METER')
+            self.assertRaises(AttributeError, func, 'METER')
             self.assertEqual(val, func('METER', False))
 
     def test_issue104(self):
