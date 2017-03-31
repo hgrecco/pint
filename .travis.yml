@@ -12,8 +12,8 @@ env:
 
 branches:
   only:
-    - master
-    - develop
+    - staging
+    - trying
 
 before_install:
   - sudo apt-get update
