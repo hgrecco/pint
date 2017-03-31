@@ -216,6 +216,11 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(self.Q_(1, 'meter')/self.Q_(1, 'meter'), 1)
         self.assertEqual((self.Q_(1, 'meter')/self.Q_(1, 'mm')).to(''), 1000)
 
+        self.assertEqual(self.Q_(10) // self.Q_(360, 'degree'), 1)
+        self.assertEqual(self.Q_(400, 'degree') // self.Q_(2 * math.pi), 1)
+        self.assertEqual(self.Q_(400, 'degree') // (2 * math.pi), 1)
+        self.assertEqual(7 // self.Q_(360, 'degree'), 1)
+
     def test_offset(self):
         self.assertQuantityAlmostEqual(self.Q_(0, 'kelvin').to('kelvin'), self.Q_(0, 'kelvin'))
         self.assertQuantityAlmostEqual(self.Q_(0, 'degC').to('kelvin'), self.Q_(273.15, 'kelvin'))
@@ -444,14 +449,76 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.itruediv, '4.2*meter', '10*inch', '0.42*meter/inch', unit)
 
     def _test_quantity_floordiv(self, unit, func):
-        func(op.floordiv, unit * 10.0, '4.2*meter', '2/meter', unit)
-        func(op.floordiv, '24*meter', unit * 10.0, '2*meter', unit)
-        func(op.floordiv, '10*meter', '4.2*inch', '2*meter/inch', unit)
+        a = self.Q_('10*meter')
+        b = self.Q_('3*second')
+        self.assertRaises(DimensionalityError, op.floordiv, a, b)
+        self.assertRaises(DimensionalityError, op.floordiv, 3, b)
+        self.assertRaises(DimensionalityError, op.floordiv, a, 3)
+        self.assertRaises(DimensionalityError, op.ifloordiv, a, b)
+        self.assertRaises(DimensionalityError, op.ifloordiv, 3, b)
+        self.assertRaises(DimensionalityError, op.ifloordiv, a, 3)
+        func(op.floordiv, unit * 10.0, '4.2*meter/meter', 2, unit)
+        func(op.floordiv, '10*meter', '4.2*inch', 93, unit)
+
+    def _test_quantity_mod(self, unit, func):
+        a = self.Q_('10*meter')
+        b = self.Q_('3*second')
+        self.assertRaises(DimensionalityError, op.mod, a, b)
+        self.assertRaises(DimensionalityError, op.mod, 3, b)
+        self.assertRaises(DimensionalityError, op.mod, a, 3)
+        self.assertRaises(DimensionalityError, op.imod, a, b)
+        self.assertRaises(DimensionalityError, op.imod, 3, b)
+        self.assertRaises(DimensionalityError, op.imod, a, 3)
+        func(op.mod, unit * 10.0, '4.2*meter/meter', 1.6, unit)
 
     def _test_quantity_ifloordiv(self, unit, func):
-        func(op.ifloordiv, 10.0, '4.2*meter', '2/meter', unit)
-        func(op.ifloordiv, '24*meter', 10.0, '2*meter', unit)
-        func(op.ifloordiv, '10*meter', '4.2*inch', '2*meter/inch', unit)
+        func(op.ifloordiv, 10.0, '4.2*meter/meter', 2, unit)
+        func(op.ifloordiv, '10*meter', '4.2*inch', 93, unit)
+
+    def _test_quantity_divmod_one(self, a, b):
+        if isinstance(a, string_types):
+            a = self.Q_(a)
+        if isinstance(b, string_types):
+            b = self.Q_(b)
+
+        q, r = divmod(a, b)
+        self.assertEqual(q, a // b)
+        self.assertEqual(r, a % b)
+        self.assertEqual(a, (q * b) + r)
+        self.assertEqual(q, math.floor(q))
+        if b > (0 * b):
+            self.assertTrue((0 * b) <= r < b)
+        else:
+            self.assertTrue((0 * b) >= r > b)
+        if isinstance(a, self.Q_):
+            self.assertEqual(r.units, a.units)
+        else:
+            self.assertTrue(r.unitless)
+        self.assertTrue(q.unitless)
+
+        copy_a = copy.copy(a)
+        a %= b
+        self.assertEqual(a, r)
+        copy_a //= b
+        self.assertEqual(copy_a, q)
+
+    def _test_quantity_divmod(self):
+        self._test_quantity_divmod_one('10*meter', '4.2*inch')
+        self._test_quantity_divmod_one('-10*meter', '4.2*inch')
+        self._test_quantity_divmod_one('-10*meter', '-4.2*inch')
+        self._test_quantity_divmod_one('10*meter', '-4.2*inch')
+
+        self._test_quantity_divmod_one('400*degree', '3')
+        self._test_quantity_divmod_one('4', '180 degree')
+        self._test_quantity_divmod_one(4, '180 degree')
+        self._test_quantity_divmod_one('20', 4)
+        self._test_quantity_divmod_one('300*degree', '100 degree')
+
+        a = self.Q_('10*meter')
+        b = self.Q_('3*second')
+        self.assertRaises(DimensionalityError, divmod, a, b)
+        self.assertRaises(DimensionalityError, divmod, 3, b)
+        self.assertRaises(DimensionalityError, divmod, a, 3)
 
     def _test_numeric(self, unit, ifunc):
         self._test_quantity_add_sub(unit, self._test_not_inplace)
@@ -459,6 +526,8 @@ class TestQuantityBasicMath(QuantityTestCase):
         self._test_quantity_mul_div(unit, self._test_not_inplace)
         self._test_quantity_imul_idiv(unit, ifunc)
         self._test_quantity_floordiv(unit, self._test_not_inplace)
+        self._test_quantity_mod(unit, self._test_not_inplace)
+        self._test_quantity_divmod()
         #self._test_quantity_ifloordiv(unit, ifunc)
 
     def test_float(self):
