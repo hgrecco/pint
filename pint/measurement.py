@@ -29,21 +29,28 @@ class _Measurement(object):
             try:
                 value, units = value.magnitude, value.units
             except AttributeError:
-                try:
-                    value, error, units = value.nominal_value, value.std_dev, error
-                except AttributeError:
+                #if called with two arguments and the first looks like a ufloat
+                # then assume the second argument is the units, keep value intact
+                if hasattr(value,"nominal_value"):
+                    units = error
+                    error = MISSING #used for check below
+                else:
                     units = ''
         try:
             error = error.to(units).magnitude
         except AttributeError:
             pass
-
-        inst = super(_Measurement, cls).__new__(cls, ufloat(value, error), units)
-
-        if error < 0:
+        
+        if error is MISSING:
+            mag = value
+        elif error < 0:
             raise ValueError('The magnitude of the error cannot be negative'.format(value, error))
+        else:
+            mag = ufloat(value,error)
+            
+        inst = super(_Measurement, cls).__new__(cls, mag, units)
         return inst
-
+    
     @property
     def value(self):
         return self._REGISTRY.Quantity(self.magnitude.nominal_value, self.units)
