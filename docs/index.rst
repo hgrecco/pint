@@ -49,6 +49,12 @@ To install Pint, simply:
 
     $ pip install pint
 
+or utilizing conda, with the conda-forge channel:
+
+.. code-block:: bash
+
+    $ conda install -c conda-forge pint
+
 and then simply enjoy it!
 
 
