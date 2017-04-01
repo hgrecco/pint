@@ -18,7 +18,7 @@
     :target: https://travis-ci.org/hgrecco/pint
     :alt: CI
 
-.. image:: https://coveralls.io/repos/github/hgrecco/pint/badge.svg?branch=master 
+.. image:: https://coveralls.io/repos/github/hgrecco/pint/badge.svg?branch=master
     :target: https://coveralls.io/github/hgrecco/pint?branch=master
     :alt: Coverage
 
@@ -71,6 +71,12 @@ To install Pint, simply:
 .. code-block:: bash
 
     $ pip install pint
+
+or utilizing conda, with the conda-forge channel:
+
+.. code-block:: bash
+
+    $ conda install -c conda-forge pint
 
 and then simply enjoy it!
 
