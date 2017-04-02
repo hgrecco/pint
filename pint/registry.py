@@ -35,6 +35,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import os
 import re
 import math
+import functools
 import itertools
 import pkg_resources
 from decimal import Decimal
@@ -1139,6 +1140,34 @@ class ContextRegistry(BaseRegistry):
             # Upon leaving the with statement,
             # the added contexts are removed from the active one.
             self.disable_contexts(len(names))
+
+    def with_context(self, name, **kw):
+        """Decorator to wrap a function call in a Pint context.
+
+        Use it to ensure that a certain context is active when
+        calling a function::
+
+            >>> @ureg.with_context('sp')
+            ... def my_cool_fun(wavelenght):
+            ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
+
+
+        :param names: name of the context.
+        :param kwargs: keyword arguments for the contexts.
+        :return: the wrapped function.
+        """
+        def decorator(func):
+            assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
+            updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
+
+            @functools.wraps(func, assigned=assigned, updated=updated)
+            def wrapper(*values, **kwargs):
+                with self.context(name, **kw):
+                    return func(*values, **kwargs)
+
+            return wrapper
+
+        return decorator
 
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.

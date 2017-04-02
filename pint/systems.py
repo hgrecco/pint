@@ -15,7 +15,7 @@ import re
 
 from .definitions import Definition, UnitDefinition
 from .errors import DefinitionSyntaxError, RedefinitionError
-from .util import to_units_container, SharedRegistryObject, SourceIterator
+from .util import to_units_container, SharedRegistryObject, SourceIterator, logger
 from .babel_names import _babel_systems
 from pint.compat import Loc
 
@@ -309,7 +309,10 @@ class _System(SharedRegistryObject):
             self._computed_members = set()
 
             for group_name in self._used_groups:
-                self._computed_members |= d[group_name].members
+                try:
+                    self._computed_members |= d[group_name].members
+                except KeyError:
+                    logger.warning('Could not resolve {0} in System {1}'.format(group_name, self.name))
 
             self._computed_members = frozenset(self._computed_members)
 

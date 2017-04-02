@@ -455,7 +455,7 @@ stere = meter ** 3
     pound
 @end
 
-@system US using USCSLiquidVolume, USCSDryVolume, USCSVolume, USCSLengthInternational, USCSLengthSurvey, AvoirdupoisUS
+@system US using USCSLiquidVolume, USCSDryVolume, USCSVolumeOther, USCSLengthInternational, USCSLengthSurvey, AvoirdupoisUS
     yard
     pound
 @end
