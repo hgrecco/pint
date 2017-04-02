@@ -340,3 +340,8 @@ class TestSystem(QuantityTestCase):
         c = ureg.get_base_units('kph', system=sysname)
         self.assertAlmostEqual(c[0], 0.6213, places=3)
         self.assertEqual(c[1], {'mph': 1})
+
+    def test_members_nowarning(self):
+        ureg = self.ureg
+        for name in dir(ureg.sys):
+            s = dir(getattr(ureg.sys, name))
