@@ -215,9 +215,9 @@ or
    >>> type(Q_('2.54'))
    <class 'pint.quantity.build_quantity_class.<locals>.Quantity'>
 
-.. note:: Since version 0.7, Pint **does not** uses eval_ under the hood.
+.. note:: Since version 0.7, Pint **does not** use eval_ under the hood.
    This change removes the `serious security problems`_ that the system is
-   exposed when parsing information from untrusted sources.
+   exposed to when parsing information from untrusted sources.
 
 
 .. _sec-string-formatting:
