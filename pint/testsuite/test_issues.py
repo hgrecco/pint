@@ -535,3 +535,15 @@ class TestIssuesNP(QuantityTestCase):
         q = self.ureg.Quantity(1, self.ureg.dimensionless)
         qe = np.exp(q)
         self.assertIsInstance(qe, self.ureg.Quantity)
+
+    def test_issue468(self):
+        ureg = UnitRegistry()
+
+        @ureg.wraps(('kg'), 'meter')
+        def f(x):
+            return x
+
+        x = ureg.Quantity(1., 'meter')
+        y = f(x)
+        z = x * y
+        self.assertEquals(z, ureg.Quantity(1., 'meter * kilogram'))
