@@ -225,9 +225,10 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         """
 
         if isinstance(definition, string_types):
-            definition = Definition.from_string(definition)
-
-        self._define(definition)
+            for line in definition.split('\n'):
+                self._define(Definition.from_string(line))
+        else:
+            self._define(definition)
 
     def _define(self, definition):
         """Add unit to the registry.
