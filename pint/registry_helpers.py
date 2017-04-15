@@ -29,7 +29,7 @@ def _replace_units(original_units, values_by_name):
     return getattr(q, "_units", UnitsContainer({}))
 
 
-def _to_units_container(a):
+def _to_units_container(a, registry=None):
     """Convert a unit compatible type to a UnitsContainer,
     checking if it is string field prefixed with an equal
     (which is considered a reference)
@@ -38,10 +38,10 @@ def _to_units_container(a):
     """
     if isinstance(a, string_types) and '=' in a:
         return to_units_container(a.split('=', 1)[1]), True
-    return to_units_container(a), False
+    return to_units_container(a, registry), False
 
 
-def _parse_wrap_args(args):
+def _parse_wrap_args(args, registry=None):
 
     # Arguments which contain definitions
     # (i.e. names that appear alone and for the first time)
@@ -55,7 +55,7 @@ def _parse_wrap_args(args):
     unit_args_ndx = set()
 
     # _to_units_container
-    args_as_uc = [_to_units_container(arg) for arg in args]
+    args_as_uc = [_to_units_container(arg, registry) for arg in args]
 
     # Check for references in args, remove None values
     for ndx, (arg, is_ref) in enumerate(args_as_uc):
@@ -154,9 +154,9 @@ def wraps(ureg, ret, args, strict=True):
     converter = _parse_wrap_args(args)
 
     if isinstance(ret, (list, tuple)):
-        container, ret = True, ret.__class__([_to_units_container(arg) for arg in ret])
+        container, ret = True, ret.__class__([_to_units_container(arg, ureg) for arg in ret])
     else:
-        container, ret = False, _to_units_container(ret)
+        container, ret = False, _to_units_container(ret, ureg)
 
     def decorator(func):
         assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))

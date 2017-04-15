@@ -893,9 +893,21 @@ class _Quantity(SharedRegistryObject):
 
             if isinstance(getattr(other, '_magnitude', other), ndarray):
                 # arrays are refused as exponent, because they would create
-                #  len(array) quanitites of len(set(array)) different units
-                if np.size(other) > 1:
-                    raise DimensionalityError(self._units, 'dimensionless')
+                # len(array) quantities of len(set(array)) different units
+                # unless the base is dimensionless.
+                if self.dimensionless:
+                    if getattr(other, 'dimensionless', False):
+                        self._magnitude **= other.m_as('')
+                        return self
+                    elif not getattr(other, 'dimensionless', True):
+                        raise DimensionalityError(other._units, 'dimensionless')
+                    else:
+                        self._magnitude **= other
+                        return self
+                elif np.size(other) > 1:
+                    raise DimensionalityError(self._units, 'dimensionless',
+                                              extra_msg='Quantity array exponents are only allowed '
+                                                        'if the base is dimensionless')
 
             if other == 1:
                 return self
@@ -930,9 +942,19 @@ class _Quantity(SharedRegistryObject):
 
             if isinstance(getattr(other, '_magnitude', other), ndarray):
                 # arrays are refused as exponent, because they would create
-                #  len(array) quantities of len(set(array)) different units
-                if np.size(other) > 1:
-                    raise DimensionalityError(self._units, 'dimensionless')
+                # len(array) quantities of len(set(array)) different units
+                # unless the base is dimensionless.
+                if self.dimensionless:
+                    if getattr(other, 'dimensionless', False):
+                        return self.__class__(self.m ** other.m_as(''))
+                    elif not getattr(other, 'dimensionless', True):
+                        raise DimensionalityError(other._units, 'dimensionless')
+                    else:
+                        return self.__class__(self.m ** other)
+                elif np.size(other) > 1:
+                    raise DimensionalityError(self._units, 'dimensionless',
+                                              extra_msg='Quantity array exponents are only allowed '
+                                                        'if the base is dimensionless')
 
             new_self = self
             if other == 1:
@@ -1052,6 +1074,7 @@ class _Quantity(SharedRegistryObject):
     #: will set on output.
     __set_units = {'cos': '', 'sin': '', 'tan': '',
                    'cosh': '', 'sinh': '', 'tanh': '',
+                   'log': '', 'exp': '',
                    'arccos': __radian, 'arcsin': __radian,
                    'arctan': __radian, 'arctan2': __radian,
                    'arccosh': __radian, 'arcsinh': __radian,
