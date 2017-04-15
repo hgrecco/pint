@@ -530,3 +530,8 @@ class TestIssuesNP(QuantityTestCase):
                          '1 count')
         self.assertEqual('{0:~}'.format(1 * self.ureg('MiB')),
                          '1 MiB')
+
+    def test_issue482(self):
+        q = self.ureg.Quantity(1, self.ureg.dimensionless)
+        qe = np.exp(q)
+        self.assertIsInstance(qe, self.ureg.Quantity)

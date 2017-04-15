@@ -1052,6 +1052,7 @@ class _Quantity(SharedRegistryObject):
     #: will set on output.
     __set_units = {'cos': '', 'sin': '', 'tan': '',
                    'cosh': '', 'sinh': '', 'tanh': '',
+                   'log': '', 'exp': '',
                    'arccos': __radian, 'arcsin': __radian,
                    'arctan': __radian, 'arctan2': __radian,
                    'arccosh': __radian, 'arcsinh': __radian,
