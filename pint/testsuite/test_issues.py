@@ -547,3 +547,10 @@ class TestIssuesNP(QuantityTestCase):
         y = f(x)
         z = x * y
         self.assertEquals(z, ureg.Quantity(1., 'meter * kilogram'))
+
+    def test_issue483(self):
+        ureg = self.ureg
+        a = np.asarray([1, 2, 3])
+        q = [1, 2, 3] * ureg.dimensionless
+        p = (q ** q).m
+        np.testing.assert_array_equal(p, a ** a)

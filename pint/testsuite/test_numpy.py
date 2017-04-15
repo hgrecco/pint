@@ -427,7 +427,7 @@ class TestNDArrayQunatityMath(QuantityTestCase):
     @helpers.requires_numpy()
     def test_exponentiation_array_exp(self):
         arr = np.array(range(3), dtype=np.float)
-        q = self.Q_(arr, None)
+        q = self.Q_(arr, 'meter')
 
         for op_ in [op.pow, op.ipow]:
             q_cp = copy.copy(q)
