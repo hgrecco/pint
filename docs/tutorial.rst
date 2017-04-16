@@ -287,7 +287,7 @@ Pint also supports the LaTeX siunitx package:
    >>> print('The siunitx representation is {:Lx}'.format(accel))
    The siunitx representation is \SI[]{1.3}{\meter\per\second\squared}
 
-Finally, you can specify a default format specification:
+Additionally, you can specify a default format specification:
 
 .. doctest::
 
@@ -296,6 +296,14 @@ Finally, you can specify a default format specification:
    >>> ureg.default_format = 'P'
    >>> 'The acceleration is {}'.format(accel)
    'The acceleration is 1.3 meter/second²'
+
+
+Finally, if Babel_ is installed you can translate unit names to any language
+
+.. doctest::
+
+   >>> accel.format_babel(locale='fr_FR')
+   '1.3 mètre par seconde²'
 
 
 Using Pint in your projects
@@ -342,3 +350,4 @@ also define the registry as the application registry::
 
 .. _eval: http://docs.python.org/3/library/functions.html#eval
 .. _`serious security problems`: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
+.. _`Babel`: http://babel.pocoo.org/

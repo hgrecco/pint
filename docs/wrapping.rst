@@ -182,8 +182,8 @@ To avoid the conversion of an argument or return value, use None
     >>> mypp3 = ureg.wraps((ureg.second, None), ureg.meter)(pendulum_period_error)
 
 
-Checking units
-==============
+Checking dimensionality
+=======================
 
 When you want pint quantities to be used as inputs to your functions, pint provides a wrapper to ensure units are of
 correct type - or more precisely, they match the expected dimensionality of the physical quantity.
