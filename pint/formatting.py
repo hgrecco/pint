@@ -148,7 +148,6 @@ def formatter(items, as_ratio=True, single_denominator=False,
                 other_lengths = []
             for _babel_length in [babel_length] + other_lengths:
                 pat = unit_patterns.get(_key, {}).get(_babel_length, {}).get(plural)
-                print(plural, _babel_length, pat)
                 if pat is not None:
                     key = pat.replace('{0}', '').strip()
                     break

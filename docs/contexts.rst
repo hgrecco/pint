@@ -120,6 +120,27 @@ mass.
     <Quantity(19.0, 'mole')>
 
 
+Ensuring context when calling a function
+----------------------------------------
+
+Pint provides a decorator to make sure that a function called is done within a given
+context. Just like before, you have to provide as argument the name (or alias) of the
+context and the parameters that you wish to set.
+
+
+.. doctest::
+
+    >>> wl = 530. * ureg.nm
+    >>> @ureg.with_context('sp', n=1.33)
+    ... def f(wl):
+    ...     return wl.to('Hz').magnitude
+    >>> f(wl)
+    398.496240602
+
+
+This decorator can be combined with **wraps** or **check** decorators described in `wrapping`_
+
+
 Defining contexts in a file
 ---------------------------
 
