@@ -9,7 +9,7 @@ except:
     pass
 
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     print('Please install or upgrade setuptools or pip to continue')
     sys.exit(1)
@@ -43,7 +43,7 @@ setup(
     test_suite='pint.testsuite.testsuite',
     tests_require=tests_require,
     zip_safe=True,
-    packages=['pint'],
+    packages=find_packages(),
     package_data={
         'pint': ['default_en.txt',
                  'constants_en.txt']
