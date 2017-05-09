@@ -49,6 +49,12 @@ To install Pint, simply:
 
     $ pip install pint
 
+or utilizing conda, with the conda-forge channel:
+
+.. code-block:: bash
+
+    $ conda install -c conda-forge pint
+
 and then simply enjoy it!
 
 
@@ -70,7 +76,8 @@ definitions does not involve changing the code.
 
 **Advanced string formatting**: a quantity can be formatted into string using
 `PEP 3101`_ syntax. Extended conversion flags are given to provide symbolic,
-LaTeX and pretty formatting.
+LaTeX and pretty formatting. Unit name translation is available if Babel_ is
+installed.
 
 **Free to choose the numerical type**: You can use any numerical type
 (`fraction`, `float`, `decimal`, `numpy.ndarray`, etc). NumPy_ is not required
@@ -143,3 +150,4 @@ One last thing
 .. _`uncertainties package`: https://pythonhosted.org/uncertainties/
 .. _`NumPy`: http://www.numpy.org/
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/
+.. _`Babel`: http://babel.pocoo.org/

@@ -47,8 +47,12 @@ class _Measurement(object):
 
         if error < 0:
             raise ValueError('The magnitude of the error cannot be negative'.format(value, error))
+        else:
+            mag = ufloat(value,error)
+            
+        inst = super(_Measurement, cls).__new__(cls, mag, units)
         return inst
-
+    
     @property
     def value(self):
         return self._REGISTRY.Quantity(self.magnitude.nominal_value, self.units)
@@ -72,17 +76,17 @@ class _Measurement(object):
     def __format__(self, spec):
         # special cases
         if 'Lx' in spec: # the LaTeX siunitx code
-          # the uncertainties module supports formatting
-          # numbers in value(unc) notation (i.e. 1.23(45) instead of 1.23 +/- 0.45),
-          # which siunitx actually accepts as input. we just need to give the 'S'
-          # formatting option for the uncertainties module.
-          spec = spec.replace('Lx','S')
-          # todo: add support for extracting options
-          opts = 'separate-uncertainty=true'
-          mstr = format( self.magnitude, spec )
-          ustr = siunitx_format_unit(self.units)
-          ret = r'\SI[%s]{%s}{%s}'%( opts, mstr, ustr )
-          return ret
+            # the uncertainties module supports formatting
+            # numbers in value(unc) notation (i.e. 1.23(45) instead of 1.23 +/- 0.45),
+            # which siunitx actually accepts as input. we just need to give the 'S'
+            # formatting option for the uncertainties module.
+            spec = spec.replace('Lx','S')
+            # todo: add support for extracting options
+            opts = 'separate-uncertainty=true'
+            mstr = format( self.magnitude, spec )
+            ustr = siunitx_format_unit(self.units)
+            ret = r'\SI[%s]{%s}{%s}'%( opts, mstr, ustr )
+            return ret
 
 
         # standard cases

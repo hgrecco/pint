@@ -7,13 +7,15 @@ env:
   - UNCERTAINTIES="N" PYTHON="3.4" NUMPY_VERSION=1.11.2
   - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=1.11.2
   - UNCERTAINTIES="Y" PYTHON="3.5" NUMPY_VERSION=1.11.2
+  - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.11.2
   - UNCERTAINTIES="N" PYTHON="2.7" NUMPY_VERSION=0
   - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=0
 
 branches:
   only:
+    - staging
+    - trying
     - master
-    - develop
 
 before_install:
   - sudo apt-get update
@@ -43,7 +45,7 @@ install:
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
   - if [ $PYTHON == '3.2' ]; then pip install coverage==3.7.1; else pip install coverage; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install serialize pyyaml; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install babel serialize pyyaml; fi
   - pip install coveralls
 
 script:

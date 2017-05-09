@@ -234,7 +234,7 @@ class TestIssues(QuantityTestCase):
 
         for func in (ureg.get_name, ureg.parse_expression):
             val = func('meter')
-            self.assertRaises(ValueError, func, 'METER')
+            self.assertRaises(AttributeError, func, 'METER')
             self.assertEqual(val, func('METER', False))
 
     def test_issue104(self):
@@ -530,3 +530,27 @@ class TestIssuesNP(QuantityTestCase):
                          '1 count')
         self.assertEqual('{0:~}'.format(1 * self.ureg('MiB')),
                          '1 MiB')
+
+    def test_issue482(self):
+        q = self.ureg.Quantity(1, self.ureg.dimensionless)
+        qe = np.exp(q)
+        self.assertIsInstance(qe, self.ureg.Quantity)
+
+    def test_issue468(self):
+        ureg = UnitRegistry()
+
+        @ureg.wraps(('kg'), 'meter')
+        def f(x):
+            return x
+
+        x = ureg.Quantity(1., 'meter')
+        y = f(x)
+        z = x * y
+        self.assertEquals(z, ureg.Quantity(1., 'meter * kilogram'))
+
+    def test_issue483(self):
+        ureg = self.ureg
+        a = np.asarray([1, 2, 3])
+        q = [1, 2, 3] * ureg.dimensionless
+        p = (q ** q).m
+        np.testing.assert_array_equal(p, a ** a)

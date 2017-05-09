@@ -797,15 +797,6 @@ class _Quantity(SharedRegistryObject):
     def __truediv__(self, other):
         return self._mul_div(other, operator.truediv)
 
-    def __ifloordiv__(self, other):
-        if not isinstance(self._magnitude, ndarray):
-            return self._mul_div(other, operator.floordiv, units_op=operator.itruediv)
-        else:
-            return self._imul_div(other, operator.ifloordiv, units_op=operator.itruediv)
-
-    def __floordiv__(self, other):
-        return self._mul_div(other, operator.floordiv, units_op=operator.truediv)
-
     def __rtruediv__(self, other):
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
@@ -819,24 +810,77 @@ class _Quantity(SharedRegistryObject):
             self = self.to_root_units()
 
         return self.__class__(other_magnitude / self._magnitude, 1 / self._units)
-
-    def __rfloordiv__(self, other):
-        try:
-            other_magnitude = _to_magnitude(other, self.force_ndarray)
-        except TypeError:
-            return NotImplemented
-
-        no_offset_units_self = len(self._get_non_multiplicative_units())
-        if not self._ok_for_muldiv(no_offset_units_self):
-            raise OffsetUnitCalculusError(self._units, '')
-        elif no_offset_units_self == 1 and len(self._units) == 1:
-            self = self.to_root_units()
-
-        return self.__class__(other_magnitude // self._magnitude, 1 / self._units)
-
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
     __idiv__ = __itruediv__
+
+    def __ifloordiv__(self, other):
+        if self._check(other):
+            self._magnitude //= other.to(self._units)._magnitude
+        elif self.dimensionless:
+            self._magnitude = self.to('')._magnitude // other
+        else:
+            raise DimensionalityError(self._units, 'dimensionless')
+        self._units = UnitsContainer({})
+        return self
+
+    def __floordiv__(self, other):
+        if self._check(other):
+            magnitude = self._magnitude // other.to(self._units)._magnitude
+        elif self.dimensionless:
+            magnitude = self.to('')._magnitude // other
+        else:
+            raise DimensionalityError(self._units, 'dimensionless')
+        return self.__class__(magnitude, UnitsContainer({}))
+
+    def __rfloordiv__(self, other):
+        if self._check(other):
+            magnitude = other._magnitude // self.to(other._units)._magnitude
+        elif self.dimensionless:
+            magnitude = other // self.to('')._magnitude
+        else:
+            raise DimensionalityError(self._units, 'dimensionless')
+        return self.__class__(magnitude, UnitsContainer({}))
+
+    def __imod__(self, other):
+        if not self._check(other):
+            other = self.__class__(other, UnitsContainer({}))
+        self._magnitude %= other.to(self._units)._magnitude
+        return self
+
+    def __mod__(self, other):
+        if not self._check(other):
+            other = self.__class__(other, UnitsContainer({}))
+        magnitude = self._magnitude % other.to(self._units)._magnitude
+        return self.__class__(magnitude, self._units)
+
+    def __rmod__(self, other):
+        if self._check(other):
+            magnitude = other._magnitude % self.to(other._units)._magnitude
+            return self.__class__(magnitude, other._units)
+        elif self.dimensionless:
+            magnitude = other % self.to('')._magnitude
+            return self.__class__(magnitude, UnitsContainer({}))
+        else:
+            raise DimensionalityError(self._units, 'dimensionless')
+
+    def __divmod__(self, other):
+        if not self._check(other):
+            other = self.__class__(other, UnitsContainer({}))
+        q, r = divmod(self._magnitude, other.to(self._units)._magnitude)
+        return (self.__class__(q, UnitsContainer({})),
+                self.__class__(r, self._units))
+
+    def __rdivmod__(self, other):
+        if self._check(other):
+            q, r = divmod(other._magnitude, self.to(other._units)._magnitude)
+            unit = other._units
+        elif self.dimensionless:
+            q, r = divmod(other, self.to('')._magnitude)
+            unit = UnitsContainer({})
+        else:
+            raise DimensionalityError(self._units, 'dimensionless')
+        return (self.__class__(q, UnitsContainer({})), self.__class__(r, unit))
 
     def __ipow__(self, other):
         if not isinstance(self._magnitude, ndarray):
@@ -852,9 +896,21 @@ class _Quantity(SharedRegistryObject):
 
             if isinstance(getattr(other, '_magnitude', other), ndarray):
                 # arrays are refused as exponent, because they would create
-                #  len(array) quanitites of len(set(array)) different units
-                if np.size(other) > 1:
-                    raise DimensionalityError(self._units, 'dimensionless')
+                # len(array) quantities of len(set(array)) different units
+                # unless the base is dimensionless.
+                if self.dimensionless:
+                    if getattr(other, 'dimensionless', False):
+                        self._magnitude **= other.m_as('')
+                        return self
+                    elif not getattr(other, 'dimensionless', True):
+                        raise DimensionalityError(other._units, 'dimensionless')
+                    else:
+                        self._magnitude **= other
+                        return self
+                elif np.size(other) > 1:
+                    raise DimensionalityError(self._units, 'dimensionless',
+                                              extra_msg='Quantity array exponents are only allowed '
+                                                        'if the base is dimensionless')
 
             if other == 1:
                 return self
@@ -889,9 +945,19 @@ class _Quantity(SharedRegistryObject):
 
             if isinstance(getattr(other, '_magnitude', other), ndarray):
                 # arrays are refused as exponent, because they would create
-                #  len(array) quantities of len(set(array)) different units
-                if np.size(other) > 1:
-                    raise DimensionalityError(self._units, 'dimensionless')
+                # len(array) quantities of len(set(array)) different units
+                # unless the base is dimensionless.
+                if self.dimensionless:
+                    if getattr(other, 'dimensionless', False):
+                        return self.__class__(self.m ** other.m_as(''))
+                    elif not getattr(other, 'dimensionless', True):
+                        raise DimensionalityError(other._units, 'dimensionless')
+                    else:
+                        return self.__class__(self.m ** other)
+                elif np.size(other) > 1:
+                    raise DimensionalityError(self._units, 'dimensionless',
+                                              extra_msg='Quantity array exponents are only allowed '
+                                                        'if the base is dimensionless')
 
             new_self = self
             if other == 1:
@@ -1011,6 +1077,7 @@ class _Quantity(SharedRegistryObject):
     #: will set on output.
     __set_units = {'cos': '', 'sin': '', 'tan': '',
                    'cosh': '', 'sinh': '', 'tanh': '',
+                   'log': '', 'exp': '',
                    'arccos': __radian, 'arcsin': __radian,
                    'arctan': __radian, 'arctan2': __radian,
                    'arccosh': __radian, 'arcsinh': __radian,

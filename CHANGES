@@ -1,11 +1,65 @@
 Pint Changelog
 ==============
 
-0.8 (unreleased)
+0.9 (unreleased)
 ----------------
 
 - Nothing changed yet.
 
+
+0.8 (2017-04-16)
+----------------
+
+- Refactored the Registry in multiple classes for better separation of concerns and clarity.
+- Implemented support for defining multiple units per `define` call (one definition per line).
+  (Issue #462)
+- In pow and ipow, allow array exponents (with len > 1) when base is dimensionless.
+  (Issue #483)
+- Wraps now gets the canonical name of the unit when passed as string.
+  (Issue #468)
+- NumPy exp and log keeps the type
+  (Issue #95)
+- Implemented a function decorator to ensure that a context is active (with_context)
+  (Issue #465)
+- Add warning when a System contains an unknown Group. 
+  (Issue #472)
+- Add conda-forge installation snippet.
+  (Issue #485, thanks stadelmanma)
+- Properly support floor division and modulo.
+  (Issue #474, thanks tecki)
+- Measurement Correlated variable fix.
+  (Issue #463, thanks tadhgmister)
+- Implement degree sign handling.
+  (Issue #449, thanks iamthad)
+- Change `UndefinedUnitError` to inherit from `AttributeError`
+  (Issue #480, thanks jhidding)
+- Simplified travis for faster testing.
+- Fixed order units in siunitx formatting.
+  (Issue #441)
+- Changed Systems lister to return a list instead of frozenset.
+  (Issue #425, thanks GloriaVictis)
+- Fixed issue with negative values in to_compact() method.
+  (Issue #443, thanks nowox)
+- Improved defintions.
+  (Issues #448, thanks gdonval)
+- Improved Parser to support capital "E" on scientific notation.
+  (Issue #390, thanks javenoneal)
+- Make sure that prefixed units are defined on the registry when unplicking.
+  (Issue #405)
+- Automatic unit names translation through babel.
+  (Issue #338, thanks alexbodn)
+- Support pickling Unit objects.
+  (Issue #349)
+- Add support for wavenumber/kayser in spectroscopy context.
+  (Issue #321, thanks gerritholl)
+- Improved formatting.
+  (thanks endolith and others)
+- Add support for inline comments in definitions file.
+  (Issue #366)
+- Implement Unit.__deepcopy__.
+  (Issue #357, thanks noahl)
+- Allow changing shape for Quantities with numpy arrays.
+  (Issue #344, thanks tecki)
 
 0.7.2 (2016-03-02)
 ------------------

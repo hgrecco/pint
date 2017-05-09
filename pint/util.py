@@ -554,7 +554,8 @@ class ParserHelper(UnitsContainer):
 
 
 #: List of regex substitution pairs.
-_subs_re = [(r"([\w\.\-\+\*\\\^])\s+", r"\1 "), # merge multiple spaces
+_subs_re = [('\N{DEGREE SIGN}', " degree"),
+            (r"([\w\.\-\+\*\\\^])\s+", r"\1 "), # merge multiple spaces
             (r"({0}) squared", r"\1**2"),  # Handle square and cube
             (r"({0}) cubed", r"\1**3"),
             (r"cubic ({0})", r"\1**3"),

@@ -5,7 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import itertools
 from collections import defaultdict
 
-from pint import UnitRegistry
+from pint import UnitRegistry, errors
 from pint.context import Context
 from pint.util import UnitsContainer
 from pint.testsuite import QuantityTestCase
@@ -619,3 +619,41 @@ class TestDefinedContexts(QuantityTestCase):
 
         for a, b in itertools.product(eq, eq):
             self.assertQuantityAlmostEqual(a.to(b.units, 'sp'), b, rtol=0.01)
+
+    def test_decorator(self):
+        ureg = self.ureg
+
+        a = 532. * ureg.nm
+        with ureg.context('sp'):
+            b = a.to('terahertz')
+
+        def f(wl):
+            return wl.to('terahertz')
+
+        self.assertRaises(errors.DimensionalityError, f, a)
+
+        @ureg.with_context('sp')
+        def g(wl):
+            return wl.to('terahertz')
+
+        self.assertEqual(b, g(a))
+
+    def test_decorator_composition(self):
+        ureg = self.ureg
+
+        a = 532. * ureg.nm
+        with ureg.context('sp'):
+            b = a.to('terahertz')
+
+        @ureg.with_context('sp')
+        @ureg.check('[length]')
+        def f(wl):
+            return wl.to('terahertz')
+
+        @ureg.with_context('sp')
+        @ureg.check('[length]')
+        def g(wl):
+            return wl.to('terahertz')
+
+        self.assertEqual(b, f(a))
+        self.assertEqual(b, g(a))
