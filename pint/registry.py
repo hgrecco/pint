@@ -96,6 +96,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
     :type on_redefinition: str
+    :param auto_reduce_dimensions: If True, reduce dimensionality on appropriate operations.
     """
 
     #: Map context prefix to function
@@ -111,7 +112,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             'parse_unit_name', 'parse_units', 'parse_expression',
             'convert']
 
-    def __init__(self, filename='', force_ndarray=False, on_redefinition='warn'):
+    def __init__(self, filename='', force_ndarray=False, on_redefinition='warn', auto_reduce_dimensions=False):
 
         self._register_parsers()
 
@@ -128,6 +129,9 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
+
+        #: Determines if dimensionality should be reduced on appropriate operations.
+        self.auto_reduce_dimensions = auto_reduce_dimensions
 
         #: Map between name (string) and value (string) of defaults stored in the definitions file.
         self._defaults = {}
@@ -1435,17 +1439,20 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
     :type on_redefinition: str
+    :param auto_reduce_dimensions: If True, reduce dimensionality on appropriate operations.
     """
 
     def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
                  autoconvert_offset_to_baseunit=False,
-                 on_redefinition='warn', system=None):
+                 on_redefinition='warn', system=None,
+                 auto_reduce_dimensions=False):
 
         super(UnitRegistry, self).__init__(filename=filename, force_ndarray=force_ndarray,
                                            on_redefinition=on_redefinition,
                                            default_as_delta=default_as_delta,
                                            autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
-                                           system=system)
+                                           system=system,
+                                           auto_reduce_dimensions=auto_reduce_dimensions)
 
     def pi_theorem(self, quantities):
         """Builds dimensionless quantities using the Buckingham π theorem

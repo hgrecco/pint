@@ -44,6 +44,25 @@ class _Exception(Exception):            # pragma: no cover
         self.internal = internal
 
 
+def reduce_dimensions(f):
+    def wrapped(self, *args, **kwargs):
+        result = f(self, *args, **kwargs)
+        if result._REGISTRY.auto_reduce_dimensions:
+            return result.to_root_units()
+        else:
+            return result
+    return wrapped
+
+
+def ireduce_dimensions(f):
+    def wrapped(self, *args, **kwargs):
+        result = f(self, *args, **kwargs)
+        if result._REGISTRY.auto_reduce_dimensions:
+            result.ito_root_units()
+        return result
+    return wrapped
+
+
 @fix_str_conversions
 class _Quantity(SharedRegistryObject):
     """Implements a class to describe a physical quantity:
@@ -657,6 +676,7 @@ class _Quantity(SharedRegistryObject):
     def __rsub__(self, other):
         return -self._add_sub(other, operator.sub)
 
+    @ireduce_dimensions
     def _imul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation in-place and return the
         result.
@@ -714,6 +734,7 @@ class _Quantity(SharedRegistryObject):
 
         return self
 
+    @reduce_dimensions
     def _mul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation and return the result.
 
