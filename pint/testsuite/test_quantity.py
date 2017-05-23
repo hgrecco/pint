@@ -1156,3 +1156,40 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
                 in1_cp = copy.copy(in1)
                 self.assertQuantityAlmostEqual(op.ipow(in1_cp, in2), expected)
+
+
+class TestDimensionReduction(QuantityTestCase):
+    def _calc_mass(self, ureg):
+        density = 3 * ureg.g / ureg.L
+        volume = 32 * ureg.milliliter
+        return density * volume
+
+    def _icalc_mass(self, ureg):
+        res = ureg.Quantity(3.0, 'gram/liter')
+        res *= ureg.Quantity(32.0, 'milliliter')
+        return res
+
+    def test_mul_and_div_reduction(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True)
+        mass = self._calc_mass(ureg)
+        self.assertEqual(mass.units, ureg.g)
+        ureg = UnitRegistry(auto_reduce_dimensions=False)
+        mass = self._calc_mass(ureg)
+        self.assertEqual(mass.units, ureg.g / ureg.L * ureg.milliliter)
+
+    @helpers.requires_numpy()
+    def test_imul_and_div_reduction(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True, force_ndarray=True)
+        mass = self._icalc_mass(ureg)
+        self.assertEqual(mass.units, ureg.g)
+        ureg = UnitRegistry(auto_reduce_dimensions=False, force_ndarray=True)
+        mass = self._icalc_mass(ureg)
+        self.assertEqual(mass.units, ureg.g / ureg.L * ureg.milliliter)
+
+    def test_reduction_to_dimensionless(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True)
+        x = (10 * ureg.feet) / (3 * ureg.inches)
+        self.assertEqual(x.units, UnitsContainer({}))
+        ureg = UnitRegistry(auto_reduce_dimensions=False)
+        x = (10 * ureg.feet) / (3 * ureg.inches)
+        self.assertEqual(x.units, ureg.feet / ureg.inches)
