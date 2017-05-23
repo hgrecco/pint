@@ -595,6 +595,18 @@ class TestDimensions(QuantityTestCase):
         self.assertFalse((self.Q_(42, 'meter') / self.Q_(1, 'second')).dimensionless)
         self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'inch')).dimensionless)
 
+    def test_inclusion(self):
+        dim = self.Q_(42, 'meter').dimensionality
+        self.assertTrue('[length]' in dim)
+        self.assertFalse('[time]' in dim)
+        dim = (self.Q_(42, 'meter') / self.Q_(11, 'second')).dimensionality
+        self.assertTrue('[length]' in dim)
+        self.assertTrue('[time]' in dim)
+        dim = self.Q_(20.785, 'J/(mol)').dimensionality
+        for dimension in ('[length]', '[mass]', '[substance]', '[time]'):
+            self.assertTrue(dimension in dim)
+        self.assertFalse('[angle]' in dim)
+
 
 class TestQuantityWithDefaultRegistry(TestDimensions):
 

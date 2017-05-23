@@ -297,6 +297,9 @@ class UnitsContainer(Mapping):
     def __getitem__(self, key):
         return self._d[key]
 
+    def __contains__(self, key):
+        return key in self._d
+
     def __hash__(self):
         return self._hash
 
