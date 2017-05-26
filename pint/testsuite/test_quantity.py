@@ -3,6 +3,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import copy
+import datetime
 import math
 import operator as op
 import warnings
@@ -1205,3 +1206,31 @@ class TestDimensionReduction(QuantityTestCase):
         ureg = UnitRegistry(auto_reduce_dimensions=False)
         x = (10 * ureg.feet) / (3 * ureg.inches)
         self.assertEqual(x.units, ureg.feet / ureg.inches)
+
+
+class TestTimedelta(QuantityTestCase):
+    def test_add_sub(self):
+        d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
+        after = d + 3 * self.ureg.second
+        self.assertEqual(d + datetime.timedelta(seconds=3), after)
+        after = 3 * self.ureg.second + d
+        self.assertEqual(d + datetime.timedelta(seconds=3), after)
+        after = d - 3 * self.ureg.second
+        self.assertEqual(d - datetime.timedelta(seconds=3), after)
+        with self.assertRaises(DimensionalityError):
+            3 * self.ureg.second - d
+
+    def test_iadd_isub(self):
+        d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
+        after = copy.copy(d)
+        after += 3 * self.ureg.second
+        self.assertEqual(d + datetime.timedelta(seconds=3), after)
+        after = 3 * self.ureg.second
+        after += d
+        self.assertEqual(d + datetime.timedelta(seconds=3), after)
+        after = copy.copy(d)
+        after -= 3 * self.ureg.second
+        self.assertEqual(d - datetime.timedelta(seconds=3), after)
+        after = 3 * self.ureg.second
+        with self.assertRaises(DimensionalityError):
+            after -= d
