@@ -14,7 +14,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import re
 
 from .babel_names import _babel_units, _babel_lengths
-from pint.compat import babel_units, Loc
+from pint.compat import babel_units, Loc, string_types
 
 __JOIN_REG_EXP = re.compile("\{\d*\}")
 
@@ -278,7 +278,7 @@ def vector_to_latex(vec, fmtfun=lambda x: format(x, '.2f')):
     return matrix_to_latex([vec], fmtfun)
 
 
-def matrix_to_latex(matrix, fmtfun=lambda x: format('.2f', x)):
+def matrix_to_latex(matrix, fmtfun=lambda x: format(x, '.2f')):
     ret = []
 
     for row in matrix:
@@ -288,7 +288,7 @@ def matrix_to_latex(matrix, fmtfun=lambda x: format('.2f', x)):
 
 
 def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, '.2f'), dim=()):
-    if isinstance(fmtfun, str):
+    if isinstance(fmtfun, string_types):
         fmt = fmtfun
         fmtfun = lambda x: format(x, fmt)
 
