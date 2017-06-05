@@ -10,6 +10,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import copy
+import datetime
 import math
 import operator
 import functools
@@ -654,13 +655,18 @@ class _Quantity(SharedRegistryObject):
         return self.__class__(magnitude, units)
 
     def __iadd__(self, other):
-        if not isinstance(self._magnitude, ndarray):
+        if isinstance(other, datetime.datetime):
+            return self.to_timedelta() + other
+        elif not isinstance(self._magnitude, ndarray):
             return self._add_sub(other, operator.add)
         else:
             return self._iadd_sub(other, operator.iadd)
 
     def __add__(self, other):
-        return self._add_sub(other, operator.add)
+        if isinstance(other, datetime.datetime):
+            return self.to_timedelta() + other
+        else:
+            return self._add_sub(other, operator.add)
 
     __radd__ = __add__
 
@@ -674,7 +680,10 @@ class _Quantity(SharedRegistryObject):
         return self._add_sub(other, operator.sub)
 
     def __rsub__(self, other):
-        return -self._add_sub(other, operator.sub)
+        if isinstance(other, datetime.datetime):
+            return other - self.to_timedelta()
+        else:
+            return -self._add_sub(other, operator.sub)
 
     @ireduce_dimensions
     def _imul_div(self, other, magnitude_op, units_op=None):
@@ -1510,6 +1519,9 @@ class _Quantity(SharedRegistryObject):
             if next(iter(self._units.values())) != 1:
                 is_ok = False
         return is_ok
+
+    def to_timedelta(self):
+        return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
 
 
 def build_quantity_class(registry, force_ndarray=False):
