@@ -10,7 +10,7 @@ from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
 from pint.compat import np, long_type
-from pint.errors import UndefinedUnitError
+from pint.errors import UndefinedUnitError, DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.compat import unittest
 
@@ -204,6 +204,14 @@ class TestIssues(QuantityTestCase):
 
         self.assertQuantityAlmostEqual(x + y, 5.1 * ureg.meter)
         self.assertQuantityAlmostEqual(z, 5.1 * ureg.meter)
+
+    def test_issue523(self):
+        ureg = UnitRegistry()
+        src, dst = UnitsContainer({'meter': 1}), UnitsContainer({'degF': 1})
+        value = 10.
+        convert = self.ureg.convert
+        self.assertRaises(DimensionalityError, convert, value, src, dst)
+        self.assertRaises(DimensionalityError, convert, value, dst, src)
 
     def _test_issueXX(self):
         ureg = UnitRegistry()
