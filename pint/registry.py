@@ -939,6 +939,11 @@ class NonMultiplicativeRegistry(BaseRegistry):
         src_dim = self._get_dimensionality(src)
         dst_dim = self._get_dimensionality(dst)
 
+        # If the source and destination dimensionality are different,
+        # then the conversion cannot be performed.
+        if src_dim != dst_dim:
+            raise DimensionalityError(src, dst, src_dim, dst_dim)
+
         # For offset units we need to check if the conversion is allowed.
         if src_offset_units or dst_offset_units:
 
