@@ -10,7 +10,8 @@ Pint Changelog
   (Issue #512)
 - Implemented BaseRegistry.auto_reduce_dimensions.
   (Issue #500, thanks robertd)
-
+- Fixed dimension compatibility bug introduced on Registry refactoring
+  (Issue #523, thanks dalito)
 
 
 0.8 (2017-04-16)
