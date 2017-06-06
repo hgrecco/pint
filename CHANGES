@@ -1,8 +1,8 @@
 Pint Changelog
 ==============
 
-0.9 (unreleased)
-----------------
+0.8.1 (2017-06-05)
+------------------
 
 - Add support for datetime math.
   (Issue #510, thanks robertd)
