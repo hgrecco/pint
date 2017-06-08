@@ -462,7 +462,10 @@ class ParserHelper(UnitsContainer):
                                  for key, value in ret.items()))
 
     def __copy__(self):
-        return ParserHelper(scale=self.scale, **self)
+        # workaround for python2.6 compatibility (cast kwarg keys to str)
+        # see http://bugs.python.org/issue2646
+        kwargs = dict([(str(k),v) for k,v in self.items()])
+        return ParserHelper(scale=self.scale, **kwargs)
 
     def copy(self):
         return self.__copy__()
