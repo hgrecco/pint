@@ -12,3 +12,6 @@ MANIFEST
 
 # WebDAV file system cache files
 .DAV/
+
+# tags files (from ctags)
+tags
