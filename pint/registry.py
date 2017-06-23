@@ -944,34 +944,31 @@ class NonMultiplicativeRegistry(BaseRegistry):
         if src_dim != dst_dim:
             raise DimensionalityError(src, dst, src_dim, dst_dim)
 
-        # For offset units we need to check if the conversion is allowed.
-        if src_offset_units or dst_offset_units:
+        # Validate that not more than one offset unit is present
+        if len(src_offset_units) > 1 or len(dst_offset_units) > 1:
+            raise DimensionalityError(
+                src, dst, src_dim, dst_dim,
+                extra_msg=' - more than one offset unit.')
 
-            # Validate that not more than one offset unit is present
-            if len(src_offset_units) > 1 or len(dst_offset_units) > 1:
+        # validate that offset unit is not used in multiplicative context
+        if ((len(src_offset_units) == 1 and len(src) > 1)
+                or (len(dst_offset_units) == 1 and len(dst) > 1)
+                and not self.autoconvert_offset_to_baseunit):
+            raise DimensionalityError(
+                src, dst, src_dim, dst_dim,
+                extra_msg=' - offset unit used in multiplicative context.')
+
+        # Validate that order of offset unit is exactly one.
+        if src_offset_units:
+            if src_offset_units[0][1] != 1:
                 raise DimensionalityError(
                     src, dst, src_dim, dst_dim,
-                    extra_msg=' - more than one offset unit.')
-
-            # validate that offset unit is not used in multiplicative context
-            if ((len(src_offset_units) == 1 and len(src) > 1)
-                    or (len(dst_offset_units) == 1 and len(dst) > 1)
-                    and not self.autoconvert_offset_to_baseunit):
+                    extra_msg=' - offset units in higher order.')
+        else:
+            if dst_offset_units[0][1] != 1:
                 raise DimensionalityError(
                     src, dst, src_dim, dst_dim,
-                    extra_msg=' - offset unit used in multiplicative context.')
-
-            # Validate that order of offset unit is exactly one.
-            if src_offset_units:
-                if src_offset_units[0][1] != 1:
-                    raise DimensionalityError(
-                        src, dst, src_dim, dst_dim,
-                        extra_msg=' - offset units in higher order.')
-            else:
-                if dst_offset_units[0][1] != 1:
-                    raise DimensionalityError(
-                        src, dst, src_dim, dst_dim,
-                        extra_msg=' - offset units in higher order.')
+                    extra_msg=' - offset units in higher order.')
 
         # Here we convert only the offset quantities. Any remaining scaled
         # quantities will be converted later.
