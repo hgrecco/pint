@@ -561,3 +561,13 @@ class TestIssuesNP(QuantityTestCase):
         q = [1, 2, 3] * ureg.dimensionless
         p = (q ** q).m
         np.testing.assert_array_equal(p, a ** a)
+
+    def test_issue532(self):
+        ureg = self.ureg
+
+        @ureg.check(ureg(''))
+        def f(x):
+            return 2 * x
+
+        self.assertEqual(f(ureg.Quantity(1, '')), 2)
+        self.assertRaises(DimensionalityError, f, ureg.Quantity(1, 'm'))
