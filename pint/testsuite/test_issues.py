@@ -39,7 +39,6 @@ class TestIssues(QuantityTestCase):
 
     def test_issue29(self):
         ureg = UnitRegistry()
-        ureg.define('molar = mole / liter = M')
         t = 4 * ureg('mM')
         self.assertEqual(t.magnitude, 4)
         self.assertEqual(t._units, UnitsContainer(millimolar=1))

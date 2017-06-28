@@ -90,6 +90,22 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(str(x), '4.2 meter')
         self.assertEqual(repr(x), "<Quantity(4.2, 'meter')>")
 
+    def test_quantity_hash(self):
+        x = self.Q_(4.2, 'meter')
+        x2 = self.Q_(4200, 'millimeter')
+        y = self.Q_(2, 'second')
+        z = self.Q_(0.5, 'hertz')
+        self.assertEqual(hash(x), hash(x2))
+
+        # Dimensionless equality
+        self.assertEqual(hash(y * z), hash(1.0))
+
+        # Dimensionless equality from a different unit registry
+        ureg2 = UnitRegistry(force_ndarray=self.FORCE_NDARRAY)
+        y2 = ureg2.Quantity(2, 'second')
+        z2 = ureg2.Quantity(0.5, 'hertz')
+        self.assertEqual(hash(y * z), hash(y2 * z2))
+
     def test_quantity_format(self):
         x = self.Q_(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
         for spec, result in (('{0}', str(x)), ('{0!s}', str(x)), ('{0!r}', repr(x)),
