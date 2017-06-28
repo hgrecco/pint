@@ -210,9 +210,10 @@ def check(ureg, *args):
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kwargs):
             for dim, value in zip_longest(dimensions, values):
-                if dim is not None and value.dimensionality != dim:
+                val_dim = ureg.get_dimensionality(value)
+                if dim is not None and val_dim != dim:
                     raise DimensionalityError(value, 'a quantity of',
-                                              value.dimensionality, dim)
+                                              val_dim, dim)
             return func(*values, **kwargs)
         return wrapper
     return decorator
