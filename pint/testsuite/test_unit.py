@@ -391,12 +391,12 @@ class TestRegistry(QuantityTestCase):
         ureg = self.ureg
 
         f0 = ureg.check('[length]')(func)
-        self.assertRaises(AttributeError, f0, 3.)
+        self.assertRaises(DimensionalityError, f0, 3.)
         self.assertEqual(f0(3. * ureg.centimeter), 0.03 * ureg.meter)
         self.assertRaises(DimensionalityError, f0, 3. * ureg.kilogram)
 
         f0b = ureg.check(ureg.meter)(func)
-        self.assertRaises(AttributeError, f0b, 3.)
+        self.assertRaises(DimensionalityError, f0b, 3.)
         self.assertEqual(f0b(3. * ureg.centimeter), 0.03 * ureg.meter)
         self.assertRaises(DimensionalityError, f0b, 3. * ureg.kilogram)
 
@@ -408,13 +408,13 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(g0(6 * ureg.parsec, 2), 3 * ureg.parsec)
 
         g1 = ureg.check('[speed]', '[time]')(gfunc)
-        self.assertRaises(AttributeError, g1, 3.0, 1)
+        self.assertRaises(DimensionalityError, g1, 3.0, 1)
         self.assertRaises(DimensionalityError, g1, 1 * ureg.parsec, 1 * ureg.angstrom)
         self.assertRaises(TypeError, g1, 1 * ureg.km / ureg.hour, 1 * ureg.hour, 3.0)
         self.assertEqual(g1(3.6 * ureg.km / ureg.hour, 1 * ureg.second), 1 * ureg.meter / ureg.second ** 2)
 
         g2 = ureg.check('[speed]')(gfunc)
-        self.assertRaises(AttributeError, g2, 3.0, 1)
+        self.assertRaises(DimensionalityError, g2, 3.0, 1)
         self.assertRaises(DimensionalityError, g2, 2 * ureg.parsec)
         self.assertRaises(DimensionalityError, g2, 2 * ureg.parsec, 1.0)
         self.assertEqual(g2(2.0 * ureg.km / ureg.hour, 2), 1 * ureg.km / ureg.hour)
