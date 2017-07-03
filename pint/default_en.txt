@@ -162,6 +162,8 @@ carat = 200 * milligram
 metric_ton = 1000 * kilogram = t = tonne
 atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
 bag = 94 * lb
+slug = lbf * s ** 2 / foot
+slinch = lbf * s ** 2 / inch = blob
 
 # Textile
 denier =  gram / (9000 * meter)
