@@ -300,6 +300,11 @@ class TestIssues(QuantityTestCase):
         except SyntaxError:
             self.fail('Quantity with µ prefix could not be created.')
 
+    def test_issue506(self):
+        ureg = UnitRegistry()
+        self.assertEqual(ureg['millennium'], ureg['millennia'])
+        self.assertRaises(UndefinedUnitError, ureg.Quanity, 'millenium')
+
 
 @helpers.requires_numpy()
 class TestIssuesNP(QuantityTestCase):
