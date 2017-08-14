@@ -243,7 +243,7 @@ common_year = 365 * day
 leap_year = 366 * day
 julian_year = 365.25 * day
 gregorian_year = 365.2425 * day
-millenium = 1000 * year = millenia = milenia = milenium
+millennium = 1000 * year = millennia
 eon = 1e9 * year
 work_year = 2056 * hour
 work_month = work_year / 12
