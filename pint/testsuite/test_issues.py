@@ -303,7 +303,7 @@ class TestIssues(QuantityTestCase):
     def test_issue506(self):
         ureg = UnitRegistry()
         self.assertEqual(ureg['millennium'], ureg['millennia'])
-        self.assertRaises(UndefinedUnitError, ureg.Quanity, 'millenium')
+        self.assertRaises(UndefinedUnitError, ureg.Quantity, 'millenium')
 
 
 @helpers.requires_numpy()
