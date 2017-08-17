@@ -412,7 +412,7 @@ class _Quantity(SharedRegistryObject):
         can it make use of contexts at this time.
         """
         #can we make this more efficient? 
-        newq = self.copy()
+        newq = copy.copy(self)
         newq.ito_reduced_units()
         return newq
         
