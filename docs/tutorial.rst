@@ -108,6 +108,28 @@ convert to the reference units with the correct dimensionality:
    >>> print(height)
    1.7526 meter
 
+There are also methods 'to_reduced_units' and 'ito_reduced_units' which perform
+a simplified dimensional reduction, combining units with the same dimensionality
+but otherwise keeping your unit definitions intact. 
+
+.. doctest::
+
+   >>> density = 1.4 * ureg.gram / ureg.cm**3
+   >>> volume = 10*ureg.cc
+   >>> mass = density*volume
+   >>> print(mass)
+   14.0 cc * gram / centimeter ** 3
+   >>> print(mass.to_reduced_units())
+   14.0 gram
+   >>> print(mass)
+   14.0 cc * gram / centimeter ** 3
+   >>> mass.ito_reduced_units()
+   >>> print(mass)
+   14.0 gram
+   
+If you want pint to automatically perform dimensional reduction when producing
+new quantities, the UnitRegistry accepts a parameter `auto_reduce_dimensions`.
+Dimensional reduction can be slow, so auto-reducing is disabled by default. 
 
 In some cases it is useful to define physical quantities objects using the
 class constructor:

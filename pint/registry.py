@@ -557,7 +557,29 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                 reg = self._units[self.get_name(key)]
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
+                    
+    def _get_dimensionality_ratio(self, unit1, unit2):
+        """ Get the exponential ratio between two units, i.e. solve unit2 = unit1**x for x. 
+        :param unit1: first unit
+        :type unit1: UnitsContainer compatible (str, Unit, UnitsContainer, dict)
+        :param unit2: second unit
+        :type unit2: UnitsContainer compatible (str, Unit, UnitsContainer, dict)
+        :returns: exponential proportionality or None if the units cannot be converted 
+        """
+        #shortcut in case of equal units
+        if unit1 == unit2:
+            return 1
 
+        dim1, dim2 = (self.get_dimensionality(unit) for unit in (unit1, unit2))
+        if not dim1 or not dim2 or dim1.keys() != dim2.keys(): #not comparable
+            return None
+        
+        ratios = (dim2[key]/val for key, val in dim1.items())
+        first = next(ratios)
+        if all(r == first for r in ratios): #all are same, we're good
+            return first
+        return None
+            
     def get_root_units(self, input_units, check_nonmult=True):
         """Convert unit or dict of units to the root units.
 

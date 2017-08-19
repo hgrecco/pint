@@ -1223,6 +1223,10 @@ class TestDimensionReduction(QuantityTestCase):
         x = (10 * ureg.feet) / (3 * ureg.inches)
         self.assertEqual(x.units, ureg.feet / ureg.inches)
 
+    def test_nocoerce_creation(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True)
+        x = 1 * ureg.foot
+        self.assertEqual(x.units, ureg.foot)
 
 class TestTimedelta(QuantityTestCase):
     def test_add_sub(self):

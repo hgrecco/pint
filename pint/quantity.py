@@ -49,7 +49,7 @@ def reduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
         if result._REGISTRY.auto_reduce_dimensions:
-            return result.to_root_units()
+            return result.to_reduced_units()
         else:
             return result
     return wrapped
@@ -59,7 +59,7 @@ def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
         if result._REGISTRY.auto_reduce_dimensions:
-            result.ito_root_units()
+            result.ito_reduced_units()
         return result
     return wrapped
 
@@ -380,7 +380,43 @@ class _Quantity(SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
+        
+    def ito_reduced_units(self):
+        """Return Quantity scaled in place to reduced units, i.e. one unit per 
+        dimension. This will not reduce compound units (intentionally), nor 
+        can it make use of contexts at this time.
+        """
+        #shortcuts in case we're dimensionless or only a single unit
+        if self.dimensionless:
+            return self.ito({})
+        if len(self._units) == 1:
+            return None
+            
+        newunits = self._units.copy()
+        #loop through individual units and compare to each other unit
+        #can we do better than a nested loop here?
+        for unit1, exp in self._units.items():
+            for unit2 in newunits:
+                if unit1 != unit2:
+                    power = self._REGISTRY._get_dimensionality_ratio(unit1, 
+                                                                     unit2)
+                    if power:
+                        newunits = newunits.add(unit2, exp/power).remove(unit1)
+                        break
 
+        return self.ito(newunits)
+        
+    def to_reduced_units(self):
+        """Return Quantity scaled in place to reduced units, i.e. one unit per 
+        dimension. This will not reduce compound units (intentionally), nor 
+        can it make use of contexts at this time.
+        """
+        #can we make this more efficient? 
+        newq = copy.copy(self)
+        newq.ito_reduced_units()
+        return newq
+        
+    
     def to_compact(self, unit=None):
         """Return Quantity rescaled to compact, human-readable units.
 
@@ -750,7 +786,7 @@ class _Quantity(SharedRegistryObject):
 
         return self
 
-    @reduce_dimensions
+    @ireduce_dimensions
     def _mul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation and return the result.
 
