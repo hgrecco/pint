@@ -10,7 +10,7 @@ from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
 from pint.compat import np, long_type
-from pint.errors import UndefinedUnitError
+from pint.errors import UndefinedUnitError, DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.compat import unittest
 
@@ -39,7 +39,6 @@ class TestIssues(QuantityTestCase):
 
     def test_issue29(self):
         ureg = UnitRegistry()
-        ureg.define('molar = mole / liter = M')
         t = 4 * ureg('mM')
         self.assertEqual(t.magnitude, 4)
         self.assertEqual(t._units, UnitsContainer(millimolar=1))
@@ -204,6 +203,14 @@ class TestIssues(QuantityTestCase):
 
         self.assertQuantityAlmostEqual(x + y, 5.1 * ureg.meter)
         self.assertQuantityAlmostEqual(z, 5.1 * ureg.meter)
+
+    def test_issue523(self):
+        ureg = UnitRegistry()
+        src, dst = UnitsContainer({'meter': 1}), UnitsContainer({'degF': 1})
+        value = 10.
+        convert = self.ureg.convert
+        self.assertRaises(DimensionalityError, convert, value, src, dst)
+        self.assertRaises(DimensionalityError, convert, value, dst, src)
 
     def _test_issueXX(self):
         ureg = UnitRegistry()
@@ -554,3 +561,13 @@ class TestIssuesNP(QuantityTestCase):
         q = [1, 2, 3] * ureg.dimensionless
         p = (q ** q).m
         np.testing.assert_array_equal(p, a ** a)
+
+    def test_issue532(self):
+        ureg = self.ureg
+
+        @ureg.check(ureg(''))
+        def f(x):
+            return 2 * x
+
+        self.assertEqual(f(ureg.Quantity(1, '')), 2)
+        self.assertRaises(DimensionalityError, f, ureg.Quantity(1, 'm'))

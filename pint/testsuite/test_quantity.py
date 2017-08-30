@@ -3,6 +3,7 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import copy
+import datetime
 import math
 import operator as op
 import warnings
@@ -88,6 +89,22 @@ class TestQuantity(QuantityTestCase):
         x = self.Q_(4.2, UnitsContainer(meter=1))
         self.assertEqual(str(x), '4.2 meter')
         self.assertEqual(repr(x), "<Quantity(4.2, 'meter')>")
+
+    def test_quantity_hash(self):
+        x = self.Q_(4.2, 'meter')
+        x2 = self.Q_(4200, 'millimeter')
+        y = self.Q_(2, 'second')
+        z = self.Q_(0.5, 'hertz')
+        self.assertEqual(hash(x), hash(x2))
+
+        # Dimensionless equality
+        self.assertEqual(hash(y * z), hash(1.0))
+
+        # Dimensionless equality from a different unit registry
+        ureg2 = UnitRegistry(force_ndarray=self.FORCE_NDARRAY)
+        y2 = ureg2.Quantity(2, 'second')
+        z2 = ureg2.Quantity(0.5, 'hertz')
+        self.assertEqual(hash(y * z), hash(y2 * z2))
 
     def test_quantity_format(self):
         x = self.Q_(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
@@ -594,6 +611,18 @@ class TestDimensions(QuantityTestCase):
         self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'meter')).dimensionless)
         self.assertFalse((self.Q_(42, 'meter') / self.Q_(1, 'second')).dimensionless)
         self.assertTrue((self.Q_(42, 'meter') / self.Q_(1, 'inch')).dimensionless)
+
+    def test_inclusion(self):
+        dim = self.Q_(42, 'meter').dimensionality
+        self.assertTrue('[length]' in dim)
+        self.assertFalse('[time]' in dim)
+        dim = (self.Q_(42, 'meter') / self.Q_(11, 'second')).dimensionality
+        self.assertTrue('[length]' in dim)
+        self.assertTrue('[time]' in dim)
+        dim = self.Q_(20.785, 'J/(mol)').dimensionality
+        for dimension in ('[length]', '[mass]', '[substance]', '[time]'):
+            self.assertTrue(dimension in dim)
+        self.assertFalse('[angle]' in dim)
 
 
 class TestQuantityWithDefaultRegistry(TestDimensions):
@@ -1156,3 +1185,72 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
                 in1_cp = copy.copy(in1)
                 self.assertQuantityAlmostEqual(op.ipow(in1_cp, in2), expected)
+
+
+class TestDimensionReduction(QuantityTestCase):
+    def _calc_mass(self, ureg):
+        density = 3 * ureg.g / ureg.L
+        volume = 32 * ureg.milliliter
+        return density * volume
+
+    def _icalc_mass(self, ureg):
+        res = ureg.Quantity(3.0, 'gram/liter')
+        res *= ureg.Quantity(32.0, 'milliliter')
+        return res
+
+    def test_mul_and_div_reduction(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True)
+        mass = self._calc_mass(ureg)
+        self.assertEqual(mass.units, ureg.g)
+        ureg = UnitRegistry(auto_reduce_dimensions=False)
+        mass = self._calc_mass(ureg)
+        self.assertEqual(mass.units, ureg.g / ureg.L * ureg.milliliter)
+
+    @helpers.requires_numpy()
+    def test_imul_and_div_reduction(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True, force_ndarray=True)
+        mass = self._icalc_mass(ureg)
+        self.assertEqual(mass.units, ureg.g)
+        ureg = UnitRegistry(auto_reduce_dimensions=False, force_ndarray=True)
+        mass = self._icalc_mass(ureg)
+        self.assertEqual(mass.units, ureg.g / ureg.L * ureg.milliliter)
+
+    def test_reduction_to_dimensionless(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True)
+        x = (10 * ureg.feet) / (3 * ureg.inches)
+        self.assertEqual(x.units, UnitsContainer({}))
+        ureg = UnitRegistry(auto_reduce_dimensions=False)
+        x = (10 * ureg.feet) / (3 * ureg.inches)
+        self.assertEqual(x.units, ureg.feet / ureg.inches)
+
+    def test_nocoerce_creation(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True)
+        x = 1 * ureg.foot
+        self.assertEqual(x.units, ureg.foot)
+
+class TestTimedelta(QuantityTestCase):
+    def test_add_sub(self):
+        d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
+        after = d + 3 * self.ureg.second
+        self.assertEqual(d + datetime.timedelta(seconds=3), after)
+        after = 3 * self.ureg.second + d
+        self.assertEqual(d + datetime.timedelta(seconds=3), after)
+        after = d - 3 * self.ureg.second
+        self.assertEqual(d - datetime.timedelta(seconds=3), after)
+        with self.assertRaises(DimensionalityError):
+            3 * self.ureg.second - d
+
+    def test_iadd_isub(self):
+        d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
+        after = copy.copy(d)
+        after += 3 * self.ureg.second
+        self.assertEqual(d + datetime.timedelta(seconds=3), after)
+        after = 3 * self.ureg.second
+        after += d
+        self.assertEqual(d + datetime.timedelta(seconds=3), after)
+        after = copy.copy(d)
+        after -= 3 * self.ureg.second
+        self.assertEqual(d - datetime.timedelta(seconds=3), after)
+        after = 3 * self.ureg.second
+        with self.assertRaises(DimensionalityError):
+            after -= d

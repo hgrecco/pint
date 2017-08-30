@@ -96,6 +96,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
     :type on_redefinition: str
+    :param auto_reduce_dimensions: If True, reduce dimensionality on appropriate operations.
     """
 
     #: Map context prefix to function
@@ -111,7 +112,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             'parse_unit_name', 'parse_units', 'parse_expression',
             'convert']
 
-    def __init__(self, filename='', force_ndarray=False, on_redefinition='warn'):
+    def __init__(self, filename='', force_ndarray=False, on_redefinition='warn', auto_reduce_dimensions=False):
 
         self._register_parsers()
 
@@ -128,6 +129,9 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
+
+        #: Determines if dimensionality should be reduced on appropriate operations.
+        self.auto_reduce_dimensions = auto_reduce_dimensions
 
         #: Map between name (string) and value (string) of defaults stored in the definitions file.
         self._defaults = {}
@@ -553,7 +557,29 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                 reg = self._units[self.get_name(key)]
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
+                    
+    def _get_dimensionality_ratio(self, unit1, unit2):
+        """ Get the exponential ratio between two units, i.e. solve unit2 = unit1**x for x. 
+        :param unit1: first unit
+        :type unit1: UnitsContainer compatible (str, Unit, UnitsContainer, dict)
+        :param unit2: second unit
+        :type unit2: UnitsContainer compatible (str, Unit, UnitsContainer, dict)
+        :returns: exponential proportionality or None if the units cannot be converted 
+        """
+        #shortcut in case of equal units
+        if unit1 == unit2:
+            return 1
 
+        dim1, dim2 = (self.get_dimensionality(unit) for unit in (unit1, unit2))
+        if not dim1 or not dim2 or dim1.keys() != dim2.keys(): #not comparable
+            return None
+        
+        ratios = (dim2[key]/val for key, val in dim1.items())
+        first = next(ratios)
+        if all(r == first for r in ratios): #all are same, we're good
+            return first
+        return None
+            
     def get_root_units(self, input_units, check_nonmult=True):
         """Convert unit or dict of units to the root units.
 
@@ -906,6 +932,33 @@ class NonMultiplicativeRegistry(BaseRegistry):
         except KeyError:
             raise UndefinedUnitError(u)
 
+    def _validate_and_extract(self, units):
+
+        nonmult_units = [(u, e) for u, e in units.items()
+                         if not self._is_multiplicative(u)]
+
+        # Let's validate source offset units
+        if len(nonmult_units) > 1:
+            # More than one src offset unit is not allowed
+            raise ValueError('more than one offset unit.')
+
+        elif len(nonmult_units) == 1:
+            # A single src offset unit is present. Extract it
+            # But check that:
+            # - the exponent is 1
+            # - is not used in multiplicative context
+            nonmult_unit, exponent = nonmult_units.pop()
+
+            if exponent != 1:
+                raise ValueError('offset units in higher order.')
+
+            if len(units) > 1 and not self.autoconvert_offset_to_baseunit:
+                raise ValueError('offset unit used in multiplicative context.')
+
+            return nonmult_unit
+
+        return None
+
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
 
@@ -923,65 +976,44 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         # Conversion needs to consider if non-multiplicative (AKA offset
         # units) are involved. Conversion is only possible if src and dst
-        # have at most one offset unit per dimension.
-        src_offset_units = [(u, e) for u, e in src.items()
-                            if not self._is_multiplicative(u)]
-        dst_offset_units = [(u, e) for u, e in dst.items()
-                            if not self._is_multiplicative(u)]
+        # have at most one offset unit per dimension. Other rules are applied
+        # by validate and extract.
+        try:
+            src_offset_unit = self._validate_and_extract(src)
+        except ValueError as ex:
+            raise DimensionalityError(src, dst, extra_msg=' - In source units, %s ' % ex)
 
-        if not (src_offset_units or dst_offset_units):
+        try:
+            dst_offset_unit = self._validate_and_extract(dst)
+        except ValueError as ex:
+            raise DimensionalityError(src, dst, extra_msg=' - In destination units, %s ' % ex)
+
+        if not (src_offset_unit or dst_offset_unit):
             return super(NonMultiplicativeRegistry, self)._convert(value, src, dst, inplace)
 
         src_dim = self._get_dimensionality(src)
         dst_dim = self._get_dimensionality(dst)
 
-        # For offset units we need to check if the conversion is allowed.
-        if src_offset_units or dst_offset_units:
-
-            # Validate that not more than one offset unit is present
-            if len(src_offset_units) > 1 or len(dst_offset_units) > 1:
-                raise DimensionalityError(
-                    src, dst, src_dim, dst_dim,
-                    extra_msg=' - more than one offset unit.')
-
-            # validate that offset unit is not used in multiplicative context
-            if ((len(src_offset_units) == 1 and len(src) > 1)
-                    or (len(dst_offset_units) == 1 and len(dst) > 1)
-                    and not self.autoconvert_offset_to_baseunit):
-                raise DimensionalityError(
-                    src, dst, src_dim, dst_dim,
-                    extra_msg=' - offset unit used in multiplicative context.')
-
-            # Validate that order of offset unit is exactly one.
-            if src_offset_units:
-                if src_offset_units[0][1] != 1:
-                    raise DimensionalityError(
-                        src, dst, src_dim, dst_dim,
-                        extra_msg=' - offset units in higher order.')
-            else:
-                if dst_offset_units[0][1] != 1:
-                    raise DimensionalityError(
-                        src, dst, src_dim, dst_dim,
-                        extra_msg=' - offset units in higher order.')
-
-        # Here we convert only the offset quantities. Any remaining scaled
-        # quantities will be converted later.
-
-        # TODO: Shouldn't this (until factor, units) be inside the If above?
+        # If the source and destination dimensionality are different,
+        # then the conversion cannot be performed.
+        if src_dim != dst_dim:
+            raise DimensionalityError(src, dst, src_dim, dst_dim)
 
         # clean src from offset units by converting to reference
-        for u, e in src_offset_units:
-            value = self._units[u].converter.to_reference(value, inplace)
-        src = src.remove([u for u, e in src_offset_units])
+        if src_offset_unit:
+            value = self._units[src_offset_unit].converter.to_reference(value, inplace)
+
+        src = src.remove([src_offset_unit])
 
         # clean dst units from offset units
-        dst = dst.remove([u for u, e in dst_offset_units])
+        dst = dst.remove([dst_offset_unit])
 
+        # Convert non multiplicative units to the dst.
         value = super(NonMultiplicativeRegistry, self)._convert(value, src, dst, inplace, False)
 
         # Finally convert to offset units specified in destination
-        for u, e in dst_offset_units:
-            value = self._units[u].converter.from_reference(value, inplace)
+        if dst_offset_unit:
+            value = self._units[dst_offset_unit].converter.from_reference(value, inplace)
 
         return value
 
@@ -1435,17 +1467,20 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
     :type on_redefinition: str
+    :param auto_reduce_dimensions: If True, reduce dimensionality on appropriate operations.
     """
 
     def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
                  autoconvert_offset_to_baseunit=False,
-                 on_redefinition='warn', system=None):
+                 on_redefinition='warn', system=None,
+                 auto_reduce_dimensions=False):
 
         super(UnitRegistry, self).__init__(filename=filename, force_ndarray=force_ndarray,
                                            on_redefinition=on_redefinition,
                                            default_as_delta=default_as_delta,
                                            autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
-                                           system=system)
+                                           system=system,
+                                           auto_reduce_dimensions=auto_reduce_dimensions)
 
     def pi_theorem(self, quantities):
         """Builds dimensionless quantities using the Buckingham π theorem

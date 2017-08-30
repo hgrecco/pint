@@ -7,6 +7,19 @@ Pint Changelog
 - Nothing changed yet.
 
 
+0.8.1 (2017-06-05)
+------------------
+
+- Add support for datetime math.
+  (Issue #510, thanks robertd)
+- Fixed _repr_html_ in Python 2.7.
+  (Issue #512)
+- Implemented BaseRegistry.auto_reduce_dimensions.
+  (Issue #500, thanks robertd)
+- Fixed dimension compatibility bug introduced on Registry refactoring
+  (Issue #523, thanks dalito)
+
+
 0.8 (2017-04-16)
 ----------------
 

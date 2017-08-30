@@ -201,7 +201,7 @@ def check(ureg, *args):
     :raises:
         :class:`DimensionalityError` if the parameters don't match dimensions
     """
-    dimensions = [ureg.get_dimensionality(dim) for dim in args]
+    dimensions = [ureg.get_dimensionality(dim) if dim is not None else None for dim in args]
 
     def decorator(func):
         assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
@@ -210,9 +210,14 @@ def check(ureg, *args):
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kwargs):
             for dim, value in zip_longest(dimensions, values):
-                if dim and value.dimensionality != dim:
+
+                if dim is None:
+                    continue
+
+                val_dim = ureg.get_dimensionality(value)
+                if val_dim != dim:
                     raise DimensionalityError(value, 'a quantity of',
-                                              value.dimensionality, dim)
+                                              val_dim, dim)
             return func(*values, **kwargs)
         return wrapper
     return decorator
