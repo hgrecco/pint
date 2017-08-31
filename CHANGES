@@ -4,7 +4,8 @@ Pint Changelog
 0.9 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Add support for registering with matplotlib's unit handling
+  (Issue #317, thanks dopplershift)
 
 
 0.8.1 (2017-06-05)
@@ -34,7 +35,7 @@ Pint Changelog
   (Issue #95)
 - Implemented a function decorator to ensure that a context is active (with_context)
   (Issue #465)
-- Add warning when a System contains an unknown Group. 
+- Add warning when a System contains an unknown Group.
   (Issue #472)
 - Add conda-forge installation snippet.
   (Issue #485, thanks stadelmanma)
@@ -57,7 +58,7 @@ Pint Changelog
   (Issues #448, thanks gdonval)
 - Improved Parser to support capital "E" on scientific notation.
   (Issue #390, thanks javenoneal)
-- Make sure that prefixed units are defined on the registry when unplicking.
+- Make sure that prefixed units are defined on the registry when unpickling.
   (Issue #405)
 - Automatic unit names translation through babel.
   (Issue #338, thanks alexbodn)
@@ -234,7 +235,7 @@ Pint Changelog
   (Issue #107, thanks rec)
 - Added UnitRegistry () operator to parse expression replacing [].
   (Issue #106, thanks rec)
-- Optional case insensitive unit parsing. 
+- Optional case insensitive unit parsing.
   (Issue #105, thanks rec, jeremyfreeman, dbrnz)
 - Change the Quantity mutability depending on magnitude type.
   (Issue #104, thanks rec)
