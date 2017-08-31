@@ -115,6 +115,7 @@ User Guide
     numpy
     nonmult
     wrapping
+    plotting
     serialization
     pitheorem
     contexts
