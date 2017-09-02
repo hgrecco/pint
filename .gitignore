@@ -15,3 +15,5 @@ MANIFEST
 
 # tags files (from ctags)
 tags
+
+test/

@@ -1,2 +1,2 @@
-matplotlib
+matplotlib>=2
 numpy
