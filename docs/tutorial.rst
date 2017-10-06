@@ -237,6 +237,24 @@ or
    >>> type(Q_('2.54'))
    <class 'pint.quantity.build_quantity_class.<locals>.Quantity'>
 
+.. note:: Pint´s rule for parsing strings with a mixture of numbers and
+   units is that **units are treated with the same precedence as numbers**.
+   
+For example, the unit of
+
+.. doctest::
+
+   >>> Q_('3 l / 100 km')
+   <Quantity(0.03, 'kilometer * liter')>
+   
+may be unexpected first but is a consequence of applying this rule. Use
+brackets to get the expected result:
+
+.. doctest::
+
+   >>> Q_('3 l / (100 km)')
+   <Quantity(0.03, 'liter / kilometer')>
+
 .. note:: Since version 0.7, Pint **does not** use eval_ under the hood.
    This change removes the `serious security problems`_ that the system is
    exposed to when parsing information from untrusted sources.
