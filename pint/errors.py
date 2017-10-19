@@ -25,7 +25,7 @@ class DefinitionSyntaxError(ValueError):
         self.lineno = None
 
     def __str__(self):
-        mess = "While opening {0}, in line {1}: "
+        mess = "While opening {}, in line {}: "
         return mess.format(self.filename, self.lineno) + self.msg
 
 
@@ -41,10 +41,10 @@ class RedefinitionError(ValueError):
         self.lineno = None
 
     def __str__(self):
-        msg = "cannot redefine '{0}' ({1})".format(self.name,
+        msg = "cannot redefine '{}' ({})".format(self.name,
                                                    self.definition_type)
         if self.filename:
-            mess = "While opening {0}, in line {1}: "
+            mess = "While opening {}, in line {}: "
             return mess.format(self.filename, self.lineno) + msg
         return msg
 
@@ -58,8 +58,8 @@ class UndefinedUnitError(AttributeError):
         self.unit_names = unit_names
 
     def __str__(self):
-        mess = "'{0}' is not defined in the unit registry"
-        mess_plural = "'{0}' are not defined in the unit registry"
+        mess = "'{}' is not defined in the unit registry"
+        mess_plural = "'{}' are not defined in the unit registry"
         if isinstance(self.unit_names, string_types):
             return mess.format(self.unit_names)
         elif isinstance(self.unit_names, (list, tuple))\
@@ -86,13 +86,13 @@ class DimensionalityError(ValueError):
 
     def __str__(self):
         if self.dim1 or self.dim2:
-            dim1 = ' ({0})'.format(self.dim1)
-            dim2 = ' ({0})'.format(self.dim2)
+            dim1 = ' ({})'.format(self.dim1)
+            dim2 = ' ({})'.format(self.dim2)
         else:
             dim1 = ''
             dim2 = ''
 
-        msg = "Cannot convert from '{0}'{1} to '{2}'{3}" + self.extra_msg
+        msg = "Cannot convert from '{}'{} to '{}'{}" + self.extra_msg
 
         return msg.format(self.units1, dim1, self.units2, dim2)
 

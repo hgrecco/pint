@@ -23,7 +23,7 @@ def _join(fmt, iterable):
     """Join an iterable with the format specified in fmt.
 
     The format can be specified in two ways:
-    - PEP3101 format with two replacement fields (eg. '{0} * {1}')
+    - PEP3101 format with two replacement fields (eg. '{} * {}')
     - The concatenating string (eg. ' * ')
     """
     if not iterable:
@@ -58,8 +58,8 @@ _FORMATS = {
         'single_denominator': False,
         'product_fmt': '·',
         'division_fmt': '/',
-        'power_fmt': '{0}{1}',
-        'parentheses_fmt': '({0})',
+        'power_fmt': '{}{}',
+        'parentheses_fmt': '({})',
         'exp_call': _pretty_fmt_exponent,
         },
 
@@ -67,18 +67,18 @@ _FORMATS = {
         'as_ratio': True,
         'single_denominator': True,
         'product_fmt': r' \cdot ',
-        'division_fmt': r'\frac[{0}][{1}]',
-        'power_fmt': '{0}^[{1}]',
-        'parentheses_fmt': r'\left({0}\right)',
+        'division_fmt': r'\frac[{}][{}]',
+        'power_fmt': '{}^[{}]',
+        'parentheses_fmt': r'\left({}\right)',
         },
 
     'H': {   # HTML format.
         'as_ratio': True,
         'single_denominator': True,
         'product_fmt': r' ',
-        'division_fmt': r'{0}/{1}',
-        'power_fmt': '{0}<sup>{1}</sup>',
-        'parentheses_fmt': r'({0})',
+        'division_fmt': r'{}/{}',
+        'power_fmt': '{}<sup>{}</sup>',
+        'parentheses_fmt': r'({})',
         },
 
     '': {   # Default format.
@@ -86,8 +86,8 @@ _FORMATS = {
         'single_denominator': False,
         'product_fmt': ' * ',
         'division_fmt': ' / ',
-        'power_fmt': '{0} ** {1}',
-        'parentheses_fmt': r'({0})',
+        'power_fmt': '{} ** {}',
+        'parentheses_fmt': r'({})',
         },
 
     'C': {  # Compact format.
@@ -95,14 +95,14 @@ _FORMATS = {
         'single_denominator': False,
         'product_fmt': '*',  # TODO: Should this just be ''?
         'division_fmt': '/',
-        'power_fmt': '{0}**{1}',
-        'parentheses_fmt': r'({0})',
+        'power_fmt': '{}**{}',
+        'parentheses_fmt': r'({})',
         },
     }
 
 
 def formatter(items, as_ratio=True, single_denominator=False,
-              product_fmt=' * ', division_fmt=' / ', power_fmt='{0} ** {1}',
+              product_fmt=' * ', division_fmt=' / ', power_fmt='{} ** {}',
               parentheses_fmt='({0})', exp_call=lambda x: '{0:n}'.format(x),
               locale=None, babel_length='long', babel_plural_form='one'):
     """Format a list of (name, exponent) pairs.
@@ -149,10 +149,10 @@ def formatter(items, as_ratio=True, single_denominator=False,
             for _babel_length in [babel_length] + other_lengths:
                 pat = unit_patterns.get(_key, {}).get(_babel_length, {}).get(plural)
                 if pat is not None:
-                    key = pat.replace('{0}', '').strip()
+                    key = pat.replace('{}', '').strip()
                     break
             division_fmt = compound_unit_patterns.get("per", {}).get(babel_length, division_fmt)
-            power_fmt = '{0}{1}'
+            power_fmt = '{}{}'
             exp_call = _pretty_fmt_exponent
         if value == 1:
             pos_terms.append(key)
@@ -214,7 +214,7 @@ def format_unit(unit, spec, **kwspec):
     fmt.update(kwspec)
 
     if spec == 'L':
-        rm = [(r'\mathrm{{{0}}}'.format(u), p) for u, p in unit.items()]
+        rm = [(r'\mathrm{{{}}}'.format(u), p) for u, p in unit.items()]
         result = formatter(rm, **fmt)
     else:
         result = formatter(unit.items(), **fmt)
@@ -260,9 +260,9 @@ def siunitx_format_unit(units):
         if power < 0:
             l.append(r'\per')
         if prefix is not None:
-            l.append(r'\{0}'.format(prefix))
-        l.append(r'\{0}'.format(unit))
-        l.append(r'{0}'.format(_tothe(abs(power))))
+            l.append(r'\{}'.format(prefix))
+        l.append(r'\{}'.format(unit))
+        l.append(r'{}'.format(_tothe(abs(power))))
 
     return ''.join(lpos) + ''.join(lneg)
 

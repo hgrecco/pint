@@ -312,7 +312,7 @@ class _System(SharedRegistryObject):
                 try:
                     self._computed_members |= d[group_name].members
                 except KeyError:
-                    logger.warning('Could not resolve {0} in System {1}'.format(group_name, self.name))
+                    logger.warning('Could not resolve {} in System {}'.format(group_name, self.name))
 
             self._computed_members = frozenset(self._computed_members)
 
@@ -343,7 +343,7 @@ class _System(SharedRegistryObject):
 
     def format_babel(self, locale):
         """translate the name of the system
-        
+
         :type locale: Locale
         """
         if locale and self.name in _babel_systems:

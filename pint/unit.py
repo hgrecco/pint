@@ -47,7 +47,7 @@ class _Unit(SharedRegistryObject):
             inst._units = units._units
         else:
             raise TypeError('units must be of type str, Unit or '
-                            'UnitsContainer; not {0}.'.format(type(units)))
+                            'UnitsContainer; not {}.'.format(type(units)))
 
         inst.__used = False
         inst.__handling = None
@@ -71,7 +71,7 @@ class _Unit(SharedRegistryObject):
         return format(self)
 
     def __repr__(self):
-        return "<Unit('{0}')>".format(self._units)
+        return "<Unit('{}')>".format(self._units)
 
     def __format__(self, spec):
         spec = spec or self.default_format

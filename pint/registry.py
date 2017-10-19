@@ -267,7 +267,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             d, di = self._prefixes, None
 
         else:
-            raise TypeError('{0} is not a valid definition.'.format(definition))
+            raise TypeError('{} is not a valid definition.'.format(definition))
 
         # define "delta_" units for units with an offset
         if getattr(definition.converter, "offset", 0.0) != 0.0:
@@ -365,7 +365,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                 raise e
             except Exception as e:
                 msg = getattr(e, 'message', '') or str(e)
-                raise ValueError('While opening {0}\n{1}'.format(file, msg))
+                raise ValueError('While opening {}\n{}'.format(file, msg))
 
         ifile = SourceIterator(file)
         for no, line in ifile:
@@ -402,7 +402,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                         ex.lineno = no
                     raise ex
                 except Exception as ex:
-                    logger.error("In line {0}, cannot add '{1}' {2}".format(no, line, ex))
+                    logger.error("In line {}, cannot add '{}' {}".format(no, line, ex))
 
     def _build_cache(self):
         """Build a cache of dimensionality and base units.
@@ -476,8 +476,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         elif len(candidates) == 1:
             prefix, unit_name, _ = candidates[0]
         else:
-            logger.warning('Parsing {0} yield multiple results. '
-                           'Options are: {1}'.format(name_or_alias, candidates))
+            logger.warning('Parsing {} yield multiple results. '
+                           'Options are: {}'.format(name_or_alias, candidates))
             prefix, unit_name, _ = candidates[0]
 
         if prefix:
@@ -1050,7 +1050,7 @@ class ContextRegistry(BaseRegistry):
             self.add_context(Context.from_lines(ifile.block_iter(),
                                                 self.get_dimensionality))
         except KeyError as e:
-            raise DefinitionSyntaxError('unknown dimension {0} in context'.format(str(e)))
+            raise DefinitionSyntaxError('unknown dimension {} in context'.format(str(e)))
 
     def add_context(self, context):
         """Add a context object to the registry.
