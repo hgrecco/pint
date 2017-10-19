@@ -16,7 +16,7 @@ Due to its modular design, you can extend (or even rewrite!) the complete list
 without changing the source code. It supports a lot of numpy mathematical
 operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 2.7 and 3.2+ with no other
+It has a complete test coverage. It runs in Python 2.7 and 3.3+ with no other
 dependency. It is licensed under BSD.
 
 
@@ -100,7 +100,7 @@ points, like positions on a map or absolute temperature scales.
 **Dependency free**: it depends only on Python and its standard library.
 
 **Python 2 and 3**: a single codebase that runs unchanged in Python 2.7+ and
-Python 3.0+.
+Python 3.3+.
 
 
 

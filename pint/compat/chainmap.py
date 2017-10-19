@@ -16,8 +16,6 @@ import sys
 from collections import MutableMapping
 if sys.version_info < (3, 0):
     from thread import get_ident
-elif sys.version_info < (3, 3):
-    from _thread import get_ident
 else:
     from threading import get_ident
 

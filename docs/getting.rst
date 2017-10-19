@@ -3,7 +3,7 @@
 Installation
 ============
 
-Pint has no dependencies except Python_ itself. In runs on Python 2.7 and 3.0+.
+Pint has no dependencies except Python_ itself. In runs on Python 2.7 and 3.3+.
 
 You can install it (or upgrade to the latest version) using pip_::
 
