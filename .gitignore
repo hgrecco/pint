@@ -17,3 +17,4 @@ MANIFEST
 tags
 
 test/
+.coverage*
