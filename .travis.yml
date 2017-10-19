@@ -10,12 +10,6 @@ env:
   - UNCERTAINTIES="N" PYTHON="2.7" NUMPY_VERSION=0
   - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=0
 
-branches:
-  only:
-    - staging
-    - trying
-    - master
-
 before_install:
   - sudo apt-get update
   - if [[ "$PYTHON" == "2.7" ]]; then
