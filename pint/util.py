@@ -19,12 +19,13 @@ import operator
 from numbers import Number
 from fractions import Fraction
 from collections import Mapping
+from logging import NullHandler
 
 import logging
 from token import STRING, NAME, OP, NUMBER
 from tokenize import untokenize
 
-from .compat import string_types, tokenizer, lru_cache, NullHandler, maketrans, NUMERIC_TYPES
+from .compat import string_types, tokenizer, lru_cache, maketrans, NUMERIC_TYPES
 from .formatting import format_unit,siunitx_format_unit
 from .pint_eval import build_eval_tree
 from .errors import DefinitionSyntaxError

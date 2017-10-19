@@ -62,11 +62,6 @@ except ImportError:
     from .lrucache import lru_cache
 
 try:
-    from logging import NullHandler
-except ImportError:
-    from .nullhandler import NullHandler
-
-try:
     from itertools import zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
