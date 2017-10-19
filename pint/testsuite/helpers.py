@@ -6,9 +6,9 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import doctest
 from distutils.version import StrictVersion
 import re
+import unittest
 
 from pint.compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
-from pint.testsuite.compat import unittest
 
 
 def requires_numpy18():

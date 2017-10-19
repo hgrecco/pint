@@ -6,6 +6,7 @@ import doctest
 import logging
 import os
 import sys
+import unittest
 
 from contextlib import contextmanager
 
@@ -13,7 +14,6 @@ from pint.compat import ndarray, np
 
 from pint import logger, UnitRegistry
 from pint.quantity import _Quantity
-from pint.testsuite.compat import unittest
 from pint.testsuite.helpers import PintOutputChecker
 from logging.handlers import BufferingHandler
 

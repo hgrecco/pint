@@ -28,11 +28,9 @@
 #        def test_eval(self, input, expected_output):
 #            self.assertEqual(eval(input), expected_output)
 
-from pint.testsuite.compat import unittest
-
 from functools import wraps
 import collections
-
+import unittest
 
 def add_metaclass(metaclass):
     """Class decorator for creating a class with a metaclass."""
