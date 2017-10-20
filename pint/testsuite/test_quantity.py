@@ -131,7 +131,7 @@ class TestQuantity(QuantityTestCase):
 
     def test_format_compact(self):
         q1 = (200e-9 * self.ureg.s).to_compact()
-        q1b = self.Q_(200., 'nanosecond')
+        q1b = self.Q_(0.2, 'microsecond')
         self.assertAlmostEqual(q1.magnitude, q1b.magnitude)
         self.assertEqual(q1.units, q1b.units)
 
@@ -316,29 +316,29 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_inverse_units(self):
         ureg = self.ureg
         self.compareQuantity_compact(1/ureg.m, 1/ureg.m)
-        self.compareQuantity_compact(100e9/ureg.m, 100/ureg.nm)
+        self.compareQuantity_compact(100e9/ureg.m, .1/ureg.pm)
 
     def test_inverse_square_units(self):
         ureg = self.ureg
         self.compareQuantity_compact(1/ureg.m**2, 1/ureg.m**2)
-        self.compareQuantity_compact(1e11/ureg.m**2, 1e5/ureg.mm**2)
+        self.compareQuantity_compact(1e11/ureg.m**2, 0.1/ureg.um**2)
 
     def test_fractional_exponent_units(self):
         ureg = self.ureg
         self.compareQuantity_compact(1*ureg.m**0.5, 1*ureg.m**0.5)
-        self.compareQuantity_compact(1e-2*ureg.m**0.5, 10*ureg.um**0.5)
+        self.compareQuantity_compact(1e-2*ureg.m**0.5, math.sqrt(0.1)*ureg.mm**0.5)
 
     def test_derived_units(self):
         ureg = self.ureg
-        self.compareQuantity_compact(0.5*ureg.megabyte, 500*ureg.kilobyte)
+        self.compareQuantity_compact(5e-4*ureg.megabyte, 0.5*ureg.kilobyte)
         self.compareQuantity_compact(1e-11*ureg.N, 10*ureg.pN)
 
     def test_unit_parameter(self):
         ureg = self.ureg
         self.compareQuantity_compact(self.Q_(100e-9, 'kg m / s^2'),
-            100*ureg.nN, ureg.N)
+            0.1*ureg.uN, ureg.N)
         self.compareQuantity_compact(self.Q_(101.3e3, 'kg/m/s^2'),
-            101.3*ureg.kPa, ureg.Pa)
+            0.1013*ureg.MPa, ureg.Pa)
 
     def test_limits_magnitudes(self):
         ureg = self.ureg

@@ -553,7 +553,7 @@ class TestIssuesNP(QuantityTestCase):
         x = ureg.Quantity(1., 'meter')
         y = f(x)
         z = x * y
-        self.assertEquals(z, ureg.Quantity(1., 'meter * kilogram'))
+        self.assertEqual(z, ureg.Quantity(1., 'meter * kilogram'))
 
     def test_issue483(self):
         ureg = self.ureg

@@ -466,9 +466,9 @@ class _Quantity(SharedRegistryObject):
         unit_power = list(q_base._units.items())[0][1]
 
         if unit_power > 0:
-            power = int(math.floor(math.log10(abs(magnitude)) / unit_power / 3)) * 3
+            power = int(math.floor((math.log10(abs(magnitude)) / unit_power + 1) / 3)) * 3
         else:
-            power = int(math.ceil(math.log10(abs(magnitude)) / unit_power / 3)) * 3
+            power = int(math.ceil((math.log10(abs(magnitude)) / unit_power - 1) / 3)) * 3
 
         prefix = SI_bases[bisect.bisect_left(SI_powers, power)]
 
