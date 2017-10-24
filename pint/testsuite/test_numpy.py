@@ -4,11 +4,11 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import copy
 import operator as op
+import unittest
 
 from pint import DimensionalityError, set_application_registry
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
-from pint.testsuite.compat import unittest
 from pint.testsuite.test_umath import TestUFuncs
 
 

@@ -19,12 +19,13 @@ import operator
 from numbers import Number
 from fractions import Fraction
 from collections import Mapping
+from logging import NullHandler
 
 import logging
 from token import STRING, NAME, OP, NUMBER
 from tokenize import untokenize
 
-from .compat import string_types, tokenizer, lru_cache, NullHandler, maketrans, NUMERIC_TYPES
+from .compat import string_types, tokenizer, lru_cache, maketrans, NUMERIC_TYPES
 from .formatting import format_unit,siunitx_format_unit
 from .pint_eval import build_eval_tree
 from .errors import DefinitionSyntaxError
@@ -149,7 +150,7 @@ def pi_theorem(quantities, registry=None):
 
         if not registry and any(not key.startswith('[') for key in dims):
             logger.warning('A non dimension was found and a registry was not provided. '
-                           'Assuming that it is a dimension name: {0}.'.format(dims))
+                           'Assuming that it is a dimension name: {}.'.format(dims))
 
         quant.append((name, dims))
         dimensions = dimensions.union(dims.keys())
@@ -253,9 +254,9 @@ class UnitsContainer(Mapping):
         self._d = d
         for key, value in d.items():
             if not isinstance(key, string_types):
-                raise TypeError('key must be a str, not {0}'.format(type(key)))
+                raise TypeError('key must be a str, not {}'.format(type(key)))
             if not isinstance(value, Number):
-                raise TypeError('value must be a number, not {0}'.format(type(value)))
+                raise TypeError('value must be a number, not {}'.format(type(value)))
             if not isinstance(value, float):
                 d[key] = float(value)
         self._hash = hash(frozenset(self._d.items()))
@@ -323,9 +324,9 @@ class UnitsContainer(Mapping):
         return self.__format__('')
 
     def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value)
+        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value)
                                   for key, value in sorted(self._d.items())])
-        return '<UnitsContainer({0})>'.format(tmp)
+        return '<UnitsContainer({})>'.format(tmp)
 
     def __format__(self, spec):
         return format_unit(self, spec)
@@ -339,7 +340,7 @@ class UnitsContainer(Mapping):
     def __mul__(self, other):
         d = udict(self._d)
         if not isinstance(other, self.__class__):
-            err = 'Cannot multiply UnitsContainer by {0}'
+            err = 'Cannot multiply UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
         for key, value in other.items():
             d[key] += value
@@ -353,7 +354,7 @@ class UnitsContainer(Mapping):
 
     def __pow__(self, other):
         if not isinstance(other, NUMERIC_TYPES):
-            err = 'Cannot power UnitsContainer by {0}'
+            err = 'Cannot power UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
         d = udict(self._d)
         for key, value in d.items():
@@ -362,7 +363,7 @@ class UnitsContainer(Mapping):
 
     def __truediv__(self, other):
         if not isinstance(other, self.__class__):
-            err = 'Cannot divide UnitsContainer by {0}'
+            err = 'Cannot divide UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
 
         d = udict(self._d)
@@ -378,7 +379,7 @@ class UnitsContainer(Mapping):
 
     def __rtruediv__(self, other):
         if not isinstance(other, self.__class__) and other != 1:
-            err = 'Cannot divide {0} by UnitsContainer'
+            err = 'Cannot divide {} by UnitsContainer'
             raise TypeError(err.format(type(other)))
 
         return self**-1
@@ -415,7 +416,7 @@ class ParserHelper(UnitsContainer):
     @classmethod
     def from_string(cls, input_string):
         return cls._from_string(input_string)
-    
+
     @classmethod
     def eval_token(cls, token, use_decimal=False):
         token_type = token.type
@@ -431,7 +432,7 @@ class ParserHelper(UnitsContainer):
             return ParserHelper.from_word(token_text)
         else:
             raise Exception('unknown token type')
-    
+
     @classmethod
     @lru_cache()
     def _from_string(cls, input_string):
@@ -497,14 +498,14 @@ class ParserHelper(UnitsContainer):
         return self.__class__(self.scale, d)
 
     def __str__(self):
-        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value)
+        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value)
                                   for key, value in sorted(self._d.items())])
-        return '{0} {1}'.format(self.scale, tmp)
+        return '{} {}'.format(self.scale, tmp)
 
     def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{0}': {1}".format(key, value)
+        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value)
                                   for key, value in sorted(self._d.items())])
-        return '<ParserHelper({0}, {1})>'.format(self.scale, tmp)
+        return '<ParserHelper({}, {})>'.format(self.scale, tmp)
 
     def __mul__(self, other):
         if isinstance(other, string_types):
@@ -559,16 +560,16 @@ class ParserHelper(UnitsContainer):
 #: List of regex substitution pairs.
 _subs_re = [('\N{DEGREE SIGN}', " degree"),
             (r"([\w\.\-\+\*\\\^])\s+", r"\1 "), # merge multiple spaces
-            (r"({0}) squared", r"\1**2"),  # Handle square and cube
-            (r"({0}) cubed", r"\1**3"),
-            (r"cubic ({0})", r"\1**3"),
-            (r"square ({0})", r"\1**2"),
-            (r"sq ({0})", r"\1**2"),
+            (r"({}) squared", r"\1**2"),  # Handle square and cube
+            (r"({}) cubed", r"\1**3"),
+            (r"cubic ({})", r"\1**3"),
+            (r"square ({})", r"\1**2"),
+            (r"sq ({})", r"\1**2"),
             (r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])", r"\1*"),  # Handle numberLetter for multiplication
             (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
             ]
 
-#: Compiles the regex and replace {0} by a regex that matches an identifier.
+#: Compiles the regex and replace {} by a regex that matches an identifier.
 _subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
 _pretty_table = maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹·⁻', '0123456789*-')
 _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
@@ -618,7 +619,7 @@ class SharedRegistryObject(object):
             return True
 
         elif isinstance(other, SharedRegistryObject):
-            mess = 'Cannot operate with {0} and {1} of different registries.'
+            mess = 'Cannot operate with {} and {} of different registries.'
             raise ValueError(mess.format(self.__class__.__name__,
                                          other.__class__.__name__))
         else:

@@ -115,7 +115,7 @@ class _Quantity(SharedRegistryObject):
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
         else:
             raise TypeError('units must be of type str, Quantity or '
-                            'UnitsContainer; not {0}.'.format(type(units)))
+                            'UnitsContainer; not {}.'.format(type(units)))
 
         inst.__used = False
         inst.__handling = None
@@ -140,7 +140,7 @@ class _Quantity(SharedRegistryObject):
         return format(self)
 
     def __repr__(self):
-        return "<Quantity({0}, '{1}')>".format(self._magnitude, self._units)
+        return "<Quantity({}, '{}')>".format(self._magnitude, self._units)
 
     def __hash__(self):
         self_base = self.to_base_units()
@@ -153,9 +153,9 @@ class _Quantity(SharedRegistryObject):
         spec = spec or self.default_format
 
         if 'L' in spec:
-            allf = plain_allf = r'{0}\ {1}'
+            allf = plain_allf = r'{}\ {}'
         else:
-            allf = plain_allf = '{0} {1}'
+            allf = plain_allf = '{} {}'
 
         mstr, ustr = None, None
 
@@ -172,7 +172,7 @@ class _Quantity(SharedRegistryObject):
             # todo: add support for extracting options
             opts = ''
             ustr = siunitx_format_unit(obj.units)
-            allf = r'\SI[%s]{{{0}}}{{{1}}}'% opts
+            allf = r'\SI[%s]{{{}}}{{{}}}'% opts
         else:
             ustr = format(obj.units, spec)
 
@@ -182,7 +182,7 @@ class _Quantity(SharedRegistryObject):
                 mstr = ndarray_to_latex(obj.magnitude, mspec)
             elif 'H' in spec:
                 # this is required to have the magnitude and unit in the same line
-                allf = r'\[{0} {1}\]'
+                allf = r'\[{} {}\]'
                 parts = ndarray_to_latex_parts(obj.magnitude, mspec)
 
                 if len(parts) > 1:
@@ -213,7 +213,7 @@ class _Quantity(SharedRegistryObject):
             kwspec['babel_length'] = kwspec.pop('length')
         kwspec['locale'] = Loc.parse(kwspec['locale'])
         kwspec['babel_plural_form'] = kwspec['locale'].plural_form(obj.magnitude)
-        return '{0} {1}'.format(
+        return '{} {}'.format(
             format(obj.magnitude, remove_custom_flags(spec)),
             obj.units.format_babel(spec, **kwspec)).replace('\n', '')
 
@@ -380,10 +380,10 @@ class _Quantity(SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
-        
+
     def ito_reduced_units(self):
-        """Return Quantity scaled in place to reduced units, i.e. one unit per 
-        dimension. This will not reduce compound units (intentionally), nor 
+        """Return Quantity scaled in place to reduced units, i.e. one unit per
+        dimension. This will not reduce compound units (intentionally), nor
         can it make use of contexts at this time.
         """
         #shortcuts in case we're dimensionless or only a single unit
@@ -391,32 +391,32 @@ class _Quantity(SharedRegistryObject):
             return self.ito({})
         if len(self._units) == 1:
             return None
-            
+
         newunits = self._units.copy()
         #loop through individual units and compare to each other unit
         #can we do better than a nested loop here?
         for unit1, exp in self._units.items():
             for unit2 in newunits:
                 if unit1 != unit2:
-                    power = self._REGISTRY._get_dimensionality_ratio(unit1, 
+                    power = self._REGISTRY._get_dimensionality_ratio(unit1,
                                                                      unit2)
                     if power:
                         newunits = newunits.add(unit2, exp/power).remove(unit1)
                         break
 
         return self.ito(newunits)
-        
+
     def to_reduced_units(self):
-        """Return Quantity scaled in place to reduced units, i.e. one unit per 
-        dimension. This will not reduce compound units (intentionally), nor 
+        """Return Quantity scaled in place to reduced units, i.e. one unit per
+        dimension. This will not reduce compound units (intentionally), nor
         can it make use of contexts at this time.
         """
-        #can we make this more efficient? 
+        #can we make this more efficient?
         newq = copy.copy(self)
         newq.ito_reduced_units()
         return newq
-        
-    
+
+
     def to_compact(self, unit=None):
         """Return Quantity rescaled to compact, human-readable units.
 
@@ -1107,7 +1107,7 @@ class _Quantity(SharedRegistryObject):
             if self.dimensionless:
                 return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
             else:
-                raise ValueError('Cannot compare Quantity and {0}'.format(type(other)))
+                raise ValueError('Cannot compare Quantity and {}'.format(type(other)))
 
         if self._units == other._units:
             return op(self._magnitude, other._magnitude)
@@ -1316,15 +1316,15 @@ class _Quantity(SharedRegistryObject):
         try:
             return getattr(self._magnitude, item)
         except AttributeError as ex:
-            raise AttributeError("Neither Quantity object nor its magnitude ({0}) "
-                                 "has attribute '{1}'".format(self._magnitude, item))
+            raise AttributeError("Neither Quantity object nor its magnitude ({}) "
+                                 "has attribute '{}'".format(self._magnitude, item))
 
     def __getitem__(self, key):
         try:
             value = self._magnitude[key]
             return self.__class__(value, self._units)
         except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({0})"
+            raise TypeError("Neither Quantity object nor its magnitude ({})"
                             "supports indexing".format(self._magnitude))
 
     def __setitem__(self, key, value):
@@ -1352,7 +1352,7 @@ class _Quantity(SharedRegistryObject):
                 self._magnitude[key] = factor
 
         except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({0})"
+            raise TypeError("Neither Quantity object nor its magnitude ({})"
                             "supports indexing".format(self._magnitude))
 
     def tolist(self):
@@ -1377,8 +1377,8 @@ class _Quantity(SharedRegistryObject):
             # something is wrong..
             if self.__handling:
                 raise Exception('Cannot handled nested ufuncs.\n'
-                                'Current: {0}\n'
-                                'New: {1}'.format(context, self.__handling))
+                                'Current: {}\n'
+                                'New: {}'.format(context, self.__handling))
             self.__handling = context
 
         return obj
@@ -1391,7 +1391,7 @@ class _Quantity(SharedRegistryObject):
             return self.magnitude.__array_wrap__(obj, context)
 
         try:
-            ufname = uf.__name__ if i_out == 0 else '{0}__{1}'.format(uf.__name__, i_out)
+            ufname = uf.__name__ if i_out == 0 else '{}__{}'.format(uf.__name__, i_out)
 
             # First, we check the units of the input arguments.
 

@@ -4,6 +4,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import math
 import copy
+import unittest
 
 from pint import UnitRegistry
 from pint.unit import UnitsContainer
@@ -12,7 +13,6 @@ from pint.util import ParserHelper
 from pint.compat import np, long_type
 from pint.errors import UndefinedUnitError, DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
-from pint.testsuite.compat import unittest
 
 
 class TestIssues(QuantityTestCase):

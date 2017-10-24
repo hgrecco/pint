@@ -40,7 +40,7 @@ and constants. Due to its modular design, you can extend (or even rewrite!)
 the complete list without changing the source code. It supports a lot of
 numpy mathematical operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 2.6 and 3.X
+It has a complete test coverage. It runs in Python 2.7 and 3.3+
 with no other dependency. It is licensed under BSD.
 
 It is extremely easy and natural to use:
@@ -111,7 +111,7 @@ Pint to scratch my own itches.
 
 - Dependency free: it depends only on Python and its standard library.
 
-- Python 2 and 3: A single codebase that runs unchanged in Python 2.6+ and Python 3.0+.
+- Python 2 and 3: A single codebase that runs unchanged in Python 2.7 and Python 3.3+.
 
 - Advanced NumPy support: While NumPy is not a requirement for Pint,
   when available ndarray methods and ufuncs can be used in Quantity objects.

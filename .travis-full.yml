@@ -1,7 +1,6 @@
 language: python
 
 python:
-  - "2.6"
   - "2.7"
   - "3.3"
   - "3.4"
@@ -49,16 +48,13 @@ before_install:
 install:
   - conda create -c mwcraig --yes -n $ENV_NAME python=$TRAVIS_PYTHON_VERSION pip
   - source activate $ENV_NAME
-  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then pip install unittest2; fi
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install -c mwcraig --yes numpy==$NUMPY_VERSION; fi
-  - if [ $TRAVIS_PYTHON_VERSION == '3.2' ]; then pip install coverage==3.7.1; else pip install coverage; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.10.4 && $UNCERTAINTIES == "Y" ]]; then pip install serialize pyyaml; fi
   - pip install coveralls
 
 script:
-  - if [ $TRAVIS_PYTHON_VERSION == '2.6' ]; then coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
-  - if [ $TRAVIS_PYTHON_VERSION != '2.6' ]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
+  - python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test
   - coverage combine
   - coverage report -m
 

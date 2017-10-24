@@ -612,7 +612,7 @@ class TestDefinedContexts(QuantityTestCase):
                                                       b.dimensionality)
                     p = find_shortest_path(ureg._active_ctx.graph, da, db)
                     self.assertTrue(p)
-                    msg = '{0} <-> {1}'.format(a, b)
+                    msg = '{} <-> {}'.format(a, b)
                     # assertAlmostEqualRelError converts second to first
                     self.assertQuantityAlmostEqual(b, a, rtol=0.01, msg=msg)
 

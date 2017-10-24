@@ -24,10 +24,10 @@ class TestGroup(QuantityTestCase):
         self.assertEqual(root._used_groups, set())
         self.assertEqual(root._used_by, set())
         root.add_units('meter', 'second', 'meter')
-        self.assertEqual(root._unit_names, set(['meter', 'second']))
-        self.assertEqual(root.members, set(['meter', 'second']))
+        self.assertEqual(root._unit_names, {'meter', 'second'})
+        self.assertEqual(root.members, {'meter', 'second'})
 
-        self.assertEqual(set(d.keys()), set(['root']))
+        self.assertEqual(set(d.keys()), {'root'})
 
     def test_cyclic(self):
         ureg, root = self._build_empty_reg_root()
@@ -44,13 +44,13 @@ class TestGroup(QuantityTestCase):
         d = ureg._groups
         g2 = ureg.Group('g2')
 
-        self.assertEqual(set(d.keys()), set(['root', 'g2']))
+        self.assertEqual(set(d.keys()), {'root', 'g2'})
 
-        self.assertEqual(root._used_groups, set(['g2']))
+        self.assertEqual(root._used_groups, {'g2'})
         self.assertEqual(root._used_by, set())
 
         self.assertEqual(g2._used_groups, set())
-        self.assertEqual(g2._used_by, set(['root']))
+        self.assertEqual(g2._used_by, {'root'})
 
 
     def test_simple(self):
@@ -64,12 +64,12 @@ class TestGroup(QuantityTestCase):
 
         grp = ureg.Group.from_lines(lines, lambda x: None)
 
-        self.assertEqual(set(d.keys()), set(['root', 'mygroup']))
+        self.assertEqual(set(d.keys()), {'root', 'mygroup'})
 
         self.assertEqual(grp.name, 'mygroup')
-        self.assertEqual(grp._unit_names, set(['meter', 'second']))
+        self.assertEqual(grp._unit_names, {'meter', 'second'})
         self.assertEqual(grp._used_groups, set())
-        self.assertEqual(grp._used_by, set([root.name]))
+        self.assertEqual(grp._used_by, {root.name})
         self.assertEqual(grp.members, frozenset(['meter', 'second']))
 
     def test_using1(self):
@@ -84,8 +84,8 @@ class TestGroup(QuantityTestCase):
         g = ureg.Group('group1')
         grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertEqual(grp.name, 'mygroup')
-        self.assertEqual(grp._unit_names, set(['meter', 'second']))
-        self.assertEqual(grp._used_groups, set(['group1']))
+        self.assertEqual(grp._unit_names, {'meter', 'second'})
+        self.assertEqual(grp._used_groups, {'group1'})
         self.assertEqual(grp.members, frozenset(['meter', 'second']))
 
     def test_using2(self):
@@ -101,8 +101,8 @@ class TestGroup(QuantityTestCase):
         ureg.Group('group2')
         grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertEqual(grp.name, 'mygroup')
-        self.assertEqual(grp._unit_names, set(['meter', 'second']))
-        self.assertEqual(grp._used_groups, set(['group1', 'group2']))
+        self.assertEqual(grp._unit_names, {'meter', 'second'})
+        self.assertEqual(grp._used_groups, {'group1', 'group2'})
         self.assertEqual(grp.members, frozenset(['meter', 'second']))
 
     def test_spaces(self):
@@ -118,8 +118,8 @@ class TestGroup(QuantityTestCase):
         ureg.Group('group2')
         grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertEqual(grp.name, 'mygroup')
-        self.assertEqual(grp._unit_names, set(['meter', 'second']))
-        self.assertEqual(grp._used_groups, set(['group1', 'group2']))
+        self.assertEqual(grp._unit_names, {'meter', 'second'})
+        self.assertEqual(grp._used_groups, {'group1', 'group2'})
         self.assertEqual(grp.members, frozenset(['meter', 'second']))
 
     def test_invalidate_members(self):
@@ -214,7 +214,7 @@ class TestSystem(QuantityTestCase):
         d = ureg._groups
 
         s = ureg.System.from_lines(lines, lambda x: x)
-        s._used_groups = set(['root'])
+        s._used_groups = {'root'}
 
     def test_simple_using(self):
         lines = ['@system mks using g1',
@@ -227,7 +227,7 @@ class TestSystem(QuantityTestCase):
         d = ureg._groups
 
         s = ureg.System.from_lines(lines, lambda x: x)
-        s._used_groups = set(['root', 'g1'])
+        s._used_groups = {'root', 'g1'}
 
 
     def test_members_group(self):

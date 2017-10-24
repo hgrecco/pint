@@ -118,7 +118,7 @@ def _parse_wrap_args(args, registry=None):
                 if strict:
                     raise ValueError('A wrapped function using strict=True requires '
                                      'quantity for all arguments with not None units. '
-                                     '(error found for {0}, {1})'.format(args_as_uc[ndx][0], new_values[ndx]))
+                                     '(error found for {}, {})'.format(args_as_uc[ndx][0], new_values[ndx]))
 
         return new_values, values_by_name
 
