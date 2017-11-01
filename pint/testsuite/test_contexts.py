@@ -278,10 +278,15 @@ class TestContexts(QuantityTestCase):
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
 
+        meter_units = ureg.get_compatible_units(ureg.meter)
+        hertz_units = ureg.get_compatible_units(ureg.hertz)
+
         self.assertRaises(ValueError, q.to, 'Hz')
         with ureg.context('lc'):
             self.assertEqual(q.to('Hz'), s)
+            self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units)
         self.assertRaises(ValueError, q.to, 'Hz')
+
 
     def test_multiple_context(self):
         ureg = UnitRegistry()
@@ -291,9 +296,13 @@ class TestContexts(QuantityTestCase):
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
 
+        meter_units = ureg.get_compatible_units(ureg.meter)
+        hertz_units = ureg.get_compatible_units(ureg.hertz)
+
         self.assertRaises(ValueError, q.to, 'Hz')
         with ureg.context('lc', 'ab'):
             self.assertEqual(q.to('Hz'), s)
+            self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units)
         self.assertRaises(ValueError, q.to, 'Hz')
 
     def test_nested_context(self):

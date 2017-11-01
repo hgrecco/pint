@@ -1096,8 +1096,8 @@ class ContextRegistry(BaseRegistry):
             kwargs = dict(self._active_ctx.defaults, **kwargs)
 
         # For each name, we first find the corresponding context
-        ctxs = tuple((self._contexts[name] if isinstance(name, string_types) else name)
-                     for name in names_or_contexts)
+        ctxs = list((self._contexts[name] if isinstance(name, string_types) else name)
+                    for name in names_or_contexts)
 
         # Check if the contexts have been checked first, if not we make sure
         # that dimensions are expressed in terms of base dimensions.
