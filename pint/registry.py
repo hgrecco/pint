@@ -413,11 +413,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
-                prefixed = False
-                for p in self._prefixes.keys():
-                    if p and unit_name.startswith(p):
-                        prefixed = True
-                        break
+                prefixed = True if next(self.parse_unit_name(unit_name))[0] else False
                 if '[' in unit_name:
                     continue
                 try:
