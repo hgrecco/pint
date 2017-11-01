@@ -413,11 +413,17 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
-                prefixed = True if next(self.parse_unit_name(unit_name))[0] else False
                 if '[' in unit_name:
                     continue
+                parsed_names = tuple(self.parse_unit_name(unit_name))
+                _prefix = None
+                if parsed_names:
+                    _prefix, base_name, _suffix = parsed_names[0]
+                else:
+                    base_name = unit_name
+                prefixed = True if _prefix else False
                 try:
-                    uc = ParserHelper.from_word(unit_name)
+                    uc = ParserHelper.from_word(base_name)
 
                     bu = self._get_root_units(uc)
                     di = self._get_dimensionality(uc)
@@ -429,7 +435,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                         if di not in self._dimensional_equivalents:
                             self._dimensional_equivalents[di] = set()
 
-                        self._dimensional_equivalents[di].add(self._units[unit_name]._name)
+                        self._dimensional_equivalents[di].add(self._units[base_name]._name)
 
                 except Exception as e:
                     logger.warning('Could not resolve {0}: {1!r}'.format(unit_name, e))
