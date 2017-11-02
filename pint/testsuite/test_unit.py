@@ -21,8 +21,8 @@ class TestUnit(QuantityTestCase):
         self.assertRaises(TypeError, self.U_, 1)
 
     def test_deepcopy(self):
-      x = self.U_(UnitsContainer(meter=1))
-      self.assertEqual(x, copy.deepcopy(x))
+        x = self.U_(UnitsContainer(meter=1))
+        self.assertEqual(x, copy.deepcopy(x))
 
     def test_unit_repr(self):
         x = self.U_(UnitsContainer(meter=1))
@@ -205,7 +205,6 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(self.ureg.parse_expression('kilometre'), self.Q_(1, UnitsContainer(kilometer=1.)))
         self.assertEqual(self.ureg.parse_expression('kilometres'), self.Q_(1, UnitsContainer(kilometer=1.)))
 
-
     def test_str_errors(self):
         self.assertEqual(str(UndefinedUnitError('rabbits')), "'{0!s}' is not defined in the unit registry".format('rabbits'))
         self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "'{0!s}' are not defined in the unit registry".format(('rabbits', 'horses')))
@@ -249,7 +248,7 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(parse('kelvin**(-1)', as_delta=False), UnitsContainer(kelvin=-1))
         self.assertEqual(parse('kelvin**2', as_delta=True), UnitsContainer(kelvin=2))
         self.assertEqual(parse('kelvin**2', as_delta=False), UnitsContainer(kelvin=2))
-        self.assertEqual(parse('kelvin*meter', as_delta=True), UnitsContainer(kelvin=1, meter= 1))
+        self.assertEqual(parse('kelvin*meter', as_delta=True), UnitsContainer(kelvin=1, meter=1))
         self.assertEqual(parse('kelvin*meter', as_delta=False), UnitsContainer(kelvin=1, meter=1))
 
     def test_name(self):
@@ -492,8 +491,13 @@ class TestRegistry(QuantityTestCase):
 
 
 class TestCompatibleUnits(QuantityTestCase):
+    FORCE_NDARRAY = False
 
-    FORCE_NDARRAY= False
+    def setUp(self):
+        super().setUp()
+        self.ureg = UnitRegistry(force_ndarray=self.FORCE_NDARRAY)
+        self.Q_ = self.ureg.Quantity
+        self.U_ = self.ureg.Unit
 
     def _test(self, input_units):
         gd = self.ureg.get_dimensionality
