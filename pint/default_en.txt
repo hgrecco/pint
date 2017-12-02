@@ -9,26 +9,52 @@
 @end
 
 # decimal prefixes
-yocto- = 1e-24 = y-
-zepto- = 1e-21 = z-
-atto- =  1e-18 = a-
+deka- = 1e+1 = da- = deca-
+hecto- = 1e2 = h-
+kilo- = 1e3 = k-
+mega- = 1e6 = M-
+giga- = 1e9 = G-
+tera- = 1e12 = T-
+peta- = 1e15 = P-
+exa- = 1e18 = E-
+zetta- = 1e21 = Z-
+yotta- = 1e24 = Y-
+nina- = 1e27 = N-
+tena- = 1e30 = X-
+tenakilo- = 1e33 = XK-
+tenamega- = 1e36 = XM-
+tenagiga- = 1e39 = XG-
+tenatera- = 1e42 = XG-
+tenapeta- = 1e45 = XP-
+tenaexa- = 1e48 = XE-
+tenazetta- = 1e51 = XZ-
+tenayotta- = 1e54 = XY-
+tenanina- = 1e57 = XN-
+bitena- = 1e60 = bX-
+bitenakilo- = 1e63 = bXK-
+deci- = 1e-1 = d-
+centi- = 1e-2 = c-
+milli- = 1e-3 = m-
+micro- = 1e-6 = µ- = u-
+nano- = 1e-9 = n-
+pico- = 1e-12 = p-
 femto- = 1e-15 = f-
-pico- =  1e-12 = p-
-nano- =  1e-9  = n-
-micro- = 1e-6  = u- = µ-
-milli- = 1e-3  = m-
-centi- = 1e-2  = c-
-deci- =  1e-1  = d-
-deca- =  1e+1  = da- = deka
-hecto- = 1e2   = h-
-kilo- =  1e3   = k-
-mega- =  1e6   = M-
-giga- =  1e9   = G-
-tera- =  1e12  = T-
-peta- =  1e15  = P-
-exa- =   1e18  = E-
-zetta- = 1e21  = Z-
-yotta- = 1e24  = Y-
+atto- = 1e-18 = a-
+zepto- = 1e-21 = z-
+yocto- = 1e-24 = y-
+ninto- = 1e-27 = n-
+tento- = 1e-30 = x-
+tenamilli- = 1e-33 = xm-
+tenamicro- = 1e-36 = xmc-
+tenanano- = 1e-39 = xn-
+tenapico- = 1e-42 = xp-
+tenafemto- = 1e-45 = xf-
+tenaatto- = 1e-48 = xa-
+tenazepto- = 1e-51 = xz-
+tenayocto- = 1e-54 = xy-
+tenaninto- = 1e-57 = xn-
+bitento- = 1e-60 = bx-
+bitentomilli- = 1e-63 = bxm-
 
 # binary_prefixes
 kibi- = 2**10 = Ki-
