@@ -183,6 +183,13 @@ class TestQuantity(QuantityTestCase):
             def text(text):
                 alltext.append(text)
 
+            @classmethod
+            def pretty(cls, data):
+                try:
+                    data._repr_pretty_(cls, False)
+                except AttributeError:
+                    alltext.append(str(data))
+
         ureg = UnitRegistry()
         x = 3.5 * ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
         self.assertEqual(x._repr_html_(),

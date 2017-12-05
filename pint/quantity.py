@@ -207,6 +207,14 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             ustr = ustr[2:]
         return allf.format(mstr, ustr).strip()
 
+    def _repr_pretty_(self, p, cycle):
+        if cycle:
+            super(_Quantity, self)._repr_pretty_(p, cycle)
+        else:
+            p.pretty(self.magnitude)
+            p.text(" ")
+            p.pretty(self.units)
+
     def format_babel(self, spec='', **kwspec):
         spec = spec or self.default_format
 
