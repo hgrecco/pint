@@ -625,6 +625,29 @@ class SharedRegistryObject(object):
         else:
             return False
 
+
+class PrettyIPython(object):
+    """Mixin to add pretty-printers for IPython"""
+
+    def _repr_html_(self):
+        if "~" in self.default_format:
+            return "{:~H}".format(self)
+        else:
+            return "{:H}".format(self)
+
+    def _repr_latex_(self):
+        if "~" in self.default_format:
+            return "${:~L}$".format(self)
+        else:
+            return "${:L}$".format(self)
+
+    def _repr_pretty_(self, p, cycle):
+        if "~" in self.default_format:
+            p.text("{:~P}".format(self))
+        else:
+            p.text("{:P}".format(self))
+
+
 def to_units_container(unit_like, registry=None):
     """ Convert a unit compatible type to a UnitsContainer.
 

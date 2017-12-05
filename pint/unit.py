@@ -15,7 +15,8 @@ import copy
 import operator
 from numbers import Number
 
-from .util import UnitsContainer, SharedRegistryObject, fix_str_conversions
+from .util import (
+    PrettyIPython, UnitsContainer, SharedRegistryObject, fix_str_conversions)
 
 from .compat import string_types, NUMERIC_TYPES, long_type
 from .formatting import siunitx_format_unit
@@ -23,7 +24,7 @@ from .definitions import UnitDefinition
 
 
 @fix_str_conversions
-class _Unit(SharedRegistryObject):
+class _Unit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
 
     :type units: UnitsContainer, str, Unit or Quantity.
@@ -109,19 +110,6 @@ class _Unit(SharedRegistryObject):
             units = self._units
 
         return '%s' % (units.format_babel(spec, **kwspec))
-
-    # IPython related code
-    def _repr_html_(self):
-        if "~" in self.default_format:
-            return "{:~H}".format(self)
-        else:
-            return "{:H}".format(self)
-
-    def _repr_latex_(self):
-        if "~" in self.default_format:
-            return "${:~L}$".format(self)
-        else:
-            return "${:L}$".format(self)
 
     @property
     def dimensionless(self):

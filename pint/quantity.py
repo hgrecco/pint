@@ -25,7 +25,7 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError)
 from .definitions import UnitDefinition
 from .compat import string_types, ndarray, np, _to_magnitude, long_type
-from .util import (logger, UnitsContainer, SharedRegistryObject,
+from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit,
                    fix_str_conversions)
 from pint.compat import Loc
@@ -66,7 +66,7 @@ def ireduce_dimensions(f):
 
 
 @fix_str_conversions
-class _Quantity(SharedRegistryObject):
+class _Quantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -224,25 +224,6 @@ class _Quantity(SharedRegistryObject):
         return '{} {}'.format(
             format(obj.magnitude, remove_custom_flags(spec)),
             obj.units.format_babel(spec, **kwspec)).replace('\n', '')
-
-    # IPython related code
-    def _repr_html_(self):
-        if "~" in self.default_format:
-            return "{:~H}".format(self)
-        else:
-            return "{:H}".format(self)
-
-    def _repr_latex_(self):
-        if "~" in self.default_format:
-            return "${:~L}$".format(self)
-        else:
-            return "${:L}$".format(self)
-
-    def _repr_pretty_(self, p, cycle):
-        if "~" in self.default_format:
-            p.text("{:~P}".format(self))
-        else:
-            p.text("{:P}".format(self))
 
     @property
     def magnitude(self):
