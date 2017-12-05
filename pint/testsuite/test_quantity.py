@@ -166,6 +166,15 @@ class TestQuantity(QuantityTestCase):
             ureg.default_format = spec
             self.assertEqual('{0}'.format(x), result)
 
+    def test_exponent_formatting(self):
+        ureg = UnitRegistry()
+        x = ureg.Quantity(1e20, UnitsContainer(meter=1))
+        self.assertEqual("{:~H}".format(x), "1×10<sup>20</sup> m")
+        self.assertEqual("{:~L}".format(x), r"1\times 10^{20}\ \mathrm{m}")
+        x /= 1e40
+        self.assertEqual("{:~H}".format(x), "1×10<sup>-20</sup> m")
+        self.assertEqual("{:~L}".format(x), r"1\times 10^{-20}\ \mathrm{m}")
+
     def test_ipython(self):
         ureg = UnitRegistry()
         x = 3.5 * ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))

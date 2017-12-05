@@ -17,6 +17,7 @@ import functools
 import bisect
 import warnings
 import numbers
+import re
 
 from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_latex,
                          ndarray_to_latex_parts)
@@ -149,6 +150,8 @@ class _Quantity(SharedRegistryObject):
         else:
             return hash((self_base.__class__, self_base.magnitude, self_base.units))
 
+    _exp_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
+
     def __format__(self, spec):
         spec = spec or self.default_format
 
@@ -193,6 +196,11 @@ class _Quantity(SharedRegistryObject):
                 mstr = format(obj.magnitude, mspec).replace('\n', '')
         else:
             mstr = format(obj.magnitude, mspec).replace('\n', '')
+
+        if 'L' in spec:
+            mstr = self._exp_pattern.sub(r"\1\\times 10^{\2\3}", mstr)
+        elif 'H' in spec:
+            mstr = self._exp_pattern.sub(r"\1×10<sup>\2\3</sup>", mstr)
 
         if allf == plain_allf and ustr.startswith('1 /'):
             # Write e.g. "3 / s" instead of "3 1 / s"
