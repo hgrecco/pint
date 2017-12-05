@@ -176,6 +176,13 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual("{:~L}".format(x), r"1\times 10^{-20}\ \mathrm{m}")
 
     def test_ipython(self):
+        alltext = []
+
+        class Pretty(object):
+            @staticmethod
+            def text(text):
+                alltext.append(text)
+
         ureg = UnitRegistry()
         x = 3.5 * ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
         self.assertEqual(x._repr_html_(),
@@ -183,11 +190,16 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(x._repr_latex_(),
                          r'$3.5\ \frac{\mathrm{kilogram} \cdot '
                          r'\mathrm{meter}^{2}}{\mathrm{second}}$')
+        x._repr_pretty_(Pretty, False)
+        self.assertEqual("".join(alltext), "3.5 kilogram·meter²/second")
         ureg.default_format = "~"
         self.assertEqual(x._repr_html_(), "3.5 kg m<sup>2</sup>/s")
         self.assertEqual(x._repr_latex_(),
                          r'$3.5\ \frac{\mathrm{kg} \cdot '
                          r'\mathrm{m}^{2}}{\mathrm{s}}$')
+        alltext = []
+        x._repr_pretty_(Pretty, False)
+        self.assertEqual("".join(alltext), "3.5 kg·m²/s")
 
     def test_to_base_units(self):
         x = self.Q_('1*inch')

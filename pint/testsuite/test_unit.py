@@ -64,15 +64,27 @@ class TestUnit(QuantityTestCase):
                              'Failed for {0}, {1}'.format(spec, result))
 
     def test_ipython(self):
+        alltext = []
+
+        class Pretty(object):
+            @staticmethod
+            def text(text):
+                alltext.append(text)
+
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
         self.assertEqual(x._repr_html_(), "kilogram meter<sup>2</sup>/second")
         self.assertEqual(x._repr_latex_(), r'$\frac{\mathrm{kilogram} \cdot '
                                            r'\mathrm{meter}^{2}}{\mathrm{second}}$')
+        x._repr_pretty_(Pretty, False)
+        self.assertEqual("".join(alltext), "kilogram·meter²/second")
         ureg.default_format = "~"
         self.assertEqual(x._repr_html_(), "kg m<sup>2</sup>/s")
         self.assertEqual(x._repr_latex_(),
                          r'$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$')
+        alltext = []
+        x._repr_pretty_(Pretty, False)
+        self.assertEqual("".join(alltext), "kg·m²/s")
 
     def test_unit_mul(self):
         x = self.U_('m')

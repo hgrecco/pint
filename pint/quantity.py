@@ -238,6 +238,12 @@ class _Quantity(SharedRegistryObject):
         else:
             return "${:L}$".format(self)
 
+    def _repr_pretty_(self, p, cycle):
+        if "~" in self.default_format:
+            p.text("{:~P}".format(self))
+        else:
+            p.text("{:P}".format(self))
+
     @property
     def magnitude(self):
         """Quantity's magnitude. Long form for `m`
