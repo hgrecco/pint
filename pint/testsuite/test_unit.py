@@ -63,6 +63,13 @@ class TestUnit(QuantityTestCase):
             self.assertEqual('{0}'.format(x), result,
                              'Failed for {0}, {1}'.format(spec, result))
 
+    def test_ipython(self):
+        ureg = UnitRegistry()
+        x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
+        self.assertEqual(x._repr_html_(), "kilogram meter<sup>2</sup>/second")
+        self.assertEqual(x._repr_latex_(), r'$\frac{\mathrm{kilogram} \cdot '
+                                           r'\mathrm{meter}^{2}}{\mathrm{second}}$')
+
     def test_unit_mul(self):
         x = self.U_('m')
         self.assertEqual(x*1, self.Q_(1, 'm'))
