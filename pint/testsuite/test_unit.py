@@ -69,6 +69,10 @@ class TestUnit(QuantityTestCase):
         self.assertEqual(x._repr_html_(), "kilogram meter<sup>2</sup>/second")
         self.assertEqual(x._repr_latex_(), r'$\frac{\mathrm{kilogram} \cdot '
                                            r'\mathrm{meter}^{2}}{\mathrm{second}}$')
+        ureg.default_format = "~"
+        self.assertEqual(x._repr_html_(), "kg m<sup>2</sup>/s")
+        self.assertEqual(x._repr_latex_(),
+                         r'$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$')
 
     def test_unit_mul(self):
         x = self.U_('m')

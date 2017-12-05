@@ -174,6 +174,11 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(x._repr_latex_(),
                          r'$3.5\ \frac{\mathrm{kilogram} \cdot '
                          r'\mathrm{meter}^{2}}{\mathrm{second}}$')
+        ureg.default_format = "~"
+        self.assertEqual(x._repr_html_(), "3.5 kg m<sup>2</sup>/s")
+        self.assertEqual(x._repr_latex_(),
+                         r'$3.5\ \frac{\mathrm{kg} \cdot '
+                         r'\mathrm{m}^{2}}{\mathrm{s}}$')
 
     def test_to_base_units(self):
         x = self.Q_('1*inch')

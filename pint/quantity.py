@@ -219,10 +219,16 @@ class _Quantity(SharedRegistryObject):
 
     # IPython related code
     def _repr_html_(self):
-        return self.__format__('H')
+        if "~" in self.default_format:
+            return "{:~H}".format(self)
+        else:
+            return "{:H}".format(self)
 
     def _repr_latex_(self):
-        return "$" + self.__format__('L') + "$"
+        if "~" in self.default_format:
+            return "${:~L}$".format(self)
+        else:
+            return "${:L}$".format(self)
 
     @property
     def magnitude(self):
