@@ -219,6 +219,7 @@ roentgen = 2.58e-4 * coulomb / kilogram
 
 # Temperature
 degC = kelvin; offset: 273.15 = celsius
+℃ = degC
 degR = 5 / 9 * kelvin; offset: 0 = rankine
 degF = 5 / 9 * kelvin; offset: 255.372222 = fahrenheit
 
