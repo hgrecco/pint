@@ -207,7 +207,10 @@ def _parse_spec(spec):
 
 def format_unit(unit, spec, **kwspec):
     if not unit:
-        return 'dimensionless'
+        if spec[-1] == '%':
+            return ''
+        else:
+            return 'dimensionless'
 
     spec = _parse_spec(spec)
     fmt = dict(_FORMATS[spec])
