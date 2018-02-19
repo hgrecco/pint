@@ -166,6 +166,48 @@ class TestQuantity(QuantityTestCase):
             ureg.default_format = spec
             self.assertEqual('{0}'.format(x), result)
 
+    def test_exponent_formatting(self):
+        ureg = UnitRegistry()
+        x = ureg.Quantity(1e20, UnitsContainer(meter=1))
+        self.assertEqual("{:~H}".format(x), "1×10<sup>20</sup> m")
+        self.assertEqual("{:~L}".format(x), r"1\times 10^{20}\ \mathrm{m}")
+        x /= 1e40
+        self.assertEqual("{:~H}".format(x), "1×10<sup>-20</sup> m")
+        self.assertEqual("{:~L}".format(x), r"1\times 10^{-20}\ \mathrm{m}")
+
+    def test_ipython(self):
+        alltext = []
+
+        class Pretty(object):
+            @staticmethod
+            def text(text):
+                alltext.append(text)
+
+            @classmethod
+            def pretty(cls, data):
+                try:
+                    data._repr_pretty_(cls, False)
+                except AttributeError:
+                    alltext.append(str(data))
+
+        ureg = UnitRegistry()
+        x = 3.5 * ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
+        self.assertEqual(x._repr_html_(),
+                         "3.5 kilogram meter<sup>2</sup>/second")
+        self.assertEqual(x._repr_latex_(),
+                         r'$3.5\ \frac{\mathrm{kilogram} \cdot '
+                         r'\mathrm{meter}^{2}}{\mathrm{second}}$')
+        x._repr_pretty_(Pretty, False)
+        self.assertEqual("".join(alltext), "3.5 kilogram·meter²/second")
+        ureg.default_format = "~"
+        self.assertEqual(x._repr_html_(), "3.5 kg m<sup>2</sup>/s")
+        self.assertEqual(x._repr_latex_(),
+                         r'$3.5\ \frac{\mathrm{kg} \cdot '
+                         r'\mathrm{m}^{2}}{\mathrm{s}}$')
+        alltext = []
+        x._repr_pretty_(Pretty, False)
+        self.assertEqual("".join(alltext), "3.5 kg·m²/s")
+
     def test_to_base_units(self):
         x = self.Q_('1*inch')
         self.assertQuantityAlmostEqual(x.to_base_units(), self.Q_(0.0254, 'meter'))
