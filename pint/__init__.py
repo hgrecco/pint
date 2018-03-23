@@ -18,7 +18,7 @@ import pkg_resources
 from .formatting import formatter
 from .registry import (UnitRegistry, LazyRegistry)
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
-                   UndefinedUnitError)
+                   UndefinedUnitError, UnitStrippedWarning)
 from .util import pi_theorem, logger
 
 from .context import Context
