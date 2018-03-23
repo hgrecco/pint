@@ -19,10 +19,10 @@ def add_ctxs(ureg):
 
     ureg.add_context(d)
 
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': 1})
     d = Context('ab')
-    d.add_transformation(a, b, lambda ureg, x: 1 / x)
-    d.add_transformation(b, a, lambda ureg, x: 1 / x)
+    d.add_transformation(a, b, lambda ureg, x: ureg.ampere * ureg.meter / x)
+    d.add_transformation(b, a, lambda ureg, x: ureg.ampere * ureg.meter / x)
 
     ureg.add_context(d)
 
@@ -35,10 +35,10 @@ def add_arg_ctxs(ureg):
 
     ureg.add_context(d)
 
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': 1})
     d = Context('ab')
-    d.add_transformation(a, b, lambda ureg, x: 1 / x)
-    d.add_transformation(b, a, lambda ureg, x: 1 / x)
+    d.add_transformation(a, b, lambda ureg, x: ureg.ampere * ureg.meter / x)
+    d.add_transformation(b, a, lambda ureg, x: ureg.ampere * ureg.meter / x)
 
     ureg.add_context(d)
 
@@ -53,10 +53,10 @@ def add_argdef_ctxs(ureg):
 
     ureg.add_context(d)
 
-    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': -1})
+    a, b = UnitsContainer({'[length]': 1}), UnitsContainer({'[current]': 1})
     d = Context('ab')
-    d.add_transformation(a, b, lambda ureg, x: 1 / x)
-    d.add_transformation(b, a, lambda ureg, x: 1 / x)
+    d.add_transformation(a, b, lambda ureg, x: ureg.ampere * ureg.meter / x)
+    d.add_transformation(b, a, lambda ureg, x: ureg.ampere * ureg.meter / x)
 
     ureg.add_context(d)
 
@@ -122,7 +122,7 @@ class TestContexts(QuantityTestCase):
         add_ctxs(ureg)
         l = UnitsContainer({'[length]': 1.})
         t = UnitsContainer({'[time]': -1.})
-        c = UnitsContainer({'[current]': -1.})
+        c = UnitsContainer({'[current]': 1.})
 
         g_sp = defaultdict(set)
         g_sp.update({l: set((t,)),
@@ -165,7 +165,7 @@ class TestContexts(QuantityTestCase):
         add_ctxs(ureg)
         l = UnitsContainer({'[length]': 1.})
         t = UnitsContainer({'[time]': -1.})
-        c = UnitsContainer({'[current]': -1.})
+        c = UnitsContainer({'[current]': 1.})
 
         g_sp = defaultdict(set)
         g_sp.update({l: set((t,)),
@@ -278,10 +278,16 @@ class TestContexts(QuantityTestCase):
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
 
+        meter_units = ureg.get_compatible_units(ureg.meter)
+        hertz_units = ureg.get_compatible_units(ureg.hertz)
+
         self.assertRaises(ValueError, q.to, 'Hz')
         with ureg.context('lc'):
             self.assertEqual(q.to('Hz'), s)
+            self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units)
         self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertEqual(ureg.get_compatible_units(q), meter_units)
+
 
     def test_multiple_context(self):
         ureg = UnitRegistry()
@@ -291,10 +297,17 @@ class TestContexts(QuantityTestCase):
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
 
+        meter_units = ureg.get_compatible_units(ureg.meter)
+        hertz_units = ureg.get_compatible_units(ureg.hertz)
+        ampere_units = ureg.get_compatible_units(ureg.ampere)
+
         self.assertRaises(ValueError, q.to, 'Hz')
         with ureg.context('lc', 'ab'):
             self.assertEqual(q.to('Hz'), s)
+            self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units | ampere_units)
         self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertEqual(ureg.get_compatible_units(q), meter_units)
+
 
     def test_nested_context(self):
         ureg = UnitRegistry()

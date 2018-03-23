@@ -407,21 +407,24 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     def _build_cache(self):
         """Build a cache of dimensionality and base units.
         """
+        self._dimensional_equivalents = dict()
 
         deps = dict((name, set(definition.reference.keys() if definition.reference else {}))
                     for name, definition in self._units.items())
 
         for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
-                prefixed = False
-                for p in self._prefixes.keys():
-                    if p and unit_name.startswith(p):
-                        prefixed = True
-                        break
                 if '[' in unit_name:
                     continue
+                parsed_names = tuple(self.parse_unit_name(unit_name))
+                _prefix = None
+                if parsed_names:
+                    _prefix, base_name, _suffix = parsed_names[0]
+                else:
+                    base_name = unit_name
+                prefixed = True if _prefix else False
                 try:
-                    uc = ParserHelper.from_word(unit_name)
+                    uc = ParserHelper.from_word(base_name)
 
                     bu = self._get_root_units(uc)
                     di = self._get_dimensionality(uc)
@@ -433,7 +436,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                         if di not in self._dimensional_equivalents:
                             self._dimensional_equivalents[di] = set()
 
-                        self._dimensional_equivalents[di].add(self._units[unit_name]._name)
+                        self._dimensional_equivalents[di].add(self._units[base_name]._name)
 
                 except Exception as e:
                     logger.warning('Could not resolve {0}: {1!r}'.format(unit_name, e))
@@ -1094,8 +1097,8 @@ class ContextRegistry(BaseRegistry):
             kwargs = dict(self._active_ctx.defaults, **kwargs)
 
         # For each name, we first find the corresponding context
-        ctxs = tuple((self._contexts[name] if isinstance(name, string_types) else name)
-                     for name in names_or_contexts)
+        ctxs = list((self._contexts[name] if isinstance(name, string_types) else name)
+                    for name in names_or_contexts)
 
         # Check if the contexts have been checked first, if not we make sure
         # that dimensions are expressed in terms of base dimensions.
@@ -1116,6 +1119,7 @@ class ContextRegistry(BaseRegistry):
 
         # Finally we add them to the active context.
         self._active_ctx.insert_contexts(*ctxs)
+        self._build_cache()
 
     def disable_contexts(self, n=None):
         """Disable the last n enabled contexts.
@@ -1123,6 +1127,7 @@ class ContextRegistry(BaseRegistry):
         if n is None:
             n = len(self._contexts)
         self._active_ctx.remove_contexts(n)
+        self._build_cache()
 
     @contextmanager
     def context(self, *names, **kwargs):
@@ -1246,7 +1251,6 @@ class ContextRegistry(BaseRegistry):
 
         if self._active_ctx:
             nodes = find_connected_nodes(self._active_ctx.graph, src_dim)
-            ret = set()
             if nodes:
                 for node in nodes:
                     ret |= self._dimensional_equivalents[node]
