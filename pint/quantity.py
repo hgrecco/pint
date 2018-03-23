@@ -22,7 +22,7 @@ import re
 from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_latex,
                          ndarray_to_latex_parts)
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
-                     UndefinedUnitError)
+                     UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
 from .compat import string_types, ndarray, np, _to_magnitude, long_type
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
@@ -1308,6 +1308,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
         if item.startswith('__array_'):
+            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
             if isinstance(self._magnitude, ndarray):
                 return getattr(self._magnitude, item)
             else:

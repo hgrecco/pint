@@ -111,3 +111,7 @@ class OffsetUnitCalculusError(ValueError):
                ', '.join(['%s' % u for u in [self.units1, self.units2] if u])
                + self.extra_msg)
         return msg.format(self.units1, self.units2)
+
+
+class UnitStrippedWarning(UserWarning):
+    pass
