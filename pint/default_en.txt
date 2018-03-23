@@ -85,7 +85,7 @@ coulomb = ampere * second = C
 volt = joule / coulomb = V
 farad = coulomb / volt = F
 ohm = volt / ampere = Ω
-siemens = ampere / volt = S = mho
+siemens = ampere / volt = S = mho = ℧
 weber = volt * second = Wb
 tesla = weber / meter ** 2 = T
 henry = weber / ampere = H
