@@ -422,7 +422,7 @@ class TestBitTwiddlingUfuncs(TestUFuncs):
                     'same')
 
 
-class TestNDArrayQunatityMath(QuantityTestCase):
+class TestNDArrayQuantityMath(QuantityTestCase):
 
     @helpers.requires_numpy()
     def test_exponentiation_array_exp(self):
