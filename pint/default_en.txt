@@ -49,7 +49,7 @@ gram = [mass] = g
 mole = [substance] = mol
 kelvin = [temperature]; offset: 0 = K = degK
 radian = [] = rad
-bit = []
+bit = [information]
 count = []
 
 @import constants_en.txt
