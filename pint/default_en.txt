@@ -68,7 +68,7 @@ atto- =  1e-18 = a-
 femto- = 1e-15 = f-
 pico- =  1e-12 = p-
 nano- =  1e-9  = n-
-micro- = 1e-6  = µ- = u-
+micro- = 1e-6 = u- = µ- = μ-
 milli- = 1e-3  = m-
 centi- = 1e-2  = c-
 deci- =  1e-1  = d-
@@ -109,7 +109,7 @@ mole = [substance] = mol
 kelvin = [temperature]; offset: 0 = K = degK = °K = degree_Kelvin = degreeK  # older names supported for compatibility
 radian = [] = rad
 neper = [] = Np
-bit = []
+bit = [information]
 count = []
 
 
