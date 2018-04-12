@@ -613,7 +613,7 @@ class TestFloatingUfuncs(TestUFuncs):
                     (self.q1, self.qm, self.qless))
 
     def test_isfinite(self):
-        self._testn(np.isreal,
+        self._testn(np.isfinite,
                     (self.q1, self.qm, self.qless))
 
     def test_isinf(self):
