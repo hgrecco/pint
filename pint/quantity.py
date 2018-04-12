@@ -1003,8 +1003,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                         raise OffsetUnitCalculusError(self._units)
 
                 if getattr(other, 'dimensionless', False):
-                    other = other.to_base_units()
-                    self._units **= other.magnitude
+                    other = other.to_base_units().magnitude
+                    self._units **= other
                 elif not getattr(other, 'dimensionless', True):
                     raise DimensionalityError(self._units, 'dimensionless')
                 else:
