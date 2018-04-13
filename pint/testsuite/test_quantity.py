@@ -1296,3 +1296,107 @@ class TestTimedelta(QuantityTestCase):
         after = 3 * self.ureg.second
         with self.assertRaises(DimensionalityError):
             after -= d
+
+
+class TestCompareZero(QuantityTestCase):
+    """This test case checks the special treatment that the zero value
+    receives in the comparisons: pint>=0.9 supports comparisons against zero
+    even for non-dimensionless quantities
+    """
+
+    def test_equal_zero(self):
+        ureg = self.ureg
+        ureg.autoconvert_offset_to_baseunit = False
+        self.assertTrue(ureg.Quantity(0, ureg.J) == 0)
+        self.assertFalse(ureg.Quantity(0, ureg.J) == ureg.Quantity(0, ''))
+        self.assertFalse(ureg.Quantity(5, ureg.J) == 0)
+
+    @helpers.requires_numpy()
+    def test_equal_zero_NP(self):
+        ureg = self.ureg
+        ureg.autoconvert_offset_to_baseunit = False
+        aeq = np.testing.assert_array_equal
+        aeq(ureg.Quantity(0, ureg.J) == np.zeros(3),
+            np.asarray([True, True, True]))
+        aeq(ureg.Quantity(5, ureg.J) == np.zeros(3),
+            np.asarray([False, False, False]))
+        aeq(ureg.Quantity(np.arange(3), ureg.J) == np.zeros(3),
+            np.asarray([True, False, False]))
+        self.assertFalse(ureg.Quantity(np.arange(4), ureg.J) == np.zeros(3))
+
+    def test_offset_equal_zero(self):
+        ureg =  self.ureg
+        ureg.autoconvert_offset_to_baseunit = False
+        q0 = ureg.Quantity(-273.15, 'degC')
+        q1 = ureg.Quantity(0, 'degC')
+        q2 = ureg.Quantity(5, 'degC')
+        self.assertRaises(OffsetUnitCalculusError, q0.__eq__, 0)
+        self.assertRaises(OffsetUnitCalculusError, q1.__eq__, 0)
+        self.assertRaises(OffsetUnitCalculusError, q2.__eq__, 0)
+        self.assertFalse(q0 == ureg.Quantity(0, ''))
+
+    def test_offset_autoconvert_equal_zero(self):
+        ureg =  self.ureg
+        ureg.autoconvert_offset_to_baseunit = True
+        q0 = ureg.Quantity(-273.15, 'degC')
+        q1 = ureg.Quantity(0, 'degC')
+        q2 = ureg.Quantity(5, 'degC')
+        self.assertTrue(q0 == 0)
+        self.assertFalse(q1 == 0)
+        self.assertFalse(q2 == 0)
+        self.assertFalse(q0 == ureg.Quantity(0, ''))
+
+    def test_gt_zero(self):
+        ureg = self.ureg
+        ureg.autoconvert_offset_to_baseunit = False
+        q0 = ureg.Quantity(0, 'J')
+        q0m = ureg.Quantity(0, 'm')
+        q0less = ureg.Quantity(0, '')
+        qpos = ureg.Quantity(5, 'J')
+        qneg = ureg.Quantity(-5, 'J')
+        self.assertTrue(qpos > q0)
+        self.assertTrue(qpos > 0)
+        self.assertFalse(qneg > 0)
+        self.assertRaises(DimensionalityError, qpos.__gt__, q0less)
+        self.assertRaises(DimensionalityError, qpos.__gt__, q0m)
+
+    @helpers.requires_numpy()
+    def test_gt_zero_NP(self):
+        ureg = self.ureg
+        ureg.autoconvert_offset_to_baseunit = False
+        qpos = ureg.Quantity(5, 'J')
+        qneg = ureg.Quantity(-5, 'J')
+        aeq = np.testing.assert_array_equal
+        aeq(qpos > np.zeros(3), np.asarray([True, True, True]))
+        aeq(qneg > np.zeros(3), np.asarray([False, False, False]))
+        aeq(ureg.Quantity(np.arange(-1, 2), ureg.J) > np.zeros(3),
+            np.asarray([False, False, True]))
+        aeq(ureg.Quantity(np.arange(-1, 2), ureg.J) > np.zeros(3),
+            np.asarray([False, False, True]))
+        self.assertRaises(ValueError,
+                          ureg.Quantity(np.arange(-1, 2), ureg.J).__gt__,
+                          np.zeros(4))
+
+    def test_offset_gt_zero(self):
+        ureg =  self.ureg
+        ureg.autoconvert_offset_to_baseunit = False
+        q0 = ureg.Quantity(-273.15, 'degC')
+        q1 = ureg.Quantity(0, 'degC')
+        q2 = ureg.Quantity(5, 'degC')
+        self.assertRaises(OffsetUnitCalculusError, q0.__gt__, 0)
+        self.assertRaises(OffsetUnitCalculusError, q1.__gt__, 0)
+        self.assertRaises(OffsetUnitCalculusError, q2.__gt__, 0)
+        self.assertRaises(DimensionalityError, q1.__gt__,
+                          ureg.Quantity(0, ''))
+
+    def test_offset_autoconvert_gt_zero(self):
+        ureg =  self.ureg
+        ureg.autoconvert_offset_to_baseunit = True
+        q0 = ureg.Quantity(-273.15, 'degC')
+        q1 = ureg.Quantity(0, 'degC')
+        q2 = ureg.Quantity(5, 'degC')
+        self.assertFalse(q0 > 0)
+        self.assertTrue(q1 > 0)
+        self.assertTrue(q2 > 0)
+        self.assertRaises(DimensionalityError, q1.__gt__,
+                          ureg.Quantity(0, ''))
