@@ -1090,6 +1090,20 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
         if not isinstance(other, _Quantity):
+            if _eq(other, 0, True):
+                # Handle the special case in which we compare to zero
+                # (or an array of zeros)
+                if self._is_multiplicative:
+                    # compare magnitude
+                    return _eq(self._magnitude, other, False)
+                else:
+                    # compare the magnitude after converting the
+                    # non-multiplicative quantity to base units
+                    if self._REGISTRY.autoconvert_offset_to_baseunit:
+                        return _eq(self.to_base_units()._magnitude, other, False)
+                    else:
+                        raise OffsetUnitCalculusError(self._units)
+
             return (self.dimensionless and
                     _eq(self._convert_magnitude(UnitsContainer()), other, False))
 
@@ -1115,6 +1129,19 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
                 return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
+            elif _eq(other, 0, True):
+                # Handle the special case in which we compare to zero
+                # (or an array of zeros)
+                if self._is_multiplicative:
+                    # compare magnitude
+                    return op(self._magnitude, other)
+                else:
+                    # compare the magnitude after converting the
+                    # non-multiplicative quantity to base units
+                    if self._REGISTRY.autoconvert_offset_to_baseunit:
+                        return op(self.to_base_units()._magnitude, other)
+                    else:
+                        raise OffsetUnitCalculusError(self._units)
             else:
                 raise ValueError('Cannot compare Quantity and {}'.format(type(other)))
 
