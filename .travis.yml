@@ -1,5 +1,11 @@
 language: python
 
+branches:
+  # prevent bors temporary branches to be built
+  except:
+  - staging.tmp
+  - trying.tmp
+
 env:
   - UNCERTAINTIES="N" PYTHON="3.3" NUMPY_VERSION=1.9.2
   - UNCERTAINTIES="N" PYTHON="3.4" NUMPY_VERSION=1.11.2
