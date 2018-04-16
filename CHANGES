@@ -6,6 +6,25 @@ Pint Changelog
 
 - Add support for registering with matplotlib's unit handling
   (Issue #317, thanks dopplershift)
+- Add converters for matplotlib's unit support.
+  (Issue #317, thanks Ryan May)
+- Fix unwanted side effects in auto dimensionality reduction.
+  (Issue #516, thanks Ben Loer)
+- Allow dimensionality check for non Quantity arguments.
+- Make Quantity and UnitContainer objects hashable.
+  (Issue #286, thanks Nevada Sanchez)
+- Fix unit tests errors with numpy >=1.13.
+  (Issue #577, thanks cpascual)
+- Avoid error in in-place exponentiation with numpy > 1.11.
+  (Issue #577, thanks cpascual)
+- fix compatible units in context.
+  (thanks enrico)
+- Added warning for unsupported ufunc.
+  (Issue #626, thanks kanhua)
+- Improve IPython pretty printers.
+  (Issue #590, thanks tecki)
+- Drop Support for Python 2.6, 3.0, 3.1 and 3.2.
+  (Issue #567)
 
 
 0.8.1 (2017-06-05)
