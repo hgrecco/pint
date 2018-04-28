@@ -256,6 +256,37 @@ class _Unit(PrettyIPython, SharedRegistryObject):
                     out.add(sname)
         return frozenset(out)
 
+    def from_(self, value, strict=True, name='value'):
+        """Converts a numerical value or quantity to this unit
+
+        :param value: a Quantity (or numerical value if strict=False) to convert
+        :param strict: boolean to indicate that only quanities are accepted
+        :param name: descriptive name to use if an exception occurs
+        :return: The converted value as this unit
+        :raises:
+            :class:`ValueError` if strict and one of the arguments is not a Quantity.
+        """
+        if self._check(value):
+            if not isinstance(value, self._REGISTRY.Quantity):
+                value = self._REGISTRY.Quantity(1, value)
+            return value.to(self)
+        elif strict:
+            raise ValueError("%s must be a Quantity" % value)
+        else:
+            return value * self
+
+    def m_from(self, value, strict=True, name='value'):
+        """Converts a numerical value or quantity to this unit, then returns
+        the magnitude of the converted value
+
+        :param value: a Quantity (or numerical value if strict=False) to convert
+        :param strict: boolean to indicate that only quanities are accepted
+        :param name: descriptive name to use if an exception occurs
+        :return: The magnitude of the converted value
+        :raises:
+            :class:`ValueError` if strict and one of the arguments is not a Quantity.
+        """
+        return self.from_(value, strict=strict, name=name).magnitude
 
 def build_unit_class(registry):
 
