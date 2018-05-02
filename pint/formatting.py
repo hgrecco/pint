@@ -295,6 +295,9 @@ def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, '.2f'), dim=()):
         fmt = fmtfun
         fmtfun = lambda x: format(x, fmt)
 
+    if ndarr.ndim == 0:
+        _ndarr = ndarr.reshape(1)
+        return [vector_to_latex(_ndarr, fmtfun)]
     if ndarr.ndim == 1:
         return [vector_to_latex(ndarr, fmtfun)]
     if ndarr.ndim == 2:
