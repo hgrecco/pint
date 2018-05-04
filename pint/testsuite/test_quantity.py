@@ -247,6 +247,26 @@ class TestQuantity(QuantityTestCase):
             self.assertIsNot(r, q)
             self.assertIsNot(r._magnitude, a)
 
+    def test_convert_from(self):
+        x = self.Q_('2*inch')
+        meter = self.ureg.meter
+
+        # from quantity
+        self.assertQuantityAlmostEqual(meter.from_(x), self.Q_(2. * 0.0254, 'meter'))
+        self.assertQuantityAlmostEqual(meter.m_from(x), 2. * 0.0254)
+
+        # from unit
+        self.assertQuantityAlmostEqual(meter.from_(self.ureg.inch), self.Q_(0.0254, 'meter'))
+        self.assertQuantityAlmostEqual(meter.m_from(self.ureg.inch), 0.0254)
+
+        # from number
+        self.assertQuantityAlmostEqual(meter.from_(2, strict=False), self.Q_(2., 'meter'))
+        self.assertQuantityAlmostEqual(meter.m_from(2, strict=False), 2.)
+
+        # from number (strict mode)
+        self.assertRaises(ValueError, meter.from_, 2)
+        self.assertRaises(ValueError, meter.m_from, 2)
+
     @helpers.requires_numpy()
     def test_retain_unit(self):
         # Test that methods correctly retain units and do not degrade into
