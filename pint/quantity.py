@@ -1399,6 +1399,108 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     __array_priority__ = 17
 
+    def _call_ufunc(self, ufunc, *inputs, **kwargs):
+        # Store the destination units
+        dst_units = None
+        # List of magnitudes of Quantities with the right units
+        # to be used as argument of the ufunc
+        mobjs = None
+
+        if ufunc.__name__ in self.__require_units:
+            # ufuncs in __require_units
+            # require specific units
+            # This is more complex that it should be due to automatic
+            # conversion between radians/dimensionless
+            # TODO: maybe could be simplified using Contexts
+            dst_units = self.__require_units[ufunc.__name__]
+            if dst_units == 'radian':
+                mobjs = []
+                for other in inputs:
+                    unt = getattr(other, '_units', '')
+                    if unt == 'radian':
+                        mobjs.append(getattr(other, 'magnitude', other))
+                    else:
+                        factor, units = self._REGISTRY._get_root_units(unt)
+                        if units and units != UnitsContainer({'radian': 1}):
+                            raise DimensionalityError(units, dst_units)
+                        mobjs.append(getattr(other, 'magnitude', other) * factor)
+                mobjs = tuple(mobjs)
+            else:
+                dst_units = self._REGISTRY.parse_expression(dst_units)._units
+
+        elif len(inputs) > 1 and ufunc.__name__ not in self.__skip_other_args:
+            # ufunc with multiple arguments require that all inputs have
+            # the same arguments unless they are in __skip_other_args
+            dst_units = inputs[0]._units
+
+        # Do the conversion (if needed) and extract the magnitude for each input.
+        if mobjs is None:
+            if dst_units is not None:
+                mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
+                                                     getattr(other, 'units', ''),
+                                                     dst_units)
+                              for other in inputs)
+            else:
+                mobjs = tuple(getattr(other, 'magnitude', other)
+                              for other in inputs)
+
+        # call the ufunc
+        return ufunc(*mobjs)
+
+
+    def _wrap_output(self, ufname, i, objs, out):
+        """we set the units of the output value"""
+        if i > 0:
+            ufname = "{}__{}".format(ufname, i)
+
+        if ufname in self.__set_units:
+            try:
+                out = self.__class__(out, self.__set_units[ufname])
+            except:
+                raise _Exception(ValueError)
+        elif ufname in self.__copy_units:
+            try:
+                out = self.__class__(out, self._units)
+            except:
+                raise _Exception(ValueError)
+        elif ufname in self.__prod_units:
+            tmp = self.__prod_units[ufname]
+            if tmp == 'size':
+                out = self.__class__(out, self._units ** self._magnitude.size)
+            elif tmp == 'div':
+                units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
+                units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                out = self.__class__(out, units1 / units2)
+            elif tmp == 'mul':
+                units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
+                units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                out = self.__class__(out, units1 * units2)
+            else:
+                out = self.__class__(out, self._units ** tmp)
+
+        return out
+
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if method != "__call__":
+            return NotImplemented
+
+        try:
+            out = self._call_ufunc(ufunc, *inputs, **kwargs)
+            if isinstance(out, tuple):
+                ret = tuple(self._wrap_output(ufunc.__name__, i, inputs, o)
+                            for i, o in enumerate(out))
+                return ret
+            else:
+                return self._wrap_output(ufunc.__name__, 0, inputs, out)
+        except (DimensionalityError, UndefinedUnitError):
+            raise
+        except _Exception as ex:
+            raise ex.internal
+        except:
+            return NotImplemented
+
+
     def __array_prepare__(self, obj, context=None):
         # If this uf is handled by Pint, write it down in the handling dictionary.
 
@@ -1433,55 +1535,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             # First, we check the units of the input arguments.
 
             if i_out == 0:
-                # Do this only when the wrap is called for the first ouput.
-
-                # Store the destination units
-                dst_units = None
-                # List of magnitudes of Quantities with the right units
-                # to be used as argument of the ufunc
-                mobjs = None
-
-                if uf.__name__ in self.__require_units:
-                    # ufuncs in __require_units
-                    # require specific units
-                    # This is more complex that it should be due to automatic
-                    # conversion between radians/dimensionless
-                    # TODO: maybe could be simplified using Contexts
-                    dst_units = self.__require_units[uf.__name__]
-                    if dst_units == 'radian':
-                        mobjs = []
-                        for other in objs:
-                            unt = getattr(other, '_units', '')
-                            if unt == 'radian':
-                                mobjs.append(getattr(other, 'magnitude', other))
-                            else:
-                                factor, units = self._REGISTRY._get_root_units(unt)
-                                if units and units != UnitsContainer({'radian': 1}):
-                                    raise DimensionalityError(units, dst_units)
-                                mobjs.append(getattr(other, 'magnitude', other) * factor)
-                        mobjs = tuple(mobjs)
-                    else:
-                        dst_units = self._REGISTRY.parse_expression(dst_units)._units
-
-                elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
-                    # ufunc with multiple arguments require that all inputs have
-                    # the same arguments unless they are in __skip_other_args
-                    dst_units = objs[0]._units
-
-                # Do the conversion (if needed) and extract the magnitude for each input.
-                if mobjs is None:
-                    if dst_units is not None:
-                        mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
-                                                             getattr(other, 'units', ''),
-                                                             dst_units)
-                                      for other in objs)
-                    else:
-                        mobjs = tuple(getattr(other, 'magnitude', other)
-                                      for other in objs)
-
-                # call the ufunc
-                out = uf(*mobjs)
-
+                out = self._call_ufunc(uf, *objs)
                 # If there are multiple outputs,
                 # store them in __handling (uf, objs, i_out, out0, out1, ...)
                 # and return the first
@@ -1493,33 +1547,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 # just grab the result that was previously calculated.
                 out = self.__handling[3 + i_out]
 
-            # Second, we set the units of the output value.
-            if ufname in self.__set_units:
-                try:
-                    out = self.__class__(out, self.__set_units[ufname])
-                except:
-                    raise _Exception(ValueError)
-            elif ufname in self.__copy_units:
-                try:
-                    out = self.__class__(out, self._units)
-                except:
-                    raise _Exception(ValueError)
-            elif ufname in self.__prod_units:
-                tmp = self.__prod_units[ufname]
-                if tmp == 'size':
-                    out = self.__class__(out, self._units ** self._magnitude.size)
-                elif tmp == 'div':
-                    units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                    units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
-                    out = self.__class__(out, units1 / units2)
-                elif tmp == 'mul':
-                    units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                    units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
-                    out = self.__class__(out, units1 * units2)
-                else:
-                    out = self.__class__(out, self._units ** tmp)
-
-            return out
+            return self._wrap_output(ufname, i_out, objs, out)
         except (DimensionalityError, UndefinedUnitError) as ex:
             raise ex
         except _Exception as ex:
