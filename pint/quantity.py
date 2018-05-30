@@ -1431,7 +1431,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         elif len(inputs) > 1 and ufunc.__name__ not in self.__skip_other_args:
             # ufunc with multiple arguments require that all inputs have
             # the same arguments unless they are in __skip_other_args
-            dst_units = inputs[0]._units
+            dst_units = getattr(inputs[0], "_units", None)
 
         # Do the conversion (if needed) and extract the magnitude for each input.
         if mobjs is None:
@@ -1445,7 +1445,10 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                               for other in inputs)
 
         # call the ufunc
-        return ufunc(*mobjs)
+        try:
+            return ufunc(*mobjs)
+        except Exception as ex:
+            raise _Exception(ex)
 
 
     def _wrap_output(self, ufname, i, objs, out):
@@ -1530,8 +1533,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             return self.magnitude.__array_wrap__(obj, context)
 
         try:
-            ufname = uf.__name__ if i_out == 0 else '{}__{}'.format(uf.__name__, i_out)
-
             # First, we check the units of the input arguments.
 
             if i_out == 0:
@@ -1547,7 +1548,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 # just grab the result that was previously calculated.
                 out = self.__handling[3 + i_out]
 
-            return self._wrap_output(ufname, i_out, objs, out)
+            return self._wrap_output(uf.__name__, i_out, objs, out)
         except (DimensionalityError, UndefinedUnitError) as ex:
             raise ex
         except _Exception as ex:
