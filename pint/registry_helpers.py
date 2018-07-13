@@ -14,6 +14,7 @@ import functools
 from .compat import string_types, zip_longest
 from .errors import DimensionalityError
 from .util import to_units_container, UnitsContainer
+from inspect import signature
 
 
 def _replace_units(original_units, values_by_name):
@@ -165,11 +166,18 @@ def wraps(ureg, ret, args, strict=True):
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kw):
 
+            # Named keywords may have been left blank. Wherever the named keyword is blank,
+            # fill it in with the default value.
+            sig = signature(func)
+            bound_arguments = sig.bind(*values, **kw)
+            bound_arguments.apply_defaults()
+            values = tuple(bound_arguments.arguments.values())
+            
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.
             new_values, values_by_name = converter(ureg, values, strict)
 
-            result = func(*new_values, **kw)
+            result = func(*new_values)
 
             if container:
                 out_units = (_replace_units(r, values_by_name) if is_ref else r
