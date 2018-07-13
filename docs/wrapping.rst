@@ -151,7 +151,7 @@ airmass::
 Optional arguments
 ------------------
 
-In Python 3, for a function with named keywords with optional values, use a tuple for all
+For a function with named keywords with optional values, use a tuple for all
 arguments:
 
 .. doctest::
@@ -202,7 +202,7 @@ You can use more than one label:
     ... def some_function(x, y, z):
     ...     pass
 
-With optional arguments in Python 3:
+With optional arguments
 
 .. doctest::
 

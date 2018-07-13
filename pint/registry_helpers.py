@@ -18,8 +18,8 @@ from .util import to_units_container, UnitsContainer
 try:
     from inspect import signature
 except ImportError:
-    # Python2 does not have the inspect library.
-    pass
+    # Python2 does not have the inspect library. Import the backport.
+    from funcsigs import signature
 
 # for detecting whether we can support the inspect library
 import sys 
@@ -174,18 +174,18 @@ def wraps(ureg, ret, args, strict=True):
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kw):
 
-            if sys.version_info >= (3, 0):
-                # Named keywords may have been left blank. Wherever the named keyword is blank,
-                # fill it in with the default value.
-                sig = signature(func)
-                bound_arguments = sig.bind(*values, **kw)
 
-                for param in sig.parameters.values():
-                    if param.name not in bound_arguments.arguments:
-                        bound_arguments.arguments[param.name] = param.default
+            # Named keywords may have been left blank. Wherever the named keyword is blank,
+            # fill it in with the default value.
+            sig = signature(func)
+            bound_arguments = sig.bind(*values, **kw)
 
-                values = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
-                kw = {}
+            for param in sig.parameters.values():
+                if param.name not in bound_arguments.arguments:
+                    bound_arguments.arguments[param.name] = param.default
+
+            values = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
+            kw = {}
                 
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.

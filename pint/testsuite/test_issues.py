@@ -572,7 +572,6 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual(f(ureg.Quantity(1, '')), 2)
         self.assertRaises(DimensionalityError, f, ureg.Quantity(1, 'm'))
 
-    @helpers.requires_python3()
     def test_issue625a(self):
         from inspect import signature
         ureg = UnitRegistry()
@@ -600,7 +599,6 @@ class TestIssuesNP(QuantityTestCase):
         t2 = calculate_time_to_fall(lunar_module_height, moon_gravity)
         self.assertAlmostEqual(t2, Q_(3.508232077228117, 's'))
 
-    @helpers.requires_python3()
     def test_issue625b(self):
         from inspect import signature
         ureg = UnitRegistry()
