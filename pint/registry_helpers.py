@@ -14,7 +14,15 @@ import functools
 from .compat import string_types, zip_longest
 from .errors import DimensionalityError
 from .util import to_units_container, UnitsContainer
-from inspect import signature
+
+try:
+    from inspect import signature
+except ImportError:
+    # Python2 does not have the inspect library.
+    pass
+
+# for detecting whether we can support the inspect library
+import sys 
 
 
 def _replace_units(original_units, values_by_name):
@@ -166,18 +174,24 @@ def wraps(ureg, ret, args, strict=True):
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kw):
 
-            # Named keywords may have been left blank. Wherever the named keyword is blank,
-            # fill it in with the default value.
-            sig = signature(func)
-            bound_arguments = sig.bind(*values, **kw)
-            bound_arguments.apply_defaults()
-            values = tuple(bound_arguments.arguments.values())
-            
+            if sys.version_info >= (3, 0):
+                # Named keywords may have been left blank. Wherever the named keyword is blank,
+                # fill it in with the default value.
+                sig = signature(func)
+                bound_arguments = sig.bind(*values, **kw)
+
+                for param in sig.parameters.values():
+                    if param.name not in bound_arguments.arguments:
+                        bound_arguments.arguments[param.name] = param.default
+
+                values = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
+                kw = {}
+                
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.
             new_values, values_by_name = converter(ureg, values, strict)
 
-            result = func(*new_values)
+            result = func(*new_values, **kw)
 
             if container:
                 out_units = (_replace_units(r, values_by_name) if is_ref else r
