@@ -573,11 +573,11 @@ class TestIssuesNP(QuantityTestCase):
         self.assertRaises(DimensionalityError, f, ureg.Quantity(1, 'm'))
 
     def test_issue625a(self):
-    try:
-        from inspect import signature
-    except ImportError:
-        # Python2 does not have the inspect library. Import the backport.
-        from funcsigs import signature
+        try:
+            from inspect import signature
+        except ImportError:
+            # Python2 does not have the inspect library. Import the backport.
+            from funcsigs import signature
 
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
@@ -605,11 +605,11 @@ class TestIssuesNP(QuantityTestCase):
         self.assertAlmostEqual(t2, Q_(3.508232077228117, 's'))
 
     def test_issue625b(self):
-    try:
-        from inspect import signature
-    except ImportError:
-        # Python2 does not have the inspect library. Import the backport.
-        from funcsigs import signature
+        try:
+            from inspect import signature
+        except ImportError:
+            # Python2 does not have the inspect library. Import the backport.
+            from funcsigs import signature
 
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
