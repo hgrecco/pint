@@ -21,9 +21,6 @@ except ImportError:
     # Python2 does not have the inspect library. Import the backport.
     from funcsigs import signature
 
-# for detecting whether we can support the inspect library
-import sys 
-
 
 def _replace_units(original_units, values_by_name):
     """Convert a unit compatible type to a UnitsContainer.
