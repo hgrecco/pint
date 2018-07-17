@@ -134,8 +134,9 @@ kip = 1000*lbf
 
 # Frequency
 [frequency] = 1 / [time]
-hertz = 1 / second = Hz = rps
+hertz = 1 / second = Hz
 revolutions_per_minute = revolution / minute = rpm
+revolutions_per_second = revolution / second = rps
 counts_per_second = count / second = cps
 
 # Heat
