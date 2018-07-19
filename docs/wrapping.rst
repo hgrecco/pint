@@ -148,6 +148,37 @@ airmass::
     def solar_position(lat, lon, press, tamb, timestamp):
         return zenith, azimuth, airmass
 
+Optional arguments
+------------------
+
+For a function with named keywords with optional values, use a tuple for all
+arguments:
+
+.. doctest::
+
+    >>> @ureg.wraps(ureg.second, (ureg.meters, ureg.meters/ureg.second**2))
+    ... def calculate_time_to_fall(height, gravity=Q_(9.8, 'm/s^2'), verbose=False):
+    ...     """Calculate time to fall from a height h.
+    ...
+    ...     By default, the gravity is assumed to be earth gravity,
+    ...     but it can be modified.
+    ...
+    ...     d = .5 * g * t**2
+    ...     t = sqrt(2 * d / g)
+    ...     """
+    ...     t = sqrt(2 * height / gravity)
+    ...     if verbose: print(str(t) + " seconds to fall")
+    ...     return t
+    ...
+    >>> lunar_module_height = Q_(22, 'feet') + Q_(11, 'inches')
+    >>> calculate_time_to_fall(lunar_module_height, verbose=True)
+    1.1939473204801092 seconds to fall
+    <Quantity(1.1939473204801092, 'second')>
+    >>>
+    >>> moon_gravity = Q_(1.625, 'm/s^2')
+    >>> tcalculate_time_to_fall(lunar_module_height, moon_gravity)
+    <Quantity(2.932051001760214, 'second')>
+
 
 Specifying relations between arguments
 --------------------------------------
@@ -170,6 +201,19 @@ You can use more than one label:
     >>> @ureg.wraps('=A**2*B', ('=A', '=A*B', '=B'))
     ... def some_function(x, y, z):
     ...     pass
+
+With optional arguments
+
+.. doctest::
+
+    >>> @ureg.wraps('=A*B', ('=A', '=B'))
+    ... def get_displacement(time, rate=Q_(1, 'm/s')):
+    ...     return time * rate
+    ...
+    >>> get_displacement(Q_(2, 's'))
+    <Quantity(2, 'meter')>
+    >>> get_displacement(Q_(2, 's'), Q_(1, 'deg/s'))
+    <Quantity(2, 'degree')>
 
 
 Ignoring an argument or return value
