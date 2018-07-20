@@ -233,8 +233,8 @@ def check(ureg, *args):
                 if dim is None:
                     continue
 
-                val_dim = ureg.get_dimensionality(value)
-                if val_dim != dim:
+                if not ureg.Quantity(value).check(dim):
+                    val_dim = ureg.get_dimensionality(value)
                     raise DimensionalityError(value, 'a quantity of',
                                               val_dim, dim)
             return func(*values, **kwargs)

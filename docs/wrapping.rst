@@ -246,3 +246,12 @@ In the decorator format:
     ... def pendulum_period(length):
     ...     return 2*math.pi*math.sqrt(length/G)
 
+If you just want to check the dimensionality of a quantity, you can do so with the built-in 'check' function.
+
+.. doctest::
+
+    >>> distance = 1 * ureg.m
+    >>> distance.check('[length]')
+    True
+    >>> distance.check('[time]')
+    False

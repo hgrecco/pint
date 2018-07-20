@@ -625,3 +625,13 @@ class TestIssuesNP(QuantityTestCase):
 
         d2 = get_displacement(Q_(2, 's'), Q_(1, 'deg/s'))
         self.assertAlmostEqual(d2, Q_(2,' deg'))
+
+    def test_issue655a(self):
+        ureg = UnitRegistry()
+        distance = 1 * ureg.m
+        time = 1 * ureg.s
+        velocity = distance / time
+        self.assertEqual(distance.check('[length]'), True)
+        self.assertEqual(distance.check('[time]'), False)
+        self.assertEqual(velocity.check('[length] / [time]'), True)
+        self.assertEqual(velocity.check('1 / [time] * [length]'), True)
