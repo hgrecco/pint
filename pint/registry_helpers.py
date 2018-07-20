@@ -130,6 +130,20 @@ def _parse_wrap_args(args, registry=None):
 
     return _converter
 
+def _apply_defaults(func, args, kwargs):
+    """Apply default keyword arguments.
+
+    Named keywords may have been left blank. This function applies the default
+    values so that every argument is defined.
+    """
+
+    sig = signature(func)
+    bound_arguments = sig.bind(*args)
+    for param in sig.parameters.values():
+        if param.name not in bound_arguments.arguments:
+            bound_arguments.arguments[param.name] = param.default
+    args = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
+    return args, {} 
 
 def wraps(ureg, ret, args, strict=True):
     """Wraps a function to become pint-aware.
@@ -171,18 +185,7 @@ def wraps(ureg, ret, args, strict=True):
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kw):
 
-
-            # Named keywords may have been left blank. Wherever the named keyword is blank,
-            # fill it in with the default value.
-            sig = signature(func)
-            bound_arguments = sig.bind(*values, **kw)
-
-            for param in sig.parameters.values():
-                if param.name not in bound_arguments.arguments:
-                    bound_arguments.arguments[param.name] = param.default
-
-            values = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
-            kw = {}
+            values, kw = _apply_defaults(func, values, kw)
                 
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.
@@ -228,13 +231,17 @@ def check(ureg, *args):
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kwargs):
-            for dim, value in zip_longest(dimensions, values):
+            values, kwargs = _apply_defaults(func, values, kwargs)
+            if len(dimensions) > len(values):
+                raise TypeError("%s takes %i parameters, but %i dimensions were passed"
+                % (func.__name__, len(values), len(dimensions)))
+            for dim, value in zip(dimensions, values):
 
                 if dim is None:
                     continue
 
-                val_dim = ureg.get_dimensionality(value)
-                if val_dim != dim:
+                if not ureg.Quantity(value).check(dim):
+                    val_dim = ureg.get_dimensionality(value)
                     raise DimensionalityError(value, 'a quantity of',
                                               val_dim, dim)
             return func(*values, **kwargs)

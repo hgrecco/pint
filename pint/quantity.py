@@ -294,6 +294,11 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         return self._dimensionality
 
+    def check(self, dimension):
+        """Return true if the quantity's dimension matches passed dimension.
+        """
+        return self.dimensionality == dimension
+
     @classmethod
     def from_tuple(cls, tup):
         return cls(tup[0], UnitsContainer(tup[1]))

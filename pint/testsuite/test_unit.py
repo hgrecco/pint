@@ -437,13 +437,13 @@ class TestRegistry(QuantityTestCase):
 
         g2 = ureg.check('[speed]')(gfunc)
         self.assertRaises(DimensionalityError, g2, 3.0, 1)
-        self.assertRaises(DimensionalityError, g2, 2 * ureg.parsec)
+        self.assertRaises(TypeError, g2, 2 * ureg.parsec)
         self.assertRaises(DimensionalityError, g2, 2 * ureg.parsec, 1.0)
         self.assertEqual(g2(2.0 * ureg.km / ureg.hour, 2), 1 * ureg.km / ureg.hour)
 
         g3 = ureg.check('[speed]', '[time]', '[mass]')(gfunc)
-        self.assertRaises(DimensionalityError, g3, 1 * ureg.parsec, 1 * ureg.angstrom)
-        self.assertRaises(DimensionalityError, g3, 1 * ureg.parsec, 1 * ureg.angstrom, 1 * ureg.kilogram)
+        self.assertRaises(TypeError, g3, 1 * ureg.parsec, 1 * ureg.angstrom)
+        self.assertRaises(TypeError, g3, 1 * ureg.parsec, 1 * ureg.angstrom, 1 * ureg.kilogram)
 
     def test_to_ref_vs_to(self):
         self.ureg.autoconvert_offset_to_baseunit = True

@@ -625,3 +625,38 @@ class TestIssuesNP(QuantityTestCase):
 
         d2 = get_displacement(Q_(2, 's'), Q_(1, 'deg/s'))
         self.assertAlmostEqual(d2, Q_(2,' deg'))
+
+    def test_issue655a(self):
+        ureg = UnitRegistry()
+        distance = 1 * ureg.m
+        time = 1 * ureg.s
+        velocity = distance / time
+        self.assertEqual(distance.check('[length]'), True)
+        self.assertEqual(distance.check('[time]'), False)
+        self.assertEqual(velocity.check('[length] / [time]'), True)
+        self.assertEqual(velocity.check('1 / [time] * [length]'), True)
+
+    def test_issue(self):
+        import math
+        try:
+            from inspect import signature
+        except ImportError:
+            # Python2 does not have the inspect library. Import the backport
+            from funcsigs import signature
+
+        ureg = UnitRegistry()
+        Q_ = ureg.Quantity
+        @ureg.check('[length]', '[length]/[time]^2')
+        def pendulum_period(length, G=Q_(1, 'standard_gravity')):
+            print(length)
+            return (2*math.pi*(length/G)**.5).to('s')
+        l = 1 * ureg.m
+        # Assume earth gravity
+        t = pendulum_period(l)
+        self.assertAlmostEqual(t, Q_('2.0064092925890407 second'))
+        # Use moon gravity
+        moon_gravity = Q_(1.625, 'm/s^2')
+        t = pendulum_period(l, moon_gravity)
+        self.assertAlmostEqual(t, Q_('4.928936075204336 second'))
+
+
