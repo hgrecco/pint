@@ -91,6 +91,18 @@ If you ask Pint to perform an invalid conversion:
    ...
    pint.errors.DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
 
+Sometimes, the magnitude of the quantity will be very large or very small.
+The method 'to_compact' can adjust the units to make the quantity more
+human-readable.
+
+.. doctest::
+
+   >>> wavelength = 1550 * ureg.nm
+   >>> frequency = (ureg.speed_of_light / wavelength).to('Hz')
+   >>> print(frequency)
+   193414489032258.03 hertz
+   >>> print(frequency.to_compact())
+   193.41448903225802 terahertz
 
 There are also methods 'to_base_units' and 'ito_base_units' which automatically
 convert to the reference units with the correct dimensionality:
