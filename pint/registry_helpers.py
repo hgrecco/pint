@@ -138,7 +138,7 @@ def _apply_defaults(func, args, kwargs):
     """
 
     sig = signature(func)
-    bound_arguments = sig.bind(*args)
+    bound_arguments = sig.bind(*args, **kwargs)
     for param in sig.parameters.values():
         if param.name not in bound_arguments.arguments:
             bound_arguments.arguments[param.name] = param.default
