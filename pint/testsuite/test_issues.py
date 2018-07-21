@@ -626,6 +626,23 @@ class TestIssuesNP(QuantityTestCase):
         d2 = get_displacement(Q_(2, 's'), Q_(1, 'deg/s'))
         self.assertAlmostEqual(d2, Q_(2,' deg'))
 
+    def test_issue625c(self):        
+        try:
+            from inspect import signature
+        except ImportError:
+            # Python2 does not have the inspect library. Import the backport.
+            from funcsigs import signature
+
+        u = UnitRegistry()
+
+        @u.wraps('=A*B*C', ('=A', '=B', '=C'))
+        def get_product(a=2*u.m, b=3*u.m, c=5*u.m):
+            return a*b*c
+
+        self.assertEqual(get_product(a=3*u.m), 45*u.m**3)
+        self.assertEqual(get_product(b=2*u.m), 20*u.m**3)
+        self.assertEqual(get_product(c=1*u.dimensionless), 6*u.m**2)
+
     def test_issue655a(self):
         ureg = UnitRegistry()
         distance = 1 * ureg.m
