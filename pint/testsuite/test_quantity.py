@@ -410,7 +410,13 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
         x = "some string"*ureg.m
-        self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
+        warning = RuntimeWarning
+        with warnings.catch_warnings(record=True) as warning_list:
+            warnings.simplefilter('always')
+            self.compareQuantity_compact(x, x)
+            self.assertTrue(
+                any(item.category == warning for item in warning_list)
+            )
 
 class TestQuantityBasicMath(QuantityTestCase):
 
