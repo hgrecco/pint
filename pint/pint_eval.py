@@ -111,7 +111,7 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
     6) Go back to step #2
     """
 
-    if depth == 0 and prev_op == None:
+    if depth == 0 and prev_op is None:
         # ensure tokens is list so we can access by index
         tokens = list(tokens)
         
