@@ -430,7 +430,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         if isinstance(expected_result, string_types):
             expected_result = self.Q_(expected_result)
 
-        if not unit is None:
+        if unit is not None:
             value1 = value1 * unit
             value2 = value2 * unit
             expected_result = expected_result * unit
@@ -454,7 +454,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         if isinstance(expected_result, string_types):
             expected_result = self.Q_(expected_result)
 
-        if not unit is None:
+        if unit is not None:
             value1 = value1 * unit
             value2 = value2 * unit
             expected_result = expected_result * unit
