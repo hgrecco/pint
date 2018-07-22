@@ -71,7 +71,7 @@ class PintOutputChecker(doctest.OutputChecker):
         try:
             if eval(want) == eval(got):
                 return True
-        except:
+        except Exception:
             pass
 
         for regex in (_q_re, _sq_re):
@@ -89,7 +89,7 @@ class PintOutputChecker(doctest.OutputChecker):
                     return False
 
                 return True
-            except:
+            except Exception:
                 pass
 
         cnt = 0
@@ -102,8 +102,7 @@ class PintOutputChecker(doctest.OutputChecker):
 
                 if parsed_got == parsed_want:
                     return True
-
-            except:
+            except Exception:
                 pass
 
         if cnt:

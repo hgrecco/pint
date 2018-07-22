@@ -123,7 +123,7 @@ class TestIssues(QuantityTestCase):
 
         try:
             va.to_base_units()
-        except:
+        except Exception:
             self.assertTrue(False, 'Error while trying to get base units for {}'.format(va))
 
         boltmk = 1.3806488e-23*ureg.J/ureg.K
@@ -216,7 +216,7 @@ class TestIssues(QuantityTestCase):
         ureg = UnitRegistry()
         try:
             ureg.convert(1, ureg.degC, ureg.kelvin * ureg.meter / ureg.nanometer)
-        except:
+        except Exception:
             self.assertTrue(False,
                             'Error while trying to convert {} to {}'.format(ureg.degC, ureg.kelvin * ureg.meter / ureg.nanometer))
 

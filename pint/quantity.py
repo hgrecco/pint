@@ -462,7 +462,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 log10_scale = int(math.log10(scale))
                 if log10_scale == math.log10(scale):
                     SI_prefixes[log10_scale] = prefix.name
-            except:
+            except Exception:
                 SI_prefixes[0] = ''
 
         SI_prefixes = sorted(SI_prefixes.items())
@@ -1502,12 +1502,12 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             if ufname in self.__set_units:
                 try:
                     out = self.__class__(out, self.__set_units[ufname])
-                except:
+                except Exception:
                     raise _Exception(ValueError)
             elif ufname in self.__copy_units:
                 try:
                     out = self.__class__(out, self._units)
-                except:
+                except Exception:
                     raise _Exception(ValueError)
             elif ufname in self.__prod_units:
                 tmp = self.__prod_units[ufname]

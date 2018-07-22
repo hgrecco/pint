@@ -26,7 +26,7 @@ from .context import Context
 
 try:                # pragma: no cover
     __version__ = pkg_resources.get_distribution('pint').version
-except:             # pragma: no cover
+except TypeError:  # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown
     __version__ = "unknown"

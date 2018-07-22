@@ -4,8 +4,8 @@
 import sys
 
 try:
-    reload(sys).setdefaultencoding("UTF-8")
-except:
+    reload(sys).setdefaultencoding('UTF-8')
+except NameError:
     pass
 
 try:

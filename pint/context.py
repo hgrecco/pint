@@ -108,7 +108,7 @@ class Context(object):
             else:
                 aliases = ()
             defaults = r.groupdict()['defaults']
-        except:
+        except Exception:
             raise DefinitionSyntaxError("Could not parse the Context header '%s'" % header,
                                         lineno=lineno)
 
@@ -157,7 +157,7 @@ class Context(object):
                     ctx.add_transformation(src, dst, func)
                 else:
                     raise Exception
-            except:
+            except Exception:
                 raise DefinitionSyntaxError("Could not parse Context %s relation '%s'" % (name, line),
                                             lineno=lineno)
 

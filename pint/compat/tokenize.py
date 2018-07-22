@@ -36,7 +36,7 @@ from token import *
 
 try:
     reASCII = re.ASCII
-except:
+except AttributeError:
     reASCII = 0
 
 
