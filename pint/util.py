@@ -205,7 +205,7 @@ def find_shortest_path(graph, start, end, path=None):
     path = (path or []) + [start]
     if start == end:
         return path
-    if not start in graph:
+    if start not in graph:
         return None
     shortest = None
     for node in graph[start]:
@@ -218,7 +218,7 @@ def find_shortest_path(graph, start, end, path=None):
 
 
 def find_connected_nodes(graph, start, visited=None):
-    if not start in graph:
+    if start not in graph:
         return None
 
     visited = (visited or set())
