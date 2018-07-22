@@ -482,7 +482,7 @@ class TestRegistry(QuantityTestCase):
         src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
         src_dst2 = UnitsContainer(meter=1, second=-1), UnitsContainer(inch=1, minute=-1)
         for src, dst in (src_dst1, src_dst2):
-            v = ureg.convert(1, src, dst),
+            v = ureg.convert(1, src, dst)
 
             a = np.ones((3, 1))
             ac = np.ones((3, 1))
