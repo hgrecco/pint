@@ -235,7 +235,7 @@ class TokenError(Exception): pass
 class StopTokenizing(Exception): pass
 
 
-class Untokenizer:
+class Untokenizer(object):
 
     def __init__(self):
         self.tokens = []
