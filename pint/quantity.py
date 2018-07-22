@@ -1227,13 +1227,13 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def clip(self, first=None, second=None, out=None, **kwargs):
         minimum = kwargs.get('min', first)
-        max = kwargs.get('max', second)
+        maximum = kwargs.get('max', second)
 
-        if minimum is None and max is None:
+        if minimum is None and maximum is None:
             raise TypeError('clip() takes at least 3 arguments (2 given)')
 
-        if max is None and 'min' not in kwargs:
-            minimum, max = max, minimum
+        if maximum is None and 'min' not in kwargs:
+            minimum, maximum = maximum, minimum
 
         kwargs = {'out': out}
 
@@ -1245,11 +1245,11 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             else:
                 raise DimensionalityError('dimensionless', self._units)
 
-        if max is not None:
-            if isinstance(max, self.__class__):
-                kwargs['max'] = max.to(self).magnitude
+        if maximum is not None:
+            if isinstance(maximum, self.__class__):
+                kwargs['max'] = maximum.to(self).magnitude
             elif self.dimensionless:
-                kwargs['max'] = max
+                kwargs['max'] = maximum
             else:
                 raise DimensionalityError('dimensionless', self._units)
 
