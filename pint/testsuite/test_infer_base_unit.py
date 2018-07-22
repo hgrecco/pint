@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from pint import UnitRegistry, set_application_registry
 from pint.testsuite import QuantityTestCase
 from pint.util import infer_base_unit

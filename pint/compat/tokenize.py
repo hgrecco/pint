@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Tokenization help for Python programs.
 
 tokenize(readline) is a generator that breaks a stream of bytes into
