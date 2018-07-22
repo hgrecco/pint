@@ -1226,22 +1226,22 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 tuple(__copy_units) + tuple(__skip_other_args)
 
     def clip(self, first=None, second=None, out=None, **kwargs):
-        min = kwargs.get('min', first)
+        minimum = kwargs.get('min', first)
         max = kwargs.get('max', second)
 
-        if min is None and max is None:
+        if minimum is None and max is None:
             raise TypeError('clip() takes at least 3 arguments (2 given)')
 
         if max is None and 'min' not in kwargs:
-            min, max = max, min
+            minimum, max = max, minimum
 
         kwargs = {'out': out}
 
-        if min is not None:
-            if isinstance(min, self.__class__):
-                kwargs['min'] = min.to(self).magnitude
+        if minimum is not None:
+            if isinstance(minimum, self.__class__):
+                kwargs['min'] = minimum.to(self).magnitude
             elif self.dimensionless:
-                kwargs['min'] = min
+                kwargs['min'] = minimum
             else:
                 raise DimensionalityError('dimensionless', self._units)
 
