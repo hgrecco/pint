@@ -134,7 +134,6 @@ class PintArray(ExtensionArray):
         return cls(np.concatenate([array.data for array in to_concat]))  # don't know how to do this without numpy either
 
     def __setitem__(self, key, value):
-        explode
         self.data[key] = value
 
     def tolist(self):
