@@ -30,8 +30,11 @@ class PintType(ExtensionDtype):
     # Hence this is my hack.
     ureg = pint.UnitRegistry()
     type = ureg.Quantity
-    kind = 'f'  # I think Quantity becomes a float if converted to np ndarray...
     na_value = math.nan
+
+    @property
+    def kind(self):
+        return np.array(self.type).dtype.kind
 
     @classmethod
     def construct_from_string(cls, string):
@@ -94,6 +97,10 @@ class PintArray(ExtensionArray):
         return len(self.data)
 
     @property
+    def shape(self):
+        return (len(self.data),)
+
+    @property
     def nbytes(self):
         if isinstance(self.data, np.ndarray):
             return self.data.nbytes
@@ -125,3 +132,19 @@ class PintArray(ExtensionArray):
     @classmethod
     def _concat_same_type(cls, to_concat):
         return cls(np.concatenate([array.data for array in to_concat]))  # don't know how to do this without numpy either
+
+    def __setitem__(self, key, value):
+        explode
+        self.data[key] = value
+
+    def tolist(self):
+        return self.data.tolist()
+
+    def argsort(self, axis=-1, kind='quicksort', order=None):
+        return self.data.argsort()
+
+    def unique(self):
+        return type(self)(np.unique(self.data))
+
+    def _formatting_values(self):
+        return self.data

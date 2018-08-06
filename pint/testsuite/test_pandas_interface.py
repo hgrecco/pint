@@ -79,8 +79,8 @@ def data_for_grouping():
     ])
 
 
-class TestCasting(base.BaseCastingTests):
-    pass
+# class TestCasting(base.BaseCastingTests):
+#     pass
 
 
 class TestConstructors(base.BaseConstructorsTests):
@@ -95,16 +95,16 @@ class TestGetitem(base.BaseGetitemTests):
     pass
 
 
-class TestGroupby(base.BaseGroupbyTests):
-    pass
+# class TestGroupby(base.BaseGroupbyTests):
+#     pass
 
 
 class TestInterface(base.BaseInterfaceTests):
     pass
 
 
-class TestMethods(base.BaseMethodsTests):
-    pass
+# class TestMethods(base.BaseMethodsTests):
+#     pass
 
 
 # No idea why these don't appear to be there...
@@ -116,18 +116,18 @@ class TestMethods(base.BaseMethodsTests):
 #     pass
 
 
-# class TestBaseOpsUtil(base.BaseOpsUtil):
+# class TestOpsUtil(base.BaseOpsUtil):
 #     pass
 
 
-class TestBaseMissing(base.BaseMissingTests):
+class TestMissing(base.BaseMissingTests):
     pass
 
 
-class TestBaseReshaping(base.BaseReshapingTests):
+class TestReshaping(base.BaseReshapingTests):
     pass
 
 
-class TestBaseSetitem(base.BaseSetitemTests):
-    pass
+# class TestSetitem(base.BaseSetitemTests):
+#     pass
 
