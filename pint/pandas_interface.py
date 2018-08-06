@@ -12,6 +12,7 @@
 # for giving an example of how to do this
 
 import sys
+import math
 
 import pint
 import numpy as np
@@ -30,7 +31,7 @@ class PintType(ExtensionDtype):
     ureg = pint.UnitRegistry()
     type = ureg.Quantity
     kind = 'f'  # I think Quantity becomes a float if converted to np ndarray...
-    na_value = np.nan  # avoiding numpy dependency with pandas doesn't make sense
+    na_value = math.nan
 
     @classmethod
     def construct_from_string(cls, string):
@@ -94,12 +95,33 @@ class PintArray(ExtensionArray):
 
     @property
     def nbytes(self):
-        # there must be a smarter way to do this...
         if isinstance(self.data, np.ndarray):
             return self.data.nbytes
+        # there must be a smarter way to do this that avoids sys...
         else:
             return sys.getsizeof(self.data)
 
+    def isna(self):
+        return np.isnan(self.data.magnitude)  # I can't see how to do this without numpy unless I use a loop and math.isnan() ...
 
+    def take(self, indices, allow_fill=False, fill_value=None):
+       from pandas.core.algorithms import take
 
+       data = self.data
+       if allow_fill and fill_value is None:
+           fill_value = self.dtype.na_value
 
+       result = take(data, indices, fill_value=fill_value,
+                     allow_fill=allow_fill)
+       return self._from_sequence(result)
+
+    def copy(self, deep=False):
+        if deep:
+            import copy
+            return type(self)(copy.deepcopy(self.data))  # no idea if this is required...
+        else:
+            return type(self)(self.data.copy())
+
+    @classmethod
+    def _concat_same_type(cls, to_concat):
+        return cls(np.concatenate([array.data for array in to_concat]))  # don't know how to do this without numpy either

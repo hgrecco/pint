@@ -30,23 +30,26 @@ def all_data(request, data, data_missing):
 
 
 @pytest.fixture
+def data_repeated():
+    """Return different versions of data for count times"""
+    def gen(count):
+        for _ in range(count):
+            yield NotImplementedError  # no idea what I'm meant to put here
+    yield gen
+
+
+@pytest.fixture
 def data_for_sorting():
-    return ppi.PintArray([10, 2 ** 64 + 1, 1])
+    return ppi.PintArray([0.3, 10, -50])
+    # should probably get fancy and do something like
+    # [1 * ureg.meter, 3*ureg.meter, 10 * ureg.centimeter]
 
 
 @pytest.fixture
 def data_missing_for_sorting():
-    return ppi.PintArray([2 ** 64 + 1, 0, 1])
-
-
-@pytest.fixture
-def data_for_grouping():
-    b = 1
-    a = 2 ** 32 + 1
-    c = 2 ** 32 + 10
-    ppi.PintArray([
-        b, b, np.nan, np.nan, a, a, b, c
-    ])
+    return ppi.PintArray([4, np.nan, -5])
+    # should probably get fancy and do something like
+    # [1 * ureg.meter, 3*ureg.meter, 10 * ureg.centimeter]
 
 
 @pytest.fixture
@@ -63,14 +66,20 @@ def na_cmp():
 
 @pytest.fixture
 def na_value():
-    return np.nan
+    return ppi.PintType.na_value
 
 
-class TestDtype(base.BaseDtypeTests):
-    pass
+@pytest.fixture
+def data_for_grouping():
+    b = 1
+    a = 2 ** 32 + 1
+    c = 2 ** 32 + 10
+    ppi.PintArray([
+        b, b, np.nan, np.nan, a, a, b, c
+    ])
 
 
-class TestInterface(base.BaseInterfaceTests):
+class TestCasting(base.BaseCastingTests):
     pass
 
 
@@ -78,7 +87,7 @@ class TestConstructors(base.BaseConstructorsTests):
     pass
 
 
-class TestReshaping(base.BaseReshapingTests):
+class TestDtype(base.BaseDtypeTests):
     pass
 
 
@@ -86,12 +95,39 @@ class TestGetitem(base.BaseGetitemTests):
     pass
 
 
-class TestMissing(base.BaseMissingTests):
+class TestGroupby(base.BaseGroupbyTests):
+    pass
+
+
+class TestInterface(base.BaseInterfaceTests):
     pass
 
 
 class TestMethods(base.BaseMethodsTests):
-    @pytest.mark.parametrize('dropna', [True, False])
-    @pytest.mark.xfail(reason='upstream')
-    def test_value_counts(data, dropna):
-        pass
+    pass
+
+
+# No idea why these don't appear to be there...
+# class TestArithmeticOps(base.BaseArithmeticOpsTests):
+#     pass
+
+
+# class TestComparisonOps(base.BaseComparisonOpsTests):
+#     pass
+
+
+# class TestBaseOpsUtil(base.BaseOpsUtil):
+#     pass
+
+
+class TestBaseMissing(base.BaseMissingTests):
+    pass
+
+
+class TestBaseReshaping(base.BaseReshapingTests):
+    pass
+
+
+class TestBaseSetitem(base.BaseSetitemTests):
+    pass
+
