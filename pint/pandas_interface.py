@@ -11,6 +11,8 @@
 # thanks to cyberpandas (https://github.com/ContinuumIO/cyberpandas)
 # for giving an example of how to do this
 
+import sys
+
 import pint
 import numpy as np
 from pandas.core.dtypes.dtypes import ExtensionDtype
@@ -71,6 +73,8 @@ class PintArray(ExtensionArray):
     """
     # __array_priority__ = 1000  # I have no idea what this does
 
+    dtype = PintType()
+
     def __init__(self, values):
         self.data = self.dtype.type(values)
 
@@ -88,6 +92,14 @@ class PintArray(ExtensionArray):
     def __len__(self):
         return len(self.data)
 
-    dtype = PintType()
+    @property
+    def nbytes(self):
+        # there must be a smarter way to do this...
+        if isinstance(self.data, np.ndarray):
+            return self.data.nbytes
+        else:
+            return sys.getsizeof(self.data)
+
+
 
 
