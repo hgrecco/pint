@@ -14,7 +14,10 @@
 import sys
 import math
 
-import pint
+# import pint
+from .registry import UnitRegistry
+from .quantity import _Quantity
+
 import numpy as np
 from pandas.core.dtypes.dtypes import ExtensionDtype
 from pandas.core.arrays import ExtensionArray
@@ -24,11 +27,11 @@ class PintType(ExtensionDtype):
     Docs...
 
     """
-    name = 'Pint'
+    name = 'pintarray'
     # This is definitely not the smart way to do this.
     # I just want to get access to the Quantity class but can't work out how.
     # Hence this is my hack.
-    ureg = pint.UnitRegistry()
+    ureg = UnitRegistry()
     type = ureg.Quantity
     na_value = math.nan
 
@@ -77,10 +80,13 @@ class PintArray(ExtensionArray):
     """
     # __array_priority__ = 1000  # I have no idea what this does
 
-    dtype = PintType()
+    dtype = PintType
 
     def __init__(self, values):
-        self.data = self.dtype.type(values)
+        if isinstance(values, _Quantity):
+            self.data = self.dtype.type(values.magnitude, values.units)
+        else:
+            self.data = self.dtype.type(values)
 
     @classmethod
     def _from_sequence(cls, scalars):
