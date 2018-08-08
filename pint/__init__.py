@@ -22,6 +22,7 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
 from .util import pi_theorem, logger
 
 from .context import Context
+from .pandas_array import QuantityArray
 
 
 try:                # pragma: no cover
