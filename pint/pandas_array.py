@@ -8,6 +8,7 @@ from pandas import Series
 import six
 import abc
 import numpy as np
+import collections
 
 from .quantity import _Quantity
 
@@ -510,7 +511,7 @@ class QuantityArray(ExtensionArray, ExtensionOpsMixin):
         # type: () -> np.ndarray
         # At the moment, this has to be an array since we use result.dtype
         """An array of values to be printed in, e.g. the Series repr"""
-        return np.array(self.data)
+        return np.array(self.data.magnitude)
 
     @classmethod
     def _concat_same_type(cls, to_concat):
@@ -608,7 +609,7 @@ class QuantityArray(ExtensionArray, ExtensionOpsMixin):
             print("binop",self,type(self),other,type(other))
             # Pint quantities may only be exponented by single values, not arrays.
             # Reduce single value arrays to single value to allow power ops
-            if len(set(np.array(rvalues)))==1:
+            if isinstance(rvalues, collections.Iterable) and len(set(rvalues))==1:
                 rvalues=rvalues[0]
 
             # If the operator is not defined for the underlying objects,
