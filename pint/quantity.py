@@ -1058,7 +1058,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 if getattr(other, 'dimensionless', False):
                     units = new_self._units ** other.to_root_units().magnitude
                 elif not getattr(other, 'dimensionless', True):
-                    raise DimensionalityError(self._units, 'dimensionless')
+                    raise DimensionalityError(other._units, 'dimensionless')
                 else:
                     units = new_self._units ** other
 
