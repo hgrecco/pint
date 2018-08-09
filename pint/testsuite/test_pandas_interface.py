@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+# - pandas test resources https://github.com/pandas-dev/pandas/blob/master/pandas/tests/extension/base/__init__.py
+
 import pytest
 from pandas.tests.extension import base
 
@@ -79,8 +83,8 @@ def data_for_grouping():
     ])
 
 
-# class TestCasting(base.BaseCastingTests):
-#     pass
+class TestCasting(base.BaseCastingTests):
+    pass
 
 
 class TestConstructors(base.BaseConstructorsTests):
@@ -95,29 +99,28 @@ class TestGetitem(base.BaseGetitemTests):
     pass
 
 
-# class TestGroupby(base.BaseGroupbyTests):
-#     pass
+class TestGroupby(base.BaseGroupbyTests):
+    pass
 
 
 class TestInterface(base.BaseInterfaceTests):
     pass
 
 
-# class TestMethods(base.BaseMethodsTests):
-#     pass
+class TestMethods(base.BaseMethodsTests):
+    pass
 
 
-# No idea why these don't appear to be there...
-# class TestArithmeticOps(base.BaseArithmeticOpsTests):
-#     pass
+class TestArithmeticOps(base.BaseArithmeticOpsTests):
+    pass
 
 
-# class TestComparisonOps(base.BaseComparisonOpsTests):
-#     pass
+class TestComparisonOps(base.BaseComparisonOpsTests):
+    pass
 
 
-# class TestOpsUtil(base.BaseOpsUtil):
-#     pass
+class TestOpsUtil(base.BaseOpsUtil):
+    pass
 
 
 class TestMissing(base.BaseMissingTests):
@@ -128,6 +131,6 @@ class TestReshaping(base.BaseReshapingTests):
     pass
 
 
-# class TestSetitem(base.BaseSetitemTests):
-#     pass
+class TestSetitem(base.BaseSetitemTests):
+    pass
 
