@@ -12,7 +12,7 @@
 # - can run the tests with python setup.py test to make sure everything still passes
 # - can run the pandas interface tests with pytest -x --pdb pint/testsuite/test_pandas_interface.py
 
-# - I'll use IntegerArray as my base https://github.com/pandas-dev/pandas/blob/master/pandas/core/arrays/integer.py
+# - I'll use PintArray as my base https://github.com/pandas-dev/pandas/blob/master/pandas/core/arrays/integer.py
 # - I'll add as few methods as possible to pass the pandas test
 # - each time I add a method I'll add it with NotImplementedError first to make sure I can see where it's being called
 # - then I can add the functionality bit by bit and keep some track of what is going on
@@ -39,12 +39,12 @@ from pandas.core.dtypes.common import (
 from pandas.core.dtypes.dtypes import registry
 
 from ..quantity import build_quantity_class, _Quantity
-from ..registry import UnitRegistry
+from .. import _DEFAULT_REGISTRY
 
 class PintType(ExtensionDtype):
     # I think this is the way to build a Quantity class and force it to be a
     # numpy array
-    type = build_quantity_class(UnitRegistry(), force_ndarray=True)
+    type = build_quantity_class(_DEFAULT_REGISTRY, force_ndarray=True)
     name = 'pint'
 
     @classmethod
@@ -209,9 +209,17 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
 
     @classmethod
     def _concat_same_type(cls, to_concat):
-        import pdb
-        pdb.set_trace()
-        return cls._coerce_to_pint_array(cls, [x._data for x in to_concat])
+        # taken from Metpy, would be great to somehow include in pint...
+        for a in to_concat:
+            units = a._data.units
+
+        data = []
+        for a in to_concat:
+            mag_common_unit = a._data.to(units).magnitude
+            data.append(np.atleast_1d(mag_common_unit))
+
+        return cls(np.concatenate(data) * units)
+
 
     @classmethod
     def _from_sequence(cls, scalars, dtype=None, copy=False):
@@ -220,6 +228,51 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     @classmethod
     def _from_factorized(cls, values, original):
         return cls(values, dtype=original.dtype)
+
+    def value_counts(self, dropna=True):
+        """
+        Returns a Series containing counts of each category.
+
+        Every category will have an entry, even those with a count of 0.
+
+        Parameters
+        ----------
+        dropna : boolean, default True
+            Don't include counts of NaN.
+
+        Returns
+        -------
+        counts : Series
+
+        See Also
+        --------
+        Series.value_counts
+        """
+
+        from pandas import Index, Series
+
+        # compute counts on the data with no nans
+        data = self._data
+        if dropna:
+            value_counts = Index(data).dropna().value_counts()
+        else:
+            value_counts = Index(data).dropna().value_counts()
+
+        array = value_counts.values
+        index = value_counts.index
+
+        return Series(array, index=index)
+
+    def unique(self):
+        """Compute the PintArray of unique values.
+
+        Returns
+        -------
+        uniques : ExtensionArray
+        """
+        from pandas import unique
+
+        return self._from_sequence(unique(self._data) * self._data.units)
 
     @property
     def dtype(self):
@@ -230,6 +283,13 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     @property
     def data(self):
         return self._data
+
+    @property
+    def nbytes(self):
+        return self._data.nbytes
+
+# PintArray._add_arithmetic_ops()
+# PintArray._add_comparison_ops()
 
 # register
 registry.register(PintType)
