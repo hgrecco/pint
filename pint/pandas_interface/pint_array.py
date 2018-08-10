@@ -21,6 +21,12 @@
 # - pandas ExtensionDtype source https://github.com/pandas-dev/pandas/blob/master/pandas/core/dtypes/base.py
 # - pandas ExtensionArray source https://github.com/pandas-dev/pandas/blob/master/pandas/core/arrays/base.py
 
+# thoughts now, type of PintType should be taken from the default, initialised
+# Registry. Then PintArray should use this by default, however if it's
+# initialised with a Quantity then it should overwrite PintType's type by the
+# Quantity's registry Quantity i.e. Quantity._REGISTRY.Quantity to make sure
+# the registry is as expected
+
 import copy
 
 import numpy as np
@@ -79,7 +85,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
 
     def __init__(self, values, dtype=None, copy=False):
         if isinstance(values, list):
-            tmp = self._from_sequence(values)
+            tmp = self._from_sequence(values, dtype=dtype, copy=copy)
             self._data = tmp._data
 
         else:
@@ -198,7 +204,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         raise NotImplementedError
 
     @classmethod
-    def _from_sequence(cls, scalars):
+    def _from_sequence(cls, scalars, dtype=None, copy=False):
         """Construct a new PintArray from a sequence of single value
         (not array) quantities.
         Parameters
@@ -210,14 +216,18 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         -------
         PintArray
         """
+        if dtype is not None:
+            if not isinstance(dtype, cls._dtype):
+                raise NotImplementedError
+
         for s in scalars:
             assert isinstance(s, cls._dtype.type)
 
-        units=set(s.units for s in scalars)
-        if len(units)>1:
+        units = set(s.units for s in scalars)
+        if len(units) > 1:
             raise TypeError("The units of all quantities are not the same.")
 
-        magnitudes=[quantity.magnitude for quantity in scalars]
+        magnitudes = [quantity.magnitude for quantity in scalars]
 
         return cls(type(scalars[0])(magnitudes, scalars[0].units))
 
