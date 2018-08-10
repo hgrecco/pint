@@ -30,13 +30,16 @@
 import copy
 
 import numpy as np
+from pandas.core import ops
 from pandas.core.arrays import ExtensionArray
 from pandas.core.arrays.base import ExtensionOpsMixin
 from pandas.core.dtypes.base import ExtensionDtype
 from pandas.core.dtypes.common import (
     is_integer,
-    is_list_like)
+    is_list_like,
+    is_bool)
 from pandas.core.dtypes.dtypes import registry
+from pandas.compat import set_function_name
 
 from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
@@ -76,6 +79,11 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             return values
 
         if is_list_like(values):
+            if all(is_bool(v) for v in values):
+                # known bug in pint https://github.com/hgrecco/pint/issues/673
+                raise TypeError("Invalid magnitude for {}: {}"
+                                "".format(self._dtype.type, values))
+
             for i, v in enumerate(values):
                 if isinstance(v, self._dtype.type):
                     continue
@@ -289,8 +297,32 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     def nbytes(self):
         return self._data.nbytes
 
-# PintArray._add_arithmetic_ops()
-# PintArray._add_comparison_ops()
+    @classmethod
+    def _create_comparison_method(cls, op):
+        def cmp_method(self, other):
+            op_name = op.__name__
+
+            if isinstance(other, PintArray):
+                other = other._data
+            elif is_list_like(other):
+                other = self._coerce_to_pint_array(other)
+                if other.ndim > 0 and len(self._data) != len(other):
+                    raise ValueError('Lengths must match to compare')
+
+            result = op(self._data, other)
+
+            return result
+
+        name = '__{name}__'.format(name=op.__name__)
+        return set_function_name(cmp_method, name, cls)
+
+    @classmethod
+    def _create_arithmetic_method(cls, op):
+        pass
+
+
+PintArray._add_arithmetic_ops()
+PintArray._add_comparison_ops()
 
 # register
 registry.register(PintType)
