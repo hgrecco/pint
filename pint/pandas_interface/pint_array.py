@@ -68,6 +68,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     def __init__(self, values, dtype=None, copy=False):
         if isinstance(values, _Quantity):
             self._dtype.type = type(values)
+            assert self._dtype.type._REGISTRY == values._REGISTRY
         self._data = self._coerce_to_pint_array(values, dtype=dtype, copy=copy)
 
     def _coerce_to_pint_array(self, values, dtype=None, copy=False):
