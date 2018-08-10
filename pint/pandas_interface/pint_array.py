@@ -21,10 +21,216 @@
 # - pandas ExtensionDtype source https://github.com/pandas-dev/pandas/blob/master/pandas/core/dtypes/base.py
 # - pandas ExtensionArray source https://github.com/pandas-dev/pandas/blob/master/pandas/core/arrays/base.py
 
-class PintType(object):
-    def __init__(self):
+import copy
+
+import numpy as np
+from pandas.core.arrays import ExtensionArray
+from pandas.core.arrays.base import ExtensionOpsMixin
+from pandas.core.dtypes.base import ExtensionDtype
+from pandas.core.dtypes.common import (
+    is_integer)
+from pandas.core.dtypes.dtypes import registry
+
+from ..quantity import _Quantity
+
+class PintType(ExtensionDtype):
+    type = _Quantity
+    name = 'pint'
+
+    @classmethod
+    def construct_array_type(cls, type_str='pint'):
+        if type_str is not cls.name:
+            raise NotImplementedError
+        return PintArray
+
+    @classmethod
+    def construct_from_string(cls, string):
+        if string == cls.name:
+            return cls()
+        else:
+            raise TypeError("Cannot construct a '{}' from "
+                            "'{}'".format(cls, string))
+
+def coerce_to_pint_quantity(values, dtype, copy=False):
+    if dtype is not None:
+        if not isinstance(dtype, PintType):
+            raise ValueError("invalid dtype specified {}".format(dtype))
+
+    if isinstance(values, _Quantity):
+        return values
+
+    a = []
+    for v in values:
+        a.append(dtype.type(v))
+    import pdb
+    pdb.set_trace()
+    raise NotImplementedError("cannot make PintArray from "
+                              "{}".format(type(values)))
+
+    if not isinstance(values, _Quantity):
+        raise NotImplementedError("cannot make PintArray from "
+                                  "{}".format(type(values)))
+
+    return values
+
+
+class PintArray(ExtensionArray, ExtensionOpsMixin):
+    _dtype = PintType
+
+    def __init__(self, values, dtype=None, copy=False):
+        if isinstance(values, list):
+            tmp = self._from_sequence(values)
+            self._data = tmp._data
+
+        else:
+            self._data = coerce_to_pint_quantity(
+                values, dtype, copy=copy
+            )
+
+    def __getitem__(self, item):
+        # type (Any) -> Any
+        """Select a subset of self.
+        Parameters
+        ----------
+        item : int, slice, or ndarray
+            * int: The position in 'self' to get.
+            * slice: A slice object, where 'start', 'stop', and 'step' are
+              integers or None
+            * ndarray: A 1-d boolean NumPy ndarray the same length as 'self'
+        Returns
+        -------
+        item : scalar or ExtensionArray
+        """
+        if is_integer(item):
+            return self._data[item]
+
+        return type(self)(self._data[item])
+
+    def __len__(self):
+        # type: () -> int
+        """Length of this array
+
+        Returns
+        -------
+        length : int
+        """
+        return len(self._data)
+
+    def __array__(self, dtype=None):
+        return self._data.astype(object)
+
+    def isna(self):
+        # type: () -> np.ndarray
+        """Return a Boolean NumPy array indicating if each value is missing.
+
+        Returns
+        -------
+        missing : np.array
+        """
+        return np.isnan(self.data)
+
+    def take(self, indices, allow_fill=False, fill_value=None):
+        # type: (Sequence[int], bool, Optional[Any]) -> PintArray
+        """Take elements from an array.
+        Parameters
+        ----------
+        indices : sequence of integers
+            Indices to be taken.
+        allow_fill : bool, default False
+            How to handle negative values in `indices`.
+            * False: negative values in `indices` indicate positional indices
+              from the right (the default). This is similar to
+              :func:`numpy.take`.
+            * True: negative values in `indices` indicate
+              missing values. These values are set to `fill_value`. Any other
+              other negative values raise a ``ValueError``.
+        fill_value : any, optional
+            Fill value to use for NA-indices when `allow_fill` is True.
+            This may be ``None``, in which case the default NA value for
+            the type, ``self.dtype.na_value``, is used.
+        Returns
+        -------
+        ExtensionArray
+        Raises
+        ------
+        IndexError
+            When the indices are out of bounds for the array.
+        ValueError
+            When `indices` contains negative values other than ``-1``
+            and `allow_fill` is True.
+        Notes
+        -----
+        ExtensionArray.take is called by ``Series.__getitem__``, ``.loc``,
+        ``iloc``, when `indices` is a sequence of values. Additionally,
+        it's called by :meth:`Series.reindex`, or any other method
+        that causes realignemnt, with a `fill_value`.
+        See Also
+        --------
+        numpy.take
+        pandas.api.extensions.take
+        Examples
+        --------
+        """
+        from pandas.core.algorithms import take
+
+        data = self._data.magnitude
+        if allow_fill and fill_value is None:
+            fill_value = self.dtype.na_value
+        if isinstance(fill_value, _Quantity):
+            fill_value = fill_value.to(self._data).magnitude
+
+        result = take(data, indices, fill_value=fill_value,
+                      allow_fill=allow_fill)
+
+        return type(self)(type(self._data)(result, self._data.units))
+
+    def copy(self, deep=False):
+        data = self._data
+        if deep:
+            data = copy.deepcopy(data)
+        else:
+            data = data.copy()
+
+        return type(self)(data, dtype=self.dtype)
+
+    @classmethod
+    def _concat_same_type(cls, to_concat):
         raise NotImplementedError
 
-class PintArray(object):
-    def __init__(self):
-        raise NotImplementedError
+    @classmethod
+    def _from_sequence(cls, scalars):
+        """Construct a new PintArray from a sequence of single value
+        (not array) quantities.
+        Parameters
+        ----------
+        scalars : Sequence
+            Each element must be an instance of the scalar type for this
+            array.
+        Returns
+        -------
+        PintArray
+        """
+        for s in scalars:
+            assert isinstance(s, cls._dtype.type)
+
+        units=set(s.units for s in scalars)
+        if len(units)>1:
+            raise TypeError("The units of all quantities are not the same.")
+
+        magnitudes=[quantity.magnitude for quantity in scalars]
+
+        return cls(type(scalars[0])(magnitudes, scalars[0].units))
+
+    @property
+    def dtype(self):
+        # type: () -> ExtensionDtype
+        """An instance of 'ExtensionDtype'."""
+        return self._dtype()
+
+    @property
+    def data(self):
+        return self._data
+
+# register
+registry.register(PintType)
+

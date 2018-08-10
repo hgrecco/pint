@@ -6,8 +6,10 @@ import pytest
 from pandas.tests.extension import base
 
 import numpy as np
+import pint
 import pint.pandas_interface as ppi
 
+ureg = pint.UnitRegistry()
 
 @pytest.fixture
 def dtype():
@@ -16,12 +18,12 @@ def dtype():
 
 @pytest.fixture
 def data():
-    return ppi.PintArray(range(100))
+    return ppi.PintArray(np.arange(100) * ureg.meter)
 
 
 @pytest.fixture
 def data_missing():
-    return ppi.PintArray([np.nan, 1])
+    return ppi.PintArray([np.nan, 1] * ureg.meter)
 
 
 @pytest.fixture(params=['data', 'data_missing'])
