@@ -34,13 +34,17 @@ from pandas.core.arrays import ExtensionArray
 from pandas.core.arrays.base import ExtensionOpsMixin
 from pandas.core.dtypes.base import ExtensionDtype
 from pandas.core.dtypes.common import (
-    is_integer)
+    is_integer,
+    is_list_like)
 from pandas.core.dtypes.dtypes import registry
 
-from ..quantity import _Quantity
+from ..quantity import build_quantity_class, _Quantity
+from ..registry import UnitRegistry
 
 class PintType(ExtensionDtype):
-    type = _Quantity
+    # I think this is the way to build a Quantity class and force it to be a
+    # numpy array
+    type = build_quantity_class(UnitRegistry(), force_ndarray=True)
     name = 'pint'
 
     @classmethod
@@ -57,41 +61,45 @@ class PintType(ExtensionDtype):
             raise TypeError("Cannot construct a '{}' from "
                             "'{}'".format(cls, string))
 
-def coerce_to_pint_quantity(values, dtype, copy=False):
-    if dtype is not None:
-        if not isinstance(dtype, PintType):
-            raise ValueError("invalid dtype specified {}".format(dtype))
-
-    if isinstance(values, _Quantity):
-        return values
-
-    a = []
-    for v in values:
-        a.append(dtype.type(v))
-    import pdb
-    pdb.set_trace()
-    raise NotImplementedError("cannot make PintArray from "
-                              "{}".format(type(values)))
-
-    if not isinstance(values, _Quantity):
-        raise NotImplementedError("cannot make PintArray from "
-                                  "{}".format(type(values)))
-
-    return values
-
 
 class PintArray(ExtensionArray, ExtensionOpsMixin):
     _dtype = PintType
 
     def __init__(self, values, dtype=None, copy=False):
-        if isinstance(values, list):
-            tmp = self._from_sequence(values, dtype=dtype, copy=copy)
-            self._data = tmp._data
+        if isinstance(values, _Quantity):
+            self._dtype.type = type(values)
+        self._data = self._coerce_to_pint_array(values, dtype=dtype, copy=copy)
 
-        else:
-            self._data = coerce_to_pint_quantity(
-                values, dtype, copy=copy
-            )
+    def _coerce_to_pint_array(self, values, dtype=None, copy=False):
+        if isinstance(values, self._dtype.type):
+            return values
+
+        if is_list_like(values):
+            for i, v in enumerate(values):
+                if isinstance(v, self._dtype.type):
+                    continue
+                else:
+                    values[i] = v * self._find_first_unit(values)
+
+            units = set(v.units for v in values)
+            if len(units) > 1:
+                raise TypeError("The units of all quantities are not the same"
+                                " for input {}".format(values))
+
+            magnitudes = [v.magnitude for v in values]
+
+            return self._dtype.type(magnitudes, values[0].units)
+
+        import pdb
+        pdb.set_trace()
+        return NotImplementedError
+
+    def _find_first_unit(self, values):
+        for v in values:
+            if isinstance(v, self._dtype.type):
+                return v.units
+
+        return self._dtype.type(1).units
 
     def __getitem__(self, item):
         # type (Any) -> Any
@@ -201,35 +209,17 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
 
     @classmethod
     def _concat_same_type(cls, to_concat):
-        raise NotImplementedError
+        import pdb
+        pdb.set_trace()
+        return cls._coerce_to_pint_array(cls, [x._data for x in to_concat])
 
     @classmethod
     def _from_sequence(cls, scalars, dtype=None, copy=False):
-        """Construct a new PintArray from a sequence of single value
-        (not array) quantities.
-        Parameters
-        ----------
-        scalars : Sequence
-            Each element must be an instance of the scalar type for this
-            array.
-        Returns
-        -------
-        PintArray
-        """
-        if dtype is not None:
-            if not isinstance(dtype, cls._dtype):
-                raise NotImplementedError
+        return cls(scalars, dtype=dtype, copy=copy)
 
-        for s in scalars:
-            assert isinstance(s, cls._dtype.type)
-
-        units = set(s.units for s in scalars)
-        if len(units) > 1:
-            raise TypeError("The units of all quantities are not the same.")
-
-        magnitudes = [quantity.magnitude for quantity in scalars]
-
-        return cls(type(scalars[0])(magnitudes, scalars[0].units))
+    @classmethod
+    def _from_factorized(cls, values, original):
+        return cls(values, dtype=original.dtype)
 
     @property
     def dtype(self):

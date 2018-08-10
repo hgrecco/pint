@@ -77,10 +77,10 @@ def na_value():
 
 @pytest.fixture
 def data_for_grouping():
-    b = 1
-    a = 2 ** 32 + 1
+    a = 1
+    b = 2 ** 32 + 1
     c = 2 ** 32 + 10
-    ppi.PintArray([
+    return ppi.PintArray([
         b, b, np.nan, np.nan, a, a, b, c
     ])
 
