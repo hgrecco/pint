@@ -35,7 +35,7 @@ from pandas.core.arrays import ExtensionArray
 from pandas.core.arrays.base import ExtensionOpsMixin
 from pandas.core.dtypes.base import ExtensionDtype
 from pandas.core.dtypes.common import (
-    is_integer,
+    is_integer, is_scalar,
     is_list_like,
     is_bool)
 from pandas.core.dtypes.dtypes import registry
@@ -215,6 +215,24 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             data = data.copy()
 
         return type(self)(data, dtype=self.dtype)
+
+    def __setitem__(self, key, value):
+        _is_scalar = is_scalar(value)
+        if _is_scalar:
+            value = [value]
+
+        # need to not use `not value` on numpy arrays
+        if isinstance(value, (list, tuple)) and (not value):
+            # doing nothing here seems to be ok
+            return
+
+        value = self._coerce_to_pint_array(value, dtype=self.dtype)
+
+        if _is_scalar:
+            value = value[0]
+
+        self._data[key] = value
+
 
     @classmethod
     def _concat_same_type(cls, to_concat):

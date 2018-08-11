@@ -161,14 +161,14 @@ class TestOpsUtil(base.BaseOpsUtil):
     pass
 
 
-# class TestMissing(base.BaseMissingTests):
-#     pass
+class TestMissing(base.BaseMissingTests):
+    pass
 
 
 class TestReshaping(base.BaseReshapingTests):
     pass
 
 
-# class TestSetitem(base.BaseSetitemTests):
-#     pass
+class TestSetitem(base.BaseSetitemTests):
+    pass
 
