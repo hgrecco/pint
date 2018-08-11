@@ -86,6 +86,7 @@ def data_for_grouping():
     ])
 
 # === missing from docs about what has to be included in tests ===
+# copied from pandas/pandas/conftest.py
 _all_arithmetic_operators = ['__add__', '__radd__',
                              '__sub__', '__rsub__',
                              '__mul__', '__rmul__',
@@ -100,6 +101,21 @@ if not PY3:
 def all_arithmetic_operators(request):
     """
     Fixture for dunder names for common arithmetic operations
+    """
+    return request.param
+
+@pytest.fixture(params=['__eq__', '__ne__', '__le__',
+                        '__lt__', '__ge__', '__gt__'])
+def all_compare_operators(request):
+    """
+    Fixture for dunder names for common compare operations
+
+    * >=
+    * >
+    * ==
+    * !=
+    * <
+    * <=
     """
     return request.param
 # =================================================================
@@ -145,14 +161,14 @@ class TestOpsUtil(base.BaseOpsUtil):
     pass
 
 
-class TestMissing(base.BaseMissingTests):
-    pass
+# class TestMissing(base.BaseMissingTests):
+#     pass
 
 
 class TestReshaping(base.BaseReshapingTests):
     pass
 
 
-class TestSetitem(base.BaseSetitemTests):
-    pass
+# class TestSetitem(base.BaseSetitemTests):
+#     pass
 

@@ -297,32 +297,34 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     def nbytes(self):
         return self._data.nbytes
 
-    @classmethod
-    def _create_comparison_method(cls, op):
-        def cmp_method(self, other):
-            op_name = op.__name__
+# --- removing this seems to help ---
+    # @classmethod
+    # def _create_comparison_method(cls, op):
+    #     def cmp_method(self, other):
+    #         op_name = op.__name__
 
-            if isinstance(other, PintArray):
-                other = other._data
-            elif is_list_like(other):
-                other = self._coerce_to_pint_array(other)
-                if other.ndim > 0 and len(self._data) != len(other):
-                    raise ValueError('Lengths must match to compare')
+    #         if isinstance(other, PintArray):
+    #             other = other._data
+    #         elif is_list_like(other):
+    #             other = self._coerce_to_pint_array(other)
+    #             if other.ndim > 0 and len(self._data) != len(other):
+    #                 raise ValueError('Lengths must match to compare')
 
-            result = op(self._data, other)
+    #         result = op(self._data, other)
 
-            return result
+    #         return result
 
-        name = '__{name}__'.format(name=op.__name__)
-        return set_function_name(cmp_method, name, cls)
+    #     name = '__{name}__'.format(name=op.__name__)
+    #     return set_function_name(cmp_method, name, cls)
 
-    @classmethod
-    def _create_arithmetic_method(cls, op):
-        pass
+    # @classmethod
+    # def _create_arithmetic_method(cls, op):
+    #     pass
 
 
-PintArray._add_arithmetic_ops()
-PintArray._add_comparison_ops()
+# PintArray._add_arithmetic_ops()
+# PintArray._add_comparison_ops()
+# ---------------------------------
 
 # register
 registry.register(PintType)
