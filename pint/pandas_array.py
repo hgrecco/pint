@@ -1,10 +1,10 @@
-from pandas.api.extensions import ExtensionDtype, ExtensionArray
+from pandas.api.extensions import ExtensionDtype, ExtensionArray, register_dataframe_accessor
 from pandas.core.arrays.base import ExtensionOpsMixin
 from pandas.core import ops
 from pandas.compat import set_function_name, PY3
 import operator
 from pandas.core.dtypes.common import is_list_like
-from pandas import Series
+from pandas import Series, DataFrame
 import six
 import abc
 import numpy as np
@@ -644,3 +644,31 @@ class QuantityArray(ExtensionArray, ExtensionOpsMixin):
         return self.data.magnitude
 QuantityArray._add_arithmetic_ops()
 QuantityArray._add_comparison_ops()
+@register_dataframe_accessor("pint")
+class PintAccessor(object):
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def quantify(self,ureg,level=-1):
+        df=self._obj
+        Q_=ureg.Quantity
+        df_columns=df.columns.to_frame()
+        unit_col_name=df_columns.columns[level]
+        units=df_columns[unit_col_name]
+        df_columns=df_columns.drop(columns=unit_col_name)
+        df_columns.values
+        df_new=DataFrame({ i : QuantityArray(Q_(df.values[:,i], unit))
+            for i,unit in enumerate(units.values)
+        })
+        df_new.columns=df_columns.index.droplevel(unit_col_name)
+        df_new.index=df.index
+        return df_new
+    
+    def dequantify(self,):
+        df=self._obj
+        df_columns=df.columns.to_frame()
+        df_columns['units']=[str(df[col].values.data.units) for col in df.columns]
+        df_new=DataFrame({ tuple(df_columns.iloc[i]) : df[col].values.data.magnitude
+            for i,col in enumerate(df.columns)
+        })        
+        return df_new
