@@ -39,7 +39,7 @@ from pandas.core.dtypes.common import (
     is_list_like,
     is_bool)
 from pandas.core.dtypes.dtypes import registry
-from pandas.compat import set_function_name
+from pandas.compat import u, set_function_name
 from pandas.io.formats.printing import (
     format_object_summary, format_object_attrs, default_pprint)
 
@@ -148,8 +148,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         Invoked by unicode(df) in py2 only. Yields a Unicode String in both
         py2/py3.
         """
-        import pdb
-        pdb.set_trace()
+
         klass = self.__class__.__name__
         data = format_object_summary(self, default_pprint, False)
         attrs = format_object_attrs(self)

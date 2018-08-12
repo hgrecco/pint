@@ -209,7 +209,9 @@ class TestUserInterface(object):
         <Quantity(23, 'meter')>
 
         which does make sense. Hence is this simply an issue with how my
-        representation is implemented? Will try this fix now.
+        representation is implemented?
+
+        Turns out this is simply a `__repr__` thing :)
 
         If I do,
 
@@ -298,11 +300,11 @@ class TestUserInterface(object):
         """
 
         ser = pd.Series(data)
-        from pandas.core.arrays import IntegerArray
-        intarr = IntegerArray(list(range(100)))
-        intser = pd.Series(intarr)
         import pdb
         pdb.set_trace()
-        print(intser.values)
         print(ser.values)
+        # this is doing wrong thing too
+        import pdb
+        pdb.set_trace()
+        ppi.PintArray(np.array([1, 12]) * [ureg.kilogram, ureg.meter])
         assert ser.values.data == data.data
