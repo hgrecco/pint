@@ -40,6 +40,8 @@ from pandas.core.dtypes.common import (
     is_bool)
 from pandas.core.dtypes.dtypes import registry
 from pandas.compat import set_function_name
+from pandas.io.formats.printing import (
+    format_object_summary, format_object_attrs, default_pprint)
 
 from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
@@ -138,6 +140,27 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         length : int
         """
         return len(self._data)
+
+    def __repr__(self):
+        """
+        Return a string representation for this object.
+
+        Invoked by unicode(df) in py2 only. Yields a Unicode String in both
+        py2/py3.
+        """
+        import pdb
+        pdb.set_trace()
+        klass = self.__class__.__name__
+        data = format_object_summary(self, default_pprint, False)
+        attrs = format_object_attrs(self)
+        space = " "
+
+        prepr = (u(",%s") %
+                 space).join(u("%s=%s") % (k, v) for k, v in attrs)
+
+        res = u("%s(%s%s)") % (klass, data, prepr)
+
+        return res
 
     def __array__(self, dtype=None):
         return self._data.astype(object)
@@ -314,35 +337,6 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     @property
     def nbytes(self):
         return self._data.nbytes
-
-# --- removing this seems to help ---
-    # @classmethod
-    # def _create_comparison_method(cls, op):
-    #     def cmp_method(self, other):
-    #         op_name = op.__name__
-
-    #         if isinstance(other, PintArray):
-    #             other = other._data
-    #         elif is_list_like(other):
-    #             other = self._coerce_to_pint_array(other)
-    #             if other.ndim > 0 and len(self._data) != len(other):
-    #                 raise ValueError('Lengths must match to compare')
-
-    #         result = op(self._data, other)
-
-    #         return result
-
-    #     name = '__{name}__'.format(name=op.__name__)
-    #     return set_function_name(cmp_method, name, cls)
-
-    # @classmethod
-    # def _create_arithmetic_method(cls, op):
-    #     pass
-
-
-# PintArray._add_arithmetic_ops()
-# PintArray._add_comparison_ops()
-# ---------------------------------
 
 # register
 registry.register(PintType)

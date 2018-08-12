@@ -3,6 +3,7 @@
 # - pandas test resources https://github.com/pandas-dev/pandas/blob/master/pandas/tests/extension/base/__init__.py
 
 import pytest
+import pandas as pd
 from pandas.compat import PY3
 from pandas.tests.extension import base
 
@@ -19,7 +20,7 @@ def dtype():
 
 @pytest.fixture
 def data():
-    return ppi.PintArray(np.arange(100) * ureg.meter)
+    return ppi.PintArray(np.arange(100) * ureg.kilogram)
 
 
 @pytest.fixture
@@ -172,3 +173,136 @@ class TestReshaping(base.BaseReshapingTests):
 class TestSetitem(base.BaseSetitemTests):
     pass
 
+class TestUserInterface(object):
+    def test_get_underlying_data(self, data):
+        """
+        How is this meant to be implemented for `ExtensionArray`?
+
+        The reason I ask is that I don't really understand what the `values`
+        attribute is for on a pandas Series.
+
+        I thought that I should be able to do something like
+
+        >>> import pint
+        >>> from pint.pandas_interface import PintArray
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from pandas.core.arrays import IntegerArray
+        >>> ureg = pint.UnitRegistry()
+        >>> abc = np.arange(0,100) * ureg.meter
+        >>> abc
+        <Quantity([ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+         20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42
+         43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65
+         66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88
+         89 90 91 92 93 94 95 96 97 98 99], 'meter')>
+        >>> ser2 = pd.Series(PintArray(abc))
+        >>> ser2.values
+        <pint.pandas_interface.pint_array.PintArray object at 0x1154f84a8>
+
+        and get back my original 'pint array' (for want of a better word), in
+        this case `abc`. However that's clearly not the case. Although I can do
+
+        >>> ser2.values[23]
+
+        >>> ser2.values[23]
+        <Quantity(23, 'meter')>
+
+        which does make sense. Hence is this simply an issue with how my
+        representation is implemented? Will try this fix now.
+
+        If I do,
+
+        >>> ser2.values.data
+        <Quantity([ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+         20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42
+         43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65
+         66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88
+         89 90 91 92 93 94 95 96 97 98 99], 'meter')>
+
+        then I get a representation which is more like what I'd hoped to get
+        for `ser2.values` (although obviously the datatype changes a bit). To
+        give an example of the behaviour I'd like to get, I use the example of
+        `IntergerArray`.
+
+        >>> intarr = IntegerArray(list(range(100)))
+        >>> intser = pd.Series(intarr)
+        >>> intser.values
+        IntegerArray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                      16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+                      30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+                      44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
+                      58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,
+                      72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
+                      86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99],
+                     dtype='Int64')
+        >>> intser.values._data
+        array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+               64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+               80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+               96, 97, 98, 99])
+
+        This seems to be at odds with the behaviour of simple Series, e.g.
+
+        >>> pdser = pd.Series(range(0,100))
+        >>> pdser.values
+        array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+               64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+               80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+               96, 97, 98, 99])
+
+        Hence my question.
+
+        Whilst I go through this, one other thought about using pint arrays
+        with pandas.
+
+        When pandas is doing its type checking, it goes through a bunch of
+        steps and then has a function called `is_extension_array_dtype` in
+        pandas/pandas/core/dtypes/common.py. This function checks the array
+        dtype with the line
+        `dtype = getattr(arr_or_dtype, 'dtype', arr_or_dtype)`.
+        The problem with this is that, for a pint array, dtype is the same as
+        for the underlying numpy array e.g.
+
+        >>> import pint
+        >>> import numpy as np
+        >>> ureg = pint.UnitRegistry()
+        >>> abc = np.arange(0,100) * ureg.meter
+        >>> abc
+        <Quantity([ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+                    20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38
+                    39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57
+                    58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76
+                    77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95
+                    96 97 98 99], 'meter')>
+        >>> abc.dtype
+        dtype('int64')
+        >>> type(abc)  # FYI
+        <class 'pint.quantity.build_quantity_class.<locals>.Quantity'>
+
+        Hence I don't think it's possible to simply register 'pint arrays'
+        in pandas, we have to use this extension array. The awkward thing with
+        that is that we have to store the actual data in another attribute of
+        the underlying class. Hence things like
+
+        >>> ser = pd.Series(abc)
+
+        can never work directly which is kind of sad... You have to always go
+        through a `PintArray`.
+        """
+
+        ser = pd.Series(data)
+        from pandas.core.arrays import IntegerArray
+        intarr = IntegerArray(list(range(100)))
+        intser = pd.Series(intarr)
+        import pdb
+        pdb.set_trace()
+        print(intser.values)
+        print(ser.values)
+        assert ser.values.data == data.data
