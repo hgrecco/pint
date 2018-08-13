@@ -15,7 +15,9 @@ except ImportError:
 import numpy as np
 import pint
 import pint.pandas_interface as ppi
-
+import operator
+from .test_quantity import QuantityTestCase
+from ..pandas_interface import PintArray
 pytest_required = pytest.mark.skipif('pytest' not in sys.modules,
                                       reason=("requires the 'right' pytest "
                                               "and Pandas libraries"))
@@ -326,17 +328,66 @@ through a `PintArray`.
 class TestUserInterface(object):
     def test_get_underlying_data(self, data):
         ser = pd.Series(data)
-        assert ser.values == data
+        # this first test creates an array of bool (which is desired, eg for indexing)
+        assert all(ser.values == data)
         assert ser.values[23] == data[23]
 
     def test_arithmetic(self, data):
         ser = pd.Series(data)
         ser2 = ser + ser
-        assert ser2.values == 2*data
+        assert all(ser2.values == 2*data)
 
     def test_initialisation(self, data):
         # fails with plain array
         # works with PintArray
         strt = np.arange(100) * ureg.newton
-        ser = pd.Series(strt)
-        assert ser.values == strt
+        ser = pd.Series(strt, dtype=ppi.PintType())
+        assert all(ser.values == strt)
+class TestPintArrayQuantity(QuantityTestCase):
+    FORCE_NDARRAY = True
+    
+    def test_pintarray_creation(self):
+        x=self.Q_([1,2,3],"m")
+        ys=[
+            PintArray(x),
+            PintArray._from_sequence([item for item in x])
+        ]
+        for y in ys:
+            self.assertQuantityAlmostEqual(x,y.data)
+    def test_pintarray_arithmetics(self):
+        # Perform operations with Quantities and PintArrays
+        # The resulting Quantity and PintArray.Data should be the same
+        # a op b = c
+        def test_op(a_Q,a_QA,b_):
+            c_Q=None
+            try:
+                c_Q=op(a_Q, b_)
+            except Exception as exception:
+                e=exception
+            if not c_Q is None:
+                c_QA=op(a_QA, b_).data
+                self.assertQuantityAlmostEqual(c_Q,c_QA)
+            else:
+                self.assertRaises(type(e), op,a_QA, b_)
+        arithmetic_ops=[operator.add ,
+         operator.sub ,
+         operator.mul ,
+         operator.truediv ,
+         operator.floordiv ,
+         operator.pow]
+
+        a_Qs= [ self.Q_([3,4],"m"),
+                self.Q_([3,4],"")]
+        a_QAs=[PintArray(q) for q in a_Qs]
+
+        bs=[[1.,3.],
+            [3.3,4.4],
+            self.Q_([6,6],"m"),
+            self.Q_([7.,np.nan])
+        ]
+        for a_Q, a_QA in zip(a_Qs, a_QAs):
+            for bb in bs:
+                for op in arithmetic_ops:
+                    test_op(a_Q,a_QA,bb)
+                
+                
