@@ -32,6 +32,7 @@ import copy
 import numpy as np
 from pandas.core import ops
 from pandas.core.arrays import ExtensionArray
+from pandas.api.extensions import register_dataframe_accessor, register_series_accessor
 from pandas.core.arrays.base import ExtensionOpsMixin
 from pandas.core.dtypes.base import ExtensionDtype
 from pandas.core.dtypes.common import (
@@ -42,6 +43,8 @@ from pandas.core.dtypes.dtypes import registry
 from pandas.compat import u, set_function_name
 from pandas.io.formats.printing import (
     format_object_summary, format_object_attrs, default_pprint)
+from pandas import Series, DataFrame
+import collections 
 
 from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
@@ -337,6 +340,154 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     def nbytes(self):
         return self._data.nbytes
 
+    # The _can_hold_na attribute is set to True so that pandas internals
+    # will use the ExtensionDtype.na_value as the NA value in operations
+    # such as take(), reindex(), shift(), etc.  In addition, those results
+    # will then be of the ExtensionArray subclass rather than an array
+    # of objects
+    _can_hold_na = True
+
+    @property
+    def _ndarray_values(self):
+        # type: () -> np.ndarray
+        """Internal pandas method for lossy conversion to a NumPy ndarray.
+        This method is not part of the pandas interface.
+        The expectation is that this is cheap to compute, and is primarily
+        used for interacting with our indexers.
+        """
+        return np.array(self)
+    
+    
+
+    @classmethod
+    def _create_method(cls, op, coerce_to_dtype=True):
+        """
+        A class method that returns a method that will correspond to an
+        operator for an ExtensionArray subclass, by dispatching to the
+        relevant operator defined on the individual elements of the
+        ExtensionArray.
+        Parameters
+        ----------
+        op : function
+            An operator that takes arguments op(a, b)
+        coerce_to_dtype :  bool
+            boolean indicating whether to attempt to convert
+            the result to the underlying ExtensionArray dtype
+            (default True)
+        Returns
+        -------
+        A method that can be bound to a method of a class
+        Example
+        -------
+        Given an ExtensionArray subclass called MyExtensionArray, use
+        >>> __add__ = cls._create_method(operator.add)
+        in the class definition of MyExtensionArray to create the operator
+        for addition, that will be based on the operator implementation
+        of the underlying elements of the ExtensionArray
+        """
+
+        def _binop(self, other):
+            def convert_values(param):
+                # convert to a quantity or listlike
+                if isinstance(param,Series) and isinstance(param.values,cls):
+                    return param.values.data
+                elif isinstance(param,cls):
+                    return param.data
+                elif isinstance(param,_Quantity):
+                    return param
+                elif is_list_like(param) and isinstance(param[0],_Quantity):
+                    return type(param[0])([p.magnitude for p in param], param[0].units)
+                elif isinstance(param, ExtensionArray) or is_list_like(param):
+                    return list(param)
+                else:  # Assume its an object
+                    return [param] * len(self)
+            # print("binop",self,type(self),other,type(other))
+            lvalues = self.data
+            rvalues = convert_values(other)
+            # print("binop",self,type(self),other,type(other))
+            if (isinstance(rvalues, collections.Iterable) and 
+                # make sure we've not got a single value quantity
+                (not isinstance(rvalues,_Quantity) or isinstance(rvalues.magnitude, collections.Iterable) )):
+                if not len(rvalues) in [1, len(lvalues)]:
+                    raise ValueError('Lengths must match')
+                # Pint quantities may only be exponented by single values, not arrays.
+                # Reduce single value arrays to single value to allow power ops
+                if len(set(rvalues))==1:
+                    rvalues=rvalues[0]
+
+            # If the operator is not defined for the underlying objects,
+            # a TypeError should be raised
+            res = op(lvalues,rvalues)# [op(a, b) for (a, b) in zip(lvalues, rvalues)]
+#             res =[op(a, b) for (a, b) in zip(lvalues, rvalues)]
+
+            if coerce_to_dtype:
+                try:
+                    res = cls(res)
+                except TypeError:
+                    pass
+
+            return res
+
+        op_name = ops._get_op_name(op, True)
+        return set_function_name(_binop, op_name, cls)
+
+    @classmethod
+    def _create_arithmetic_method(cls, op):
+        return cls._create_method(op)
+
+    @classmethod
+    def _create_comparison_method(cls, op):
+        return cls._create_method(op, coerce_to_dtype=False)
+    def __array__(self):
+    # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
+        return self.data.magnitude
+PintArray._add_arithmetic_ops()
+PintArray._add_comparison_ops()
 # register
 registry.register(PintType)
 
+@register_dataframe_accessor("pint")
+class PintDataFrameAccessor(object):
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def quantify(self,ureg,level=-1):
+        df=self._obj
+        Q_=ureg.Quantity
+        df_columns=df.columns.to_frame()
+        unit_col_name=df_columns.columns[level]
+        units=df_columns[unit_col_name]
+        df_columns=df_columns.drop(columns=unit_col_name)
+        df_columns.values
+        df_new=DataFrame({ i : PintArray(Q_(df.values[:,i], unit))
+            for i,unit in enumerate(units.values)
+        })
+        df_new.columns=df_columns.index.droplevel(unit_col_name)
+        df_new.index=df.index
+        return df_new
+    
+    def dequantify(self,):
+        df=self._obj
+        df_columns=df.columns.to_frame()
+        df_columns['units']=[str(df[col].values.data.units) for col in df.columns]
+        df_new=DataFrame({ tuple(df_columns.iloc[i]) : df[col].values.data.magnitude
+            for i,col in enumerate(df.columns)
+        })        
+        return df_new
+
+@register_series_accessor("pint")
+class PintSeriesAccessor(object):
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def _validate(obj):
+        if not is_pint_type(obj):
+            raise AttributeError("Cannot use 'pint' accessor on objects of "
+                                 "dtype '{}'.".format(obj.dtype))
+                                 
+def is_pint_type(obj):
+    t = getattr(obj, 'dtype', obj)
+    try:
+        return isinstance(t, PintType) or issubclass(t, PintType)
+    except Exception:
+        return False
