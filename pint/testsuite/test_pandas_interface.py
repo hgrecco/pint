@@ -173,6 +173,19 @@ class TestReshaping(base.BaseReshapingTests):
 class TestSetitem(base.BaseSetitemTests):
     pass
 
+# all of the below tests are pretty messy
+# I'm bascially just fiddling around trying to write complete examples of
+# how things should work (hence the code duplication), which can then be
+# tidied up once we have a clearer idea of what we are trying to do
+
+# plan is to re-write tests as self-contained blocks that can be copied and
+# pasted to be used in e.g. documentation
+
+# simple examples:
+# - accessing data
+# - arithmetic with data
+# - initialising data
+
 class TestUserInterface(object):
     def test_get_underlying_data(self, data):
         """
@@ -298,8 +311,13 @@ class TestUserInterface(object):
         can never work directly which is kind of sad... You have to always go
         through a `PintArray`.
         """
+        import pint
+        from pint.pandas_interface import PintArray
+        import numpy as np
 
-        ser = pd.Series(data)
+        ureg = pint.UnitRegistry()
+        abc = np.arange(0,100) * ureg.meter
+        ser = pd.Series(PintArray(abc))
         import pdb
         pdb.set_trace()
         print(ser.values)
@@ -308,3 +326,8 @@ class TestUserInterface(object):
         pdb.set_trace()
         ppi.PintArray(np.array([1, 12]) * [ureg.kilogram, ureg.meter])
         assert ser.values.data == data.data
+
+        # would be good to have things fail if you use a plain 'pint array' in
+        # a series but don't think that's easily possibe
+
+
