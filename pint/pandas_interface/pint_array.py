@@ -386,7 +386,17 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         of the underlying elements of the ExtensionArray
         """
 
+
         def _binop(self, other):
+            def validate_length(l,r):
+                #validates length and converts to listlike
+                try:
+                    if len(l)==len(r):
+                        return r
+                    else:
+                        raise ValueError("Lengths must match")
+                except TypeError:
+                    return [r] * len(l)
             def convert_values(param):
                 # convert to a quantity or listlike
                 if isinstance(param,Series) and isinstance(param.values,cls):
@@ -397,23 +407,15 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
                     return param
                 elif is_list_like(param) and isinstance(param[0],_Quantity):
                     return type(param[0])([p.magnitude for p in param], param[0].units)
-                elif isinstance(param, ExtensionArray) or is_list_like(param):
-                    return list(param)
-                else:  # Assume its an object
-                    return [param] * len(self)
-            # print("binop",self,type(self),other,type(other))
+                else:
+                    return param
             lvalues = self.data
+            other=validate_length(lvalues,other)
             rvalues = convert_values(other)
-            # print("binop",self,type(self),other,type(other))
-            if (isinstance(rvalues, collections.Iterable) and 
-                # make sure we've not got a single value quantity
-                (not isinstance(rvalues,_Quantity) or isinstance(rvalues.magnitude, collections.Iterable) )):
-                if not len(rvalues) in [1, len(lvalues)]:
-                    raise ValueError('Lengths must match')
-                # Pint quantities may only be exponented by single values, not arrays.
-                # Reduce single value arrays to single value to allow power ops
-                if len(set(rvalues))==1:
-                    rvalues=rvalues[0]
+            # Pint quantities may only be exponented by single values, not arrays.
+            # Reduce single value arrays to single value to allow power ops
+            if len(set(rvalues))==1:
+                rvalues=rvalues[0]
 
             # If the operator is not defined for the underlying objects,
             # a TypeError should be raised
