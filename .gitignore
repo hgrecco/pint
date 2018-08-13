@@ -9,6 +9,7 @@ build/
 dist/
 MANIFEST
 .tox
+*pytest_cache*
 
 # WebDAV file system cache files
 .DAV/
