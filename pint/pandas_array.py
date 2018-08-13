@@ -1,4 +1,4 @@
-from pandas.api.extensions import ExtensionDtype, ExtensionArray, register_dataframe_accessor
+from pandas.api.extensions import ExtensionDtype, ExtensionArray, register_dataframe_accessor, register_series_accessor
 from pandas.core.arrays.base import ExtensionOpsMixin
 from pandas.core import ops
 from pandas.compat import set_function_name, PY3
@@ -11,7 +11,8 @@ import numpy as np
 import collections
 
 from .quantity import _Quantity
-
+from ._accessor import (DelegatedMethod, DelegatedProperty,
+                        delegated_method)
 
 @six.add_metaclass(abc.ABCMeta)
 class QuantityBase(object):
@@ -672,3 +673,87 @@ class PintAccessor(object):
             for i,col in enumerate(df.columns)
         })        
         return df_new
+@register_series_accessor("pint")
+class PintSeriesAccessor(object):
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def quantify(self,ureg,level=-1):
+        df=self._obj
+        Q_=ureg.Quantity
+        df_columns=df.columns.to_frame()
+        unit_col_name=df_columns.columns[level]
+        units=df_columns[unit_col_name]
+        df_columns=df_columns.drop(columns=unit_col_name)
+        df_columns.values
+        df_new=DataFrame({ i : QuantityArray(Q_(df.values[:,i], unit))
+            for i,unit in enumerate(units.values)
+        })
+        df_new.columns=df_columns.index.droplevel(unit_col_name)
+        df_new.index=df.index
+        return df_new
+    
+    def dequantify(self,):
+        df=self._obj
+        df_columns=df.columns.to_frame()
+        df_columns['units']=[str(df[col].values.data.units) for col in df.columns]
+        df_new=DataFrame({ tuple(df_columns.iloc[i]) : df[col].values.data.magnitude
+            for i,col in enumerate(df.columns)
+        })        
+        return df_new
+        
+
+@register_series_accessor("pintseries")
+class PintSeriesAccessor:
+
+    debug_used = DelegatedProperty("debug_used")
+    dimensionality = DelegatedProperty("dimensionality")
+    dimensionless = DelegatedProperty("dimensionless")
+    force_ndarray = DelegatedProperty("force_ndarray")
+    imag = DelegatedProperty("imag")
+    m = DelegatedProperty("m")
+    magnitude = DelegatedProperty("magnitude")
+    real = DelegatedProperty("real")
+    shape = DelegatedProperty("shape")
+    u = DelegatedProperty("u")
+    unitless = DelegatedProperty("unitless")
+    units = DelegatedProperty("units")
+
+    isna = DelegatedMethod("isna")
+    to_pyints = DelegatedMethod("to_pyints")
+
+    def __init__(self, obj):
+        # self._validate(obj)
+        self._data = obj.values
+        self._index = obj.index
+        self._name = obj.name
+
+    @staticmethod
+    def _validate(obj):
+        if not is_ipaddress_type(obj):
+            raise AttributeError("Cannot use 'ip' accessor on objects of "
+                                 "dtype '{}'.".format(obj.dtype))
+
+    def isin(self, other):
+        return delegated_method(self._data.isin, self._index,
+                                self._name, other)
+
+    def netmask(self, v4_prefixlen=32, v6_prefixlen=128):
+        return delegated_method(self._data.netmask, self._index,
+                                self._name, v4_prefixlen, v6_prefixlen)
+
+    def hostmask(self, v4_prefixlen=32, v6_prefixlen=128):
+        return delegated_method(self._data.hostmask, self._index,
+                                self._name, v4_prefixlen, v6_prefixlen)
+
+    def mask(self, other):
+        return delegated_method(self._data.mask, self._index, self._name,
+                                other)
+
+
+def is_ipaddress_type(obj):
+    t = getattr(obj, 'dtype', obj)
+    try:
+        return isinstance(t, IPType) or issubclass(t, IPType)
+    except Exception:
+        return False
