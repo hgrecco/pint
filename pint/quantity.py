@@ -119,8 +119,19 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         inst.__used = False
         inst.__handling = None
+        # Only instances where the magnitude is iterable should have __iter__()
+        if hasattr(inst._magnitude,"__iter__"):
+            inst.__iter__ = cls._iter
+            print(inst)
         return inst
-
+    
+    def _iter(self):
+        """
+        Will be become __iter__() for instances with iterable magnitudes
+        """
+        # # Allow exception to propagate in case of non-iterable magnitude
+        it_mag = iter(self.magnitude)
+        return iter((self.__class__(mag, self._units) for mag in it_mag))
     @property
     def debug_used(self):
         return self.__used
@@ -1329,11 +1340,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def __len__(self):
         return len(self._magnitude)
-
-    def __iter__(self):
-        # Allow exception to propagate in case of non-iterable magnitude
-        it_mag = iter(self.magnitude)
-        return iter((self.__class__(mag, self._units) for mag in it_mag))
 
     def __getattr__(self, item):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
