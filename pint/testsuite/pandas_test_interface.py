@@ -6,30 +6,12 @@ import sys
 
 import pint
 import pytest
-try:
-    import pandas as pd
-    from pandas.compat import PY3
-    from pandas.tests.extension import base
+import pandas as pd
+from pandas.compat import PY3
+from pandas.tests.extension import base
 
-    import numpy as np
-    import pint.pandas_interface as ppi
-except ImportError:
-    pass
-
-required_libs = [
-    'pandas',
-    'numpy',
-]
-required_libs_str = ", ".join(required_libs)
-all_required_libs = all(
-    x in sys.modules
-    for x in required_libs
-)
-
-check_required = pytest.mark.skipif(not all_required_libs,
-                                    reason=("requires the 'right' "
-                                            + required_libs_str
-                                            + " libraries"))
+import numpy as np
+import pint.pandas_interface as ppi
 
 ureg = pint.UnitRegistry()
 
@@ -141,55 +123,42 @@ def all_compare_operators(request):
     return request.param
 # =================================================================
 
-@check_required
 class TestCasting(base.BaseCastingTests):
     pass
 
-@check_required
 class TestConstructors(base.BaseConstructorsTests):
     pass
 
-@check_required
 class TestDtype(base.BaseDtypeTests):
     pass
 
-@check_required
 class TestGetitem(base.BaseGetitemTests):
     pass
 
-@check_required
 class TestGroupby(base.BaseGroupbyTests):
     pass
 
-@check_required
 class TestInterface(base.BaseInterfaceTests):
     pass
 
-@check_required
 class TestMethods(base.BaseMethodsTests):
     pass
 
-@check_required
 class TestArithmeticOps(base.BaseArithmeticOpsTests):
     pass
 
-@check_required
 class TestComparisonOps(base.BaseComparisonOpsTests):
     pass
 
-@check_required
 class TestOpsUtil(base.BaseOpsUtil):
     pass
 
-@check_required
 class TestMissing(base.BaseMissingTests):
     pass
 
-@check_required
 class TestReshaping(base.BaseReshapingTests):
     pass
 
-@check_required
 class TestSetitem(base.BaseSetitemTests):
     pass
 
@@ -333,7 +302,6 @@ the underlying class. Hence things like
 can never work directly which is kind of sad... You have to always go
 through a `PintArray`.
 """
-@check_required
 class TestUserInterface(object):
     def test_get_underlying_data(self, data):
         ser = pd.Series(data)
