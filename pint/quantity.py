@@ -122,7 +122,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         # Only instances where the magnitude is iterable should have __iter__()
         if hasattr(inst._magnitude,"__iter__"):
             inst.__iter__ = cls._iter
-            print(inst)
         return inst
     
     def _iter(self):

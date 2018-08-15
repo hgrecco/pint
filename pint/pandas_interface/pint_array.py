@@ -450,9 +450,11 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     @classmethod
     def _create_comparison_method(cls, op):
         return cls._create_method(op, coerce_to_dtype=False)
-    def __array__(self):
+    def __array__(self,dtype=None,copy=False):
     # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
-        return self.data.magnitude
+        if dtype==None:
+            dtype=self._dtype
+        return np.array(self.data.magnitude, dtype = dtype, copy = copy)
 PintArray._add_arithmetic_ops()
 PintArray._add_comparison_ops()
 # register
