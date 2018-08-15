@@ -12,15 +12,13 @@ from pandas.tests.extension import base
 
 import numpy as np
 import pint.pandas_interface as ppi
-<<<<<<< HEAD:pint/testsuite/test_pandas_interface.py
 import operator
+
 from .test_quantity import QuantityTestCase
 from ..pandas_interface import PintArray
 pytest_required = pytest.mark.skipif('pytest' not in sys.modules,
                                       reason=("requires the 'right' pytest "
                                               "and Pandas libraries"))
-=======
->>>>>>> upstream/master:pint/testsuite/pandas_test_interface.py
 
 ureg = pint.UnitRegistry()
 
