@@ -4,23 +4,23 @@
 
 import sys
 
-try:
-    import pytest
-    import pandas as pd
-    from pandas.compat import PY3
-    from pandas.tests.extension import base
-except ImportError:
-    pass
+import pint
+import pytest
+import pandas as pd
+from pandas.compat import PY3
+from pandas.tests.extension import base
 
 import numpy as np
-import pint
 import pint.pandas_interface as ppi
+<<<<<<< HEAD:pint/testsuite/test_pandas_interface.py
 import operator
 from .test_quantity import QuantityTestCase
 from ..pandas_interface import PintArray
 pytest_required = pytest.mark.skipif('pytest' not in sys.modules,
                                       reason=("requires the 'right' pytest "
                                               "and Pandas libraries"))
+=======
+>>>>>>> upstream/master:pint/testsuite/pandas_test_interface.py
 
 ureg = pint.UnitRegistry()
 
@@ -132,55 +132,42 @@ def all_compare_operators(request):
     return request.param
 # =================================================================
 
-@pytest_required
 class TestCasting(base.BaseCastingTests):
     pass
 
-@pytest_required
 class TestConstructors(base.BaseConstructorsTests):
     pass
 
-@pytest_required
 class TestDtype(base.BaseDtypeTests):
     pass
 
-@pytest_required
 class TestGetitem(base.BaseGetitemTests):
     pass
 
-@pytest_required
 class TestGroupby(base.BaseGroupbyTests):
     pass
 
-@pytest_required
 class TestInterface(base.BaseInterfaceTests):
     pass
 
-@pytest_required
 class TestMethods(base.BaseMethodsTests):
     pass
 
-@pytest_required
 class TestArithmeticOps(base.BaseArithmeticOpsTests):
     pass
 
-@pytest_required
 class TestComparisonOps(base.BaseComparisonOpsTests):
     pass
 
-@pytest_required
 class TestOpsUtil(base.BaseOpsUtil):
     pass
 
-@pytest_required
 class TestMissing(base.BaseMissingTests):
     pass
 
-@pytest_required
 class TestReshaping(base.BaseReshapingTests):
     pass
 
-@pytest_required
 class TestSetitem(base.BaseSetitemTests):
     pass
 
@@ -324,7 +311,6 @@ the underlying class. Hence things like
 can never work directly which is kind of sad... You have to always go
 through a `PintArray`.
 """
-@pytest_required
 class TestUserInterface(object):
     def test_get_underlying_data(self, data):
         ser = pd.Series(data)
