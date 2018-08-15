@@ -30,7 +30,6 @@ from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    fix_str_conversions)
 from pint.compat import Loc
 
-
 def _eq(first, second, check_all):
     """Comparison of scalars and arrays
     """

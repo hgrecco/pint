@@ -48,6 +48,7 @@ import collections
 
 from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
+from .. util import (SharedRegistryObject)
 
 class PintType(ExtensionDtype):
     # I think this is the way to build a Quantity class and force it to be a
@@ -78,6 +79,15 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             self._dtype.type = type(values)
             assert self._dtype.type._REGISTRY == values._REGISTRY
         self._data = self._coerce_to_pint_array(values, dtype=dtype, copy=copy)
+        # # delete these and make quantities raise notimplimented error on pint arrays
+        # self._REGISTRY = self._data._REGISTRY
+        # self.dimensionality = self._data.dimensionality
+        # self._get_non_multiplicative_units = self._data._get_non_multiplicative_units
+        # self._units = self._data._units
+        # self._magnitude = self._data._magnitude
+        # self._ok_for_muldiv = self._data._ok_for_muldiv
+        # self.to = self._data.to
+
 
     def _coerce_to_pint_array(self, values, dtype=None, copy=False):
         if isinstance(values, self._dtype.type):
