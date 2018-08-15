@@ -4,6 +4,7 @@
 
 import sys
 
+import pint
 import pytest
 try:
     import pandas as pd
@@ -11,7 +12,6 @@ try:
     from pandas.tests.extension import base
 
     import numpy as np
-    import pint
     import pint.pandas_interface as ppi
 except ImportError:
     pass
