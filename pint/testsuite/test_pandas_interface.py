@@ -4,8 +4,8 @@
 
 import sys
 
+import pytest
 try:
-    import pytest
     import pandas as pd
     from pandas.compat import PY3
     from pandas.tests.extension import base
@@ -17,7 +17,6 @@ except ImportError:
     pass
 
 required_libs = [
-    'pytest',
     'pandas',
     'numpy',
 ]
@@ -28,9 +27,9 @@ all_required_libs = all(
 )
 
 check_required = pytest.mark.skipif(not all_required_libs,
-                                      reason=("requires the 'right' "
-                                              + required_libs_str
-                                              + " libraries"))
+                                    reason=("requires the 'right' "
+                                            + required_libs_str
+                                            + " libraries"))
 
 ureg = pint.UnitRegistry()
 
