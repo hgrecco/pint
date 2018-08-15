@@ -383,7 +383,9 @@ class TestPintArrayQuantity(QuantityTestCase):
             [1.,3.],
             [3.3,4.4],
             self.Q_([6,6],"m"),
-            self.Q_([7.,np.nan])
+            self.Q_([7.,np.nan]),
+            PintArray(self.Q_([6,6],"m")),
+            PintArray(self.Q_([7.,np.nan]))
         ]
         for a_P, a_PA in zip(a_Ps, a_PAs):
             for b in bs:
