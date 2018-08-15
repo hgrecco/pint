@@ -50,14 +50,6 @@ from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
 from .. util import (SharedRegistryObject)
 
-from pandas.api.types import is_array_like as pandas_is_array_like
-
-def is_array_like(values):
-    if isinstance(values, _Quantity):
-        return pandas_is_array_like(values._magnitude)
-    else:
-        return pandas_is_array_like(values)
-
 class PintType(ExtensionDtype):
     # I think this is the way to build a Quantity class and force it to be a
     # numpy array
@@ -451,59 +443,6 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         op_name = ops._get_op_name(op, True)
         return set_function_name(_binop, op_name, cls)
 
-    def fillna(self, value=None, method=None, limit=None):
-        """ Fill NA/NaN values using the specified method.
-
-        Parameters
-        ----------
-        value : scalar, array-like
-            If a scalar value is passed it is used to fill all missing values.
-            Alternatively, an array-like 'value' can be given. It's expected
-            that the array-like have the same length as 'self'.
-        method : {'backfill', 'bfill', 'pad', 'ffill', None}, default None
-            Method to use for filling holes in reindexed Series
-            pad / ffill: propagate last valid observation forward to next valid
-            backfill / bfill: use NEXT valid observation to fill gap
-        limit : int, default None
-            If method is specified, this is the maximum number of consecutive
-            NaN values to forward/backward fill. In other words, if there is
-            a gap with more than this number of consecutive NaNs, it will only
-            be partially filled. If method is not specified, this is the
-            maximum number of entries along the entire axis where NaNs will be
-            filled.
-
-        Returns
-        -------
-        filled : ExtensionArray with NA/NaN filled
-        """
-        # use is_array_like defined at start of file instead
-        # from pandas.api.types import is_array_like 
-        from pandas.util._validators import validate_fillna_kwargs
-        from pandas.core.missing import pad_1d, backfill_1d
-
-        value, method = validate_fillna_kwargs(value, method)
-
-        mask = self.isna()
-
-        if is_array_like(value):
-            if len(value) != len(self):
-                raise ValueError("Length of 'value' does not match. Got ({}) "
-                                 " expected {}".format(len(value), len(self)))
-            value = value[mask]
-
-        if mask.any():
-            if method is not None:
-                func = pad_1d if method == 'pad' else backfill_1d
-                new_values = func(self.astype(object), limit=limit,
-                                  mask=mask)
-                new_values = self._from_sequence(new_values, dtype=self.dtype)
-            else:
-                # fill with value
-                new_values = self.copy()
-                new_values[mask] = value
-        else:
-            new_values = self.copy()
-        return new_values
     @classmethod
     def _create_arithmetic_method(cls, op):
         return cls._create_method(op)
@@ -511,11 +450,9 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     @classmethod
     def _create_comparison_method(cls, op):
         return cls._create_method(op, coerce_to_dtype=False)
-    def __array__(self,dtype=None, copy=False):
-        if dtype==None:
-            dtype=self._dtype
-        # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
-        return np.array(self.data.magnitude, dtype=dtype, copy=copy)
+    def __array__(self):
+    # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
+        return self.data.magnitude
 PintArray._add_arithmetic_ops()
 PintArray._add_comparison_ops()
 # register
