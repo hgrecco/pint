@@ -455,8 +455,8 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         if dtype==None:
             dtype=self._dtype
         return np.array(self.data.magnitude, dtype = dtype, copy = copy)
-PintArray._add_arithmetic_ops()
-PintArray._add_comparison_ops()
+# PintArray._add_arithmetic_ops()
+# PintArray._add_comparison_ops()
 # register
 registry.register(PintType)
 
