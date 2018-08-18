@@ -63,6 +63,19 @@ def ireduce_dimensions(f):
         return result
     return wrapped
 
+def check_implemented(f):
+    def wrapped(self, *args, **kwargs):
+        other=args[0]
+        if other.__class__.__name__ in ["PintArray", "Series"]:
+            return NotImplemented
+        # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
+        # and expects Quantity * array[Quantity] should return NotImplemented
+        elif type(other)==list and isinstance(other[0], type(self)):
+            return NotImplemented
+        result = f(self, *args, **kwargs)
+        return result
+    return wrapped
+
 
 @fix_str_conversions
 class _Quantity(PrettyIPython, SharedRegistryObject):
@@ -618,7 +631,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             raise OffsetUnitCalculusError(self._units, other._units)
 
         return self
-
+    
+    @check_implemented
     def _add_sub(self, other, op):
         """Perform addition or subtraction operation and return the result.
 
@@ -627,8 +641,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
-        if not self._check_implemented(other):
-            return NotImplemented
         if not self._check(other):
             # other not from same Registry or not a Quantity
             if _eq(other, 0, True):
@@ -811,6 +823,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         return self
 
+    @check_implemented
     @ireduce_dimensions
     def _mul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation and return the result.
@@ -824,8 +837,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             *magnitude_op* is used
         :type units_op: function or None
         """
-        if not self._check_implemented(other):
-            return NotImplemented
         if units_op is None:
             units_op = magnitude_op
 
@@ -1616,15 +1627,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def to_timedelta(self):
         return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
     
-    def _check_implemented(self, other):
-        # pandas expects Quantity * PintArray to return NotImplemented
-        if other.__class__.__name__ in ["PintArray", "Series"]:
-            return False
-        # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
-        # and expects Quantity * array[Quantity] should return NotImplemented
-        elif type(other)==list and isinstance(other[0], type(self)):
-            return False
-        return True
         
 
 def build_quantity_class(registry, force_ndarray=False):
