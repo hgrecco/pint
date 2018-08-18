@@ -932,6 +932,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         self._units = UnitsContainer({})
         return self
 
+    @check_implemented
     def __floordiv__(self, other):
         if self._check(other):
             magnitude = self._magnitude // other.to(self._units)._magnitude
@@ -941,6 +942,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             raise DimensionalityError(self._units, 'dimensionless')
         return self.__class__(magnitude, UnitsContainer({}))
 
+    @check_implemented
     def __rfloordiv__(self, other):
         if self._check(other):
             magnitude = other._magnitude // self.to(other._units)._magnitude
@@ -956,12 +958,14 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         self._magnitude %= other.to(self._units)._magnitude
         return self
 
+    @check_implemented
     def __mod__(self, other):
         if not self._check(other):
             other = self.__class__(other, UnitsContainer({}))
         magnitude = self._magnitude % other.to(self._units)._magnitude
         return self.__class__(magnitude, self._units)
 
+    @check_implemented
     def __rmod__(self, other):
         if self._check(other):
             magnitude = other._magnitude % self.to(other._units)._magnitude
@@ -972,6 +976,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         else:
             raise DimensionalityError(self._units, 'dimensionless')
 
+    @check_implemented
     def __divmod__(self, other):
         if not self._check(other):
             other = self.__class__(other, UnitsContainer({}))
@@ -979,6 +984,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return (self.__class__(q, UnitsContainer({})),
                 self.__class__(r, self._units))
 
+    @check_implemented
     def __rdivmod__(self, other):
         if self._check(other):
             q, r = divmod(other._magnitude, self.to(other._units)._magnitude)
@@ -1042,6 +1048,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             self._magnitude **= _to_magnitude(other, self.force_ndarray)
             return self
 
+    @check_implemented
     def __pow__(self, other):
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
@@ -1089,6 +1096,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             magnitude = new_self._magnitude ** _to_magnitude(other, self.force_ndarray)
             return self.__class__(magnitude, units)
 
+    @check_implemented
     def __rpow__(self, other):
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
