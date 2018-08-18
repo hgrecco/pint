@@ -220,7 +220,27 @@ class TestArithmeticOps(base.BaseArithmeticOpsTests):
 
 
 class TestComparisonOps(base.BaseComparisonOpsTests):
-    pass
+    def _compare_other(self, s, data, op_name, other):
+        op = self.get_op_from_name(op_name)
+        
+        result = op(s,other)
+        expected = op(s.values.data, other)
+        assert (result==expected).all()
+        
+    def test_compare_scalar(self, data, all_compare_operators):
+        op_name = all_compare_operators
+        s = pd.Series(data)
+        other = data[0]
+        self._compare_other(s, data, op_name, other)
+
+    def test_compare_array(self, data, all_compare_operators):
+        # nb this compares an quantity containing array 
+        # eg Q_([1,2],"m")
+        op_name = all_compare_operators
+        s = pd.Series(data)
+        other = data.data
+        self._compare_other(s, data, op_name, other)
+        
 
 class TestOpsUtil(base.BaseOpsUtil):
     pass
