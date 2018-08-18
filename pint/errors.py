@@ -72,7 +72,7 @@ class UndefinedUnitError(AttributeError):
             return mess_plural.format(self.unit_names)
 
 
-class DimensionalityError(ValueError,TypeError):
+class DimensionalityError(ValueError):
     """Raised when trying to convert between incompatible units.
     """
 

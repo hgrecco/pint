@@ -14,6 +14,7 @@ import numpy as np
 import pint.pandas_interface as ppi
 import operator
 from .test_quantity import QuantityTestCase
+from ..errors import DimensionalityError
 from ..pandas_interface import PintArray
 pytest_required = pytest.mark.skipif('pytest' not in sys.modules,
                                       reason=("requires the 'right' pytest "
@@ -151,7 +152,70 @@ class TestMethods(base.BaseMethodsTests):
     pass
 
 class TestArithmeticOps(base.BaseArithmeticOpsTests):
-    pass
+    def check_opname(self, s, op_name, other, exc=None):
+        op = self.get_op_from_name(op_name)
+
+        self._check_op(s, op, other, exc)
+
+    def _check_op(self, s, op, other, exc=None):
+        if exc is None:
+            result = op(s, other)
+            expected = s.combine(other, op)
+            self.assert_series_equal(result, expected)
+        else:
+            with pytest.raises(exc):
+                op(s, other)
+
+    def _check_divmod_op(self, s, op, other, exc=None):
+        # divmod has multiple return values, so check separatly
+        if exc is None:
+            result_div, result_mod = op(s, other)
+            if op is divmod:
+                expected_div, expected_mod = s // other, s % other
+            else:
+                expected_div, expected_mod = other // s, other % s
+            self.assert_series_equal(result_div, expected_div)
+            self.assert_series_equal(result_mod, expected_mod)
+        else:
+            with pytest.raises(exc):
+                divmod(s, other)
+    def _get_exception(self, data, op_name):
+        if op_name in ["__pow__", "__rpow__"]:
+            return op_name, DimensionalityError
+        else:
+            return op_name, None
+            
+    def test_arith_series_with_scalar(self, data, all_arithmetic_operators):
+        # series & scalar
+        op_name, exc = self._get_exception(data, all_arithmetic_operators)
+        s = pd.Series(data)
+        self.check_opname(s, op_name, s.iloc[0], exc=exc)
+
+    @pytest.mark.xfail(run=False, reason="_reduce needs implementation")
+    def test_arith_frame_with_scalar(self, data, all_arithmetic_operators):
+        # frame & scalar
+        op_name, exc = self._get_exception(data, all_arithmetic_operators)
+        df = pd.DataFrame({'A': data})
+        self.check_opname(df, op_name, data[0], exc=exc)
+
+    def test_arith_series_with_array(self, data, all_arithmetic_operators):
+        # ndarray & other series
+        op_name, exc = self._get_exception(data, all_arithmetic_operators)
+        s = pd.Series(data)
+        self.check_opname(s, op_name, [s.iloc[0]] * len(s), exc=exc)
+
+    def test_divmod(self, data):
+        s = pd.Series(data)
+        self._check_divmod_op(s, divmod, 1)
+        self._check_divmod_op(1, ops.rdivmod, s)
+
+    def test_error(self, data, all_arithmetic_operators):
+        # invalid ops
+        op_name, exc = self._get_exception(data, all_arithmetic_operators)
+        with pytest.raises(AttributeError):
+            getattr(data, op_name)
+
+
 
 class TestComparisonOps(base.BaseComparisonOpsTests):
     pass
