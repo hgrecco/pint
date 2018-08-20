@@ -54,6 +54,9 @@ class PintType(ExtensionDtype):
     # I think this is the way to build a Quantity class and force it to be a
     # numpy array
     type = build_quantity_class(_DEFAULT_REGISTRY, force_ndarray=True)
+    # # AS: I'm not sure that does force it as an ndarray.
+    # # Trying the below as running into registry issues
+    # type = _Quantity
     name = 'pint'
 
     @classmethod
@@ -79,16 +82,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             self._dtype.type = type(values)
             assert self._dtype.type._REGISTRY == values._REGISTRY
         self._data = self._coerce_to_pint_array(values, dtype=dtype, copy=copy)
-        # # delete these and make quantities raise notimplimented error on pint arrays
-        # self._REGISTRY = self._data._REGISTRY
-        # self.dimensionality = self._data.dimensionality
-        # self._get_non_multiplicative_units = self._data._get_non_multiplicative_units
-        # self._units = self._data._units
-        # self._magnitude = self._data._magnitude
-        # self._ok_for_muldiv = self._data._ok_for_muldiv
-        # self.to = self._data.to
-
-
+        
     def _coerce_to_pint_array(self, values, dtype=None, copy=False):
         if isinstance(values, self._dtype.type):
             return values
@@ -431,6 +425,9 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             # a TypeError should be raised
             res = op(lvalues,rvalues)# [op(a, b) for (a, b) in zip(lvalues, rvalues)]
 #             res =[op(a, b) for (a, b) in zip(lvalues, rvalues)]
+            
+            if op.__name__ == 'divmod':
+                return cls(res[0]),cls(res[1])
 
             if coerce_to_dtype:
                 try:
