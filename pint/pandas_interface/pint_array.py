@@ -418,13 +418,11 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             rvalues = convert_values(other)
             # Pint quantities may only be exponented by single values, not arrays.
             # Reduce single value arrays to single value to allow power ops
-            if len(set(rvalues))==1:
+            if len(set(np.atleast_1d(rvalues)))==1:
                 rvalues=rvalues[0]
-
             # If the operator is not defined for the underlying objects,
             # a TypeError should be raised
-            res = op(lvalues,rvalues)# [op(a, b) for (a, b) in zip(lvalues, rvalues)]
-#             res =[op(a, b) for (a, b) in zip(lvalues, rvalues)]
+            res = op(lvalues,rvalues)
             
             if op.__name__ == 'divmod':
                 return cls(res[0]),cls(res[1])
