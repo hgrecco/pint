@@ -210,12 +210,48 @@ class TestArithmeticOps(base.BaseArithmeticOpsTests):
         s = pd.Series(data)
         self._check_divmod_op(s, divmod, 1)
         self._check_divmod_op(1, ops.rdivmod, s)
-
+            
     def test_error(self, data, all_arithmetic_operators):
         # invalid ops
-        op_name, exc = self._get_exception(data, all_arithmetic_operators)
-        with pytest.raises(AttributeError):
-            getattr(data, op_name)
+
+        op = all_arithmetic_operators
+        s = pd.Series(data)
+        ops = getattr(s, op)
+        opa = getattr(data, op)
+        
+        error=False
+        # invalid scalars
+        try:
+            ops('foo')
+            ops(pd.Timestamp('20180101'))
+            error = True
+        except:
+            pass
+
+        # invalid array-likes
+        try:
+            ops(pd.Series('foo', index=s.index))
+            error = True
+        except:
+            pass
+
+        # if op != '__rpow__':
+            # # TODO(extension)
+            # # rpow with a datetimelike coerces the integer array incorrectly
+            # with pytest.raises(TypeError):
+                # ops(pd.Series(pd.date_range('20180101', periods=len(s))))
+
+        # 2d
+        try:
+            opa(pd.DataFrame({'A': s}))
+            opa(np.arange(len(s)).reshape(-1, len(s)))
+            error = True
+        except:
+            pass
+        if error:
+            raise AssertionError
+
+
 
 
 
