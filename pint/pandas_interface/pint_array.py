@@ -49,6 +49,9 @@ import collections
 from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
 from .. util import (SharedRegistryObject)
+# from .._accessor import (DelegatedMethod, DelegatedScalarProperty, DelegatedProperty,
+                        # DelegatedScalarMethod)
+
 
 class PintType(ExtensionDtype):
     # I think this is the way to build a Quantity class and force it to be a
@@ -483,17 +486,112 @@ class PintDataFrameAccessor(object):
             for i,col in enumerate(df.columns)
         })        
         return df_new
+    def to_base_units(self):
+        obj=self._obj
+        df=self._obj
+        index = object.__getattribute__(obj, 'index')
+        # name = object.__getattribute__(obj, '_name')
+        return DataFrame({
+        col: df[col].pint.to_base_units() 
+        for col in df.columns
+        },index=index)
 
 @register_series_accessor("pint")
 class PintSeriesAccessor(object):
     def __init__(self, pandas_obj):
-        self._obj = pandas_obj
-
+        self._validate(pandas_obj)
+        self.pandas_obj = pandas_obj
+        self._data = pandas_obj.values
+        self._index = pandas_obj.index
+        self._name = pandas_obj.name
+    @staticmethod
     def _validate(obj):
         if not is_pint_type(obj):
             raise AttributeError("Cannot use 'pint' accessor on objects of "
                                  "dtype '{}'.".format(obj.dtype))
-                                 
+
+
+class Delegated:
+    # Descriptor for delegating attribute access to from
+    # a Series to an underlying array
+    to_series = True
+    def __init__(self, name):
+        self.name = name
+
+
+class DelegatedProperty(Delegated):
+    def __get__(self, obj, type=None):
+        index = object.__getattribute__(obj, '_index')
+        name = object.__getattribute__(obj, '_name')
+        result = getattr(object.__getattribute__(obj, '_data')._data, self.name)
+        if self.to_series:
+            return Series(PintArray(result), index, name=name)
+        else:
+            return result
+
+class DelegatedScalarProperty(DelegatedProperty):
+    to_series = False
+
+class DelegatedMethod(Delegated):
+    def __get__(self, obj, type=None):
+        index = object.__getattribute__(obj, '_index')
+        name = object.__getattribute__(obj, '_name')
+        method = getattr(object.__getattribute__(obj, '_data')._data, self.name)
+        def delegated_method(*args, **kwargs):
+            if self.to_series:
+                return Series(PintArray(method(*args, **kwargs)), index, name=name)
+            else:
+                return method(*args, **kwargs)
+        return delegated_method
+
+class DelegatedScalarMethod(DelegatedMethod):
+    to_series = False
+
+for attr in [
+'debug_used',
+'default_format',
+'dimensionality',
+'dimensionless',
+'force_ndarray',
+'shape',
+'u',
+'unitless',
+'units']:
+    setattr(PintSeriesAccessor,attr,DelegatedScalarProperty(attr))
+for attr in [
+'imag',
+'m',
+'magnitude',
+'real']:
+    setattr(PintSeriesAccessor,attr,DelegatedProperty(attr))
+    
+for attr in [
+'check',
+'compatible_units',
+'format_babel',
+'ito',
+'ito_base_units',
+'ito_reduced_units',
+'ito_root_units',
+'plus_minus',
+'put',
+'to_tuple',
+'tolist']:
+    setattr(PintSeriesAccessor,attr,DelegatedScalarMethod(attr))
+for attr in [
+'clip',
+'compare',
+'fill',
+'from_tuple',
+'m_as',
+'searchsorted',
+'to',
+'to_base_units',
+'to_compact',
+'to_reduced_units',
+'to_root_units',
+'to_timedelta']:
+    setattr(PintSeriesAccessor,attr,DelegatedMethod(attr))
 def is_pint_type(obj):
     t = getattr(obj, 'dtype', obj)
     try:
