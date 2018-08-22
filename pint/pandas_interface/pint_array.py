@@ -291,13 +291,12 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         # compute counts on the data with no nans
         data = self._data
         if dropna:
-            value_counts = Index(data).dropna().value_counts()
-        else:
-            value_counts = Index(data).dropna().value_counts()
-
-        array = value_counts.values
-        index = value_counts.index
-
+            data = data[~np.isnan(data.magnitude)]
+            
+        data_list = data.tolist()
+        index = list(set(data))
+        array = [data_list.count(item) for item in index]
+        
         return Series(array, index=index)
 
     def unique(self):

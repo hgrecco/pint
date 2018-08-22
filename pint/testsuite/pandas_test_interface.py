@@ -14,6 +14,7 @@ from pandas.core import ops
 import numpy as np
 import pint.pandas_interface as ppi
 import operator
+import warnings
 from .test_quantity import QuantityTestCase
 from ..errors import DimensionalityError
 from ..pandas_interface import PintArray
@@ -73,7 +74,12 @@ def data_missing_for_sorting():
 def na_cmp():
     """Binary operator for comparing NA values.
     """
-    return lambda x, y: bool(np.isnan(x)) & bool(np.isnan(y))
+    def f(x,y):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            res = bool(np.isnan(x)) & bool(np.isnan(y))
+        return res
+    return f
 
 
 @pytest.fixture
@@ -146,7 +152,20 @@ class TestInterface(base.BaseInterfaceTests):
     pass
 
 class TestMethods(base.BaseMethodsTests):
-    pass
+
+    @pytest.mark.parametrize('dropna', [True, False])
+    def test_value_counts(self, all_data, dropna):
+        all_data = all_data[:10]
+        if dropna:
+            other = all_data[~all_data.isna()]
+        else:
+            other = all_data
+
+        result = pd.Series(all_data).value_counts(dropna=dropna).sort_index()
+        expected = pd.Series(other).value_counts(
+            dropna=dropna).sort_index()
+
+        self.assert_series_equal(result, expected)
 
 class TestArithmeticOps(base.BaseArithmeticOpsTests):
     def check_opname(self, s, op_name, other, exc=None):
