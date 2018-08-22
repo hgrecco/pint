@@ -8,27 +8,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-# ok plan here:
-# - can run the tests with python setup.py test to make sure everything still passes
-# - can run the pandas interface tests with pytest -x --pdb pint/testsuite/test_pandas_interface.py
-
-# - I'll use PintArray as my base https://github.com/pandas-dev/pandas/blob/master/pandas/core/arrays/integer.py
-# - I'll add as few methods as possible to pass the pandas test
-# - each time I add a method I'll add it with NotImplementedError first to make sure I can see where it's being called
-# - then I can add the functionality bit by bit and keep some track of what is going on
-# - other resources I can use
-# - cyberpandas https://github.com/ContinuumIO/cyberpandas/blob/468644bcbdc9320a1a33b0df393d4fa4bef57dd7/cyberpandas/ip_array.py
-# - pandas ExtensionDtype source https://github.com/pandas-dev/pandas/blob/master/pandas/core/dtypes/base.py
-# - pandas ExtensionArray source https://github.com/pandas-dev/pandas/blob/master/pandas/core/arrays/base.py
-
-# thoughts now, type of PintType should be taken from the default, initialised
-# Registry. Then PintArray should use this by default, however if it's
-# initialised with a Quantity then it should overwrite PintType's type by the
-# Quantity's registry Quantity i.e. Quantity._REGISTRY.Quantity to make sure
-# the registry is as expected
-
 import copy
-
 import numpy as np
 from pandas.core import ops
 from pandas.core.arrays import ExtensionArray
@@ -44,14 +24,8 @@ from pandas.compat import u, set_function_name
 from pandas.io.formats.printing import (
     format_object_summary, format_object_attrs, default_pprint)
 from pandas import Series, DataFrame
-import collections 
-
 from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
-from .. util import (SharedRegistryObject)
-# from .._accessor import (DelegatedMethod, DelegatedScalarProperty, DelegatedProperty,
-                        # DelegatedScalarMethod)
-
 
 class PintType(ExtensionDtype):
     # I think this is the way to build a Quantity class and force it to be a
@@ -134,7 +108,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             * ndarray: A 1-d boolean NumPy ndarray the same length as 'self'
         Returns
         -------
-        item : scalar or ExtensionArray
+        item : scalar or PintArray
         """
         if is_integer(item):
             return self._data[item]
@@ -170,9 +144,12 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         res = u("%s(%s%s)") % (klass, data, prepr)
 
         return res
-
-    def __array__(self, dtype=None):
-        return self._data.astype(object)
+    
+    def __array__(self,dtype=None,copy=False):
+    # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
+        if dtype==None:
+            dtype=self._dtype
+        return np.array(self._data.magnitude, dtype = dtype, copy = copy)
 
     def isna(self):
         # type: () -> np.ndarray
@@ -182,7 +159,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         -------
         missing : np.array
         """
-        return np.isnan(self.data)
+        return np.isnan(self._data.magnitude)
 
     def take(self, indices, allow_fill=False, fill_value=None):
         # type: (Sequence[int], bool, Optional[Any]) -> PintArray
@@ -205,7 +182,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             the type, ``self.dtype.na_value``, is used.
         Returns
         -------
-        ExtensionArray
+        PintArray
         Raises
         ------
         IndexError
@@ -215,7 +192,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             and `allow_fill` is True.
         Notes
         -----
-        ExtensionArray.take is called by ``Series.__getitem__``, ``.loc``,
+        PintArray.take is called by ``Series.__getitem__``, ``.loc``,
         ``iloc``, when `indices` is a sequence of values. Additionally,
         it's called by :meth:`Series.reindex`, or any other method
         that causes realignemnt, with a `fill_value`.
@@ -327,7 +304,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
 
         Returns
         -------
-        uniques : ExtensionArray
+        uniques : PintArray
         """
         from pandas import unique
 
@@ -448,11 +425,6 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     @classmethod
     def _create_comparison_method(cls, op):
         return cls._create_method(op, coerce_to_dtype=False)
-    def __array__(self,dtype=None,copy=False):
-    # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
-        if dtype==None:
-            dtype=self._dtype
-        return np.array(self.data.magnitude, dtype = dtype, copy = copy)
 PintArray._add_arithmetic_ops()
 PintArray._add_comparison_ops()
 # register
