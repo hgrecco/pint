@@ -17,11 +17,10 @@ import operator
 from .test_quantity import QuantityTestCase
 from ..errors import DimensionalityError
 from ..pandas_interface import PintArray
-pytest_required = pytest.mark.skipif('pytest' not in sys.modules,
-                                      reason=("requires the 'right' pytest "
-                                              "and Pandas libraries"))
+
 
 ureg = pint.UnitRegistry()
+
 
 @pytest.fixture
 def dtype():
@@ -40,7 +39,6 @@ def data_missing():
 
 @pytest.fixture(params=['data', 'data_missing'])
 def all_data(request, data, data_missing):
-    """Parametrized fixture giving 'data' and 'data_missing'"""
     if request.param == 'data':
         return data
     elif request.param == 'data_missing':
@@ -50,34 +48,30 @@ def all_data(request, data, data_missing):
 @pytest.fixture
 def data_repeated(data):
     """Return different versions of data for count times"""
+    # no idea what I'm meant to put here, try just copying from https://github.com/pandas-dev/pandas/blob/master/pandas/tests/extension/integer/test_integer.py
     def gen(count):
         for _ in range(count):
-            yield data  # no idea what I'm meant to put here, try just copying from https://github.com/pandas-dev/pandas/blob/master/pandas/tests/extension/integer/test_integer.py
+            yield data
     yield gen
 
 
 @pytest.fixture
 def data_for_sorting():
     return ppi.PintArray([0.3, 10, -50])
-    # should probably get fancy and do something like
-    # [1 * ureg.meter, 3*ureg.meter, 10 * ureg.centimeter]
+    # should probably get more sophisticated and do something like
+    # [1 * ureg.meter, 3 * ureg.meter, 10 * ureg.centimeter]
 
 
 @pytest.fixture
 def data_missing_for_sorting():
     return ppi.PintArray([4, np.nan, -5])
-    # should probably get fancy and do something like
-    # [1 * ureg.meter, 3*ureg.meter, 10 * ureg.centimeter]
+    # should probably get more sophisticated and do something like
+    # [4 * ureg.meter, np.nan, 10 * ureg.centimeter]
 
 
 @pytest.fixture
 def na_cmp():
     """Binary operator for comparing NA values.
-
-    Should return a function of two arguments that returns
-    True if both arguments are (scalar) NA for your type.
-
-    By defult, uses ``operator.or``
     """
     return lambda x, y: bool(np.isnan(x)) & bool(np.isnan(y))
 
@@ -89,6 +83,8 @@ def na_value():
 
 @pytest.fixture
 def data_for_grouping():
+    # should probably get more sophisticated here and use units on all these
+    # quantities
     a = 1
     b = 2 ** 32 + 1
     c = 2 ** 32 + 10
@@ -96,7 +92,7 @@ def data_for_grouping():
         b, b, np.nan, np.nan, a, a, b, c
     ])
 
-# === missing from docs about what has to be included in tests ===
+# === missing from pandas extension docs about what has to be included in tests ===
 # copied from pandas/pandas/conftest.py
 _all_arithmetic_operators = ['__add__', '__radd__',
                              '__sub__', '__rsub__',
@@ -168,7 +164,7 @@ class TestArithmeticOps(base.BaseArithmeticOpsTests):
                 op(s, other)
 
     def _check_divmod_op(self, s, op, other, exc=None):
-        # divmod has multiple return values, so check separatly
+        # divmod has multiple return values, so check separately
         if exc is None:
             result_div, result_mod = op(s, other)
             if op is divmod:
@@ -180,38 +176,39 @@ class TestArithmeticOps(base.BaseArithmeticOpsTests):
         else:
             with pytest.raises(exc):
                 divmod(s, other)
+
     def _get_exception(self, data, op_name):
         if op_name in ["__pow__", "__rpow__"]:
             return op_name, DimensionalityError
         else:
             return op_name, None
-            
+
     def test_arith_series_with_scalar(self, data, all_arithmetic_operators):
         # series & scalar
         op_name, exc = self._get_exception(data, all_arithmetic_operators)
         s = pd.Series(data)
         self.check_opname(s, op_name, s.iloc[0], exc=exc)
 
-    @pytest.mark.xfail(run=False, reason="_reduce needs implementation")
+    @pytest.mark.xfail(run=True, reason="_reduce needs implementation")
     def test_arith_frame_with_scalar(self, data, all_arithmetic_operators):
         # frame & scalar
         op_name, exc = self._get_exception(data, all_arithmetic_operators)
         df = pd.DataFrame({'A': data})
         self.check_opname(df, op_name, data[0], exc=exc)
 
+    @pytest.mark.xfail(run=True, reason="s.combine does not accept arrays")
     def test_arith_series_with_array(self, data, all_arithmetic_operators):
-        # s.combine does not accept arrays
-        pass
-        ## ndarray & other series
-        #op_name, exc = self._get_exception(data, all_arithmetic_operators)
-        #s = pd.Series(data)
-        #self.check_opname(s, op_name, data, exc=exc)
+        # ndarray & other series
+        op_name, exc = self._get_exception(data, all_arithmetic_operators)
+        s = pd.Series(data)
+        self.check_opname(s, op_name, data, exc=exc)
 
+    # parameterise this to try divisor not equal to 1
     def test_divmod(self, data):
         s = pd.Series(data)
         self._check_divmod_op(s, divmod, 1*ureg.kg)
-        self._check_divmod_op( 1*ureg.kg, ops.rdivmod, s)
-            
+        self._check_divmod_op(1*ureg.kg, ops.rdivmod, s)
+
     def test_error(self, data, all_arithmetic_operators):
         # invalid ops
 
@@ -219,51 +216,40 @@ class TestArithmeticOps(base.BaseArithmeticOpsTests):
         s = pd.Series(data)
         ops = getattr(s, op)
         opa = getattr(data, op)
-        
-        error=False
+
         # invalid scalars
-        try:
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
+        with pytest.raises(Exception):
             ops('foo')
+
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
+        with pytest.raises(Exception):
             ops(pd.Timestamp('20180101'))
-            error = True
-        except:
-            pass
 
         # invalid array-likes
-        try:
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
+        with pytest.raises(Exception):
             ops(pd.Series('foo', index=s.index))
-            error = True
-        except:
-            pass
-
-        # if op != '__rpow__':
-            # # TODO(extension)
-            # # rpow with a datetimelike coerces the integer array incorrectly
-            # with pytest.raises(TypeError):
-                # ops(pd.Series(pd.date_range('20180101', periods=len(s))))
 
         # 2d
-        try:
+        with pytest.raises(KeyError):
             opa(pd.DataFrame({'A': s}))
+
+        with pytest.raises(ValueError):
             opa(np.arange(len(s)).reshape(-1, len(s)))
-            error = True
-        except:
-            pass
-        if error:
-            raise AssertionError
-
-
-
 
 
 class TestComparisonOps(base.BaseComparisonOpsTests):
     def _compare_other(self, s, data, op_name, other):
         op = self.get_op_from_name(op_name)
-        
+
         result = op(s,other)
         expected = op(s.values.data, other)
         assert (result==expected).all()
-        
+
     def test_compare_scalar(self, data, all_compare_operators):
         op_name = all_compare_operators
         s = pd.Series(data)
@@ -271,13 +257,13 @@ class TestComparisonOps(base.BaseComparisonOpsTests):
         self._compare_other(s, data, op_name, other)
 
     def test_compare_array(self, data, all_compare_operators):
-        # nb this compares an quantity containing array 
+        # nb this compares an quantity containing array
         # eg Q_([1,2],"m")
         op_name = all_compare_operators
         s = pd.Series(data)
         other = data.data
         self._compare_other(s, data, op_name, other)
-        
+
 
 class TestOpsUtil(base.BaseOpsUtil):
     pass
@@ -291,146 +277,7 @@ class TestReshaping(base.BaseReshapingTests):
 class TestSetitem(base.BaseSetitemTests):
     pass
 
-# all of the below tests are pretty messy
-# I'm bascially just fiddling around trying to write examples of
-# how things should work, which can then be
-# tidied up once we have a clearer idea of what we are trying to do
 
-# plan is to re-write tests as self-contained blocks that can be copied and
-# pasted (with addition of import substitutions and extracting function code)
-# to be used in e.g. documentation
-
-# simple examples:
-# - accessing data
-# - arithmetic with data
-# - initialising data
-
-"""
-Notes from working out how to do data access:
-
-I don't really understand what the `values` attributes is for on a pandas Series. Does it basically just use the `__repr__` method of the class when the values are printed and otherwise just uses the `__getitem__` method of the class to get items?
-
-I ask because initially, I thought that I should be able to do something like
-
->>> import pint
->>> from pint.pandas_interface import PintArray
->>> import numpy as np
->>> import pandas as pd
->>> from pandas.core.arrays import IntegerArray
->>> ureg = pint.UnitRegistry()
->>> abc = np.arange(0,100) * ureg.meter
->>> abc
-<Quantity([ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
- 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42
- 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65
- 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88
- 89 90 91 92 93 94 95 96 97 98 99], 'meter')>
->>> ser2 = pd.Series(PintArray(abc))
->>> ser2.values
-<pint.pandas_interface.pint_array.PintArray object at 0x1154f84a8>
-
-and get back my original 'pint array' (for want of a better word), in
-this case `abc`. However that wasn't the case. Although I could do
-
->>> ser2.values[23]
-
->>> ser2.values[23]
-<Quantity(23, 'meter')>
-
-which does make sense.
-
-So then I worked out that this was simply an issue with  `__repr__`
-
-To work this out, I fiddled around. For example,
-
->>> ser2.values.data
-<Quantity([ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
- 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42
- 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65
- 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88
- 89 90 91 92 93 94 95 96 97 98 99], 'meter')>
-
-from which I got a representation more like what I'd hoped to get
-for `ser2.values` (although obviously the datatype changed a bit). To
-get an example of the behaviour I wanted, I looked at
-`IntergerArray`.
-
->>> intarr = IntegerArray(list(range(100)))
->>> intser = pd.Series(intarr)
->>> intser.values
-IntegerArray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-              16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-              30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-              44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
-              58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,
-              72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
-              86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99],
-             dtype='Int64')
->>> intser.values._data
-array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
-       16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-       32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-       48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-       64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
-       80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
-       96, 97, 98, 99])
-
-as well as a plain Series
-
->>> pdser = pd.Series(range(0,100))
->>> pdser.values
-array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
-       16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-       32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-       48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-       64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
-       80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
-       96, 97, 98, 99])
-
-I also stepped through (with a debugger) what happens when you call
-`pdser.values` and saw that it was actually going through the `__repr__`
-method, at least implicitly.
-"""
-
-"""
-Some thoughts on whether `Pint arrays' (for want of a better word) could ever
-be used directly with pandas rather than having to go through our `PintArray`
-which subclasses `ExtensionArray`.
-
-When pandas is doing its type checking, it goes through a bunch of
-steps and then has a function called `is_extension_array_dtype` in
-pandas/pandas/core/dtypes/common.py. This function checks the array
-dtype with the line
-`dtype = getattr(arr_or_dtype, 'dtype', arr_or_dtype)`.
-The problem with this is that, for a pint array, dtype is the same as
-for the underlying numpy array e.g.
-
->>> import pint
->>> import numpy as np
->>> ureg = pint.UnitRegistry()
->>> abc = np.arange(0,100) * ureg.meter
->>> abc
-<Quantity([ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
-            20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38
-            39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57
-            58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76
-            77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95
-            96 97 98 99], 'meter')>
->>> abc.dtype
-dtype('int64')
->>> type(abc)  # FYI
-<class 'pint.quantity.build_quantity_class.<locals>.Quantity'>
-
-Hence I don't think it's possible to simply register 'pint arrays'
-in pandas, we have to use this extension array. The awkward thing with
-that is that we have to store the actual data in another attribute of
-the underlying class. Hence things like
-
->>> ser = pd.Series(abc)
-
-can never work directly which is kind of sad... You have to always go
-through a `PintArray`.
-"""
 class TestUserInterface(object):
     def test_get_underlying_data(self, data):
         ser = pd.Series(data)
@@ -447,81 +294,97 @@ class TestUserInterface(object):
         # fails with plain array
         # works with PintArray
         strt = np.arange(100) * ureg.newton
+
+        # it is sad this doesn't work
+        with pytest.raises(ValueError):
+            ser_fail = pd.Series(strt, dtype=ppi.PintType())
+            assert all(ser_fail.values == strt)
+
         # This needs to be a list of scalar quantities to work :<
-        # ser = pd.Series(strt, dtype=ppi.PintType())
         ser = pd.Series([q for q in strt], dtype=ppi.PintType())
         assert all(ser.values == strt)
-        
-        
-arithmetic_ops=[operator.add ,
- operator.sub ,
- operator.mul ,
- operator.truediv ,
- operator.floordiv ,
- operator.pow]
- 
-comparative_ops=     [operator.eq ,
-     operator.le ,
-     operator.lt ,
-     operator.ge ,
-     operator.gt]
+
+
+arithmetic_ops = [
+    operator.add,
+    operator.sub,
+    operator.mul,
+    operator.truediv,
+    operator.floordiv,
+    operator.pow,
+]
+
+comparative_ops = [
+    operator.eq,
+    operator.le,
+    operator.lt,
+    operator.ge,
+    operator.gt,
+]
+
 class TestPintArrayQuantity(QuantityTestCase):
     FORCE_NDARRAY = True
-    
+
     def test_pintarray_creation(self):
-        x=self.Q_([1,2,3],"m")
-        ys=[
+        x = self.Q_([1, 2, 3],"m")
+        ys = [
             PintArray(x),
             PintArray._from_sequence([item for item in x])
         ]
         for y in ys:
             self.assertQuantityAlmostEqual(x,y.data)
-    def test_pintarray_arithmetics_compatives(self):
+
+    def test_pintarray_operations(self):
         # Perform operations with Quantities and PintArrays
         # The resulting Quantity and PintArray.Data should be the same
-        # a op b = c
-        def test_op(a_P,a_PA,b_, coerce=True):
+        # a op b == c
+        def test_op(a_pint, a_pint_array, b_, coerce=True):
             try:
-                c_P=op(a_P, b_)
-            except Exception as e:
-                exception=e
-            if not "exception" in locals():
+                result_pint = op(a_pint, b_)
                 if coerce:
                     # a PintArray is returned from arithmetics, so need the data
-                    c_PA=op(a_PA, b_).data
+                    c_pint_array = op(a_pint_array, b_).data
                 else:
                     # a boolean array is returned from comparatives
-                    c_PA=op(a_PA, b_)
-                self.assertQuantityAlmostEqual(c_P,c_PA)
-            else:
-                self.assertRaises(type(exception), op,a_PA, b_)
+                    c_pint_array = op(a_pint_array, b_)
 
-        a_Ps= [ self.Q_([3,4],"m"),
-                self.Q_([3,4],"")]
-        a_PAs=[PintArray(q) for q in a_Ps]
+                self.assertQuantityAlmostEqual(result_pint, c_pint_array)
 
-        bs=[2,
-            self.Q_(3,"m"),
-            [1.,3.],
-            [3.3,4.4],
-            self.Q_([6,6],"m"),
-            self.Q_([7.,np.nan]),
-            # PintArray(self.Q_([6,6],"m")),
-            # PintArray(self.Q_([7.,np.nan]))
+            except Exception as caught_exception:
+                self.assertRaises(type(caught_exception), op, a_pint_array, b_)
+
+
+        a_pints = [
+            self.Q_([3, 4], "m"),
+            self.Q_([3, 4], ""),
         ]
-        for a_P, a_PA in zip(a_Ps, a_PAs):
+
+        a_pint_arrays = [PintArray(q) for q in a_pints]
+
+        bs = [
+            2,
+            self.Q_(3, "m"),
+            [1., 3.],
+            [3.3, 4.4],
+            self.Q_([6, 6], "m"),
+            self.Q_([7., np.nan]),
+            # PintArray(self.Q_([6,6],"m")),
+            # PintArray(self.Q_([7.,np.nan])),
+        ]
+
+        for a_pint, a_pint_array in zip(a_pints, a_pint_arrays):
             for b in bs:
                 for op in arithmetic_ops:
-                    test_op(a_P,a_PA,b)
+                    test_op(a_pint, a_pint_array, b)
                 for op in comparative_ops:
-                    test_op(a_P,a_PA,b,coerce=False)
-                
+                    test_op(a_pint, a_pint_array, b, coerce=False)
+
     def test_mismatched_dimensions(self):
         x_and_ys=[
-        (PintArray(self.Q_([5],"m")), [1,1] ),
-        (PintArray(self.Q_([5,5,5],"m")), [1,1] ),
-        (PintArray(self.Q_([5,5],"m")), [1] ),
+            (PintArray(self.Q_([5], "m")), [1, 1]),
+            (PintArray(self.Q_([5, 5, 5], "m")), [1, 1]),
+            (PintArray(self.Q_([5, 5], "m")), [1]),
         ]
         for x, y in x_and_ys:
-            for op in comparative_ops+arithmetic_ops:
+            for op in comparative_ops + arithmetic_ops:
                 self.assertRaises(ValueError, op, x, y)
