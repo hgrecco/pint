@@ -24,6 +24,7 @@ from pandas.compat import u, set_function_name
 from pandas.io.formats.printing import (
     format_object_summary, format_object_attrs, default_pprint)
 from pandas import Series, DataFrame
+import warnings
 from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
 
@@ -398,8 +399,11 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             rvalues = convert_values(other)
             # Pint quantities may only be exponented by single values, not arrays.
             # Reduce single value arrays to single value to allow power ops
-            if len(set(np.atleast_1d(rvalues)))==1:
-                rvalues=rvalues[0]
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                if len(set(np.atleast_1d(rvalues)))==1:
+                    rvalues=rvalues[0]
             # If the operator is not defined for the underlying objects,
             # a TypeError should be raised
             res = op(lvalues,rvalues)
