@@ -218,24 +218,21 @@ class TestArithmeticOps(base.BaseArithmeticOpsTests):
         opa = getattr(data, op)
 
         # invalid scalars
-        # would be nice to make this more specific
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
         with pytest.raises(Exception):
             ops('foo')
 
-        # would be nice to make this more specific
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
         with pytest.raises(Exception):
             ops(pd.Timestamp('20180101'))
 
         # invalid array-likes
-        # would be nice to make this more specific
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
         with pytest.raises(Exception):
             ops(pd.Series('foo', index=s.index))
-
-        # ZN: not clear what this is for
-        # if op != '__rpow__':
-            # # TODO(extension)
-            # with pytest.raises(TypeError):
-                # ops(pd.Series(pd.date_range('20180101', periods=len(s))))
 
         # 2d
         with pytest.raises(KeyError):
@@ -337,7 +334,7 @@ class TestPintArrayQuantity(QuantityTestCase):
         for y in ys:
             self.assertQuantityAlmostEqual(x,y.data)
 
-    def test_pintarray_arithmetics_compatibility(self):
+    def test_pintarray_operations(self):
         # Perform operations with Quantities and PintArrays
         # The resulting Quantity and PintArray.Data should be the same
         # a op b == c
