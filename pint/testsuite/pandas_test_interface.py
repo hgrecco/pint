@@ -70,16 +70,21 @@ def data_missing_for_sorting():
     # [4 * ureg.meter, np.nan, 10 * ureg.centimeter]
 
 
+# @pytest.fixture
+# def na_cmp(x,y):
+    # """Binary operator for comparing NA values.
+    # """
+    # def f():
+        # with warnings.catch_warnings():
+            # warnings.simplefilter("ignore")
+            # res = bool(np.isnan(x)) & bool(np.isnan(y))
+        # return res
+    # return f
 @pytest.fixture
 def na_cmp():
     """Binary operator for comparing NA values.
     """
-    def f(x,y):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            res = bool(np.isnan(x)) & bool(np.isnan(y))
-        return res
-    return f
+    return lambda x, y: bool(np.isnan(x)) & bool(np.isnan(y))
 
 
 @pytest.fixture
@@ -134,7 +139,9 @@ def all_compare_operators(request):
 # =================================================================
 
 class TestCasting(base.BaseCastingTests):
-    pass
+    def test_astype_str(self, data):
+        result = pd.Series(data[:5]).astype(str)
+        expected = pd.Series(data[:5].astype(str))
 
 class TestConstructors(base.BaseConstructorsTests):
     pass
