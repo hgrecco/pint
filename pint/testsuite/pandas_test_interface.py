@@ -301,8 +301,24 @@ class TestReshaping(base.BaseReshapingTests):
     pass
 
 class TestSetitem(base.BaseSetitemTests):
-    pass
+    @pytest.mark.parametrize('setter', ['loc', None])
+    @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
+    # Pandas performs as hasattr(__array__), which triggers the warning
+    # Debugging it does not pass through a PintArray, so
+    # I think this needs changing in pint quantity 
+    def test_setitem_mask_broadcast(self, data, setter):
+        ser = pd.Series(data)
+        mask = np.zeros(len(data), dtype=bool)
+        mask[:2] = True
 
+        if setter:   # loc
+            target = getattr(ser, setter)
+        else:  # __setitem__
+            target = ser
+
+        operator.setitem(target, mask, data[10])
+        assert ser[0] == data[10]
+        assert ser[1] == data[10]
 
 class TestUserInterface(object):
     def test_get_underlying_data(self, data):
