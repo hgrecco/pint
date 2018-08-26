@@ -160,6 +160,8 @@ class TestInterface(base.BaseInterfaceTests):
 
 class TestMethods(base.BaseMethodsTests):
 
+    @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
+    # See test_setitem_mask_broadcast note
     @pytest.mark.parametrize('dropna', [True, False])
     def test_value_counts(self, all_data, dropna):
         all_data = all_data[:10]
@@ -173,6 +175,19 @@ class TestMethods(base.BaseMethodsTests):
             dropna=dropna).sort_index()
 
         self.assert_series_equal(result, expected)
+    
+    @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
+    # See test_setitem_mask_broadcast note
+    @pytest.mark.parametrize('box', [pd.Series, lambda x: x])
+    @pytest.mark.parametrize('method', [lambda x: x.unique(), pd.unique])
+    def test_unique(self, data, box, method):
+        duplicated = box(data._from_sequence([data[0], data[0]]))
+
+        result = method(duplicated)
+
+        assert len(result) == 1
+        assert isinstance(result, type(data))
+        assert result[0] == duplicated[0]
 
 class TestArithmeticOps(base.BaseArithmeticOpsTests):
     def check_opname(self, s, op_name, other, exc=None):
@@ -303,9 +318,10 @@ class TestReshaping(base.BaseReshapingTests):
 class TestSetitem(base.BaseSetitemTests):
     @pytest.mark.parametrize('setter', ['loc', None])
     @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
-    # Pandas performs as hasattr(__array__), which triggers the warning
+    # Pandas performs a hasattr(__array__), which triggers the warning
     # Debugging it does not pass through a PintArray, so
     # I think this needs changing in pint quantity 
+    # eg s[[True]*len(s)]=Q_(1,"m")
     def test_setitem_mask_broadcast(self, data, setter):
         ser = pd.Series(data)
         mask = np.zeros(len(data), dtype=bool)
