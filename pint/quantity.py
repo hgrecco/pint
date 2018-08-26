@@ -1293,7 +1293,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def shape(self, value):
         self._magnitude.shape = value
 
-    def searchsorted(self, v, side='left'):
+    def searchsorted(self, v, side='left', sorter=None):
         if isinstance(v, self.__class__):
             v = v.to(self).magnitude
         elif self.dimensionless:

@@ -113,6 +113,12 @@ class TestNumpyMethods(QuantityTestCase):
         q = self.q.flatten()
         self.assertRaises(ValueError, q.searchsorted, [1.5, 2.5])
 
+    def test_searchsorted_numpy_func(self):
+        """Test searchsorted as numpy function."""
+        q = self.q.flatten()
+        np.testing.assert_array_equal(np.searchsorted(q, [1.5, 2.5] * self.ureg.m),
+                                      [1, 2])
+
     def test_nonzero(self):
         q = [1, 0, 5, 6, 0, 9] * self.ureg.m
         np.testing.assert_array_equal(q.nonzero()[0], [0, 2, 3, 5])
