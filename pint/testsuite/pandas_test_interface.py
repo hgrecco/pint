@@ -30,7 +30,7 @@ def dtype():
 
 @pytest.fixture
 def data():
-    return ppi.PintArray(np.arange(100) * ureg.kilogram)
+    return ppi.PintArray( np.arange(start=1,stop=101) * ureg.kilogram)
 
 
 @pytest.fixture

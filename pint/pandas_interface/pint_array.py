@@ -149,8 +149,10 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     def __array__(self,dtype=None,copy=False):
     # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
         if dtype==None:
-            dtype=self._dtype
-        return np.array(self._data.magnitude, dtype = dtype, copy = copy)
+            dtype=object
+        if dtype == object:
+            return np.array(list(self._data), dtype = dtype, copy = copy)
+        return np.array(self._data, dtype = dtype, copy = copy)
 
     def isna(self):
         # type: () -> np.ndarray
