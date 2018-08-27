@@ -3,8 +3,9 @@
     pint.pandas_interface.pint_array
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # I'm happy with both of these but need to check with Pint Authors...
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
+    # I'm happy with both of these as long as Andrew and Zebedee are added on
+    # but need to check with Pint Authors...
+    :copyright: 2018 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -25,6 +26,8 @@ from pandas.io.formats.printing import (
     format_object_summary, format_object_attrs, default_pprint)
 from pandas import Series, DataFrame
 import warnings
+import collections
+
 from ..quantity import build_quantity_class, _Quantity
 from .. import _DEFAULT_REGISTRY
 
@@ -60,7 +63,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             self._dtype.type = type(values)
             assert self._dtype.type._REGISTRY == values._REGISTRY
         self._data = self._coerce_to_pint_array(values, dtype=dtype, copy=copy)
-        
+
     def _coerce_to_pint_array(self, values, dtype=None, copy=False):
         if isinstance(values, self._dtype.type):
             return values
@@ -342,8 +345,8 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         used for interacting with our indexers.
         """
         return np.array(self)
-    
-    
+
+
 
     @classmethod
     def _create_method(cls, op, coerce_to_dtype=True):
@@ -411,7 +414,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             # If the operator is not defined for the underlying objects,
             # a TypeError should be raised
             res = op(lvalues,rvalues)
-            
+
             if op.__name__ == 'divmod':
                 return cls(res[0]),cls(res[1])
 
@@ -443,36 +446,37 @@ class PintDataFrameAccessor(object):
     def __init__(self, pandas_obj):
         self._obj = pandas_obj
 
-    def quantify(self,ureg,level=-1):
-        df=self._obj
-        Q_=ureg.Quantity
-        df_columns=df.columns.to_frame()
-        unit_col_name=df_columns.columns[level]
-        units=df_columns[unit_col_name]
-        df_columns=df_columns.drop(columns=unit_col_name)
+    def quantify(self, ureg, level=-1):
+        df = self._obj
+        Q_ = ureg.Quantity
+        df_columns = df.columns.to_frame()
+        unit_col_name = df_columns.columns[level]
+        units = df_columns[unit_col_name]
+        df_columns = df_columns.drop(columns=unit_col_name)
         df_columns.values
-        df_new=DataFrame({ i : PintArray(Q_(df.values[:,i], unit))
-            for i,unit in enumerate(units.values)
+        df_new = DataFrame({i: PintArray(Q_(df.values[:, i], unit))
+            for i, unit in enumerate(units.values)
         })
-        df_new.columns=df_columns.index.droplevel(unit_col_name)
-        df_new.index=df.index
+        df_new.columns = df_columns.index.droplevel(unit_col_name)
+        df_new.index = df.index
         return df_new
-    
-    def dequantify(self,):
+
+    def dequantify(self):
         df=self._obj
         df_columns=df.columns.to_frame()
         df_columns['units']=[str(df[col].values.data.units) for col in df.columns]
         df_new=DataFrame({ tuple(df_columns.iloc[i]) : df[col].values.data.magnitude
             for i,col in enumerate(df.columns)
-        })        
+        })
         return df_new
+
     def to_base_units(self):
         obj=self._obj
         df=self._obj
         index = object.__getattribute__(obj, 'index')
         # name = object.__getattribute__(obj, '_name')
         return DataFrame({
-        col: df[col].pint.to_base_units() 
+        col: df[col].pint.to_base_units()
         for col in df.columns
         },index=index)
 
@@ -544,7 +548,7 @@ for attr in [
 'magnitude',
 'real']:
     setattr(PintSeriesAccessor,attr,DelegatedProperty(attr))
-    
+
 for attr in [
 'check',
 'compatible_units',

@@ -15,6 +15,8 @@ import operator
 
 import token as tokenlib
 
+from .errors import DefinitionSyntaxError
+
 # For controlling order of operations
 _OP_PRIORITY = {
     '**': 3,
@@ -78,14 +80,14 @@ class EvalTreeNode(object):
             # binary or implicit operator
             op_text = self.operator[1] if self.operator else ''
             if op_text not in bin_op:
-                raise Exception('missing binary operator "%s"' % op_text)
+                raise DefinitionSyntaxError('missing binary operator "%s"' % op_text)
             left = self.left.evaluate(define_op, bin_op, un_op)
             return bin_op[op_text](left, self.right.evaluate(define_op, bin_op, un_op))
         elif self.operator:
             # unary operator
             op_text = self.operator[1]
             if op_text not in un_op:
-                raise Exception('missing unary operator "%s"' % op_text)
+                raise DefinitionSyntaxError('missing unary operator "%s"' % op_text)
             return un_op[op_text](self.left.evaluate(define_op, bin_op, un_op))
         else:
             # single value
@@ -125,7 +127,7 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
         if token_type == tokenlib.OP:
             if token_text == ')':
                 if prev_op is None:
-                    raise Exception('unopened parentheses in tokens: %s' % current_token)
+                    raise DefinitionSyntaxError('unopened parentheses in tokens: %s' % current_token)
                 elif prev_op == '(':
                     # close parenthetical group
                     return result, index
@@ -136,7 +138,7 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
                 # gather parenthetical group
                 right, index = build_eval_tree(tokens, op_priority, index+1, 0, token_text)
                 if not tokens[index][1] == ')':
-                    raise Exception('weird exit from parentheses')
+                    raise DefinitionSyntaxError('weird exit from parentheses')
                 if result:
                     # implicit op with a parenthetical group, i.e. "3 (kg ** 2)"
                     result = EvalTreeNode(left=result, right=right)
@@ -174,7 +176,7 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
         
         if tokens[index][0] == tokenlib.ENDMARKER:
             if prev_op == '(':
-                raise Exception('unclosed parentheses in tokens')
+                raise DefinitionSyntaxError('unclosed parentheses in tokens')
             if depth > 0 or prev_op:
                 # have to close recursion
                 return result, index
@@ -184,7 +186,7 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
             
         if index + 1 >= len(tokens):
             # should hit ENDMARKER before this ever happens
-            raise Exception('unexpected end to tokens')
-        
+            raise DefinitionSyntaxError('unexpected end to tokens')
+
         index += 1
 
