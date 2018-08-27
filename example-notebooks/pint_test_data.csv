@@ -1,0 +1,6 @@
+speed,mech power,torque,rail pressure,fuel flow rate,fluid power
+rpm,kW,N m,bar,l/min,kW
+1000,NaN,10,1000,10,NaN
+1100,NaN,10,1000000000000,10,NaN
+1200,NaN,10,1000,10,NaN
+1200,NaN,10,1000,10,NaN
