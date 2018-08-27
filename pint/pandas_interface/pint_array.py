@@ -425,9 +425,6 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             rvalues = convert_values(other)
             # Pint quantities may only be exponented by single values, not arrays.
             # Reduce single value arrays to single value to allow power ops
-
-            # with warnings.catch_warnings():
-                # warnings.simplefilter("ignore")
             if isinstance(rvalues,_Quantity):
                 if len(set(np.array(rvalues.data)))==1:
                     rvalues=rvalues[0]
