@@ -153,9 +153,12 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
         if dtype==None:
             dtype=object
+        if type(dtype)== str:
+            dtype = getattr(np, dtype)
         if dtype == object:
             return np.array(list(self._data), dtype = dtype, copy = copy)
-        return np.array(self._data, dtype = dtype, copy = copy)
+        list_of_converteds= [ dtype(item) for item in self._data]
+        return np.array(list_of_converteds)
 
     def isna(self):
         # type: () -> np.ndarray
@@ -166,6 +169,25 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         missing : np.array
         """
         return np.isnan(self._data.magnitude)
+        
+    def astype(self, dtype, copy=True):
+        """Cast to a NumPy array with 'dtype'.
+
+        Parameters
+        ----------
+        dtype : str or dtype
+            Typecode or data-type to which the array is cast.
+        copy : bool, default True
+            Whether to copy the data, even if not necessary. If False,
+            a copy is made only if the old dtype does not match the
+            new dtype.
+
+        Returns
+        -------
+        array : ndarray
+            NumPy ndarray with 'dtype' for its dtype.
+        """
+        return self.__array__(dtype,copy)
 
     def take(self, indices, allow_fill=False, fill_value=None):
         # type: (Sequence[int], bool, Optional[Any]) -> PintArray

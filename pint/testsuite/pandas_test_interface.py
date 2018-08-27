@@ -142,6 +142,8 @@ class TestCasting(base.BaseCastingTests):
     def test_astype_str(self, data):
         result = pd.Series(data[:5]).astype(str)
         expected = pd.Series(data[:5].astype(str))
+        self.assert_series_equal(result, expected)
+
 
 class TestConstructors(base.BaseConstructorsTests):
     pass
@@ -393,6 +395,7 @@ class TestPintArrayQuantity(QuantityTestCase):
             self.assertQuantityAlmostEqual(x,y.data)
 
     
+    @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def test_pintarray_operations(self):
         # Perform operations with Quantities and PintArrays
