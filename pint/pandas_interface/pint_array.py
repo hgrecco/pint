@@ -148,16 +148,21 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         res = u("%s(%s%s)") % (klass, data, prepr)
 
         return res
-    
-    def __array__(self,dtype=None,copy=False):
-    # this is necessary to prevent for some pandas operations, eg transpose. Units will be lost though
-        if dtype==None:
+
+    def __array__(self, dtype=None, copy=False):
+    # this is necessary for some pandas operations, eg transpose
+    # note, units will be lost
+        if dtype == None:
             dtype=object
-        if type(dtype)== str:
+        if type(dtype) == str:
             dtype = getattr(np, dtype)
         if dtype == object:
             return np.array(list(self._data), dtype = dtype, copy = copy)
-        list_of_converteds= [ dtype(item) for item in self._data]
+        if not isinstance(dtype, np.dtype):
+            list_of_converteds = [dtype(item) for item in self._data]
+        else:
+            list_of_converteds = [dtype.type(item) for item in self._data]
+
         return np.array(list_of_converteds)
 
     def isna(self):
@@ -169,7 +174,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         missing : np.array
         """
         return np.isnan(self._data.magnitude)
-        
+
     def astype(self, dtype, copy=True):
         """Cast to a NumPy array with 'dtype'.
 
@@ -275,10 +280,14 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
     def _concat_same_type(cls, to_concat):
         # taken from Metpy, would be great to somehow include in pint...
         for a in to_concat:
+            if all(np.isnan(a._data)):
+                continue
             units = a._data.units
 
         data = []
         for a in to_concat:
+            if (all(np.isnan(a._data))) and (a._data.units != units):
+                a = a*units
             mag_common_unit = a._data.to(units).magnitude
             data.append(np.atleast_1d(mag_common_unit))
 
@@ -319,11 +328,11 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         data = self._data
         if dropna:
             data = data[~np.isnan(data.magnitude)]
-            
+
         data_list = data.tolist()
         index = list(set(data))
         array = [data_list.count(item) for item in index]
-        
+
         return Series(array, index=index)
 
     def unique(self):
