@@ -30,7 +30,6 @@ from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    fix_str_conversions)
 from pint.compat import Loc
 
-
 def _eq(first, second, check_all):
     """Comparison of scalars and arrays
     """
@@ -61,6 +60,19 @@ def ireduce_dimensions(f):
         result = f(self, *args, **kwargs)
         if result._REGISTRY.auto_reduce_dimensions:
             result.ito_reduced_units()
+        return result
+    return wrapped
+
+def check_implemented(f):
+    def wrapped(self, *args, **kwargs):
+        other=args[0]
+        if other.__class__.__name__ in ["PintArray", "Series"]:
+            return NotImplemented
+        # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
+        # and expects Quantity * array[Quantity] should return NotImplemented
+        elif type(other)==list and isinstance(other[0], type(self)):
+            return NotImplemented
+        result = f(self, *args, **kwargs)
         return result
     return wrapped
 
@@ -120,8 +132,18 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         inst.__used = False
         inst.__handling = None
+        # Only instances where the magnitude is iterable should have __iter__()
+        if hasattr(inst._magnitude,"__iter__"):
+            inst.__iter__ = cls._iter
         return inst
-
+    
+    def _iter(self):
+        """
+        Will be become __iter__() for instances with iterable magnitudes
+        """
+        # # Allow exception to propagate in case of non-iterable magnitude
+        it_mag = iter(self.magnitude)
+        return iter((self.__class__(mag, self._units) for mag in it_mag))
     @property
     def debug_used(self):
         return self.__used
@@ -609,7 +631,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             raise OffsetUnitCalculusError(self._units, other._units)
 
         return self
-
+    
+    @check_implemented
     def _add_sub(self, other, op):
         """Perform addition or subtraction operation and return the result.
 
@@ -800,6 +823,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         return self
 
+    @check_implemented
     @ireduce_dimensions
     def _mul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation and return the result.
@@ -908,6 +932,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         self._units = UnitsContainer({})
         return self
 
+    @check_implemented
     def __floordiv__(self, other):
         if self._check(other):
             magnitude = self._magnitude // other.to(self._units)._magnitude
@@ -917,6 +942,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             raise DimensionalityError(self._units, 'dimensionless')
         return self.__class__(magnitude, UnitsContainer({}))
 
+    @check_implemented
     def __rfloordiv__(self, other):
         if self._check(other):
             magnitude = other._magnitude // self.to(other._units)._magnitude
@@ -932,12 +958,14 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         self._magnitude %= other.to(self._units)._magnitude
         return self
 
+    @check_implemented
     def __mod__(self, other):
         if not self._check(other):
             other = self.__class__(other, UnitsContainer({}))
         magnitude = self._magnitude % other.to(self._units)._magnitude
         return self.__class__(magnitude, self._units)
 
+    @check_implemented
     def __rmod__(self, other):
         if self._check(other):
             magnitude = other._magnitude % self.to(other._units)._magnitude
@@ -948,6 +976,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         else:
             raise DimensionalityError(self._units, 'dimensionless')
 
+    @check_implemented
     def __divmod__(self, other):
         if not self._check(other):
             other = self.__class__(other, UnitsContainer({}))
@@ -955,6 +984,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return (self.__class__(q, UnitsContainer({})),
                 self.__class__(r, self._units))
 
+    @check_implemented
     def __rdivmod__(self, other):
         if self._check(other):
             q, r = divmod(other._magnitude, self.to(other._units)._magnitude)
@@ -1018,6 +1048,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             self._magnitude **= _to_magnitude(other, self.force_ndarray)
             return self
 
+    @check_implemented
     def __pow__(self, other):
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
@@ -1058,13 +1089,14 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 if getattr(other, 'dimensionless', False):
                     units = new_self._units ** other.to_root_units().magnitude
                 elif not getattr(other, 'dimensionless', True):
-                    raise DimensionalityError(self._units, 'dimensionless')
+                    raise DimensionalityError(other._units, 'dimensionless')
                 else:
                     units = new_self._units ** other
 
             magnitude = new_self._magnitude ** _to_magnitude(other, self.force_ndarray)
             return self.__class__(magnitude, units)
 
+    @check_implemented
     def __rpow__(self, other):
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
@@ -1330,11 +1362,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def __len__(self):
         return len(self._magnitude)
-
-    def __iter__(self):
-        # Allow exception to propagate in case of non-iterable magnitude
-        it_mag = iter(self.magnitude)
-        return iter((self.__class__(mag, self._units) for mag in it_mag))
 
     def __getattr__(self, item):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
@@ -1607,7 +1634,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def to_timedelta(self):
         return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
-
+    
+        
 
 def build_quantity_class(registry, force_ndarray=False):
 

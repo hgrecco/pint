@@ -14,8 +14,8 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Python Versions
 
-.. image:: https://travis-ci.org/hgrecco/pint.svg?branch=master
-    :target: https://travis-ci.org/hgrecco/pint
+.. image:: https://travis-ci.org/znicholls/pint.svg?branch=master
+    :target: https://travis-ci.org/znicholls/pint
     :alt: CI
 
 .. image:: https://coveralls.io/repos/github/hgrecco/pint/badge.svg?branch=master

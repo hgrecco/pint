@@ -122,7 +122,10 @@ class QuantityTestCase(BaseTestCase):
 def testsuite():
     """A testsuite that has all the pint tests.
     """
-    suite = unittest.TestLoader().discover(os.path.dirname(__file__))
+    suite = unittest.TestLoader().discover(
+        os.path.dirname(__file__),
+        pattern='test*.py',
+    )
     from pint.compat import HAS_NUMPY, HAS_UNCERTAINTIES
 
     # TESTING THE DOCUMENTATION requires pyyaml, serialize, numpy and uncertainties
