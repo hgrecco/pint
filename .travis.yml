@@ -50,7 +50,7 @@ install:
   - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install babel serialize pyyaml; fi
   # this is superslow but suck it up until updates to pandas are made
-  - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest; pip install git+https://github.com/znicholls/pandas.git; fi
+  - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest; pip install git+https://github.com/pandas-dev/pandas.git; fi
   - pip install coveralls
 
 script:
