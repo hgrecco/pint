@@ -9,6 +9,7 @@ build/
 dist/
 MANIFEST
 .tox
+*pytest_cache*
 
 # WebDAV file system cache files
 .DAV/
@@ -18,3 +19,9 @@ tags
 
 test/
 .coverage*
+
+# notebook stuff
+*.ipynb_checkpoints*
+
+# test csv which should be user generated
+notebooks/pandas_test.csv

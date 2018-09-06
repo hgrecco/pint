@@ -123,3 +123,16 @@ except ImportError:
 
 if not HAS_PROPER_BABEL:
     Loc = babel_units = None
+
+try:
+    import pandas as pd
+    HAS_PANDAS = True
+    HAS_PROPER_PANDAS = hasattr(pd.core.arrays.base, "ExtensionOpsMixin")
+except ImportError:
+    HAS_PROPER_PANDAS = HAS_PANDAS = False
+
+try:
+    import pytest
+    HAS_PYTEST = True
+except ImportError:
+    HAS_PYTEST = False
