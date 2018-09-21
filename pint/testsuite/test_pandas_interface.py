@@ -443,7 +443,6 @@ else:
                 "test-data", "pandas_test.csv"
             )
 
-
             df = pd.read_csv(test_csv, header=[0, 1])
             df.columns = pd.MultiIndex.from_arrays(
                 [
@@ -462,9 +461,27 @@ else:
 
             )
 
-            df_ = df.pint.quantify(ureg, level=-1).pint.dequantify()
 
-            pd.testing.assert_frame_equal(df, df_)
+            expected = df.copy()
+
+            # we expect the result to come back with pint names, not input
+            # names
+            def get_pint_value(in_str):
+                return str(ureg.Quantity(1, in_str).units)
+
+            units_level = [
+                i for i, name in enumerate(df.columns.names) if name == 'unit'
+            ][0]
+
+            expected.columns = df.columns.set_levels(
+                df.columns.levels[units_level].map(get_pint_value),
+                level='unit'
+            )
+
+
+            result = df.pint.quantify(ureg, level=-1).pint.dequantify()
+
+            pd.testing.assert_frame_equal(result, expected)
 
 
     class TestSeriesAccessors(object):
