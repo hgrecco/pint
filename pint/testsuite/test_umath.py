@@ -671,6 +671,3 @@ class TestFloatingUfuncs(TestUFuncs):
     def test_trunc(self):
         self._test1(np.trunc,
                     (self.q1, self.qm, self.qless))
-        
-if __name__ == '__main__':
-    unittest.main()

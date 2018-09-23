@@ -59,7 +59,7 @@ class TestIssues(QuantityTestCase):
 
     def test_issue54(self):
         ureg = UnitRegistry()
-        self.assertEqual((1*ureg.km/ureg.m + 1).magnitude, 1001)
+        self.assertAlmostEqual((1*ureg.km/ureg.m + 1), 1001)
 
     def test_issue54_related(self):
         ureg = UnitRegistry()
@@ -182,7 +182,7 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(v1.to_base_units(), v2)
         self.assertQuantityAlmostEqual(v1.to_base_units(), v2.to_base_units())
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_issue86c(self):
         ureg = self.ureg
         ureg.autoconvert_offset_to_baseunit = True
@@ -306,51 +306,52 @@ class TestIssuesNP(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_issue37(self):
         x = np.ma.masked_array([1, 2, 3], mask=[True, True, False])
         ureg = UnitRegistry()
         q = ureg.meter * x
         self.assertIsInstance(q, ureg.Quantity)
         np.testing.assert_array_equal(q.magnitude, x)
-        self.assertEqual(q.units, ureg.meter.units)
+        self.assertEqual(q.units, ureg.meter)
         q = x * ureg.meter
         self.assertIsInstance(q, ureg.Quantity)
         np.testing.assert_array_equal(q.magnitude, x)
-        self.assertEqual(q.units, ureg.meter.units)
+        self.assertEqual(q.units, ureg.meter)
 
-        m = np.ma.masked_array(2 * np.ones(3,3))
+        m = np.ma.masked_array(2 * np.ones((3,3)))
         qq = q * m
         self.assertIsInstance(qq, ureg.Quantity)
         np.testing.assert_array_equal(qq.magnitude, x * m)
-        self.assertEqual(qq.units, ureg.meter.units)
+        self.assertEqual(qq.units, ureg.meter)
         qq = m * q
+        qq = ureg.Quantity(qq)
         self.assertIsInstance(qq, ureg.Quantity)
         np.testing.assert_array_equal(qq.magnitude, x * m)
-        self.assertEqual(qq.units, ureg.meter.units)
+        self.assertEqual(qq.units, ureg.meter)
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_issue39(self):
         x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
         ureg = UnitRegistry()
         q = ureg.meter * x
         self.assertIsInstance(q, ureg.Quantity)
         np.testing.assert_array_equal(q.magnitude, x)
-        self.assertEqual(q.units, ureg.meter.units)
+        self.assertEqual(q.units, ureg.meter)
         q = x * ureg.meter
         self.assertIsInstance(q, ureg.Quantity)
         np.testing.assert_array_equal(q.magnitude, x)
-        self.assertEqual(q.units, ureg.meter.units)
+        self.assertEqual(q.units, ureg.meter)
 
-        m = np.matrix(2 * np.ones(3,3))
+        m = np.matrix(2 * np.ones((3,3)))
         qq = q * m
         self.assertIsInstance(qq, ureg.Quantity)
         np.testing.assert_array_equal(qq.magnitude, x * m)
-        self.assertEqual(qq.units, ureg.meter.units)
+        self.assertEqual(qq.units, ureg.meter)
         qq = m * q
         self.assertIsInstance(qq, ureg.Quantity)
         np.testing.assert_array_equal(qq.magnitude, x * m)
-        self.assertEqual(qq.units, ureg.meter.units)
+        self.assertEqual(qq.units, ureg.meter)
 
     def test_issue44(self):
         ureg = UnitRegistry()
@@ -676,4 +677,4 @@ class TestIssuesNP(QuantityTestCase):
         t = pendulum_period(l, moon_gravity)
         self.assertAlmostEqual(t, Q_('4.928936075204336 second'))
 
-
+unittest.main()

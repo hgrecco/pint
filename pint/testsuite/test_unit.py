@@ -646,3 +646,7 @@ class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
             if src != dst:
                 self.assertQuantityAlmostEqual(convert(expected, dst, src),
                                                value, atol=0.001)
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

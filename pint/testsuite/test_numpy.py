@@ -463,14 +463,3 @@ class TestNDArrayQuantityMath(QuantityTestCase):
         arr_cp = copy.copy(arr)
         q_cp = copy.copy(q)
         self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)
-
-if __name__ == '__main__':
-    
-    unittest.main()
-    # A = TestNumpyNeedsSubclassing()
-    # A.setUpClass()
-    # A.Q_(3, 'm') **2
-    # A.test_gradient()
-    # 
-    # A.Q_([3, 4], 'm') **2
-    # A.test_power()
