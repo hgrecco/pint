@@ -79,6 +79,8 @@ class QuantityTestCase(BaseTestCase):
         cls.U_ = cls.ureg.Unit
 
     def _get_comparable_magnitudes(self, first, second, msg):
+        first = self.Q_(first)
+        second = self.Q_(second)
         if isinstance(first, _Quantity) and isinstance(second, _Quantity):
             second = second.to(first)
             self.assertEqual(first.units, second.units, msg=msg + ' Units are not equal.')

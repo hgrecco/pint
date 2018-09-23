@@ -29,6 +29,7 @@ from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit,
                    fix_str_conversions)
 from pint.compat import Loc
+from .unit import _Unit
 
 def _eq(first, second, check_all):
     """Comparison of scalars and arrays
@@ -95,6 +96,14 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         from . import _build_quantity
         return _build_quantity, (self.magnitude, self._units)
 
+    def asQuantity(self, value):
+        if isinstance(value, self.__class__):
+            return value
+        elif isinstance(value, _Unit):
+            return value
+        else:
+            return self.__class__(value)
+        
     def __new__(cls, value, units=None):
         if units is None:
             if isinstance(value, string_types):
@@ -105,6 +114,35 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 return cls.__new__(cls, inst)
             elif isinstance(value, cls):
                 inst = copy.copy(value)
+            elif isinstance(value, (list, tuple, np.ndarray)):
+                def recursion(value, unit=None):
+                    if isinstance(value, cls):
+                        if unit is not None:
+                            value = value.to(unit)
+                        else:
+                            unit = value.u
+                        return value.m, unit
+                    elif isinstance(value, np.ndarray):
+                        if value.size == 0:
+                            return value, ''
+                        ret = np.zeros_like(value)
+                        for index, val in np.ndenumerate(value):
+                            ret[index], unit = recursion(val, unit)
+                        return ret, unit
+                    if isinstance(value, (list, tuple)):
+                        if len(value) == 0:
+                            return [], ''
+                        array = []
+                        for val in value:
+                            m, unit = recursion(val, unit)
+                            array.append(m)
+                        return np.array(array), unit
+                    else:
+                        if unit is None:
+                            unit = ''
+                        return value, unit
+                return cls.__new__(cls, *recursion(value))
+                
             else:
                 inst = object.__new__(cls)
                 inst._magnitude = _to_magnitude(value, inst.force_ndarray)
@@ -542,6 +580,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
+        other = self.asQuantity(other)
         if not self._check(other):
             # other not from same Registry or not a Quantity
             try:
@@ -641,6 +680,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
+        other = self.asQuantity(other)
         if not self._check(other):
             # other not from same Registry or not a Quantity
             if _eq(other, 0, True):
@@ -735,6 +775,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, units)
 
     def __iadd__(self, other):
+        other = self.asQuantity(other)
         if isinstance(other, datetime.datetime):
             return self.to_timedelta() + other
         elif not isinstance(self._magnitude, ndarray):
@@ -743,6 +784,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             return self._iadd_sub(other, operator.iadd)
 
     def __add__(self, other):
+        other = self.asQuantity(other)
         if isinstance(other, datetime.datetime):
             return self.to_timedelta() + other
         else:
@@ -751,15 +793,18 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     __radd__ = __add__
 
     def __isub__(self, other):
+        other = self.asQuantity(other)
         if not isinstance(self._magnitude, ndarray):
             return self._add_sub(other, operator.sub)
         else:
             return self._iadd_sub(other, operator.isub)
 
     def __sub__(self, other):
+        other = self.asQuantity(other)
         return self._add_sub(other, operator.sub)
 
     def __rsub__(self, other):
+        other = self.asQuantity(other)
         if isinstance(other, datetime.datetime):
             return other - self.to_timedelta()
         else:
@@ -779,6 +824,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             *magnitude_op* is used
         :type units_op: function or None
         """
+        other = self.asQuantity(other)
         if units_op is None:
             units_op = magnitude_op
 
@@ -837,6 +883,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             *magnitude_op* is used
         :type units_op: function or None
         """
+        other = self.asQuantity(other)
         if units_op is None:
             units_op = magnitude_op
 
@@ -886,26 +933,31 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, units)
 
     def __imul__(self, other):
+        other = self.asQuantity(other)
         if not isinstance(self._magnitude, ndarray):
             return self._mul_div(other, operator.mul)
         else:
             return self._imul_div(other, operator.imul)
 
     def __mul__(self, other):
+        other = self.asQuantity(other)
         return self._mul_div(other, operator.mul)
 
     __rmul__ = __mul__
 
     def __itruediv__(self, other):
+        other = self.asQuantity(other)
         if not isinstance(self._magnitude, ndarray):
             return self._mul_div(other, operator.truediv)
         else:
             return self._imul_div(other, operator.itruediv)
 
     def __truediv__(self, other):
+        other = self.asQuantity(other)
         return self._mul_div(other, operator.truediv)
 
     def __rtruediv__(self, other):
+        other = self.asQuantity(other)
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
         except TypeError:
@@ -923,6 +975,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     __idiv__ = __itruediv__
 
     def __ifloordiv__(self, other):
+        other = self.asQuantity(other)
         if self._check(other):
             self._magnitude //= other.to(self._units)._magnitude
         elif self.dimensionless:
@@ -934,6 +987,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __floordiv__(self, other):
+        other = self.asQuantity(other)
         if self._check(other):
             magnitude = self._magnitude // other.to(self._units)._magnitude
         elif self.dimensionless:
@@ -944,6 +998,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __rfloordiv__(self, other):
+        other = self.asQuantity(other)
         if self._check(other):
             magnitude = other._magnitude // self.to(other._units)._magnitude
         elif self.dimensionless:
@@ -953,6 +1008,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, UnitsContainer({}))
 
     def __imod__(self, other):
+        other = self.asQuantity(other)
         if not self._check(other):
             other = self.__class__(other, UnitsContainer({}))
         self._magnitude %= other.to(self._units)._magnitude
@@ -960,6 +1016,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __mod__(self, other):
+        other = self.asQuantity(other)
         if not self._check(other):
             other = self.__class__(other, UnitsContainer({}))
         magnitude = self._magnitude % other.to(self._units)._magnitude
@@ -967,6 +1024,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __rmod__(self, other):
+        other = self.asQuantity(other)
         if self._check(other):
             magnitude = other._magnitude % self.to(other._units)._magnitude
             return self.__class__(magnitude, other._units)
@@ -978,6 +1036,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __divmod__(self, other):
+        other = self.asQuantity(other)
         if not self._check(other):
             other = self.__class__(other, UnitsContainer({}))
         q, r = divmod(self._magnitude, other.to(self._units)._magnitude)
@@ -986,6 +1045,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __rdivmod__(self, other):
+        other = self.asQuantity(other)
         if self._check(other):
             q, r = divmod(other._magnitude, self.to(other._units)._magnitude)
             unit = other._units
@@ -997,6 +1057,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return (self.__class__(q, UnitsContainer({})), self.__class__(r, unit))
 
     def __ipow__(self, other):
+        other = self.asQuantity(other)
         if not isinstance(self._magnitude, ndarray):
             return self.__pow__(other)
 
@@ -1050,6 +1111,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __pow__(self, other):
+        other = self.asQuantity(other)
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
         except TypeError:
@@ -1093,11 +1155,13 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 else:
                     units = new_self._units ** other
 
-            magnitude = new_self._magnitude ** _to_magnitude(other, self.force_ndarray)
+            magnitude = new_self._magnitude ** _to_magnitude(
+                    getattr(other, 'magnitude', other), self.force_ndarray)
             return self.__class__(magnitude, units)
 
     @check_implemented
     def __rpow__(self, other):
+        other = self.asQuantity(other)
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
         except TypeError:
@@ -1126,6 +1190,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
+        other = self.asQuantity(other)
         if not isinstance(other, _Quantity):
             if _eq(other, 0, True):
                 # Handle the special case in which we compare to zero
@@ -1157,12 +1222,14 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             return False
 
     def __ne__(self, other):
+        other = self.asQuantity(other)
         out = self.__eq__(other)
         if isinstance(out, ndarray):
             return np.logical_not(out)
         return not out
 
     def compare(self, other, op):
+        other = self.asQuantity(other)
         if not isinstance(other, self.__class__):
             if self.dimensionless:
                 return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
@@ -1246,11 +1313,13 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     __prod_units = {'var': 2, 'prod': 'size', 'multiply': 'mul',
                     'true_divide': 'div', 'divide': 'div', 'floor_divide': 'div',
                     'remainder': 'div',
-                    'sqrt': .5, 'square': 2, 'reciprocal': -1}
+                    'sqrt': .5, 'square': 2, 'reciprocal': -1, 'power': 'other'}
 
     __skip_other_args = 'ldexp multiply ' \
                         'true_divide divide floor_divide fmod mod ' \
-                        'remainder'.split()
+                        'remainder power'.split()
+                        
+    __magnitude_ufunc = ['isfinite', 'isnan', 'isreal', 'isinf', 'iscomplex', ]
 
     __handled = tuple(__same_units) + \
                 tuple(__require_units.keys()) + \
@@ -1295,7 +1364,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         if isinstance(values, self.__class__):
             values = values.to(self).magnitude
         elif self.dimensionless:
-            values = self.__class__(values, '').to(self)
+            values = self.__class__(values, '').to(self).magnitude
         else:
             raise DimensionalityError('dimensionless', self._units)
         self.magnitude.put(indices, values, mode)
@@ -1366,7 +1435,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def __getattr__(self, item):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
-        if item.startswith('__array_'):
+        if item == '__array_interface__' or item == '__array_struct__' or item == '__array__':
+            raise AttributeError('Nope')
+        elif item.startswith('__array_'):
             warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
             if isinstance(self._magnitude, ndarray):
                 return getattr(self._magnitude, item)
@@ -1451,6 +1522,110 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             self.__handling = context
 
         return obj
+
+    def __array_ufunc__(self, uf, method, *objs, **kwargs):
+        ufname = uf.__name__
+        objs = [self.asQuantity(other) for other in objs]
+        if uf.__name__ in self.__magnitude_ufunc:
+            mobjs = []
+            for other in objs:
+                mobjs.append(getattr(other, 'magnitude', other))
+            return uf(*mobjs, **kwargs)
+
+        try:
+
+            # Do this only when the wrap is called for the first ouput.
+
+            # Store the destination units
+            dst_units = None
+            # List of magnitudes of Quantities with the right units
+            # to be used as argument of the ufunc
+            mobjs = None
+
+            if uf.__name__ in self.__require_units:
+                # ufuncs in __require_units
+                # require specific units
+                # This is more complex that it should be due to automatic
+                # conversion between radians/dimensionless
+                # TODO: maybe could be simplified using Contexts
+                dst_units = self.__require_units[uf.__name__]
+                if dst_units == 'radian':
+                    mobjs = []
+                    for other in objs:
+                        unt = getattr(other, '_units', '')
+                        if unt == 'radian':
+                            mobjs.append(getattr(other, 'magnitude', other))
+                        else:
+                            factor, units = self._REGISTRY._get_root_units(unt)
+                            if units and units != UnitsContainer({'radian': 1}):
+                                raise DimensionalityError(units, dst_units)
+                            mobjs.append(getattr(other, 'magnitude', other) * factor)
+                    mobjs = tuple(mobjs)
+                else:
+                    dst_units = self._REGISTRY.parse_expression(dst_units)._units
+
+            elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
+                # ufunc with multiple arguments require that all inputs have
+                # the same arguments unless they are in __skip_other_args
+                dst_units = getattr(objs[0], 'units', '')
+
+            # Do the conversion (if needed) and extract the magnitude for each input.
+            if mobjs is None:
+                if dst_units is not None:
+                    mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
+                                                         getattr(other, 'units', ''),
+                                                         dst_units)
+                                  for other in objs)
+                else:
+                    mobjs = tuple(getattr(other, 'magnitude', other)
+                                  for other in objs)
+
+            # call the ufunc
+            out = uf(*mobjs)
+
+            # Second, we set the units of the output value.
+            if ufname in self.__set_units:
+                try:
+                    out = self.__class__(out, self.__set_units[ufname])
+                except:
+                    raise _Exception(ValueError)
+            elif ufname in self.__copy_units:
+                try:
+                    out = self.__class__(out, self._units)
+                except:
+                    raise _Exception(ValueError)
+            elif ufname in self.__prod_units:
+                tmp = self.__prod_units[ufname]
+                if tmp == 'size':
+                    out = self.__class__(out, self._units ** self._magnitude.size)
+                elif tmp == 'div':
+                    units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
+                    units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                    out = self.__class__(out, units1 / units2)
+                elif tmp == 'mul':
+                    units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
+                    units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                    out = self.__class__(out, units1 * units2)
+                elif tmp == 'other':
+                    if len(objs) != 2 or not objs[1].dimensionless:
+                        return NotImplemented
+                    if len(np.shape(objs[1].m)) > 0:
+                        return NotImplemented
+                    out = self.__class__(out, self._units ** objs[1].m)
+                else:
+                    out = self.__class__(out, self._units ** tmp)
+
+            return out
+        except (DimensionalityError, UndefinedUnitError) as ex:
+            raise ex
+        except _Exception as ex:
+            raise ex.internal
+        except Exception as ex:
+            print(ex)
+        finally:
+            pass
+
+        return NotImplemented
 
     def __array_wrap__(self, obj, context=None):
         uf, objs, i_out = context
