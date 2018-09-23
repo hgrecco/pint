@@ -29,7 +29,6 @@ from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit,
                    fix_str_conversions)
 from pint.compat import Loc
-from .unit import _Unit
 
 def _eq(first, second, check_all):
     """Comparison of scalars and arrays
