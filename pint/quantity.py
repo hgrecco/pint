@@ -1555,7 +1555,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             
             if uf.nout > 1:
                 out = tuple(self.output_with_unit(out[idx], objs, uf, idx) for idx in range(uf.nout))
-            out = self.output_with_unit(out, objs, uf)
+            else:
+                out = self.output_with_unit(out, objs, uf)
             return out
         except (DimensionalityError, UndefinedUnitError, ValueError) as ex:
             raise ex
