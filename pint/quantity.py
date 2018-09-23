@@ -96,9 +96,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return _build_quantity, (self.magnitude, self._units)
 
     def asQuantity(self, value):
-        if isinstance(value, self.__class__):
+        if isinstance(value, SharedRegistryObject):
             return value
-        elif isinstance(value, _Unit):
+        elif isinstance(value, (UnitsContainer, UnitDefinition)):
             return value
         else:
             return self._REGISTRY.Quantity(value)
@@ -1324,7 +1324,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     __skip_other_args = 'ldexp multiply ' \
                         'true_divide divide floor_divide fmod mod ' \
-                        'remainder power'.split()
+                        'remainder'.split()
                         
     __magnitude_ufunc = ['isfinite', 'isnan', 'isreal', 'isinf', 'iscomplex', ]
     
@@ -1537,6 +1537,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def __array_ufunc__(self, uf, method, *objs, **kwargs):
         objs = [self.asQuantity(other) for other in objs]
+        #TODO: don't process power as an exception!
+        if uf.__name__ == 'power':
+            return objs[0] ** objs[1]
         if uf.__name__ in self.__magnitude_ufunc:
             mobjs = []
             for other in objs:
@@ -1547,11 +1550,13 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             mobjs = self.inputs_without_units(uf, objs)
 
             # call the ufunc
-            out = uf(*mobjs)
+            kwargs.pop('out', None) #TODO: do not disregard the 'out'
+            out = uf(*mobjs, **kwargs)
             
             if uf.nout > 1:
-                return tuple(self.output_with_unit(out[idx], objs, uf, idx) for idx in range(uf.nout))
-            return self.output_with_unit(out, objs, uf)
+                out = tuple(self.output_with_unit(out[idx], objs, uf, idx) for idx in range(uf.nout))
+            out = self.output_with_unit(out, objs, uf)
+            return out
         except (DimensionalityError, UndefinedUnitError, ValueError) as ex:
             raise ex
         except _Exception as ex:
