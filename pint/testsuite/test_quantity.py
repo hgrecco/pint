@@ -1420,4 +1420,3 @@ class TestCompareZero(QuantityTestCase):
         self.assertTrue(q2 > 0)
         self.assertRaises(DimensionalityError, q1.__gt__,
                           ureg.Quantity(0, ''))
-        
