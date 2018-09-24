@@ -299,7 +299,6 @@ class TestNumpyNeedsSubclassing(TestUFuncs):
         """
         self.assertQuantityEqual(np.ediff1d(self.q, 1 * self.ureg.J), [1, 1, 1, 1] * self.ureg.J)
 
-    # @unittest.expectedFailure
     def test_fix(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
@@ -441,7 +440,6 @@ class TestNDArrayQuantityMath(QuantityTestCase):
             q2_cp = copy.copy(q)
             self.assertRaises(DimensionalityError, op_, q_cp, q2_cp)
 
-    # @unittest.expectedFailure
     @helpers.requires_numpy()
     def test_exponentiation_array_exp_2(self):
         arr = np.array(range(3), dtype=np.float)
@@ -457,7 +455,3 @@ class TestNDArrayQuantityMath(QuantityTestCase):
         arr_cp = copy.copy(arr)
         q_cp = copy.copy(q)
         self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)
-        
-if __name__ == '__main__':
-    import unittest
-    unittest.main()

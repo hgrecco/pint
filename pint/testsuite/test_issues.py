@@ -182,7 +182,6 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(v1.to_base_units(), v2)
         self.assertQuantityAlmostEqual(v1.to_base_units(), v2.to_base_units())
 
-    # @unittest.expectedFailure
     def test_issue86c(self):
         ureg = self.ureg
         ureg.autoconvert_offset_to_baseunit = True
@@ -306,7 +305,6 @@ class TestIssuesNP(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
-    # @unittest.expectedFailure
     def test_issue37(self):
         x = np.ma.masked_array([1, 2, 3], mask=[True, True, False])
         ureg = UnitRegistry()
@@ -330,7 +328,6 @@ class TestIssuesNP(QuantityTestCase):
         np.testing.assert_array_equal(qq.magnitude, x * m)
         self.assertEqual(qq.units, ureg.meter)
 
-    # @unittest.expectedFailure
     def test_issue39(self):
         x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
         ureg = UnitRegistry()
@@ -676,6 +673,3 @@ class TestIssuesNP(QuantityTestCase):
         moon_gravity = Q_(1.625, 'm/s^2')
         t = pendulum_period(l, moon_gravity)
         self.assertAlmostEqual(t, Q_('4.928936075204336 second'))
-
-if __name__ == '__main__':
-    unittest.main()
