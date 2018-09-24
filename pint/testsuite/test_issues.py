@@ -677,4 +677,5 @@ class TestIssuesNP(QuantityTestCase):
         t = pendulum_period(l, moon_gravity)
         self.assertAlmostEqual(t, Q_('4.928936075204336 second'))
 
-unittest.main()
+if __name__ == '__main__':
+    unittest.main()

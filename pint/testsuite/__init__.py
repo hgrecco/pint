@@ -106,6 +106,8 @@ class QuantityTestCase(BaseTestCase):
 
         if isinstance(m1, ndarray) or isinstance(m2, ndarray):
             np.testing.assert_array_equal(m1, m2, err_msg=msg)
+        elif isinstance(m1, _Quantity) and isinstance(m2, _Quantity):
+            np.testing.assert_array_equal(m1.m, m2.m, err_msg=msg)
         else:
             self.assertEqual(m1, m2, msg)
 

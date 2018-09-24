@@ -104,68 +104,83 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             return self._REGISTRY.Quantity(value)
         
     def __new__(cls, value, units=None):
+        # Get units
         if units is None:
-            if isinstance(value, string_types):
-                if value == '':
-                    raise ValueError('Expression to parse as Quantity cannot '
-                                     'be an empty string.')
-                inst = cls._REGISTRY.parse_expression(value)
-                return cls.__new__(cls, inst)
-            elif isinstance(value, _Quantity):
-                inst = copy.copy(value)
-            elif isinstance(value, (list, tuple, np.ndarray)):
-                def recursion(value, unit=None):
-                    if isinstance(value, _Quantity):
-                        if unit is not None:
-                            value = value.to(unit)
-                        else:
-                            unit = value.u
-                        return value.m, unit
-                    elif isinstance(value, np.ndarray):
-                        if value.size == 0:
-                            return value, ''
-                        ret = np.zeros_like(value)
-                        for index, val in np.ndenumerate(value):
-                            ret[index], unit = recursion(val, unit)
-                        return ret, unit
-                    if isinstance(value, (list, tuple)):
-                        if len(value) == 0:
-                            return [], ''
-                        array = []
-                        for val in value:
-                            m, unit = recursion(val, unit)
-                            array.append(m)
-                        return np.array(array), unit
-                    else:
-                        if unit is None:
-                            unit = ''
-                        return value, unit
-                return cls.__new__(cls, *recursion(value))
-                
-            else:
-                inst = object.__new__(cls)
-                inst._magnitude = _to_magnitude(value, inst.force_ndarray)
-                inst._units = UnitsContainer()
+            units = UnitsContainer()
         elif isinstance(units, (UnitsContainer, UnitDefinition)):
-            inst = object.__new__(cls)
-            inst._magnitude = _to_magnitude(value, inst.force_ndarray)
-            inst._units = units
+            pass
         elif isinstance(units, string_types):
-            inst = object.__new__(cls)
-            inst._magnitude = _to_magnitude(value, inst.force_ndarray)
-            inst._units = inst._REGISTRY.parse_units(units)._units
+            units = cls._REGISTRY.parse_units(units)._units
         elif isinstance(units, SharedRegistryObject):
             if isinstance(units, _Quantity) and units.magnitude != 1:
-                inst = copy.copy(units)
+                units = copy.copy(units)._units
                 logger.warning('Creating new Quantity using a non unity '
                                'Quantity as units.')
             else:
-                inst = object.__new__(cls)
-                inst._units = units._units
-            inst._magnitude = _to_magnitude(value, inst.force_ndarray)
+                units = units._units
         else:
             raise TypeError('units must be of type str, Quantity or '
                             'UnitsContainer; not {}.'.format(type(units)))
+        
+        while isinstance(value, np.ndarray) and value.ndim == 0:
+            value = np.asscalar(value)
+        
+        # Get magnitude (and unit?)
+        if isinstance(value, string_types):
+            if value == '':
+                raise ValueError('Expression to parse as Quantity cannot '
+                                 'be an empty string.')
+            inst = cls._REGISTRY.parse_expression(value)
+            if not isinstance(inst, _Quantity):
+                return cls.__new__(cls, inst, units)
+            inst._units = inst._units * units
+            
+        elif isinstance(value, _Quantity):
+            inst = copy.copy(value)
+            inst._units *= units
+        elif isinstance(value, (list, tuple, np.ndarray)):
+            def recursion(value, units=None):
+                if isinstance(value, _Quantity):
+                    if units is not None:
+                        value = value.to(units)
+                    else:
+                        units = value._units
+                    return value.m, units
+                elif isinstance(value, np.ndarray):
+                    if value.size == 0:
+                        return value, units
+                    if value.ndim == 0:
+                        if units is None:
+                            units = UnitsContainer()
+                        return value, units
+                    ret = np.zeros_like(value)
+                    for idx, val in np.ndenumerate(value):
+                        m, units = recursion(val, units)
+                        ret[idx] = m
+                    return ret, units
+                        
+                elif isinstance(value, (list, tuple)):
+                    if len(value) == 0:
+                        return np.array([]), units
+                    array = []
+                    for val in value:
+                        m, units = recursion(val, units)
+                        array.append(m)
+                    return np.array(array), units
+                else:
+                    if units is None:
+                        units = UnitsContainer()
+                    return value, units
+            value_magnitude, value_units = recursion(value)
+            if value_magnitude.dtype == np.dtype('object'):
+                value_magnitude = np.asarray(value_magnitude, dtype=float)
+            inst = object.__new__(cls)
+            inst._magnitude = value_magnitude
+            inst._units = value_units * units
+        else:
+            inst = object.__new__(cls)
+            inst._magnitude = _to_magnitude(value, inst.force_ndarray)
+            inst._units = units
 
         inst.__used = False
         inst.__handling = None
@@ -938,27 +953,23 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, units)
 
     def __imul__(self, other):
-        other = self.asQuantity(other)
         if not isinstance(self._magnitude, ndarray):
             return self._mul_div(other, operator.mul)
         else:
             return self._imul_div(other, operator.imul)
 
     def __mul__(self, other):
-        other = self.asQuantity(other)
         return self._mul_div(other, operator.mul)
 
     __rmul__ = __mul__
 
     def __itruediv__(self, other):
-        other = self.asQuantity(other)
         if not isinstance(self._magnitude, ndarray):
             return self._mul_div(other, operator.truediv)
         else:
             return self._imul_div(other, operator.itruediv)
 
     def __truediv__(self, other):
-        other = self.asQuantity(other)
         return self._mul_div(other, operator.truediv)
 
     def __rtruediv__(self, other):
@@ -1548,15 +1559,23 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         try:
             mobjs = self.inputs_without_units(uf, objs)
-
+            
+            kwargs_out_in = kwargs.pop('out', None)
+            if kwargs_out_in is not None:
+                out_units = tuple(self.output_units(objs, uf, idx) 
+                                for idx in range(uf.nout))
+                kwargs_out_in = tuple(self.asQuantity(other) for other in kwargs_out_in)
+                mkwarg_out = tuple(out.to(unit).m for out, unit in zip(kwargs_out_in, out_units))
+                kwargs['out'] = mkwarg_out
             # call the ufunc
-            kwargs.pop('out', None) #TODO: do not disregard the 'out'
             out = uf(*mobjs, **kwargs)
             
             if uf.nout > 1:
-                out = tuple(self.output_with_unit(out[idx], objs, uf, idx) for idx in range(uf.nout))
+                out = tuple(self.output_with_unit(out[idx], objs, uf, idx) 
+                            for idx in range(uf.nout))
             else:
                 out = self.output_with_unit(out, objs, uf)
+            
             return out
         except (DimensionalityError, UndefinedUnitError, ValueError) as ex:
             raise ex
@@ -1573,9 +1592,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         # Store the destination units
         dst_units = None
-        # List of magnitudes of Quantities with the right units
-        # to be used as argument of the ufunc
-        mobjs = None
 
         if uf.__name__ in self.__require_units:
             # ufuncs in __require_units
@@ -1584,7 +1600,31 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             # conversion between radians/dimensionless
             # TODO: maybe could be simplified using Contexts
             dst_units = self.__require_units[uf.__name__]
-            if dst_units == 'radian':
+            dst_units = self._REGISTRY.parse_expression(dst_units)._units
+
+        elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
+            # ufunc with multiple arguments require that all inputs have
+            # the same arguments unless they are in __skip_other_args
+            idx = 0
+            dst_units = getattr(objs[idx], 'units', '')
+            if uf.__name__ in self.__unitless_zero_ok:
+                while idx < uf.nin - 1 and objs[idx].dimensionless and np.all(objs[idx] == 0):
+                    idx += 1
+                    dst_units = getattr(objs[idx], 'units', '')
+                
+            
+
+        #List of magnitudes of Quantities with the right units
+        # to be used as argument of the ufunc
+        mobjs = None
+        # Do the conversion (if needed) and extract the magnitude for each input.
+        
+        if dst_units is not None:
+            if uf.__name__ in self.__unitless_zero_ok:
+                for idx in range(uf.nin):
+                    if objs[idx].dimensionless and np.all(objs[idx] == 0):
+                        objs[idx] = objs[idx] * self._REGISTRY.Unit(dst_units)
+            if uf.__name__ in self.__require_units and self.__require_units[uf.__name__] == 'radian':
                 mobjs = []
                 for other in objs:
                     unt = getattr(other, '_units', '')
@@ -1597,69 +1637,59 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                         mobjs.append(getattr(other, 'magnitude', other) * factor)
                 mobjs = tuple(mobjs)
             else:
-                dst_units = self._REGISTRY.parse_expression(dst_units)._units
-
-        elif len(objs) > 1 and uf.__name__ not in self.__skip_other_args:
-            # ufunc with multiple arguments require that all inputs have
-            # the same arguments unless they are in __skip_other_args
-            idx = 0
-            dst_units = getattr(objs[idx], 'units', '')
-            if uf.__name__ in self.__unitless_zero_ok:
-                while idx < uf.nin - 1 and objs[idx].dimensionless and np.all(objs[idx] == 0):
-                    idx += 1
-                    dst_units = getattr(objs[idx], 'units', '')
-                for idx in range(uf.nin):
-                    if objs[idx].dimensionless and np.all(objs[idx] == 0):
-                        objs[idx] = objs[idx] * self._REGISTRY.Unit(dst_units)
-                
             
-
-        # Do the conversion (if needed) and extract the magnitude for each input.
-        if mobjs is None:
-            if dst_units is not None:
-                mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
-                                                     getattr(other, 'units', ''),
-                                                     dst_units)
-                              for other in objs)
-            else:
-                mobjs = tuple(getattr(other, 'magnitude', other)
-                              for other in objs)
+                mobjs = tuple(self._REGISTRY.convert(
+                        getattr(other, 'magnitude', other),
+                        getattr(other, 'units', ''),
+                        dst_units)
+                          for other in objs)
+        else:
+            mobjs = tuple(getattr(other, 'magnitude', other)
+                          for other in objs)
         return mobjs
 
-    def output_with_unit(self, out, objs, uf, i_out=0):
+    def output_units(self, objs, uf, i_out=0):
         ufname = uf.__name__ if i_out == 0 else '{}__{}'.format(uf.__name__, i_out)
         # Second, we set the units of the output value.
+        units = None
         if ufname in self.__set_units:
             try:
-                out = self.__class__(out, self.__set_units[ufname])
+                units = self.__set_units[ufname]
             except:
                 raise _Exception(ValueError)
         elif ufname in self.__copy_units:
             try:
-                out = self.__class__(out, self._units)
+                units = self._units
             except:
                 raise _Exception(ValueError)
         elif ufname in self.__prod_units:
             tmp = self.__prod_units[ufname]
             if tmp == 'size':
-                out = self.__class__(out, self._units ** self._magnitude.size)
+                units = self._units ** self._magnitude.size
             elif tmp == 'div':
                 units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
                 units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
-                out = self.__class__(out, units1 / units2)
+                units = units1 / units2
             elif tmp == 'mul':
                 units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
                 units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
-                out = self.__class__(out, units1 * units2)
+                units = units1 * units2
             elif tmp == 'other':
                 if len(objs) != 2 or not objs[1].dimensionless:
                     return NotImplemented
                 if len(np.shape(objs[1].m)) > 0:
                     return NotImplemented
-                out = self.__class__(out, self._units ** objs[1].m)
+                units = self._units ** objs[1].m
             else:
-                out = self.__class__(out, self._units ** tmp)
+                units = self._units ** tmp
 
+        return units
+        
+        
+    def output_with_unit(self, out, objs, uf, i_out=0):
+        units = self.output_units(objs, uf, i_out)
+        if units is not None:
+            return self.__class__(out, units)
         return out
     
     def __array_wrap__(self, obj, context=None):

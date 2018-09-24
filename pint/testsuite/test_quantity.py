@@ -13,6 +13,7 @@ from pint.unit import UnitsContainer
 from pint.compat import string_types, PYTHON3, np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
+from pint.errors import UndefinedUnitError
 
 
 class TestQuantity(QuantityTestCase):
@@ -409,8 +410,9 @@ class TestQuantityToCompact(QuantityTestCase):
 
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
-        x = "some string"*ureg.m
-        self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
+        self.assertRaises(UndefinedUnitError, op.mul, "some string", ureg.m)
+        
+        # self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
 
 class TestQuantityBasicMath(QuantityTestCase):
 
@@ -1108,7 +1110,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     multiplications_with_scalar = [
         (((10, 'kelvin'),    2),    (20., 'kelvin')),
         (((10, 'kelvin**2'), 2),    (20., 'kelvin**2')),
-        (((10, 'degC'),      2),    (20., 'degC')),
+        (((10, 'degC'),      2),    'error'),
         (((10, '1/degC'),    2),    'error'),
         (((10, 'degC**0.5'),   2),  'error'),
         (((10, 'degC**2'),   2),    'error'),
@@ -1118,6 +1120,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     @ParameterizedTestCase.parameterize(
         ("input", "expected_output"), multiplications_with_scalar)
     def test_multiplication_with_scalar(self, input_tuple, expected):
+        self.ureg.autoconvert_offset_to_baseunit = False
         self.ureg.default_as_delta = False
         in1, in2 = input_tuple
         if type(in1) is tuple:
@@ -1136,7 +1139,7 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
     divisions_with_scalar = [   # without / with autoconvert to base unit
         (((10, 'kelvin'), 2),       [(5., 'kelvin'), (5., 'kelvin')]),
         (((10, 'kelvin**2'), 2),    [(5., 'kelvin**2'), (5., 'kelvin**2')]),
-        (((10, 'degC'), 2),         ['error', 'error']),
+        (((10, 'degC'), 2),         ['error', (283.15/2, 'kelvin')]),
         (((10, 'degC**2'), 2),      ['error', 'error']),
         (((10, 'degC**-2'), 2),     ['error', 'error']),
 

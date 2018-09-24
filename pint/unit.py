@@ -149,7 +149,7 @@ class _Unit(PrettyIPython, SharedRegistryObject):
         if isinstance(other, Number) and other == 1:
             return self._REGISTRY.Quantity(other, self._units)
 
-        return self._REGISTRY.Quantity(1, self._units) * other
+        return self._REGISTRY.Quantity(other, self._units)
 
     __rmul__ = __mul__
 

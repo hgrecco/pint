@@ -300,8 +300,8 @@ class TestRegistry(QuantityTestCase):
         p = self.ureg.pint
         l = self.ureg.liter
         ip = self.ureg.imperial_pint
-        self.assertLess(p, l)
-        self.assertLess(p, ip)
+        self.assertLess(1 * p, 1 * l)
+        self.assertLess(1 * p, 1 * ip)
 
     def test_wraps(self):
         def func(x):
