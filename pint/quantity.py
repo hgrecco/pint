@@ -96,7 +96,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return _build_quantity, (self.magnitude, self._units)
 
     def asQuantity(self, value):
-        if isinstance(value, SharedRegistryObject):
+        if value is None:
+            raise TypeError('value can not be None')   
+        elif isinstance(value, SharedRegistryObject):
             return value
         elif isinstance(value, (UnitsContainer, UnitDefinition)):
             return value
@@ -178,7 +180,10 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 value_magnitude = np.asarray(value_magnitude, dtype=float)
             inst = object.__new__(cls)
             inst._magnitude = value_magnitude
-            inst._units = value_units * units
+            if value_units is not None:
+                inst._units = units * value_units
+            else:
+                inst._units = units
         else:
             inst = object.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
@@ -1211,6 +1216,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
+        if other is None:
+            return False
         if not isinstance(other, _Quantity):
             if _eq(other, 0, True):
                 # Handle the special case in which we compare to zero
@@ -1339,7 +1346,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                         
     __magnitude_ufunc = ['isfinite', 'isnan', 'isreal', 'isinf', 'iscomplex', 
                          'argmax', 'argmin', 'sort', 'nonzero', 'argsort',
-                         'nanargmin', 'nanargmax']
+                         'nanargmin', 'nanargmax', 'nbytes']
     
     __unitless_zero_ok = 'greater greater_equal less less_equal equal not_equal '\
                         'add subtract'.split()

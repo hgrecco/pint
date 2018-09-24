@@ -355,7 +355,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
         """
         from pandas import unique
 
-        return self._from_sequence(unique(self._data) * self._data.units)
+        return self._from_sequence(unique(self._data))
 
     @property
     def dtype(self):
