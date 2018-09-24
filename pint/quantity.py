@@ -1237,11 +1237,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         if self._units == other._units:
             return _eq(self._magnitude, other._magnitude, False)
 
-        try:
-            return _eq(self._convert_magnitude_not_inplace(other._units),
-                       other._magnitude, False)
-        except DimensionalityError:
-            return False
+        return _eq(self._convert_magnitude_not_inplace(other._units),
+                   other._magnitude, False)
 
     def __ne__(self, other):
         out = self.__eq__(other)
@@ -1325,7 +1322,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                    'add subtract ' \
                    'copysign nextafter trunc ' \
                    'frexp ldexp modf modf__1 ' \
-                   'absolute negative remainder fmod mod'.split()
+                   'absolute negative remainder fmod mod '\
+                   'amax amin'.split()
 
     #: Dictionary mapping ufunc/attributes names to the units that they will
     #: set on output. The value is interpreted as the power to which the unit
@@ -1339,7 +1337,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                         'true_divide divide floor_divide fmod mod ' \
                         'remainder'.split()
                         
-    __magnitude_ufunc = ['isfinite', 'isnan', 'isreal', 'isinf', 'iscomplex', ]
+    __magnitude_ufunc = ['isfinite', 'isnan', 'isreal', 'isinf', 'iscomplex', 
+                         'argmax', 'argmin', 'sort', 'nonzero', 'argsort',
+                         'nanargmin', 'nanargmax']
     
     __unitless_zero_ok = 'greater greater_equal less less_equal equal not_equal '\
                         'add subtract'.split()
@@ -1349,7 +1349,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     __handled = tuple(__same_units) + \
                 tuple(__require_units.keys()) + \
                 tuple(__prod_units.keys()) + \
-                tuple(__copy_units) + tuple(__skip_other_args)
+                tuple(__copy_units) + tuple(__skip_other_args) + \
+                tuple(__magnitude_ufunc)
 
     def clip(self, first=None, second=None, out=None, **kwargs):
         min = kwargs.get('min', first)
@@ -1461,27 +1462,19 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
         if item in ['__array_interface__', '__array_struct__' , '__array__', '_data']:
+            # print(item, self)
             raise AttributeError('Nope')
-        elif item.startswith('__array_'):
-            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
-            if isinstance(self._magnitude, ndarray):
-                return getattr(self._magnitude, item)
-            else:
-                # If an `__array_` attributes is requested but the magnitude is not an ndarray,
-                # we convert the magnitude to a numpy ndarray.
-                self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
-                return getattr(self._magnitude, item)
         elif item in self.__handled:
             if not isinstance(self._magnitude, ndarray):
                 self._magnitude = _to_magnitude(self._magnitude, True)
-            attr = getattr(self._magnitude, item)
+            attr = getattr(self._magnitude, item, None)
+            if attr is None:
+                attr = getattr(np, item)
+                return functools.partial(self.__array_ufunc__, attr, 'manual', self)
             if callable(attr):
                 return functools.partial(self.__numpy_method_wrap, attr)
             return attr
-        try:
-            return getattr(self._magnitude, item)
-        except AttributeError as ex:
-            raise AttributeError("Neither Quantity object nor its magnitude ({}) "
+        raise AttributeError("Neither Quantity object nor its magnitude ({}) "
                                  "has attribute '{}'".format(self._magnitude, item))
 
     def __getitem__(self, key):
@@ -1526,27 +1519,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 for value in self._magnitude.tolist()]
 
     __array_priority__ = 17
-
-    def __array_prepare__(self, obj, context=None):
-        # If this uf is handled by Pint, write it down in the handling dictionary.
-
-        # name of the ufunc, argument of the ufunc, domain of the ufunc
-        # In ufuncs with multiple outputs, domain indicates which output
-        # is currently being prepared (eg. see modf).
-        # In ufuncs with a single output, domain is 0
-        uf, objs, i_out = context
-
-        if uf.__name__ in self.__handled and i_out == 0:
-            # Only one ufunc should be handled at a time.
-            # If a ufunc is already being handled (and this is not another domain),
-            # something is wrong..
-            if self.__handling:
-                raise Exception('Cannot handled nested ufuncs.\n'
-                                'Current: {}\n'
-                                'New: {}'.format(context, self.__handling))
-            self.__handling = context
-
-        return obj
 
     def __array_ufunc__(self, uf, method, *objs, **kwargs):
         objs = [self.asQuantity(other) for other in objs]
@@ -1693,50 +1665,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         if units is not None:
             return self.__class__(out, units)
         return out
-    
-    def __array_wrap__(self, obj, context=None):
-        uf, objs, i_out = context
-
-        # if this ufunc is not handled by Pint, pass it to the magnitude.
-        if uf.__name__ not in self.__handled:
-            return self.magnitude.__array_wrap__(obj, context)
-
-        try:
-            
-
-            # First, we check the units of the input arguments.
-
-            if i_out == 0:
-                mobjs = self.inputs_without_units(uf, objs)
-                # call the ufunc
-                out = uf(*mobjs)
-
-                # If there are multiple outputs,
-                # store them in __handling (uf, objs, i_out, out0, out1, ...)
-                # and return the first
-                if uf.nout > 1:
-                    self.__handling += out
-                    out = out[0]
-            else:
-                # If this is not the first output,
-                # just grab the result that was previously calculated.
-                out = self.__handling[3 + i_out]
-
-            return self.output_with_unit(out, objs, uf, i_out)
-        
-        except (DimensionalityError, UndefinedUnitError) as ex:
-            raise ex
-        except _Exception as ex:
-            raise ex.internal
-        except Exception as ex:
-            print(ex)
-        finally:
-            # If this is the last output argument for the ufunc,
-            # we are done handling this ufunc.
-            if uf.nout == i_out + 1:
-                self.__handling = None
-
-        return self.magnitude.__array_wrap__(obj, context)
 
     # Measurement support
     def plus_minus(self, error, relative=False):
@@ -1806,6 +1734,75 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def to_timedelta(self):
         return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
+    
+    
+    # old numpy versions support
+    
+    # def __array_prepare__(self, obj, context=None):
+    #     print('prepare', self)
+    #     # If this uf is handled by Pint, write it down in the handling dictionary.
+
+    #     # name of the ufunc, argument of the ufunc, domain of the ufunc
+    #     # In ufuncs with multiple outputs, domain indicates which output
+    #     # is currently being prepared (eg. see modf).
+    #     # In ufuncs with a single output, domain is 0
+    #     uf, objs, i_out = context
+
+    #     if uf.__name__ in self.__handled and i_out == 0:
+    #         # Only one ufunc should be handled at a time.
+    #         # If a ufunc is already being handled (and this is not another domain),
+    #         # something is wrong..
+    #         if self.__handling:
+    #             raise Exception('Cannot handled nested ufuncs.\n'
+    #                             'Current: {}\n'
+    #                             'New: {}'.format(context, self.__handling))
+    #         self.__handling = context
+
+    #     return obj
+    
+    # def __array_wrap__(self, obj, context=None):
+    #     print('wrap', self)
+    #     uf, objs, i_out = context
+    #     objs = [self.asQuantity(other) for other in objs]
+    #     # if this ufunc is not handled by Pint, pass it to the magnitude.
+    #     if uf.__name__ not in self.__handled:
+    #         return self.magnitude.__array_wrap__(obj, context)
+
+    #     try:
+            
+    #         # First, we check the units of the input arguments.
+
+    #         if i_out == 0:
+    #             mobjs = self.inputs_without_units(uf, objs)
+    #             # call the ufunc
+    #             out = uf(*mobjs)
+
+    #             # If there are multiple outputs,
+    #             # store them in __handling (uf, objs, i_out, out0, out1, ...)
+    #             # and return the first
+    #             if uf.nout > 1:
+    #                 self.__handling += out
+    #                 out = out[0]
+    #         else:
+    #             # If this is not the first output,
+    #             # just grab the result that was previously calculated.
+    #             out = self.__handling[3 + i_out]
+
+    #         return self.output_with_unit(out, objs, uf, i_out)
+        
+    #     except (DimensionalityError, UndefinedUnitError) as ex:
+    #         raise ex
+    #     except _Exception as ex:
+    #         raise ex.internal
+    #     except Exception as ex:
+    #         print(ex)
+    #     finally:
+    #         # If this is the last output argument for the ufunc,
+    #         # we are done handling this ufunc.
+    #         if uf.nout == i_out + 1:
+    #             self.__handling = None
+
+    #     return self.magnitude.__array_wrap__(obj, context)
 
 
 

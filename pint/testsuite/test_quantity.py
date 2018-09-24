@@ -74,9 +74,8 @@ class TestQuantity(QuantityTestCase):
         self.assertTrue(x != z)
         self.assertTrue(x < z)
 
-        self.assertTrue(z != j)
+        self.assertRaises(DimensionalityError, op.eq, z, j)
 
-        self.assertNotEqual(z, j)
         self.assertEqual(self.Q_(0, 'meter'), self.Q_(0, 'centimeter'))
         self.assertNotEqual(self.Q_(0, 'meter'), self.Q_(0, 'second'))
 
@@ -1356,7 +1355,7 @@ class TestCompareZero(QuantityTestCase):
         self.assertRaises(OffsetUnitCalculusError, q0.__eq__, 0)
         self.assertRaises(OffsetUnitCalculusError, q1.__eq__, 0)
         self.assertRaises(OffsetUnitCalculusError, q2.__eq__, 0)
-        self.assertFalse(q0 == ureg.Quantity(0, ''))
+        self.assertRaises(DimensionalityError, op.eq, q0, ureg.Quantity(0, ''))
 
     def test_offset_autoconvert_equal_zero(self):
         ureg =  self.ureg
@@ -1367,7 +1366,7 @@ class TestCompareZero(QuantityTestCase):
         self.assertTrue(q0 == 0)
         self.assertFalse(q1 == 0)
         self.assertFalse(q2 == 0)
-        self.assertFalse(q0 == ureg.Quantity(0, ''))
+        self.assertRaises(DimensionalityError, op.eq, q0, ureg.Quantity(0, ''))
 
     def test_gt_zero(self):
         ureg = self.ureg
@@ -1423,3 +1422,6 @@ class TestCompareZero(QuantityTestCase):
         self.assertTrue(q2 > 0)
         self.assertRaises(DimensionalityError, q1.__gt__,
                           ureg.Quantity(0, ''))
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

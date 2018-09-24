@@ -480,10 +480,10 @@ class TestIssuesNP(QuantityTestCase):
     def test_issue127(self):
         q = [1., 2., 3., 4.] * self.ureg.meter
         q[0] = np.nan
-        self.assertNotEqual(q[0], 1.)
+        self.assertNotEqual(q[0], 1. * self.ureg.meter)
         self.assertTrue(math.isnan(q[0].magnitude))
         q[1] = float('NaN')
-        self.assertNotEqual(q[1], 2.)
+        self.assertNotEqual(q[1], 2. * self.ureg.meter)
         self.assertTrue(math.isnan(q[1].magnitude))
 
     def test_issue171_real_imag(self):

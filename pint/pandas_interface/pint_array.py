@@ -454,7 +454,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             # Pint quantities may only be exponented by single values, not arrays.
             # Reduce single value arrays to single value to allow power ops
             if isinstance(rvalues,_Quantity):
-                if len(set(np.array(rvalues.data)))==1:
+                if len(np.array(rvalues))==1:
                     rvalues=rvalues[0]
             elif len(set(np.array(rvalues)))==1:
                 rvalues=rvalues[0]
