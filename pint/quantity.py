@@ -122,7 +122,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             raise TypeError('units must be of type str, Quantity or '
                             'UnitsContainer; not {}.'.format(type(units)))
         
-        while isinstance(value, np.ndarray) and value.ndim == 0:
+        while isinstance(value, ndarray) and value.ndim == 0:
             value = np.asscalar(value)
         
         # Get magnitude (and unit?)
@@ -138,7 +138,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         elif isinstance(value, _Quantity):
             inst = copy.copy(value)
             inst._units *= units
-        elif isinstance(value, (list, tuple, np.ndarray)):
+        elif isinstance(value, (list, tuple, ndarray)):
             def recursion(value, units=None):
                 if isinstance(value, _Quantity):
                     if units is not None:
@@ -146,7 +146,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                     else:
                         units = value._units
                     return value.m, units
-                elif isinstance(value, np.ndarray):
+                elif isinstance(value, ndarray):
                     if value.size == 0:
                         return value, units
                     if value.ndim == 0:
@@ -172,7 +172,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                         units = UnitsContainer()
                     return value, units
             value_magnitude, value_units = recursion(value)
-            if value_magnitude.dtype == np.dtype('object'):
+            if isinstance(value, ndarray) and value_magnitude.dtype == np.dtype('object'):
                 value_magnitude = np.asarray(value_magnitude, dtype=float)
             inst = object.__new__(cls)
             inst._magnitude = value_magnitude
