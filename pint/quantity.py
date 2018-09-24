@@ -24,7 +24,7 @@ from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_la
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
-from .compat import string_types, ndarray, np, _to_magnitude, long_type
+from .compat import string_types, ndarray, np, _to_magnitude, long_type, HAS_NUMPY
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit,
                    fix_str_conversions)
@@ -160,6 +160,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                     return ret, units
                         
                 elif isinstance(value, (list, tuple)):
+                    if not HAS_NUMPY:
+                        raise TypeError("Can't use list or tuple without numpy.")
                     if len(value) == 0:
                         return np.array([]), units
                     array = []
