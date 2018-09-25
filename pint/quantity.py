@@ -104,6 +104,17 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             return value
         else:
             return self._REGISTRY.Quantity(value)
+    
+    @property
+    def dtype(self):
+        return 'pint'
+    
+    def isna(self):
+        if isinstance(self.magnitude, ndarray):
+            return self.isnan()
+        else:
+            return math.isnan(self.magnitude)
+    
         
     def __new__(cls, value, units=None):
         # Get units
@@ -1346,7 +1357,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                         
     __magnitude_ufunc = ['isfinite', 'isnan', 'isreal', 'isinf', 'iscomplex', 
                          'argmax', 'argmin', 'sort', 'nonzero', 'argsort',
-                         'nanargmin', 'nanargmax', 'nbytes']
+                         'nanargmin', 'nanargmax', 'nbytes', 'dtype', 
+                         'ndim']
     
     __unitless_zero_ok = 'greater greater_equal less less_equal equal not_equal '\
                         'add subtract'.split()
@@ -1481,8 +1493,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             if callable(attr):
                 return functools.partial(self.__numpy_method_wrap, attr)
             return attr
-        raise AttributeError("Neither Quantity object nor its magnitude ({}) "
-                                 "has attribute '{}'".format(self._magnitude, item))
+        raise AttributeError("Quantity object doesn't have "
+                                 "attribute '{}'".format(self._magnitude, item))
 
     def __getitem__(self, key):
         try:
