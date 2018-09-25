@@ -230,12 +230,12 @@ def check(ureg, *args):
         updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
 
         @functools.wraps(func, assigned=assigned, updated=updated)
-        def wrapper(*values, **kwargs):
-            values, kwargs = _apply_defaults(func, values, kwargs)
-            if len(dimensions) > len(values):
+        def wrapper(*args, **kwargs):
+            list_args, empty = _apply_defaults(func, args, kwargs)
+            if len(dimensions) > len(list_args):
                 raise TypeError("%s takes %i parameters, but %i dimensions were passed"
-                % (func.__name__, len(values), len(dimensions)))
-            for dim, value in zip(dimensions, values):
+                % (func.__name__, len(list_args), len(dimensions)))
+            for dim, value in zip(dimensions, list_args):
 
                 if dim is None:
                     continue
@@ -244,6 +244,6 @@ def check(ureg, *args):
                     val_dim = ureg.get_dimensionality(value)
                     raise DimensionalityError(value, 'a quantity of',
                                               val_dim, dim)
-            return func(*values, **kwargs)
+            return func(*args, **kwargs)
         return wrapper
     return decorator
