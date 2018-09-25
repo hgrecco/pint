@@ -76,7 +76,44 @@ def check_implemented(f):
         return result
     return wrapped
 
-
+def recursion(value, units=None):
+    if isinstance(value, _Quantity):
+        if units is not None:
+            value = value.to(units)
+        else:
+            units = value._units
+        return value.m, units
+    elif isinstance(value, ndarray):
+        if value.dtype != np.dtype('object'):
+            if units is None:
+                units = UnitsContainer()
+            return value, units
+        if value.size == 0:
+            return value, units
+        if value.ndim == 0:
+            if units is None:
+                units = UnitsContainer()
+            return value, units
+        ret = np.zeros_like(value)
+        for idx, val in np.ndenumerate(value):
+            m, units = recursion(val, units)
+            ret[idx] = m
+        return ret, units
+            
+    elif isinstance(value, (list, tuple)):
+        if not HAS_NUMPY:
+            raise TypeError("Can't use list or tuple without numpy.")
+        if len(value) == 0:
+            return np.array([]), units
+        array = []
+        for val in value:
+            m, units = recursion(val, units)
+            array.append(m)
+        return np.array(array), units
+    else:
+        if units is None:
+            units = UnitsContainer()
+        return value, units
 @fix_str_conversions
 class _Quantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
@@ -152,40 +189,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             inst = copy.copy(value)
             inst._units *= units
         elif isinstance(value, (list, tuple, ndarray)):
-            def recursion(value, units=None):
-                if isinstance(value, _Quantity):
-                    if units is not None:
-                        value = value.to(units)
-                    else:
-                        units = value._units
-                    return value.m, units
-                elif isinstance(value, ndarray):
-                    if value.size == 0:
-                        return value, units
-                    if value.ndim == 0:
-                        if units is None:
-                            units = UnitsContainer()
-                        return value, units
-                    ret = np.zeros_like(value)
-                    for idx, val in np.ndenumerate(value):
-                        m, units = recursion(val, units)
-                        ret[idx] = m
-                    return ret, units
-                        
-                elif isinstance(value, (list, tuple)):
-                    if not HAS_NUMPY:
-                        raise TypeError("Can't use list or tuple without numpy.")
-                    if len(value) == 0:
-                        return np.array([]), units
-                    array = []
-                    for val in value:
-                        m, units = recursion(val, units)
-                        array.append(m)
-                    return np.array(array), units
-                else:
-                    if units is None:
-                        units = UnitsContainer()
-                    return value, units
+            
             value_magnitude, value_units = recursion(value)
             if isinstance(value, ndarray) and value_magnitude.dtype == np.dtype('object'):
                 value_magnitude = np.asarray(value_magnitude, dtype=float)
