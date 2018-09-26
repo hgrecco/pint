@@ -142,10 +142,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         else:
             return self._REGISTRY.Quantity(value)
     
-    @property
-    def dtype(self):
-        return 'pint'
-    
     def isna(self):
         if isinstance(self.magnitude, ndarray):
             return self.isnan()
@@ -1345,7 +1341,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                    'copysign nextafter trunc ' \
                    'frexp ldexp modf modf__1 ' \
                    'absolute negative remainder fmod mod '\
-                   'amax amin'.split()
+                   'amax amin astype'.split()
 
     #: Dictionary mapping ufunc/attributes names to the units that they will
     #: set on output. The value is interpreted as the power to which the unit
