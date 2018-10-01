@@ -498,21 +498,34 @@ class PintDataFrameAccessor(object):
         unit_col_name = df_columns.columns[level]
         units = df_columns[unit_col_name]
         df_columns = df_columns.drop(columns=unit_col_name)
-        df_columns.values
-        df_new = DataFrame({i: PintArray(Q_(df.values[:, i], unit))
+
+        df_new = DataFrame({
+            i: PintArray(Q_(df.values[:, i], unit))
             for i, unit in enumerate(units.values)
         })
+
         df_new.columns = df_columns.index.droplevel(unit_col_name)
         df_new.index = df.index
+
         return df_new
 
     def dequantify(self):
-        df=self._obj
-        df_columns=df.columns.to_frame()
-        df_columns['units']=[str(df[col].values.data.units) for col in df.columns]
-        df_new=DataFrame({ tuple(df_columns.iloc[i]) : df[col].values.data.magnitude
-            for i,col in enumerate(df.columns)
+        df = self._obj
+
+        df_columns = df.columns.to_frame()
+        df_columns['units'] = [
+            str(df[col].values.data.units)
+            for col in df.columns
+        ]
+
+        df_new = DataFrame({
+            tuple(df_columns.iloc[i]): df[col].values.data.magnitude
+            for i, col in enumerate(df.columns)
         })
+
+        df_new.columns.names = df.columns.names + ['unit']
+        df_new.index = df.index
+
         return df_new
 
     def to_base_units(self):

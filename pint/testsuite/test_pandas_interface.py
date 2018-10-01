@@ -421,7 +421,7 @@ else:
                 "test-data", "pandas_test.csv"
             )
 
-            df=pd.read_csv(test_csv, header=[0,1])
+            df = pd.read_csv(test_csv, header=[0,1])
             df_ = df.pint.quantify(ureg, level=-1)
 
             df_['mech power'] = df_.speed*df_.torque
@@ -435,6 +435,53 @@ else:
 
             df_.pint.to_base_units().pint.dequantify()
 
+
+    class TestDataFrameAccessor(object):
+        def test_index_maintained(self):
+            test_csv = join(
+                dirname(__file__),
+                "test-data", "pandas_test.csv"
+            )
+
+            df = pd.read_csv(test_csv, header=[0, 1])
+            df.columns = pd.MultiIndex.from_arrays(
+                [
+                    ['Holden', 'Holden', 'Holden', 'Ford', 'Ford', 'Ford'],
+                    ['speed', 'mech power', 'torque', 'rail pressure', 'fuel flow rate' ,'fluid power'],
+                    ['rpm', 'kW', 'N m', 'bar', 'l/min', 'kW'],
+                ],
+                names = ['Car type', 'metric', 'unit']
+            )
+            df.index = pd.MultiIndex.from_arrays(
+                [
+                    [1, 12, 32, 48],
+                    ['Tim', 'Tim', 'Jane', 'Steve'],
+                ],
+                names = ['Measurement number', 'Measurer']
+
+            )
+
+
+            expected = df.copy()
+
+            # we expect the result to come back with pint names, not input
+            # names
+            def get_pint_value(in_str):
+                return str(ureg.Quantity(1, in_str).units)
+
+            units_level = [
+                i for i, name in enumerate(df.columns.names) if name == 'unit'
+            ][0]
+
+            expected.columns = df.columns.set_levels(
+                df.columns.levels[units_level].map(get_pint_value),
+                level='unit'
+            )
+
+
+            result = df.pint.quantify(ureg, level=-1).pint.dequantify()
+
+            pd.testing.assert_frame_equal(result, expected)
 
 
     class TestSeriesAccessors(object):
@@ -528,7 +575,6 @@ else:
         operator.ge,
         operator.gt,
     ]
-
 
 
     class TestPintArrayQuantity(QuantityTestCase):
