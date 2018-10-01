@@ -3,8 +3,6 @@
     pint.pandas_interface.pint_array
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # I'm happy with both of these as long as Andrew and Zebedee are added on
-    # but need to check with Pint Authors...
     :copyright: 2018 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
