@@ -128,9 +128,9 @@ try:
     import pandas as pd
     HAS_PANDAS = True
     HAS_PROPER_PANDAS = (
-            hasattr(pd.core, "arrays")
-            and hasattr(pd.core.arrays.base, "ExtensionOpsMixin")
-        )
+        hasattr(pd.core, "arrays")
+        and hasattr(pd.core.arrays.base, "ExtensionOpsMixin")
+    )
 except ImportError:
     HAS_PROPER_PANDAS = HAS_PANDAS = False
 
