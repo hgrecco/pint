@@ -1500,7 +1500,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         :type enable: bool
         """
         # Delays importing matplotlib until it's actually requested
-        from .matplotlib import setup_matplotlib_handlers
+        from .mpl_units import setup_matplotlib_handlers
         setup_matplotlib_handlers(self, enable)
 
     wraps = registry_helpers.wraps
