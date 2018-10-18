@@ -343,6 +343,17 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(f3(3. * ureg.centimeter), 0.03 * ureg.centimeter)
         self.assertEqual(f3(3. * ureg.meter), 3. * ureg.centimeter)
 
+        # Test string conversion when strict=True.
+        f3 = ureg.wraps('centimeter', ['meter', ], strict=True)(func)
+        self.assertEqual(f3('3 cm'), .03 * ureg.centimeter)
+        self.assertEqual(f3('3 m'), 3. * ureg.centimeter)
+
+        # Test that string conversion fails when strict=False
+        f3 = ureg.wraps('centimeter', ['meter', ], strict=False)(func)
+        # self.assertRaises(ValueError, f3, '3 cm')
+        self.assertEqual(f3('3 cm'), '3 cm' * ureg.centimeter)
+        # self.assertEqual(f3('3 m'), 3. * ureg.centimeter)
+
         def gfunc(x, y):
             return x + y
 

@@ -82,6 +82,8 @@ Or in the decorator format:
                 Use None to skip conversion of any given element.
     - **strict**: if `True` all convertible arguments must be a Quantity
                   and others will raise a ValueError (True by default)
+                  `strict` also enables implicit string conversion. If
+                  a string can be converted to a Quantity, it will be.
 
 
 
@@ -89,11 +91,14 @@ Strict Mode
 -----------
 
 By default, the function is wrapped in `strict` mode. In this mode,
-the input arguments assigned to units must be a Quantities.
+the input arguments assigned to units must be a Quantities, or strings that
+can be converted to Quantities.
 
 .. doctest::
 
     >>> mypp(1. * ureg.meter)
+    <Quantity(2.0064092925890407, 'second')>
+    >>> mypp('2 m')
     <Quantity(2.0064092925890407, 'second')>
     >>> mypp(1.)
     Traceback (most recent call last):

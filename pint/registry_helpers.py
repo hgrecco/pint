@@ -120,6 +120,15 @@ def _parse_wrap_args(args, registry=None):
                 new_values[ndx] = ureg._convert(values[ndx]._magnitude,
                                                 values[ndx]._units,
                                                 args_as_uc[ndx][0])
+
+            # If the input is a string and strict is active, convert it to a quantity.
+            elif string_types in type(values[ndx]).mro() and strict:
+                implicit_quantity = ureg.Quantity(values[ndx])
+                new_values[ndx] = ureg._convert(implicit_quantity._magnitude,
+                                                implicit_quantity._units,
+                                                args_as_uc[ndx][0])
+
+
             else:
                 if strict:
                     raise ValueError('A wrapped function using strict=True requires '
@@ -143,7 +152,7 @@ def _apply_defaults(func, args, kwargs):
         if param.name not in bound_arguments.arguments:
             bound_arguments.arguments[param.name] = param.default
     args = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
-    return args, {} 
+    return args, {}
 
 def wraps(ureg, ret, args, strict=True):
     """Wraps a function to become pint-aware.
@@ -186,7 +195,7 @@ def wraps(ureg, ret, args, strict=True):
         def wrapper(*values, **kw):
 
             values, kw = _apply_defaults(func, values, kw)
-                
+
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.
             new_values, values_by_name = converter(ureg, values, strict)
