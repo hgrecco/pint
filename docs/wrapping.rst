@@ -91,19 +91,23 @@ Strict Mode
 -----------
 
 By default, the function is wrapped in `strict` mode. In this mode,
-the input arguments assigned to units must be a Quantities, or strings that
-can be converted to Quantities.
+the input arguments assigned to units must be Quantities.
 
 .. doctest::
 
     >>> mypp(1. * ureg.meter)
     <Quantity(2.0064092925890407, 'second')>
-    >>> mypp('2 m')
-    <Quantity(2.0064092925890407, 'second')>
     >>> mypp(1.)
     Traceback (most recent call last):
     ...
     ValueError: A wrapped function using strict=True requires quantity for all arguments with not None units. (error found for meter, 1.0)
+
+Strict mode also enables automatic conversion of strings into Quantities when possible.
+
+.. doctest::
+
+    >>> mypp('1 m')
+    <Quantity(2.0064092925890407, 'second')>
 
 To enable using non-Quantity numerical values, set strict to False`.
 
