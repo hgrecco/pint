@@ -347,6 +347,8 @@ class TestRegistry(QuantityTestCase):
         f3 = ureg.wraps('centimeter', ['meter', ], strict=True)(func)
         self.assertEqual(f3('3 cm'), .03 * ureg.centimeter)
         self.assertEqual(f3('3 m'), 3. * ureg.centimeter)
+        # Test that string conversion also rejects incorrect units.
+        self.assertRaises(ValueError, f3, '3 s')
 
         # Test that string conversion fails when strict=False
         f3 = ureg.wraps('centimeter', ['meter', ], strict=False)(func)
