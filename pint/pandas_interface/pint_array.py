@@ -10,8 +10,8 @@
 from pint.compat import HAS_PROPER_PANDAS
 if not HAS_PROPER_PANDAS:
     error_msg = (
-        "Pint's Pandas interface requires that the latest version of "
-        "Pandas is installed from Pandas' master branch"
+        "The installed version of Pandas is not compatible with Pint, please check "
+        "the docs."
     )
     raise ImportError(error_msg)
 

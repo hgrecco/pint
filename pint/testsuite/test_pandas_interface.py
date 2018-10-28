@@ -10,8 +10,8 @@ if not (HAS_PYTEST and HAS_PROPER_PANDAS):
     class TestPandasException(BaseTestCase):
         def test_pandas_exception(self):
             expected_error_msg = (
-                "Pint's Pandas interface requires that the latest version of "
-                "Pandas is installed from Pandas' master branch"
+                "The installed version of Pandas is not compatible with Pint, please "
+                "check the docs."
             )
             with self.assertRaises(ImportError) as cm:
                 import pint.pandas_interface
@@ -19,9 +19,9 @@ if not (HAS_PYTEST and HAS_PROPER_PANDAS):
             self.assertEqual(str(cm.exception), expected_error_msg)
 
     if not (HAS_PYTEST and HAS_PROPER_PANDAS):
-        msg_end = "the latest version of Pandas from the master branch and pytest installed"
+        msg_end = "the correct version of Pandas and pytest installed"
     elif not HAS_PROPER_PANDAS:
-        msg_end = "the latest version of Pandas from the master branch installed"
+        msg_end = "the latest version of Pandas installed"
     elif not HAS_PYTEST:
         msg_end = "pytest installed"
 
