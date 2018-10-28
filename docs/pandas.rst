@@ -5,7 +5,8 @@ Pandas support
 
 It is convenient to use the `Pandas package`_ when dealing with numerical data, so Pint provides `PintArray`. A `PintArray` is a `Pandas Extension Array`_, which allows Pandas to recognise the Quantity and store it in Pandas DataFrames and Series.
 
-For this to work, we rely on `Pandas Extension Types`_ which are still experimental. As a result, we currently have to build the latest version of Pandas' master branch from source as documented in the `Pandas README`_.
+For this to work, we rely on `Pandas Extension Types`_ which are still experimental. As a result, we are currently pinned to a specific commit, with version id ``0.24.0.dev0+625.gbdb7a16``, of Pandas.
+
 
 Basic example
 -------------

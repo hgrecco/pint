@@ -127,10 +127,8 @@ if not HAS_PROPER_BABEL:
 try:
     import pandas as pd
     HAS_PANDAS = True
-    HAS_PROPER_PANDAS = (
-        hasattr(pd.core, "arrays")
-        and hasattr(pd.core.arrays.base, "ExtensionOpsMixin")
-    )
+    # pin Pandas version for now
+    HAS_PROPER_PANDAS = pd.__version__.startswith("0.24.0.dev0+625.gbdb7a16")
 except ImportError:
     HAS_PROPER_PANDAS = HAS_PANDAS = False
 
