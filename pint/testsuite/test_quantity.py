@@ -385,6 +385,12 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compareQuantity_compact(1/ureg.m**2, 1/ureg.m**2)
         self.compareQuantity_compact(1e11/ureg.m**2, 1e5/ureg.mm**2)
 
+    def test_fractional_units(self):
+        ureg = self.ureg
+        # Typing denominator first to provoke potential error
+        self.compareQuantity_compact(20e3*ureg('hr^(-1) m'),
+            20*ureg.km/ureg.hr)
+
     def test_fractional_exponent_units(self):
         ureg = self.ureg
         self.compareQuantity_compact(1*ureg.m**0.5, 1*ureg.m**0.5)

@@ -497,9 +497,14 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         q_base = self.to(unit)
 
         magnitude = q_base.magnitude
-        # Only changes the prefix on the first unit in the UnitContainer
-        unit_str = list(q_base._units.items())[0][0]
-        unit_power = list(q_base._units.items())[0][1]
+
+        units = list(q_base._units.items())
+        units_numerator = list(filter(lambda a: a[1]>0, units))
+
+        if len(units_numerator) > 0:
+            unit_str, unit_power = units_numerator[0]
+        else:
+            unit_str, unit_power = units[0]
 
         if unit_power > 0:
             power = int(math.floor(math.log10(abs(magnitude)) / unit_power / 3)) * 3
