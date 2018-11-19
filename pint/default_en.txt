@@ -177,6 +177,7 @@ Nm = 1/1000 / tex
     # Allow switching between Direct count system (i.e. tex) and
     # Indirect count system (i.e. Ne, Nm)
     [mass] / [length] <-> [length] / [mass]: 1 / value
+@end
 
 # Photometry
 lumen = candela * steradian = lm
