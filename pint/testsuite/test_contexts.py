@@ -633,6 +633,24 @@ class TestDefinedContexts(QuantityTestCase):
         for a, b in itertools.product(eq, eq):
             self.assertQuantityAlmostEqual(a.to(b.units, 'sp'), b, rtol=0.01)
 
+    def test_textile(self):
+        ureg = self.ureg
+        qty_direct = 1.331 * ureg.tex
+        with self.assertRaises(errors.DimensionalityError):
+            qty_indirect = qty_direct.to('Nm')
+
+        with ureg.context('textile'):
+            from pint.util import find_shortest_path
+            qty_indirect = qty_direct.to('Nm')
+            a = qty_direct.to_base_units()
+            b = qty_indirect.to_base_units()
+            da, db = Context.__keytransform__(a.dimensionality,
+                                              b.dimensionality)
+            p = find_shortest_path(ureg._active_ctx.graph, da, db)
+            self.assertTrue(p)
+            msg = '{} <-> {}'.format(a, b)
+            self.assertQuantityAlmostEqual(b, a, rtol=0.01, msg=msg)
+
     def test_decorator(self):
         ureg = self.ureg
 
