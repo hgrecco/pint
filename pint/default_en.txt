@@ -168,6 +168,16 @@ denier =  gram / (9000 * meter)
 tex = gram / (1000 * meter)
 dtex = decitex
 
+# These are Indirect yarn numbering systems (length/unit mass)
+jute = lb / (14400 * yd) = Tj
+Ne = 1/590.5 / tex
+Nm = 1/1000 / tex
+
+@context textile
+    # Allow switching between Direct count system (i.e. tex) and
+    # Indirect count system (i.e. Ne, Nm)
+    [mass] / [length] <-> [length] / [mass]: 1 / value
+
 # Photometry
 lumen = candela * steradian = lm
 lux = lumen / meter ** 2 = lx
