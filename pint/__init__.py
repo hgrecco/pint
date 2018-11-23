@@ -79,7 +79,6 @@ def get_application_registry():
     """
     Get the application registry which is used for unpickling operations.
     """
-    assert isinstance(registry, UnitRegistry)
     return _APP_REGISTRY
 
 
