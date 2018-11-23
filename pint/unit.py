@@ -71,9 +71,6 @@ class _Unit(PrettyIPython, SharedRegistryObject):
     def __str__(self):
         return format(self)
 
-    def __repr__(self):
-        return "<Unit('{}')>".format(self._units)
-
     def __format__(self, spec):
         spec = spec or self.default_format
         # special cases

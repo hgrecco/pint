@@ -16,6 +16,7 @@ import locale
 import sys
 import re
 import operator
+import warnings
 from numbers import Number
 from fractions import Fraction
 from collections import Mapping
@@ -305,9 +306,25 @@ class UnitsContainer(Mapping):
         return self._hash
 
     def __getstate__(self):
+        from . import _APP_REGISTRY, _DEFAULT_REGISTRY
+        if _APP_REGISTRY == _DEFAULT_REGISTRY:
+            warnings.warn("It is advised to set the application registry "
+                          "through `pint.set_application_registry` before "
+                          "using unit serialization.\nSee "
+                          "https://pint.readthedocs.io/en/latest/"
+                          "tutorial.html#using-pint-in-your-projects for "
+                          "more details.")
         return {'_d': self._d, '_hash': self._hash}
 
     def __setstate__(self, state):
+        from . import _APP_REGISTRY, _DEFAULT_REGISTRY
+        if _APP_REGISTRY == _DEFAULT_REGISTRY:
+            warnings.warn("It is advised to set the application registry "
+                          "through `pint.set_application_registry` before "
+                          "using unit serialization.\nSee "
+                          "https://pint.readthedocs.io/en/latest/"
+                          "tutorial.html#using-pint-in-your-projects for "
+                          "more details.")
         self._d = state['_d']
         self._hash = state['_hash']
 
@@ -646,6 +663,13 @@ class PrettyIPython(object):
             p.text("{:~P}".format(self))
         else:
             p.text("{:P}".format(self))
+
+    def __repr__(self):
+        if hasattr(self, "_magnitude"):
+            return "<{}({}, '{}')>".format(self.__class__.__name__,
+                                           self._magnitude, self._units)
+        else:
+            return "<{}('{}')>".format(self.__class__.__name__, self._units)
 
 
 def to_units_container(unit_like, registry=None):

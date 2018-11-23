@@ -75,6 +75,14 @@ def _build_unit(units):
     return _APP_REGISTRY.Unit(units)
 
 
+def get_application_registry():
+    """
+    Get the application registry which is used for unpickling operations.
+    """
+    assert isinstance(registry, UnitRegistry)
+    return _APP_REGISTRY
+
+
 def set_application_registry(registry):
     """Set the application registry which is used for unpickling operations.
 

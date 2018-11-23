@@ -144,6 +144,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         # # Allow exception to propagate in case of non-iterable magnitude
         it_mag = iter(self.magnitude)
         return iter((self.__class__(mag, self._units) for mag in it_mag))
+
     @property
     def debug_used(self):
         return self.__used
@@ -161,9 +162,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def __str__(self):
         return format(self)
-
-    def __repr__(self):
-        return "<Quantity({}, '{}')>".format(self._magnitude, self._units)
 
     def __hash__(self):
         self_base = self.to_base_units()
@@ -323,9 +321,25 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     @classmethod
     def from_tuple(cls, tup):
+        from . import _APP_REGISTRY, _DEFAULT_REGISTRY
+        if _APP_REGISTRY == _DEFAULT_REGISTRY:
+            warnings.warn("It is advised to set the application registry "
+                          "through `pint.set_application_registry` before "
+                          "using unit serialization.\nSee "
+                          "https://pint.readthedocs.io/en/latest/"
+                          "tutorial.html#using-pint-in-your-projects for "
+                          "more details.")
         return cls(tup[0], UnitsContainer(tup[1]))
 
     def to_tuple(self):
+        from . import _APP_REGISTRY, _DEFAULT_REGISTRY
+        if _APP_REGISTRY == _DEFAULT_REGISTRY:
+            warnings.warn("It is advised to set the application registry "
+                          "through `pint.set_application_registry` before "
+                          "using unit serialization.\nSee "
+                          "https://pint.readthedocs.io/en/latest/"
+                          "tutorial.html#using-pint-in-your-projects for "
+                          "more details.")
         return self.m, tuple(self._units.items())
 
     def compatible_units(self, *contexts):
