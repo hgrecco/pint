@@ -3,7 +3,10 @@ import unittest
 from pint.compat import pd, pytest
 
 def setUpModule():
-    if (pytest is None) or (pd is None):
+    print("Hit setupmodule")
+    try:
+        import pint.pandas_interface as ppi
+    except:
         if (pytest is None) and (pd is None):
             missing_msg = (
                 "pytest and the right pandas version are not available, check the docs"
