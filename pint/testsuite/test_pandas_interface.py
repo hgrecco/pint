@@ -8,136 +8,141 @@ import warnings
 
 import pint
 
-from pint.compat import np, pd, pytest, PYTHON3
+from pint.compat import np, pd, pytest
 from pint.errors import DimensionalityError
 from pint.testsuite import BaseTestCase, QuantityTestCase, helpers
 
 if (pytest is None) or (pd is None):
-    # not a great solution but not sure what is...
-    if PYTHON3:
-        from unittest.mock import MagicMock
-    else:
-        from mock import MagicMock
+    solution_msg = (
+        'Run the tests with \n'
+        'python -bb -m coverage run -p --source=pint --omit="*test*","*compat*","*pandas*" setup.py test\n'
+        'to avoid the Pandas tests'
+    )
+    if (pytest is None) and (pd is None):
+        missing_msg = (
+            "pytest and the right pandas version are not available, check the docs"
+        )
+    elif pytest is None:
+        missing_msg = "pytest is not available"
+    elif pd is None:
+        missing_msg = "the right pandas version is not available, check the docs"
+    raise ValueError("{}\n{}".format(missing_msg, solution_msg))
 
-    base = MagicMock()
-    pytest = MagicMock()
-    pd = MagicMock()
-    get_tdata = MagicMock()
-else:
-    import pint.pandas_interface as ppi
-    from pint.pandas_interface import PintArray
+import pint.pandas_interface as ppi
+from pint.pandas_interface import PintArray
 
-    from pandas.tests.extension import base
-    from pandas.core import ops
-    from pandas.compat import PY3
-
-    @pytest.fixture
-    def dtype():
-        return ppi.PintType()
-
-
-    def get_tdata():
-        return ppi.PintArray(np.arange(start=1., stop=101.) * UREG.kilogram)
+from pandas.tests.extension import base
+from pandas.core import ops
+from pandas.compat import PY3
 
 
-    @pytest.fixture
-    def data():
-        return get_tdata()
+@pytest.fixture
+def dtype():
+    return ppi.PintType()
 
 
-    @pytest.fixture
-    def data_missing():
-        return ppi.PintArray([np.nan, 1] * UREG.meter)
+def get_tdata():
+    return ppi.PintArray(np.arange(start=1., stop=101.) * UREG.kilogram)
 
 
-    @pytest.fixture(params=['data', 'data_missing'])
-    def all_data(request, data, data_missing):
-        if request.param == 'data':
-            return data
-        elif request.param == 'data_missing':
-            return data_missing
+@pytest.fixture
+def data():
+    return get_tdata()
 
 
-    @pytest.fixture
-    def data_repeated(data):
-        """Return different versions of data for count times"""
-        # no idea what I'm meant to put here, try just copying from https://github.com/pandas-dev/pandas/blob/master/pandas/tests/extension/integer/test_integer.py
-        def gen(count):
-            for _ in range(count):
-                yield data
-        yield gen
+@pytest.fixture
+def data_missing():
+    return ppi.PintArray([np.nan, 1] * UREG.meter)
 
 
-    @pytest.fixture
-    def data_for_sorting():
-        return ppi.PintArray([0.3, 10, -50])
-        # should probably get more sophisticated and do something like
-        # [1 * UREG.meter, 3 * UREG.meter, 10 * UREG.centimeter]
+@pytest.fixture(params=['data', 'data_missing'])
+def all_data(request, data, data_missing):
+    if request.param == 'data':
+        return data
+    elif request.param == 'data_missing':
+        return data_missing
 
 
-    @pytest.fixture
-    def data_missing_for_sorting():
-        return ppi.PintArray([4, np.nan, -5])
-        # should probably get more sophisticated and do something like
-        # [4 * UREG.meter, np.nan, 10 * UREG.centimeter]
+@pytest.fixture
+def data_repeated(data):
+    """Return different versions of data for count times"""
+    # no idea what I'm meant to put here, try just copying from https://github.com/pandas-dev/pandas/blob/master/pandas/tests/extension/integer/test_integer.py
+    def gen(count):
+        for _ in range(count):
+            yield data
+    yield gen
 
 
-    @pytest.fixture
-    def na_cmp():
-        """Binary operator for comparing NA values.
-        """
-        return lambda x, y: bool(np.isnan(x.magnitude)) & bool(np.isnan(y))
+@pytest.fixture
+def data_for_sorting():
+    return ppi.PintArray([0.3, 10, -50])
+    # should probably get more sophisticated and do something like
+    # [1 * UREG.meter, 3 * UREG.meter, 10 * UREG.centimeter]
 
 
-    @pytest.fixture
-    def na_value():
-        return ppi.PintType.na_value
+@pytest.fixture
+def data_missing_for_sorting():
+    return ppi.PintArray([4, np.nan, -5])
+    # should probably get more sophisticated and do something like
+    # [4 * UREG.meter, np.nan, 10 * UREG.centimeter]
 
 
-    @pytest.fixture
-    def data_for_grouping():
-        # should probably get more sophisticated here and use units on all these
-        # quantities
-        a = 1
-        b = 2 ** 32 + 1
-        c = 2 ** 32 + 10
-        return ppi.PintArray([
-            b, b, np.nan, np.nan, a, a, b, c
-        ])
+@pytest.fixture
+def na_cmp():
+    """Binary operator for comparing NA values.
+    """
+    return lambda x, y: bool(np.isnan(x.magnitude)) & bool(np.isnan(y))
 
-    # === missing from pandas extension docs about what has to be included in tests ===
-    # copied from pandas/pandas/conftest.py
-    _all_arithmetic_operators = ['__add__', '__radd__',
-                                 '__sub__', '__rsub__',
-                                 '__mul__', '__rmul__',
-                                 '__floordiv__', '__rfloordiv__',
-                                 '__truediv__', '__rtruediv__',
-                                 '__pow__', '__rpow__',
-                                 '__mod__', '__rmod__']
-    if not PY3:
-        _all_arithmetic_operators.extend(['__div__', '__rdiv__'])
 
-    @pytest.fixture(params=_all_arithmetic_operators)
-    def all_arithmetic_operators(request):
-        """
-        Fixture for dunder names for common arithmetic operations
-        """
-        return request.param
+@pytest.fixture
+def na_value():
+    return ppi.PintType.na_value
 
-    @pytest.fixture(params=['__eq__', '__ne__', '__le__',
-                            '__lt__', '__ge__', '__gt__'])
-    def all_compare_operators(request):
-        """
-        Fixture for dunder names for common compare operations
 
-        * >=
-        * >
-        * ==
-        * !=
-        * <
-        * <=
-        """
-        return request.param
+@pytest.fixture
+def data_for_grouping():
+    # should probably get more sophisticated here and use units on all these
+    # quantities
+    a = 1
+    b = 2 ** 32 + 1
+    c = 2 ** 32 + 10
+    return ppi.PintArray([
+        b, b, np.nan, np.nan, a, a, b, c
+    ])
+
+# === missing from pandas extension docs about what has to be included in tests ===
+# copied from pandas/pandas/conftest.py
+_all_arithmetic_operators = ['__add__', '__radd__',
+                             '__sub__', '__rsub__',
+                             '__mul__', '__rmul__',
+                             '__floordiv__', '__rfloordiv__',
+                             '__truediv__', '__rtruediv__',
+                             '__pow__', '__rpow__',
+                             '__mod__', '__rmod__']
+if not PY3:
+    _all_arithmetic_operators.extend(['__div__', '__rdiv__'])
+
+@pytest.fixture(params=_all_arithmetic_operators)
+def all_arithmetic_operators(request):
+    """
+    Fixture for dunder names for common arithmetic operations
+    """
+    return request.param
+
+@pytest.fixture(params=['__eq__', '__ne__', '__le__',
+                        '__lt__', '__ge__', '__gt__'])
+def all_compare_operators(request):
+    """
+    Fixture for dunder names for common compare operations
+
+    * >=
+    * >
+    * ==
+    * !=
+    * <
+    * <=
+    """
+    return request.param
 # =================================================================
 
 
