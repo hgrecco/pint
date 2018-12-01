@@ -8,7 +8,7 @@ from distutils.version import StrictVersion
 import re
 import unittest
 
-from pint.compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
+from pint.compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3, HAS_PROPER_PANDAS
 
 
 def requires_numpy18():
@@ -29,6 +29,14 @@ def requires_numpy():
 
 def requires_not_numpy():
     return unittest.skipIf(HAS_NUMPY, 'Requires NumPy is not installed.')
+
+
+def requires_pandas():
+    return unittest.skipUnless(HAS_PROPER_PANDAS, 'Requires compatible Pandas')
+
+
+def requires_not_pandas():
+    return unittest.skipIf(HAS_PROPER_PANDAS, 'Requires compatible Pandas is not installed')
 
 
 def requires_proper_babel():
