@@ -155,30 +155,37 @@ if pytest is not None:
 # =================================================================
 
 
+@helpers.requires_pandas()
 class TestCasting(base.BaseCastingTests):
     pass
 
 
+@helpers.requires_pandas()
 class TestConstructors(base.BaseConstructorsTests):
     pass
 
 
+@helpers.requires_pandas()
 class TestDtype(base.BaseDtypeTests):
     pass
 
 
+@helpers.requires_pandas()
 class TestGetitem(base.BaseGetitemTests):
     pass
 
 
+@helpers.requires_pandas()
 class TestGroupby(base.BaseGroupbyTests):
     pass
 
 
+@helpers.requires_pandas()
 class TestInterface(base.BaseInterfaceTests):
     pass
 
 
+@helpers.requires_pandas()
 class TestMethods(base.BaseMethodsTests):
     @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
     # See test_setitem_mask_broadcast note
@@ -210,6 +217,7 @@ class TestMethods(base.BaseMethodsTests):
         assert result[0] == duplicated[0]
 
 
+@helpers.requires_pandas()
 class TestArithmeticOps(base.BaseArithmeticOpsTests):
     def check_opname(self, s, op_name, other, exc=None):
         op = self.get_op_from_name(op_name)
@@ -304,7 +312,7 @@ class TestArithmeticOps(base.BaseArithmeticOpsTests):
             opa(np.arange(len(s)).reshape(-1, len(s)))
 
 
-
+@helpers.requires_pandas()
 class TestComparisonOps(base.BaseComparisonOpsTests):
     def _compare_other(self, s, data, op_name, other):
         op = self.get_op_from_name(op_name)
@@ -328,19 +336,22 @@ class TestComparisonOps(base.BaseComparisonOpsTests):
         self._compare_other(s, data, op_name, other)
 
 
-
+@helpers.requires_pandas()
 class TestOpsUtil(base.BaseOpsUtil):
     pass
 
 
+@helpers.requires_pandas()
 class TestMissing(base.BaseMissingTests):
     pass
 
 
+@helpers.requires_pandas()
 class TestReshaping(base.BaseReshapingTests):
     pass
 
 
+@helpers.requires_pandas()
 class TestSetitem(base.BaseSetitemTests):
     @pytest.mark.parametrize('setter', ['loc', None])
     @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
@@ -365,7 +376,7 @@ class TestSetitem(base.BaseSetitemTests):
 
 # would be ideal to just test all of this by running the example notebook
 # but this isn't a discussion we've had yet
-
+@helpers.requires_pandas()
 class TestUserInterface(object):
     def test_get_underlying_data(self, data):
         ser = pd.Series(data)
@@ -428,6 +439,7 @@ class TestUserInterface(object):
         df_.pint.to_base_units().pint.dequantify()
 
 
+@helpers.requires_pandas()
 class TestDataFrameAccessor(object):
     def test_index_maintained(self):
         test_csv = join(
@@ -476,6 +488,7 @@ class TestDataFrameAccessor(object):
         pd.testing.assert_frame_equal(result, expected)
 
 
+@helpers.requires_pandas()
 class TestSeriesAccessors(object):
     @pytest.mark.parametrize('attr', [
         'debug_used',
@@ -568,6 +581,7 @@ comparative_ops = [
 ]
 
 
+@helpers.requires_pandas()
 class TestPintArrayQuantity(QuantityTestCase):
     FORCE_NDARRAY = True
 
