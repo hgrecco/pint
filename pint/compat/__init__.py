@@ -86,8 +86,7 @@ try:
         return value
 
 except ImportError:
-    # why is there both np = None and HAS_NUMPY = False, surely np = None implies
-    # HAS_NUMPY = False
+
     np = None
 
     class ndarray(object):
