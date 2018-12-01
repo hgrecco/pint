@@ -1,12 +1,25 @@
 # -*- coding: utf-8 -*-
 
 # - pandas test resources https://github.com/pandas-dev/pandas/blob/master/pandas/tests/extension/base/__init__.py
+from os.path import join, dirname
+from copy import deepcopy
+import operator
+import warnings
 
-from pint.compat import HAS_PROPER_PANDAS, HAS_PYTEST
+from pandas.core import ops
+from pandas.compat import PY3
+from pandas.tests.extension import base
+import pint
+from pint.pandas_interface import PintArray
 
-# I can't see how else to do this without this massive if clause...
-if not (HAS_PYTEST and HAS_PROPER_PANDAS):
-    from pint.testsuite import BaseTestCase
+from pint.compat import np, pd, pytest
+from pint.errors import DimensionalityError
+from pint.testsuite import BaseTestCase, QuantityTestCase, helpers
+
+if pd is not None:
+    import pint.pandas_interface as ppi
+
+if not (pytest is not None and pd is not None):
     class TestPandasException(BaseTestCase):
         def test_pandas_exception(self):
             expected_error_msg = (
@@ -29,30 +42,6 @@ if not (HAS_PYTEST and HAS_PROPER_PANDAS):
 
 
 else:
-    import sys
-    from os.path import join, dirname
-
-
-    import numpy as np
-    import pytest
-    import operator
-    import warnings
-
-    import pint
-    import pint.pandas_interface as ppi
-    from pint.testsuite import helpers
-
-    import pandas as pd
-    from pandas.compat import PY3
-    from pandas.tests.extension import base
-    from pandas.core import ops
-
-
-    from pint.testsuite.test_quantity import QuantityTestCase
-    from pint.errors import DimensionalityError
-    from pint.pandas_interface import PintArray
-
-
     ureg = pint.UnitRegistry()
 
 
@@ -538,7 +527,6 @@ else:
         def test_series_inplace_method_accessors(self, data, attr_args):
             attr = attr_args[0]
             args = attr_args[1]
-            from copy import deepcopy
             s = pd.Series(deepcopy(data))
             getattr(s.pint, attr)(*args)
             getattr(data._data, attr)(*args)

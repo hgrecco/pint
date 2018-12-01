@@ -139,4 +139,5 @@ try:
     import pytest
     HAS_PYTEST = True
 except ImportError:
+    pytest = None
     HAS_PYTEST = False
