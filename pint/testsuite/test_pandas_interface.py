@@ -8,15 +8,20 @@ import warnings
 
 import pint
 
-from pint.compat import np, pd, pytest
+from pint.compat import np, pd, pytest, PYTHON3
 from pint.errors import DimensionalityError
 from pint.testsuite import BaseTestCase, QuantityTestCase, helpers
 
 if (pytest is None) or (pd is None):
     # not a great solution but not sure what is...
-    from unittest.mock import MagicMock
+    if PYTHON3:
+        from unittest.mock import MagicMock
+    else:
+        from mock import MagicMock
+
     base = MagicMock()
     pytest = MagicMock()
+    pd = MagicMock()
     get_tdata = MagicMock()
 else:
     import pint.pandas_interface as ppi
