@@ -6,10 +6,7 @@ from copy import deepcopy
 import operator
 import warnings
 
-from pandas.core import ops
-from pandas.compat import PY3
 import pint
-from pint.pandas_interface import PintArray
 
 from pint.compat import np, pd, pytest
 from pint.errors import DimensionalityError
@@ -23,7 +20,12 @@ if (pytest is None) or (pd is None):
     get_tdata = MagicMock()
 else:
     import pint.pandas_interface as ppi
+    from pint.pandas_interface import PintArray
+
     from pandas.tests.extension import base
+    from pandas.core import ops
+    from pandas.compat import PY3
+
     @pytest.fixture
     def dtype():
         return ppi.PintType()
