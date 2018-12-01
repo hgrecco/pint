@@ -5,6 +5,7 @@ from os.path import join, dirname
 from copy import deepcopy
 import operator
 import warnings
+import unittest
 
 import pint
 
@@ -13,11 +14,6 @@ from pint.errors import DimensionalityError
 from pint.testsuite import BaseTestCase, QuantityTestCase, helpers
 
 if (pytest is None) or (pd is None):
-    solution_msg = (
-        'Run the tests with \n'
-        'python -bb -m coverage run -p --source=pint --omit="*test*","*compat*","*pandas*" setup.py test\n'
-        'to avoid the Pandas tests'
-    )
     if (pytest is None) and (pd is None):
         missing_msg = (
             "pytest and the right pandas version are not available, check the docs"
@@ -26,7 +22,8 @@ if (pytest is None) or (pd is None):
         missing_msg = "pytest is not available"
     elif pd is None:
         missing_msg = "the right pandas version is not available, check the docs"
-    raise ValueError("{}\n{}".format(missing_msg, solution_msg))
+
+    raise unittest.SkipTest(missing_msg)
 
 import pint.pandas_interface as ppi
 from pint.pandas_interface import PintArray
