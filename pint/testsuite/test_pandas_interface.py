@@ -61,9 +61,13 @@ else:
         return ppi.PintType()
 
 
+    def get_tdata():
+        return ppi.PintArray(np.arange(start=1., stop=101.) * ureg.kilogram)
+
+
     @pytest.fixture
     def data():
-        return ppi.PintArray(np.arange(start=1., stop=101.) * ureg.kilogram)
+        return get_tdata()
 
 
     @pytest.fixture
@@ -529,7 +533,7 @@ else:
             ('ito_base_units', ()),
             ('ito_reduced_units', ()),
             ('ito_root_units', ()),
-            ('put', (1, data()[0]))
+            ('put', (1, get_tdata()[0]))
         ])
         def test_series_inplace_method_accessors(self, data, attr_args):
             attr = attr_args[0]
@@ -541,10 +545,10 @@ else:
             assert all(s.values == data)
 
         @pytest.mark.parametrize('attr_args', [
-            ('clip', (data()[10], data()[20])),
-            ('from_tuple', (data().data.to_tuple(),)),
+            ('clip', (get_tdata()[10], get_tdata()[20])),
+            ('from_tuple', (get_tdata().data.to_tuple(),)),
             ('m_as', ("g",)),
-            ('searchsorted', (data()[10],)),
+            ('searchsorted', (get_tdata()[10],)),
             ('to', ("g")),
             ('to_base_units', ()),
             ('to_compact', ()),
