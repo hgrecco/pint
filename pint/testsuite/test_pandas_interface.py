@@ -8,7 +8,6 @@ import warnings
 
 from pandas.core import ops
 from pandas.compat import PY3
-from pandas.tests.extension import base
 import pint
 from pint.pandas_interface import PintArray
 
@@ -16,35 +15,15 @@ from pint.compat import np, pd, pytest
 from pint.errors import DimensionalityError
 from pint.testsuite import BaseTestCase, QuantityTestCase, helpers
 
-if pd is not None:
+if (pytest is None) or (pd is None):
+    # not a great solution but not sure what is...
+    from unittest.mock import MagicMock
+    base = MagicMock()
+    pytest = MagicMock()
+    get_tdata = MagicMock()
+else:
     import pint.pandas_interface as ppi
-
-
-UREG = pint.UnitRegistry()
-
-
-@helpers.requires_not_pandas()
-class TestPandasException(BaseTestCase):
-    def test_pandas_exception(self):
-        expected_error_msg = (
-            "The installed version of Pandas is not compatible with Pint, please "
-            "check the docs."
-        )
-        with self.assertRaises(ImportError) as cm:
-            import pint.pandas_interface
-
-        self.assertEqual(str(cm.exception), expected_error_msg)
-
-# if not (HAS_PYTEST and HAS_PROPER_PANDAS):
-#     msg_end = "the correct version of Pandas and pytest installed"
-# elif not HAS_PROPER_PANDAS:
-#     msg_end = "the latest version of Pandas installed"
-# elif not HAS_PYTEST:
-#     msg_end = "pytest installed"
-
-# print("Skipping all Pandas tests except exception raising as we don't have {}".format(msg_end))
-
-if pytest is not None:
+    from pandas.tests.extension import base
     @pytest.fixture
     def dtype():
         return ppi.PintType()
@@ -155,36 +134,59 @@ if pytest is not None:
 # =================================================================
 
 
+UREG = pint.UnitRegistry()
+
+
+@helpers.requires_not_pandas()
+class TestPandasException(BaseTestCase):
+    def test_pandas_exception(self):
+        expected_error_msg = (
+            "The installed version of Pandas is not compatible with Pint, please "
+            "check the docs."
+        )
+        with self.assertRaises(ImportError) as cm:
+            import pint.pandas_interface
+
+        self.assertEqual(str(cm.exception), expected_error_msg)
+
+
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestCasting(base.BaseCastingTests):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestConstructors(base.BaseConstructorsTests):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestDtype(base.BaseDtypeTests):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestGetitem(base.BaseGetitemTests):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestGroupby(base.BaseGroupbyTests):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestInterface(base.BaseInterfaceTests):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestMethods(base.BaseMethodsTests):
     @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
@@ -217,6 +219,7 @@ class TestMethods(base.BaseMethodsTests):
         assert result[0] == duplicated[0]
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestArithmeticOps(base.BaseArithmeticOpsTests):
     def check_opname(self, s, op_name, other, exc=None):
@@ -312,6 +315,7 @@ class TestArithmeticOps(base.BaseArithmeticOpsTests):
             opa(np.arange(len(s)).reshape(-1, len(s)))
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestComparisonOps(base.BaseComparisonOpsTests):
     def _compare_other(self, s, data, op_name, other):
@@ -336,21 +340,25 @@ class TestComparisonOps(base.BaseComparisonOpsTests):
         self._compare_other(s, data, op_name, other)
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestOpsUtil(base.BaseOpsUtil):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestMissing(base.BaseMissingTests):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestReshaping(base.BaseReshapingTests):
     pass
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestSetitem(base.BaseSetitemTests):
     @pytest.mark.parametrize('setter', ['loc', None])
@@ -376,6 +384,7 @@ class TestSetitem(base.BaseSetitemTests):
 
 # would be ideal to just test all of this by running the example notebook
 # but this isn't a discussion we've had yet
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestUserInterface(object):
     def test_get_underlying_data(self, data):
@@ -439,6 +448,7 @@ class TestUserInterface(object):
         df_.pint.to_base_units().pint.dequantify()
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestDataFrameAccessor(object):
     def test_index_maintained(self):
@@ -488,6 +498,7 @@ class TestDataFrameAccessor(object):
         pd.testing.assert_frame_equal(result, expected)
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestSeriesAccessors(object):
     @pytest.mark.parametrize('attr', [
@@ -581,6 +592,7 @@ comparative_ops = [
 ]
 
 
+@helpers.requires_pytest()
 @helpers.requires_pandas()
 class TestPintArrayQuantity(QuantityTestCase):
     FORCE_NDARRAY = True
