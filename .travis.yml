@@ -55,8 +55,7 @@ install:
 
 script:
   # if we haven't installed pandas, don't use pytest to run tests
-  - if [[ $PANDAS == '0' ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test; fi
-  # - if [[ $PANDAS == '0' ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*","*pandas*" setup.py test; fi
+  - if [[ $PANDAS == '0' ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*","*pandas*" setup.py test; fi
   # if we're doing the pandas tests and hence have pytest available, we can
   # simply use pytest to run all the tests
   - if [[ $PANDAS == '1' ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" -m py.test -rfsxEX; fi
