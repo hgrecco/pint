@@ -130,6 +130,9 @@ try:
     # pin Pandas version for now
     HAS_PROPER_PANDAS = pd.__version__.startswith("0.24.0.dev0+625.gbdb7a16")
 except ImportError:
+
+    pd = None
+
     HAS_PROPER_PANDAS = HAS_PANDAS = False
 
 try:

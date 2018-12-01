@@ -7,8 +7,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from pint.compat import HAS_PROPER_PANDAS
-if not HAS_PROPER_PANDAS:
+from pint.compat import pd
+if pd is None:
     error_msg = (
         "The installed version of Pandas is not compatible with Pint, please check "
         "the docs."
