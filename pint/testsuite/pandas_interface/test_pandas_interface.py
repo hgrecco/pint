@@ -13,17 +13,20 @@ from pint.compat import np, pd, pytest
 from pint.errors import DimensionalityError
 from pint.testsuite import BaseTestCase, QuantityTestCase, helpers
 
-if (pytest is None) or (pd is None):
-    if (pytest is None) and (pd is None):
-        missing_msg = (
-            "pytest and the right pandas version are not available, check the docs"
-        )
-    elif pytest is None:
-        missing_msg = "pytest is not available"
-    elif pd is None:
-        missing_msg = "the right pandas version is not available, check the docs"
+def setUpModule():
+    if (pytest is None) or (pd is None):
+        if (pytest is None) and (pd is None):
+            missing_msg = (
+                "pytest and the right pandas version are not available, check the docs"
+            )
+        elif pytest is None:
+            missing_msg = "pytest is not available"
+        elif pd is None:
+            missing_msg = "the right pandas version is not available, check the docs"
 
-    raise unittest.SkipTest(missing_msg)
+        raise unittest.SkipTest(missing_msg)
+
+setUpModule()
 
 import pint.pandas_interface as ppi
 from pint.pandas_interface import PintArray
@@ -31,7 +34,6 @@ from pint.pandas_interface import PintArray
 from pandas.tests.extension import base
 from pandas.core import ops
 from pandas.compat import PY3
-
 
 @pytest.fixture
 def dtype():
