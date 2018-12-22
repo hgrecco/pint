@@ -455,7 +455,6 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
                 else:
                     return param
             if isinstance(other,Series):
-                    print("dfsdfdsfsdf")
                     return NotImplemented
             lvalues = self.data
             other=validate_length(lvalues,other)
