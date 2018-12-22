@@ -128,7 +128,7 @@ try:
     import pandas as pd
     HAS_PANDAS = True
     # pin Pandas version for now
-    HAS_PROPER_PANDAS = pd.__version__.startswith("0.24.0.dev0+625.gbdb7a16")
+    HAS_PROPER_PANDAS = pd.__version__.startswith("0.24.0.dev0+1340.g8c58817bd")
 except ImportError:
     HAS_PROPER_PANDAS = HAS_PANDAS = False
 

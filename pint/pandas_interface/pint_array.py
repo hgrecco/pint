@@ -77,6 +77,8 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
             return values
 
         if is_list_like(values):
+            if len(values)==0:
+                return self._dtype.type([], "dimensionless")
             if all(is_bool(v) for v in values):
                 # known bug in pint https://github.com/hgrecco/pint/issues/673
                 raise TypeError("Invalid magnitude for {}: {}"
@@ -286,12 +288,14 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
 
 
     @classmethod
-    def _concat_same_type(cls, to_concat):
-        # taken from Metpy, would be great to somehow include in pint...
-        for a in to_concat:
-            if all(np.isnan(a._data)):
-                continue
-            units = a._data.units
+    def _concat_same_type(cls, to_concat):        
+        possible_units = [a._data.units for a in to_concat 
+                          if not str(a._data.units)=="dimensionless"]
+        
+        if len(possible_units)>0: 
+            units = possible_units[0]
+        else:
+            units = to_concat[0]._data.units
 
         data = []
         for a in to_concat:
@@ -309,8 +313,14 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
 
     @classmethod
     def _from_factorized(cls, values, original):
+        Q_ = original.data._REGISTRY.Quantity
+        values = Q_(values,original.data.units)
         return cls(values, dtype=original.dtype)
-
+    
+    def _values_for_factorize(self):
+        arr = self.data.magnitude
+        return arr, np.NaN
+    
     def value_counts(self, dropna=True):
         """
         Returns a Series containing counts of each category.
@@ -436,9 +446,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
                     return [r] * len(l)
             def convert_values(param):
                 # convert to a quantity or listlike
-                if isinstance(param,Series) and isinstance(param.values,cls):
-                    return param.values.data
-                elif isinstance(param,cls):
+                if isinstance(param,cls):
                     return param.data
                 elif isinstance(param,_Quantity):
                     return param
@@ -446,6 +454,9 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
                     return type(param[0])([p.magnitude for p in param], param[0].units)
                 else:
                     return param
+            if isinstance(other,Series):
+                    print("dfsdfdsfsdf")
+                    return NotImplemented
             lvalues = self.data
             other=validate_length(lvalues,other)
             rvalues = convert_values(other)

@@ -1,0 +1,81 @@
+============================= test session starts ==============================
+platform linux -- Python 3.6.6, pytest-3.7.1, py-1.5.4, pluggy-0.7.1
+rootdir: /home/andrew/repos/pint, inifile:
+collected 296 items
+
+pint/testsuite/test_pandas_interface.py ................................ [ 10%]
+........................................................................ [ 35%]
+................................xxxxxxxxxxXxxxxxxxxxxxxxXXxx............ [ 59%]
+..F..................................................................... [ 83%]
+......x.........................................                         [100%]
+
+=================================== FAILURES ===================================
+____________________ TestArithmeticOps.test_error[__rmod__] ____________________
+
+self = <pint.testsuite.test_pandas_interface.TestArithmeticOps object at 0x7fec964af2e8>
+data = PintArray([1.0 kilogram, 2.0 kilogram, 3.0 kilogram, 4.0 kilogram,
+           5.0 kilogram, 6.0 kilogram, 7.0 kilogram...logram, 96.0 kilogram,
+           97.0 kilogram, 98.0 kilogram, 99.0 kilogram, 100.0 kilogram],
+          dtype='pint')
+all_arithmetic_operators = '__rmod__'
+
+    def test_error(self, data, all_arithmetic_operators):
+        # invalid ops
+    
+        op = all_arithmetic_operators
+        s = pd.Series(data)
+        ops = getattr(s, op)
+        opa = getattr(data, op)
+    
+        # invalid scalars
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
+        with pytest.raises(Exception):
+            ops('foo')
+    
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
+        with pytest.raises(Exception):
+            ops(pd.Timestamp('20180101'))
+    
+        # invalid array-likes
+        # TODO: work out how to make this more specific/test for the two
+        #       different possible errors here
+        with pytest.raises(Exception):
+>           ops(pd.Series('foo', index=s.index))
+E           Failed: DID NOT RAISE <class 'Exception'>
+
+pint/testsuite/test_pandas_interface.py:312: Failed
+=============================== warnings summary ===============================
+pint/testsuite/test_pandas_interface.py::TestMethods::()::test_where_series[True]
+  /home/andrew/repos/pint/pint/quantity.py:1375: UnitStrippedWarning: The unit of the quantity is stripped.
+    warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+
+pint/testsuite/test_pandas_interface.py::TestMethods::()::test_where_series[False]
+  /home/andrew/repos/pint/pint/quantity.py:1375: UnitStrippedWarning: The unit of the quantity is stripped.
+    warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+
+pint/testsuite/test_pandas_interface.py::TestReshaping::()::test_unstack[series-index1]
+  /home/andrew/repos/pint/pint/quantity.py:1375: UnitStrippedWarning: The unit of the quantity is stripped.
+    warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+
+pint/testsuite/test_pandas_interface.py::TestReshaping::()::test_unstack[series-index3]
+  /home/andrew/repos/pint/pint/quantity.py:1375: UnitStrippedWarning: The unit of the quantity is stripped.
+    warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+
+pint/testsuite/test_pandas_interface.py::TestReshaping::()::test_unstack[frame-index1]
+  /home/andrew/repos/pint/pint/quantity.py:1375: UnitStrippedWarning: The unit of the quantity is stripped.
+    warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+
+pint/testsuite/test_pandas_interface.py::TestReshaping::()::test_unstack[frame-index3]
+  /home/andrew/repos/pint/pint/quantity.py:1375: UnitStrippedWarning: The unit of the quantity is stripped.
+    warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+
+pint/testsuite/test_pandas_interface.py::TestSeriesAccessors::()::test_series_method_accessors[attr_args6]
+  /home/andrew/repos/pint/pint/pandas_interface/pint_array.py:596: RuntimeWarning: to_compact applied to non numerical types has an undefined behavior.
+    result = method(*args, **kwargs)
+  /home/andrew/repos/pint/pint/testsuite/test_pandas_interface.py:566: RuntimeWarning: to_compact applied to non numerical types has an undefined behavior.
+    assert all(getattr(s.pint, attr)(*args) == getattr(data._data,attr)(*args))
+
+-- Docs: http://doc.pytest.org/en/latest/warnings.html
+=== 1 failed, 266 passed, 26 xfailed, 3 xpassed, 8 warnings in 5.29 seconds ====
