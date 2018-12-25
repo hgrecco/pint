@@ -21,15 +21,21 @@ import warnings
 import numpy as np
 
 from pandas.core import ops
-from pandas.core.arrays import ExtensionArray
-from pandas.api.extensions import register_dataframe_accessor, register_series_accessor
+from pandas.api.extensions import (
+    ExtensionArray, 
+    ExtensionDtype,
+    register_extension_dtype,
+    register_dataframe_accessor, 
+    register_series_accessor
+    )
 from pandas.core.arrays.base import ExtensionOpsMixin
-from pandas.core.dtypes.base import ExtensionDtype
-from pandas.core.dtypes.common import (
-    is_integer, is_scalar,
+
+from pandas.api.types import (
     is_list_like,
-    is_bool)
-from pandas.core.dtypes.dtypes import registry
+    is_scalar,
+    is_integer,
+    is_bool,
+    )
 from pandas.compat import u, set_function_name
 from pandas.io.formats.printing import (
     format_object_summary, format_object_attrs, default_pprint)
@@ -494,7 +500,7 @@ class PintArray(ExtensionArray, ExtensionOpsMixin):
 PintArray._add_arithmetic_ops()
 PintArray._add_comparison_ops()
 # register
-registry.register(PintType)
+register_extension_dtype(PintType)
 
 @register_dataframe_accessor("pint")
 class PintDataFrameAccessor(object):
