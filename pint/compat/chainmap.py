@@ -13,7 +13,11 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import sys
 
-from collections import MutableMapping
+if sys.version_info < (3, 3):
+    from collections import MutableMapping
+else:
+    from collections.abc import MutableMapping
+
 if sys.version_info < (3, 0):
     from thread import get_ident
 else:
