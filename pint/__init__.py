@@ -20,9 +20,11 @@ from .registry import (UnitRegistry, LazyRegistry)
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
                    UndefinedUnitError, UnitStrippedWarning)
 from .util import pi_theorem, logger
-from .pandas_interface import PandasInterface
+from .pandas_interface import pintpandas
 
 from .context import Context
+
+
 
 try:                # pragma: no cover
     __version__ = pkg_resources.get_distribution('pint').version
