@@ -1128,9 +1128,10 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def __neg__(self):
         return self.__class__(operator.neg(self._magnitude), self._units)
 
+    @check_implemented
     def __eq__(self, other):
         # We compare to the base class of Quantity because
-        # each Quantity class is unique.
+        ## each Quantity class is unique.
         if not isinstance(other, _Quantity):
             if _eq(other, 0, True):
                 # Handle the special case in which we compare to zero
@@ -1167,6 +1168,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             return np.logical_not(out)
         return not out
 
+    @check_implemented
     def compare(self, other, op):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
@@ -1372,6 +1374,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
         if item.startswith('__array_'):
+            print(item)
             warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
             if isinstance(self._magnitude, ndarray):
                 return getattr(self._magnitude, item)

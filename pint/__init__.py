@@ -22,7 +22,11 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
 from .util import pi_theorem, logger
 
 from .context import Context
-
+import pintpandas
+try:
+    import pintpandas
+except:
+    pass
 
 try:                # pragma: no cover
     __version__ = pkg_resources.get_distribution('pint').version
