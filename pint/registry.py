@@ -88,7 +88,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     - Parse a definition file.
     - Allow extending the definition file parser by registering @ directives.
 
-    :param filename: path of the units definition file to load.
+    :param filename: path of the units definition file to load or line iterable object.
                      Empty to load the default definition file.
                      None to leave the UnitRegistry empty.
     :type filename: str | None
@@ -1459,7 +1459,7 @@ class SystemRegistry(BaseRegistry):
 class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
     """The unit registry stores the definitions and relationships between units.
 
-    :param filename: path of the units definition file to load.
+    :param filename: path of the units definition file to load or line-iterable object.
                      Empty to load the default definition file.
                      None to leave the UnitRegistry empty.
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
