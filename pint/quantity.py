@@ -1128,6 +1128,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def __neg__(self):
         return self.__class__(operator.neg(self._magnitude), self._units)
 
+    @check_implemented
     def __eq__(self, other):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
@@ -1167,6 +1168,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             return np.logical_not(out)
         return not out
 
+    @check_implemented
     def compare(self, other, op):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
