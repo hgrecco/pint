@@ -18,7 +18,7 @@ import re
 import operator
 from numbers import Number
 from fractions import Fraction
-from collections import Mapping
+from collections.abc import Mapping
 from logging import NullHandler
 
 import logging
