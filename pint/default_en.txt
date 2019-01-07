@@ -76,6 +76,10 @@ hectare = 100 * are = ha
 [concentration] = [substance] / [volume]
 molar = mol / (1e-3 * m ** 3) = M
 
+# Activity
+[activity] = [substance] / [time]
+katal = mole / second = kat
+
 # EM
 esu = 1 * erg**0.5 * centimeter**0.5 = statcoulombs = statC = franklin = Fr
 esu_per_second = 1 * esu / second = statampere
