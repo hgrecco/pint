@@ -25,6 +25,14 @@ Pint Changelog
   (Issue #590, thanks tecki)
 - Drop Support for Python 2.6, 3.0, 3.1 and 3.2.
   (Issue #567)
+- Prepare for deprecation announced in Python 3.7
+  (Issue #747, thanks Simon Willison)
+- Added several new units and Systems
+  (Issues #749, #737, )
+- Started experimental pandas support
+  (Issue #746 and others. Thanks andrewgsavage, znicholls and others)  
+- wraps and checks now supports kwargs and defaults.
+  (Issue #660, thanks jondoesntgit)
 
 
 0.8.1 (2017-06-05)
