@@ -130,7 +130,7 @@ User Guide
     defining
     performance
     systems
-
+    pint-pandas.ipynb
 
 More information
 ----------------
