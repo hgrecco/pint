@@ -292,6 +292,17 @@ Pint's physical quantities can be easily printed:
    >>> print('The magnitude is {0.magnitude} with units {0.units}'.format(accel))
    The magnitude is 1.3 with units meter / second ** 2
 
+Pint supports float formatting for numpy arrays as well:
+
+.. doctest::
+
+   >>> accel = np.array([-1.1, 1e-6, 1.2505, 1.3]) * ureg['meter/second**2']
+   >>> # float formatting numpy arrays
+   >>> print('The array is {:.2f}'.format(accel))
+   The array is [-1.10 0.00 1.25 1.30] meter / second ** 2
+   >>> # scientific form formatting with unit pretty printing
+   >>> print('The array is {:+.2E~P}'.format(accel))
+   The array is [-1.10E+00 +1.00E-06 +1.25E+00 +1.30E+00] m/s²
 
 But Pint also extends the standard formatting capabilities for unicode and
 LaTeX representations:
