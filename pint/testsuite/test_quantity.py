@@ -129,6 +129,19 @@ class TestQuantity(QuantityTestCase):
         x = self.Q_(3, UnitsContainer(second=-1))
         self.assertEqual('{0}'.format(x), '3 / second')
 
+    @helpers.requires_numpy()
+    def test_quantity_array_format(self):
+        x = self.Q_(np.array([1e-16, 1.0000001, 10000000.0, 1e12, np.nan, np.inf]), "kg * m ** 2")
+        for spec, result in (('{0}',  str(x)),
+                             ('{0.magnitude}', str(x.magnitude)),
+                             ('{0:e}', "[1.000000e-16 1.000000e+00 1.000000e+07 1.000000e+12 nan inf] kilogram * meter ** 2"),
+                             ('{0:E}', "[1.000000E-16 1.000000E+00 1.000000E+07 1.000000E+12 NAN INF] kilogram * meter ** 2"),
+                             ('{0:.2f}', "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kilogram * meter ** 2"),
+                             ('{0:.2f~P}', "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg·m²"),
+                             ('{0:g~P}', "[1e-16 1 1e+07 1e+12 nan inf] kg·m²"),
+                             ):
+            self.assertEqual(spec.format(x), result)
+
     def test_format_compact(self):
         q1 = (200e-9 * self.ureg.s).to_compact()
         q1b = self.Q_(200., 'nanosecond')

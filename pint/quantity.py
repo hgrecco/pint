@@ -9,6 +9,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import contextlib
 import copy
 import datetime
 import math
@@ -75,6 +76,21 @@ def check_implemented(f):
         result = f(self, *args, **kwargs)
         return result
     return wrapped
+
+
+@contextlib.contextmanager
+def printoptions(*args, **kwargs):
+    """
+    Numpy printoptions context manager released with version 1.15.0
+    https://docs.scipy.org/doc/numpy/reference/generated/numpy.printoptions.html
+    """
+
+    opts = np.get_printoptions()
+    try:
+        np.set_printoptions(*args, **kwargs)
+        yield np.get_printoptions()
+    finally:
+        np.set_printoptions(**opts)
 
 
 @fix_str_conversions
@@ -215,7 +231,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
                 mstr = parts[0]
             else:
-                mstr = format(obj.magnitude, mspec).replace('\n', '')
+                formatter = "{{:{}}}".format(mspec)
+                with printoptions(formatter={"float_kind": formatter.format}):
+                    mstr = format(obj.magnitude).replace('\n', '')
         else:
             mstr = format(obj.magnitude, mspec).replace('\n', '')
 
