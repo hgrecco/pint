@@ -24,7 +24,7 @@ from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_la
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
-from .compat import string_types, ndarray, np, _to_magnitude, long_type
+from .compat import string_types, ndarray, np, _to_magnitude, _distill_sequence, long_type
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit,
                    fix_str_conversions)
@@ -90,12 +90,16 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     #: Default formatting string.
     default_format = ''
+    distill_sequences = True
 
     def __reduce__(self):
         from . import _build_quantity
         return _build_quantity, (self.magnitude, self._units)
 
     def __new__(cls, value, units=None):
+        if cls.distill_sequences:
+            value, units = _distill_sequence(value, units)
+
         if units is None:
             if isinstance(value, string_types):
                 if value == '':
@@ -352,20 +356,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         :type units: UnitsContainer, str or Quantity.
         """
 
-        len_seq = len(seq)
-        if units is None:
-            if len_seq:
-                units = seq[0].u
-            else:
-                raise ValueError('Cannot determine units from empty sequence!')        
-
-        a = np.empty(len_seq)
-        
-        for i, seq_i in enumerate(seq):
-            a[i] = seq_i.m_as(units)
-            # raises DimensionalityError if incompatible units are used in the sequence
-        
-        return cls(a, units)
+        # moved sequence distillation into default constructor
+        return cls(*_distill_sequence(seq, units))
 
 
     @classmethod

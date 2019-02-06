@@ -66,6 +66,14 @@ try:
 except ImportError:
     from itertools import izip_longest as zip_longest
 
+
+
+def _raise_invalid_magnitude(value):
+    if isinstance(value, (dict, bool)) or value is None:
+        raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
+    elif isinstance(value, string_types) and value == '':
+        raise ValueError('Quantity magnitude cannot be an empty string.')
+
 try:
     import numpy as np
     from numpy import ndarray
@@ -74,13 +82,41 @@ try:
     NUMPY_VER = np.__version__
     NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
+    def _distill_sequence(value, units=None):
+        """
+        Distills sequences of quantities to magnitude arrays with a single unit.
+        """
+        
+        _raise_invalid_magnitude(value)
+
+        try:
+            # might trigger IndexError if sequence empty
+            new_units = value[0].units if units is None else units
+
+            # might trigger TypeError if not a sequence (no __len__)
+            a = np.empty(len(value))
+
+            for i, seq_i in enumerate(value):
+                # might raise AttributeError if not a quantity
+                a[i] = seq_i.m_as(new_units)
+                # raises DimensionalityError if incompatible units are used in the sequence
+
+            return a, new_units
+
+        except (TypeError, IndexError, KeyError, AttributeError):
+            # if any element is not a quantity we pass value on
+            return value, units
+
+
     def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, (dict, bool)) or value is None:
-            raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
-        elif isinstance(value, string_types) and value == '':
-            raise ValueError('Quantity magnitude cannot be an empty string.')
-        elif isinstance(value, (list, tuple)):
-            return np.asarray(value)
+        _raise_invalid_magnitude(value)
+
+        if isinstance(value, (list, tuple)):
+            try:
+                a = np.asarray(value)
+            except ValueError:
+                raise ValueError('Given magnitude value cannot be used as an numpy array! Use e.g. scalars, Quantities, lists of scalars or lists of Quantities!') from None
+            return a
         if force_ndarray:
             return np.asarray(value)
         return value
@@ -96,12 +132,14 @@ except ImportError:
     NUMPY_VER = '0'
     NUMERIC_TYPES = (Number, Decimal)
 
+    def _distill_sequence(value, units=None, ignore_mix=True):
+        _raise_invalid_magnitude(value)
+        return value, units
+
     def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, (dict, bool)) or value is None:
-            raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
-        elif isinstance(value, string_types) and value == '':
-            raise ValueError('Quantity magnitude cannot be an empty string.')
-        elif isinstance(value, (list, tuple)):
+        _raise_invalid_magnitude(value)
+
+        if isinstance(value, (list, tuple)):
             raise TypeError('lists and tuples are valid magnitudes for '
                              'Quantity only when NumPy is present.')
         return value

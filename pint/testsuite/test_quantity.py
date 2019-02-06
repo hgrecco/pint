@@ -372,8 +372,12 @@ class TestQuantity(QuantityTestCase):
         self.assertTrue(all(u_array_3 == u_array_ref_reversed))        
         self.assertTrue(u_array_3.u == u_array_ref_reversed.u)
 
-        with self.assertRaises(ValueError):
-            self.Q_.from_sequence([])
+        u_seq_np = np.array(u_seq, dtype=object)
+        u_array_4 = self.Q_.from_sequence(u_seq_np)
+        self.assertTrue(all(u_array_4 == u_array_ref))
+
+        # with self.assertRaises(ValueError):
+        #     self.Q_.from_sequence([])
 
         u_array_5 = self.Q_.from_list(u_seq)
         self.assertTrue(all(u_array_5 == u_array_ref))
