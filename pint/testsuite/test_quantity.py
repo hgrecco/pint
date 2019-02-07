@@ -355,6 +355,7 @@ class TestQuantity(QuantityTestCase):
         pickle_test(self.Q_(2.4, 'm/s'))
 
 
+    @helpers.requires_numpy()
     def test_from_sequence(self):
         u_array_ref = self.Q_([200, 1000], 'g')
         u_array_ref_reversed = self.Q_([1000, 200], 'g')
@@ -372,12 +373,8 @@ class TestQuantity(QuantityTestCase):
         self.assertTrue(all(u_array_3 == u_array_ref_reversed))        
         self.assertTrue(u_array_3.u == u_array_ref_reversed.u)
 
-        u_seq_np = np.array(u_seq, dtype=object)
-        u_array_4 = self.Q_.from_sequence(u_seq_np)
-        self.assertTrue(all(u_array_4 == u_array_ref))
-
-        # with self.assertRaises(ValueError):
-        #     self.Q_.from_sequence([])
+        with self.assertRaises(ValueError):
+            self.Q_.from_sequence([])
 
         u_array_5 = self.Q_.from_list(u_seq)
         self.assertTrue(all(u_array_5 == u_array_ref))
