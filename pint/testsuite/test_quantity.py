@@ -368,6 +368,31 @@ class TestQuantity(QuantityTestCase):
         pickle_test(self.Q_(2.4, 'm/s'))
 
 
+    @helpers.requires_numpy()
+    def test_from_sequence(self):
+        u_array_ref = self.Q_([200, 1000], 'g')
+        u_array_ref_reversed = self.Q_([1000, 200], 'g')
+        u_seq = [self.Q_('200g'), self.Q_('1kg')]
+        u_seq_reversed = u_seq[::-1]
+
+        u_array = self.Q_.from_sequence(u_seq)
+        self.assertTrue(all(u_array == u_array_ref))
+
+        u_array_2 = self.Q_.from_sequence(u_seq_reversed)
+        self.assertTrue(all(u_array_2 == u_array_ref_reversed))
+        self.assertFalse(u_array_2.u == u_array_ref_reversed.u)
+
+        u_array_3 = self.Q_.from_sequence(u_seq_reversed, units='g')
+        self.assertTrue(all(u_array_3 == u_array_ref_reversed))        
+        self.assertTrue(u_array_3.u == u_array_ref_reversed.u)
+
+        with self.assertRaises(ValueError):
+            self.Q_.from_sequence([])
+
+        u_array_5 = self.Q_.from_list(u_seq)
+        self.assertTrue(all(u_array_5 == u_array_ref))
+
+
 class TestQuantityToCompact(QuantityTestCase):
 
     def assertQuantityAlmostIdentical(self, q1, q2):
