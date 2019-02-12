@@ -78,7 +78,7 @@ def check_implemented(f):
 
 
 @fix_str_conversions
-class _Quantity(PrettyIPython, SharedRegistryObject):
+class BaseQuantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -95,7 +95,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         from . import _build_quantity
         return _build_quantity, (self.magnitude, self._units)
 
-    def __new__(cls, value, units=None):
+    
+    @classmethod
+    def _new(cls, value, units=None):
         if units is None:
             if isinstance(value, string_types):
                 if value == '':
@@ -132,18 +134,8 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         inst.__used = False
         inst.__handling = None
-        # Only instances where the magnitude is iterable should have __iter__()
-        if hasattr(inst._magnitude,"__iter__"):
-            inst.__iter__ = cls._iter
         return inst
 
-    def _iter(self):
-        """
-        Will be become __iter__() for instances with iterable magnitudes
-        """
-        # # Allow exception to propagate in case of non-iterable magnitude
-        it_mag = iter(self.magnitude)
-        return iter((self.__class__(mag, self._units) for mag in it_mag))
     @property
     def debug_used(self):
         return self.__used
@@ -825,7 +817,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         self._magnitude = magnitude_op(self._magnitude, other._magnitude)
         self._units = units_op(self._units, other._units)
-
         return self
 
     @check_implemented
@@ -1395,42 +1386,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             raise AttributeError("Neither Quantity object nor its magnitude ({}) "
                                  "has attribute '{}'".format(self._magnitude, item))
 
-    def __getitem__(self, key):
-        try:
-            value = self._magnitude[key]
-            return self.__class__(value, self._units)
-        except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({})"
-                            "supports indexing".format(self._magnitude))
-
-    def __setitem__(self, key, value):
-        try:
-            if math.isnan(value):
-                self._magnitude[key] = value
-                return
-        except (TypeError, DimensionalityError):
-            pass
-
-        try:
-            if isinstance(value, self.__class__):
-                factor = self.__class__(value.magnitude, value._units / self._units).to_root_units()
-            else:
-                factor = self.__class__(value, self._units ** (-1)).to_root_units()
-
-            if isinstance(factor, self.__class__):
-                if not factor.dimensionless:
-                    raise DimensionalityError(value, self.units,
-                                              extra_msg='. Assign a quantity with the same dimensionality or '
-                                                        'access the magnitude directly as '
-                                                        '`obj.magnitude[%s] = %s`' % (key, value))
-                self._magnitude[key] = factor.magnitude
-            else:
-                self._magnitude[key] = factor
-
-        except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({})"
-                            "supports indexing".format(self._magnitude))
-
     def tolist(self):
         units = self._units
         return [self.__class__(value, units).tolist() if isinstance(value, list) else self.__class__(value, units)
@@ -1671,14 +1626,84 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def to_timedelta(self):
         return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
 
+class QuantitySequenceMixin(object):
+    def __getitem__(self, key):
+        try:
+            value = self._magnitude[key]
+            return self.__class__(value, self._units)
+        except TypeError:
+            raise TypeError("Neither Quantity object nor its magnitude ({})"
+                            "supports indexing".format(self._magnitude))
+
+    def __setitem__(self, key, value):
+        try:
+            if math.isnan(value):
+                self._magnitude[key] = value
+                return
+        except (TypeError, DimensionalityError):
+            pass
+
+        try:
+            if isinstance(value, self.__class__):
+                factor = self.__class__(value.magnitude, value._units / self._units).to_root_units()
+            else:
+                factor = self.__class__(value, self._units ** (-1)).to_root_units()
+
+            if isinstance(factor, self.__class__):
+                if not factor.dimensionless:
+                    raise DimensionalityError(value, self.units,
+                                              extra_msg='. Assign a quantity with the same dimensionality or '
+                                                        'access the magnitude directly as '
+                                                        '`obj.magnitude[%s] = %s`' % (key, value))
+                self._magnitude[key] = factor.magnitude
+            else:
+                self._magnitude[key] = factor
+
+        except TypeError:
+            raise TypeError("Neither Quantity object nor its magnitude ({})"
+                            "supports indexing".format(self._magnitude))
+    def __iter__(self):
+        """
+        Will be become __iter__() for instances with iterable magnitudes
+        """
+        # # Allow exception to propagate in case of non-iterable magnitude
+        it_mag = iter(self.magnitude)
+        return iter((self.__class__(mag, self._units) for mag in it_mag))
 
 
 def build_quantity_class(registry, force_ndarray=False):
-
-    class Quantity(_Quantity):
-        pass
-
+    
+    class Quantity(BaseQuantity):
+        def __new__(cls, value, units=None):
+            if units is None:
+                if isinstance(value, string_types):
+                    if value == '':
+                        raise ValueError('Expression to parse as Quantity cannot '
+                                         'be an empty string.')
+                    inst = cls._REGISTRY.parse_expression(value)
+                    return cls.__new__(cls, inst)
+                elif isinstance(value, cls):
+                    inst = copy.copy(value)
+                else:
+                    inst = object.__new__(cls)
+                    inst._magnitude = _to_magnitude(value, inst.force_ndarray)
+                    inst._units = UnitsContainer()
+                    return inst
+            if hasattr(value, "__iter__"):
+                return QuantitySequence._new(value,units)
+            else:
+                return QuantityScalar._new(value,units)
+    
     Quantity._REGISTRY = registry
     Quantity.force_ndarray = force_ndarray
-
+    
+    class QuantityScalar(Quantity):
+        def __new__(cls, value, units=None):
+            inst = Quantity.__new__(Quantity, value, units)
+            return inst
+    
+    class QuantitySequence(Quantity,QuantitySequenceMixin):
+        def __new__(cls, value, units=None):
+            inst = Quantity.__new__(Quantity, value, units)
+            return inst
     return Quantity
