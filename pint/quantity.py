@@ -9,6 +9,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import contextlib
 import copy
 import datetime
 import math
@@ -120,6 +121,21 @@ def implement_func(func_str):
 for func_str in ['linspace', 'concatenate', 'hstack', 'vstack']:
     implement_func(func_str)
     
+
+@contextlib.contextmanager
+def printoptions(*args, **kwargs):
+    """
+    Numpy printoptions context manager released with version 1.15.0
+    https://docs.scipy.org/doc/numpy/reference/generated/numpy.printoptions.html
+    """
+
+    opts = np.get_printoptions()
+    try:
+        np.set_printoptions(*args, **kwargs)
+        yield np.get_printoptions()
+    finally:
+        np.set_printoptions(**opts)
+
 @fix_str_conversions
 class BaseQuantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
@@ -256,7 +272,9 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
 
                 mstr = parts[0]
             else:
-                mstr = format(obj.magnitude, mspec).replace('\n', '')
+                formatter = "{{:{}}}".format(mspec)
+                with printoptions(formatter={"float_kind": formatter.format}):
+                    mstr = format(obj.magnitude).replace('\n', '')
         else:
             mstr = format(obj.magnitude, mspec).replace('\n', '')
 
@@ -361,6 +379,53 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
         """Return true if the quantity's dimension matches passed dimension.
         """
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
+
+
+    @classmethod
+    def from_list(cls, quant_list, units=None):
+        """Transforms a list of Quantities into an numpy.array quantity. 
+        If no units are specified, the unit of the first element will be used.
+        Same as from_sequence.
+
+        If units is not specified and list is empty, the unit cannot be determined
+        and a ValueError is raised.
+
+        :param quant_list: list of Quantities
+        :type quant_list: list of Quantity
+        :param units: units of the physical quantity to be created.
+        :type units: UnitsContainer, str or Quantity.
+        """
+        return cls.from_sequence(quant_list, units=units)
+
+    @classmethod
+    def from_sequence(cls, seq, units=None):
+        """Transforms a sequence of Quantities into an numpy.array quantity. 
+        If no units are specified, the unit of the first element will be used.
+
+        If units is not specified and sequence is empty, the unit cannot be determined
+        and a ValueError is raised.
+
+        :param seq: sequence of Quantities
+        :type seq: sequence of Quantity
+        :param units: units of the physical quantity to be created.
+        :type units: UnitsContainer, str or Quantity.
+        """
+
+        len_seq = len(seq)
+        if units is None:
+            if len_seq:
+                units = seq[0].u
+            else:
+                raise ValueError('Cannot determine units from empty sequence!')        
+
+        a = np.empty(len_seq)
+        
+        for i, seq_i in enumerate(seq):
+            a[i] = seq_i.m_as(units)
+            # raises DimensionalityError if incompatible units are used in the sequence
+        
+        return cls(a, units)
+
 
     @classmethod
     def from_tuple(cls, tup):

@@ -129,6 +129,19 @@ class TestQuantity(QuantityTestCase):
         x = self.Q_(3, UnitsContainer(second=-1))
         self.assertEqual('{0}'.format(x), '3 / second')
 
+    @helpers.requires_numpy()
+    def test_quantity_array_format(self):
+        x = self.Q_(np.array([1e-16, 1.0000001, 10000000.0, 1e12, np.nan, np.inf]), "kg * m ** 2")
+        for spec, result in (('{0}',  str(x)),
+                             ('{0.magnitude}', str(x.magnitude)),
+                             ('{0:e}', "[1.000000e-16 1.000000e+00 1.000000e+07 1.000000e+12 nan inf] kilogram * meter ** 2"),
+                             ('{0:E}', "[1.000000E-16 1.000000E+00 1.000000E+07 1.000000E+12 NAN INF] kilogram * meter ** 2"),
+                             ('{0:.2f}', "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kilogram * meter ** 2"),
+                             ('{0:.2f~P}', "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg·m²"),
+                             ('{0:g~P}', "[1e-16 1 1e+07 1e+12 nan inf] kg·m²"),
+                             ):
+            self.assertEqual(spec.format(x), result)
+
     def test_format_compact(self):
         q1 = (200e-9 * self.ureg.s).to_compact()
         q1b = self.Q_(200., 'nanosecond')
@@ -353,6 +366,31 @@ class TestQuantity(QuantityTestCase):
         pickle_test(self.Q_(2.4, ''))
         pickle_test(self.Q_(32, 'm/s'))
         pickle_test(self.Q_(2.4, 'm/s'))
+
+
+    @helpers.requires_numpy()
+    def test_from_sequence(self):
+        u_array_ref = self.Q_([200, 1000], 'g')
+        u_array_ref_reversed = self.Q_([1000, 200], 'g')
+        u_seq = [self.Q_('200g'), self.Q_('1kg')]
+        u_seq_reversed = u_seq[::-1]
+
+        u_array = self.Q_.from_sequence(u_seq)
+        self.assertTrue(all(u_array == u_array_ref))
+
+        u_array_2 = self.Q_.from_sequence(u_seq_reversed)
+        self.assertTrue(all(u_array_2 == u_array_ref_reversed))
+        self.assertFalse(u_array_2.u == u_array_ref_reversed.u)
+
+        u_array_3 = self.Q_.from_sequence(u_seq_reversed, units='g')
+        self.assertTrue(all(u_array_3 == u_array_ref_reversed))        
+        self.assertTrue(u_array_3.u == u_array_ref_reversed.u)
+
+        with self.assertRaises(ValueError):
+            self.Q_.from_sequence([])
+
+        u_array_5 = self.Q_.from_list(u_seq)
+        self.assertTrue(all(u_array_5 == u_array_ref))
 
 
 class TestQuantityToCompact(QuantityTestCase):
