@@ -19,7 +19,7 @@ class TestQuantity(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
-    def test_quantity_creation(self):
+    def testBaseQuantity_creation(self):
         for args in ((4.2, 'meter'),
                      (4.2,  UnitsContainer(meter=1)),
                      (4.2,  self.ureg.meter),
@@ -44,13 +44,13 @@ class TestQuantity(QuantityTestCase):
             self.assertEqual(4.2 * self.ureg.meter, self.Q_(4.2, 2 * self.ureg.meter))
             self.assertEqual(len(buffer), 1)
 
-    def test_quantity_bool(self):
+    def testBaseQuantity_bool(self):
         self.assertTrue(self.Q_(1, None))
         self.assertTrue(self.Q_(1, 'meter'))
         self.assertFalse(self.Q_(0, None))
         self.assertFalse(self.Q_(0, 'meter'))
 
-    def test_quantity_comparison(self):
+    def testBaseQuantity_comparison(self):
         x = self.Q_(4.2, 'meter')
         y = self.Q_(4.2, 'meter')
         z = self.Q_(5, 'meter')
@@ -81,16 +81,16 @@ class TestQuantity(QuantityTestCase):
 
         self.assertLess(self.Q_(10, 'meter'), self.Q_(5, 'kilometer'))
 
-    def test_quantity_comparison_convert(self):
+    def testBaseQuantity_comparison_convert(self):
         self.assertEqual(self.Q_(1000, 'millimeter'), self.Q_(1, 'meter'))
         self.assertEqual(self.Q_(1000, 'millimeter/min'), self.Q_(1000/60, 'millimeter/s'))
 
-    def test_quantity_repr(self):
+    def testBaseQuantity_repr(self):
         x = self.Q_(4.2, UnitsContainer(meter=1))
         self.assertEqual(str(x), '4.2 meter')
         self.assertEqual(repr(x), "<Quantity(4.2, 'meter')>")
 
-    def test_quantity_hash(self):
+    def testBaseQuantity_hash(self):
         x = self.Q_(4.2, 'meter')
         x2 = self.Q_(4200, 'millimeter')
         y = self.Q_(2, 'second')
@@ -106,7 +106,7 @@ class TestQuantity(QuantityTestCase):
         z2 = ureg2.Quantity(0.5, 'hertz')
         self.assertEqual(hash(y * z), hash(y2 * z2))
 
-    def test_quantity_format(self):
+    def testBaseQuantity_format(self):
         x = self.Q_(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
         for spec, result in (('{0}', str(x)), ('{0!s}', str(x)), ('{0!r}', repr(x)),
                              ('{0.magnitude}',  str(x.magnitude)), ('{0.units}',  str(x.units)),
@@ -511,7 +511,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         self.assertNotEqual(id(result), id1)
         self.assertNotEqual(id(result), id2)
 
-    def _test_quantity_add_sub(self, unit, func):
+    def _testBaseQuantity_add_sub(self, unit, func):
         x = self.Q_(unit, 'centimeter')
         y = self.Q_(unit, 'inch')
         z = self.Q_(unit, 'second')
@@ -533,7 +533,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         self.assertRaises(DimensionalityError, op.sub, x, 10)
         self.assertRaises(DimensionalityError, op.sub, x, z)
 
-    def _test_quantity_iadd_isub(self, unit, func):
+    def _testBaseQuantity_iadd_isub(self, unit, func):
         x = self.Q_(unit, 'centimeter')
         y = self.Q_(unit, 'inch')
         z = self.Q_(unit, 'second')
@@ -555,7 +555,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         self.assertRaises(DimensionalityError, op.sub, x, 10)
         self.assertRaises(DimensionalityError, op.sub, x, z)
 
-    def _test_quantity_mul_div(self, unit, func):
+    def _testBaseQuantity_mul_div(self, unit, func):
         func(op.mul, unit * 10.0, '4.2*meter', '42*meter', unit)
         func(op.mul, '4.2*meter', unit * 10.0, '42*meter', unit)
         func(op.mul, '4.2*meter', '10*inch', '42*meter*inch', unit)
@@ -563,7 +563,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.truediv, '4.2*meter', unit * 10.0, '0.42*meter', unit)
         func(op.truediv, '4.2*meter', '10*inch', '0.42*meter/inch', unit)
 
-    def _test_quantity_imul_idiv(self, unit, func):
+    def _testBaseQuantity_imul_idiv(self, unit, func):
         #func(op.imul, 10.0, '4.2*meter', '42*meter')
         func(op.imul, '4.2*meter', 10.0, '42*meter', unit)
         func(op.imul, '4.2*meter', '10*inch', '42*meter*inch', unit)
@@ -571,7 +571,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.itruediv, '4.2*meter', unit * 10.0, '0.42*meter', unit)
         func(op.itruediv, '4.2*meter', '10*inch', '0.42*meter/inch', unit)
 
-    def _test_quantity_floordiv(self, unit, func):
+    def _testBaseQuantity_floordiv(self, unit, func):
         a = self.Q_('10*meter')
         b = self.Q_('3*second')
         self.assertRaises(DimensionalityError, op.floordiv, a, b)
@@ -583,7 +583,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.floordiv, unit * 10.0, '4.2*meter/meter', 2, unit)
         func(op.floordiv, '10*meter', '4.2*inch', 93, unit)
 
-    def _test_quantity_mod(self, unit, func):
+    def _testBaseQuantity_mod(self, unit, func):
         a = self.Q_('10*meter')
         b = self.Q_('3*second')
         self.assertRaises(DimensionalityError, op.mod, a, b)
@@ -594,11 +594,11 @@ class TestQuantityBasicMath(QuantityTestCase):
         self.assertRaises(DimensionalityError, op.imod, a, 3)
         func(op.mod, unit * 10.0, '4.2*meter/meter', 1.6, unit)
 
-    def _test_quantity_ifloordiv(self, unit, func):
+    def _testBaseQuantity_ifloordiv(self, unit, func):
         func(op.ifloordiv, 10.0, '4.2*meter/meter', 2, unit)
         func(op.ifloordiv, '10*meter', '4.2*inch', 93, unit)
 
-    def _test_quantity_divmod_one(self, a, b):
+    def _testBaseQuantity_divmod_one(self, a, b):
         if isinstance(a, string_types):
             a = self.Q_(a)
         if isinstance(b, string_types):
@@ -625,17 +625,17 @@ class TestQuantityBasicMath(QuantityTestCase):
         copy_a //= b
         self.assertEqual(copy_a, q)
 
-    def _test_quantity_divmod(self):
-        self._test_quantity_divmod_one('10*meter', '4.2*inch')
-        self._test_quantity_divmod_one('-10*meter', '4.2*inch')
-        self._test_quantity_divmod_one('-10*meter', '-4.2*inch')
-        self._test_quantity_divmod_one('10*meter', '-4.2*inch')
+    def _testBaseQuantity_divmod(self):
+        self._testBaseQuantity_divmod_one('10*meter', '4.2*inch')
+        self._testBaseQuantity_divmod_one('-10*meter', '4.2*inch')
+        self._testBaseQuantity_divmod_one('-10*meter', '-4.2*inch')
+        self._testBaseQuantity_divmod_one('10*meter', '-4.2*inch')
 
-        self._test_quantity_divmod_one('400*degree', '3')
-        self._test_quantity_divmod_one('4', '180 degree')
-        self._test_quantity_divmod_one(4, '180 degree')
-        self._test_quantity_divmod_one('20', 4)
-        self._test_quantity_divmod_one('300*degree', '100 degree')
+        self._testBaseQuantity_divmod_one('400*degree', '3')
+        self._testBaseQuantity_divmod_one('4', '180 degree')
+        self._testBaseQuantity_divmod_one(4, '180 degree')
+        self._testBaseQuantity_divmod_one('20', 4)
+        self._testBaseQuantity_divmod_one('300*degree', '100 degree')
 
         a = self.Q_('10*meter')
         b = self.Q_('3*second')
@@ -644,14 +644,14 @@ class TestQuantityBasicMath(QuantityTestCase):
         self.assertRaises(DimensionalityError, divmod, a, 3)
 
     def _test_numeric(self, unit, ifunc):
-        self._test_quantity_add_sub(unit, self._test_not_inplace)
-        self._test_quantity_iadd_isub(unit, ifunc)
-        self._test_quantity_mul_div(unit, self._test_not_inplace)
-        self._test_quantity_imul_idiv(unit, ifunc)
-        self._test_quantity_floordiv(unit, self._test_not_inplace)
-        self._test_quantity_mod(unit, self._test_not_inplace)
-        self._test_quantity_divmod()
-        #self._test_quantity_ifloordiv(unit, ifunc)
+        self._testBaseQuantity_add_sub(unit, self._test_not_inplace)
+        self._testBaseQuantity_iadd_isub(unit, ifunc)
+        self._testBaseQuantity_mul_div(unit, self._test_not_inplace)
+        self._testBaseQuantity_imul_idiv(unit, ifunc)
+        self._testBaseQuantity_floordiv(unit, self._test_not_inplace)
+        self._testBaseQuantity_mod(unit, self._test_not_inplace)
+        self._testBaseQuantity_divmod()
+        #self._testBaseQuantity_ifloordiv(unit, ifunc)
 
     def test_float(self):
         self._test_numeric(1., self._test_not_inplace)
@@ -664,7 +664,7 @@ class TestQuantityBasicMath(QuantityTestCase):
     def test_nparray(self):
         self._test_numeric(np.ones((1, 3)), self._test_inplace)
 
-    def test_quantity_abs_round(self):
+    def testBaseQuantity_abs_round(self):
 
         x = self.Q_(-4.2, 'meter')
         y = self.Q_(4.2, 'meter')
@@ -680,7 +680,7 @@ class TestQuantityBasicMath(QuantityTestCase):
             self.assertIsNot(rx, zx, 'while testing {0}'.format(fun))
             self.assertIsNot(ry, zy, 'while testing {0}'.format(fun))
 
-    def test_quantity_float_complex(self):
+    def testBaseQuantity_float_complex(self):
         x = self.Q_(-4.2, None)
         y = self.Q_(4.2, None)
         z = self.Q_(1, 'meter')

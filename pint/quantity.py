@@ -157,8 +157,8 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
     default_format = ''
 
     def __reduce__(self):
-        from . import _build_quantity
-        return _build_quantity, (self.magnitude, self._units)
+        from . import _buildBaseQuantity
+        return _buildBaseQuantity, (self.magnitude, self._units)
 
     
     @classmethod
@@ -1787,7 +1787,7 @@ class QuantitySequenceMixin(object):
                 for value in self._magnitude.tolist()]
 
 
-def build_quantity_class(registry, force_ndarray=False):
+def buildBaseQuantity_class(registry, force_ndarray=False):
     
     class Quantity(BaseQuantity):
         def __new__(cls, value, units=None):
