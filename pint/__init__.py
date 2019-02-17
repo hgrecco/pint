@@ -46,7 +46,7 @@ _DEFAULT_REGISTRY = LazyRegistry()
 _APP_REGISTRY = _DEFAULT_REGISTRY
 
 
-def _buildBaseQuantity(value, units):
+def _build_quantity(value, units):
     """Build Quantity using the Application registry.
     Used only for unpickling operations.
     """

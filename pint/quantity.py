@@ -159,8 +159,8 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
     default_format = ''
 
     def __reduce__(self):
-        from . import _buildBaseQuantity
-        return _buildBaseQuantity, (self.magnitude, self._units)
+        from . import _build_quantity
+        return _build_quantity, (self.magnitude, self._units)
 
     
     @classmethod
