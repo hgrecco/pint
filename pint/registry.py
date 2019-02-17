@@ -119,8 +119,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         from .unit import build_unit_class
         self.Unit = build_unit_class(self)
 
-        from .quantity import buildBaseQuantity_class
-        self.Quantity = buildBaseQuantity_class(self, force_ndarray)
+        from .quantity import build_quantity_class
+        self.Quantity = build_quantity_class(self, force_ndarray)
 
         from .measurement import build_measurement_class
         self.Measurement = build_measurement_class(self, force_ndarray)
