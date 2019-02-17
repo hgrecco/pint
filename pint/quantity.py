@@ -1789,7 +1789,7 @@ class QuantitySequenceMixin(object):
                 for value in self._magnitude.tolist()]
 
 
-def buildBaseQuantity_class(registry, force_ndarray=False):
+def build_quantity_class(registry, force_ndarray=False):
     
     class Quantity(BaseQuantity):
         def __new__(cls, value, units=None):
