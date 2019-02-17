@@ -106,6 +106,8 @@ def convert_to_consistent_units(*args):
             arg = arg.m_as(out_units)
         elif hasattr(arg, "__iter__") and not isinstance(arg, string_types):
             if isinstance(arg[0],BaseQuantity):
+                if not all([isinstance(item,BaseQuantity) for item in arg]):
+                    raise TypeError("{} contains items that aren't BaseQuantity type so cannot be converted".format(arg))
                 arg = [item.m_as(out_units) for item in arg]
         new_args.append(arg)
     return out_units, new_args
@@ -1530,12 +1532,12 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
             if tmp == 'size':
                 out = self.__class__(out, self._units ** self._magnitude.size)
             elif tmp == 'div':
-                units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                units1 = objs[0]._units if isinstance(objs[0], BaseQuantity) else UnitsContainer()
+                units2 = objs[1]._units if isinstance(objs[1], BaseQuantity) else UnitsContainer()
                 out = self.__class__(out, units1 / units2)
             elif tmp == 'mul':
-                units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                units1 = objs[0]._units if isinstance(objs[0], BaseQuantity) else UnitsContainer()
+                units2 = objs[1]._units if isinstance(objs[1], BaseQuantity) else UnitsContainer()
                 out = self.__class__(out, units1 * units2)
             else:
                 out = self.__class__(out, self._units ** tmp)
