@@ -1432,30 +1432,30 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
         return value
 
 
-    # def __getattr__(self, item):
-        # # Attributes starting with `__array_` are common attributes of NumPy ndarray.
-        # # They are requested by numpy functions.
-        # if item.startswith('__array_'):
-            # warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
-            # if isinstance(self._magnitude, ndarray):
-                # return getattr(self._magnitude, item)
-            # else:
-                # # If an `__array_` attributes is requested but the magnitude is not an ndarray,
-                # # we convert the magnitude to a numpy ndarray.
-                # self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
-                # return getattr(self._magnitude, item)
-        # elif item in self.__handled:
-            # if not isinstance(self._magnitude, ndarray):
-                # self._magnitude = _to_magnitude(self._magnitude, True)
-            # attr = getattr(self._magnitude, item)
-            # if callable(attr):
-                # return functools.partial(self.__numpy_method_wrap, attr)
-            # return attr
-        # try:
-            # return getattr(self._magnitude, item)
-        # except AttributeError as ex:
-            # raise AttributeError("Neither Quantity object nor its magnitude ({}) "
-                                 # "has attribute '{}'".format(self._magnitude, item))
+    def __getattr__(self, item):
+        # Attributes starting with `__array_` are common attributes of NumPy ndarray.
+        # They are requested by numpy functions.
+        if item.startswith('__array_'):
+            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+            if isinstance(self._magnitude, ndarray):
+                return getattr(self._magnitude, item)
+            else:
+                # If an `__array_` attributes is requested but the magnitude is not an ndarray,
+                # we convert the magnitude to a numpy ndarray.
+                self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
+                return getattr(self._magnitude, item)
+        elif item in self.__handled:
+            if not isinstance(self._magnitude, ndarray):
+                self._magnitude = _to_magnitude(self._magnitude, True)
+            attr = getattr(self._magnitude, item)
+            if callable(attr):
+                return functools.partial(self.__numpy_method_wrap, attr)
+            return attr
+        try:
+            return getattr(self._magnitude, item)
+        except AttributeError as ex:
+            raise AttributeError("Neither Quantity object nor its magnitude ({}) "
+                                 "has attribute '{}'".format(self._magnitude, item))
 
 
     __array_priority__ = 17
