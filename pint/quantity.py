@@ -198,24 +198,23 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
         else:
             raise TypeError('units must be of type str, Quantity or '
                             'UnitsContainer; not {}.'.format(type(units)))
-        inst._used = False
-        inst._handling = None
-        print(inst._used)
+        inst.__used = False
+        inst.__handling = None
         return inst
 
     @property
-    def debug_used(self):
-        return self._used
+    def debug__used(self):
+        return self.__used
 
     def __copy__(self):
         ret = self.__class__(copy.copy(self._magnitude), self._units)
-        ret._used = self._used
+        ret.__used = self.__used
         return ret
 
     def __deepcopy__(self, memo):
         ret = self.__class__(copy.deepcopy(self._magnitude, memo),
                              copy.deepcopy(self._units, memo))
-        ret._used = self._used
+        ret.__used = self.__used
         return ret
 
     def __str__(self):
@@ -1578,11 +1577,11 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
             # Only one ufunc should be handled at a time.
             # If a ufunc is already being handled (and this is not another domain),
             # something is wrong..
-            if self._handling:
+            if self.__handling:
                 raise Exception('Cannot handled nested ufuncs.\n'
                                 'Current: {}\n'
-                                'New: {}'.format(context, self._handling))
-            self._handling = context
+                                'New: {}'.format(context, self.__handling))
+            self.__handling = context
 
         return obj
 
@@ -1599,15 +1598,15 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
             if i_out == 0:
                 out = self._call_ufunc(uf, *objs)
                 # If there are multiple outputs,
-                # store them in _handling (uf, objs, i_out, out0, out1, ...)
+                # store them in __handling (uf, objs, i_out, out0, out1, ...)
                 # and return the first
                 if uf.nout > 1:
-                    self._handling += out
+                    self.__handling += out
                     out = out[0]
             else:
                 # If this is not the first output,
                 # just grab the result that was previously calculated.
-                out = self._handling[3 + i_out]
+                out = self.__handling[3 + i_out]
 
             return self._wrap_output(uf.__name__, i_out, objs, out)
         except (DimensionalityError, UndefinedUnitError) as ex:
@@ -1620,7 +1619,7 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
             # If this is the last output argument for the ufunc,
             # we are done handling this ufunc.
             if uf.nout == i_out + 1:
-                self._handling = None
+                self.__handling = None
 
         return self.magnitude.__array_wrap__(obj, context)
 
@@ -1803,10 +1802,8 @@ def build_quantity_class(registry, force_ndarray=False):
                 elif isinstance(value, cls):
                     inst = copy.copy(value)
                 else:
-                    inst = object.__new__(cls)
-                    inst._magnitude = _to_magnitude(value, inst.force_ndarray)
-                    inst._units = UnitsContainer()
-                    return inst
+                    value = _to_magnitude(value, cls.force_ndarray)
+                    units = UnitsContainer()
             if hasattr(value, "__iter__"):
                 return QuantitySequence._new(value,units)
             else:
