@@ -1713,12 +1713,12 @@ class QuantitySequenceMixin(object):
             pass
 
         try:
-            if isinstance(value, self.__class__):
+            if isinstance(value, BaseQuantity):
                 factor = self.__class__(value.magnitude, value._units / self._units).to_root_units()
             else:
                 factor = self.__class__(value, self._units ** (-1)).to_root_units()
 
-            if isinstance(factor, self.__class__):
+            if isinstance(factor, BaseQuantity):
                 if not factor.dimensionless:
                     raise DimensionalityError(value, self.units,
                                               extra_msg='. Assign a quantity with the same dimensionality or '
