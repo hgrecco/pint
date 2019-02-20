@@ -1752,7 +1752,7 @@ class QuantitySequenceMixin(object):
         kwargs = {'out': out}
 
         if min is not None:
-            if isinstance(min, self.__class__):
+            if isinstance(min, BaseQuantity):
                 kwargs['min'] = min.to(self).magnitude
             elif self.dimensionless:
                 kwargs['min'] = min
@@ -1760,7 +1760,7 @@ class QuantitySequenceMixin(object):
                 raise DimensionalityError('dimensionless', self._units)
 
         if max is not None:
-            if isinstance(max, self.__class__):
+            if isinstance(max, BaseQuantity):
                 kwargs['max'] = max.to(self).magnitude
             elif self.dimensionless:
                 kwargs['max'] = max
@@ -1774,7 +1774,7 @@ class QuantitySequenceMixin(object):
         return self.magnitude.fill(value.magnitude)
 
     def put(self, indices, values, mode='raise'):
-        if isinstance(values, self.__class__):
+        if isinstance(values, BaseQuantity):
             values = values.to(self).magnitude
         elif self.dimensionless:
             values = self.__class__(values, '').to(self)
