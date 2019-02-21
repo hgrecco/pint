@@ -39,12 +39,18 @@ class TestNumpyMethods(QuantityTestCase):
     def test_atleast_3d(self):
         self.assertQuantityEqual(np.atleast_3d(self.q), np.array([[[1],[2]],[[3],[4]]])* self.ureg.m)
         
+    def test_expand_dims(self):
+        self.assertQuantityEqual(np.expand_dims(self.q, 0), array([[[1, 2],[3, 4]]])* self.ureg.m)
+        
     ####################################
     # above here are __array_function tests, below may be applicable to older numpy too
     ####################################
     
     def test_rollaxis(self):
         self.assertQuantityEqual(np.rollaxis(self.q, 1), np.array([[1,2],[3,4]]).T * self.ureg.m)
+        
+    def test_squeeze(self):
+        self.assertQuantityEqual(np.squeeze(self.q), self.q)
 
     # Seems not in 1.19
     # def test_moveaxis(self):

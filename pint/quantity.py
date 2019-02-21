@@ -121,7 +121,7 @@ def implement_func(func_str):
         Q_ = out_units._REGISTRY.Quantity
         return Q_(func(*new_args), out_units)
 
-for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'atleast_1d', 'atleast_2d', 'atleast_3d']:
+for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'atleast_1d', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze']:
     implement_func(func_str)
     
 
