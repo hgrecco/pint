@@ -28,18 +28,30 @@ class TestNumpyMethods(QuantityTestCase):
         return [[1,2],[3,4]] * self.ureg.m
         
         #TODO
-        # atleast_1d 2d 3d
+        # atleast_3d
         # broadcast to removed?
+    def test_atleast_1d(self):
+        self.assertQuantityEqual(np.atleast_1d(self.q), self.q)
         
+    def test_atleast_2d(self):
+        self.assertQuantityEqual(np.atleast_2d(self.q), self.q)
+        
+    def test_atleast_3d(self):
+        self.assertQuantityEqual(np.atleast_3d(self.q), np.array([[[1],[2]],[[3],[4]]])* self.ureg.m)
+        
+    ####################################
+    # above here are __array_function tests, below may be applicable to older numpy too
+    ####################################
+    
     def test_rollaxis(self):
         self.assertQuantityEqual(np.rollaxis(self.q, 1), np.array([[1,2],[3,4]]).T * self.ureg.m)
 
-    def test_moveaxis(self):
-        self.assertQuantityEqual(np.moveaxis(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
+    # Seems not in 1.19
+    # def test_moveaxis(self):
+        # self.assertQuantityEqual(np.moveaxis(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
 
     def test_swapaxes(self):
         self.assertQuantityEqual(np.swapaxes(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
-
     def test_tolist(self):
         self.assertEqual(self.q.tolist(), [[1*self.ureg.m, 2*self.ureg.m], [3*self.ureg.m, 4*self.ureg.m]])
 
