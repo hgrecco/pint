@@ -26,6 +26,15 @@ class TestNumpyMethods(QuantityTestCase):
     @property
     def q(self):
         return [[1,2],[3,4]] * self.ureg.m
+        
+    def test_rollaxis(self):
+        self.assertQuantityEqual(np.rollaxis(self.q, 1), np.array([[1,2],[3,4]]).T * self.ureg.m)
+
+    def test_moveaxis(self):
+        self.assertQuantityEqual(np.moveaxis(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
+
+    def test_swapaxes(self):
+        self.assertQuantityEqual(np.swapaxes(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
 
     def test_tolist(self):
         self.assertEqual(self.q.tolist(), [[1*self.ureg.m, 2*self.ureg.m], [3*self.ureg.m, 4*self.ureg.m]])

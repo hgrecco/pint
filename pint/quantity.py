@@ -116,11 +116,12 @@ def implement_func(func_str):
     func = getattr(np,func_str)
     @implements(func)
     def _(*args):
+        print(func)
         out_units, new_args = convert_to_consistent_units(*args)
         Q_ = out_units._REGISTRY.Quantity
         return Q_(func(*new_args), out_units)
 
-for func_str in ['linspace', 'concatenate', 'hstack', 'vstack']:
+for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'broadcast_to', 'atleast_1d', 'atleast_2d', 'atleast_3d']:
     implement_func(func_str)
     
 
