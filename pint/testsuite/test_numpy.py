@@ -27,6 +27,10 @@ class TestNumpyMethods(QuantityTestCase):
     def q(self):
         return [[1,2],[3,4]] * self.ureg.m
         
+        #TODO
+        # atleast_1d 2d 3d
+        # broadcast to removed?
+        
     def test_rollaxis(self):
         self.assertQuantityEqual(np.rollaxis(self.q, 1), np.array([[1,2],[3,4]]).T * self.ureg.m)
 
