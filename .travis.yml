@@ -50,6 +50,7 @@ install:
   - source activate $ENV_NAME
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
   # - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
+  - pip install cython
   - pip install git+https://github.com/numpy/numpy.git@67e20d09d3d83eed4c8ce06cf5d5dd6e0b38b856
   - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install babel serialize pyyaml; fi
   # this is superslow but suck it up until updates to pandas are made
