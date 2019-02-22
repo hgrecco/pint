@@ -9,7 +9,7 @@ branches:
 env:
   # Should pandas tests be removed or replaced wih import checks?
   #- UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.14 PANDAS=1
-  - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.15 PANDAS=0
+  - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.17 PANDAS=0
   # - UNCERTAINTIES="N" PYTHON="3.3" NUMPY_VERSION=1.9.2 PANDAS=0
   # - UNCERTAINTIES="N" PYTHON="3.4" NUMPY_VERSION=1.11.2 PANDAS=0
   # - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=1.11.2 PANDAS=0
@@ -49,7 +49,8 @@ install:
   - conda create --yes -n $ENV_NAME python=$PYTHON pip
   - source activate $ENV_NAME
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
-  - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
+  # - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
+  - pip install git+https://github.com/numpy/numpy.git@67e20d09d3d83eed4c8ce06cf5d5dd6e0b38b856
   - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install babel serialize pyyaml; fi
   # this is superslow but suck it up until updates to pandas are made
   - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
