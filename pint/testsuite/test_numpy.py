@@ -40,7 +40,7 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertQuantityEqual(np.atleast_3d(self.q), np.array([[[1],[2]],[[3],[4]]])* self.ureg.m)
         
     def test_expand_dims(self):
-        self.assertQuantityEqual(np.expand_dims(self.q, 0), array([[[1, 2],[3, 4]]])* self.ureg.m)
+        self.assertQuantityEqual(np.expand_dims(self.q, 0), np.array([[[1, 2],[3, 4]]])* self.ureg.m)
         
     ####################################
     # above here are __array_function tests, below may be applicable to older numpy too

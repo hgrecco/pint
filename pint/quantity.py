@@ -112,17 +112,48 @@ def convert_to_consistent_units(*args):
         new_args.append(arg)
     return out_units, new_args
     
-def implement_func(func_str):
+def convert_to_magnitudes(*args):
+    """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
+    into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
+    """
+        
+    new_args=[]
+    for arg in args:
+        if isinstance(arg,BaseQuantity):
+            arg = arg.m
+        elif hasattr(arg, "__iter__") and not isinstance(arg, string_types):
+            if isinstance(arg[0],BaseQuantity):
+                arg = [item.m for item in arg]
+        new_args.append(arg)
+    return new_args
+    
+def implement_consistent_units_func(func_str):
     func = getattr(np,func_str)
     @implements(func)
     def _(*args):
+        # TODO make work for kwargs
         print(func)
         out_units, new_args = convert_to_consistent_units(*args)
         Q_ = out_units._REGISTRY.Quantity
         return Q_(func(*new_args), out_units)
 
-for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'atleast_1d', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze']:
-    implement_func(func_str)
+def implement_delegate_func(func_str):
+    # unitless output
+    func = getattr(np,func_str)
+    @implements(func)
+    def _(*args):
+        # TODO make work for kwargs
+        print(func)
+        new_args = convert_to_magnitudes(*args)
+        return func(*new_args)
+        
+
+for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'atleast_1d', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis']:
+    implement_consistent_units_func(func_str)
+    
+
+for func_str in ['size', 'isreal', 'iscomplex']:
+    implement_delegate_func(func_str)
     
 
 @contextlib.contextmanager
