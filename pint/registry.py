@@ -1293,12 +1293,27 @@ class SystemRegistry(BaseRegistry):
         self._default_system = system
 
     def _after_init(self):
+        """After init function
+
+        Create default group.
+        Add all orphan units to it.
+        Set default system.
+        """
         super(SystemRegistry, self)._after_init()
 
-        #: Copy units in root group to the default group
+        #: Copy units not defined in any group to the default group
         if 'group' in self._defaults:
             grp = self.get_group(self._defaults['group'], True)
-            grp.add_units(*self.get_group('root', False).non_inherited_unit_names)
+            group_units = frozenset(
+                [
+                    member
+                    for group in self._groups.values()
+                    if group.name != "root"
+                    for member in group.members
+                ]
+            )
+            all_units = self.get_group("root", False).members
+            grp.add_units(*(all_units - group_units))
 
         #: System name to be used by default.
         self._default_system = self._default_system or self._defaults.get('system', None)
