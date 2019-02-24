@@ -9,7 +9,6 @@ import re
 import unittest
 
 from pint.compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
-NUMPY_VER = '1.17'
 
 def requires_numpy18():
     if not HAS_NUMPY:
