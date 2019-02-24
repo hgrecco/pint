@@ -328,7 +328,6 @@ class TestNumpyNeedsSubclassing(TestUFuncs):
         """
         self.assertQuantityEqual(np.trapz(self.q, dx=1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
 
-    @unittest.expectedFailure
     def test_diff(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
