@@ -9,7 +9,7 @@ import re
 import unittest
 
 from pint.compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
-
+NUMPY_VER = '1.17'
 
 def requires_numpy18():
     if not HAS_NUMPY:
@@ -20,8 +20,7 @@ def requires_numpy18():
 def requires_numpy_previous_than(version):
     if not HAS_NUMPY:
         return unittest.skip('Requires NumPy')
-    # return unittest.skipUnless(StrictVersion(NUMPY_VER) < StrictVersion(version), 'Requires NumPy < %s' % version)
-    return unittest.skipUnless(HAS_NUMPY, 'Requires NumPy')
+    return unittest.skipUnless(StrictVersion(NUMPY_VER) < StrictVersion(version), 'Requires NumPy < %s' % version)
 
 
 def requires_numpy():
