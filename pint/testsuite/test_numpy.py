@@ -28,8 +28,12 @@ class TestNumpyMethods(QuantityTestCase):
         return [[1,2],[3,4]] * self.ureg.m
         
         #TODO
-        # atleast_3d
-        # broadcast to removed?
+        # https://www.numpy.org/devdocs/reference/routines.array-manipulation.html
+        # copyto
+        # broadcast , broadcast_arrays
+        # asarray	asanyarray	asmatrix	asfarray	asfortranarray	ascontiguousarray	asarray_chkfinite	asscalar	require
+
+        
     def test_atleast_1d(self):
         self.assertQuantityEqual(np.atleast_1d(self.q), self.q)
         
@@ -51,10 +55,12 @@ class TestNumpyMethods(QuantityTestCase):
         
     def test_squeeze(self):
         self.assertQuantityEqual(np.squeeze(self.q), self.q)
+        
+    def test_broadcast_to(self):
+        self.assertQuantityEqual(np.broadcast_to(self.q[:,1], (2,2)), np.array([[2,4],[2,4]]) * self.ureg.m)
 
-    # Seems not in 1.19
-    # def test_moveaxis(self):
-        # self.assertQuantityEqual(np.moveaxis(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
+    def test_moveaxis(self):
+        self.assertQuantityEqual(np.moveaxis(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
 
     def test_swapaxes(self):
         self.assertQuantityEqual(np.swapaxes(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)

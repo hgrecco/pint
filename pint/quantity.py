@@ -148,7 +148,7 @@ def implement_delegate_func(func_str):
         return func(*new_args)
         
 
-for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'atleast_1d', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis']:
+for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'atleast_1d', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis',  'diff']:
     implement_consistent_units_func(func_str)
     
 
@@ -1467,7 +1467,7 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
         if item.startswith('__array_'):
-            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+            warnings.warn("The unit of the quantity is stripped when getting {} attribute".format(item), UnitStrippedWarning)
             if isinstance(self._magnitude, ndarray):
                 return getattr(self._magnitude, item)
             else:
