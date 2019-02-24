@@ -333,13 +333,11 @@ class TestNumpyNeedsSubclassing(TestUFuncs):
         """
         self.assertQuantityEqual(np.diff(self.q, 1), [1, 1, 1] * self.ureg.J)
 
-    @unittest.expectedFailure
     def test_ediff1d(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
-        self.assertQuantityEqual(np.ediff1d(self.q, 1 * self.ureg.J), [1, 1, 1] * self.ureg.J)
+        self.assertQuantityEqual(np.ediff1d(self.q, 1 * self.ureg.J), [1, 1, 1, 1] * self.ureg.J)
 
-    @unittest.expectedFailure
     def test_fix(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """

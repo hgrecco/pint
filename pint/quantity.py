@@ -148,7 +148,7 @@ def implement_delegate_func(func_str):
         return func(*new_args)
         
 
-for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'dstack', 'atleast_1d', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis',  'diff']:
+for func_str in ['linspace', 'concatenate', 'hstack', 'vstack', 'dstack', 'atleast_1d', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis',  'diff', 'ediff1d', 'fix']:
     implement_consistent_units_func(func_str)
     
 
