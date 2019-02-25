@@ -86,44 +86,68 @@ def implements(numpy_function):
         return func
     return decorator
 
-def convert_to_consistent_units(*args):
-    """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
-    into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
-    """
+def _is_quantity_sequence(arg):
+    if hasattr(arg, "__iter__") and hasattr(arg, "__len__") and not isinstance(arg, string_types):
+        if isinstance(arg[0],BaseQuantity):
+            if not all([isinstance(item,BaseQuantity) for item in arg]):
+                raise TypeError("{} contains items that aren't BaseQuantity type".format(arg))
+            return True
+    return False
+    
+def _get_out_units(args):
     out_units=None
     for arg in args:
         if isinstance(arg,BaseQuantity):
             out_units = arg.units
-        elif hasattr(arg, "__iter__") and not isinstance(arg, string_types):
-            if isinstance(arg[0],BaseQuantity):
-                out_units = arg[0].units
+        elif _is_quantity_sequence(arg):
+            out_units = arg[0].units
         if out_units is not None:
             break
+    return out_units
+    
+def convert_to_consistent_units(*args):
+    """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
+    into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
+    """
+    out_units = _get_out_units(args)
     
     new_args=[]
     for arg in args:
         if isinstance(arg,BaseQuantity):
             arg = arg.m_as(out_units)
-        elif hasattr(arg, "__iter__") and not isinstance(arg, string_types):
-            if isinstance(arg[0],BaseQuantity):
-                if not all([isinstance(item,BaseQuantity) for item in arg]):
-                    raise TypeError("{} contains items that aren't BaseQuantity type so cannot be converted".format(arg))
-                arg = [item.m_as(out_units) for item in arg]
+        elif _is_quantity_sequence(arg):
+            arg = [item.m_as(out_units) for item in arg]
+        new_args.append(arg)
+    return out_units, new_args
+    
+def convert_to_consistent_units(*args, pre_calc_units=None):
+    """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
+    into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
+    """
+    out_units = _get_out_units(args)
+    if pre_calc_units == None:
+        pre_calc_units = out_units
+    
+    new_args=[]
+    for arg in args:
+        if isinstance(arg,BaseQuantity):
+            arg = arg.m_as(pre_calc_units)
+        elif _is_quantity_sequence(arg):
+            arg = [item.m_as(pre_calc_units) for item in arg]
         new_args.append(arg)
     return out_units, new_args
     
 def convert_to_magnitudes(*args):
     """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
-    into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
+    into the magnitudes. Other args are left untouched.
     """
         
     new_args=[]
     for arg in args:
         if isinstance(arg,BaseQuantity):
             arg = arg.m
-        elif hasattr(arg, "__iter__") and not isinstance(arg, string_types):
-            if isinstance(arg[0],BaseQuantity):
-                arg = [item.m for item in arg]
+        elif _is_quantity_sequence(arg):
+            arg = [item.m for item in arg]
         new_args.append(arg)
     return new_args
     
@@ -136,6 +160,16 @@ def implement_consistent_units_func(func_str):
         out_units, new_args = convert_to_consistent_units(*args)
         Q_ = out_units._REGISTRY.Quantity
         return Q_(func(*new_args), out_units)
+    
+def implement_radians_units_func(func_str):
+    func = getattr(np,func_str)
+    @implements(func)
+    def _(*args):
+        # TODO make work for kwargs
+        print(func)
+        out_units, new_args = convert_to_consistent_units(*args, pre_calc_units = "rad")
+        Q_ = out_units._REGISTRY.Quantity
+        return Q_(func(*new_args), "rad").to(out_units)
 
 def implement_delegate_func(func_str):
     # unitless output
@@ -150,6 +184,10 @@ def implement_delegate_func(func_str):
 
 for func_str in ['linspace', 'concatenate', 'block', 'stack', 'hstack', 'vstack',  'dstack', 'atleast_1d', 'column_stack', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis',  'diff', 'ediff1d', 'fix']:
     implement_consistent_units_func(func_str)
+    
+
+for func_str in ['unwrap']:
+    implement_radians_units_func(func_str)
     
 
 for func_str in ['size', 'isreal', 'iscomplex']:

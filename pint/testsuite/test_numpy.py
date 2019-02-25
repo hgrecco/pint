@@ -132,6 +132,13 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
             self.Q_([1,2,3,4], self.ureg.m)
         )
         
+class TestNumpyMathematicalFunctions(TestNumpyMethods):
+    def test_unwrap(self):
+        """unwrap depends on diff
+        """
+        self.assertQuantityEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
+        self.assertQuantityEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
+
 class TestNumpyUnclassified(TestNumpyMethods):
     def test_tolist(self):
         self.assertEqual(self.q.tolist(), [[1*self.ureg.m, 2*self.ureg.m], [3*self.ureg.m, 4*self.ureg.m]])
@@ -361,13 +368,6 @@ class TestNumpyNeedsSubclassing(TestUFuncs):
     @property
     def q(self):
         return [1. ,2., 3., 4.] * self.ureg.J
-
-    @unittest.expectedFailure
-    def test_unwrap(self):
-        """unwrap depends on diff
-        """
-        self.assertQuantityEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
-        self.assertQuantityEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
 
     @unittest.expectedFailure
     def test_trapz(self):
