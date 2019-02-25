@@ -94,7 +94,7 @@ def _is_quantity_sequence(arg):
             return True
     return False
     
-def _get_out_units(args, kwargs={}):
+def _get_first_input_units(args, kwargs={}):
     args_combo = list(args)+list(kwargs.values())
     out_units=None
     for arg in args_combo:
@@ -127,50 +127,77 @@ def convert_to_consistent_units(pre_calc_units=None, *args, **kwargs):
     new_kwargs = {key:convert_arg(arg) for key,arg in kwargs.items()}
     return new_args, new_kwargs
     
-def implement_consistent_units_func(func_str):
-    func = getattr(np,func_str)
-    @implements(func)
-    def _(*args, **kwargs):
-        # TODO make work for kwargs
-        print(func)
-        out_units = _get_out_units(args, kwargs)
-        new_args, new_kwargs = convert_to_consistent_units(out_units, *args, **kwargs)
-        Q_ = out_units._REGISTRY.Quantity
-        return Q_(func(*new_args), out_units)
+def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
+    """
+    :param func_str: The numpy function to implement
+    :type func_str: str
+    :param pre_calc_units: The units any quantity/ sequences of quantities should be converted to. 
+    consistent_infer converts all qs to the first units found in args/kwargs
+    inconsistent does not convert any qs, eg for product
+    rad (or any other unit) converts qs to radians/ other unit
+    None converts qs to magnitudes without conversion
+    :type pre_calc_units: NoneType, str
+    :param pre_calc_units: The units the result of the function should be initiated as. 
+    as_pre_calc uses the units it was converted to pre calc. Do not use with pre_calc_units="inconsistent"
+    rad (or any other unit) uses radians/ other unit
+    prod uses multiplies the input quantity units
+    None causes func to return without creating a quantity from the output, regardless of any out_units
+    :type out_units: NoneType, str
+    :param out_units: The units the result of the function should be returned to the user as.  The quantity created in the post_calc_units will be converted to the out_units
+    None or as_post_calc uses the units the quantity was initiated in, ie the post_calc_units, without any conversion.
+    rad (or any other unit) uses radians/ other unit
+    infer_from_input uses the first input units found, as received by the function before any conversions.
+    :type out_units: NoneType, str
     
-def implement_radians_units_func(func_str):
+    """
     func = getattr(np,func_str)
+    
     @implements(func)
     def _(*args, **kwargs):
         # TODO make work for kwargs
-        print(func)
-        out_units = _get_out_units(args, kwargs)
-        new_args, new_kwargs = convert_to_consistent_units("rad", *args, **kwargs, )
-        Q_ = out_units._REGISTRY.Quantity
-        return Q_(func(*new_args), "rad").to(out_units)
-
-def implement_delegate_func(func_str):
-    # unitless output
-    func = getattr(np,func_str)
-    @implements(func)
-    def _(*args, **kwargs):
-        # TODO make work for kwargs
-        print(func)
-        out_units = _get_out_units(args, kwargs)
-        new_args, new_kwargs = convert_to_consistent_units(None, *args, **kwargs, )
-        return func(*new_args, **new_kwargs)
+        print(func_str)
+        (pre_calc_units, post_calc_units, out_units)=(pre_calc_units_, post_calc_units_, out_units_)
+        first_input_units=_get_first_input_units(args, kwargs)
+        if pre_calc_units == "consistent_infer":
+            pre_calc_units = first_input_units
+            
+        if pre_calc_units == "inconsistent":
+            new_args, new_kwargs = args, kwargs
+        else:   
+            new_args, new_kwargs = convert_to_consistent_units(pre_calc_units, *args, **kwargs)
+        res = func(*new_args, **new_kwargs)
         
-
+        if post_calc_units is None:
+            return res
+        elif post_calc_units == "as_pre_calc":
+            post_calc_units = pre_calc_units
+        elif post_calc_units == "prod":
+            product = 1
+            for x in list(args)+list(kwargs.values()):
+                product *= x
+            post_calc_units = product.units
+        Q_ = first_input_units._REGISTRY.Quantity
+        post_calc_Q_= Q_(res, post_calc_units)
+        
+        if out_units is None or out_units == "as_post_calc":
+            return post_calc_Q_
+        elif out_units == "infer_from_input":
+            out_units = first_input_units
+        return post_calc_Q_.to(out_units)
+    
 for func_str in ['linspace', 'concatenate', 'block', 'stack', 'hstack', 'vstack',  'dstack', 'atleast_1d', 'column_stack', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis',  'diff', 'ediff1d', 'fix']:
-    implement_consistent_units_func(func_str)
+    implement_func(func_str, 'consistent_infer', 'as_pre_calc', 'as_post_calc')
     
 
 for func_str in ['unwrap']:
-    implement_radians_units_func(func_str)
+    implement_func(func_str, 'rad', 'rad', 'infer_from_input')
     
 
 for func_str in ['size', 'isreal', 'iscomplex']:
-    implement_delegate_func(func_str)
+    implement_func(func_str, None, None, None)
+    
+for func_str in ['cross']:
+    implement_func(func_str, None, 'prod', None)
     
 
 @contextlib.contextmanager

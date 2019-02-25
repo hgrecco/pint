@@ -175,13 +175,12 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         self.assertQuantityEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.m / self.ureg.J)
         self.assertQuantityEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.m / self.ureg.J)
 
-    @unittest.expectedFailure
     def test_cross(self):
         """Units are erased by asarray, Quantity does not inherit from NDArray
         """
         a = [[3,-3, 1]] * self.ureg.kPa
         b = [[4, 9, 2]] * self.ureg.m**2
-        self.assertQuantityEqual(np.cross(a, b), [-15, -2, 39] * self.ureg.kPa * self.ureg.m**2)
+        self.assertQuantityEqual(np.cross(a, b), [[-15, -2, 39]] * self.ureg.kPa * self.ureg.m**2)
 
 
 class TestNumpyUnclassified(TestNumpyMethods):
