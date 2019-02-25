@@ -27,13 +27,47 @@ class TestNumpyMethods(QuantityTestCase):
     def q(self):
         return [[1,2],[3,4]] * self.ureg.m
         
-        #TODO
-        # https://www.numpy.org/devdocs/reference/routines.array-manipulation.html
-        # copyto
-        # broadcast , broadcast_arrays
-        # asarray	asanyarray	asmatrix	asfarray	asfortranarray	ascontiguousarray	asarray_chkfinite	asscalar	require
+class TestNumpyArrayManipulation(TestNumpyMethods):
+    #TODO
+    # https://www.numpy.org/devdocs/reference/routines.array-manipulation.html
+    # copyto
+    # broadcast , broadcast_arrays
+    # asarray	asanyarray	asmatrix	asfarray	asfortranarray	ascontiguousarray	asarray_chkfinite	asscalar	require
+    
+    # Changing array shape
+    
+    def test_flatten(self):
+        self.assertQuantityEqual(self.q.flatten(), [1, 2, 3, 4] * self.ureg.m)
 
+    def test_flat(self):
+        for q, v in zip(self.q.flat, [1, 2, 3, 4]):
+            self.assertEqual(q, v * self.ureg.m)
+
+    def test_reshape(self):
+        self.assertQuantityEqual(self.q.reshape([1,4]), [[1, 2, 3, 4]] * self.ureg.m)
+    
+    def test_ravel(self):
+        self.assertQuantityEqual(self.q.ravel(), [1, 2, 3, 4] * self.ureg.m)
+    
+    # Transpose-like operations
+
+    def test_moveaxis(self):
+        self.assertQuantityEqual(np.moveaxis(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
+
+    
+    def test_rollaxis(self):
+        self.assertQuantityEqual(np.rollaxis(self.q, 1), np.array([[1,2],[3,4]]).T * self.ureg.m)
         
+        
+    def test_swapaxes(self):
+        self.assertQuantityEqual(np.swapaxes(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
+
+
+    def test_transpose(self):
+        self.assertQuantityEqual(self.q.transpose(), [[1, 3], [2, 4]] * self.ureg.m)
+    
+    # Changing number of dimensions
+    
     def test_atleast_1d(self):
         self.assertQuantityEqual(np.atleast_1d(self.q), self.q)
         
@@ -43,27 +77,27 @@ class TestNumpyMethods(QuantityTestCase):
     def test_atleast_3d(self):
         self.assertQuantityEqual(np.atleast_3d(self.q), np.array([[[1],[2]],[[3],[4]]])* self.ureg.m)
         
+    def test_broadcast_to(self):
+        self.assertQuantityEqual(np.broadcast_to(self.q[:,1], (2,2)), np.array([[2,4],[2,4]]) * self.ureg.m)
+        
     def test_expand_dims(self):
         self.assertQuantityEqual(np.expand_dims(self.q, 0), np.array([[[1, 2],[3, 4]]])* self.ureg.m)
+        
+    def test_squeeze(self):
+        self.assertQuantityEqual(np.squeeze(self.q), self.q)
+        self.assertQuantityEqual(
+            self.q.reshape([1,4]).squeeze(),
+            [1, 2, 3, 4] * self.ureg.m
+        )
+        
+    # Changing number of dimensions
+    # Joining arrays
         
     ####################################
     # above here are __array_function tests, below may be applicable to older numpy too
     ####################################
-    
-    def test_rollaxis(self):
-        self.assertQuantityEqual(np.rollaxis(self.q, 1), np.array([[1,2],[3,4]]).T * self.ureg.m)
         
-    def test_squeeze(self):
-        self.assertQuantityEqual(np.squeeze(self.q), self.q)
-        
-    def test_broadcast_to(self):
-        self.assertQuantityEqual(np.broadcast_to(self.q[:,1], (2,2)), np.array([[2,4],[2,4]]) * self.ureg.m)
-
-    def test_moveaxis(self):
-        self.assertQuantityEqual(np.moveaxis(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
-
-    def test_swapaxes(self):
-        self.assertQuantityEqual(np.swapaxes(self.q, 1,0), np.array([[1,2],[3,4]]).T * self.ureg.m)
+class TestNumpyUnclassified(TestNumpyMethods):
     def test_tolist(self):
         self.assertEqual(self.q.tolist(), [[1*self.ureg.m, 2*self.ureg.m], [3*self.ureg.m, 4*self.ureg.m]])
 
@@ -78,29 +112,7 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertQuantityEqual(tmp, [[6, 6], [6, 6]] * self.ureg.ft)
         tmp.fill(5 * self.ureg.m)
         self.assertQuantityEqual(tmp, [[5, 5], [5, 5]] * self.ureg.m)
-
-    def test_reshape(self):
-        self.assertQuantityEqual(self.q.reshape([1,4]), [[1, 2, 3, 4]] * self.ureg.m)
-
-    def test_transpose(self):
-        self.assertQuantityEqual(self.q.transpose(), [[1, 3], [2, 4]] * self.ureg.m)
-
-    def test_flatten(self):
-        self.assertQuantityEqual(self.q.flatten(), [1, 2, 3, 4] * self.ureg.m)
-
-    def test_flat(self):
-        for q, v in zip(self.q.flat, [1, 2, 3, 4]):
-            self.assertEqual(q, v * self.ureg.m)
-
-    def test_ravel(self):
-        self.assertQuantityEqual(self.q.ravel(), [1, 2, 3, 4] * self.ureg.m)
-
-    def test_squeeze(self):
-        self.assertQuantityEqual(
-            self.q.reshape([1,4]).squeeze(),
-            [1, 2, 3, 4] * self.ureg.m
-        )
-
+        
     def test_take(self):
         self.assertQuantityEqual(self.q.take([0,1,2,3]), self.q.flatten())
 
