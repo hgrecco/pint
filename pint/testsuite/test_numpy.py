@@ -92,10 +92,45 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         
     # Changing number of dimensions
     # Joining arrays
+    def test_concatentate(self):
+        self.assertQuantityEqual(
+            np.concatenate([self.q]*2),
+            self.Q_(np.concatenate([self.q.m]*2), self.ureg.m)
+        )
         
-    ####################################
-    # above here are __array_function tests, below may be applicable to older numpy too
-    ####################################
+    def test_stack(self):
+        self.assertQuantityEqual(
+            np.stack([self.q]*2),
+            self.Q_(np.stack([self.q.m]*2), self.ureg.m)
+        )
+        
+    def test_column_stack(self):
+        self.assertQuantityEqual(
+            np.column_stack([self.q[:,0],self.q[:,1]]),
+            self.q
+        )
+        
+    def test_dstack(self):
+        self.assertQuantityEqual(
+            np.dstack([self.q]*2),
+            self.Q_(np.dstack([self.q.m]*2), self.ureg.m)
+        )
+        
+    def test_hstack(self):
+        self.assertQuantityEqual(
+            np.hstack([self.q]*2),
+            self.Q_(np.hstack([self.q.m]*2), self.ureg.m)
+        )
+    def test_vstack(self):
+        self.assertQuantityEqual(
+            np.vstack([self.q]*2),
+            self.Q_(np.vstack([self.q.m]*2), self.ureg.m)
+        )
+    def test_block(self):
+        self.assertQuantityEqual(
+            np.block([self.q[0,:],self.q[1,:]]),
+            self.Q_([1,2,3,4], self.ureg.m)
+        )
         
 class TestNumpyUnclassified(TestNumpyMethods):
     def test_tolist(self):
