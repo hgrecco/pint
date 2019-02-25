@@ -94,9 +94,10 @@ def _is_quantity_sequence(arg):
             return True
     return False
     
-def _get_out_units(args):
+def _get_out_units(args, kwargs={}):
+    args_combo = list(args)+list(kwargs.values())
     out_units=None
-    for arg in args:
+    for arg in args_combo:
         if isinstance(arg,BaseQuantity):
             out_units = arg.units
         elif _is_quantity_sequence(arg):
@@ -105,69 +106,46 @@ def _get_out_units(args):
             break
     return out_units
     
-def convert_to_consistent_units(*args):
+def convert_to_consistent_units(pre_calc_units=None, *args, **kwargs):
     """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
     into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
     """
-    out_units = _get_out_units(args)
+    def convert_arg(arg):
+        if pre_calc_units is not None:
+            if isinstance(arg,BaseQuantity):
+                return arg.m_as(pre_calc_units)
+            elif _is_quantity_sequence(arg):
+                return [item.m_as(pre_calc_units) for item in arg]
+        else:
+            if isinstance(arg,BaseQuantity):
+                return arg.m
+            elif _is_quantity_sequence(arg):
+                return [item.m for item in arg]
+        return arg
     
-    new_args=[]
-    for arg in args:
-        if isinstance(arg,BaseQuantity):
-            arg = arg.m_as(out_units)
-        elif _is_quantity_sequence(arg):
-            arg = [item.m_as(out_units) for item in arg]
-        new_args.append(arg)
-    return out_units, new_args
-    
-def convert_to_consistent_units(*args, pre_calc_units=None):
-    """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
-    into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
-    """
-    out_units = _get_out_units(args)
-    if pre_calc_units == None:
-        pre_calc_units = out_units
-    
-    new_args=[]
-    for arg in args:
-        if isinstance(arg,BaseQuantity):
-            arg = arg.m_as(pre_calc_units)
-        elif _is_quantity_sequence(arg):
-            arg = [item.m_as(pre_calc_units) for item in arg]
-        new_args.append(arg)
-    return out_units, new_args
-    
-def convert_to_magnitudes(*args):
-    """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
-    into the magnitudes. Other args are left untouched.
-    """
-        
-    new_args=[]
-    for arg in args:
-        if isinstance(arg,BaseQuantity):
-            arg = arg.m
-        elif _is_quantity_sequence(arg):
-            arg = [item.m for item in arg]
-        new_args.append(arg)
-    return new_args
+    new_args=(convert_arg(arg) for arg in args)
+    new_kwargs = {key:convert_arg(arg) for key,arg in kwargs.items()}
+    return new_args, new_kwargs
     
 def implement_consistent_units_func(func_str):
     func = getattr(np,func_str)
     @implements(func)
-    def _(*args):
+    def _(*args, **kwargs):
         # TODO make work for kwargs
         print(func)
-        out_units, new_args = convert_to_consistent_units(*args)
+        out_units = _get_out_units(args, kwargs)
+        new_args, new_kwargs = convert_to_consistent_units(out_units, *args, **kwargs)
         Q_ = out_units._REGISTRY.Quantity
         return Q_(func(*new_args), out_units)
     
 def implement_radians_units_func(func_str):
     func = getattr(np,func_str)
     @implements(func)
-    def _(*args):
+    def _(*args, **kwargs):
         # TODO make work for kwargs
         print(func)
-        out_units, new_args = convert_to_consistent_units(*args, pre_calc_units = "rad")
+        out_units = _get_out_units(args, kwargs)
+        new_args, new_kwargs = convert_to_consistent_units("rad", *args, **kwargs, )
         Q_ = out_units._REGISTRY.Quantity
         return Q_(func(*new_args), "rad").to(out_units)
 
@@ -175,11 +153,12 @@ def implement_delegate_func(func_str):
     # unitless output
     func = getattr(np,func_str)
     @implements(func)
-    def _(*args):
+    def _(*args, **kwargs):
         # TODO make work for kwargs
         print(func)
-        new_args = convert_to_magnitudes(*args)
-        return func(*new_args)
+        out_units = _get_out_units(args, kwargs)
+        new_args, new_kwargs = convert_to_consistent_units(None, *args, **kwargs, )
+        return func(*new_args, **new_kwargs)
         
 
 for func_str in ['linspace', 'concatenate', 'block', 'stack', 'hstack', 'vstack',  'dstack', 'atleast_1d', 'column_stack', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis',  'diff', 'ediff1d', 'fix']:

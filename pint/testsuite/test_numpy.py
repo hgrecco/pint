@@ -133,20 +133,60 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         )
         
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
+    # https://www.numpy.org/devdocs/reference/routines.math.html
+    # Trigonometric functions
     def test_unwrap(self):
         """unwrap depends on diff
         """
         self.assertQuantityEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
         self.assertQuantityEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
+    
+    # Sums, products, differences
 
-class TestNumpyUnclassified(TestNumpyMethods):
-    def test_tolist(self):
-        self.assertEqual(self.q.tolist(), [[1*self.ureg.m, 2*self.ureg.m], [3*self.ureg.m, 4*self.ureg.m]])
-
+    def test_prod(self):
+        self.assertEqual(self.q.prod(), 24 * self.ureg.m**4)
+        
     def test_sum(self):
         self.assertEqual(self.q.sum(), 10*self.ureg.m)
         self.assertQuantityEqual(self.q.sum(0), [4,     6]*self.ureg.m)
         self.assertQuantityEqual(self.q.sum(1), [3, 7]*self.ureg.m)
+
+
+    def test_cumprod(self):
+        self.assertRaises(ValueError, self.q.cumprod)
+        self.assertQuantityEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
+
+
+    def test_diff(self):
+        """Units are erased by asanyarray, Quantity does not inherit from NDArray
+        """
+        self.assertQuantityEqual(np.diff(self.q, 1), [[1], [1]] * self.ureg.m)
+
+    def test_ediff1d(self):
+        """Units are erased by asanyarray, Quantity does not inherit from NDArray
+        """
+        self.assertQuantityEqual(np.ediff1d(self.q, 1 * self.ureg.m), [1, 1, 1, 1] * self.ureg.m)
+
+    @unittest.expectedFailure
+    def test_gradient(self):
+        """shape is a property not a function
+        """
+        l = np.gradient([[1,1],[3,4]] * self.ureg.m, 1 * self.ureg.J)
+        self.assertQuantityEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.m / self.ureg.J)
+        self.assertQuantityEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.m / self.ureg.J)
+
+    @unittest.expectedFailure
+    def test_cross(self):
+        """Units are erased by asarray, Quantity does not inherit from NDArray
+        """
+        a = [[3,-3, 1]] * self.ureg.kPa
+        b = [[4, 9, 2]] * self.ureg.m**2
+        self.assertQuantityEqual(np.cross(a, b), [-15, -2, 39] * self.ureg.kPa * self.ureg.m**2)
+
+
+class TestNumpyUnclassified(TestNumpyMethods):
+    def test_tolist(self):
+        self.assertEqual(self.q.tolist(), [[1*self.ureg.m, 2*self.ureg.m], [3*self.ureg.m, 4*self.ureg.m]])
 
     def test_fill(self):
         tmp = self.q
@@ -265,14 +305,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_std(self):
         self.assertQuantityAlmostEqual(self.q.std(), 1.11803*self.ureg.m, rtol=1e-5)
-
-    def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m**4)
-
-    def test_cumprod(self):
-        self.assertRaises(ValueError, self.q.cumprod)
-        self.assertQuantityEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
-
+        
     @helpers.requires_numpy_previous_than('1.10')
     def test_integer_div(self):
         a = [1] * self.ureg.m
@@ -374,17 +407,6 @@ class TestNumpyNeedsSubclassing(TestUFuncs):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
         self.assertQuantityEqual(np.trapz(self.q, dx=1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
-
-    def test_diff(self):
-        """Units are erased by asanyarray, Quantity does not inherit from NDArray
-        """
-        self.assertQuantityEqual(np.diff(self.q, 1), [1, 1, 1] * self.ureg.J)
-
-    def test_ediff1d(self):
-        """Units are erased by asanyarray, Quantity does not inherit from NDArray
-        """
-        self.assertQuantityEqual(np.ediff1d(self.q, 1 * self.ureg.J), [1, 1, 1, 1] * self.ureg.J)
-
     def test_fix(self):
         """Units are erased by asanyarray, Quantity does not inherit from NDArray
         """
@@ -394,22 +416,6 @@ class TestNumpyNeedsSubclassing(TestUFuncs):
             np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.m),
             [2., 2., -2., -2.] * self.ureg.m
         )
-
-    @unittest.expectedFailure
-    def test_gradient(self):
-        """shape is a property not a function
-        """
-        l = np.gradient([[1,1],[3,4]] * self.ureg.J, 1 * self.ureg.m)
-        self.assertQuantityEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.J / self.ureg.m)
-        self.assertQuantityEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.J / self.ureg.m)
-
-    @unittest.expectedFailure
-    def test_cross(self):
-        """Units are erased by asarray, Quantity does not inherit from NDArray
-        """
-        a = [[3,-3, 1]] * self.ureg.kPa
-        b = [[4, 9, 2]] * self.ureg.m**2
-        self.assertQuantityEqual(np.cross(a, b), [-15, -2, 39] * self.ureg.kPa * self.ureg.m**2)
 
     @unittest.expectedFailure
     def test_power(self):
