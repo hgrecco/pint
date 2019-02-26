@@ -27,6 +27,20 @@ class TestNumpyMethods(QuantityTestCase):
     def q(self):
         return [[1,2],[3,4]] * self.ureg.m
         
+
+class TestNumpyArrayCreation(TestNumpyMethods):
+    # https://docs.scipy.org/doc/numpy/reference/routines.array-creation.html
+    
+    # Ones and zeros
+    @unittest.expectedFailure
+    def test_ones_like(self):
+        """Needs implementing
+        """
+        self._test1(np.ones_like,
+                    (self.q2, self.qs, self.qless, self.qi),
+                    (),
+                    2)
+
 class TestNumpyArrayManipulation(TestNumpyMethods):
     #TODO
     # https://www.numpy.org/devdocs/reference/routines.array-manipulation.html
@@ -136,11 +150,18 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # https://www.numpy.org/devdocs/reference/routines.math.html
     # Trigonometric functions
     def test_unwrap(self):
-        """unwrap depends on diff
-        """
         self.assertQuantityEqual(np.unwrap([0,3*np.pi]*self.ureg.radians), [0,np.pi])
         self.assertQuantityEqual(np.unwrap([0,540]*self.ureg.deg), [0,180]*self.ureg.deg)
+        
+    # Rounding
     
+    def test_fix(self):
+        self.assertQuantityEqual(np.fix(3.14 * self.ureg.m), 3.0 * self.ureg.m)
+        self.assertQuantityEqual(np.fix(3.0 * self.ureg.m), 3.0 * self.ureg.m)
+        self.assertQuantityEqual(
+            np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.m),
+            [2., 2., -2., -2.] * self.ureg.m
+        )
     # Sums, products, differences
 
     def test_prod(self):
@@ -158,30 +179,36 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
 
     def test_diff(self):
-        """Units are erased by asanyarray, Quantity does not inherit from NDArray
-        """
         self.assertQuantityEqual(np.diff(self.q, 1), [[1], [1]] * self.ureg.m)
 
     def test_ediff1d(self):
-        """Units are erased by asanyarray, Quantity does not inherit from NDArray
-        """
         self.assertQuantityEqual(np.ediff1d(self.q, 1 * self.ureg.m), [1, 1, 1, 1] * self.ureg.m)
 
-    @unittest.expectedFailure
     def test_gradient(self):
-        """shape is a property not a function
-        """
         l = np.gradient([[1,1],[3,4]] * self.ureg.m, 1 * self.ureg.J)
         self.assertQuantityEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.m / self.ureg.J)
         self.assertQuantityEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.m / self.ureg.J)
 
+
     def test_cross(self):
-        """Units are erased by asarray, Quantity does not inherit from NDArray
-        """
         a = [[3,-3, 1]] * self.ureg.kPa
         b = [[4, 9, 2]] * self.ureg.m**2
         self.assertQuantityEqual(np.cross(a, b), [[-15, -2, 39]] * self.ureg.kPa * self.ureg.m**2)
 
+    def test_trapz(self):
+        self.assertQuantityEqual(np.trapz([1. ,2., 3., 4.] * self.ureg.J, dx=1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
+    # Arithmetic operations
+    @unittest.expectedFailure
+    def test_power(self):
+        """This is not supported as different elements might end up with different units
+
+        eg. ([1, 1] * m) ** [2, 3]
+
+        Must force exponent to single value
+        """
+        self._test2(np.power, self.q1,
+                    (self.qless, np.asarray([1., 2, 3, 4])),
+                    (self.q2, ),)
 
 class TestNumpyUnclassified(TestNumpyMethods):
     def test_tolist(self):
@@ -390,52 +417,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
         u = self.Q_(np.arange(12))
         u.shape = 4, 3
         self.assertEqual(u.magnitude.shape, (4, 3))
-
-
-@helpers.requires_numpy()
-class TestNumpyNeedsSubclassing(TestUFuncs):
-
-    FORCE_NDARRAY = True
-
-    @property
-    def q(self):
-        return [1. ,2., 3., 4.] * self.ureg.J
-
-    @unittest.expectedFailure
-    def test_trapz(self):
-        """Units are erased by asanyarray, Quantity does not inherit from NDArray
-        """
-        self.assertQuantityEqual(np.trapz(self.q, dx=1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
-    def test_fix(self):
-        """Units are erased by asanyarray, Quantity does not inherit from NDArray
-        """
-        self.assertQuantityEqual(np.fix(3.14 * self.ureg.m), 3.0 * self.ureg.m)
-        self.assertQuantityEqual(np.fix(3.0 * self.ureg.m), 3.0 * self.ureg.m)
-        self.assertQuantityEqual(
-            np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.m),
-            [2., 2., -2., -2.] * self.ureg.m
-        )
-
-    @unittest.expectedFailure
-    def test_power(self):
-        """This is not supported as different elements might end up with different units
-
-        eg. ([1, 1] * m) ** [2, 3]
-
-        Must force exponent to single value
-        """
-        self._test2(np.power, self.q1,
-                    (self.qless, np.asarray([1., 2, 3, 4])),
-                    (self.q2, ),)
-
-    @unittest.expectedFailure
-    def test_ones_like(self):
-        """Units are erased by emptyarra, Quantity does not inherit from NDArray
-        """
-        self._test1(np.ones_like,
-                    (self.q2, self.qs, self.qless, self.qi),
-                    (),
-                    2)
 
 
 @unittest.skip

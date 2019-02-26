@@ -176,6 +176,12 @@ def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
             for x in list(args)+list(kwargs.values()):
                 product *= x
             post_calc_units = product.units
+        elif post_calc_units == "div":
+            product = first_input_units*first_input_units
+            for x in list(args)+list(kwargs.values()):
+                product /= x
+            post_calc_units = product.units
+        print(post_calc_units)
         Q_ = first_input_units._REGISTRY.Quantity
         post_calc_Q_= Q_(res, post_calc_units)
         
@@ -196,8 +202,11 @@ for func_str in ['unwrap']:
 for func_str in ['size', 'isreal', 'iscomplex']:
     implement_func(func_str, None, None, None)
     
-for func_str in ['cross']:
+for func_str in ['cross', 'trapz']:
     implement_func(func_str, None, 'prod', None)
+    
+for func_str in ['gradient']:
+    implement_func(func_str, None, 'div', None)
     
 
 @contextlib.contextmanager
