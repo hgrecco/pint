@@ -198,17 +198,38 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     def test_trapz(self):
         self.assertQuantityEqual(np.trapz([1. ,2., 3., 4.] * self.ureg.J, dx=1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
     # Arithmetic operations
-    @unittest.expectedFailure
+    
     def test_power(self):
-        """This is not supported as different elements might end up with different units
+        arr = np.array(range(3), dtype=np.float)
+        q = self.Q_(arr, 'meter')
 
-        eg. ([1, 1] * m) ** [2, 3]
+        for op_ in [op.pow, op.ipow, np.power]:
+            q_cp = copy.copy(q)
+            self.assertRaises(DimensionalityError, op_, 2., q_cp)
+            arr_cp = copy.copy(arr)
+            arr_cp = copy.copy(arr)
+            q_cp = copy.copy(q)
+            self.assertRaises(DimensionalityError, op_, q_cp, arr_cp)
+            q_cp = copy.copy(q)
+            q2_cp = copy.copy(q)
+            self.assertRaises(DimensionalityError, op_, q_cp, q2_cp)
 
-        Must force exponent to single value
-        """
-        self._test2(np.power, self.q1,
-                    (self.qless, np.asarray([1., 2, 3, 4])),
-                    (self.q2, ),)
+    @unittest.expectedFailure
+    @helpers.requires_numpy()
+    def test_exponentiation_array_exp_2(self):
+        arr = np.array(range(3), dtype=np.float)
+        #q = self.Q_(copy.copy(arr), None)
+        q = self.Q_(copy.copy(arr), 'meter')
+        arr_cp = copy.copy(arr)
+        q_cp = copy.copy(q)
+        # this fails as expected since numpy 1.8.0 but...
+        self.assertRaises(DimensionalityError, op.pow, arr_cp, q_cp)
+        # ..not for op.ipow !
+        # q_cp is treated as if it is an array. The units are ignored.
+        # BaseQuantity.__ipow__ is never called
+        arr_cp = copy.copy(arr)
+        q_cp = copy.copy(q)
+        self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)
 
 class TestNumpyUnclassified(TestNumpyMethods):
     def test_tolist(self):
@@ -493,39 +514,3 @@ class TestBitTwiddlingUfuncs(TestUFuncs):
                     (self.qless, 2),
                     (self.q1, self.q2, self.qs, ),
                     'same')
-
-
-class TestNDArrayQuantityMath(QuantityTestCase):
-
-    @helpers.requires_numpy()
-    def test_exponentiation_array_exp(self):
-        arr = np.array(range(3), dtype=np.float)
-        q = self.Q_(arr, 'meter')
-
-        for op_ in [op.pow, op.ipow]:
-            q_cp = copy.copy(q)
-            self.assertRaises(DimensionalityError, op_, 2., q_cp)
-            arr_cp = copy.copy(arr)
-            arr_cp = copy.copy(arr)
-            q_cp = copy.copy(q)
-            self.assertRaises(DimensionalityError, op_, q_cp, arr_cp)
-            q_cp = copy.copy(q)
-            q2_cp = copy.copy(q)
-            self.assertRaises(DimensionalityError, op_, q_cp, q2_cp)
-
-    @unittest.expectedFailure
-    @helpers.requires_numpy()
-    def test_exponentiation_array_exp_2(self):
-        arr = np.array(range(3), dtype=np.float)
-        #q = self.Q_(copy.copy(arr), None)
-        q = self.Q_(copy.copy(arr), 'meter')
-        arr_cp = copy.copy(arr)
-        q_cp = copy.copy(q)
-        # this fails as expected since numpy 1.8.0 but...
-        self.assertRaises(DimensionalityError, op.pow, arr_cp, q_cp)
-        # ..not for op.ipow !
-        # q_cp is treated as if it is an array. The units are ignored.
-        # BaseQuantity.__ipow__ is never called
-        arr_cp = copy.copy(arr)
-        q_cp = copy.copy(q)
-        self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)

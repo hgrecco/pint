@@ -151,11 +151,12 @@ def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
     
     """
     func = getattr(np,func_str)
+    print(func_str)
     
     @implements(func)
     def _(*args, **kwargs):
         # TODO make work for kwargs
-        print(func_str)
+        print("_",func_str)
         (pre_calc_units, post_calc_units, out_units)=(pre_calc_units_, post_calc_units_, out_units_)
         first_input_units=_get_first_input_units(args, kwargs)
         if pre_calc_units == "consistent_infer":
@@ -190,7 +191,10 @@ def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
         elif out_units == "infer_from_input":
             out_units = first_input_units
         return post_calc_Q_.to(out_units)
-    
+@implements(np.power)
+def _power(*args, **kwargs):
+    print(args)
+    pass
 for func_str in ['linspace', 'concatenate', 'block', 'stack', 'hstack', 'vstack',  'dstack', 'atleast_1d', 'column_stack', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis',  'diff', 'ediff1d', 'fix']:
     implement_func(func_str, 'consistent_infer', 'as_pre_calc', 'as_post_calc')
     
@@ -234,6 +238,7 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
     :type units: UnitsContainer, str or Quantity.
     """
     def __array_function__(self, func, types, args, kwargs):
+        print("__array_function__", func)
         if func not in HANDLED_FUNCTIONS:
             return NotImplemented
         if not all(issubclass(t, BaseQuantity) for t in types):
