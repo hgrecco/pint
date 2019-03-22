@@ -102,7 +102,7 @@ points, like positions on a map or absolute temperature scales.
 **Python 2 and 3**: a single codebase that runs unchanged in Python 2.7+ and
 Python 3.3+.
 
-**Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas. Operations on DataFrames and between columns are units aware, providing even more convenience for users of Pandas DataFrames. For full details, see the `Pandas Support Documentation`_.
+**Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas. Operations on DataFrames and between columns are units aware, providing even more convenience for users of Pandas DataFrames. For full details, see the `pint-pandas Jupyter notebook`_.
 
 
 When you choose to use a NumPy_ ndarray, its methods and
@@ -160,4 +160,4 @@ One last thing
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/
 .. _`Babel`: http://babel.pocoo.org/
 .. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/extending.html#extension-types
-.. _`Pandas Support Documentation`: ./pandas.rst
+.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb
