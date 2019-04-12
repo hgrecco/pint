@@ -831,7 +831,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         return ret
 
-    def _eval_token(self, token, case_sensitive=True, **values):
+    def _eval_token(self, token, case_sensitive=True, use_decimal=False, **values):
         token_type = token[0]
         token_text = token[1]
         if token_type == NAME:
@@ -845,11 +845,11 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                 return self.Quantity(1, UnitsContainer({self.get_name(token_text,
                                                                       case_sensitive=case_sensitive) : 1}))
         elif token_type == NUMBER:
-            return ParserHelper.eval_token(token)
+            return ParserHelper.eval_token(token, use_decimal=use_decimal)
         else:
             raise Exception('unknown token type')
 
-    def parse_expression(self, input_string, case_sensitive=True, **values):
+    def parse_expression(self, input_string, case_sensitive=True, use_decimal=False, **values):
         """Parse a mathematical expression including units and return a quantity object.
 
         Numerical constants can be specified as keyword arguments and will take precedence
@@ -864,6 +864,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         return build_eval_tree(gen).evaluate(lambda x: self._eval_token(x,
                                                                         case_sensitive=case_sensitive,
+                                                                        use_decimal=use_decimal,
                                                                         **values))
 
     __call__ = parse_expression
