@@ -132,7 +132,7 @@ force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
 force_gram = g_0 * gram = gf = gram_force
 force_ounce = g_0 * ounce = ozf = ounce_force
 force_pound = g_0 * lb = lbf = pound_force
-force_ton = 2000 * force_pound = ton_force
+force_metric_ton = g_0 * t = metric_ton_force = force_t = t_force
 poundal = lb * feet / second ** 2 = pdl
 kip = 1000*lbf
 
@@ -405,6 +405,8 @@ stere = meter ** 3
     long_hunderweight = 112 avoirdupois_pound = lg_cwt
     short_ton = 2000 avoirdupois_pound
     long_ton = 2240 avoirdupois_pound
+    force_short_ton = short_ton * g_0 = short_ton_force
+    force_long_ton = long_ton * g_0 = long_ton_force
 @end
 
 @group Troy
@@ -425,11 +427,13 @@ stere = meter ** 3
     quarter = 28 stone
     UK_hundredweight = long_hunderweight = UK_cwt
     UK_ton = long_ton
+    UK_ton_force = force_long_ton
 @end
 
 @group AvoirdupoisUS using Avoirdupois
     US_hundredweight = short_hunderdweight = US_cwt
     US_ton = short_ton = ton
+    US_ton_force = force_short_ton = ton_force = force_ton
 @end
 
 @group Printer
