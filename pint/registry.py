@@ -194,9 +194,6 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             k, v = part.split('=')
             self._defaults[k.strip()] = v.strip()
 
-    def __name__(self):
-        return 'UnitRegistry'
-
     def __getattr__(self, item):
         if item[0] == '_':
             return super(BaseRegistry, self).__getattribute__(item)
