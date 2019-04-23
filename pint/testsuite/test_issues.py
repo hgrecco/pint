@@ -5,6 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import math
 import copy
 import unittest
+import sys
 
 from pint import UnitRegistry
 from pint.unit import UnitsContainer
@@ -281,25 +282,24 @@ class TestIssues(QuantityTestCase):
 
     def test_angstrom_creation(self):
         ureg = UnitRegistry()
-        try:
+        if (sys.version_info < (3, 0)):
+            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, 'Å')
+        else:
             ureg.Quantity(2, 'Å')
-        except SyntaxError:
-            self.fail('Quantity with Å could not be created.')
 
     def test_alternative_angstrom_definition(self):
         ureg = UnitRegistry()
-        try:
+        if (sys.version_info < (3, 0)):
+            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, '\u212B')
+        else:
             ureg.Quantity(2, '\u212B')
-        except UndefinedUnitError:
-            self.fail('Quantity with Å could not be created.')
 
     def test_micro_creation(self):
         ureg = UnitRegistry()
-        try:
+        if (sys.version_info < (3, 0)):
+            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, 'µm')
+        else:
             ureg.Quantity(2, 'µm')
-        except SyntaxError:
-            self.fail('Quantity with µ prefix could not be created.')
-
 
 @helpers.requires_numpy()
 class TestIssuesNP(QuantityTestCase):
