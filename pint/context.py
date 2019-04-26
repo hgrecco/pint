@@ -192,6 +192,8 @@ class Context(object):
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)
 
+    def __hash__(self):
+        return hash(self.name)
 
 class ContextChain(ChainMap):
     """A specialized ChainMap for contexts that simplifies finding rules
@@ -201,7 +203,7 @@ class ContextChain(ChainMap):
     def __init__(self, *args, **kwargs):
         super(ContextChain, self).__init__(*args, **kwargs)
         self._graph = None
-        self._contexts = []
+        self._contexts = ()
 
     def insert_contexts(self, *contexts):
         """Insert one or more contexts in reversed order the chained map.
@@ -210,7 +212,7 @@ class ContextChain(ChainMap):
         To facilitate the identification of the context with the matching rule,
         the *relation_to_context* dictionary of the context is used.
         """
-        self._contexts.insert(0, contexts)
+        self._contexts = tuple(contexts) + self._contexts
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
@@ -244,3 +246,6 @@ class ContextChain(ChainMap):
         :raises: KeyError if the rule is not found.
         """
         return self[(src, dst)].transform(src, dst, registry, value)
+
+    def __hash__(self):
+        return hash(self._contexts)
