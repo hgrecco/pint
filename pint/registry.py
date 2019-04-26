@@ -318,7 +318,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             if self._on_redefinition == 'raise':
                 raise RedefinitionError(key, type(value))
             elif self._on_redefinition == 'warn':
-                logger.warning("Redefining '%s' (%s)", key, type(value))
+                logger.warning("Redefining '%s' (%s)" % (key, type(value)))
 
         unit_dict[key] = value
         if casei_unit_dict is not None:
