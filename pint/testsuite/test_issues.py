@@ -282,21 +282,36 @@ class TestIssues(QuantityTestCase):
 
     def test_angstrom_creation(self):
         ureg = UnitRegistry()
-        if (sys.version_info < (3, 0)):
+        try:
+            # Check if the install supports unicode, travis python27 seems to
+            # support it...
+            if (sys.version_info < (3, 0)):
+                'Å'.decode('utf-8')
+        except UnicodeEncodeError:
             self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, 'Å')
         else:
             ureg.Quantity(2, 'Å')
 
     def test_alternative_angstrom_definition(self):
         ureg = UnitRegistry()
-        if (sys.version_info < (3, 0)):
+        try:
+            # Check if the install supports unicode, travis python27 seems to
+            # support it...
+            if (sys.version_info < (3, 0)):
+                'Å'.decode('utf-8')
+        except UnicodeEncodeError:
             self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, '\u212B')
         else:
             ureg.Quantity(2, '\u212B')
 
     def test_micro_creation(self):
         ureg = UnitRegistry()
-        if (sys.version_info < (3, 0)):
+        try:
+            # Check if the install supports unicode, travis python27 seems to
+            # support it...
+            if (sys.version_info < (3, 0)):
+                'µ'.decode('utf-8')
+        except UnicodeEncodeError:
             self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, 'µm')
         else:
             ureg.Quantity(2, 'µm')
