@@ -11,6 +11,7 @@
 
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
+import sys
 
 from .converters import ScaleConverter, OffsetConverter
 from .util import UnitsContainer, _is_dim, ParserHelper
@@ -44,6 +45,13 @@ class Definition(object):
         name = name.strip()
 
         result = [res.strip() for res in definition.split('=')]
+        # For python 2.7, remove unsupported unicode character
+        if (sys.version_info < (3, 0)):
+            for value in result:
+                try:
+                    value.decode('utf-8')
+                except UnicodeEncodeError:
+                    result.remove(value)
         value, aliases = result[0], tuple(result[1:])
         symbol, aliases = (aliases[0], aliases[1:]) if aliases else (None,
                                                                      aliases)
