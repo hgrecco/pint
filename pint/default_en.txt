@@ -171,6 +171,7 @@ bag = 94 * lb
 denier =  gram / (9000 * meter)
 tex = gram / (1000 * meter)
 dtex = decitex
+RKM = kgf * 1000 / tex
 
 # These are Indirect yarn numbering systems (length/unit mass)
 jute = lb / (14400 * yd) = Tj
