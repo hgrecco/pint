@@ -19,7 +19,7 @@ micro- = 1e-6  = µ- = u-
 milli- = 1e-3  = m-
 centi- = 1e-2  = c-
 deci- =  1e-1  = d-
-deca- =  1e+1  = da- = deka
+deca- =  1e+1  = da- = deka-
 hecto- = 1e2   = h-
 kilo- =  1e3   = k-
 mega- =  1e6   = M-
@@ -343,8 +343,6 @@ stere = meter ** 3
     cubic_inch = 1 in ** 3 = cu_in
     cubic_foot = 1 ft ** 3 = cu_ft = cubic_feet
     cubic_yard = 1 yd ** 3 = cu_yd
-
-    acre_foot = acre * foot = acre_feet
 @end
 
 @group USCSLengthSurvey
@@ -361,6 +359,8 @@ stere = meter ** 3
     us_statute_mile = 5280 survey_foot
     league = 3 us_statute_mile
     furlong = us_statute_mile / 8
+
+    acre_foot = acre * survey_foot = acre_feet
 @end
 
 @group USCSDryVolume
@@ -369,7 +369,7 @@ stere = meter ** 3
     dry_gallon = 8 dry_pint = dgal = US_dry_gallon
     peck = 16 dry_pint = pk
     bushel = 64 dry_pint = bu
-    dry_barrel = 7065 cubic_inch = US_dry_barrel
+    dry_barrel = 7056 cubic_inch = US_dry_barrel
 @end
 
 @group USCSLiquidVolume
@@ -401,8 +401,8 @@ stere = meter ** 3
     ounce = pound / 16 = oz = avoirdupois_ounce = avdp_ounce
     pound = 453.59237 gram = lb = avoirdupois_pound = avdp_pound
 
-    short_hunderdweight = 100 avoirdupois_pound = ch_cwt
-    long_hunderweight = 112 avoirdupois_pound = lg_cwt
+    short_hundredweight = 100 avoirdupois_pound = ch_cwt
+    long_hundredweight = 112 avoirdupois_pound = lg_cwt
     short_ton = 2000 avoirdupois_pound
     long_ton = 2240 avoirdupois_pound
     force_short_ton = short_ton * g_0 = short_ton_force
@@ -425,13 +425,13 @@ stere = meter ** 3
 @group AvoirdupoisUK using Avoirdupois
     stone = 14 pound
     quarter = 28 stone
-    UK_hundredweight = long_hunderweight = UK_cwt
+    UK_hundredweight = long_hundredweight = UK_cwt
     UK_ton = long_ton
     UK_ton_force = force_long_ton
 @end
 
 @group AvoirdupoisUS using Avoirdupois
-    US_hundredweight = short_hunderdweight = US_cwt
+    US_hundredweight = short_hundredweight = US_cwt
     US_ton = short_ton = ton
     US_ton_force = force_short_ton = ton_force = force_ton
 @end
