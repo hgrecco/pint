@@ -168,7 +168,7 @@ atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
 bag = 94 * lb
 
 # Textile
-denier =  gram / (9000 * meter)
+denier =  gram / (9000 * meter) = den
 tex = gram / (1000 * meter)
 dtex = decitex
 RKM = kgf * 1000 / tex
