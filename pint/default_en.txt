@@ -58,17 +58,17 @@ count = []
 [acceleration] = [length] / [time] ** 2
 
 # Angle
-turn = 2 * pi * radian = revolution = cycle = circle
+turn = 2 * pi * radian = _ = revolution = cycle = circle
 degree = pi / 180 * radian = deg = arcdeg = arcdegree = angular_degree
 arcminute = arcdeg / 60 = arcmin = arc_minute = angular_minute
-arcsecond = arcmin / 60 =  arcsec = arc_second = angular_second
+arcsecond = arcmin / 60 = arcsec = arc_second = angular_second
 steradian = radian ** 2 = sr
 
 # Area
 [area] = [length] ** 2
 are = 100 * m**2
 barn = 1e-28 * m ** 2 = b
-cmil = 5.067075e-10 * m ** 2 = circular_mils
+circular_mil = 5.067075e-10 * m ** 2 = cmil = circular_mils
 darcy = 9.869233e-13 * m ** 2
 hectare = 100 * are = ha
 
@@ -81,8 +81,8 @@ molar = mol / (1e-3 * m ** 3) = M
 katal = mole / second = kat
 
 # EM
-esu = 1 * erg**0.5 * centimeter**0.5 = statcoulombs = statC = franklin = Fr
-esu_per_second = 1 * esu / second = statampere
+esu = 1 * erg**0.5 * centimeter**0.5 = statcoulomb = statC = franklin = Fr
+esu_per_second = 1 * esu / second = _ = statampere = statA
 ampere_turn = 1 * A
 gilbert = 10 / (4 * pi ) * ampere_turn
 coulomb = ampere * second = C
@@ -96,15 +96,15 @@ henry = weber / ampere = H
 elementary_charge = 1.602176487e-19 * coulomb = e
 chemical_faraday = 9.64957e4 * coulomb
 physical_faraday = 9.65219e4 * coulomb
-faraday =  96485.3399 * coulomb = C12_faraday
+faraday =  96485.3399 * coulomb = _ = C12_faraday
 gamma = 1e-9 * tesla
 gauss = 1e-4 * tesla
-maxwell = 1e-8 * weber = mx
+maxwell = 1e-8 * weber = Mx
 oersted = 1000 / (4 * pi) * A / m = Oe
 statfarad = 1.112650e-12 * farad = statF = stF
 stathenry = 8.987554e11 * henry = statH = stH
 statmho = 1.112650e-12 * siemens = statS = stS
-statohm = 8.987554e11 * ohm
+statohm = 8.987554e11 * ohm = statΩ = stΩ
 statvolt = 2.997925e2 * volt = statV = stV
 unit_pole = 1.256637e-7 * weber
 
@@ -112,17 +112,17 @@ unit_pole = 1.256637e-7 * weber
 [energy] = [force] * [length]
 joule = newton * meter = J
 erg = dyne * centimeter
-btu = 1.05505585262e3 * joule = Btu = BTU = british_thermal_unit
+british_thermal_unit = 1.05505585262e3 * joule = Btu = BTU = btu
 electron_volt = 1.60217653e-19 * J = eV
 quadrillion_btu = 10**15 * btu = quad
-thm = 100000 * BTU = therm = EC_therm
+therm = 100000 * BTU = thm = EC_therm
 calorie = 4.184 * joule = cal = thermochemical_calorie
 international_steam_table_calorie = 4.1868 * joule
 ton_TNT = 4.184e9 * joule = tTNT
 US_therm = 1.054804e8 * joule
 watt_hour = watt * hour = Wh = watthour
-hartree = 4.35974394e-18 * joule = = Eh = E_h = hartree_energy
-toe = 41.868e9 * joule = tonne_of_oil_equivalent
+hartree = 4.35974394e-18 * joule = E_h = Eh = hartree_energy
+tonne_of_oil_equivalent = 41.868e9 * joule = toe
 
 # Force
 [force] = [mass] * [acceleration]
@@ -132,7 +132,7 @@ force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
 force_gram = g_0 * gram = gf = gram_force
 force_ounce = g_0 * ounce = ozf = ounce_force
 force_pound = g_0 * lb = lbf = pound_force
-force_metric_ton = g_0 * t = metric_ton_force = force_t = t_force
+force_metric_ton = g_0 * t = tf = metric_ton_force = force_t = t_force
 poundal = lb * feet / second ** 2 = pdl
 kip = 1000*lbf
 
@@ -144,7 +144,7 @@ counts_per_second = count / second = cps
 
 # Heat
 #RSI = degK * meter ** 2 / watt
-#clo = 0.155 * RSI = clos
+#clo = 0.155 * RSI = _ = clos
 #R_value = foot ** 2 * degF * hour / btu
 
 # Information
@@ -153,7 +153,7 @@ baud = bit / second = Bd = bps
 
 # Irradiance
 peak_sun_hour = 1000 * watt_hour / meter**2 = PSH
-langley = thermochemical_calorie / centimeter**2 = Langley
+langley = thermochemical_calorie / centimeter**2 = Ly
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
@@ -164,7 +164,7 @@ astronomical_unit = 149597870691 * meter = au
 # Mass
 carat = 200 * milligram
 metric_ton = 1000 * kilogram = t = tonne
-atomic_mass_unit = 1.660538782e-27 * kilogram =  u = amu = dalton = Da
+atomic_mass_unit = 1.660538782e-27 * kilogram = u = amu = dalton = Da
 bag = 94 * lb
 
 # Textile
@@ -195,13 +195,13 @@ boiler_horsepower = 33475 * btu / hour
 metric_horsepower =  75 * force_kilogram * meter / second
 electric_horsepower = 746 * watt
 hydraulic_horsepower = 550 * feet * lbf / second
-refrigeration_ton = 12000 * btu / hour = ton_of_refrigeration
+refrigeration_ton = 12000 * btu / hour = _ = ton_of_refrigeration
 
 # Pressure
 [pressure] = [force] / [area]
-Hg = gravity * 13.59510 * gram / centimeter ** 3 = mercury = conventional_mercury
+mercury = gravity * 13.59510 * gram / centimeter ** 3 = Hg = conventional_mercury
 mercury_60F = gravity * 13.5568 * gram / centimeter ** 3
-H2O = gravity * 1000 * kilogram / meter ** 3 = h2o = water = conventional_water
+water = gravity * 1000 * kilogram / meter ** 3 = H2O = h2o = conventional_water
 water_4C = gravity * 999.972 * kilogram / meter ** 3 = water_39F
 water_60F = gravity * 999.001 * kilogram / m ** 3
 pascal = newton / meter ** 2 = Pa
@@ -211,31 +211,31 @@ technical_atmosphere = kilogram * gravity / centimeter ** 2 = at
 torr = atm / 760
 pound_force_per_square_inch = pound * gravity / inch ** 2 = psi
 kip_per_square_inch = kip / inch ** 2 = ksi
-barye = 0.1 * newton / meter ** 2 = barie = barad = barrie = baryd = Ba
-mm_Hg = millimeter * Hg = mmHg = millimeter_Hg = millimeter_Hg_0C
-cm_Hg = centimeter * Hg = cmHg = centimeter_Hg
-in_Hg = inch * Hg = inHg = inch_Hg = inch_Hg_32F
+barye = 0.1 * newton / meter ** 2 = Ba = barie = barad = barrie = baryd
+millimeter_Hg = millimeter * Hg = mmHg = mm_Hg = millimeter_Hg_0C
+centimeter_Hg = centimeter * Hg = cmHg = cm_Hg
+inch_Hg = inch * Hg = inHg = in_Hg = inch_Hg_32F
 inch_Hg_60F = inch * mercury_60F
 inch_H2O_39F = inch * water_39F
 inch_H2O_60F = inch * water_60F
-footH2O = ft * water
-cmH2O = centimeter * water
-foot_H2O = ft * water = ftH2O
+centimeter_water = centimeter * water = cmH2O
+foot_H2O = ft * water = ftH2O = footH2O
 standard_liter_per_minute = 1.68875 * Pa * m ** 3 / s = slpm = slm
 
 # Radiation
-Bq = Hz = becquerel
+becquerel = Hz = Bq
 curie = 3.7e10 * Bq = Ci
 rutherford = 1e6*Bq = Rd
-Gy = joule / kilogram = gray = Sv = sievert
+gray = joule / kilogram = Gy
+sievert = joule / kilogram = Sv
 rem = 1e-2 * sievert
 rads = 1e-2 * gray
 roentgen = 2.58e-4 * coulomb / kilogram
 
 # Temperature
-degC = kelvin; offset: 273.15 = celsius
-degR = 5 / 9 * kelvin; offset: 0 = rankine
-degF = 5 / 9 * kelvin; offset: 255.372222 = fahrenheit
+degC = kelvin; offset: 273.15 = °C = degree_Celsius = celsius
+degR = 5 / 9 * kelvin; offset: 0 = °R = degree_Rankine = rankine
+degF = 5 / 9 * kelvin; offset: 255.372222 = °F = degree_Fahrenheit = fahrenheit
 
 # Time
 minute = 60 * second = min
@@ -253,12 +253,12 @@ sidereal_second = sidereal_minute / 60
 sidereal_year = 366.25636042 * sidereal_day
 sidereal_month = 27.321661 * sidereal_day
 tropical_month = 27.321661 * day
-synodic_month = 29.530589 * day = lunar_month
+synodic_month = 29.530589 * day = _ = lunar_month
 common_year = 365 * day
 leap_year = 366 * day
 julian_year = 365.25 * day
 gregorian_year = 365.2425 * day
-millenium = 1000 * year = millenia = milenia = milenium
+millennium = 1000 * year = _ = millennia
 eon = 1e9 * year
 work_year = 2056 * hour
 work_month = work_year / 12
@@ -279,7 +279,7 @@ rhe = 10 / (Pa * s)
 # Volume
 [volume] = [length] ** 3
 liter = 1e-3 * m ** 3 = l = L = litre
-cc = centimeter ** 3 = cubic_centimeter
+cubic_centimeter = centimeter ** 3 = cc
 stere = meter ** 3
 
 
@@ -353,23 +353,23 @@ stere = meter ** 3
     survey_mile = 5280 survey_foot
 
     acre = 43560 survey_foot ** 2
-    square_rod = 1 rod ** 2 = sq_rod = sq_pole = sq_perch
+    square_rod = 1 rod ** 2 = sq_rd = sq_rod = sq_pole = sq_perch
 
     fathom = 6 survey_foot
     us_statute_mile = 5280 survey_foot
     league = 3 us_statute_mile
     furlong = us_statute_mile / 8
 
-    acre_foot = acre * survey_foot = acre_feet
+    acre_foot = acre * survey_foot = _ =acre_feet
 @end
 
 @group USCSDryVolume
-    dry_pint = 33.6003125 cubic_inch  = dpi = US_dry_pint
+    dry_pint = 33.6003125 cubic_inch = dpt = US_dry_pint
     dry_quart = 2 dry_pint = dqt = US_dry_quart
     dry_gallon = 8 dry_pint = dgal = US_dry_gallon
     peck = 16 dry_pint = pk
     bushel = 64 dry_pint = bu
-    dry_barrel = 7056 cubic_inch = US_dry_barrel
+    dry_barrel = 7056 cubic_inch = _ = US_dry_barrel
 @end
 
 @group USCSLiquidVolume
@@ -405,8 +405,8 @@ stere = meter ** 3
     long_hundredweight = 112 avoirdupois_pound = lg_cwt
     short_ton = 2000 avoirdupois_pound
     long_ton = 2240 avoirdupois_pound
-    force_short_ton = short_ton * g_0 = short_ton_force
-    force_long_ton = long_ton * g_0 = long_ton_force
+    force_short_ton = short_ton * g_0 = _ = short_ton_force
+    force_long_ton = long_ton * g_0 = _ = long_ton_force
 @end
 
 @group Troy
@@ -433,14 +433,14 @@ stere = meter ** 3
 @group AvoirdupoisUS using Avoirdupois
     US_hundredweight = short_hundredweight = US_cwt
     US_ton = short_ton = ton
-    US_ton_force = force_short_ton = ton_force = force_ton
+    US_ton_force = force_short_ton = _ = ton_force = force_ton
 @end
 
 @group Printer
     # Length
-    pixel = [printing_unit] = dot = px = pel = picture_element
+    pixel = [printing_unit] = _ = dot = px = pel = picture_element
     pixels_per_centimeter = pixel / cm = PPCM
-    pixels_per_inch = pixel / inch = dots_per_inch = PPI = ppi = DPI = printers_dpi
+    pixels_per_inch = pixel / inch = ppi = dots_per_inch = PPI = DPI = printers_dpi
     bits_per_pixel = bit / pixel = bpp
 
     point = yard / 216 / 12 = pp = printers_point
@@ -450,7 +450,7 @@ stere = meter ** 3
 
 @group ImperialVolume
     imperial_fluid_ounce = imperial_pint / 20 = imperial_floz = UK_fluid_ounce
-    imperial_fluid_drachm = imperial_fluid_ounce / 8 = imperial_fluid_dram
+    imperial_fluid_drachm = imperial_fluid_ounce / 8 = imperial_fldr = imperial_fluid_dram
     imperial_gill = imperial_pint / 4 = imperial_gi = UK_gill
     imperial_cup = imperial_pint / 2 = imperial_cp = UK_cup
     imperial_pint = 568.26125 * milliliter = imperial_pt = UK_pint
