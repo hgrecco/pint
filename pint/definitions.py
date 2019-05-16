@@ -123,10 +123,10 @@ class UnitDefinition(Definition):
                 modifiers = {}
 
             converter = ParserHelper.from_string(converter)
-            if all(_is_dim(key) for key in converter.keys()):
-                self.is_base = True
-            elif not any(_is_dim(key) for key in converter.keys()):
+            if not any(_is_dim(key) for key in converter.keys()):
                 self.is_base = False
+            elif all(_is_dim(key) for key in converter.keys()):
+                self.is_base = True
             else:
                 raise ValueError('Cannot mix dimensions and units in the same definition. '
                                  'Base units must be referenced only to dimensions. '
