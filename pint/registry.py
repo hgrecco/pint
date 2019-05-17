@@ -171,12 +171,12 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     def _after_init(self):
         """This should be called after all __init__
         """
+        self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
+
         if self._filename == '':
             self.load_definitions('default_en.txt', True)
         elif self._filename is not None:
             self.load_definitions(self._filename)
-
-        self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
 
         self._build_cache()
         self._initialized = True
@@ -832,9 +832,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         token_type = token[0]
         token_text = token[1]
         if token_type == NAME:
-            if token_text == 'pi':
-                return self.Quantity(math.pi)
-            elif token_text == 'dimensionless':
+            if token_text == 'dimensionless':
                 return 1 * self.dimensionless
             elif token_text in values:
                 return self.Quantity(values[token_text])
