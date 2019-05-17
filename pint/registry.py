@@ -851,8 +851,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         over the names defined in the registry.
         """
 
-        if not input_string:
-            return self.Quantity(1)
+        if not input_string.strip(' '):
+            raise Exception('Unit Registry cannot parse an empty string')
 
         input_string = string_preprocessor(input_string)
         gen = tokenizer(input_string)
