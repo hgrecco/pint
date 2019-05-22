@@ -43,7 +43,7 @@ class TestIssues(QuantityTestCase):
         t = 4 * ureg('mM')
         self.assertEqual(t.magnitude, 4)
         self.assertEqual(t._units, UnitsContainer(millimolar=1))
-        self.assertEqual(t.to('mole / liter'), 4e-3 * ureg('M'))
+        self.assertAlmostEqual(t.to('mole / liter'), 4e-3 * ureg('M'))
 
     def test_issue52(self):
         u1 = UnitRegistry()
@@ -127,7 +127,7 @@ class TestIssues(QuantityTestCase):
         except:
             self.assertTrue(False, 'Error while trying to get base units for {}'.format(va))
 
-        boltmk = 1.3806488e-23*ureg.J/ureg.K
+        boltmk = 1.380649e-23*ureg.J/ureg.K
         vb = 2. * boltmk * T / m
 
         self.assertQuantityAlmostEqual(va.to_base_units(), vb.to_base_units())
