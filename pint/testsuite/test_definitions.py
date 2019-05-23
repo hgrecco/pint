@@ -70,6 +70,16 @@ class TestDefinition(BaseTestCase):
         self.assertEqual(x.converter.offset, 255.372222)
         self.assertEqual(x.reference, UnitsContainer(kelvin=1))
 
+        x = Definition.from_string('turn = 6.28 * radian = _ = revolution = = cycle = _')
+        self.assertIsInstance(x, UnitDefinition)
+        self.assertEqual(x.name, 'turn')
+        self.assertEqual(x.aliases, ('revolution', 'cycle'))
+        self.assertEqual(x.symbol, 'turn')
+        self.assertFalse(x.is_base)
+        self.assertIsInstance(x.converter, ScaleConverter)
+        self.assertEqual(x.converter.scale, 6.28)
+        self.assertEqual(x.reference, UnitsContainer(radian=1))
+
     def test_dimension_definition(self):
         x = DimensionDefinition('[time]', '', (), converter='')
         self.assertTrue(x.is_base)
