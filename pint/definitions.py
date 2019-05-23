@@ -52,9 +52,12 @@ class Definition(object):
                     value.decode('utf-8')
                 except UnicodeEncodeError:
                     result.remove(value)
-        value, aliases = result[0], tuple(result[1:])
+        value, aliases = result[0], tuple([x for x in result[1:] if x != ''])
         symbol, aliases = (aliases[0], aliases[1:]) if aliases else (None,
                                                                      aliases)
+        if symbol == '_':
+            symbol = None
+        aliases = tuple([x for x in aliases if x != '_'])
 
         if name.startswith('['):
             return DimensionDefinition(name, symbol, aliases, value)
