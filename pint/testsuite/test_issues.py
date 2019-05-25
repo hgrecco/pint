@@ -40,10 +40,10 @@ class TestIssues(QuantityTestCase):
 
     def test_issue29(self):
         ureg = UnitRegistry()
-        t = 4 * ureg('mM')
+        t = 4 * ureg('mW')
         self.assertEqual(t.magnitude, 4)
-        self.assertEqual(t._units, UnitsContainer(millimolar=1))
-        self.assertAlmostEqual(t.to('mole / liter'), 4e-3 * ureg('M'))
+        self.assertEqual(t._units, UnitsContainer(milliwatt=1))
+        self.assertEqual(t.to('joule / second'), 4e-3 * ureg('W'))
 
     def test_issue52(self):
         u1 = UnitRegistry()

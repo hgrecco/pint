@@ -44,7 +44,7 @@ zebi- = 2**70 = Zi-
 yobi- = 2**80 = Yi-
 
 # extra_prefixes
-semi- = 0.5 = = demi-
+semi- = 0.5 = _ = demi-
 sesqui- = 1.5
 
 
@@ -74,7 +74,7 @@ count = []
 # although floating-point conversion may introduce inaccuracies
 
 # Angle
-turn = 2 * π * radian = = revolution = cycle = circle
+turn = 2 * π * radian = _ = revolution = cycle = circle
 degree = π / 180 * radian = deg = arcdeg = arcdegree = angular_degree
 arcminute = degree / 60 = arcmin = arc_minute = angular_minute
 arcsecond = arcminute / 60 = arcsec = arc_second = angular_second
@@ -125,8 +125,8 @@ fortnight = 2 * week
 year = 365.25 * day = a = yr = julian_year
 month = year / 12
 decade = 10 * year
-century = 100 * year = = centuries
-millennium = 1e3 * year = = millennia
+century = 100 * year = _ = centuries
+millennium = 1e3 * year = _ = millennia
 eon = 1e9 * year
 shake = 1e-8 * second
 svedberg = 1e-13 * second
@@ -139,14 +139,14 @@ leap_year = 366 * day
 sidereal_day = day / 1.00273790935079524           # approximate
 sidereal_month = 27.32166155 * day                 # approximate
 tropical_month = 27.321582 * day                   # approximate
-synodic_month = 29.530589 * day = = lunar_month    # approximate
+synodic_month = 29.530589 * day = _ = lunar_month  # approximate
 planck_time = (hbar * gravitational_constant / c ** 5) ** 0.5
 
 # Temperature
-degC = kelvin; offset: 273.15 = °C = celsius = degree_Celsius = degreeC
-degR = 5 / 9 * kelvin; offset: 0 = °R = rankine = degree_Rankine = degreeR
-degF = 5 / 9 * kelvin; offset: 233.15 + 200 / 9 = °F = fahrenheit = degree_Fahrenheit = degreeF
-degRe = 4 / 5 * kelvin; offset: 273.15 = °Re = reaumur = degree_Reaumur = degreeRe = degree_Réaumur = réaumur
+degree_Celsius = kelvin; offset: 273.15 = °C = celsius = degC = degreeC
+degree_Rankine = 5 / 9 * kelvin; offset: 0 = °R = rankine = degR = degreeR
+degree_Fahrenheit = 5 / 9 * kelvin; offset: 233.15 + 200 / 9 = °F = fahrenheit = degF = degreeF
+degree_Reaumur = 4 / 5 * kelvin; offset: 273.15 = °Re = reaumur = degRe = degreeRe = degree_Réaumur = réaumur
 atomic_unit_of_temperature = E_h / k = a_u_temp
 planck_temperature = (hbar * c ** 5 / gravitational_constant / k ** 2) ** 0.5
 
@@ -225,7 +225,7 @@ horsepower = 550 * foot * force_pound / second = hp = UK_horsepower = hydraulic_
 boiler_horsepower = 33475 * Btu / hour                            # unclear which Btu
 metric_horsepower = 75 * force_kilogram * meter / second
 electrical_horsepower = 746 * watt
-refrigeration_ton = 12e3 * Btu / hour = = ton_of_refrigeration  # approximate, no exact definition
+refrigeration_ton = 12e3 * Btu / hour = _ = ton_of_refrigeration  # approximate, no exact definition
 standard_liter_per_minute = atmosphere * liter / minute = slpm = slm
 conventional_watt_90 = K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt = W_90
 
@@ -273,7 +273,7 @@ stokes = centimeter ** 2 / second = St
 rhe = 1 / poise
 
 # Amount of substance
-particle = 1 / N_A = = molec = molecule
+particle = 1 / N_A = _ = molec = molecule
 
 # Concentration
 [concentration] = [substance] / [volume]
@@ -300,7 +300,7 @@ gray = joule / kilogram = Gy
 sievert = joule / kilogram = Sv
 rads = 0.01 * gray
 rem = 0.01 * sievert
-roentgen = 2.58e-4 * coulomb / kilogram = = röntgen  # approximate, depends on medium
+roentgen = 2.58e-4 * coulomb / kilogram = _ = röntgen  # approximate, depends on medium
 
 # Heat transimission
 [heat_transmission] = [energy] / [area]
@@ -448,10 +448,10 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 
     square_rod = rod ** 2 = sq_rod = sq_pole = sq_perch
     acre = 10 * chain ** 2
-    square_survey_mile = survey_mile ** 2 = = section
+    square_survey_mile = survey_mile ** 2 = _ = section
     square_league = league ** 2
 
-    acre_foot = acre * survey_foot = = acre_feet
+    acre_foot = acre * survey_foot = _ = acre_feet
 @end
 
 @group USCSDryVolume
@@ -460,7 +460,7 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
     dry_gallon = bushel / 8 = dgal = US_dry_gallon
     peck = bushel / 4 = pk
     bushel = 2150.42 cubic_inch = bu
-    dry_barrel = 7056 cubic_inch = = US_dry_barrel
+    dry_barrel = 7056 cubic_inch = _ = US_dry_barrel
 @end
 
 @group USCSLiquidVolume
@@ -469,7 +469,7 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
     fluid_ounce = pint / 16 = floz = US_fluid_ounce = US_liquid_ounce
     gill = pint / 4 = gi = liquid_gill = US_liquid_gill
     pint = quart / 2 = pt = liquid_pint = US_pint
-    fifth = gallon / 5 = = US_liquid_fifth
+    fifth = gallon / 5 = _ = US_liquid_fifth
     quart = gallon / 4 = qt = liquid_quart = US_liquid_quart
     gallon = 231 * cubic_inch = gal = liquid_gallon = US_liquid_gallon
 @end
@@ -494,14 +494,14 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
     bag = 94 * pound
     hundredweight = 100 * pound = cwt = short_hundredweight
     long_hundredweight = 112 * pound
-    ton = 2e3 * pound = = short_ton
+    ton = 2e3 * pound = _ = short_ton
     long_ton = 2240 * pound
     slug = g_0 * pound * second ** 2 / foot
 
     force_ounce = g_0 * ounce = ozf = ounce_force
     force_pound = g_0 * pound = lbf = pound_force
-    force_ton = g_0 * ton = = ton_force = force_short_ton = short_ton_force
-    force_long_ton = g_0 * long_ton = = long_ton_force
+    force_ton = g_0 * ton = _ = ton_force = force_short_ton = short_ton_force
+    force_long_ton = g_0 * long_ton = _ = long_ton_force
     kip = 1e3 * force_pound
     poundal = pound * foot / second ** 2 = pdl
 @end
@@ -509,13 +509,13 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 @group AvoirdupoisUK using Avoirdupois
     UK_hundredweight = long_hundredweight = UK_cwt
     UK_ton = long_ton
-    UK_force_ton = force_long_ton = = UK_ton_force
+    UK_force_ton = force_long_ton = _ = UK_ton_force
 @end
 
 @group AvoirdupoisUS using Avoirdupois
     US_hundredweight = hundredweight = US_cwt
     US_ton = ton
-    US_force_ton = force_ton = = US_ton_force
+    US_force_ton = force_ton = _ = US_ton_force
 @end
 
 @group Troy
@@ -547,7 +547,7 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 @end
 
 @group Printer
-    pica = inch / 6 = = printers_pica
+    pica = inch / 6 = _ = printers_pica
     point = pica / 12 = pp = printers_point = big_point = bp
     didot = 1 / 2660 * m
     cicero = 12 * didot
@@ -558,7 +558,7 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
     scaled_point = tex_point / 65536
     css_pixel = inch / 96 = px
 
-    pixel = [printing_unit] = = dot = pel = picture_element
+    pixel = [printing_unit] = _ = dot = pel = picture_element
     pixels_per_centimeter = pixel / cm = PPCM
     pixels_per_inch = pixel / inch = dots_per_inch = PPI = ppi = DPI = printers_dpi
     bits_per_pixel = bit / pixel = bpp
@@ -734,6 +734,16 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 
 
 #### SYSTEMS OF UNITS ####
+
+@system SI
+    second
+    meter
+    kilogram
+    ampere
+    kelvin
+    mole
+    candela
+@end
 
 @system mks using international
     meter

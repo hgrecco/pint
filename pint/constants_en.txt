@@ -50,7 +50,7 @@ wien_frequency_displacement_law_constant = wien_u * k / h
 # The choice of measured constants is based on convenience and on available uncertainty.
 # The uncertainty in the last significant digits is given in parentheses as a comment.
 
-newtonian_constant_of_gravitation = 6.67408e-11 m^3/(kg s^2) = = gravitational_constant    # (15)
+newtonian_constant_of_gravitation = 6.67408e-11 m^3/(kg s^2) = _ = gravitational_constant  # (15)
 rydberg_constant = 1.0973731568160e7 * m^-1 = R_∞ = R_inf                                  # (21)
 electron_g_factor = -2.00231930436256 = g_e                                                # (35)
 atomic_mass_constant = 1.66053906660e-27 kg = m_u                                          # (50)
