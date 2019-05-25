@@ -57,7 +57,7 @@ atomic_mass_constant = 1.66053906660e-27 kg = m_u                               
 electron_mass = 9.1093837015e-31 kg = m_e = atomic_unit_of_mass = a_u_mass                 # (28)
 proton_mass = 1.67262192369e-27 kg = m_p                                                   # (51)
 neutron_mass = 1.67492749804e-27 kg = m_n                                                  # (95)
-lattice_spacing_of_Si = 1.920155716 m = d_220                                              # (32)
+lattice_spacing_of_Si = 1.920155716e-10 m = d_220                                          # (32)
 K_alpha_Cu_d_220 = 0.80232719                                                              # (22)
 K_alpha_Mo_d_220 = 0.36940604                                                              # (19)
 K_alpha_W_d_220 = 0.108852175                                                              # (98)
