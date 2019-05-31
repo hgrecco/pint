@@ -39,5 +39,4 @@ You mention other similar Python libraries. Can you point me to those?
 
 `measurement <https://github.com/coddingtonbear/python-measurement>`_
 
-
-If your are aware of another one, please contribute a patch to the docs.
+If you're aware of another one, please contribute a patch to the docs.
