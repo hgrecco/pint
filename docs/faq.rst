@@ -31,13 +31,13 @@ You mention other similar Python libraries. Can you point me to those?
 
 `SymPy <http://docs.sympy.org/dev/modules/physics/units.html>`_
 
-`Units <https://bitbucket.org/adonohue/units/>`_
-
 `cf units <https://github.com/SciTools/cf_units>`_
 
 `astropy units <https://github.com/astropy/astropy>`_
 
 `yt <https://github.com/yt-project/yt>`_
+
+`measurement <https://github.com/coddingtonbear/python-measurement>`_
 
 
 If your are aware of another one, please contribute a patch to the docs.
