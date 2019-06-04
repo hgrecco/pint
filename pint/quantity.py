@@ -1529,8 +1529,12 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                             raise DimensionalityError(units, dst_units)
                         mobjs.append(getattr(other, 'magnitude', other) * factor)
                 mobjs = tuple(mobjs)
-            else:
+            elif dst_units:
                 dst_units = self._REGISTRY.parse_expression(dst_units)._units
+            else:
+                # Parsing an empty string will raise an exception (see PR #810)
+                # while previous behaviour was to yield a '1 dimensionless'
+                dst_units = self._REGISTRY.dimensionless._units
 
         elif len(inputs) > 1 and ufunc.__name__ not in self.__skip_other_args:
             # ufunc with multiple arguments require that all inputs have
