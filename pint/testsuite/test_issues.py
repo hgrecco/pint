@@ -538,11 +538,14 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual((self.Q_(F(2,3), 'm')).to('km'), self.Q_(F(1,1500), 'km'))
 
     def test_issue339(self):
-        q1 = self.ureg('')
-        self.assertEqual(q1.magnitude, 1)
-        self.assertEqual(q1.units, self.ureg.dimensionless)
+        # This raises an exception (see PR #810) while previous behaviour was to
+        # yield a '1 dimensionless'
+        with self.assertRaises(Exception):
+            q1 = self.ureg('')
+
         q2 = self.ureg('1 dimensionless')
-        self.assertEqual(q1, q2)
+        self.assertEqual(q2.magnitude, 1)
+        self.assertEqual(q2.units, self.ureg.dimensionless)
 
     def test_issue354_356_370(self):
         q = 1 * self.ureg.second / self.ureg.millisecond
@@ -580,7 +583,9 @@ class TestIssuesNP(QuantityTestCase):
     def test_issue532(self):
         ureg = self.ureg
 
-        @ureg.check(ureg(''))
+        # Parser will not accept an empty string (see PR #810) while previous behaviour was to
+        # yield a '1 dimensionless'
+        @ureg.check(ureg('dimensionless'))
         def f(x):
             return 2 * x
 
