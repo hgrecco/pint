@@ -567,7 +567,7 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 @group Textile
     tex = gram / kilometer = Tt
     dtex = decitex
-    denier = gram / (9 * kilometer) = Td
+    denier = gram / (9 * kilometer) = den = Td
     jute = pound / (14400 * yard) = Tj
     aberdeen = jute = Ta
 
