@@ -279,7 +279,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             else:
                 d_symbol = None
 
-            d_aliases = tuple('Δ' + alias for alias in definition.aliases)
+            d_aliases = tuple('Δ' + alias for alias in definition.aliases) + \
+                        tuple('delta_' + alias for alias in definition.aliases)
 
             d_reference = UnitsContainer(dict((ref, value)
                                          for ref, value in definition.reference.items()))
