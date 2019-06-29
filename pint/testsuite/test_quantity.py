@@ -383,7 +383,7 @@ class TestQuantity(QuantityTestCase):
         self.assertFalse(u_array_2.u == u_array_ref_reversed.u)
 
         u_array_3 = self.Q_.from_sequence(u_seq_reversed, units='g')
-        self.assertTrue(all(u_array_3 == u_array_ref_reversed))        
+        self.assertTrue(all(u_array_3 == u_array_ref_reversed))
         self.assertTrue(u_array_3.u == u_array_ref_reversed.u)
 
         with self.assertRaises(ValueError):
@@ -454,7 +454,8 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
         x = "some string"*ureg.m
-        self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
+        with self.assertWarns(RuntimeWarning):
+            self.compareQuantity_compact(x,x)
 
 class TestQuantityBasicMath(QuantityTestCase):
 
