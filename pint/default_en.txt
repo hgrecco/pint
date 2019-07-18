@@ -321,6 +321,10 @@ lumen = candela * steradian = lm
 [illuminance] = [luminous_flux] / [area]
 lux = lumen / meter ** 2 = lx
 
+# Intensity
+[intensity] = [power] / [area]
+atomic_unit_of_intensity = 0.5 * ε_0 * c * atomic_unit_of_electric_field ** 2 = a_u_intensity
+
 # Current
 biot = 10 * ampere = Bi
 abampere = biot = abA
@@ -347,6 +351,7 @@ conventional_volt_90 = K_J90 / K_J * volt = V_90
 
 # Electric field
 [electric_field] = [electric_potential] / [length]
+atomic_unit_of_electric_field = e * k_C / a_0 ** 2 = a_u_electric_field
 
 # Electric displacement field
 [electric_displacement_field] = [charge] / [area]
