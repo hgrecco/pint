@@ -138,6 +138,7 @@ More information
 .. toctree::
     :maxdepth: 1
 
+    developers_reference
     contributing
     faq
 
