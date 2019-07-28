@@ -26,6 +26,9 @@ class TestNumpyMethods(QuantityTestCase):
     @property
     def q(self):
         return [[1,2],[3,4]] * self.ureg.m
+    @property
+    def q_temperature(self):
+        return self.Q_([[1,2],[3,4]] , self.ureg.degC)
         
 
 class TestNumpyArrayCreation(TestNumpyMethods):
@@ -180,14 +183,20 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     def test_diff(self):
         self.assertQuantityEqual(np.diff(self.q, 1), [[1], [1]] * self.ureg.m)
+        self.assertQuantityEqual(np.diff(self.q_temperature, 1), [[1], [1]] * self.ureg.delta_degC)
 
     def test_ediff1d(self):
-        self.assertQuantityEqual(np.ediff1d(self.q, 1 * self.ureg.m), [1, 1, 1, 1] * self.ureg.m)
+        self.assertQuantityEqual(np.ediff1d(self.q), [1, 1, 1] * self.ureg.m)
+        self.assertQuantityEqual(np.ediff1d(self.q_temperature), [1, 1, 1] * self.ureg.delta_degC)
 
     def test_gradient(self):
         l = np.gradient([[1,1],[3,4]] * self.ureg.m, 1 * self.ureg.J)
         self.assertQuantityEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.m / self.ureg.J)
         self.assertQuantityEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.m / self.ureg.J)
+
+        l = np.gradient(self.Q_([[1,1],[3,4]] , self.ureg.degC), 1 * self.ureg.J)
+        self.assertQuantityEqual(l[0], [[2., 3.], [2., 3.]] * self.ureg.delta_degC / self.ureg.J)
+        self.assertQuantityEqual(l[1], [[0., 0.], [1., 1.]] * self.ureg.delta_degC / self.ureg.J)
 
 
     def test_cross(self):

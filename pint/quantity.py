@@ -110,6 +110,7 @@ def convert_to_consistent_units(pre_calc_units=None, *args, **kwargs):
     """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
     into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
     """
+    print(args,kwargs)
     def convert_arg(arg):
         if pre_calc_units is not None:
             if isinstance(arg,BaseQuantity):
@@ -123,8 +124,9 @@ def convert_to_consistent_units(pre_calc_units=None, *args, **kwargs):
                 return [item.m for item in arg]
         return arg
     
-    new_args=(convert_arg(arg) for arg in args)
+    new_args=tuple(convert_arg(arg) for arg in args)
     new_kwargs = {key:convert_arg(arg) for key,arg in kwargs.items()}
+    print( new_args, new_kwargs)
     return new_args, new_kwargs
     
 def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
@@ -157,6 +159,8 @@ def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
     def _(*args, **kwargs):
         # TODO make work for kwargs
         print("_",func_str)
+        args_and_kwargs = list(args)+list(kwargs.values())
+        
         (pre_calc_units, post_calc_units, out_units)=(pre_calc_units_, post_calc_units_, out_units_)
         first_input_units=_get_first_input_units(args, kwargs)
         if pre_calc_units == "consistent_infer":
@@ -174,12 +178,19 @@ def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
             post_calc_units = pre_calc_units
         elif post_calc_units == "prod":
             product = 1
-            for x in list(args)+list(kwargs.values()):
+            for x in args_and_kwargs:
                 product *= x
             post_calc_units = product.units
         elif post_calc_units == "div":
             product = first_input_units*first_input_units
-            for x in list(args)+list(kwargs.values()):
+            for x in args_and_kwargs:
+                product /= x
+            post_calc_units = product.units
+        elif post_calc_units == "delta":
+            post_calc_units = (1*first_input_units-1*first_input_units).units
+        elif post_calc_units == "delta,div":
+            product=(1*first_input_units-1*first_input_units).units
+            for x in args_and_kwargs[1:]:
                 product /= x
             post_calc_units = product.units
         print(post_calc_units)
@@ -195,7 +206,7 @@ def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
 def _power(*args, **kwargs):
     print(args)
     pass
-for func_str in ['linspace', 'concatenate', 'block', 'stack', 'hstack', 'vstack',  'dstack', 'atleast_1d', 'column_stack', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis',  'diff', 'ediff1d', 'fix']:
+for func_str in ['linspace', 'concatenate', 'block', 'stack', 'hstack', 'vstack',  'dstack', 'atleast_1d', 'column_stack', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'searchsorted' ,'rollaxis', 'broadcast_to', 'moveaxis', 'fix']:
     implement_func(func_str, 'consistent_infer', 'as_pre_calc', 'as_post_calc')
     
 
@@ -209,8 +220,11 @@ for func_str in ['size', 'isreal', 'iscomplex']:
 for func_str in ['cross', 'trapz']:
     implement_func(func_str, None, 'prod', None)
     
-for func_str in ['gradient']:
-    implement_func(func_str, None, 'div', None)
+for func_str in ['diff', 'ediff1d',]:
+    implement_func(func_str, None, 'delta', None)
+    
+for func_str in ['gradient', ]:
+    implement_func(func_str, None, 'delta,div', None)
     
 
 @contextlib.contextmanager
