@@ -71,7 +71,7 @@ def check_implemented(f):
             return NotImplemented
         # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
         # and expects Quantity * array[Quantity] should return NotImplemented
-        elif isinstance(other, list) and isinstance(other[0], type(self)):
+        elif isinstance(other, list) and other and isinstance(other[0], type(self)):
             return NotImplemented
         result = f(self, *args, **kwargs)
         return result

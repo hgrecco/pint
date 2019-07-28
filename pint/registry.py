@@ -171,12 +171,12 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     def _after_init(self):
         """This should be called after all __init__
         """
+        self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
+
         if self._filename == '':
             self.load_definitions('default_en.txt', True)
         elif self._filename is not None:
             self.load_definitions(self._filename)
-
-        self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
 
         self._build_cache()
         self._initialized = True
@@ -193,9 +193,6 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         for lineno, part in ifile.block_iter():
             k, v = part.split('=')
             self._defaults[k.strip()] = v.strip()
-
-    def __name__(self):
-        return 'UnitRegistry'
 
     def __getattr__(self, item):
         if item[0] == '_':
@@ -282,7 +279,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             else:
                 d_symbol = None
 
-            d_aliases = tuple('Δ' + alias for alias in definition.aliases)
+            d_aliases = tuple('Δ' + alias for alias in definition.aliases) + \
+                        tuple('delta_' + alias for alias in definition.aliases)
 
             d_reference = UnitsContainer(dict((ref, value)
                                          for ref, value in definition.reference.items()))
@@ -831,13 +829,11 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         return ret
 
-    def _eval_token(self, token, case_sensitive=True, **values):
+    def _eval_token(self, token, case_sensitive=True, use_decimal=False, **values):
         token_type = token[0]
         token_text = token[1]
         if token_type == NAME:
-            if token_text == 'pi':
-                return self.Quantity(math.pi)
-            elif token_text == 'dimensionless':
+            if token_text == 'dimensionless':
                 return 1 * self.dimensionless
             elif token_text in values:
                 return self.Quantity(values[token_text])
@@ -845,11 +841,11 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                 return self.Quantity(1, UnitsContainer({self.get_name(token_text,
                                                                       case_sensitive=case_sensitive) : 1}))
         elif token_type == NUMBER:
-            return ParserHelper.eval_token(token)
+            return ParserHelper.eval_token(token, use_decimal=use_decimal)
         else:
             raise Exception('unknown token type')
 
-    def parse_expression(self, input_string, case_sensitive=True, **values):
+    def parse_expression(self, input_string, case_sensitive=True, use_decimal=False, **values):
         """Parse a mathematical expression including units and return a quantity object.
 
         Numerical constants can be specified as keyword arguments and will take precedence
@@ -864,6 +860,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         return build_eval_tree(gen).evaluate(lambda x: self._eval_token(x,
                                                                         case_sensitive=case_sensitive,
+                                                                        use_decimal=use_decimal,
                                                                         **values))
 
     __call__ = parse_expression
@@ -1293,12 +1290,27 @@ class SystemRegistry(BaseRegistry):
         self._default_system = system
 
     def _after_init(self):
+        """After init function
+
+        Create default group.
+        Add all orphan units to it.
+        Set default system.
+        """
         super(SystemRegistry, self)._after_init()
 
-        #: Copy units in root group to the default group
+        #: Copy units not defined in any group to the default group
         if 'group' in self._defaults:
             grp = self.get_group(self._defaults['group'], True)
-            grp.add_units(*self.get_group('root', False).non_inherited_unit_names)
+            group_units = frozenset(
+                [
+                    member
+                    for group in self._groups.values()
+                    if group.name != "root"
+                    for member in group.members
+                ]
+            )
+            all_units = self.get_group("root", False).members
+            grp.add_units(*(all_units - group_units))
 
         #: System name to be used by default.
         self._default_system = self._default_system or self._defaults.get('system', None)

@@ -5,6 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import math
 import copy
 import unittest
+import sys
 
 from pint import UnitRegistry
 from pint.unit import UnitsContainer
@@ -39,10 +40,10 @@ class TestIssues(QuantityTestCase):
 
     def test_issue29(self):
         ureg = UnitRegistry()
-        t = 4 * ureg('mM')
+        t = 4 * ureg('mW')
         self.assertEqual(t.magnitude, 4)
-        self.assertEqual(t._units, UnitsContainer(millimolar=1))
-        self.assertEqual(t.to('mole / liter'), 4e-3 * ureg('M'))
+        self.assertEqual(t._units, UnitsContainer(milliwatt=1))
+        self.assertEqual(t.to('joule / second'), 4e-3 * ureg('W'))
 
     def test_issue52(self):
         u1 = UnitRegistry()
@@ -126,7 +127,7 @@ class TestIssues(QuantityTestCase):
         except:
             self.assertTrue(False, 'Error while trying to get base units for {}'.format(va))
 
-        boltmk = 1.3806488e-23*ureg.J/ureg.K
+        boltmk = 1.380649e-23*ureg.J/ureg.K
         vb = 2. * boltmk * T / m
 
         self.assertQuantityAlmostEqual(va.to_base_units(), vb.to_base_units())
@@ -282,24 +283,38 @@ class TestIssues(QuantityTestCase):
     def test_angstrom_creation(self):
         ureg = UnitRegistry()
         try:
+            # Check if the install supports unicode, travis python27 seems to
+            # support it...
+            if (sys.version_info < (3, 0)):
+                'Å'.decode('utf-8')
+        except UnicodeEncodeError:
+            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, 'Å')
+        else:
             ureg.Quantity(2, 'Å')
-        except SyntaxError:
-            self.fail('Quantity with Å could not be created.')
 
     def test_alternative_angstrom_definition(self):
         ureg = UnitRegistry()
         try:
+            # Check if the install supports unicode, travis python27 seems to
+            # support it...
+            if (sys.version_info < (3, 0)):
+                'Å'.decode('utf-8')
+        except UnicodeEncodeError:
+            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, '\u212B')
+        else:
             ureg.Quantity(2, '\u212B')
-        except UndefinedUnitError:
-            self.fail('Quantity with Å could not be created.')
 
     def test_micro_creation(self):
         ureg = UnitRegistry()
         try:
+            # Check if the install supports unicode, travis python27 seems to
+            # support it...
+            if (sys.version_info < (3, 0)):
+                'µ'.decode('utf-8')
+        except UnicodeEncodeError:
+            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, 'µm')
+        else:
             ureg.Quantity(2, 'µm')
-        except SyntaxError:
-            self.fail('Quantity with µ prefix could not be created.')
-
 
 @helpers.requires_numpy()
 class TestIssuesNP(QuantityTestCase):
@@ -652,6 +667,10 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual(distance.check('[time]'), False)
         self.assertEqual(velocity.check('[length] / [time]'), True)
         self.assertEqual(velocity.check('1 / [time] * [length]'), True)
+
+    def test_issue783(self):
+        ureg = UnitRegistry()
+        assert not ureg('g') == []
 
     def test_issue(self):
         import math

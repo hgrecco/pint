@@ -37,6 +37,9 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
+  - if [[ "$PYTHON" != "2.7" ]]; then
+      conda config --set restore_free_channel yes;
+    fi
   # Useful for debugging any issues with conda
   - conda info -a
 

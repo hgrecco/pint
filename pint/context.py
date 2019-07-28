@@ -125,7 +125,7 @@ class Context(object):
                 defaults = dict((str(k).strip(), to_num(v))
                                 for k, v in defaults)
             except (ValueError, TypeError):
-                raise DefinitionSyntaxError("Could not parse Context definition defaults: '%s'", _txt,
+                raise DefinitionSyntaxError("Could not parse Context definition defaults: '%s'" % _txt,
                                             lineno=lineno)
 
             ctx = cls(name, aliases, defaults)

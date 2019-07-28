@@ -11,6 +11,7 @@
 
 from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
+import sys
 
 from .converters import ScaleConverter, OffsetConverter
 from .util import UnitsContainer, _is_dim, ParserHelper
@@ -44,9 +45,19 @@ class Definition(object):
         name = name.strip()
 
         result = [res.strip() for res in definition.split('=')]
-        value, aliases = result[0], tuple(result[1:])
+        # For python 2.7, remove unsupported unicode character
+        if (sys.version_info < (3, 0)):
+            for value in result:
+                try:
+                    value.decode('utf-8')
+                except UnicodeEncodeError:
+                    result.remove(value)
+        value, aliases = result[0], tuple([x for x in result[1:] if x != ''])
         symbol, aliases = (aliases[0], aliases[1:]) if aliases else (None,
                                                                      aliases)
+        if symbol == '_':
+            symbol = None
+        aliases = tuple([x for x in aliases if x != '_'])
 
         if name.startswith('['):
             return DimensionDefinition(name, symbol, aliases, value)
@@ -115,10 +126,10 @@ class UnitDefinition(Definition):
                 modifiers = {}
 
             converter = ParserHelper.from_string(converter)
-            if all(_is_dim(key) for key in converter.keys()):
-                self.is_base = True
-            elif not any(_is_dim(key) for key in converter.keys()):
+            if not any(_is_dim(key) for key in converter.keys()):
                 self.is_base = False
+            elif all(_is_dim(key) for key in converter.keys()):
+                self.is_base = True
             else:
                 raise ValueError('Cannot mix dimensions and units in the same definition. '
                                  'Base units must be referenced only to dimensions. '

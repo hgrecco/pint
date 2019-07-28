@@ -562,6 +562,8 @@ class TestCompatibleUnits(QuantityTestCase):
     def test_get_base_units(self):
         ureg = UnitRegistry()
         self.assertEqual(ureg.get_base_units(''), (1, ureg.Unit('')))
+        self.assertEqual(ureg.get_base_units('pi'), (math.pi, ureg.Unit('')))
+        self.assertEqual(ureg.get_base_units('ln10'), (math.log(10), ureg.Unit('')))
         self.assertEqual(ureg.get_base_units('meter'), ureg.get_base_units(ParserHelper(meter=1)))
 
     def test_get_compatible_units(self):

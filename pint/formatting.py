@@ -149,7 +149,8 @@ def formatter(items, as_ratio=True, single_denominator=False,
             for _babel_length in [babel_length] + other_lengths:
                 pat = unit_patterns.get(_key, {}).get(_babel_length, {}).get(plural)
                 if pat is not None:
-                    key = pat.replace('{}', '').strip()
+                    # Don't remove this positional! This is the format used in Babel
+                    key = pat.replace('{0}', '').strip()
                     break
             division_fmt = compound_unit_patterns.get("per", {}).get(babel_length, division_fmt)
             power_fmt = '{}{}'
