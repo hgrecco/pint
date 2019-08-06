@@ -303,6 +303,22 @@ Pint supports float formatting for numpy arrays as well:
    >>> # scientific form formatting with unit pretty printing
    >>> print('The array is {:+.2E~P}'.format(accel))
    The array is [-1.10E+00 +1.00E-06 +1.25E+00 +1.30E+00] m/s²
+   
+Pint also supports 'f-strings'_ from python>=3.6 :
+
+.. doctest::
+
+   >>> accel = 1.3 * ureg['meter/second**2'] 
+   >>> print(f'The str is {accel}')
+   The str is 1.3 meter / second ** 2
+   >>> print(f'The str is {accel:.3e}')
+   The str is 1.300e+00 meter / second ** 2
+   >>> print(f'The str is {accel:~}')
+   The str is 1.3 m / s ** 2
+   >>> print(f'The str is {accel:~.3e}')
+   The str is 1.300e+00 m / s ** 2
+   >>> print(f'The str is {accel:~H}')
+   The str is 1.3 m/s²  
 
 But Pint also extends the standard formatting capabilities for unicode and
 LaTeX representations:
@@ -422,3 +438,4 @@ also define the registry as the application registry::
 .. _`serious security problems`: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
 .. _`Babel`: http://babel.pocoo.org/
 .. _'formatting syntax': https://docs.python.org/3/library/string.html#format-specification-mini-language
+.. _'f-strings': https://www.python.org/dev/peps/pep-0498/
