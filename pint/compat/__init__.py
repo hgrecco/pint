@@ -13,6 +13,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import sys
 
+import warnings
 from io import BytesIO
 from numbers import Number
 from decimal import Decimal
@@ -66,6 +67,25 @@ try:
 except ImportError:
     from itertools import izip_longest as zip_longest
 
+# TODO: remove this warning after v0.10
+class BehaviorChangeWarning(UserWarning):
+    pass
+_msg = ('The way pint handles numpy operations has changed. '
+'Unimplemented numpy operations will now fail instead '
+'of making assumptions about units. Some functions, '
+'eg concat, will now return Quanties with units, where '
+'they returned ndarrays previously. See '
+'https://github.com/hgrecco/pint/pull/764 . '
+'To hide this warning use the following code to import pint:'
+"""
+
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import pint
+---    
+""")
+
 try:
     import numpy as np
     from numpy import ndarray
@@ -87,6 +107,10 @@ try:
         if force_ndarray:
             return np.asarray(value)
         return value
+    
+    warnings.warn(_msg, BehaviorChangeWarning)
+
+
 
 except ImportError:
 
