@@ -23,6 +23,7 @@ from .util import pi_theorem, logger
 
 from .context import Context
 
+import warnings
 import sys
 try:
     from pintpandas import PintType, PintArray
@@ -37,7 +38,6 @@ except:             # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown
     __version__ = "unknown"
-
 
 #: A Registry with the default units and constants.
 _DEFAULT_REGISTRY = LazyRegistry()
