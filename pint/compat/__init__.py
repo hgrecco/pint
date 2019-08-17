@@ -13,7 +13,6 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 import sys
 
-import warnings
 from io import BytesIO
 from numbers import Number
 from decimal import Decimal
