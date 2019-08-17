@@ -454,8 +454,11 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
         x = "some string"*ureg.m
-        with self.assertWarns(RuntimeWarning):
-            self.compareQuantity_compact(x,x)
+        if PYTHON3:
+            with self.assertWarns(RuntimeWarning):
+                self.compareQuantity_compact(x,x)
+        else:
+            self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
 
 class TestQuantityBasicMath(QuantityTestCase):
 
