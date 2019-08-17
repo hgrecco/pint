@@ -23,7 +23,6 @@ from .util import pi_theorem, logger
 
 from .context import Context
 
-import warnings
 import sys
 try:
     from pintpandas import PintType, PintArray
