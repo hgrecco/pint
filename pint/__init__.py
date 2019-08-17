@@ -38,6 +38,7 @@ except:             # pragma: no cover
     # so the reported version will be unknown
     __version__ = "unknown"
 
+
 #: A Registry with the default units and constants.
 _DEFAULT_REGISTRY = LazyRegistry()
 
