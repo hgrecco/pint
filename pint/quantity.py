@@ -966,6 +966,21 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     __rmul__ = __mul__
 
+    def __matmul__(self, other):
+        try:
+            ret = np.matmul(self, other)
+            if not self._check(ret):
+                if self._check(other):
+                    units = self._units * other._units
+                else:
+                    units = self._units
+                ret = self.__class__(ret, units)
+            return ret
+        except (AttributeError, TypeError):
+            return NotImplemented
+
+    __rmatmul__ = __matmul__
+
     def __itruediv__(self, other):
         if not isinstance(self._magnitude, ndarray):
             return self._mul_div(other, operator.truediv)
@@ -1317,10 +1332,10 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     #: will be raised.
     __prod_units = {'var': 2, 'prod': 'size', 'multiply': 'mul',
                     'true_divide': 'div', 'divide': 'div', 'floor_divide': 'div',
-                    'remainder': 'div',
+                    'matmul': 'mul', 'remainder': 'div',
                     'sqrt': .5, 'square': 2, 'reciprocal': -1}
 
-    __skip_other_args = 'ldexp multiply ' \
+    __skip_other_args = 'ldexp multiply matmul ' \
                         'true_divide divide floor_divide fmod mod ' \
                         'remainder'.split()
 

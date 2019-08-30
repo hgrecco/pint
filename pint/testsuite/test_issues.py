@@ -679,3 +679,23 @@ class TestIssues(QuantityTestCase):
     def test_issue783(self):
         ureg = UnitRegistry()
         assert not ureg('g') == []
+
+    @helpers.requires_numpy()
+    @unittest.skipIf(sys.version_info < (3, 5), 'Requires Python >= 3.5')
+    def test_issue859_with_numpy(self):
+        import operator as op
+        ureg = UnitRegistry()
+        A = [[1, 2], [3, 4]] * ureg.m
+        B = np.array([[0, -1], [-1, 0]])
+        b = [[1], [0]] * ureg.m
+        self.assertQuantityEqual(op.matmul(A, B), [[-2, -1], [-4, -3]] * ureg.m)
+        self.assertQuantityEqual(op.matmul(A, b), [[1], [3]] * ureg.m**2)
+        self.assertQuantityEqual(op.matmul(B, b), [[0], [-1]] * ureg.m)
+
+    @helpers.requires_not_numpy()
+    @unittest.skipIf(sys.version_info < (3, 5), 'Requires Python >= 3.5')
+    def test_issue859_without_numpy(self):
+        import operator as op
+        ureg = UnitRegistry()
+        A = [[1, 2], [3, 4]] * ureg.m
+        self.assertRaises(TypeError, op.matmul, A, A)
