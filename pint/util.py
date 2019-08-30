@@ -706,6 +706,16 @@ def fix_str_conversions(cls):
     return cls
 
 
+def getattr_maybe_raise(self, item):
+    """Helper function to invoke at the beginning of all overridden ``__getattr__``
+    methods. Raise AttributeError if the user tries to ask for a _ or __ attribute.
+    """
+    # Double-underscore attributes are tricky to detect because they are
+    # automatically prefixed with the class name - which may be a subclass of self
+    if item.startswith('_') or item.endswith('__'):
+        object.__getattr__(self, item)
+
+
 class SourceIterator(object):
     """Iterator to facilitate reading the definition files.
 

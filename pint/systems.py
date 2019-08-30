@@ -15,7 +15,7 @@ import re
 
 from .definitions import Definition, UnitDefinition
 from .errors import DefinitionSyntaxError, RedefinitionError
-from .util import to_units_container, SharedRegistryObject, SourceIterator, logger
+from .util import to_units_container, getattr_maybe_raise, SharedRegistryObject, SourceIterator, logger
 from .babel_names import _babel_systems
 from pint.compat import Loc
 
@@ -232,6 +232,7 @@ class _Group(SharedRegistryObject):
         return grp
 
     def __getattr__(self, item):
+        getattr_maybe_raise(self, item)
         return self._REGISTRY
 
 
@@ -297,9 +298,7 @@ class _System(SharedRegistryObject):
         return list(self.members)
 
     def __getattr__(self, item):
-        if item == "__setstate__":
-            raise AttributeError(item)
-
+        getattr_maybe_raise(self, item)
         u = getattr(self._REGISTRY, self.name + '_' + item, None)
         if u is not None:
             return u
@@ -443,6 +442,7 @@ class Lister(object):
         return list(self.d.keys())
 
     def __getattr__(self, item):
+        getattr_maybe_raise(self, item)
         return self.d[item]
 
 

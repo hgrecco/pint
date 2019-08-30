@@ -47,7 +47,8 @@ from tokenize import NUMBER, NAME
 
 from . import registry_helpers
 from .context import Context, ContextChain
-from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
+from .util import (getattr_maybe_raise,
+                   logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
                    find_shortest_path, UnitsContainer, _is_dim,
                    to_units_container, SourceIterator)
@@ -195,11 +196,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             self._defaults[k.strip()] = v.strip()
 
     def __getattr__(self, item):
-        # Double-underscore attributes are tricky to detect because they are
-        # automatically prefixed with the class name - which may be a subclass of self
-        if item.startswith('_') or item.endswith('__'):
-            # Generate AttributeError
-            return object.__getattr__(self, item)
+        getattr_maybe_raise(self, item)
         return self.Unit(item)
 
     def __getitem__(self, item):

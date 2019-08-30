@@ -694,3 +694,24 @@ class TestIssuesNP(QuantityTestCase):
     def test_issue783(self):
         ureg = UnitRegistry()
         assert not ureg('g') == []
+
+    def test_issue856(self):
+        ph1 = ParserHelper(scale=123)
+        ph2 = copy.deepcopy(ph1)
+        assert ph2.scale == ph1.scale
+
+        ureg1 = UnitRegistry()
+        ureg2 = copy.deepcopy(ureg1)
+        # Very basic functionality test
+        assert ureg2('1 t').to('kg').magnitude == 1000
+
+    @unittest.expectedFailure
+    def test_issue856b(self):
+        # Test that, after a deepcopy(), the two UnitRegistries are
+        # independent from each other
+        ureg1 = UnitRegistry()
+        ureg2 = copy.deepcopy(ureg1)
+        ureg1.define('test123 = 123 kg')
+        ureg2.define('test123 = 456 kg')
+        assert ureg1('1 test123').to('kg').magnitude == 123
+        assert ureg2('1 test123').to('kg').magnitude == 456
