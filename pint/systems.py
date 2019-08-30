@@ -297,6 +297,9 @@ class _System(SharedRegistryObject):
         return list(self.members)
 
     def __getattr__(self, item):
+        if item == "__setstate__":
+            raise AttributeError(item)
+
         u = getattr(self._REGISTRY, self.name + '_' + item, None)
         if u is not None:
             return u

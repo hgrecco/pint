@@ -309,13 +309,6 @@ class UnitsContainer(Mapping):
     def __hash__(self):
         return self._hash
 
-    def __getstate__(self):
-        return {'_d': self._d, '_hash': self._hash}
-
-    def __setstate__(self, state):
-        self._d = state['_d']
-        self._hash = state['_hash']
-
     def __eq__(self, other):
         if isinstance(other, UnitsContainer):
             other = other._d
