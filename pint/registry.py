@@ -195,8 +195,11 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             self._defaults[k.strip()] = v.strip()
 
     def __getattr__(self, item):
-        if item[0] == '_':
-            return super(BaseRegistry, self).__getattribute__(item)
+        # Double-underscore attributes are tricky to detect because they are
+        # automatically prefixed with the class name - which may be a subclass of self
+        if item.startswith('_') or item.endswith('__'):
+            # Generate AttributeError
+            return object.__getattr__(self, item)
         return self.Unit(item)
 
     def __getitem__(self, item):
