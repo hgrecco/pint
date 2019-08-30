@@ -3,6 +3,22 @@
 # Language: english
 # :copyright: 2013,2019 by Pint Authors, see AUTHORS for more details.
 
+# Definition syntax
+# =================
+# <canonical name> = <relation to another unit> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+#
+# The canonical name and aliases should be expressed in singular form.
+# Pint automatically deals with plurals built by adding 's' to the singular form; plural
+# forms that don't follow this rule should be instead explicitly listed as aliases.
+#
+# If a unit has no symbol and one wants to define aliases, then the symbol should be
+# conventionally set to _.
+#
+# Example:
+#     millennium = 1e3 * year = _ = millennia
+#
+# See also: https://pint.readthedocs.io/en/latest/defining.html
+
 @defaults
     group = international
     system = mks
