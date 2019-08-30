@@ -42,8 +42,9 @@ before_install:
   - conda info -a
 
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
-  - sudo rm -rf /dev/shm
-  - sudo ln -s /run/shm /dev/shm
+  # But broke travis 2019-08
+  # - sudo rm -rf /dev/shm
+  # - sudo ln -s /run/shm /dev/shm
 
   - export ENV_NAME=travis
 
