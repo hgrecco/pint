@@ -690,7 +690,6 @@ class TestIssues(QuantityTestCase):
         # Very basic functionality test
         assert ureg2('1 t').to('kg').magnitude == 1000
 
-    @unittest.expectedFailure
     def test_issue856b(self):
         # Test that, after a deepcopy(), the two UnitRegistries are
         # independent from each other

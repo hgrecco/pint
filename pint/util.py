@@ -727,7 +727,7 @@ def getattr_maybe_raise(self, item):
     # Double-underscore attributes are tricky to detect because they are
     # automatically prefixed with the class name - which may be a subclass of self
     if item.startswith('_') or item.endswith('__'):
-        object.__getattr__(self, item)
+        raise AttributeError("%r object has no attribute %r" % (self, item))
 
 
 class SourceIterator(object):

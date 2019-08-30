@@ -32,6 +32,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import copy
 import os
 import re
 import math
@@ -116,15 +117,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     def __init__(self, filename='', force_ndarray=False, on_redefinition='warn', auto_reduce_dimensions=False):
 
         self._register_parsers()
-
-        from .unit import build_unit_class
-        self.Unit = build_unit_class(self)
-
-        from .quantity import build_quantity_class
-        self.Quantity = build_quantity_class(self, force_ndarray)
-
-        from .measurement import build_measurement_class
-        self.Measurement = build_measurement_class(self, force_ndarray)
+        self._init_dynamic_classes(force_ndarray)
 
         self._filename = filename
 
@@ -169,6 +162,18 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         self._initialized = False
 
+    def _init_dynamic_classes(self, force_ndarray):
+        """Generate subclasses on the fly and attach them to self
+        """
+        from .unit import build_unit_class
+        self.Unit = build_unit_class(self)
+
+        from .quantity import build_quantity_class
+        self.Quantity = build_quantity_class(self, force_ndarray)
+
+        from .measurement import build_measurement_class
+        self.Measurement = build_measurement_class(self, force_ndarray)
+
     def _after_init(self):
         """This should be called after all __init__
         """
@@ -194,6 +199,13 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         for lineno, part in ifile.block_iter():
             k, v = part.split('=')
             self._defaults[k.strip()] = v.strip()
+
+    def __deepcopy__(self, memo):
+        new = object.__new__(type(self))
+        new.__dict__ = copy.deepcopy(self.__dict__, memo)
+        force_ndarray = self.Quantity.force_ndarray
+        new._init_dynamic_classes(force_ndarray)
+        return new
 
     def __getattr__(self, item):
         getattr_maybe_raise(self, item)
@@ -1283,11 +1295,13 @@ class SystemRegistry(BaseRegistry):
         #: Map group name to group.
         #: :type: dict[ str | Group]
         self._groups = {}
-        self.Group = systems.build_group_class(self)
         self._groups['root'] = self.Group('root')
-        self.System = systems.build_system_class(self)
-
         self._default_system = system
+
+    def _init_dynamic_classes(self, force_ndarray):
+        super(SystemRegistry, self)._init_dynamic_classes(force_ndarray)
+        self.Group = systems.build_group_class(self)
+        self.System = systems.build_system_class(self)
 
     def _after_init(self):
         """After init function
