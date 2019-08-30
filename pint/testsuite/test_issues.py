@@ -475,6 +475,7 @@ class TestIssues(QuantityTestCase):
         else:
             ureg.Quantity(2, 'µm')
 
+    @helpers.requires_numpy()
     def test_issue171_real_imag(self):
         qr = [1., 2., 3., 4.] * self.ureg.meter
         qi = [4., 3., 2., 1.] * self.ureg.meter
