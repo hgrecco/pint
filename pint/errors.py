@@ -109,6 +109,7 @@ class OffsetUnitCalculusError(ValueError):
     def __str__(self):
         msg = ("Ambiguous operation with offset unit (%s)." %
                ', '.join(['%s' % u for u in [self.units1, self.units2] if u])
+               + " See https://pint.readthedocs.io/en/latest/nonmult.html for guidance."
                + self.extra_msg)
         return msg.format(self.units1, self.units2)
 
