@@ -668,7 +668,11 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual(velocity.check('[length] / [time]'), True)
         self.assertEqual(velocity.check('1 / [time] * [length]'), True)
 
-    def test_issue655b(self):
+    def test_issue783(self):
+        ureg = UnitRegistry()
+        assert not ureg('g') == []
+
+    def test_issue(self):
         import math
         try:
             from inspect import signature
@@ -690,10 +694,6 @@ class TestIssuesNP(QuantityTestCase):
         moon_gravity = Q_(1.625, 'm/s^2')
         t = pendulum_period(l, moon_gravity)
         self.assertAlmostEqual(t, Q_('4.928936075204336 second'))
-
-    def test_issue783(self):
-        ureg = UnitRegistry()
-        assert not ureg('g') == []
 
     def test_issue856(self):
         ph1 = ParserHelper(scale=123)
