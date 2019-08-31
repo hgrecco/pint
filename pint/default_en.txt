@@ -3,6 +3,22 @@
 # Language: english
 # :copyright: 2013,2019 by Pint Authors, see AUTHORS for more details.
 
+# Definition syntax
+# =================
+# <canonical name> = <relation to another unit> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+#
+# The canonical name and aliases should be expressed in singular form.
+# Pint automatically deals with plurals built by adding 's' to the singular form; plural
+# forms that don't follow this rule should be instead explicitly listed as aliases.
+#
+# If a unit has no symbol and one wants to define aliases, then the symbol should be
+# conventionally set to _.
+#
+# Example:
+#     millennium = 1e3 * year = _ = millennia
+#
+# See also: https://pint.readthedocs.io/en/latest/defining.html
+
 @defaults
     group = international
     system = mks
@@ -321,6 +337,10 @@ lumen = candela * steradian = lm
 [illuminance] = [luminous_flux] / [area]
 lux = lumen / meter ** 2 = lx
 
+# Intensity
+[intensity] = [power] / [area]
+atomic_unit_of_intensity = 0.5 * ε_0 * c * atomic_unit_of_electric_field ** 2 = a_u_intensity
+
 # Current
 biot = 10 * ampere = Bi
 abampere = biot = abA
@@ -347,6 +367,7 @@ conventional_volt_90 = K_J90 / K_J * volt = V_90
 
 # Electric field
 [electric_field] = [electric_potential] / [length]
+atomic_unit_of_electric_field = e * k_C / a_0 ** 2 = a_u_electric_field
 
 # Electric displacement field
 [electric_displacement_field] = [charge] / [area]
@@ -567,9 +588,10 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 @group Textile
     tex = gram / kilometer = Tt
     dtex = decitex
-    denier = gram / (9 * kilometer) = Td
+    denier = gram / (9 * kilometer) = den = Td
     jute = pound / (14400 * yard) = Tj
     aberdeen = jute = Ta
+    RKM = kgf * 1000 / tex
 
     number_english = 840 * yard / pound = Ne = NeC = ECC
     number_meter = kilometer / kilogram = Nm

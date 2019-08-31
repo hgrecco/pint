@@ -32,6 +32,11 @@ from functools import wraps
 import collections
 import unittest
 
+try:
+    from collections.abc import Callable
+except ImportError:
+    from collections import Callable
+
 def add_metaclass(metaclass):
     """Class decorator for creating a class with a metaclass."""
     def wrapper(cls):
@@ -69,7 +74,7 @@ class ParameterizedTestCaseMetaClass(type):
         new_class_dict = {}
 
         for attr_name, attr_value in list(class_dict.items()):
-            if isinstance(attr_value, collections.Callable) and hasattr(attr_value, 'param_names'):
+            if isinstance(attr_value, Callable) and hasattr(attr_value, 'param_names'):
                 # print("Processing attr_name = %r; attr_value = %r" % (
                 #     attr_name, attr_value))
 
