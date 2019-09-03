@@ -648,3 +648,14 @@ class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
             if src != dst:
                 self.assertQuantityAlmostEqual(convert(expected, dst, src),
                                                value, atol=0.001)
+
+    def test_alias(self):
+        ureg = UnitRegistry()
+        # Against canonical name
+        ureg.define("@alias meter = metro = metr")
+        self.assertQuantityEqual(ureg("1 metro"), ureg("1 meter"))
+        # Against a previously defined alias
+        ureg.define("@alias octet = word")
+        self.assertQuantityEqual(ureg("1 word"), ureg("1 byte"))
+        # Against unknown name
+        self.assertRaises(KeyError, ureg.define, "@alias notexist = something")

@@ -54,7 +54,7 @@ from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
 
 from .compat import tokenizer, string_types, meta
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
-                          DimensionDefinition)
+                          DimensionDefinition, AliasDefinition)
 from .converters import ScaleConverter
 from .errors import (DimensionalityError, UndefinedUnitError,
                      DefinitionSyntaxError, RedefinitionError)
@@ -263,6 +263,11 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         elif isinstance(definition, PrefixDefinition):
             d, di = self._prefixes, None
 
+        elif isinstance(definition, AliasDefinition):
+            d, di = self._units, self._units_casei
+            self._define_alias(definition, d, di)
+            return d[definition.name], d, di
+
         else:
             raise TypeError('{} is not a valid definition.'.format(definition))
 
@@ -324,6 +329,13 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         unit_dict[key] = value
         if casei_unit_dict is not None:
             casei_unit_dict[key.lower()].add(key)
+
+    def _define_alias(self, definition, unit_dict, casei_unit_dict):
+        unit = unit_dict[definition.name]
+        unit.add_aliases(*definition.aliases)
+        for alias in unit.aliases:
+            unit_dict[alias] = unit
+            casei_unit_dict[alias.lower()].add(alias)
 
     def _register_parser(self, prefix, parserfunc):
         """Register a loader for a given @ directive..
