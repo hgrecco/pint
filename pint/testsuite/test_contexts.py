@@ -269,7 +269,6 @@ class TestContexts(QuantityTestCase):
         self.assertFalse(ureg._active_ctx)
         self.assertFalse(ureg._active_ctx.graph)
 
-
     def test_one_context(self):
         ureg = UnitRegistry()
 
@@ -287,7 +286,6 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units)
         self.assertRaises(ValueError, q.to, 'Hz')
         self.assertEqual(ureg.get_compatible_units(q), meter_units)
-
 
     def test_multiple_context(self):
         ureg = UnitRegistry()
@@ -307,7 +305,6 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units | ampere_units)
         self.assertRaises(ValueError, q.to, 'Hz')
         self.assertEqual(ureg.get_compatible_units(q), meter_units)
-
 
     def test_nested_context(self):
         ureg = UnitRegistry()
@@ -385,7 +382,6 @@ class TestContexts(QuantityTestCase):
         self.assertRaises(TypeError, q.to, 'Hz')
         ureg.disable_contexts(1)
 
-
     def test_context_with_arg_def(self):
 
         ureg = UnitRegistry()
@@ -420,7 +416,6 @@ class TestContexts(QuantityTestCase):
             with ureg.context('lc', n=2):
                 self.assertEqual(q.to('Hz'), s / 2)
             self.assertRaises(ValueError, q.to, 'Hz')
-
 
     def test_context_with_sharedarg_def(self):
 
@@ -461,6 +456,24 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(q.to('ampere'), 3 * u)
             with ureg.context('lc', n=6):
                 self.assertEqual(q.to('Hz'), s / 6)
+
+    def test_anonymous_context(self):
+        ureg = UnitRegistry()
+        c = Context()
+        c.add_transformation(
+            '[length]', '[time]',
+            lambda ureg, x: (x / ureg.speed_of_light)
+        )
+        expect = ureg("1 m") / ureg.speed_of_light
+
+        out = ureg("1 m").to("s", c)
+        self.assertQuantityEqual(out, expect)
+
+        with ureg.context(c):
+            out = ureg("1 m").to("s")
+        self.assertQuantityEqual(out, expect)
+
+        self.assertRaises(ValueError, ureg.add_context, c)
 
     def _test_ctx(self, ctx):
         ureg = UnitRegistry()
@@ -628,7 +641,6 @@ class TestDefinedContexts(QuantityTestCase):
                     msg = '{} <-> {}'.format(a, b)
                     # assertAlmostEqualRelError converts second to first
                     self.assertQuantityAlmostEqual(b, a, rtol=0.01, msg=msg)
-
 
         for a, b in itertools.product(eq, eq):
             self.assertQuantityAlmostEqual(a.to(b.units, 'sp'), b, rtol=0.01)

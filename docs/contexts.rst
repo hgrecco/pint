@@ -188,7 +188,19 @@ functions. For example:
     >>> ureg = pint.UnitRegistry()
     >>> c = pint.Context('ab')
     >>> c.add_transformation('[length]', '[time]',
-    ...                      lambda ureg, x: ureg.speed_of_light / x)
+    ...                      lambda ureg, x: x / ureg.speed_of_light)
     >>> c.add_transformation('[time]', '[length]',
-    ...                      lambda ureg, x: ureg.speed_of_light * x)
+    ...                      lambda ureg, x: x * ureg.speed_of_light)
     >>> ureg.add_context(c)
+    >>> ureg("1 s").to("km", "ab")
+    299792.458 kilometer
+
+It is also possible to create anonymous contexts without invoking add_context:
+
+   >>> c = pint.Context()
+   ...
+   >>> ureg("1 s").to("km", c)
+   299792.458 kilometer
+   >>> with ureg.context(c):
+   ...     ureg("1 s").to("km")
+   299792.458 kilometer
