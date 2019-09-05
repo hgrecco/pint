@@ -75,12 +75,28 @@ unit, including non-metric ones (e.g. kiloinch is valid for Pint). This
 simplifies definitions files enormously without introducing major problems.
 Pint, like Python, believes that we are all consenting adults.
 
+Derived dimensions are defined as follows::
+
+    [density] = [mass] / [volume]
+
+Note that primary dimensions don't need to be declared; they can be
+defined for the first time as part of a unit definition.
+
+Finally, one may add aliases to an already existing unit definition::
+
+    @alias meter = metro = metr
+
+This is particularly useful when one wants to enrich definitions from defaults_en.txt
+with new aliases from a custom file. It can also be used for translations (like in the
+example above) as long as one is happy to have the localized units automatically
+converted to English when they are parsed.
+
 
 Programmatically
 ----------------
 
-You can easily add units to the registry programmatically. Let's add a dog_year
-(sometimes written as dy) equivalent to 52 (human) days:
+You can easily add units, dimensions, or aliases to the registry programmatically.
+Let's add a dog_year (sometimes written as dy) equivalent to 52 (human) days:
 
 .. doctest::
 
@@ -111,4 +127,14 @@ You can also add prefixes programmatically:
 
 where the number indicates the multiplication factor.
 
-.. warning:: Units and prefixes added programmatically are forgotten when the program ends.
+Same for aliases and derived dimensions:
+
+.. doctest::
+
+   >>> ureg.define('@alias meter = metro = metr')
+   >>> ureg.define('[hypervolume] = [length ** 4]')
+
+
+.. warning::
+   Units, prefixes, aliases and dimensions added programmatically are forgotten when the
+   program ends.

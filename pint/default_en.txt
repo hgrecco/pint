@@ -3,9 +3,11 @@
 # Language: english
 # :copyright: 2013,2019 by Pint Authors, see AUTHORS for more details.
 
-# Definition syntax
-# =================
-# <canonical name> = <relation to another unit> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+# Syntax
+# ======
+# Units
+# -----
+# <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
 #
 # The canonical name and aliases should be expressed in singular form.
 # Pint automatically deals with plurals built by adding 's' to the singular form; plural
@@ -17,6 +19,38 @@
 # Example:
 #     millennium = 1e3 * year = _ = millennia
 #
+#
+# Prefixes
+# --------
+# <prefix>- = <amount> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+#
+# Example:
+#     deca- =  1e+1  = da- = deka-
+#
+#
+# Derived dimensions
+# ------------------
+# [dimension name] = <relation to other dimensions>
+#
+# Example:
+#     [density] = [mass] / [volume]
+#
+# Note that primary dimensions don't need to be declared; they can be
+# defined or the first time in a unit definition.
+# E.g. see below `meter = [length]`
+#
+#
+# Additional aliases
+# ------------------
+# @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
+#
+# Used to add aliases to already existing unit definitions.
+# Particularly useful when one wants to enrich definitions
+# from defaults_en.txt with custom aliases.
+#
+# Example:
+#     @alias meter = my_meter
+
 # See also: https://pint.readthedocs.io/en/latest/defining.html
 
 @defaults
