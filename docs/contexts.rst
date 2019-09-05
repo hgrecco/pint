@@ -201,6 +201,3 @@ It is also possible to create anonymous contexts without invoking add_context:
    ...
    >>> ureg("1 s").to("km", c)
    299792.458 kilometer
-   >>> with ureg.context(c):
-   ...     ureg("1 s").to("km")
-   299792.458 kilometer

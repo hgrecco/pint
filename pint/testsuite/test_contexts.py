@@ -464,16 +464,22 @@ class TestContexts(QuantityTestCase):
             '[length]', '[time]',
             lambda ureg, x: (x / ureg.speed_of_light)
         )
-        expect = ureg("1 m") / ureg.speed_of_light
+        self.assertRaises(ValueError, ureg.add_context, c)
 
-        out = ureg("1 m").to("s", c)
+        x = ureg("1 m")
+        expect = x / ureg.speed_of_light
+        out = x.to("s", c)
         self.assertQuantityEqual(out, expect)
 
         with ureg.context(c):
-            out = ureg("1 m").to("s")
+            out = x.to("s")
         self.assertQuantityEqual(out, expect)
 
-        self.assertRaises(ValueError, ureg.add_context, c)
+        ureg.enable_contexts(c)
+        out = x.to("s")
+        self.assertQuantityEqual(out, expect)
+        ureg.disable_contexts(1)
+        self.assertRaises(errors.DimensionalityError, x.to, "s")
 
     def _test_ctx(self, ctx):
         ureg = UnitRegistry()
