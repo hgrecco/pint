@@ -90,6 +90,7 @@ class Definition(object):
         return self._aliases
 
     def add_aliases(self, *alias):
+        alias = tuple(a for a in alias if a not in self._aliases)
         self._aliases = self._aliases + alias
 
     @property

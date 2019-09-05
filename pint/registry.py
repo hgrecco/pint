@@ -379,7 +379,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         ifile = SourceIterator(file)
         for no, line in ifile:
-            if line and line[0] == '@':
+            if line.startswith('@') and not line.startswith('@alias'):
                 if line.startswith('@import'):
                     if is_resource:
                         path = line[7:].strip()
