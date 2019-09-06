@@ -1102,7 +1102,8 @@ class ContextRegistry(BaseRegistry):
         for ctx in ctxs:
             if getattr(ctx, '_checked', False):
                 continue
-            for (src, dst), func in ctx.funcs.items():
+            funcs_copy = dict(ctx.funcs)
+            for (src, dst), func in funcs_copy.items():
                 src_ = self._get_dimensionality(src)
                 dst_ = self._get_dimensionality(dst)
                 if src != src_ or dst != dst_:
