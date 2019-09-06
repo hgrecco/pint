@@ -462,24 +462,38 @@ class TestContexts(QuantityTestCase):
         c = Context()
         c.add_transformation(
             '[length]', '[time]',
-            lambda ureg, x: (x / ureg.speed_of_light)
+            lambda ureg, x: x / ureg("5 cm/s")
         )
         self.assertRaises(ValueError, ureg.add_context, c)
 
-        x = ureg("1 m")
-        expect = x / ureg.speed_of_light
-        out = x.to("s", c)
-        self.assertQuantityEqual(out, expect)
+        x = ureg("10 cm")
+        expect = ureg("2 s")
+        self.assertQuantityEqual(x.to("s", c), expect)
 
         with ureg.context(c):
-            out = x.to("s")
-        self.assertQuantityEqual(out, expect)
+            self.assertQuantityEqual(x.to("s"), expect)
 
         ureg.enable_contexts(c)
-        out = x.to("s")
-        self.assertQuantityEqual(out, expect)
+        self.assertQuantityEqual(x.to("s"), expect)
         ureg.disable_contexts(1)
         self.assertRaises(errors.DimensionalityError, x.to, "s")
+
+        # Multiple anonymous contexts
+        c2 = Context()
+        c2.add_transformation(
+            '[length]', '[time]',
+            lambda ureg, x: x / ureg("10 cm/s")
+        )
+        c2.add_transformation(
+            '[mass]', '[time]',
+            lambda ureg, x: x / ureg("10 kg/s")
+        )
+        with ureg.context(c2, c):
+            self.assertQuantityEqual(x.to("s"), expect)
+            # Transformations only in c2 are still working even if c takes priority
+            self.assertQuantityEqual(ureg("100 kg").to("s"), ureg("10 s"))
+        with ureg.context(c, c2):
+            self.assertQuantityEqual(x.to("s"), ureg("1 s"))
 
     def _test_ctx(self, ctx):
         ureg = UnitRegistry()
