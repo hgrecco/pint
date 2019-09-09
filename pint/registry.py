@@ -1071,6 +1071,8 @@ class ContextRegistry(BaseRegistry):
 
         Notice that this method will NOT enable the context. Use `enable_contexts`.
         """
+        if not context.name:
+            raise ValueError("Can't add unnamed context to registry")
         if context.name in self._contexts:
             logger.warning('The name %s was already registered for another context.',
                            context.name)
