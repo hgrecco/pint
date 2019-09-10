@@ -151,7 +151,7 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
         return inst
 
     @property
-    def debug__used(self):
+    def debug_used(self):
         return self.__used
 
     def __copy__(self):
