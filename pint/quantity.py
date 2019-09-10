@@ -92,9 +92,8 @@ def printoptions(*args, **kwargs):
     finally:
         np.set_printoptions(**opts)
 
-
 @fix_str_conversions
-class _Quantity(PrettyIPython, SharedRegistryObject):
+class BaseQuantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -111,7 +110,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         from . import _build_quantity
         return _build_quantity, (self.magnitude, self._units)
 
-    def __new__(cls, value, units=None):
+    
+    @classmethod
+    def _new(cls, value, units=None):
         if units is None:
             if isinstance(value, string_types):
                 if value == '':
@@ -134,7 +135,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)._units
         elif isinstance(units, SharedRegistryObject):
-            if isinstance(units, _Quantity) and units.magnitude != 1:
+            if isinstance(units, BaseQuantity) and units.magnitude != 1:
                 inst = copy.copy(units)
                 logger.warning('Creating new Quantity using a non unity '
                                'Quantity as units.')
@@ -145,23 +146,12 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         else:
             raise TypeError('units must be of type str, Quantity or '
                             'UnitsContainer; not {}.'.format(type(units)))
-
         inst.__used = False
         inst.__handling = None
-        # Only instances where the magnitude is iterable should have __iter__()
-        if hasattr(inst._magnitude,"__iter__"):
-            inst.__iter__ = cls._iter
         return inst
 
-    def _iter(self):
-        """
-        Will be become __iter__() for instances with iterable magnitudes
-        """
-        # # Allow exception to propagate in case of non-iterable magnitude
-        it_mag = iter(self.magnitude)
-        return iter((self.__class__(mag, self._units) for mag in it_mag))
     @property
-    def debug_used(self):
+    def debug__used(self):
         return self.__used
 
     def __copy__(self):
@@ -249,7 +239,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def _repr_pretty_(self, p, cycle):
         if cycle:
-            super(_Quantity, self)._repr_pretty_(p, cycle)
+            super(BaseQuantity, self)._repr_pretty_(p, cycle)
         else:
             p.pretty(self.magnitude)
             p.text(" ")
@@ -890,7 +880,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         self._magnitude = magnitude_op(self._magnitude, other._magnitude)
         self._units = units_op(self._units, other._units)
-
         return self
 
     @check_implemented
@@ -1197,7 +1186,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
-        if not isinstance(other, _Quantity):
+        if not isinstance(other, BaseQuantity):
             if _eq(other, 0, True):
                 # Handle the special case in which we compare to zero
                 # (or an array of zeros)
@@ -1329,49 +1318,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 tuple(__prod_units.keys()) + \
                 tuple(__copy_units) + tuple(__skip_other_args)
 
-    def clip(self, first=None, second=None, out=None, **kwargs):
-        min = kwargs.get('min', first)
-        max = kwargs.get('max', second)
-
-        if min is None and max is None:
-            raise TypeError('clip() takes at least 3 arguments (2 given)')
-
-        if max is None and 'min' not in kwargs:
-            min, max = max, min
-
-        kwargs = {'out': out}
-
-        if min is not None:
-            if isinstance(min, self.__class__):
-                kwargs['min'] = min.to(self).magnitude
-            elif self.dimensionless:
-                kwargs['min'] = min
-            else:
-                raise DimensionalityError('dimensionless', self._units)
-
-        if max is not None:
-            if isinstance(max, self.__class__):
-                kwargs['max'] = max.to(self).magnitude
-            elif self.dimensionless:
-                kwargs['max'] = max
-            else:
-                raise DimensionalityError('dimensionless', self._units)
-
-        return self.__class__(self.magnitude.clip(**kwargs), self._units)
-
-    def fill(self, value):
-        self._units = value._units
-        return self.magnitude.fill(value.magnitude)
-
-    def put(self, indices, values, mode='raise'):
-        if isinstance(values, self.__class__):
-            values = values.to(self).magnitude
-        elif self.dimensionless:
-            values = self.__class__(values, '').to(self)
-        else:
-            raise DimensionalityError('dimensionless', self._units)
-        self.magnitude.put(indices, values, mode)
-
     @property
     def real(self):
         return self.__class__(self._magnitude.real, self._units)
@@ -1432,14 +1378,12 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         return value
 
-    def __len__(self):
-        return len(self._magnitude)
 
     def __getattr__(self, item):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
         if item.startswith('__array_'):
-            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+            warnings.warn("The unit of the quantity is stripped when getting {} attribute".format(item), UnitStrippedWarning)
             if isinstance(self._magnitude, ndarray):
                 return getattr(self._magnitude, item)
             else:
@@ -1460,46 +1404,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             raise AttributeError("Neither Quantity object nor its magnitude ({}) "
                                  "has attribute '{}'".format(self._magnitude, item))
 
-    def __getitem__(self, key):
-        try:
-            value = self._magnitude[key]
-            return self.__class__(value, self._units)
-        except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({})"
-                            "supports indexing".format(self._magnitude))
-
-    def __setitem__(self, key, value):
-        try:
-            if math.isnan(value):
-                self._magnitude[key] = value
-                return
-        except (TypeError, DimensionalityError):
-            pass
-
-        try:
-            if isinstance(value, self.__class__):
-                factor = self.__class__(value.magnitude, value._units / self._units).to_root_units()
-            else:
-                factor = self.__class__(value, self._units ** (-1)).to_root_units()
-
-            if isinstance(factor, self.__class__):
-                if not factor.dimensionless:
-                    raise DimensionalityError(value, self.units,
-                                              extra_msg='. Assign a quantity with the same dimensionality or '
-                                                        'access the magnitude directly as '
-                                                        '`obj.magnitude[%s] = %s`' % (key, value))
-                self._magnitude[key] = factor.magnitude
-            else:
-                self._magnitude[key] = factor
-
-        except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({})"
-                            "supports indexing".format(self._magnitude))
-
-    def tolist(self):
-        units = self._units
-        return [self.__class__(value, units).tolist() if isinstance(value, list) else self.__class__(value, units)
-                for value in self._magnitude.tolist()]
 
     __array_priority__ = 17
 
@@ -1575,12 +1479,12 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             if tmp == 'size':
                 out = self.__class__(out, self._units ** self._magnitude.size)
             elif tmp == 'div':
-                units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                units1 = objs[0]._units if isinstance(objs[0], BaseQuantity) else UnitsContainer()
+                units2 = objs[1]._units if isinstance(objs[1], BaseQuantity) else UnitsContainer()
                 out = self.__class__(out, units1 / units2)
             elif tmp == 'mul':
-                units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
+                units1 = objs[0]._units if isinstance(objs[0], BaseQuantity) else UnitsContainer()
+                units2 = objs[1]._units if isinstance(objs[1], BaseQuantity) else UnitsContainer()
                 out = self.__class__(out, units1 * units2)
             else:
                 out = self.__class__(out, self._units ** tmp)
@@ -1736,14 +1640,133 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def to_timedelta(self):
         return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
 
+class QuantitySequenceMixin(object):
+    def __len__(self):
+        return len(self._magnitude)
+        
+    def __getitem__(self, key):
+        try:
+            value = self._magnitude[key]
+            return self.__class__(value, self._units)
+        except TypeError:
+            raise TypeError("Neither Quantity object nor its magnitude ({})"
+                            "supports indexing".format(self._magnitude))
+
+    def __setitem__(self, key, value):
+        try:
+            if math.isnan(value):
+                self._magnitude[key] = value
+                return
+        except (TypeError, DimensionalityError):
+            pass
+
+        try:
+            if isinstance(value, BaseQuantity):
+                factor = self.__class__(value.magnitude, value._units / self._units).to_root_units()
+            else:
+                factor = self.__class__(value, self._units ** (-1)).to_root_units()
+
+            if isinstance(factor, BaseQuantity):
+                if not factor.dimensionless:
+                    raise DimensionalityError(value, self.units,
+                                              extra_msg='. Assign a quantity with the same dimensionality or '
+                                                        'access the magnitude directly as '
+                                                        '`obj.magnitude[%s] = %s`' % (key, value))
+                self._magnitude[key] = factor.magnitude
+            else:
+                self._magnitude[key] = factor
+
+        except TypeError:
+            raise TypeError("Neither Quantity object nor its magnitude ({})"
+                            "supports indexing".format(self._magnitude))
+    def __iter__(self):
+        """
+        Will be become __iter__() for instances with iterable magnitudes
+        """
+        # # Allow exception to propagate in case of non-iterable magnitude
+        it_mag = iter(self.magnitude)
+        return iter((self.__class__(mag, self._units) for mag in it_mag))
+
+    def clip(self, first=None, second=None, out=None, **kwargs):
+        min = kwargs.get('min', first)
+        max = kwargs.get('max', second)
+
+        if min is None and max is None:
+            raise TypeError('clip() takes at least 3 arguments (2 given)')
+
+        if max is None and 'min' not in kwargs:
+            min, max = max, min
+
+        kwargs = {'out': out}
+
+        if min is not None:
+            if isinstance(min, BaseQuantity):
+                kwargs['min'] = min.to(self).magnitude
+            elif self.dimensionless:
+                kwargs['min'] = min
+            else:
+                raise DimensionalityError('dimensionless', self._units)
+
+        if max is not None:
+            if isinstance(max, BaseQuantity):
+                kwargs['max'] = max.to(self).magnitude
+            elif self.dimensionless:
+                kwargs['max'] = max
+            else:
+                raise DimensionalityError('dimensionless', self._units)
+
+        return self.__class__(self.magnitude.clip(**kwargs), self._units)
+
+    def fill(self, value):
+        self._units = value._units
+        return self.magnitude.fill(value.magnitude)
+
+    def put(self, indices, values, mode='raise'):
+        if isinstance(values, BaseQuantity):
+            values = values.to(self).magnitude
+        elif self.dimensionless:
+            values = self.__class__(values, '').to(self)
+        else:
+            raise DimensionalityError('dimensionless', self._units)
+        self.magnitude.put(indices, values, mode)
+        
+    def tolist(self):
+        units = self._units
+        return [self.__class__(value, units).tolist() if isinstance(value, list) else self.__class__(value, units)
+                for value in self._magnitude.tolist()]
 
 
 def build_quantity_class(registry, force_ndarray=False):
-
-    class Quantity(_Quantity):
-        pass
-
+    
+    class Quantity(BaseQuantity):
+        def __new__(cls, value, units=None):
+            if units is None:
+                if isinstance(value, string_types):
+                    if value == '':
+                        raise ValueError('Expression to parse as Quantity cannot '
+                                         'be an empty string.')
+                    inst = cls._REGISTRY.parse_expression(value)
+                    return cls.__new__(cls, inst)
+                elif isinstance(value, cls):
+                    inst = copy.copy(value)
+                else:
+                    value = _to_magnitude(value, cls.force_ndarray)
+                    units = UnitsContainer()
+            if hasattr(value, "__iter__"):
+                return QuantitySequence._new(value,units)
+            else:
+                return QuantityScalar._new(value,units)
+    
     Quantity._REGISTRY = registry
     Quantity.force_ndarray = force_ndarray
-
+    
+    class QuantityScalar(Quantity):
+        def __new__(cls, value, units=None):
+            inst = Quantity.__new__(Quantity, value, units)
+            return inst
+    
+    class QuantitySequence(Quantity,QuantitySequenceMixin):
+        def __new__(cls, value, units=None):
+            inst = Quantity.__new__(Quantity, value, units)
+            return inst
     return Quantity
