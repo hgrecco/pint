@@ -25,6 +25,7 @@ env:
   # - UNCERTAINTIES="Y" PYTHON="3.5" NUMPY_VERSION=1.14 PANDAS=0
   # - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.14 PANDAS=0
 
+
 before_install:
   - sudo apt-get update
   - if [[ "$PYTHON" == "2.7" ]]; then
@@ -37,12 +38,16 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
+  - if [[ "$PYTHON" != "2.7" ]]; then
+      conda config --set restore_free_channel yes;
+    fi
   # Useful for debugging any issues with conda
   - conda info -a
 
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
-  - sudo rm -rf /dev/shm
-  - sudo ln -s /run/shm /dev/shm
+  # But broke travis 2019-08
+  # - sudo rm -rf /dev/shm
+  # - sudo ln -s /run/shm /dev/shm
 
   - export ENV_NAME=travis
 

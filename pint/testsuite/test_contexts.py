@@ -269,7 +269,6 @@ class TestContexts(QuantityTestCase):
         self.assertFalse(ureg._active_ctx)
         self.assertFalse(ureg._active_ctx.graph)
 
-
     def test_one_context(self):
         ureg = UnitRegistry()
 
@@ -287,7 +286,6 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units)
         self.assertRaises(ValueError, q.to, 'Hz')
         self.assertEqual(ureg.get_compatible_units(q), meter_units)
-
 
     def test_multiple_context(self):
         ureg = UnitRegistry()
@@ -307,7 +305,6 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units | ampere_units)
         self.assertRaises(ValueError, q.to, 'Hz')
         self.assertEqual(ureg.get_compatible_units(q), meter_units)
-
 
     def test_nested_context(self):
         ureg = UnitRegistry()
@@ -385,7 +382,6 @@ class TestContexts(QuantityTestCase):
         self.assertRaises(TypeError, q.to, 'Hz')
         ureg.disable_contexts(1)
 
-
     def test_context_with_arg_def(self):
 
         ureg = UnitRegistry()
@@ -420,7 +416,6 @@ class TestContexts(QuantityTestCase):
             with ureg.context('lc', n=2):
                 self.assertEqual(q.to('Hz'), s / 2)
             self.assertRaises(ValueError, q.to, 'Hz')
-
 
     def test_context_with_sharedarg_def(self):
 
@@ -461,6 +456,44 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(q.to('ampere'), 3 * u)
             with ureg.context('lc', n=6):
                 self.assertEqual(q.to('Hz'), s / 6)
+
+    def test_anonymous_context(self):
+        ureg = UnitRegistry()
+        c = Context()
+        c.add_transformation(
+            '[length]', '[time]',
+            lambda ureg, x: x / ureg("5 cm/s")
+        )
+        self.assertRaises(ValueError, ureg.add_context, c)
+
+        x = ureg("10 cm")
+        expect = ureg("2 s")
+        self.assertQuantityEqual(x.to("s", c), expect)
+
+        with ureg.context(c):
+            self.assertQuantityEqual(x.to("s"), expect)
+
+        ureg.enable_contexts(c)
+        self.assertQuantityEqual(x.to("s"), expect)
+        ureg.disable_contexts(1)
+        self.assertRaises(errors.DimensionalityError, x.to, "s")
+
+        # Multiple anonymous contexts
+        c2 = Context()
+        c2.add_transformation(
+            '[length]', '[time]',
+            lambda ureg, x: x / ureg("10 cm/s")
+        )
+        c2.add_transformation(
+            '[mass]', '[time]',
+            lambda ureg, x: x / ureg("10 kg/s")
+        )
+        with ureg.context(c2, c):
+            self.assertQuantityEqual(x.to("s"), expect)
+            # Transformations only in c2 are still working even if c takes priority
+            self.assertQuantityEqual(ureg("100 kg").to("s"), ureg("10 s"))
+        with ureg.context(c, c2):
+            self.assertQuantityEqual(x.to("s"), ureg("1 s"))
 
     def _test_ctx(self, ctx):
         ureg = UnitRegistry()
@@ -628,7 +661,6 @@ class TestDefinedContexts(QuantityTestCase):
                     msg = '{} <-> {}'.format(a, b)
                     # assertAlmostEqualRelError converts second to first
                     self.assertQuantityAlmostEqual(b, a, rtol=0.01, msg=msg)
-
 
         for a, b in itertools.product(eq, eq):
             self.assertQuantityAlmostEqual(a.to(b.units, 'sp'), b, rtol=0.01)

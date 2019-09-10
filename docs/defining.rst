@@ -16,9 +16,16 @@ other units. For example this is how the minute and the hour are defined in
     minute = 60 * second = min
 
 It is quite straightforward, isn't it? We are saying that `minute` is
-`60 seconds` and is also known as `min`. The first word is always the canonical
-name. Next comes the definition (based on other units). Finally, a list of
-aliases, separated by equal signs.
+`60 seconds` and is also known as `min`.
+
+1. The first word is always the canonical name.
+2. Next comes the definition (based on other units).
+3. Next, optionally, there is the unit symbol.
+4. Finally, again optionally, a list of aliases, separated by equal signs.
+   If one wants to specify aliases but not a symbol, the symbol should be
+   conventionally set to ``_``; e.g.::
+
+        millennium = 1e3 * year = _ = millennia
 
 The order in which units are defined does not matter, Pint will resolve the
 dependencies to define them in the right order. What is important is that if
@@ -68,12 +75,28 @@ unit, including non-metric ones (e.g. kiloinch is valid for Pint). This
 simplifies definitions files enormously without introducing major problems.
 Pint, like Python, believes that we are all consenting adults.
 
+Derived dimensions are defined as follows::
+
+    [density] = [mass] / [volume]
+
+Note that primary dimensions don't need to be declared; they can be
+defined for the first time as part of a unit definition.
+
+Finally, one may add aliases to an already existing unit definition::
+
+    @alias meter = metro = metr
+
+This is particularly useful when one wants to enrich definitions from defaults_en.txt
+with new aliases from a custom file. It can also be used for translations (like in the
+example above) as long as one is happy to have the localized units automatically
+converted to English when they are parsed.
+
 
 Programmatically
 ----------------
 
-You can easily add units to the registry programmatically. Let's add a dog_year
-(sometimes written as dy) equivalent to 52 (human) days:
+You can easily add units, dimensions, or aliases to the registry programmatically.
+Let's add a dog_year (sometimes written as dy) equivalent to 52 (human) days:
 
 .. doctest::
 
@@ -93,6 +116,8 @@ You can easily add units to the registry programmatically. Let's add a dog_year
 
 Note that we have used the name `dog_years` even though we have not defined the
 plural form as an alias. Pint takes care of that, so you don't have to.
+Plural forms that aren't simply built by adding a 's' suffix to the singular form
+should be explicitly stated as aliases (see for example ``millennia`` above).
 
 You can also add prefixes programmatically:
 
@@ -102,4 +127,14 @@ You can also add prefixes programmatically:
 
 where the number indicates the multiplication factor.
 
-.. warning:: Units and prefixes added programmatically are forgotten when the program ends.
+Same for aliases and derived dimensions:
+
+.. doctest::
+
+   >>> ureg.define('@alias meter = metro = metr')
+   >>> ureg.define('[hypervolume] = [length ** 4]')
+
+
+.. warning::
+   Units, prefixes, aliases and dimensions added programmatically are forgotten when the
+   program ends.

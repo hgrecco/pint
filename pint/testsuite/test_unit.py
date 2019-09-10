@@ -648,3 +648,30 @@ class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
             if src != dst:
                 self.assertQuantityAlmostEqual(convert(expected, dst, src),
                                                value, atol=0.001)
+
+    def test_alias(self):
+        # Use load_definitions
+        ureg = UnitRegistry([
+            "canonical = [] = can = alias1 = alias2\n",
+            # overlapping aliases
+            "@alias canonical = alias2 = alias3\n",
+            # Against another alias
+            "@alias alias3 = alias4\n",
+        ])
+
+        # Use define
+        ureg.define("@alias canonical = alias5")
+
+        # Test that new aliases work
+        # Test that pre-existing aliases and symbol are not eliminated
+        for a in ("can", "alias1", "alias2", "alias3", "alias4", "alias5"):
+            self.assertEqual(ureg.Unit(a), ureg.Unit("canonical"))
+
+        # Test that aliases defined multiple times are not duplicated
+        self.assertEqual(
+            ureg._units["canonical"].aliases,
+            ("alias1", "alias2", "alias3", "alias4", "alias5")
+        )
+
+        # Define against unknown name
+        self.assertRaises(KeyError, ureg.define, "@alias notexist = something")

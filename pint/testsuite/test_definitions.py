@@ -5,7 +5,7 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 from pint.util import (UnitsContainer)
 from pint.converters import (ScaleConverter, OffsetConverter)
 from pint.definitions import (Definition, PrefixDefinition, UnitDefinition,
-                              DimensionDefinition)
+                              DimensionDefinition, AliasDefinition)
 
 from pint.testsuite import BaseTestCase
 
@@ -88,3 +88,9 @@ class TestDefinition(BaseTestCase):
         x = Definition.from_string('[speed] = [length]/[time]')
         self.assertIsInstance(x, DimensionDefinition)
         self.assertEqual(x.reference, UnitsContainer({'[length]': 1, '[time]': -1}))
+
+    def test_alias_definition(self):
+        x = Definition.from_string("@alias meter = metro = metr")
+        self.assertIsInstance(x, AliasDefinition)
+        self.assertEqual(x.name, "meter")
+        self.assertEqual(x.aliases, ("metro", "metr"))

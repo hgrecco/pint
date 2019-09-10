@@ -52,6 +52,12 @@ class Definition(object):
                     value.decode('utf-8')
                 except UnicodeEncodeError:
                     result.remove(value)
+
+        # @alias name = alias1 = alias2 = ...
+        if name.startswith("@alias "):
+            name = name[len("@alias "):].lstrip()
+            return AliasDefinition(name, tuple(result))
+
         value, aliases = result[0], tuple([x for x in result[1:] if x != ''])
         symbol, aliases = (aliases[0], aliases[1:]) if aliases else (None,
                                                                      aliases)
@@ -82,6 +88,10 @@ class Definition(object):
     @property
     def aliases(self):
         return self._aliases
+
+    def add_aliases(self, *alias):
+        alias = tuple(a for a in alias if a not in self._aliases)
+        self._aliases = self._aliases + alias
 
     @property
     def converter(self):
@@ -166,3 +176,12 @@ class DimensionDefinition(Definition):
 
         super(DimensionDefinition, self).__init__(name, symbol, aliases,
                                                   converter=None)
+
+
+class AliasDefinition(Definition):
+    """Additional alias(es) for an already existing unit
+    """
+    def __init__(self, name, aliases):
+        super(AliasDefinition, self).__init__(
+            name=name, symbol=None, aliases=aliases, converter=None
+        )
