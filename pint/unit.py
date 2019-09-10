@@ -64,7 +64,7 @@ class _Unit(PrettyIPython, SharedRegistryObject):
         return ret
 
     def __deepcopy__(self, memo):
-      ret = self.__class__(copy.deepcopy(self._units))
+      ret = self.__class__(copy.deepcopy(self._units, memo))
       ret.__used = self.__used
       return ret
 
