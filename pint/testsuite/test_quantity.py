@@ -7,7 +7,6 @@ import datetime
 import math
 import operator as op
 import warnings
-import unittest
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.unit import UnitsContainer
