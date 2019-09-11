@@ -703,9 +703,9 @@ class TestIssues(QuantityTestCase):
     def test_issue876(self):
         # Same hash must not imply equality.
 
-        # As an implementation detail of CPython, hash(-1) == hash(-2) This test is
-        # useless in potential alternative Python implementations where hash(-1) !=
-        # hash(-2); one would need to find hash collisions specific for each
+        # As an implementation detail of CPython, hash(-1) == hash(-2).
+        # This test is useless in potential alternative Python implementations where
+        # hash(-1) != hash(-2); one would need to find hash collisions specific for each
         # implementation
 
         a = UnitsContainer({"[mass]": -1})

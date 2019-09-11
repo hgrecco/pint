@@ -327,11 +327,12 @@ class UnitsContainer(Mapping):
 
     def __eq__(self, other):
         if isinstance(other, UnitsContainer):
-            out = UnitsContainer.__hash__(self) == UnitsContainer.__hash__(other)
+            # UnitsContainer.__hash__(self) is not the same as hash(self); see
+            # ParserHelper.__hash__ and __eq__.
             # Different hashes guarantee that the actual contents are different, but
-            # identical hashes give no guarantee of equality
+            # identical hashes give no guarantee of equality.
             # e.g. in CPython, hash(-1) == hash(-2)
-            if not out:
+            if UnitsContainer.__hash__(self) != UnitsContainer.__hash__(other):
                 return False
             other = other._d
 
