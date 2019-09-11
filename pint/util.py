@@ -327,9 +327,16 @@ class UnitsContainer(Mapping):
 
     def __eq__(self, other):
         if isinstance(other, UnitsContainer):
-            # Not the same as hash(self); see ParserHelper.__hash__ and __eq__
-            return UnitsContainer.__hash__(self) == UnitsContainer.__hash__(other)
-        if isinstance(other, string_types):
+            # UnitsContainer.__hash__(self) is not the same as hash(self); see
+            # ParserHelper.__hash__ and __eq__.
+            # Different hashes guarantee that the actual contents are different, but
+            # identical hashes give no guarantee of equality.
+            # e.g. in CPython, hash(-1) == hash(-2)
+            if UnitsContainer.__hash__(self) != UnitsContainer.__hash__(other):
+                return False
+            other = other._d
+
+        elif isinstance(other, string_types):
             other = ParserHelper.from_string(other)
             other = other._d
 
@@ -504,9 +511,11 @@ class ParserHelper(UnitsContainer):
         self._d, self._hash, self.scale = state
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.scale == other.scale and\
+        if isinstance(other, ParserHelper):
+            return (
+                self.scale == other.scale and
                 super(ParserHelper, self).__eq__(other)
+            )
         elif isinstance(other, string_types):
             return self == ParserHelper.from_string(other)
         elif isinstance(other, Number):

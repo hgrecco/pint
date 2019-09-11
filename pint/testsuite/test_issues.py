@@ -11,7 +11,7 @@ from pint import UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import np, long_type
+from pint.compat import np
 from pint.errors import UndefinedUnitError, DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 
@@ -699,3 +699,21 @@ class TestIssues(QuantityTestCase):
         ureg2.define('test123 = 456 kg')
         assert ureg1('1 test123').to('kg').magnitude == 123
         assert ureg2('1 test123').to('kg').magnitude == 456
+
+    def test_issue876(self):
+        # Same hash must not imply equality.
+
+        # As an implementation detail of CPython, hash(-1) == hash(-2).
+        # This test is useless in potential alternative Python implementations where
+        # hash(-1) != hash(-2); one would need to find hash collisions specific for each
+        # implementation
+
+        a = UnitsContainer({"[mass]": -1})
+        b = UnitsContainer({"[mass]": -2})
+        c = UnitsContainer({"[mass]": -3})
+
+        # Guarantee working on alternative Python implementations
+        assert (hash(-1) == hash(-2)) == (hash(a) == hash(b))
+        assert (hash(-1) == hash(-3)) == (hash(a) == hash(c))
+        assert a != b
+        assert a != c
