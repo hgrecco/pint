@@ -286,16 +286,20 @@ class UnitsContainer(Mapping):
         """ Create a new UnitsContainer purged from given keys.
 
         """
-        d = udict(self._d)
-        return UnitsContainer(((key, d[key]) for key in d if key not in keys))
+        new = self.copy()
+        for k in keys:
+            new._d.pop(k, None)
+        new._hash = None
+        return new
 
     def rename(self, oldkey, newkey):
         """ Create a new UnitsContainer in which an entry has been renamed.
 
         """
-        d = udict(self._d)
-        d[newkey] = d.pop(oldkey)
-        return UnitsContainer(d)
+        new = self.copy()
+        new._d[newkey] = new._d.pop(oldkey)
+        new._hash = None
+        return new
 
     def __iter__(self):
         return iter(self._d)
@@ -323,7 +327,14 @@ class UnitsContainer(Mapping):
 
     def __eq__(self, other):
         if isinstance(other, UnitsContainer):
+            out = UnitsContainer.__hash__(self) == UnitsContainer.__hash__(other)
+            # Different hashes guarantee that the actual contents are different, but
+            # identical hashes give no guarantee of equality
+            # e.g. in CPython, hash(-1) == hash(-2)
+            if not out:
+                return False
             other = other._d
+
         elif isinstance(other, string_types):
             other = ParserHelper.from_string(other)
             other = other._d
@@ -345,20 +356,25 @@ class UnitsContainer(Mapping):
         return format_unit(self, spec, **kwspec)
 
     def __copy__(self):
-        return UnitsContainer(self._d)
+        # Skip expensive health checks performed by __init__
+        out = object.__new__(self.__class__)
+        out._d = self._d.copy()
+        out._hash = self._hash
+        return out
 
     def __mul__(self, other):
-        d = udict(self._d)
         if not isinstance(other, self.__class__):
             err = 'Cannot multiply UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
-        for key, value in other.items():
-            d[key] += value
-        keys = [key for key, value in d.items() if value == 0]
-        for key in keys:
-            del d[key]
 
-        return UnitsContainer(d)
+        new = self.copy()
+        for key, value in other.items():
+            new._d[key] += value
+            if new._d[key] == 0:
+                del new._d[key]
+
+        new._hash = None
+        return new
 
     __rmul__ = __mul__
 
@@ -366,26 +382,26 @@ class UnitsContainer(Mapping):
         if not isinstance(other, NUMERIC_TYPES):
             err = 'Cannot power UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
-        d = udict(self._d)
-        for key, value in d.items():
-            d[key] *= other
-        return UnitsContainer(d)
+
+        new = self.copy()
+        for key, value in new._d.items():
+            new._d[key] *= other
+        new._hash = None
+        return new
 
     def __truediv__(self, other):
         if not isinstance(other, self.__class__):
             err = 'Cannot divide UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
 
-        d = udict(self._d)
-
+        new = self.copy()
         for key, value in other.items():
-            d[key] -= value
+            new._d[key] -= value
+            if new._d[key] == 0:
+                del new._d[key]
 
-        keys = [key for key, value in d.items() if value == 0]
-        for key in keys:
-            del d[key]
-
-        return UnitsContainer(d)
+        new._hash = None
+        return new
 
     def __rtruediv__(self, other):
         if not isinstance(other, self.__class__) and other != 1:
@@ -473,7 +489,9 @@ class ParserHelper(UnitsContainer):
                                  for key, value in ret.items()))
 
     def __copy__(self):
-        return ParserHelper(scale=self.scale, **self)
+        new = super(ParserHelper, self).__copy__()
+        new.scale = self.scale
+        return new
 
     def copy(self):
         return self.__copy__()
@@ -492,9 +510,11 @@ class ParserHelper(UnitsContainer):
         self._d, self._hash, self.scale = state
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.scale == other.scale and\
+        if isinstance(other, ParserHelper):
+            return (
+                self.scale == other.scale and
                 super(ParserHelper, self).__eq__(other)
+            )
         elif isinstance(other, string_types):
             return self == ParserHelper.from_string(other)
         elif isinstance(other, Number):
