@@ -57,8 +57,6 @@ install:
   - source activate $ENV_NAME
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
-  - pip install --upgrade pip setuptools wheel
-  - pip install cython
   - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install babel serialize pyyaml; fi
   # this is superslow but suck it up until updates to pandas are made
   - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
