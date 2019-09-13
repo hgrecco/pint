@@ -51,7 +51,7 @@ All usual Pint methods can be used with this quantity. For example:
     >>> legs1.to('joule')
     Traceback (most recent call last):
     ...
-    pint.errors.DimensionalityError: Cannot convert from 'meter' ([length]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
+    DimensionalityError: Cannot convert from 'meter' ([length]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
 
 NumPy functions are supported by Pint. For example if we define:
 
@@ -96,7 +96,7 @@ results in an error:
     >>> np.arccos(legs2)
     Traceback (most recent call last):
     ...
-    pint.errors.DimensionalityError: Cannot convert from 'centimeter' ([length]) to 'dimensionless' (dimensionless)
+    DimensionalityError: Cannot convert from 'centimeter' ([length]) to 'dimensionless' (dimensionless)
 
 
 Support

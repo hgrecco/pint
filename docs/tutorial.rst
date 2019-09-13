@@ -89,7 +89,7 @@ If you ask Pint to perform an invalid conversion:
    >>> speed.to(ureg.joule)
    Traceback (most recent call last):
    ...
-   pint.errors.DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
+   DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
 
 Sometimes, the magnitude of the quantity will be very large or very small.
 The method 'to_compact' can adjust the units to make the quantity more
@@ -170,7 +170,7 @@ If you try to use a unit which is not in the registry:
    >>> speed = 23 * ureg.snail_speed
    Traceback (most recent call last):
    ...
-   pint.errors.UndefinedUnitError: 'snail_speed' is not defined in the unit registry
+   UndefinedUnitError: 'snail_speed' is not defined in the unit registry
 
 You can add your own units to the registry or build your own list. More info on
 that :ref:`defining`
