@@ -101,9 +101,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     the product of a numerical value and a unit of measurement.
 
     :param value: value of the physical quantity to be created
-    :type value: str, Quantity or any numeric type
+    :type value: str, pint.Quantity or any numeric type
     :param units: units of the physical quantity to be created
-    :type units: UnitsContainer, str or Quantity
+    :type units: UnitsContainer, str or pint.Quantity
     """
 
     #: Default formatting string.
@@ -300,7 +300,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Quantity's magnitude expressed in particular units.
 
         :param units: destination units
-        :type units: Quantity, str or dict
+        :type units: pint.Quantity, str or dict
         """
         return self.to(units).magnitude
 
@@ -360,10 +360,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         If units is not specified and list is empty, the unit cannot be determined
         and a ValueError is raised.
 
-        :param quant_list: list of Quantity
-        :type quant_list: list of Quantity
+        :param quant_list: list of pint.Quantity
+        :type quant_list: list of pint.Quantity
         :param units: units of the physical quantity to be created
-        :type units: UnitsContainer, str or Quantity
+        :type units: UnitsContainer, str or pint.Quantity
         """
         return cls.from_sequence(quant_list, units=units)
 
@@ -375,10 +375,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         If units is not specified and sequence is empty, the unit cannot be determined
         and a ValueError is raised.
 
-        :param seq: sequence of Quantity
-        :type seq: sequence of Quantity
+        :param seq: sequence of pint.Quantity
+        :type seq: sequence of pint.Quantity
         :param units: units of the physical quantity to be created
-        :type units: UnitsContainer, str or Quantity
+        :type units: UnitsContainer, str or pint.Quantity
         """
 
         len_seq = len(seq)
@@ -430,7 +430,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Inplace rescale to different units.
 
         :param other: destination units.
-        :type other: Quantity, str or dict
+        :type other: pint.Quantity, str or dict
         """
         other = to_units_container(other, self._REGISTRY)
 
@@ -444,7 +444,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Return Quantity rescaled to different units.
 
         :param other: destination units.
-        :type other: Quantity, str or dict
+        :type other: pint.Quantity, str or dict
         """
         other = to_units_container(other, self._REGISTRY)
 
@@ -619,7 +619,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Perform addition or subtraction operation in-place and return the result.
 
         :param other: object to be added to / subtracted from self
-        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :type other: pint.Quantity or any type accepted by :func:`_to_magnitude`
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
@@ -718,7 +718,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Perform addition or subtraction operation and return the result.
 
         :param other: object to be added to / subtracted from self
-        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :type other: pint.Quantity or any type accepted by :func:`_to_magnitude`
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
@@ -852,7 +852,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         result.
 
         :param other: object to be multiplied/divided with self
-        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :type other: pint.Quantity or any type accepted by :func:`_to_magnitude`
         :param magnitude_op: operator function to perform on the magnitudes
             (e.g. operator.mul)
         :type magnitude_op: function
@@ -910,7 +910,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Perform multiplication or division operation and return the result.
 
         :param other: object to be multiplied/divided with self
-        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :type other: pint.Quantity or any type accepted by :func:`_to_magnitude`
         :param magnitude_op: operator function to perform on the magnitudes
             (e.g. operator.mul)
         :type magnitude_op: function
@@ -1726,7 +1726,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def _ok_for_muldiv(self, no_offset_units=None):
         """Checks if Quantity object can be multiplied or divided
 
-        :q: quantity object that is checked
+        :q: pint.Quantity object that is checked
         :no_offset_units: number of offset units in q
         """
         is_ok = True

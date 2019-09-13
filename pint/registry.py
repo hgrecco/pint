@@ -719,9 +719,9 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         :param value: value
         :param src: source units.
-        :type src: Quantity or str
+        :type src: pint.Quantity or str
         :param dst: destination units.
-        :type dst: Quantity or str
+        :type dst: pint.Quantity or str
 
         :return: converted value
         """

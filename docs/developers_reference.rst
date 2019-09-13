@@ -5,6 +5,9 @@ Developer reference
 Pint
 ====
 
+.. automodule:: pint
+    :members:
+
 .. automodule:: pint.babel_names
     :members:
 

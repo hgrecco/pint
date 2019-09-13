@@ -138,7 +138,8 @@ context and the parameters that you wish to set.
     398.496240602
 
 
-This decorator can be combined with **wraps** or **check** decorators described in `wrapping`_
+This decorator can be combined with **wraps** or **check** decorators described in
+:doc:`wrapping`.
 
 
 Defining contexts in a file
