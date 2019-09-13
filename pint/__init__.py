@@ -16,9 +16,15 @@ from __future__ import with_statement
 
 import pkg_resources
 from .formatting import formatter
-from .registry import (UnitRegistry, LazyRegistry)
-from .errors import (DimensionalityError, OffsetUnitCalculusError,
-                   UndefinedUnitError, UnitStrippedWarning)
+from .registry import UnitRegistry, LazyRegistry
+from .quantity import Quantity
+from .unit import Unit
+from .errors import (
+    DimensionalityError,
+    OffsetUnitCalculusError,
+    UndefinedUnitError,
+    UnitStrippedWarning
+)
 from .util import pi_theorem, logger
 
 from .context import Context
@@ -83,7 +89,8 @@ def _build_unit(units):
 
 
 def set_application_registry(registry):
-    """Set the application registry which is used for unpickling operations.
+    """Set the application registry, which is used for unpickling operations
+    and when invoking pint.Quantity or pint.Unit directly.
 
     :param registry: a UnitRegistry instance.
     """
@@ -91,6 +98,16 @@ def set_application_registry(registry):
     global _APP_REGISTRY
     logger.debug('Changing app registry from %r to %r.', _APP_REGISTRY, registry)
     _APP_REGISTRY = registry
+
+
+def get_application_registry():
+    """Return the application registry. If :func:`set_application_registry` was never
+    invoked, return a registry built using :file:`defaults_en.txt` embedded in the pint
+    package.
+
+    :param registry: a UnitRegistry instance.
+    """
+    return _APP_REGISTRY
 
 
 def test():

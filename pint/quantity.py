@@ -31,6 +31,7 @@ from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    fix_str_conversions)
 from pint.compat import Loc
 
+
 def _eq(first, second, check_all):
     """Comparison of scalars and arrays
     """
@@ -64,6 +65,7 @@ def ireduce_dimensions(f):
         return result
     return wrapped
 
+
 def check_implemented(f):
     def wrapped(self, *args, **kwargs):
         other=args[0]
@@ -94,7 +96,7 @@ def printoptions(*args, **kwargs):
 
 
 @fix_str_conversions
-class _Quantity(PrettyIPython, SharedRegistryObject):
+class Quantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -107,6 +109,16 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     #: Default formatting string.
     default_format = ''
 
+    @property
+    def _REGISTRY(self):
+        from . import _APP_REGISTRY
+
+        return _APP_REGISTRY
+
+    @property
+    def force_ndarray(self):
+        return self._REGISTRY.force_ndarray
+
     def __reduce__(self):
         from . import _build_quantity
         return _build_quantity, (self.magnitude, self._units)
@@ -117,7 +129,12 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 if value == '':
                     raise ValueError('Expression to parse as Quantity cannot '
                                      'be an empty string.')
-                inst = cls._REGISTRY.parse_expression(value)
+                _REGISTRY = cls._REGISTRY
+                if isinstance(_REGISTRY, property):
+                    # Base class, not subclassed with build_*_class
+                    from . import _APP_REGISTRY as _REGISTRY
+
+                inst = _REGISTRY.parse_expression(value)
                 return cls.__new__(cls, inst)
             elif isinstance(value, cls):
                 inst = copy.copy(value)
@@ -134,7 +151,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)._units
         elif isinstance(units, SharedRegistryObject):
-            if isinstance(units, _Quantity) and units.magnitude != 1:
+            if isinstance(units, Quantity) and units.magnitude != 1:
                 inst = copy.copy(units)
                 logger.warning('Creating new Quantity using a non unity '
                                'Quantity as units.')
@@ -1737,13 +1754,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
 
 
+def build_quantity_class(registry):
 
-def build_quantity_class(registry, force_ndarray=False):
-
-    class Quantity(_Quantity):
-        pass
-
-    Quantity._REGISTRY = registry
-    Quantity.force_ndarray = force_ndarray
+    class Quantity(Quantity):
+        _REGISTRY = registry
 
     return Quantity
