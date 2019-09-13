@@ -1,10 +1,6 @@
-from pint import UnitRegistry, set_application_registry
+from pint import Quantity as Q
 from pint.testsuite import QuantityTestCase
 from pint.util import infer_base_unit
-
-ureg = UnitRegistry()
-set_application_registry(ureg)
-Q = ureg.Quantity
 
 
 class TestInferBaseUnit(QuantityTestCase):

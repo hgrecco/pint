@@ -6,7 +6,7 @@ import copy
 import operator as op
 import unittest
 
-from pint import DimensionalityError, set_application_registry
+from pint import DimensionalityError
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.test_umath import TestUFuncs
@@ -247,13 +247,13 @@ class TestNumpyMethods(QuantityTestCase):
 
     def test_pickle(self):
         import pickle
-        set_application_registry(self.ureg)
+
         def pickle_test(q):
             pq = pickle.loads(pickle.dumps(q))
             np.testing.assert_array_equal(q.magnitude, pq.magnitude)
             self.assertEqual(q.units, pq.units)
 
-        pickle_test([10,20]*self.ureg.m)
+        pickle_test([10, 20]*self.ureg.m)
 
     def test_equal(self):
         x = self.q.magnitude
