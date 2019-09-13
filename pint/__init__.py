@@ -117,3 +117,23 @@ def test():
     """
     from .testsuite import run
     return run()
+
+
+# Enumerate all user-facing objects
+# Hint to intersphinx that, when building objects.inv, these objects must be registered
+# under the top-level module and not in their original submodules
+__all__ = (
+    'Context',
+    'Quantity',
+    'Unit',
+    'UnitRegistry',
+
+    'DimensionalityError',
+    'OffsetUnitCalculusError',
+    'UndefinedUnitError',
+    'UnitStrippedWarning',
+
+    'get_application_registry',
+    'set_application_registry',
+    '__version__',
+)

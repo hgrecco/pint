@@ -24,7 +24,7 @@ from .definitions import UnitDefinition
 
 
 @fix_str_conversions
-class _Unit(PrettyIPython, SharedRegistryObject):
+class Unit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
 
     :type units: UnitsContainer, str, Unit or Quantity.
@@ -44,7 +44,7 @@ class _Unit(PrettyIPython, SharedRegistryObject):
             inst._units = units
         elif isinstance(units, string_types):
             inst._units = inst._REGISTRY.parse_units(units)._units
-        elif isinstance(units, _Unit):
+        elif isinstance(units, Unit):
             inst._units = units._units
         else:
             raise TypeError('units must be of type str, Unit or '
@@ -210,7 +210,7 @@ class _Unit(PrettyIPython, SharedRegistryObject):
 
         if isinstance(other, NUMERIC_TYPES):
             return self_q.compare(other, op)
-        elif isinstance(other, (_Unit, UnitsContainer, dict)):
+        elif isinstance(other, (Unit, UnitsContainer, dict)):
             return self_q.compare(self._REGISTRY.Quantity(1, other), op)
         else:
             return NotImplemented
@@ -288,10 +288,12 @@ class _Unit(PrettyIPython, SharedRegistryObject):
         """
         return self.from_(value, strict=strict, name=name).magnitude
 
+
+_Unit = Unit
+
+
 def build_unit_class(registry):
-
     class Unit(_Unit):
-        pass
+        _REGISTRY = registry
 
-    Unit._REGISTRY = registry
     return Unit

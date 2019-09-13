@@ -110,12 +110,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     default_format = ''
 
     @property
-    def _REGISTRY(self):
-        from . import _APP_REGISTRY
-
-        return _APP_REGISTRY
-
-    @property
     def force_ndarray(self):
         return self._REGISTRY.force_ndarray
 
@@ -266,7 +260,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def _repr_pretty_(self, p, cycle):
         if cycle:
-            super(_Quantity, self)._repr_pretty_(p, cycle)
+            super(Quantity, self)._repr_pretty_(p, cycle)
         else:
             p.pretty(self.magnitude)
             p.text(" ")
@@ -1214,7 +1208,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
-        if not isinstance(other, _Quantity):
+        if not isinstance(other, Quantity):
             if _eq(other, 0, True):
                 # Handle the special case in which we compare to zero
                 # (or an array of zeros)
@@ -1754,9 +1748,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
 
 
-def build_quantity_class(registry):
+_Quantity = Quantity
 
-    class Quantity(Quantity):
+
+def build_quantity_class(registry):
+    class Quantity(_Quantity):
         _REGISTRY = registry
 
     return Quantity

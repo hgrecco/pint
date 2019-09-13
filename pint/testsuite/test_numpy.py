@@ -458,7 +458,7 @@ class TestNDArrayQuantityMath(QuantityTestCase):
         self.assertRaises(DimensionalityError, op.pow, arr_cp, q_cp)
         # ..not for op.ipow !
         # q_cp is treated as if it is an array. The units are ignored.
-        # _Quantity.__ipow__ is never called
+        # Quantity.__ipow__ is never called
         arr_cp = copy.copy(arr)
         q_cp = copy.copy(q)
         self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)
