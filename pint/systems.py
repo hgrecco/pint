@@ -30,14 +30,13 @@ class Group(SharedRegistryObject):
 
     The group belongs to one Registry.
 
-    It can be specified in the definition file as:
+    It can be specified in the definition file as::
 
         @group <name> [using <group 1>, ..., <group N>]
             <definition 1>
             ...
             <definition N>
         @end
-
     """
 
     #: Regex to match the header parts of a definition.
@@ -244,7 +243,7 @@ class System(SharedRegistryObject):
 
     The System belongs to one Registry.
 
-    It can be specified in the definition file as:
+    It can be specified in the definition file as::
 
         @system <name> [using <group 1>, ..., <group N>]
             <rule 1>

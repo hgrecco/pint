@@ -65,7 +65,7 @@ Pint
 .. automodule:: pint.testsuite.helpers
     :members:
 
-.. automodule:: pint.testsuite.parametrized
+.. automodule:: pint.testsuite.parameterized
     :members:
 
 .. automodule:: pint.testsuite.test_babel
@@ -92,7 +92,7 @@ Pint
 .. automodule:: pint.testsuite.test_issues
     :members:
 
-.. automodule:: pint.testsuite.test_measurements
+.. automodule:: pint.testsuite.test_measurement
     :members:
 
 .. automodule:: pint.testsuite.test_numpy

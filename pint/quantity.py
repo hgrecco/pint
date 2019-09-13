@@ -100,10 +100,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
-    :param value: value of the physical quantity to be created.
-    :type value: str, Quantity or any numeric type.
-    :param units: units of the physical quantity to be created.
-    :type units: UnitsContainer, str or Quantity.
+    :param value: value of the physical quantity to be created
+    :type value: str, Quantity or any numeric type
+    :param units: units of the physical quantity to be created
+    :type units: UnitsContainer, str or Quantity
     """
 
     #: Default formatting string.
@@ -308,7 +308,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def units(self):
         """Quantity's units. Long form for `u`
 
-        :rtype: UnitContainer
+        :rtype: UnitsContainer
         """
         return self._REGISTRY.Unit(self._units)
 
@@ -316,7 +316,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def u(self):
         """Quantity's units. Short form for `units`
 
-        :rtype: UnitContainer
+        :rtype: UnitsContainer
         """
         return self._REGISTRY.Unit(self._units)
 
@@ -360,10 +360,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         If units is not specified and list is empty, the unit cannot be determined
         and a ValueError is raised.
 
-        :param quant_list: list of Quantities
+        :param quant_list: list of Quantity
         :type quant_list: list of Quantity
-        :param units: units of the physical quantity to be created.
-        :type units: UnitsContainer, str or Quantity.
+        :param units: units of the physical quantity to be created
+        :type units: UnitsContainer, str or Quantity
         """
         return cls.from_sequence(quant_list, units=units)
 
@@ -375,10 +375,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         If units is not specified and sequence is empty, the unit cannot be determined
         and a ValueError is raised.
 
-        :param seq: sequence of Quantities
+        :param seq: sequence of Quantity
         :type seq: sequence of Quantity
-        :param units: units of the physical quantity to be created.
-        :type units: UnitsContainer, str or Quantity.
+        :param units: units of the physical quantity to be created
+        :type units: UnitsContainer, str or Quantity
         """
 
         len_seq = len(seq)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     pint.matplotlib
-    ~~~~~~~~~
+    ~~~~~~~~~~~~~~~
 
     Functions and classes related to working with Matplotlib's support
     for plotting with units.

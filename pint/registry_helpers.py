@@ -220,8 +220,8 @@ def check(ureg, *args):
     :param ureg: a UnitRegistry instance.
     :param args: iterable of input units.
     :return: the wrapped function.
-    :raises:
-        :class:`DimensionalityError` if the parameters don't match dimensions
+    :raises DimensionalityError:
+        if the parameters don't match dimensions
     """
     dimensions = [ureg.get_dimensionality(dim) if dim is not None else None for dim in args]
 

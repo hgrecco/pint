@@ -637,7 +637,7 @@ def _is_dim(name):
 
 
 class SharedRegistryObject(object):
-    """Base class for object keeping a refrence to the registree.
+    """Base class for object keeping a reference to the registree.
 
     Such object are for now Quantity and Unit, in a number of places it is
     that an object from this class has a '_units' attribute.

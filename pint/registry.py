@@ -12,11 +12,13 @@
 
     - NonMultiplicativeRegistry: Conversion between non multiplicative (offset) units.
                                  (e.g. Temperature)
+
       * Inherits from BaseRegistry
 
     - ContextRegisty: Conversion between units with different dimenstions according
                       to previously established relations (contexts).
                       (e.g. in the spectroscopy, conversion between frequency and energy is possible)
+
       * Inherits from BaseRegistry
 
     - SystemRegistry: Group unit and changing of base units.
@@ -93,7 +95,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     :param filename: path of the units definition file to load or line iterable object.
                      Empty to load the default definition file.
                      None to leave the UnitRegistry empty.
-    :type filename: str | None
+    :type filename: str or None
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
@@ -234,7 +236,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         """Add unit to the registry.
 
         :param definition: a dimension, unit or prefix definition.
-        :type definition: str | Definition
+        :type definition: str or Definition
         """
 
         if isinstance(definition, string_types):
