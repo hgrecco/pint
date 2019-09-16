@@ -19,10 +19,10 @@ MISSING = object()
 class Measurement(Quantity):
     """Implements a class to describe a quantity with uncertainty.
 
-    :param value: The most likely value of the measurement.
-    :type value: Quantity or Number
-    :param error: The error or uncertainty of the measurement.
-    :type error: Quantity or Number
+    :param value: The expected value of the measurement
+    :type value: pint.Quantity or any numeric type
+    :param error: The error or uncertainty of the measurement
+    :type error: pint.Quantity or any numeric type
     """
 
     def __new__(cls, value, error, units=MISSING):
