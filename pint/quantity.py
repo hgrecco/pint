@@ -1224,7 +1224,7 @@ class BaseQuantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def compare(self, other, op):
-        if not isinstance(other, self.BaseQuantity):
+        if not isinstance(other, self.__class__):
             if self.dimensionless:
                 return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
             elif _eq(other, 0, True):
