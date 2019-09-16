@@ -58,8 +58,6 @@ def _build_quantity(value, units):
     """
     from .unit import UnitsContainer
 
-    global _APP_REGISTRY
-
     # Prefixed units are defined within the registry
     # on parsing (which does not happen here).
     # We need to make sure that this happens before using.
@@ -75,8 +73,6 @@ def _build_unit(units):
     Used only for unpickling operations.
     """
     from .unit import UnitsContainer
-
-    global _APP_REGISTRY
 
     # Prefixed units are defined within the registry
     # on parsing (which does not happen here).
@@ -94,7 +90,8 @@ def set_application_registry(registry):
 
     :param registry: a UnitRegistry instance.
     """
-    assert isinstance(registry, UnitRegistry)
+    if not isinstance(registry, (LazyRegistry, UnitRegistry)):
+        raise TypeError("Expected UnitRegistry; got %s" % type(registry))
     global _APP_REGISTRY
     logger.debug('Changing app registry from %r to %r.', _APP_REGISTRY, registry)
     _APP_REGISTRY = registry

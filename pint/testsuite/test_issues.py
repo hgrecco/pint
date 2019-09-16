@@ -7,12 +7,11 @@ import copy
 import unittest
 import sys
 
-from pint import UnitRegistry
+from pint import DimensionalityError, UndefinedUnitError, UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
 from pint.compat import np
-from pint.errors import UndefinedUnitError, DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 
 
