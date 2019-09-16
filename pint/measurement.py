@@ -149,10 +149,10 @@ def build_measurement_class(registry, force_ndarray=False):
 
     class MeasurementScalar(Measurement):
         def __new__(cls, value, error, units=MISSING):
-            inst = Measurement.__new__(Measurement, error, value, units)
+            inst = Measurement.__new__(Measurement, value, error, units)
             return inst
     
     class MeasurementSequence(Measurement):
         def __new__(cls, value, error, units=MISSING):
-            inst = Measurement.__new__(Measurement, error, value, units)
+            inst = Measurement.__new__(Measurement, value, error, units)
     return Measurement
