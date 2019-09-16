@@ -54,6 +54,26 @@ _DEFAULT_REGISTRY = LazyRegistry()
 _APP_REGISTRY = _DEFAULT_REGISTRY
 
 
+def _unpickle(cls, *args):
+    """Rebuild object upon unpickling.
+    All units must exist in the application registry.
+
+    :param cls:
+        Quantity, Magnitude, or Unit
+    """
+    from .unit import UnitsContainer
+
+    for arg in args:
+        # Prefixed units are defined within the registry
+        # on parsing (which does not happen here).
+        # We need to make sure that this happens before using.
+        if isinstance(arg, UnitsContainer):
+            for name in arg:
+                _APP_REGISTRY.parse_units(name)
+
+    return cls(*args)
+
+
 def set_application_registry(registry):
     """Set the application registry, which is used for unpickling operations
     and when invoking pint.Quantity or pint.Unit directly.

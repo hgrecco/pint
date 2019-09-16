@@ -65,8 +65,10 @@ class Measurement(Quantity):
         return float(abs(self.magnitude.std_dev / self.magnitude.nominal_value))
 
     def __reduce__(self):
-        # See Quantity.__reduce__
-        return Measurement._expand, (self.magnitude, self._units)
+        # See notes in Quantity.__reduce__
+        from . import _unpickle
+
+        return _unpickle, (Measurement, self.magnitude, self._units)
 
     def __repr__(self):
         return "<Measurement({0:.2f}, {1:.2f}, {2})>".format(self.magnitude.nominal_value,
