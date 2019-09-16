@@ -267,6 +267,11 @@ class TestNumpyMethods(QuantityTestCase):
         u = self.Q_(np.arange(12))
         u.shape = 4, 3
         self.assertEqual(u.magnitude.shape, (4, 3))
+        
+    def test_comparisons(self):
+        self.assert_equal(self.q > 2 * self.ureg.m, np.array([[False, False], [True, True]]))
+        self.assert_equal(self.q < 2 * self.ureg.m, np.array([[True, False], [False, False]]))
+
 
 
 @helpers.requires_numpy()
