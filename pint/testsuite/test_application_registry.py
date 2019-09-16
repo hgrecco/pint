@@ -14,7 +14,7 @@ from pint import (
 from pint.testsuite import BaseTestCase
 
 
-class TestDefaultGlobal(BaseTestCase):
+class TestDefaultApplicationRegistry(BaseTestCase):
     def test_unit(self):
         u = Unit("kg")
         self.assertEqual(str(u), "kilogram")
@@ -42,9 +42,9 @@ class TestDefaultGlobal(BaseTestCase):
         self.assertRaises(UndefinedUnitError, pickle.loads, b)
 
 
-class TestCustomGlobal(BaseTestCase):
+class TestCustomApplicationRegistry(BaseTestCase):
     def setUp(self):
-        super(TestCustomGlobal, self).setUp()
+        super(TestCustomApplicationRegistry, self).setUp()
         ureg = UnitRegistry(None)
         ureg.define("foo = []")
         ureg.define("bar = foo / 2")
@@ -55,7 +55,7 @@ class TestCustomGlobal(BaseTestCase):
         assert get_application_registry() is ureg
 
     def tearDown(self):
-        super(TestCustomGlobal, self).tearDown()
+        super(TestCustomApplicationRegistry, self).tearDown()
         set_application_registry(self.ureg_bak)
 
     def test_unit(self):
