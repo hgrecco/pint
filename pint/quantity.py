@@ -1769,4 +1769,7 @@ def build_quantity_class(registry, force_ndarray=False):
         def __new__(cls, value, units=None):
             inst = Quantity.__new__(Quantity, value, units)
             return inst
+    
+    registry.QuantityScalar = QuantityScalar
+    registry.QuantitySequence = QuantitySequence
     return Quantity

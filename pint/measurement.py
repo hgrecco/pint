@@ -12,10 +12,12 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 from .compat import ufloat
 from .formatting import _FORMATS, siunitx_format_unit
 
+from .quantity import BaseQuantity
+
 MISSING = object()
 
 
-class _Measurement(object):
+class BaseMeasurement(object):
     """Implements a class to describe a quantity with uncertainty.
 
     :param value: The most likely value of the measurement.
@@ -24,7 +26,8 @@ class _Measurement(object):
     :type error: Quantity or Number
     """
 
-    def __new__(cls, value, error, units=MISSING):
+    @classmethod
+    def _new(cls, value, error, units=MISSING):
         if units is MISSING:
             try:
                 value, units = value.magnitude, value.units
@@ -47,8 +50,7 @@ class _Measurement(object):
             raise ValueError('The magnitude of the error cannot be negative'.format(value, error))
         else:
             mag = ufloat(value,error)
-            
-        inst = super(_Measurement, cls).__new__(cls, mag, units)
+        inst = super(BaseMeasurement, cls)._new(mag, units)
         return inst
     
     @property
@@ -136,10 +138,21 @@ def build_measurement_class(registry, force_ndarray=False):
                 raise RuntimeError("Pint requires the 'uncertainties' package to create a Measurement object.")
 
     else:
-        class Measurement(_Measurement, registry.Quantity):
-            pass
-
+        class Measurement(BaseMeasurement, registry.Quantity):
+            def __new__(cls, value, error, units=MISSING):
+                if hasattr(value, "__iter__"):
+                    return MeasurementSequence._new(value, error, units)
+                else:
+                    return MeasurementScalar._new(value, error, units)
     Measurement._REGISTRY = registry
     Measurement.force_ndarray = force_ndarray
 
+    class MeasurementScalar(Measurement):
+        def __new__(cls, value, error, units=MISSING):
+            inst = Measurement.__new__(Measurement, error, value, units)
+            return inst
+    
+    class MeasurementSequence(Measurement):
+        def __new__(cls, value, error, units=MISSING):
+            inst = Measurement.__new__(Measurement, error, value, units)
     return Measurement
