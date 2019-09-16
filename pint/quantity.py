@@ -123,12 +123,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 if value == '':
                     raise ValueError('Expression to parse as Quantity cannot '
                                      'be an empty string.')
-                _REGISTRY = cls._REGISTRY
-                if isinstance(_REGISTRY, property):
+                ureg = cls._REGISTRY
+                if isinstance(ureg, property):
                     # Base class, not subclassed with build_*_class
-                    from . import _APP_REGISTRY as _REGISTRY
+                    from . import _APP_REGISTRY as ureg
 
-                inst = _REGISTRY.parse_expression(value)
+                inst = ureg.parse_expression(value)
                 return cls.__new__(cls, inst)
             elif isinstance(value, cls):
                 inst = copy.copy(value)

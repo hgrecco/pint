@@ -127,19 +127,17 @@ class _Measurement(object):
             return pars.format(mag) + space + format(self.units, spec)
 
 
-def build_measurement_class(registry, force_ndarray=False):
+def build_measurement_class(registry):
 
     if ufloat is None:
         class Measurement(object):
+            _REGISTRY = registry
 
             def __init__(self, *args):
                 raise RuntimeError("Pint requires the 'uncertainties' package to create a Measurement object.")
 
     else:
         class Measurement(_Measurement, registry.Quantity):
-            pass
-
-    Measurement._REGISTRY = registry
-    Measurement.force_ndarray = force_ndarray
+            _REGISTRY = registry
 
     return Measurement
