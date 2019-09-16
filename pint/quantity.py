@@ -114,8 +114,26 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.force_ndarray
 
     def __reduce__(self):
-        from . import _build_quantity
-        return _build_quantity, (self.magnitude, self._units)
+        """Allow pickling quantities. Since UnitRegistries are not pickled, upon
+        unpickling the new object is always attached to the application registry.
+        """
+        # Note: type(self) would be a mistake as subclasses built by
+        # build_quantity_class can't be pickled
+        return Quantity._expand, (self.magnitude, self._units)
+
+    @classmethod
+    def _expand(cls, magnitude, units):
+        """Rebuild object upon unpickling.
+        All units must exist in the application registry.
+
+        :param cls:
+           Quantity or Measurement
+        """
+        from . import _APP_REGISTRY
+
+        for name in units:
+            _APP_REGISTRY.parse_units(name)
+        return cls(magnitude, units)
 
     def __new__(cls, value, units=None):
         if units is None:
@@ -492,7 +510,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
-
     def ito_reduced_units(self):
         """Return Quantity scaled in place to reduced units, i.e. one unit per
         dimension. This will not reduce compound units (intentionally), nor
@@ -527,7 +544,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         newq = copy.copy(self)
         newq.ito_reduced_units()
         return newq
-
 
     def to_compact(self, unit=None):
         """Return Quantity rescaled to compact, human-readable units.

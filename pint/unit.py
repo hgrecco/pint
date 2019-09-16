@@ -35,8 +35,19 @@ class Unit(PrettyIPython, SharedRegistryObject):
     default_format = ''
 
     def __reduce__(self):
-        from . import _build_unit
-        return _build_unit, (self._units, )
+        # See notes in Quantity.__reduce__
+        return Unit._expand, (self._units, )
+
+    @staticmethod
+    def _expand(units):
+        """Rebuild object upon unpickling.
+        All units must exist in the application registry.
+        """
+        from . import _APP_REGISTRY
+
+        for name in units:
+            _APP_REGISTRY.parse_units(name)
+        return Unit(units)
 
     def __new__(cls, units):
         inst = object.__new__(cls)

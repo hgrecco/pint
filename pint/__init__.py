@@ -15,19 +15,21 @@ from __future__ import with_statement
 
 
 import pkg_resources
-from .formatting import formatter
-from .registry import UnitRegistry, LazyRegistry
-from .quantity import Quantity
-from .unit import Unit
+
+from .context import Context
 from .errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
     UndefinedUnitError,
     UnitStrippedWarning
 )
+from .formatting import formatter
+from .measurement import Measurement
+from .quantity import Quantity
+from .registry import UnitRegistry, LazyRegistry
+from .unit import Unit
 from .util import pi_theorem, logger
 
-from .context import Context
 
 import sys
 try:
@@ -50,38 +52,6 @@ _DEFAULT_REGISTRY = LazyRegistry()
 
 #: Registry used for unpickling operations.
 _APP_REGISTRY = _DEFAULT_REGISTRY
-
-
-def _build_quantity(value, units):
-    """Build Quantity using the Application registry.
-    Used only for unpickling operations.
-    """
-    from .unit import UnitsContainer
-
-    # Prefixed units are defined within the registry
-    # on parsing (which does not happen here).
-    # We need to make sure that this happens before using.
-    if isinstance(units, UnitsContainer):
-        for name in units.keys():
-            _APP_REGISTRY.parse_units(name)
-
-    return _APP_REGISTRY.Quantity(value, units)
-
-
-def _build_unit(units):
-    """Build Unit using the Application registry.
-    Used only for unpickling operations.
-    """
-    from .unit import UnitsContainer
-
-    # Prefixed units are defined within the registry
-    # on parsing (which does not happen here).
-    # We need to make sure that this happens before using.
-    if isinstance(units, UnitsContainer):
-        for name in units.keys():
-            _APP_REGISTRY.parse_units(name)
-
-    return _APP_REGISTRY.Unit(units)
 
 
 def set_application_registry(registry):
@@ -121,6 +91,7 @@ def test():
 # under the top-level module and not in their original submodules
 __all__ = (
     'Context',
+    'Measurement',
     'Quantity',
     'Unit',
     'UnitRegistry',
