@@ -55,7 +55,7 @@ before_install:
 install:
   - conda create --yes -n $ENV_NAME python=$PYTHON pip
   - source activate $ENV_NAME
-  - if [[ "$NUMPY_VERSION" == "1.17" ]]; then
+  - if [[ "$NUMPY_VERSION" == 1.17 ]]; then
     conda config --add channels conda-forge
     conda config --set channel_priority strict
     fi
