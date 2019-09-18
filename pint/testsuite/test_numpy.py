@@ -269,8 +269,8 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertEqual(u.magnitude.shape, (4, 3))
         
     def test_comparisons(self):
-        self.assert_equal(self.q > 2 * self.ureg.m, np.array([[False, False], [True, True]]))
-        self.assert_equal(self.q < 2 * self.ureg.m, np.array([[True, False], [False, False]]))
+        np.testing.assert_equal(self.q > 2 * self.ureg.m, np.array([[False, False], [True, True]]))
+        np.testing.assert_equal(self.q < 2 * self.ureg.m, np.array([[True, False], [False, False]]))
 
 
 
