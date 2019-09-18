@@ -55,10 +55,8 @@ before_install:
 install:
   - conda create --yes -n $ENV_NAME python=$PYTHON pip
   - source activate $ENV_NAME
-  - if [[ "$NUMPY_VERSION" == 1.17 ]]; then
-    conda config --add channels conda-forge
-    conda config --set channel_priority strict
-    fi
+  - conda config --add channels conda-forge
+  - conda config --set channel_priority strict
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install babel serialize pyyaml; fi
