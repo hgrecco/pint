@@ -501,11 +501,18 @@ class TestIssues(QuantityTestCase):
             self.assertEqual(np.float128(a/b), 1000.)
 
     def test_issue252(self):
-        ur = UnitRegistry()
-        q = ur("3 F")
+        ureg = UnitRegistry()
+        q = ureg("3 F")
         t = copy.deepcopy(q)
-        u = t.to(ur.mF)
-        self.assertQuantityEqual(q.to(ur.mF), u)
+        u = t.to(ureg.mF)
+        self.assertQuantityEqual(q.to(ureg.mF), u)
+
+    def test_issue290(self):
+        ureg = UnitRegistry()
+        q=self.Q_(32, ureg.degF).to('degK')
+        assertTrue(abs(q.m- 273.15)<1e-8)
+        q=self.Q_(0, ureg.degC).to('degF')
+        assertTrue(abs(q.m- 32)<1e-8)
 
     def test_issue323(self):
         from fractions import Fraction as F
