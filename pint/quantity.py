@@ -1238,6 +1238,9 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
                 return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
+            elif other != other:
+                # Returning False if comparing til NaN
+                return False
             elif _eq(other, 0, True):
                 # Handle the special case in which we compare to zero
                 # (or an array of zeros)
