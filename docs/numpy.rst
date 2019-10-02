@@ -109,7 +109,7 @@ The following ufuncs_ can be applied to a Quantity object:
 - **Comparison functions**: greater, greater_equal, less, less_equal, not_equal, equal
 - **Floating functions**: isreal,iscomplex, isfinite, isinf, isnan, signbit, copysign, nextafter, modf, ldexp, frexp, fmod, floor, ceil, trunc
 
-And the following `ndarrays methods`_ and functions:
+And the following `NumPy ndarray methods`_ and functions:
 
 - sum, fill, reshape, transpose, flatten, ravel, squeeze, take, put, repeat, sort, argsort, diagonal, compress,  nonzero, searchsorted, max, argmax, min, argmin, ptp, clip, round, trace, cumsum, mean, var, std, prod, cumprod, conj, conjugate, flatten
 
