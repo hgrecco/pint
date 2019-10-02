@@ -142,7 +142,7 @@ memory and CPU cycles. On top of this, all `ufuncs` are implemented in the
 after the calculation and before returning the value. To our knowledge, there
 is no way to signal back to NumPy that our code will take care of the
 calculation. For this reason the calculation is actually done twice:
-first in the original ndarray and then in then in the one that has been
+first in the original ndarray and then in the one that has been
 converted to the right units. Therefore, for numerically intensive code, you
 might want to convert the objects first and then use directly the magnitude.
 
