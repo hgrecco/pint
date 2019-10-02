@@ -151,4 +151,4 @@ might want to convert the objects first and then use directly the magnitude.
 
 .. _`NumPy ndarray`: http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html
 .. _ufuncs: http://docs.scipy.org/doc/numpy/reference/ufuncs.html
-.. _`ndarrays methods`: http://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html#array-methods
+.. _`NumPy ndarray methods`: http://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html#array-methods
