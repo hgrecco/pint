@@ -183,7 +183,7 @@ arguments:
 Specifying relations between arguments
 --------------------------------------
 
-In certain cases, you may not be concerned with the actual units and only care about the unit relationships among arguments.
+In certain cases, you may not be concerned with the actual units and only care about the unit relations among arguments.
 This is done using a string starting with the equal sign `=`:
 
 .. doctest::
