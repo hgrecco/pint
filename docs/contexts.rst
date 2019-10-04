@@ -7,7 +7,7 @@ If you work frequently on certain topics, you will probably find the need to
 convert between dimensions based on some pre-established (physical)
 relationships. For example, in spectroscopy you need to transform from
 wavelength to frequency. These are incompatible units and therefore Pint will
-raise an error if your do this directly:
+raise an error if you do this directly:
 
 .. doctest::
 

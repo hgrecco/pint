@@ -27,7 +27,7 @@ This support can also be disabled with:
 
    >>> ureg.setup_matplotlib(False)
 
-This allows then plotting quantities with different units:
+This allows plotting quantities with different units:
 
 .. plot::
    :include-source: true

@@ -109,7 +109,7 @@ The following ufuncs_ can be applied to a Quantity object:
 - **Comparison functions**: greater, greater_equal, less, less_equal, not_equal, equal
 - **Floating functions**: isreal,iscomplex, isfinite, isinf, isnan, signbit, copysign, nextafter, modf, ldexp, frexp, fmod, floor, ceil, trunc
 
-And the following `ndarrays methods`_ and functions:
+And the following `NumPy ndarray methods`_ and functions:
 
 - sum, fill, reshape, transpose, flatten, ravel, squeeze, take, put, repeat, sort, argsort, diagonal, compress,  nonzero, searchsorted, max, argmax, min, argmin, ptp, clip, round, trace, cumsum, mean, var, std, prod, cumprod, conj, conjugate, flatten
 
@@ -142,7 +142,7 @@ memory and CPU cycles. On top of this, all `ufuncs` are implemented in the
 after the calculation and before returning the value. To our knowledge, there
 is no way to signal back to NumPy that our code will take care of the
 calculation. For this reason the calculation is actually done twice:
-first in the original ndarray and then in then in the one that has been
+first in the original ndarray and then in the one that has been
 converted to the right units. Therefore, for numerically intensive code, you
 might want to convert the objects first and then use directly the magnitude.
 
@@ -151,4 +151,4 @@ might want to convert the objects first and then use directly the magnitude.
 
 .. _`NumPy ndarray`: http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html
 .. _ufuncs: http://docs.scipy.org/doc/numpy/reference/ufuncs.html
-.. _`ndarrays methods`: http://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html#array-methods
+.. _`NumPy ndarray methods`: http://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html#array-methods

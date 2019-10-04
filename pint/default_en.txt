@@ -516,6 +516,7 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
     peck = bushel / 4 = pk
     bushel = 2150.42 cubic_inch = bu
     dry_barrel = 7056 cubic_inch = _ = US_dry_barrel
+    board_foot = ft * ft * in = FBM = board_feet = BF = BDFT = super_foot = superficial_foot = super_feet = superficial_feet
 @end
 
 @group USCSLiquidVolume
