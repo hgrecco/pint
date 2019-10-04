@@ -22,6 +22,10 @@ env:
   - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=1.14 PANDAS=0
   - UNCERTAINTIES="Y" PYTHON="3.5" NUMPY_VERSION=1.14 PANDAS=0
   - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.14 PANDAS=0
+  # Test with the newer numpy versions
+  - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.17 PANDAS=0
+  - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.16 PANDAS=0
+
 
 before_install:
   - sudo apt-get update
@@ -51,6 +55,10 @@ before_install:
 install:
   - conda create --yes -n $ENV_NAME python=$PYTHON pip
   - source activate $ENV_NAME
+  - if [[ "$NUMPY_VERSION" == 1.17 ]]; then
+        conda config --add channels conda-forge;
+        conda config --set channel_priority strict;
+    fi
   - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
   - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install babel serialize pyyaml; fi

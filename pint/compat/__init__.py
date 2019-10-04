@@ -73,6 +73,9 @@ try:
     HAS_NUMPY = True
     NUMPY_VER = np.__version__
     NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
+    
+    if "dev" in NUMPY_VER:
+        NUMPY_VER = NUMPY_VER[:NUMPY_VER.index("dev")-1]
 
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
@@ -128,7 +131,7 @@ try:
     import pandas as pd
     HAS_PANDAS = True
     # pin Pandas version for now
-    HAS_PROPER_PANDAS = pd.__version__.startswith("0.24.0.dev0+625.gbdb7a16")
+    HAS_PROPER_PANDAS = pd.__version__.startswith("0.25")
 except ImportError:
     HAS_PROPER_PANDAS = HAS_PANDAS = False
 

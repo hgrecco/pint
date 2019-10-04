@@ -267,6 +267,11 @@ class TestNumpyMethods(QuantityTestCase):
         u = self.Q_(np.arange(12))
         u.shape = 4, 3
         self.assertEqual(u.magnitude.shape, (4, 3))
+        
+    def test_comparisons(self):
+        np.testing.assert_equal(self.q > 2 * self.ureg.m, np.array([[False, False], [True, True]]))
+        np.testing.assert_equal(self.q < 2 * self.ureg.m, np.array([[True, False], [False, False]]))
+
 
 
 @helpers.requires_numpy()
@@ -333,9 +338,7 @@ class TestNumpyNeedsSubclassing(TestUFuncs):
     @unittest.expectedFailure
     def test_power(self):
         """This is not supported as different elements might end up with different units
-
         eg. ([1, 1] * m) ** [2, 3]
-
         Must force exponent to single value
         """
         self._test2(np.power, self.q1,
@@ -355,9 +358,7 @@ class TestNumpyNeedsSubclassing(TestUFuncs):
 @unittest.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):
     """Universal functions (ufuncs) >  Bittwiddling functions
-
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#bittwiddlingfunctions
-
     bitwise_and(x1, x2[, out])         Compute the bitwise AND of two arrays elementwise.
     bitwise_or(x1, x2[, out])  Compute the bitwise OR of two arrays elementwise.
     bitwise_xor(x1, x2[, out])         Compute the bitwise XOR of two arrays elementwise.
