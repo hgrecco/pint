@@ -392,6 +392,19 @@ class TestQuantity(QuantityTestCase):
         u_array_5 = self.Q_.from_list(u_seq)
         self.assertTrue(all(u_array_5 == u_array_ref))
 
+    @helpers.requires_numpy()
+    def test_iter(self):
+        # Verify that iteration gives element as Quantity with same units
+        x = self.Q_([0, 1, 2, 3], 'm')
+        self.assertQuantityEqual(next(iter(x)), self.Q_(0, 'm'))
+
+    def test_notiter(self):
+        # Verify that iter() crashes immediately, without needing to draw any
+        # element from it, if the magnitude isn't iterable
+        x = self.Q_(1, 'm')
+        with self.assertRaises(TypeError):
+            iter(x)
+
 
 class TestQuantityToCompact(QuantityTestCase):
 
