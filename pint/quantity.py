@@ -148,21 +148,23 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         inst.__used = False
         inst.__handling = None
-        # Only instances where the magnitude is iterable should have __iter__()
-        if hasattr(inst._magnitude,"__iter__"):
-            inst.__iter__ = cls._iter
+
         return inst
 
-    def _iter(self):
-        """
-        Will be become __iter__() for instances with iterable magnitudes
-        """
-        # # Allow exception to propagate in case of non-iterable magnitude
-        it_mag = iter(self.magnitude)
-        return iter((self.__class__(mag, self._units) for mag in it_mag))
     @property
     def debug_used(self):
         return self.__used
+
+    def __iter__(self):
+        # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon as one
+        # calls iter(self) without waiting for the first element to be drawn from the iterator
+        it_magnitude = iter(self.magnitude)
+
+        def it_outer():
+            for element in it_magnitude:
+                yield self.__class__(element, self._units)
+
+        return it_outer()
 
     def __copy__(self):
         ret = self.__class__(copy.copy(self._magnitude), self._units)

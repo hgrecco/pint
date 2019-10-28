@@ -9,7 +9,7 @@ from decimal import Decimal
 from pint.testsuite import BaseTestCase, QuantityTestCase
 from pint.util import (string_preprocessor, find_shortest_path, matrix_to_string,
                        transpose, tokenizer, find_connected_nodes, ParserHelper,
-                       UnitsContainer, to_units_container)
+                       UnitsContainer, to_units_container, iterable, sized)
 
 
 class TestUnitsContainer(QuantityTestCase):
@@ -333,3 +333,22 @@ class TestMatrix(BaseTestCase):
     def test_transpose(self):
 
         self.assertEqual(transpose([[1, 2], [3, 4]]), [[1, 3], [2, 4]])
+
+
+class TestOtherUtils(BaseTestCase):
+
+    def test_iterable(self):
+
+        # Test with list, string, generator, and scalar
+        self.assertTrue(iterable([0, 1, 2, 3]))
+        self.assertTrue(iterable('test'))
+        self.assertTrue(iterable((i for i in range(5))))
+        self.assertFalse(iterable(0))
+
+    def test_sized(self):
+
+        # Test with list, string, generator, and scalar
+        self.assertTrue(sized([0, 1, 2, 3]))
+        self.assertTrue(sized('test'))
+        self.assertFalse(sized((i for i in range(5))))
+        self.assertFalse(sized(0))
