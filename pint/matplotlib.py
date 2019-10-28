@@ -13,6 +13,8 @@ from __future__ import absolute_import
 
 import matplotlib.units
 
+from .util import iterable, sized
+
 
 class PintAxisInfo(matplotlib.units.AxisInfo):
     """Support default axis and tick labeling and default limits."""
@@ -31,7 +33,7 @@ class PintConverter(matplotlib.units.ConversionInterface):
 
     def convert(self, value, unit, axis):
         """Convert :`Quantity` instances for matplotlib to use."""
-        if hasattr(value,"__iter__"):
+        if iterable(value):
             return [self._convert_value(v, unit, axis) for v in value]
         else:
             return self._convert_value(value, unit, axis)
@@ -51,7 +53,7 @@ class PintConverter(matplotlib.units.ConversionInterface):
     @staticmethod
     def default_units(x, axis):
         """Get the default unit to use for the given combination of unit and axis."""
-        if hasattr(x,"__iter__") and len(x) > 0:
+        if iterable(x) and sized(x):
             return getattr(x[0], 'units', None)
         return getattr(x, 'units', None)
 
