@@ -286,7 +286,9 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(q.u, q.reshape(2, 3).u)
         self.assertEqual(q.u, q.swapaxes(0, 1).u)
         self.assertEqual(q.u, q.mean().u)
-        self.assertEqual(q.u, np.compress((q==q[0,0]).any(0), q).u)
+        # TODO: Re-add np.compress implementation once mixed type is resolved
+        # (see https://github.com/hgrecco/pint/pull/764#issuecomment-523272038)
+        # self.assertEqual(q.u, np.compress((q==q[0,0]).any(0), q).u)
 
     def test_context_attr(self):
         self.assertEqual(self.ureg.meter, self.Q_(1, 'meter'))
