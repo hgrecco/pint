@@ -5,7 +5,19 @@ from distutils.version import StrictVersion
 import re
 import unittest
 
-from ..compat import HAS_NUMPY, HAS_BABEL, HAS_UNCERTAINTIES, NUMPY_VER
+from ..compat import HAS_NUMPY, HAS_BABEL, HAS_UNCERTAINTIES, HAS_NUMPY_ARRAY_FUNCTION, NUMPY_VER
+
+
+def requires_array_function_protocol():
+    if not HAS_NUMPY:
+        return unittest.skip('Requires NumPy')
+    return unittest.skipUnless(HAS_NUMPY_ARRAY_FUNCTION, 'Requires __array_function__ protocol to be enabled')
+
+
+def requires_not_array_function_protocol():
+    if not HAS_NUMPY:
+        return unittest.skip('Requires NumPy')
+    return unittest.skipIf(HAS_NUMPY_ARRAY_FUNCTION, 'Requires __array_function__ protocol to be unavailable or disabled')
 
 
 def requires_numpy18():
