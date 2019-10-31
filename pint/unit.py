@@ -40,21 +40,20 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
         return _unpickle, (Unit, self._units)
 
-    def __new__(cls, units):
-        inst = SharedRegistryObject.__new__(cls)
+    def __init__(self, units):
+        super(Unit, self).__init__()
         if isinstance(units, (UnitsContainer, UnitDefinition)):
-            inst._units = units
+            self._units = units
         elif isinstance(units, string_types):
-            inst._units = inst._REGISTRY.parse_units(units)._units
+            self._units = self._REGISTRY.parse_units(units)._units
         elif isinstance(units, Unit):
-            inst._units = units._units
+            self._units = units._units
         else:
             raise TypeError('units must be of type str, Unit or '
                             'UnitsContainer; not {}.'.format(type(units)))
 
-        inst.__used = False
-        inst.__handling = None
-        return inst
+        self.__used = False
+        self.__handling = None
 
     @property
     def debug_used(self):
