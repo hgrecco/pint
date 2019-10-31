@@ -187,14 +187,13 @@ def formatter(items, as_ratio=True, single_denominator=False,
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
 # We also add uS for uncertainties.
 _BASIC_TYPES = frozenset('bcdeEfFgGnosxX%uS')
-_KNOWN_TYPES = frozenset(list(_FORMATS.keys()) + ['~'])
 
 def _parse_spec(spec):
     result = ''
     for ch in reversed(spec):
         if ch == '~' or ch in _BASIC_TYPES:
             continue
-        elif ch in _KNOWN_TYPES:
+        elif ch in list(_FORMATS.keys()) + ['~']:
             if result:
                 raise ValueError("expected ':' after format specifier")
             else:
@@ -272,7 +271,7 @@ def siunitx_format_unit(units):
 
 
 def remove_custom_flags(spec):
-    for flag in _KNOWN_TYPES:
+    for flag in list(_FORMATS.keys()) + ['~']:
          if flag:
              spec = spec.replace(flag, '')
     return spec

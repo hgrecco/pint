@@ -818,3 +818,32 @@ class BlockIterator(SourceIterator):
         return lineno, line
 
     next = __next__
+
+
+def iterable(y):
+    """Check whether or not an object can be iterated over.
+
+    Vendored from numpy under the terms of the BSD 3-Clause License. (Copyright
+    (c) 2005-2019, NumPy Developers.)
+
+    :param value: Input object.
+    :param type: object
+    """
+    try:
+        iter(y)
+    except TypeError:
+        return False
+    return True
+
+
+def sized(y):
+    """Check whether or not an object has a defined length.
+
+    :param value: Input object.
+    :param type: object
+    """
+    try:
+        len(y)
+    except TypeError:
+        return False
+    return True

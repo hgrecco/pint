@@ -235,6 +235,10 @@ class TestNumpyMethods(QuantityTestCase):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
             self.assertEqual(q, v * self.ureg.m)
 
+    def test_iterable(self):
+        self.assertTrue(np.iterable(self.q))
+        self.assertFalse(np.iterable(1 * self.ureg.m))
+
     def test_reversible_op(self):
         """
         """
