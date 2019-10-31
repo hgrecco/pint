@@ -129,25 +129,21 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 if value == '':
                     raise ValueError('Expression to parse as Quantity cannot '
                                      'be an empty string.')
-                ureg = cls._REGISTRY
-                if isinstance(ureg, property):
-                    # Base class, not subclassed with build_*_class
-                    from . import _APP_REGISTRY as ureg
-
+                ureg = SharedRegistryObject.__new__(cls)._REGISTRY
                 inst = ureg.parse_expression(value)
                 return cls.__new__(cls, inst)
             elif isinstance(value, cls):
                 inst = copy.copy(value)
             else:
-                inst = object.__new__(cls)
+                inst = SharedRegistryObject.__new__(cls)
                 inst._magnitude = _to_magnitude(value, inst.force_ndarray)
                 inst._units = UnitsContainer()
         elif isinstance(units, (UnitsContainer, UnitDefinition)):
-            inst = object.__new__(cls)
+            inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = units
         elif isinstance(units, string_types):
-            inst = object.__new__(cls)
+            inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)._units
         elif isinstance(units, SharedRegistryObject):
@@ -156,7 +152,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 logger.warning('Creating new Quantity using a non unity '
                                'Quantity as units.')
             else:
-                inst = object.__new__(cls)
+                inst = SharedRegistryObject.__new__(cls)
                 inst._units = units._units
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
         else:

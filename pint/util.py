@@ -643,14 +643,15 @@ class SharedRegistryObject(object):
     that an object from this class has a '_units' attribute.
 
     """
-    @property
-    def _REGISTRY(self):
-        """Return the global application registry. This property is overridden by
-        ``UnitRegistry.__init__`` by creating subclasses on the fly.
-        """
-        from . import _APP_REGISTRY
+    def __new__(cls, *args, **kwargs):
+        inst = object.__new__(cls)
+        if not hasattr(cls, "_REGISTRY"):
+            # Base class, not subclasses dynamically by
+            # UnitRegistry._init_dynamic_classes
+            from . import _APP_REGISTRY
 
-        return _APP_REGISTRY
+            inst._REGISTRY = _APP_REGISTRY
+        return inst
 
     def _check(self, other):
         """Check if the other object use a registry and if so that it is the

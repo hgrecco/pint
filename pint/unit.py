@@ -41,7 +41,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         return _unpickle, (Unit, self._units)
 
     def __new__(cls, units):
-        inst = object.__new__(cls)
+        inst = SharedRegistryObject.__new__(cls)
         if isinstance(units, (UnitsContainer, UnitDefinition)):
             inst._units = units
         elif isinstance(units, string_types):
