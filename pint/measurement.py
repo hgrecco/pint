@@ -11,17 +11,18 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 
 from .compat import ufloat
 from .formatting import _FORMATS, siunitx_format_unit
+from .quantity import Quantity
 
 MISSING = object()
 
 
-class _Measurement(object):
+class Measurement(Quantity):
     """Implements a class to describe a quantity with uncertainty.
 
-    :param value: The most likely value of the measurement.
-    :type value: Quantity or Number
-    :param error: The error or uncertainty of the measurement.
-    :type error: Quantity or Number
+    :param value: The expected value of the measurement
+    :type value: pint.Quantity or any numeric type
+    :param error: The error or uncertainty of the measurement
+    :type error: pint.Quantity or any numeric type
     """
 
     def __new__(cls, value, error, units=MISSING):
@@ -29,28 +30,28 @@ class _Measurement(object):
             try:
                 value, units = value.magnitude, value.units
             except AttributeError:
-                #if called with two arguments and the first looks like a ufloat
+                # if called with two arguments and the first looks like a ufloat
                 # then assume the second argument is the units, keep value intact
-                if hasattr(value,"nominal_value"):
+                if hasattr(value, "nominal_value"):
                     units = error
-                    error = MISSING #used for check below
+                    error = MISSING  # used for check below
                 else:
                     units = ''
         try:
             error = error.to(units).magnitude
         except AttributeError:
             pass
-        
+
         if error is MISSING:
             mag = value
         elif error < 0:
             raise ValueError('The magnitude of the error cannot be negative'.format(value, error))
         else:
-            mag = ufloat(value,error)
-            
-        inst = super(_Measurement, cls).__new__(cls, mag, units)
+            mag = ufloat(value, error)
+
+        inst = super(Measurement, cls).__new__(cls, mag, units)
         return inst
-    
+
     @property
     def value(self):
         return self._REGISTRY.Quantity(self.magnitude.nominal_value, self.units)
@@ -62,6 +63,12 @@ class _Measurement(object):
     @property
     def rel(self):
         return float(abs(self.magnitude.std_dev / self.magnitude.nominal_value))
+
+    def __reduce__(self):
+        # See notes in Quantity.__reduce__
+        from . import _unpickle
+
+        return _unpickle, (Measurement, self.magnitude, self._units)
 
     def __repr__(self):
         return "<Measurement({0:.2f}, {1:.2f}, {2})>".format(self.magnitude.nominal_value,
@@ -127,19 +134,20 @@ class _Measurement(object):
             return pars.format(mag) + space + format(self.units, spec)
 
 
-def build_measurement_class(registry, force_ndarray=False):
+_Measurement = Measurement
+
+
+def build_measurement_class(registry):
 
     if ufloat is None:
         class Measurement(object):
+            _REGISTRY = registry
 
             def __init__(self, *args):
                 raise RuntimeError("Pint requires the 'uncertainties' package to create a Measurement object.")
 
     else:
-        class Measurement(_Measurement, registry.Quantity):
-            pass
-
-    Measurement._REGISTRY = registry
-    Measurement.force_ndarray = force_ndarray
+        class Measurement(_Measurement):
+            _REGISTRY = registry
 
     return Measurement

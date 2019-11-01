@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     pint.definitions
-    ~~~~~~~~~
+    ~~~~~~~~~~~~~~~~
 
     Functions and classes related to unit definitions.
 

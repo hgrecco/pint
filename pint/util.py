@@ -637,12 +637,21 @@ def _is_dim(name):
 
 
 class SharedRegistryObject(object):
-    """Base class for object keeping a refrence to the registree.
+    """Base class for object keeping a reference to the registree.
 
-    Such object are for now _Quantity and _Unit, in a number of places it is
+    Such object are for now Quantity and Unit, in a number of places it is
     that an object from this class has a '_units' attribute.
 
     """
+    def __new__(cls, *args, **kwargs):
+        inst = object.__new__(cls)
+        if not hasattr(cls, "_REGISTRY"):
+            # Base class, not subclasses dynamically by
+            # UnitRegistry._init_dynamic_classes
+            from . import _APP_REGISTRY
+
+            inst._REGISTRY = _APP_REGISTRY
+        return inst
 
     def _check(self, other):
         """Check if the other object use a registry and if so that it is the

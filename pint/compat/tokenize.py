@@ -1,7 +1,7 @@
 """Tokenization help for Python programs.
 
 tokenize(readline) is a generator that breaks a stream of bytes into
-Python tokens.  It decodes the bytes according to PEP-0263 for
+Python tokens. It decodes the bytes according to PEP-0263 for
 determining source file encoding.
 
 It accepts a readline-like method which is called repeatedly to get the
@@ -462,7 +462,8 @@ def tokenize(readline):
     must be a callable object which provides the same interface as the
     readline() method of built-in file objects.  Each call to the function
     should return one line of input as bytes.  Alternately, readline
-    can be a callable function terminating with StopIteration:
+    can be a callable function terminating with StopIteration::
+
         readline = open(myfile, 'rb').__next__  # Example of alternate readline
 
     The generator produces 5-tuples with these members: the token type; the

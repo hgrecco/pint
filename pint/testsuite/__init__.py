@@ -5,15 +5,13 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import doctest
 import logging
 import os
-import sys
 import unittest
 
 from contextlib import contextmanager
 
 from pint.compat import ndarray, np
 
-from pint import logger, UnitRegistry
-from pint.quantity import _Quantity
+from pint import logger, UnitRegistry, Quantity
 from pint.testsuite.helpers import PintOutputChecker
 from logging.handlers import BufferingHandler
 
@@ -79,15 +77,15 @@ class QuantityTestCase(BaseTestCase):
         cls.U_ = cls.ureg.Unit
 
     def _get_comparable_magnitudes(self, first, second, msg):
-        if isinstance(first, _Quantity) and isinstance(second, _Quantity):
+        if isinstance(first, Quantity) and isinstance(second, Quantity):
             second = second.to(first)
             self.assertEqual(first.units, second.units, msg=msg + ' Units are not equal.')
             m1, m2 = first.magnitude, second.magnitude
-        elif isinstance(first, _Quantity):
+        elif isinstance(first, Quantity):
             self.assertTrue(first.dimensionless, msg=msg + ' The first is not dimensionless.')
             first = first.to('')
             m1, m2 = first.magnitude, second
-        elif isinstance(second, _Quantity):
+        elif isinstance(second, Quantity):
             self.assertTrue(second.dimensionless, msg=msg + ' The second is not dimensionless.')
             second = second.to('')
             m1, m2 = first, second.magnitude

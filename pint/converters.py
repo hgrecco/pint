@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     pint.converters
-    ~~~~~~~~~
+    ~~~~~~~~~~~~~~~
 
     Functions and classes related to unit conversions.
 

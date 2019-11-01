@@ -12,11 +12,13 @@
 
     - NonMultiplicativeRegistry: Conversion between non multiplicative (offset) units.
                                  (e.g. Temperature)
+
       * Inherits from BaseRegistry
 
     - ContextRegisty: Conversion between units with different dimenstions according
                       to previously established relations (contexts).
                       (e.g. in the spectroscopy, conversion between frequency and energy is possible)
+
       * Inherits from BaseRegistry
 
     - SystemRegistry: Group unit and changing of base units.
@@ -93,7 +95,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     :param filename: path of the units definition file to load or line iterable object.
                      Empty to load the default definition file.
                      None to leave the UnitRegistry empty.
-    :type filename: str | None
+    :type filename: str or None
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
@@ -117,9 +119,10 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     def __init__(self, filename='', force_ndarray=False, on_redefinition='warn', auto_reduce_dimensions=False):
 
         self._register_parsers()
-        self._init_dynamic_classes(force_ndarray)
+        self._init_dynamic_classes()
 
         self._filename = filename
+        self.force_ndarray = force_ndarray
 
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
@@ -162,17 +165,17 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         self._initialized = False
 
-    def _init_dynamic_classes(self, force_ndarray):
+    def _init_dynamic_classes(self):
         """Generate subclasses on the fly and attach them to self
         """
         from .unit import build_unit_class
         self.Unit = build_unit_class(self)
 
         from .quantity import build_quantity_class
-        self.Quantity = build_quantity_class(self, force_ndarray)
+        self.Quantity = build_quantity_class(self)
 
         from .measurement import build_measurement_class
-        self.Measurement = build_measurement_class(self, force_ndarray)
+        self.Measurement = build_measurement_class(self)
 
     def _after_init(self):
         """This should be called after all __init__
@@ -203,8 +206,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     def __deepcopy__(self, memo):
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
-        force_ndarray = self.Quantity.force_ndarray
-        new._init_dynamic_classes(force_ndarray)
+        new._init_dynamic_classes()
         return new
 
     def __getattr__(self, item):
@@ -234,7 +236,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         """Add unit to the registry.
 
         :param definition: a dimension, unit or prefix definition.
-        :type definition: str | Definition
+        :type definition: str or Definition
         """
 
         if isinstance(definition, string_types):
@@ -717,9 +719,9 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         :param value: value
         :param src: source units.
-        :type src: Quantity or str
+        :type src: pint.Quantity or str
         :param dst: destination units.
-        :type dst: Quantity or str
+        :type dst: pint.Quantity or str
 
         :return: converted value
         """
@@ -1312,8 +1314,8 @@ class SystemRegistry(BaseRegistry):
         self._groups['root'] = self.Group('root')
         self._default_system = system
 
-    def _init_dynamic_classes(self, force_ndarray):
-        super(SystemRegistry, self)._init_dynamic_classes(force_ndarray)
+    def _init_dynamic_classes(self):
+        super(SystemRegistry, self)._init_dynamic_classes()
         self.Group = systems.build_group_class(self)
         self.System = systems.build_system_class(self)
 

@@ -24,7 +24,7 @@ from .definitions import UnitDefinition
 
 
 @fix_str_conversions
-class _Unit(PrettyIPython, SharedRegistryObject):
+class Unit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
 
     :type units: UnitsContainer, str, Unit or Quantity.
@@ -35,24 +35,25 @@ class _Unit(PrettyIPython, SharedRegistryObject):
     default_format = ''
 
     def __reduce__(self):
-        from . import _build_unit
-        return _build_unit, (self._units, )
+        # See notes in Quantity.__reduce__
+        from . import _unpickle
 
-    def __new__(cls, units):
-        inst = object.__new__(cls)
+        return _unpickle, (Unit, self._units)
+
+    def __init__(self, units):
+        super(Unit, self).__init__()
         if isinstance(units, (UnitsContainer, UnitDefinition)):
-            inst._units = units
+            self._units = units
         elif isinstance(units, string_types):
-            inst._units = inst._REGISTRY.parse_units(units)._units
-        elif isinstance(units, _Unit):
-            inst._units = units._units
+            self._units = self._REGISTRY.parse_units(units)._units
+        elif isinstance(units, Unit):
+            self._units = units._units
         else:
             raise TypeError('units must be of type str, Unit or '
                             'UnitsContainer; not {}.'.format(type(units)))
 
-        inst.__used = False
-        inst.__handling = None
-        return inst
+        self.__used = False
+        self.__handling = None
 
     @property
     def debug_used(self):
@@ -210,7 +211,7 @@ class _Unit(PrettyIPython, SharedRegistryObject):
 
         if isinstance(other, NUMERIC_TYPES):
             return self_q.compare(other, op)
-        elif isinstance(other, (_Unit, UnitsContainer, dict)):
+        elif isinstance(other, (Unit, UnitsContainer, dict)):
             return self_q.compare(self._REGISTRY.Quantity(1, other), op)
         else:
             return NotImplemented
@@ -288,10 +289,12 @@ class _Unit(PrettyIPython, SharedRegistryObject):
         """
         return self.from_(value, strict=strict, name=name).magnitude
 
+
+_Unit = Unit
+
+
 def build_unit_class(registry):
-
     class Unit(_Unit):
-        pass
+        _REGISTRY = registry
 
-    Unit._REGISTRY = registry
     return Unit

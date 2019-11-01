@@ -6,7 +6,7 @@ import copy
 import operator as op
 import unittest
 
-from pint import DimensionalityError, set_application_registry
+from pint import DimensionalityError
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.test_umath import TestUFuncs
@@ -251,13 +251,13 @@ class TestNumpyMethods(QuantityTestCase):
 
     def test_pickle(self):
         import pickle
-        set_application_registry(self.ureg)
+
         def pickle_test(q):
             pq = pickle.loads(pickle.dumps(q))
             np.testing.assert_array_equal(q.magnitude, pq.magnitude)
             self.assertEqual(q.units, pq.units)
 
-        pickle_test([10,20]*self.ureg.m)
+        pickle_test([10, 20]*self.ureg.m)
 
     def test_equal(self):
         x = self.q.magnitude
@@ -462,7 +462,7 @@ class TestNDArrayQuantityMath(QuantityTestCase):
         self.assertRaises(DimensionalityError, op.pow, arr_cp, q_cp)
         # ..not for op.ipow !
         # q_cp is treated as if it is an array. The units are ignored.
-        # _Quantity.__ipow__ is never called
+        # Quantity.__ipow__ is never called
         arr_cp = copy.copy(arr)
         q_cp = copy.copy(q)
         self.assertRaises(DimensionalityError, op.ipow, arr_cp, q_cp)

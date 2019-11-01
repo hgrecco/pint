@@ -19,7 +19,8 @@ That's all! You can check that Pint is correctly installed by starting up python
 .. note:: If you have an old system installation of Python and you don't want to
    mess with it, you can try `Anaconda CE`_. It is a free Python distribution by
    Continuum Analytics that includes many scientific packages. To install pint
-   from the conda-forge channel instead of through pip use:
+   from the conda-forge channel instead of through pip use::
+
        $ conda install -c conda-forge pint
 
 You can check the installation with the following command:

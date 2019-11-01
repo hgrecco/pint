@@ -134,8 +134,9 @@ class TestToUnitsContainer(BaseTestCase):
                          UnitsContainer(m=1))
 
     def test_unit_conversion(self):
-        from pint.unit import _Unit
-        self.assertEqual(to_units_container(_Unit(UnitsContainer(m=1))),
+        from pint import Unit
+
+        self.assertEqual(to_units_container(Unit(UnitsContainer(m=1))),
                          UnitsContainer(m=1))
 
     def test_dict_conversion(self):

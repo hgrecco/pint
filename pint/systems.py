@@ -20,7 +20,7 @@ from .babel_names import _babel_systems
 from pint.compat import Loc
 
 
-class _Group(SharedRegistryObject):
+class Group(SharedRegistryObject):
     """A group is a set of units.
 
     Units can be added directly or by including other groups.
@@ -30,14 +30,13 @@ class _Group(SharedRegistryObject):
 
     The group belongs to one Registry.
 
-    It can be specified in the definition file as:
+    It can be specified in the definition file as::
 
         @group <name> [using <group 1>, ..., <group N>]
             <definition 1>
             ...
             <definition N>
         @end
-
     """
 
     #: Regex to match the header parts of a definition.
@@ -236,7 +235,7 @@ class _Group(SharedRegistryObject):
         return self._REGISTRY
 
 
-class _System(SharedRegistryObject):
+class System(SharedRegistryObject):
     """A system is a Group plus a set of base units.
 
     Members are computed dynamically, that is if a unit is added to a group X
@@ -244,7 +243,7 @@ class _System(SharedRegistryObject):
 
     The System belongs to one Registry.
 
-    It can be specified in the definition file as:
+    It can be specified in the definition file as::
 
         @system <name> [using <group 1>, ..., <group N>]
             <rule 1>
@@ -446,19 +445,19 @@ class Lister(object):
         return self.d[item]
 
 
+_Group = Group
+_System = System
+
+
 def build_group_class(registry):
-
     class Group(_Group):
-        pass
+        _REGISTRY = registry
 
-    Group._REGISTRY = registry
     return Group
 
 
 def build_system_class(registry):
-
     class System(_System):
-        pass
+        _REGISTRY = registry
 
-    System._REGISTRY = registry
     return System
