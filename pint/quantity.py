@@ -24,10 +24,15 @@ from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_la
 from .errors import (DimensionalityError, OffsetUnitCalculusError, PintTypeError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
-from .compat import ndarray, np, _to_magnitude
+from .compat import Loc, ndarray, np, _to_magnitude, is_upcast_type
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit, iterable, sized)
-from pint.compat import Loc
+from .numpy_func import (HANDLED_UFUNCS, copy_units_output_ufuncs, get_op_output_unit,
+                         matching_input_bare_output_ufuncs,
+                         matching_input_copy_units_output_ufuncs, 
+                         matching_input_set_units_output_ufuncs, numpy_wrap, 
+                         op_units_output_ufuncs, set_units_ufuncs)
+
 
 def _eq(first, second, check_all):
     """Comparison of scalars and arrays
@@ -62,10 +67,11 @@ def ireduce_dimensions(f):
         return result
     return wrapped
 
+
 def check_implemented(f):
     def wrapped(self, *args, **kwargs):
         other=args[0]
-        if other.__class__.__name__ in ["PintArray", "Series", "DataArray"]:
+        if is_upcast_type(other):
             return NotImplemented
         # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
         # and expects Quantity * array[Quantity] should return NotImplemented
@@ -74,192 +80,6 @@ def check_implemented(f):
         result = f(self, *args, **kwargs)
         return result
     return wrapped
-
-HANDLED_FUNCTIONS = {}
-
-def implements(numpy_function):
-    """Register an __array_function__ implementation for BaseQuantity objects."""
-    def decorator(func):
-        HANDLED_FUNCTIONS[numpy_function] = func
-        return func
-    return decorator
-
-def _is_quantity_sequence(arg):
-    if iterable(arg) and sized(arg) and not isinstance(arg, string_types):
-        if isinstance(arg[0], Quantity):
-            if not all([isinstance(item, Quantity) for item in arg]):
-                raise TypeError("{} contains items that aren't Quantity type".format(arg))
-            return True
-    return False
-    
-def _get_first_input_units(args, kwargs={}):
-    args_combo = list(args)+list(kwargs.values())
-    out_units=None
-    for arg in args_combo:
-        if isinstance(arg, Quantity):
-            out_units = arg.units
-        elif _is_quantity_sequence(arg):
-            out_units = arg[0].units
-        if out_units is not None:
-            break
-    return out_units
-    
-def convert_to_consistent_units(pre_calc_units=None, *args, **kwargs):
-    """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
-    into the units of the first Quantiy/Sequence of quantities. Other args are left untouched.
-    """
-    def convert_arg(arg):
-        if pre_calc_units is not None:
-            if isinstance(arg, Quantity):
-                return arg.m_as(pre_calc_units)
-            elif _is_quantity_sequence(arg):
-                return [item.m_as(pre_calc_units) for item in arg]
-        else:
-            if isinstance(arg, Quantity):
-                return arg.m
-            elif _is_quantity_sequence(arg):
-                return [item.m for item in arg]
-        return arg
-    
-    new_args=tuple(convert_arg(arg) for arg in args)
-    new_kwargs = {key:convert_arg(arg) for key,arg in kwargs.items()}
-    return new_args, new_kwargs
-    
-def implement_func(func_str, pre_calc_units_, post_calc_units_, out_units_):
-    """
-    :param func_str: The numpy function to implement
-    :type func_str: str
-    :param pre_calc_units: The units any quantity/ sequences of quantities should be converted to. 
-    consistent_infer converts all qs to the first units found in args/kwargs
-    inconsistent does not convert any qs, eg for product
-    rad (or any other unit) converts qs to radians/ other unit
-    None converts qs to magnitudes without conversion
-    :type pre_calc_units: NoneType, str
-    :param pre_calc_units: The units the result of the function should be initiated as. 
-    as_pre_calc uses the units it was converted to pre calc. Do not use with pre_calc_units="inconsistent"
-    rad (or any other unit) uses radians/ other unit
-    prod uses multiplies the input quantity units
-    None causes func to return without creating a quantity from the output, regardless of any out_units
-    :type out_units: NoneType, str
-    :param out_units: The units the result of the function should be returned to the user as.  The quantity created in the post_calc_units will be converted to the out_units
-    None or as_post_calc uses the units the quantity was initiated in, ie the post_calc_units, without any conversion.
-    rad (or any other unit) uses radians/ other unit
-    infer_from_input uses the first input units found, as received by the function before any conversions.
-    :type out_units: NoneType, str
-    
-    """
-    func = getattr(np,func_str)
-    
-    @implements(func)
-    def _(*args, **kwargs):
-        # TODO make work for kwargs
-        args_and_kwargs = list(args)+list(kwargs.values())
-        
-        (pre_calc_units, post_calc_units, out_units)=(pre_calc_units_, post_calc_units_, out_units_)
-        first_input_units=_get_first_input_units(args, kwargs)
-        if pre_calc_units == "consistent_infer":
-            pre_calc_units = first_input_units
-            
-        if pre_calc_units == "inconsistent":
-            new_args, new_kwargs = args, kwargs
-        else:   
-            new_args, new_kwargs = convert_to_consistent_units(pre_calc_units, *args, **kwargs)
-        res = func(*new_args, **new_kwargs)
-        
-        if post_calc_units is None:
-            return res
-        elif post_calc_units == "as_pre_calc":
-            post_calc_units = pre_calc_units
-        elif post_calc_units == "sum":
-            post_calc_units = (1*first_input_units + 1*first_input_units).units
-        elif post_calc_units == "prod":
-            product = 1
-            for x in args_and_kwargs:
-                product *= x
-            post_calc_units = product.units
-        elif post_calc_units == "div":
-            product = first_input_units*first_input_units
-            for x in args_and_kwargs:
-                product /= x
-            post_calc_units = product.units
-        elif post_calc_units == "delta":
-            post_calc_units = (1*first_input_units-1*first_input_units).units
-        elif post_calc_units == "delta,div":
-            product=(1*first_input_units-1*first_input_units).units
-            for x in args_and_kwargs[1:]:
-                product /= x
-            post_calc_units = product.units
-        elif post_calc_units == "variance":
-            post_calc_units = ((1*first_input_units + 1*first_input_units)**2).units
-        Q_ = first_input_units._REGISTRY.Quantity
-        post_calc_Q_= Q_(res, post_calc_units)
-        
-        if out_units is None or out_units == "as_post_calc":
-            return post_calc_Q_
-        elif out_units == "infer_from_input":
-            out_units = first_input_units
-        return post_calc_Q_.to(out_units)
-
-@implements(np.meshgrid)
-def _meshgrid(*xi, **kwargs):
-    # Simply need to map input units to onto list of outputs
-    input_units = (x.units for x in xi)
-    res = np.meshgrid(*(x.m for x in xi), **kwargs)
-    return [out * unit for out, unit in zip(res, input_units)]
-
-@implements(np.full_like)
-def _full_like(a, fill_value, dtype=None, order='K', subok=True, shape=None):
-    # Make full_like by multiplying with array from ones_like in a
-    # non-multiplicative-unit-safe way
-    if isinstance(fill_value, Quantity):
-        return fill_value._REGISTRY.Quantity(
-            np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape) * fill_value.m,
-            fill_value.units)
-    else:
-        return (np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-                * fill_value)
-
-@implements(np.interp)
-def _interp(x, xp, fp, left=None, right=None, period=None):
-    # Need to handle x and y units separately
-    x_unit = _get_first_input_units([x, xp, period])
-    y_unit = _get_first_input_units([fp, left, right])
-    x_args, _ = convert_to_consistent_units(x_unit, x, xp, period)
-    y_args, _ = convert_to_consistent_units(y_unit, fp, left, right)
-    x, xp, period = x_args
-    fp, right, left = y_args
-    Q_ = y_unit._REGISTRY.Quantity
-    return Q_(np.interp(x, xp, fp, left=left, right=right, period=period), y_unit)
-
-for func_str in ['linspace', 'concatenate', 'block', 'stack', 'hstack', 'vstack',  'dstack', 'atleast_1d', 'column_stack', 'atleast_2d', 'atleast_3d', 'expand_dims','squeeze', 'swapaxes', 'compress', 'rollaxis', 'broadcast_to', 'moveaxis', 'fix', 'amax', 'amin', 'nanmax', 'nanmin', 'around', 'diagonal', 'mean', 'ptp', 'ravel', 'round_', 'sort', 'median', 'nanmedian', 'transpose', 'flip', 'copy', 'trim_zeros', 'append', 'clip', 'nan_to_num']:
-    implement_func(func_str, 'consistent_infer', 'as_pre_calc', 'as_post_calc')
-
-for func_str in ['isclose', 'searchsorted']:
-    implement_func(func_str, 'consistent_infer', None, None)
-
-for func_str in ['unwrap']:
-    implement_func(func_str, 'rad', 'rad', 'infer_from_input')
-
-for func_str in ['cumprod', 'cumproduct', 'nancumprod']:
-    implement_func(func_str, 'dimensionless', 'dimensionless', 'infer_from_input')
-
-for func_str in ['size', 'isreal', 'iscomplex', 'shape', 'ones_like', 'zeros_like', 'empty_like', 'argsort', 'argmin', 'argmax', 'alen', 'ndim', 'nanargmax', 'nanargmin', 'count_nonzero', 'nonzero', 'result_type']:
-    implement_func(func_str, None, None, None)
-
-for func_str in ['average', 'mean', 'std', 'nanmean', 'nanstd', 'sum', 'nansum', 'cumsum', 'nancumsum']:
-    implement_func(func_str, None, 'sum', None)
-    
-for func_str in ['cross', 'trapz', 'dot']:
-    implement_func(func_str, None, 'prod', None)
-
-for func_str in ['diff', 'ediff1d',]:
-    implement_func(func_str, None, 'delta', None)
-
-for func_str in ['gradient', ]:
-    implement_func(func_str, None, 'delta,div', None)
-
-for func_str in ['var', 'nanvar']:
-    implement_func(func_str, None, 'variance', None)
 
 
 @contextlib.contextmanager
@@ -286,12 +106,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     :param units: units of the physical quantity to be created
     :type units: UnitsContainer, str or pint.Quantity
     """
-    def __array_function__(self, func, types, args, kwargs):
-        if func not in HANDLED_FUNCTIONS:
-            return NotImplemented
-        if not all(issubclass(t, Quantity) for t in types):
-            return NotImplemented
-        return HANDLED_FUNCTIONS[func](*args, **kwargs)
 
     #: Default formatting string.
     default_format = ''
@@ -1492,62 +1306,57 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     __nonzero__ = __bool__
 
-    # NumPy Support
-    __radian = 'radian'
-    __same_units = 'equal greater greater_equal less less_equal not_equal arctan2'.split()
-    #: Dictionary mapping ufunc/attributes names to the units that they
-    #: require (conversion will be tried).
-    __require_units = {'cumprod': '',
-                       'arccos': '', 'arcsin': '', 'arctan': '',
-                       'arccosh': '', 'arcsinh': '', 'arctanh': '',
-                       'exp': '', 'expm1': '', 'exp2': '',
-                       'log': '', 'log10': '', 'log1p': '', 'log2': '',
-                       'sin': __radian, 'cos': __radian, 'tan': __radian,
-                       'sinh': __radian, 'cosh': __radian, 'tanh': __radian,
-                       'radians': 'degree', 'degrees': __radian,
-                       'deg2rad': 'degree', 'rad2deg': __radian,
-                       'logaddexp': '', 'logaddexp2': ''}
+    # NumPy function/ufunc support
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if method != "__call__":
+            # Only handle ufuncs as callables
+            return NotImplemented
 
-    #: Dictionary mapping ufunc/attributes names to the units that they
-    #: will set on output.
-    __set_units = {'cos': '', 'sin': '', 'tan': '',
-                   'cosh': '', 'sinh': '', 'tanh': '',
-                   'log': '', 'exp': '',
-                   'arccos': __radian, 'arcsin': __radian,
-                   'arctan': __radian, 'arctan2': __radian,
-                   'arccosh': __radian, 'arcsinh': __radian,
-                   'arctanh': __radian,
-                   'degrees': 'degree', 'radians': __radian,
-                   'expm1': '', 'cumprod': '',
-                   'rad2deg': 'degree', 'deg2rad': __radian}
+        # Replicate types from __array_function__
+        types = set(type(arg) for arg in list(inputs) + list(kwargs.values())
+                    if hasattr(arg, "__array_ufunc__"))
 
-    #: List of ufunc/attributes names in which units are copied from the
-    #: original.
-    __copy_units = 'compress conj conjugate copy cumsum diagonal flatten ' \
-                   'max mean min ptp ravel repeat reshape round ' \
-                   'squeeze std sum swapaxes take trace transpose ' \
-                   'ceil floor hypot rint ' \
-                   'add subtract ' \
-                   'copysign nextafter trunc ' \
-                   'frexp ldexp modf modf__1 ' \
-                   'absolute negative remainder fmod mod'.split()
+        return numpy_wrap('ufunc', ufunc, inputs, kwargs, types)
 
-    #: Dictionary mapping ufunc/attributes names to the units that they will
-    #: set on output. The value is interpreted as the power to which the unit
-    #: will be raised.
-    __prod_units = {'var': 2, 'prod': 'size', 'multiply': 'mul',
-                    'true_divide': 'div', 'divide': 'div', 'floor_divide': 'div',
-                    'remainder': 'div',
-                    'sqrt': .5, 'square': 2, 'reciprocal': -1}
+    def __array_function__(self, func, types, args, kwargs):
+        return numpy_wrap('function', func, args, kwargs, types)
 
-    __skip_other_args = 'ldexp multiply ' \
-                        'true_divide divide floor_divide fmod mod ' \
-                        'remainder'.split()
+    def _ufunc_method_wrap(self, func, *args, **kwargs):
+        """Convenience method to wrap on the fly NumPy ndarray methods taking
+        care of the units.
+        """
+        # Set input units if needed
+        if func.__name__ in set_units_ufuncs:
+            self.__ito_if_needed(set_units_ufuncs[func.__name__][0])
 
-    __handled = tuple(__same_units) + \
-                tuple(__require_units.keys()) + \
-                tuple(__prod_units.keys()) + \
-                tuple(__copy_units) + tuple(__skip_other_args)
+        value = func(*args, **kwargs)
+
+        # Set output units as needed
+        if (func.__name__ in
+                matching_input_copy_units_output_ufuncs + copy_units_output_ufuncs):
+            output_unit = self._units
+        elif func.__name__ in set_units_ufuncs:
+            output_unit = set_units_ufuncs[func.__name__][1]
+        elif func.__name__ in matching_input_set_units_output_ufuncs:
+            output_unit = matching_input_set_units_output_ufuncs[func.__name__]
+        elif func.__name__ in op_units_output_ufuncs:
+            output_unit = get_op_output_unit(op_units_output_ufuncs[func.__name__],
+                                             self.units,
+                                             list(args) + list(kwargs.values()),
+                                             self._magnitude.size)
+        else:
+            output_unit = None
+
+        if output_unit is not None:
+            return self.__class__(value, output_unit)
+        else:
+            return value
+
+    def flatten(self, order='C'):
+        """Wrap ndarray.flatten."""
+        return self.__class__(
+            _to_magnitude(self._magnitude, force_ndarray=True).flatten(order=order),
+            self._units)
 
     def clip(self, first=None, second=None, out=None, **kwargs):
         min = kwargs.get('min', first)
@@ -1632,26 +1441,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         self.ito(to_units)
 
-    def __numpy_method_wrap(self, func, *args, **kwargs):
-        """Convenience method to wrap on the fly numpy method taking
-        care of the units.
-        """
-        if func.__name__ in self.__require_units:
-            self.__ito_if_needed(self.__require_units[func.__name__])
-
-        value = func(*args, **kwargs)
-
-        if func.__name__ in self.__copy_units:
-            return self.__class__(value, self._units)
-
-        if func.__name__ in self.__prod_units:
-            tmp = self.__prod_units[func.__name__]
-            if tmp == 'size':
-                return self.__class__(value, self._units ** self._magnitude.size)
-            return self.__class__(value, self._units ** tmp)
-
-        return value
-
     def __len__(self):
         return len(self._magnitude)
 
@@ -1668,13 +1457,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # we convert the magnitude to a numpy ndarray.
                 self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
                 return getattr(self._magnitude, item)
-        elif item in self.__handled:
-            if not isinstance(self._magnitude, ndarray):
-                self._magnitude = _to_magnitude(self._magnitude, True)
+        elif item in HANDLED_UFUNCS:
+            # TODO: Fix for duck arrays
+            magnitude = _to_magnitude(self._magnitude, True)
             attr = getattr(self._magnitude, item)
             if callable(attr):
-                return functools.partial(self.__numpy_method_wrap, attr)
-            return attr
+                return functools.partial(self._ufunc_method_wrap, attr)
+            else:
+                raise AttributeError('NumPy ufunc attribute {} was not callable.'.format(item))
         try:
             return getattr(self._magnitude, item)
         except AttributeError as ex:
@@ -1729,172 +1519,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         units = self._units
         return [self.__class__(value, units).tolist() if isinstance(value, list) else self.__class__(value, units)
                 for value in self._magnitude.tolist()]
-
-    __array_priority__ = 17
-
-    def _call_ufunc(self, ufunc, *inputs, **kwargs):
-        # Store the destination units
-        dst_units = None
-        # List of magnitudes of Quantities with the right units
-        # to be used as argument of the ufunc
-        mobjs = None
-
-        if ufunc.__name__ in self.__require_units:
-            # ufuncs in __require_units
-            # require specific units
-            # This is more complex that it should be due to automatic
-            # conversion between radians/dimensionless
-            # TODO: maybe could be simplified using Contexts
-            dst_units = self.__require_units[ufunc.__name__]
-            if dst_units == 'radian':
-                mobjs = []
-                for other in inputs:
-                    unt = getattr(other, '_units', '')
-                    if unt == 'radian':
-                        mobjs.append(getattr(other, 'magnitude', other))
-                    else:
-                        factor, units = self._REGISTRY._get_root_units(unt)
-                        if units and units != UnitsContainer({'radian': 1}):
-                            raise DimensionalityError(units, dst_units)
-                        mobjs.append(getattr(other, 'magnitude', other) * factor)
-                mobjs = tuple(mobjs)
-            else:
-                dst_units = self._REGISTRY.parse_expression(dst_units)._units
-
-        elif len(inputs) > 1 and ufunc.__name__ not in self.__skip_other_args:
-            # ufunc with multiple arguments require that all inputs have
-            # the same arguments unless they are in __skip_other_args
-            dst_units = getattr(inputs[0], "_units", None)
-
-        # Do the conversion (if needed) and extract the magnitude for each input.
-        if mobjs is None:
-            if dst_units is not None:
-                mobjs = tuple(self._REGISTRY.convert(getattr(other, 'magnitude', other),
-                                                     getattr(other, 'units', ''),
-                                                     dst_units)
-                              for other in inputs)
-            else:
-                mobjs = tuple(getattr(other, 'magnitude', other)
-                              for other in inputs)
-
-        # call the ufunc
-        try:
-            return ufunc(*mobjs)
-        except Exception as ex:
-            raise _Exception(ex)
-
-
-    def _wrap_output(self, ufname, i, objs, out):
-        """we set the units of the output value"""
-        if i > 0:
-            ufname = "{}__{}".format(ufname, i)
-
-        if ufname in self.__set_units:
-            try:
-                out = self.__class__(out, self.__set_units[ufname])
-            except:
-                raise _Exception(ValueError)
-        elif ufname in self.__copy_units:
-            try:
-                out = self.__class__(out, self._units)
-            except:
-                raise _Exception(ValueError)
-        elif ufname in self.__prod_units:
-            tmp = self.__prod_units[ufname]
-            if tmp == 'size':
-                out = self.__class__(out, self._units ** self._magnitude.size)
-            elif tmp == 'div':
-                units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
-                out = self.__class__(out, units1 / units2)
-            elif tmp == 'mul':
-                units1 = objs[0]._units if isinstance(objs[0], self.__class__) else UnitsContainer()
-                units2 = objs[1]._units if isinstance(objs[1], self.__class__) else UnitsContainer()
-                out = self.__class__(out, units1 * units2)
-            else:
-                out = self.__class__(out, self._units ** tmp)
-
-        return out
-
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        if method != "__call__":
-            return NotImplemented
-
-        try:
-            out = self._call_ufunc(ufunc, *inputs, **kwargs)
-            if isinstance(out, tuple):
-                ret = tuple(self._wrap_output(ufunc.__name__, i, inputs, o)
-                            for i, o in enumerate(out))
-                return ret
-            else:
-                return self._wrap_output(ufunc.__name__, 0, inputs, out)
-        except (DimensionalityError, UndefinedUnitError):
-            raise
-        except _Exception as ex:
-            raise ex.internal
-        except:
-            return NotImplemented
-
-
-    def __array_prepare__(self, obj, context=None):
-        # If this uf is handled by Pint, write it down in the handling dictionary.
-
-        # name of the ufunc, argument of the ufunc, domain of the ufunc
-        # In ufuncs with multiple outputs, domain indicates which output
-        # is currently being prepared (eg. see modf).
-        # In ufuncs with a single output, domain is 0
-        uf, objs, i_out = context
-
-        if uf.__name__ in self.__handled and i_out == 0:
-            # Only one ufunc should be handled at a time.
-            # If a ufunc is already being handled (and this is not another domain),
-            # something is wrong..
-            if self.__handling:
-                raise Exception('Cannot handled nested ufuncs.\n'
-                                'Current: {}\n'
-                                'New: {}'.format(context, self.__handling))
-            self.__handling = context
-
-        return obj
-
-    def __array_wrap__(self, obj, context=None):
-        uf, objs, i_out = context
-
-        # if this ufunc is not handled by Pint, pass it to the magnitude.
-        if uf.__name__ not in self.__handled:
-            return self.magnitude.__array_wrap__(obj, context)
-
-        try:
-            # First, we check the units of the input arguments.
-
-            if i_out == 0:
-                out = self._call_ufunc(uf, *objs)
-                # If there are multiple outputs,
-                # store them in __handling (uf, objs, i_out, out0, out1, ...)
-                # and return the first
-                if uf.nout > 1:
-                    self.__handling += out
-                    out = out[0]
-            else:
-                # If this is not the first output,
-                # just grab the result that was previously calculated.
-                out = self.__handling[3 + i_out]
-
-            return self._wrap_output(uf.__name__, i_out, objs, out)
-        except (DimensionalityError, UndefinedUnitError) as ex:
-            raise ex
-        except _Exception as ex:
-            raise ex.internal
-        except Exception as ex:
-            print(ex)
-        finally:
-            # If this is the last output argument for the ufunc,
-            # we are done handling this ufunc.
-            if uf.nout == i_out + 1:
-                self.__handling = None
-
-        return self.magnitude.__array_wrap__(obj, context)
 
     # Measurement support
     def plus_minus(self, error, relative=False):
