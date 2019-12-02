@@ -22,10 +22,10 @@ from .util import (ParserHelper, UnitsContainer, string_types,
 from .errors import DefinitionSyntaxError
 
 #: Regex to match the header parts of a context.
-_header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
+_header_re = re.compile(r'@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
 
 #: Regex to match variable names in an equation.
-_varname_re = re.compile('[A-Za-z_][A-Za-z0-9_]*')
+_varname_re = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
 
 
 def _expression_to_function(eq):

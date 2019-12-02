@@ -57,7 +57,7 @@ class TestMeasurement(QuantityTestCase):
         self.assertEqual('{0:.1fL}'.format(m), r'\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}')
         self.assertEqual('{0:.1fH}'.format(m), '(4.0 &plusmn; 0.1) second<sup>2</sup>')
         self.assertEqual('{0:.1fC}'.format(m), '(4.0+/-0.1) second**2')
-        self.assertEqual('{0:.1fLx}'.format(m), '\SI[separate-uncertainty=true]{4.0(1)}{\second\squared}')
+        self.assertEqual('{0:.1fLx}'.format(m), r'\SI[separate-uncertainty=true]{4.0(1)}{\second\squared}')
 
     def test_format_paru(self):
         v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
@@ -77,8 +77,8 @@ class TestMeasurement(QuantityTestCase):
         self.assertEqual('{0:.3uL}'.format(m), r'\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}')
         self.assertEqual('{0:.3uH}'.format(m), '(0.2000 &plusmn; 0.0100) second<sup>2</sup>')
         self.assertEqual('{0:.3uC}'.format(m), '(0.2000+/-0.0100) second**2')
-        self.assertEqual('{0:.3uLx}'.format(m), '\SI[separate-uncertainty=true]{0.2000(100)}{\second\squared}')
-        self.assertEqual('{0:.1uLx}'.format(m), '\SI[separate-uncertainty=true]{0.20(1)}{\second\squared}')
+        self.assertEqual('{0:.3uLx}'.format(m), r'\SI[separate-uncertainty=true]{0.2000(100)}{\second\squared}')
+        self.assertEqual('{0:.1uLx}'.format(m), r'\SI[separate-uncertainty=true]{0.20(1)}{\second\squared}')
 
     def test_format_percu(self):
         self.test_format_perce()
