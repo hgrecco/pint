@@ -1452,7 +1452,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
         if item.startswith('__array_'):
-            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning, stacklevel=2)
             if isinstance(self._magnitude, ndarray):
                 return getattr(self._magnitude, item)
             else:
