@@ -9,8 +9,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import re
 
 from .definitions import Definition, UnitDefinition
@@ -401,9 +399,11 @@ class System(SharedRegistryObject):
 
                 # Here we invert the equation, in other words
                 # we write old units in terms new unit and expansion
-                new_unit_dict = dict((new_unit, -1./value)
-                                     for new_unit, value in new_unit_expanded.items()
-                                     if new_unit != old_unit)
+                new_unit_dict = {
+                    new_unit: -1./value
+                    for new_unit, value in new_unit_expanded.items()
+                    if new_unit != old_unit
+                }
                 new_unit_dict[new_unit] = 1 / new_unit_expanded[old_unit]
 
                 base_unit_names[old_unit] = new_unit_dict
@@ -432,7 +432,7 @@ class System(SharedRegistryObject):
         return system
 
 
-class Lister(object):
+class Lister:
 
     def __init__(self, d):
         self.d = d

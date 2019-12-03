@@ -9,10 +9,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
-import sys
-
 from io import BytesIO
 from numbers import Number
 from decimal import Decimal
@@ -21,7 +17,6 @@ from . import tokenize
 
 ENCODING_TOKEN = tokenize.ENCODING
 
-PYTHON3 = sys.version >= '3'
 
 def tokenizer(input_string):
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline):
@@ -29,42 +24,6 @@ def tokenizer(input_string):
             continue
         yield tokinfo
 
-
-if PYTHON3:
-    string_types = str
-
-    def u(x):
-        return x
-
-    maketrans = str.maketrans
-
-    long_type = int
-else:
-    string_types = basestring
-
-    import codecs
-
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
-
-    maketrans = lambda f, t: dict((ord(a), b) for a, b in zip(f, t))
-
-    long_type = long
-
-try:
-    from collections import Chainmap
-except ImportError:
-    from .chainmap import ChainMap
-
-try:
-    from functools import lru_cache
-except ImportError:
-    from .lrucache import lru_cache
-
-try:
-    from itertools import zip_longest
-except ImportError:
-    from itertools import izip_longest as zip_longest
 
 try:
     import numpy as np
@@ -77,7 +36,7 @@ try:
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
             raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
-        elif isinstance(value, string_types) and value == '':
+        elif isinstance(value, str) and value == '':
             raise ValueError('Quantity magnitude cannot be an empty string.')
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
@@ -89,7 +48,7 @@ except ImportError:
 
     np = None
 
-    class ndarray(object):
+    class ndarray:
         pass
 
     HAS_NUMPY = False
@@ -99,7 +58,7 @@ except ImportError:
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
             raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
-        elif isinstance(value, string_types) and value == '':
+        elif isinstance(value, str) and value == '':
             raise ValueError('Quantity magnitude cannot be an empty string.')
         elif isinstance(value, (list, tuple)):
             raise TypeError('lists and tuples are valid magnitudes for '

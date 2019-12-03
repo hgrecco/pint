@@ -8,10 +8,6 @@
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-from .compat import string_types
 
 
 class DefinitionSyntaxError(ValueError):
@@ -60,7 +56,7 @@ class UndefinedUnitError(AttributeError):
     def __str__(self):
         mess = "'{}' is not defined in the unit registry"
         mess_plural = "'{}' are not defined in the unit registry"
-        if isinstance(self.unit_names, string_types):
+        if isinstance(self.unit_names, str):
             return mess.format(self.unit_names)
         elif isinstance(self.unit_names, (list, tuple))\
                 and len(self.unit_names) == 1:

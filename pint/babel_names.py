@@ -138,7 +138,7 @@ _babel_units = dict(
 )
 
 if not HAS_PROPER_BABEL:
-    _babel_units = dict()
+    _babel_units = {}
 
 _babel_systems = dict(
 	mks='metric',

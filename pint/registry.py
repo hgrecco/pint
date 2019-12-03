@@ -32,8 +32,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import copy
 import os
 import re
@@ -56,7 +54,7 @@ from .util import (getattr_maybe_raise,
                    find_shortest_path, UnitsContainer, _is_dim,
                    to_units_container, SourceIterator)
 
-from .compat import tokenizer, string_types, meta
+from .compat import tokenizer
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
                           DimensionDefinition, AliasDefinition)
 from .converters import ScaleConverter
@@ -69,18 +67,18 @@ from . import systems
 _BLOCK_RE = re.compile(r' |\(')
 
 
-class _Meta(type):
+class RegistryMeta(type):
     """This is just to call after_init at the right time
     instead of asking the developer to do it when subclassing.
     """
 
     def __call__(self, *args, **kwargs):
-        obj = super(_Meta, self).__call__(*args, **kwargs)
+        obj = super().__call__(*args, **kwargs)
         obj._after_init()
         return obj
 
 
-class BaseRegistry(meta.with_metaclass(_Meta)):
+class BaseRegistry(metaclass=RegistryMeta):
     """Base class for all registries.
 
     Capabilities:
@@ -239,7 +237,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         :type definition: str or Definition
         """
 
-        if isinstance(definition, string_types):
+        if isinstance(definition, str):
             for line in definition.split('\n'):
                 self._define(Definition.from_string(line))
         else:
@@ -301,8 +299,9 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             d_aliases = tuple('Δ' + alias for alias in definition.aliases) + \
                         tuple('delta_' + alias for alias in definition.aliases)
 
-            d_reference = UnitsContainer(dict((ref, value)
-                                         for ref, value in definition.reference.items()))
+            d_reference = UnitsContainer(
+                {ref: value for ref, value in definition.reference.items()}
+            )
 
             d_def = UnitDefinition(d_name, d_symbol, d_aliases,
                                    ScaleConverter(definition.converter.scale),
@@ -359,7 +358,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         :type parserfunc: SourceIterator -> None
         """
         if self._parsers is None:
-            self._parsers = dict()
+            self._parsers = {}
 
         if prefix and prefix[0] == '@':
             self._parsers[prefix] = parserfunc
@@ -374,7 +373,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                             and therefore should be loaded from the package.
         """
         # Permit both filenames and line-iterables
-        if isinstance(file, string_types):
+        if isinstance(file, str):
             try:
                 if is_resource:
                     with closing(pkg_resources.resource_stream(__name__, file)) as fp:
@@ -564,8 +563,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         if '[]' in accumulator:
             del accumulator['[]']
 
-        dims = UnitsContainer(dict((k, v) for k, v in accumulator.items()
-                                   if v != 0.0))
+        dims = UnitsContainer({k: v for k, v in accumulator.items() if v != 0.0})
 
         self._dimensionality_cache[input_units] = dims
 
@@ -650,12 +648,11 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         self._get_root_units_recurse(input_units, 1.0, accumulators)
 
         factor = accumulators[0]
-        units = UnitsContainer(dict((k, v) for k, v in accumulators[1].items()
-                                    if v != 0.))
+        units = UnitsContainer({k: v for k, v in accumulators[1].items() if v != 0})
 
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
-            for unit in units.keys():
+            for unit in units:
                 if not self._units[unit].converter.is_multiplicative:
                     return None, units
 
@@ -1122,8 +1119,10 @@ class ContextRegistry(BaseRegistry):
             kwargs = dict(self._active_ctx.defaults, **kwargs)
 
         # For each name, we first find the corresponding context
-        ctxs = list((self._contexts[name] if isinstance(name, string_types) else name)
-                    for name in names_or_contexts)
+        ctxs = [
+            self._contexts[name] if isinstance(name, str) else name
+            for name in names_or_contexts
+        ]
 
         # Check if the contexts have been checked first, if not we make sure
         # that dimensions are expressed in terms of base dimensions.
@@ -1550,7 +1549,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
     check = registry_helpers.check
 
 
-class LazyRegistry(object):
+class LazyRegistry:
 
     def __init__(self, args=None, kwargs=None):
         self.__dict__['params'] = args or (), kwargs or {}

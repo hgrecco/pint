@@ -44,7 +44,7 @@ _UNARY_OPERATOR_MAP = {
 }
 
 
-class EvalTreeNode(object):
+class EvalTreeNode:
     
     def __init__(self, left, operator=None, right=None):
         """

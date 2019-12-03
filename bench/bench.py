@@ -1,7 +1,3 @@
-
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import fnmatch
 import os
 import copy
@@ -23,11 +19,11 @@ def time_stmt(stmt='pass', setup='pass', number=0, repeat=3):
     if not number:
         # determine number so that 0.2 <= total time < 2.0
         for i in range(1, 10):
-            number = 10**i
+            number = 10 ** i
 
             try:
                 x = t.timeit(number)
-            except:
+            except Exception:
                 print(t.print_exc())
                 return float('NaN')
 
@@ -36,7 +32,7 @@ def time_stmt(stmt='pass', setup='pass', number=0, repeat=3):
 
     try:
         r = t.repeat(repeat, number)
-    except:
+    except Exception:
         print(t.print_exc())
         return float('NaN')
 
@@ -92,23 +88,28 @@ def time_file(filename, name='', setup='', number=0, repeat=3):
 
 
 def recursive_glob(rootdir='.', pattern='*'):
-    return [os.path.join(looproot, filename)
-            for looproot, _, filenames in os.walk(rootdir)
-            for filename in filenames
-            if fnmatch.fnmatch(filename, pattern)]
+    return [
+        os.path.join(looproot, filename)
+        for looproot, _, filenames in os.walk(rootdir)
+        for filename in filenames
+        if fnmatch.fnmatch(filename, pattern)
+    ]
+
 
 def main(filenames=None):
     if not filenames:
-        filenames = recursive_glob('.', 'bench_*.yaml')
-    elif isinstance(filenames, basestring):
-        filenames = [filenames, ]
+        filenames = recursive_glob(".", "bench_*.yaml")
+    elif isinstance(filenames, str):
+        filenames = [filenames]
 
     for filename in filenames:
         print(filename)
         print('-' * len(filename))
         print()
         for task_name, value in time_file(filename):
-            print('%.2e   %s' % (value, task_name))
+            print(f"{value:.2e}   {task_name}")
         print()
 
-main()
+
+if __name__ == "__main__":
+    main()

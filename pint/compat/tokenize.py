@@ -31,29 +31,11 @@ import io
 from io import TextIOWrapper
 from itertools import chain
 import re
-import sys
 from token import *
 
-try:
-    reASCII = re.ASCII
-except:
-    reASCII = 0
 
-
-try:
-    unicode
-    _name_re = re.compile(r"\w*$", re.UNICODE)
-    def isidentifier(s):
-        if s[0] in '0123456789':
-            return False
-        return bool(_name_re.match(s))
-except NameError:
-    def isidentifier(s):
-        return s.isidentifier()
-
-
-cookie_re = re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', reASCII)
-blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', reASCII)
+cookie_re = re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII)
+blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = 'COMMENT'
@@ -108,6 +90,7 @@ EXACT_TOKEN_TYPES = {
     '@':   AT
 }
 
+
 class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line')):
     def __repr__(self):
         annotated_type = '%d (%s)' % (self.type, tok_name[self.type])
@@ -121,9 +104,18 @@ class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line'
         else:
             return self.type
 
-def group(*choices): return '(' + '|'.join(choices) + ')'
-def any(*choices): return group(*choices) + '*'
-def maybe(*choices): return group(*choices) + '?'
+
+def group(*choices):
+    return '(' + '|'.join(choices) + ')'
+
+
+def any(*choices):
+    return group(*choices) + '*'
+
+
+def maybe(*choices):
+    return group(*choices) + '?'
+
 
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
@@ -182,8 +174,10 @@ ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
 PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple)
 PseudoToken = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name)
 
+
 def _compile(expr):
     return re.compile(expr, re.UNICODE)
+
 
 endpats = {"'": Single, '"': Double,
            "'''": Single3, '"""': Double3,
@@ -230,9 +224,13 @@ for t in ("'", '"',
 
 tabsize = 8
 
-class TokenError(Exception): pass
 
-class StopTokenizing(Exception): pass
+class TokenError(Exception):
+    pass
+
+
+class StopTokenizing(Exception):
+    pass
 
 
 class Untokenizer:
@@ -351,6 +349,7 @@ def _get_normal_name(orig_enc):
         return "iso-8859-1"
     return orig_enc
 
+
 def detect_encoding(readline):
     """
     The detect_encoding() function is used to detect the encoding that should
@@ -375,6 +374,7 @@ def detect_encoding(readline):
     bom_found = False
     encoding = None
     default = 'utf-8'
+
     def read_or_stop():
         try:
             return readline()
@@ -486,7 +486,7 @@ def tokenize(readline):
     try:
         return _tokenize(chain(consumed, rl_gen, empty).__next__, encoding)
     except AttributeError:
-        return _tokenize(chain(consumed, rl_gen, empty).next, encoding)
+        return _tokenize(chain(consumed, rl_gen, empty).__next__, encoding)
 
 
 def _tokenize(readline, encoding):
@@ -621,7 +621,7 @@ def _tokenize(readline, encoding):
                         break
                     else:                                  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
-                elif isidentifier(initial):               # ordinary name
+                elif initial.isidentifier():               # ordinary name
                     yield TokenInfo(NAME, token, spos, epos, line)
                 elif initial == '\\':                      # continued stmt
                     continued = 1
@@ -636,6 +636,6 @@ def _tokenize(readline, encoding):
                            (lnum, pos), (lnum, pos+1), line)
                 pos += 1
 
-    for indent in indents[1:]:                 # pop remaining indent levels
+    for _ in indents[1:]:                 # pop remaining indent levels
         yield TokenInfo(DEDENT, '', (lnum, 0), (lnum, 0), '')
     yield TokenInfo(ENDMARKER, '', (lnum, 0), (lnum, 0), '')

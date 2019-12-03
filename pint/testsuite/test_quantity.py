@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import copy
 import datetime
 import math
 import operator as op
-import warnings
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.unit import UnitsContainer
-from pint.compat import string_types, PYTHON3, np
+from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
 
@@ -191,7 +188,7 @@ class TestQuantity(QuantityTestCase):
     def test_ipython(self):
         alltext = []
 
-        class Pretty(object):
+        class Pretty:
             @staticmethod
             def text(text):
                 alltext.append(text)
@@ -467,22 +464,20 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
         x = "some string"*ureg.m
-        if PYTHON3:
-            with self.assertWarns(RuntimeWarning):
-                self.compareQuantity_compact(x,x)
-        else:
-            self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
+        with self.assertWarns(RuntimeWarning):
+            self.compareQuantity_compact(x, x)
+
 
 class TestQuantityBasicMath(QuantityTestCase):
 
     FORCE_NDARRAY = False
 
     def _test_inplace(self, operator, value1, value2, expected_result, unit=None):
-        if isinstance(value1, string_types):
+        if isinstance(value1, str):
             value1 = self.Q_(value1)
-        if isinstance(value2, string_types):
+        if isinstance(value2, str):
             value2 = self.Q_(value2)
-        if isinstance(expected_result, string_types):
+        if isinstance(expected_result, str):
             expected_result = self.Q_(expected_result)
 
         if not unit is None:
@@ -502,11 +497,11 @@ class TestQuantityBasicMath(QuantityTestCase):
         self.assertEqual(id2, id(value2))
 
     def _test_not_inplace(self, operator, value1, value2, expected_result, unit=None):
-        if isinstance(value1, string_types):
+        if isinstance(value1, str):
             value1 = self.Q_(value1)
-        if isinstance(value2, string_types):
+        if isinstance(value2, str):
             value2 = self.Q_(value2)
-        if isinstance(expected_result, string_types):
+        if isinstance(expected_result, str):
             expected_result = self.Q_(expected_result)
 
         if not unit is None:
@@ -616,9 +611,9 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.ifloordiv, '10*meter', '4.2*inch', 93, unit)
 
     def _test_quantity_divmod_one(self, a, b):
-        if isinstance(a, string_types):
+        if isinstance(a, str):
             a = self.Q_(a)
-        if isinstance(b, string_types):
+        if isinstance(b, str):
             b = self.Q_(b)
 
         q, r = divmod(a, b)
@@ -685,9 +680,8 @@ class TestQuantityBasicMath(QuantityTestCase):
 
         x = self.Q_(-4.2, 'meter')
         y = self.Q_(4.2, 'meter')
-        # In Python 3+ round of x is delegated to x.__round__, instead of round(x.__float__)
-        # and therefore it can be properly implemented by Pint
-        for fun in (abs, op.pos, op.neg) + (round, ) if PYTHON3 else ():
+
+        for fun in (abs, round, op.pos, op.neg):
             zx = self.Q_(fun(x.magnitude), 'meter')
             zy = self.Q_(fun(y.magnitude), 'meter')
             rx = fun(x)

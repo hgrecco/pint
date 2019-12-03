@@ -7,8 +7,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import contextlib
 import copy
 import datetime
@@ -25,7 +23,7 @@ from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_la
 from .errors import (DimensionalityError, OffsetUnitCalculusError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
-from .compat import string_types, ndarray, np, _to_magnitude, long_type
+from .compat import ndarray, np, _to_magnitude
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit,
                    fix_str_conversions)
@@ -125,7 +123,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def __new__(cls, value, units=None):
         if units is None:
-            if isinstance(value, string_types):
+            if isinstance(value, str):
                 if value == '':
                     raise ValueError('Expression to parse as Quantity cannot '
                                      'be an empty string.')
@@ -142,7 +140,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = units
-        elif isinstance(units, string_types):
+        elif isinstance(units, str):
             inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)._units
@@ -577,7 +575,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         magnitude = q_base.magnitude
 
         units = list(q_base._units.items())
-        units_numerator = list(filter(lambda a: a[1]>0, units))
+        units_numerator = [a for a in units if a[1] > 0]
 
         if len(units_numerator) > 0:
             unit_str, unit_power = units_numerator[0]
@@ -600,11 +598,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __int__(self):
         if self.dimensionless:
             return int(self._convert_magnitude_not_inplace(UnitsContainer()))
-        raise DimensionalityError(self._units, 'dimensionless')
-
-    def __long__(self):
-        if self.dimensionless:
-            return long_type(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, 'dimensionless')
 
     def __float__(self):

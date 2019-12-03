@@ -7,8 +7,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 from .compat import ufloat
 from .formatting import _FORMATS, siunitx_format_unit
 from .quantity import Quantity
@@ -140,7 +138,7 @@ _Measurement = Measurement
 def build_measurement_class(registry):
 
     if ufloat is None:
-        class Measurement(object):
+        class Measurement:
             _REGISTRY = registry
 
             def __init__(self, *args):

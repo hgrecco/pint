@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
-import math
 import copy
+import math
 import unittest
 import sys
 
@@ -430,49 +428,17 @@ class TestIssues(QuantityTestCase):
         self.assertEqual(iq, 10)
         self.assertIsInstance(iq, int)
 
-    @helpers.requires_python2()
-    def test_issue170b(self):
-        Q_ = UnitRegistry().Quantity
-        q = Q_('1 kHz')/Q_('100 Hz')
-        iq = long(q)
-        self.assertEqual(iq, long(10))
-        self.assertIsInstance(iq, long)
-
     def test_angstrom_creation(self):
         ureg = UnitRegistry()
-        try:
-            # Check if the install supports unicode, travis python27 seems to
-            # support it...
-            if (sys.version_info < (3, 0)):
-                'Å'.decode('utf-8')
-        except UnicodeEncodeError:
-            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, 'Å')
-        else:
-            ureg.Quantity(2, 'Å')
+        ureg.Quantity(2, 'Å')
 
     def test_alternative_angstrom_definition(self):
         ureg = UnitRegistry()
-        try:
-            # Check if the install supports unicode, travis python27 seems to
-            # support it...
-            if (sys.version_info < (3, 0)):
-                'Å'.decode('utf-8')
-        except UnicodeEncodeError:
-            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, '\u212B')
-        else:
-            ureg.Quantity(2, '\u212B')
+        ureg.Quantity(2, '\u212B')
 
     def test_micro_creation(self):
         ureg = UnitRegistry()
-        try:
-            # Check if the install supports unicode, travis python27 seems to
-            # support it...
-            if (sys.version_info < (3, 0)):
-                'µ'.decode('utf-8')
-        except UnicodeEncodeError:
-            self.assertRaises(UndefinedUnitError, ureg.Quantity, 2, 'µm')
-        else:
-            ureg.Quantity(2, 'µm')
+        ureg.Quantity(2, 'µm')
 
     @helpers.requires_numpy()
     def test_issue171_real_imag(self):
@@ -537,7 +503,7 @@ class TestIssues(QuantityTestCase):
         x = ureg.Quantity(1., 'meter')
         y = f(x)
         z = x * y
-        self.assertEquals(z, ureg.Quantity(1., 'meter * kilogram'))
+        self.assertEqual(z, ureg.Quantity(1., 'meter * kilogram'))
 
     @helpers.requires_numpy()
     def test_issue482(self):

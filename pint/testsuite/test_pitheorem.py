@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import itertools
 
 from pint import pi_theorem
-
 from pint.testsuite import QuantityTestCase
 
 

@@ -9,8 +9,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import copy
 import operator
 from numbers import Number
@@ -18,7 +16,7 @@ from numbers import Number
 from .util import (
     PrettyIPython, UnitsContainer, SharedRegistryObject, fix_str_conversions)
 
-from .compat import string_types, NUMERIC_TYPES, long_type
+from .compat import NUMERIC_TYPES
 from .formatting import siunitx_format_unit
 from .definitions import UnitDefinition
 
@@ -44,7 +42,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         super(Unit, self).__init__()
         if isinstance(units, (UnitsContainer, UnitDefinition)):
             self._units = units
-        elif isinstance(units, string_types):
+        elif isinstance(units, str):
             self._units = self._REGISTRY.parse_units(units)._units
         elif isinstance(units, Unit):
             self._units = units._units
@@ -223,9 +221,6 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __int__(self):
         return int(self._REGISTRY.Quantity(1, self._units))
-
-    def __long__(self):
-        return long_type(self._REGISTRY.Quantity(1, self._units))
 
     def __float__(self):
         return float(self._REGISTRY.Quantity(1, self._units))

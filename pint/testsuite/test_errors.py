@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 
 from pint import DimensionalityError, UndefinedUnitError
 from pint.testsuite import BaseTestCase

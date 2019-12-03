@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
-
 import doctest
 from distutils.version import StrictVersion
 import re
 import unittest
 
-from pint.compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
+from ..compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER
 
 
 def requires_numpy18():
@@ -41,14 +38,6 @@ def requires_uncertainties():
 
 def requires_not_uncertainties():
     return unittest.skipIf(HAS_UNCERTAINTIES, 'Requires Uncertainties is not installed.')
-
-
-def requires_python2():
-    return unittest.skipIf(PYTHON3, 'Requires Python 2.X.')
-
-
-def requires_python3():
-    return unittest.skipUnless(PYTHON3, 'Requires Python 3.X.')
 
 
 _number_re = '([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)'

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals, print_function, absolute_import
 
 import itertools
 
 from pint.compat import np
 from pint.converters import (ScaleConverter, OffsetConverter, Converter)
 from pint.testsuite import helpers, BaseTestCase
+
 
 class TestConverter(BaseTestCase):
 

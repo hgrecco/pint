@@ -9,29 +9,22 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
-from decimal import Decimal
 import locale
+import logging
+from logging import NullHandler
 import sys
 import re
 import operator
+from collections.abc import Mapping
+from decimal import Decimal
 from numbers import Number
 from fractions import Fraction
+from functools import lru_cache
 
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
+from token import NAME, NUMBER
 
-from logging import NullHandler
-
-import logging
-from token import STRING, NAME, OP, NUMBER
-from tokenize import untokenize
-
-from .compat import string_types, tokenizer, lru_cache, maketrans, NUMERIC_TYPES
-from .formatting import format_unit,siunitx_format_unit
+from .compat import tokenizer, NUMERIC_TYPES
+from .formatting import format_unit
 from .pint_eval import build_eval_tree
 from .errors import DefinitionSyntaxError
 
@@ -144,7 +137,7 @@ def pi_theorem(quantities, registry=None):
         getdim = registry.get_dimensionality
 
     for name, value in quantities.items():
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value = ParserHelper.from_string(value)
         if isinstance(value, dict):
             dims = getdim(UnitsContainer(value))
@@ -194,15 +187,18 @@ def solve_dependencies(dependencies):
     r = []
     while d:
         # values not in keys (items without dep)
-        t = set(i for v in d.values() for i in v) - set(d.keys())
+        t = {i for v in d.values() for i in v} - d.keys()
         # and keys without value (items without dep)
         t.update(k for k, v in d.items() if not v)
         # can be done right away
         if not t:
-            raise ValueError('Cyclic dependencies exist among these items: {}'.format(', '.join(repr(x) for x in d.items())))
+            raise ValueError(
+                'Cyclic dependencies exist among these items: {}'
+                .format(', '.join(repr(x) for x in d.items()))
+            )
         r.append(t)
         # and cleaned up
-        d = dict(((k, v - t) for k, v in d.items() if v))
+        d = {k: v - t for k, v in d.items() if v}
     return r
 
 
@@ -261,7 +257,7 @@ class UnitsContainer(Mapping):
         d = udict(*args, **kwargs)
         self._d = d
         for key, value in d.items():
-            if not isinstance(key, string_types):
+            if not isinstance(key, str):
                 raise TypeError('key must be a str, not {}'.format(type(key)))
             if not isinstance(value, Number):
                 raise TypeError('value must be a number, not {}'.format(type(value)))
@@ -318,10 +314,6 @@ class UnitsContainer(Mapping):
             self._hash = hash(frozenset(self._d.items()))
         return self._hash
 
-    # Only needed by Python 2.7
-    def __getstate__(self):
-        return self._d, self._hash
-
     def __setstate__(self, state):
         self._d, self._hash = state
 
@@ -336,7 +328,7 @@ class UnitsContainer(Mapping):
                 return False
             other = other._d
 
-        elif isinstance(other, string_types):
+        elif isinstance(other, str):
             other = ParserHelper.from_string(other)
             other = other._d
 
@@ -485,9 +477,13 @@ class ParserHelper(UnitsContainer):
         if not reps:
             return ret
 
-        return ParserHelper(ret.scale,
-                            dict((key.replace('__obra__', '[').replace('__cbra__', ']'), value)
-                                 for key, value in ret.items()))
+        return ParserHelper(
+            ret.scale,
+            {
+                key.replace('__obra__', '[').replace('__cbra__', ']'): value
+                for key, value in ret.items()
+            }
+        )
 
     def __copy__(self):
         new = super(ParserHelper, self).__copy__()
@@ -503,10 +499,6 @@ class ParserHelper(UnitsContainer):
             raise ValueError(mess)
         return super(ParserHelper, self).__hash__()
 
-    # Only needed by Python 2.7
-    def __getstate__(self):
-        return self._d, self._hash, self.scale
-
     def __setstate__(self, state):
         self._d, self._hash, self.scale = state
 
@@ -516,7 +508,7 @@ class ParserHelper(UnitsContainer):
                 self.scale == other.scale and
                 super(ParserHelper, self).__eq__(other)
             )
-        elif isinstance(other, string_types):
+        elif isinstance(other, str):
             return self == ParserHelper.from_string(other)
         elif isinstance(other, Number):
             return self.scale == other and not len(self._d)
@@ -546,7 +538,7 @@ class ParserHelper(UnitsContainer):
         return '<ParserHelper({}, {})>'.format(self.scale, tmp)
 
     def __mul__(self, other):
-        if isinstance(other, string_types):
+        if isinstance(other, str):
             new = self.add(other, 1)
         elif isinstance(other, Number):
             new = self.copy()
@@ -567,7 +559,7 @@ class ParserHelper(UnitsContainer):
         return self.__class__(self.scale**other, d)
 
     def __truediv__(self, other):
-        if isinstance(other, string_types):
+        if isinstance(other, str):
             new = self.add(other, -1)
         elif isinstance(other, Number):
             new = self.copy()
@@ -583,7 +575,7 @@ class ParserHelper(UnitsContainer):
 
     def __rtruediv__(self, other):
         new = self.__pow__(-1)
-        if isinstance(other, string_types):
+        if isinstance(other, str):
             new = new.add(other, 1)
         elif isinstance(other, Number):
             new.scale *= other
@@ -609,7 +601,7 @@ _subs_re = [('\N{DEGREE SIGN}', " degree"),
 
 #: Compiles the regex and replace {} by a regex that matches an identifier.
 _subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
-_pretty_table = maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹·⁻', '0123456789*-')
+_pretty_table = str.maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹·⁻', '0123456789*-')
 _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
 
 
@@ -636,7 +628,7 @@ def _is_dim(name):
     return name[0] == '[' and name[-1] == ']'
 
 
-class SharedRegistryObject(object):
+class SharedRegistryObject:
     """Base class for object keeping a reference to the registree.
 
     Such object are for now Quantity and Unit, in a number of places it is
@@ -673,7 +665,7 @@ class SharedRegistryObject(object):
             return False
 
 
-class PrettyIPython(object):
+class PrettyIPython:
     """Mixin to add pretty-printers for IPython"""
 
     def _repr_html_(self):
@@ -704,7 +696,7 @@ def to_units_container(unit_like, registry=None):
         return unit_like
     elif SharedRegistryObject in mro:
         return unit_like._units
-    elif string_types in mro:
+    elif str in mro:
         if registry:
             return registry._parse_units(unit_like)
         else:
@@ -722,7 +714,9 @@ def infer_base_unit(q):
 
         _, base_unit, __ = completely_parsed_unit
         d[base_unit] += power
-    return UnitsContainer(dict((k, v) for k, v in d.items() if v != 0))  # remove values that resulted in a power of 0
+
+    # remove values that resulted in a power of 0
+    return UnitsContainer({k: v for k, v in d.items() if v != 0})
 
 
 def fix_str_conversions(cls):
@@ -748,7 +742,7 @@ def getattr_maybe_raise(self, item):
         raise AttributeError("%r object has no attribute %r" % (self, item))
 
 
-class SourceIterator(object):
+class SourceIterator:
     """Iterator to facilitate reading the definition files.
 
     Accepts any sequence (like a list of lines, a file or another SourceIterator)

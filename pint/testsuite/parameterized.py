@@ -121,7 +121,7 @@ class ParameterizedTestCaseMetaClass(type):
         return new_method
 
 @add_metaclass(ParameterizedTestCaseMetaClass)
-class ParameterizedTestMixin(object):
+class ParameterizedTestMixin:
     @classmethod
     def parameterize(cls, param_names, data,
                      func_name_format='{func_name}_{case_num:05d}'):

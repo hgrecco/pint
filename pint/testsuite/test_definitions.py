@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 from pint.util import (UnitsContainer)
 from pint.converters import (ScaleConverter, OffsetConverter)
 from pint.definitions import (Definition, PrefixDefinition, UnitDefinition,
                               DimensionDefinition, AliasDefinition)
 
 from pint.testsuite import BaseTestCase
+
 
 class TestDefinition(BaseTestCase):
 
