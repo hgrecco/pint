@@ -313,6 +313,10 @@ class UnitsContainer(Mapping):
             self._hash = hash(frozenset(self._d.items()))
         return self._hash
 
+    # Only needed by Python 2.7
+    def __getstate__(self):
+        return self._d, self._hash
+
     def __setstate__(self, state):
         self._d, self._hash = state
 
@@ -497,6 +501,10 @@ class ParserHelper(UnitsContainer):
             mess = 'Only scale 1.0 ParserHelper instance should be considered hashable'
             raise ValueError(mess)
         return super(ParserHelper, self).__hash__()
+
+    # Only needed by Python 2.7
+    def __getstate__(self):
+        return self._d, self._hash, self.scale
 
     def __setstate__(self, state):
         self._d, self._hash, self.scale = state
