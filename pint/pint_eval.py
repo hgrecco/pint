@@ -9,8 +9,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from decimal import Decimal
-import math
 import operator
 
 import token as tokenlib

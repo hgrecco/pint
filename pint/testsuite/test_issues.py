@@ -3,9 +3,9 @@
 import copy
 import math
 import unittest
-import sys
+from inspect import signature
 
-from pint import DimensionalityError, UndefinedUnitError, UnitRegistry
+from pint import DimensionalityError, UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
@@ -538,12 +538,6 @@ class TestIssues(QuantityTestCase):
         self.assertRaises(DimensionalityError, f, ureg.Quantity(1, 'm'))
 
     def test_issue625a(self):
-        try:
-            from inspect import signature
-        except ImportError:
-            # Python2 does not have the inspect library. Import the backport.
-            from funcsigs import signature
-
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
         from math import sqrt
