@@ -421,7 +421,7 @@ class ParserHelper(UnitsContainer):
     __slots__ = ('scale', )
 
     def __init__(self, scale=1, *args, **kwargs):
-        super(ParserHelper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.scale = scale
 
     @classmethod
@@ -487,7 +487,7 @@ class ParserHelper(UnitsContainer):
         )
 
     def __copy__(self):
-        new = super(ParserHelper, self).__copy__()
+        new = super().__copy__()
         new.scale = self.scale
         return new
 
@@ -498,7 +498,7 @@ class ParserHelper(UnitsContainer):
         if self.scale != 1.0:
             mess = 'Only scale 1.0 ParserHelper instance should be considered hashable'
             raise ValueError(mess)
-        return super(ParserHelper, self).__hash__()
+        return super().__hash__()
 
     # Only needed by Python 2.7
     def __getstate__(self):
@@ -511,14 +511,14 @@ class ParserHelper(UnitsContainer):
         if isinstance(other, ParserHelper):
             return (
                 self.scale == other.scale and
-                super(ParserHelper, self).__eq__(other)
+                super().__eq__(other)
             )
         elif isinstance(other, str):
             return self == ParserHelper.from_string(other)
         elif isinstance(other, Number):
             return self.scale == other and not len(self._d)
         else:
-            return self.scale == 1. and super(ParserHelper, self).__eq__(other)
+            return self.scale == 1. and super().__eq__(other)
 
     def operate(self, items, op=operator.iadd, cleanup=True):
         d = udict(self._d)

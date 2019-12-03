@@ -265,7 +265,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def _repr_pretty_(self, p, cycle):
         if cycle:
-            super(Quantity, self)._repr_pretty_(p, cycle)
+            super()._repr_pretty_(p, cycle)
         else:
             p.pretty(self.magnitude)
             p.text(" ")

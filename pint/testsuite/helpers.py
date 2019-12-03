@@ -53,7 +53,7 @@ _unit_re = re.compile('<Unit\((.*)\)>')
 class PintOutputChecker(doctest.OutputChecker):
 
     def check_output(self, want, got, optionflags):
-        check = super(PintOutputChecker, self).check_output(want, got, optionflags)
+        check = super().check_output(want, got, optionflags)
         if check:
             return check
 

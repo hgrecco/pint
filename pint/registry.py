@@ -903,7 +903,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
     """
 
     def __init__(self, default_as_delta=True, autoconvert_offset_to_baseunit=False, **kwargs):
-        super(NonMultiplicativeRegistry, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
@@ -919,7 +919,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         if as_delta is None:
             as_delta = self.default_as_delta
 
-        return super(NonMultiplicativeRegistry, self)._parse_units(input_string, as_delta)
+        return super()._parse_units(input_string, as_delta)
 
     def _define(self, definition):
         """Add unit to the registry.
@@ -933,7 +933,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         :rtype: Definition, dict, dict
         """
 
-        definition, d, di = super(NonMultiplicativeRegistry, self)._define(definition)
+        definition, d, di = super()._define(definition)
 
         # define additional units for units with an offset
         if getattr(definition.converter, "offset", 0.0) != 0.0:
@@ -1012,7 +1012,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
             raise DimensionalityError(src, dst, extra_msg=' - In destination units, %s ' % ex)
 
         if not (src_offset_unit or dst_offset_unit):
-            return super(NonMultiplicativeRegistry, self)._convert(value, src, dst, inplace)
+            return super()._convert(value, src, dst, inplace)
 
         src_dim = self._get_dimensionality(src)
         dst_dim = self._get_dimensionality(dst)
@@ -1032,7 +1032,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         dst = dst.remove([dst_offset_unit])
 
         # Convert non multiplicative units to the dst.
-        value = super(NonMultiplicativeRegistry, self)._convert(value, src, dst, inplace, False)
+        value = super()._convert(value, src, dst, inplace, False)
 
         # Finally convert to offset units specified in destination
         if dst_offset_unit:
@@ -1056,7 +1056,7 @@ class ContextRegistry(BaseRegistry):
     """
 
     def __init__(self, **kwargs):
-        super(ContextRegistry, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         #: Map context name (string) or abbreviation to context.
         self._contexts = {}
@@ -1065,7 +1065,7 @@ class ContextRegistry(BaseRegistry):
         self._active_ctx = ContextChain()
 
     def _register_parsers(self):
-        super(ContextRegistry, self)._register_parsers()
+        super()._register_parsers()
         self._register_parser('@context', self._parse_context)
 
     def _parse_context(self, ifile):
@@ -1263,7 +1263,7 @@ class ContextRegistry(BaseRegistry):
 
                 value, src = src._magnitude, src._units
 
-        return super(ContextRegistry, self)._convert(value, src, dst, inplace)
+        return super()._convert(value, src, dst, inplace)
 
     def _get_compatible_units(self, input_units, group_or_system):
         """
@@ -1271,7 +1271,7 @@ class ContextRegistry(BaseRegistry):
 
         src_dim = self._get_dimensionality(input_units)
 
-        ret = super(ContextRegistry, self)._get_compatible_units(input_units, group_or_system)
+        ret = super()._get_compatible_units(input_units, group_or_system)
 
         if self._active_ctx:
             nodes = find_connected_nodes(self._active_ctx.graph, src_dim)
@@ -1298,7 +1298,7 @@ class SystemRegistry(BaseRegistry):
     """
 
     def __init__(self, system=None, **kwargs):
-        super(SystemRegistry, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         #: Map system name to system.
         #: :type: dict[ str | System]
@@ -1314,7 +1314,7 @@ class SystemRegistry(BaseRegistry):
         self._default_system = system
 
     def _init_dynamic_classes(self):
-        super(SystemRegistry, self)._init_dynamic_classes()
+        super()._init_dynamic_classes()
         self.Group = systems.build_group_class(self)
         self.System = systems.build_system_class(self)
 
@@ -1325,7 +1325,7 @@ class SystemRegistry(BaseRegistry):
         Add all orphan units to it.
         Set default system.
         """
-        super(SystemRegistry, self)._after_init()
+        super()._after_init()
 
         #: Copy units not defined in any group to the default group
         if 'group' in self._defaults:
@@ -1345,7 +1345,7 @@ class SystemRegistry(BaseRegistry):
         self._default_system = self._default_system or self._defaults.get('system', None)
 
     def _register_parsers(self):
-        super(SystemRegistry, self)._register_parsers()
+        super()._register_parsers()
         self._register_parser('@group', self._parse_group)
         self._register_parser('@system', self._parse_system)
 
@@ -1408,7 +1408,7 @@ class SystemRegistry(BaseRegistry):
         # In addition to the what is done by the BaseRegistry,
         # this adds all units to the `root` group.
 
-        definition, d, di = super(SystemRegistry, self)._define(definition)
+        definition, d, di = super()._define(definition)
 
         if isinstance(definition, UnitDefinition):
             # We add all units to the root group
@@ -1483,7 +1483,7 @@ class SystemRegistry(BaseRegistry):
         if group_or_system is None:
             group_or_system = self._default_system
 
-        ret = super(SystemRegistry, self)._get_compatible_units(input_units, group_or_system)
+        ret = super()._get_compatible_units(input_units, group_or_system)
 
         if group_or_system:
             if group_or_system in self._systems:
@@ -1520,12 +1520,14 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
                  on_redefinition='warn', system=None,
                  auto_reduce_dimensions=False):
 
-        super(UnitRegistry, self).__init__(filename=filename, force_ndarray=force_ndarray,
-                                           on_redefinition=on_redefinition,
-                                           default_as_delta=default_as_delta,
-                                           autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
-                                           system=system,
-                                           auto_reduce_dimensions=auto_reduce_dimensions)
+        super().__init__(
+            filename=filename, force_ndarray=force_ndarray,
+            on_redefinition=on_redefinition,
+            default_as_delta=default_as_delta,
+            autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
+            system=system,
+            auto_reduce_dimensions=auto_reduce_dimensions
+        )
 
     def pi_theorem(self, quantities):
         """Builds dimensionless quantities using the Buckingham π theorem
@@ -1569,7 +1571,7 @@ class LazyRegistry:
 
     def __setattr__(self, key, value):
         if key == '__class__':
-            super(LazyRegistry, self).__setattr__(key, value)
+            super().__setattr__(key, value)
         else:
             self.__init()
             setattr(self, key, value)

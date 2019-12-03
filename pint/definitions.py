@@ -99,8 +99,7 @@ class PrefixDefinition(Definition):
         aliases = tuple(alias.strip('-') for alias in aliases)
         if symbol:
             symbol = symbol.strip('-')
-        super(PrefixDefinition, self).__init__(name, symbol, aliases,
-                                               converter)
+        super().__init__(name, symbol, aliases, converter)
 
 
 class UnitDefinition(Definition):
@@ -139,7 +138,7 @@ class UnitDefinition(Definition):
             else:
                 converter = ScaleConverter(converter.scale)
 
-        super(UnitDefinition, self).__init__(name, symbol, aliases, converter)
+        super().__init__(name, symbol, aliases, converter)
 
 
 class DimensionDefinition(Definition):
@@ -162,14 +161,11 @@ class DimensionDefinition(Definition):
                                  'to dimensions.')
             self.reference = UnitsContainer(converter)
 
-        super(DimensionDefinition, self).__init__(name, symbol, aliases,
-                                                  converter=None)
+        super().__init__(name, symbol, aliases, converter=None)
 
 
 class AliasDefinition(Definition):
     """Additional alias(es) for an already existing unit
     """
     def __init__(self, name, aliases):
-        super(AliasDefinition, self).__init__(
-            name=name, symbol=None, aliases=aliases, converter=None
-        )
+        super().__init__(name=name, symbol=None, aliases=aliases, converter=None)

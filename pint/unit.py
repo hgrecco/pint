@@ -38,7 +38,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         return _unpickle, (Unit, self._units)
 
     def __init__(self, units):
-        super(Unit, self).__init__()
+        super().__init__()
         if isinstance(units, (UnitsContainer, UnitDefinition)):
             self._units = units
         elif isinstance(units, str):

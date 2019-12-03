@@ -515,7 +515,7 @@ class TestCompatibleUnits(QuantityTestCase):
     FORCE_NDARRAY = False
 
     def setUp(self):
-        super(TestCompatibleUnits, self).setUp()
+        super().setUp()
         self.ureg = UnitRegistry(force_ndarray=self.FORCE_NDARRAY)
         self.Q_ = self.ureg.Quantity
         self.U_ = self.ureg.Unit

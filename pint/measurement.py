@@ -47,7 +47,7 @@ class Measurement(Quantity):
         else:
             mag = ufloat(value, error)
 
-        inst = super(Measurement, cls).__new__(cls, mag, units)
+        inst = super().__new__(cls, mag, units)
         return inst
 
     @property

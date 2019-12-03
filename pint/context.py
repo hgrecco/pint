@@ -195,7 +195,7 @@ class ContextChain(ChainMap):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ContextChain, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._graph = None
         self._contexts = []
 
