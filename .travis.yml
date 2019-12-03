@@ -17,29 +17,29 @@ env:
   # At the moment of writing, uncertainties doesn't officially support Python 3.8
 
   # Without numpy, without uncertainties
-  - UNCERTAINTIES=0   PYTHON=3.6 NUMPY_VERSION=0 PANDAS=0
-  - UNCERTAINTIES=0   PYTHON=3.7 NUMPY_VERSION=0 PANDAS=0
-  - UNCERTAINTIES=0   PYTHON=3.8 NUMPY_VERSION=0 PANDAS=0
+  - UNCERTAINTIES=0     PYTHON=3.6 NUMPY=0 PANDAS=0
+  - UNCERTAINTIES=0     PYTHON=3.7 NUMPY=0 PANDAS=0
+  - UNCERTAINTIES=0     PYTHON=3.8 NUMPY=0 PANDAS=0
   # Without numpy, min version of uncertainties
-  - UNCERTAINTIES=3.0 PYTHON=3.6 NUMPY_VERSION=0 PANDAS=0
-  - UNCERTAINTIES=3.0 PYTHON=3.7 NUMPY_VERSION=0 PANDAS=0
+  - UNCERTAINTIES=3.0.1 PYTHON=3.6 NUMPY=0 PANDAS=0
+  - UNCERTAINTIES=3.0.1 PYTHON=3.7 NUMPY=0 PANDAS=0
   # Min version of numpy, without uncertainties
-  - UNCERTAINTIES=0   PYTHON=3.6 NUMPY_VERSION=1.14 PANDAS=0
-  - UNCERTAINTIES=0   PYTHON=3.7 NUMPY_VERSION=1.14 PANDAS=0
-  - UNCERTAINTIES=0   PYTHON=3.8 NUMPY_VERSION=1.17 PANDAS=0
+  - UNCERTAINTIES=0     PYTHON=3.6 NUMPY=1.14 PANDAS=0
+  - UNCERTAINTIES=0     PYTHON=3.7 NUMPY=1.14 PANDAS=0
+  - UNCERTAINTIES=0     PYTHON=3.8 NUMPY=1.17 PANDAS=0
   # Min version of numpy, min version of uncertainties
-  - UNCERTAINTIES=3.0 PYTHON=3.6 NUMPY_VERSION=1.14 PANDAS=0
-  - UNCERTAINTIES=3.0 PYTHON=3.7 NUMPY_VERSION=1.14 PANDAS=0
+  - UNCERTAINTIES=3.0.1 PYTHON=3.6 NUMPY=1.14 PANDAS=0
+  - UNCERTAINTIES=3.0.1 PYTHON=3.7 NUMPY=1.14 PANDAS=0
   # Latest versions of numpy and uncertainties (where different from the minimum ones)
-  - UNCERTAINTIES=3.1 PYTHON=3.6 NUMPY_VERSION=1.17 PANDAS=0
-  - UNCERTAINTIES=3.1 PYTHON=3.7 NUMPY_VERSION=1.17 PANDAS=0
+  - UNCERTAINTIES=999   PYTHON=3.6 NUMPY=999 PANDAS=0
+  - UNCERTAINTIES=999   PYTHON=3.7 NUMPY=999 PANDAS=0
 
   # TODO: Should pandas tests be removed or replaced wih import checks?
-  #- UNCERTAINTIES=0 PYTHON=3.6 NUMPY_VERSION=1.14 PANDAS=1
+  #- UNCERTAINTIES=0 PYTHON=3.6 NUMPY=1.14 PANDAS=1
 
 before_install:
   - sudo apt-get update
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
@@ -58,8 +58,10 @@ before_install:
 install:
   - conda create --yes -n $ENV_NAME python=$PYTHON pip
   - source activate $ENV_NAME
-  - if [ $UNCERTAINTIES != '0' ]; then pip install uncertainties==$UNCERTAINTIES; fi
-  - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
+  - if [[ $UNCERTAINTIES != 0 && $UNCERTAINTIES < 999 ]]; then pip install uncertainties==$UNCERTAINTIES; fi
+  - if [[ $UNCERTAINTIES == 999 ]]; then pip install uncertainties; fi
+  - if [[ $NUMPY != 0 && $NUMPY < 999 ]; then conda install --yes numpy==$NUMPY; fi
+  - if [[ $NUMPY == "latest" ]; then conda install --yes numpy; fi
   # this is superslow but suck it up until updates to pandas are made
   - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
   - pip install coveralls
