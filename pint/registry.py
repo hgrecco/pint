@@ -441,12 +441,11 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         """Build a cache of dimensionality and base units.
         """
         self._cache = RegistryCache()
-        root_units = self._cache.root_units
-        dimensionality = self._cache.dimensionality
-        dimensional_equivalents = self._cache.dimensional_equivalents
 
-        deps = dict((name, set(definition.reference.keys() if definition.reference else {}))
-                    for name, definition in self._units.items())
+        deps = {
+            name: set(definition.reference.keys()) if definition.reference else set()
+            for name, definition in self._units.items()
+        }
 
         for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
@@ -465,11 +464,13 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                     bu = self._get_root_units(uc)
                     di = self._get_dimensionality(uc)
 
-                    root_units[uc] = bu
-                    dimensionality[uc] = di
+                    self._cache.root_units[uc] = bu
+                    self._cache.dimensionality[uc] = di
 
                     if not prefixed:
-                        dimeq_set = dimensional_equivalents.setdefault(di, set())
+                        dimeq_set = self._cache.dimensional_equivalents.setdefault(
+                            di, set()
+                        )
                         dimeq_set.add(self._units[base_name]._name)
 
                 except Exception as e:
@@ -1075,16 +1076,14 @@ class ContextRegistry(BaseRegistry):
     """
 
     def __init__(self, **kwargs):
-        super(ContextRegistry, self).__init__(**kwargs)
-
         #: Map context name (string) or abbreviation to context.
         self._contexts = {}
-
         #: Stores active contexts.
         self._active_ctx = ContextChain()
-
         #: Map context chain to cache
-        self._caches = {self._active_ctx: self._cache}
+        self._caches = {}
+
+        super(ContextRegistry, self).__init__(**kwargs)
 
     def _register_parsers(self):
         super(ContextRegistry, self)._register_parsers()
@@ -1130,7 +1129,6 @@ class ContextRegistry(BaseRegistry):
         return context
 
     def _build_cache(self):
-        """"""
         try:
             self._cache = self._caches[self._active_ctx]
         except KeyError:
