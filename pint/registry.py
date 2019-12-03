@@ -101,6 +101,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                             'warn', 'raise', 'ignore'
     :type on_redefinition: str
     :param auto_reduce_dimensions: If True, reduce dimensionality on appropriate operations.
+    :param preprocessors: list of callables which are iteratively ran on any input expression
+                          or unit string
     """
 
     #: Map context prefix to function
@@ -116,13 +118,15 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             'parse_unit_name', 'parse_units', 'parse_expression',
             'convert']
 
-    def __init__(self, filename='', force_ndarray=False, on_redefinition='warn', auto_reduce_dimensions=False):
+    def __init__(self, filename='', force_ndarray=False, on_redefinition='warn',
+                 auto_reduce_dimensions=False, preprocessors=None):
 
         self._register_parsers()
         self._init_dynamic_classes()
 
         self._filename = filename
         self.force_ndarray = force_ndarray
+        self.preprocessors = preprocessors or []
 
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
@@ -813,6 +817,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             :class:`pint.UndefinedUnitError` if a unit is not in the registry
             :class:`ValueError` if the expression is invalid.
         """
+        for p in self.preprocessors:
+            input_string = p(input_string)
         units = self._parse_units(input_string, as_delta)
         return self.Unit(units)
 
@@ -881,6 +887,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         if not input_string:
             return self.Quantity(1)
 
+        for p in self.preprocessors:
+            input_string = p(input_string)
         input_string = string_preprocessor(input_string)
         gen = tokenizer(input_string)
 
@@ -1514,19 +1522,22 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
                             'warn', 'raise', 'ignore'
     :type on_redefinition: str
     :param auto_reduce_dimensions: If True, reduce dimensionality on appropriate operations.
+    :param preprocessors: list of callables which are iteratively ran on any input expression
+                          or unit string
     """
 
     def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
                  autoconvert_offset_to_baseunit=False,
                  on_redefinition='warn', system=None,
-                 auto_reduce_dimensions=False):
+                 auto_reduce_dimensions=False, preprocessors=None):
 
         super(UnitRegistry, self).__init__(filename=filename, force_ndarray=force_ndarray,
                                            on_redefinition=on_redefinition,
                                            default_as_delta=default_as_delta,
                                            autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
                                            system=system,
-                                           auto_reduce_dimensions=auto_reduce_dimensions)
+                                           auto_reduce_dimensions=auto_reduce_dimensions,
+                                           preprocessors=preprocessors)
 
     def pi_theorem(self, quantities):
         """Builds dimensionless quantities using the Buckingham π theorem
