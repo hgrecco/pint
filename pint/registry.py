@@ -80,7 +80,7 @@ class _Meta(type):
         return obj
 
 
-class RegistryCache(object):
+class RegistryCache:
     """Cache to speed up unit registries
     """
 
@@ -1083,7 +1083,7 @@ class ContextRegistry(BaseRegistry):
         #: Map context chain to cache
         self._caches = {}
 
-        super(ContextRegistry, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _register_parsers(self):
         super(ContextRegistry, self)._register_parsers()
@@ -1132,7 +1132,7 @@ class ContextRegistry(BaseRegistry):
         try:
             self._cache = self._caches[self._active_ctx]
         except KeyError:
-            super(ContextRegistry, self)._build_cache()
+            super()._build_cache()
             self._caches[self._active_ctx] = self._cache
 
     def enable_contexts(self, *names_or_contexts, **kwargs):

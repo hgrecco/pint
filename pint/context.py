@@ -201,7 +201,7 @@ class ContextChain(ChainMap):
     def __init__(self):
         super(ContextChain, self).__init__()
         self._graph = None
-        self._contexts = ()
+        self._contexts = []
 
     def insert_contexts(self, *contexts):
         """Insert one or more contexts in reversed order the chained map.
@@ -210,7 +210,7 @@ class ContextChain(ChainMap):
         To facilitate the identification of the context with the matching rule,
         the *relation_to_context* dictionary of the context is used.
         """
-        self._contexts = contexts + self._contexts
+        self._contexts.insert(0, contexts)
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
@@ -246,4 +246,4 @@ class ContextChain(ChainMap):
         return self[(src, dst)].transform(src, dst, registry, value)
 
     def __hash__(self):
-        return hash(self._contexts)
+        return hash(tuple(self._contexts))
