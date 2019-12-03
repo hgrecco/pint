@@ -14,7 +14,6 @@ env:
   # min/max Python version supported by numpy
   # Refer to history of https://github.com/lebigot/uncertainties/blob/master/setup.py
   # for min/max Python versions supported by uncertainties
-  # At the moment of writing, uncertainties doesn't officially support Python 3.8
 
   # Without numpy, without uncertainties
   - UNCERTAINTIES=0     PYTHON=3.6 NUMPY=0 PANDAS=0
@@ -33,6 +32,9 @@ env:
   # Latest versions of numpy and uncertainties (where different from the minimum ones)
   - UNCERTAINTIES=999   PYTHON=3.6 NUMPY=999 PANDAS=0
   - UNCERTAINTIES=999   PYTHON=3.7 NUMPY=999 PANDAS=0
+  # At the moment of writing, uncertainties doesn't officially support Python 3.8
+  # We're testing here at our own risk
+  - UNCERTAINTIES=999   PYTHON=3.8 NUMPY=999 PANDAS=0
 
   # TODO: Should pandas tests be removed or replaced wih import checks?
   #- UNCERTAINTIES=0 PYTHON=3.6 NUMPY=1.14 PANDAS=1
