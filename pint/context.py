@@ -89,7 +89,7 @@ class Context(object):
             newdef = dict(context.defaults, **defaults)
             c = cls(context.name, context.aliases, newdef)
             c.funcs = context.funcs
-            for edge in context.funcs.keys():
+            for edge in context.funcs:
                 c.relation_to_context[edge] = c
             return c
         return context
@@ -192,16 +192,14 @@ class Context(object):
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)
 
-    def __hash__(self):
-        return hash(self.name)
 
 class ContextChain(ChainMap):
     """A specialized ChainMap for contexts that simplifies finding rules
     to transform from one dimension to another.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(ContextChain, self).__init__(*args, **kwargs)
+    def __init__(self):
+        super(ContextChain, self).__init__()
         self._graph = None
         self._contexts = ()
 
@@ -212,7 +210,7 @@ class ContextChain(ChainMap):
         To facilitate the identification of the context with the matching rule,
         the *relation_to_context* dictionary of the context is used.
         """
-        self._contexts = tuple(contexts) + self._contexts
+        self._contexts = contexts + self._contexts
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 

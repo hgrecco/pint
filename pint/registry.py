@@ -79,21 +79,24 @@ class _Meta(type):
         obj._after_init()
         return obj
 
-class RegistryCache():
-    """Cache to speed up unit registries"""
+
+class RegistryCache(object):
+    """Cache to speed up unit registries
+    """
 
     def __init__(self):
         #: Maps dimensionality (UnitsContainer) to Units (str)
-        self.dimensional_equivalents = dict()
+        self.dimensional_equivalents = {}
 
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
-        self.root_units = dict()
+        self.root_units = {}
 
         #: Maps dimensionality (UnitsContainer) to Units (UnitsContainer)
-        self.dimensionality = dict()
+        self.dimensionality = {}
 
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit = dict()
+        self.parse_unit = {}
+
 
 class BaseRegistry(meta.with_metaclass(_Meta)):
     """Base class for all registries.
@@ -466,10 +469,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                     dimensionality[uc] = di
 
                     if not prefixed:
-                        if di not in dimensional_equivalents:
-                            dimensional_equivalents[di] = set()
-
-                        dimensional_equivalents[di].add(self._units[base_name]._name)
+                        dimeq_set = dimensional_equivalents.setdefault(di, set())
+                        dimeq_set.add(self._units[base_name]._name)
 
                 except Exception as e:
                     logger.warning('Could not resolve {0}: {1!r}'.format(unit_name, e))
@@ -566,8 +567,10 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         cache = self._cache.dimensionality
 
-        if input_units in cache:
+        try:
             return cache[input_units]
+        except KeyError:
+            pass
 
         accumulator = defaultdict(float)
         self._get_dimensionality_recurse(input_units, 1.0, accumulator)
@@ -653,11 +656,13 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         if not input_units:
             return 1., UnitsContainer()
 
-        cache = self._cache.root_units
-
         # The cache is only done for check_nonmult=True
-        if check_nonmult and input_units in cache:
-            return cache[input_units]
+        cache = self._cache.root_units
+        if check_nonmult:
+            try:
+                return cache[input_units]
+            except KeyError:
+                pass
 
         accumulators = [1., defaultdict(float)]
         self._get_root_units_recurse(input_units, 1.0, accumulators)
@@ -722,10 +727,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             return frozenset()
 
         src_dim = self._get_dimensionality(input_units)
-
-        ret = self._cache.dimensional_equivalents[src_dim]
-
-        return ret
+        return self._cache.dimensional_equivalents[src_dim]
 
     def convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
@@ -829,16 +831,15 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         units = self._parse_units(input_string, as_delta)
         return self.Unit(units)
 
-    def _parse_units(self, input_string, as_delta=None):
+    def _parse_units(self, input_string, as_delta=True):
         """
         """
-        if as_delta is None:
-            as_delta = True
-
         cache = self._cache.parse_unit
-
-        if as_delta and input_string in cache:
-            return cache[input_string]
+        if as_delta:
+            try:
+                return cache[input_string]
+            except KeyError:
+                pass
 
         if not input_string:
             return UnitsContainer()
@@ -1083,7 +1084,7 @@ class ContextRegistry(BaseRegistry):
         self._active_ctx = ContextChain()
 
         #: Map context chain to cache
-        self._caches = { self._active_ctx: self._cache }
+        self._caches = {self._active_ctx: self._cache}
 
     def _register_parsers(self):
         super(ContextRegistry, self)._register_parsers()
@@ -1130,12 +1131,11 @@ class ContextRegistry(BaseRegistry):
 
     def _build_cache(self):
         """"""
-        cache = self._caches.get(self._active_ctx)
-        if cache is None:
-            super()._build_cache()
+        try:
+            self._cache = self._caches[self._active_ctx]
+        except KeyError:
+            super(ContextRegistry, self)._build_cache()
             self._caches[self._active_ctx] = self._cache
-        else:
-            self._cache = cache
 
     def enable_contexts(self, *names_or_contexts, **kwargs):
         """Enable contexts provided by name or by object.
