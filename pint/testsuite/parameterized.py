@@ -28,14 +28,11 @@
 #        def test_eval(self, input, expected_output):
 #            self.assertEqual(eval(input), expected_output)
 
+from collections.abc import Callable
 from functools import wraps
-import collections
+
 import unittest
 
-try:
-    from collections.abc import Callable
-except ImportError:
-    from collections import Callable
 
 def add_metaclass(metaclass):
     """Class decorator for creating a class with a metaclass."""

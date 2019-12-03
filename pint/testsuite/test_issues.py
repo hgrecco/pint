@@ -3,7 +3,6 @@
 import copy
 import math
 import unittest
-from inspect import signature
 
 from pint import DimensionalityError, UnitRegistry
 from pint.unit import UnitsContainer
@@ -564,12 +563,6 @@ class TestIssues(QuantityTestCase):
         self.assertAlmostEqual(t2, Q_(3.508232077228117, 's'))
 
     def test_issue625b(self):
-        try:
-            from inspect import signature
-        except ImportError:
-            # Python2 does not have the inspect library. Import the backport.
-            from funcsigs import signature
-
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
 
@@ -585,13 +578,7 @@ class TestIssues(QuantityTestCase):
         d2 = get_displacement(Q_(2, 's'), Q_(1, 'deg/s'))
         self.assertAlmostEqual(d2, Q_(2,' deg'))
 
-    def test_issue625c(self):        
-        try:
-            from inspect import signature
-        except ImportError:
-            # Python2 does not have the inspect library. Import the backport.
-            from funcsigs import signature
-
+    def test_issue625c(self):
         u = UnitRegistry()
 
         @u.wraps('=A*B*C', ('=A', '=B', '=C'))
@@ -613,19 +600,14 @@ class TestIssues(QuantityTestCase):
         self.assertEqual(velocity.check('1 / [time] * [length]'), True)
 
     def test_issue655b(self):
-        import math
-        try:
-            from inspect import signature
-        except ImportError:
-            # Python2 does not have the inspect library. Import the backport
-            from funcsigs import signature
-
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
+
         @ureg.check('[length]', '[length]/[time]^2')
         def pendulum_period(length, G=Q_(1, 'standard_gravity')):
             print(length)
             return (2*math.pi*(length/G)**.5).to('s')
+
         l = 1 * ureg.m
         # Assume earth gravity
         t = pendulum_period(l)
