@@ -243,6 +243,9 @@ class udict(dict):
     def __missing__(self, key):
         return 0.
 
+    def copy(self):
+        return udict(self)
+
 
 class UnitsContainer(Mapping):
     """The UnitsContainer stores the product of units and their respective
@@ -264,7 +267,7 @@ class UnitsContainer(Mapping):
                 raise TypeError('value must be a number, not {}'.format(type(value)))
             if not isinstance(value, float):
                 d[key] = float(value)
-        self._hash = hash(frozenset(self._d.items()))
+        self._hash = None
 
     def copy(self):
         return self.__copy__()
@@ -275,24 +278,28 @@ class UnitsContainer(Mapping):
         if newval:
             new._d[key] = newval
         else:
-            del new._d[key]
-
+            new._d.pop(key, None)
+        new._hash = None
         return new
 
     def remove(self, keys):
         """ Create a new UnitsContainer purged from given keys.
 
         """
-        d = udict(self._d)
-        return UnitsContainer(((key, d[key]) for key in d if key not in keys))
+        new = self.copy()
+        for k in keys:
+            new._d.pop(k, None)
+        new._hash = None
+        return new
 
     def rename(self, oldkey, newkey):
         """ Create a new UnitsContainer in which an entry has been renamed.
 
         """
-        d = udict(self._d)
-        d[newkey] = d.pop(oldkey)
-        return UnitsContainer(d)
+        new = self.copy()
+        new._d[newkey] = new._d.pop(oldkey)
+        new._hash = None
+        return new
 
     def __iter__(self):
         return iter(self._d)
@@ -307,18 +314,28 @@ class UnitsContainer(Mapping):
         return key in self._d
 
     def __hash__(self):
+        if self._hash is None:
+            self._hash = hash(frozenset(self._d.items()))
         return self._hash
 
+    # Only needed by Python 2.7
     def __getstate__(self):
-        return {'_d': self._d, '_hash': self._hash}
+        return self._d, self._hash
 
     def __setstate__(self, state):
-        self._d = state['_d']
-        self._hash = state['_hash']
+        self._d, self._hash = state
 
     def __eq__(self, other):
         if isinstance(other, UnitsContainer):
+            # UnitsContainer.__hash__(self) is not the same as hash(self); see
+            # ParserHelper.__hash__ and __eq__.
+            # Different hashes guarantee that the actual contents are different, but
+            # identical hashes give no guarantee of equality.
+            # e.g. in CPython, hash(-1) == hash(-2)
+            if UnitsContainer.__hash__(self) != UnitsContainer.__hash__(other):
+                return False
             other = other._d
+
         elif isinstance(other, string_types):
             other = ParserHelper.from_string(other)
             other = other._d
@@ -340,20 +357,25 @@ class UnitsContainer(Mapping):
         return format_unit(self, spec, **kwspec)
 
     def __copy__(self):
-        return UnitsContainer(self._d)
+        # Skip expensive health checks performed by __init__
+        out = object.__new__(self.__class__)
+        out._d = self._d.copy()
+        out._hash = self._hash
+        return out
 
     def __mul__(self, other):
-        d = udict(self._d)
         if not isinstance(other, self.__class__):
             err = 'Cannot multiply UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
-        for key, value in other.items():
-            d[key] += value
-        keys = [key for key, value in d.items() if value == 0]
-        for key in keys:
-            del d[key]
 
-        return UnitsContainer(d)
+        new = self.copy()
+        for key, value in other.items():
+            new._d[key] += value
+            if new._d[key] == 0:
+                del new._d[key]
+
+        new._hash = None
+        return new
 
     __rmul__ = __mul__
 
@@ -361,26 +383,26 @@ class UnitsContainer(Mapping):
         if not isinstance(other, NUMERIC_TYPES):
             err = 'Cannot power UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
-        d = udict(self._d)
-        for key, value in d.items():
-            d[key] *= other
-        return UnitsContainer(d)
+
+        new = self.copy()
+        for key, value in new._d.items():
+            new._d[key] *= other
+        new._hash = None
+        return new
 
     def __truediv__(self, other):
         if not isinstance(other, self.__class__):
             err = 'Cannot divide UnitsContainer by {}'
             raise TypeError(err.format(type(other)))
 
-        d = udict(self._d)
-
+        new = self.copy()
         for key, value in other.items():
-            d[key] -= value
+            new._d[key] -= value
+            if new._d[key] == 0:
+                del new._d[key]
 
-        keys = [key for key, value in d.items() if value == 0]
-        for key in keys:
-            del d[key]
-
-        return UnitsContainer(d)
+        new._hash = None
+        return new
 
     def __rtruediv__(self, other):
         if not isinstance(other, self.__class__) and other != 1:
@@ -468,7 +490,9 @@ class ParserHelper(UnitsContainer):
                                  for key, value in ret.items()))
 
     def __copy__(self):
-        return ParserHelper(scale=self.scale, **self)
+        new = super(ParserHelper, self).__copy__()
+        new.scale = self.scale
+        return new
 
     def copy(self):
         return self.__copy__()
@@ -477,12 +501,21 @@ class ParserHelper(UnitsContainer):
         if self.scale != 1.0:
             mess = 'Only scale 1.0 ParserHelper instance should be considered hashable'
             raise ValueError(mess)
-        return self._hash
+        return super(ParserHelper, self).__hash__()
+
+    # Only needed by Python 2.7
+    def __getstate__(self):
+        return self._d, self._hash, self.scale
+
+    def __setstate__(self, state):
+        self._d, self._hash, self.scale = state
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.scale == other.scale and\
+        if isinstance(other, ParserHelper):
+            return (
+                self.scale == other.scale and
                 super(ParserHelper, self).__eq__(other)
+            )
         elif isinstance(other, string_types):
             return self == ParserHelper.from_string(other)
         elif isinstance(other, Number):
@@ -604,12 +637,21 @@ def _is_dim(name):
 
 
 class SharedRegistryObject(object):
-    """Base class for object keeping a refrence to the registree.
+    """Base class for object keeping a reference to the registree.
 
-    Such object are for now _Quantity and _Unit, in a number of places it is
+    Such object are for now Quantity and Unit, in a number of places it is
     that an object from this class has a '_units' attribute.
 
     """
+    def __new__(cls, *args, **kwargs):
+        inst = object.__new__(cls)
+        if not hasattr(cls, "_REGISTRY"):
+            # Base class, not subclasses dynamically by
+            # UnitRegistry._init_dynamic_classes
+            from . import _APP_REGISTRY
+
+            inst._REGISTRY = _APP_REGISTRY
+        return inst
 
     def _check(self, other):
         """Check if the other object use a registry and if so that it is the
@@ -696,6 +738,16 @@ def fix_str_conversions(cls):
     return cls
 
 
+def getattr_maybe_raise(self, item):
+    """Helper function to invoke at the beginning of all overridden ``__getattr__``
+    methods. Raise AttributeError if the user tries to ask for a _ or __ attribute.
+    """
+    # Double-underscore attributes are tricky to detect because they are
+    # automatically prefixed with the class name - which may be a subclass of self
+    if item.startswith('_') or item.endswith('__'):
+        raise AttributeError("%r object has no attribute %r" % (self, item))
+
+
 class SourceIterator(object):
     """Iterator to facilitate reading the definition files.
 
@@ -767,3 +819,32 @@ class BlockIterator(SourceIterator):
         return lineno, line
 
     next = __next__
+
+
+def iterable(y):
+    """Check whether or not an object can be iterated over.
+
+    Vendored from numpy under the terms of the BSD 3-Clause License. (Copyright
+    (c) 2005-2019, NumPy Developers.)
+
+    :param value: Input object.
+    :param type: object
+    """
+    try:
+        iter(y)
+    except TypeError:
+        return False
+    return True
+
+
+def sized(y):
+    """Check whether or not an object has a defined length.
+
+    :param value: Input object.
+    :param type: object
+    """
+    try:
+        len(y)
+    except TypeError:
+        return False
+    return True

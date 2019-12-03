@@ -89,7 +89,7 @@ If you ask Pint to perform an invalid conversion:
    >>> speed.to(ureg.joule)
    Traceback (most recent call last):
    ...
-   pint.errors.DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
+   DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
 
 Sometimes, the magnitude of the quantity will be very large or very small.
 The method 'to_compact' can adjust the units to make the quantity more
@@ -170,7 +170,7 @@ If you try to use a unit which is not in the registry:
    >>> speed = 23 * ureg.snail_speed
    Traceback (most recent call last):
    ...
-   pint.errors.UndefinedUnitError: 'snail_speed' is not defined in the unit registry
+   UndefinedUnitError: 'snail_speed' is not defined in the unit registry
 
 You can add your own units to the registry or build your own list. More info on
 that :ref:`defining`
@@ -303,6 +303,22 @@ Pint supports float formatting for numpy arrays as well:
    >>> # scientific form formatting with unit pretty printing
    >>> print('The array is {:+.2E~P}'.format(accel))
    The array is [-1.10E+00 +1.00E-06 +1.25E+00 +1.30E+00] m/s²
+   
+Pint also supports 'f-strings'_ from python>=3.6 :
+
+.. doctest::
+
+   >>> accel = 1.3 * ureg['meter/second**2'] 
+   >>> print(f'The str is {accel}')
+   The str is 1.3 meter / second ** 2
+   >>> print(f'The str is {accel:.3e}')
+   The str is 1.300e+00 meter / second ** 2
+   >>> print(f'The str is {accel:~}')
+   The str is 1.3 m / s ** 2
+   >>> print(f'The str is {accel:~.3e}')
+   The str is 1.300e+00 m / s ** 2
+   >>> print(f'The str is {accel:~H}')
+   The str is 1.3 m/s²  
 
 But Pint also extends the standard formatting capabilities for unicode and
 LaTeX representations:
@@ -335,6 +351,18 @@ If you want to use abbreviated unit names, prefix the specification with `~`:
 
 
 The same is true for latex (`L`) and HTML (`H`) specs.
+
+.. note::
+   The abbreviated unit is drawn from the unit registry where the 3rd item in the 
+   equivalence chain (ie 1 = 2 = **3**) will be returned when the prefix '~' is 
+   used. The 1st item in the chain is the canonical name of the unit.
+
+The formatting specs (ie 'L', 'H', 'P') can be used with Python string 'formatting 
+syntax'_ for custom float representations. For example, scientific notation:
+
+..doctest::
+   >>> 'Scientific notation: {:.3e~L}'.format(accel)
+   'Scientific notation: 1.300\\times 10^{0}\\ \\frac{\\mathrm{m}}{\\mathrm{s}^{2}}'
 
 Pint also supports the LaTeX siunitx package:
 
@@ -409,3 +437,5 @@ also define the registry as the application registry::
 .. _eval: http://docs.python.org/3/library/functions.html#eval
 .. _`serious security problems`: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
 .. _`Babel`: http://babel.pocoo.org/
+.. _'formatting syntax': https://docs.python.org/3/library/string.html#format-specification-mini-language
+.. _'f-strings': https://www.python.org/dev/peps/pep-0498/

@@ -15,13 +15,21 @@ from __future__ import with_statement
 
 
 import pkg_resources
-from .formatting import formatter
-from .registry import (UnitRegistry, LazyRegistry)
-from .errors import (DimensionalityError, OffsetUnitCalculusError,
-                   UndefinedUnitError, UnitStrippedWarning)
-from .util import pi_theorem, logger
 
 from .context import Context
+from .errors import (
+    DimensionalityError,
+    OffsetUnitCalculusError,
+    UndefinedUnitError,
+    UnitStrippedWarning
+)
+from .formatting import formatter
+from .measurement import Measurement
+from .quantity import Quantity
+from .registry import UnitRegistry, LazyRegistry
+from .unit import Unit
+from .util import pi_theorem, logger
+
 
 import sys
 try:
@@ -46,51 +54,47 @@ _DEFAULT_REGISTRY = LazyRegistry()
 _APP_REGISTRY = _DEFAULT_REGISTRY
 
 
-def _build_quantity(value, units):
-    """Build Quantity using the Application registry.
-    Used only for unpickling operations.
+def _unpickle(cls, *args):
+    """Rebuild object upon unpickling.
+    All units must exist in the application registry.
+
+    :param cls:
+        Quantity, Magnitude, or Unit
     """
     from .unit import UnitsContainer
 
-    global _APP_REGISTRY
+    for arg in args:
+        # Prefixed units are defined within the registry
+        # on parsing (which does not happen here).
+        # We need to make sure that this happens before using.
+        if isinstance(arg, UnitsContainer):
+            for name in arg:
+                _APP_REGISTRY.parse_units(name)
 
-    # Prefixed units are defined within the registry
-    # on parsing (which does not happen here).
-    # We need to make sure that this happens before using.
-    if isinstance(units, UnitsContainer):
-        for name in units.keys():
-            _APP_REGISTRY.parse_units(name)
-
-    return _APP_REGISTRY.Quantity(value, units)
-
-
-def _build_unit(units):
-    """Build Unit using the Application registry.
-    Used only for unpickling operations.
-    """
-    from .unit import UnitsContainer
-
-    global _APP_REGISTRY
-
-    # Prefixed units are defined within the registry
-    # on parsing (which does not happen here).
-    # We need to make sure that this happens before using.
-    if isinstance(units, UnitsContainer):
-        for name in units.keys():
-            _APP_REGISTRY.parse_units(name)
-
-    return _APP_REGISTRY.Unit(units)
+    return cls(*args)
 
 
 def set_application_registry(registry):
-    """Set the application registry which is used for unpickling operations.
+    """Set the application registry, which is used for unpickling operations
+    and when invoking pint.Quantity or pint.Unit directly.
 
     :param registry: a UnitRegistry instance.
     """
-    assert isinstance(registry, UnitRegistry)
+    if not isinstance(registry, (LazyRegistry, UnitRegistry)):
+        raise TypeError("Expected UnitRegistry; got %s" % type(registry))
     global _APP_REGISTRY
     logger.debug('Changing app registry from %r to %r.', _APP_REGISTRY, registry)
     _APP_REGISTRY = registry
+
+
+def get_application_registry():
+    """Return the application registry. If :func:`set_application_registry` was never
+    invoked, return a registry built using :file:`defaults_en.txt` embedded in the pint
+    package.
+
+    :param registry: a UnitRegistry instance.
+    """
+    return _APP_REGISTRY
 
 
 def test():
@@ -100,3 +104,24 @@ def test():
     """
     from .testsuite import run
     return run()
+
+
+# Enumerate all user-facing objects
+# Hint to intersphinx that, when building objects.inv, these objects must be registered
+# under the top-level module and not in their original submodules
+__all__ = (
+    'Context',
+    'Measurement',
+    'Quantity',
+    'Unit',
+    'UnitRegistry',
+
+    'DimensionalityError',
+    'OffsetUnitCalculusError',
+    'UndefinedUnitError',
+    'UnitStrippedWarning',
+
+    'get_application_registry',
+    'set_application_registry',
+    '__version__',
+)

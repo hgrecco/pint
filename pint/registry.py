@@ -12,11 +12,13 @@
 
     - NonMultiplicativeRegistry: Conversion between non multiplicative (offset) units.
                                  (e.g. Temperature)
+
       * Inherits from BaseRegistry
 
     - ContextRegisty: Conversion between units with different dimenstions according
                       to previously established relations (contexts).
                       (e.g. in the spectroscopy, conversion between frequency and energy is possible)
+
       * Inherits from BaseRegistry
 
     - SystemRegistry: Group unit and changing of base units.
@@ -32,6 +34,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+import copy
 import os
 import re
 import math
@@ -47,14 +50,15 @@ from tokenize import NUMBER, NAME
 
 from . import registry_helpers
 from .context import Context, ContextChain
-from .util import (logger, pi_theorem, solve_dependencies, ParserHelper,
+from .util import (getattr_maybe_raise,
+                   logger, pi_theorem, solve_dependencies, ParserHelper,
                    string_preprocessor, find_connected_nodes,
                    find_shortest_path, UnitsContainer, _is_dim,
                    to_units_container, SourceIterator)
 
 from .compat import tokenizer, string_types, meta
 from .definitions import (Definition, UnitDefinition, PrefixDefinition,
-                          DimensionDefinition)
+                          DimensionDefinition, AliasDefinition)
 from .converters import ScaleConverter
 from .errors import (DimensionalityError, UndefinedUnitError,
                      DefinitionSyntaxError, RedefinitionError)
@@ -106,7 +110,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     :param filename: path of the units definition file to load or line iterable object.
                      Empty to load the default definition file.
                      None to leave the UnitRegistry empty.
-    :type filename: str | None
+    :type filename: str or None
     :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
     :param on_redefinition: action to take in case a unit is redefined.
                             'warn', 'raise', 'ignore'
@@ -130,17 +134,10 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
     def __init__(self, filename='', force_ndarray=False, on_redefinition='warn', auto_reduce_dimensions=False):
 
         self._register_parsers()
-
-        from .unit import build_unit_class
-        self.Unit = build_unit_class(self)
-
-        from .quantity import build_quantity_class
-        self.Quantity = build_quantity_class(self, force_ndarray)
-
-        from .measurement import build_measurement_class
-        self.Measurement = build_measurement_class(self, force_ndarray)
+        self._init_dynamic_classes()
 
         self._filename = filename
+        self.force_ndarray = force_ndarray
 
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
@@ -174,15 +171,27 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         self._initialized = False
 
+    def _init_dynamic_classes(self):
+        """Generate subclasses on the fly and attach them to self
+        """
+        from .unit import build_unit_class
+        self.Unit = build_unit_class(self)
+
+        from .quantity import build_quantity_class
+        self.Quantity = build_quantity_class(self)
+
+        from .measurement import build_measurement_class
+        self.Measurement = build_measurement_class(self)
+
     def _after_init(self):
         """This should be called after all __init__
         """
+        self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
+
         if self._filename == '':
             self.load_definitions('default_en.txt', True)
         elif self._filename is not None:
             self.load_definitions(self._filename)
-
-        self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
 
         self._build_cache()
         self._initialized = True
@@ -200,9 +209,14 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             k, v = part.split('=')
             self._defaults[k.strip()] = v.strip()
 
+    def __deepcopy__(self, memo):
+        new = object.__new__(type(self))
+        new.__dict__ = copy.deepcopy(self.__dict__, memo)
+        new._init_dynamic_classes()
+        return new
+
     def __getattr__(self, item):
-        if item[0] == '_':
-            return super(BaseRegistry, self).__getattribute__(item)
+        getattr_maybe_raise(self, item)
         return self.Unit(item)
 
     def __getitem__(self, item):
@@ -228,7 +242,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         """Add unit to the registry.
 
         :param definition: a dimension, unit or prefix definition.
-        :type definition: str | Definition
+        :type definition: str or Definition
         """
 
         if isinstance(definition, string_types):
@@ -269,6 +283,11 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         elif isinstance(definition, PrefixDefinition):
             d, di = self._prefixes, None
 
+        elif isinstance(definition, AliasDefinition):
+            d, di = self._units, self._units_casei
+            self._define_alias(definition, d, di)
+            return d[definition.name], d, di
+
         else:
             raise TypeError('{} is not a valid definition.'.format(definition))
 
@@ -285,7 +304,8 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
             else:
                 d_symbol = None
 
-            d_aliases = tuple('Δ' + alias for alias in definition.aliases)
+            d_aliases = tuple('Δ' + alias for alias in definition.aliases) + \
+                        tuple('delta_' + alias for alias in definition.aliases)
 
             d_reference = UnitsContainer(dict((ref, value)
                                          for ref, value in definition.reference.items()))
@@ -330,6 +350,13 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         if casei_unit_dict is not None:
             casei_unit_dict[key.lower()].add(key)
 
+    def _define_alias(self, definition, unit_dict, casei_unit_dict):
+        unit = unit_dict[definition.name]
+        unit.add_aliases(*definition.aliases)
+        for alias in unit.aliases:
+            unit_dict[alias] = unit
+            casei_unit_dict[alias.lower()].add(alias)
+
     def _register_parser(self, prefix, parserfunc):
         """Register a loader for a given @ directive..
 
@@ -372,7 +399,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         ifile = SourceIterator(file)
         for no, line in ifile:
-            if line and line[0] == '@':
+            if line.startswith('@') and not line.startswith('@alias'):
                 if line.startswith('@import'):
                     if is_resource:
                         path = line[7:].strip()
@@ -705,9 +732,9 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
 
         :param value: value
         :param src: source units.
-        :type src: Quantity or str
+        :type src: pint.Quantity or str
         :param dst: destination units.
-        :type dst: Quantity or str
+        :type dst: pint.Quantity or str
 
         :return: converted value
         """
@@ -847,9 +874,7 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
         token_type = token[0]
         token_text = token[1]
         if token_type == NAME:
-            if token_text == 'pi':
-                return self.Quantity(math.pi)
-            elif token_text == 'dimensionless':
+            if token_text == 'dimensionless':
                 return 1 * self.dimensionless
             elif token_text in values:
                 return self.Quantity(values[token_text])
@@ -1078,6 +1103,8 @@ class ContextRegistry(BaseRegistry):
 
         Notice that this method will NOT enable the context. Use `enable_contexts`.
         """
+        if not context.name:
+            raise ValueError("Can't add unnamed context to registry")
         if context.name in self._contexts:
             logger.warning('The name %s was already registered for another context.',
                            context.name)
@@ -1311,11 +1338,13 @@ class SystemRegistry(BaseRegistry):
         #: Map group name to group.
         #: :type: dict[ str | Group]
         self._groups = {}
-        self.Group = systems.build_group_class(self)
         self._groups['root'] = self.Group('root')
-        self.System = systems.build_system_class(self)
-
         self._default_system = system
+
+    def _init_dynamic_classes(self):
+        super(SystemRegistry, self)._init_dynamic_classes()
+        self.Group = systems.build_group_class(self)
+        self.System = systems.build_system_class(self)
 
     def _after_init(self):
         """After init function

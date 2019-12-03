@@ -62,7 +62,7 @@ class Context(object):
 
     """
 
-    def __init__(self, name, aliases=(), defaults=None):
+    def __init__(self, name=None, aliases=(), defaults=None):
 
         self.name = name
         self.aliases = aliases

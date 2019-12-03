@@ -7,7 +7,7 @@ If you work frequently on certain topics, you will probably find the need to
 convert between dimensions based on some pre-established (physical)
 relationships. For example, in spectroscopy you need to transform from
 wavelength to frequency. These are incompatible units and therefore Pint will
-raise an error if your do this directly:
+raise an error if you do this directly:
 
 .. doctest::
 
@@ -17,7 +17,7 @@ raise an error if your do this directly:
     >>> q.to('Hz')
     Traceback (most recent call last):
     ...
-    pint.errors.DimensionalityError: Cannot convert from 'nanometer' ([length]) to 'hertz' (1 / [time])
+    DimensionalityError: Cannot convert from 'nanometer' ([length]) to 'hertz' (1 / [time])
 
 
 You probably want to use the relation `frequency = speed_of_light / wavelength`:
@@ -138,7 +138,8 @@ context and the parameters that you wish to set.
     398.496240602
 
 
-This decorator can be combined with **wraps** or **check** decorators described in `wrapping`_
+This decorator can be combined with **wraps** or **check** decorators described in
+:doc:`wrapping`.
 
 
 Defining contexts in a file
@@ -188,7 +189,16 @@ functions. For example:
     >>> ureg = pint.UnitRegistry()
     >>> c = pint.Context('ab')
     >>> c.add_transformation('[length]', '[time]',
-    ...                      lambda ureg, x: ureg.speed_of_light / x)
+    ...                      lambda ureg, x: x / ureg.speed_of_light)
     >>> c.add_transformation('[time]', '[length]',
-    ...                      lambda ureg, x: ureg.speed_of_light * x)
+    ...                      lambda ureg, x: x * ureg.speed_of_light)
     >>> ureg.add_context(c)
+    >>> ureg("1 s").to("km", "ab")
+    299792.458 kilometer
+
+It is also possible to create anonymous contexts without invoking add_context:
+
+   >>> c = pint.Context()
+   ...
+   >>> ureg("1 s").to("km", c)
+   299792.458 kilometer

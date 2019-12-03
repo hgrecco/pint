@@ -2,8 +2,9 @@
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 
-from pint.errors import DimensionalityError, UndefinedUnitError
+from pint import DimensionalityError, UndefinedUnitError
 from pint.testsuite import BaseTestCase
+
 
 class TestErrors(BaseTestCase):
 

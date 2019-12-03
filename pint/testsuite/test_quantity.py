@@ -383,7 +383,7 @@ class TestQuantity(QuantityTestCase):
         self.assertFalse(u_array_2.u == u_array_ref_reversed.u)
 
         u_array_3 = self.Q_.from_sequence(u_seq_reversed, units='g')
-        self.assertTrue(all(u_array_3 == u_array_ref_reversed))        
+        self.assertTrue(all(u_array_3 == u_array_ref_reversed))
         self.assertTrue(u_array_3.u == u_array_ref_reversed.u)
 
         with self.assertRaises(ValueError):
@@ -391,6 +391,19 @@ class TestQuantity(QuantityTestCase):
 
         u_array_5 = self.Q_.from_list(u_seq)
         self.assertTrue(all(u_array_5 == u_array_ref))
+
+    @helpers.requires_numpy()
+    def test_iter(self):
+        # Verify that iteration gives element as Quantity with same units
+        x = self.Q_([0, 1, 2, 3], 'm')
+        self.assertQuantityEqual(next(iter(x)), self.Q_(0, 'm'))
+
+    def test_notiter(self):
+        # Verify that iter() crashes immediately, without needing to draw any
+        # element from it, if the magnitude isn't iterable
+        x = self.Q_(1, 'm')
+        with self.assertRaises(TypeError):
+            iter(x)
 
 
 class TestQuantityToCompact(QuantityTestCase):
@@ -454,7 +467,11 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
         x = "some string"*ureg.m
-        self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
+        if PYTHON3:
+            with self.assertWarns(RuntimeWarning):
+                self.compareQuantity_compact(x,x)
+        else:
+            self.assertRaises(RuntimeError, self.compareQuantity_compact(x,x))
 
 class TestQuantityBasicMath(QuantityTestCase):
 

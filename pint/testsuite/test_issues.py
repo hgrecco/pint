@@ -7,12 +7,11 @@ import copy
 import unittest
 import sys
 
-from pint import UnitRegistry
+from pint import DimensionalityError, UndefinedUnitError, UnitRegistry
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
-from pint.compat import np, long_type
-from pint.errors import UndefinedUnitError, DimensionalityError
+from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 
 
@@ -40,10 +39,84 @@ class TestIssues(QuantityTestCase):
 
     def test_issue29(self):
         ureg = UnitRegistry()
-        t = 4 * ureg('mM')
+        t = 4 * ureg('mW')
         self.assertEqual(t.magnitude, 4)
-        self.assertEqual(t._units, UnitsContainer(millimolar=1))
-        self.assertEqual(t.to('mole / liter'), 4e-3 * ureg('M'))
+        self.assertEqual(t._units, UnitsContainer(milliwatt=1))
+        self.assertEqual(t.to('joule / second'), 4e-3 * ureg('W'))
+
+    @unittest.expectedFailure
+    @helpers.requires_numpy()
+    def test_issue37(self):
+        x = np.ma.masked_array([1, 2, 3], mask=[True, True, False])
+        ureg = UnitRegistry()
+        q = ureg.meter * x
+        self.assertIsInstance(q, ureg.Quantity)
+        np.testing.assert_array_equal(q.magnitude, x)
+        self.assertEqual(q.units, ureg.meter.units)
+        q = x * ureg.meter
+        self.assertIsInstance(q, ureg.Quantity)
+        np.testing.assert_array_equal(q.magnitude, x)
+        self.assertEqual(q.units, ureg.meter.units)
+
+        m = np.ma.masked_array(2 * np.ones(3,3))
+        qq = q * m
+        self.assertIsInstance(qq, ureg.Quantity)
+        np.testing.assert_array_equal(qq.magnitude, x * m)
+        self.assertEqual(qq.units, ureg.meter.units)
+        qq = m * q
+        self.assertIsInstance(qq, ureg.Quantity)
+        np.testing.assert_array_equal(qq.magnitude, x * m)
+        self.assertEqual(qq.units, ureg.meter.units)
+
+    @unittest.expectedFailure
+    @helpers.requires_numpy()
+    def test_issue39(self):
+        x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
+        ureg = UnitRegistry()
+        q = ureg.meter * x
+        self.assertIsInstance(q, ureg.Quantity)
+        np.testing.assert_array_equal(q.magnitude, x)
+        self.assertEqual(q.units, ureg.meter.units)
+        q = x * ureg.meter
+        self.assertIsInstance(q, ureg.Quantity)
+        np.testing.assert_array_equal(q.magnitude, x)
+        self.assertEqual(q.units, ureg.meter.units)
+
+        m = np.matrix(2 * np.ones(3,3))
+        qq = q * m
+        self.assertIsInstance(qq, ureg.Quantity)
+        np.testing.assert_array_equal(qq.magnitude, x * m)
+        self.assertEqual(qq.units, ureg.meter.units)
+        qq = m * q
+        self.assertIsInstance(qq, ureg.Quantity)
+        np.testing.assert_array_equal(qq.magnitude, x * m)
+        self.assertEqual(qq.units, ureg.meter.units)
+
+    @helpers.requires_numpy()
+    def test_issue44(self):
+        ureg = UnitRegistry()
+        x = 4. * ureg.dimensionless
+        np.sqrt(x)
+        self.assertQuantityAlmostEqual(np.sqrt([4.] * ureg.dimensionless), [2.] * ureg.dimensionless)
+        self.assertQuantityAlmostEqual(np.sqrt(4. * ureg.dimensionless), 2. * ureg.dimensionless)
+
+    def test_issue45(self):
+        import math
+        ureg = UnitRegistry()
+        self.assertAlmostEqual(math.sqrt(4 * ureg.m/ureg.cm), math.sqrt(4 * 100))
+        self.assertAlmostEqual(float(ureg.V / ureg.mV), 1000.)
+
+    @helpers.requires_numpy()
+    def test_issue45b(self):
+        ureg = UnitRegistry()
+        self.assertAlmostEqual(np.sin([np.pi/2] * ureg.m / ureg.m ), np.sin([np.pi/2] * ureg.dimensionless))
+        self.assertAlmostEqual(np.sin([np.pi/2] * ureg.cm / ureg.m ), np.sin([np.pi/2] * ureg.dimensionless * 0.01))
+
+    def test_issue50(self):
+        ureg = UnitRegistry()
+        Q_ = ureg.Quantity
+        self.assertEqual(Q_(100), 100 * ureg.dimensionless)
+        self.assertEqual(Q_('100'), 100 * ureg.dimensionless)
 
     def test_issue52(self):
         u1 = UnitRegistry()
@@ -86,6 +159,11 @@ class TestIssues(QuantityTestCase):
             self.assertRaises(TypeError, Q_, value)
             self.assertRaises(TypeError, Q_, value, 'meter')
 
+    def test_issue62(self):
+        ureg = UnitRegistry()
+        m = ureg('m**0.5')
+        self.assertEqual(str(m.units), 'meter ** 0.5')
+
     def test_issue66(self):
         ureg = UnitRegistry()
         self.assertEqual(ureg.get_dimensionality(UnitsContainer({'[temperature]': 1})),
@@ -107,6 +185,46 @@ class TestIssues(QuantityTestCase):
         q = ureg('m').to(ureg('in'))
         self.assertEqual(q, ureg('m').to('in'))
 
+    @helpers.requires_numpy()
+    def test_issue74(self):
+        ureg = UnitRegistry()
+        v1 = np.asarray([1., 2., 3.])
+        v2 = np.asarray([3., 2., 1.])
+        q1 = v1 * ureg.ms
+        q2 = v2 * ureg.ms
+
+        np.testing.assert_array_equal(q1 < q2, v1 < v2)
+        np.testing.assert_array_equal(q1 > q2, v1 > v2)
+
+        np.testing.assert_array_equal(q1 <= q2, v1 <= v2)
+        np.testing.assert_array_equal(q1 >= q2, v1 >= v2)
+
+        q2s = np.asarray([0.003, 0.002, 0.001]) * ureg.s
+        v2s = q2s.to('ms').magnitude
+
+        np.testing.assert_array_equal(q1 < q2s, v1 < v2s)
+        np.testing.assert_array_equal(q1 > q2s, v1 > v2s)
+
+        np.testing.assert_array_equal(q1 <= q2s, v1 <= v2s)
+        np.testing.assert_array_equal(q1 >= q2s, v1 >= v2s)
+
+    @helpers.requires_numpy()
+    def test_issue75(self):
+        ureg = UnitRegistry()
+        v1 = np.asarray([1., 2., 3.])
+        v2 = np.asarray([3., 2., 1.])
+        q1 = v1 * ureg.ms
+        q2 = v2 * ureg.ms
+
+        np.testing.assert_array_equal(q1 == q2, v1 == v2)
+        np.testing.assert_array_equal(q1 != q2, v1 != v2)
+
+        q2s = np.asarray([0.003, 0.002, 0.001]) * ureg.s
+        v2s = q2s.to('ms').magnitude
+
+        np.testing.assert_array_equal(q1 == q2s, v1 == v2s)
+        np.testing.assert_array_equal(q1 != q2s, v1 != v2s)
+
     @helpers.requires_uncertainties()
     def test_issue77(self):
         ureg = UnitRegistry()
@@ -127,7 +245,7 @@ class TestIssues(QuantityTestCase):
         except:
             self.assertTrue(False, 'Error while trying to get base units for {}'.format(va))
 
-        boltmk = 1.3806488e-23*ureg.J/ureg.K
+        boltmk = 1.380649e-23*ureg.J/ureg.K
         vb = 2. * boltmk * T / m
 
         self.assertQuantityAlmostEqual(va.to_base_units(), vb.to_base_units())
@@ -205,45 +323,16 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(x + y, 5.1 * ureg.meter)
         self.assertQuantityAlmostEqual(z, 5.1 * ureg.meter)
 
-    def test_issue523(self):
+    @helpers.requires_numpy_previous_than('1.10')
+    def test_issue94(self):
         ureg = UnitRegistry()
-        src, dst = UnitsContainer({'meter': 1}), UnitsContainer({'degF': 1})
-        value = 10.
-        convert = self.ureg.convert
-        self.assertRaises(DimensionalityError, convert, value, src, dst)
-        self.assertRaises(DimensionalityError, convert, value, dst, src)
+        v1 = np.array([5, 5]) * ureg.meter
+        v2 = 0.1 * ureg.meter
+        v3 = np.array([5, 5]) * ureg.meter
+        v3 += v2
 
-    def _test_issueXX(self):
-        ureg = UnitRegistry()
-        try:
-            ureg.convert(1, ureg.degC, ureg.kelvin * ureg.meter / ureg.nanometer)
-        except:
-            self.assertTrue(False,
-                            'Error while trying to convert {} to {}'.format(ureg.degC, ureg.kelvin * ureg.meter / ureg.nanometer))
-
-    def test_issue121(self):
-        sh = (2, 1)
-        ureg = UnitRegistry()
-        z, v = 0, 2.
-        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
-
-        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
-
-    def test_issue105(self):
-        ureg = UnitRegistry()
-
-        func = ureg.parse_unit_name
-        val = list(func('meter'))
-        self.assertEqual(list(func('METER')), [])
-        self.assertEqual(val, list(func('METER', False)))
-
-        for func in (ureg.get_name, ureg.parse_expression):
-            val = func('meter')
-            self.assertRaises(AttributeError, func, 'METER')
-            self.assertEqual(val, func('METER', False))
+        np.testing.assert_array_equal((v1 + v2).magnitude, np.array([5.1, 5.1]))
+        np.testing.assert_array_equal(v3.magnitude, np.array([5, 5]))
 
     def test_issue104(self):
         ureg = UnitRegistry()
@@ -264,6 +353,75 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(x[0], ureg.Quantity(1, 'meter'))
         self.assertQuantityAlmostEqual(summer(y), ureg.Quantity(3, 'meter'))
         self.assertQuantityAlmostEqual(y[0], ureg.Quantity(1, 'meter'))
+
+    def test_issue105(self):
+        ureg = UnitRegistry()
+
+        func = ureg.parse_unit_name
+        val = list(func('meter'))
+        self.assertEqual(list(func('METER')), [])
+        self.assertEqual(val, list(func('METER', False)))
+
+        for func in (ureg.get_name, ureg.parse_expression):
+            val = func('meter')
+            self.assertRaises(AttributeError, func, 'METER')
+            self.assertEqual(val, func('METER', False))
+
+    def test_issue121(self):
+        sh = (2, 1)
+        ureg = UnitRegistry()
+        z, v = 0, 2.
+        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
+        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
+        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
+        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
+
+        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
+
+    @helpers.requires_numpy18()
+    def test_issue121b(self):
+        sh = (2, 1)
+        ureg = UnitRegistry()
+
+        z, v = 0, 2.
+        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
+        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
+        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
+        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
+
+        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
+
+        z, v = np.zeros(sh), 2. * np.ones(sh)
+        self.assertQuantityEqual(z + v * ureg.meter, v * ureg.meter)
+        self.assertQuantityEqual(z - v * ureg.meter, -v * ureg.meter)
+        self.assertQuantityEqual(v * ureg.meter + z, v * ureg.meter)
+        self.assertQuantityEqual(v * ureg.meter - z, v * ureg.meter)
+
+        z, v = np.zeros((3, 1)), 2. * np.ones(sh)
+        for x, y in ((z, v),
+                     (z, v * ureg.meter),
+                     (v * ureg.meter, z)
+                     ):
+            try:
+                w = x + y
+                self.assertTrue(False, "ValueError not raised")
+            except ValueError:
+                pass
+            try:
+                w = x - y
+                self.assertTrue(False, "ValueError not raised")
+            except ValueError:
+                pass
+
+    @helpers.requires_numpy()
+    def test_issue127(self):
+        q = [1., 2., 3., 4.] * self.ureg.meter
+        q[0] = np.nan
+        self.assertNotEqual(q[0], 1.)
+        self.assertTrue(math.isnan(q[0].magnitude))
+        q[1] = float('NaN')
+        self.assertNotEqual(q[1], 2.)
+        self.assertTrue(math.isnan(q[1].magnitude))
 
     def test_issue170(self):
         Q_ = UnitRegistry().Quantity
@@ -316,193 +474,7 @@ class TestIssues(QuantityTestCase):
         else:
             ureg.Quantity(2, 'µm')
 
-@helpers.requires_numpy()
-class TestIssuesNP(QuantityTestCase):
-
-    FORCE_NDARRAY = False
-
-    @unittest.expectedFailure
-    def test_issue37(self):
-        x = np.ma.masked_array([1, 2, 3], mask=[True, True, False])
-        ureg = UnitRegistry()
-        q = ureg.meter * x
-        self.assertIsInstance(q, ureg.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        self.assertEqual(q.units, ureg.meter.units)
-        q = x * ureg.meter
-        self.assertIsInstance(q, ureg.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        self.assertEqual(q.units, ureg.meter.units)
-
-        m = np.ma.masked_array(2 * np.ones(3,3))
-        qq = q * m
-        self.assertIsInstance(qq, ureg.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        self.assertEqual(qq.units, ureg.meter.units)
-        qq = m * q
-        self.assertIsInstance(qq, ureg.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        self.assertEqual(qq.units, ureg.meter.units)
-
-    @unittest.expectedFailure
-    def test_issue39(self):
-        x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-        ureg = UnitRegistry()
-        q = ureg.meter * x
-        self.assertIsInstance(q, ureg.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        self.assertEqual(q.units, ureg.meter.units)
-        q = x * ureg.meter
-        self.assertIsInstance(q, ureg.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        self.assertEqual(q.units, ureg.meter.units)
-
-        m = np.matrix(2 * np.ones(3,3))
-        qq = q * m
-        self.assertIsInstance(qq, ureg.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        self.assertEqual(qq.units, ureg.meter.units)
-        qq = m * q
-        self.assertIsInstance(qq, ureg.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        self.assertEqual(qq.units, ureg.meter.units)
-
-    def test_issue44(self):
-        ureg = UnitRegistry()
-        x = 4. * ureg.dimensionless
-        np.sqrt(x)
-        self.assertQuantityAlmostEqual(np.sqrt([4.] * ureg.dimensionless), [2.] * ureg.dimensionless)
-        self.assertQuantityAlmostEqual(np.sqrt(4. * ureg.dimensionless), 2. * ureg.dimensionless)
-
-    def test_issue45(self):
-        import math
-        ureg = UnitRegistry()
-        self.assertAlmostEqual(math.sqrt(4 * ureg.m/ureg.cm), math.sqrt(4 * 100))
-        self.assertAlmostEqual(float(ureg.V / ureg.mV), 1000.)
-
-    def test_issue45b(self):
-        ureg = UnitRegistry()
-        self.assertAlmostEqual(np.sin([np.pi/2] * ureg.m / ureg.m ), np.sin([np.pi/2] * ureg.dimensionless))
-        self.assertAlmostEqual(np.sin([np.pi/2] * ureg.cm / ureg.m ), np.sin([np.pi/2] * ureg.dimensionless * 0.01))
-
-    def test_issue50(self):
-        ureg = UnitRegistry()
-        Q_ = ureg.Quantity
-        self.assertEqual(Q_(100), 100 * ureg.dimensionless)
-        self.assertEqual(Q_('100'), 100 * ureg.dimensionless)
-
-    def test_issue62(self):
-        ureg = UnitRegistry()
-        m = ureg('m**0.5')
-        self.assertEqual(str(m.units), 'meter ** 0.5')
-
-    def test_issue74(self):
-        ureg = UnitRegistry()
-        v1 = np.asarray([1., 2., 3.])
-        v2 = np.asarray([3., 2., 1.])
-        q1 = v1 * ureg.ms
-        q2 = v2 * ureg.ms
-
-        np.testing.assert_array_equal(q1 < q2, v1 < v2)
-        np.testing.assert_array_equal(q1 > q2, v1 > v2)
-
-        np.testing.assert_array_equal(q1 <= q2, v1 <= v2)
-        np.testing.assert_array_equal(q1 >= q2, v1 >= v2)
-
-        q2s = np.asarray([0.003, 0.002, 0.001]) * ureg.s
-        v2s = q2s.to('ms').magnitude
-
-        np.testing.assert_array_equal(q1 < q2s, v1 < v2s)
-        np.testing.assert_array_equal(q1 > q2s, v1 > v2s)
-
-        np.testing.assert_array_equal(q1 <= q2s, v1 <= v2s)
-        np.testing.assert_array_equal(q1 >= q2s, v1 >= v2s)
-
-    def test_issue75(self):
-        ureg = UnitRegistry()
-        v1 = np.asarray([1., 2., 3.])
-        v2 = np.asarray([3., 2., 1.])
-        q1 = v1 * ureg.ms
-        q2 = v2 * ureg.ms
-
-        np.testing.assert_array_equal(q1 == q2, v1 == v2)
-        np.testing.assert_array_equal(q1 != q2, v1 != v2)
-
-        q2s = np.asarray([0.003, 0.002, 0.001]) * ureg.s
-        v2s = q2s.to('ms').magnitude
-
-        np.testing.assert_array_equal(q1 == q2s, v1 == v2s)
-        np.testing.assert_array_equal(q1 != q2s, v1 != v2s)
-
-    def test_issue93(self):
-        ureg = UnitRegistry()
-        x = 5 * ureg.meter
-        self.assertIsInstance(x.magnitude, int)
-        y = 0.1 * ureg.meter
-        self.assertIsInstance(y.magnitude, float)
-        z = 5 * ureg.meter
-        self.assertIsInstance(z.magnitude, int)
-        z += y
-        self.assertIsInstance(z.magnitude, float)
-
-        self.assertQuantityAlmostEqual(x + y, 5.1 * ureg.meter)
-        self.assertQuantityAlmostEqual(z, 5.1 * ureg.meter)
-
-    @helpers.requires_numpy_previous_than('1.10')
-    def test_issue94(self):
-        ureg = UnitRegistry()
-        v1 = np.array([5, 5]) * ureg.meter
-        v2 = 0.1 * ureg.meter
-        v3 = np.array([5, 5]) * ureg.meter
-        v3 += v2
-
-        np.testing.assert_array_equal((v1 + v2).magnitude, np.array([5.1, 5.1]))
-        np.testing.assert_array_equal(v3.magnitude, np.array([5, 5]))
-
-    @helpers.requires_numpy18()
-    def test_issue121(self):
-        sh = (2, 1)
-        ureg = UnitRegistry()
-
-        z, v = 0, 2.
-        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
-
-        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
-
-        z, v = np.zeros(sh), 2. * np.ones(sh)
-        self.assertQuantityEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertQuantityEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertQuantityEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertQuantityEqual(v * ureg.meter - z, v * ureg.meter)
-
-        z, v = np.zeros((3, 1)), 2. * np.ones(sh)
-        for x, y in ((z, v),
-                     (z, v * ureg.meter),
-                     (v * ureg.meter, z)
-                     ):
-            try:
-                w = x + y
-                self.assertTrue(False, "ValueError not raised")
-            except ValueError:
-                pass
-            try:
-                w = x - y
-                self.assertTrue(False, "ValueError not raised")
-            except ValueError:
-                pass
-
-    def test_issue127(self):
-        q = [1., 2., 3., 4.] * self.ureg.meter
-        q[0] = np.nan
-        self.assertNotEqual(q[0], 1.)
-        self.assertTrue(math.isnan(q[0].magnitude))
-        q[1] = float('NaN')
-        self.assertNotEqual(q[1], 2.)
-        self.assertTrue(math.isnan(q[1].magnitude))
-
+    @helpers.requires_numpy()
     def test_issue171_real_imag(self):
         qr = [1., 2., 3., 4.] * self.ureg.meter
         qi = [4., 3., 2., 1.] * self.ureg.meter
@@ -510,12 +482,14 @@ class TestIssuesNP(QuantityTestCase):
         self.assertQuantityEqual(q.real, qr)
         self.assertQuantityEqual(q.imag, qi)
 
+    @helpers.requires_numpy()
     def test_issue171_T(self):
         a = np.asarray([[1., 2., 3., 4.],[4., 3., 2., 1.]])
         q1 = a * self.ureg.meter
         q2 = a.T * self.ureg.meter
         self.assertQuantityEqual(q1.T, q2)
 
+    @helpers.requires_numpy()
     def test_issue250(self):
         a = self.ureg.V
         b = self.ureg.mV
@@ -553,11 +527,6 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual('{0:~}'.format(1 * self.ureg('MiB')),
                          '1 MiB')
 
-    def test_issue482(self):
-        q = self.ureg.Quantity(1, self.ureg.dimensionless)
-        qe = np.exp(q)
-        self.assertIsInstance(qe, self.ureg.Quantity)
-
     def test_issue468(self):
         ureg = UnitRegistry()
 
@@ -570,12 +539,27 @@ class TestIssuesNP(QuantityTestCase):
         z = x * y
         self.assertEquals(z, ureg.Quantity(1., 'meter * kilogram'))
 
+    @helpers.requires_numpy()
+    def test_issue482(self):
+        q = self.ureg.Quantity(1, self.ureg.dimensionless)
+        qe = np.exp(q)
+        self.assertIsInstance(qe, self.ureg.Quantity)
+
+    @helpers.requires_numpy()
     def test_issue483(self):
         ureg = self.ureg
         a = np.asarray([1, 2, 3])
         q = [1, 2, 3] * ureg.dimensionless
         p = (q ** q).m
         np.testing.assert_array_equal(p, a ** a)
+
+    def test_issue523(self):
+        ureg = UnitRegistry()
+        src, dst = UnitsContainer({'meter': 1}), UnitsContainer({'degF': 1})
+        value = 10.
+        convert = self.ureg.convert
+        self.assertRaises(DimensionalityError, convert, value, src, dst)
+        self.assertRaises(DimensionalityError, convert, value, dst, src)
 
     def test_issue532(self):
         ureg = self.ureg
@@ -668,11 +652,7 @@ class TestIssuesNP(QuantityTestCase):
         self.assertEqual(velocity.check('[length] / [time]'), True)
         self.assertEqual(velocity.check('1 / [time] * [length]'), True)
 
-    def test_issue783(self):
-        ureg = UnitRegistry()
-        assert not ureg('g') == []
-
-    def test_issue(self):
+    def test_issue655b(self):
         import math
         try:
             from inspect import signature
@@ -695,4 +675,44 @@ class TestIssuesNP(QuantityTestCase):
         t = pendulum_period(l, moon_gravity)
         self.assertAlmostEqual(t, Q_('4.928936075204336 second'))
 
+    def test_issue783(self):
+        ureg = UnitRegistry()
+        assert not ureg('g') == []
 
+    def test_issue856(self):
+        ph1 = ParserHelper(scale=123)
+        ph2 = copy.deepcopy(ph1)
+        assert ph2.scale == ph1.scale
+
+        ureg1 = UnitRegistry()
+        ureg2 = copy.deepcopy(ureg1)
+        # Very basic functionality test
+        assert ureg2('1 t').to('kg').magnitude == 1000
+
+    def test_issue856b(self):
+        # Test that, after a deepcopy(), the two UnitRegistries are
+        # independent from each other
+        ureg1 = UnitRegistry()
+        ureg2 = copy.deepcopy(ureg1)
+        ureg1.define('test123 = 123 kg')
+        ureg2.define('test123 = 456 kg')
+        assert ureg1('1 test123').to('kg').magnitude == 123
+        assert ureg2('1 test123').to('kg').magnitude == 456
+
+    def test_issue876(self):
+        # Same hash must not imply equality.
+
+        # As an implementation detail of CPython, hash(-1) == hash(-2).
+        # This test is useless in potential alternative Python implementations where
+        # hash(-1) != hash(-2); one would need to find hash collisions specific for each
+        # implementation
+
+        a = UnitsContainer({"[mass]": -1})
+        b = UnitsContainer({"[mass]": -2})
+        c = UnitsContainer({"[mass]": -3})
+
+        # Guarantee working on alternative Python implementations
+        assert (hash(-1) == hash(-2)) == (hash(a) == hash(b))
+        assert (hash(-1) == hash(-3)) == (hash(a) == hash(c))
+        assert a != b
+        assert a != c

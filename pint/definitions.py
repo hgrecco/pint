@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     pint.definitions
-    ~~~~~~~~~
+    ~~~~~~~~~~~~~~~~
 
     Functions and classes related to unit definitions.
 
@@ -52,9 +52,18 @@ class Definition(object):
                     value.decode('utf-8')
                 except UnicodeEncodeError:
                     result.remove(value)
-        value, aliases = result[0], tuple(result[1:])
+
+        # @alias name = alias1 = alias2 = ...
+        if name.startswith("@alias "):
+            name = name[len("@alias "):].lstrip()
+            return AliasDefinition(name, tuple(result))
+
+        value, aliases = result[0], tuple([x for x in result[1:] if x != ''])
         symbol, aliases = (aliases[0], aliases[1:]) if aliases else (None,
                                                                      aliases)
+        if symbol == '_':
+            symbol = None
+        aliases = tuple([x for x in aliases if x != '_'])
 
         if name.startswith('['):
             return DimensionDefinition(name, symbol, aliases, value)
@@ -79,6 +88,10 @@ class Definition(object):
     @property
     def aliases(self):
         return self._aliases
+
+    def add_aliases(self, *alias):
+        alias = tuple(a for a in alias if a not in self._aliases)
+        self._aliases = self._aliases + alias
 
     @property
     def converter(self):
@@ -123,10 +136,10 @@ class UnitDefinition(Definition):
                 modifiers = {}
 
             converter = ParserHelper.from_string(converter)
-            if all(_is_dim(key) for key in converter.keys()):
-                self.is_base = True
-            elif not any(_is_dim(key) for key in converter.keys()):
+            if not any(_is_dim(key) for key in converter.keys()):
                 self.is_base = False
+            elif all(_is_dim(key) for key in converter.keys()):
+                self.is_base = True
             else:
                 raise ValueError('Cannot mix dimensions and units in the same definition. '
                                  'Base units must be referenced only to dimensions. '
@@ -163,3 +176,12 @@ class DimensionDefinition(Definition):
 
         super(DimensionDefinition, self).__init__(name, symbol, aliases,
                                                   converter=None)
+
+
+class AliasDefinition(Definition):
+    """Additional alias(es) for an already existing unit
+    """
+    def __init__(self, name, aliases):
+        super(AliasDefinition, self).__init__(
+            name=name, symbol=None, aliases=aliases, converter=None
+        )

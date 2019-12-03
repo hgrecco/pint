@@ -31,6 +31,7 @@ from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    fix_str_conversions)
 from pint.compat import Loc
 
+
 def _eq(first, second, check_all):
     """Comparison of scalars and arrays
     """
@@ -64,6 +65,7 @@ def ireduce_dimensions(f):
         return result
     return wrapped
 
+
 def check_implemented(f):
     def wrapped(self, *args, **kwargs):
         other=args[0]
@@ -94,22 +96,32 @@ def printoptions(*args, **kwargs):
 
 
 @fix_str_conversions
-class _Quantity(PrettyIPython, SharedRegistryObject):
+class Quantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
-    :param value: value of the physical quantity to be created.
-    :type value: str, Quantity or any numeric type.
-    :param units: units of the physical quantity to be created.
-    :type units: UnitsContainer, str or Quantity.
+    :param value: value of the physical quantity to be created
+    :type value: str, pint.Quantity or any numeric type
+    :param units: units of the physical quantity to be created
+    :type units: UnitsContainer, str or pint.Quantity
     """
 
     #: Default formatting string.
     default_format = ''
 
+    @property
+    def force_ndarray(self):
+        return self._REGISTRY.force_ndarray
+
     def __reduce__(self):
-        from . import _build_quantity
-        return _build_quantity, (self.magnitude, self._units)
+        """Allow pickling quantities. Since UnitRegistries are not pickled, upon
+        unpickling the new object is always attached to the application registry.
+        """
+        from . import _unpickle
+
+        # Note: type(self) would be a mistake as subclasses built by
+        # build_quantity_class can't be pickled
+        return _unpickle, (Quantity, self.magnitude, self._units)
 
     def __new__(cls, value, units=None):
         if units is None:
@@ -117,29 +129,30 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
                 if value == '':
                     raise ValueError('Expression to parse as Quantity cannot '
                                      'be an empty string.')
-                inst = cls._REGISTRY.parse_expression(value)
+                ureg = SharedRegistryObject.__new__(cls)._REGISTRY
+                inst = ureg.parse_expression(value)
                 return cls.__new__(cls, inst)
             elif isinstance(value, cls):
                 inst = copy.copy(value)
             else:
-                inst = object.__new__(cls)
+                inst = SharedRegistryObject.__new__(cls)
                 inst._magnitude = _to_magnitude(value, inst.force_ndarray)
                 inst._units = UnitsContainer()
         elif isinstance(units, (UnitsContainer, UnitDefinition)):
-            inst = object.__new__(cls)
+            inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = units
         elif isinstance(units, string_types):
-            inst = object.__new__(cls)
+            inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)._units
         elif isinstance(units, SharedRegistryObject):
-            if isinstance(units, _Quantity) and units.magnitude != 1:
+            if isinstance(units, Quantity) and units.magnitude != 1:
                 inst = copy.copy(units)
                 logger.warning('Creating new Quantity using a non unity '
                                'Quantity as units.')
             else:
-                inst = object.__new__(cls)
+                inst = SharedRegistryObject.__new__(cls)
                 inst._units = units._units
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
         else:
@@ -148,21 +161,23 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         inst.__used = False
         inst.__handling = None
-        # Only instances where the magnitude is iterable should have __iter__()
-        if hasattr(inst._magnitude,"__iter__"):
-            inst.__iter__ = cls._iter
+
         return inst
 
-    def _iter(self):
-        """
-        Will be become __iter__() for instances with iterable magnitudes
-        """
-        # # Allow exception to propagate in case of non-iterable magnitude
-        it_mag = iter(self.magnitude)
-        return iter((self.__class__(mag, self._units) for mag in it_mag))
     @property
     def debug_used(self):
         return self.__used
+
+    def __iter__(self):
+        # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon as one
+        # calls iter(self) without waiting for the first element to be drawn from the iterator
+        it_magnitude = iter(self.magnitude)
+
+        def it_outer():
+            for element in it_magnitude:
+                yield self.__class__(element, self._units)
+
+        return it_outer()
 
     def __copy__(self):
         ret = self.__class__(copy.copy(self._magnitude), self._units)
@@ -249,7 +264,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
     def _repr_pretty_(self, p, cycle):
         if cycle:
-            super(_Quantity, self)._repr_pretty_(p, cycle)
+            super(Quantity, self)._repr_pretty_(p, cycle)
         else:
             p.pretty(self.magnitude)
             p.text(" ")
@@ -289,7 +304,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         """Quantity's magnitude expressed in particular units.
 
         :param units: destination units
-        :type units: Quantity, str or dict
+        :type units: pint.Quantity, str or dict
         """
         return self.to(units).magnitude
 
@@ -297,7 +312,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def units(self):
         """Quantity's units. Long form for `u`
 
-        :rtype: UnitContainer
+        :rtype: UnitsContainer
         """
         return self._REGISTRY.Unit(self._units)
 
@@ -305,7 +320,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def u(self):
         """Quantity's units. Short form for `units`
 
-        :rtype: UnitContainer
+        :rtype: UnitsContainer
         """
         return self._REGISTRY.Unit(self._units)
 
@@ -349,10 +364,10 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         If units is not specified and list is empty, the unit cannot be determined
         and a ValueError is raised.
 
-        :param quant_list: list of Quantities
-        :type quant_list: list of Quantity
-        :param units: units of the physical quantity to be created.
-        :type units: UnitsContainer, str or Quantity.
+        :param quant_list: list of pint.Quantity
+        :type quant_list: list of pint.Quantity
+        :param units: units of the physical quantity to be created
+        :type units: UnitsContainer, str or pint.Quantity
         """
         return cls.from_sequence(quant_list, units=units)
 
@@ -364,10 +379,10 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         If units is not specified and sequence is empty, the unit cannot be determined
         and a ValueError is raised.
 
-        :param seq: sequence of Quantities
-        :type seq: sequence of Quantity
-        :param units: units of the physical quantity to be created.
-        :type units: UnitsContainer, str or Quantity.
+        :param seq: sequence of pint.Quantity
+        :type seq: sequence of pint.Quantity
+        :param units: units of the physical quantity to be created
+        :type units: UnitsContainer, str or pint.Quantity
         """
 
         len_seq = len(seq)
@@ -419,7 +434,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         """Inplace rescale to different units.
 
         :param other: destination units.
-        :type other: Quantity, str or dict
+        :type other: pint.Quantity, str or dict
         """
         other = to_units_container(other, self._REGISTRY)
 
@@ -433,7 +448,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         """Return Quantity rescaled to different units.
 
         :param other: destination units.
-        :type other: Quantity, str or dict
+        :type other: pint.Quantity, str or dict
         """
         other = to_units_container(other, self._REGISTRY)
 
@@ -481,7 +496,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
-
     def ito_reduced_units(self):
         """Return Quantity scaled in place to reduced units, i.e. one unit per
         dimension. This will not reduce compound units (intentionally), nor
@@ -516,7 +530,6 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         newq = copy.copy(self)
         newq.ito_reduced_units()
         return newq
-
 
     def to_compact(self, unit=None):
         """Return Quantity rescaled to compact, human-readable units.
@@ -608,7 +621,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         """Perform addition or subtraction operation in-place and return the result.
 
         :param other: object to be added to / subtracted from self
-        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :type other: pint.Quantity or any type accepted by :func:`_to_magnitude`
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
@@ -707,7 +720,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         """Perform addition or subtraction operation and return the result.
 
         :param other: object to be added to / subtracted from self
-        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :type other: pint.Quantity or any type accepted by :func:`_to_magnitude`
         :param op: operator function (e.g. operator.add, operator.isub)
         :type op: function
         """
@@ -841,7 +854,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         result.
 
         :param other: object to be multiplied/divided with self
-        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :type other: pint.Quantity or any type accepted by :func:`_to_magnitude`
         :param magnitude_op: operator function to perform on the magnitudes
             (e.g. operator.mul)
         :type magnitude_op: function
@@ -899,7 +912,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         """Perform multiplication or division operation and return the result.
 
         :param other: object to be multiplied/divided with self
-        :type other: Quantity or any type accepted by :func:`_to_magnitude`
+        :type other: pint.Quantity or any type accepted by :func:`_to_magnitude`
         :param magnitude_op: operator function to perform on the magnitudes
             (e.g. operator.mul)
         :type magnitude_op: function
@@ -1197,7 +1210,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
-        if not isinstance(other, _Quantity):
+        if not isinstance(other, Quantity):
             if _eq(other, 0, True):
                 # Handle the special case in which we compare to zero
                 # (or an array of zeros)
@@ -1439,7 +1452,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         # Attributes starting with `__array_` are common attributes of NumPy ndarray.
         # They are requested by numpy functions.
         if item.startswith('__array_'):
-            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning)
+            warnings.warn("The unit of the quantity is stripped.", UnitStrippedWarning, stacklevel=2)
             if isinstance(self._magnitude, ndarray):
                 return getattr(self._magnitude, item)
             else:
@@ -1715,7 +1728,7 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
     def _ok_for_muldiv(self, no_offset_units=None):
         """Checks if Quantity object can be multiplied or divided
 
-        :q: quantity object that is checked
+        :q: pint.Quantity object that is checked
         :no_offset_units: number of offset units in q
         """
         is_ok = True
@@ -1737,13 +1750,11 @@ class _Quantity(PrettyIPython, SharedRegistryObject):
         return datetime.timedelta(microseconds=self.to('microseconds').magnitude)
 
 
+_Quantity = Quantity
 
-def build_quantity_class(registry, force_ndarray=False):
 
+def build_quantity_class(registry):
     class Quantity(_Quantity):
-        pass
-
-    Quantity._REGISTRY = registry
-    Quantity.force_ndarray = force_ndarray
+        _REGISTRY = registry
 
     return Quantity

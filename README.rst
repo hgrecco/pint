@@ -86,6 +86,11 @@ Documentation
 
 Full documentation is available at http://pint.readthedocs.org/
 
+GUI Website 
+-----------
+
+This [website](www.dimensionalanalysis.org) wraps Pint's "dimensional analysis" methods to provide a GUI.
+
 
 Design principles
 -----------------
