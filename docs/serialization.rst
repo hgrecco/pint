@@ -109,7 +109,7 @@ Using the serialize_ package you can load and read from multiple formats:
 .. _Pickle: http://docs.python.org/3/library/pickle.html
 .. _json: http://docs.python.org/3/library/json.html
 .. _yaml: http://pyyaml.org/
-.. _shelve: http://docs.python.org/3.4/library/shelve.html
+.. _shelve: http://docs.python.org/3.6/library/shelve.html
 .. _hdf5: http://www.h5py.org/
 .. _PyTables: http://www.pytables.org
 .. _dill: https://pypi.python.org/pypi/dill
