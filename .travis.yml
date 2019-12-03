@@ -62,8 +62,8 @@ install:
   - source activate $ENV_NAME
   - if [[ $UNCERTAINTIES != 0 && $UNCERTAINTIES < 999 ]]; then pip install uncertainties==$UNCERTAINTIES; fi
   - if [[ $UNCERTAINTIES == 999 ]]; then pip install uncertainties; fi
-  - if [[ $NUMPY != 0 && $NUMPY < 999 ]; then conda install --yes numpy==$NUMPY; fi
-  - if [[ $NUMPY == "latest" ]; then conda install --yes numpy; fi
+  - if [[ $NUMPY != 0 && $NUMPY < 999 ]]; then conda install --yes numpy==$NUMPY; fi
+  - if [[ $NUMPY == 999 ]]; then conda install --yes numpy; fi
   # this is superslow but suck it up until updates to pandas are made
   - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
   - pip install coveralls
