@@ -9,17 +9,15 @@
     :license: BSD, see LICENSE for more details.
 """
 
-import locale
 import logging
 from logging import NullHandler
-import re
 import operator
+import re
 from collections.abc import Mapping
 from decimal import Decimal
 from numbers import Number
 from fractions import Fraction
 from functools import lru_cache
-
 from token import NAME, NUMBER
 
 from .compat import tokenizer, NUMERIC_TYPES
@@ -724,16 +722,6 @@ def infer_base_unit(q):
 
     # remove values that resulted in a power of 0
     return UnitsContainer({k: v for k, v in d.items() if v != 0})
-
-
-def fix_str_conversions(cls):
-    """Enable python2/3 compatible behaviour for __str__."""
-    def __bytes__(self):
-        return self.__unicode__().encode(locale.getpreferredencoding())
-    cls.__unicode__ = __unicode__ = cls.__str__
-    cls.__bytes__ = __bytes__
-    cls.__str__ = __unicode__
-    return cls
 
 
 def getattr_maybe_raise(self, item):

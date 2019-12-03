@@ -12,6 +12,7 @@ import contextlib
 import copy
 import datetime
 import functools
+import locale
 import math
 import numbers
 import operator
@@ -25,8 +26,7 @@ from .errors import (DimensionalityError, OffsetUnitCalculusError,
 from .definitions import UnitDefinition
 from .compat import ndarray, np, _to_magnitude
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
-                   to_units_container, infer_base_unit,
-                   fix_str_conversions)
+                   to_units_container, infer_base_unit)
 from pint.compat import Loc
 
 
@@ -93,7 +93,6 @@ def printoptions(*args, **kwargs):
         np.set_printoptions(**opts)
 
 
-@fix_str_conversions
 class Quantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
@@ -191,6 +190,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def __str__(self):
         return format(self)
+
+    def __bytes__(self):
+        return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self):
         return f"<Quantity({self._magnitude}, '{self._units}')>"

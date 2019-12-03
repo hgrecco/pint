@@ -10,18 +10,17 @@
 """
 
 import copy
+import locale
 import operator
 from numbers import Number
 
-from .util import (
-    PrettyIPython, UnitsContainer, SharedRegistryObject, fix_str_conversions)
+from .util import PrettyIPython, UnitsContainer, SharedRegistryObject
 
 from .compat import NUMERIC_TYPES
 from .formatting import siunitx_format_unit
 from .definitions import UnitDefinition
 
 
-@fix_str_conversions
 class Unit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
 
@@ -69,6 +68,9 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __str__(self):
         return format(self)
+
+    def __bytes__(self):
+        return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self):
         return "<Unit('{}')>".format(self._units)
