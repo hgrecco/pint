@@ -7,16 +7,16 @@
     :license: BSD, see LICENSE for more details.
 """
 
+import bisect
 import contextlib
 import copy
 import datetime
-import math
-import operator
 import functools
-import bisect
-import warnings
+import math
 import numbers
+import operator
 import re
+import warnings
 
 from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_latex,
                          ndarray_to_latex_parts)
@@ -167,8 +167,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self.__used
 
     def __iter__(self):
-        # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon as one
-        # calls iter(self) without waiting for the first element to be drawn from the iterator
+        # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
+        # as one calls iter(self) without waiting for the first element to be drawn from
+        # the iterator
         it_magnitude = iter(self.magnitude)
 
         def it_outer():
@@ -192,7 +193,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return format(self)
 
     def __repr__(self):
-        return "<Quantity({}, '{}')>".format(self._magnitude, self._units)
+        return f"<Quantity({self._magnitude}, '{self._units}')>"
 
     def __hash__(self):
         self_base = self.to_base_units()

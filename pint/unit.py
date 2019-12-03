@@ -76,12 +76,8 @@ class Unit(PrettyIPython, SharedRegistryObject):
     def __format__(self, spec):
         spec = spec or self.default_format
         # special cases
-        if 'Lx' in spec: # the LaTeX siunitx code
-          opts = ''
-          ustr = siunitx_format_unit(self)
-          ret = r'\si[%s]{%s}'%( opts, ustr )
-          return ret
-
+        if 'Lx' in spec:  # the LaTeX siunitx code
+            return r'\si[]{%s}' % siunitx_format_unit(self)
 
         if '~' in spec:
             if not self._units:

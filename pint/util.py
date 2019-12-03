@@ -12,7 +12,6 @@
 import locale
 import logging
 from logging import NullHandler
-import sys
 import re
 import operator
 from collections.abc import Mapping
@@ -725,10 +724,7 @@ def fix_str_conversions(cls):
         return self.__unicode__().encode(locale.getpreferredencoding())
     cls.__unicode__ = __unicode__ = cls.__str__
     cls.__bytes__ = __bytes__
-    if sys.version_info[0] == 2:
-        cls.__str__ = __bytes__
-    else:
-        cls.__str__ = __unicode__
+    cls.__str__ = __unicode__
     return cls
 
 
