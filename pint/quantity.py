@@ -1455,12 +1455,13 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             else:
                 # If an `__array_` attributes is requested but the magnitude is not an ndarray,
                 # we convert the magnitude to a numpy ndarray.
-                self._magnitude = _to_magnitude(self._magnitude, force_ndarray=True)
-                return getattr(self._magnitude, item)
+                # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays
+                magnitude_as_array = _to_magnitude(self._magnitude, force_ndarray=True)
+                return getattr(magnitude_as_array, item)
         elif item in HANDLED_UFUNCS:
-            # TODO: Fix for duck arrays
-            magnitude = _to_magnitude(self._magnitude, True)
-            attr = getattr(self._magnitude, item)
+            # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays/scalars
+            magnitude_as_array = _to_magnitude(self._magnitude, True)
+            attr = getattr(magnitude_as_array, item)
             if callable(attr):
                 return functools.partial(self._ufunc_method_wrap, attr)
             else:
