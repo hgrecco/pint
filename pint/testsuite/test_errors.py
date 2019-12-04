@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals, print_function, absolute_import
 
+import pickle
 
 from pint import (
     DefinitionSyntaxError,
@@ -9,6 +9,7 @@ from pint import (
     OffsetUnitCalculusError,
     RedefinitionError,
     UndefinedUnitError,
+    UnitRegistry,
 )
 from pint.testsuite import BaseTestCase
 
@@ -88,3 +89,32 @@ class TestErrors(BaseTestCase):
             "Ambiguous operation with offset unit (kilogram, second). See "
             "https://pint.readthedocs.io/en/latest/nonmult.html for guidance.",
         )
+
+    def test_pickle_definition_syntax_error(self):
+        # OffsetUnitCalculusError raised from a custom ureg must be pickleable even if
+        # the ureg is not the application ureg
+        # pickled
+        ureg = UnitRegistry(filename=None)
+        ureg.define("foo = [bar]")
+        ureg.define("bar = 2 foo")
+        pik = pickle.dumps(ureg.Quantity("1 foo"))
+        with self.assertRaises(UndefinedUnitError):
+            pickle.loads(pik)
+        q1 = ureg.Quantity("1 foo")
+        q2 = ureg.Quantity("1 bar")
+
+        for ex in [
+            DefinitionSyntaxError("foo", filename="a.txt", lineno=123),
+            RedefinitionError("foo", "bar"),
+            UndefinedUnitError("meter"),
+            DimensionalityError("a", "b", "c", "d", extra_msg=": msg"),
+            OffsetUnitCalculusError(Quantity("1 kg")._units, Quantity("1 s")._units),
+            OffsetUnitCalculusError(q1._units, q2._units),
+        ]:
+            with self.subTest(etype=type(ex)):
+                # assert False, ex.__reduce__()
+                ex2 = pickle.loads(pickle.dumps(ex))
+                assert type(ex) is type(ex2)
+                self.assertEqual(ex.args, ex2.args)
+                self.assertEqual(ex.__dict__, ex2.__dict__)
+                self.assertEqual(str(ex), str(ex2))

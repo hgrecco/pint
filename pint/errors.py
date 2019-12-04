@@ -10,47 +10,55 @@
 """
 
 
-class FilenameMixin:
-    def __init__(self, filename=None, lineno=None):
-        self.filename = filename
-        self.lineno = lineno
-
-    def __str__(self):
-        if self.filename and self.lineno is not None:
-            return f"While opening {self.filename}, in line {self.lineno}: "
-        elif self.filename:
-            return f"While opening {self.filename}: "
-        elif self.lineno is not None:
-            return f"In line {self.lineno}: "
-        else:
-            return ""
+def _file_prefix(filename=None, lineno=None):
+    if filename and lineno is not None:
+        return f"While opening {filename}, in line {lineno}: "
+    elif filename:
+        return f"While opening {filename}: "
+    elif lineno is not None:
+        return f"In line {lineno}: "
+    else:
+        return ""
 
 
-class DefinitionSyntaxError(SyntaxError, FilenameMixin):
+class DefinitionSyntaxError(SyntaxError):
     """Raised when a textual definition has a syntax error.
     """
 
     def __init__(self, msg, *, filename=None, lineno=None):
-        SyntaxError.__init__(self, msg)
-        FilenameMixin.__init__(self, filename, lineno)
+        super().__init__(msg)
+        self.filename = filename
+        self.lineno = lineno
 
     def __str__(self):
-        return f"{FilenameMixin.__str__(self)}{self.args[0]}"
+        return _file_prefix(self.filename, self.lineno) + str(self.args[0])
+
+    @property
+    def __dict__(self):
+        # For some reason, SyntaxError.__dict__ is always empty.
+        # There are no __slots__ either. This messes up pickling and deepcopy, as well
+        # as any other Python library that expects sane behaviour.
+        return {"filename": self.filename, "lineno": self.lineno}
+
+    def __reduce__(self):
+        return DefinitionSyntaxError, self.args, self.__dict__
 
 
-class RedefinitionError(ValueError, FilenameMixin):
+class RedefinitionError(ValueError):
     """Raised when a unit or prefix is redefined.
     """
 
-    def __init__(self, name, definition_type, filename=None, lineno=None):
-        ValueError().__init__(self)
-        FilenameMixin.__init__(self, filename, lineno)
-        self.name = name
-        self.definition_type = definition_type
+    def __init__(self, name, definition_type, *, filename=None, lineno=None):
+        super().__init__(name, definition_type)
+        self.filename = filename
+        self.lineno = lineno
 
     def __str__(self):
-        msg = f"Cannot redefine '{self.name}' ({self.definition_type})"
-        return FilenameMixin.__str__(self) + msg
+        msg = f"Cannot redefine '{self.args[0]}' ({self.args[1]})"
+        return _file_prefix(self.filename, self.lineno) + msg
+
+    def __reduce__(self):
+        return RedefinitionError, self.args, self.__dict__
 
 
 class UndefinedUnitError(AttributeError):
@@ -96,6 +104,9 @@ class DimensionalityError(PintTypeError):
             f"Cannot convert from '{self.units1}'{dim1} to "
             f"'{self.units2}'{dim2}{self.extra_msg}"
         )
+
+    def __reduce__(self):
+        return TypeError.__new__, (DimensionalityError,), self.__dict__
 
 
 class OffsetUnitCalculusError(PintTypeError):
