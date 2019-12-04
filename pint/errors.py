@@ -8,25 +8,19 @@
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-from .compat import string_types
 
 
-class DefinitionSyntaxError(ValueError):
+class DefinitionSyntaxError(SyntaxError):
     """Raised when a textual definition has a syntax error.
     """
 
     def __init__(self, msg, filename=None, lineno=None):
-        super(DefinitionSyntaxError, self).__init__()
-        self.msg = msg
+        super().__init__(msg)
         self.filename = None
         self.lineno = None
 
     def __str__(self):
-        mess = "While opening {}, in line {}: "
-        return mess.format(self.filename, self.lineno) + self.msg
+        return f"While opening {self.filename}, in line {self.lineno}: {self.args[0]}"
 
 
 class RedefinitionError(ValueError):
@@ -34,18 +28,16 @@ class RedefinitionError(ValueError):
     """
 
     def __init__(self, name, definition_type):
-        super(RedefinitionError, self).__init__()
+        super().__init__()
         self.name = name
         self.definition_type = definition_type
         self.filename = None
         self.lineno = None
 
     def __str__(self):
-        msg = "cannot redefine '{}' ({})".format(self.name,
-                                                   self.definition_type)
+        msg = f"Cannot redefine '{self.name}' ({self.definition_type})"
         if self.filename:
-            mess = "While opening {}, in line {}: "
-            return mess.format(self.filename, self.lineno) + msg
+            return f"While opening {self.filename}, in line {self.lineno}: {msg}"
         return msg
 
 
@@ -54,16 +46,15 @@ class UndefinedUnitError(AttributeError):
     """
 
     def __init__(self, unit_names):
-        super(UndefinedUnitError, self).__init__()
+        super().__init__()
         self.unit_names = unit_names
 
     def __str__(self):
         mess = "'{}' is not defined in the unit registry"
         mess_plural = "'{}' are not defined in the unit registry"
-        if isinstance(self.unit_names, string_types):
+        if isinstance(self.unit_names, str):
             return mess.format(self.unit_names)
-        elif isinstance(self.unit_names, (list, tuple))\
-                and len(self.unit_names) == 1:
+        elif isinstance(self.unit_names, (list, tuple)) and len(self.unit_names) == 1:
             return mess.format(self.unit_names[0])
         elif isinstance(self.unit_names, set) and len(self.unit_names) == 1:
             uname = list(self.unit_names)[0]
@@ -72,12 +63,16 @@ class UndefinedUnitError(AttributeError):
             return mess_plural.format(self.unit_names)
 
 
-class DimensionalityError(ValueError):
+class PintTypeError(TypeError):
+    pass
+
+
+class DimensionalityError(PintTypeError):
     """Raised when trying to convert between incompatible units.
     """
 
-    def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=''):
-        super(DimensionalityError, self).__init__()
+    def __init__(self, units1, units2, dim1=None, dim2=None, *, extra_msg=""):
+        super().__init__()
         self.units1 = units1
         self.units2 = units2
         self.dim1 = dim1
@@ -86,31 +81,35 @@ class DimensionalityError(ValueError):
 
     def __str__(self):
         if self.dim1 or self.dim2:
-            dim1 = ' ({})'.format(self.dim1)
-            dim2 = ' ({})'.format(self.dim2)
+            dim1 = f" ({self.dim1})"
+            dim2 = f" ({self.dim2})"
         else:
-            dim1 = ''
-            dim2 = ''
+            dim1 = ""
+            dim2 = ""
 
-        msg = "Cannot convert from '{}'{} to '{}'{}" + self.extra_msg
+        return (
+            f"Cannot convert from '{self.units1}'{dim1} to "
+            f"'{self.units2}'{dim2}{self.extra_msg}"
+        )
 
-        return msg.format(self.units1, dim1, self.units2, dim2)
 
-
-class OffsetUnitCalculusError(ValueError):
+class OffsetUnitCalculusError(PintTypeError):
     """Raised on ambiguous operations with offset units.
     """
-    def __init__(self, units1, units2='', extra_msg=''):
-        super(ValueError, self).__init__()
+
+    def __init__(self, units1, units2="", *, extra_msg=""):
+        super().__init__()
         self.units1 = units1
         self.units2 = units2
         self.extra_msg = extra_msg
 
     def __str__(self):
-        msg = ("Ambiguous operation with offset unit (%s)." %
-               ', '.join(['%s' % u for u in [self.units1, self.units2] if u])
-               + " See https://pint.readthedocs.io/en/latest/nonmult.html for guidance."
-               + self.extra_msg)
+        msg = (
+            "Ambiguous operation with offset unit (%s)."
+            % ", ".join(["%s" % u for u in [self.units1, self.units2] if u])
+            + " See https://pint.readthedocs.io/en/latest/nonmult.html for guidance."
+            + self.extra_msg
+        )
         return msg.format(self.units1, self.units2)
 
 

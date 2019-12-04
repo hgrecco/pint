@@ -81,8 +81,10 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertQuantityEqual(q, [0.001, 2., 0.002, 4.]*self.ureg.m/self.ureg.mm)
 
         q =  [1., 2., 3., 4.] * self.ureg.m
-        self.assertRaises(ValueError, q.put, [0, 2], [4., 6.] * self.ureg.J)
-        self.assertRaises(ValueError, q.put, [0, 2], [4., 6.])
+        with self.assertRaises(DimensionalityError):
+            q.put([0, 2], [4., 6.] * self.ureg.J)
+        with self.assertRaises(DimensionalityError):
+            q.put([0, 2], [4., 6.])
 
     def test_repeat(self):
         self.assertQuantityEqual(self.q.repeat(2), [1,1,2,2,3,3,4,4]*self.ureg.m)
@@ -111,7 +113,7 @@ class TestNumpyMethods(QuantityTestCase):
         np.testing.assert_array_equal(q.searchsorted([1.5, 2.5] * self.ureg.m),
                                       [1, 2])
         q = self.q.flatten()
-        self.assertRaises(ValueError, q.searchsorted, [1.5, 2.5])
+        self.assertRaises(DimensionalityError, q.searchsorted, [1.5, 2.5])
 
     def test_searchsorted_numpy_func(self):
         """Test searchsorted as numpy function."""
@@ -151,8 +153,8 @@ class TestNumpyMethods(QuantityTestCase):
             self.q.clip(min=2*self.ureg.m, max=3*self.ureg.m),
             [[2, 2], [3, 3]] * self.ureg.m
         )
-        self.assertRaises(ValueError, self.q.clip, self.ureg.J)
-        self.assertRaises(ValueError, self.q.clip, 1)
+        self.assertRaises(DimensionalityError, self.q.clip, self.ureg.J)
+        self.assertRaises(DimensionalityError, self.q.clip, 1)
 
     def test_round(self):
         q = [1, 1.33, 5.67, 22] * self.ureg.m
@@ -179,7 +181,7 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertEqual(self.q.prod(), 24 * self.ureg.m**4)
 
     def test_cumprod(self):
-        self.assertRaises(ValueError, self.q.cumprod)
+        self.assertRaises(DimensionalityError, self.q.cumprod)
         self.assertQuantityEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
 
     @helpers.requires_numpy_previous_than('1.10')
@@ -202,34 +204,39 @@ class TestNumpyMethods(QuantityTestCase):
         self.assertEqual(self.q[1,1], 4*self.ureg.m)
 
     def test_setitem(self):
-        self.assertRaises(ValueError, self.q.__setitem__, (0,0), 1)
-        self.assertRaises(ValueError, self.q.__setitem__, (0,0), 1*self.ureg.J)
-        self.assertRaises(ValueError, self.q.__setitem__, 0, 1)
-        self.assertRaises(ValueError, self.q.__setitem__, 0, np.ndarray([1, 2]))
-        self.assertRaises(ValueError, self.q.__setitem__, 0, 1*self.ureg.J)
+        with self.assertRaises(TypeError):
+            self.q[0, 0] = 1
+        with self.assertRaises(DimensionalityError):
+            self.q[0, 0] = 1 * self.ureg.J
+        with self.assertRaises(DimensionalityError):
+            self.q[0] = 1
+        with self.assertRaises(DimensionalityError):
+            self.q[0] = np.ndarray([1, 2])
+        with self.assertRaises(DimensionalityError):
+            self.q[0] = 1 * self.ureg.J
 
         q = self.q.copy()
-        q[0] = 1*self.ureg.m
-        self.assertQuantityEqual(q, [[1,1],[3,4]]*self.ureg.m)
+        q[0] = 1 * self.ureg.m
+        self.assertQuantityEqual(q, [[1, 1], [3, 4]] * self.ureg.m)
 
         q = self.q.copy()
-        q.__setitem__(Ellipsis, 1*self.ureg.m)
-        self.assertQuantityEqual(q, [[1,1],[1,1]]*self.ureg.m)
+        q[...] = 1 * self.ureg.m
+        self.assertQuantityEqual(q, [[1, 1], [1, 1]] * self.ureg.m)
 
         q = self.q.copy()
-        q[:] = 1*self.ureg.m
-        self.assertQuantityEqual(q, [[1,1],[1,1]]*self.ureg.m)
+        q[:] = 1 * self.ureg.m
+        self.assertQuantityEqual(q, [[1, 1], [1, 1]] * self.ureg.m)
 
         # check and see that dimensionless num  bers work correctly
-        q = [0,1,2,3]*self.ureg.dimensionless
+        q = [0, 1, 2, 3] * self.ureg.dimensionless
         q[0] = 1
-        self.assertQuantityEqual(q, np.asarray([1,1,2,3]))
+        self.assertQuantityEqual(q, np.asarray([1, 1, 2, 3]))
         q[0] = self.ureg.m/self.ureg.mm
-        self.assertQuantityEqual(q, np.asarray([1000, 1,2,3]))
+        self.assertQuantityEqual(q, np.asarray([1000, 1, 2, 3]))
 
-        q = [0.,1.,2.,3.] * self.ureg.m / self.ureg.mm
-        q[0] = 1.
-        self.assertQuantityEqual(q, [0.001,1,2,3]*self.ureg.m / self.ureg.mm)
+        q = [0., 1., 2., 3.] * self.ureg.m / self.ureg.mm
+        q[0] = 1.0
+        self.assertQuantityEqual(q, [0.001, 1, 2, 3] * self.ureg.m / self.ureg.mm)
 
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):

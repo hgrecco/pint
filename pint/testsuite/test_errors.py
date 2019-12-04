@@ -16,5 +16,5 @@ class TestErrors(BaseTestCase):
         self.assertEqual(str(UndefinedUnitError(set(x))), msg)
 
         msg = "Cannot convert from 'a' (c) to 'b' (d)msg"
-        ex = DimensionalityError('a', 'b', 'c', 'd', 'msg')
+        ex = DimensionalityError('a', 'b', 'c', 'd', extra_msg='msg')
         self.assertEqual(str(ex), msg)

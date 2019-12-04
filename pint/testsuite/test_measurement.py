@@ -2,6 +2,7 @@
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
+from pint import DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 
 
@@ -104,9 +105,12 @@ class TestMeasurement(QuantityTestCase):
         o = self.Q_(.1, 'm')
 
         M_ = self.ureg.Measurement
-        self.assertRaises(ValueError, M_, v, o)
-        self.assertRaises(ValueError, v.plus_minus, o)
-        self.assertRaises(ValueError, v.plus_minus, u, True)
+        with self.assertRaises(DimensionalityError):
+            M_(v, o)
+        with self.assertRaises(DimensionalityError):
+            v.plus_minus(o)
+        with self.assertRaises(ValueError):
+            v.plus_minus(u, relative=True)
 
     def test_propagate_linear(self):
 

@@ -1007,12 +1007,16 @@ class NonMultiplicativeRegistry(BaseRegistry):
         try:
             src_offset_unit = self._validate_and_extract(src)
         except ValueError as ex:
-            raise DimensionalityError(src, dst, extra_msg=' - In source units, %s ' % ex)
+            raise DimensionalityError(
+                src, dst, extra_msg=f" - In source units, {ex}"
+            )
 
         try:
             dst_offset_unit = self._validate_and_extract(dst)
         except ValueError as ex:
-            raise DimensionalityError(src, dst, extra_msg=' - In destination units, %s ' % ex)
+            raise DimensionalityError(
+                src, dst, extra_msg=f" - In destination units, {ex}"
+            )
 
         if not (src_offset_unit or dst_offset_unit):
             return super(NonMultiplicativeRegistry, self)._convert(value, src, dst, inplace)

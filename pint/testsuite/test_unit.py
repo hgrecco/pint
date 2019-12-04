@@ -5,9 +5,11 @@ from __future__ import division, unicode_literals, print_function, absolute_impo
 import copy
 import math
 
-from pint.registry import (UnitRegistry, LazyRegistry)
-from pint.util import (UnitsContainer, ParserHelper)
-from pint import DimensionalityError, UndefinedUnitError
+from pint import (
+    DefinitionSyntaxError, DimensionalityError, RedefinitionError, UndefinedUnitError
+)
+from pint.registry import UnitRegistry, LazyRegistry
+from pint.util import UnitsContainer, ParserHelper
 from pint.compat import u, np, string_types
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
@@ -174,7 +176,7 @@ class TestRegistry(QuantityTestCase):
     def test_base(self):
         ureg = UnitRegistry(None)
         ureg.define('meter = [length]')
-        self.assertRaises(ValueError, ureg.define, 'meter = [length]')
+        self.assertRaises(DefinitionSyntaxError, ureg.define, 'meter = [length]')
         self.assertRaises(TypeError, ureg.define, list())
         x = ureg.define('degC = kelvin; offset: 273.15')
 
@@ -319,19 +321,19 @@ class TestRegistry(QuantityTestCase):
         self.assertRaises(ValueError, f1, 3.)
         self.assertEqual(f1(3. * ureg.centimeter), 0.03)
         self.assertEqual(f1(3. * ureg.meter), 3.)
-        self.assertRaises(ValueError, f1, 3 * ureg.second)
+        self.assertRaises(DimensionalityError, f1, 3 * ureg.second)
 
         f1b = ureg.wraps(None, [ureg.meter, ])(func)
         self.assertRaises(ValueError, f1b, 3.)
         self.assertEqual(f1b(3. * ureg.centimeter), 0.03)
         self.assertEqual(f1b(3. * ureg.meter), 3.)
-        self.assertRaises(ValueError, f1b, 3 * ureg.second)
+        self.assertRaises(DimensionalityError, f1b, 3 * ureg.second)
 
         f1 = ureg.wraps(None, 'meter')(func)
         self.assertRaises(ValueError, f1, 3.)
         self.assertEqual(f1(3. * ureg.centimeter), 0.03)
         self.assertEqual(f1(3. * ureg.meter), 3.)
-        self.assertRaises(ValueError, f1, 3 * ureg.second)
+        self.assertRaises(DimensionalityError, f1, 3 * ureg.second)
 
         f2 = ureg.wraps('centimeter', ['meter', ])(func)
         self.assertRaises(ValueError, f2, 3.)
@@ -591,14 +593,14 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
 
     def test_redefinition(self):
         d = self.ureg.define
-        self.assertRaises(ValueError, d, 'meter = [time]')
-        self.assertRaises(ValueError, d, 'kilo- = 1000')
-        self.assertRaises(ValueError, d, '[speed] = [length]')
+        self.assertRaises(RedefinitionError, d, 'meter = [time]')
+        self.assertRaises(RedefinitionError, d, 'kilo- = 1000')
+        self.assertRaises(RedefinitionError, d, '[speed] = [length]')
 
         # aliases
         self.assertIn('inch', self.ureg._units)
-        self.assertRaises(ValueError, d, 'bla = 3.2 meter = inch')
-        self.assertRaises(ValueError, d, 'myk- = 1000 = kilo-')
+        self.assertRaises(RedefinitionError, d, 'bla = 3.2 meter = inch')
+        self.assertRaises(RedefinitionError, d, 'myk- = 1000 = kilo-')
 
 
 class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
