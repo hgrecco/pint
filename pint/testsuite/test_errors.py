@@ -92,8 +92,7 @@ class TestErrors(BaseTestCase):
 
     def test_pickle_definition_syntax_error(self):
         # OffsetUnitCalculusError raised from a custom ureg must be pickleable even if
-        # the ureg is not the application ureg
-        # pickled
+        # the ureg is not registered as the application ureg
         ureg = UnitRegistry(filename=None)
         ureg.define("foo = [bar]")
         ureg.define("bar = 2 foo")
