@@ -10,57 +10,62 @@
 """
 
 
-class DefinitionSyntaxError(SyntaxError):
+class FilenameMixin:
+    def __init__(self, filename=None, lineno=None):
+        self.filename = filename
+        self.lineno = lineno
+
+    def __str__(self):
+        if self.filename and self.lineno is not None:
+            return f"While opening {self.filename}, in line {self.lineno}: "
+        elif self.filename:
+            return f"While opening {self.filename}: "
+        elif self.lineno is not None:
+            return f"In line {self.lineno}: "
+        else:
+            return ""
+
+
+class DefinitionSyntaxError(SyntaxError, FilenameMixin):
     """Raised when a textual definition has a syntax error.
     """
 
-    def __init__(self, msg, filename=None, lineno=None):
-        super().__init__(msg)
-        self.filename = None
-        self.lineno = None
+    def __init__(self, msg, *, filename=None, lineno=None):
+        SyntaxError.__init__(self, msg)
+        FilenameMixin.__init__(self, filename, lineno)
 
     def __str__(self):
-        return f"While opening {self.filename}, in line {self.lineno}: {self.args[0]}"
+        return f"{FilenameMixin.__str__(self)}{self.args[0]}"
 
 
-class RedefinitionError(ValueError):
+class RedefinitionError(ValueError, FilenameMixin):
     """Raised when a unit or prefix is redefined.
     """
 
-    def __init__(self, name, definition_type):
-        super().__init__()
+    def __init__(self, name, definition_type, filename=None, lineno=None):
+        ValueError().__init__(self)
+        FilenameMixin.__init__(self, filename, lineno)
         self.name = name
         self.definition_type = definition_type
-        self.filename = None
-        self.lineno = None
 
     def __str__(self):
         msg = f"Cannot redefine '{self.name}' ({self.definition_type})"
-        if self.filename:
-            return f"While opening {self.filename}, in line {self.lineno}: {msg}"
-        return msg
+        return FilenameMixin.__str__(self) + msg
 
 
 class UndefinedUnitError(AttributeError):
     """Raised when the units are not defined in the unit registry.
     """
 
-    def __init__(self, unit_names):
-        super().__init__()
-        self.unit_names = unit_names
+    def __init__(self, *unit_names):
+        if len(unit_names) == 1 and not isinstance(unit_names[0], str):
+            unit_names = unit_names[0]
+        super().__init__(*unit_names)
 
     def __str__(self):
-        mess = "'{}' is not defined in the unit registry"
-        mess_plural = "'{}' are not defined in the unit registry"
-        if isinstance(self.unit_names, str):
-            return mess.format(self.unit_names)
-        elif isinstance(self.unit_names, (list, tuple)) and len(self.unit_names) == 1:
-            return mess.format(self.unit_names[0])
-        elif isinstance(self.unit_names, set) and len(self.unit_names) == 1:
-            uname = list(self.unit_names)[0]
-            return mess.format(uname)
-        else:
-            return mess_plural.format(self.unit_names)
+        if len(self.args) == 1:
+            return f"'{self.args[0]}' is not defined in the unit registry"
+        return f"{self.args} are not defined in the unit registry"
 
 
 class PintTypeError(TypeError):
@@ -71,7 +76,7 @@ class DimensionalityError(PintTypeError):
     """Raised when trying to convert between incompatible units.
     """
 
-    def __init__(self, units1, units2, dim1=None, dim2=None, *, extra_msg=""):
+    def __init__(self, units1, units2, dim1="", dim2="", *, extra_msg=""):
         super().__init__()
         self.units1 = units1
         self.units2 = units2
@@ -97,20 +102,12 @@ class OffsetUnitCalculusError(PintTypeError):
     """Raised on ambiguous operations with offset units.
     """
 
-    def __init__(self, units1, units2="", *, extra_msg=""):
-        super().__init__()
-        self.units1 = units1
-        self.units2 = units2
-        self.extra_msg = extra_msg
-
     def __str__(self):
-        msg = (
+        return (
             "Ambiguous operation with offset unit (%s)."
-            % ", ".join(["%s" % u for u in [self.units1, self.units2] if u])
+            % ", ".join(str(u) for u in self.args)
             + " See https://pint.readthedocs.io/en/latest/nonmult.html for guidance."
-            + self.extra_msg
         )
-        return msg.format(self.units1, self.units2)
 
 
 class UnitStrippedWarning(UserWarning):

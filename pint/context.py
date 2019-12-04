@@ -165,7 +165,9 @@ class Context(object):
         if defaults:
             missing_pars = set(defaults.keys()).difference(set(names))
             if missing_pars:
-                raise DefinitionSyntaxError('Context parameters {} not found in any equation.'.format(missing_pars))
+                raise DefinitionSyntaxError(
+                    f'Context parameters {missing_pars} not found in any equation'
+                )
 
         return ctx
 

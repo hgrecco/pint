@@ -230,14 +230,6 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(self.ureg.parse_expression('kilometre'), self.Q_(1, UnitsContainer(kilometer=1.)))
         self.assertEqual(self.ureg.parse_expression('kilometres'), self.Q_(1, UnitsContainer(kilometer=1.)))
 
-    def test_str_errors(self):
-        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{0!s}' is not defined in the unit registry".format('rabbits'))
-        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "'{0!s}' are not defined in the unit registry".format(('rabbits', 'horses')))
-        self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
-                         "Cannot convert from 'meter' to 'second'")
-        self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),
-                         "Cannot convert from 'meter' (length) to 'second' (time)")
-
     def test_parse_mul_div(self):
         self.assertEqual(self.ureg.parse_expression('meter*meter'), self.Q_(1, UnitsContainer(meter=2.)))
         self.assertEqual(self.ureg.parse_expression('meter**2'), self.Q_(1, UnitsContainer(meter=2.)))

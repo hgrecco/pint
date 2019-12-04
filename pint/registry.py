@@ -1080,7 +1080,7 @@ class ContextRegistry(BaseRegistry):
             self.add_context(Context.from_lines(ifile.block_iter(),
                                                 self.get_dimensionality))
         except KeyError as e:
-            raise DefinitionSyntaxError('unknown dimension {} in context'.format(str(e)))
+            raise DefinitionSyntaxError(f'unknown dimension {e} in context')
 
     def add_context(self, context):
         """Add a context object to the registry.
