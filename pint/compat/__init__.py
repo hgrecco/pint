@@ -8,19 +8,15 @@
     :copyright: 2013 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-
+import tokenize
 from io import BytesIO
 from numbers import Number
 from decimal import Decimal
 
-from . import tokenize
-
-ENCODING_TOKEN = tokenize.ENCODING
-
 
 def tokenizer(input_string):
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline):
-        if tokinfo.type == ENCODING_TOKEN:
+        if tokinfo.type == tokenize.ENCODING:
             continue
         yield tokinfo
 
@@ -75,24 +71,9 @@ except ImportError:
 try:
     from babel import Locale as Loc
     from babel import units as babel_units
-    HAS_BABEL = True
-    HAS_PROPER_BABEL = hasattr(babel_units, 'format_unit')
+    HAS_BABEL = hasattr(babel_units, 'format_unit')
 except ImportError:
-    HAS_PROPER_BABEL = HAS_BABEL = False
+    HAS_BABEL = False
 
-if not HAS_PROPER_BABEL:
+if not HAS_BABEL:
     Loc = babel_units = None
-
-try:
-    import pandas as pd
-    HAS_PANDAS = True
-    # pin Pandas version for now
-    HAS_PROPER_PANDAS = pd.__version__.startswith("0.24.0.dev0+625.gbdb7a16")
-except ImportError:
-    HAS_PROPER_PANDAS = HAS_PANDAS = False
-
-try:
-    import pytest
-    HAS_PYTEST = True
-except ImportError:
-    HAS_PYTEST = False

@@ -5,7 +5,7 @@ from distutils.version import StrictVersion
 import re
 import unittest
 
-from ..compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER
+from ..compat import HAS_NUMPY, HAS_BABEL, HAS_UNCERTAINTIES, NUMPY_VER
 
 
 def requires_numpy18():
@@ -28,8 +28,8 @@ def requires_not_numpy():
     return unittest.skipIf(HAS_NUMPY, 'Requires NumPy is not installed.')
 
 
-def requires_proper_babel():
-    return unittest.skipUnless(HAS_PROPER_BABEL, 'Requires Babel with units support')
+def requires_babel():
+    return unittest.skipUnless(HAS_BABEL, 'Requires Babel with units support')
 
 
 def requires_uncertainties():

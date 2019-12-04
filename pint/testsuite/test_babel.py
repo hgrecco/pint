@@ -7,7 +7,7 @@ import os
 
 class TestBabel(BaseTestCase):
 
-    @helpers.requires_proper_babel()
+    @helpers.requires_babel()
     def test_babel(self):
         ureg = UnitRegistry()
         dirname = os.path.dirname(__file__)
