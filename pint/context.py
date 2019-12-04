@@ -158,7 +158,7 @@ class Context:
                                             lineno=lineno)
 
         if defaults:
-            missing_pars = set(defaults.keys()).difference(set(names))
+            missing_pars = defaults.keys() - set(names)
             if missing_pars:
                 raise DefinitionSyntaxError('Context parameters {} not found in any equation.'.format(missing_pars))
 

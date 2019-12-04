@@ -180,22 +180,21 @@ def solve_dependencies(dependencies):
     :return: list of sets, each containing keys of independents tasks dependent
                            only of the previous tasks in the list.
     """
-    d = dict((key, set(dependencies[key])) for key in dependencies)
     r = []
-    while d:
+    while dependencies:
         # values not in keys (items without dep)
-        t = {i for v in d.values() for i in v} - d.keys()
+        t = {i for v in dependencies.values() for i in v} - dependencies.keys()
         # and keys without value (items without dep)
-        t.update(k for k, v in d.items() if not v)
+        t.update(k for k, v in dependencies.items() if not v)
         # can be done right away
         if not t:
             raise ValueError(
                 'Cyclic dependencies exist among these items: {}'
-                .format(', '.join(repr(x) for x in d.items()))
+                .format(', '.join(repr(x) for x in dependencies.items()))
             )
         r.append(t)
         # and cleaned up
-        d = {k: v - t for k, v in d.items() if v}
+        dependencies = {k: v - t for k, v in dependencies.items() if v}
     return r
 
 
@@ -219,7 +218,7 @@ def find_connected_nodes(graph, start, visited=None):
     if not start in graph:
         return None
 
-    visited = (visited or set())
+    visited = visited or set()
     visited.add(start)
 
     for node in graph[start]:

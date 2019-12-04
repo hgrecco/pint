@@ -23,7 +23,7 @@ class TestGroup(QuantityTestCase):
         self.assertEqual(root._unit_names, {'meter', 'second'})
         self.assertEqual(root.members, {'meter', 'second'})
 
-        self.assertEqual(set(d.keys()), {'root'})
+        self.assertEqual(d.keys(), {'root'})
 
     def test_cyclic(self):
         ureg, root = self._build_empty_reg_root()
@@ -40,7 +40,7 @@ class TestGroup(QuantityTestCase):
         d = ureg._groups
         g2 = ureg.Group('g2')
 
-        self.assertEqual(set(d.keys()), {'root', 'g2'})
+        self.assertEqual(d.keys(), {'root', 'g2'})
 
         self.assertEqual(root._used_groups, {'g2'})
         self.assertEqual(root._used_by, set())
@@ -60,7 +60,7 @@ class TestGroup(QuantityTestCase):
 
         grp = ureg.Group.from_lines(lines, lambda x: None)
 
-        self.assertEqual(set(d.keys()), {'root', 'mygroup'})
+        self.assertEqual(d.keys(), {'root', 'mygroup'})
 
         self.assertEqual(grp.name, 'mygroup')
         self.assertEqual(grp._unit_names, {'meter', 'second'})

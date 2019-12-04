@@ -432,8 +432,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
         self._dimensional_equivalents = dict()
 
-        deps = dict((name, set(definition.reference.keys() if definition.reference else {}))
-                    for name, definition in self._units.items())
+        deps = {
+            name: definition.reference.keys() if definition.reference else set()
+            for name, definition in self._units.items()
+        }
 
         for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
@@ -1492,7 +1494,7 @@ class SystemRegistry(BaseRegistry):
                 members = self._groups[group_or_system].members
             else:
                 raise ValueError("Unknown Group o System with name '%s'" % group_or_system)
-            return frozenset(ret.intersection(members))
+            return frozenset(ret & members)
 
         return ret
 
