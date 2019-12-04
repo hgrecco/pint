@@ -1129,11 +1129,12 @@ class ContextRegistry(BaseRegistry):
         return context
 
     def _build_cache(self):
+        key = self._active_ctx.context_ids()
         try:
-            self._cache = self._caches[self._active_ctx]
+            self._cache = self._caches[key]
         except KeyError:
             super()._build_cache()
-            self._caches[self._active_ctx] = self._cache
+            self._caches[key] = self._cache
 
     def enable_contexts(self, *names_or_contexts, **kwargs):
         """Enable contexts provided by name or by object.

@@ -224,7 +224,7 @@ class ContextChain(ChainMap):
     @property
     def defaults(self):
         if self:
-            return list(self.maps[0].values())[0].defaults
+            return next(iter(self.maps[0].values())).defaults
         return {}
 
     @property
@@ -245,5 +245,10 @@ class ContextChain(ChainMap):
         """
         return self[(src, dst)].transform(src, dst, registry, value)
 
-    def __hash__(self):
-        return hash(tuple(self._contexts))
+    def context_ids(self):
+        """Hashable unique identifier of the current contents of the context chain. This
+        is not implemented as ``__hash__`` as doing so on a mutable object can provoke
+        unpredictable behaviour, as interpreter-level optimizations can cache the output
+        of ``__hash__``.
+        """
+        return tuple(id(ctx) for ctx in self._contexts)
