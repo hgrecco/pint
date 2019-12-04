@@ -19,7 +19,7 @@ class DefinitionSyntaxError(ValueError):
     """
 
     def __init__(self, msg, filename=None, lineno=None):
-        super(DefinitionSyntaxError, self).__init__()
+        super(DefinitionSyntaxError, self).__init__(msg, filename, lineno)
         self.msg = msg
         self.filename = None
         self.lineno = None
@@ -34,7 +34,7 @@ class RedefinitionError(ValueError):
     """
 
     def __init__(self, name, definition_type):
-        super(RedefinitionError, self).__init__()
+        super(RedefinitionError, self).__init__(name, definition_type)
         self.name = name
         self.definition_type = definition_type
         self.filename = None
@@ -54,7 +54,7 @@ class UndefinedUnitError(AttributeError):
     """
 
     def __init__(self, unit_names):
-        super(UndefinedUnitError, self).__init__()
+        super(UndefinedUnitError, self).__init__(unit_names)
         self.unit_names = unit_names
 
     def __str__(self):
@@ -77,7 +77,7 @@ class DimensionalityError(ValueError):
     """
 
     def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=''):
-        super(DimensionalityError, self).__init__()
+        super(DimensionalityError, self).__init__(units1, units2, dim1, dim2, extra_msg)
         self.units1 = units1
         self.units2 = units2
         self.dim1 = dim1
@@ -101,7 +101,7 @@ class OffsetUnitCalculusError(ValueError):
     """Raised on ambiguous operations with offset units.
     """
     def __init__(self, units1, units2='', extra_msg=''):
-        super(ValueError, self).__init__()
+        super(ValueError, self).__init__(units1, units2, extra_msg)
         self.units1 = units1
         self.units2 = units2
         self.extra_msg = extra_msg
