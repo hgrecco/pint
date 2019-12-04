@@ -24,7 +24,7 @@ from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_la
 from .errors import (DimensionalityError, OffsetUnitCalculusError, PintTypeError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
-from .compat import Loc, ndarray, np, _to_magnitude, is_upcast_type
+from .compat import Loc, ndarray, np, _to_magnitude, is_upcast_type, eq
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit, iterable, sized)
 from .numpy_func import (HANDLED_UFUNCS, copy_units_output_ufuncs, get_op_output_unit,
@@ -32,15 +32,6 @@ from .numpy_func import (HANDLED_UFUNCS, copy_units_output_ufuncs, get_op_output
                          matching_input_copy_units_output_ufuncs, 
                          matching_input_set_units_output_ufuncs, numpy_wrap, 
                          op_units_output_ufuncs, set_units_ufuncs)
-
-
-def _eq(first, second, check_all):
-    """Comparison of scalars and arrays
-    """
-    out = first == second
-    if check_all and isinstance(out, ndarray):
-        return np.all(out)
-    return out
 
 
 class _Exception(Exception):            # pragma: no cover
@@ -633,8 +624,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 raise
             except TypeError:
                 return NotImplemented
-
-            if _eq(other, 0, True):
+            if eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same
@@ -729,7 +719,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """
         if not self._check(other):
             # other not from same Registry or not a Quantity
-            if _eq(other, 0, True):
+            if eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same
@@ -1232,31 +1222,31 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
         if not isinstance(other, Quantity):
-            if _eq(other, 0, True):
+            if eq(other, 0, True):
                 # Handle the special case in which we compare to zero
                 # (or an array of zeros)
                 if self._is_multiplicative:
                     # compare magnitude
-                    return _eq(self._magnitude, other, False)
+                    return eq(self._magnitude, other, False)
                 else:
                     # compare the magnitude after converting the
                     # non-multiplicative quantity to base units
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
-                        return _eq(self.to_base_units()._magnitude, other, False)
+                        return eq(self.to_base_units()._magnitude, other, False)
                     else:
                         raise OffsetUnitCalculusError(self._units)
 
             return (self.dimensionless and
-                    _eq(self._convert_magnitude(UnitsContainer()), other, False))
+                    eq(self._convert_magnitude(UnitsContainer()), other, False))
 
-        if _eq(self._magnitude, 0, True) and _eq(other._magnitude, 0, True):
+        if eq(self._magnitude, 0, True) and eq(other._magnitude, 0, True):
             return self.dimensionality == other.dimensionality
 
         if self._units == other._units:
-            return _eq(self._magnitude, other._magnitude, False)
+            return eq(self._magnitude, other._magnitude, False)
 
         try:
-            return _eq(self._convert_magnitude_not_inplace(other._units),
+            return eq(self._convert_magnitude_not_inplace(other._units),
                        other._magnitude, False)
         except DimensionalityError:
             return False
@@ -1272,7 +1262,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
                 return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
-            elif _eq(other, 0, True):
+            elif eq(other, 0, True):
                 # Handle the special case in which we compare to zero
                 # (or an array of zeros)
                 if self._is_multiplicative:

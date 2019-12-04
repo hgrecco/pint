@@ -7,7 +7,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from .compat import is_upcast_type, np, string_types
+from .compat import NP_NO_VALUE, is_upcast_type, np, string_types, eq
 from .errors import DimensionalityError
 from .util import iterable, sized
 
@@ -100,8 +100,9 @@ def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
                 product /= x.units
         result_unit = product
     elif unit_op == "div":
-        product = first_input_units._REGISTRY.parse_units('')
-        for x in all_args:
+        # Start with first arg in numerator, all others in denominator
+        product = getattr(all_args[0], 'units', first_input_units._REGISTRY.parse_units(''))
+        for x in all_args[1:]:
             if hasattr(x, 'units'):
                 product /= x.units
         result_unit = product
@@ -139,6 +140,10 @@ def implements(numpy_func_string, func_type):
 
 def implement_func(func_type, func_str, input_units=None, output_unit=None):
     """TODO"""
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
     func = getattr(np, func_str)
 
     @implements(func_str, func_type)
@@ -151,7 +156,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
                 *args, pre_calc_units=first_input_units, **kwargs)
         else:
             # Match all input args/kwargs to input_units, or if input_units is None, simply
-            # strip units 
+            # strip units
             stripped_args, stripped_kwargs = convert_to_consistent_units(
                 *args, pre_calc_units=input_units, **kwargs)
 
@@ -163,8 +168,11 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             return result_magnitude
         elif output_unit == "match_input":
             result_unit = first_input_units
-        else:
+        elif output_unit in ['sum', 'mul', 'delta', 'delta,div', 'div', 'variance', 'square',
+                             'sqrt', 'reciprocal', 'size']:
             result_unit = get_op_output_unit(output_unit, first_input_units, args_and_kwargs)
+        else:
+            result_unit = output_unit
 
         return first_input_units._REGISTRY.Quantity(result_magnitude, result_unit)
 
@@ -176,6 +184,7 @@ TODO: document as before
 
 
 """
+strip_unit_input_output_ufuncs = ['isnan', 'isinf', 'isfinite', 'signbit']
 matching_input_bare_output_ufuncs = ['equal', 'greater', 'greater_equal', 'less',
                                      'less_equal', 'not_equal']
 matching_input_set_units_output_ufuncs = {'arctan2': 'radian'}
@@ -205,22 +214,28 @@ set_units_ufuncs = {'cumprod': ('', ''),
                     'rad2deg': ('radian', 'degree'),
                     'logaddexp': ('', ''),
                     'logaddexp2': ('', '')}
+# TODO (#905 follow-up): while this matches previous behavior, some of these have optional
+# arguments that should not be Quantities. This should be fixed, and tests using these
+# optional arguments should be added.
 matching_input_copy_units_output_ufuncs = ['compress', 'conj', 'conjugate', 'copy',
                                            'diagonal', 'max', 'mean', 'min',
                                            'ptp', 'ravel', 'repeat', 'reshape', 'round',
                                            'squeeze', 'swapaxes', 'take', 'trace',
                                            'transpose', 'ceil', 'floor', 'hypot', 'rint',
-                                           'add', 'subtract', 'copysign', 'nextafter',
-                                           'trunc', 'frexp', 'absolute', 'negative']  # TODO: review extra args/kwargs
+                                           'copysign', 'nextafter', 'trunc', 'absolute',
+                                           'negative']
 copy_units_output_ufuncs = ['ldexp', 'fmod', 'mod', 'remainder']
 op_units_output_ufuncs = {'var': 'square', 'prod': 'size', 'multiply': 'mul',
                           'true_divide': 'div', 'divide': 'div', 'floor_divide': 'div',
-                          'remainder': 'div', 'sqrt': 'sqrt', 'square': 'square',
-                          'reciprocal': 'reciprocal', 'std': 'sum', 'sum': 'sum',
-                          'cumsum': 'sum'}
+                          'sqrt': 'sqrt', 'square': 'square', 'reciprocal': 'reciprocal',
+                          'std': 'sum', 'sum': 'sum', 'cumsum': 'sum'}
 
 
 # Perform the standard ufunc implementations based on behavior collections
+for ufunc_str in strip_unit_input_output_ufuncs:
+    # Ignore units
+    implement_func('ufunc', ufunc_str, input_units=None, output_unit=None)
+
 for ufunc_str in matching_input_bare_output_ufuncs:
     # Require all inputs to match units, but output base ndarray
     implement_func('ufunc', ufunc_str, input_units='all_consistent', output_unit=None)
@@ -246,7 +261,48 @@ for ufunc_str, unit_op in op_units_output_ufuncs.items():
     implement_func('ufunc', ufunc_str, input_units=None, output_unit=unit_op)
 
 
-# TODO: modf (since it had the old modf__1)
+@implements('modf', 'ufunc')
+def _modf(x, *args, **kwargs):
+    (x,), output_wrap = unwrap_and_wrap_consistent_units(x)
+    return tuple(output_wrap(y) for y in np.modf(x, *args, **kwargs))
+
+
+@implements('frexp', 'ufunc')
+def _frexp(x, *args, **kwargs):
+    (x,), output_wrap = unwrap_and_wrap_consistent_units(x)
+    mantissa, exponent = np.frexp(x, *args, **kwargs)
+    return output_wrap(mantissa), exponent
+
+
+@implements('power', 'ufunc')
+def _power(x1, x2):
+    # Hand off to __pow__
+    return x1**x2
+
+
+def _add_subtract_handle_non_quantity_zero(x1, x2):
+    # As in #121/#122, if a value is 0 (but not Quantity 0) do the operation without checking
+    # units. We do the calculation instead of just returning the same value to enforce any
+    # shape checking and type casting due to the operation.
+    if eq(x1, 0, True):
+        (x2,), output_wrap = unwrap_and_wrap_consistent_units(x2)
+    elif eq(x2, 0, True):
+        (x1,), output_wrap = unwrap_and_wrap_consistent_units(x1)
+    else:
+        (x1, x2), output_wrap = unwrap_and_wrap_consistent_units(x1, x2)
+    return x1, x2, output_wrap
+
+
+@implements('add', 'ufunc')
+def _add(x1, x2, *args, **kwargs):
+    x1, x2, output_wrap = _add_subtract_handle_non_quantity_zero(x1, x2)
+    return output_wrap(np.add(x1, x2, *args, **kwargs))
+
+
+@implements('subtract', 'ufunc')
+def _subtract(x1, x2, *args, **kwargs):
+    x1, x2, output_wrap = _add_subtract_handle_non_quantity_zero(x1, x2)
+    return output_wrap(np.subtract(x1, x2, *args, **kwargs))
 
 
 """
@@ -364,8 +420,35 @@ def _unwrap(p, discont=None, axis=-1):
     return p._REGISTRY.Quantity(np.unwrap(p.m_as('rad'), discont, axis=axis),
                                 'rad').to(p.units)
 
+
+@implements('amin', 'function')
+def _amin(a, axis=None, out=None, keepdims=NP_NO_VALUE, initial=NP_NO_VALUE,
+          where=NP_NO_VALUE):
+    if initial == NP_NO_VALUE:
+        (a,), output_wrap = unwrap_and_wrap_consistent_units(a)
+    else:
+        (a, initial), output_wrap = unwrap_and_wrap_consistent_units(a, initial)
+    return output_wrap(np.amin(a, axis=axis, out=out, keepdims=keepdims, initial=initial,
+                               where=where))
+
+
+@implements('amax', 'function')
+def _amax(a, axis=None, out=None, keepdims=NP_NO_VALUE, initial=NP_NO_VALUE,
+          where=NP_NO_VALUE):
+    if initial == NP_NO_VALUE:
+        (a,), output_wrap = unwrap_and_wrap_consistent_units(a)
+    else:
+        (a, initial), output_wrap = unwrap_and_wrap_consistent_units(a, initial)
+    return output_wrap(np.amax(a, axis=axis, out=out, keepdims=keepdims, initial=initial,
+                               where=where))
+
+
 # Handle single unit argument operations (axis ops, aggregations, etc.)
 def implement_single_unit(func_str):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
     func = getattr(np, func_str)
 
     @implements(func_str, 'function')
@@ -376,12 +459,17 @@ def implement_single_unit(func_str):
 
 for func_str in ['expand_dims', 'squeeze', 'rollaxis', 'moveaxis', 'fix', 'around',
                  'diagonal', 'mean', 'ptp', 'ravel', 'round_', 'sort', 'median', 'nanmedian',
-                 'transpose', 'flip', 'copy', 'trim_zeros', 'average', 'nanmean']:
+                 'transpose', 'flip', 'copy', 'trim_zeros', 'average', 'nanmean',
+                 'broadcast_to', 'swapaxes', 'nanmin', 'nanmax']:
     implement_single_unit(func_str)
 
 
 # Handle atleast_nd functions
 def implement_atleast_nd(func_str):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
     func = getattr(np, func_str)
     @implements(func_str, 'function')
     def implementation(*arrays):
@@ -429,11 +517,6 @@ for func_str in ['gradient', ]:
 
 for func_str in ['var', 'nanvar']:
     implement_func('function', func_str, input_units=None, output_unit='variance')
-
-# TODO: broadcast_to (how to handle subok?)
-# TODO: result_type
-# TODO: 'amax', 'amin', 'nanmax', 'nanmin' (version dependent signatures)
-# TODO: nan_to_num (expected behavior with input values, sensible defaults?)
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):

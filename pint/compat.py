@@ -78,6 +78,8 @@ try:
     if HAS_NUMPY_ARRAY_FUNCTION:
         warnings.warn(_msg, BehaviorChangeWarning)
 
+    NP_NO_VALUE = np._NoValue
+
 except ImportError:
 
     np = None
@@ -89,6 +91,7 @@ except ImportError:
     NUMPY_VER = '0'
     NUMERIC_TYPES = (Number, Decimal)
     HAS_NUMPY_ARRAY_FUNCTION = False
+    NP_NO_VALUE = None
 
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
@@ -122,3 +125,12 @@ if not HAS_BABEL:
 def is_upcast_type(other):
     # Check if class name is in preset list
     return other.__class__.__name__ in ("PintArray", "Series", "DataArray")
+
+
+def eq(first, second, check_all):
+    """Comparison of scalars and arrays
+    """
+    out = first == second
+    if check_all and isinstance(out, ndarray):
+        return np.all(out)
+    return out
