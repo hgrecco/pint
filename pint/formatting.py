@@ -16,7 +16,7 @@ import re
 from .babel_names import _babel_units, _babel_lengths
 from pint.compat import babel_units, Loc, string_types
 
-__JOIN_REG_EXP = re.compile("\{\d*\}")
+__JOIN_REG_EXP = re.compile(r"\{\d*\}")
 
 
 def _join(fmt, iterable):
