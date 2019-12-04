@@ -585,7 +585,8 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
 
     def test_redefinition(self):
         d = self.ureg.define
-        self.assertRaises(RedefinitionError, d, 'meter = [time]')
+        self.assertRaises(DefinitionSyntaxError, d, 'meter = [time]')
+        self.assertRaises(RedefinitionError, d, 'meter = [newdim]')
         self.assertRaises(RedefinitionError, d, 'kilo- = 1000')
         self.assertRaises(RedefinitionError, d, '[speed] = [length]')
 

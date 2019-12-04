@@ -269,7 +269,9 @@ class BaseRegistry(meta.with_metaclass(_Meta)):
                 for dimension in definition.reference.keys():
                     if dimension in self._dimensions:
                         if dimension != '[]':
-                            raise DefinitionSyntaxError('only one unit per dimension can be a base unit.')
+                            raise DefinitionSyntaxError(
+                                'Only one unit per dimension can be a base unit'
+                            )
                         continue
 
                     self.define(DimensionDefinition(dimension, '', (), None, is_base=True))
