@@ -4,7 +4,76 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- **BREAKING CHANGE**:
+  Fix crash when applying pprint to large sets of Units.
+  DefinitionSyntaxError is now a subclass of SyntaxError (was ValueError).
+  DimensionalityError and OffsetUnitCalculusError are now subclasses of TypeError (was
+  ValueError).
+  (Issue #915, Thanks Guido Imperiale)
+- TODO #913
+- TODO #911
+- Prevent 1500x slowdown when using .to() with a context
+  (Issue #909, Thanks Guido Imperiale)
+- **BREAKING CHANGE**:
+  Drop support for Python < 3.6, numpy < 1.14, and uncertainties < 3.0;
+  if you still need them, please install pint 0.9.
+  Pint now adheres to NEP-29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>
+  as a rolling dependencies version policy.
+  (Issues #908 and #910, Thanks Guido Imperiale)
+- TODO #907
+- TODO #891
+- TODO #890
+- TODO #889
+- TODO #888
+- TODO #884
+- All Exceptions can now be pickled and can be accessed from the top-level package
+  (e.g. pint.DimensionalityError).
+  (Issues #880 and #915, Thanks Guido Imperiale)
+- Quantity, Unit, and Measurement are now accessible as top-level classes
+  (pint.Quantity, pint.Unit, pint.Measurement) and can be
+  instantiated without explicitly creating a UnitRegistry
+  (Issue #880, Thanks Guido Imperiale)
+- Contexts don't need to have a name anymore
+  (Issue #870, Thanks Guido Imperiale)
+- "Board feet" unit added top default registry
+  (Issue #869, Thanks Guido Imperiale)
+- New syntax to add aliases to already existing definitions
+  (Issue #868, Thanks Guido Imperiale)
+- copy.deepcopy() can now copy a UnitRegistry
+  (Issues #864 and #877, Thanks Guido Imperiale)
+- Enabled many tests in test_issues when numpy is not available
+  (Issue #863, Thanks Guido Imperiale)
+- Document the '_' symbols found in the definitions files
+  (Issue #862, Thanks Guido Imperiale)
+- TODO #846
+- TODO #837
+- TODO #835
+- TODO #834
+- TODO #830
+- TODO #829
+- TODO #825
+- TODO #824
+- TODO #822
+- TODO #813
+- TODO #811
+- TODO #809
+- TODO #805
+- TODO #802
+- TODO #798
+- TODO #796
+- TODO #791
+- TODO #788
+- TODO #781
+- TODO #776
+- TODO #784
+- TODO #773
+- TODO #768
+- TODO #767
+- TODO #762
+- TODO #759
+- TODO #756
+- TODO #754
+- TODO #680
 
 
 0.9 (2019-01-12)
