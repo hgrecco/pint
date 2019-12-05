@@ -82,16 +82,13 @@ class RegistryCache:
     """Cache to speed up unit registries
     """
 
-        #: Maps dimensionality (UnitsContainer) to Units (str)
     def __init__(self):
-
+        #: Maps dimensionality (UnitsContainer) to Units (str)
         self.dimensional_equivalents = {}
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self.root_units = {}
-
         #: Maps dimensionality (UnitsContainer) to Units (UnitsContainer)
         self.dimensionality = {}
-
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit = {}
 
