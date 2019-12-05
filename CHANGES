@@ -10,6 +10,8 @@ Pint Changelog
   DimensionalityError and OffsetUnitCalculusError are now subclasses of TypeError (was
   ValueError).
   (Issue #915, Thanks Guido Imperiale)
+- All Exceptions can now be pickled and can be accessed from the top-level package.
+  (Issue #915, Thanks Guido Imperiale)
 - TODO #913
 - TODO #911
 - Prevent 1500x slowdown when using .to() with a context
@@ -26,9 +28,6 @@ Pint Changelog
 - TODO #889
 - TODO #888
 - TODO #884
-- All Exceptions can now be pickled and can be accessed from the top-level package
-  (e.g. pint.DimensionalityError).
-  (Issues #880 and #915, Thanks Guido Imperiale)
 - Quantity, Unit, and Measurement are now accessible as top-level classes
   (pint.Quantity, pint.Unit, pint.Measurement) and can be
   instantiated without explicitly creating a UnitRegistry
