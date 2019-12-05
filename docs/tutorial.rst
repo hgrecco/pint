@@ -336,10 +336,6 @@ LaTeX representations:
    >>> 'The HTML representation is {:H}'.format(accel)
    'The HTML representation is 1.3 meter/second<sup>2</sup>'
 
-.. note::
-   In Python 2, run ``from __future__ import unicode_literals``
-   or prefix pretty  formatted strings with `u` to prevent ``UnicodeEncodeError``.
-
 If you want to use abbreviated unit names, prefix the specification with `~`:
 
 .. doctest::

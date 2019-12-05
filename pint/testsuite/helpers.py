@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
-
 import doctest
 from distutils.version import StrictVersion
 import re
 import unittest
 
-from pint.compat import HAS_NUMPY, HAS_PROPER_BABEL, HAS_UNCERTAINTIES, NUMPY_VER, PYTHON3
+from ..compat import HAS_NUMPY, HAS_BABEL, HAS_UNCERTAINTIES, NUMPY_VER
 
 
 def requires_numpy18():
@@ -31,8 +28,8 @@ def requires_not_numpy():
     return unittest.skipIf(HAS_NUMPY, 'Requires NumPy is not installed.')
 
 
-def requires_proper_babel():
-    return unittest.skipUnless(HAS_PROPER_BABEL, 'Requires Babel with units support')
+def requires_babel():
+    return unittest.skipUnless(HAS_BABEL, 'Requires Babel with units support')
 
 
 def requires_uncertainties():
@@ -41,14 +38,6 @@ def requires_uncertainties():
 
 def requires_not_uncertainties():
     return unittest.skipIf(HAS_UNCERTAINTIES, 'Requires Uncertainties is not installed.')
-
-
-def requires_python2():
-    return unittest.skipIf(PYTHON3, 'Requires Python 2.X.')
-
-
-def requires_python3():
-    return unittest.skipUnless(PYTHON3, 'Requires Python 3.X.')
 
 
 _number_re = r'([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)'
@@ -64,7 +53,7 @@ _unit_re = re.compile(r'<Unit\((.*)\)>')
 class PintOutputChecker(doctest.OutputChecker):
 
     def check_output(self, want, got, optionflags):
-        check = super(PintOutputChecker, self).check_output(want, got, optionflags)
+        check = super().check_output(want, got, optionflags)
         if check:
             return check
 

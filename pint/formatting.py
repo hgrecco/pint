@@ -9,12 +9,10 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import re
 
 from .babel_names import _babel_units, _babel_lengths
-from pint.compat import babel_units, Loc, string_types
+from .compat import Loc
 
 __JOIN_REG_EXP = re.compile(r"\{\d*\}")
 
@@ -291,7 +289,7 @@ def matrix_to_latex(matrix, fmtfun=lambda x: format(x, '.2f')):
 
 
 def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, '.2f'), dim=()):
-    if isinstance(fmtfun, string_types):
+    if isinstance(fmtfun, str):
         fmt = fmtfun
         fmtfun = lambda x: format(x, fmt)
 

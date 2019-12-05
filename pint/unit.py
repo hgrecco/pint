@@ -9,21 +9,18 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import copy
+import locale
 import operator
 from numbers import Number
 
-from .util import (
-    PrettyIPython, UnitsContainer, SharedRegistryObject, fix_str_conversions)
+from .util import PrettyIPython, UnitsContainer, SharedRegistryObject
 
-from .compat import string_types, NUMERIC_TYPES, long_type
+from .compat import NUMERIC_TYPES
 from .formatting import siunitx_format_unit
 from .definitions import UnitDefinition
 
 
-@fix_str_conversions
 class Unit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations.
 
@@ -41,10 +38,10 @@ class Unit(PrettyIPython, SharedRegistryObject):
         return _unpickle, (Unit, self._units)
 
     def __init__(self, units):
-        super(Unit, self).__init__()
+        super().__init__()
         if isinstance(units, (UnitsContainer, UnitDefinition)):
             self._units = units
-        elif isinstance(units, string_types):
+        elif isinstance(units, str):
             self._units = self._REGISTRY.parse_units(units)._units
         elif isinstance(units, Unit):
             self._units = units._units
@@ -72,18 +69,17 @@ class Unit(PrettyIPython, SharedRegistryObject):
     def __str__(self):
         return format(self)
 
+    def __bytes__(self):
+        return str(self).encode(locale.getpreferredencoding())
+
     def __repr__(self):
         return "<Unit('{}')>".format(self._units)
 
     def __format__(self, spec):
         spec = spec or self.default_format
         # special cases
-        if 'Lx' in spec: # the LaTeX siunitx code
-          opts = ''
-          ustr = siunitx_format_unit(self)
-          ret = r'\si[%s]{%s}'%( opts, ustr )
-          return ret
-
+        if 'Lx' in spec:  # the LaTeX siunitx code
+            return r'\si[]{%s}' % siunitx_format_unit(self)
 
         if '~' in spec:
             if not self._units:
@@ -223,9 +219,6 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __int__(self):
         return int(self._REGISTRY.Quantity(1, self._units))
-
-    def __long__(self):
-        return long_type(self._REGISTRY.Quantity(1, self._units))
 
     def __float__(self):
         return float(self._REGISTRY.Quantity(1, self._units))

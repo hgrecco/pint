@@ -1,4 +1,4 @@
-include README AUTHORS CHANGES LICENSE CHANGES_DEV README.rst BADGES.rst
+include README AUTHORS CHANGES LICENSE README.rst BADGES.rst
 recursive-include pint *
 recursive-include docs *
 recursive-include bench *

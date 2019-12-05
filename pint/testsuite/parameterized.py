@@ -7,11 +7,6 @@
 # Author: Marc Abramowitz, email: marc@marc-abramowitz.com
 # License: MIT
 #
-# Fixed for to work in Python 2 & 3 with "add_metaclass" decorator from six
-# https://pypi.python.org/pypi/six
-# Author: Benjamin Peterson
-# License: MIT
-#
 # Use like this:
 #
 #    from parameterizedtestcase import ParameterizedTestCase
@@ -28,29 +23,10 @@
 #        def test_eval(self, input, expected_output):
 #            self.assertEqual(eval(input), expected_output)
 
+from collections.abc import Callable
 from functools import wraps
-import collections
+
 import unittest
-
-try:
-    from collections.abc import Callable
-except ImportError:
-    from collections import Callable
-
-def add_metaclass(metaclass):
-    """Class decorator for creating a class with a metaclass."""
-    def wrapper(cls):
-        orig_vars = cls.__dict__.copy()
-        orig_vars.pop('__dict__', None)
-        orig_vars.pop('__weakref__', None)
-        slots = orig_vars.get('__slots__')
-        if slots is not None:
-            if isinstance(slots, str):
-                slots = [slots]
-            for slots_var in slots:
-                orig_vars.pop(slots_var)
-        return metaclass(cls.__name__, cls.__bases__, orig_vars)
-    return wrapper
 
 
 def augment_method_docstring(method, new_class_dict, classname,
@@ -120,8 +96,8 @@ class ParameterizedTestCaseMetaClass(type):
 
         return new_method
 
-@add_metaclass(ParameterizedTestCaseMetaClass)
-class ParameterizedTestMixin(object):
+
+class ParameterizedTestMixin(metaclass=ParameterizedTestCaseMetaClass):
     @classmethod
     def parameterize(cls, param_names, data,
                      func_name_format='{func_name}_{case_num:05d}'):
@@ -147,6 +123,6 @@ class ParameterizedTestMixin(object):
 
         return decorator
 
-@add_metaclass(ParameterizedTestCaseMetaClass)
+
 class ParameterizedTestCase(unittest.TestCase, ParameterizedTestMixin):
     pass

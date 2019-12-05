@@ -8,10 +8,6 @@
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-from .compat import string_types
 
 
 class DefinitionSyntaxError(ValueError):
@@ -19,7 +15,7 @@ class DefinitionSyntaxError(ValueError):
     """
 
     def __init__(self, msg, filename=None, lineno=None):
-        super(DefinitionSyntaxError, self).__init__()
+        super().__init__()
         self.msg = msg
         self.filename = None
         self.lineno = None
@@ -34,7 +30,7 @@ class RedefinitionError(ValueError):
     """
 
     def __init__(self, name, definition_type):
-        super(RedefinitionError, self).__init__()
+        super().__init__()
         self.name = name
         self.definition_type = definition_type
         self.filename = None
@@ -54,13 +50,13 @@ class UndefinedUnitError(AttributeError):
     """
 
     def __init__(self, unit_names):
-        super(UndefinedUnitError, self).__init__()
+        super().__init__()
         self.unit_names = unit_names
 
     def __str__(self):
         mess = "'{}' is not defined in the unit registry"
         mess_plural = "'{}' are not defined in the unit registry"
-        if isinstance(self.unit_names, string_types):
+        if isinstance(self.unit_names, str):
             return mess.format(self.unit_names)
         elif isinstance(self.unit_names, (list, tuple))\
                 and len(self.unit_names) == 1:
@@ -77,7 +73,7 @@ class DimensionalityError(ValueError):
     """
 
     def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=''):
-        super(DimensionalityError, self).__init__()
+        super().__init__()
         self.units1 = units1
         self.units2 = units2
         self.dim1 = dim1
@@ -101,7 +97,7 @@ class OffsetUnitCalculusError(ValueError):
     """Raised on ambiguous operations with offset units.
     """
     def __init__(self, units1, units2='', extra_msg=''):
-        super(ValueError, self).__init__()
+        super().__init__()
         self.units1 = units1
         self.units2 = units2
         self.extra_msg = extra_msg

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import collections
 import copy
 import operator as op
@@ -264,15 +262,15 @@ class TestStringProcessor(BaseTestCase):
 class TestGraph(BaseTestCase):
 
     def test_start_not_in_graph(self):
-        g = collections.defaultdict(list)
-        g[1] = set((2,))
-        g[2] = set((3,))
+        g = collections.defaultdict(set)
+        g[1] = {2}
+        g[2] = {3}
         self.assertIs(find_connected_nodes(g, 9), None)
 
     def test_shortest_path(self):
-        g = collections.defaultdict(list)
-        g[1] = set((2,))
-        g[2] = set((3,))
+        g = collections.defaultdict(set)
+        g[1] = {2}
+        g[2] = {3}
         p = find_shortest_path(g, 1, 2)
         self.assertEqual(p, [1, 2])
         p = find_shortest_path(g, 1, 3)
@@ -280,10 +278,10 @@ class TestGraph(BaseTestCase):
         p = find_shortest_path(g, 3, 1)
         self.assertIs(p, None)
 
-        g = collections.defaultdict(list)
-        g[1] = set((2,))
-        g[2] = set((3, 1))
-        g[3] = set((2,))
+        g = collections.defaultdict(set)
+        g[1] = {2}
+        g[2] = {3, 1}
+        g[3] = {2}
         p = find_shortest_path(g, 1, 2)
         self.assertEqual(p, [1, 2])
         p = find_shortest_path(g, 1, 3)

@@ -9,15 +9,11 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
-
 import re
-from collections import defaultdict
 import weakref
+from collections import ChainMap, defaultdict
 
-from .compat import ChainMap
-from .util import (ParserHelper, UnitsContainer, string_types,
+from .util import (ParserHelper, UnitsContainer,
                    to_units_container, SourceIterator)
 from .errors import DefinitionSyntaxError
 
@@ -34,7 +30,7 @@ def _expression_to_function(eq):
     return func
 
 
-class Context(object):
+class Context:
     """A specialized container that defines transformation functions from one
     dimension to another. Each Dimension are specified using a UnitsContainer.
     Simple transformation are given with a function taking a single parameter.
@@ -162,7 +158,7 @@ class Context(object):
                                             lineno=lineno)
 
         if defaults:
-            missing_pars = set(defaults.keys()).difference(set(names))
+            missing_pars = defaults.keys() - set(names)
             if missing_pars:
                 raise DefinitionSyntaxError('Context parameters {} not found in any equation.'.format(missing_pars))
 

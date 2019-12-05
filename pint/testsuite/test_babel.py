@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals, print_function, absolute_import
 
 from pint.testsuite import helpers, BaseTestCase
 from pint import UnitRegistry
 import os
 
+
 class TestBabel(BaseTestCase):
 
-    @helpers.requires_proper_babel()
+    @helpers.requires_babel()
     def test_babel(self):
         ureg = UnitRegistry()
         dirname = os.path.dirname(__file__)

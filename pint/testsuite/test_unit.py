@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import copy
 import functools
 import math
 import re
 
-from pint.registry import (UnitRegistry, LazyRegistry)
-from pint.util import (UnitsContainer, ParserHelper)
 from pint import DimensionalityError, UndefinedUnitError
-from pint.compat import u, np, string_types
+from pint.compat import np
+from pint.registry import (UnitRegistry, LazyRegistry)
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
+from pint.util import (UnitsContainer, ParserHelper)
 
 
 class TestUnit(QuantityTestCase):
@@ -68,7 +66,7 @@ class TestUnit(QuantityTestCase):
     def test_ipython(self):
         alltext = []
 
-        class Pretty(object):
+        class Pretty:
             @staticmethod
             def text(text):
                 alltext.append(text)
@@ -233,7 +231,7 @@ class TestRegistry(QuantityTestCase):
     def test_str_errors(self):
         self.assertEqual(str(UndefinedUnitError('rabbits')), "'{0!s}' is not defined in the unit registry".format('rabbits'))
         self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "'{0!s}' are not defined in the unit registry".format(('rabbits', 'horses')))
-        self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
+        self.assertEqual(str(DimensionalityError('meter', 'second')),
                          "Cannot convert from 'meter' to 'second'")
         self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),
                          "Cannot convert from 'meter' (length) to 'second' (time)")
@@ -541,7 +539,7 @@ class TestCompatibleUnits(QuantityTestCase):
     FORCE_NDARRAY = False
 
     def setUp(self):
-        super(TestCompatibleUnits, self).setUp()
+        super().setUp()
         self.ureg = UnitRegistry(force_ndarray=self.FORCE_NDARRAY)
         self.Q_ = self.ureg.Quantity
         self.U_ = self.ureg.Unit
@@ -662,7 +660,7 @@ class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
         src, dst = UnitsContainer(src), UnitsContainer(dst)
         value = 10.
         convert = self.ureg.convert
-        if isinstance(expected, string_types):
+        if isinstance(expected, str):
             self.assertRaises(DimensionalityError, convert, value, src, dst)
             if src != dst:
                 self.assertRaises(DimensionalityError, convert, value, dst, src)
