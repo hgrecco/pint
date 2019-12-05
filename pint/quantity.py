@@ -1454,7 +1454,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays
                 magnitude_as_array = _to_magnitude(self._magnitude, force_ndarray=True)
                 return getattr(magnitude_as_array, item)
-        elif item in HANDLED_UFUNCS or self._wrapped_numpy_methods:
+        elif item in HANDLED_UFUNCS or item in self._wrapped_numpy_methods:
             # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays/scalars
             magnitude_as_array = _to_magnitude(self._magnitude, True)
             attr = getattr(magnitude_as_array, item)
@@ -1465,7 +1465,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         try:
             return getattr(self._magnitude, item)
-        except AttributeError as ex:
+        except AttributeError:
             raise AttributeError("Neither Quantity object nor its magnitude ({}) "
                                  "has attribute '{}'".format(self._magnitude, item))
 

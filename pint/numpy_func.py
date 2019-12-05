@@ -376,8 +376,8 @@ def copyto(dst, src, casting='same_kind', where=True):
             src = src.m_as(dst.units)
         np.copyto(dst._magnitude, src, casting=casting, where=where)
     else:
-        warnings.warn("The unit of the quantity is stripped when getting copying to "
-                      "non-quantity", stacklevel=2)
+        warnings.warn("The unit of the quantity is stripped when copying to non-quantity",
+                      stacklevel=2)
         np.copyto(dst, src.m, casting=casting, where=where)
 
 
