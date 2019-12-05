@@ -16,8 +16,10 @@ import pkg_resources
 
 from .context import Context
 from .errors import (
+    DefinitionSyntaxError,
     DimensionalityError,
     OffsetUnitCalculusError,
+    RedefinitionError,
     UndefinedUnitError,
     UnitStrippedWarning
 )
@@ -114,8 +116,10 @@ __all__ = (
     'Unit',
     'UnitRegistry',
 
+    'DefinitionSyntaxError',
     'DimensionalityError',
     'OffsetUnitCalculusError',
+    'RedefinitionError',
     'UndefinedUnitError',
     'UnitStrippedWarning',
 

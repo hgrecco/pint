@@ -115,14 +115,15 @@ class Context:
                     return val.real
                 return val
 
-            _txt = defaults
+            txt = defaults
             try:
                 defaults = (part.split('=') for part in defaults.strip('()').split(','))
-                defaults = dict((str(k).strip(), to_num(v))
-                                for k, v in defaults)
+                defaults = {str(k).strip(): to_num(v) for k, v in defaults}
             except (ValueError, TypeError):
-                raise DefinitionSyntaxError("Could not parse Context definition defaults: '%s'" % _txt,
-                                            lineno=lineno)
+                raise DefinitionSyntaxError(
+                    f"Could not parse Context definition defaults: '{txt}'",
+                    lineno=lineno
+                )
 
             ctx = cls(name, aliases, defaults)
         else:
@@ -160,7 +161,9 @@ class Context:
         if defaults:
             missing_pars = defaults.keys() - set(names)
             if missing_pars:
-                raise DefinitionSyntaxError('Context parameters {} not found in any equation.'.format(missing_pars))
+                raise DefinitionSyntaxError(
+                    f'Context parameters {missing_pars} not found in any equation'
+                )
 
         return ctx
 

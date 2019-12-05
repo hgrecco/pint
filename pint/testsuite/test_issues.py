@@ -3,6 +3,7 @@
 import copy
 import math
 import unittest
+import pprint
 
 from pint import DimensionalityError, UnitRegistry
 from pint.unit import UnitsContainer
@@ -658,3 +659,13 @@ class TestIssues(QuantityTestCase):
         assert (hash(-1) == hash(-3)) == (hash(a) == hash(c))
         assert a != b
         assert a != c
+
+    def test_issue912(self):
+        """pprint.pformat() invokes sorted() on large sets and frozensets and graciously
+        handles TypeError, but not generic Exceptions. This test will fail if
+        pint.DimensionalityError stops being a subclass of TypeError.
+        """
+        ureg = UnitRegistry()
+        meter_units = ureg.get_compatible_units(ureg.meter)
+        hertz_units = ureg.get_compatible_units(ureg.hertz)
+        pprint.pformat(meter_units | hertz_units)

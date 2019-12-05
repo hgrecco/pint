@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from pint import DimensionalityError
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 
@@ -38,15 +39,6 @@ class TestUFuncs(QuantityTestCase):
     def qi(self):
         return np.asarray([1 + 1j, 2 + 2j, 3 + 3j, 4 + 4j]) * self.ureg.m
 
-    def assertRaisesMsg(self, msg, ExcType, func, *args, **kwargs):
-        try:
-            func(*args, **kwargs)
-            self.assertFalse(True, msg='Exception {} not raised {}'.format(ExcType, msg))
-        except ExcType as e:
-            pass
-        except Exception as e:
-            self.assertFalse(True, msg='{} not raised but {}\n{}'.format(ExcType, e, msg))
-
     def _test1(self, func,  ok_with, raise_with=(), output_units='same', results=None, rtol=1e-6):
         """Test function that takes a single argument and returns Quantity.
 
@@ -83,8 +75,10 @@ class TestUFuncs(QuantityTestCase):
             self.assertQuantityAlmostEqual(qm, res, rtol=rtol, msg=err_msg)
 
         for x1 in raise_with:
-            self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
-                                 ValueError, func, x1)
+            with self.assertRaises(
+                DimensionalityError, msg=f'At {func.__name__} with {x1}'
+            ):
+                func(x1)
 
     def _testn(self, func,  ok_with, raise_with=(), results=None):
         """Test function that takes a single argument and returns and ndarray (not a Quantity)
@@ -136,8 +130,8 @@ class TestUFuncs(QuantityTestCase):
                 self.assertQuantityAlmostEqual(qm, re, rtol=rtol, msg=err_msg)
 
         for x1 in raise_with:
-            self.assertRaisesMsg('At {} with {}'.format(func.__name__, x1),
-                                 ValueError, func, x1)
+            with self.assertRaises(ValueError, msg=f'At {func.__name__} with {x1}'):
+                func(x1)
 
     def _test2(self, func, x1, ok_with, raise_with=(), output_units='same', rtol=1e-6, convert2=True):
         """Test function that takes two arguments and return a Quantity.
@@ -183,8 +177,10 @@ class TestUFuncs(QuantityTestCase):
             self.assertQuantityAlmostEqual(qm, res, rtol=rtol, msg=err_msg)
 
         for x2 in raise_with:
-            self.assertRaisesMsg('At {} with {} and {}'.format(func.__name__, x1, x2),
-                                 ValueError, func, x1, x2)
+            with self.assertRaises(
+                DimensionalityError, msg=f'At {func.__name__} with {x1} and {x2}'
+            ):
+                func(x1, x2)
 
     def _testn2(self, func, x1, ok_with, raise_with=()):
         """Test function that takes two arguments and return a ndarray.
@@ -471,7 +467,8 @@ class TestTrigUfuncs(TestUFuncs):
     def test_hypot(self):
         self.assertTrue(np.hypot(3. * self.ureg.m, 4. * self.ureg.m) ==  5. * self.ureg.m)
         self.assertTrue(np.hypot(3. * self.ureg.m, 400. * self.ureg.cm) ==  5. * self.ureg.m)
-        self.assertRaises(ValueError, np.hypot, 1. * self.ureg.m, 2. * self.ureg.J)
+        with self.assertRaises(DimensionalityError):
+            np.hypot(1. * self.ureg.m, 2. * self.ureg.J)
 
     def test_sinh(self):
         self._test1(np.sinh, (np.arange(0, pi/2, pi/4) * self.ureg.dimensionless,

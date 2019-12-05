@@ -21,7 +21,7 @@ import warnings
 
 from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_latex,
                          ndarray_to_latex_parts)
-from .errors import (DimensionalityError, OffsetUnitCalculusError,
+from .errors import (DimensionalityError, OffsetUnitCalculusError, PintTypeError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
 from .compat import ndarray, np, _to_magnitude
@@ -625,8 +625,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             # other not from same Registry or not a Quantity
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
+            except PintTypeError:
+                raise
             except TypeError:
                 return NotImplemented
+
             if _eq(other, 0, True):
                 # If the other value is 0 (but not Quantity 0)
                 # do the operation without checking units.
@@ -876,6 +879,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                                                   getattr(other, 'units', ''))
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
+            except PintTypeError:
+                raise
             except TypeError:
                 return NotImplemented
             self._magnitude = magnitude_op(self._magnitude, other_magnitude)
@@ -934,6 +939,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                                                   getattr(other, 'units', ''))
             try:
                 other_magnitude = _to_magnitude(other, self.force_ndarray)
+            except PintTypeError:
+                raise
             except TypeError:
                 return NotImplemented
 
@@ -987,6 +994,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __rtruediv__(self, other):
         try:
             other_magnitude = _to_magnitude(other, self.force_ndarray)
+        except PintTypeError:
+            raise
         except TypeError:
             return NotImplemented
 
@@ -1080,7 +1089,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             return self.__pow__(other)
 
         try:
-            other_magnitude = _to_magnitude(other, self.force_ndarray)
+            _to_magnitude(other, self.force_ndarray)
+        except PintTypeError:
+            raise
         except TypeError:
             return NotImplemented
         else:
@@ -1101,9 +1112,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                         self._magnitude **= other
                         return self
                 elif np.size(other) > 1:
-                    raise DimensionalityError(self._units, 'dimensionless',
-                                              extra_msg='Quantity array exponents are only allowed '
-                                                        'if the base is dimensionless')
+                    raise DimensionalityError(
+                        self._units,
+                        'dimensionless',
+                        extra_msg=". Quantity array exponents are only allowed if the "
+                        "base is dimensionless"
+                    )
 
             if other == 1:
                 return self
@@ -1130,7 +1144,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     @check_implemented
     def __pow__(self, other):
         try:
-            other_magnitude = _to_magnitude(other, self.force_ndarray)
+            _to_magnitude(other, self.force_ndarray)
+        except PintTypeError:
+            raise
         except TypeError:
             return NotImplemented
         else:
@@ -1149,9 +1165,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                     else:
                         return self.__class__(self.m ** other)
                 elif np.size(other) > 1:
-                    raise DimensionalityError(self._units, 'dimensionless',
-                                              extra_msg='Quantity array exponents are only allowed '
-                                                        'if the base is dimensionless')
+                    raise DimensionalityError(
+                        self._units,
+                        'dimensionless',
+                        extra_msg=". Quantity array exponents are only allowed if the "
+                        "base is dimensionless"
+                    )
 
             new_self = self
             if other == 1:
@@ -1178,7 +1197,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     @check_implemented
     def __rpow__(self, other):
         try:
-            other_magnitude = _to_magnitude(other, self.force_ndarray)
+            _to_magnitude(other, self.force_ndarray)
+        except PintTypeError:
+            raise
         except TypeError:
             return NotImplemented
         else:
@@ -1471,8 +1492,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def __getitem__(self, key):
         try:
-            value = self._magnitude[key]
-            return self.__class__(value, self._units)
+            return type(self)(self._magnitude[key], self._units)
+        except PintTypeError:
+            raise
         except TypeError:
             raise TypeError("Neither Quantity object nor its magnitude ({})"
                             "supports indexing".format(self._magnitude))
@@ -1482,7 +1504,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             if math.isnan(value):
                 self._magnitude[key] = value
                 return
-        except (TypeError, DimensionalityError):
+        except TypeError:
             pass
 
         try:
@@ -1493,17 +1515,24 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
             if isinstance(factor, self.__class__):
                 if not factor.dimensionless:
-                    raise DimensionalityError(value, self.units,
-                                              extra_msg='. Assign a quantity with the same dimensionality or '
-                                                        'access the magnitude directly as '
-                                                        '`obj.magnitude[%s] = %s`' % (key, value))
+                    raise DimensionalityError(
+                        value,
+                        self.units,
+                        extra_msg=". Assign a quantity with the same dimensionality "
+                        "or access the magnitude directly as "
+                        f"`obj.magnitude[{key}] = {value}`."
+                    )
                 self._magnitude[key] = factor.magnitude
             else:
                 self._magnitude[key] = factor
 
-        except TypeError:
-            raise TypeError("Neither Quantity object nor its magnitude ({})"
-                            "supports indexing".format(self._magnitude))
+        except PintTypeError:
+            raise
+        except TypeError as exc:
+            raise TypeError(
+                f"Neither Quantity object nor its magnitude ({self._magnitude}) "
+                "supports indexing"
+            ) from exc
 
     def tolist(self):
         units = self._units

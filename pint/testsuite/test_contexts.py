@@ -3,7 +3,7 @@
 import itertools
 from collections import defaultdict
 
-from pint import UnitRegistry, errors
+from pint import UnitRegistry, DefinitionSyntaxError, DimensionalityError
 from pint.context import Context
 from pint.util import UnitsContainer
 from pint.testsuite import QuantityTestCase
@@ -270,11 +270,11 @@ class TestContexts(QuantityTestCase):
         meter_units = ureg.get_compatible_units(ureg.meter)
         hertz_units = ureg.get_compatible_units(ureg.hertz)
 
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         with ureg.context('lc'):
             self.assertEqual(q.to('Hz'), s)
             self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units)
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         self.assertEqual(ureg.get_compatible_units(q), meter_units)
 
     def test_multiple_context(self):
@@ -289,11 +289,11 @@ class TestContexts(QuantityTestCase):
         hertz_units = ureg.get_compatible_units(ureg.hertz)
         ampere_units = ureg.get_compatible_units(ureg.ampere)
 
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         with ureg.context('lc', 'ab'):
             self.assertEqual(q.to('Hz'), s)
             self.assertEqual(ureg.get_compatible_units(q), meter_units | hertz_units | ampere_units)
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         self.assertEqual(ureg.get_compatible_units(q), meter_units)
 
     def test_nested_context(self):
@@ -304,7 +304,7 @@ class TestContexts(QuantityTestCase):
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
 
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         with ureg.context('lc'):
             self.assertEqual(q.to('Hz'), s)
             with ureg.context('ab'):
@@ -312,10 +312,10 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(q.to('Hz'), s)
 
         with ureg.context('ab'):
-            self.assertRaises(ValueError, q.to, 'Hz')
+            self.assertRaises(DimensionalityError, q.to, 'Hz')
             with ureg.context('lc'):
                 self.assertEqual(q.to('Hz'), s)
-            self.assertRaises(ValueError, q.to, 'Hz')
+            self.assertRaises(DimensionalityError, q.to, 'Hz')
 
     def test_context_with_arg(self):
 
@@ -326,7 +326,7 @@ class TestContexts(QuantityTestCase):
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
 
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         with ureg.context('lc', n=1):
             self.assertEqual(q.to('Hz'), s)
             with ureg.context('ab'):
@@ -334,10 +334,10 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(q.to('Hz'), s)
 
         with ureg.context('ab'):
-            self.assertRaises(ValueError, q.to, 'Hz')
+            self.assertRaises(DimensionalityError, q.to, 'Hz')
             with ureg.context('lc', n=1):
                 self.assertEqual(q.to('Hz'), s)
-            self.assertRaises(ValueError, q.to, 'Hz')
+            self.assertRaises(DimensionalityError, q.to, 'Hz')
 
         with ureg.context('lc'):
             self.assertRaises(TypeError, q.to, 'Hz')
@@ -351,7 +351,7 @@ class TestContexts(QuantityTestCase):
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
 
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         ureg.enable_contexts('lc', n=1)
         self.assertEqual(q.to('Hz'), s)
         ureg.enable_contexts('ab')
@@ -361,11 +361,11 @@ class TestContexts(QuantityTestCase):
         ureg.disable_contexts(1)
 
         ureg.enable_contexts('ab')
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         ureg.enable_contexts('lc', n=1)
         self.assertEqual(q.to('Hz'), s)
         ureg.disable_contexts(1)
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         ureg.disable_contexts(1)
 
         ureg.enable_contexts('lc')
@@ -381,7 +381,7 @@ class TestContexts(QuantityTestCase):
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to('Hz')
 
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         with ureg.context('lc'):
             self.assertEqual(q.to('Hz'), s)
             with ureg.context('ab'):
@@ -389,12 +389,12 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(q.to('Hz'), s)
 
         with ureg.context('ab'):
-            self.assertRaises(ValueError, q.to, 'Hz')
+            self.assertRaises(DimensionalityError, q.to, 'Hz')
             with ureg.context('lc'):
                 self.assertEqual(q.to('Hz'), s)
-            self.assertRaises(ValueError, q.to, 'Hz')
+            self.assertRaises(DimensionalityError, q.to, 'Hz')
 
-        self.assertRaises(ValueError, q.to, 'Hz')
+        self.assertRaises(DimensionalityError, q.to, 'Hz')
         with ureg.context('lc', n=2):
             self.assertEqual(q.to('Hz'), s / 2)
             with ureg.context('ab'):
@@ -402,10 +402,10 @@ class TestContexts(QuantityTestCase):
             self.assertEqual(q.to('Hz'), s / 2)
 
         with ureg.context('ab'):
-            self.assertRaises(ValueError, q.to, 'Hz')
+            self.assertRaises(DimensionalityError, q.to, 'Hz')
             with ureg.context('lc', n=2):
                 self.assertEqual(q.to('Hz'), s / 2)
-            self.assertRaises(ValueError, q.to, 'Hz')
+            self.assertRaises(DimensionalityError, q.to, 'Hz')
 
     def test_context_with_sharedarg_def(self):
 
@@ -466,7 +466,7 @@ class TestContexts(QuantityTestCase):
         ureg.enable_contexts(c)
         self.assertQuantityEqual(x.to("s"), expect)
         ureg.disable_contexts(1)
-        self.assertRaises(errors.DimensionalityError, x.to, "s")
+        self.assertRaises(DimensionalityError, x.to, "s")
 
         # Multiple anonymous contexts
         c2 = Context()
@@ -511,7 +511,7 @@ class TestContexts(QuantityTestCase):
              '[length] = 1 / [time]: c / value',
              '1 / [time] = [length]: c / value']
 
-        self.assertRaises(ValueError, Context.from_lines, s)
+        self.assertRaises(DefinitionSyntaxError, Context.from_lines, s)
 
     def test_parse_simple(self):
 
@@ -595,7 +595,7 @@ class TestContexts(QuantityTestCase):
         # If the variable is not present in the definition, then raise an error
         s = ['@context(n=1) longcontextname',
              '[length] <-> 1 / [time]: c / value']
-        self.assertRaises(ValueError, Context.from_lines, s)
+        self.assertRaises(DefinitionSyntaxError, Context.from_lines, s)
 
     def test_warnings(self):
 
@@ -658,7 +658,7 @@ class TestDefinedContexts(QuantityTestCase):
     def test_textile(self):
         ureg = self.ureg
         qty_direct = 1.331 * ureg.tex
-        with self.assertRaises(errors.DimensionalityError):
+        with self.assertRaises(DimensionalityError):
             qty_indirect = qty_direct.to('Nm')
 
         with ureg.context('textile'):
@@ -683,7 +683,7 @@ class TestDefinedContexts(QuantityTestCase):
         def f(wl):
             return wl.to('terahertz')
 
-        self.assertRaises(errors.DimensionalityError, f, a)
+        self.assertRaises(DimensionalityError, f, a)
 
         @ureg.with_context('sp')
         def g(wl):

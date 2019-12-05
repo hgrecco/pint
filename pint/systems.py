@@ -205,8 +205,11 @@ class Group(SharedRegistryObject):
                 # Is a definition
                 definition = Definition.from_string(line)
                 if not isinstance(definition, UnitDefinition):
-                    raise DefinitionSyntaxError('Only UnitDefinition are valid inside _used_groups, '
-                                                'not %s' % type(definition), lineno=lineno)
+                    raise DefinitionSyntaxError(
+                        'Only UnitDefinition are valid inside _used_groups, not '
+                        + str(definition),
+                        lineno=lineno
+                    )
 
                 try:
                     define_func(definition)
