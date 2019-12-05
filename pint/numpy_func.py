@@ -7,6 +7,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from inspect import signature
+
 from .compat import NP_NO_VALUE, is_upcast_type, np, string_types, eq
 from .errors import DimensionalityError
 from .util import iterable, sized
@@ -89,7 +91,6 @@ def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
     elif unit_op == "mul":
         product = first_input_units._REGISTRY.parse_units('')
         for x in all_args:
-            print(x)
             if hasattr(x, 'units'):
                 product *= x.units
         result_unit = product
@@ -183,8 +184,6 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 Define ufunc behavior collections.
 
 TODO: document as before
-
-
 """
 strip_unit_input_output_ufuncs = ['isnan', 'isinf', 'isfinite', 'signbit']
 matching_input_bare_output_ufuncs = ['equal', 'greater', 'greater_equal', 'less',
@@ -349,12 +348,6 @@ def _where(condition, *args):
     return output_wrap(np.where(condition, *args))
 
 
-@implements('linspace', 'function')
-def _linspace(start, stop, *args, **kwargs):
-    (start, stop), output_wrap = unwrap_and_wrap_consistent_units(start, stop)
-    return output_wrap(np.linspace(start, stop, *args, **kwargs))
-
-
 @implements('concatenate', 'function')
 def _concatenate(sequence, *args, **kwargs):
     sequence, output_wrap = unwrap_and_wrap_consistent_units(*sequence)
@@ -367,54 +360,6 @@ def _stack(arrays, *args, **kwargs):
     return output_wrap(np.stack(arrays, *args, **kwargs))
 
 
-@implements('compress', 'function')
-def _compress(condition, a, *args, **kwargs):
-    (a,), output_wrap = unwrap_and_wrap_consistent_units(a)
-    return output_wrap(np.compress(condition, a, *args, **kwargs))
-
-
-@implements('append', 'function')
-def _append(arr, values, axis=None):
-    (arr, values), output_wrap = unwrap_and_wrap_consistent_units(arr, values)
-    return output_wrap(np.append(arr, values, axis))
-
-
-@implements('clip', 'function')
-def _clip(a, a_min, a_max, *args, **kwargs):
-    (a, a_min, a_max), output_wrap = unwrap_and_wrap_consistent_units(a, a_min, a_max)
-    return output_wrap(np.clip(a, a_min, a_max, *args, **kwargs))
-
-
-@implements('nan_to_num', 'function')
-def _nan_to_num(x, copy=True, nan=None, posinf=None, neginf=None):
-    if nan is None:
-        nan = 0.0
-    elif isinstance(nan, x.__class__):
-        nan = nan.m_as(x.units)
-    posinf = posinf if not isinstance(posinf, x.__class__) else posinf.m_as(x.units)
-    neginf = neginf if not isinstance(neginf, x.__class__) else neginf.m_as(x.units)
-    result_magnitude = np.nan_to_num(x.magnitude, copy=False, nan=nan, posinf=posinf,
-                                     neginf=neginf)
-    if not copy:
-        x._magnitude = result_magnitude
-
-    return x._REGISTRY.Quantity(result_magnitude, x.units)
-
-
-@implements('isclose', 'function')
-def _isclose(a, b, rtol=None, atol=None, equal_nan=False):
-    (a, b, rtol, atol), _ = unwrap_and_wrap_consistent_units(a, b, rtol, atol)
-    rtol = 1e-05 if rtol is None else rtol
-    atol = 1e-08 if atol is None else atol
-    return np.isclose(a, b, rtol, atol, equal_nan)
-
-
-@implements('searchsorted', 'function')
-def _searchsorted(a, v, *args, **kwargs):
-    (a, v), _ = unwrap_and_wrap_consistent_units(a, v)
-    return np.searchsorted(a, v, *args, **kwargs)
-
-
 @implements('unwrap', 'function')
 def _unwrap(p, discont=None, axis=-1):
     # np.unwrap only dispatches over p argument, so assume it is a Quantity
@@ -423,30 +368,7 @@ def _unwrap(p, discont=None, axis=-1):
                                 'rad').to(p.units)
 
 
-@implements('amin', 'function')
-def _amin(a, axis=None, out=None, keepdims=NP_NO_VALUE, initial=NP_NO_VALUE,
-          where=NP_NO_VALUE):
-    if initial == NP_NO_VALUE:
-        (a,), output_wrap = unwrap_and_wrap_consistent_units(a)
-    else:
-        (a, initial), output_wrap = unwrap_and_wrap_consistent_units(a, initial)
-    return output_wrap(np.amin(a, axis=axis, out=out, keepdims=keepdims, initial=initial,
-                               where=where))
-
-
-@implements('amax', 'function')
-def _amax(a, axis=None, out=None, keepdims=NP_NO_VALUE, initial=NP_NO_VALUE,
-          where=NP_NO_VALUE):
-    if initial == NP_NO_VALUE:
-        (a,), output_wrap = unwrap_and_wrap_consistent_units(a)
-    else:
-        (a, initial), output_wrap = unwrap_and_wrap_consistent_units(a, initial)
-    return output_wrap(np.amax(a, axis=axis, out=out, keepdims=keepdims, initial=initial,
-                               where=where))
-
-
-# Handle single unit argument operations (axis ops, aggregations, etc.)
-def implement_single_unit(func_str):
+def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output=True):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
@@ -454,16 +376,66 @@ def implement_single_unit(func_str):
     func = getattr(np, func_str)
 
     @implements(func_str, 'function')
-    def implementation(a, *args, **kwargs):
-        (a,), output_wrap = unwrap_and_wrap_consistent_units(a)
-        return output_wrap(func(a, *args, **kwargs))
+    def implementation(*args, **kwargs):
+        # Bind given arguments to the NumPy function signature
+        bound_args = signature(func).bind(*args, **kwargs)
+
+        # Skip unit arguments that are supplied as None
+        valid_unit_arguments = [label for label in unit_arguments
+                                if label in bound_args.arguments
+                                and bound_args.arguments[label] is not None]
+
+        # Unwrap valid unit arguments, ensure consistency, and obtain output wrapper
+        unwrapped_unit_args, output_wrap = unwrap_and_wrap_consistent_units(
+            *(bound_args.arguments[label] for label in valid_unit_arguments))
+
+        # Call NumPy function with updated arguments
+        for i, unwrapped_unit_arg in enumerate(unwrapped_unit_args):
+            bound_args.arguments[valid_unit_arguments[i]] = unwrapped_unit_arg
+        ret = func(*bound_args.args, **bound_args.kwargs)
+
+        # Conditionally wrap output
+        if wrap_output:
+            return output_wrap(ret)
+        else:
+            return ret
 
 
-for func_str in ['expand_dims', 'squeeze', 'rollaxis', 'moveaxis', 'fix', 'around',
-                 'diagonal', 'mean', 'ptp', 'ravel', 'round_', 'sort', 'median', 'nanmedian',
-                 'transpose', 'flip', 'copy', 'trim_zeros', 'average', 'nanmean',
-                 'broadcast_to', 'swapaxes', 'nanmin', 'nanmax']:
-    implement_single_unit(func_str)
+for func_str, unit_arguments, wrap_output in [('expand_dims', 'a', True),
+                                              ('squeeze', 'a', True),
+                                              ('rollaxis', 'a', True),
+                                              ('moveaxis', 'a', True),
+                                              ('around', 'a', True),
+                                              ('diagonal', 'a', True),
+                                              ('mean', 'a', True),
+                                              ('ptp', 'a', True),
+                                              ('ravel', 'a', True),
+                                              ('round_', 'a', True),
+                                              ('sort', 'a', True),
+                                              ('median', 'a', True),
+                                              ('nanmedian', 'a', True),
+                                              ('transpose', 'a', True),
+                                              ('copy', 'a', True),
+                                              ('average', 'a', True),
+                                              ('nanmean', 'a', True),
+                                              ('swapaxes', 'a', True),
+                                              ('nanmin', 'a', True),
+                                              ('nanmax', 'a', True),
+                                              ('flip', 'm', True),
+                                              ('fix', 'x', True),
+                                              ('trim_zeros', ['filt'], True),
+                                              ('broadcast_to', ['array'], True),
+                                              ('amax', ['a', 'initial'], True),
+                                              ('amin', ['a', 'initial'], True),
+                                              ('searchsorted', ['a', 'v'], False),
+                                              ('isclose', ['a', 'b', 'rtol', 'atol'], False),
+                                              ('nan_to_num', ['x', 'nan', 'posinf', 'neginf'],
+                                               True),
+                                              ('clip', ['a', 'a_min', 'a_max'], True),
+                                              ('append', ['arr', 'values'], True),
+                                              ('compress', 'a', True),
+                                              ('linspace', ['start', 'stop'], True)]:
+    implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
 
 # Handle atleast_nd functions
