@@ -10,7 +10,7 @@
 from inspect import signature
 import warnings
 
-from .compat import NP_NO_VALUE, is_upcast_type, np, string_types, eq
+from .compat import NP_NO_VALUE, is_upcast_type, np, eq
 from .errors import DimensionalityError, UnitStrippedWarning
 from .util import iterable, sized
 

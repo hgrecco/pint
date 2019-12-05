@@ -257,7 +257,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         self.assertQuantityEqual(np.nansum(self.q_nan, axis=0), [4, 2] * self.ureg.m)
 
     def test_cumprod(self):
-        self.assertRaises(ValueError, self.q.cumprod)
+        self.assertRaises(DimensionalityError, self.q.cumprod)
         self.assertQuantityEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
 
     @helpers.requires_array_function_protocol()
