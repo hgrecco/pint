@@ -40,14 +40,14 @@ def requires_not_uncertainties():
     return unittest.skipIf(HAS_UNCERTAINTIES, 'Requires Uncertainties is not installed.')
 
 
-_number_re = '([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)'
-_q_re = re.compile('<Quantity\(' + '\s*' + '(?P<magnitude>%s)' % _number_re +
-                   '\s*,\s*' + "'(?P<unit>.*)'" + '\s*' + '\)>')
+_number_re = r'([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)'
+_q_re = re.compile(r'<Quantity\(' + r'\s*' + r'(?P<magnitude>%s)' % _number_re +
+                   r'\s*,\s*' + r"'(?P<unit>.*)'" + r'\s*' + r'\)>')
 
-_sq_re = re.compile('\s*' + '(?P<magnitude>%s)' % _number_re +
-                    '\s' + "(?P<unit>.*)")
+_sq_re = re.compile(r'\s*' + r'(?P<magnitude>%s)' % _number_re +
+                    r'\s' + r"(?P<unit>.*)")
 
-_unit_re = re.compile('<Unit\((.*)\)>')
+_unit_re = re.compile(r'<Unit\((.*)\)>')
 
 
 class PintOutputChecker(doctest.OutputChecker):

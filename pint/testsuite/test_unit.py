@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import functools
 import math
+import re
 
 from pint import DimensionalityError, UndefinedUnitError
 from pint.compat import np
@@ -271,6 +273,28 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(parse('kelvin**2', as_delta=False), UnitsContainer(kelvin=2))
         self.assertEqual(parse('kelvin*meter', as_delta=True), UnitsContainer(kelvin=1, meter=1))
         self.assertEqual(parse('kelvin*meter', as_delta=False), UnitsContainer(kelvin=1, meter=1))
+
+    def test_parse_expression_with_preprocessor(self):
+        # Add parsing of UDUNITS-style power
+        self.ureg.preprocessors.append(functools.partial(
+            re.sub, r'(?<=[A-Za-z])(?![A-Za-z])(?<![0-9\-][eE])(?<![0-9\-])(?=[0-9\-])', '**'))
+        # Test equality
+        self.assertEqual(self.ureg.parse_expression('42 m2'), self.Q_(42, UnitsContainer(meter=2.)))
+        self.assertEqual(self.ureg.parse_expression('1e6 Hz s-2'), self.Q_(1e6, UnitsContainer(second=-3.)))
+        self.assertEqual(self.ureg.parse_expression('3 metre3'), self.Q_(3, UnitsContainer(meter=3.)))
+        # Clean up and test previously expected value
+        self.ureg.preprocessors.pop()
+        self.assertEqual(self.ureg.parse_expression('1e6 Hz s-2'), self.Q_(999998., UnitsContainer()))
+
+    def test_parse_unit_with_preprocessor(self):
+        # Add parsing of UDUNITS-style power
+        self.ureg.preprocessors.append(functools.partial(
+            re.sub, r'(?<=[A-Za-z])(?![A-Za-z])(?<![0-9\-][eE])(?<![0-9\-])(?=[0-9\-])', '**'))
+        # Test equality
+        self.assertEqual(self.ureg.parse_units('m2'), UnitsContainer(meter=2.))
+        self.assertEqual(self.ureg.parse_units('m-2'), UnitsContainer(meter=-2.))
+        # Clean up
+        self.ureg.preprocessors.pop()
 
     def test_name(self):
         self.assertRaises(UndefinedUnitError, self.ureg.get_name, 'asdf')

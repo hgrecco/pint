@@ -38,7 +38,7 @@ class Group(SharedRegistryObject):
     """
 
     #: Regex to match the header parts of a definition.
-    _header_re = re.compile('@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*')
+    _header_re = re.compile(r'@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*')
 
     def __init__(self, name):
         """
@@ -261,7 +261,7 @@ class System(SharedRegistryObject):
     """
 
     #: Regex to match the header parts of a context.
-    _header_re = re.compile('@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*')
+    _header_re = re.compile(r'@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*')
 
     def __init__(self, name):
         """

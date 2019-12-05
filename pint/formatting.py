@@ -14,7 +14,7 @@ import re
 from .babel_names import _babel_units, _babel_lengths
 from .compat import Loc
 
-__JOIN_REG_EXP = re.compile("\{\d*\}")
+__JOIN_REG_EXP = re.compile(r"\{\d*\}")
 
 
 def _join(fmt, iterable):
