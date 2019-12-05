@@ -35,8 +35,8 @@ class DefinitionSyntaxError(SyntaxError):
 
     @property
     def __dict__(self):
-        # For some reason, SyntaxError.__dict__ is always empty.
-        # There are no __slots__ either. This messes up pickling and deepcopy, as well
+        # SyntaxError.filename and lineno are special fields that don't appear in
+        # the __dict__. This messes up pickling and deepcopy, as well
         # as any other Python library that expects sane behaviour.
         return {"filename": self.filename, "lineno": self.lineno}
 
