@@ -976,6 +976,15 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     __rmul__ = __mul__
 
+    def __matmul__(self, other):
+        # Use NumPy ufunc for matrix multiplication
+        try:
+            return np.matmul(self, other)
+        except AttributeError:
+            return NotImplemented
+
+    __rmatmul__ = __matmul__
+
     def __itruediv__(self, other):
         if not isinstance(self._magnitude, ndarray):
             return self._mul_div(other, operator.truediv)

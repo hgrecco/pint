@@ -228,7 +228,7 @@ copy_units_output_ufuncs = ['ldexp', 'fmod', 'mod', 'remainder']
 op_units_output_ufuncs = {'var': 'square', 'prod': 'size', 'multiply': 'mul',
                           'true_divide': 'div', 'divide': 'div', 'floor_divide': 'div',
                           'sqrt': 'sqrt', 'square': 'square', 'reciprocal': 'reciprocal',
-                          'std': 'sum', 'sum': 'sum', 'cumsum': 'sum'}
+                          'std': 'sum', 'sum': 'sum', 'cumsum': 'sum', 'matmul': 'mul'}
 
 
 # Perform the standard ufunc implementations based on behavior collections
