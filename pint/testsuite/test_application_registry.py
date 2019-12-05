@@ -86,7 +86,7 @@ class TestDefaultApplicationRegistry(BaseTestCase):
 
 class TestCustomApplicationRegistry(BaseTestCase):
     def setUp(self):
-        super(TestCustomApplicationRegistry, self).setUp()
+        super().setUp()
         self.ureg_bak = get_application_registry()
         self.ureg = UnitRegistry(None)
         self.ureg.define("foo = []")
@@ -95,7 +95,7 @@ class TestCustomApplicationRegistry(BaseTestCase):
         assert get_application_registry() is self.ureg
 
     def tearDown(self):
-        super(TestCustomApplicationRegistry, self).tearDown()
+        super().tearDown()
         set_application_registry(self.ureg_bak)
 
     def test_unit(self):
@@ -149,7 +149,7 @@ class TestSwapApplicationRegistry(BaseTestCase):
     """
 
     def setUp(self):
-        super(TestSwapApplicationRegistry, self).setUp()
+        super().setUp()
         self.ureg_bak = get_application_registry()
         self.ureg1 = UnitRegistry(None)
         self.ureg1.define("foo = [dim1]")

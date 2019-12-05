@@ -9,16 +9,11 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-import sys
-
 from .converters import ScaleConverter, OffsetConverter
 from .util import UnitsContainer, _is_dim, ParserHelper
-from .compat import string_types
 
 
-class Definition(object):
+class Definition:
     """Base class for definitions.
 
     :param name: name.
@@ -45,13 +40,6 @@ class Definition(object):
         name = name.strip()
 
         result = [res.strip() for res in definition.split('=')]
-        # For python 2.7, remove unsupported unicode character
-        if (sys.version_info < (3, 0)):
-            for value in result:
-                try:
-                    value.decode('utf-8')
-                except UnicodeEncodeError:
-                    result.remove(value)
 
         # @alias name = alias1 = alias2 = ...
         if name.startswith("@alias "):
@@ -106,13 +94,12 @@ class PrefixDefinition(Definition):
     """
 
     def __init__(self, name, symbol, aliases, converter):
-        if isinstance(converter, string_types):
+        if isinstance(converter, str):
             converter = ScaleConverter(eval(converter))
         aliases = tuple(alias.strip('-') for alias in aliases)
         if symbol:
             symbol = symbol.strip('-')
-        super(PrefixDefinition, self).__init__(name, symbol, aliases,
-                                               converter)
+        super().__init__(name, symbol, aliases, converter)
 
 
 class UnitDefinition(Definition):
@@ -126,7 +113,7 @@ class UnitDefinition(Definition):
                  reference=None, is_base=False):
         self.reference = reference
         self.is_base = is_base
-        if isinstance(converter, string_types):
+        if isinstance(converter, str):
             if ';' in converter:
                 [converter, modifiers] = converter.split(';', 2)
                 modifiers = dict((key.strip(), eval(value)) for key, value in
@@ -151,7 +138,7 @@ class UnitDefinition(Definition):
             else:
                 converter = ScaleConverter(converter.scale)
 
-        super(UnitDefinition, self).__init__(name, symbol, aliases, converter)
+        super().__init__(name, symbol, aliases, converter)
 
 
 class DimensionDefinition(Definition):
@@ -162,7 +149,7 @@ class DimensionDefinition(Definition):
                  reference=None, is_base=False):
         self.reference = reference
         self.is_base = is_base
-        if isinstance(converter, string_types):
+        if isinstance(converter, str):
             converter = ParserHelper.from_string(converter)
             if not converter:
                 self.is_base = True
@@ -174,14 +161,11 @@ class DimensionDefinition(Definition):
                                  'to dimensions.')
             self.reference = UnitsContainer(converter)
 
-        super(DimensionDefinition, self).__init__(name, symbol, aliases,
-                                                  converter=None)
+        super().__init__(name, symbol, aliases, converter=None)
 
 
 class AliasDefinition(Definition):
     """Additional alias(es) for an already existing unit
     """
     def __init__(self, name, aliases):
-        super(AliasDefinition, self).__init__(
-            name=name, symbol=None, aliases=aliases, converter=None
-        )
+        super().__init__(name=name, symbol=None, aliases=aliases, converter=None)

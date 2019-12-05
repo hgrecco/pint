@@ -8,11 +8,9 @@
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
 
 
-class Converter(object):
+class Converter:
     """Base class for value converters.
     """
 

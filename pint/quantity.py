@@ -7,28 +7,26 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
+import bisect
 import contextlib
 import copy
 import datetime
-import math
-import operator
 import functools
-import bisect
-import warnings
+import locale
+import math
 import numbers
+import operator
 import re
+import warnings
 
 from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_latex,
                          ndarray_to_latex_parts)
 from .errors import (DimensionalityError, OffsetUnitCalculusError, PintTypeError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
-from .compat import string_types, ndarray, np, _to_magnitude, long_type
+from .compat import ndarray, np, _to_magnitude
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
-                   to_units_container, infer_base_unit,
-                   fix_str_conversions)
+                   to_units_container, infer_base_unit)
 from pint.compat import Loc
 
 
@@ -95,7 +93,6 @@ def printoptions(*args, **kwargs):
         np.set_printoptions(**opts)
 
 
-@fix_str_conversions
 class Quantity(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
@@ -125,7 +122,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def __new__(cls, value, units=None):
         if units is None:
-            if isinstance(value, string_types):
+            if isinstance(value, str):
                 if value == '':
                     raise ValueError('Expression to parse as Quantity cannot '
                                      'be an empty string.')
@@ -142,7 +139,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = units
-        elif isinstance(units, string_types):
+        elif isinstance(units, str):
             inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(value, inst.force_ndarray)
             inst._units = inst._REGISTRY.parse_units(units)._units
@@ -169,8 +166,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self.__used
 
     def __iter__(self):
-        # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon as one
-        # calls iter(self) without waiting for the first element to be drawn from the iterator
+        # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
+        # as one calls iter(self) without waiting for the first element to be drawn from
+        # the iterator
         it_magnitude = iter(self.magnitude)
 
         def it_outer():
@@ -193,8 +191,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __str__(self):
         return format(self)
 
+    def __bytes__(self):
+        return str(self).encode(locale.getpreferredencoding())
+
     def __repr__(self):
-        return "<Quantity({}, '{}')>".format(self._magnitude, self._units)
+        return f"<Quantity({self._magnitude}, '{self._units}')>"
 
     def __hash__(self):
         self_base = self.to_base_units()
@@ -264,7 +265,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def _repr_pretty_(self, p, cycle):
         if cycle:
-            super(Quantity, self)._repr_pretty_(p, cycle)
+            super()._repr_pretty_(p, cycle)
         else:
             p.pretty(self.magnitude)
             p.text(" ")
@@ -577,7 +578,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         magnitude = q_base.magnitude
 
         units = list(q_base._units.items())
-        units_numerator = list(filter(lambda a: a[1]>0, units))
+        units_numerator = [a for a in units if a[1] > 0]
 
         if len(units_numerator) > 0:
             unit_str, unit_power = units_numerator[0]
@@ -600,11 +601,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __int__(self):
         if self.dimensionless:
             return int(self._convert_magnitude_not_inplace(UnitsContainer()))
-        raise DimensionalityError(self._units, 'dimensionless')
-
-    def __long__(self):
-        if self.dimensionless:
-            return long_type(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, 'dimensionless')
 
     def __float__(self):

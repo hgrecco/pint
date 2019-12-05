@@ -9,23 +9,19 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
-
 import re
-from collections import defaultdict
 import weakref
+from collections import ChainMap, defaultdict
 
-from .compat import ChainMap
-from .util import (ParserHelper, UnitsContainer, string_types,
+from .util import (ParserHelper, UnitsContainer,
                    to_units_container, SourceIterator)
 from .errors import DefinitionSyntaxError
 
 #: Regex to match the header parts of a context.
-_header_re = re.compile('@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
+_header_re = re.compile(r'@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
 
 #: Regex to match variable names in an equation.
-_varname_re = re.compile('[A-Za-z_][A-Za-z0-9_]*')
+_varname_re = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
 
 
 def _expression_to_function(eq):
@@ -34,7 +30,7 @@ def _expression_to_function(eq):
     return func
 
 
-class Context(object):
+class Context:
     """A specialized container that defines transformation functions from one
     dimension to another. Each Dimension are specified using a UnitsContainer.
     Simple transformation are given with a function taking a single parameter.
@@ -89,7 +85,7 @@ class Context(object):
             newdef = dict(context.defaults, **defaults)
             c = cls(context.name, context.aliases, newdef)
             c.funcs = context.funcs
-            for edge in context.funcs.keys():
+            for edge in context.funcs:
                 c.relation_to_context[edge] = c
             return c
         return context
@@ -163,7 +159,7 @@ class Context(object):
                                             lineno=lineno)
 
         if defaults:
-            missing_pars = set(defaults.keys()).difference(set(names))
+            missing_pars = defaults.keys() - set(names)
             if missing_pars:
                 raise DefinitionSyntaxError(
                     f'Context parameters {missing_pars} not found in any equation'
@@ -201,8 +197,8 @@ class ContextChain(ChainMap):
     to transform from one dimension to another.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(ContextChain, self).__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__()
         self._graph = None
         self._contexts = []
 
@@ -227,7 +223,7 @@ class ContextChain(ChainMap):
     @property
     def defaults(self):
         if self:
-            return list(self.maps[0].values())[0].defaults
+            return next(iter(self.maps[0].values())).defaults
         return {}
 
     @property
@@ -247,3 +243,11 @@ class ContextChain(ChainMap):
         :raises: KeyError if the rule is not found.
         """
         return self[(src, dst)].transform(src, dst, registry, value)
+
+    def context_ids(self):
+        """Hashable unique identifier of the current contents of the context chain. This
+        is not implemented as ``__hash__`` as doing so on a mutable object can provoke
+        unpredictable behaviour, as interpreter-level optimizations can cache the output
+        of ``__hash__``.
+        """
+        return tuple(id(ctx) for ctx in self._contexts)

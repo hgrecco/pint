@@ -9,8 +9,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from decimal import Decimal
-import math
 import operator
 
 import token as tokenlib
@@ -44,7 +42,7 @@ _UNARY_OPERATOR_MAP = {
 }
 
 
-class EvalTreeNode(object):
+class EvalTreeNode:
     
     def __init__(self, left, operator=None, right=None):
         """

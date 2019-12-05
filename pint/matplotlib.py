@@ -9,7 +9,6 @@
     :copyright: 2017 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import absolute_import
 
 import matplotlib.units
 
@@ -21,14 +20,14 @@ class PintAxisInfo(matplotlib.units.AxisInfo):
 
     def __init__(self, units):
         """Set the default label to the pretty-print of the unit."""
-        super(PintAxisInfo, self).__init__(label='{:P}'.format(units))
+        super().__init__(label='{:P}'.format(units))
 
 
 class PintConverter(matplotlib.units.ConversionInterface):
     """Implement support for pint within matplotlib's unit conversion framework."""
 
     def __init__(self, registry):
-        super(PintConverter, self).__init__()
+        super().__init__()
         self._reg = registry
 
     def convert(self, value, unit, axis):

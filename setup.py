@@ -65,4 +65,4 @@ setup(
         'numpy': ['numpy >= 1.14'],
         'uncertainties': ['uncertainties >= 3.0'],
     },
-    )
+)

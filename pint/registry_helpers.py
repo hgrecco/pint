@@ -10,16 +10,11 @@
 """
 
 import functools
+from inspect import signature
+from itertools import zip_longest
 
-from .compat import string_types, zip_longest
 from .errors import DimensionalityError
 from .util import to_units_container, UnitsContainer
-
-try:
-    from inspect import signature
-except ImportError:
-    # Python2 does not have the inspect library. Import the backport.
-    from funcsigs import signature
 
 
 def _replace_units(original_units, values_by_name):
@@ -42,7 +37,7 @@ def _to_units_container(a, registry=None):
 
     Return a tuple with the unit container and a boolean indicating if it was a reference.
     """
-    if isinstance(a, string_types) and '=' in a:
+    if isinstance(a, str) and '=' in a:
         return to_units_container(a.split('=', 1)[1]), True
     return to_units_container(a, registry), False
 
@@ -130,6 +125,7 @@ def _parse_wrap_args(args, registry=None):
 
     return _converter
 
+
 def _apply_defaults(func, args, kwargs):
     """Apply default keyword arguments.
 
@@ -144,6 +140,7 @@ def _apply_defaults(func, args, kwargs):
             bound_arguments.arguments[param.name] = param.default
     args = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
     return args, {} 
+
 
 def wraps(ureg, ret, args, strict=True):
     """Wraps a function to become pint-aware.

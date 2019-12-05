@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import copy
+import functools
 import math
+import re
 
+from pint.compat import np
+from pint.registry import (UnitRegistry, LazyRegistry)
 from pint import (
     DefinitionSyntaxError, DimensionalityError, RedefinitionError, UndefinedUnitError
 )
-from pint.registry import UnitRegistry, LazyRegistry
-from pint.util import UnitsContainer, ParserHelper
-from pint.compat import u, np, string_types
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
+from pint.util import (UnitsContainer, ParserHelper)
 
 
 class TestUnit(QuantityTestCase):
@@ -68,7 +68,7 @@ class TestUnit(QuantityTestCase):
     def test_ipython(self):
         alltext = []
 
-        class Pretty(object):
+        class Pretty:
             @staticmethod
             def text(text):
                 alltext.append(text)
@@ -267,6 +267,28 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(parse('kelvin**2', as_delta=False), UnitsContainer(kelvin=2))
         self.assertEqual(parse('kelvin*meter', as_delta=True), UnitsContainer(kelvin=1, meter=1))
         self.assertEqual(parse('kelvin*meter', as_delta=False), UnitsContainer(kelvin=1, meter=1))
+
+    def test_parse_expression_with_preprocessor(self):
+        # Add parsing of UDUNITS-style power
+        self.ureg.preprocessors.append(functools.partial(
+            re.sub, r'(?<=[A-Za-z])(?![A-Za-z])(?<![0-9\-][eE])(?<![0-9\-])(?=[0-9\-])', '**'))
+        # Test equality
+        self.assertEqual(self.ureg.parse_expression('42 m2'), self.Q_(42, UnitsContainer(meter=2.)))
+        self.assertEqual(self.ureg.parse_expression('1e6 Hz s-2'), self.Q_(1e6, UnitsContainer(second=-3.)))
+        self.assertEqual(self.ureg.parse_expression('3 metre3'), self.Q_(3, UnitsContainer(meter=3.)))
+        # Clean up and test previously expected value
+        self.ureg.preprocessors.pop()
+        self.assertEqual(self.ureg.parse_expression('1e6 Hz s-2'), self.Q_(999998., UnitsContainer()))
+
+    def test_parse_unit_with_preprocessor(self):
+        # Add parsing of UDUNITS-style power
+        self.ureg.preprocessors.append(functools.partial(
+            re.sub, r'(?<=[A-Za-z])(?![A-Za-z])(?<![0-9\-][eE])(?<![0-9\-])(?=[0-9\-])', '**'))
+        # Test equality
+        self.assertEqual(self.ureg.parse_units('m2'), UnitsContainer(meter=2.))
+        self.assertEqual(self.ureg.parse_units('m-2'), UnitsContainer(meter=-2.))
+        # Clean up
+        self.ureg.preprocessors.pop()
 
     def test_name(self):
         self.assertRaises(UndefinedUnitError, self.ureg.get_name, 'asdf')
@@ -511,7 +533,7 @@ class TestCompatibleUnits(QuantityTestCase):
     FORCE_NDARRAY = False
 
     def setUp(self):
-        super(TestCompatibleUnits, self).setUp()
+        super().setUp()
         self.ureg = UnitRegistry(force_ndarray=self.FORCE_NDARRAY)
         self.Q_ = self.ureg.Quantity
         self.U_ = self.ureg.Unit
@@ -633,7 +655,7 @@ class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
         src, dst = UnitsContainer(src), UnitsContainer(dst)
         value = 10.
         convert = self.ureg.convert
-        if isinstance(expected, string_types):
+        if isinstance(expected, str):
             self.assertRaises(DimensionalityError, convert, value, src, dst)
             if src != dst:
                 self.assertRaises(DimensionalityError, convert, value, dst, src)

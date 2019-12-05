@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import itertools
 from collections import defaultdict
 
@@ -125,17 +123,13 @@ class TestContexts(QuantityTestCase):
         c = UnitsContainer({'[current]': 1.})
 
         g_sp = defaultdict(set)
-        g_sp.update({l: set((t,)),
-                     t: set((l,))})
+        g_sp.update({l: {t}, t: {l}})
 
         g_ab = defaultdict(set)
-        g_ab.update({l: set((c,)),
-                     c: set((l,))})
+        g_ab.update({l: {c}, c: {l}})
 
         g = defaultdict(set)
-        g.update({l: set((t, c)),
-                  t: set((l,)),
-                  c: set((l,))})
+        g.update({l: {t, c}, t: {l}, c: {l}})
 
         with ureg.context('lc'):
             self.assertEqual(ureg._active_ctx.graph, g_sp)
@@ -168,17 +162,13 @@ class TestContexts(QuantityTestCase):
         c = UnitsContainer({'[current]': 1.})
 
         g_sp = defaultdict(set)
-        g_sp.update({l: set((t,)),
-                     t: set((l,))})
+        g_sp.update({l: {t}, t: {l}})
 
         g_ab = defaultdict(set)
-        g_ab.update({l: set((c,)),
-                     c: set((l,))})
+        g_ab.update({l: {c}, c: {l}})
 
         g = defaultdict(set)
-        g.update({l: set((t, c)),
-                  t: set((l,)),
-                  c: set((l,))})
+        g.update({l: {t, c}, t: {l}, c: {l}})
 
         ureg.enable_contexts('lc')
         self.assertEqual(ureg._active_ctx.graph, g_sp)
@@ -536,7 +526,7 @@ class TestContexts(QuantityTestCase):
         self.assertEqual(c.name, 'longcontextname')
         self.assertEqual(c.aliases, ())
         self.assertEqual(c.defaults, {})
-        self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self.assertEqual(c.funcs.keys(), {a, b})
         self._test_ctx(c)
 
         s = ['@context longcontextname = lc',
@@ -546,7 +536,7 @@ class TestContexts(QuantityTestCase):
         self.assertEqual(c.name, 'longcontextname')
         self.assertEqual(c.aliases, ('lc', ))
         self.assertEqual(c.defaults, {})
-        self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self.assertEqual(c.funcs.keys(), {a, b})
         self._test_ctx(c)
 
         s = ['@context longcontextname = lc = lcn',
@@ -556,7 +546,7 @@ class TestContexts(QuantityTestCase):
         self.assertEqual(c.name, 'longcontextname')
         self.assertEqual(c.aliases, ('lc', 'lcn', ))
         self.assertEqual(c.defaults, {})
-        self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self.assertEqual(c.funcs.keys(), {a, b})
         self._test_ctx(c)
 
     def test_parse_auto_inverse(self):
@@ -569,7 +559,7 @@ class TestContexts(QuantityTestCase):
 
         c = Context.from_lines(s)
         self.assertEqual(c.defaults, {})
-        self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self.assertEqual(c.funcs.keys(), {a, b})
         self._test_ctx(c)
 
     def test_parse_define(self):
@@ -580,7 +570,7 @@ class TestContexts(QuantityTestCase):
              '[length] <-> 1 / [time]: c / value']
         c = Context.from_lines(s)
         self.assertEqual(c.defaults, {})
-        self.assertEqual(set(c.funcs.keys()), set((a, b)))
+        self.assertEqual(c.funcs.keys(), {a, b})
         self._test_ctx(c)
 
     def test_parse_parameterized(self):

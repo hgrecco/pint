@@ -11,6 +11,9 @@ Pint
 .. automodule:: pint.babel_names
     :members:
 
+.. automodule:: pint.compat
+    :members:
+
 .. automodule:: pint.context
     :members:
 
@@ -51,18 +54,6 @@ Pint
     :members:
 
 .. automodule:: pint.util
-    :members:
-
-.. automodule:: pint.compat.chainmap
-    :members:
-
-.. automodule:: pint.compat.lrucache
-    :members:
-
-.. automodule:: pint.compat.meta
-    :members:
-
-.. automodule:: pint.compat.tokenize
     :members:
 
 .. automodule:: pint.testsuite.helpers
