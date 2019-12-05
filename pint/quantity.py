@@ -1320,7 +1320,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __array_function__(self, func, types, args, kwargs):
         return numpy_wrap('function', func, args, kwargs, types)
 
-    def _ufunc_method_wrap(self, func, *args, **kwargs):
+    _wrapped_numpy_methods = ['flatten', 'astype', 'item']
+
+    def _numpy_method_wrap(self, func, *args, **kwargs):
         """Convenience method to wrap on the fly NumPy ndarray methods taking
         care of the units.
         """
@@ -1332,7 +1334,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         # Set output units as needed
         if (func.__name__ in
-                matching_input_copy_units_output_ufuncs + copy_units_output_ufuncs):
+                matching_input_copy_units_output_ufuncs + copy_units_output_ufuncs
+                + _wrapped_numpy_methods):
             output_unit = self._units
         elif func.__name__ in set_units_ufuncs:
             output_unit = set_units_ufuncs[func.__name__][1]
@@ -1350,12 +1353,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             return self.__class__(value, output_unit)
         else:
             return value
-
-    def flatten(self, order='C'):
-        """Wrap ndarray.flatten."""
-        return self.__class__(
-            _to_magnitude(self._magnitude, force_ndarray=True).flatten(order=order),
-            self._units)
 
     def clip(self, first=None, second=None, out=None, **kwargs):
         min = kwargs.get('min', first)
@@ -1457,14 +1454,15 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays
                 magnitude_as_array = _to_magnitude(self._magnitude, force_ndarray=True)
                 return getattr(magnitude_as_array, item)
-        elif item in HANDLED_UFUNCS:
+        elif item in HANDLED_UFUNCS or _wrapped_numpy_methods:
             # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays/scalars
             magnitude_as_array = _to_magnitude(self._magnitude, True)
             attr = getattr(magnitude_as_array, item)
             if callable(attr):
-                return functools.partial(self._ufunc_method_wrap, attr)
+                return functools.partial(self._numpy_method_wrap, attr)
             else:
-                raise AttributeError('NumPy ufunc attribute {} was not callable.'.format(item))
+                raise AttributeError('NumPy method {} was not callable.'.format(item))
+
         try:
             return getattr(self._magnitude, item)
         except AttributeError as ex:

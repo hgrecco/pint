@@ -209,6 +209,15 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     def test_append(self):
         self.assertQuantityEqual(np.append(self.q, [[0, 0]] * self.ureg.m, axis=0),
                                  [[1, 2], [3, 4], [0, 0]] * self.ureg.m)
+
+    def test_astype(self):
+        actual = self.q.astype(np.float32)
+        expected = self.Q_(np.array([[1., 2.], [3., 4.]], dtype=np.float32), 'm')
+        self.assertQuantityEqual(actual, expected)
+        self.assertEqual(actual.m.dtype, expected.m.dtype)
+
+    def test_item(self):
+        self.assertQuantityEqual(self.Q_([[0]], 'm').item(), 0 * self.ureg.m)
         
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # https://www.numpy.org/devdocs/reference/routines.math.html
