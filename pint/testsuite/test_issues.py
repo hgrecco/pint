@@ -4,7 +4,6 @@ import copy
 import math
 import unittest
 import pprint
-import sys
 
 from pint import DimensionalityError, UnitRegistry
 from pint.unit import UnitsContainer
