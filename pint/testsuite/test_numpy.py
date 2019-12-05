@@ -482,6 +482,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_nanargmax_numpy_func(self):
         self.assertNDArrayEqual(np.nanargmax(self.q_nan, axis=0), np.array([1, 0]))
 
+    def test_maximum(self):
+        self.assertQuantityEqual(np.maximum(self.q, self.Q_([0, 5], 'm')),
+                                 self.Q_([[1, 5], [3, 5]], 'm'))
+
     def test_min(self):
         self.assertEqual(self.q.min(), 1 * self.ureg.m)
 
@@ -511,6 +515,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
     @helpers.requires_array_function_protocol()
     def test_nanargmin_numpy_func(self):
         self.assertNDArrayEqual(np.nanargmin(self.q_nan, axis=0), np.array([0, 0]))
+
+    def test_minimum(self):
+        self.assertQuantityEqual(np.minimum(self.q, self.Q_([0, 5], 'm')),
+                                 self.Q_([[0, 2], [0, 4]], 'm'))
 
     def test_ptp(self):
         self.assertEqual(self.q.ptp(), 3 * self.ureg.m)
@@ -774,6 +782,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityEqual(np.where(self.q >= 2 * self.ureg.m, self.q, 0 * self.ureg.m),
                                  [[0, 2], [3, 4]] * self.ureg.m)
         self.assertRaises(DimensionalityError, np.where, self.q < 2 * self.ureg.m, self.q, 0)
+
+    def test_fabs(self):
+        self.assertQuantityEqual(np.fabs(self.q - 2 * self.ureg.m), self.Q_([[1, 0], [1, 2]], 'm'))
 
 
 @unittest.skip

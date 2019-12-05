@@ -224,7 +224,7 @@ matching_input_copy_units_output_ufuncs = ['compress', 'conj', 'conjugate', 'cop
                                            'squeeze', 'swapaxes', 'take', 'trace',
                                            'transpose', 'ceil', 'floor', 'hypot', 'rint',
                                            'copysign', 'nextafter', 'trunc', 'absolute',
-                                           'negative']
+                                           'negative', 'maximum', 'minimum', 'fabs']
 copy_units_output_ufuncs = ['ldexp', 'fmod', 'mod', 'remainder']
 op_units_output_ufuncs = {'var': 'square', 'prod': 'size', 'multiply': 'mul',
                           'true_divide': 'div', 'divide': 'div', 'floor_divide': 'div',

@@ -1334,8 +1334,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         # Set output units as needed
         if (func.__name__ in
-                matching_input_copy_units_output_ufuncs + copy_units_output_ufuncs
-                + _wrapped_numpy_methods):
+                (matching_input_copy_units_output_ufuncs + copy_units_output_ufuncs
+                 + self._wrapped_numpy_methods)):
             output_unit = self._units
         elif func.__name__ in set_units_ufuncs:
             output_unit = set_units_ufuncs[func.__name__][1]
@@ -1454,7 +1454,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays
                 magnitude_as_array = _to_magnitude(self._magnitude, force_ndarray=True)
                 return getattr(magnitude_as_array, item)
-        elif item in HANDLED_UFUNCS or _wrapped_numpy_methods:
+        elif item in HANDLED_UFUNCS or self._wrapped_numpy_methods:
             # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays/scalars
             magnitude_as_array = _to_magnitude(self._magnitude, True)
             attr = getattr(magnitude_as_array, item)
