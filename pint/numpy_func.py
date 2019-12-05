@@ -8,9 +8,10 @@
 """
 
 from inspect import signature
+import warnings
 
 from .compat import NP_NO_VALUE, is_upcast_type, np, string_types, eq
-from .errors import DimensionalityError
+from .errors import DimensionalityError, UnitStrippedWarning
 from .util import iterable, sized
 
 HANDLED_UFUNCS = {}
@@ -368,6 +369,18 @@ def _unwrap(p, discont=None, axis=-1):
                                 'rad').to(p.units)
 
 
+@implements('copyto', 'function')
+def copyto(dst, src, casting='same_kind', where=True):
+    if _is_quantity(dst):
+        if _is_quantity(src):
+            src = src.m_as(dst.units)
+        np.copyto(dst._magnitude, src, casting=casting, where=where)
+    else:
+        warnings.warn("The unit of the quantity is stripped when getting copying to "
+                      "non-quantity", stacklevel=2)
+        np.copyto(dst, src.m, casting=casting, where=where)
+
+
 def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output=True):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
@@ -421,6 +434,8 @@ for func_str, unit_arguments, wrap_output in [('expand_dims', 'a', True),
                                               ('swapaxes', 'a', True),
                                               ('nanmin', 'a', True),
                                               ('nanmax', 'a', True),
+                                              ('percentile', 'a', True),
+                                              ('nanpercentile', 'a', True),
                                               ('flip', 'm', True),
                                               ('fix', 'x', True),
                                               ('trim_zeros', ['filt'], True),
@@ -434,7 +449,8 @@ for func_str, unit_arguments, wrap_output in [('expand_dims', 'a', True),
                                               ('clip', ['a', 'a_min', 'a_max'], True),
                                               ('append', ['arr', 'values'], True),
                                               ('compress', 'a', True),
-                                              ('linspace', ['start', 'stop'], True)]:
+                                              ('linspace', ['start', 'stop'], True),
+                                              ('isin', ['element', 'test_elements'], False)]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
 

@@ -786,6 +786,29 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_fabs(self):
         self.assertQuantityEqual(np.fabs(self.q - 2 * self.ureg.m), self.Q_([[1, 0], [1, 2]], 'm'))
 
+    def test_isin(self):
+        self.assertNDArrayEqual(np.isin(self.q, self.Q_([0, 2, 4], 'm')),
+                                np.array([[False, True], [False, True]]))
+
+    @helpers.requires_array_function_protocol()
+    def test_percentile(self):
+        self.assertQuantityEqual(np.percentile(self.q, 25), self.Q_(1.75, 'm'))
+
+    @helpers.requires_array_function_protocol()
+    def test_nanpercentile(self):
+        self.assertQuantityEqual(np.nanpercentile(self.q_nan, 25), self.Q_(1.5, 'm'))
+
+    @helpers.requires_array_function_protocol()
+    def test_copyto(self):
+        a = self.q.m
+        q = copy.copy(self.q)
+        np.copyto(q, 2 * q, where=[True, False])
+        self.assertQuantityEqual(q, self.Q_([[2, 2], [6, 4]], 'm'))
+        np.copyto(q, 0, where=[[False, False], [True, False]])
+        self.assertQuantityEqual(q, self.Q_([[2, 2], [0, 4]], 'm'))
+        np.copyto(a, q)
+        self.assertNDArrayEqual(a, np.array([[2, 2], [0, 4]]))
+
 
 @unittest.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):
