@@ -19,22 +19,24 @@ HANDLED_FUNCTIONS = {}
 # Shared Implementation Utilities
 #
 
+def _is_quantity(arg):
+    """Test for _units and _magnitude attrs.
 
-# TODO: make more robust and test
+    This is done in place of isinstance(Quantity, arg), which would cause a circular import.
+    """
+    return hasattr(arg, '_units') and hasattr(arg, '_magnitude')
+
 def _is_quantity_sequence(arg):
-    if iterable(arg) and sized(arg) and not isinstance(arg, string_types):
-        if hasattr(arg[0], 'units'):
-            if not all([hasattr(item, 'units') for item in arg]):
-                raise TypeError("{} contains items that aren't Quantity type".format(arg))
-            return True
-    return False
+    """Test for sequences of quantities."""
+    return (iterable(arg) and sized(arg) and not isinstance(arg, str)
+            and all(_is_quantity(item) for item in arg))
 
 
 def _get_first_input_units(args, kwargs={}):
     args_combo = list(args) + list(kwargs.values())
     out_units=None
     for arg in args_combo:
-        if hasattr(arg, 'units'):  # TODO better check?
+        if _is_quantity(arg):
             out_units = arg.units
         elif _is_quantity_sequence(arg):
             out_units = arg[0].units
@@ -50,7 +52,7 @@ def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
     """
     def convert_arg(arg):
         if pre_calc_units is not None:
-            if hasattr(arg, 'units'):  # TODO better check?
+            if _is_quantity(arg):
                 return arg.m_as(pre_calc_units)
             elif _is_quantity_sequence(arg):
                 return [item.m_as(pre_calc_units) for item in arg]
@@ -60,7 +62,7 @@ def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
                 else:
                     raise DimensionalityError('dimensionless', pre_calc_units)
         else:
-            if hasattr(arg, 'units'):  # TODO better check?
+            if _is_quantity(arg):
                 return arg.m
             elif _is_quantity_sequence(arg):
                 return [item.m for item in arg]
@@ -139,7 +141,7 @@ def implements(numpy_func_string, func_type):
 
 
 def implement_func(func_type, func_str, input_units=None, output_unit=None):
-    """TODO"""
+    """Add default-behavior NumPy function/ufunc to the handled list."""
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
