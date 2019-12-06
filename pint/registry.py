@@ -897,8 +897,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         over the names defined in the registry.
         """
 
-        if not input_string:
-            return self.Quantity(1)
+        if not input_string.strip(' '):
+            raise Exception('Unit Registry cannot parse an empty string')
 
         for p in self.preprocessors:
             input_string = p(input_string)
