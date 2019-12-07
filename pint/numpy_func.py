@@ -370,7 +370,7 @@ def _unwrap(p, discont=None, axis=-1):
 
 
 @implements('copyto', 'function')
-def copyto(dst, src, casting='same_kind', where=True):
+def _copyto(dst, src, casting='same_kind', where=True):
     if _is_quantity(dst):
         if _is_quantity(src):
             src = src.m_as(dst.units)
@@ -379,6 +379,13 @@ def copyto(dst, src, casting='same_kind', where=True):
         warnings.warn("The unit of the quantity is stripped when copying to non-quantity",
                       stacklevel=2)
         np.copyto(dst, src.m, casting=casting, where=where)
+
+
+@implements('einsum', 'function')
+def _einsum(subscripts, *operands, **kwargs):
+    operand_magnitudes, _ = convert_to_consistent_units(*operands, pre_calc_units=None)
+    output_unit = get_op_output_unit("mul", _get_first_input_units(operands), operands)
+    return np.einsum(subscripts, *operand_magnitudes, **kwargs) * output_unit
 
 
 def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output=True):
@@ -450,7 +457,10 @@ for func_str, unit_arguments, wrap_output in [('expand_dims', 'a', True),
                                               ('append', ['arr', 'values'], True),
                                               ('compress', 'a', True),
                                               ('linspace', ['start', 'stop'], True),
-                                              ('isin', ['element', 'test_elements'], False)]:
+                                              ('isin', ['element', 'test_elements'], False),
+                                              ('tile', 'A', True),
+                                              ('rot90', 'm', True),
+                                              ('insert', ['arr', 'values'], True)]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
 

@@ -306,6 +306,15 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     def test_dot_numpy_func(self):
         self.assertQuantityEqual(np.dot(self.q.ravel(), [0, 0, 1, 0] * self.ureg.dimensionless), 3 * self.ureg.m)
 
+    @helpers.requires_array_function_protocol()
+    def test_einsum(self):
+        a = np.arange(25).reshape(5, 5) * self.ureg.m
+        b = np.arange(5) * self.ureg.m
+        self.assertQuantityEqual(np.einsum('ii', a), 60 * self.ureg.m)
+        self.assertQuantityEqual(np.einsum('ii->i', a), np.array([ 0,  6, 12, 18, 24]) * self.ureg.m)
+        self.assertQuantityEqual(np.einsum('i,i', b, b), 30 * self.ureg.m**2)
+        self.assertQuantityEqual(np.einsum('ij,j', a, b), np.array([ 30,  80, 130, 180, 230]) * self.ureg.m**2)
+
     # Arithmetic operations
     def test_addition_with_scalar(self):
         a = np.array([0, 1, 2])
@@ -808,6 +817,19 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityEqual(q, self.Q_([[2, 2], [0, 4]], 'm'))
         np.copyto(a, q)
         self.assertNDArrayEqual(a, np.array([[2, 2], [0, 4]]))
+
+    @helpers.requires_array_function_protocol()
+    def test_tile(self):
+        self.assertQuantityEqual(np.tile(self.q, 2), np.array([[1, 2, 1, 2], [3, 4, 3, 4]]) * self.ureg.m)
+
+    @helpers.requires_array_function_protocol()
+    def test_rot90(self):
+        self.assertQuantityEqual(np.rot90(self.q), np.array([[2, 4], [1, 3]]) * self.ureg.m)
+
+    @helpers.requires_array_function_protocol()
+    def test_insert(self):
+        self.assertQuantityEqual(np.insert(self.q, 1, 0 * self.ureg.m, axis=1),
+                                 np.array([[1, 0, 2], [3, 0, 4]]) * self.ureg.m)
 
 
 @unittest.skip
