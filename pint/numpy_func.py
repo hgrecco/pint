@@ -345,7 +345,17 @@ def _interp(x, xp, fp, left=None, right=None, period=None):
 
 @implements('where', 'function')
 def _where(condition, *args):
-    args, output_wrap = unwrap_and_wrap_consistent_units(*args)
+    if len(args) == 2 and np.isscalar(args[1]) and (args[1] == 0 or np.isnan(args[1])):
+        print(0, args)
+        (x,), output_wrap = unwrap_and_wrap_consistent_units(args[0])
+        args = x, args[1]
+    elif len(args) == 2 and np.isscalar(args[0]) and (args[0] == 0 or np.isnan(args[0])):
+        print(1, args)
+        (y,), output_wrap = unwrap_and_wrap_consistent_units(args[1])
+        args = args[0], y
+    else:
+        print(2, args)
+        args, output_wrap = unwrap_and_wrap_consistent_units(*args)
     return output_wrap(np.where(condition, *args))
 
 

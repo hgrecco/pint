@@ -788,9 +788,17 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_where(self):
-        self.assertQuantityEqual(np.where(self.q >= 2 * self.ureg.m, self.q, 0 * self.ureg.m),
+        self.assertQuantityEqual(np.where(self.q >= 2 * self.ureg.m, self.q, 20 * self.ureg.m),
+                                 [[20, 2], [3, 4]] * self.ureg.m)
+        self.assertQuantityEqual(np.where(self.q >= 2 * self.ureg.m, self.q, 0),
                                  [[0, 2], [3, 4]] * self.ureg.m)
-        self.assertRaises(DimensionalityError, np.where, self.q < 2 * self.ureg.m, self.q, 0)
+        self.assertQuantityEqual(np.where(self.q >= 2 * self.ureg.m, self.q, np.nan),
+                                 [[np.nan, 2], [3, 4]] * self.ureg.m)
+        self.assertQuantityEqual(np.where(self.q >= 3 * self.ureg.m, 0, self.q),
+                                 [[1, 2], [0, 0]] * self.ureg.m)
+        self.assertQuantityEqual(np.where(self.q >= 3 * self.ureg.m, np.nan, self.q),
+                                 [[1, 2], [np.nan, np.nan]] * self.ureg.m)
+        self.assertRaises(DimensionalityError, np.where, self.q < 2 * self.ureg.m, self.q, 0 * self.ureg.J)
 
     def test_fabs(self):
         self.assertQuantityEqual(np.fabs(self.q - 2 * self.ureg.m), self.Q_([[1, 0], [1, 2]], 'm'))
