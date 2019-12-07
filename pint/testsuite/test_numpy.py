@@ -798,6 +798,11 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_isin(self):
         self.assertNDArrayEqual(np.isin(self.q, self.Q_([0, 2, 4], 'm')),
                                 np.array([[False, True], [False, True]]))
+        self.assertNDArrayEqual(np.isin(self.q, self.Q_([0, 2, 4], 'J')),
+                                np.array([[False, False], [False, False]]))
+        self.assertNDArrayEqual(np.isin(self.q, [self.Q_(2, 'm'), self.Q_(4, 'J')]),
+                                np.array([[False, True], [False, False]]))
+        self.assertRaises(ValueError, np.isin, self.q.m, self.q)
 
     @helpers.requires_array_function_protocol()
     def test_percentile(self):

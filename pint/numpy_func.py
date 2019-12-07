@@ -388,6 +388,31 @@ def _einsum(subscripts, *operands, **kwargs):
     return np.einsum(subscripts, *operand_magnitudes, **kwargs) * output_unit
 
 
+@implements('isin', 'function')
+def _isin(element, test_elements, assume_unique=False, invert=False):
+    if not _is_quantity(element):
+        raise ValueError('Cannot test if unit-aware elements are in not-unit-aware array')
+
+    if _is_quantity(test_elements):
+        try:
+            test_elements = test_elements.m_as(element.units)
+        except DimensionalityError:
+            # Incompatible unit test elements cannot be in element
+            return np.full(element.shape, False)
+    elif _is_quantity_sequence(test_elements):
+        compatible_test_elements = []
+        for test_element in test_elements:
+            try:
+                compatible_test_elements.append(test_element.m_as(element.units))
+            except DimensionalityError:
+                # Incompatible unit test elements cannot be in element, but others in sequence
+                # may
+                pass
+        test_elements = compatible_test_elements
+
+    return np.isin(element.m, test_elements, assume_unique=assume_unique, invert=invert)
+
+
 def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output=True):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
@@ -457,7 +482,6 @@ for func_str, unit_arguments, wrap_output in [('expand_dims', 'a', True),
                                               ('append', ['arr', 'values'], True),
                                               ('compress', 'a', True),
                                               ('linspace', ['start', 'stop'], True),
-                                              ('isin', ['element', 'test_elements'], False),
                                               ('tile', 'A', True),
                                               ('rot90', 'm', True),
                                               ('insert', ['arr', 'values'], True)]:
