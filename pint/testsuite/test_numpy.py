@@ -303,6 +303,10 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         self.assertQuantityEqual(np.trapz([1. ,2., 3., 4.] * self.ureg.J, dx=1*self.ureg.m), 7.5 * self.ureg.J*self.ureg.m)
 
     @helpers.requires_array_function_protocol()
+    def test_dot(self):
+        self.assertQuantityEqual(self.q.ravel().dot(np.array([1, 0, 0, 1])), 5 * self.ureg.m)
+
+    @helpers.requires_array_function_protocol()
     def test_dot_numpy_func(self):
         self.assertQuantityEqual(np.dot(self.q.ravel(), [0, 0, 1, 0] * self.ureg.dimensionless), 3 * self.ureg.m)
 

@@ -1431,6 +1431,13 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             raise DimensionalityError('dimensionless', self._units)
         return self.magnitude.searchsorted(v, side)
 
+    def dot(self, b):
+        """Dot product of two arrays.
+
+        Wraps np.dot().
+        """
+        return np.dot(self, b)
+
     def __ito_if_needed(self, to_units):
         if self.unitless and to_units == 'radian':
             return
