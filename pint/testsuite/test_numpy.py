@@ -808,9 +808,11 @@ class TestNumpyUnclassified(TestNumpyMethods):
                                  [[1, 2], [np.nan, np.nan]] * self.ureg.m)
         self.assertRaises(DimensionalityError, np.where, self.q < 2 * self.ureg.m, self.q, 0 * self.ureg.J)
 
+    @helpers.requires_array_function_protocol()
     def test_fabs(self):
         self.assertQuantityEqual(np.fabs(self.q - 2 * self.ureg.m), self.Q_([[1, 0], [1, 2]], 'm'))
 
+    @helpers.requires_array_function_protocol()
     def test_isin(self):
         self.assertNDArrayEqual(np.isin(self.q, self.Q_([0, 2, 4], 'm')),
                                 np.array([[False, True], [False, True]]))

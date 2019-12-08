@@ -1303,7 +1303,8 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
                 in1_cp = copy.copy(in1)
                 self.assertQuantityAlmostEqual(op.ipow(in1_cp, in2), expected)
 
-    @helpers.requires_numpy()
+    # matmul is only a ufunc since 1.16
+    @helpers.requires_numpy_at_least('1.16')
     def test_matmul_with_numpy(self):
         A = [[1, 2], [3, 4]] * self.ureg.m
         B = np.array([[0, -1], [-1, 0]])

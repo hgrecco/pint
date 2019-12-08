@@ -19,12 +19,14 @@ import operator
 import re
 import warnings
 
+from distutils.version import StrictVersion
+
 from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_latex,
                          ndarray_to_latex_parts)
 from .errors import (DimensionalityError, OffsetUnitCalculusError, PintTypeError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
-from .compat import Loc, ndarray, np, _to_magnitude, is_upcast_type, eq
+from .compat import Loc, NUMPY_VER, ndarray, np, _to_magnitude, is_upcast_type, eq
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit, iterable, sized)
 from .numpy_func import (HANDLED_UFUNCS, copy_units_output_ufuncs, get_op_output_unit,
@@ -977,10 +979,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     __rmul__ = __mul__
 
     def __matmul__(self, other):
-        # Use NumPy ufunc for matrix multiplication
-        try:
+        # Use NumPy ufunc (existing since 1.16) for matrix multiplication
+        if StrictVersion(NUMPY_VER) >= StrictVersion('1.16'):
             return np.matmul(self, other)
-        except AttributeError:
+        else:
             return NotImplemented
 
     __rmatmul__ = __matmul__

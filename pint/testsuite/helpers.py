@@ -32,6 +32,12 @@ def requires_numpy_previous_than(version):
     return unittest.skipUnless(StrictVersion(NUMPY_VER) < StrictVersion(version), 'Requires NumPy < %s' % version)
 
 
+def requires_numpy_at_least(version):
+    if not HAS_NUMPY:
+        return unittest.skip('Requires NumPy')
+    return unittest.skipUnless(StrictVersion(NUMPY_VER) >= StrictVersion(version), 'Requires NumPy >= %s' % version)
+
+
 def requires_numpy():
     return unittest.skipUnless(HAS_NUMPY, 'Requires NumPy')
 
