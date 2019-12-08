@@ -18,9 +18,7 @@ HANDLED_UFUNCS = {}
 HANDLED_FUNCTIONS = {}
 
 
-#
 # Shared Implementation Utilities
-#
 
 def _is_quantity(arg):
     """Test for _units and _magnitude attrs.
@@ -29,6 +27,7 @@ def _is_quantity(arg):
     """
     return hasattr(arg, '_units') and hasattr(arg, '_magnitude')
 
+
 def _is_quantity_sequence(arg):
     """Test for sequences of quantities."""
     return (iterable(arg) and sized(arg) and not isinstance(arg, str)
@@ -36,6 +35,7 @@ def _is_quantity_sequence(arg):
 
 
 def _get_first_input_units(args, kwargs={}):
+    """Obtain the first valid unit from a collection of args and kwargs."""
     args_combo = list(args) + list(kwargs.values())
     out_units=None
     for arg in args_combo:
@@ -49,9 +49,12 @@ def _get_first_input_units(args, kwargs={}):
 
 
 def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
-    """Takes the args for a numpy function and converts any Quantity or Sequence of Quantities 
-    into the units of the first Quantiy/Sequence of quantities. Other args are left untouched
-    if pre_calc_units is None or dimensionless, otherwise a DimensionalityError is raised.
+    """Prepare args and kwargs for wrapping by unit conversion and stripping.
+
+    If pre_calc_units is not None, takes the args and kwargs for a NumPy function and converts
+    any Quantity or Sequence of Quantities into the units of the first Quantiy/Sequence of
+    Quantities and returns the magnitudes. Other args/kwargs are treated as dimensionless
+    Quantities. If pre_calc_units is None, units are simply stripped.
     """
     def convert_arg(arg):
         if pre_calc_units is not None:
@@ -77,7 +80,9 @@ def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
 
 
 def unwrap_and_wrap_consistent_units(*args):
-    """Returns the given args as parsed by convert_to_consistent_units assuming units of first
+    """Strip units from args while providing a rewrapping function.
+
+    Returns the given args as parsed by convert_to_consistent_units assuming units of first
     arg with units, along with a wrapper to restore that unit to the output.
     """
     first_input_units = _get_first_input_units(args)
@@ -86,7 +91,24 @@ def unwrap_and_wrap_consistent_units(*args):
 
 
 def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
-    """Determine resulting unit from given operation."""
+    """Determine resulting unit from given operation.
+
+    Options for `unit_op`:
+
+    - "sum": `first_input_units`, unless non-multiplicative, which raises
+      OffsetUnitCalculusError
+    - "mul": product of all units in `all_args`
+    - "delta": `first_input_units`, unless non-multiplicative, which uses delta version
+    - "delta,div": like "delta", but divided by all units in `all_args` except the first
+    - "div": unit of first argument in `all_args` (or dimensionless if not a Quantity) divided
+      by all following units
+    - "variance": square of `first_input_units`, unless non-multiplicative, which raises
+      OffsetUnitCalculusError
+    - "square": square of `first_input_units`
+    - "sqrt": square root of `first_input_units`
+    - "reciprocal": reciprocal of `first_input_units`
+    - "size": `first_input_units` raised to the power of `size`
+    """
     if unit_op == "sum":
         result_unit = (1 * first_input_units + 1 * first_input_units).units
     elif unit_op == "mul":
@@ -184,7 +206,20 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 """
 Define ufunc behavior collections.
 
-TODO: document as before
+- `strip_unit_input_output_ufuncs`: units should be ignored on both input and output
+- `matching_input_bare_output_ufuncs`: inputs are converted to matching units, but outputs are
+  returned as-is
+- `matching_input_set_units_output_ufuncs`: inputs are converted to matching units, and the
+  output units are as set by the dict value
+- `set_units_ufuncs`: dict values are specified as (in_unit, out_unit), so that inputs are
+  converted to in_unit before having magnitude passed to NumPy ufunc, and outputs are set to
+  have out_unit
+- `matching_input_copy_units_output_ufuncs`: inputs are converted to matching units, and
+  outputs are set to that unit
+- `copy_units_output_ufuncs`: input units (except the first) are ignored, and output is set to
+  that of the first input unit
+- `op_units_output_ufuncs`: determine output unit from input unit as determined by operation
+  (see `get_op_output_unit`)
 """
 strip_unit_input_output_ufuncs = ['isnan', 'isinf', 'isfinite', 'signbit']
 matching_input_bare_output_ufuncs = ['equal', 'greater', 'greater_equal', 'less',
@@ -234,6 +269,7 @@ op_units_output_ufuncs = {'var': 'square', 'prod': 'size', 'multiply': 'mul',
 
 
 # Perform the standard ufunc implementations based on behavior collections
+
 for ufunc_str in strip_unit_input_output_ufuncs:
     # Ignore units
     implement_func('ufunc', ufunc_str, input_units=None, output_unit=None)
@@ -263,6 +299,8 @@ for ufunc_str, unit_op in op_units_output_ufuncs.items():
     implement_func('ufunc', ufunc_str, input_units=None, output_unit=unit_op)
 
 
+# Define custom ufunc implementations for atypical cases
+
 @implements('modf', 'ufunc')
 def _modf(x, *args, **kwargs):
     (x,), output_wrap = unwrap_and_wrap_consistent_units(x)
@@ -278,7 +316,6 @@ def _frexp(x, *args, **kwargs):
 
 @implements('power', 'ufunc')
 def _power(x1, x2):
-    # Hand off to __pow__
     return x1**x2
 
 
@@ -307,12 +344,7 @@ def _subtract(x1, x2, *args, **kwargs):
     return output_wrap(np.subtract(x1, x2, *args, **kwargs))
 
 
-"""
-Define function behavior
-
-TODO: Document
-"""
-
+# Define custom function implementations
 
 @implements('meshgrid', 'function')
 def _meshgrid(*xi, **kwargs):
@@ -432,6 +464,8 @@ def _isin(element, test_elements, assume_unique=False, invert=False):
     return np.isin(element.m, test_elements, assume_unique=assume_unique, invert=invert)
 
 
+# Implement simple matching-unit or stripped-unit functions based on signature
+
 def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output=True):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
@@ -508,6 +542,7 @@ for func_str, unit_arguments, wrap_output in [('expand_dims', 'a', True),
 
 
 # Handle atleast_nd functions
+
 def implement_atleast_nd(func_str):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
@@ -535,35 +570,33 @@ for func_str in ['block', 'hstack', 'vstack', 'dstack', 'column_stack']:
     implement_func('function', func_str, input_units='all_consistent',
                    output_unit='match_input')
 
+# Handle cumulative products (which must be dimensionless for consistent units across output
+# array)
 for func_str in ['cumprod', 'cumproduct', 'nancumprod']:
     implement_func('function', func_str, input_units='dimensionless',
                    output_unit='match_input')
 
+# Handle functions that ignore units on input and output
 for func_str in ['size', 'isreal', 'iscomplex', 'shape', 'ones_like', 'zeros_like',
                  'empty_like', 'argsort', 'argmin', 'argmax', 'alen', 'ndim', 'nanargmax',
                  'nanargmin', 'count_nonzero', 'nonzero', 'result_type']:
     implement_func('function', func_str, input_units=None, output_unit=None)
 
-# TODO: Verify all these below with non-united other arguments \/ !!
-
+# Handle functions with output unit defined by operation
 for func_str in ['std', 'nanstd', 'sum', 'nansum', 'cumsum', 'nancumsum']:
     implement_func('function', func_str, input_units=None, output_unit='sum')
-
 for func_str in ['cross', 'trapz', 'dot']:
     implement_func('function', func_str, input_units=None, output_unit='mul')
-
 for func_str in ['diff', 'ediff1d']:
     implement_func('function', func_str, input_units=None, output_unit='delta')
-
 for func_str in ['gradient', ]:
     implement_func('function', func_str, input_units=None, output_unit='delta,div')
-
 for func_str in ['var', 'nanvar']:
     implement_func('function', func_str, input_units=None, output_unit='variance')
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):
-    # TODO: documentation
+    """Return the result from a NumPy function/ufunc as wrapped by Pint."""
     if func_type == 'function':
         handled = HANDLED_FUNCTIONS
     elif func_type == 'ufunc':
