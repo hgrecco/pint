@@ -559,7 +559,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 if unit1 != unit2:
                     power = self._REGISTRY._get_dimensionality_ratio(unit1, unit2)
                     if power:
-                        newunits = newunits.add(unit2, exp / power).remove(unit1)
+                        newunits = newunits.add(unit2, exp / power).remove([unit1])
                         break
 
         return self.ito(newunits)
