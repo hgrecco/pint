@@ -345,16 +345,17 @@ def _interp(x, xp, fp, left=None, right=None, period=None):
 
 @implements('where', 'function')
 def _where(condition, *args):
-    if len(args) == 2 and np.isscalar(args[1]) and (args[1] == 0 or np.isnan(args[1])):
-        print(0, args)
+    if (len(args) == 2 and not _is_quantity(args[1]) and not iterable(args[1])
+            and (args[1] == 0 or np.isnan(args[1]))):
+        # Special case for y being bare zero or nan
         (x,), output_wrap = unwrap_and_wrap_consistent_units(args[0])
         args = x, args[1]
-    elif len(args) == 2 and np.isscalar(args[0]) and (args[0] == 0 or np.isnan(args[0])):
-        print(1, args)
+    elif (len(args) == 2 and not _is_quantity(args[0]) and not iterable(args[0])
+            and (args[0] == 0 or np.isnan(args[0]))):
+        # Special case for x being bare zero or nan
         (y,), output_wrap = unwrap_and_wrap_consistent_units(args[1])
         args = args[0], y
     else:
-        print(2, args)
         args, output_wrap = unwrap_and_wrap_consistent_units(*args)
     return output_wrap(np.where(condition, *args))
 
@@ -419,6 +420,14 @@ def _isin(element, test_elements, assume_unique=False, invert=False):
                 # may
                 pass
         test_elements = compatible_test_elements
+    else:
+        # Consider non-quantity like dimensionless quantity
+        if not element.dimensionless:
+            # Unit do not match, so all false
+            return np.full(element.shape, False)
+        else:
+            # Convert to units of element
+            element._REGISTRY.Quantity(test_elements).m_as(element.units)
 
     return np.isin(element.m, test_elements, assume_unique=assume_unique, invert=invert)
 

@@ -798,6 +798,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
                                  [[1, 2], [0, 0]] * self.ureg.m)
         self.assertQuantityEqual(np.where(self.q >= 3 * self.ureg.m, np.nan, self.q),
                                  [[1, 2], [np.nan, np.nan]] * self.ureg.m)
+        self.assertQuantityEqual(np.where(self.q >= 2 * self.ureg.m, self.q, np.array(np.nan)),
+                                 [[np.nan, 2], [3, 4]] * self.ureg.m)
+        self.assertQuantityEqual(np.where(self.q >= 3 * self.ureg.m, np.array(np.nan), self.q),
+                                 [[1, 2], [np.nan, np.nan]] * self.ureg.m)
         self.assertRaises(DimensionalityError, np.where, self.q < 2 * self.ureg.m, self.q, 0 * self.ureg.J)
 
     def test_fabs(self):
@@ -810,6 +814,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
                                 np.array([[False, False], [False, False]]))
         self.assertNDArrayEqual(np.isin(self.q, [self.Q_(2, 'm'), self.Q_(4, 'J')]),
                                 np.array([[False, True], [False, False]]))
+        self.assertNDArrayEqual(np.isin(self.q, self.q.m),
+                                np.array([[False, False], [False, False]]))
+        self.assertNDArrayEqual(np.isin(self.q / self.ureg.cm, [1, 3]),
+                                np.array([[True, False], [True, False]]))
         self.assertRaises(ValueError, np.isin, self.q.m, self.q)
 
     @helpers.requires_array_function_protocol()
