@@ -191,6 +191,18 @@ class Context:
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)
 
+    def hashable(self):
+        """Generate a unique hashable and comparable representation of self, which can
+        be used as a key in a dict. This class cannot define ``__hash__`` because it is
+        mutable, and the Python interpreter does cache the output of ``__hash__``.
+        """
+        return (
+            self.name,
+            tuple(self.aliases),
+            frozenset((k, id(v)) for k, v in self.funcs.items()),
+            frozenset(self.defaults.items()),
+        )
+
 
 class ContextChain(ChainMap):
     """A specialized ChainMap for contexts that simplifies finding rules
@@ -209,7 +221,7 @@ class ContextChain(ChainMap):
         To facilitate the identification of the context with the matching rule,
         the *relation_to_context* dictionary of the context is used.
         """
-        self._contexts.insert(0, contexts)
+        self._contexts = list(contexts) + self._contexts
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
@@ -244,10 +256,9 @@ class ContextChain(ChainMap):
         """
         return self[(src, dst)].transform(src, dst, registry, value)
 
-    def context_ids(self):
-        """Hashable unique identifier of the current contents of the context chain. This
-        is not implemented as ``__hash__`` as doing so on a mutable object can provoke
-        unpredictable behaviour, as interpreter-level optimizations can cache the output
-        of ``__hash__``.
+    def hashable(self):
+        """Generate a unique hashable and comparable representation of self, which can
+        be used as a key in a dict. This class cannot define ``__hash__`` because it is
+        mutable, and the Python interpreter does cache the output of ``__hash__``.
         """
-        return tuple(id(ctx) for ctx in self._contexts)
+        return tuple(ctx.hashable() for ctx in self._contexts)
