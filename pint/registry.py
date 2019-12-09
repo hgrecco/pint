@@ -1137,7 +1137,7 @@ class ContextRegistry(BaseRegistry):
         return context
 
     def _build_cache(self):
-        key = self._active_ctx.context_ids()
+        key = self._active_ctx.hashable()
         try:
             self._cache = self._caches[key]
         except KeyError:

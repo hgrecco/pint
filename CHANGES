@@ -15,7 +15,7 @@ Pint Changelog
 - TODO #913
 - TODO #911
 - Prevent 1500x slowdown when using .to() with a context
-  (Issue #909, Thanks Guido Imperiale)
+  (Issues #909 and #923, Thanks Guido Imperiale)
 - **BREAKING CHANGE**:
   Drop support for Python < 3.6, numpy < 1.14, and uncertainties < 3.0;
   if you still need them, please install pint 0.9.
