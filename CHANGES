@@ -5,6 +5,21 @@ Pint Changelog
 -----------------
 
 - **BREAKING CHANGE**:
+  Implement NEP-18 <https://numpy.org/neps/nep-0018-array-function-protocol.html> for
+  Pint Quantities. Most NumPy functions that previously stripped units when applied to
+  Pint Quantities will now return Quantities with proper units (on NumPy v1.16 with
+  the array_function protocol enabled or v1.17+ by default) instead of ndarrays. Any
+  non-explictly-handled functions will now raise a "no implementation found" TypeError
+  instead of stripping units. The previous behavior is maintained for NumPy < v1.16 and
+  when the array_function protocol is disabled.
+  (Issue #905, Thanks Jon Thielen and andrewgsavage)
+- Implementation of NumPy ufuncs has been refactored to share common utilities with
+  NumPy function implementations
+  (Issue #905, Thanks Jon Thielen)
+- Pint Quantities now support the `@` matrix mulitiplication operator (on NumPy v1.16+),
+  as well as the `dot`, `flatten`, `astype`, and `item` methods.
+  (Issue #905, Thanks Jon Thielen)
+- **BREAKING CHANGE**:
   Fix crash when applying pprint to large sets of Units.
   DefinitionSyntaxError is now a subclass of SyntaxError (was ValueError).
   DimensionalityError and OffsetUnitCalculusError are now subclasses of TypeError (was

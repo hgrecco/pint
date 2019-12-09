@@ -1308,6 +1308,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     __nonzero__ = __bool__
 
     # NumPy function/ufunc support
+    __array_priority__ = 17
+
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         if method != "__call__":
             # Only handle ufuncs as callables
