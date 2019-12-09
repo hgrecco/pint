@@ -26,7 +26,9 @@ from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_la
 from .errors import (DimensionalityError, OffsetUnitCalculusError, PintTypeError,
                      UndefinedUnitError, UnitStrippedWarning)
 from .definitions import UnitDefinition
-from .compat import Loc, NUMPY_VER, ndarray, np, _to_magnitude, is_upcast_type, eq
+from .compat import (Loc, NUMPY_VER, SKIP_ARRAY_FUNCTION_CHANGE_WARNING,
+                     BehaviorChangeWarning, ndarray, np, _to_magnitude, is_upcast_type, eq,
+                     array_function_change_msg)
 from .util import (PrettyIPython, logger, UnitsContainer, SharedRegistryObject,
                    to_units_container, infer_base_unit, iterable, sized)
 from .numpy_func import (HANDLED_UFUNCS, copy_units_output_ufuncs, get_op_output_unit,
@@ -118,6 +120,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return _unpickle, (Quantity, self.magnitude, self._units)
 
     def __new__(cls, value, units=None):
+        global SKIP_ARRAY_FUNCTION_CHANGE_WARNING
+
         if units is None:
             if isinstance(value, str):
                 if value == '':
@@ -155,6 +159,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         inst.__used = False
         inst.__handling = None
+
+        if not SKIP_ARRAY_FUNCTION_CHANGE_WARNING and isinstance(inst._magnitude, ndarray):
+            warnings.warn(array_function_change_msg, BehaviorChangeWarning)
+            SKIP_ARRAY_FUNCTION_CHANGE_WARNING = True
 
         return inst
 

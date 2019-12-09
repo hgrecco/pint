@@ -4,12 +4,14 @@ import copy
 import datetime
 import math
 import operator as op
+import warnings
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.unit import UnitsContainer
-from pint.compat import np
+from pint.compat import BehaviorChangeWarning, np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
+from unittest.mock import patch
 
 
 class TestQuantity(QuantityTestCase):
@@ -401,6 +403,16 @@ class TestQuantity(QuantityTestCase):
         x = self.Q_(1, 'm')
         with self.assertRaises(TypeError):
             iter(x)
+
+    @helpers.requires_array_function_protocol()
+    @patch('pint.quantity.SKIP_ARRAY_FUNCTION_CHANGE_WARNING', False)
+    def test_array_function_warning_on_creation(self):
+        # Test that warning is raised on first creation, but not second
+        with self.assertWarns(BehaviorChangeWarning):
+            self.Q_([])
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            self.Q_([])
 
 
 class TestQuantityToCompact(QuantityTestCase):
