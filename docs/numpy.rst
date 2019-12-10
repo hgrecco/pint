@@ -156,7 +156,8 @@ information on these protocols, see
 This behaviour introduces some performance penalties and increased memory
 usage. Quantities that must be converted to other units require additional
 memory and CPU cycles. Therefore, for numerically intensive code, you
-might want to convert the objects first and then use directly the magnitude.
+might want to convert the objects first and then use directly the magnitude,
+such as by using Pint's `wraps` utility (see :ref:`wrapping`).
 
 
 
