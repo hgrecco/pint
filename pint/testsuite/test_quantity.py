@@ -4,12 +4,14 @@ import copy
 import datetime
 import math
 import operator as op
+import warnings
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.unit import UnitsContainer
-from pint.compat import np
+from pint.compat import BehaviorChangeWarning, np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
+from unittest.mock import patch
 
 
 class TestQuantity(QuantityTestCase):
@@ -401,6 +403,16 @@ class TestQuantity(QuantityTestCase):
         x = self.Q_(1, 'm')
         with self.assertRaises(TypeError):
             iter(x)
+
+    @helpers.requires_array_function_protocol()
+    @patch('pint.quantity.SKIP_ARRAY_FUNCTION_CHANGE_WARNING', False)
+    def test_array_function_warning_on_creation(self):
+        # Test that warning is raised on first creation, but not second
+        with self.assertWarns(BehaviorChangeWarning):
+            self.Q_([])
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            self.Q_([])
 
 
 class TestQuantityToCompact(QuantityTestCase):
@@ -1302,6 +1314,16 @@ class TestOffsetUnitMath(QuantityTestCase, ParameterizedTestCase):
 
                 in1_cp = copy.copy(in1)
                 self.assertQuantityAlmostEqual(op.ipow(in1_cp, in2), expected)
+
+    # matmul is only a ufunc since 1.16
+    @helpers.requires_numpy_at_least('1.16')
+    def test_matmul_with_numpy(self):
+        A = [[1, 2], [3, 4]] * self.ureg.m
+        B = np.array([[0, -1], [-1, 0]])
+        b = [[1], [0]] * self.ureg.m
+        self.assertQuantityEqual(A @ B, [[-2, -1], [-4, -3]] * self.ureg.m)
+        self.assertQuantityEqual(A @ b, [[1], [3]] * self.ureg.m**2)
+        self.assertQuantityEqual(B @ b, [[0], [-1]] * self.ureg.m)
 
 
 class TestDimensionReduction(QuantityTestCase):

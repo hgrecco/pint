@@ -9,6 +9,7 @@
     :license: BSD, see LICENSE for more details.
 """
 import tokenize
+import warnings
 from io import BytesIO
 from numbers import Number
 from decimal import Decimal
@@ -19,6 +20,30 @@ def tokenizer(input_string):
         if tokinfo.type == tokenize.ENCODING:
             continue
         yield tokinfo
+
+
+# TODO: remove this warning after v0.10
+class BehaviorChangeWarning(UserWarning):
+    pass
+array_function_change_msg = """The way Pint handles NumPy operations has changed with the
+implementation of NEP 18. Unimplemented NumPy operations will now fail instead of making
+assumptions about units. Some functions, eg concat, will now return Quanties with units, where
+they returned ndarrays previously. See https://github.com/hgrecco/pint/pull/905.
+
+To hide this warning, wrap your first creation of an array Quantity with
+warnings.catch_warnings(), like the following:
+
+import numpy as np
+import warnings
+from pint import Quantity
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    Quantity([])
+
+To disable the new behavior, see
+https://www.numpy.org/neps/nep-0018-array-function-protocol.html#implementation
+"""
 
 
 try:
@@ -40,6 +65,23 @@ try:
             return np.asarray(value)
         return value
 
+    def _test_array_function_protocol():
+        # Test if the __array_function__ protocol is enabled
+        try:
+            class FakeArray:
+                def __array_function__(self, *args, **kwargs):
+                    return
+
+            np.concatenate([FakeArray()])
+            return True
+        except ValueError:
+            return False
+
+    HAS_NUMPY_ARRAY_FUNCTION = _test_array_function_protocol()
+    SKIP_ARRAY_FUNCTION_CHANGE_WARNING = not HAS_NUMPY_ARRAY_FUNCTION
+
+    NP_NO_VALUE = np._NoValue
+
 except ImportError:
 
     np = None
@@ -50,6 +92,9 @@ except ImportError:
     HAS_NUMPY = False
     NUMPY_VER = '0'
     NUMERIC_TYPES = (Number, Decimal)
+    HAS_NUMPY_ARRAY_FUNCTION = False
+    SKIP_ARRAY_FUNCTION_CHANGE_WARNING = True
+    NP_NO_VALUE = None
 
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
@@ -77,3 +122,18 @@ except ImportError:
 
 if not HAS_BABEL:
     Loc = babel_units = None
+
+# Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast and
+# downcast/wrappable types
+def is_upcast_type(other):
+    # Check if class name is in preset list
+    return other.__class__.__name__ in ("PintArray", "Series", "DataArray")
+
+
+def eq(first, second, check_all):
+    """Comparison of scalars and arrays
+    """
+    out = first == second
+    if check_all and isinstance(out, ndarray):
+        return np.all(out)
+    return out
