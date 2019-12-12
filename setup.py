@@ -61,6 +61,7 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     python_requires='>=3.6',
+    install_requires=['setuptools'],
     extras_require={
         'numpy': ['numpy >= 1.14'],
         'uncertainties': ['uncertainties >= 3.0'],
