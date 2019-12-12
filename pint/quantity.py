@@ -19,7 +19,7 @@ import operator
 import re
 import warnings
 
-from distutils.version import StrictVersion
+from pkg_resources.extern.packaging.version import LegacyVersion
 
 from .formatting import (remove_custom_flags, siunitx_format_unit, ndarray_to_latex,
                          ndarray_to_latex_parts)
@@ -988,7 +988,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def __matmul__(self, other):
         # Use NumPy ufunc (existing since 1.16) for matrix multiplication
-        if StrictVersion(NUMPY_VER) >= StrictVersion('1.16'):
+        if LegacyVersion(NUMPY_VER) >= LegacyVersion('1.16'):
             return np.matmul(self, other)
         else:
             return NotImplemented
