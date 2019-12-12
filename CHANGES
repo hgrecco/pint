@@ -4,6 +4,8 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Fix HTML (Jupyter Notebook) and LateX representation of some units
+  (Issue #927, Thanks Guido Imperiale)
 - **BREAKING CHANGE**:
   Implement NEP-18 <https://numpy.org/neps/nep-0018-array-function-protocol.html> for
   Pint Quantities. Most NumPy functions that previously stripped units when applied to

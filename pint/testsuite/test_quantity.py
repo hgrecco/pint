@@ -107,23 +107,31 @@ class TestQuantity(QuantityTestCase):
 
     def test_quantity_format(self):
         x = self.Q_(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
-        for spec, result in (('{0}', str(x)), ('{0!s}', str(x)), ('{0!r}', repr(x)),
-                             ('{0.magnitude}',  str(x.magnitude)), ('{0.units}',  str(x.units)),
-                             ('{0.magnitude!s}',  str(x.magnitude)), ('{0.units!s}',  str(x.units)),
-                             ('{0.magnitude!r}',  repr(x.magnitude)), ('{0.units!r}',  repr(x.units)),
-                             ('{0:.4f}', '{0:.4f} {1!s}'.format(x.magnitude, x.units)),
-                             ('{0:L}', r'4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
-                             ('{0:P}', '4.12345678 kilogram·meter²/second'),
-                             ('{0:H}', '4.12345678 kilogram meter<sup>2</sup>/second'),
-                             ('{0:C}', '4.12345678 kilogram*meter**2/second'),
-                             ('{0:~}', '4.12345678 kg * m ** 2 / s'),
-                             ('{0:L~}', r'4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
-                             ('{0:P~}', '4.12345678 kg·m²/s'),
-                             ('{0:H~}', '4.12345678 kg m<sup>2</sup>/s'),
-                             ('{0:C~}', '4.12345678 kg*m**2/s'),
-                             ('{0:Lx}', r'\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}'),
-                             ):
-            self.assertEqual(spec.format(x), result)
+        for spec, result in (
+            ('{}', str(x)),
+            ('{!s}', str(x)),
+            ('{!r}', repr(x)),
+            ('{.magnitude}',  str(x.magnitude)),
+            ('{.units}',  str(x.units)),
+            ('{.magnitude!s}',  str(x.magnitude)),
+            ('{.units!s}',  str(x.units)),
+            ('{.magnitude!r}',  repr(x.magnitude)),
+            ('{.units!r}',  repr(x.units)),
+            ('{:.4f}', f'{x.magnitude:.4f} {x.units!s}'),
+            ('{:L}', r'4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
+            ('{:P}', '4.12345678 kilogram·meter²/second'),
+            ('{:H}', '4.12345678 kilogram meter^2/second'),
+            ('{:C}', '4.12345678 kilogram*meter**2/second'),
+            ('{:~}', '4.12345678 kg * m ** 2 / s'),
+            ('{:L~}', r'4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
+            ('{:P~}', '4.12345678 kg·m²/s'),
+            ('{:H~}', '4.12345678 kg m^2/s'),
+            ('{:C~}', '4.12345678 kg*m**2/s'),
+            ('{:Lx}', r'\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}'),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(x), result)
+
         # Check the special case that prevents e.g. '3 1 / second'
         x = self.Q_(3, UnitsContainer(second=-1))
         self.assertEqual('{0}'.format(x), '3 / second')
@@ -131,15 +139,17 @@ class TestQuantity(QuantityTestCase):
     @helpers.requires_numpy()
     def test_quantity_array_format(self):
         x = self.Q_(np.array([1e-16, 1.0000001, 10000000.0, 1e12, np.nan, np.inf]), "kg * m ** 2")
-        for spec, result in (('{0}',  str(x)),
-                             ('{0.magnitude}', str(x.magnitude)),
-                             ('{0:e}', "[1.000000e-16 1.000000e+00 1.000000e+07 1.000000e+12 nan inf] kilogram * meter ** 2"),
-                             ('{0:E}', "[1.000000E-16 1.000000E+00 1.000000E+07 1.000000E+12 NAN INF] kilogram * meter ** 2"),
-                             ('{0:.2f}', "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kilogram * meter ** 2"),
-                             ('{0:.2f~P}', "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg·m²"),
-                             ('{0:g~P}', "[1e-16 1 1e+07 1e+12 nan inf] kg·m²"),
-                             ):
-            self.assertEqual(spec.format(x), result)
+        for spec, result in (
+            ('{}',  str(x)),
+            ('{.magnitude}', str(x.magnitude)),
+            ('{:e}', "[1.000000e-16 1.000000e+00 1.000000e+07 1.000000e+12 nan inf] kilogram * meter ** 2"),
+            ('{:E}', "[1.000000E-16 1.000000E+00 1.000000E+07 1.000000E+12 NAN INF] kilogram * meter ** 2"),
+            ('{:.2f}', "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kilogram * meter ** 2"),
+            ('{:.2f~P}', "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg·m²"),
+            ('{:g~P}', "[1e-16 1 1e+07 1e+12 nan inf] kg·m²"),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(x), result)
 
     def test_format_compact(self):
         q1 = (200e-9 * self.ureg.s).to_compact()
@@ -161,22 +171,23 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual('{0:#.1f}'.format(q2), '{0}'.format(q2b))
         self.assertEqual('{0:#.1f}'.format(q3), '{0}'.format(q3b))
 
-
     def test_default_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Quantity(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
-        for spec, result in (('L', r'4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
-                             ('P', '4.12345678 kilogram·meter²/second'),
-                             ('H', '4.12345678 kilogram meter<sup>2</sup>/second'),
-                             ('C', '4.12345678 kilogram*meter**2/second'),
-                             ('~', '4.12345678 kg * m ** 2 / s'),
-                             ('L~', r'4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
-                             ('P~', '4.12345678 kg·m²/s'),
-                             ('H~', '4.12345678 kg m<sup>2</sup>/s'),
-                             ('C~', '4.12345678 kg*m**2/s'),
-                             ):
-            ureg.default_format = spec
-            self.assertEqual('{0}'.format(x), result)
+        for spec, result in (
+            ('L', r'4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
+            ('P', '4.12345678 kilogram·meter²/second'),
+            ('H', '4.12345678 kilogram meter^2/second'),
+            ('C', '4.12345678 kilogram*meter**2/second'),
+            ('~', '4.12345678 kg * m ** 2 / s'),
+            ('L~', r'4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
+            ('P~', '4.12345678 kg·m²/s'),
+            ('H~', '4.12345678 kg m^2/s'),
+            ('C~', '4.12345678 kg*m**2/s'),
+        ):
+            with self.subTest(spec):
+                ureg.default_format = spec
+                self.assertEqual(f'{x}', result)
 
     def test_exponent_formatting(self):
         ureg = UnitRegistry()
@@ -205,14 +216,14 @@ class TestQuantity(QuantityTestCase):
         ureg = UnitRegistry()
         x = 3.5 * ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
         self.assertEqual(x._repr_html_(),
-                         "3.5 kilogram meter<sup>2</sup>/second")
+                         "3.5 kilogram meter^2/second")
         self.assertEqual(x._repr_latex_(),
                          r'$3.5\ \frac{\mathrm{kilogram} \cdot '
                          r'\mathrm{meter}^{2}}{\mathrm{second}}$')
         x._repr_pretty_(Pretty, False)
         self.assertEqual("".join(alltext), "3.5 kilogram·meter²/second")
         ureg.default_format = "~"
-        self.assertEqual(x._repr_html_(), "3.5 kg m<sup>2</sup>/s")
+        self.assertEqual(x._repr_html_(), "3.5 kg m^2/s")
         self.assertEqual(x._repr_latex_(),
                          r'$3.5\ \frac{\mathrm{kg} \cdot '
                          r'\mathrm{m}^{2}}{\mathrm{s}}$')
