@@ -33,37 +33,60 @@ class TestUnit(QuantityTestCase):
 
     def test_unit_formatting(self):
         x = self.U_(UnitsContainer(meter=2, kilogram=1, second=-1))
-        for spec, result in (('{0}', str(x)), ('{0!s}', str(x)),
-                             ('{0!r}', repr(x)),
-                             ('{0:L}', r'\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
-                             ('{0:P}', 'kilogram·meter²/second'),
-                             ('{0:H}', 'kilogram meter<sup>2</sup>/second'),
-                             ('{0:C}', 'kilogram*meter**2/second'),
-                             ('{0:Lx}', r'\si[]{\kilo\gram\meter\squared\per\second}'),
-                             ('{0:~}', 'kg * m ** 2 / s'),
-                             ('{0:L~}', r'\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
-                             ('{0:P~}', 'kg·m²/s'),
-                             ('{0:H~}', 'kg m<sup>2</sup>/s'),
-                             ('{0:C~}', 'kg*m**2/s'),
-                             ):
-            self.assertEqual(spec.format(x), result)
+        for spec, result in (
+            ('{}', str(x)),
+            ('{!s}', str(x)),
+            ('{!r}', repr(x)),
+            ('{:L}', r'\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
+            ('{:P}', 'kilogram·meter²/second'),
+            ('{:H}', 'kilogram meter^2/second'),
+            ('{:C}', 'kilogram*meter**2/second'),
+            ('{:Lx}', r'\si[]{\kilo\gram\meter\squared\per\second}'),
+            ('{:~}', 'kg * m ** 2 / s'),
+            ('{:L~}', r'\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
+            ('{:P~}', 'kg·m²/s'),
+            ('{:H~}', 'kg m^2/s'),
+            ('{:C~}', 'kg*m**2/s'),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(x), result)
 
     def test_unit_default_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        for spec, result in (('L', r'\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
-                             ('P', 'kilogram·meter²/second'),
-                             ('H', 'kilogram meter<sup>2</sup>/second'),
-                             ('C', 'kilogram*meter**2/second'),
-                             ('~', 'kg * m ** 2 / s'),
-                             ('L~', r'\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
-                             ('P~', 'kg·m²/s'),
-                             ('H~', 'kg m<sup>2</sup>/s'),
-                             ('C~', 'kg*m**2/s'),
-                             ):
-            ureg.default_format = spec
-            self.assertEqual('{0}'.format(x), result,
-                             'Failed for {0}, {1}'.format(spec, result))
+        for spec, result in (
+            ('L', r'\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
+            ('P', 'kilogram·meter²/second'),
+            ('H', 'kilogram meter^2/second'),
+            ('C', 'kilogram*meter**2/second'),
+            ('~', 'kg * m ** 2 / s'),
+            ('L~', r'\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
+            ('P~', 'kg·m²/s'),
+            ('H~', 'kg m^2/s'),
+            ('C~', 'kg*m**2/s'),
+        ):
+            with self.subTest(spec):
+                ureg.default_format = spec
+                self.assertEqual(f'{x}', result, f'Failed for {spec}, {result}')
+
+    def test_unit_formatting_snake_case(self):
+        # Test that snake_case units are escaped where appropriate
+        ureg = UnitRegistry()
+        x = ureg.Unit(UnitsContainer(oil_barrel=1))
+        for spec, result in (
+            ('L', r'\mathrm{oil\_barrel}'),
+            ('P', 'oil_barrel'),
+            ('H', 'oil\_barrel'),
+            ('C', 'oil_barrel'),
+            ('~', 'oil_bbl'),
+            ('L~', r'\mathrm{oil\_bbl}'),
+            ('P~', 'oil_bbl'),
+            ('H~', 'oil\_bbl'),
+            ('C~', 'oil_bbl'),
+        ):
+            with self.subTest(spec):
+                ureg.default_format = spec
+                self.assertEqual(f'{x}', result, f'Failed for {spec}, {result}')
 
     def test_ipython(self):
         alltext = []
@@ -75,13 +98,13 @@ class TestUnit(QuantityTestCase):
 
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        self.assertEqual(x._repr_html_(), "kilogram meter<sup>2</sup>/second")
+        self.assertEqual(x._repr_html_(), "kilogram meter^2/second")
         self.assertEqual(x._repr_latex_(), r'$\frac{\mathrm{kilogram} \cdot '
                                            r'\mathrm{meter}^{2}}{\mathrm{second}}$')
         x._repr_pretty_(Pretty, False)
         self.assertEqual("".join(alltext), "kilogram·meter²/second")
         ureg.default_format = "~"
-        self.assertEqual(x._repr_html_(), "kg m<sup>2</sup>/s")
+        self.assertEqual(x._repr_html_(), "kg m^2/s")
         self.assertEqual(x._repr_latex_(),
                          r'$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$')
         alltext = []

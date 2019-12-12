@@ -75,7 +75,7 @@ _FORMATS = {
         'single_denominator': True,
         'product_fmt': r' ',
         'division_fmt': r'{}/{}',
-        'power_fmt': '{}<sup>{}</sup>',
+        'power_fmt': '{}^{}',
         'parentheses_fmt': r'({})',
         },
 
@@ -215,13 +215,19 @@ def format_unit(unit, spec, **kwspec):
     fmt.update(kwspec)
 
     if spec == 'L':
-        rm = [(r'\mathrm{{{}}}'.format(u), p) for u, p in unit.items()]
-        result = formatter(rm, **fmt)
+        # Latex
+        rm = [
+            (r'\mathrm{{{}}}'.format(u.replace("_", r"\_")), p)
+            for u, p in unit.items()
+        ]
+        return formatter(rm, **fmt).replace('[', '{').replace(']', '}')
+    elif spec == "H":
+        # HTML (Jupyter Notebook)
+        rm = [(u.replace("_", r"\_"), p) for u, p in unit.items()]
+        return formatter(rm, **fmt)
     else:
-        result = formatter(unit.items(), **fmt)
-    if spec == 'L':
-        result = result.replace('[', '{').replace(']', '}')
-    return result
+        # Plain text
+        return formatter(unit.items(), **fmt)
 
 
 def siunitx_format_unit(units):
