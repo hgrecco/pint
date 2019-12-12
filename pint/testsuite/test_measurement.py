@@ -42,61 +42,83 @@ class TestMeasurement(QuantityTestCase):
     def test_format(self):
         v, u = self.Q_(4.0, 's ** 2'), self.Q_(.1, 's ** 2')
         m = self.ureg.Measurement(v, u)
-        self.assertEqual(str(m), '(4.00 +/- 0.10) second ** 2')
-        self.assertEqual(repr(m), '<Measurement(4.00, 0.10, second ** 2)>')
-        #self.assertEqual('{:!s}'.format(m), '(4.00 +/- 0.10) second ** 2')
-        #self.assertEqual('{:!r}'.format(m), '<Measurement(4.0-, 0.10, second ** 2)>')
-        self.assertEqual('{0:P}'.format(m), '(4.00 ± 0.10) second²')
-        self.assertEqual('{0:L}'.format(m), r'\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}')
-        self.assertEqual('{0:H}'.format(m), '(4.00 &plusmn; 0.10) second^2')
-        self.assertEqual('{0:C}'.format(m), '(4.00+/-0.10) second**2')
-        self.assertEqual('{0:Lx}'.format(m), r'\SI[separate-uncertainty=true]{4.00(10)}{\second\squared}')
-        self.assertEqual('{0:.1f}'.format(m), '(4.0 +/- 0.1) second ** 2')
-        self.assertEqual('{0:.1fP}'.format(m), '(4.0 ± 0.1) second²')
-        self.assertEqual('{0:.1fL}'.format(m), r'\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}')
-        self.assertEqual('{0:.1fH}'.format(m), '(4.0 &plusmn; 0.1) second^2')
-        self.assertEqual('{0:.1fC}'.format(m), '(4.0+/-0.1) second**2')
-        self.assertEqual('{0:.1fLx}'.format(m), r'\SI[separate-uncertainty=true]{4.0(1)}{\second\squared}')
+
+        for spec, result in (
+            ("{}", '(4.00 +/- 0.10) second ** 2'),
+            ("{!r}", '<Measurement(4.00, 0.10, second ** 2)>'),
+            ('{:P}', '(4.00 ± 0.10) second²'),
+            ('{:L}', r'\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}'),
+            ('{:H}', '(4.00 &plusmn; 0.10) second^2'),
+            ('{:C}', '(4.00+/-0.10) second**2'),
+            ('{:Lx}', r'\SI[separate-uncertainty=true]{4.00(10)}{\second\squared}'),
+            ('{:.1f}', '(4.0 +/- 0.1) second ** 2'),
+            ('{:.1fP}', '(4.0 ± 0.1) second²'),
+            ('{:.1fL}', r'\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}'),
+            ('{:.1fH}', '(4.0 &plusmn; 0.1) second^2'),
+            ('{:.1fC}', '(4.0+/-0.1) second**2'),
+            ('{:.1fLx}', r'\SI[separate-uncertainty=true]{4.0(1)}{\second\squared}'),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(m), result)
 
     def test_format_paru(self):
         v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
         m = self.ureg.Measurement(v, u)
-        self.assertEqual('{0:uS}'.format(m), '0.200(10) second ** 2')
-        self.assertEqual('{0:.3uS}'.format(m), '0.2000(100) second ** 2')
-        self.assertEqual('{0:.3uSP}'.format(m), '0.2000(100) second²')
-        self.assertEqual('{0:.3uSL}'.format(m), r'0.2000\left(100\right)\ \mathrm{second}^{2}')
-        self.assertEqual('{0:.3uSH}'.format(m), '0.2000(100) second^2')
-        self.assertEqual('{0:.3uSC}'.format(m), '0.2000(100) second**2')
+
+        for spec, result in (
+            ('{:uS}', '0.200(10) second ** 2'),
+            ('{:.3uS}', '0.2000(100) second ** 2'),
+            ('{:.3uSP}', '0.2000(100) second²'),
+            ('{:.3uSL}', r'0.2000\left(100\right)\ \mathrm{second}^{2}'),
+            ('{:.3uSH}', '0.2000(100) second^2'),
+            ('{:.3uSC}', '0.2000(100) second**2'),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(m), result)
 
     def test_format_u(self):
         v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
         m = self.ureg.Measurement(v, u)
-        self.assertEqual('{0:.3u}'.format(m), '(0.2000 +/- 0.0100) second ** 2')
-        self.assertEqual('{0:.3uP}'.format(m), '(0.2000 ± 0.0100) second²')
-        self.assertEqual('{0:.3uL}'.format(m), r'\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}')
-        self.assertEqual('{0:.3uH}'.format(m), '(0.2000 &plusmn; 0.0100) second^2')
-        self.assertEqual('{0:.3uC}'.format(m), '(0.2000+/-0.0100) second**2')
-        self.assertEqual('{0:.3uLx}'.format(m), r'\SI[separate-uncertainty=true]{0.2000(100)}{\second\squared}')
-        self.assertEqual('{0:.1uLx}'.format(m), r'\SI[separate-uncertainty=true]{0.20(1)}{\second\squared}')
+
+        for spec, result in (
+            ('{:.3u}', '(0.2000 +/- 0.0100) second ** 2'),
+            ('{:.3uP}', '(0.2000 ± 0.0100) second²'),
+            ('{:.3uL}', r'\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}'),
+            ('{:.3uH}', '(0.2000 &plusmn; 0.0100) second^2'),
+            ('{:.3uC}', '(0.2000+/-0.0100) second**2'),
+            ('{:.3uLx}', r'\SI[separate-uncertainty=true]{0.2000(100)}{\second\squared}'),
+            ('{:.1uLx}', r'\SI[separate-uncertainty=true]{0.20(1)}{\second\squared}'),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(m), result)
 
     def test_format_percu(self):
         self.test_format_perce()
         v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
         m = self.ureg.Measurement(v, u)
-        self.assertEqual('{0:.1u%}'.format(m), '(20 +/- 1)% second ** 2')
-        self.assertEqual('{0:.1u%P}'.format(m), '(20 ± 1)% second²')
-        self.assertEqual('{0:.1u%L}'.format(m), r'\left(20 \pm 1\right) \%\ \mathrm{second}^{2}')
-        self.assertEqual('{0:.1u%H}'.format(m), '(20 &plusmn; 1)% second^2')
-        self.assertEqual('{0:.1u%C}'.format(m), '(20+/-1)% second**2')
+
+        for spec, result in (
+            ('{:.1u%}', '(20 +/- 1)% second ** 2'),
+            ('{:.1u%P}', '(20 ± 1)% second²'),
+            ('{:.1u%L}', r'\left(20 \pm 1\right) \%\ \mathrm{second}^{2}'),
+            ('{:.1u%H}', '(20 &plusmn; 1)% second^2'),
+            ('{:.1u%C}', '(20+/-1)% second**2'),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(m), result)
 
     def test_format_perce(self):
         v, u = self.Q_(0.20, 's ** 2'), self.Q_(0.01, 's ** 2')
         m = self.ureg.Measurement(v, u)
-        self.assertEqual('{0:.1ue}'.format(m), '(2.0 +/- 0.1)e-01 second ** 2')
-        self.assertEqual('{0:.1ueP}'.format(m), '(2.0 ± 0.1)×10⁻¹ second²')
-        self.assertEqual('{0:.1ueL}'.format(m), r'\left(2.0 \pm 0.1\right) \times 10^{-1}\ \mathrm{second}^{2}')
-        self.assertEqual('{0:.1ueH}'.format(m), '(2.0 &plusmn; 0.1)e-01 second^2')
-        self.assertEqual('{0:.1ueC}'.format(m), '(2.0+/-0.1)e-01 second**2')
+        for spec, result in (
+            ('{:.1ue}', '(2.0 +/- 0.1)e-01 second ** 2'),
+            ('{:.1ueP}', '(2.0 ± 0.1)×10⁻¹ second²'),
+            ('{:.1ueL}', r'\left(2.0 \pm 0.1\right) \times 10^{-1}\ \mathrm{second}^{2}'),
+            ('{:.1ueH}', '(2.0 &plusmn; 0.1)e-01 second^2'),
+            ('{:.1ueC}', '(2.0+/-0.1)e-01 second**2'),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(m), result)
 
     def test_raise_build(self):
         v, u = self.Q_(1.0, 's'), self.Q_(.1, 's')
