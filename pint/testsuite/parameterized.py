@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Adds Parameterized tests for Python's unittest module
 #
 # Code from: parameterizedtestcase, version: 0.1.0

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from pint import DimensionalityError
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers

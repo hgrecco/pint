@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import doctest
 import logging
 import math

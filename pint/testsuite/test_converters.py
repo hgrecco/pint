@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import itertools
 
 from pint.compat import np

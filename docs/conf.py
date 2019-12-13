@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # pint documentation build configuration file, created by
 # sphinx-quickstart on Thu Mar  1 13:33:14 2012.

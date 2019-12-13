@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from pint.converters import OffsetConverter, ScaleConverter
 from pint.definitions import (
     AliasDefinition,

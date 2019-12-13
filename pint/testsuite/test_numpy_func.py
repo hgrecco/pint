@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from unittest.mock import patch
 
 import pint.numpy_func
