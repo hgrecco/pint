@@ -154,7 +154,6 @@ def run():
     return test_runner.run(testsuite())
 
 
-
 _GLOBS = {
     "wrapping.rst": {
         "pendulum_period": lambda length: 2 * math.pi * math.sqrt(length / 9.806650),
