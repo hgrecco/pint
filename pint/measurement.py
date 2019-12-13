@@ -75,7 +75,7 @@ class Measurement(Quantity):
         )
 
     def __str__(self):
-        return "{0}".format(self)
+        return "{}".format(self)
 
     def __format__(self, spec):
         # special cases

@@ -142,7 +142,7 @@ class TestQuantity(QuantityTestCase):
 
         # Check the special case that prevents e.g. '3 1 / second'
         x = self.Q_(3, UnitsContainer(second=-1))
-        self.assertEqual("{0}".format(x), "3 / second")
+        self.assertEqual(f"{x}", "3 / second")
 
     @helpers.requires_numpy()
     def test_quantity_array_format(self):
@@ -187,9 +187,9 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(q3.magnitude, q3b.magnitude)
         self.assertEqual(q3.units, q3b.units)
 
-        self.assertEqual("{0:#.1f}".format(q1), "{0}".format(q1b))
-        self.assertEqual("{0:#.1f}".format(q2), "{0}".format(q2b))
-        self.assertEqual("{0:#.1f}".format(q3), "{0}".format(q3b))
+        self.assertEqual(f"{q1:#.1f}", f"{q1b}")
+        self.assertEqual(f"{q2:#.1f}", f"{q2b}")
+        self.assertEqual(f"{q3:#.1f}", f"{q3b}")
 
     def test_default_formatting(self):
         ureg = UnitRegistry()

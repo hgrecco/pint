@@ -42,7 +42,7 @@ def _pretty_fmt_exponent(num):
     """Format an number into a pretty printed exponent.
     """
     # TODO: Will not work for decimals
-    ret = "{0:n}".format(num).replace("-", "⁻")
+    ret = f"{num:n}".replace("-", "⁻")
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
@@ -103,7 +103,7 @@ def formatter(
     division_fmt=" / ",
     power_fmt="{} ** {}",
     parentheses_fmt="({0})",
-    exp_call=lambda x: "{0:n}".format(x),
+    exp_call=lambda x: f"{x:n}",
     locale=None,
     babel_length="long",
     babel_plural_form="one",

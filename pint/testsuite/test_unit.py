@@ -232,10 +232,10 @@ class TestRegistry(QuantityTestCase):
     def test_default_format(self):
         ureg = UnitRegistry()
         q = ureg.meter
-        s1 = "{0}".format(q)
-        s2 = "{0:~}".format(q)
+        s1 = f"{q}"
+        s2 = f"{q:~}"
         ureg.default_format = "~"
-        s3 = "{0}".format(q)
+        s3 = f"{q}"
         self.assertEqual(s2, s3)
         self.assertNotEqual(s1, s3)
         self.assertEqual(ureg.default_format, "~")

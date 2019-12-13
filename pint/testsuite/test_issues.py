@@ -262,12 +262,7 @@ class TestIssues(QuantityTestCase):
         m = 1.0 * ureg.amu
         va = 2.0 * ureg.k * T / m
 
-        try:
-            va.to_base_units()
-        except:
-            self.assertTrue(
-                False, "Error while trying to get base units for {}".format(va)
-            )
+        va.to_base_units()
 
         boltmk = 1.380649e-23 * ureg.J / ureg.K
         vb = 2.0 * boltmk * T / m
@@ -388,11 +383,11 @@ class TestIssues(QuantityTestCase):
 
         for func in (ureg.get_name, ureg.parse_expression):
             val = func("meter")
-            self.assertRaises(AttributeError, func, "METER")
+            with self.assertRaises(AttributeError):
+                func("METER")
             self.assertEqual(val, func("METER", False))
 
     def test_issue121(self):
-        sh = (2, 1)
         ureg = UnitRegistry()
         z, v = 0, 2.0
         self.assertEqual(z + v * ureg.meter, v * ureg.meter)
@@ -423,16 +418,10 @@ class TestIssues(QuantityTestCase):
 
         z, v = np.zeros((3, 1)), 2.0 * np.ones(sh)
         for x, y in ((z, v), (z, v * ureg.meter), (v * ureg.meter, z)):
-            try:
-                w = x + y
-                self.assertTrue(False, "ValueError not raised")
-            except ValueError:
-                pass
-            try:
-                w = x - y
-                self.assertTrue(False, "ValueError not raised")
-            except ValueError:
-                pass
+            with self.assertRaises(ValueError):
+                x + y
+            with self.assertRaises(ValueError):
+                x - y
 
     @helpers.requires_numpy()
     def test_issue127(self):
@@ -509,12 +498,11 @@ class TestIssues(QuantityTestCase):
         self.assertEqual(q1, q2)
 
     def test_issue354_356_370(self):
-        q = 1 * self.ureg.second / self.ureg.millisecond
         self.assertEqual(
-            "{0:~}".format(1 * self.ureg.second / self.ureg.millisecond), "1.0 s / ms"
+            "{:~}".format(1 * self.ureg.second / self.ureg.millisecond), "1.0 s / ms"
         )
-        self.assertEqual("{0:~}".format(1 * self.ureg.count), "1 count")
-        self.assertEqual("{0:~}".format(1 * self.ureg("MiB")), "1 MiB")
+        self.assertEqual("{:~}".format(1 * self.ureg.count), "1 count")
+        self.assertEqual("{:~}".format(1 * self.ureg("MiB")), "1 MiB")
 
     def test_issue468(self):
         ureg = UnitRegistry()

@@ -206,7 +206,7 @@ class TestParseHelper(BaseTestCase):
 
 class TestStringProcessor(BaseTestCase):
     def _test(self, bef, aft):
-        for pattern in ("{0}", "+{0}+"):
+        for pattern in ("{}", "+{}+"):
             b = pattern.format(bef)
             a = pattern.format(aft)
             self.assertEqual(string_preprocessor(b), a)
@@ -308,7 +308,7 @@ class TestMatrix(BaseTestCase):
                 [[1, 2], [3, 4]],
                 row_headers=None,
                 col_headers=None,
-                fmtfun=lambda x: "{0:.2f}".format(x),
+                fmtfun=lambda x: f"{x:.2f}",
             ),
             "1.00\t2.00\n" "3.00\t4.00",
         )
