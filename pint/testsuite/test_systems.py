@@ -62,27 +62,25 @@ class TestGroup(QuantityTestCase):
         self.assertEqual(grp.members, frozenset(["meter", "second"]))
 
     def test_using1(self):
-        lines = ["@group mygroup using group1", "meter", "second"]
-
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
-        g = ureg.Group("group1")
-        grp = ureg.Group.from_lines(lines, lambda x: None)
+        ureg._groups
+        ureg.Group("group1")
+        grp = ureg.Group.from_lines(
+            ["@group mygroup using group1", "meter", "second"], lambda x: None
+        )
         self.assertEqual(grp.name, "mygroup")
         self.assertEqual(grp._unit_names, {"meter", "second"})
         self.assertEqual(grp._used_groups, {"group1"})
         self.assertEqual(grp.members, frozenset(["meter", "second"]))
 
     def test_using2(self):
-        lines = ["@group mygroup using group1,group2", "meter", "second"]
-
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
+        ureg._groups
         ureg.Group("group1")
         ureg.Group("group2")
-        grp = ureg.Group.from_lines(lines, lambda x: None)
+        grp = ureg.Group.from_lines(
+            ["@group mygroup using group1,group2", "meter", "second"], lambda x: None
+        )
         self.assertEqual(grp.name, "mygroup")
         self.assertEqual(grp._unit_names, {"meter", "second"})
         self.assertEqual(grp._used_groups, {"group1", "group2"})
