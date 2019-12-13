@@ -13,7 +13,7 @@ import re
 import weakref
 from collections import ChainMap, defaultdict
 
-from .util import ParserHelper, UnitsContainer, to_units_container, SourceIterator
+from .util import ParserHelper, to_units_container, SourceIterator
 from .errors import DefinitionSyntaxError
 
 #: Regex to match the header parts of a context.
@@ -37,6 +37,7 @@ class Context:
     dimension to another. Each Dimension are specified using a UnitsContainer.
     Simple transformation are given with a function taking a single parameter.
 
+        >>> from pint.util import UnitsContainer
         >>> timedim = UnitsContainer({'[time]': 1})
         >>> spacedim = UnitsContainer({'[length]': 1})
         >>> def f(time):
@@ -106,10 +107,10 @@ class Context:
             else:
                 aliases = ()
             defaults = r.groupdict()["defaults"]
-        except:
+        except Exception as exc:
             raise DefinitionSyntaxError(
                 "Could not parse the Context header '%s'" % header, lineno=lineno
-            )
+            ) from exc
 
         if defaults:
 
@@ -123,11 +124,11 @@ class Context:
             try:
                 defaults = (part.split("=") for part in defaults.strip("()").split(","))
                 defaults = {str(k).strip(): to_num(v) for k, v in defaults}
-            except (ValueError, TypeError):
+            except (ValueError, TypeError) as exc:
                 raise DefinitionSyntaxError(
                     f"Could not parse Context definition defaults: '{txt}'",
                     lineno=lineno,
-                )
+                ) from exc
 
             ctx = cls(name, aliases, defaults)
         else:
@@ -156,11 +157,11 @@ class Context:
                     ctx.add_transformation(src, dst, func)
                 else:
                     raise Exception
-            except:
+            except Exception as exc:
                 raise DefinitionSyntaxError(
                     "Could not parse Context %s relation '%s'" % (name, line),
                     lineno=lineno,
-                )
+                ) from exc
 
         if defaults:
             missing_pars = defaults.keys() - set(names)

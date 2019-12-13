@@ -31,14 +31,12 @@ from .errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
     PintTypeError,
-    UndefinedUnitError,
     UnitStrippedWarning,
 )
 from .definitions import UnitDefinition
 from .compat import (
     Loc,
     NUMPY_VER,
-    SKIP_ARRAY_FUNCTION_CHANGE_WARNING,
     BehaviorChangeWarning,
     ndarray,
     np,
@@ -47,6 +45,7 @@ from .compat import (
     eq,
     array_function_change_msg,
 )
+from .compat import SKIP_ARRAY_FUNCTION_CHANGE_WARNING  # noqa: F401
 from .util import (
     PrettyIPython,
     logger,
@@ -54,14 +53,11 @@ from .util import (
     SharedRegistryObject,
     to_units_container,
     infer_base_unit,
-    iterable,
-    sized,
 )
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
     get_op_output_unit,
-    matching_input_bare_output_ufuncs,
     matching_input_copy_units_output_ufuncs,
     matching_input_set_units_output_ufuncs,
     numpy_wrap,
@@ -404,7 +400,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @classmethod
     def from_list(cls, quant_list, units=None):
-        """Transforms a list of Quantities into an numpy.array quantity. 
+        """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
 
@@ -420,7 +416,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @classmethod
     def from_sequence(cls, seq, units=None):
-        """Transforms a sequence of Quantities into an numpy.array quantity. 
+        """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
 
         If units is not specified and sequence is empty, the unit cannot be determined
@@ -616,7 +612,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 log10_scale = int(math.log10(scale))
                 if log10_scale == math.log10(scale):
                     SI_prefixes[log10_scale] = prefix.name
-            except:
+            except Exception:
                 SI_prefixes[0] = ""
 
         SI_prefixes = sorted(SI_prefixes.items())

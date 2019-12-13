@@ -60,7 +60,7 @@ author = "Hernan E. Grecco"
 
 try:  # pragma: no cover
     version = pkg_resources.get_distribution(project).version
-except:  # pragma: no cover
+except Exception:  # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown
     version = "unknown"
@@ -200,11 +200,11 @@ htmlhelp_basename = "pintdoc"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+    # 'papersize': 'letterpaper',
     # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+    # 'pointsize': '10pt',
     # Additional stuff for the LaTeX preamble.
-    "preamble": "".join(("\DeclareUnicodeCharacter{2212}{-}",))  # MINUS
+    "preamble": "".join((r"\DeclareUnicodeCharacter{2212}{-}",))  # MINUS
 }
 
 # Grouping the document tree into LaTeX files. List of tuples

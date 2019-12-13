@@ -95,10 +95,11 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
     Params:
     Index, depth, and prev_op used recursively, so don't touch.
     Tokens is an iterable of tokens from an expression to be evaluated.
-    
-    Transform the tokens from an expression into a recursive parse tree, following order of operations.
-    Operations can include binary ops (3 + 4), implicit ops (3 kg), or unary ops (-1).
-    
+
+    Transform the tokens from an expression into a recursive parse tree, following order
+    of operations. Operations can include binary ops (3 + 4), implicit ops (3 kg), or
+    unary ops (-1).
+
     General Strategy:
     1) Get left side of operator
     2) If no tokens left, return final result
@@ -109,7 +110,7 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
     6) Go back to step #2
     """
 
-    if depth == 0 and prev_op == None:
+    if depth == 0 and prev_op is None:
         # ensure tokens is list so we can access by index
         tokens = list(tokens)
 
@@ -147,9 +148,10 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
                     result = right
             elif token_text in op_priority:
                 if result:
-                    # equal-priority operators are grouped in a left-to-right order, unless they're
-                    # exponentiation, in which case they're grouped right-to-left
-                    # this allows us to get the expected behavior for multiple exponents
+                    # equal-priority operators are grouped in a left-to-right order,
+                    # unless they're exponentiation, in which case they're grouped
+                    # right-to-left this allows us to get the expected behavior for
+                    # multiple exponents
                     #     (2^3^4)  --> (2^(3^4))
                     #     (2 * 3 / 4) --> ((2 * 3) / 4)
                     if op_priority[token_text] <= op_priority.get(
@@ -174,7 +176,8 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
             if result:
                 # tokens with an implicit operation i.e. "1 kg"
                 if op_priority[""] <= op_priority.get(prev_op, -1):
-                    # previous operator is higher priority than implicit, so end previous binary op
+                    # previous operator is higher priority than implicit, so end
+                    # previous binary op
                     return result, index - 1
                 right, index = build_eval_tree(
                     tokens, op_priority, index, depth + 1, ""

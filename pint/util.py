@@ -82,8 +82,10 @@ def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
         new_M.append(r)
     M = new_M
 
-    #    M = [[ntype(x) for x in row] for row in M]
-    I = [[ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)]
+    # M = [[ntype(x) for x in row] for row in M]
+    I = [  # noqa: E741
+        [ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)
+    ]
     swapped = []
 
     for r in range(rows):
@@ -215,7 +217,7 @@ def find_shortest_path(graph, start, end, path=None):
     path = (path or []) + [start]
     if start == end:
         return path
-    if not start in graph:
+    if start not in graph:
         return None
     shortest = None
     for node in graph[start]:
@@ -228,7 +230,7 @@ def find_shortest_path(graph, start, end, path=None):
 
 
 def find_connected_nodes(graph, start, visited=None):
-    if not start in graph:
+    if start not in graph:
         return None
 
     visited = visited or set()

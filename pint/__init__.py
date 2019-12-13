@@ -34,16 +34,19 @@ from .util import pi_theorem, logger
 import sys
 
 try:
-    from pintpandas import PintType, PintArray
+    from pintpandas import PintArray, PintType
+
+    del PintType
+    del PintArray
 
     _HAS_PINTPANDAS = True
-except Exception:
+except ImportError:
     _HAS_PINTPANDAS = False
     _, _pintpandas_error, _ = sys.exc_info()
 
 try:  # pragma: no cover
     __version__ = pkg_resources.get_distribution("pint").version
-except:  # pragma: no cover
+except Exception:  # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown
     __version__ = "unknown"
@@ -124,7 +127,9 @@ __all__ = (
     "RedefinitionError",
     "UndefinedUnitError",
     "UnitStrippedWarning",
+    "formatter",
     "get_application_registry",
     "set_application_registry",
+    "pi_theorem",
     "__version__",
 )

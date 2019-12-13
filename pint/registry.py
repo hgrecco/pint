@@ -1048,9 +1048,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
         # If the unit is not in the registry might be because it is not
         # registered with its prefixed version.
         # TODO: Might be better to register them.
-        l = self._dedup_candidates(self.parse_unit_name(u))
+        candidates = self._dedup_candidates(self.parse_unit_name(u))
         try:
-            u = l[0][1]
+            u = candidates[0][1]
             return self._units[u].is_multiplicative
         except KeyError:
             raise UndefinedUnitError(u)
