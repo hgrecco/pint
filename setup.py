@@ -1,20 +1,16 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-import codecs
 import subprocess
 
 from setuptools import setup
 
 
 def read(filename):
-    return codecs.open(filename, encoding='utf-8').read()
+    with open(filename) as fh:
+        return fh.read()
 
 
-long_description = '\n\n'.join([read('README'),
-                                read('AUTHORS'),
-                                read('CHANGES')])
-
+long_description = '\n\n'.join([read('README'), read('AUTHORS'), read('CHANGES')])
 __doc__ = long_description
 
 
