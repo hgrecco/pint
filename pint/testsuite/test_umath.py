@@ -442,7 +442,6 @@ class TestTrigUfuncs(TestUFuncs):
         )
 
     def test_arccos(self):
-        x = np.arange(0, 0.9, 0.1) * self.ureg.m
         self._test1(
             np.arccos,
             (

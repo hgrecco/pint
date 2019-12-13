@@ -42,10 +42,10 @@ class BaseTestCase(unittest.TestCase):
         th.setLevel(level)
         logger.addHandler(th)
         if self._test_handler is not None:
-            l = len(self._test_handler.buffer)
+            buflen = len(self._test_handler.buffer)
         yield th.buffer
         if self._test_handler is not None:
-            self._test_handler.buffer = self._test_handler.buffer[:l]
+            self._test_handler.buffer = self._test_handler.buffer[:buflen]
 
     def setUp(self):
         self._test_handler = None
@@ -57,9 +57,8 @@ class BaseTestCase(unittest.TestCase):
     def tearDown(self):
         if self._test_handler is not None:
             buf = self._test_handler.buffer
-            l = len(buf)
             msg = "\n".join(record.get("msg", str(record)) for record in buf)
-            self.assertEqual(l, 0, msg="%d warnings raised.\n%s" % (l, msg))
+            self.assertEqual(len(buf), 0, msg=f"{len(buf)} warnings raised.\n{msg}")
 
 
 class QuantityTestCase(BaseTestCase):
@@ -128,7 +127,8 @@ def testsuite():
     # TESTING THE DOCUMENTATION requires pyyaml, serialize, numpy and uncertainties
     if HAS_NUMPY and HAS_UNCERTAINTIES:
         try:
-            import yaml, serialize
+            import serialize  # noqa: F401
+            import yaml  # noqa: F401
 
             add_docs(suite)
         except ImportError:
