@@ -6,7 +6,6 @@ import pint.numpy_func
 from pint import DimensionalityError, OffsetUnitCalculusError
 from pint.compat import np
 from pint.numpy_func import (
-    _get_first_input_units,
     _is_quantity,
     _is_quantity_sequence,
     convert_to_consistent_units,

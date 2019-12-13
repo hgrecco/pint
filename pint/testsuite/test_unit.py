@@ -84,12 +84,12 @@ class TestUnit(QuantityTestCase):
         for spec, result in (
             ("L", r"\mathrm{oil\_barrel}"),
             ("P", "oil_barrel"),
-            ("H", "oil\_barrel"),
+            ("H", r"oil\_barrel"),
             ("C", "oil_barrel"),
             ("~", "oil_bbl"),
             ("L~", r"\mathrm{oil\_bbl}"),
             ("P~", "oil_bbl"),
-            ("H~", "oil\_bbl"),
+            ("H~", r"oil\_bbl"),
             ("C~", "oil_bbl"),
         ):
             with self.subTest(spec):
@@ -212,7 +212,7 @@ class TestRegistry(QuantityTestCase):
         ureg.define("meter = [length]")
         self.assertRaises(DefinitionSyntaxError, ureg.define, "meter = [length]")
         self.assertRaises(TypeError, ureg.define, list())
-        x = ureg.define("degC = kelvin; offset: 273.15")
+        ureg.define("degC = kelvin; offset: 273.15")
 
     def test_define(self):
         ureg = UnitRegistry(None)
@@ -272,7 +272,6 @@ class TestRegistry(QuantityTestCase):
             self.ureg.parse_expression("kilometer"),
             self.Q_(1, UnitsContainer(kilometer=1.0)),
         )
-        # self.assertEqual(self.ureg._units['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
 
     def test_parse_complex(self):
         self.assertEqual(
@@ -427,11 +426,8 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(self.ureg.get_symbol("international_inch"), "in")
 
     def test_pint(self):
-        p = self.ureg.pint
-        l = self.ureg.liter
-        ip = self.ureg.imperial_pint
-        self.assertLess(p, l)
-        self.assertLess(p, ip)
+        self.assertLess(self.ureg.pint, self.ureg.liter)
+        self.assertLess(self.ureg.pint, self.ureg.imperial_pint)
 
     def test_wraps(self):
         def func(x):
@@ -742,7 +738,7 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         x.test = "test"
         self.assertIsInstance(x, UnitRegistry)
         y = LazyRegistry()
-        q = y("meter")
+        y("meter")
         self.assertIsInstance(y, UnitRegistry)
 
     def test_redefinition(self):

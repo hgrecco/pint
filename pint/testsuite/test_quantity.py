@@ -271,22 +271,24 @@ class TestQuantity(QuantityTestCase):
         )
 
     def test_convert(self):
-        x = self.Q_("2*inch")
-        self.assertQuantityAlmostEqual(x.to("meter"), self.Q_(2.0 * 0.0254, "meter"))
-        x = self.Q_("2*meter")
-        self.assertQuantityAlmostEqual(x.to("inch"), self.Q_(2.0 / 0.0254, "inch"))
-        x = self.Q_("2*sidereal_second")
-        self.assertQuantityAlmostEqual(x.to("second"), self.Q_(1.994539133, "second"))
-        x = self.Q_("2.54*centimeter/second")
-        self.assertQuantityAlmostEqual(x.to("inch/second"), self.Q_(1, "inch/second"))
-        x = self.Q_("2.54*centimeter")
-        self.assertQuantityAlmostEqual(x.to("inch").magnitude, 1)
         self.assertQuantityAlmostEqual(
-            self.Q_(2, "second").to("millisecond").magnitude, 2000
+            self.Q_("2 inch").to("meter"), self.Q_(2.0 * 0.0254, "meter")
         )
+        self.assertQuantityAlmostEqual(
+            self.Q_("2 meter").to("inch"), self.Q_(2.0 / 0.0254, "inch")
+        )
+        self.assertQuantityAlmostEqual(
+            self.Q_("2 sidereal_year").to("second"), self.Q_(63116297.5325, "second")
+        )
+        self.assertQuantityAlmostEqual(
+            self.Q_("2.54 centimeter/second").to("inch/second"),
+            self.Q_("1 inch/second"),
+        )
+        self.assertAlmostEqual(self.Q_("2.54 centimeter").to("inch").magnitude, 1)
+        self.assertAlmostEqual(self.Q_("2 second").to("millisecond").magnitude, 2000)
 
     @helpers.requires_numpy()
-    def test_convert(self):
+    def test_convert_numpy(self):
 
         # Conversions with single units take a different codepath than
         # Conversions with more than one unit.
@@ -606,7 +608,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         if isinstance(expected_result, str):
             expected_result = self.Q_(expected_result)
 
-        if not unit is None:
+        if unit is not None:
             value1 = value1 * unit
             value2 = value2 * unit
             expected_result = expected_result * unit
@@ -630,7 +632,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         if isinstance(expected_result, str):
             expected_result = self.Q_(expected_result)
 
-        if not unit is None:
+        if unit is not None:
             value1 = value1 * unit
             value2 = value2 * unit
             expected_result = expected_result * unit
