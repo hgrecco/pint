@@ -5,7 +5,7 @@ Pint Changelog
 -----------------
 
 - Auto-increase package version at every commit when pint is installed from the git tip,
-  e.g. ``pip install git+https://github.com/hgrecco/pint.git``.
+  e.g. pip install git+https://github.com/hgrecco/pint.git.
   (Issue #930, Thanks Guido Imperiale)
 - Fix HTML (Jupyter Notebook) and LateX representation of some units
   (Issue #927, Thanks Guido Imperiale)
