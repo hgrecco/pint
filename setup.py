@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import codecs
+
 from setuptools import setup
 
 

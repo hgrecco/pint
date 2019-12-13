@@ -3,10 +3,10 @@
 import itertools
 from collections import defaultdict
 
-from pint import UnitRegistry, DefinitionSyntaxError, DimensionalityError
+from pint import DefinitionSyntaxError, DimensionalityError, UnitRegistry
 from pint.context import Context
-from pint.util import UnitsContainer
 from pint.testsuite import QuantityTestCase
+from pint.util import UnitsContainer
 
 
 def add_ctxs(ureg):

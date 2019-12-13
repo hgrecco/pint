@@ -2,16 +2,15 @@
 
 import doctest
 import logging
+import math
 import os
 import unittest
-
 from contextlib import contextmanager
-
-from pint.compat import ndarray, np
-
-from pint import logger, UnitRegistry, Quantity
-from pint.testsuite.helpers import PintOutputChecker
 from logging.handlers import BufferingHandler
+
+from pint import Quantity, UnitRegistry, logger
+from pint.compat import ndarray, np
+from pint.testsuite.helpers import PintOutputChecker
 
 
 class TestHandler(BufferingHandler):
@@ -155,7 +154,6 @@ def run():
     return test_runner.run(testsuite())
 
 
-import math
 
 _GLOBS = {
     "wrapping.rst": {

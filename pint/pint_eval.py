@@ -10,7 +10,6 @@
 """
 
 import operator
-
 import token as tokenlib
 
 from .errors import DefinitionSyntaxError

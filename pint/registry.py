@@ -33,54 +33,52 @@
 """
 
 import copy
-import os
-import re
-import math
 import functools
 import itertools
-import pkg_resources
+import math
+import os
+import re
+from collections import defaultdict
+from contextlib import closing, contextmanager
 from decimal import Decimal
 from fractions import Fraction
-from contextlib import contextmanager, closing
-from io import open, StringIO
-from collections import defaultdict
-from tokenize import NUMBER, NAME
+from io import StringIO, open
+from tokenize import NAME, NUMBER
 
-from . import registry_helpers
+import pkg_resources
+
+from . import registry_helpers, systems
+from .compat import tokenizer
 from .context import Context, ContextChain
+from .converters import ScaleConverter
+from .definitions import (
+    AliasDefinition,
+    Definition,
+    DimensionDefinition,
+    PrefixDefinition,
+    UnitDefinition,
+)
+from .errors import (
+    DefinitionSyntaxError,
+    DimensionalityError,
+    RedefinitionError,
+    UndefinedUnitError,
+)
+from .pint_eval import build_eval_tree
 from .util import (
+    ParserHelper,
+    SourceIterator,
+    UnitsContainer,
+    _is_dim,
+    find_connected_nodes,
+    find_shortest_path,
     getattr_maybe_raise,
     logger,
     pi_theorem,
     solve_dependencies,
-    ParserHelper,
     string_preprocessor,
-    find_connected_nodes,
-    find_shortest_path,
-    UnitsContainer,
-    _is_dim,
     to_units_container,
-    SourceIterator,
 )
-
-from .compat import tokenizer
-from .definitions import (
-    Definition,
-    UnitDefinition,
-    PrefixDefinition,
-    DimensionDefinition,
-    AliasDefinition,
-)
-from .converters import ScaleConverter
-from .errors import (
-    DimensionalityError,
-    UndefinedUnitError,
-    DefinitionSyntaxError,
-    RedefinitionError,
-)
-
-from .pint_eval import build_eval_tree
-from . import systems
 
 _BLOCK_RE = re.compile(r" |\(")
 

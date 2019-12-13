@@ -9,9 +9,9 @@
     :license: BSD, see LICENSE for more details.
 """
 import tokenize
+from decimal import Decimal
 from io import BytesIO
 from numbers import Number
-from decimal import Decimal
 
 
 def tokenizer(input_string):

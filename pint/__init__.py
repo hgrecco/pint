@@ -12,6 +12,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+import sys
+
 import pkg_resources
 
 from .context import Context
@@ -26,12 +28,9 @@ from .errors import (
 from .formatting import formatter
 from .measurement import Measurement
 from .quantity import Quantity
-from .registry import UnitRegistry, LazyRegistry
+from .registry import LazyRegistry, UnitRegistry
 from .unit import Unit
-from .util import pi_theorem, logger
-
-
-import sys
+from .util import logger, pi_theorem
 
 try:
     from pintpandas import PintArray, PintType

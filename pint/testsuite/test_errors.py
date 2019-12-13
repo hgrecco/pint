@@ -5,8 +5,8 @@ import pickle
 from pint import (
     DefinitionSyntaxError,
     DimensionalityError,
-    Quantity,
     OffsetUnitCalculusError,
+    Quantity,
     RedefinitionError,
     UndefinedUnitError,
     UnitRegistry,

@@ -4,19 +4,20 @@ import collections
 import copy
 import operator as op
 from decimal import Decimal
+
 from pint.testsuite import BaseTestCase, QuantityTestCase
 from pint.util import (
-    string_preprocessor,
-    find_shortest_path,
-    matrix_to_string,
-    transpose,
-    tokenizer,
-    find_connected_nodes,
     ParserHelper,
     UnitsContainer,
-    to_units_container,
+    find_connected_nodes,
+    find_shortest_path,
     iterable,
+    matrix_to_string,
     sized,
+    string_preprocessor,
+    to_units_container,
+    tokenizer,
+    transpose,
 )
 
 

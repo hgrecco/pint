@@ -9,8 +9,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from .converters import ScaleConverter, OffsetConverter
-from .util import UnitsContainer, _is_dim, ParserHelper
+from .converters import OffsetConverter, ScaleConverter
+from .util import ParserHelper, UnitsContainer, _is_dim
 
 
 class Definition:

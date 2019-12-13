@@ -5,17 +5,17 @@ import functools
 import math
 import re
 
-from pint.compat import np
-from pint.registry import UnitRegistry, LazyRegistry
 from pint import (
     DefinitionSyntaxError,
     DimensionalityError,
     RedefinitionError,
     UndefinedUnitError,
 )
+from pint.compat import np
+from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
-from pint.util import UnitsContainer, ParserHelper
+from pint.util import ParserHelper, UnitsContainer
 
 
 class TestUnit(QuantityTestCase):

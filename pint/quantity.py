@@ -21,38 +21,30 @@ import warnings
 
 from pkg_resources.extern.packaging import version
 
-from .formatting import (
-    remove_custom_flags,
-    siunitx_format_unit,
-    ndarray_to_latex,
-    ndarray_to_latex_parts,
+from .compat import SKIP_ARRAY_FUNCTION_CHANGE_WARNING  # noqa: F401
+from .compat import (
+    NUMPY_VER,
+    BehaviorChangeWarning,
+    Loc,
+    _to_magnitude,
+    array_function_change_msg,
+    eq,
+    is_upcast_type,
+    ndarray,
+    np,
 )
+from .definitions import UnitDefinition
 from .errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
     PintTypeError,
     UnitStrippedWarning,
 )
-from .definitions import UnitDefinition
-from .compat import (
-    Loc,
-    NUMPY_VER,
-    BehaviorChangeWarning,
-    ndarray,
-    np,
-    _to_magnitude,
-    is_upcast_type,
-    eq,
-    array_function_change_msg,
-)
-from .compat import SKIP_ARRAY_FUNCTION_CHANGE_WARNING  # noqa: F401
-from .util import (
-    PrettyIPython,
-    logger,
-    UnitsContainer,
-    SharedRegistryObject,
-    to_units_container,
-    infer_base_unit,
+from .formatting import (
+    ndarray_to_latex,
+    ndarray_to_latex_parts,
+    remove_custom_flags,
+    siunitx_format_unit,
 )
 from .numpy_func import (
     HANDLED_UFUNCS,
@@ -63,6 +55,14 @@ from .numpy_func import (
     numpy_wrap,
     op_units_output_ufuncs,
     set_units_ufuncs,
+)
+from .util import (
+    PrettyIPython,
+    SharedRegistryObject,
+    UnitsContainer,
+    infer_base_unit,
+    logger,
+    to_units_container,
 )
 
 

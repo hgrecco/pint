@@ -14,7 +14,7 @@ from inspect import signature
 from itertools import zip_longest
 
 from .errors import DimensionalityError
-from .util import to_units_container, UnitsContainer
+from .util import UnitsContainer, to_units_container
 
 
 def _replace_units(original_units, values_by_name):

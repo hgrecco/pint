@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from pint.testsuite import helpers, BaseTestCase
-from pint import UnitRegistry
 import os
+
+from pint import UnitRegistry
+from pint.testsuite import BaseTestCase, helpers
 
 
 class TestBabel(BaseTestCase):

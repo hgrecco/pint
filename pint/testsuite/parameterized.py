@@ -23,10 +23,9 @@
 #        def test_eval(self, input, expected_output):
 #            self.assertEqual(eval(input), expected_output)
 
+import unittest
 from collections.abc import Callable
 from functools import wraps
-
-import unittest
 
 
 def augment_method_docstring(

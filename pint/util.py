@@ -10,20 +10,20 @@
 """
 
 import logging
-from logging import NullHandler
 import operator
 import re
 from collections.abc import Mapping
 from decimal import Decimal
-from numbers import Number
 from fractions import Fraction
 from functools import lru_cache
+from logging import NullHandler
+from numbers import Number
 from token import NAME, NUMBER
 
-from .compat import tokenizer, NUMERIC_TYPES
+from .compat import NUMERIC_TYPES, tokenizer
+from .errors import DefinitionSyntaxError
 from .formatting import format_unit
 from .pint_eval import build_eval_tree
-from .errors import DefinitionSyntaxError
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())

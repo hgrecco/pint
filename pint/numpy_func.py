@@ -7,11 +7,11 @@
     :license: BSD, see LICENSE for more details.
 """
 
+import warnings
 from inspect import signature
 from itertools import chain
-import warnings
 
-from .compat import is_upcast_type, np, eq
+from .compat import eq, is_upcast_type, np
 from .errors import DimensionalityError
 from .util import iterable, sized
 

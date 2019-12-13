@@ -13,8 +13,8 @@ import re
 import weakref
 from collections import ChainMap, defaultdict
 
-from .util import ParserHelper, to_units_container, SourceIterator
 from .errors import DefinitionSyntaxError
+from .util import ParserHelper, SourceIterator, to_units_container
 
 #: Regex to match the header parts of a context.
 _header_re = re.compile(

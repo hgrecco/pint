@@ -11,17 +11,18 @@
 
 import re
 
+from pint.compat import Loc
+
+from .babel_names import _babel_systems
 from .definitions import Definition, UnitDefinition
 from .errors import DefinitionSyntaxError, RedefinitionError
 from .util import (
-    to_units_container,
-    getattr_maybe_raise,
     SharedRegistryObject,
     SourceIterator,
+    getattr_maybe_raise,
     logger,
+    to_units_container,
 )
-from .babel_names import _babel_systems
-from pint.compat import Loc
 
 
 class Group(SharedRegistryObject):

@@ -5,13 +5,13 @@ import datetime
 import math
 import operator as op
 import warnings
+from unittest.mock import patch
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
-from pint.unit import UnitsContainer
 from pint.compat import BehaviorChangeWarning, np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
-from unittest.mock import patch
+from pint.unit import UnitsContainer
 
 
 class TestQuantity(QuantityTestCase):

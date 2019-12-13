@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from pint.util import UnitsContainer
-from pint.converters import ScaleConverter, OffsetConverter
+from pint.converters import OffsetConverter, ScaleConverter
 from pint.definitions import (
+    AliasDefinition,
     Definition,
+    DimensionDefinition,
     PrefixDefinition,
     UnitDefinition,
-    DimensionDefinition,
-    AliasDefinition,
 )
-
 from pint.testsuite import BaseTestCase
+from pint.util import UnitsContainer
 
 
 class TestDefinition(BaseTestCase):

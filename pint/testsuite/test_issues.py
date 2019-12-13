@@ -2,15 +2,14 @@
 
 import copy
 import math
-import unittest
 import pprint
+import unittest
 
 from pint import DimensionalityError, UnitRegistry
-from pint.unit import UnitsContainer
-from pint.util import ParserHelper
-
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
+from pint.unit import UnitsContainer
+from pint.util import ParserHelper
 
 
 class TestIssues(QuantityTestCase):
