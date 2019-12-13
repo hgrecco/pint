@@ -1,20 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-
-try:
-    reload(sys).setdefaultencoding("UTF-8")
-except:
-    pass
-
-try:
-    from setuptools import setup
-except ImportError:
-    print('Please install or upgrade setuptools or pip to continue')
-    sys.exit(1)
-
 import codecs
+import subprocess
+
+from setuptools import setup
 
 
 def read(filename):
@@ -27,9 +17,28 @@ long_description = '\n\n'.join([read('README'),
 
 __doc__ = long_description
 
+
+version = "0.10"
+RELEASE_VERSION = False
+
+if not RELEASE_VERSION:
+    # Append incremental version number from git
+    try:
+        version += (
+            ".dev"
+            + subprocess.check_output(["git", "rev-list", "--count", "HEAD"])
+            .decode()
+            .strip()
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # The .git directory has been removed (likely by setup.py sdist),
+        # and/or git is not installed
+        version += ".dev0"
+
+
 setup(
     name='Pint',
-    version='0.10.dev0',
+    version=version,
     description='Physical quantities module',
     long_description=long_description,
     keywords='physical quantities unit conversion science',
