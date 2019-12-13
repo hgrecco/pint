@@ -15,7 +15,6 @@ from logging.handlers import BufferingHandler
 
 
 class TestHandler(BufferingHandler):
-
     def __init__(self, only_warnings=False):
         # BufferingHandler takes a "capacity" argument
         # so as to know when to flush. As we're overriding
@@ -60,8 +59,8 @@ class BaseTestCase(unittest.TestCase):
         if self._test_handler is not None:
             buf = self._test_handler.buffer
             l = len(buf)
-            msg = '\n'.join(record.get('msg', str(record)) for record in buf)
-            self.assertEqual(l, 0, msg='%d warnings raised.\n%s' % (l, msg))
+            msg = "\n".join(record.get("msg", str(record)) for record in buf)
+            self.assertEqual(l, 0, msg="%d warnings raised.\n%s" % (l, msg))
 
 
 class QuantityTestCase(BaseTestCase):
@@ -77,15 +76,21 @@ class QuantityTestCase(BaseTestCase):
     def _get_comparable_magnitudes(self, first, second, msg):
         if isinstance(first, Quantity) and isinstance(second, Quantity):
             second = second.to(first)
-            self.assertEqual(first.units, second.units, msg=msg + ' Units are not equal.')
+            self.assertEqual(
+                first.units, second.units, msg=msg + " Units are not equal."
+            )
             m1, m2 = first.magnitude, second.magnitude
         elif isinstance(first, Quantity):
-            self.assertTrue(first.dimensionless, msg=msg + ' The first is not dimensionless.')
-            first = first.to('')
+            self.assertTrue(
+                first.dimensionless, msg=msg + " The first is not dimensionless."
+            )
+            first = first.to("")
             m1, m2 = first.magnitude, second
         elif isinstance(second, Quantity):
-            self.assertTrue(second.dimensionless, msg=msg + ' The second is not dimensionless.')
-            second = second.to('')
+            self.assertTrue(
+                second.dimensionless, msg=msg + " The second is not dimensionless."
+            )
+            second = second.to("")
             m1, m2 = first, second.magnitude
         else:
             m1, m2 = first, second
@@ -94,7 +99,7 @@ class QuantityTestCase(BaseTestCase):
 
     def assertQuantityEqual(self, first, second, msg=None):
         if msg is None:
-            msg = 'Comparing %r and %r. ' % (first, second)
+            msg = "Comparing %r and %r. " % (first, second)
 
         m1, m2 = self._get_comparable_magnitudes(first, second, msg)
 
@@ -105,7 +110,7 @@ class QuantityTestCase(BaseTestCase):
 
     def assertQuantityAlmostEqual(self, first, second, rtol=1e-07, atol=0, msg=None):
         if msg is None:
-            msg = 'Comparing %r and %r. ' % (first, second)
+            msg = "Comparing %r and %r. " % (first, second)
 
         m1, m2 = self._get_comparable_magnitudes(first, second, msg)
 
@@ -125,6 +130,7 @@ def testsuite():
     if HAS_NUMPY and HAS_UNCERTAINTIES:
         try:
             import yaml, serialize
+
             add_docs(suite)
         except ImportError:
             pass
@@ -137,7 +143,7 @@ def main():
     try:
         unittest.main()
     except Exception as e:
-        print('Error: %s' % e)
+        print("Error: %s" % e)
 
 
 def run():
@@ -149,15 +155,14 @@ def run():
     return test_runner.run(testsuite())
 
 
-
 import math
 
 _GLOBS = {
-    'wrapping.rst': {
-        'pendulum_period': lambda length: 2*math.pi*math.sqrt(length/9.806650),
-        'pendulum_period2': lambda length, swing_amplitude: 1.,
-        'pendulum_period_maxspeed': lambda length, swing_amplitude: (1., 2.),
-        'pendulum_period_error': lambda length: (1., False),
+    "wrapping.rst": {
+        "pendulum_period": lambda length: 2 * math.pi * math.sqrt(length / 9.806650),
+        "pendulum_period2": lambda length, swing_amplitude: 1.0,
+        "pendulum_period_maxspeed": lambda length, swing_amplitude: (1.0, 2.0),
+        "pendulum_period_error": lambda length: (1.0, False),
     }
 }
 
@@ -167,16 +172,20 @@ def add_docs(suite):
 
     :type suite: unittest.TestSuite
     """
-    docpath = os.path.join(os.path.dirname(__file__), '..', '..', 'docs')
+    docpath = os.path.join(os.path.dirname(__file__), "..", "..", "docs")
     docpath = os.path.abspath(docpath)
     if os.path.exists(docpath):
         checker = PintOutputChecker()
-        for name in (name for name in os.listdir(docpath) if name.endswith('.rst')):
+        for name in (name for name in os.listdir(docpath) if name.endswith(".rst")):
             file = os.path.join(docpath, name)
-            suite.addTest(doctest.DocFileSuite(file,
-                                               module_relative=False,
-                                               checker=checker,
-                                               globs=_GLOBS.get(name, None)))
+            suite.addTest(
+                doctest.DocFileSuite(
+                    file,
+                    module_relative=False,
+                    checker=checker,
+                    globs=_GLOBS.get(name, None),
+                )
+            )
 
 
 def test_docs():
@@ -184,5 +193,3 @@ def test_docs():
     add_docs(suite)
     runner = unittest.TextTestRunner()
     return runner.run(suite)
-
-

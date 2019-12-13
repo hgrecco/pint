@@ -16,7 +16,7 @@ from decimal import Decimal
 
 
 def tokenizer(input_string):
-    for tokinfo in tokenize.tokenize(BytesIO(input_string.encode('utf-8')).readline):
+    for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
         if tokinfo.type == tokenize.ENCODING:
             continue
         yield tokinfo
@@ -25,6 +25,8 @@ def tokenizer(input_string):
 # TODO: remove this warning after v0.10
 class BehaviorChangeWarning(UserWarning):
     pass
+
+
 array_function_change_msg = """The way Pint handles NumPy operations has changed with the
 implementation of NEP 18. Unimplemented NumPy operations will now fail instead of making
 assumptions about units. Some functions, eg concat, will now return Quanties with units, where
@@ -56,9 +58,9 @@ try:
 
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
-            raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
-        elif isinstance(value, str) and value == '':
-            raise ValueError('Quantity magnitude cannot be an empty string.')
+            raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
+        elif isinstance(value, str) and value == "":
+            raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
         if force_ndarray:
@@ -68,6 +70,7 @@ try:
     def _test_array_function_protocol():
         # Test if the __array_function__ protocol is enabled
         try:
+
             class FakeArray:
                 def __array_function__(self, *args, **kwargs):
                     return
@@ -90,7 +93,7 @@ except ImportError:
         pass
 
     HAS_NUMPY = False
-    NUMPY_VER = '0'
+    NUMPY_VER = "0"
     NUMERIC_TYPES = (Number, Decimal)
     HAS_NUMPY_ARRAY_FUNCTION = False
     SKIP_ARRAY_FUNCTION_CHANGE_WARNING = True
@@ -98,16 +101,20 @@ except ImportError:
 
     def _to_magnitude(value, force_ndarray=False):
         if isinstance(value, (dict, bool)) or value is None:
-            raise TypeError('Invalid magnitude for Quantity: {0!r}'.format(value))
-        elif isinstance(value, str) and value == '':
-            raise ValueError('Quantity magnitude cannot be an empty string.')
+            raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
+        elif isinstance(value, str) and value == "":
+            raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
-            raise TypeError('lists and tuples are valid magnitudes for '
-                             'Quantity only when NumPy is present.')
+            raise TypeError(
+                "lists and tuples are valid magnitudes for "
+                "Quantity only when NumPy is present."
+            )
         return value
+
 
 try:
     from uncertainties import ufloat
+
     HAS_UNCERTAINTIES = True
 except ImportError:
     ufloat = None
@@ -116,7 +123,8 @@ except ImportError:
 try:
     from babel import Locale as Loc
     from babel import units as babel_units
-    HAS_BABEL = hasattr(babel_units, 'format_unit')
+
+    HAS_BABEL = hasattr(babel_units, "format_unit")
 except ImportError:
     HAS_BABEL = False
 

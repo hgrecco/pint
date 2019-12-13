@@ -6,7 +6,7 @@ from timeit import Timer
 import yaml
 
 
-def time_stmt(stmt='pass', setup='pass', number=0, repeat=3):
+def time_stmt(stmt="pass", setup="pass", number=0, repeat=3):
     """Timer function with the same behaviour as running `python -m timeit `
     in the command line.
 
@@ -25,7 +25,7 @@ def time_stmt(stmt='pass', setup='pass', number=0, repeat=3):
                 x = t.timeit(number)
             except Exception:
                 print(t.print_exc())
-                return float('NaN')
+                return float("NaN")
 
             if x >= 0.2:
                 break
@@ -34,34 +34,34 @@ def time_stmt(stmt='pass', setup='pass', number=0, repeat=3):
         r = t.repeat(repeat, number)
     except Exception:
         print(t.print_exc())
-        return float('NaN')
+        return float("NaN")
 
     best = min(r)
 
     return best / number
 
 
-def build_task(task, name='', setup='', number=0, repeat=3):
+def build_task(task, name="", setup="", number=0, repeat=3):
     nt = copy.copy(task)
 
-    nt['name'] = (name + ' ' + task.get('name', '')).strip()
-    nt['setup'] = (setup + '\n' + task.get('setup', '')).strip('\n')
-    nt['stmt'] = task.get('stmt', '')
-    nt['number'] = task.get('number', number)
-    nt['repeat'] = task.get('repeat', repeat)
+    nt["name"] = (name + " " + task.get("name", "")).strip()
+    nt["setup"] = (setup + "\n" + task.get("setup", "")).strip("\n")
+    nt["stmt"] = task.get("stmt", "")
+    nt["number"] = task.get("number", number)
+    nt["repeat"] = task.get("repeat", repeat)
 
     return nt
 
 
-def time_task(name, stmt='pass', setup='pass', number=0, repeat=3, stmts='', base=''):
+def time_task(name, stmt="pass", setup="pass", number=0, repeat=3, stmts="", base=""):
 
     if base:
         nvalue = time_stmt(stmt=base, setup=setup, number=number, repeat=repeat)
-        yield name + ' (base)', nvalue
-        suffix = ' (normalized)'
+        yield name + " (base)", nvalue
+        suffix = " (normalized)"
     else:
-        nvalue = 1.
-        suffix = ''
+        nvalue = 1.0
+        suffix = ""
 
     if stmt:
         value = time_stmt(stmt=stmt, setup=setup, number=number, repeat=repeat)
@@ -73,12 +73,12 @@ def time_task(name, stmt='pass', setup='pass', number=0, repeat=3, stmts='', bas
             yield task_name + suffix, value / nvalue
 
 
-def time_file(filename, name='', setup='', number=0, repeat=3):
+def time_file(filename, name="", setup="", number=0, repeat=3):
     """Open a yaml benchmark file an time each statement,
 
     yields a tuple with filename, task name, time in seconds.
     """
-    with open(filename, 'r') as fp:
+    with open(filename, "r") as fp:
         tasks = yaml.load(fp)
 
     for task in tasks:
@@ -87,7 +87,7 @@ def time_file(filename, name='', setup='', number=0, repeat=3):
             yield task_name, value
 
 
-def recursive_glob(rootdir='.', pattern='*'):
+def recursive_glob(rootdir=".", pattern="*"):
     return [
         os.path.join(looproot, filename)
         for looproot, _, filenames in os.walk(rootdir)
@@ -104,7 +104,7 @@ def main(filenames=None):
 
     for filename in filenames:
         print(filename)
-        print('-' * len(filename))
+        print("-" * len(filename))
         print()
         for task_name, value in time_file(filename):
             print(f"{value:.2e}   {task_name}")

@@ -25,7 +25,7 @@ def _join(fmt, iterable):
     - The concatenating string (eg. ' * ')
     """
     if not iterable:
-        return ''
+        return ""
     if not __JOIN_REG_EXP.search(fmt):
         return fmt.join(iterable)
     miter = iter(iterable)
@@ -35,14 +35,15 @@ def _join(fmt, iterable):
         first = ret
     return first
 
-_PRETTY_EXPONENTS = '⁰¹²³⁴⁵⁶⁷⁸⁹'
+
+_PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 
 
 def _pretty_fmt_exponent(num):
     """Format an number into a pretty printed exponent.
     """
     # TODO: Will not work for decimals
-    ret = '{0:n}'.format(num).replace('-', '⁻')
+    ret = "{0:n}".format(num).replace("-", "⁻")
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
@@ -51,58 +52,63 @@ def _pretty_fmt_exponent(num):
 #: _FORMATS maps format specifications to the corresponding argument set to
 #: formatter().
 _FORMATS = {
-    'P': {   # Pretty format.
-        'as_ratio': True,
-        'single_denominator': False,
-        'product_fmt': '·',
-        'division_fmt': '/',
-        'power_fmt': '{}{}',
-        'parentheses_fmt': '({})',
-        'exp_call': _pretty_fmt_exponent,
-        },
-
-    'L': {   # Latex format.
-        'as_ratio': True,
-        'single_denominator': True,
-        'product_fmt': r' \cdot ',
-        'division_fmt': r'\frac[{}][{}]',
-        'power_fmt': '{}^[{}]',
-        'parentheses_fmt': r'\left({}\right)',
-        },
-
-    'H': {   # HTML format.
-        'as_ratio': True,
-        'single_denominator': True,
-        'product_fmt': r' ',
-        'division_fmt': r'{}/{}',
-        'power_fmt': '{}^{}',
-        'parentheses_fmt': r'({})',
-        },
-
-    '': {   # Default format.
-        'as_ratio': True,
-        'single_denominator': False,
-        'product_fmt': ' * ',
-        'division_fmt': ' / ',
-        'power_fmt': '{} ** {}',
-        'parentheses_fmt': r'({})',
-        },
-
-    'C': {  # Compact format.
-        'as_ratio': True,
-        'single_denominator': False,
-        'product_fmt': '*',  # TODO: Should this just be ''?
-        'division_fmt': '/',
-        'power_fmt': '{}**{}',
-        'parentheses_fmt': r'({})',
-        },
-    }
+    "P": {  # Pretty format.
+        "as_ratio": True,
+        "single_denominator": False,
+        "product_fmt": "·",
+        "division_fmt": "/",
+        "power_fmt": "{}{}",
+        "parentheses_fmt": "({})",
+        "exp_call": _pretty_fmt_exponent,
+    },
+    "L": {  # Latex format.
+        "as_ratio": True,
+        "single_denominator": True,
+        "product_fmt": r" \cdot ",
+        "division_fmt": r"\frac[{}][{}]",
+        "power_fmt": "{}^[{}]",
+        "parentheses_fmt": r"\left({}\right)",
+    },
+    "H": {  # HTML format.
+        "as_ratio": True,
+        "single_denominator": True,
+        "product_fmt": r" ",
+        "division_fmt": r"{}/{}",
+        "power_fmt": "{}^{}",
+        "parentheses_fmt": r"({})",
+    },
+    "": {  # Default format.
+        "as_ratio": True,
+        "single_denominator": False,
+        "product_fmt": " * ",
+        "division_fmt": " / ",
+        "power_fmt": "{} ** {}",
+        "parentheses_fmt": r"({})",
+    },
+    "C": {  # Compact format.
+        "as_ratio": True,
+        "single_denominator": False,
+        "product_fmt": "*",  # TODO: Should this just be ''?
+        "division_fmt": "/",
+        "power_fmt": "{}**{}",
+        "parentheses_fmt": r"({})",
+    },
+}
 
 
-def formatter(items, as_ratio=True, single_denominator=False,
-              product_fmt=' * ', division_fmt=' / ', power_fmt='{} ** {}',
-              parentheses_fmt='({0})', exp_call=lambda x: '{0:n}'.format(x),
-              locale=None, babel_length='long', babel_plural_form='one'):
+def formatter(
+    items,
+    as_ratio=True,
+    single_denominator=False,
+    product_fmt=" * ",
+    division_fmt=" / ",
+    power_fmt="{} ** {}",
+    parentheses_fmt="({0})",
+    exp_call=lambda x: "{0:n}".format(x),
+    locale=None,
+    babel_length="long",
+    babel_plural_form="one",
+):
     """Format a list of (name, exponent) pairs.
 
     :param items: a list of (name, exponent) pairs.
@@ -121,7 +127,7 @@ def formatter(items, as_ratio=True, single_denominator=False,
     """
 
     if not items:
-        return ''
+        return ""
 
     if as_ratio:
         fun = lambda x: exp_call(abs(x))
@@ -134,12 +140,13 @@ def formatter(items, as_ratio=True, single_denominator=False,
         if locale and babel_length and babel_plural_form and key in _babel_units:
             _key = _babel_units[key]
             locale = Loc.parse(locale)
-            unit_patterns = locale._data['unit_patterns']
+            unit_patterns = locale._data["unit_patterns"]
             compound_unit_patterns = locale._data["compound_unit_patterns"]
-            plural = 'one' if abs(value) <= 0 else babel_plural_form
+            plural = "one" if abs(value) <= 0 else babel_plural_form
             if babel_length not in _babel_lengths:
                 other_lengths = [
-                    _babel_length for _babel_length in reversed(_babel_lengths) \
+                    _babel_length
+                    for _babel_length in reversed(_babel_lengths)
                     if babel_length != _babel_length
                 ]
             else:
@@ -148,10 +155,12 @@ def formatter(items, as_ratio=True, single_denominator=False,
                 pat = unit_patterns.get(_key, {}).get(_babel_length, {}).get(plural)
                 if pat is not None:
                     # Don't remove this positional! This is the format used in Babel
-                    key = pat.replace('{0}', '').strip()
+                    key = pat.replace("{0}", "").strip()
                     break
-            division_fmt = compound_unit_patterns.get("per", {}).get(babel_length, division_fmt)
-            power_fmt = '{}{}'
+            division_fmt = compound_unit_patterns.get("per", {}).get(
+                babel_length, division_fmt
+            )
+            power_fmt = "{}{}"
             exp_call = _pretty_fmt_exponent
         if value == 1:
             pos_terms.append(key)
@@ -167,7 +176,7 @@ def formatter(items, as_ratio=True, single_denominator=False,
         return _join(product_fmt, pos_terms + neg_terms)
 
     # Show as Ratio: positive terms / negative terms
-    pos_ret = _join(product_fmt, pos_terms) or '1'
+    pos_ret = _join(product_fmt, pos_terms) or "1"
 
     if not neg_terms:
         return pos_ret
@@ -181,17 +190,19 @@ def formatter(items, as_ratio=True, single_denominator=False,
 
     return _join(division_fmt, [pos_ret, neg_ret])
 
+
 # Extract just the type from the specification mini-langage: see
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
 # We also add uS for uncertainties.
-_BASIC_TYPES = frozenset('bcdeEfFgGnosxX%uS')
+_BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
+
 
 def _parse_spec(spec):
-    result = ''
+    result = ""
     for ch in reversed(spec):
-        if ch == '~' or ch in _BASIC_TYPES:
+        if ch == "~" or ch in _BASIC_TYPES:
             continue
-        elif ch in list(_FORMATS.keys()) + ['~']:
+        elif ch in list(_FORMATS.keys()) + ["~"]:
             if result:
                 raise ValueError("expected ':' after format specifier")
             else:
@@ -199,28 +210,27 @@ def _parse_spec(spec):
         elif ch.isalpha():
             raise ValueError("Unknown conversion specified " + ch)
         else:
-             break
+            break
     return result
 
 
 def format_unit(unit, spec, **kwspec):
     if not unit:
-        if spec.endswith('%'):
-            return ''
+        if spec.endswith("%"):
+            return ""
         else:
-            return 'dimensionless'
+            return "dimensionless"
 
     spec = _parse_spec(spec)
     fmt = dict(_FORMATS[spec])
     fmt.update(kwspec)
 
-    if spec == 'L':
+    if spec == "L":
         # Latex
         rm = [
-            (r'\mathrm{{{}}}'.format(u.replace("_", r"\_")), p)
-            for u, p in unit.items()
+            (r"\mathrm{{{}}}".format(u.replace("_", r"\_")), p) for u, p in unit.items()
         ]
-        return formatter(rm, **fmt).replace('[', '{').replace(']', '}')
+        return formatter(rm, **fmt).replace("[", "{").replace("]", "}")
     elif spec == "H":
         # HTML (Jupyter Notebook)
         rm = [(u.replace("_", r"\_"), p) for u, p in unit.items()]
@@ -231,23 +241,23 @@ def format_unit(unit, spec, **kwspec):
 
 
 def siunitx_format_unit(units):
-    '''Returns LaTeX code for the unit that can be put into an siunitx command.'''
+    """Returns LaTeX code for the unit that can be put into an siunitx command."""
     # NOTE: unit registry is required to identify unit prefixes.
     registry = units._REGISTRY
 
     def _tothe(power):
         if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
             if power == 1:
-                return ''
+                return ""
             elif power == 2:
-                return r'\squared'
+                return r"\squared"
             elif power == 3:
-                return r'\cubed'
+                return r"\cubed"
             else:
-                return r'\tothe{{{:d}}}'.format(int(power))
+                return r"\tothe{{{:d}}}".format(int(power))
         else:
             # limit float powers to 3 decimal places
-            return r'\tothe{{{:.3f}}}'.format(power).rstrip('0')
+            return r"\tothe{{{:.3f}}}".format(power).rstrip("0")
 
     lpos = []
     lneg = []
@@ -262,39 +272,39 @@ def siunitx_format_unit(units):
             p = str(p)
             if len(p) > 0 and unit.find(p) == 0:
                 prefix = p
-                unit = unit.replace(prefix, '', 1)
+                unit = unit.replace(prefix, "", 1)
 
         if power < 0:
-            l.append(r'\per')
+            l.append(r"\per")
         if prefix is not None:
-            l.append(r'\{}'.format(prefix))
-        l.append(r'\{}'.format(unit))
-        l.append(r'{}'.format(_tothe(abs(power))))
+            l.append(r"\{}".format(prefix))
+        l.append(r"\{}".format(unit))
+        l.append(r"{}".format(_tothe(abs(power))))
 
-    return ''.join(lpos) + ''.join(lneg)
+    return "".join(lpos) + "".join(lneg)
 
 
 def remove_custom_flags(spec):
-    for flag in list(_FORMATS.keys()) + ['~']:
-         if flag:
-             spec = spec.replace(flag, '')
+    for flag in list(_FORMATS.keys()) + ["~"]:
+        if flag:
+            spec = spec.replace(flag, "")
     return spec
 
 
-def vector_to_latex(vec, fmtfun=lambda x: format(x, '.2f')):
+def vector_to_latex(vec, fmtfun=lambda x: format(x, ".2f")):
     return matrix_to_latex([vec], fmtfun)
 
 
-def matrix_to_latex(matrix, fmtfun=lambda x: format(x, '.2f')):
+def matrix_to_latex(matrix, fmtfun=lambda x: format(x, ".2f")):
     ret = []
 
     for row in matrix:
-        ret += [' & '.join(fmtfun(f) for f in row)]
+        ret += [" & ".join(fmtfun(f) for f in row)]
 
-    return r'\begin{pmatrix}%s\end{pmatrix}' % '\\\\ \n'.join(ret)
+    return r"\begin{pmatrix}%s\end{pmatrix}" % "\\\\ \n".join(ret)
 
 
-def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, '.2f'), dim=()):
+def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, ".2f"), dim=()):
     if isinstance(fmtfun, str):
         fmt = fmtfun
         fmtfun = lambda x: format(x, fmt)
@@ -309,15 +319,15 @@ def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, '.2f'), dim=()):
     else:
         ret = []
         if ndarr.ndim == 3:
-            header = ('arr[%s,' % ','.join('%d' % d for d in dim)) + '%d,:,:]'
+            header = ("arr[%s," % ",".join("%d" % d for d in dim)) + "%d,:,:]"
             for elno, el in enumerate(ndarr):
-                ret += [header % elno + ' = ' + matrix_to_latex(el, fmtfun)]
+                ret += [header % elno + " = " + matrix_to_latex(el, fmtfun)]
         else:
             for elno, el in enumerate(ndarr):
-                ret += ndarray_to_latex_parts(el, fmtfun, dim + (elno, ))
+                ret += ndarray_to_latex_parts(el, fmtfun, dim + (elno,))
 
         return ret
 
 
-def ndarray_to_latex(ndarr, fmtfun=lambda x: format(x, '.2f'), dim=()):
-        return '\n'.join(ndarray_to_latex_parts(ndarr, fmtfun, dim))
+def ndarray_to_latex(ndarr, fmtfun=lambda x: format(x, ".2f"), dim=()):
+    return "\n".join(ndarray_to_latex_parts(ndarr, fmtfun, dim))

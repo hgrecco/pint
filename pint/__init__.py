@@ -21,7 +21,7 @@ from .errors import (
     OffsetUnitCalculusError,
     RedefinitionError,
     UndefinedUnitError,
-    UnitStrippedWarning
+    UnitStrippedWarning,
 )
 from .formatting import formatter
 from .measurement import Measurement
@@ -32,16 +32,18 @@ from .util import pi_theorem, logger
 
 
 import sys
+
 try:
     from pintpandas import PintType, PintArray
+
     _HAS_PINTPANDAS = True
 except Exception:
     _HAS_PINTPANDAS = False
     _, _pintpandas_error, _ = sys.exc_info()
 
-try:                # pragma: no cover
-    __version__ = pkg_resources.get_distribution('pint').version
-except:             # pragma: no cover
+try:  # pragma: no cover
+    __version__ = pkg_resources.get_distribution("pint").version
+except:  # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown
     __version__ = "unknown"
@@ -83,7 +85,7 @@ def set_application_registry(registry):
     if not isinstance(registry, (LazyRegistry, UnitRegistry)):
         raise TypeError("Expected UnitRegistry; got %s" % type(registry))
     global _APP_REGISTRY
-    logger.debug('Changing app registry from %r to %r.', _APP_REGISTRY, registry)
+    logger.debug("Changing app registry from %r to %r.", _APP_REGISTRY, registry)
     _APP_REGISTRY = registry
 
 
@@ -103,6 +105,7 @@ def test():
     :return: a :class:`unittest.TestResult` object
     """
     from .testsuite import run
+
     return run()
 
 
@@ -110,20 +113,18 @@ def test():
 # Hint to intersphinx that, when building objects.inv, these objects must be registered
 # under the top-level module and not in their original submodules
 __all__ = (
-    'Context',
-    'Measurement',
-    'Quantity',
-    'Unit',
-    'UnitRegistry',
-
-    'DefinitionSyntaxError',
-    'DimensionalityError',
-    'OffsetUnitCalculusError',
-    'RedefinitionError',
-    'UndefinedUnitError',
-    'UnitStrippedWarning',
-
-    'get_application_registry',
-    'set_application_registry',
-    '__version__',
+    "Context",
+    "Measurement",
+    "Quantity",
+    "Unit",
+    "UnitRegistry",
+    "DefinitionSyntaxError",
+    "DimensionalityError",
+    "OffsetUnitCalculusError",
+    "RedefinitionError",
+    "UndefinedUnitError",
+    "UnitStrippedWarning",
+    "get_application_registry",
+    "set_application_registry",
+    "__version__",
 )
