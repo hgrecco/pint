@@ -104,7 +104,7 @@ def formatter(
     division_fmt=" / ",
     power_fmt="{} ** {}",
     parentheses_fmt="({0})",
-    exp_call=lambda x: "{0:n}".format(x),
+    exp_call=lambda x: "{:n}".format(x),
     locale=None,
     babel_length="long",
     babel_plural_form="one",

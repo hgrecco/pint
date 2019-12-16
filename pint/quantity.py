@@ -26,6 +26,7 @@ from .formatting import (
     siunitx_format_unit,
     ndarray_to_latex,
     ndarray_to_latex_parts,
+    _pretty_fmt_exponent,
 )
 from .errors import (
     DimensionalityError,
@@ -260,8 +261,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             allf = plain_allf = "{} {}"
 
-        mstr, ustr = None, None
-
         # If Compact is selected, do it at the beginning
         if "#" in spec:
             spec = spec.replace("#", "")
@@ -272,10 +271,16 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         # the LaTeX siunitx code
         if "Lx" in spec:
             spec = spec.replace("Lx", "")
-            # todo: add support for extracting options
+            # TODO: add support for extracting options
             opts = ""
             ustr = siunitx_format_unit(obj.units)
             allf = r"\SI[%s]{{{}}}{{{}}}" % opts
+        elif "H" in spec:
+            ustr = format(obj.units, spec)
+            assert ustr[:2] == r"\["
+            assert ustr[-2:] == r"\]"
+            ustr = ustr[2:-2]
+            allf = r"\[{}\ {}\]"
         else:
             ustr = format(obj.units, spec)
 
@@ -284,8 +289,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             if "L" in spec:
                 mstr = ndarray_to_latex(obj.magnitude, mspec)
             elif "H" in spec:
-                # this is required to have the magnitude and unit in the same line
                 allf = r"\[{} {}\]"
+                # this is required to have the magnitude and unit in the same line
                 parts = ndarray_to_latex_parts(obj.magnitude, mspec)
 
                 if len(parts) > 1:
@@ -302,7 +307,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         if "L" in spec:
             mstr = self._exp_pattern.sub(r"\1\\times 10^{\2\3}", mstr)
         elif "H" in spec:
-            mstr = self._exp_pattern.sub(r"\1×10<sup>\2\3</sup>", mstr)
+            mstr = self._exp_pattern.sub(r"\1×10^{\2\3}", mstr)
+        elif "P" in spec:
+            m = self._exp_pattern.match(mstr)
+            if m:
+                exp = int(m.group(2) + m.group(3))
+                mstr = self._exp_pattern.sub(r"\1×10" + _pretty_fmt_exponent(exp), mstr)
 
         if allf == plain_allf and ustr.startswith("1 /"):
             # Write e.g. "3 / s" instead of "3 1 / s"
