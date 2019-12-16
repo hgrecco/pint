@@ -553,6 +553,7 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
     ton = 2e3 * pound = _ = short_ton
     long_ton = 2240 * pound
     slug = g_0 * pound * second ** 2 / foot
+    slinch = g_0 * pound * second ** 2 / inch = blob = slugette
 
     force_ounce = g_0 * ounce = ozf = ounce_force
     force_pound = g_0 * pound = lbf = pound_force
