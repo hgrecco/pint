@@ -43,7 +43,7 @@ from decimal import Decimal
 from fractions import Fraction
 from contextlib import contextmanager, closing
 from io import open, StringIO
-from collections import defaultdict
+from collections import ChainMap, defaultdict
 from tokenize import NUMBER, NAME
 
 from . import registry_helpers
@@ -109,6 +109,19 @@ class RegistryCache:
         self.dimensionality = {}
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit = {}
+
+
+class ContextCacheOverlay:
+    """Layer on top of the base UnitRegistry cache specific to a combination of
+    active contexts
+    """
+
+    def __init__(self, registry_cache):
+        # TODO: Use ChainMap to define context-specific caches
+        self.dimensional_equivalents = registry_cache.dimensional_equivalents
+        self.root_units = registry_cache.root_units
+        self.dimensionality = registry_cache.dimensionality
+        self.parse_unit = registry_cache.parse_unit
 
 
 class BaseRegistry(metaclass=RegistryMeta):
@@ -200,7 +213,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._prefixes = {"": PrefixDefinition("", "", (), 1)}
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
-        self._suffixes = {"": None, "s": ""}
+        self._suffixes = {"": "", "s": ""}
 
         #: Map contexts to RegistryCache
         self._cache = RegistryCache()
@@ -510,13 +523,13 @@ class BaseRegistry(metaclass=RegistryMeta):
             for unit_name in unit_names:
                 if "[" in unit_name:
                     continue
-                parsed_names = tuple(self.parse_unit_name(unit_name))
-                _prefix = None
+                parsed_names = self.parse_unit_name(unit_name)
+                prefix = None
                 if parsed_names:
-                    _prefix, base_name, _suffix = parsed_names[0]
+                    prefix, base_name, _suffix = parsed_names[0]
                 else:
                     base_name = unit_name
-                prefixed = True if _prefix else False
+
                 try:
                     uc = ParserHelper.from_word(base_name)
 
@@ -526,34 +539,14 @@ class BaseRegistry(metaclass=RegistryMeta):
                     self._cache.root_units[uc] = bu
                     self._cache.dimensionality[uc] = di
 
-                    if not prefixed:
+                    if not prefix:
                         dimeq_set = self._cache.dimensional_equivalents.setdefault(
                             di, set()
                         )
                         dimeq_set.add(self._units[base_name]._name)
 
-                except Exception as e:
-                    logger.warning("Could not resolve {0}: {1!r}".format(unit_name, e))
-
-    def _dedup_candidates(self, candidates):
-        """Given a list of unit triplets (prefix, name, suffix),
-        remove those with different names but equal value.
-
-            e.g. ('kilo', 'gram', '') and ('', 'kilogram', '')
-        """
-        candidates = tuple(candidates)
-        if len(candidates) < 2:
-            return candidates
-
-        unique = [candidates[0]]
-        for c in candidates[2:]:
-            for u in unique:
-                if c == u:
-                    break
-            else:
-                unique.append(c)
-
-        return tuple(unique)
+                except Exception as exc:
+                    logger.warning(f"Could not resolve {unit_name}: {exc!r}")
 
     def get_name(self, name_or_alias, case_sensitive=True):
         """Return the canonical name of a unit.
@@ -567,9 +560,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         except KeyError:
             pass
 
-        candidates = self._dedup_candidates(
-            self.parse_unit_name(name_or_alias, case_sensitive)
-        )
+        candidates = self.parse_unit_name(name_or_alias, case_sensitive)
         if not candidates:
             raise UndefinedUnitError(name_or_alias)
         elif len(candidates) == 1:
@@ -595,7 +586,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     def get_symbol(self, name_or_alias):
         """Return the preferred alias for a unit
         """
-        candidates = self._dedup_candidates(self.parse_unit_name(name_or_alias))
+        candidates = self.parse_unit_name(name_or_alias)
         if not candidates:
             raise UndefinedUnitError(name_or_alias)
         elif len(candidates) == 1:
@@ -856,8 +847,20 @@ class BaseRegistry(metaclass=RegistryMeta):
     def parse_unit_name(self, unit_name, case_sensitive=True):
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
+        In case of equivalent combinations (e.g. ('kilo', 'gram', '') and
+        ('', 'kilogram', ''), prefer those with prefix.
 
-        :rtype: (str, str, str)
+        :returns:
+            all non-equivalent combinations of (prefix, unit name, suffix)
+        :rtype:
+            ((str, str, str), ...)
+        """
+        return self._dedup_candidates(
+            self._parse_unit_name(unit_name, case_sensitive=case_sensitive)
+        )
+
+    def _parse_unit_name(self, unit_name, case_sensitive=True):
+        """Helper of parse_unit_name
         """
         stw = unit_name.startswith
         edw = unit_name.endswith
@@ -882,6 +885,24 @@ class BaseRegistry(metaclass=RegistryMeta):
                             self._units[real_name].name,
                             self._suffixes[suffix],
                         )
+
+    @staticmethod
+    def _dedup_candidates(candidates):
+        """Helper of parse_unit_name.
+
+        Given an iterable of unit triplets (prefix, name, suffix), remove those with
+        different names but equal value, preferring those with a prefix.
+
+        e.g. ('kilo', 'gram', '') and ('', 'kilogram', '')
+        """
+        candidates = dict.fromkeys(candidates)  # ordered set
+        for cp, cu, cs in list(candidates):
+            assert isinstance(cp, str)
+            assert isinstance(cu, str)
+            assert cs == "", "not empty suffix is not supported"
+            if cp:
+                candidates.pop(("", cp + cu, ""), None)
+        return tuple(candidates)
 
     def parse_units(self, input_string, as_delta=None):
         """Parse a units expression and returns a UnitContainer with
@@ -1048,10 +1069,11 @@ class NonMultiplicativeRegistry(BaseRegistry):
         # If the unit is not in the registry might be because it is not
         # registered with its prefixed version.
         # TODO: Might be better to register them.
-        l = self._dedup_candidates(self.parse_unit_name(u))
+        names = self.parse_unit_name(u)
+        assert len(names) == 1
+        _, base_name, _ = names[0]
         try:
-            u = l[0][1]
-            return self._units[u].is_multiplicative
+            return self._units[base_name].is_multiplicative
         except KeyError:
             raise UndefinedUnitError(u)
 
@@ -1218,12 +1240,16 @@ class ContextRegistry(BaseRegistry):
         return context
 
     def _build_cache(self):
+        super()._build_cache()
+        self._caches[()] = self._cache
+
+    def _switch_context_cache(self):
         key = self._active_ctx.hashable()
         try:
             self._cache = self._caches[key]
         except KeyError:
-            super()._build_cache()
-            self._caches[key] = self._cache
+            base_cache = self._caches[()]
+            self._caches[key] = ContextCacheOverlay(base_cache)
 
     def enable_contexts(self, *names_or_contexts, **kwargs):
         """Enable contexts provided by name or by object.
@@ -1260,15 +1286,13 @@ class ContextRegistry(BaseRegistry):
 
         # Finally we add them to the active context.
         self._active_ctx.insert_contexts(*ctxs)
-        self._build_cache()
+        self._switch_context_cache()
 
     def disable_contexts(self, n=None):
         """Disable the last n enabled contexts.
         """
-        if n is None:
-            n = len(self._contexts)
         self._active_ctx.remove_contexts(n)
-        self._build_cache()
+        self._switch_context_cache()
 
     @contextmanager
     def context(self, *names, **kwargs):
@@ -1396,6 +1420,7 @@ class ContextRegistry(BaseRegistry):
         ret = super()._get_compatible_units(input_units, group_or_system)
 
         if self._active_ctx:
+            ret = ret.copy()
             nodes = find_connected_nodes(self._active_ctx.graph, src_dim)
             if nodes:
                 for node in nodes:
