@@ -11,7 +11,6 @@ from pint import (
     get_application_registry,
     set_application_registry,
 )
-
 from pint.testsuite import BaseTestCase
 from pint.testsuite.helpers import requires_uncertainties
 

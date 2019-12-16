@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
-
 import copy
 import datetime
 import math
 import operator as op
 import warnings
+from unittest.mock import patch
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
-from pint.unit import UnitsContainer
 from pint.compat import BehaviorChangeWarning, np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
-from unittest.mock import patch
+from pint.unit import UnitsContainer
 
 
 class TestQuantity(QuantityTestCase):
@@ -144,7 +142,7 @@ class TestQuantity(QuantityTestCase):
 
         # Check the special case that prevents e.g. '3 1 / second'
         x = self.Q_(3, UnitsContainer(second=-1))
-        self.assertEqual("{0}".format(x), "3 / second")
+        self.assertEqual(f"{x}", "3 / second")
 
     @helpers.requires_numpy()
     def test_quantity_array_format(self):
@@ -189,9 +187,9 @@ class TestQuantity(QuantityTestCase):
         self.assertEqual(q3.magnitude, q3b.magnitude)
         self.assertEqual(q3.units, q3b.units)
 
-        self.assertEqual("{0:#.1f}".format(q1), "{0}".format(q1b))
-        self.assertEqual("{0:#.1f}".format(q2), "{0}".format(q2b))
-        self.assertEqual("{0:#.1f}".format(q3), "{0}".format(q3b))
+        self.assertEqual(f"{q1:#.1f}", f"{q1b}")
+        self.assertEqual(f"{q2:#.1f}", f"{q2b}")
+        self.assertEqual(f"{q3:#.1f}", f"{q3b}")
 
     def test_default_formatting(self):
         ureg = UnitRegistry()
@@ -271,22 +269,24 @@ class TestQuantity(QuantityTestCase):
         )
 
     def test_convert(self):
-        x = self.Q_("2*inch")
-        self.assertQuantityAlmostEqual(x.to("meter"), self.Q_(2.0 * 0.0254, "meter"))
-        x = self.Q_("2*meter")
-        self.assertQuantityAlmostEqual(x.to("inch"), self.Q_(2.0 / 0.0254, "inch"))
-        x = self.Q_("2*sidereal_second")
-        self.assertQuantityAlmostEqual(x.to("second"), self.Q_(1.994539133, "second"))
-        x = self.Q_("2.54*centimeter/second")
-        self.assertQuantityAlmostEqual(x.to("inch/second"), self.Q_(1, "inch/second"))
-        x = self.Q_("2.54*centimeter")
-        self.assertQuantityAlmostEqual(x.to("inch").magnitude, 1)
         self.assertQuantityAlmostEqual(
-            self.Q_(2, "second").to("millisecond").magnitude, 2000
+            self.Q_("2 inch").to("meter"), self.Q_(2.0 * 0.0254, "meter")
         )
+        self.assertQuantityAlmostEqual(
+            self.Q_("2 meter").to("inch"), self.Q_(2.0 / 0.0254, "inch")
+        )
+        self.assertQuantityAlmostEqual(
+            self.Q_("2 sidereal_year").to("second"), self.Q_(63116297.5325, "second")
+        )
+        self.assertQuantityAlmostEqual(
+            self.Q_("2.54 centimeter/second").to("inch/second"),
+            self.Q_("1 inch/second"),
+        )
+        self.assertAlmostEqual(self.Q_("2.54 centimeter").to("inch").magnitude, 1)
+        self.assertAlmostEqual(self.Q_("2 second").to("millisecond").magnitude, 2000)
 
     @helpers.requires_numpy()
-    def test_convert(self):
+    def test_convert_numpy(self):
 
         # Conversions with single units take a different codepath than
         # Conversions with more than one unit.
@@ -606,7 +606,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         if isinstance(expected_result, str):
             expected_result = self.Q_(expected_result)
 
-        if not unit is None:
+        if unit is not None:
             value1 = value1 * unit
             value2 = value2 * unit
             expected_result = expected_result * unit
@@ -630,7 +630,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         if isinstance(expected_result, str):
             expected_result = self.Q_(expected_result)
 
-        if not unit is None:
+        if unit is not None:
             value1 = value1 * unit
             value2 = value2 * unit
             expected_result = expected_result * unit

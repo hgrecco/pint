@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
-
 import doctest
 import logging
+import math
 import os
 import unittest
-
 from contextlib import contextmanager
-
-from pint.compat import ndarray, np
-
-from pint import logger, UnitRegistry, Quantity
-from pint.testsuite.helpers import PintOutputChecker
 from logging.handlers import BufferingHandler
+
+from pint import Quantity, UnitRegistry, logger
+from pint.compat import ndarray, np
+from pint.testsuite.helpers import PintOutputChecker
 
 
 class TestHandler(BufferingHandler):
@@ -43,10 +40,10 @@ class BaseTestCase(unittest.TestCase):
         th.setLevel(level)
         logger.addHandler(th)
         if self._test_handler is not None:
-            l = len(self._test_handler.buffer)
+            buflen = len(self._test_handler.buffer)
         yield th.buffer
         if self._test_handler is not None:
-            self._test_handler.buffer = self._test_handler.buffer[:l]
+            self._test_handler.buffer = self._test_handler.buffer[:buflen]
 
     def setUp(self):
         self._test_handler = None
@@ -58,9 +55,8 @@ class BaseTestCase(unittest.TestCase):
     def tearDown(self):
         if self._test_handler is not None:
             buf = self._test_handler.buffer
-            l = len(buf)
             msg = "\n".join(record.get("msg", str(record)) for record in buf)
-            self.assertEqual(l, 0, msg="%d warnings raised.\n%s" % (l, msg))
+            self.assertEqual(len(buf), 0, msg=f"{len(buf)} warnings raised.\n{msg}")
 
 
 class QuantityTestCase(BaseTestCase):
@@ -129,7 +125,8 @@ def testsuite():
     # TESTING THE DOCUMENTATION requires pyyaml, serialize, numpy and uncertainties
     if HAS_NUMPY and HAS_UNCERTAINTIES:
         try:
-            import yaml, serialize
+            import serialize  # noqa: F401
+            import yaml  # noqa: F401
 
             add_docs(suite)
         except ImportError:
@@ -154,8 +151,6 @@ def run():
     test_runner = unittest.TextTestRunner()
     return test_runner.run(testsuite())
 
-
-import math
 
 _GLOBS = {
     "wrapping.rst": {

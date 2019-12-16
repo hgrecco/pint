@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     pint.babel
     ~~~~~~~~~~
@@ -57,7 +56,7 @@ _babel_units = dict(
     millimeter="length-millimeter",
     metric_horsepower="power-horsepower",
     gibibyte="digital-gigabyte",
-    ## 'temperature-generic',
+    # 'temperature-generic',
     liter="volume-liter",
     turn="angle-revolution",
     microsecond="duration-microsecond",
@@ -111,7 +110,7 @@ _babel_units = dict(
     century="duration-century",
     cubic_foot="volume-cubic-foot",
     deciliter="volume-deciliter",
-    ##pint='volume-pint-metric',
+    # pint='volume-pint-metric',
     cubic_meter="volume-cubic-meter",
     cubic_kilometer="volume-cubic-kilometer",
     quart="volume-quart",

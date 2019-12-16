@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Adds Parameterized tests for Python's unittest module
 #
 # Code from: parameterizedtestcase, version: 0.1.0
@@ -23,10 +21,9 @@
 #        def test_eval(self, input, expected_output):
 #            self.assertEqual(eval(input), expected_output)
 
+import unittest
 from collections.abc import Callable
 from functools import wraps
-
-import unittest
 
 
 def augment_method_docstring(

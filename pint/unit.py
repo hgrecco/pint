@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     pint.unit
     ~~~~~~~~~
@@ -14,11 +13,10 @@ import locale
 import operator
 from numbers import Number
 
-from .util import PrettyIPython, UnitsContainer, SharedRegistryObject
-
 from .compat import NUMERIC_TYPES
-from .formatting import siunitx_format_unit
 from .definitions import UnitDefinition
+from .formatting import siunitx_format_unit
+from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
 
 class Unit(PrettyIPython, SharedRegistryObject):

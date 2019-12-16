@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import itertools
 
 from pint.compat import np
-from pint.converters import ScaleConverter, OffsetConverter, Converter
-from pint.testsuite import helpers, BaseTestCase
+from pint.converters import Converter, OffsetConverter, ScaleConverter
+from pint.testsuite import BaseTestCase, helpers
 
 
 class TestConverter(BaseTestCase):

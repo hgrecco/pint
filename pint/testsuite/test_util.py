@@ -1,22 +1,21 @@
-# -*- coding: utf-8 -*-
-
 import collections
 import copy
 import operator as op
 from decimal import Decimal
+
 from pint.testsuite import BaseTestCase, QuantityTestCase
 from pint.util import (
-    string_preprocessor,
-    find_shortest_path,
-    matrix_to_string,
-    transpose,
-    tokenizer,
-    find_connected_nodes,
     ParserHelper,
     UnitsContainer,
-    to_units_container,
+    find_connected_nodes,
+    find_shortest_path,
     iterable,
+    matrix_to_string,
     sized,
+    string_preprocessor,
+    to_units_container,
+    tokenizer,
+    transpose,
 )
 
 
@@ -207,7 +206,7 @@ class TestParseHelper(BaseTestCase):
 
 class TestStringProcessor(BaseTestCase):
     def _test(self, bef, aft):
-        for pattern in ("{0}", "+{0}+"):
+        for pattern in ("{}", "+{}+"):
             b = pattern.format(bef)
             a = pattern.format(aft)
             self.assertEqual(string_preprocessor(b), a)
@@ -309,7 +308,7 @@ class TestMatrix(BaseTestCase):
                 [[1, 2], [3, 4]],
                 row_headers=None,
                 col_headers=None,
-                fmtfun=lambda x: "{0:.2f}".format(x),
+                fmtfun=lambda x: f"{x:.2f}",
             ),
             "1.00\t2.00\n" "3.00\t4.00",
         )

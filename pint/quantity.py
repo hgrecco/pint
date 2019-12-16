@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     pint.quantity
     ~~~~~~~~~~~~~
@@ -21,52 +20,48 @@ import warnings
 
 from pkg_resources.extern.packaging import version
 
-from .formatting import (
-    remove_custom_flags,
-    siunitx_format_unit,
-    ndarray_to_latex,
-    ndarray_to_latex_parts,
+from .compat import SKIP_ARRAY_FUNCTION_CHANGE_WARNING  # noqa: F401
+from .compat import (
+    NUMPY_VER,
+    BehaviorChangeWarning,
+    Loc,
+    _to_magnitude,
+    array_function_change_msg,
+    eq,
+    is_upcast_type,
+    ndarray,
+    np,
 )
+from .definitions import UnitDefinition
 from .errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
     PintTypeError,
-    UndefinedUnitError,
     UnitStrippedWarning,
 )
-from .definitions import UnitDefinition
-from .compat import (
-    Loc,
-    NUMPY_VER,
-    SKIP_ARRAY_FUNCTION_CHANGE_WARNING,
-    BehaviorChangeWarning,
-    ndarray,
-    np,
-    _to_magnitude,
-    is_upcast_type,
-    eq,
-    array_function_change_msg,
-)
-from .util import (
-    PrettyIPython,
-    logger,
-    UnitsContainer,
-    SharedRegistryObject,
-    to_units_container,
-    infer_base_unit,
-    iterable,
-    sized,
+from .formatting import (
+    ndarray_to_latex,
+    ndarray_to_latex_parts,
+    remove_custom_flags,
+    siunitx_format_unit,
 )
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
     get_op_output_unit,
-    matching_input_bare_output_ufuncs,
     matching_input_copy_units_output_ufuncs,
     matching_input_set_units_output_ufuncs,
     numpy_wrap,
     op_units_output_ufuncs,
     set_units_ufuncs,
+)
+from .util import (
+    PrettyIPython,
+    SharedRegistryObject,
+    UnitsContainer,
+    infer_base_unit,
+    logger,
+    to_units_container,
 )
 
 
@@ -404,7 +399,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @classmethod
     def from_list(cls, quant_list, units=None):
-        """Transforms a list of Quantities into an numpy.array quantity. 
+        """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
 
@@ -420,7 +415,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @classmethod
     def from_sequence(cls, seq, units=None):
-        """Transforms a sequence of Quantities into an numpy.array quantity. 
+        """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
 
         If units is not specified and sequence is empty, the unit cannot be determined
@@ -616,7 +611,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 log10_scale = int(math.log10(scale))
                 if log10_scale == math.log10(scale):
                     SI_prefixes[log10_scale] = prefix.name
-            except:
+            except Exception:
                 SI_prefixes[0] = ""
 
         SI_prefixes = sorted(SI_prefixes.items())
@@ -1442,30 +1437,30 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             return value
 
     def clip(self, first=None, second=None, out=None, **kwargs):
-        min = kwargs.get("min", first)
-        max = kwargs.get("max", second)
+        minimum = kwargs.get("min", first)
+        maximum = kwargs.get("max", second)
 
-        if min is None and max is None:
+        if minimum is None and maximum is None:
             raise TypeError("clip() takes at least 3 arguments (2 given)")
 
-        if max is None and "min" not in kwargs:
-            min, max = max, min
+        if maximum is None and "min" not in kwargs:
+            minimum, maximum = maximum, minimum
 
         kwargs = {"out": out}
 
-        if min is not None:
-            if isinstance(min, self.__class__):
-                kwargs["min"] = min.to(self).magnitude
+        if minimum is not None:
+            if isinstance(minimum, self.__class__):
+                kwargs["min"] = minimum.to(self).magnitude
             elif self.dimensionless:
-                kwargs["min"] = min
+                kwargs["min"] = minimum
             else:
                 raise DimensionalityError("dimensionless", self._units)
 
-        if max is not None:
-            if isinstance(max, self.__class__):
-                kwargs["max"] = max.to(self).magnitude
+        if maximum is not None:
+            if isinstance(maximum, self.__class__):
+                kwargs["max"] = maximum.to(self).magnitude
             elif self.dimensionless:
-                kwargs["max"] = max
+                kwargs["max"] = maximum
             else:
                 raise DimensionalityError("dimensionless", self._units)
 

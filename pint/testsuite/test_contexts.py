@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
 import itertools
 from collections import defaultdict
 
-from pint import UnitRegistry, DefinitionSyntaxError, DimensionalityError
+from pint import DefinitionSyntaxError, DimensionalityError, UnitRegistry
 from pint.context import Context
-from pint.util import UnitsContainer
 from pint.testsuite import QuantityTestCase
+from pint.util import UnitsContainer
 
 
 def add_ctxs(ureg):
@@ -117,7 +115,7 @@ class TestContexts(QuantityTestCase):
     def test_graph(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
-        l = UnitsContainer({"[length]": 1.0})
+        l = UnitsContainer({"[length]": 1.0})  # noqa: E741
         t = UnitsContainer({"[time]": -1.0})
         c = UnitsContainer({"[current]": 1.0})
 
@@ -156,7 +154,7 @@ class TestContexts(QuantityTestCase):
     def test_graph_enable(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
-        l = UnitsContainer({"[length]": 1.0})
+        l = UnitsContainer({"[length]": 1.0})  # noqa: E741
         t = UnitsContainer({"[time]": -1.0})
         c = UnitsContainer({"[current]": 1.0})
 
@@ -224,14 +222,9 @@ class TestContexts(QuantityTestCase):
     def test_unknown_context(self):
         ureg = UnitRegistry()
         add_ctxs(ureg)
-        try:
+        with self.assertRaises(KeyError):
             with ureg.context("la"):
                 pass
-        except KeyError as e:
-            value = True
-        except Exception as e:
-            value = False
-        self.assertTrue(value)
         self.assertFalse(ureg._active_ctx)
         self.assertFalse(ureg._active_ctx.graph)
 
@@ -242,15 +235,9 @@ class TestContexts(QuantityTestCase):
         with ureg.context("lc"):
             x = dict(ureg._active_ctx)
             y = dict(ureg._active_ctx.graph)
-            try:
+            with self.assertRaises(KeyError):
                 with ureg.context("la"):
                     pass
-            except KeyError as e:
-                value = True
-            except Exception as e:
-                value = False
-
-            self.assertTrue(value)
 
             self.assertEqual(x, ureg._active_ctx)
             self.assertEqual(y, ureg._active_ctx.graph)
