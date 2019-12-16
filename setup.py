@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import subprocess
-
 from setuptools import setup
 
 
@@ -13,28 +11,9 @@ def read(filename):
 long_description = "\n\n".join([read("README"), read("AUTHORS"), read("CHANGES")])
 __doc__ = long_description
 
-
-version = "0.10"
-RELEASE_VERSION = False
-
-if not RELEASE_VERSION:
-    # Append incremental version number from git
-    try:
-        version += (
-            ".dev"
-            + subprocess.check_output(["git", "rev-list", "--count", "HEAD"])
-            .decode()
-            .strip()
-        )
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        # The .git directory has been removed (likely by setup.py sdist),
-        # and/or git is not installed
-        version += ".dev0"
-
-
 setup(
     name="Pint",
-    version=version,
+    use_scm_version=True,
     description="Physical quantities module",
     long_description=long_description,
     keywords="physical quantities unit conversion science",
@@ -62,8 +41,9 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    python_requires=">=3.6",
+    python_requires='>=3.6',
     install_requires=["setuptools"],
+    setup_requires=["setuptools", "setuptools_scm"],
     extras_require={
         "numpy": ["numpy >= 1.14"],
         "uncertainties": ["uncertainties >= 3.0"],
