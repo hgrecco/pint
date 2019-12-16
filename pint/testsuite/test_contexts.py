@@ -692,9 +692,13 @@ class TestDefinedContexts(QuantityTestCase):
 
             # Check RKM <-> cN/tex conversion
             self.assertQuantityAlmostEqual(1 * ureg.RKM, 0.980665 * ureg.cN / ureg.tex)
-            self.assertQuantityAlmostEqual((1/0.980665) * ureg.RKM, 1 * ureg.cN / ureg.tex)
+            self.assertQuantityAlmostEqual(
+                (1 / 0.980665) * ureg.RKM, 1 * ureg.cN / ureg.tex
+            )
             self.assertAlmostEqual((1 * ureg.RKM).to(ureg.cN / ureg.tex).m, 0.980665)
-            self.assertAlmostEqual((1 * ureg.cN / ureg.tex).to(ureg.RKM).m, 1/0.980665)
+            self.assertAlmostEqual(
+                (1 * ureg.cN / ureg.tex).to(ureg.RKM).m, 1 / 0.980665
+            )
 
     def test_decorator(self):
         ureg = self.ureg
