@@ -215,6 +215,7 @@ class ContextChain(ChainMap):
 
     def __init__(self):
         super().__init__()
+        self.maps.clear()  # Remove default empty map
         self._graph = None
         self._contexts = []
 
@@ -229,11 +230,11 @@ class ContextChain(ChainMap):
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
-    def remove_contexts(self, n):
+    def remove_contexts(self, n: int = None):
         """Remove the last n inserted contexts from the chain.
         """
-        self._contexts = self._contexts[n:]
-        self.maps = self.maps[n:]
+        del self._contexts[:n]
+        del self.maps[:n]
         self._graph = None
 
     @property

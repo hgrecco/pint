@@ -187,12 +187,13 @@ def pi_theorem(quantities, registry=None):
 def solve_dependencies(dependencies):
     """Solve a dependency graph.
 
-    :param dependencies: dependency dictionary. For each key, the value is
-                         an iterable indicating its dependencies.
-    :return: list of sets, each containing keys of independents tasks dependent
-                           only of the previous tasks in the list.
+    :param dependencies:
+        dependency dictionary. For each key, the value is an iterable indicating its
+        dependencies.
+    :return:
+        iterator of sets, each containing keys of independents tasks dependent only of
+        the previous tasks in the list.
     """
-    r = []
     while dependencies:
         # values not in keys (items without dep)
         t = {i for v in dependencies.values() for i in v} - dependencies.keys()
@@ -205,10 +206,9 @@ def solve_dependencies(dependencies):
                     ", ".join(repr(x) for x in dependencies.items())
                 )
             )
-        r.append(t)
         # and cleaned up
         dependencies = {k: v - t for k, v in dependencies.items() if v}
-    return r
+        yield t
 
 
 def find_shortest_path(graph, start, end, path=None):
@@ -721,11 +721,10 @@ def to_units_container(unit_like, registry=None):
 def infer_base_unit(q):
     """Return UnitsContainer of q with all prefixes stripped."""
     d = udict()
-    parse = q._REGISTRY.parse_unit_name
     for unit_name, power in q._units.items():
-        completely_parsed_unit = list(parse(unit_name))[-1]
-
-        _, base_unit, __ = completely_parsed_unit
+        candidates = q._REGISTRY.parse_unit_name(unit_name)
+        assert len(candidates) == 1
+        _, base_unit, _ = candidates[0]
         d[base_unit] += power
 
     # remove values that resulted in a power of 0
