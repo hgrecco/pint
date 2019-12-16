@@ -29,7 +29,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
     """
 
     #: Default formatting string.
-    default_format = ''
+    default_format = ""
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
@@ -46,8 +46,10 @@ class Unit(PrettyIPython, SharedRegistryObject):
         elif isinstance(units, Unit):
             self._units = units._units
         else:
-            raise TypeError('units must be of type str, Unit or '
-                            'UnitsContainer; not {}.'.format(type(units)))
+            raise TypeError(
+                "units must be of type str, Unit or "
+                "UnitsContainer; not {}.".format(type(units))
+            )
 
         self.__used = False
         self.__handling = None
@@ -62,9 +64,9 @@ class Unit(PrettyIPython, SharedRegistryObject):
         return ret
 
     def __deepcopy__(self, memo):
-      ret = self.__class__(copy.deepcopy(self._units, memo))
-      ret.__used = self.__used
-      return ret
+        ret = self.__class__(copy.deepcopy(self._units, memo))
+        ret.__used = self.__used
+        return ret
 
     def __str__(self):
         return format(self)
@@ -78,35 +80,41 @@ class Unit(PrettyIPython, SharedRegistryObject):
     def __format__(self, spec):
         spec = spec or self.default_format
         # special cases
-        if 'Lx' in spec:  # the LaTeX siunitx code
-            return r'\si[]{%s}' % siunitx_format_unit(self)
+        if "Lx" in spec:  # the LaTeX siunitx code
+            return r"\si[]{%s}" % siunitx_format_unit(self)
 
-        if '~' in spec:
+        if "~" in spec:
             if not self._units:
-                return ''
-            units = UnitsContainer(dict((self._REGISTRY._get_symbol(key),
-                                         value)
-                                   for key, value in self._units.items()))
-            spec = spec.replace('~', '')
+                return ""
+            units = UnitsContainer(
+                dict(
+                    (self._REGISTRY._get_symbol(key), value)
+                    for key, value in self._units.items()
+                )
+            )
+            spec = spec.replace("~", "")
         else:
             units = self._units
 
-        return '%s' % (format(units, spec))
+        return "%s" % (format(units, spec))
 
-    def format_babel(self, spec='', **kwspec):
+    def format_babel(self, spec="", **kwspec):
         spec = spec or self.default_format
 
-        if '~' in spec:
+        if "~" in spec:
             if self.dimensionless:
-                return ''
-            units = UnitsContainer(dict((self._REGISTRY._get_symbol(key),
-                                         value)
-                                   for key, value in self._units.items()))
-            spec = spec.replace('~', '')
+                return ""
+            units = UnitsContainer(
+                dict(
+                    (self._REGISTRY._get_symbol(key), value)
+                    for key, value in self._units.items()
+                )
+            )
+            spec = spec.replace("~", "")
         else:
             units = self._units
 
-        return '%s' % (units.format_babel(spec, **kwspec))
+        return "%s" % (units.format_babel(spec, **kwspec))
 
     @property
     def dimensionless(self):
@@ -138,7 +146,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
     def __mul__(self, other):
         if self._check(other):
             if isinstance(other, self.__class__):
-                return self.__class__(self._units*other._units)
+                return self.__class__(self._units * other._units)
             else:
                 qself = self._REGISTRY.Quantity(1.0, self._units)
                 return qself * other
@@ -153,20 +161,20 @@ class Unit(PrettyIPython, SharedRegistryObject):
     def __truediv__(self, other):
         if self._check(other):
             if isinstance(other, self.__class__):
-                return self.__class__(self._units/other._units)
+                return self.__class__(self._units / other._units)
             else:
                 qself = 1.0 * self
                 return qself / other
 
-        return self._REGISTRY.Quantity(1/other, self._units)
+        return self._REGISTRY.Quantity(1 / other, self._units)
 
     def __rtruediv__(self, other):
         # As Unit and Quantity both handle truediv with each other rtruediv can
         # only be called for something different.
         if isinstance(other, NUMERIC_TYPES):
-            return self._REGISTRY.Quantity(other, 1/self._units)
+            return self._REGISTRY.Quantity(other, 1 / self._units)
         elif isinstance(other, UnitsContainer):
-            return self.__class__(other/self._units)
+            return self.__class__(other / self._units)
         else:
             return NotImplemented
 
@@ -175,10 +183,10 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __pow__(self, other):
         if isinstance(other, NUMERIC_TYPES):
-            return self.__class__(self._units**other)
+            return self.__class__(self._units ** other)
 
         else:
-            mess = 'Cannot power Unit by {}'.format(type(other))
+            mess = "Cannot power Unit by {}".format(type(other))
             raise TypeError(mess)
 
     def __hash__(self):
@@ -234,12 +242,12 @@ class Unit(PrettyIPython, SharedRegistryObject):
     def __array_wrap__(self, array, context=None):
         uf, objs, huh = context
 
-        if uf.__name__ in ('true_divide', 'divide', 'floor_divide'):
-            return self._REGISTRY.Quantity(array, 1/self._units)
-        elif uf.__name__ in ('multiply',):
+        if uf.__name__ in ("true_divide", "divide", "floor_divide"):
+            return self._REGISTRY.Quantity(array, 1 / self._units)
+        elif uf.__name__ in ("multiply",):
             return self._REGISTRY.Quantity(array, self._units)
         else:
-            raise ValueError('Unsupproted operation for Unit')
+            raise ValueError("Unsupproted operation for Unit")
 
     @property
     def systems(self):
@@ -250,7 +258,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
                     out.add(sname)
         return frozenset(out)
 
-    def from_(self, value, strict=True, name='value'):
+    def from_(self, value, strict=True, name="value"):
         """Converts a numerical value or quantity to this unit
 
         :param value: a Quantity (or numerical value if strict=False) to convert
@@ -269,7 +277,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             return value * self
 
-    def m_from(self, value, strict=True, name='value'):
+    def m_from(self, value, strict=True, name="value"):
         """Converts a numerical value or quantity to this unit, then returns
         the magnitude of the converted value
 

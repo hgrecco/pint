@@ -37,8 +37,8 @@ def _to_units_container(a, registry=None):
 
     Return a tuple with the unit container and a boolean indicating if it was a reference.
     """
-    if isinstance(a, str) and '=' in a:
-        return to_units_container(a.split('=', 1)[1]), True
+    if isinstance(a, str) and "=" in a:
+        return to_units_container(a.split("=", 1)[1]), True
     return to_units_container(a, registry), False
 
 
@@ -86,8 +86,10 @@ def _parse_wrap_args(args, registry=None):
         if not isinstance(arg, dict):
             continue
         if not set(arg.keys()) <= defs_args:
-            raise ValueError('Found a missing token while wrapping a function: '
-                             'Not all variable referenced in %s are defined using !' % args[ndx])
+            raise ValueError(
+                "Found a missing token while wrapping a function: "
+                "Not all variable referenced in %s are defined using !" % args[ndx]
+            )
 
     def _converter(ureg, values, strict):
         new_values = list(value for value in values)
@@ -104,22 +106,28 @@ def _parse_wrap_args(args, registry=None):
         for ndx in dependent_args_ndx:
             value = values[ndx]
             assert _replace_units(args_as_uc[ndx][0], values_by_name) is not None
-            new_values[ndx] = ureg._convert(getattr(value, "_magnitude", value),
-                                            getattr(value, "_units", UnitsContainer({})),
-                                            _replace_units(args_as_uc[ndx][0], values_by_name))
+            new_values[ndx] = ureg._convert(
+                getattr(value, "_magnitude", value),
+                getattr(value, "_units", UnitsContainer({})),
+                _replace_units(args_as_uc[ndx][0], values_by_name),
+            )
 
         # third pass: convert other arguments
         for ndx in unit_args_ndx:
 
             if isinstance(values[ndx], ureg.Quantity):
-                new_values[ndx] = ureg._convert(values[ndx]._magnitude,
-                                                values[ndx]._units,
-                                                args_as_uc[ndx][0])
+                new_values[ndx] = ureg._convert(
+                    values[ndx]._magnitude, values[ndx]._units, args_as_uc[ndx][0]
+                )
             else:
                 if strict:
-                    raise ValueError('A wrapped function using strict=True requires '
-                                     'quantity for all arguments with not None units. '
-                                     '(error found for {}, {})'.format(args_as_uc[ndx][0], new_values[ndx]))
+                    raise ValueError(
+                        "A wrapped function using strict=True requires "
+                        "quantity for all arguments with not None units. "
+                        "(error found for {}, {})".format(
+                            args_as_uc[ndx][0], new_values[ndx]
+                        )
+                    )
 
         return new_values, values_by_name
 
@@ -139,7 +147,7 @@ def _apply_defaults(func, args, kwargs):
         if param.name not in bound_arguments.arguments:
             bound_arguments.arguments[param.name] = param.default
     args = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
-    return args, {} 
+    return args, {}
 
 
 def wraps(ureg, ret, args, strict=True):
@@ -166,24 +174,31 @@ def wraps(ureg, ret, args, strict=True):
     """
 
     if not isinstance(args, (list, tuple)):
-        args = (args, )
+        args = (args,)
 
     converter = _parse_wrap_args(args)
 
     if isinstance(ret, (list, tuple)):
-        container, ret = True, ret.__class__([_to_units_container(arg, ureg) for arg in ret])
+        container, ret = (
+            True,
+            ret.__class__([_to_units_container(arg, ureg) for arg in ret]),
+        )
     else:
         container, ret = False, _to_units_container(ret, ureg)
 
     def decorator(func):
-        assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
-        updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
+        assigned = tuple(
+            attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
+        )
+        updated = tuple(
+            attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr)
+        )
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kw):
 
             values, kw = _apply_defaults(func, values, kw)
-                
+
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.
             new_values, values_by_name = converter(ureg, values, strict)
@@ -191,18 +206,24 @@ def wraps(ureg, ret, args, strict=True):
             result = func(*new_values, **kw)
 
             if container:
-                out_units = (_replace_units(r, values_by_name) if is_ref else r
-                             for (r, is_ref) in ret)
-                return ret.__class__(res if unit is None else ureg.Quantity(res, unit)
-                                     for unit, res in zip_longest(out_units, result))
+                out_units = (
+                    _replace_units(r, values_by_name) if is_ref else r
+                    for (r, is_ref) in ret
+                )
+                return ret.__class__(
+                    res if unit is None else ureg.Quantity(res, unit)
+                    for unit, res in zip_longest(out_units, result)
+                )
 
             if ret[0] is None:
                 return result
 
-            return ureg.Quantity(result,
-                                 _replace_units(ret[0], values_by_name) if ret[1] else ret[0])
+            return ureg.Quantity(
+                result, _replace_units(ret[0], values_by_name) if ret[1] else ret[0]
+            )
 
         return wrapper
+
     return decorator
 
 
@@ -220,18 +241,26 @@ def check(ureg, *args):
     :raises pint.DimensionalityError:
         if the parameters don't match dimensions
     """
-    dimensions = [ureg.get_dimensionality(dim) if dim is not None else None for dim in args]
+    dimensions = [
+        ureg.get_dimensionality(dim) if dim is not None else None for dim in args
+    ]
 
     def decorator(func):
-        assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
-        updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
+        assigned = tuple(
+            attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
+        )
+        updated = tuple(
+            attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr)
+        )
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*args, **kwargs):
             list_args, empty = _apply_defaults(func, args, kwargs)
             if len(dimensions) > len(list_args):
-                raise TypeError("%s takes %i parameters, but %i dimensions were passed"
-                % (func.__name__, len(list_args), len(dimensions)))
+                raise TypeError(
+                    "%s takes %i parameters, but %i dimensions were passed"
+                    % (func.__name__, len(list_args), len(dimensions))
+                )
             for dim, value in zip(dimensions, list_args):
 
                 if dim is None:
@@ -239,8 +268,9 @@ def check(ureg, *args):
 
                 if not ureg.Quantity(value).check(dim):
                     val_dim = ureg.get_dimensionality(value)
-                    raise DimensionalityError(value, 'a quantity of',
-                                              val_dim, dim)
+                    raise DimensionalityError(value, "a quantity of", val_dim, dim)
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator

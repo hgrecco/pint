@@ -29,20 +29,23 @@ logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
 
 
-def matrix_to_string(matrix, row_headers=None, col_headers=None, fmtfun=lambda x: str(int(x))):
+def matrix_to_string(
+    matrix, row_headers=None, col_headers=None, fmtfun=lambda x: str(int(x))
+):
     """Takes a 2D matrix (as nested list) and returns a string.
     """
     ret = []
     if col_headers:
-        ret.append(('\t' if row_headers else '') + '\t'.join(col_headers))
+        ret.append(("\t" if row_headers else "") + "\t".join(col_headers))
     if row_headers:
-        ret += [rh + '\t' + '\t'.join(fmtfun(f) for f in row)
-                for rh, row in zip(row_headers, matrix)]
+        ret += [
+            rh + "\t" + "\t".join(fmtfun(f) for f in row)
+            for rh, row in zip(row_headers, matrix)
+        ]
     else:
-        ret += ['\t'.join(fmtfun(f) for f in row)
-                for row in matrix]
+        ret += ["\t".join(fmtfun(f) for f in row) for row in matrix]
 
-    return '\n'.join(ret)
+    return "\n".join(ret)
 
 
 def transpose(matrix):
@@ -79,7 +82,7 @@ def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
         new_M.append(r)
     M = new_M
 
-#    M = [[ntype(x) for x in row] for row in M]
+    #    M = [[ntype(x) for x in row] for row in M]
     I = [[ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)]
     swapped = []
 
@@ -108,8 +111,8 @@ def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
             if i == r:
                 continue
             lv = M[i][lead]
-            M[i] = [iv - lv*rv for rv, iv in zip(M[r], M[i])]
-            I[i] = [iv - lv*rv for rv, iv in zip(I[r], I[i])]
+            M[i] = [iv - lv * rv for rv, iv in zip(M[r], M[i])]
+            I[i] = [iv - lv * rv for rv, iv in zip(I[r], I[i])]
 
         lead += 1
 
@@ -138,14 +141,16 @@ def pi_theorem(quantities, registry=None):
             value = ParserHelper.from_string(value)
         if isinstance(value, dict):
             dims = getdim(UnitsContainer(value))
-        elif not hasattr(value, 'dimensionality'):
+        elif not hasattr(value, "dimensionality"):
             dims = getdim(value)
         else:
             dims = value.dimensionality
 
-        if not registry and any(not key.startswith('[') for key in dims):
-            logger.warning('A non dimension was found and a registry was not provided. '
-                           'Assuming that it is a dimension name: {}.'.format(dims))
+        if not registry and any(not key.startswith("[") for key in dims):
+            logger.warning(
+                "A non dimension was found and a registry was not provided. "
+                "Assuming that it is a dimension name: {}.".format(dims)
+            )
 
         quant.append((name, dims))
         dimensions = dimensions.union(dims.keys())
@@ -153,8 +158,10 @@ def pi_theorem(quantities, registry=None):
     dimensions = list(dimensions)
 
     # Calculate dimensionless  quantities
-    M = [[dimensionality[dimension] for name, dimensionality in quant]
-         for dimension in dimensions]
+    M = [
+        [dimensionality[dimension] for name, dimensionality in quant]
+        for dimension in dimensions
+    ]
 
     M, identity, pivot = column_echelon_form(M, transpose_result=False)
 
@@ -167,8 +174,13 @@ def pi_theorem(quantities, registry=None):
             continue
         max_den = max(f.denominator for f in rowi)
         neg = -1 if sum(f < 0 for f in rowi) > sum(f > 0 for f in rowi) else 1
-        results.append(dict((q[0], neg * f.numerator * max_den / f.denominator)
-                            for q, f in zip(quant, rowi) if f.numerator != 0))
+        results.append(
+            dict(
+                (q[0], neg * f.numerator * max_den / f.denominator)
+                for q, f in zip(quant, rowi)
+                if f.numerator != 0
+            )
+        )
     return results
 
 
@@ -189,8 +201,9 @@ def solve_dependencies(dependencies):
         # can be done right away
         if not t:
             raise ValueError(
-                'Cyclic dependencies exist among these items: {}'
-                .format(', '.join(repr(x) for x in dependencies.items()))
+                "Cyclic dependencies exist among these items: {}".format(
+                    ", ".join(repr(x) for x in dependencies.items())
+                )
             )
         r.append(t)
         # and cleaned up
@@ -232,8 +245,9 @@ class udict(dict):
     """ Custom dict implementing __missing__.
 
     """
+
     def __missing__(self, key):
-        return 0.
+        return 0.0
 
     def copy(self):
         return udict(self)
@@ -247,16 +261,17 @@ class UnitsContainer(Mapping):
     return new instances.
 
     """
-    __slots__ = ('_d', '_hash')
+
+    __slots__ = ("_d", "_hash")
 
     def __init__(self, *args, **kwargs):
         d = udict(*args, **kwargs)
         self._d = d
         for key, value in d.items():
             if not isinstance(key, str):
-                raise TypeError('key must be a str, not {}'.format(type(key)))
+                raise TypeError("key must be a str, not {}".format(type(key)))
             if not isinstance(value, Number):
-                raise TypeError('value must be a number, not {}'.format(type(value)))
+                raise TypeError("value must be a number, not {}".format(type(value)))
             if not isinstance(value, float):
                 d[key] = float(value)
         self._hash = None
@@ -328,12 +343,13 @@ class UnitsContainer(Mapping):
         return dict.__eq__(self._d, other)
 
     def __str__(self):
-        return self.__format__('')
+        return self.__format__("")
 
     def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value)
-                                  for key, value in sorted(self._d.items())])
-        return '<UnitsContainer({})>'.format(tmp)
+        tmp = "{%s}" % ", ".join(
+            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+        )
+        return "<UnitsContainer({})>".format(tmp)
 
     def __format__(self, spec):
         return format_unit(self, spec)
@@ -350,7 +366,7 @@ class UnitsContainer(Mapping):
 
     def __mul__(self, other):
         if not isinstance(other, self.__class__):
-            err = 'Cannot multiply UnitsContainer by {}'
+            err = "Cannot multiply UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
 
         new = self.copy()
@@ -366,7 +382,7 @@ class UnitsContainer(Mapping):
 
     def __pow__(self, other):
         if not isinstance(other, NUMERIC_TYPES):
-            err = 'Cannot power UnitsContainer by {}'
+            err = "Cannot power UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
 
         new = self.copy()
@@ -377,7 +393,7 @@ class UnitsContainer(Mapping):
 
     def __truediv__(self, other):
         if not isinstance(other, self.__class__):
-            err = 'Cannot divide UnitsContainer by {}'
+            err = "Cannot divide UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
 
         new = self.copy()
@@ -391,10 +407,10 @@ class UnitsContainer(Mapping):
 
     def __rtruediv__(self, other):
         if not isinstance(other, self.__class__) and other != 1:
-            err = 'Cannot divide {} by UnitsContainer'
+            err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
 
-        return self**-1
+        return self ** -1
 
 
 class ParserHelper(UnitsContainer):
@@ -410,7 +426,7 @@ class ParserHelper(UnitsContainer):
 
     """
 
-    __slots__ = ('scale', )
+    __slots__ = ("scale",)
 
     def __init__(self, scale=1, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -443,7 +459,7 @@ class ParserHelper(UnitsContainer):
         elif token_type == NAME:
             return ParserHelper.from_word(token_text)
         else:
-            raise Exception('unknown token type')
+            raise Exception("unknown token type")
 
     @classmethod
     @lru_cache()
@@ -455,8 +471,10 @@ class ParserHelper(UnitsContainer):
             return cls()
 
         input_string = string_preprocessor(input_string)
-        if '[' in input_string:
-            input_string = input_string.replace('[', '__obra__').replace(']', '__cbra__')
+        if "[" in input_string:
+            input_string = input_string.replace("[", "__obra__").replace(
+                "]", "__cbra__"
+            )
             reps = True
         else:
             reps = False
@@ -473,9 +491,9 @@ class ParserHelper(UnitsContainer):
         return ParserHelper(
             ret.scale,
             {
-                key.replace('__obra__', '[').replace('__cbra__', ']'): value
+                key.replace("__obra__", "[").replace("__cbra__", "]"): value
                 for key, value in ret.items()
-            }
+            },
         )
 
     def __copy__(self):
@@ -488,22 +506,19 @@ class ParserHelper(UnitsContainer):
 
     def __hash__(self):
         if self.scale != 1.0:
-            mess = 'Only scale 1.0 ParserHelper instance should be considered hashable'
+            mess = "Only scale 1.0 ParserHelper instance should be considered hashable"
             raise ValueError(mess)
         return super().__hash__()
 
     def __eq__(self, other):
         if isinstance(other, ParserHelper):
-            return (
-                self.scale == other.scale and
-                super().__eq__(other)
-            )
+            return self.scale == other.scale and super().__eq__(other)
         elif isinstance(other, str):
             return self == ParserHelper.from_string(other)
         elif isinstance(other, Number):
             return self.scale == other and not len(self._d)
         else:
-            return self.scale == 1. and super().__eq__(other)
+            return self.scale == 1.0 and super().__eq__(other)
 
     def operate(self, items, op=operator.iadd, cleanup=True):
         d = udict(self._d)
@@ -518,14 +533,16 @@ class ParserHelper(UnitsContainer):
         return self.__class__(self.scale, d)
 
     def __str__(self):
-        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value)
-                                  for key, value in sorted(self._d.items())])
-        return '{} {}'.format(self.scale, tmp)
+        tmp = "{%s}" % ", ".join(
+            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+        )
+        return "{} {}".format(self.scale, tmp)
 
     def __repr__(self):
-        tmp = '{%s}' % ', '.join(["'{}': {}".format(key, value)
-                                  for key, value in sorted(self._d.items())])
-        return '<ParserHelper({}, {})>'.format(self.scale, tmp)
+        tmp = "{%s}" % ", ".join(
+            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+        )
+        return "<ParserHelper({}, {})>".format(self.scale, tmp)
 
     def __mul__(self, other):
         if isinstance(other, str):
@@ -546,7 +563,7 @@ class ParserHelper(UnitsContainer):
         d = self._d.copy()
         for key in self._d:
             d[key] *= other
-        return self.__class__(self.scale**other, d)
+        return self.__class__(self.scale ** other, d)
 
     def __truediv__(self, other):
         if isinstance(other, str):
@@ -578,20 +595,24 @@ class ParserHelper(UnitsContainer):
 
 
 #: List of regex substitution pairs.
-_subs_re = [('\N{DEGREE SIGN}', " degree"),
-            (r"([\w\.\-\+\*\\\^])\s+", r"\1 "), # merge multiple spaces
-            (r"({}) squared", r"\1**2"),  # Handle square and cube
-            (r"({}) cubed", r"\1**3"),
-            (r"cubic ({})", r"\1**3"),
-            (r"square ({})", r"\1**2"),
-            (r"sq ({})", r"\1**2"),
-            (r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])", r"\1*"),  # Handle numberLetter for multiplication
-            (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
-            ]
+_subs_re = [
+    ("\N{DEGREE SIGN}", " degree"),
+    (r"([\w\.\-\+\*\\\^])\s+", r"\1 "),  # merge multiple spaces
+    (r"({}) squared", r"\1**2"),  # Handle square and cube
+    (r"({}) cubed", r"\1**3"),
+    (r"cubic ({})", r"\1**3"),
+    (r"square ({})", r"\1**2"),
+    (r"sq ({})", r"\1**2"),
+    (
+        r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])",
+        r"\1*",
+    ),  # Handle numberLetter for multiplication
+    (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
+]
 
 #: Compiles the regex and replace {} by a regex that matches an identifier.
 _subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
-_pretty_table = str.maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹·⁻', '0123456789*-')
+_pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⁻", "0123456789*-")
 _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
 
 
@@ -605,7 +626,7 @@ def string_preprocessor(input_string):
 
     # Replace pretty format characters
     for pretty_exp in _pretty_exp_re.findall(input_string):
-        exp = '**' + pretty_exp.translate(_pretty_table)
+        exp = "**" + pretty_exp.translate(_pretty_table)
         input_string = input_string.replace(pretty_exp, exp)
     input_string = input_string.translate(_pretty_table)
 
@@ -615,7 +636,7 @@ def string_preprocessor(input_string):
 
 
 def _is_dim(name):
-    return name[0] == '[' and name[-1] == ']'
+    return name[0] == "[" and name[-1] == "]"
 
 
 class SharedRegistryObject:
@@ -625,6 +646,7 @@ class SharedRegistryObject:
     that an object from this class has a '_units' attribute.
 
     """
+
     def __new__(cls, *args, **kwargs):
         inst = object.__new__(cls)
         if not hasattr(cls, "_REGISTRY"):
@@ -644,13 +666,14 @@ class SharedRegistryObject:
         same unit registry.
 
         """
-        if self._REGISTRY is getattr(other, '_REGISTRY', None):
+        if self._REGISTRY is getattr(other, "_REGISTRY", None):
             return True
 
         elif isinstance(other, SharedRegistryObject):
-            mess = 'Cannot operate with {} and {} of different registries.'
-            raise ValueError(mess.format(self.__class__.__name__,
-                                         other.__class__.__name__))
+            mess = "Cannot operate with {} and {} of different registries."
+            raise ValueError(
+                mess.format(self.__class__.__name__, other.__class__.__name__)
+            )
         else:
             return False
 
@@ -715,7 +738,7 @@ def getattr_maybe_raise(self, item):
     """
     # Double-underscore attributes are tricky to detect because they are
     # automatically prefixed with the class name - which may be a subclass of self
-    if item.startswith('_') or item.endswith('__'):
+    if item.startswith("_") or item.endswith("__"):
         raise AttributeError("%r object has no attribute %r" % (self, item))
 
 
@@ -748,10 +771,10 @@ class SourceIterator:
         return self
 
     def __next__(self):
-        line = ''
-        while not line or line.startswith('#'):
+        line = ""
+        while not line or line.startswith("#"):
             lineno, line = next(self.internal)
-            line = line.split('#', 1)[0].strip()
+            line = line.split("#", 1)[0].strip()
 
         self.last = lineno, line
         return lineno, line
@@ -782,10 +805,10 @@ class BlockIterator(SourceIterator):
             return self.last
 
         lineno, line = SourceIterator.__next__(self)
-        if line.startswith('@end'):
+        if line.startswith("@end"):
             raise StopIteration
-        elif line.startswith('@'):
-            raise DefinitionSyntaxError('cannot nest @ directives', lineno=lineno)
+        elif line.startswith("@"):
+            raise DefinitionSyntaxError("cannot nest @ directives", lineno=lineno)
 
         return lineno, line
 

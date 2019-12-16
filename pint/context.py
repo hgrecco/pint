@@ -13,20 +13,22 @@ import re
 import weakref
 from collections import ChainMap, defaultdict
 
-from .util import (ParserHelper, UnitsContainer,
-                   to_units_container, SourceIterator)
+from .util import ParserHelper, UnitsContainer, to_units_container, SourceIterator
 from .errors import DefinitionSyntaxError
 
 #: Regex to match the header parts of a context.
-_header_re = re.compile(r'@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*')
+_header_re = re.compile(
+    r"@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*"
+)
 
 #: Regex to match variable names in an equation.
-_varname_re = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
+_varname_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
 def _expression_to_function(eq):
     def func(ureg, value, **kwargs):
         return ureg.parse_expression(eq, value=value, **kwargs)
+
     return func
 
 
@@ -97,18 +99,20 @@ class Context:
         lineno, header = next(lines)
         try:
             r = _header_re.search(header)
-            name = r.groupdict()['name'].strip()
-            aliases = r.groupdict()['aliases']
+            name = r.groupdict()["name"].strip()
+            aliases = r.groupdict()["aliases"]
             if aliases:
-                aliases = tuple(a.strip() for a in r.groupdict()['aliases'].split('='))
+                aliases = tuple(a.strip() for a in r.groupdict()["aliases"].split("="))
             else:
                 aliases = ()
-            defaults = r.groupdict()['defaults']
+            defaults = r.groupdict()["defaults"]
         except:
-            raise DefinitionSyntaxError("Could not parse the Context header '%s'" % header,
-                                        lineno=lineno)
+            raise DefinitionSyntaxError(
+                "Could not parse the Context header '%s'" % header, lineno=lineno
+            )
 
         if defaults:
+
             def to_num(val):
                 val = complex(val)
                 if not val.imag:
@@ -117,12 +121,12 @@ class Context:
 
             txt = defaults
             try:
-                defaults = (part.split('=') for part in defaults.strip('()').split(','))
+                defaults = (part.split("=") for part in defaults.strip("()").split(","))
                 defaults = {str(k).strip(): to_num(v) for k, v in defaults}
             except (ValueError, TypeError):
                 raise DefinitionSyntaxError(
                     f"Could not parse Context definition defaults: '{txt}'",
-                    lineno=lineno
+                    lineno=lineno,
                 )
 
             ctx = cls(name, aliases, defaults)
@@ -132,22 +136,20 @@ class Context:
         names = set()
         for lineno, line in lines:
             try:
-                rel, eq = line.split(':')
+                rel, eq = line.split(":")
                 names.update(_varname_re.findall(eq))
 
                 func = _expression_to_function(eq)
 
-                if '<->' in rel:
-                    src, dst = (ParserHelper.from_string(s)
-                                for s in rel.split('<->'))
+                if "<->" in rel:
+                    src, dst = (ParserHelper.from_string(s) for s in rel.split("<->"))
                     if to_base_func:
                         src = to_base_func(src)
                         dst = to_base_func(dst)
                     ctx.add_transformation(src, dst, func)
                     ctx.add_transformation(dst, src, func)
-                elif '->' in rel:
-                    src, dst = (ParserHelper.from_string(s)
-                                for s in rel.split('->'))
+                elif "->" in rel:
+                    src, dst = (ParserHelper.from_string(s) for s in rel.split("->"))
                     if to_base_func:
                         src = to_base_func(src)
                         dst = to_base_func(dst)
@@ -155,14 +157,16 @@ class Context:
                 else:
                     raise Exception
             except:
-                raise DefinitionSyntaxError("Could not parse Context %s relation '%s'" % (name, line),
-                                            lineno=lineno)
+                raise DefinitionSyntaxError(
+                    "Could not parse Context %s relation '%s'" % (name, line),
+                    lineno=lineno,
+                )
 
         if defaults:
             missing_pars = defaults.keys() - set(names)
             if missing_pars:
                 raise DefinitionSyntaxError(
-                    f'Context parameters {missing_pars} not found in any equation'
+                    f"Context parameters {missing_pars} not found in any equation"
                 )
 
         return ctx

@@ -48,23 +48,41 @@ from tokenize import NUMBER, NAME
 
 from . import registry_helpers
 from .context import Context, ContextChain
-from .util import (getattr_maybe_raise,
-                   logger, pi_theorem, solve_dependencies, ParserHelper,
-                   string_preprocessor, find_connected_nodes,
-                   find_shortest_path, UnitsContainer, _is_dim,
-                   to_units_container, SourceIterator)
+from .util import (
+    getattr_maybe_raise,
+    logger,
+    pi_theorem,
+    solve_dependencies,
+    ParserHelper,
+    string_preprocessor,
+    find_connected_nodes,
+    find_shortest_path,
+    UnitsContainer,
+    _is_dim,
+    to_units_container,
+    SourceIterator,
+)
 
 from .compat import tokenizer
-from .definitions import (Definition, UnitDefinition, PrefixDefinition,
-                          DimensionDefinition, AliasDefinition)
+from .definitions import (
+    Definition,
+    UnitDefinition,
+    PrefixDefinition,
+    DimensionDefinition,
+    AliasDefinition,
+)
 from .converters import ScaleConverter
-from .errors import (DimensionalityError, UndefinedUnitError,
-                     DefinitionSyntaxError, RedefinitionError)
+from .errors import (
+    DimensionalityError,
+    UndefinedUnitError,
+    DefinitionSyntaxError,
+    RedefinitionError,
+)
 
 from .pint_eval import build_eval_tree
 from . import systems
 
-_BLOCK_RE = re.compile(r' |\(')
+_BLOCK_RE = re.compile(r" |\(")
 
 
 class RegistryMeta(type):
@@ -124,15 +142,31 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     #: List to be used in addition of units when dir(registry) is called.
     #: Also used for autocompletion in IPython.
-    _dir = ['Quantity', 'Unit', 'Measurement',
-            'define', 'load_definitions',
-            'get_name', 'get_symbol', 'get_dimensionality',
-            'get_base_units', 'get_root_units',
-            'parse_unit_name', 'parse_units', 'parse_expression',
-            'convert']
+    _dir = [
+        "Quantity",
+        "Unit",
+        "Measurement",
+        "define",
+        "load_definitions",
+        "get_name",
+        "get_symbol",
+        "get_dimensionality",
+        "get_base_units",
+        "get_root_units",
+        "parse_unit_name",
+        "parse_units",
+        "parse_expression",
+        "convert",
+    ]
 
-    def __init__(self, filename='', force_ndarray=False, on_redefinition='warn',
-                 auto_reduce_dimensions=False, preprocessors=None):
+    def __init__(
+        self,
+        filename="",
+        force_ndarray=False,
+        on_redefinition="warn",
+        auto_reduce_dimensions=False,
+        preprocessors=None,
+    ):
 
         self._register_parsers()
         self._init_dynamic_classes()
@@ -163,10 +197,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._units_casei = defaultdict(set)
 
         #: Map prefix name (string) to its definition (PrefixDefinition).
-        self._prefixes = {'': PrefixDefinition('', '', (), 1)}
+        self._prefixes = {"": PrefixDefinition("", "", (), 1)}
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
-        self._suffixes = {'': None, 's': ''}
+        self._suffixes = {"": None, "s": ""}
 
         #: Map contexts to RegistryCache
         self._cache = RegistryCache()
@@ -177,21 +211,24 @@ class BaseRegistry(metaclass=RegistryMeta):
         """Generate subclasses on the fly and attach them to self
         """
         from .unit import build_unit_class
+
         self.Unit = build_unit_class(self)
 
         from .quantity import build_quantity_class
+
         self.Quantity = build_quantity_class(self)
 
         from .measurement import build_measurement_class
+
         self.Measurement = build_measurement_class(self)
 
     def _after_init(self):
         """This should be called after all __init__
         """
-        self.define(UnitDefinition('pi', 'π', (), ScaleConverter(math.pi)))
+        self.define(UnitDefinition("pi", "π", (), ScaleConverter(math.pi)))
 
-        if self._filename == '':
-            self.load_definitions('default_en.txt', True)
+        if self._filename == "":
+            self.load_definitions("default_en.txt", True)
         elif self._filename is not None:
             self.load_definitions(self._filename)
 
@@ -199,7 +236,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._initialized = True
 
     def _register_parsers(self):
-        self._register_parser('@defaults', self._parse_defaults)
+        self._register_parser("@defaults", self._parse_defaults)
 
     def _parse_defaults(self, ifile):
         """Loader for a @default section.
@@ -208,7 +245,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
         next(ifile)
         for lineno, part in ifile.block_iter():
-            k, v = part.split('=')
+            k, v = part.split("=")
             self._defaults[k.strip()] = v.strip()
 
     def __deepcopy__(self, memo):
@@ -222,8 +259,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         return self.Unit(item)
 
     def __getitem__(self, item):
-        logger.warning('Calling the getitem method from a UnitRegistry is deprecated. '
-                       'use `parse_expression` method or use the registry as a callable.')
+        logger.warning(
+            "Calling the getitem method from a UnitRegistry is deprecated. "
+            "use `parse_expression` method or use the registry as a callable."
+        )
         return self.parse_expression(item)
 
     def __dir__(self):
@@ -248,7 +287,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
 
         if isinstance(definition, str):
-            for line in definition.split('\n'):
+            for line in definition.split("\n"):
                 self._define(Definition.from_string(line))
         else:
             self._define(definition)
@@ -276,13 +315,15 @@ class BaseRegistry(metaclass=RegistryMeta):
             if definition.is_base:
                 for dimension in definition.reference.keys():
                     if dimension in self._dimensions:
-                        if dimension != '[]':
+                        if dimension != "[]":
                             raise DefinitionSyntaxError(
-                                'Only one unit per dimension can be a base unit'
+                                "Only one unit per dimension can be a base unit"
                             )
                         continue
 
-                    self.define(DimensionDefinition(dimension, '', (), None, is_base=True))
+                    self.define(
+                        DimensionDefinition(dimension, "", (), None, is_base=True)
+                    )
 
         elif isinstance(definition, PrefixDefinition):
             d, di = self._prefixes, None
@@ -293,31 +334,37 @@ class BaseRegistry(metaclass=RegistryMeta):
             return d[definition.name], d, di
 
         else:
-            raise TypeError('{} is not a valid definition.'.format(definition))
+            raise TypeError("{} is not a valid definition.".format(definition))
 
         # define "delta_" units for units with an offset
         if getattr(definition.converter, "offset", 0.0) != 0.0:
 
-            if definition.name.startswith('['):
-                d_name = '[delta_' + definition.name[1:]
+            if definition.name.startswith("["):
+                d_name = "[delta_" + definition.name[1:]
             else:
-                d_name = 'delta_' + definition.name
+                d_name = "delta_" + definition.name
 
             if definition.symbol:
-                d_symbol = 'Δ' + definition.symbol
+                d_symbol = "Δ" + definition.symbol
             else:
                 d_symbol = None
 
-            d_aliases = tuple('Δ' + alias for alias in definition.aliases) + \
-                        tuple('delta_' + alias for alias in definition.aliases)
+            d_aliases = tuple("Δ" + alias for alias in definition.aliases) + tuple(
+                "delta_" + alias for alias in definition.aliases
+            )
 
             d_reference = UnitsContainer(
                 {ref: value for ref, value in definition.reference.items()}
             )
 
-            d_def = UnitDefinition(d_name, d_symbol, d_aliases,
-                                   ScaleConverter(definition.converter.scale),
-                                   d_reference, definition.is_base)
+            d_def = UnitDefinition(
+                d_name,
+                d_symbol,
+                d_aliases,
+                ScaleConverter(definition.converter.scale),
+                d_reference,
+                definition.is_base,
+            )
         else:
             d_def = definition
 
@@ -329,14 +376,18 @@ class BaseRegistry(metaclass=RegistryMeta):
         """Helper function to store a definition in the internal dictionaries.
         It stores the definition under its name, symbol and aliases.
         """
-        self._define_single_adder(definition.name, definition, unit_dict, casei_unit_dict)
+        self._define_single_adder(
+            definition.name, definition, unit_dict, casei_unit_dict
+        )
 
         if definition.has_symbol:
-            self._define_single_adder(definition.symbol, definition, unit_dict, casei_unit_dict)
+            self._define_single_adder(
+                definition.symbol, definition, unit_dict, casei_unit_dict
+            )
 
         for alias in definition.aliases:
-            if ' ' in alias:
-                logger.warn('Alias cannot contain a space: ' + alias)
+            if " " in alias:
+                logger.warn("Alias cannot contain a space: " + alias)
 
             self._define_single_adder(alias, definition, unit_dict, casei_unit_dict)
 
@@ -346,9 +397,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         It warns or raise error on redefinition.
         """
         if key in unit_dict:
-            if self._on_redefinition == 'raise':
+            if self._on_redefinition == "raise":
                 raise RedefinitionError(key, type(value))
-            elif self._on_redefinition == 'warn':
+            elif self._on_redefinition == "warn":
                 logger.warning("Redefining '%s' (%s)" % (key, type(value)))
 
         unit_dict[key] = value
@@ -372,7 +423,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         if self._parsers is None:
             self._parsers = {}
 
-        if prefix and prefix[0] == '@':
+        if prefix and prefix[0] == "@":
             self._parsers[prefix] = parserfunc
         else:
             raise ValueError("Prefix directives must start with '@'")
@@ -390,22 +441,24 @@ class BaseRegistry(metaclass=RegistryMeta):
                 if is_resource:
                     with closing(pkg_resources.resource_stream(__name__, file)) as fp:
                         rbytes = fp.read()
-                    return self.load_definitions(StringIO(rbytes.decode('utf-8')), is_resource)
+                    return self.load_definitions(
+                        StringIO(rbytes.decode("utf-8")), is_resource
+                    )
                 else:
-                    with open(file, encoding='utf-8') as fp:
+                    with open(file, encoding="utf-8") as fp:
                         return self.load_definitions(fp, is_resource)
             except (RedefinitionError, DefinitionSyntaxError) as e:
                 if e.filename is None:
                     e.filename = file
                 raise e
             except Exception as e:
-                msg = getattr(e, 'message', '') or str(e)
-                raise ValueError('While opening {}\n{}'.format(file, msg))
+                msg = getattr(e, "message", "") or str(e)
+                raise ValueError("While opening {}\n{}".format(file, msg))
 
         ifile = SourceIterator(file)
         for no, line in ifile:
-            if line.startswith('@') and not line.startswith('@alias'):
-                if line.startswith('@import'):
+            if line.startswith("@") and not line.startswith("@alias"):
+                if line.startswith("@import"):
                     if is_resource:
                         path = line[7:].strip()
                     else:
@@ -418,10 +471,14 @@ class BaseRegistry(metaclass=RegistryMeta):
                 else:
                     parts = _BLOCK_RE.split(line)
 
-                    loader = self._parsers.get(parts[0], None) if self._parsers else None
+                    loader = (
+                        self._parsers.get(parts[0], None) if self._parsers else None
+                    )
 
                     if loader is None:
-                        raise DefinitionSyntaxError('Unknown directive %s' % line, lineno=no)
+                        raise DefinitionSyntaxError(
+                            "Unknown directive %s" % line, lineno=no
+                        )
 
                     try:
                         loader(ifile)
@@ -451,7 +508,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         for unit_names in solve_dependencies(deps):
             for unit_name in unit_names:
-                if '[' in unit_name:
+                if "[" in unit_name:
                     continue
                 parsed_names = tuple(self.parse_unit_name(unit_name))
                 _prefix = None
@@ -476,7 +533,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                         dimeq_set.add(self._units[base_name]._name)
 
                 except Exception as e:
-                    logger.warning('Could not resolve {0}: {1!r}'.format(unit_name, e))
+                    logger.warning("Could not resolve {0}: {1!r}".format(unit_name, e))
 
     def _dedup_candidates(self, candidates):
         """Given a list of unit triplets (prefix, name, suffix),
@@ -502,30 +559,35 @@ class BaseRegistry(metaclass=RegistryMeta):
         """Return the canonical name of a unit.
         """
 
-        if name_or_alias == 'dimensionless':
-            return ''
+        if name_or_alias == "dimensionless":
+            return ""
 
         try:
             return self._units[name_or_alias]._name
         except KeyError:
             pass
 
-        candidates = self._dedup_candidates(self.parse_unit_name(name_or_alias, case_sensitive))
+        candidates = self._dedup_candidates(
+            self.parse_unit_name(name_or_alias, case_sensitive)
+        )
         if not candidates:
             raise UndefinedUnitError(name_or_alias)
         elif len(candidates) == 1:
             prefix, unit_name, _ = candidates[0]
         else:
-            logger.warning('Parsing {} yield multiple results. '
-                           'Options are: {}'.format(name_or_alias, candidates))
+            logger.warning(
+                "Parsing {} yield multiple results. "
+                "Options are: {}".format(name_or_alias, candidates)
+            )
             prefix, unit_name, _ = candidates[0]
 
         if prefix:
             name = prefix + unit_name
             symbol = self.get_symbol(name)
             prefix_def = self._prefixes[prefix]
-            self._units[name] = UnitDefinition(name, symbol, (), prefix_def.converter,
-                                               UnitsContainer({unit_name: 1}))
+            self._units[name] = UnitDefinition(
+                name, symbol, (), prefix_def.converter, UnitsContainer({unit_name: 1})
+            )
             return prefix + unit_name
 
         return unit_name
@@ -539,8 +601,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         elif len(candidates) == 1:
             prefix, unit_name, _ = candidates[0]
         else:
-            logger.warning('Parsing {0} yield multiple results. '
-                           'Options are: {1!r}'.format(name_or_alias, candidates))
+            logger.warning(
+                "Parsing {0} yield multiple results. "
+                "Options are: {1!r}".format(name_or_alias, candidates)
+            )
             prefix, unit_name, _ = candidates[0]
 
         return self._prefixes[prefix].symbol + self._units[unit_name].symbol
@@ -578,8 +642,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         accumulator = defaultdict(float)
         self._get_dimensionality_recurse(input_units, 1.0, accumulator)
 
-        if '[]' in accumulator:
-            del accumulator['[]']
+        if "[]" in accumulator:
+            del accumulator["[]"]
 
         dims = UnitsContainer({k: v for k, v in accumulator.items() if v != 0.0})
 
@@ -589,7 +653,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _get_dimensionality_recurse(self, ref, exp, accumulator):
         for key in ref:
-            exp2 = exp*ref[key]
+            exp2 = exp * ref[key]
             if _is_dim(key):
                 reg = self._dimensions[key]
                 if reg.is_base:
@@ -609,17 +673,17 @@ class BaseRegistry(metaclass=RegistryMeta):
         :type unit2: UnitsContainer compatible (str, Unit, UnitsContainer, dict)
         :returns: exponential proportionality or None if the units cannot be converted
         """
-        #shortcut in case of equal units
+        # shortcut in case of equal units
         if unit1 == unit2:
             return 1
 
         dim1, dim2 = (self.get_dimensionality(unit) for unit in (unit1, unit2))
-        if not dim1 or not dim2 or dim1.keys() != dim2.keys(): #not comparable
+        if not dim1 or not dim2 or dim1.keys() != dim2.keys():  # not comparable
             return None
 
-        ratios = (dim2[key]/val for key, val in dim1.items())
+        ratios = (dim2[key] / val for key, val in dim1.items())
         first = next(ratios)
-        if all(r == first for r in ratios): #all are same, we're good
+        if all(r == first for r in ratios):  # all are same, we're good
             return first
         return None
 
@@ -656,7 +720,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         :return: multiplicative factor, base units
         """
         if not input_units:
-            return 1., UnitsContainer()
+            return 1.0, UnitsContainer()
 
         # The cache is only done for check_nonmult=True
         cache = self._cache.root_units
@@ -666,7 +730,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             except KeyError:
                 pass
 
-        accumulators = [1., defaultdict(float)]
+        accumulators = [1.0, defaultdict(float)]
         self._get_root_units_recurse(input_units, 1.0, accumulators)
 
         factor = accumulators[0]
@@ -701,7 +765,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _get_root_units_recurse(self, ref, exp, accumulators):
         for key in sorted(ref):
-            exp2 = exp*ref[key]
+            exp2 = exp * ref[key]
             key = self.get_name(key)
             reg = self._units[key]
             if reg.is_base:
@@ -709,8 +773,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             else:
                 accumulators[0] *= reg._converter.scale ** exp2
                 if reg.reference is not None:
-                    self._get_root_units_recurse(reg.reference, exp2,
-                                                 accumulators)
+                    self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
     def get_compatible_units(self, input_units, group_or_system=None):
         """
@@ -800,21 +863,25 @@ class BaseRegistry(metaclass=RegistryMeta):
         edw = unit_name.endswith
         for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
             if stw(prefix) and edw(suffix):
-                name = unit_name[len(prefix):]
+                name = unit_name[len(prefix) :]
                 if suffix:
-                    name = name[:-len(suffix)]
+                    name = name[: -len(suffix)]
                     if len(name) == 1:
                         continue
                 if case_sensitive:
                     if name in self._units:
-                        yield (self._prefixes[prefix].name,
-                               self._units[name].name,
-                               self._suffixes[suffix])
+                        yield (
+                            self._prefixes[prefix].name,
+                            self._units[name].name,
+                            self._suffixes[suffix],
+                        )
                 else:
                     for real_name in self._units_casei.get(name.lower(), ()):
-                        yield (self._prefixes[prefix].name,
-                               self._units[real_name].name,
-                               self._suffixes[suffix])
+                        yield (
+                            self._prefixes[prefix].name,
+                            self._units[real_name].name,
+                            self._suffixes[suffix],
+                        )
 
     def parse_units(self, input_string, as_delta=None):
         """Parse a units expression and returns a UnitContainer with
@@ -852,7 +919,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         units = ParserHelper.from_string(input_string)
         if units.scale != 1:
-            raise ValueError('Unit expression cannot have a scaling factor.')
+            raise ValueError("Unit expression cannot have a scaling factor.")
 
         ret = {}
         many = len(units) > 1
@@ -864,7 +931,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             if as_delta and (many or (not many and value != 1)):
                 definition = self._units[cname]
                 if not definition.is_multiplicative:
-                    cname = 'delta_' + cname
+                    cname = "delta_" + cname
             ret[cname] = value
 
         ret = UnitsContainer(ret)
@@ -878,19 +945,25 @@ class BaseRegistry(metaclass=RegistryMeta):
         token_type = token[0]
         token_text = token[1]
         if token_type == NAME:
-            if token_text == 'dimensionless':
+            if token_text == "dimensionless":
                 return 1 * self.dimensionless
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:
-                return self.Quantity(1, UnitsContainer({self.get_name(token_text,
-                                                                      case_sensitive=case_sensitive) : 1}))
+                return self.Quantity(
+                    1,
+                    UnitsContainer(
+                        {self.get_name(token_text, case_sensitive=case_sensitive): 1}
+                    ),
+                )
         elif token_type == NUMBER:
             return ParserHelper.eval_token(token, use_decimal=use_decimal)
         else:
-            raise Exception('unknown token type')
+            raise Exception("unknown token type")
 
-    def parse_expression(self, input_string, case_sensitive=True, use_decimal=False, **values):
+    def parse_expression(
+        self, input_string, case_sensitive=True, use_decimal=False, **values
+    ):
         """Parse a mathematical expression including units and return a quantity object.
 
         Numerical constants can be specified as keyword arguments and will take precedence
@@ -905,10 +978,11 @@ class BaseRegistry(metaclass=RegistryMeta):
         input_string = string_preprocessor(input_string)
         gen = tokenizer(input_string)
 
-        return build_eval_tree(gen).evaluate(lambda x: self._eval_token(x,
-                                                                        case_sensitive=case_sensitive,
-                                                                        use_decimal=use_decimal,
-                                                                        **values))
+        return build_eval_tree(gen).evaluate(
+            lambda x: self._eval_token(
+                x, case_sensitive=case_sensitive, use_decimal=use_decimal, **values
+            )
+        )
 
     __call__ = parse_expression
 
@@ -926,7 +1000,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
                                            converted to base units in multiplications.
     """
 
-    def __init__(self, default_as_delta=True, autoconvert_offset_to_baseunit=False, **kwargs):
+    def __init__(
+        self, default_as_delta=True, autoconvert_offset_to_baseunit=False, **kwargs
+    ):
         super().__init__(**kwargs)
 
         #: When performing a multiplication of units, interpret
@@ -981,13 +1057,14 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
     def _validate_and_extract(self, units):
 
-        nonmult_units = [(u, e) for u, e in units.items()
-                         if not self._is_multiplicative(u)]
+        nonmult_units = [
+            (u, e) for u, e in units.items() if not self._is_multiplicative(u)
+        ]
 
         # Let's validate source offset units
         if len(nonmult_units) > 1:
             # More than one src offset unit is not allowed
-            raise ValueError('more than one offset unit.')
+            raise ValueError("more than one offset unit.")
 
         elif len(nonmult_units) == 1:
             # A single src offset unit is present. Extract it
@@ -997,10 +1074,10 @@ class NonMultiplicativeRegistry(BaseRegistry):
             nonmult_unit, exponent = nonmult_units.pop()
 
             if exponent != 1:
-                raise ValueError('offset units in higher order.')
+                raise ValueError("offset units in higher order.")
 
             if len(units) > 1 and not self.autoconvert_offset_to_baseunit:
-                raise ValueError('offset unit used in multiplicative context.')
+                raise ValueError("offset unit used in multiplicative context.")
 
             return nonmult_unit
 
@@ -1028,9 +1105,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         try:
             src_offset_unit = self._validate_and_extract(src)
         except ValueError as ex:
-            raise DimensionalityError(
-                src, dst, extra_msg=f" - In source units, {ex}"
-            )
+            raise DimensionalityError(src, dst, extra_msg=f" - In source units, {ex}")
 
         try:
             dst_offset_unit = self._validate_and_extract(dst)
@@ -1064,7 +1139,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         # Finally convert to offset units specified in destination
         if dst_offset_unit:
-            value = self._units[dst_offset_unit].converter.from_reference(value, inplace)
+            value = self._units[dst_offset_unit].converter.from_reference(
+                value, inplace
+            )
 
         return value
 
@@ -1095,14 +1172,15 @@ class ContextRegistry(BaseRegistry):
 
     def _register_parsers(self):
         super()._register_parsers()
-        self._register_parser('@context', self._parse_context)
+        self._register_parser("@context", self._parse_context)
 
     def _parse_context(self, ifile):
         try:
-            self.add_context(Context.from_lines(ifile.block_iter(),
-                                                self.get_dimensionality))
+            self.add_context(
+                Context.from_lines(ifile.block_iter(), self.get_dimensionality)
+            )
         except KeyError as e:
-            raise DefinitionSyntaxError(f'unknown dimension {e} in context')
+            raise DefinitionSyntaxError(f"unknown dimension {e} in context")
 
     def add_context(self, context):
         """Add a context object to the registry.
@@ -1114,13 +1192,16 @@ class ContextRegistry(BaseRegistry):
         if not context.name:
             raise ValueError("Can't add unnamed context to registry")
         if context.name in self._contexts:
-            logger.warning('The name %s was already registered for another context.',
-                           context.name)
+            logger.warning(
+                "The name %s was already registered for another context.", context.name
+            )
         self._contexts[context.name] = context
         for alias in context.aliases:
             if alias in self._contexts:
-                logger.warning('The name %s was already registered for another context',
-                               context.name)
+                logger.warning(
+                    "The name %s was already registered for another context",
+                    context.name,
+                )
             self._contexts[alias] = context
 
     def remove_context(self, name_or_alias):
@@ -1164,7 +1245,7 @@ class ContextRegistry(BaseRegistry):
         # Check if the contexts have been checked first, if not we make sure
         # that dimensions are expressed in terms of base dimensions.
         for ctx in ctxs:
-            if getattr(ctx, '_checked', False):
+            if getattr(ctx, "_checked", False):
                 continue
             for (src, dst), func in ctx.funcs.items():
                 src_ = self._get_dimensionality(src)
@@ -1175,8 +1256,7 @@ class ContextRegistry(BaseRegistry):
             ctx._checked = True
 
         # and create a new one with the new defaults.
-        ctxs = tuple(Context.from_context(ctx, **kwargs)
-                     for ctx in ctxs)
+        ctxs = tuple(Context.from_context(ctx, **kwargs) for ctx in ctxs)
 
         # Finally we add them to the active context.
         self._active_ctx.insert_contexts(*ctxs)
@@ -1255,9 +1335,14 @@ class ContextRegistry(BaseRegistry):
         :param kwargs: keyword arguments for the contexts.
         :return: the wrapped function.
         """
+
         def decorator(func):
-            assigned = tuple(attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr))
-            updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
+            assigned = tuple(
+                attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
+            )
+            updated = tuple(
+                attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr)
+            )
 
             @functools.wraps(func, assigned=assigned, updated=updated)
             def wrapper(*values, **kwargs):
@@ -1347,7 +1432,7 @@ class SystemRegistry(BaseRegistry):
         #: Map group name to group.
         #: :type: dict[ str | Group]
         self._groups = {}
-        self._groups['root'] = self.Group('root')
+        self._groups["root"] = self.Group("root")
         self._default_system = system
 
     def _init_dynamic_classes(self):
@@ -1365,8 +1450,8 @@ class SystemRegistry(BaseRegistry):
         super()._after_init()
 
         #: Copy units not defined in any group to the default group
-        if 'group' in self._defaults:
-            grp = self.get_group(self._defaults['group'], True)
+        if "group" in self._defaults:
+            grp = self.get_group(self._defaults["group"], True)
             group_units = frozenset(
                 [
                     member
@@ -1379,12 +1464,14 @@ class SystemRegistry(BaseRegistry):
             grp.add_units(*(all_units - group_units))
 
         #: System name to be used by default.
-        self._default_system = self._default_system or self._defaults.get('system', None)
+        self._default_system = self._default_system or self._defaults.get(
+            "system", None
+        )
 
     def _register_parsers(self):
         super()._register_parsers()
-        self._register_parser('@group', self._parse_group)
-        self._register_parser('@system', self._parse_system)
+        self._register_parser("@group", self._parse_group)
+        self._register_parser("@system", self._parse_system)
 
     def _parse_group(self, ifile):
         self.Group.from_lines(ifile.block_iter(), self.define)
@@ -1403,7 +1490,7 @@ class SystemRegistry(BaseRegistry):
             return self._groups[name]
 
         if not create_if_needed:
-            raise ValueError('Unkown group %s' % name)
+            raise ValueError("Unkown group %s" % name)
 
         return self.Group(name)
 
@@ -1419,7 +1506,7 @@ class SystemRegistry(BaseRegistry):
     def default_system(self, name):
         if name:
             if name not in self._systems:
-                raise ValueError('Unknown system %s' % name)
+                raise ValueError("Unknown system %s" % name)
 
             self._base_units_cache = {}
 
@@ -1436,7 +1523,7 @@ class SystemRegistry(BaseRegistry):
             return self._systems[name]
 
         if not create_if_needed:
-            raise ValueError('Unkown system %s' % name)
+            raise ValueError("Unkown system %s" % name)
 
         return self.System(name)
 
@@ -1449,7 +1536,7 @@ class SystemRegistry(BaseRegistry):
 
         if isinstance(definition, UnitDefinition):
             # We add all units to the root group
-            self.get_group('root').add_units(definition.name)
+            self.get_group("root").add_units(definition.name)
 
         return definition, d, di
 
@@ -1482,7 +1569,11 @@ class SystemRegistry(BaseRegistry):
             system = self._default_system
 
         # The cache is only done for check_nonmult=True and the current system.
-        if check_nonmult and system == self._default_system and input_units in self._base_units_cache:
+        if (
+            check_nonmult
+            and system == self._default_system
+            and input_units in self._base_units_cache
+        ):
             return self._base_units_cache[input_units]
 
         factor, units = self.get_root_units(input_units, check_nonmult)
@@ -1528,7 +1619,9 @@ class SystemRegistry(BaseRegistry):
             elif group_or_system in self._groups:
                 members = self._groups[group_or_system].members
             else:
-                raise ValueError("Unknown Group o System with name '%s'" % group_or_system)
+                raise ValueError(
+                    "Unknown Group o System with name '%s'" % group_or_system
+                )
             return frozenset(ret & members)
 
         return ret
@@ -1554,20 +1647,27 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
                           or unit string
     """
 
-    def __init__(self, filename='', force_ndarray=False, default_as_delta=True,
-                 autoconvert_offset_to_baseunit=False,
-                 on_redefinition='warn', system=None,
-                 auto_reduce_dimensions=False, preprocessors=None):
+    def __init__(
+        self,
+        filename="",
+        force_ndarray=False,
+        default_as_delta=True,
+        autoconvert_offset_to_baseunit=False,
+        on_redefinition="warn",
+        system=None,
+        auto_reduce_dimensions=False,
+        preprocessors=None,
+    ):
 
         super().__init__(
-            filename=filename, 
+            filename=filename,
             force_ndarray=force_ndarray,
             on_redefinition=on_redefinition,
             default_as_delta=default_as_delta,
             autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
             system=system,
             auto_reduce_dimensions=auto_reduce_dimensions,
-            preprocessors=preprocessors
+            preprocessors=preprocessors,
         )
 
     def pi_theorem(self, quantities):
@@ -1585,6 +1685,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         """
         # Delays importing matplotlib until it's actually requested
         from .matplotlib import setup_matplotlib_handlers
+
         setup_matplotlib_handlers(self, enable)
 
     wraps = registry_helpers.wraps
@@ -1593,25 +1694,24 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
 
 
 class LazyRegistry:
-
     def __init__(self, args=None, kwargs=None):
-        self.__dict__['params'] = args or (), kwargs or {}
+        self.__dict__["params"] = args or (), kwargs or {}
 
     def __init(self):
-        args, kwargs = self.__dict__['params']
-        kwargs['on_redefinition'] = 'raise'
+        args, kwargs = self.__dict__["params"]
+        kwargs["on_redefinition"] = "raise"
         self.__class__ = UnitRegistry
         self.__init__(*args, **kwargs)
         self._after_init()
 
     def __getattr__(self, item):
-        if item == '_on_redefinition':
-            return 'raise'
+        if item == "_on_redefinition":
+            return "raise"
         self.__init()
         return getattr(self, item)
 
     def __setattr__(self, key, value):
-        if key == '__class__':
+        if key == "__class__":
             super().__setattr__(key, value)
         else:
             self.__init()

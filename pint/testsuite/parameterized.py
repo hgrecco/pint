@@ -29,13 +29,18 @@ from functools import wraps
 import unittest
 
 
-def augment_method_docstring(method, new_class_dict, classname,
-                             param_names, param_values, new_method):
-    param_assignments_str = '; '.join(
-        ['%s = %s' % (k, v) for (k, v) in zip(param_names, param_values)])
+def augment_method_docstring(
+    method, new_class_dict, classname, param_names, param_values, new_method
+):
+    param_assignments_str = "; ".join(
+        ["%s = %s" % (k, v) for (k, v) in zip(param_names, param_values)]
+    )
     extra_doc = "%s (%s.%s) [with %s] " % (
-        method.__name__, new_class_dict.get('__module__', '<module>'),
-        classname, param_assignments_str)
+        method.__name__,
+        new_class_dict.get("__module__", "<module>"),
+        classname,
+        param_assignments_str,
+    )
 
     try:
         new_method.__doc__ = extra_doc + new_method.__doc__
@@ -50,7 +55,7 @@ class ParameterizedTestCaseMetaClass(type):
         new_class_dict = {}
 
         for attr_name, attr_value in list(class_dict.items()):
-            if isinstance(attr_value, Callable) and hasattr(attr_value, 'param_names'):
+            if isinstance(attr_value, Callable) and hasattr(attr_value, "param_names"):
                 # print("Processing attr_name = %r; attr_value = %r" % (
                 #     attr_name, attr_value))
 
@@ -60,8 +65,13 @@ class ParameterizedTestCaseMetaClass(type):
                 func_name_format = attr_value.func_name_format
 
                 meta.process_method(
-                    classname, method, param_names, data, new_class_dict,
-                    func_name_format)
+                    classname,
+                    method,
+                    param_names,
+                    data,
+                    new_class_dict,
+                    func_name_format,
+                )
             else:
                 new_class_dict[attr_name] = attr_value
 
@@ -69,23 +79,22 @@ class ParameterizedTestCaseMetaClass(type):
 
     @classmethod
     def process_method(
-            cls, classname, method, param_names, data, new_class_dict,
-            func_name_format):
+        cls, classname, method, param_names, data, new_class_dict, func_name_format
+    ):
         method_counter = cls.method_counter
 
         for param_values in data:
             new_method = cls.new_method(method, param_values)
-            method_counter[method.__name__] = \
-                method_counter.get(method.__name__, 0) + 1
+            method_counter[method.__name__] = method_counter.get(method.__name__, 0) + 1
             case_data = dict(list(zip(param_names, param_values)))
-            case_data['func_name'] = method.__name__
-            case_data['case_num'] = method_counter[method.__name__]
+            case_data["func_name"] = method.__name__
+            case_data["case_num"] = method_counter[method.__name__]
 
             new_method.__name__ = func_name_format.format(**case_data)
 
             augment_method_docstring(
-                method, new_class_dict, classname,
-                param_names, param_values, new_method)
+                method, new_class_dict, classname, param_names, param_values, new_method
+            )
             new_class_dict[new_method.__name__] = new_method
 
     @classmethod
@@ -99,8 +108,9 @@ class ParameterizedTestCaseMetaClass(type):
 
 class ParameterizedTestMixin(metaclass=ParameterizedTestCaseMetaClass):
     @classmethod
-    def parameterize(cls, param_names, data,
-                     func_name_format='{func_name}_{case_num:05d}'):
+    def parameterize(
+        cls, param_names, data, func_name_format="{func_name}_{case_num:05d}"
+    ):
         """Decorator for parameterizing a test method - example:
 
         @ParameterizedTestCase.parameterize(

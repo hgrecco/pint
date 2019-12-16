@@ -13,7 +13,13 @@ import re
 
 from .definitions import Definition, UnitDefinition
 from .errors import DefinitionSyntaxError, RedefinitionError
-from .util import to_units_container, getattr_maybe_raise, SharedRegistryObject, SourceIterator, logger
+from .util import (
+    to_units_container,
+    getattr_maybe_raise,
+    SharedRegistryObject,
+    SourceIterator,
+    logger,
+)
 from .babel_names import _babel_systems
 from pint.compat import Loc
 
@@ -38,7 +44,7 @@ class Group(SharedRegistryObject):
     """
 
     #: Regex to match the header parts of a definition.
-    _header_re = re.compile(r'@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*')
+    _header_re = re.compile(r"@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
 
     def __init__(self, name):
         """
@@ -68,15 +74,14 @@ class Group(SharedRegistryObject):
         # Add this group to the group dictionary
         self._REGISTRY._groups[self.name] = self
 
-        if name != 'root':
+        if name != "root":
             # All groups are added to root group
-            self._REGISTRY._groups['root'].add_groups(name)
+            self._REGISTRY._groups["root"].add_groups(name)
 
         #: A cache of the included units.
         #: None indicates that the cache has been invalidated.
         #: :type: frozenset[str] | None
         self._computed_members = None
-
 
     @property
     def members(self):
@@ -154,7 +159,10 @@ class Group(SharedRegistryObject):
             grp = d[group_name]
 
             if grp.is_used_group(self.name):
-                raise ValueError('Cyclic relationship found between %s and %s' % (self.name, group_name))
+                raise ValueError(
+                    "Cyclic relationship found between %s and %s"
+                    % (self.name, group_name)
+                )
 
             self._used_groups.add(group_name)
             grp._used_by.add(self.name)
@@ -192,23 +200,23 @@ class Group(SharedRegistryObject):
         if r is None:
             raise ValueError("Invalid Group header syntax: '%s'" % header)
 
-        name = r.groupdict()['name'].strip()
-        groups = r.groupdict()['used_groups']
+        name = r.groupdict()["name"].strip()
+        groups = r.groupdict()["used_groups"]
         if groups:
-            group_names = tuple(a.strip() for a in groups.split(','))
+            group_names = tuple(a.strip() for a in groups.split(","))
         else:
             group_names = ()
 
         unit_names = []
         for lineno, line in lines:
-            if '=' in line:
+            if "=" in line:
                 # Is a definition
                 definition = Definition.from_string(line)
                 if not isinstance(definition, UnitDefinition):
                     raise DefinitionSyntaxError(
-                        'Only UnitDefinition are valid inside _used_groups, not '
+                        "Only UnitDefinition are valid inside _used_groups, not "
                         + str(definition),
-                        lineno=lineno
+                        lineno=lineno,
                     )
 
                 try:
@@ -264,7 +272,7 @@ class System(SharedRegistryObject):
     """
 
     #: Regex to match the header parts of a context.
-    _header_re = re.compile(r'@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*')
+    _header_re = re.compile(r"@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
 
     def __init__(self, name):
         """
@@ -299,7 +307,7 @@ class System(SharedRegistryObject):
 
     def __getattr__(self, item):
         getattr_maybe_raise(self, item)
-        u = getattr(self._REGISTRY, self.name + '_' + item, None)
+        u = getattr(self._REGISTRY, self.name + "_" + item, None)
         if u is not None:
             return u
         return getattr(self._REGISTRY, item)
@@ -314,7 +322,11 @@ class System(SharedRegistryObject):
                 try:
                     self._computed_members |= d[group_name].members
                 except KeyError:
-                    logger.warning('Could not resolve {} in System {}'.format(group_name, self.name))
+                    logger.warning(
+                        "Could not resolve {} in System {}".format(
+                            group_name, self.name
+                        )
+                    )
 
             self._computed_members = frozenset(self._computed_members)
 
@@ -365,14 +377,14 @@ class System(SharedRegistryObject):
         if r is None:
             raise ValueError("Invalid System header syntax '%s'" % header)
 
-        name = r.groupdict()['name'].strip()
-        groups = r.groupdict()['used_groups']
+        name = r.groupdict()["name"].strip()
+        groups = r.groupdict()["used_groups"]
 
         # If the systems has no group, it automatically uses the root group.
         if groups:
-            group_names = tuple(a.strip() for a in groups.split(','))
+            group_names = tuple(a.strip() for a in groups.split(","))
         else:
-            group_names = ('root', )
+            group_names = ("root",)
 
         base_unit_names = {}
         derived_unit_names = []
@@ -383,27 +395,30 @@ class System(SharedRegistryObject):
             #  - old_unit: a root unit part which is going to be removed from the system.
             #  - new_unit: a non root unit which is going to replace the old_unit.
 
-            if ':' in line:
+            if ":" in line:
                 # The syntax is new_unit:old_unit
 
-                new_unit, old_unit = line.split(':')
+                new_unit, old_unit = line.split(":")
                 new_unit, old_unit = new_unit.strip(), old_unit.strip()
 
                 # The old unit MUST be a root unit, if not raise an error.
                 if old_unit != str(get_root_func(old_unit)[1]):
-                    raise ValueError('In `%s`, the unit at the right of the `:` must be a root unit.' % line)
+                    raise ValueError(
+                        "In `%s`, the unit at the right of the `:` must be a root unit."
+                        % line
+                    )
 
                 # Here we find new_unit expanded in terms of root_units
                 new_unit_expanded = to_units_container(get_root_func(new_unit)[1])
 
                 # We require that the old unit is present in the new_unit expanded
                 if old_unit not in new_unit_expanded:
-                    raise ValueError('Old unit must be a component of new unit')
+                    raise ValueError("Old unit must be a component of new unit")
 
                 # Here we invert the equation, in other words
                 # we write old units in terms new unit and expansion
                 new_unit_dict = {
-                    new_unit: -1./value
+                    new_unit: -1.0 / value
                     for new_unit, value in new_unit_expanded.items()
                     if new_unit != old_unit
                 }
@@ -419,11 +434,13 @@ class System(SharedRegistryObject):
                 old_unit_dict = to_units_container(get_root_func(line)[1])
 
                 if len(old_unit_dict) != 1:
-                    raise ValueError('The new base must be a root dimension if not discarded unit is specified.')
+                    raise ValueError(
+                        "The new base must be a root dimension if not discarded unit is specified."
+                    )
 
                 old_unit, value = dict(old_unit_dict).popitem()
 
-                base_unit_names[old_unit] = {new_unit: 1./value}
+                base_unit_names[old_unit] = {new_unit: 1.0 / value}
 
         system = cls(name)
 
@@ -436,7 +453,6 @@ class System(SharedRegistryObject):
 
 
 class Lister:
-
     def __init__(self, d):
         self.d = d
 

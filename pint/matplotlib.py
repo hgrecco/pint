@@ -20,7 +20,7 @@ class PintAxisInfo(matplotlib.units.AxisInfo):
 
     def __init__(self, units):
         """Set the default label to the pretty-print of the unit."""
-        super().__init__(label='{:P}'.format(units))
+        super().__init__(label="{:P}".format(units))
 
 
 class PintConverter(matplotlib.units.ConversionInterface):
@@ -39,7 +39,7 @@ class PintConverter(matplotlib.units.ConversionInterface):
 
     def _convert_value(self, value, unit, axis):
         """Handle converting using attached unit or falling back to axis units."""
-        if hasattr(value, 'units'):
+        if hasattr(value, "units"):
             return value.to(unit).magnitude
         else:
             return self._reg.Quantity(value, axis.get_units()).to(unit).magnitude
@@ -53,8 +53,8 @@ class PintConverter(matplotlib.units.ConversionInterface):
     def default_units(x, axis):
         """Get the default unit to use for the given combination of unit and axis."""
         if iterable(x) and sized(x):
-            return getattr(x[0], 'units', None)
-        return getattr(x, 'units', None)
+            return getattr(x[0], "units", None)
+        return getattr(x, "units", None)
 
 
 def setup_matplotlib_handlers(registry, enable):
@@ -64,8 +64,8 @@ def setup_matplotlib_handlers(registry, enable):
        :param enable: whether support should be enabled or disabled
        :type enable: bool
     """
-    if matplotlib.__version__ < '2.0':
-        raise RuntimeError('Matplotlib >= 2.0 required to work with pint.')
+    if matplotlib.__version__ < "2.0":
+        raise RuntimeError("Matplotlib >= 2.0 required to work with pint.")
 
     if enable:
         matplotlib.units.registry[registry.Quantity] = PintConverter(registry)
