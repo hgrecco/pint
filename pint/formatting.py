@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     pint.formatter
     ~~~~~~~~~~~~~~
@@ -11,7 +10,7 @@
 
 import re
 
-from .babel_names import _babel_units, _babel_lengths
+from .babel_names import _babel_lengths, _babel_units
 from .compat import Loc
 
 __JOIN_REG_EXP = re.compile(r"\{\d*\}")
@@ -43,7 +42,7 @@ def _pretty_fmt_exponent(num):
     """Format an number into a pretty printed exponent.
     """
     # TODO: Will not work for decimals
-    ret = "{0:n}".format(num).replace("-", "⁻")
+    ret = f"{num:n}".replace("-", "⁻")
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
@@ -104,7 +103,7 @@ def formatter(
     division_fmt=" / ",
     power_fmt="{} ** {}",
     parentheses_fmt="({0})",
-    exp_call=lambda x: "{:n}".format(x),
+    exp_call=lambda x: f"{x:n}",
     locale=None,
     babel_length="long",
     babel_plural_form="one",
@@ -266,7 +265,7 @@ def siunitx_format_unit(units):
         # remove unit prefix if it exists
         # siunitx supports \prefix commands
 
-        l = lpos if power >= 0 else lneg
+        lpick = lpos if power >= 0 else lneg
         prefix = None
         for p in registry._prefixes.values():
             p = str(p)
@@ -275,11 +274,11 @@ def siunitx_format_unit(units):
                 unit = unit.replace(prefix, "", 1)
 
         if power < 0:
-            l.append(r"\per")
+            lpick.append(r"\per")
         if prefix is not None:
-            l.append(r"\{}".format(prefix))
-        l.append(r"\{}".format(unit))
-        l.append(r"{}".format(_tothe(abs(power))))
+            lpick.append(r"\{}".format(prefix))
+        lpick.append(r"\{}".format(unit))
+        lpick.append(r"{}".format(_tothe(abs(power))))
 
     return "".join(lpos) + "".join(lneg)
 

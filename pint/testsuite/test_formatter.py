@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from pint import formatting as fmt
 from pint.testsuite import QuantityTestCase
 

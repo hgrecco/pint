@@ -1,21 +1,18 @@
-# -*- coding: utf-8 -*-
+from unittest.mock import patch
 
 import pint.numpy_func
-
 from pint import DimensionalityError, OffsetUnitCalculusError
 from pint.compat import np
-from pint.testsuite.test_numpy import TestNumpyMethods
 from pint.numpy_func import (
     _is_quantity,
     _is_quantity_sequence,
-    _get_first_input_units,
     convert_to_consistent_units,
-    unwrap_and_wrap_consistent_units,
     get_op_output_unit,
     implements,
     numpy_wrap,
+    unwrap_and_wrap_consistent_units,
 )
-from unittest.mock import patch
+from pint.testsuite.test_numpy import TestNumpyMethods
 
 
 class TestNumPyFuncUtils(TestNumpyMethods):

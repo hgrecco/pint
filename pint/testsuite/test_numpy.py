@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import copy
 import operator as op
 import unittest
 
-from pint import DimensionalityError, OffsetUnitCalculusError, set_application_registry
+from pint import DimensionalityError, OffsetUnitCalculusError
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.test_umath import TestUFuncs
@@ -314,20 +312,20 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_gradient(self):
-        l = np.gradient([[1, 1], [3, 4]] * self.ureg.m, 1 * self.ureg.J)
+        grad = np.gradient([[1, 1], [3, 4]] * self.ureg.m, 1 * self.ureg.J)
         self.assertQuantityEqual(
-            l[0], [[2.0, 3.0], [2.0, 3.0]] * self.ureg.m / self.ureg.J
+            grad[0], [[2.0, 3.0], [2.0, 3.0]] * self.ureg.m / self.ureg.J
         )
         self.assertQuantityEqual(
-            l[1], [[0.0, 0.0], [1.0, 1.0]] * self.ureg.m / self.ureg.J
+            grad[1], [[0.0, 0.0], [1.0, 1.0]] * self.ureg.m / self.ureg.J
         )
 
-        l = np.gradient(self.Q_([[1, 1], [3, 4]], self.ureg.degC), 1 * self.ureg.J)
+        grad = np.gradient(self.Q_([[1, 1], [3, 4]], self.ureg.degC), 1 * self.ureg.J)
         self.assertQuantityEqual(
-            l[0], [[2.0, 3.0], [2.0, 3.0]] * self.ureg.delta_degC / self.ureg.J
+            grad[0], [[2.0, 3.0], [2.0, 3.0]] * self.ureg.delta_degC / self.ureg.J
         )
         self.assertQuantityEqual(
-            l[1], [[0.0, 0.0], [1.0, 1.0]] * self.ureg.delta_degC / self.ureg.J
+            grad[1], [[0.0, 0.0], [1.0, 1.0]] * self.ureg.delta_degC / self.ureg.J
         )
 
     @helpers.requires_array_function_protocol()
@@ -501,7 +499,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         )
 
     @helpers.requires_array_function_protocol()
-    def test_compress(self):
+    def test_compress_nep18(self):
         self.assertQuantityEqual(
             np.compress([False, True], self.q, axis=1), [[2], [4]] * self.ureg.m
         )
