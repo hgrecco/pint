@@ -22,6 +22,9 @@ the changes using a pull request against the **master** branch.
 - If you are fixing a bug, add a test to test_issues.py
   Also add "Close #<bug number> as described in the `github docs`_.
 - If you are submitting new code, add tests and documentation.
+- If adding or modifying a feature, make sure it's documented in docs/.
+- Log the change in the CHANGES file.
+- Execute ``black -t py36 . && isort -rc . && flake8`` and resolve any issues
 
 Pint uses `bors-ng` as a merge bot and therefore every PR is tested before merging.
 
