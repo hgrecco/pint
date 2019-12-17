@@ -754,7 +754,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return self.get_root_units(input_units, check_nonmult)
 
     def _get_root_units_recurse(self, ref, exp, accumulators):
-        for key in sorted(ref):
+        for key in ref:
             exp2 = exp * ref[key]
             key = self.get_name(key)
             reg = self._units[key]
