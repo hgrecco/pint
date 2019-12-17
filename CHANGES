@@ -4,11 +4,17 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Added slinch to Avoirdupois group
+  (Issue #936, Thanks awcox21)
+- Use black, flake8, and isort on the project
+  (Issues #929, #931, and TODO, Thanks Guido Imperiale)
 - Auto-increase package version at every commit when pint is installed from the git tip,
   e.g. pip install git+https://github.com/hgrecco/pint.git.
-  (Issue #930, Thanks Guido Imperiale)
+  (Issues #930 and #934, Thanks Guido Imperiale and KOLANICH)
 - Fix HTML (Jupyter Notebook) and LateX representation of some units
   (Issue #927, Thanks Guido Imperiale)
+- Fixed the definition of RKM unit as gf / tex
+  (Issue #921, Thanks Giuseppe Corbelli)
 - **BREAKING CHANGE**:
   Implement NEP-18 <https://numpy.org/neps/nep-0018-array-function-protocol.html> for
   Pint Quantities. Most NumPy functions that previously stripped units when applied to

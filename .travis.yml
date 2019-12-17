@@ -28,6 +28,7 @@ env:
   - PKGS="python=3.6 numpy uncertainties"
   - PKGS="python=3.7 numpy uncertainties"
   - PKGS="python=3.8 numpy uncertainties"
+  - PKGS="python=3.7 flake8 black isort"
 
   # TODO: pandas tests
   # - PKGS="python=3.7 numpy pandas uncertainties pandas"
@@ -53,6 +54,7 @@ install:
   - conda create -n travis $PKGS coveralls
   - source activate travis
   - if [[ $PKGS =~ pandas ]]; then PANDAS=1; else PANDAS=0; fi
+  - if [[ $PKGS =~ flake8 ]]; then LINT=1; else LINT=0; fi
   # this is superslow but suck it up until updates to pandas are made
   # - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
   - conda list
@@ -63,7 +65,8 @@ script:
   # - if [[ $PANDAS == '1' ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" -m py.test -rfsxEX; fi
   # test notebooks too if pandas available
   # - if [[ $PANDAS == '1' ]]; then pip install -e .; pytest --nbval notebooks/*; fi
-  - if [[ $PANDAS == '0' ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*","*pandas*" setup.py test; fi
+  - if [[ $PANDAS == 0 && $LINT == 0 ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*","*pandas*" setup.py test; fi
+  - if [[ $LINT == 1 ]]; then black -t py36 --check . && isort -rc -c . && flake8; fi
   - coverage combine
   - coverage report -m
 
