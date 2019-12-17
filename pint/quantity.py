@@ -40,11 +40,11 @@ from .errors import (
     UnitStrippedWarning,
 )
 from .formatting import (
+    _pretty_fmt_exponent,
     ndarray_to_latex,
     ndarray_to_latex_parts,
     remove_custom_flags,
     siunitx_format_unit,
-    _pretty_fmt_exponent,
 )
 from .numpy_func import (
     HANDLED_UFUNCS,
