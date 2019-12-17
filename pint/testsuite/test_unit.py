@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
-
 import copy
 import functools
 import math
 import re
 
-from pint.compat import np
-from pint.registry import UnitRegistry, LazyRegistry
 from pint import (
     DefinitionSyntaxError,
     DimensionalityError,
     RedefinitionError,
     UndefinedUnitError,
 )
+from pint.compat import np
+from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
-from pint.util import UnitsContainer, ParserHelper
+from pint.util import ParserHelper, UnitsContainer
 
 
 class TestUnit(QuantityTestCase):
@@ -84,12 +82,12 @@ class TestUnit(QuantityTestCase):
         for spec, result in (
             ("L", r"\mathrm{oil\_barrel}"),
             ("P", "oil_barrel"),
-            ("H", "oil\_barrel"),
+            ("H", r"oil\_barrel"),
             ("C", "oil_barrel"),
             ("~", "oil_bbl"),
             ("L~", r"\mathrm{oil\_bbl}"),
             ("P~", "oil_bbl"),
-            ("H~", "oil\_bbl"),
+            ("H~", r"oil\_bbl"),
             ("C~", "oil_bbl"),
         ):
             with self.subTest(spec):
@@ -212,7 +210,7 @@ class TestRegistry(QuantityTestCase):
         ureg.define("meter = [length]")
         self.assertRaises(DefinitionSyntaxError, ureg.define, "meter = [length]")
         self.assertRaises(TypeError, ureg.define, list())
-        x = ureg.define("degC = kelvin; offset: 273.15")
+        ureg.define("degC = kelvin; offset: 273.15")
 
     def test_define(self):
         ureg = UnitRegistry(None)
@@ -234,10 +232,10 @@ class TestRegistry(QuantityTestCase):
     def test_default_format(self):
         ureg = UnitRegistry()
         q = ureg.meter
-        s1 = "{0}".format(q)
-        s2 = "{0:~}".format(q)
+        s1 = f"{q}"
+        s2 = f"{q:~}"
         ureg.default_format = "~"
-        s3 = "{0}".format(q)
+        s3 = f"{q}"
         self.assertEqual(s2, s3)
         self.assertNotEqual(s1, s3)
         self.assertEqual(ureg.default_format, "~")
@@ -272,7 +270,6 @@ class TestRegistry(QuantityTestCase):
             self.ureg.parse_expression("kilometer"),
             self.Q_(1, UnitsContainer(kilometer=1.0)),
         )
-        # self.assertEqual(self.ureg._units['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
 
     def test_parse_complex(self):
         self.assertEqual(
@@ -427,11 +424,8 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(self.ureg.get_symbol("international_inch"), "in")
 
     def test_pint(self):
-        p = self.ureg.pint
-        l = self.ureg.liter
-        ip = self.ureg.imperial_pint
-        self.assertLess(p, l)
-        self.assertLess(p, ip)
+        self.assertLess(self.ureg.pint, self.ureg.liter)
+        self.assertLess(self.ureg.pint, self.ureg.imperial_pint)
 
     def test_wraps(self):
         def func(x):
@@ -742,7 +736,7 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         x.test = "test"
         self.assertIsInstance(x, UnitRegistry)
         y = LazyRegistry()
-        q = y("meter")
+        y("meter")
         self.assertIsInstance(y, UnitRegistry)
 
     def test_redefinition(self):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     pint.compat
     ~~~~~~~~~~~
@@ -9,10 +8,9 @@
     :license: BSD, see LICENSE for more details.
 """
 import tokenize
-import warnings
+from decimal import Decimal
 from io import BytesIO
 from numbers import Number
-from decimal import Decimal
 
 
 def tokenizer(input_string):
@@ -129,10 +127,12 @@ except ImportError:
     HAS_BABEL = False
 
 if not HAS_BABEL:
-    Loc = babel_units = None
+    Loc = babel_units = None  # noqa: F811
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast and
 # downcast/wrappable types
+
+
 def is_upcast_type(other):
     # Check if class name is in preset list
     return other.__class__.__name__ in ("PintArray", "Series", "DataArray")

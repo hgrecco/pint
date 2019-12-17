@@ -1,6 +1,6 @@
+import copy
 import fnmatch
 import os
-import copy
 from timeit import Timer
 
 import yaml

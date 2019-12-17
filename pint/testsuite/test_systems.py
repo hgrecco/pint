@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from pint import UnitRegistry
 from pint.testsuite import QuantityTestCase
 
@@ -67,9 +65,7 @@ class TestGroup(QuantityTestCase):
         lines = ["@group mygroup using group1", "meter", "second"]
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
-        g = ureg.Group("group1")
+        ureg.Group("group1")
         grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertEqual(grp.name, "mygroup")
         self.assertEqual(grp._unit_names, {"meter", "second"})
@@ -80,8 +76,6 @@ class TestGroup(QuantityTestCase):
         lines = ["@group mygroup using group1,group2", "meter", "second"]
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
         ureg.Group("group1")
         ureg.Group("group2")
         grp = ureg.Group.from_lines(lines, lambda x: None)
@@ -94,8 +88,6 @@ class TestGroup(QuantityTestCase):
         lines = ["@group   mygroup   using   group1 , group2", " meter ", " second  "]
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
         ureg.Group("group1")
         ureg.Group("group2")
         grp = ureg.Group.from_lines(lines, lambda x: None)
@@ -108,9 +100,7 @@ class TestGroup(QuantityTestCase):
         lines = ["@group mygroup using group1", "meter", "second"]
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
-        g1 = ureg.Group("group1")
+        ureg.Group("group1")
         grp = ureg.Group.from_lines(lines, lambda x: None)
         self.assertIs(root._computed_members, None)
         self.assertIs(grp._computed_members, None)
@@ -138,20 +128,16 @@ class TestGroup(QuantityTestCase):
             defs.append(ud.name)
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
-        grp = ureg.Group.from_lines(lines, define)
+        ureg.Group.from_lines(lines, define)
 
         self.assertEqual(["kings_leg", "kings_head"], defs)
 
     def test_members_including(self):
-
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
 
         g1 = ureg.Group("group1")
-
         g1.add_units("second", "inch")
+
         g2 = ureg.Group("group2")
         g2.add_units("second", "newton")
 
@@ -185,8 +171,6 @@ class TestSystem(QuantityTestCase):
         lines = ["@system mks", "meter", "kilogram", "second"]
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
         s = ureg.System.from_lines(lines, lambda x: x)
         s._used_groups = {"root"}
 
@@ -194,8 +178,6 @@ class TestSystem(QuantityTestCase):
         lines = ["@system mks using g1", "meter", "kilogram", "second"]
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
         s = ureg.System.from_lines(lines, lambda x: x)
         s._used_groups = {"root", "g1"}
 
@@ -203,8 +185,6 @@ class TestSystem(QuantityTestCase):
         lines = ["@system mk", "meter", "kilogram"]
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
-
         root.add_units("second")
         s = ureg.System.from_lines(lines, lambda x: x)
         self.assertEqual(s.members, frozenset(["second"]))
@@ -221,13 +201,12 @@ class TestSystem(QuantityTestCase):
 
         lines = ["@system %s using test-imperial" % sysname, "inch"]
 
-        s = ureg.System.from_lines(lines, lambda x: x)
+        ureg.System.from_lines(lines, lambda x: x)
         c = ureg.get_compatible_units("meter", sysname)
         self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
 
     def test_get_base_units(self):
         sysname = "mysys2"
-
         ureg = UnitRegistry()
 
         g = ureg.get_group("test-imperial")
@@ -249,12 +228,11 @@ class TestSystem(QuantityTestCase):
 
     def test_get_base_units_different_exponent(self):
         sysname = "mysys3"
-
         ureg = UnitRegistry()
 
         g = ureg.get_group("test-imperial")
         g.add_units("inch", "yard", "pint")
-        c = ureg.get_compatible_units("meter", "test-imperial")
+        ureg.get_compatible_units("meter", "test-imperial")
 
         lines = ["@system %s using test-imperial" % sysname, "pint:meter"]
 
@@ -280,7 +258,6 @@ class TestSystem(QuantityTestCase):
 
     def test_get_base_units_relation(self):
         sysname = "mysys4"
-
         ureg = UnitRegistry()
 
         g = ureg.get_group("test-imperial")
@@ -302,4 +279,4 @@ class TestSystem(QuantityTestCase):
     def test_members_nowarning(self):
         ureg = self.ureg
         for name in dir(ureg.sys):
-            s = dir(getattr(ureg.sys, name))
+            dir(getattr(ureg.sys, name))

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     pint.util
     ~~~~~~~~~
@@ -10,20 +9,20 @@
 """
 
 import logging
-from logging import NullHandler
 import operator
 import re
 from collections.abc import Mapping
 from decimal import Decimal
-from numbers import Number
 from fractions import Fraction
 from functools import lru_cache
+from logging import NullHandler
+from numbers import Number
 from token import NAME, NUMBER
 
-from .compat import tokenizer, NUMERIC_TYPES
+from .compat import NUMERIC_TYPES, tokenizer
+from .errors import DefinitionSyntaxError
 from .formatting import format_unit
 from .pint_eval import build_eval_tree
-from .errors import DefinitionSyntaxError
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -82,8 +81,10 @@ def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
         new_M.append(r)
     M = new_M
 
-    #    M = [[ntype(x) for x in row] for row in M]
-    I = [[ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)]
+    # M = [[ntype(x) for x in row] for row in M]
+    I = [  # noqa: E741
+        [ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)
+    ]
     swapped = []
 
     for r in range(rows):
@@ -215,7 +216,7 @@ def find_shortest_path(graph, start, end, path=None):
     path = (path or []) + [start]
     if start == end:
         return path
-    if not start in graph:
+    if start not in graph:
         return None
     shortest = None
     for node in graph[start]:
@@ -228,7 +229,7 @@ def find_shortest_path(graph, start, end, path=None):
 
 
 def find_connected_nodes(graph, start, visited=None):
-    if not start in graph:
+    if start not in graph:
         return None
 
     visited = visited or set()

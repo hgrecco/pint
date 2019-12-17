@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # pint documentation build configuration file, created by
 # sphinx-quickstart on Thu Mar  1 13:33:14 2012.
@@ -12,8 +11,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import pkg_resources
 import datetime
+
+import pkg_resources
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -60,7 +60,7 @@ author = "Hernan E. Grecco"
 
 try:  # pragma: no cover
     version = pkg_resources.get_distribution(project).version
-except:  # pragma: no cover
+except Exception:  # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown
     version = "unknown"
@@ -200,11 +200,11 @@ htmlhelp_basename = "pintdoc"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+    # 'papersize': 'letterpaper',
     # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+    # 'pointsize': '10pt',
     # Additional stuff for the LaTeX preamble.
-    "preamble": "".join(("\DeclareUnicodeCharacter{2212}{-}",))  # MINUS
+    "preamble": "".join((r"\DeclareUnicodeCharacter{2212}{-}",))  # MINUS
 }
 
 # Grouping the document tree into LaTeX files. List of tuples

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     pint.registry
     ~~~~~~~~~~~~~
@@ -33,54 +32,52 @@
 """
 
 import copy
-import os
-import re
-import math
 import functools
 import itertools
-import pkg_resources
+import math
+import os
+import re
+from collections import defaultdict
+from contextlib import closing, contextmanager
 from decimal import Decimal
 from fractions import Fraction
-from contextlib import contextmanager, closing
-from io import open, StringIO
-from collections import ChainMap, defaultdict
-from tokenize import NUMBER, NAME
+from io import StringIO
+from tokenize import NAME, NUMBER
 
-from . import registry_helpers
+import pkg_resources
+
+from . import registry_helpers, systems
+from .compat import tokenizer
 from .context import Context, ContextChain
+from .converters import ScaleConverter
+from .definitions import (
+    AliasDefinition,
+    Definition,
+    DimensionDefinition,
+    PrefixDefinition,
+    UnitDefinition,
+)
+from .errors import (
+    DefinitionSyntaxError,
+    DimensionalityError,
+    RedefinitionError,
+    UndefinedUnitError,
+)
+from .pint_eval import build_eval_tree
 from .util import (
+    ParserHelper,
+    SourceIterator,
+    UnitsContainer,
+    _is_dim,
+    find_connected_nodes,
+    find_shortest_path,
     getattr_maybe_raise,
     logger,
     pi_theorem,
     solve_dependencies,
-    ParserHelper,
     string_preprocessor,
-    find_connected_nodes,
-    find_shortest_path,
-    UnitsContainer,
-    _is_dim,
     to_units_container,
-    SourceIterator,
 )
-
-from .compat import tokenizer
-from .definitions import (
-    Definition,
-    UnitDefinition,
-    PrefixDefinition,
-    DimensionDefinition,
-    AliasDefinition,
-)
-from .converters import ScaleConverter
-from .errors import (
-    DimensionalityError,
-    UndefinedUnitError,
-    DefinitionSyntaxError,
-    RedefinitionError,
-)
-
-from .pint_eval import build_eval_tree
-from . import systems
 
 _BLOCK_RE = re.compile(r" |\(")
 
@@ -128,6 +125,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     """Base class for all registries.
 
     Capabilities:
+
     - Register units, prefixes, and dimensions, and their relations.
     - Convert between units.
     - Find dimensionality of a unit.
@@ -136,17 +134,22 @@ class BaseRegistry(metaclass=RegistryMeta):
     - Parse a definition file.
     - Allow extending the definition file parser by registering @ directives.
 
-    :param filename: path of the units definition file to load or line iterable object.
-                     Empty to load the default definition file.
-                     None to leave the UnitRegistry empty.
-    :type filename: str or None
-    :param force_ndarray: convert any input, scalar or not to a numpy.ndarray.
-    :param on_redefinition: action to take in case a unit is redefined.
-                            'warn', 'raise', 'ignore'
-    :type on_redefinition: str
-    :param auto_reduce_dimensions: If True, reduce dimensionality on appropriate operations.
-    :param preprocessors: list of callables which are iteratively ran on any input expression
-                          or unit string
+    :param filename:
+        path of the units definition file to load or line iterable object. Empty to load
+        the default definition file. None to leave the UnitRegistry empty.
+    :type filename:
+        str or None
+    :param force_ndarray:
+        convert any input, scalar or not to a numpy.ndarray.
+    :param on_redefinition:
+        action to take in case a unit is redefined: 'warn', 'raise', 'ignore'
+    :type on_redefinition:
+        str
+    :param auto_reduce_dimensions:
+        If True, reduce dimensionality on appropriate operations.
+    :param preprocessors:
+        list of callables which are iteratively ran on any input expression or unit
+        string
     """
 
     #: Map context prefix to function
@@ -180,7 +183,6 @@ class BaseRegistry(metaclass=RegistryMeta):
         auto_reduce_dimensions=False,
         preprocessors=None,
     ):
-
         self._register_parsers()
         self._init_dynamic_classes()
 
@@ -194,7 +196,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         #: Determines if dimensionality should be reduced on appropriate operations.
         self.auto_reduce_dimensions = auto_reduce_dimensions
 
-        #: Map between name (string) and value (string) of defaults stored in the definitions file.
+        #: Map between name (string) and value (string) of defaults stored in the
+        #: definitions file.
         self._defaults = {}
 
         #: Map dimension name (string) to its definition (DimensionDefinition).
@@ -204,7 +207,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         #: Might contain prefixed units.
         self._units = {}
 
-        #: Map unit name in lower case (string) to a set of unit names with the right case.
+        #: Map unit name in lower case (string) to a set of unit names with the right
+        #: case.
         #: Does not contain prefixed units.
         #: e.g: 'hz' - > set('Hz', )
         self._units_casei = defaultdict(set)

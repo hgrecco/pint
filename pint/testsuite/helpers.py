@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-
 import doctest
-from distutils.version import StrictVersion
 import re
 import unittest
+from distutils.version import StrictVersion
 
 from ..compat import (
-    HAS_NUMPY,
     HAS_BABEL,
-    HAS_UNCERTAINTIES,
+    HAS_NUMPY,
     HAS_NUMPY_ARRAY_FUNCTION,
+    HAS_UNCERTAINTIES,
     NUMPY_VER,
 )
 
@@ -106,7 +104,7 @@ class PintOutputChecker(doctest.OutputChecker):
         try:
             if eval(want) == eval(got):
                 return True
-        except:
+        except Exception:
             pass
 
         for regex in (_q_re, _sq_re):
@@ -124,7 +122,7 @@ class PintOutputChecker(doctest.OutputChecker):
                     return False
 
                 return True
-            except:
+            except Exception:
                 pass
 
         cnt = 0
@@ -138,7 +136,7 @@ class PintOutputChecker(doctest.OutputChecker):
                 if parsed_got == parsed_want:
                     return True
 
-            except:
+            except Exception:
                 pass
 
         if cnt:
