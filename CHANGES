@@ -7,7 +7,7 @@ Pint Changelog
 - Added slinch to Avoirdupois group
   (Issue #936, Thanks awcox21)
 - Use black, flake8, and isort on the project
-  (Issues #929, #931, and TODO, Thanks Guido Imperiale)
+  (Issues #929, #931, and #937, Thanks Guido Imperiale)
 - Auto-increase package version at every commit when pint is installed from the git tip,
   e.g. pip install git+https://github.com/hgrecco/pint.git.
   (Issues #930 and #934, Thanks Guido Imperiale and KOLANICH)

@@ -1,4 +1,4 @@
 - [ ] Executed ``black -t py36 . && isort -rc . && flake8`` with no errors
 - [ ] The change is fully covered by automated unit tests
 - [ ] Documented in docs/ as appropriate
-- [ ] Documented in CHANGES
+- [ ] Added an entry to the CHANGES file

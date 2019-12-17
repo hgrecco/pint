@@ -15,6 +15,7 @@ env:
   # Refer to history of https://github.com/lebigot/uncertainties/blob/master/setup.py
   # for min/max Python versions supported by uncertainties
 
+  - PKGS="python=3.7 flake8 black isort"  # Have linters fail first and quickly
   - PKGS="python=3.6"
   - PKGS="python=3.7"
   - PKGS="python=3.8"
@@ -28,7 +29,6 @@ env:
   - PKGS="python=3.6 numpy uncertainties"
   - PKGS="python=3.7 numpy uncertainties"
   - PKGS="python=3.8 numpy uncertainties"
-  - PKGS="python=3.7 flake8 black isort"
 
   # TODO: pandas tests
   # - PKGS="python=3.7 numpy pandas uncertainties pandas"
