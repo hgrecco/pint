@@ -67,8 +67,8 @@ script:
   # - if [[ $PANDAS == '1' ]]; then pip install -e .; pytest --nbval notebooks/*; fi
   - if [[ $PANDAS == 0 && $LINT == 0 ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*","*pandas*" setup.py test; fi
   - if [[ $LINT == 1 ]]; then black -t py36 --check . && isort -rc -c . && flake8; fi
-  - coverage combine
-  - coverage report -m
+  - if [[ $LINT == 0 ]]; coverage combine; fi
+  - if [[ $LINT == 0 ]]; coverage report -m; fi
 
 after_success:
   - coveralls --verbose
