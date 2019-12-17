@@ -717,13 +717,11 @@ class BaseRegistry(metaclass=RegistryMeta):
         if not input_units:
             return 1.0, UnitsContainer()
 
-        # The cache is only done for check_nonmult=True
         cache = self._cache.root_units
-        if check_nonmult:
-            try:
-                return cache[input_units]
-            except KeyError:
-                pass
+        try:
+            return cache[input_units]
+        except KeyError:
+            pass
 
         accumulators = [1.0, defaultdict(float)]
         self._get_root_units_recurse(input_units, 1.0, accumulators)
@@ -733,13 +731,10 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
-            for unit in units:
-                if not self._units[unit].converter.is_multiplicative:
-                    return None, units
+            if any(not self._units[unit].converter.is_multiplicative for unit in units):
+                factor = None
 
-        if check_nonmult:
-            cache[input_units] = factor, units
-
+        cache[input_units] = factor, units
         return factor, units
 
     def get_base_units(self, input_units, check_nonmult=True, system=None):
@@ -832,7 +827,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         # Here src and dst have only multiplicative units left. Thus we can
         # convert with a factor.
-        factor, units = self._get_root_units(src / dst)
+        factor, _ = self._get_root_units(src / dst)
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
