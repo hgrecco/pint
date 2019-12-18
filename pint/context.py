@@ -101,6 +101,7 @@ class Context:
             newdef = dict(context.defaults, **defaults)
             c = cls(context.name, context.aliases, newdef)
             c.funcs = context.funcs
+            c.redefinitions = context.redefinitions
             for edge in context.funcs:
                 c.relation_to_context[edge] = c
             return c

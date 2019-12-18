@@ -113,9 +113,9 @@ class ContextCacheOverlay:
     active contexts
     """
 
-    def __init__(self, registry_cache: RegistryCache, units_overlay: bool = False):
+    def __init__(self, registry_cache: RegistryCache):
         self.dimensional_equivalents = registry_cache.dimensional_equivalents
-        self.root_units = {} if units_overlay else registry_cache.root_units
+        self.root_units = {}
         self.dimensionality = registry_cache.dimensionality
         self.parse_unit = registry_cache.parse_unit
 
@@ -1247,31 +1247,30 @@ class ContextRegistry(BaseRegistry):
         self._caches[()] = self._cache
 
     def _switch_context_cache_and_units(self) -> None:
-        key = self._active_ctx.hashable()
+        """If any of the active contexts redefine units, create variant self._cache
+        and self._units specific to the combination of active contexts.
+        The next time this method is invoked with the same combination of contexts,
+        reuse the same variant self._cache and self._units as in the previous time.
+        """
+        del self._units.maps[:-1]
         units_overlay = any(ctx.redefinitions for ctx in self._active_ctx.contexts)
+        if not units_overlay:
+            # Use the default _cache and _units
+            self._cache = self._caches[()]
+            return
 
+        key = self._active_ctx.hashable()
         try:
             self._cache = self._caches[key]
-        except KeyError:
-            base_cache = self._caches[()]
-            self._caches[key] = ContextCacheOverlay(
-                base_cache, units_overlay=units_overlay
-            )
-
-        # Disable previous units overlay
-        del self._units.maps[:-1]
-        if not self._active_ctx.contexts or not units_overlay:
-            # No active contexts, or contexts don't redefine units
-            return
-
-        try:
             self._units.maps.insert(0, self._context_units[key])
-            return
         except KeyError:
             pass
 
-        # First time activating a context chain with units redefinitions; inject them
-        # into the context
+        # First time using this specific combination of contexts and it contains
+        # unit redefinitions
+        base_cache = self._caches[()]
+        self._caches[key] = self._cache = ContextCacheOverlay(base_cache)
+
         self._context_units[key] = units_overlay = {}
         self._units.maps.insert(0, units_overlay)
         for ctx in self._active_ctx.contexts:
