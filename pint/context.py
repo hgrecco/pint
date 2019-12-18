@@ -213,7 +213,7 @@ class Context:
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)
 
-    def redefine(self, definition):
+    def redefine(self, definition: str):
         for line in definition.splitlines():
             d = Definition.from_string(line)
             if not isinstance(d, UnitDefinition):
@@ -249,9 +249,9 @@ class ContextChain(ChainMap):
 
     def __init__(self):
         super().__init__()
+        self.contexts = []
         self.maps.clear()  # Remove default empty map
         self._graph = None
-        self.contexts = []
 
     def insert_contexts(self, *contexts):
         """Insert one or more contexts in reversed order the chained map.

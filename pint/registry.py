@@ -527,11 +527,10 @@ class BaseRegistry(metaclass=RegistryMeta):
                 if "[" in unit_name:
                     continue
                 parsed_names = self.parse_unit_name(unit_name)
-                prefix = None
                 if parsed_names:
-                    prefix, base_name, _suffix = parsed_names[0]
+                    prefix, base_name, _ = parsed_names[0]
                 else:
-                    base_name = unit_name
+                    prefix, base_name = '', unit_name
 
                 try:
                     uc = ParserHelper.from_word(base_name)
@@ -897,7 +896,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         for cp, cu, cs in list(candidates):
             assert isinstance(cp, str)
             assert isinstance(cu, str)
-            assert cs == "", "not empty suffix is not supported"
+            if cs != "":
+                raise NotImplementedError("non-empty suffix")
             if cp:
                 candidates.pop(("", cp + cu, ""), None)
         return tuple(candidates)
@@ -1486,7 +1486,7 @@ class ContextRegistry(BaseRegistry):
         ret = super()._get_compatible_units(input_units, group_or_system)
 
         if self._active_ctx:
-            ret = ret.copy()
+            ret = ret.copy()  # Do not alter self._cache
             nodes = find_connected_nodes(self._active_ctx.graph, src_dim)
             if nodes:
                 for node in nodes:
