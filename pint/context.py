@@ -214,7 +214,12 @@ class Context:
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)
 
-    def redefine(self, definition: str):
+    def redefine(self, definition: str) -> None:
+        """Override the definition of a unit in the registry.
+
+        :param definition:
+            ``<unit> = <new definition>``, e.g. ``pound = 0.5 kg``
+        """
         for line in definition.splitlines():
             d = Definition.from_string(line)
             if not isinstance(d, UnitDefinition):

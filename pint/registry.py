@@ -109,8 +109,8 @@ class RegistryCache:
 
 
 class ContextCacheOverlay:
-    """Layer on top of the base UnitRegistry cache specific to a combination of
-    active contexts
+    """Layer on top of the base UnitRegistry cache, specific to a combination of
+    active contexts which contain unit redefinitions.
     """
 
     def __init__(self, registry_cache: RegistryCache):
@@ -1273,9 +1273,15 @@ class ContextRegistry(BaseRegistry):
 
         self._context_units[key] = units_overlay = {}
         self._units.maps.insert(0, units_overlay)
-        for ctx in self._active_ctx.contexts:
-            for definition in ctx.redefinitions:
-                self._redefine(definition)
+
+        on_redefinition_backup = self._on_redefinition
+        self._on_redefinition = "ignore"
+        try:
+            for ctx in self._active_ctx.contexts:
+                for definition in ctx.redefinitions:
+                    self._redefine(definition)
+        finally:
+            self._on_redefinition = on_redefinition_backup
 
     def _redefine(self, definition: UnitDefinition) -> None:
         """Redefine a unit from a context
