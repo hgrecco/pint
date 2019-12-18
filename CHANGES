@@ -12,7 +12,7 @@ Pint Changelog
   e.g. pip install git+https://github.com/hgrecco/pint.git.
   (Issues #930 and #934, Thanks Guido Imperiale and KOLANICH)
 - Fix HTML (Jupyter Notebook) and LateX representation of some units
-  (Issue #927, Thanks Guido Imperiale)
+  (Issues #927 / #928 / #933, Thanks Guido Imperiale)
 - Fixed the definition of RKM unit as gf / tex
   (Issue #921, Thanks Giuseppe Corbelli)
 - **BREAKING CHANGE**:

@@ -94,7 +94,11 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             units = self._units
 
-        return "%s" % (format(units, spec))
+        if "H" in spec:
+            # HTML / Jupyter Notebook
+            return r"\[" + format(units, spec).replace(" ", r"\ ") + r"\]"
+
+        return format(units, spec)
 
     def format_babel(self, spec="", **kwspec):
         spec = spec or self.default_format
