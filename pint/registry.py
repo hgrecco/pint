@@ -37,7 +37,7 @@ import itertools
 import math
 import os
 import re
-from collections import defaultdict
+from collections import ChainMap, defaultdict
 from contextlib import closing, contextmanager
 from decimal import Decimal
 from fractions import Fraction
@@ -113,10 +113,9 @@ class ContextCacheOverlay:
     active contexts
     """
 
-    def __init__(self, registry_cache):
-        # TODO: Use ChainMap to define context-specific caches
+    def __init__(self, registry_cache: RegistryCache, units_overlay: bool = False):
         self.dimensional_equivalents = registry_cache.dimensional_equivalents
-        self.root_units = registry_cache.root_units
+        self.root_units = {} if units_overlay else registry_cache.root_units
         self.dimensionality = registry_cache.dimensionality
         self.parse_unit = registry_cache.parse_unit
 
@@ -1182,14 +1181,19 @@ class ContextRegistry(BaseRegistry):
     """
 
     def __init__(self, **kwargs):
-        #: Map context name (string) or abbreviation to context.
+        # Map context name (string) or abbreviation to context.
         self._contexts = {}
-        #: Stores active contexts.
+        # Stores active contexts.
         self._active_ctx = ContextChain()
-        #: Map context chain to cache
+        # Map context chain to cache
         self._caches = {}
+        # Map context chain to units override
+        self._context_units = {}
 
         super().__init__(**kwargs)
+
+        # Allow contexts to add override layers to the units
+        self._units = ChainMap(self._units)
 
     def _register_parsers(self):
         super()._register_parsers()
@@ -1203,7 +1207,7 @@ class ContextRegistry(BaseRegistry):
         except KeyError as e:
             raise DefinitionSyntaxError(f"unknown dimension {e} in context")
 
-    def add_context(self, context):
+    def add_context(self, context: Context) -> None:
         """Add a context object to the registry.
 
         The context will be accessible by its name and aliases.
@@ -1225,7 +1229,7 @@ class ContextRegistry(BaseRegistry):
                 )
             self._contexts[alias] = context
 
-    def remove_context(self, name_or_alias):
+    def remove_context(self, name_or_alias: str) -> Context:
         """Remove a context from the registry and return it.
 
         Notice that this methods will not disable the context. Use `disable_contexts`.
@@ -1238,19 +1242,82 @@ class ContextRegistry(BaseRegistry):
 
         return context
 
-    def _build_cache(self):
+    def _build_cache(self) -> None:
         super()._build_cache()
         self._caches[()] = self._cache
 
-    def _switch_context_cache(self):
+    def _switch_context_cache_and_units(self) -> None:
         key = self._active_ctx.hashable()
+        units_overlay = any(ctx.redefinitions for ctx in self._active_ctx.contexts)
+
         try:
             self._cache = self._caches[key]
         except KeyError:
             base_cache = self._caches[()]
-            self._caches[key] = ContextCacheOverlay(base_cache)
+            self._caches[key] = ContextCacheOverlay(
+                base_cache, units_overlay=units_overlay
+            )
 
-    def enable_contexts(self, *names_or_contexts, **kwargs):
+        # Disable previous units overlay
+        del self._units.maps[:-1]
+        if not self._active_ctx.contexts or not units_overlay:
+            # No active contexts, or contexts don't redefine units
+            return
+
+        try:
+            self._units.maps.insert(0, self._context_units[key])
+            return
+        except KeyError:
+            pass
+
+        # First time activating a context chain with units redefinitions; inject them
+        # into the context
+        self._context_units[key] = units_overlay = {}
+        self._units.maps.insert(0, units_overlay)
+        for ctx in self._active_ctx.contexts:
+            for definition in ctx.redefinitions:
+                self._redefine(definition)
+
+    def _redefine(self, definition: UnitDefinition) -> None:
+        """Redefine a unit from a context
+        """
+        # Find original definition in the UnitRegistry
+        candidates = self.parse_unit_name(definition.name)
+        assert candidates
+        candidates_no_prefix = [c for c in candidates if not c[0]]
+        if len(candidates_no_prefix) > 1:
+            raise ValueError(
+                f"Ambiguous redefinition {definition.name}; "
+                f"candidates: {candidates_no_prefix}"
+            )
+        if not candidates_no_prefix:
+            raise ValueError(
+                f"Can't redefine a unit with a prefix {definition.name}"
+            )
+        _, name, _ = candidates_no_prefix[0]
+        try:
+            basedef = self._units[name]
+        except KeyError:
+            raise UndefinedUnitError(name)
+
+        # Rebuild definition as a variant of the base
+        if basedef.is_base:
+            raise ValueError("Can't redefine a base unit to a derived one")
+        # Do not modify in place the original definition, as (1) the context may
+        # be shared by other registries, and (2) it would alter the cache key
+        definition = UnitDefinition(
+            name=basedef.name,
+            symbol=basedef.symbol,
+            aliases=basedef.aliases,
+            is_base=False,
+            reference=definition.reference,
+            converter=definition.converter,
+        )
+
+        # Write into the context-specific self._units.maps[0] and self._cache.root_units
+        self.define(definition)
+
+    def enable_contexts(self, *names_or_contexts, **kwargs) -> None:
         """Enable contexts provided by name or by object.
 
         :param names_or_contexts: sequence of the contexts or contexts names/alias
@@ -1270,7 +1337,7 @@ class ContextRegistry(BaseRegistry):
         # Check if the contexts have been checked first, if not we make sure
         # that dimensions are expressed in terms of base dimensions.
         for ctx in ctxs:
-            if getattr(ctx, "_checked", False):
+            if ctx.checked:
                 continue
             for (src, dst), func in ctx.funcs.items():
                 src_ = self._get_dimensionality(src)
@@ -1278,20 +1345,20 @@ class ContextRegistry(BaseRegistry):
                 if src != src_ or dst != dst_:
                     ctx.remove_transformation(src, dst)
                     ctx.add_transformation(src_, dst_, func)
-            ctx._checked = True
+            ctx.checked = True
 
         # and create a new one with the new defaults.
         ctxs = tuple(Context.from_context(ctx, **kwargs) for ctx in ctxs)
 
         # Finally we add them to the active context.
         self._active_ctx.insert_contexts(*ctxs)
-        self._switch_context_cache()
+        self._switch_context_cache_and_units()
 
-    def disable_contexts(self, n=None):
+    def disable_contexts(self, n: int = None) -> None:
         """Disable the last n enabled contexts.
         """
         self._active_ctx.remove_contexts(n)
-        self._switch_context_cache()
+        self._switch_context_cache_and_units()
 
     @contextmanager
     def context(self, *names, **kwargs):
