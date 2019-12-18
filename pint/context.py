@@ -220,11 +220,11 @@ class Context:
                 raise DefinitionSyntaxError(
                     "Expected <unit> = <converter>; got %s" % line.strip()
                 )
-            if d.symbol or d.aliases:
+            if d.symbol != d.name or d.aliases:
                 raise DefinitionSyntaxError(
                     "Can't change a unit's symbol or aliases within a context"
                 )
-            if d.base:
+            if d.is_base:
                 raise DefinitionSyntaxError("Cannot define base units within a context")
             self.redefinitions.append(d)
 
