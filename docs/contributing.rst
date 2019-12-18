@@ -19,9 +19,13 @@ Contribute code
 To contribute fixes, code or documentation to Pint, fork Pint in github_ and submit
 the changes using a pull request against the **master** branch.
 
-- If you are fixing a bug, add a test to test_issues.py
-  Also add "Close #<bug number> as described in the `github docs`_.
+- If you are fixing a bug, add a test to test_issues.py, or amend/enrich the general
+  test suite to cover the use case.
 - If you are submitting new code, add tests and documentation.
+- Write "Closes #<bug number>" in the PR description or a comment, as described in the
+  `github docs`_.
+- Log the change in the CHANGES file.
+- Execute ``black -t py36 . && isort -rc . && flake8`` and resolve any issues.
 
 Pint uses `bors-ng` as a merge bot and therefore every PR is tested before merging.
 
