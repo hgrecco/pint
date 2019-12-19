@@ -9,6 +9,7 @@
 """
 
 import logging
+import math
 import operator
 import re
 from collections.abc import Mapping
@@ -481,16 +482,21 @@ class ParserHelper(UnitsContainer):
         if isinstance(ret, Number):
             return ParserHelper(ret)
 
-        if not reps:
-            return ret
+        if reps:
+            ret = ParserHelper(
+                ret.scale,
+                {
+                    key.replace("__obra__", "[").replace("__cbra__", "]"): value
+                    for key, value in ret.items()
+                },
+            )
 
-        return ParserHelper(
-            ret.scale,
-            {
-                key.replace("__obra__", "[").replace("__cbra__", "]"): value
-                for key, value in ret.items()
-            },
-        )
+        for k in list(ret):
+            if k.lower() == "nan":
+                del ret._d[k]
+                ret.scale = math.nan
+
+        return ret
 
     def __copy__(self):
         new = super().__copy__()
@@ -613,7 +619,8 @@ _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³�
 
 
 def string_preprocessor(input_string):
-    input_string = input_string.strip().replace(",", "").replace(" per ", "/")
+    input_string = input_string.replace(",", "")
+    input_string = input_string.replace(" per ", "/")
 
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)

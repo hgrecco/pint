@@ -1,7 +1,8 @@
 import itertools
+import math
 from collections import defaultdict
 
-from pint import DefinitionSyntaxError, DimensionalityError, UndefinedUnitError, UnitRegistry
+from pint import DefinitionSyntaxError, DimensionalityError, UnitRegistry
 from pint.context import Context
 from pint.testsuite import QuantityTestCase
 from pint.util import UnitsContainer
@@ -734,7 +735,7 @@ class TestContextRedefinitions(QuantityTestCase):
             """
             foo = [d] = f = foo_alias
             bar = 2 foo = b = bar_alias
-            baz = 3 bar = _ = baz_alias 
+            baz = 3 bar = _ = baz_alias
             asd = 4 baz
 
             @context c
@@ -771,16 +772,16 @@ class TestContextRedefinitions(QuantityTestCase):
 
             ureg.disable_contexts()
 
-    def test_define_undef(self):
+    def test_define_nan(self):
         ureg = UnitRegistry(
             """
             USD = [currency]
-            EUR = undef USD
-            GBP = undef USD
-            
+            EUR = nan USD
+            GBP = nan USD
+
             @context c
                 EUR = 1.11 USD
-                # Note that we're redefining which unit GBP is defined against
+                # Note that we're changing which unit GBP is defined against
                 GBP = 1.18 EUR
             @end
             """.splitlines()
@@ -790,11 +791,11 @@ class TestContextRedefinitions(QuantityTestCase):
         self.assertEquals(q.magnitude, 10)
         self.assertEquals(q.units.dimensionality, {"[currency]": 1})
         self.assertEquals(q.to("GBP").magnitude, 10)
+        self.assertTrue(math.isnan(q.to("USD").magnitude))
+        self.assertAlmostEqual(q.to("USD", "c").magnitude, 10 * 1.18 * 1.11)
 
-        with self.assertRaises(UndefinedUnitError) as ex:
-            q.to("USD")
-        self.assertEquals(
-            str(ex.exception), "'undef' is not defined in the unit registry"
-        )
+    def test_non_multiplicative(self):
+        raise NotImplementedError("TODO")
 
-        self.assertAlmostEqual(q.to("USD", "c").magnitude, 1.18 * 1.11)
+    def test_invalid(self):
+        raise NotImplementedError("TODO")
