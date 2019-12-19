@@ -231,7 +231,7 @@ class Context:
                     "Can't change a unit's symbol or aliases within a context"
                 )
             if d.is_base:
-                raise DefinitionSyntaxError("Cannot define base units within a context")
+                raise DefinitionSyntaxError("Can't define base units within a context")
             self.redefinitions.append(d)
 
     def hashable(self):

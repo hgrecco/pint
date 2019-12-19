@@ -1296,7 +1296,7 @@ class ContextRegistry(BaseRegistry):
                 f"candidates: {candidates_no_prefix}"
             )
         if not candidates_no_prefix:
-            raise ValueError(f"Can't redefine a unit with a prefix {definition.name}")
+            raise ValueError(f"Can't redefine a unit with a prefix: {definition.name}")
         _, name, _ = candidates_no_prefix[0]
         try:
             basedef = self._units[name]

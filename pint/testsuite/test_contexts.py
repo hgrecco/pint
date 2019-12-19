@@ -795,7 +795,137 @@ class TestContextRedefinitions(QuantityTestCase):
         self.assertAlmostEqual(q.to("USD", "c").magnitude, 10 * 1.18 * 1.11)
 
     def test_non_multiplicative(self):
-        raise NotImplementedError("TODO")
+        ureg = UnitRegistry(
+            """
+            kelvin = [temperature]
+            fahrenheit = 5 / 9 * kelvin; offset: 233.15 + 200 / 9
+            bogokelvin = 10 * kelvin
 
-    def test_invalid(self):
-        raise NotImplementedError("TODO")
+            @context nonmult_to_nonmult
+                fahrenheit = 10 * kelvin; offset: 123
+            @end
+            @context nonmult_to_mult
+                fahrenheit = 123 * kelvin
+            @end
+            @context mult_to_nonmult
+                bogodegrees = kelvin; 5 * kelvin; offset: 123
+            @end
+            """.splitlines()
+        )
+        k = ureg.Quantity(100, "kelvin")
+
+        with self.subTest("nonmult_to_nonmult"):
+            with ureg.context("nonmult_to_nonmult"):
+                self.assertEqual(k.to("fahrenheit").magnitude, 100 * 10 + 123)
+
+        with self.subTest("nonmult_to_mult"):
+            with ureg.context("nonmult_to_mult"):
+                self.assertEqual(k.to("fahrenheit").magnitude, 100 * 123)
+
+        with self.subTest("mult_to_nonmult"):
+            with ureg.context("mult_to_nonmult"):
+                self.assertEqual(k.to("bogodegrees").magnitude, 5 * 100 + 123)
+
+    def test_err_to_base_unit(self):
+        with self.assertRaises(DefinitionSyntaxError) as e:
+            Context.from_lines(["@context c", "x = [d]"])
+        self.assertEquals(str(e.exception), "Can't define base units within a context")
+
+    def test_err_change_base_unit(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d1]
+            bar = [d2]
+
+            @context c
+                bar = foo
+            @end
+            """.splitlines()
+        )
+
+        with self.assertRaises(ValueError) as e:
+            ureg.enable_contexts("c")
+        self.assertEquals(
+            str(e.exception), "Can't redefine a base unit to a derived one"
+        )
+
+    def test_change_dimensionality(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d1]
+            bar = [d2]
+            baz = foo
+
+            @context c
+                baz = bar
+            @end
+            """.splitlines()
+        )
+        with self.assertRaises(ValueError) as e:
+            ureg.enable_contexts("c")
+        self.assertEquals(
+            str(e.exception),
+            "Can't change dimensionality of baz from [d1] to [d2] in a context",
+        )
+
+    def test_err_cyclic_dependency(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d]
+            bar = foo
+            baz = bar
+
+            @context c
+                bar = baz
+            @end
+            """.splitlines()
+        )
+        # TODO align this exception and the one you get when you implement a cyclic
+        #      dependency within the base registry. Ideally this exception should be
+        #      raised by enable_contexts.
+        ureg.enable_contexts("c")
+        q = ureg.Quantity("bar")
+        with self.assertRaises(RecursionError):
+            q.to("foo")
+
+    def test_err_dimension_redefinition(self):
+        with self.assertRaises(DefinitionSyntaxError) as e:
+            Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
+        self.assertEquals(
+            str(e.exception), "Expected <unit> = <converter>; got [d1] = [d2] * [d3]"
+        )
+
+    def test_err_prefix_redefinition(self):
+        with self.assertRaises(DefinitionSyntaxError) as e:
+            Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
+        self.assertEquals(
+            str(e.exception), "Expected <unit> = <converter>; got [d1] = [d2] * [d3]"
+        )
+
+    def test_err_redefine_alias(self):
+        for s in ("foo = bar = f", "foo = bar = _ = baz"):
+            with self.subTest(s):
+                with self.assertRaises(DefinitionSyntaxError) as e:
+                    Context.from_lines(["@context c", s])
+                self.assertEquals(
+                    str(e.exception),
+                    "Can't change a unit's symbol or aliases within a context",
+                )
+
+    def test_err_redefine_with_prefix(self):
+        ureg = UnitRegistry(
+            """
+            kilo- = 1000
+            gram = [mass]
+            pound = 454 gram
+
+            @context c
+                kilopound = 500000 gram
+            @end
+            """.splitlines()
+        )
+        with self.assertRaises(ValueError) as e:
+            ureg.enable_contexts("c")
+        self.assertEquals(
+            str(e.exception), "Can't redefine a unit with a prefix: kilopound"
+        )
