@@ -1,7 +1,7 @@
 import itertools
 from collections import defaultdict
 
-from pint import DefinitionSyntaxError, DimensionalityError, UnitRegistry
+from pint import DefinitionSyntaxError, DimensionalityError, UndefinedUnitError, UnitRegistry
 from pint.context import Context
 from pint.testsuite import QuantityTestCase
 from pint.util import UnitsContainer
@@ -726,3 +726,75 @@ class TestDefinedContexts(QuantityTestCase):
 
         self.assertEqual(b, f(a))
         self.assertEqual(b, g(a))
+
+
+class TestContextRedefinitions(QuantityTestCase):
+    def test_redefine(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d] = f = foo_alias
+            bar = 2 foo = b = bar_alias
+            baz = 3 bar = _ = baz_alias 
+            asd = 4 baz
+
+            @context c
+                # Note how we're redefining a symbol, not the base name, as a
+                # function of another name
+                b = 5 f
+            """.splitlines()
+        )
+        # Units that are somehow directly or indirectly defined as a function of the
+        # overridden unit are also affected
+        foo = ureg.Quantity(1, "foo")
+        bar = ureg.Quantity(1, "bar")
+        asd = ureg.Quantity(1, "asd")
+
+        # Test without context before and after, to verify that the cache and units have
+        # not been polluted
+        for enable_ctx in (False, True, False):
+            with self.subTest(enable_ctx):
+                if enable_ctx:
+                    ureg.enable_contexts("c")
+                    k = 5
+                else:
+                    k = 2
+
+                self.assertEqual(foo.to("b").magnitude, 1 / k)
+                self.assertEqual(foo.to("bar").magnitude, 1 / k)
+                self.assertEqual(foo.to("bar_alias").magnitude, 1 / k)
+                self.assertEqual(foo.to("baz").magnitude, 1 / k / 3)
+                self.assertEqual(bar.to("foo").magnitude, k)
+                self.assertEqual(bar.to("baz").magnitude, 1 / 3)
+                self.assertEqual(asd.to("foo").magnitude, 4 * 3 * k)
+                self.assertEqual(asd.to("bar").magnitude, 4 * 3)
+                self.assertEqual(asd.to("baz").magnitude, 4)
+
+            ureg.disable_contexts()
+
+    def test_define_undef(self):
+        ureg = UnitRegistry(
+            """
+            USD = [currency]
+            EUR = undef USD
+            GBP = undef USD
+            
+            @context c
+                EUR = 1.11 USD
+                # Note that we're redefining which unit GBP is defined against
+                GBP = 1.18 EUR
+            @end
+            """.splitlines()
+        )
+
+        q = ureg.Quantity("10 GBP")
+        self.assertEquals(q.magnitude, 10)
+        self.assertEquals(q.units.dimensionality, {"[currency]": 1})
+        self.assertEquals(q.to("GBP").magnitude, 10)
+
+        with self.assertRaises(UndefinedUnitError) as ex:
+            q.to("USD")
+        self.assertEquals(
+            str(ex.exception), "'undef' is not defined in the unit registry"
+        )
+
+        self.assertAlmostEqual(q.to("USD", "c").magnitude, 1.18 * 1.11)
