@@ -530,7 +530,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 if parsed_names:
                     prefix, base_name, _ = parsed_names[0]
                 else:
-                    prefix, base_name = '', unit_name
+                    prefix, base_name = "", unit_name
 
                 try:
                     uc = ParserHelper.from_word(base_name)
@@ -1296,9 +1296,7 @@ class ContextRegistry(BaseRegistry):
                 f"candidates: {candidates_no_prefix}"
             )
         if not candidates_no_prefix:
-            raise ValueError(
-                f"Can't redefine a unit with a prefix {definition.name}"
-            )
+            raise ValueError(f"Can't redefine a unit with a prefix {definition.name}")
         _, name, _ = candidates_no_prefix[0]
         try:
             basedef = self._units[name]

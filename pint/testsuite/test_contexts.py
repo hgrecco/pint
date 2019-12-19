@@ -486,13 +486,15 @@ class TestContexts(QuantityTestCase):
         self.assertEqual(len(ureg._contexts), nctx)
 
     def test_parse_invalid(self):
-        s = [
-            "@context longcontextname",
+        for badrow in (
             "[length] = 1 / [time]: c / value",
             "1 / [time] = [length]: c / value",
-        ]
-
-        self.assertRaises(DefinitionSyntaxError, Context.from_lines, s)
+            "[length] <- [time] = c / value",
+            "[length] - [time] = c / value",
+        ):
+            with self.subTest(badrow):
+                with self.assertRaises(DefinitionSyntaxError):
+                    Context.from_lines(["@context c", badrow])
 
     def test_parse_simple(self):
 

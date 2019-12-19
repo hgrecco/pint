@@ -9,6 +9,7 @@
 """
 
 from .converters import OffsetConverter, ScaleConverter
+from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
 
@@ -126,7 +127,7 @@ class UnitDefinition(Definition):
             elif all(_is_dim(key) for key in converter.keys()):
                 self.is_base = True
             else:
-                raise ValueError(
+                raise DefinitionSyntaxError(
                     "Cannot mix dimensions and units in the same definition. "
                     "Base units must be referenced only to dimensions. "
                     "Derived units must be referenced only to units."
@@ -154,7 +155,7 @@ class DimensionDefinition(Definition):
             elif all(_is_dim(key) for key in converter.keys()):
                 self.is_base = False
             else:
-                raise ValueError(
+                raise DefinitionSyntaxError(
                     "Base dimensions must be referenced to None. "
                     "Derived dimensions must only be referenced "
                     "to dimensions."

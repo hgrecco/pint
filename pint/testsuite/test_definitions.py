@@ -6,14 +6,17 @@ from pint.definitions import (
     PrefixDefinition,
     UnitDefinition,
 )
+from pint.errors import DefinitionSyntaxError
 from pint.testsuite import BaseTestCase
 from pint.util import UnitsContainer
 
 
 class TestDefinition(BaseTestCase):
     def test_invalid(self):
-        self.assertRaises(ValueError, Definition.from_string, "x = [time] * meter")
-        self.assertRaises(ValueError, Definition.from_string, "[x] = [time] * meter")
+        with self.assertRaises(DefinitionSyntaxError):
+            Definition.from_string("x = [time] * meter")
+        with self.assertRaises(DefinitionSyntaxError):
+            Definition.from_string("[x] = [time] * meter")
 
     def test_prefix_definition(self):
         for definition in ("m- = 1e-3", "m- = 10**-3", "m- = 0.001"):
