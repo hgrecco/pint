@@ -682,17 +682,31 @@ def implement_atleast_nd(func_str):
 for func_str in ["atleast_1d", "atleast_2d", "atleast_3d"]:
     implement_atleast_nd(func_str)
 
+
+# Handle cumulative products (which must be dimensionless for consistent units across
+# output array)
+def implement_single_dimensionless_argument_func(func_str):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(a, *args, **kwargs):
+        (a_stripped,), _ = convert_to_consistent_units(
+            a, pre_calc_units=a._REGISTRY.parse_units("dimensionless")
+        )
+        return a._REGISTRY.Quantity(func(a_stripped, *args, **kwargs))
+
+
+for func_str in ["cumprod", "cumproduct", "nancumprod"]:
+    implement_single_dimensionless_argument_func(func_str)
+
 # Handle single-argument consistent unit functions
 for func_str in ["block", "hstack", "vstack", "dstack", "column_stack"]:
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
-    )
-
-# Handle cumulative products (which must be dimensionless for consistent units across
-# output array)
-for func_str in ["cumprod", "cumproduct", "nancumprod"]:
-    implement_func(
-        "function", func_str, input_units="dimensionless", output_unit="match_input"
     )
 
 # Handle functions that ignore units on input and output
