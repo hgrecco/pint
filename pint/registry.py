@@ -1288,15 +1288,12 @@ class ContextRegistry(BaseRegistry):
         """
         # Find original definition in the UnitRegistry
         candidates = self.parse_unit_name(definition.name)
-        assert candidates
+        if not candidates:
+            raise UndefinedUnitError(definition.name)
         candidates_no_prefix = [c for c in candidates if not c[0]]
-        if len(candidates_no_prefix) > 1:
-            raise ValueError(
-                f"Ambiguous redefinition {definition.name}; "
-                f"candidates: {candidates_no_prefix}"
-            )
         if not candidates_no_prefix:
             raise ValueError(f"Can't redefine a unit with a prefix: {definition.name}")
+        assert len(candidates_no_prefix) == 1
         _, name, _ = candidates_no_prefix[0]
         try:
             basedef = self._units[name]

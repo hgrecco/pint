@@ -2,7 +2,12 @@ import itertools
 import math
 from collections import defaultdict
 
-from pint import DefinitionSyntaxError, DimensionalityError, UnitRegistry
+from pint import (
+    DefinitionSyntaxError,
+    DimensionalityError,
+    UndefinedUnitError,
+    UnitRegistry,
+)
 from pint.context import Context
 from pint.testsuite import QuantityTestCase
 from pint.util import UnitsContainer
@@ -798,33 +803,37 @@ class TestContextRedefinitions(QuantityTestCase):
         ureg = UnitRegistry(
             """
             kelvin = [temperature]
-            fahrenheit = 5 / 9 * kelvin; offset: 233.15 + 200 / 9
-            bogokelvin = 10 * kelvin
+            fahrenheit = 5 / 9 * kelvin; offset: 255
+            bogodegrees = 9 * kelvin
 
             @context nonmult_to_nonmult
-                fahrenheit = 10 * kelvin; offset: 123
+                fahrenheit = 7 * kelvin; offset: 123
             @end
             @context nonmult_to_mult
                 fahrenheit = 123 * kelvin
             @end
             @context mult_to_nonmult
-                bogodegrees = kelvin; 5 * kelvin; offset: 123
+                bogodegrees = 5 * kelvin; offset: 123
             @end
             """.splitlines()
         )
         k = ureg.Quantity(100, "kelvin")
 
+        with self.subTest("baseline"):
+            self.assertAlmostEqual(k.to("fahrenheit").magnitude, (100 - 255) * 9 / 5)
+            self.assertAlmostEqual(k.to("bogodegrees").magnitude, 100 / 9)
+
         with self.subTest("nonmult_to_nonmult"):
             with ureg.context("nonmult_to_nonmult"):
-                self.assertEqual(k.to("fahrenheit").magnitude, 100 * 10 + 123)
+                self.assertAlmostEqual(k.to("fahrenheit").magnitude, (100 - 123) / 7)
 
         with self.subTest("nonmult_to_mult"):
             with ureg.context("nonmult_to_mult"):
-                self.assertEqual(k.to("fahrenheit").magnitude, 100 * 123)
+                self.assertAlmostEqual(k.to("fahrenheit").magnitude, 100 / 123)
 
         with self.subTest("mult_to_nonmult"):
             with ureg.context("mult_to_nonmult"):
-                self.assertEqual(k.to("bogodegrees").magnitude, 5 * 100 + 123)
+                self.assertAlmostEqual(k.to("bogodegrees").magnitude, (100 - 123) / 5)
 
     def test_err_to_base_unit(self):
         with self.assertRaises(DefinitionSyntaxError) as e:
@@ -849,7 +858,7 @@ class TestContextRedefinitions(QuantityTestCase):
             str(e.exception), "Can't redefine a base unit to a derived one"
         )
 
-    def test_change_dimensionality(self):
+    def test_err_change_dimensionality(self):
         ureg = UnitRegistry(
             """
             foo = [d1]
@@ -929,3 +938,16 @@ class TestContextRedefinitions(QuantityTestCase):
         self.assertEquals(
             str(e.exception), "Can't redefine a unit with a prefix: kilopound"
         )
+
+    def test_err_new_unit(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d]
+            @context c
+                bar = foo
+            @end
+            """.splitlines()
+        )
+        with self.assertRaises(UndefinedUnitError) as e:
+            ureg.enable_contexts("c")
+        self.assertEquals(str(e.exception), "'bar' is not defined in the unit registry")
