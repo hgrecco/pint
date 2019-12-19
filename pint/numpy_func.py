@@ -184,7 +184,30 @@ def implements(numpy_func_string, func_type):
 
 
 def implement_func(func_type, func_str, input_units=None, output_unit=None):
-    """Add default-behavior NumPy function/ufunc to the handled list."""
+    """Add default-behavior NumPy function/ufunc to the handled list.
+
+    Parameters
+    ----------
+    func_type : str
+        "function" for NumPy functions, "ufunc" for NumPy ufuncs
+    func_str : str
+        String representing the name of the NumPy function/ufunc to add
+    input_units : pint.Unit or str or None
+        Parameter to control how the function downcasts to magnitudes of arguments. If
+        `pint.Unit`, converts all args and kwargs to this unit before downcasting to
+        magnitude. If "all_consistent", converts all args and kwargs to the unit of the
+        first Quantity in args and kwargs before downcasting to magnitude. If some
+        other string, the string is parsed as a unit, and all args and kwargs are
+        converted to that unit. If None, units are stripped without conversion.
+    output_unit : pint.Unit or str or None
+        Parameter to control the unit of the output. If `pint.Unit`, output is wrapped
+        with that unit. If "match_input", output is wrapped with the unit of the first
+        Quantity in args and kwargs. If a string representing a unit operation defined
+        in `get_op_output_unit`, output is wrapped by the unit determined by
+        `get_op_output_unit`. If some other string, the string is parsed as a unit,
+        which becomes the unit of the output. If None, the bare magnitude is returned.
+
+    """
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
