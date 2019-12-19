@@ -5,6 +5,7 @@
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+import re
 
 from .compat import ufloat
 from .formatting import _FORMATS, siunitx_format_unit
@@ -70,7 +71,7 @@ class Measurement(Quantity):
         return _unpickle, (Measurement, self.magnitude, self._units)
 
     def __repr__(self):
-        return "<Measurement({0:.2f}, {1:.2f}, {2})>".format(
+        return "<Measurement({}, {}, {})>".format(
             self.magnitude.nominal_value, self.magnitude.std_dev, self.units
         )
 
@@ -89,8 +90,7 @@ class Measurement(Quantity):
             opts = "separate-uncertainty=true"
             mstr = format(self.magnitude, spec)
             ustr = siunitx_format_unit(self.units)
-            ret = r"\SI[%s]{%s}{%s}" % (opts, mstr, ustr)
-            return ret
+            return r"\SI[%s]{%s}{%s}" % (opts, mstr, ustr)
 
         # standard cases
         if "L" in spec:
@@ -117,19 +117,32 @@ class Measurement(Quantity):
             pars = _FORMATS["H"]["parentheses_fmt"]
 
         mag = format(self.magnitude, newspec).replace(pm, sp + newpm + sp)
+        if "(" in mag:
+            # Exponential format has its own parentheses
+            pars = "{}"
 
         if "L" in newspec and "S" in newspec:
             mag = mag.replace("(", r"\left(").replace(")", r"\right)")
 
-        if "L" in newspec:
+        if "L" in newspec or "H" in spec:
             space = r"\ "
         else:
             space = " "
 
-        if "uS" in newspec or "ue" in newspec or "u%" in newspec:
-            return mag + space + format(self.units, spec)
+        ustr = format(self.units, spec)
+        if not ("uS" in newspec or "ue" in newspec or "u%" in newspec):
+            mag = pars.format(mag)
+
+        if "H" in spec:
+            # Fix exponential format
+            mag = re.sub(r"\)e\+0?(\d+)", r")×10^{\1}", mag)
+            mag = re.sub(r"\)e-0?(\d+)", r")×10^{-\1}", mag)
+
+            assert ustr[:2] == r"\["
+            assert ustr[-2:] == r"\]"
+            return r"\[" + mag + space + ustr[2:]
         else:
-            return pars.format(mag) + space + format(self.units, spec)
+            return mag + space + ustr
 
 
 _Measurement = Measurement
