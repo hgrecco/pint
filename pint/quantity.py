@@ -1258,6 +1258,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             if other == 1:
                 return self
             elif other == 0:
+                exponent = 0
                 units = UnitsContainer()
             else:
                 if not self._is_multiplicative:
@@ -1267,13 +1268,15 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                         raise OffsetUnitCalculusError(self._units)
 
                 if getattr(other, "dimensionless", False):
-                    units = new_self._units ** other.to_root_units().magnitude
+                    exponent = other.to_root_units().magnitude
+                    units = new_self._units ** exponent
                 elif not getattr(other, "dimensionless", True):
                     raise DimensionalityError(other._units, "dimensionless")
                 else:
-                    units = new_self._units ** other
+                    exponent = _to_magnitude(other, self.force_ndarray)
+                    units = new_self._units ** exponent
 
-            magnitude = new_self._magnitude ** _to_magnitude(other, self.force_ndarray)
+            magnitude = new_self._magnitude ** exponent
             return self.__class__(magnitude, units)
 
     @check_implemented
