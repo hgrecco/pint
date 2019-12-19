@@ -1303,6 +1303,15 @@ class ContextRegistry(BaseRegistry):
         # Rebuild definition as a variant of the base
         if basedef.is_base:
             raise ValueError("Can't redefine a base unit to a derived one")
+
+        dims_old = self._get_dimensionality(basedef.reference)
+        dims_new = self._get_dimensionality(definition.reference)
+        if dims_old != dims_new:
+            raise ValueError(
+                f"Can't change dimensionality of {basedef.name} "
+                f"from {dims_old} to {dims_new} in a context"
+            )
+
         # Do not modify in place the original definition, as (1) the context may
         # be shared by other registries, and (2) it would alter the cache key
         definition = UnitDefinition(
