@@ -127,6 +127,7 @@ User Guide
     defining
     performance
     systems
+    currencies
     pint-pandas.ipynb
 
 More information

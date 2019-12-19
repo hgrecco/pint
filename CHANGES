@@ -4,8 +4,19 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- It is now possible to redefine units within a context, and use pint for currency
+  conversions. Read
+
+  - https://pint.readthedocs.io/en/latest/contexts.html
+  - https://pint.readthedocs.io/en/latest/currencies.html
+
+  (Issue #938, Thanks Guido Imperiale)
+- NaN (any capitalization) in a definitions file is now treated as a number
+  (Issue #938, Thanks Guido Imperiale)
 - Added slinch to Avoirdupois group
   (Issue #936, Thanks awcox21)
+- Fix bug where ureg.disable_contexts() would fail to fully disable throwaway contexts
+  (Issue #932, Thanks Guido Imperiale)
 - Use black, flake8, and isort on the project
   (Issues #929, #931, and #937, Thanks Guido Imperiale)
 - Auto-increase package version at every commit when pint is installed from the git tip,
@@ -40,8 +51,9 @@ Pint Changelog
   (Issue #915, Thanks Guido Imperiale)
 - TODO #913
 - TODO #911
-- Prevent 1500x slowdown when using .to() with a context
-  (Issues #909 and #923, Thanks Guido Imperiale)
+- Context activation and deactivation is now instantaneous; drastically reduced memory
+  footprint of a context (it used to be ~1.6MB per context; now it's a few bytes)
+  (Issues #909 / #923 / #938, Thanks Guido Imperiale)
 - **BREAKING CHANGE**:
   Drop support for Python < 3.6, numpy < 1.14, and uncertainties < 3.0;
   if you still need them, please install pint 0.9.
