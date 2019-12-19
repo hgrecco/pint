@@ -443,10 +443,6 @@ class ParserHelper(UnitsContainer):
         return cls(1, [(input_word, 1)])
 
     @classmethod
-    def from_string(cls, input_string):
-        return cls._from_string(input_string)
-
-    @classmethod
     def eval_token(cls, token, use_decimal=False):
         token_type = token.type
         token_text = token.string
@@ -464,9 +460,8 @@ class ParserHelper(UnitsContainer):
 
     @classmethod
     @lru_cache()
-    def _from_string(cls, input_string):
+    def from_string(cls, input_string):
         """Parse linear expression mathematical units and return a quantity object.
-
         """
         if not input_string:
             return cls()
@@ -618,9 +613,7 @@ _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³�
 
 
 def string_preprocessor(input_string):
-
-    input_string = input_string.replace(",", "")
-    input_string = input_string.replace(" per ", "/")
+    input_string = input_string.strip().replace(",", "").replace(" per ", "/")
 
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)
