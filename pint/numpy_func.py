@@ -51,7 +51,8 @@ def _get_first_input_units(args, kwargs={}):
 def convert_arg(arg, pre_calc_units):
     """Convert quantities and sequences of quantities to pre_calc_units and strip units.
 
-    Helper function for convert_to_consistent_units.
+    Helper function for convert_to_consistent_units. pre_calc_units must be given as a pint
+    Unit or None.
     """
     if pre_calc_units is not None:
         if _is_quantity(arg):
@@ -199,10 +200,16 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
                 *args, pre_calc_units=first_input_units, **kwargs
             )
         else:
+            if isinstance(input_units, str):
+                # Conversion requires Unit, not str
+                pre_calc_units = first_input_units._REGISTRY.parse_units(input_units)
+            else:
+                pre_calc_units = input_units
+
             # Match all input args/kwargs to input_units, or if input_units is None,
             # simply strip units
             stripped_args, stripped_kwargs = convert_to_consistent_units(
-                *args, pre_calc_units=input_units, **kwargs
+                *args, pre_calc_units=pre_calc_units, **kwargs
             )
 
         # Determine result through base numpy function on stripped arguments
