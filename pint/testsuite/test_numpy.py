@@ -402,6 +402,14 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             q2_cp = copy.copy(q)
             self.assertRaises(DimensionalityError, op_, q_cp, q2_cp)
 
+        self.assertQuantityEqual(
+            np.power(self.q, self.Q_(2)), self.Q_([[1, 4], [9, 16]], "m**2")
+        )
+        self.assertQuantityEqual(
+            self.q ** self.Q_(2), self.Q_([[1, 4], [9, 16]], "m**2")
+        )
+        self.assertNDArrayEqual(arr ** self.Q_(2), np.array([0, 1, 4]))
+
     @unittest.expectedFailure
     @helpers.requires_numpy()
     def test_exponentiation_array_exp_2(self):

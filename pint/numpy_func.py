@@ -396,7 +396,10 @@ def _frexp(x, *args, **kwargs):
 
 @implements("power", "ufunc")
 def _power(x1, x2):
-    return x1 ** x2
+    if _is_quantity(x1):
+        return x1 ** x2
+    else:
+        return x2.__rpow__(x1)
 
 
 def _add_subtract_handle_non_quantity_zero(x1, x2):
