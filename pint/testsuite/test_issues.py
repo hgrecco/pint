@@ -670,6 +670,13 @@ class TestIssues(QuantityTestCase):
         assert a != b
         assert a != c
 
+    def test_issue902(self):
+        ureg = UnitRegistry(auto_reduce_dimensions=True)
+        velocity = 1 * ureg.m / ureg.s
+        cross_section = 1 * ureg.um ** 2
+        result = cross_section / velocity
+        assert result == 1e-12 * ureg.m * ureg.s
+
     def test_issue912(self):
         """pprint.pformat() invokes sorted() on large sets and frozensets and graciously
         handles TypeError, but not generic Exceptions. This test will fail if

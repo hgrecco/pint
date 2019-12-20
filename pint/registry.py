@@ -1148,11 +1148,11 @@ class NonMultiplicativeRegistry(BaseRegistry):
         # clean src from offset units by converting to reference
         if src_offset_unit:
             value = self._units[src_offset_unit].converter.to_reference(value, inplace)
-
-        src = src.remove([src_offset_unit])
+            src = src.remove([src_offset_unit])
 
         # clean dst units from offset units
-        dst = dst.remove([dst_offset_unit])
+        if dst_offset_unit:
+            dst = dst.remove([dst_offset_unit])
 
         # Convert non multiplicative units to the dst.
         value = super()._convert(value, src, dst, inplace, False)

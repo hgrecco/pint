@@ -287,7 +287,7 @@ class UnitsContainer(Mapping):
         if newval:
             new._d[key] = newval
         else:
-            new._d.pop(key, None)
+            new._d.pop(key)
         new._hash = None
         return new
 
@@ -297,7 +297,7 @@ class UnitsContainer(Mapping):
         """
         new = self.copy()
         for k in keys:
-            new._d.pop(k, None)
+            new._d.pop(k)
         new._hash = None
         return new
 
