@@ -51,7 +51,8 @@ def _get_first_input_units(args, kwargs={}):
 def convert_arg(arg, pre_calc_units):
     """Convert quantities and sequences of quantities to pre_calc_units and strip units.
 
-    Helper function for convert_to_consistent_units.
+    Helper function for convert_to_consistent_units. pre_calc_units must be given as a pint
+    Unit or None.
     """
     if pre_calc_units is not None:
         if _is_quantity(arg):
@@ -183,7 +184,30 @@ def implements(numpy_func_string, func_type):
 
 
 def implement_func(func_type, func_str, input_units=None, output_unit=None):
-    """Add default-behavior NumPy function/ufunc to the handled list."""
+    """Add default-behavior NumPy function/ufunc to the handled list.
+
+    Parameters
+    ----------
+    func_type : str
+        "function" for NumPy functions, "ufunc" for NumPy ufuncs
+    func_str : str
+        String representing the name of the NumPy function/ufunc to add
+    input_units : pint.Unit or str or None
+        Parameter to control how the function downcasts to magnitudes of arguments. If
+        `pint.Unit`, converts all args and kwargs to this unit before downcasting to
+        magnitude. If "all_consistent", converts all args and kwargs to the unit of the
+        first Quantity in args and kwargs before downcasting to magnitude. If some
+        other string, the string is parsed as a unit, and all args and kwargs are
+        converted to that unit. If None, units are stripped without conversion.
+    output_unit : pint.Unit or str or None
+        Parameter to control the unit of the output. If `pint.Unit`, output is wrapped
+        with that unit. If "match_input", output is wrapped with the unit of the first
+        Quantity in args and kwargs. If a string representing a unit operation defined
+        in `get_op_output_unit`, output is wrapped by the unit determined by
+        `get_op_output_unit`. If some other string, the string is parsed as a unit,
+        which becomes the unit of the output. If None, the bare magnitude is returned.
+
+    """
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
@@ -199,10 +223,16 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
                 *args, pre_calc_units=first_input_units, **kwargs
             )
         else:
+            if isinstance(input_units, str):
+                # Conversion requires Unit, not str
+                pre_calc_units = first_input_units._REGISTRY.parse_units(input_units)
+            else:
+                pre_calc_units = input_units
+
             # Match all input args/kwargs to input_units, or if input_units is None,
             # simply strip units
             stripped_args, stripped_kwargs = convert_to_consistent_units(
-                *args, pre_calc_units=input_units, **kwargs
+                *args, pre_calc_units=pre_calc_units, **kwargs
             )
 
         # Determine result through base numpy function on stripped arguments
@@ -678,17 +708,31 @@ def implement_atleast_nd(func_str):
 for func_str in ["atleast_1d", "atleast_2d", "atleast_3d"]:
     implement_atleast_nd(func_str)
 
+
+# Handle cumulative products (which must be dimensionless for consistent units across
+# output array)
+def implement_single_dimensionless_argument_func(func_str):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(a, *args, **kwargs):
+        (a_stripped,), _ = convert_to_consistent_units(
+            a, pre_calc_units=a._REGISTRY.parse_units("dimensionless")
+        )
+        return a._REGISTRY.Quantity(func(a_stripped, *args, **kwargs))
+
+
+for func_str in ["cumprod", "cumproduct", "nancumprod"]:
+    implement_single_dimensionless_argument_func(func_str)
+
 # Handle single-argument consistent unit functions
 for func_str in ["block", "hstack", "vstack", "dstack", "column_stack"]:
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
-    )
-
-# Handle cumulative products (which must be dimensionless for consistent units across
-# output array)
-for func_str in ["cumprod", "cumproduct", "nancumprod"]:
-    implement_func(
-        "function", func_str, input_units="dimensionless", output_unit="match_input"
     )
 
 # Handle functions that ignore units on input and output

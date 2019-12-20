@@ -290,6 +290,9 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         self.assertRaises(DimensionalityError, np.cumproduct, self.q)
         self.assertQuantityEqual(np.cumprod(self.q / self.ureg.m), [1, 2, 6, 24])
         self.assertQuantityEqual(np.cumproduct(self.q / self.ureg.m), [1, 2, 6, 24])
+        self.assertQuantityEqual(
+            np.cumprod(self.q / self.ureg.m, axis=1), [[1, 2], [3, 12]]
+        )
 
     @helpers.requires_array_function_protocol()
     def test_nancumprod_numpy_func(self):
