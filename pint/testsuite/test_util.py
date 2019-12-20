@@ -1,5 +1,6 @@
 import collections
 import copy
+import math
 import operator as op
 from decimal import Decimal
 
@@ -202,6 +203,13 @@ class TestParseHelper(BaseTestCase):
         self._test_eval_token(1000, "1000")
         # integer numbers are represented as ints, not Decimals
         self._test_eval_token(1000, "1000", use_decimal=True)
+
+    def test_nan(self):
+        for s in ("nan", "NAN", "NaN", "123 NaN nan NAN 456"):
+            with self.subTest(s):
+                p = ParserHelper.from_string(s + " kg")
+                assert math.isnan(p.scale)
+                self.assertEqual(dict(p), {"kg": 1})
 
 
 class TestStringProcessor(BaseTestCase):

@@ -9,6 +9,7 @@
 """
 
 import logging
+import math
 import operator
 import re
 from collections.abc import Mapping
@@ -188,12 +189,13 @@ def pi_theorem(quantities, registry=None):
 def solve_dependencies(dependencies):
     """Solve a dependency graph.
 
-    :param dependencies: dependency dictionary. For each key, the value is
-                         an iterable indicating its dependencies.
-    :return: list of sets, each containing keys of independents tasks dependent
-                           only of the previous tasks in the list.
+    :param dependencies:
+        dependency dictionary. For each key, the value is an iterable indicating its
+        dependencies.
+    :return:
+        iterator of sets, each containing keys of independents tasks dependent only of
+        the previous tasks in the list.
     """
-    r = []
     while dependencies:
         # values not in keys (items without dep)
         t = {i for v in dependencies.values() for i in v} - dependencies.keys()
@@ -206,10 +208,9 @@ def solve_dependencies(dependencies):
                     ", ".join(repr(x) for x in dependencies.items())
                 )
             )
-        r.append(t)
         # and cleaned up
         dependencies = {k: v - t for k, v in dependencies.items() if v}
-    return r
+        yield t
 
 
 def find_shortest_path(graph, start, end, path=None):
@@ -443,10 +444,6 @@ class ParserHelper(UnitsContainer):
         return cls(1, [(input_word, 1)])
 
     @classmethod
-    def from_string(cls, input_string):
-        return cls._from_string(input_string)
-
-    @classmethod
     def eval_token(cls, token, use_decimal=False):
         token_type = token.type
         token_text = token.string
@@ -464,9 +461,8 @@ class ParserHelper(UnitsContainer):
 
     @classmethod
     @lru_cache()
-    def _from_string(cls, input_string):
+    def from_string(cls, input_string):
         """Parse linear expression mathematical units and return a quantity object.
-
         """
         if not input_string:
             return cls()
@@ -486,16 +482,21 @@ class ParserHelper(UnitsContainer):
         if isinstance(ret, Number):
             return ParserHelper(ret)
 
-        if not reps:
-            return ret
+        if reps:
+            ret = ParserHelper(
+                ret.scale,
+                {
+                    key.replace("__obra__", "[").replace("__cbra__", "]"): value
+                    for key, value in ret.items()
+                },
+            )
 
-        return ParserHelper(
-            ret.scale,
-            {
-                key.replace("__obra__", "[").replace("__cbra__", "]"): value
-                for key, value in ret.items()
-            },
-        )
+        for k in list(ret):
+            if k.lower() == "nan":
+                del ret._d[k]
+                ret.scale = math.nan
+
+        return ret
 
     def __copy__(self):
         new = super().__copy__()
@@ -618,7 +619,6 @@ _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³�
 
 
 def string_preprocessor(input_string):
-
     input_string = input_string.replace(",", "")
     input_string = input_string.replace(" per ", "/")
 
@@ -722,11 +722,10 @@ def to_units_container(unit_like, registry=None):
 def infer_base_unit(q):
     """Return UnitsContainer of q with all prefixes stripped."""
     d = udict()
-    parse = q._REGISTRY.parse_unit_name
     for unit_name, power in q._units.items():
-        completely_parsed_unit = list(parse(unit_name))[-1]
-
-        _, base_unit, __ = completely_parsed_unit
+        candidates = q._REGISTRY.parse_unit_name(unit_name)
+        assert len(candidates) == 1
+        _, base_unit, _ = candidates[0]
         d[base_unit] += power
 
     # remove values that resulted in a power of 0

@@ -15,9 +15,8 @@ from numbers import Number
 
 def tokenizer(input_string):
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
-        if tokinfo.type == tokenize.ENCODING:
-            continue
-        yield tokinfo
+        if tokinfo.type != tokenize.ENCODING:
+            yield tokinfo
 
 
 # TODO: remove this warning after v0.10

@@ -3,7 +3,7 @@ import math
 import pprint
 import unittest
 
-from pint import DimensionalityError, UnitRegistry
+from pint import Context, DimensionalityError, UnitRegistry
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.unit import UnitsContainer
@@ -679,3 +679,14 @@ class TestIssues(QuantityTestCase):
         meter_units = ureg.get_compatible_units(ureg.meter)
         hertz_units = ureg.get_compatible_units(ureg.hertz)
         pprint.pformat(meter_units | hertz_units)
+
+    def test_issue932(self):
+        ureg = UnitRegistry()
+        q = ureg.Quantity("1 kg")
+        with self.assertRaises(DimensionalityError):
+            q.to("joule")
+        ureg.enable_contexts("energy", *(Context() for _ in range(20)))
+        q.to("joule")
+        ureg.disable_contexts()
+        with self.assertRaises(DimensionalityError):
+            q.to("joule")

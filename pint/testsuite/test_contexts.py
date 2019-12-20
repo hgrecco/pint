@@ -1,7 +1,13 @@
 import itertools
+import math
 from collections import defaultdict
 
-from pint import DefinitionSyntaxError, DimensionalityError, UnitRegistry
+from pint import (
+    DefinitionSyntaxError,
+    DimensionalityError,
+    UndefinedUnitError,
+    UnitRegistry,
+)
 from pint.context import Context
 from pint.testsuite import QuantityTestCase
 from pint.util import UnitsContainer
@@ -486,13 +492,15 @@ class TestContexts(QuantityTestCase):
         self.assertEqual(len(ureg._contexts), nctx)
 
     def test_parse_invalid(self):
-        s = [
-            "@context longcontextname",
+        for badrow in (
             "[length] = 1 / [time]: c / value",
             "1 / [time] = [length]: c / value",
-        ]
-
-        self.assertRaises(DefinitionSyntaxError, Context.from_lines, s)
+            "[length] <- [time] = c / value",
+            "[length] - [time] = c / value",
+        ):
+            with self.subTest(badrow):
+                with self.assertRaises(DefinitionSyntaxError):
+                    Context.from_lines(["@context c", badrow])
 
     def test_parse_simple(self):
 
@@ -724,3 +732,222 @@ class TestDefinedContexts(QuantityTestCase):
 
         self.assertEqual(b, f(a))
         self.assertEqual(b, g(a))
+
+
+class TestContextRedefinitions(QuantityTestCase):
+    def test_redefine(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d] = f = foo_alias
+            bar = 2 foo = b = bar_alias
+            baz = 3 bar = _ = baz_alias
+            asd = 4 baz
+
+            @context c
+                # Note how we're redefining a symbol, not the base name, as a
+                # function of another name
+                b = 5 f
+            """.splitlines()
+        )
+        # Units that are somehow directly or indirectly defined as a function of the
+        # overridden unit are also affected
+        foo = ureg.Quantity(1, "foo")
+        bar = ureg.Quantity(1, "bar")
+        asd = ureg.Quantity(1, "asd")
+
+        # Test without context before and after, to verify that the cache and units have
+        # not been polluted
+        for enable_ctx in (False, True, False):
+            with self.subTest(enable_ctx):
+                if enable_ctx:
+                    ureg.enable_contexts("c")
+                    k = 5
+                else:
+                    k = 2
+
+                self.assertEqual(foo.to("b").magnitude, 1 / k)
+                self.assertEqual(foo.to("bar").magnitude, 1 / k)
+                self.assertEqual(foo.to("bar_alias").magnitude, 1 / k)
+                self.assertEqual(foo.to("baz").magnitude, 1 / k / 3)
+                self.assertEqual(bar.to("foo").magnitude, k)
+                self.assertEqual(bar.to("baz").magnitude, 1 / 3)
+                self.assertEqual(asd.to("foo").magnitude, 4 * 3 * k)
+                self.assertEqual(asd.to("bar").magnitude, 4 * 3)
+                self.assertEqual(asd.to("baz").magnitude, 4)
+
+            ureg.disable_contexts()
+
+    def test_define_nan(self):
+        ureg = UnitRegistry(
+            """
+            USD = [currency]
+            EUR = nan USD
+            GBP = nan USD
+
+            @context c
+                EUR = 1.11 USD
+                # Note that we're changing which unit GBP is defined against
+                GBP = 1.18 EUR
+            @end
+            """.splitlines()
+        )
+
+        q = ureg.Quantity("10 GBP")
+        self.assertEquals(q.magnitude, 10)
+        self.assertEquals(q.units.dimensionality, {"[currency]": 1})
+        self.assertEquals(q.to("GBP").magnitude, 10)
+        self.assertTrue(math.isnan(q.to("USD").magnitude))
+        self.assertAlmostEqual(q.to("USD", "c").magnitude, 10 * 1.18 * 1.11)
+
+    def test_non_multiplicative(self):
+        ureg = UnitRegistry(
+            """
+            kelvin = [temperature]
+            fahrenheit = 5 / 9 * kelvin; offset: 255
+            bogodegrees = 9 * kelvin
+
+            @context nonmult_to_nonmult
+                fahrenheit = 7 * kelvin; offset: 123
+            @end
+            @context nonmult_to_mult
+                fahrenheit = 123 * kelvin
+            @end
+            @context mult_to_nonmult
+                bogodegrees = 5 * kelvin; offset: 123
+            @end
+            """.splitlines()
+        )
+        k = ureg.Quantity(100, "kelvin")
+
+        with self.subTest("baseline"):
+            self.assertAlmostEqual(k.to("fahrenheit").magnitude, (100 - 255) * 9 / 5)
+            self.assertAlmostEqual(k.to("bogodegrees").magnitude, 100 / 9)
+
+        with self.subTest("nonmult_to_nonmult"):
+            with ureg.context("nonmult_to_nonmult"):
+                self.assertAlmostEqual(k.to("fahrenheit").magnitude, (100 - 123) / 7)
+
+        with self.subTest("nonmult_to_mult"):
+            with ureg.context("nonmult_to_mult"):
+                self.assertAlmostEqual(k.to("fahrenheit").magnitude, 100 / 123)
+
+        with self.subTest("mult_to_nonmult"):
+            with ureg.context("mult_to_nonmult"):
+                self.assertAlmostEqual(k.to("bogodegrees").magnitude, (100 - 123) / 5)
+
+    def test_err_to_base_unit(self):
+        with self.assertRaises(DefinitionSyntaxError) as e:
+            Context.from_lines(["@context c", "x = [d]"])
+        self.assertEquals(str(e.exception), "Can't define base units within a context")
+
+    def test_err_change_base_unit(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d1]
+            bar = [d2]
+
+            @context c
+                bar = foo
+            @end
+            """.splitlines()
+        )
+
+        with self.assertRaises(ValueError) as e:
+            ureg.enable_contexts("c")
+        self.assertEquals(
+            str(e.exception), "Can't redefine a base unit to a derived one"
+        )
+
+    def test_err_change_dimensionality(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d1]
+            bar = [d2]
+            baz = foo
+
+            @context c
+                baz = bar
+            @end
+            """.splitlines()
+        )
+        with self.assertRaises(ValueError) as e:
+            ureg.enable_contexts("c")
+        self.assertEquals(
+            str(e.exception),
+            "Can't change dimensionality of baz from [d1] to [d2] in a context",
+        )
+
+    def test_err_cyclic_dependency(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d]
+            bar = foo
+            baz = bar
+
+            @context c
+                bar = baz
+            @end
+            """.splitlines()
+        )
+        # TODO align this exception and the one you get when you implement a cyclic
+        #      dependency within the base registry. Ideally this exception should be
+        #      raised by enable_contexts.
+        ureg.enable_contexts("c")
+        q = ureg.Quantity("bar")
+        with self.assertRaises(RecursionError):
+            q.to("foo")
+
+    def test_err_dimension_redefinition(self):
+        with self.assertRaises(DefinitionSyntaxError) as e:
+            Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
+        self.assertEquals(
+            str(e.exception), "Expected <unit> = <converter>; got [d1] = [d2] * [d3]"
+        )
+
+    def test_err_prefix_redefinition(self):
+        with self.assertRaises(DefinitionSyntaxError) as e:
+            Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
+        self.assertEquals(
+            str(e.exception), "Expected <unit> = <converter>; got [d1] = [d2] * [d3]"
+        )
+
+    def test_err_redefine_alias(self):
+        for s in ("foo = bar = f", "foo = bar = _ = baz"):
+            with self.subTest(s):
+                with self.assertRaises(DefinitionSyntaxError) as e:
+                    Context.from_lines(["@context c", s])
+                self.assertEquals(
+                    str(e.exception),
+                    "Can't change a unit's symbol or aliases within a context",
+                )
+
+    def test_err_redefine_with_prefix(self):
+        ureg = UnitRegistry(
+            """
+            kilo- = 1000
+            gram = [mass]
+            pound = 454 gram
+
+            @context c
+                kilopound = 500000 gram
+            @end
+            """.splitlines()
+        )
+        with self.assertRaises(ValueError) as e:
+            ureg.enable_contexts("c")
+        self.assertEquals(
+            str(e.exception), "Can't redefine a unit with a prefix: kilopound"
+        )
+
+    def test_err_new_unit(self):
+        ureg = UnitRegistry(
+            """
+            foo = [d]
+            @context c
+                bar = foo
+            @end
+            """.splitlines()
+        )
+        with self.assertRaises(UndefinedUnitError) as e:
+            ureg.enable_contexts("c")
+        self.assertEquals(str(e.exception), "'bar' is not defined in the unit registry")

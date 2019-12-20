@@ -12,6 +12,7 @@ import re
 import weakref
 from collections import ChainMap, defaultdict
 
+from .definitions import Definition, UnitDefinition
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, SourceIterator, to_units_container
 
@@ -58,6 +59,13 @@ class Context:
         >>> c.transform(timedim, spacedim, 2)
         2
 
+    Additionally, a context may host redefinitions:
+
+        >>> c.redefine("pound = 0.5 kg")
+
+    A redefinition must be performed among units that already exist in the registry. It
+    cannot change the dimensionality of a unit. The symbol and aliases are automatically
+    inherited from the registry.
     """
 
     def __init__(self, name=None, aliases=(), defaults=None):
@@ -70,6 +78,12 @@ class Context:
 
         #: Maps defaults variable names to values
         self.defaults = defaults or {}
+
+        # Store Definition objects that are context-specific
+        self.redefinitions = []
+
+        # Flag set to True by the Registry the first time the context is enabled
+        self.checked = False
 
         #: Maps (src, dst) -> self
         #: Used as a convenience dictionary to be composed by ContextChain
@@ -87,6 +101,7 @@ class Context:
             newdef = dict(context.defaults, **defaults)
             c = cls(context.name, context.aliases, newdef)
             c.funcs = context.funcs
+            c.redefinitions = context.redefinitions
             for edge in context.funcs:
                 c.relation_to_context[edge] = c
             return c
@@ -135,6 +150,10 @@ class Context:
 
         names = set()
         for lineno, line in lines:
+            if "=" in line:
+                ctx.redefine(line)
+                continue
+
             try:
                 rel, eq = line.split(":")
                 names.update(_varname_re.findall(eq))
@@ -195,6 +214,26 @@ class Context:
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)
 
+    def redefine(self, definition: str) -> None:
+        """Override the definition of a unit in the registry.
+
+        :param definition:
+            ``<unit> = <new definition>``, e.g. ``pound = 0.5 kg``
+        """
+        for line in definition.splitlines():
+            d = Definition.from_string(line)
+            if not isinstance(d, UnitDefinition):
+                raise DefinitionSyntaxError(
+                    "Expected <unit> = <converter>; got %s" % line.strip()
+                )
+            if d.symbol != d.name or d.aliases:
+                raise DefinitionSyntaxError(
+                    "Can't change a unit's symbol or aliases within a context"
+                )
+            if d.is_base:
+                raise DefinitionSyntaxError("Can't define base units within a context")
+            self.redefinitions.append(d)
+
     def hashable(self):
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
@@ -205,6 +244,7 @@ class Context:
             tuple(self.aliases),
             frozenset((k, id(v)) for k, v in self.funcs.items()),
             frozenset(self.defaults.items()),
+            tuple(self.redefinitions),
         )
 
 
@@ -215,8 +255,9 @@ class ContextChain(ChainMap):
 
     def __init__(self):
         super().__init__()
+        self.contexts = []
+        self.maps.clear()  # Remove default empty map
         self._graph = None
-        self._contexts = []
 
     def insert_contexts(self, *contexts):
         """Insert one or more contexts in reversed order the chained map.
@@ -225,15 +266,15 @@ class ContextChain(ChainMap):
         To facilitate the identification of the context with the matching rule,
         the *relation_to_context* dictionary of the context is used.
         """
-        self._contexts = list(reversed(contexts)) + self._contexts
+        self.contexts = list(reversed(contexts)) + self.contexts
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
-    def remove_contexts(self, n):
+    def remove_contexts(self, n: int = None):
         """Remove the last n inserted contexts from the chain.
         """
-        self._contexts = self._contexts[n:]
-        self.maps = self.maps[n:]
+        del self.contexts[:n]
+        del self.maps[:n]
         self._graph = None
 
     @property
@@ -265,4 +306,4 @@ class ContextChain(ChainMap):
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
         mutable, and the Python interpreter does cache the output of ``__hash__``.
         """
-        return tuple(ctx.hashable() for ctx in self._contexts)
+        return tuple(ctx.hashable() for ctx in self.contexts)
