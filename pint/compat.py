@@ -13,6 +13,18 @@ from io import BytesIO
 from numbers import Number
 
 
+def missing_dependency(package, display_name=None):
+    display_name = display_name or package
+
+    def _inner(*args, **kwargs):
+        raise Exception(
+            "This feature requires %s. Please install it by running:\n"
+            "pip install %s" % (display_name, package)
+        )
+
+    return _inner
+
+
 def tokenizer(input_string):
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
         if tokinfo.type != tokenize.ENCODING:
@@ -121,12 +133,14 @@ try:
     from babel import Locale as Loc
     from babel import units as babel_units
 
+    babel_parse = Loc.parse
+
     HAS_BABEL = hasattr(babel_units, "format_unit")
 except ImportError:
     HAS_BABEL = False
 
 if not HAS_BABEL:
-    Loc = babel_units = None  # noqa: F811
+    babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast and
 # downcast/wrappable types

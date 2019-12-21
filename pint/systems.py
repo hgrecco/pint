@@ -10,7 +10,7 @@
 
 import re
 
-from pint.compat import Loc
+from pint.compat import babel_parse
 
 from .babel_names import _babel_systems
 from .definitions import Definition, UnitDefinition
@@ -362,7 +362,7 @@ class System(SharedRegistryObject):
         """
         if locale and self.name in _babel_systems:
             name = _babel_systems[self.name]
-            locale = Loc.parse(locale)
+            locale = babel_parse(locale)
             return locale.measurement_systems[name]
         return self.name
 

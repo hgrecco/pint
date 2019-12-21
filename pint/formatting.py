@@ -11,7 +11,7 @@
 import re
 
 from .babel_names import _babel_lengths, _babel_units
-from .compat import Loc
+from .compat import babel_parse
 
 __JOIN_REG_EXP = re.compile(r"\{\d*\}")
 
@@ -138,7 +138,7 @@ def formatter(
     for key, value in sorted(items):
         if locale and babel_length and babel_plural_form and key in _babel_units:
             _key = _babel_units[key]
-            locale = Loc.parse(locale)
+            locale = babel_parse(locale)
             unit_patterns = locale._data["unit_patterns"]
             compound_unit_patterns = locale._data["compound_unit_patterns"]
             plural = "one" if abs(value) <= 0 else babel_plural_form
