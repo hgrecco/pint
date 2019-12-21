@@ -151,7 +151,6 @@ class BaseRegistry(metaclass=RegistryMeta):
         string
     :param fmt_locale:
         locale identifier string, used in `format_babel`
-        string
     """
 
     #: Map context prefix to function
@@ -1752,6 +1751,8 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
     :param auto_reduce_dimensions: If True, reduce dimensionality on appropriate operations.
     :param preprocessors: list of callables which are iteratively ran on any input expression
                           or unit string
+    :param fmt_locale:
+        locale identifier string, used in `format_babel`
     """
 
     def __init__(
@@ -1764,6 +1765,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         system=None,
         auto_reduce_dimensions=False,
         preprocessors=None,
+        fmt_locale='en_US'
     ):
 
         super().__init__(
@@ -1775,6 +1777,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
             system=system,
             auto_reduce_dimensions=auto_reduce_dimensions,
             preprocessors=preprocessors,
+            fmt_locale=fmt_locale
         )
 
     def pi_theorem(self, quantities):
