@@ -34,6 +34,7 @@
 import copy
 import functools
 import itertools
+import locale
 import math
 import os
 import re
@@ -47,7 +48,7 @@ from tokenize import NAME, NUMBER
 import pkg_resources
 
 from . import registry_helpers, systems
-from .compat import tokenizer
+from .compat import babel_parse, tokenizer
 from .context import Context, ContextChain
 from .converters import ScaleConverter
 from .definitions import (
@@ -183,7 +184,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         on_redefinition="warn",
         auto_reduce_dimensions=False,
         preprocessors=None,
-        fmt_locale="en_US",
+        fmt_locale=None,
     ):
         self._register_parsers()
         self._init_dynamic_classes()
@@ -199,7 +200,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         self.auto_reduce_dimensions = auto_reduce_dimensions
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
-        self.fmt_locale = fmt_locale
+        self.fmt_locale = self.set_fmt_locale(fmt_locale)
 
         #: Map between name (string) and value (string) of defaults stored in the
         #: definitions file.
@@ -289,6 +290,21 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def __dir__(self):
         return list(self._units.keys()) + self._dir
+
+    def set_fmt_locale(self, loc):
+        """Change the locale used by default by `format_babel`.
+
+        :param loc:
+            None` (do not translate), 'sys' (detect the system locale) or a locale id string.
+        """
+        if isinstance(loc, str):
+            if loc == "sys":
+                loc = locale.getdefaultlocale()[0]
+
+            # We call babel parse to fail here and not in the formatting operation
+            babel_parse(loc)
+
+        self.fmt_locale = loc
 
     @property
     def default_format(self):
@@ -1752,7 +1768,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
     :param preprocessors: list of callables which are iteratively ran on any input expression
                           or unit string
     :param fmt_locale:
-        locale identifier string, used in `format_babel`
+        locale identifier string, used in `format_babel`. Default to None
     """
 
     def __init__(
@@ -1765,7 +1781,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         system=None,
         auto_reduce_dimensions=False,
         preprocessors=None,
-        fmt_locale='en_US'
+        fmt_locale=None,
     ):
 
         super().__init__(
@@ -1777,7 +1793,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
             system=system,
             auto_reduce_dimensions=auto_reduce_dimensions,
             preprocessors=preprocessors,
-            fmt_locale=fmt_locale
+            fmt_locale=fmt_locale,
         )
 
     def pi_theorem(self, quantities):
