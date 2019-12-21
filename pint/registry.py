@@ -149,7 +149,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     :param preprocessors:
         list of callables which are iteratively ran on any input expression or unit
         string
-    :param locale:
+    :param fmt_locale:
         locale identifier string, used in `format_babel`
         string
     """
@@ -184,7 +184,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         on_redefinition="warn",
         auto_reduce_dimensions=False,
         preprocessors=None,
-        locale="en_US",
+        fmt_locale="en_US",
     ):
         self._register_parsers()
         self._init_dynamic_classes()
@@ -200,7 +200,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         self.auto_reduce_dimensions = auto_reduce_dimensions
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
-        self.locale = locale
+        self.fmt_locale = fmt_locale
 
         #: Map between name (string) and value (string) of defaults stored in the
         #: definitions file.
