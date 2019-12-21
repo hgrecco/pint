@@ -35,18 +35,13 @@ class TestBabel(BaseTestCase):
         ureg.load_definitions(os.path.join(dirname, "../xtranslated.txt"))
 
         distance = 24.0 * ureg.meter
-        self.assertEqual(
-            distance.format_babel(length="long"), "24.0 mètres"
-        )
+        self.assertEqual(distance.format_babel(length="long"), "24.0 mètres")
         time = 8.0 * ureg.second
-        self.assertEqual(
-            time.format_babel(length="long"), "8.0 secondes"
-        )
+        self.assertEqual(time.format_babel(length="long"), "8.0 secondes")
         self.assertEqual(time.format_babel(locale="ro", length="short"), "8.0 s")
         acceleration = distance / time ** 2
         self.assertEqual(
-            acceleration.format_babel(length="long"),
-            "0.375 mètre par seconde²",
+            acceleration.format_babel(length="long"), "0.375 mètre par seconde²",
         )
         mks = ureg.get_system("mks")
         self.assertEqual(mks.format_babel(locale="fr_FR"), "métrique")
@@ -54,6 +49,6 @@ class TestBabel(BaseTestCase):
     def test_nobabel(self):
         ureg = UnitRegistry()
         distance = 24.0 * ureg.meter
-        self.assertRaises(Exception,
-            distance.format_babel, locale="fr_FR", length="long"
+        self.assertRaises(
+            Exception, distance.format_babel, locale="fr_FR", length="long"
         )
