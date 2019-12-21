@@ -664,6 +664,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __float__(self):
         if self.dimensionless:
             return float(self._convert_magnitude_not_inplace(UnitsContainer()))
+        # else: # ( for math.floor !? )
+        #     return float(self._magnitude)
         raise DimensionalityError(self._units, "dimensionless")
 
     def __complex__(self):
@@ -1099,7 +1101,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         elif self.dimensionless:
             self._magnitude = self.to("")._magnitude // other
         else:
-            raise DimensionalityError(self._units, "dimensionless")
+            if not hasattr(other, "dimensionless"):
+                magnitude = self._magnitude // other
+                return self.__class__(magnitude, self._units)
+            else:
+                raise DimensionalityError(self._units, "dimensionless")
         self._units = UnitsContainer({})
         return self
 
@@ -1110,7 +1116,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         elif self.dimensionless:
             magnitude = self.to("")._magnitude // other
         else:
-            raise DimensionalityError(self._units, "dimensionless")
+            if not hasattr(other, "dimensionless"):
+                magnitude = self._magnitude // other
+                return self.__class__(magnitude, self._units)
+            else:
+                raise DimensionalityError(self._units, "dimensionless")
         return self.__class__(magnitude, UnitsContainer({}))
 
     @check_implemented
@@ -1131,9 +1141,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __mod__(self, other):
-        if not self._check(other):
-            other = self.__class__(other, UnitsContainer({}))
-        magnitude = self._magnitude % other.to(self._units)._magnitude
+        if self._check(other):
+            magnitude = self._magnitude % other.to(self._units)._magnitude
+        else:
+            # other = self.__class__(other, UnitsContainer({}))
+            magnitude = self._magnitude % other
         return self.__class__(magnitude, self._units)
 
     @check_implemented
@@ -1149,9 +1161,15 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __divmod__(self, other):
-        if not self._check(other):
-            other = self.__class__(other, UnitsContainer({}))
-        q, r = divmod(self._magnitude, other.to(self._units)._magnitude)
+        if self._check(other):
+            q, r = divmod(self._magnitude, other.to(self._units)._magnitude)
+        else:
+            if not hasattr(other, "dimensionless"):
+                q, r = divmod(self._magnitude, other)
+                return (self.__class__(q, self._units), self.__class__(r, self._units))
+            else:
+                other = self.__class__(other, UnitsContainer({}))
+                q, r = divmod(self._magnitude, other.to(self._units)._magnitude)
         return (self.__class__(q, UnitsContainer({})), self.__class__(r, self._units))
 
     @check_implemented

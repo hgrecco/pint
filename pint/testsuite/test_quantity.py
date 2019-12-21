@@ -717,23 +717,23 @@ class TestQuantityBasicMath(QuantityTestCase):
         b = self.Q_("3*second")
         self.assertRaises(DimensionalityError, op.floordiv, a, b)
         self.assertRaises(DimensionalityError, op.floordiv, 3, b)
-        self.assertRaises(DimensionalityError, op.floordiv, a, 3)
         self.assertRaises(DimensionalityError, op.ifloordiv, a, b)
         self.assertRaises(DimensionalityError, op.ifloordiv, 3, b)
-        self.assertRaises(DimensionalityError, op.ifloordiv, a, 3)
         func(op.floordiv, unit * 10.0, "4.2*meter/meter", 2, unit)
         func(op.floordiv, "10*meter", "4.2*inch", 93, unit)
+        func(op.floordiv, unit * 10.0, 3, 3 * unit, unit)
+        func(op.ifloordiv, unit * 10, 3, 3 * unit, unit)
 
     def _test_quantity_mod(self, unit, func):
         a = self.Q_("10*meter")
         b = self.Q_("3*second")
         self.assertRaises(DimensionalityError, op.mod, a, b)
         self.assertRaises(DimensionalityError, op.mod, 3, b)
-        self.assertRaises(DimensionalityError, op.mod, a, 3)
         self.assertRaises(DimensionalityError, op.imod, a, b)
         self.assertRaises(DimensionalityError, op.imod, 3, b)
-        self.assertRaises(DimensionalityError, op.imod, a, 3)
         func(op.mod, unit * 10.0, "4.2*meter/meter", 1.6, unit)
+        func(op.mod, unit * 10.0, 3, 1 * unit, unit)
+        func(op.imod, unit * 10.0, 3, 1 * unit, unit)
 
     def _test_quantity_ifloordiv(self, unit, func):
         func(op.ifloordiv, 10.0, "4.2*meter/meter", 2, unit)
@@ -782,7 +782,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         b = self.Q_("3*second")
         self.assertRaises(DimensionalityError, divmod, a, b)
         self.assertRaises(DimensionalityError, divmod, 3, b)
-        self.assertRaises(DimensionalityError, divmod, a, 3)
+        self._test_quantity_divmod_one("10*meter", 3)
 
     def _test_numeric(self, unit, ifunc):
         self._test_quantity_add_sub(unit, self._test_not_inplace)
