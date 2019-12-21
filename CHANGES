@@ -4,6 +4,10 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Added `fmt_locale` argument to registry.
+  (Issue #904)
+- Better error message when Babel is not installed.
+  (Issue #899)
 - It is now possible to redefine units within a context, and use pint for currency
   conversions. Read
 

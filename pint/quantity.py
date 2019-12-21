@@ -24,9 +24,9 @@ from .compat import SKIP_ARRAY_FUNCTION_CHANGE_WARNING  # noqa: F401
 from .compat import (
     NUMPY_VER,
     BehaviorChangeWarning,
-    Loc,
     _to_magnitude,
     array_function_change_msg,
+    babel_parse,
     eq,
     is_upcast_type,
     ndarray,
@@ -334,7 +334,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         kwspec = dict(kwspec)
         if "length" in kwspec:
             kwspec["babel_length"] = kwspec.pop("length")
-        kwspec["locale"] = Loc.parse(kwspec["locale"])
+
+        loc = kwspec.get("locale", self._REGISTRY.fmt_locale)
+        if loc is None:
+            raise ValueError("Provide a `locale` value to localize translation.")
+
+        kwspec["locale"] = babel_parse(loc)
         kwspec["babel_plural_form"] = kwspec["locale"].plural_form(obj.magnitude)
         return "{} {}".format(
             format(obj.magnitude, remove_custom_flags(spec)),
