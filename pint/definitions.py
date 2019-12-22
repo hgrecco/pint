@@ -13,6 +13,21 @@ from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
 
+class _NotNumeric(Exception):
+
+    def __init__(self, value):
+        self.value = value
+
+
+def numeric_parse(s):
+    ph = ParserHelper.from_string(s)
+
+    if len(ph):
+        raise _NotNumeric(s)
+
+    return ph.scale
+
+
 class Definition:
     """Base class for definitions.
 
@@ -94,7 +109,11 @@ class PrefixDefinition(Definition):
 
     def __init__(self, name, symbol, aliases, converter):
         if isinstance(converter, str):
-            converter = ScaleConverter(eval(converter))
+            try:
+                converter = ScaleConverter(numeric_parse(converter))
+            except _NotNumeric as ex:
+                raise ValueError(f'Prefix definition must contain only numbers, not {ex.value}')
+
         aliases = tuple(alias.strip("-") for alias in aliases)
         if symbol:
             symbol = symbol.strip("-")
@@ -114,10 +133,16 @@ class UnitDefinition(Definition):
         if isinstance(converter, str):
             if ";" in converter:
                 [converter, modifiers] = converter.split(";", 2)
-                modifiers = dict(
-                    (key.strip(), eval(value))
-                    for key, value in (part.split(":") for part in modifiers.split(";"))
-                )
+
+                try:
+                    modifiers = dict(
+                        (key.strip(), numeric_parse(value))
+                        for key, value in (part.split(":") for part in modifiers.split(";"))
+                    )
+                except _NotNumeric as ex:
+                    raise ValueError(f'Prefix definition must contain only numbers, not {ex.value}')
+
+
             else:
                 modifiers = {}
 
