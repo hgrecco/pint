@@ -79,6 +79,11 @@ Pint Changelog
 - TODO #825
 - TODO #824
 - TODO #822
+- New implementation of 'Lx' String Format Type Option
+  The old implementation treated 'Lx' as 'S' as produced by 'uncertainties'
+  package, but that is not fully compatible with SIunitx. The new code protects
+  SIunitx by fixing what unceratinties produces.
+  (Issue #814)
 - TODO #813
 - TODO #811
 - TODO #809
