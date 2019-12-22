@@ -83,12 +83,29 @@ class Measurement(Quantity):
         if "Lx" in spec:  # the LaTeX siunitx code
             # the uncertainties module supports formatting
             # numbers in value(unc) notation (i.e. 1.23(45) instead of 1.23 +/- 0.45),
-            # which siunitx actually accepts as input. we just need to give the 'S'
-            # formatting option for the uncertainties module.
-            spec = spec.replace("Lx", "S")
-            # todo: add support for extracting options
-            opts = "separate-uncertainty=true"
-            mstr = format(self.magnitude, spec)
+            # using type code 'S', which siunitx actually accepts as input.
+            # However, the implimentation is incompatible with siunitx.
+            # Uncertainties will do 9.1(1.1), which is invalid, should be 9.1(11).
+            # TODO: add support for extracting options
+            #
+            # Get rid of this code, we'll deal with it here
+            spec = spec.replace("Lx", '')
+            # The most compatible format from uncertainties is the default format,
+            # but even this requires fixups.
+            # For one, SIUnitx does not except some formats that unc does, like 'P',
+            # and 'S' is broken as stated, so...
+            spec = spec.replace("S",'').replace("P",'')
+            # get SIunitx options
+            # TODO: allow user to set this value, somehow
+            opts = _FORMATS["Lx"]["siopts"]
+            # SI requires space between "+-" (or "\pm") and the nominal value
+            # and uncertainty, and doesn't accept "+/-", so this setting
+            # selects the desired replacement.
+            pm_fmt = _FORMATS["Lx"]["pm_fmt"]
+            mstr = format(self.magnitude, spec).replace(r"+/-",pm_fmt)
+            # Also, SIunitx doesn't accept parentheses, which uncs uses with
+            # scientific notation ('e' or 'E' and somtimes 'g' or 'G').
+            mstr = mstr.replace('(','').replace(')',' ')
             ustr = siunitx_format_unit(self.units)
             return r"\SI[%s]{%s}{%s}" % (opts, mstr, ustr)
 
