@@ -112,7 +112,7 @@ class PrefixDefinition(Definition):
                 converter = ScaleConverter(numeric_parse(converter))
             except _NotNumeric as ex:
                 raise ValueError(
-                    f"Prefix definition must contain only numbers, not {ex.value}"
+                    f"Prefix definition ('{name}') must contain only numbers, not {ex.value}"
                 )
 
         aliases = tuple(alias.strip("-") for alias in aliases)
@@ -144,7 +144,7 @@ class UnitDefinition(Definition):
                     )
                 except _NotNumeric as ex:
                     raise ValueError(
-                        f"Prefix definition must contain only numbers, not {ex.value}"
+                        f"Unit definition ('{name}') must contain only numbers in modifier, not {ex.value}"
                     )
 
             else:
