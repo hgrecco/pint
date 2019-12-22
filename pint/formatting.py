@@ -89,6 +89,10 @@ _FORMATS = {
         "power_fmt": "{}^[{}]",
         "parentheses_fmt": r"\left({}\right)",
     },
+    "Lx": {  # Latex format.
+        "siopts": "separate-uncertainty=true",
+        "pm_fmt": " +- ",
+    },
     "H": {  # HTML format.
         "as_ratio": True,
         "single_denominator": True,
