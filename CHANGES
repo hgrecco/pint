@@ -4,6 +4,8 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Removed eval usage when creating UnitDefinition and PrefixDefinition from string.
+  (Issue #942)
 - Added `fmt_locale` argument to registry.
   (Issue #904)
 - Better error message when Babel is not installed.
