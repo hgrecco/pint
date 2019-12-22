@@ -95,25 +95,25 @@ class Measurement(Quantity):
             # TODO: add support for extracting options
             #
             # Get rid of this code, we'll deal with it here
-            spec = spec.replace("Lx", '')
+            spec = spec.replace("Lx", "")
             # The most compatible format from uncertainties is the default format,
             # but even this requires fixups.
             # For one, SIUnitx does not except some formats that unc does, like 'P',
             # and 'S' is broken as stated, so...
-            spec = spec.replace("S",'').replace("P",'')
+            spec = spec.replace("S", "").replace("P", "")
             # get SIunitx options
             # TODO: allow user to set this value, somehow
             opts = _FORMATS["Lx"]["siopts"]
-            if opts != '' :
-                opts = r'[' + opts +  r']'
+            if opts != "":
+                opts = r"[" + opts + r"]"
             # SI requires space between "+-" (or "\pm") and the nominal value
             # and uncertainty, and doesn't accept "+/-", so this setting
             # selects the desired replacement.
             pm_fmt = _FORMATS["Lx"]["pm_fmt"]
-            mstr = format(self.magnitude, spec).replace(r"+/-",pm_fmt)
+            mstr = format(self.magnitude, spec).replace(r"+/-", pm_fmt)
             # Also, SIunitx doesn't accept parentheses, which uncs uses with
             # scientific notation ('e' or 'E' and somtimes 'g' or 'G').
-            mstr = mstr.replace('(','').replace(')',' ')
+            mstr = mstr.replace("(", "").replace(")", " ")
             ustr = siunitx_format_unit(self.units)
             return r"\SI%s{%s}{%s}" % (opts, mstr, ustr)
 
