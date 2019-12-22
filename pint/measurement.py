@@ -104,6 +104,8 @@ class Measurement(Quantity):
             # get SIunitx options
             # TODO: allow user to set this value, somehow
             opts = _FORMATS["Lx"]["siopts"]
+            if opts != '' :
+                opts = r'[' + opts +  r']'
             # SI requires space between "+-" (or "\pm") and the nominal value
             # and uncertainty, and doesn't accept "+/-", so this setting
             # selects the desired replacement.
@@ -113,7 +115,7 @@ class Measurement(Quantity):
             # scientific notation ('e' or 'E' and somtimes 'g' or 'G').
             mstr = mstr.replace('(','').replace(')',' ')
             ustr = siunitx_format_unit(self.units)
-            return r"\SI[%s]{%s}{%s}" % (opts, mstr, ustr)
+            return r"\SI%s{%s}{%s}" % (opts, mstr, ustr)
 
         # standard cases
         if "L" in spec:
