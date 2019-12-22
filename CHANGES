@@ -23,6 +23,11 @@ Pint Changelog
   when using to_compact()
 - Fixed crash when a Unit with prefix is declared for the first time while a Context
   containing unit redefinitions is active (Issue #1062, Thanks Guido Imperiale)
+- New implementation of 'Lx' String Format Type Option
+  The old implementation treated 'Lx' as 'S' as produced by 'uncertainties'
+  package, but that is not fully compatible with SIunitx. The new code protects
+  SIunitx by fixing what unceratinties produces.
+  (Issue #814)
 
 
 0.11 (2020-02-19)
