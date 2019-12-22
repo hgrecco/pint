@@ -19,6 +19,9 @@ class TestDefinition(BaseTestCase):
             Definition.from_string("[x] = [time] * meter")
 
     def test_prefix_definition(self):
+
+        self.assertRaises(ValueError, Definition.from_string, "m- = 1e-3 k")
+
         for definition in ("m- = 1e-3", "m- = 10**-3", "m- = 0.001"):
             x = Definition.from_string(definition)
             self.assertIsInstance(x, PrefixDefinition)
@@ -84,6 +87,12 @@ class TestDefinition(BaseTestCase):
         self.assertIsInstance(x.converter, ScaleConverter)
         self.assertEqual(x.converter.scale, 6.28)
         self.assertEqual(x.reference, UnitsContainer(radian=1))
+
+        self.assertRaises(
+            ValueError,
+            Definition.from_string,
+            "degF = 9 / 5 * kelvin; offset: 255.372222 bla",
+        )
 
     def test_dimension_definition(self):
         x = DimensionDefinition("[time]", "", (), converter="")
