@@ -69,7 +69,7 @@ _FORMATS = {
         "parentheses_fmt": r"\left({}\right)",
     },
     "Lx": {  # Latex format.
-        "siopts": "separate-uncertainty=true",
+        "siopts": "",
         "pm_fmt": " +- ",
     },
     "H": {  # HTML format.
