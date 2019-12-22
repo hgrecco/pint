@@ -14,7 +14,6 @@ from .util import ParserHelper, UnitsContainer, _is_dim
 
 
 class _NotNumeric(Exception):
-
     def __init__(self, value):
         self.value = value
 
@@ -112,7 +111,9 @@ class PrefixDefinition(Definition):
             try:
                 converter = ScaleConverter(numeric_parse(converter))
             except _NotNumeric as ex:
-                raise ValueError(f'Prefix definition must contain only numbers, not {ex.value}')
+                raise ValueError(
+                    f"Prefix definition must contain only numbers, not {ex.value}"
+                )
 
         aliases = tuple(alias.strip("-") for alias in aliases)
         if symbol:
@@ -137,11 +138,14 @@ class UnitDefinition(Definition):
                 try:
                     modifiers = dict(
                         (key.strip(), numeric_parse(value))
-                        for key, value in (part.split(":") for part in modifiers.split(";"))
+                        for key, value in (
+                            part.split(":") for part in modifiers.split(";")
+                        )
                     )
                 except _NotNumeric as ex:
-                    raise ValueError(f'Prefix definition must contain only numbers, not {ex.value}')
-
+                    raise ValueError(
+                        f"Prefix definition must contain only numbers, not {ex.value}"
+                    )
 
             else:
                 modifiers = {}
