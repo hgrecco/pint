@@ -95,7 +95,7 @@ def ireduce_dimensions(f):
 def check_implemented(f):
     def wrapped(self, *args, **kwargs):
         other = args[0]
-        if is_upcast_type(other):
+        if is_upcast_type(type(other)):
             return NotImplemented
         # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
         # and expects Quantity * array[Quantity] should return NotImplemented
