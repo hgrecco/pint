@@ -1094,6 +1094,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
     __idiv__ = __itruediv__
+    
+    def __ceil__(self):
+        return self.__floordiv__(1) + self.__class__(1, self._units)
+
+    def __floor__(self):
+        return self.__floordiv__(1)
 
     def __ifloordiv__(self, other):
         if self._check(other):
