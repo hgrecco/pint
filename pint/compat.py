@@ -7,6 +7,7 @@
     :copyright: 2013 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+import os
 import tokenize
 from decimal import Decimal
 from io import BytesIO
@@ -94,6 +95,8 @@ try:
 
     NP_NO_VALUE = np._NoValue
 
+    ARRAY_FALLBACK = bool(int(os.environ.get("PINT_ARRAY_PROTOCOL_FALLBACK", 1)))
+
 except ImportError:
 
     np = None
@@ -107,9 +110,12 @@ except ImportError:
     HAS_NUMPY_ARRAY_FUNCTION = False
     SKIP_ARRAY_FUNCTION_CHANGE_WARNING = True
     NP_NO_VALUE = None
+    ARRAY_FALLBACK = False
 
     def _to_magnitude(value, force_ndarray=False):
-        if isinstance(value, (dict, bool)) or value is None:
+        if force_ndarray:
+            raise ValueError("Cannot force to ndarray when NumPy is not present.")
+        elif isinstance(value, (dict, bool)) or value is None:
             raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
         elif isinstance(value, str) and value == "":
             raise ValueError("Quantity magnitude cannot be an empty string.")
