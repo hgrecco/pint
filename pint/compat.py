@@ -147,8 +147,12 @@ if not HAS_BABEL:
 
 
 def is_upcast_type(other):
+    """ check if the type object is a upcast type
+
+    :param other: type
+    """
     # Check if class name is in preset list
-    return other.__class__.__name__ in ("PintArray", "Series", "DataArray")
+    return other.__name__ in ("PintArray", "Series", "DataArray")
 
 
 def eq(first, second, check_all):

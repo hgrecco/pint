@@ -41,7 +41,7 @@ class TestBabel(BaseTestCase):
         self.assertEqual(time.format_babel(locale="ro", length="short"), "8.0 s")
         acceleration = distance / time ** 2
         self.assertEqual(
-            acceleration.format_babel(length="long"), "0.375 mètre par seconde²",
+            acceleration.format_babel(length="long"), "0.375 mètre par seconde²"
         )
         mks = ureg.get_system("mks")
         self.assertEqual(mks.format_babel(locale="fr_FR"), "métrique")
