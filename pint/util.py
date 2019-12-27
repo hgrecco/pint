@@ -33,6 +33,21 @@ def matrix_to_string(
     matrix, row_headers=None, col_headers=None, fmtfun=lambda x: str(int(x))
 ):
     """Takes a 2D matrix (as nested list) and returns a string.
+
+    Parameters
+    ----------
+    matrix :
+        
+    row_headers :
+         (Default value = None)
+    col_headers :
+         (Default value = None)
+    fmtfun :
+         (Default value = lambda x: str(int(x)))
+
+    Returns
+    -------
+
     """
     ret = []
     if col_headers:
@@ -50,6 +65,15 @@ def matrix_to_string(
 
 def transpose(matrix):
     """Takes a 2D matrix (as nested list) and returns the transposed version.
+
+    Parameters
+    ----------
+    matrix :
+        
+
+    Returns
+    -------
+
     """
     return [list(val) for val in zip(*matrix)]
 
@@ -57,10 +81,20 @@ def transpose(matrix):
 def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
     """Calculates the column echelon form using Gaussian elimination.
 
-    :param matrix: a 2D matrix as nested list.
-    :param ntype: the numerical type to use in the calculation.
-    :param transpose_result: indicates if the returned matrix should be transposed.
-    :return: column echelon form, transformed identity matrix, swapped rows
+    Parameters
+    ----------
+    matrix :
+        a 2D matrix as nested list.
+    ntype :
+        the numerical type to use in the calculation. (Default value = Fraction)
+    transpose_result :
+        indicates if the returned matrix should be transposed. (Default value = False)
+
+    Returns
+    -------
+    type
+        column echelon form, transformed identity matrix, swapped rows
+
     """
     lead = 0
 
@@ -124,9 +158,18 @@ def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
 def pi_theorem(quantities, registry=None):
     """Builds dimensionless quantities using the Buckingham π theorem
 
-    :param quantities: mapping between variable name and units
-    :type quantities: dict
-    :return: a list of dimensionless quantities expressed as dicts
+    Parameters
+    ----------
+    quantities : dict
+        mapping between variable name and units
+    registry :
+         (Default value = None)
+
+    Returns
+    -------
+    type
+        a list of dimensionless quantities expressed as dicts
+
     """
 
     # Preprocess input and build the dimensionality Matrix
@@ -189,12 +232,18 @@ def pi_theorem(quantities, registry=None):
 def solve_dependencies(dependencies):
     """Solve a dependency graph.
 
-    :param dependencies:
+    Parameters
+    ----------
+    dependencies :
         dependency dictionary. For each key, the value is an iterable indicating its
         dependencies.
-    :return:
+
+    Returns
+    -------
+    type
         iterator of sets, each containing keys of independents tasks dependent only of
         the previous tasks in the list.
+
     """
     while dependencies:
         # values not in keys (items without dep)
@@ -244,9 +293,7 @@ def find_connected_nodes(graph, start, visited=None):
 
 
 class udict(dict):
-    """ Custom dict implementing __missing__.
-
-    """
+    """Custom dict implementing __missing__."""
 
     def __missing__(self, key):
         return 0.0
@@ -258,9 +305,16 @@ class udict(dict):
 class UnitsContainer(Mapping):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations.
-
+    
     UnitsContainer is a read-only mapping. All operations (even in place ones)
-    return new instances.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    type
+        
 
     """
 
@@ -292,7 +346,15 @@ class UnitsContainer(Mapping):
         return new
 
     def remove(self, keys):
-        """ Create a new UnitsContainer purged from given keys.
+        """Create a new UnitsContainer purged from given keys.
+
+        Parameters
+        ----------
+        keys :
+            
+
+        Returns
+        -------
 
         """
         new = self.copy()
@@ -302,7 +364,17 @@ class UnitsContainer(Mapping):
         return new
 
     def rename(self, oldkey, newkey):
-        """ Create a new UnitsContainer in which an entry has been renamed.
+        """Create a new UnitsContainer in which an entry has been renamed.
+
+        Parameters
+        ----------
+        oldkey :
+            
+        newkey :
+            
+
+        Returns
+        -------
 
         """
         new = self.copy()
@@ -416,15 +488,20 @@ class UnitsContainer(Mapping):
 
 
 class ParserHelper(UnitsContainer):
-    """ The ParserHelper stores in place the product of variables and
+    """The ParserHelper stores in place the product of variables and
     their respective exponent and implements the corresponding operations.
-
+    
     ParserHelper is a read-only mapping. All operations (even in place ones)
-    return new instances.
 
-    WARNING : The hash value used does not take into account the scale
-    attribute so be careful if you use it as a dict key and then two unequal
-    object can have the same hash.
+    Parameters
+    ----------
+
+    Returns
+    -------
+    type
+        WARNING : The hash value used does not take into account the scale
+        attribute so be careful if you use it as a dict key and then two unequal
+        object can have the same hash.
 
     """
 
@@ -437,8 +514,16 @@ class ParserHelper(UnitsContainer):
     @classmethod
     def from_word(cls, input_word):
         """Creates a ParserHelper object with a single variable with exponent one.
-
+        
         Equivalent to: ParserHelper({'word': 1})
+
+        Parameters
+        ----------
+        input_word :
+            
+
+        Returns
+        -------
 
         """
         return cls(1, [(input_word, 1)])
@@ -463,6 +548,15 @@ class ParserHelper(UnitsContainer):
     @lru_cache()
     def from_string(cls, input_string):
         """Parse linear expression mathematical units and return a quantity object.
+
+        Parameters
+        ----------
+        input_string :
+            
+
+        Returns
+        -------
+
         """
         if not input_string:
             return cls()
@@ -642,9 +736,15 @@ def _is_dim(name):
 
 class SharedRegistryObject:
     """Base class for object keeping a reference to the registree.
-
+    
     Such object are for now Quantity and Unit, in a number of places it is
     that an object from this class has a '_units' attribute.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
 
     """
 
@@ -662,9 +762,16 @@ class SharedRegistryObject:
         """Check if the other object use a registry and if so that it is the
         same registry.
 
-        Return True is both use a registry and they use the same, False is
-        other don't use a registry and raise ValueError if other don't use the
-        same unit registry.
+        Parameters
+        ----------
+        other :
+            
+
+        Returns
+        -------
+        type
+            other don't use a registry and raise ValueError if other don't use the
+            same unit registry.
 
         """
         if self._REGISTRY is getattr(other, "_REGISTRY", None):
@@ -702,7 +809,17 @@ class PrettyIPython:
 
 
 def to_units_container(unit_like, registry=None):
-    """ Convert a unit compatible type to a UnitsContainer.
+    """Convert a unit compatible type to a UnitsContainer.
+
+    Parameters
+    ----------
+    unit_like :
+        
+    registry :
+         (Default value = None)
+
+    Returns
+    -------
 
     """
     mro = type(unit_like).mro()
@@ -720,7 +837,19 @@ def to_units_container(unit_like, registry=None):
 
 
 def infer_base_unit(q):
-    """Return UnitsContainer of q with all prefixes stripped."""
+    """
+
+    Parameters
+    ----------
+    q :
+        
+
+    Returns
+    -------
+    type
+        
+
+    """
     d = udict()
     for unit_name, power in q._units.items():
         candidates = q._REGISTRY.parse_unit_name(unit_name)
@@ -735,6 +864,15 @@ def infer_base_unit(q):
 def getattr_maybe_raise(self, item):
     """Helper function to invoke at the beginning of all overridden ``__getattr__``
     methods. Raise AttributeError if the user tries to ask for a _ or __ attribute.
+
+    Parameters
+    ----------
+    item :
+        
+
+    Returns
+    -------
+
     """
     # Double-underscore attributes are tricky to detect because they are
     # automatically prefixed with the class name - which may be a subclass of self
@@ -744,14 +882,20 @@ def getattr_maybe_raise(self, item):
 
 class SourceIterator:
     """Iterator to facilitate reading the definition files.
-
+    
     Accepts any sequence (like a list of lines, a file or another SourceIterator)
-
+    
     The iterator yields the line number and line (skipping comments and empty lines)
     and stripping white spaces.
-
+    
     for lineno, line in SourceIterator(sequence):
         # do something here
+
+    Parameters
+    ----------
+
+    Returns
+    -------
 
     """
 
@@ -782,14 +926,20 @@ class SourceIterator:
     next = __next__
 
     def block_iter(self):
-        """Iterate block including header.
-        """
+        """Iterate block including header."""
         return BlockIterator(self)
 
 
 class BlockIterator(SourceIterator):
     """Like SourceIterator but stops when it finds '@end'
     It also raises an error if another '@' directive is found inside.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def __new__(cls, line_iterator):
@@ -817,12 +967,22 @@ class BlockIterator(SourceIterator):
 
 def iterable(y):
     """Check whether or not an object can be iterated over.
-
+    
     Vendored from numpy under the terms of the BSD 3-Clause License. (Copyright
     (c) 2005-2019, NumPy Developers.)
 
-    :param value: Input object.
-    :param type: object
+    Parameters
+    ----------
+    value :
+        Input object.
+    type :
+        object
+    y :
+        
+
+    Returns
+    -------
+
     """
     try:
         iter(y)
@@ -834,8 +994,18 @@ def iterable(y):
 def sized(y):
     """Check whether or not an object has a defined length.
 
-    :param value: Input object.
-    :param type: object
+    Parameters
+    ----------
+    value :
+        Input object.
+    type :
+        object
+    y :
+        
+
+    Returns
+    -------
+
     """
     try:
         len(y)

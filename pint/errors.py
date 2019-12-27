@@ -21,8 +21,7 @@ def _file_prefix(filename=None, lineno=None):
 
 
 class DefinitionSyntaxError(SyntaxError):
-    """Raised when a textual definition has a syntax error.
-    """
+    """ """
 
     def __init__(self, msg, *, filename=None, lineno=None):
         super().__init__(msg)
@@ -44,8 +43,7 @@ class DefinitionSyntaxError(SyntaxError):
 
 
 class RedefinitionError(ValueError):
-    """Raised when a unit or prefix is redefined.
-    """
+    """ """
 
     def __init__(self, name, definition_type, *, filename=None, lineno=None):
         super().__init__(name, definition_type)
@@ -61,8 +59,7 @@ class RedefinitionError(ValueError):
 
 
 class UndefinedUnitError(AttributeError):
-    """Raised when the units are not defined in the unit registry.
-    """
+    """ """
 
     def __init__(self, *unit_names):
         if len(unit_names) == 1 and not isinstance(unit_names[0], str):
@@ -80,8 +77,7 @@ class PintTypeError(TypeError):
 
 
 class DimensionalityError(PintTypeError):
-    """Raised when trying to convert between incompatible units.
-    """
+    """ """
 
     def __init__(self, units1, units2, dim1="", dim2="", *, extra_msg=""):
         super().__init__()
@@ -109,8 +105,7 @@ class DimensionalityError(PintTypeError):
 
 
 class OffsetUnitCalculusError(PintTypeError):
-    """Raised on ambiguous operations with offset units.
-    """
+    """ """
 
     def __str__(self):
         return (

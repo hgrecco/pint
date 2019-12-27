@@ -23,14 +23,33 @@ HANDLED_FUNCTIONS = {}
 
 def _is_quantity(arg):
     """Test for _units and _magnitude attrs.
-
+    
     This is done in place of isinstance(Quantity, arg), which would cause a circular import.
+
+    Parameters
+    ----------
+    arg :
+        
+
+    Returns
+    -------
+
     """
     return hasattr(arg, "_units") and hasattr(arg, "_magnitude")
 
 
 def _is_quantity_sequence(arg):
-    """Test for sequences of quantities."""
+    """Test for sequences of quantities.
+
+    Parameters
+    ----------
+    arg :
+        
+
+    Returns
+    -------
+
+    """
     return (
         iterable(arg)
         and sized(arg)
@@ -40,7 +59,19 @@ def _is_quantity_sequence(arg):
 
 
 def _get_first_input_units(args, kwargs={}):
-    """Obtain the first valid unit from a collection of args and kwargs."""
+    """Obtain the first valid unit from a collection of args and kwargs.
+
+    Parameters
+    ----------
+    args :
+        
+    kwargs :
+         (Default value = {})
+
+    Returns
+    -------
+
+    """
     for arg in chain(args, kwargs.values()):
         if _is_quantity(arg):
             return arg.units
@@ -50,9 +81,20 @@ def _get_first_input_units(args, kwargs={}):
 
 def convert_arg(arg, pre_calc_units):
     """Convert quantities and sequences of quantities to pre_calc_units and strip units.
-
+    
     Helper function for convert_to_consistent_units. pre_calc_units must be given as a pint
     Unit or None.
+
+    Parameters
+    ----------
+    arg :
+        
+    pre_calc_units :
+        
+
+    Returns
+    -------
+
     """
     if pre_calc_units is not None:
         if _is_quantity(arg):
@@ -74,11 +116,24 @@ def convert_arg(arg, pre_calc_units):
 
 def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
     """Prepare args and kwargs for wrapping by unit conversion and stripping.
-
+    
     If pre_calc_units is not None, takes the args and kwargs for a NumPy function and converts
     any Quantity or Sequence of Quantities into the units of the first Quantiy/Sequence of
     Quantities and returns the magnitudes. Other args/kwargs are treated as dimensionless
     Quantities. If pre_calc_units is None, units are simply stripped.
+
+    Parameters
+    ----------
+    *args :
+        
+    pre_calc_units :
+         (Default value = None)
+    **kwargs :
+        
+
+    Returns
+    -------
+
     """
     return (
         tuple(convert_arg(arg, pre_calc_units=pre_calc_units) for arg in args),
@@ -91,9 +146,18 @@ def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
 
 def unwrap_and_wrap_consistent_units(*args):
     """Strip units from args while providing a rewrapping function.
-
+    
     Returns the given args as parsed by convert_to_consistent_units assuming units of
     first arg with units, along with a wrapper to restore that unit to the output.
+
+    Parameters
+    ----------
+    *args :
+        
+
+    Returns
+    -------
+
     """
     first_input_units = _get_first_input_units(args)
     args, _ = convert_to_consistent_units(*args, pre_calc_units=first_input_units)
@@ -105,9 +169,9 @@ def unwrap_and_wrap_consistent_units(*args):
 
 def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
     """Determine resulting unit from given operation.
-
+    
     Options for `unit_op`:
-
+    
     - "sum": `first_input_units`, unless non-multiplicative, which raises
       OffsetUnitCalculusError
     - "mul": product of all units in `all_args`
@@ -121,6 +185,21 @@ def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
     - "sqrt": square root of `first_input_units`
     - "reciprocal": reciprocal of `first_input_units`
     - "size": `first_input_units` raised to the power of `size`
+
+    Parameters
+    ----------
+    unit_op :
+        
+    first_input_units :
+        
+    all_args :
+         (Default value = [])
+    size :
+         (Default value = None)
+
+    Returns
+    -------
+
     """
     if unit_op == "sum":
         result_unit = (1 * first_input_units + 1 * first_input_units).units
@@ -169,6 +248,17 @@ def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
 def implements(numpy_func_string, func_type):
     """Register an __array_function__/__array_ufunc__ implementation for Quantity
     objects.
+
+    Parameters
+    ----------
+    numpy_func_string :
+        
+    func_type :
+        
+
+    Returns
+    -------
+
     """
 
     def decorator(func):
@@ -188,25 +278,19 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 
     Parameters
     ----------
-    func_type : str
-        "function" for NumPy functions, "ufunc" for NumPy ufuncs
-    func_str : str
-        String representing the name of the NumPy function/ufunc to add
-    input_units : pint.Unit or str or None
-        Parameter to control how the function downcasts to magnitudes of arguments. If
-        `pint.Unit`, converts all args and kwargs to this unit before downcasting to
-        magnitude. If "all_consistent", converts all args and kwargs to the unit of the
-        first Quantity in args and kwargs before downcasting to magnitude. If some
-        other string, the string is parsed as a unit, and all args and kwargs are
-        converted to that unit. If None, units are stripped without conversion.
-    output_unit : pint.Unit or str or None
-        Parameter to control the unit of the output. If `pint.Unit`, output is wrapped
-        with that unit. If "match_input", output is wrapped with the unit of the first
-        Quantity in args and kwargs. If a string representing a unit operation defined
-        in `get_op_output_unit`, output is wrapped by the unit determined by
-        `get_op_output_unit`. If some other string, the string is parsed as a unit,
-        which becomes the unit of the output. If None, the bare magnitude is returned.
+    func_type :
+        
+    func_str :
+        
+    input_units :
+         (Default value = None)
+    output_unit :
+         (Default value = None)
 
+    Returns
+    -------
+
+    
     """
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
@@ -797,7 +881,27 @@ for func_str in ["var", "nanvar"]:
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):
-    """Return the result from a NumPy function/ufunc as wrapped by Pint."""
+    """
+
+    Parameters
+    ----------
+    func_type :
+        
+    func :
+        
+    args :
+        
+    kwargs :
+        
+    types :
+        
+
+    Returns
+    -------
+    type
+        
+
+    """
     if func_type == "function":
         handled = HANDLED_FUNCTIONS
     elif func_type == "ufunc":

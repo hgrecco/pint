@@ -1502,6 +1502,13 @@ class TestCompareZero(QuantityTestCase):
     """This test case checks the special treatment that the zero value
     receives in the comparisons: pint>=0.9 supports comparisons against zero
     even for non-dimensionless quantities
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def test_equal_zero(self):

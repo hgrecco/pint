@@ -36,8 +36,26 @@ class Context:
     """A specialized container that defines transformation functions from one
     dimension to another. Each Dimension are specified using a UnitsContainer.
     Simple transformation are given with a function taking a single parameter.
+    
+    
+    Conversion functions may take optional keyword arguments and the context
+    can have default values for these arguments.
+    
+    
+    Additionally, a context may host redefinitions:
+    
+    
+    A redefinition must be performed among units that already exist in the registry. It
+    cannot change the dimensionality of a unit. The symbol and aliases are automatically
+    inherited from the registry.
 
-        >>> from pint.util import UnitsContainer
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    >>> from pint.util import UnitsContainer
         >>> timedim = UnitsContainer({'[time]': 1})
         >>> spacedim = UnitsContainer({'[length]': 1})
         >>> def f(time):
@@ -47,10 +65,7 @@ class Context:
         >>> c.add_transformation(timedim, spacedim, f)
         >>> c.transform(timedim, spacedim, 2)
         6
-
-    Conversion functions may take optional keyword arguments and the context
-    can have default values for these arguments.
-
+    
         >>> def f(time, n):
         ...     'Time to length converter, n is the index of refraction of the material'
         ...     return 3. * time / n
@@ -58,14 +73,8 @@ class Context:
         >>> c.add_transformation(timedim, spacedim, f)
         >>> c.transform(timedim, spacedim, 2)
         2
-
-    Additionally, a context may host redefinitions:
-
+    
         >>> c.redefine("pound = 0.5 kg")
-
-    A redefinition must be performed among units that already exist in the registry. It
-    cannot change the dimensionality of a unit. The symbol and aliases are automatically
-    inherited from the registry.
     """
 
     def __init__(self, name=None, aliases=(), defaults=None):
@@ -94,8 +103,19 @@ class Context:
         """Creates a new context that shares the funcs dictionary with the
         original context. The default values are copied from the original
         context and updated with the new defaults.
-
+        
         If defaults is empty, return the same context.
+
+        Parameters
+        ----------
+        context :
+            
+        **defaults :
+            
+
+        Returns
+        -------
+
         """
         if defaults:
             newdef = dict(context.defaults, **defaults)
@@ -192,6 +212,19 @@ class Context:
 
     def add_transformation(self, src, dst, func):
         """Add a transformation function to the context.
+
+        Parameters
+        ----------
+        src :
+            
+        dst :
+            
+        func :
+            
+
+        Returns
+        -------
+
         """
         _key = self.__keytransform__(src, dst)
         self.funcs[_key] = func
@@ -199,6 +232,17 @@ class Context:
 
     def remove_transformation(self, src, dst):
         """Add a transformation function to the context.
+
+        Parameters
+        ----------
+        src :
+            
+        dst :
+            
+
+        Returns
+        -------
+
         """
         _key = self.__keytransform__(src, dst)
         del self.funcs[_key]
@@ -210,6 +254,21 @@ class Context:
 
     def transform(self, src, dst, registry, value):
         """Transform a value.
+
+        Parameters
+        ----------
+        src :
+            
+        dst :
+            
+        registry :
+            
+        value :
+            
+
+        Returns
+        -------
+
         """
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)
@@ -217,8 +276,16 @@ class Context:
     def redefine(self, definition: str) -> None:
         """Override the definition of a unit in the registry.
 
-        :param definition:
-            ``<unit> = <new definition>``, e.g. ``pound = 0.5 kg``
+        Parameters
+        ----------
+        definition :
+            unit> = <new definition>``, e.g. ``pound = 0.5 kg``
+        definition: str :
+            
+
+        Returns
+        -------
+
         """
         for line in definition.splitlines():
             d = Definition.from_string(line)
@@ -238,6 +305,13 @@ class Context:
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
         mutable, and the Python interpreter does cache the output of ``__hash__``.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
         """
         return (
             self.name,
@@ -251,6 +325,13 @@ class Context:
 class ContextChain(ChainMap):
     """A specialized ChainMap for contexts that simplifies finding rules
     to transform from one dimension to another.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def __init__(self):
@@ -262,9 +343,18 @@ class ContextChain(ChainMap):
     def insert_contexts(self, *contexts):
         """Insert one or more contexts in reversed order the chained map.
         (A rule in last context will take precedence)
-
+        
         To facilitate the identification of the context with the matching rule,
         the *relation_to_context* dictionary of the context is used.
+
+        Parameters
+        ----------
+        *contexts :
+            
+
+        Returns
+        -------
+
         """
         self.contexts = list(reversed(contexts)) + self.contexts
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
@@ -272,6 +362,15 @@ class ContextChain(ChainMap):
 
     def remove_contexts(self, n: int = None):
         """Remove the last n inserted contexts from the chain.
+
+        Parameters
+        ----------
+        n: int :
+             (Default value = None)
+
+        Returns
+        -------
+
         """
         del self.contexts[:n]
         del self.maps[:n]
@@ -285,8 +384,7 @@ class ContextChain(ChainMap):
 
     @property
     def graph(self):
-        """The graph relating
-        """
+        """The graph relating"""
         if self._graph is None:
             self._graph = defaultdict(set)
             for fr_, to_ in self:
@@ -297,7 +395,20 @@ class ContextChain(ChainMap):
         """Transform the value, finding the rule in the chained context.
         (A rule in last context will take precedence)
 
-        :raises: KeyError if the rule is not found.
+        Parameters
+        ----------
+        src :
+            
+        dst :
+            
+        registry :
+            
+        value :
+            
+
+        Returns
+        -------
+
         """
         return self[(src, dst)].transform(src, dst, registry, value)
 
@@ -305,5 +416,12 @@ class ContextChain(ChainMap):
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
         mutable, and the Python interpreter does cache the output of ``__hash__``.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
         """
         return tuple(ctx.hashable() for ctx in self.contexts)

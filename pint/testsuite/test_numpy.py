@@ -802,8 +802,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertFalse(np.iterable(1 * self.ureg.m))
 
     def test_reversible_op(self):
-        """
-        """
+        """ """
         x = self.q.magnitude
         u = self.Q_(np.ones(x.shape))
         self.assertQuantityEqual(x / self.q, u * x / self.q)
@@ -1125,15 +1124,22 @@ class TestNumpyUnclassified(TestNumpyMethods):
 @unittest.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):
     """Universal functions (ufuncs) >  Bittwiddling functions
-
+    
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#bittwiddlingfunctions
-
+    
     bitwise_and(x1, x2[, out])         Compute the bitwise AND of two arrays elementwise.
     bitwise_or(x1, x2[, out])  Compute the bitwise OR of two arrays elementwise.
     bitwise_xor(x1, x2[, out])         Compute the bitwise XOR of two arrays elementwise.
     invert(x[, out])   Compute bitwise inversion, or bitwise NOT, elementwise.
     left_shift(x1, x2[, out])  Shift the bits of an integer to the left.
     right_shift(x1, x2[, out])         Shift the bits of an integer to the right.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     @property

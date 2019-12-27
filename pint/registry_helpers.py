@@ -19,8 +19,16 @@ from .util import UnitsContainer, to_units_container
 def _replace_units(original_units, values_by_name):
     """Convert a unit compatible type to a UnitsContainer.
 
-    :param original_units: a UnitsContainer instance.
-    :param values_by_name: a map between original names and the new values.
+    Parameters
+    ----------
+    original_units :
+        a UnitsContainer instance.
+    values_by_name :
+        a map between original names and the new values.
+
+    Returns
+    -------
+
     """
     q = 1
     for arg_name, exponent in original_units.items():
@@ -34,7 +42,18 @@ def _to_units_container(a, registry=None):
     checking if it is string field prefixed with an equal
     (which is considered a reference)
 
-    Return a tuple with the unit container and a boolean indicating if it was a reference.
+    Parameters
+    ----------
+    a :
+        
+    registry :
+         (Default value = None)
+
+    Returns
+    -------
+    type
+        
+
     """
     if isinstance(a, str) and "=" in a:
         return to_units_container(a.split("=", 1)[1]), True
@@ -135,9 +154,22 @@ def _parse_wrap_args(args, registry=None):
 
 def _apply_defaults(func, args, kwargs):
     """Apply default keyword arguments.
-
+    
     Named keywords may have been left blank. This function applies the default
     values so that every argument is defined.
+
+    Parameters
+    ----------
+    func :
+        
+    args :
+        
+    kwargs :
+        
+
+    Returns
+    -------
+
     """
 
     sig = signature(func)
@@ -151,25 +183,34 @@ def _apply_defaults(func, args, kwargs):
 
 def wraps(ureg, ret, args, strict=True):
     """Wraps a function to become pint-aware.
-
+    
     Use it when a function requires a numerical value but in some specific
     units. The wrapper function will take a pint quantity, convert to the units
     specified in `args` and then call the wrapped function with the resulting
     magnitude.
-
+    
     The value returned by the wrapped function will be converted to the units
     specified in `ret`.
-
+    
     Use None to skip argument conversion.
     Set strict to False, to accept also numerical values.
 
-    :param ureg: a UnitRegistry instance.
-    :param ret: output units.
-    :param args: iterable of input units.
-    :param strict: boolean to indicate that only quantities are accepted.
-    :return: the wrapped function.
-    :raises:
-        :class:`ValueError` if strict and one of the arguments is not a Quantity.
+    Parameters
+    ----------
+    ureg :
+        a UnitRegistry instance.
+    ret :
+        output units.
+    args :
+        iterable of input units.
+    strict :
+        boolean to indicate that only quantities are accepted. (Default value = True)
+
+    Returns
+    -------
+    type
+        the wrapped function.
+
     """
 
     if not isinstance(args, (list, tuple)):
@@ -228,17 +269,31 @@ def wraps(ureg, ret, args, strict=True):
 
 def check(ureg, *args):
     """Decorator to for quantity type checking for function inputs.
-
+    
     Use it to ensure that the decorated function input parameters match
     the expected type of pint quantity.
-
+    
     Use None to skip argument checking.
 
-    :param ureg: a UnitRegistry instance.
-    :param args: iterable of input units.
-    :return: the wrapped function.
-    :raises pint.DimensionalityError:
+    Parameters
+    ----------
+    ureg :
+        a UnitRegistry instance.
+    args :
+        iterable of input units.
+    *args :
+        
+
+    Returns
+    -------
+    type
+        the wrapped function.
+
+    Raises
+    ------
+    pint.DimensionalityError
         if the parameters don't match dimensions
+
     """
     dimensions = [
         ureg.get_dimensionality(dim) if dim is not None else None for dim in args

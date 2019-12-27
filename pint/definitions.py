@@ -30,10 +30,20 @@ def numeric_parse(s):
 class Definition:
     """Base class for definitions.
 
-    :param name: name.
-    :param symbol: a short name or symbol for the definition
-    :param aliases: iterable of other names.
-    :param converter: an instance of Converter.
+    Parameters
+    ----------
+    name :
+        name.
+    symbol :
+        a short name or symbol for the definition
+    aliases :
+        iterable of other names.
+    converter :
+        an instance of Converter.
+
+    Returns
+    -------
+
     """
 
     def __init__(self, name, symbol, aliases, converter):
@@ -49,6 +59,15 @@ class Definition:
     @classmethod
     def from_string(cls, definition):
         """Parse a definition
+
+        Parameters
+        ----------
+        definition :
+            
+
+        Returns
+        -------
+
         """
         name, definition = definition.split("=", 1)
         name = name.strip()
@@ -103,8 +122,7 @@ class Definition:
 
 
 class PrefixDefinition(Definition):
-    """Definition of a prefix.
-    """
+    """Definition of a prefix."""
 
     def __init__(self, name, symbol, aliases, converter):
         if isinstance(converter, str):
@@ -124,8 +142,16 @@ class PrefixDefinition(Definition):
 class UnitDefinition(Definition):
     """Definition of a unit.
 
-    :param reference: Units container with reference units.
-    :param is_base: indicates if it is a base unit.
+    Parameters
+    ----------
+    reference :
+        Units container with reference units.
+    is_base :
+        indicates if it is a base unit.
+
+    Returns
+    -------
+
     """
 
     def __init__(self, name, symbol, aliases, converter, reference=None, is_base=False):
@@ -171,8 +197,7 @@ class UnitDefinition(Definition):
 
 
 class DimensionDefinition(Definition):
-    """Definition of a dimension.
-    """
+    """Definition of a dimension."""
 
     def __init__(self, name, symbol, aliases, converter, reference=None, is_base=False):
         self.reference = reference
@@ -195,8 +220,7 @@ class DimensionDefinition(Definition):
 
 
 class AliasDefinition(Definition):
-    """Additional alias(es) for an already existing unit
-    """
+    """Additional alias(es) for an already existing unit"""
 
     def __init__(self, name, aliases):
         super().__init__(name=name, symbol=None, aliases=aliases, converter=None)

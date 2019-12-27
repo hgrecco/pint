@@ -117,8 +117,7 @@ class QuantityTestCase(BaseTestCase):
 
 
 def testsuite():
-    """A testsuite that has all the pint tests.
-    """
+    """A testsuite that has all the pint tests."""
     suite = unittest.TestLoader().discover(os.path.dirname(__file__))
     from pint.compat import HAS_NUMPY, HAS_UNCERTAINTIES
 
@@ -135,8 +134,7 @@ def testsuite():
 
 
 def main():
-    """Runs the testsuite as command line application.
-    """
+    """Runs the testsuite as command line application."""
     try:
         unittest.main()
     except Exception as e:
@@ -145,8 +143,15 @@ def main():
 
 def run():
     """Run all tests.
-
+    
     :return: a :class:`unittest.TestResult` object
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
     test_runner = unittest.TextTestRunner()
     return test_runner.run(testsuite())
@@ -165,7 +170,14 @@ _GLOBS = {
 def add_docs(suite):
     """Add docs to suite
 
-    :type suite: unittest.TestSuite
+    Parameters
+    ----------
+    suite :
+        
+
+    Returns
+    -------
+
     """
     docpath = os.path.join(os.path.dirname(__file__), "..", "..", "docs")
     docpath = os.path.abspath(docpath)

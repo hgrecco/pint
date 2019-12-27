@@ -39,12 +39,18 @@ _UNARY_OPERATOR_MAP = {"+": lambda x: x, "-": lambda x: x * -1}
 
 class EvalTreeNode:
     def __init__(self, left, operator=None, right=None):
-        """
-        left + operator + right --> binary op
+    """left + operator + right --> binary op
         left + operator --> unary op
         left + right --> implicit op
         left --> single value
-        """
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    """
         self.left = left
         self.operator = operator
         self.right = right
@@ -65,9 +71,21 @@ class EvalTreeNode:
     def evaluate(
         self, define_op, bin_op=_BINARY_OPERATOR_MAP, un_op=_UNARY_OPERATOR_MAP
     ):
-        """
-        define_op is a callable that translates tokens into objects
+        """define_op is a callable that translates tokens into objects
         bin_op and un_op provide functions for performing binary and unary operations
+
+        Parameters
+        ----------
+        define_op :
+            
+        bin_op :
+             (Default value = _BINARY_OPERATOR_MAP)
+        un_op :
+             (Default value = _UNARY_OPERATOR_MAP)
+
+        Returns
+        -------
+
         """
 
         if self.right:
@@ -90,22 +108,49 @@ class EvalTreeNode:
 
 def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=None):
     """
-    Params:
-    Index, depth, and prev_op used recursively, so don't touch.
-    Tokens is an iterable of tokens from an expression to be evaluated.
 
-    Transform the tokens from an expression into a recursive parse tree, following order
-    of operations. Operations can include binary ops (3 + 4), implicit ops (3 kg), or
-    unary ops (-1).
+    Parameters
+    ----------
+    Index :
+        depth
+    Tokens :
+        is an iterable of tokens from an expression to be evaluated
+    Transform :
+        the tokens from an expression into a recursive parse tree
+    of :
+        operations
+    unary :
+        ops
+    General :
+        Strategy
+    1 :
+        Get left side of operator
+    2 :
+        If no tokens left
+    3 :
+        Get operator
+    4 :
+        Use recursion to create tree starting at token on right side of operator
+    4 :
+        
+    5 :
+        Combine left side
+    6 :
+        Go back to step
+    tokens :
+        
+    op_priority :
+         (Default value = _OP_PRIORITY)
+    index :
+         (Default value = 0)
+    depth :
+         (Default value = 0)
+    prev_op :
+         (Default value = None)
 
-    General Strategy:
-    1) Get left side of operator
-    2) If no tokens left, return final result
-    3) Get operator
-    4) Use recursion to create tree starting at token on right side of operator (start at step #1)
-    4.1) If recursive call encounters an operator with lower or equal priority to step #2, exit recursion
-    5) Combine left side, operator, and right side into a new left side
-    6) Go back to step #2
+    Returns
+    -------
+
     """
 
     if depth == 0 and prev_op is None:

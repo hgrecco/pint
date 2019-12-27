@@ -26,21 +26,28 @@ from .util import (
 
 class Group(SharedRegistryObject):
     """A group is a set of units.
-
+    
     Units can be added directly or by including other groups.
-
+    
     Members are computed dynamically, that is if a unit is added to a group X
     all groups that include X are affected.
-
+    
     The group belongs to one Registry.
-
+    
     It can be specified in the definition file as::
-
+    
         @group <name> [using <group 1>, ..., <group N>]
             <definition 1>
             ...
             <definition N>
         @end
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     #: Regex to match the header parts of a definition.
@@ -86,10 +93,15 @@ class Group(SharedRegistryObject):
     @property
     def members(self):
         """Names of the units that are members of the group.
-
+        
         Calculated to include to all units in all included _used_groups.
 
-        :rtype: frozenset[str]
+        Parameters
+        ----------
+
+        Returns
+        -------
+
         """
         if self._computed_members is None:
             self._computed_members = set(self._unit_names)
@@ -102,8 +114,7 @@ class Group(SharedRegistryObject):
         return self._computed_members
 
     def invalidate_members(self):
-        """Invalidate computed members in this Group and all parent nodes.
-        """
+        """Invalidate computed members in this Group and all parent nodes."""
         self._computed_members = None
         d = self._REGISTRY._groups
         for name in self._used_by:
@@ -127,7 +138,14 @@ class Group(SharedRegistryObject):
     def add_units(self, *unit_names):
         """Add units to group.
 
-        :type unit_names: str
+        Parameters
+        ----------
+        *unit_names :
+            
+
+        Returns
+        -------
+
         """
         for unit_name in unit_names:
             self._unit_names.add(unit_name)
@@ -141,7 +159,14 @@ class Group(SharedRegistryObject):
     def remove_units(self, *unit_names):
         """Remove units from group.
 
-        :type unit_names: str
+        Parameters
+        ----------
+        *unit_names :
+            
+
+        Returns
+        -------
+
         """
         for unit_name in unit_names:
             self._unit_names.remove(unit_name)
@@ -151,7 +176,14 @@ class Group(SharedRegistryObject):
     def add_groups(self, *group_names):
         """Add groups to group.
 
-        :type group_names: str
+        Parameters
+        ----------
+        *group_names :
+            
+
+        Returns
+        -------
+
         """
         d = self._REGISTRY._groups
         for group_name in group_names:
@@ -172,7 +204,14 @@ class Group(SharedRegistryObject):
     def remove_groups(self, *group_names):
         """Remove groups from group.
 
-        :type group_names: str
+        Parameters
+        ----------
+        *group_names :
+            
+
+        Returns
+        -------
+
         """
         d = self._REGISTRY._groups
         for group_name in group_names:
@@ -187,10 +226,16 @@ class Group(SharedRegistryObject):
     def from_lines(cls, lines, define_func):
         """Return a Group object parsing an iterable of lines.
 
-        :param lines: iterable
-        :type lines: list[str]
-        :param define_func: Function to define a unit in the registry.
-        :type define_func: str -> None
+        Parameters
+        ----------
+        lines : list[str]
+            iterable
+        define_func : str -> None
+            Function to define a unit in the registry.
+
+        Returns
+        -------
+
         """
         lines = SourceIterator(lines)
         lineno, header = next(lines)
@@ -246,29 +291,36 @@ class Group(SharedRegistryObject):
 
 class System(SharedRegistryObject):
     """A system is a Group plus a set of base units.
-
+    
     Members are computed dynamically, that is if a unit is added to a group X
     all groups that include X are affected.
-
+    
     The System belongs to one Registry.
-
+    
     It can be specified in the definition file as::
-
+    
         @system <name> [using <group 1>, ..., <group N>]
             <rule 1>
             ...
             <rule N>
         @end
-
+    
     The syntax for the rule is:
-
+    
         new_unit_name : old_unit_name
-
+    
     where:
         - old_unit_name: a root unit part which is going to be removed from the system.
         - new_unit_name: a non root unit which is going to replace the old_unit.
-
+    
     If the new_unit_name and the old_unit_name, the later and the colon can be ommited.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     #: Regex to match the header parts of a context.
@@ -333,14 +385,20 @@ class System(SharedRegistryObject):
         return self._computed_members
 
     def invalidate_members(self):
-        """Invalidate computed members in this Group and all parent nodes.
-        """
+        """Invalidate computed members in this Group and all parent nodes."""
         self._computed_members = None
 
     def add_groups(self, *group_names):
         """Add groups to group.
 
-        :type group_names: str
+        Parameters
+        ----------
+        *group_names :
+            
+
+        Returns
+        -------
+
         """
         self._used_groups |= set(group_names)
 
@@ -349,7 +407,14 @@ class System(SharedRegistryObject):
     def remove_groups(self, *group_names):
         """Remove groups from group.
 
-        :type group_names: str
+        Parameters
+        ----------
+        *group_names :
+            
+
+        Returns
+        -------
+
         """
         self._used_groups -= set(group_names)
 
@@ -358,7 +423,14 @@ class System(SharedRegistryObject):
     def format_babel(self, locale):
         """translate the name of the system
 
-        :type locale: Locale
+        Parameters
+        ----------
+        locale :
+            
+
+        Returns
+        -------
+
         """
         if locale and self.name in _babel_systems:
             name = _babel_systems[self.name]
