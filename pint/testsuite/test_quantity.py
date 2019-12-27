@@ -12,6 +12,12 @@ from pint.testsuite.parameterized import ParameterizedTestCase
 from pint.unit import UnitsContainer
 
 
+class FakeWrapper:
+    # Used in test_upcast_type_rejection_on_creation
+    def __init__(self, q):
+        self.q = q
+
+
 class TestQuantity(QuantityTestCase):
 
     FORCE_NDARRAY = False
@@ -535,6 +541,11 @@ class TestQuantity(QuantityTestCase):
     @helpers.requires_not_numpy()
     def test_no_ndarray_coercion_without_numpy(self):
         self.assertRaises(ValueError, self.Q_(1, "m").__array__)
+
+    @patch("pint.compat.upcast_types", [FakeWrapper])
+    def test_upcast_type_rejection_on_creation(self):
+        self.assertRaises(TypeError, self.Q_, FakeWrapper(42), "m")
+        self.assertEqual(FakeWrapper(self.Q_(42, "m")).q, self.Q_(42, "m"))
 
 
 class TestQuantityToCompact(QuantityTestCase):

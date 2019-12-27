@@ -4,9 +4,16 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Improved compatbility for upcast types like xarray's DataArray or Dataset, to which
+  Pint Quantities now fully defer for arithmetic and NumPy operations. A collection of
+  basic tests for proper deferral has been added (for full integration tests, see
+  xarray's test suite). The list of upcast types is available at
+  `pint.compat.upcast_types` in the API.
+  (Issue #959, Thanks Jon Thielen)
 - Moved docstrings to Numpy Docs
+  (Issue #958)
 - Added tests for immutability of the magnitude's type under common operations
-  (Issue #956, Thanks Jon Thielen)
+  (Issue #957, Thanks Jon Thielen)
 - Switched test configuration to pytest and added tests of Pint's matplotlib support.
   (Issue #954, Thanks Jon Thielen)
 - Deprecate array protocol fallback except where explicitly defined (`__array__`,
