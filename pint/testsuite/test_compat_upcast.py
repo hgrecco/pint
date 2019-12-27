@@ -108,3 +108,20 @@ def test_dataarray_inequalities(da):
     with pytest.raises(ValueError) as exc:
         da > 2
         assert "Cannot compare Quantity and <class 'int'>" in str(exc)
+
+
+def test_array_function_deferral(da):
+    lower = 2 * ureg.m
+    upper = 3 * ureg.m
+    args = (da, lower, upper)
+    assert (
+        lower.__array_function__(
+            np.clip, tuple(set(type(arg) for arg in args)), args, {}
+        )
+        is NotImplemented
+    )
+
+
+def test_array_ufunc_deferral(da):
+    lower = 2 * ureg.m
+    assert lower.__array_ufunc__(np.maximum, "__call__", lower, da) is NotImplemented
