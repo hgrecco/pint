@@ -597,6 +597,31 @@ def _isin(element, test_elements, assume_unique=False, invert=False):
     return np.isin(element.m, test_elements, assume_unique=assume_unique, invert=invert)
 
 
+@implements("pad", "function")
+def _pad(array, pad_width, mode="constant", **kwargs):
+    def _recursive_convert(arg, unit):
+        if iterable(arg):
+            return tuple(_recursive_convert(a, unit=unit) for a in arg)
+        elif _is_quantity(arg):
+            return arg.m_as(unit)
+        else:
+            return arg
+
+    # pad only dispatches on array argument, so we know it is a Quantity
+    units = array.units
+
+    # Handle flexible constant_values and end_values, converting to units if Quantity
+    # and ignoring if not
+    if mode == "constant":
+        kwargs["constant_values"] = _recursive_convert(kwargs["constant_values"], units)
+    elif mode == "linear_ramp":
+        kwargs["end_values"] = _recursive_convert(kwargs["end_values"], units)
+
+    return units._REGISTRY.Quantity(
+        np.pad(array._magnitude, pad_width, mode=mode, **kwargs), units
+    )
+
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
@@ -675,6 +700,7 @@ for func_str, unit_arguments, wrap_output in [
     ("tile", "A", True),
     ("rot90", "m", True),
     ("insert", ["arr", "values"], True),
+    ("resize", "a", True),
 ]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
