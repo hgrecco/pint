@@ -149,12 +149,36 @@ if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast and
-# downcast/wrappable types
-upcast_types = ["PintArray", "Series", "DataArray", "Dataset", "Variable"]
+# downcast/wrappable types using guarded imports
+upcast_types = []
+
+# pint-pandas (PintArray)
+try:
+    from pintpandas import PintArray
+
+    upcast_types.append(PintArray)
+except ImportError:
+    pass
+
+# Pandas (Series)
+try:
+    from pandas import Series
+
+    upcast_types.append(Series)
+except ImportError:
+    pass
+
+# xarray (DataArray, Dataset, Variable)
+try:
+    from xarray import DataArray, Dataset, Variable
+
+    upcast_types += [DataArray, Dataset, Variable]
+except ImportError:
+    pass
 
 
 def is_upcast_type(other):
-    """Check if the type object is a upcast type.
+    """Check if the type object is a upcast type using preset list.
 
     Parameters
     ----------
@@ -164,8 +188,7 @@ def is_upcast_type(other):
     -------
     bool
     """
-    # Check if class name is in preset list
-    return other.__name__ in upcast_types
+    return other in upcast_types
 
 
 def eq(lhs, rhs, check_all):

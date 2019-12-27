@@ -7,7 +7,7 @@ Pint Changelog
 - Improved compatbility for upcast types like xarray's DataArray or Dataset, to which
   Pint Quantities now fully defer for arithmetic and NumPy operations. A collection of
   basic tests for proper deferral has been added (for full integration tests, see
-  xarray's test suite). The list of names of upcast types is available at
+  xarray's test suite). The list of upcast types is available at
   `pint.compat.upcast_types` in the API.
   (Issue #959, Thanks Jon Thielen)
 - Moved docstrings to Numpy Docs

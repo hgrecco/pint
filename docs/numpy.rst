@@ -146,9 +146,9 @@ upcast types to which Pint defers (see
 - ``Series``, as defined by pandas
 - ``DataArray``, ``Dataset``, and ``Variable``, as defined by xarray
 
-If your application requires extension of this collection of types, the collection of
-type names is available in Pint's API at ``pint.compat.upcast_types``. Note that these
-are also the types to which a Quantity object will defer for arithmetic operations.
+If your application requires extension of this collection of types, it is available in
+Pint's API at ``pint.compat.upcast_types``. Note that these are also the types to which
+a Quantity object will defer for arithmetic operations.
 
 To achive these function and ufunc overrides, Pint uses the ``__array_function__`` and
 ``__array_ufunc__`` protocols respectively, as recommened by NumPy. This means that
