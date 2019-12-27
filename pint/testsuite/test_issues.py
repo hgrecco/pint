@@ -3,11 +3,15 @@ import math
 import pprint
 import unittest
 
+import pytest
+
 from pint import Context, DimensionalityError, UnitRegistry
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
+
+ureg = UnitRegistry()
 
 
 class TestIssues(QuantityTestCase):
@@ -23,7 +27,6 @@ class TestIssues(QuantityTestCase):
         self.assertEqual(x, ParserHelper(10, {"%": 1}))
         x = ParserHelper.from_string("10 ‰")
         self.assertEqual(x, ParserHelper(10, {"‰": 1}))
-        ureg = UnitRegistry()
         ureg.define("percent = [fraction]; offset: 0 = %")
         ureg.define("permille = percent / 10 = ‰")
         x = ureg.parse_expression("10 %")
@@ -33,7 +36,6 @@ class TestIssues(QuantityTestCase):
         self.assertEqual(x.to("‰"), ureg.Quantity(1, {"‰": 1}))
 
     def test_issue29(self):
-        ureg = UnitRegistry()
         t = 4 * ureg("mW")
         self.assertEqual(t.magnitude, 4)
         self.assertEqual(t._units, UnitsContainer(milliwatt=1))
@@ -43,7 +45,6 @@ class TestIssues(QuantityTestCase):
     @helpers.requires_numpy()
     def test_issue37(self):
         x = np.ma.masked_array([1, 2, 3], mask=[True, True, False])
-        ureg = UnitRegistry()
         q = ureg.meter * x
         self.assertIsInstance(q, ureg.Quantity)
         np.testing.assert_array_equal(q.magnitude, x)
@@ -67,7 +68,6 @@ class TestIssues(QuantityTestCase):
     @helpers.requires_numpy()
     def test_issue39(self):
         x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-        ureg = UnitRegistry()
         q = ureg.meter * x
         self.assertIsInstance(q, ureg.Quantity)
         np.testing.assert_array_equal(q.magnitude, x)
@@ -89,7 +89,6 @@ class TestIssues(QuantityTestCase):
 
     @helpers.requires_numpy()
     def test_issue44(self):
-        ureg = UnitRegistry()
         x = 4.0 * ureg.dimensionless
         np.sqrt(x)
         self.assertQuantityAlmostEqual(
@@ -102,13 +101,11 @@ class TestIssues(QuantityTestCase):
     def test_issue45(self):
         import math
 
-        ureg = UnitRegistry()
         self.assertAlmostEqual(math.sqrt(4 * ureg.m / ureg.cm), math.sqrt(4 * 100))
         self.assertAlmostEqual(float(ureg.V / ureg.mV), 1000.0)
 
     @helpers.requires_numpy()
     def test_issue45b(self):
-        ureg = UnitRegistry()
         self.assertAlmostEqual(
             np.sin([np.pi / 2] * ureg.m / ureg.m),
             np.sin([np.pi / 2] * ureg.dimensionless),
@@ -119,7 +116,6 @@ class TestIssues(QuantityTestCase):
         )
 
     def test_issue50(self):
-        ureg = UnitRegistry()
         Q_ = ureg.Quantity
         self.assertEqual(Q_(100), 100 * ureg.dimensionless)
         self.assertEqual(Q_("100"), 100 * ureg.dimensionless)
@@ -146,18 +142,15 @@ class TestIssues(QuantityTestCase):
             self.assertRaises(ValueError, fun, q1, q2)
 
     def test_issue54(self):
-        ureg = UnitRegistry()
         self.assertEqual((1 * ureg.km / ureg.m + 1).magnitude, 1001)
 
     def test_issue54_related(self):
-        ureg = UnitRegistry()
         self.assertEqual(ureg.km / ureg.m, 1000)
         self.assertEqual(1000, ureg.km / ureg.m)
         self.assertLess(900, ureg.km / ureg.m)
         self.assertGreater(1100, ureg.km / ureg.m)
 
     def test_issue61(self):
-        ureg = UnitRegistry()
         Q_ = ureg.Quantity
         for value in ({}, {"a": 3}, None):
             self.assertRaises(TypeError, Q_, value)
@@ -167,19 +160,16 @@ class TestIssues(QuantityTestCase):
 
     @helpers.requires_not_numpy()
     def test_issue61_notNP(self):
-        ureg = UnitRegistry()
         Q_ = ureg.Quantity
         for value in ([1, 2, 3], (1, 2, 3)):
             self.assertRaises(TypeError, Q_, value)
             self.assertRaises(TypeError, Q_, value, "meter")
 
     def test_issue62(self):
-        ureg = UnitRegistry()
         m = ureg("m**0.5")
         self.assertEqual(str(m.units), "meter ** 0.5")
 
     def test_issue66(self):
-        ureg = UnitRegistry()
         self.assertEqual(
             ureg.get_dimensionality(UnitsContainer({"[temperature]": 1})),
             UnitsContainer({"[temperature]": 1}),
@@ -192,7 +182,6 @@ class TestIssues(QuantityTestCase):
         )
 
     def test_issue66b(self):
-        ureg = UnitRegistry()
         self.assertEqual(
             ureg.get_base_units(ureg.kelvin),
             (1.0, ureg.Unit(UnitsContainer({"kelvin": 1}))),
@@ -203,13 +192,11 @@ class TestIssues(QuantityTestCase):
         )
 
     def test_issue69(self):
-        ureg = UnitRegistry()
         q = ureg("m").to(ureg("in"))
         self.assertEqual(q, ureg("m").to("in"))
 
     @helpers.requires_numpy()
     def test_issue74(self):
-        ureg = UnitRegistry()
         v1 = np.asarray([1.0, 2.0, 3.0])
         v2 = np.asarray([3.0, 2.0, 1.0])
         q1 = v1 * ureg.ms
@@ -232,7 +219,6 @@ class TestIssues(QuantityTestCase):
 
     @helpers.requires_numpy()
     def test_issue75(self):
-        ureg = UnitRegistry()
         v1 = np.asarray([1.0, 2.0, 3.0])
         v2 = np.asarray([3.0, 2.0, 1.0])
         q1 = v1 * ureg.ms
@@ -249,14 +235,12 @@ class TestIssues(QuantityTestCase):
 
     @helpers.requires_uncertainties()
     def test_issue77(self):
-        ureg = UnitRegistry()
         acc = (5.0 * ureg("m/s/s")).plus_minus(0.25)
         tim = (37.0 * ureg("s")).plus_minus(0.16)
         dis = acc * tim ** 2 / 2
         self.assertEqual(dis.value, acc.value * tim.value ** 2 / 2)
 
     def test_issue85(self):
-        ureg = UnitRegistry()
 
         T = 4.0 * ureg.kelvin
         m = 1.0 * ureg.amu
@@ -329,7 +313,6 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(ureg.k * 2 * T, ureg.k * (2 * T))
 
     def test_issue93(self):
-        ureg = UnitRegistry()
         x = 5 * ureg.meter
         self.assertIsInstance(x.magnitude, int)
         y = 0.1 * ureg.meter
@@ -344,7 +327,6 @@ class TestIssues(QuantityTestCase):
 
     @helpers.requires_numpy_previous_than("1.10")
     def test_issue94(self):
-        ureg = UnitRegistry()
         v1 = np.array([5, 5]) * ureg.meter
         v2 = 0.1 * ureg.meter
         v3 = np.array([5, 5]) * ureg.meter
@@ -354,7 +336,6 @@ class TestIssues(QuantityTestCase):
         np.testing.assert_array_equal(v3.magnitude, np.array([5, 5]))
 
     def test_issue104(self):
-        ureg = UnitRegistry()
 
         x = [ureg("1 meter"), ureg("1 meter"), ureg("1 meter")]
         y = [ureg("1 meter")] * 3
@@ -374,7 +355,6 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(y[0], ureg.Quantity(1, "meter"))
 
     def test_issue105(self):
-        ureg = UnitRegistry()
 
         func = ureg.parse_unit_name
         val = list(func("meter"))
@@ -388,7 +368,6 @@ class TestIssues(QuantityTestCase):
             self.assertEqual(val, func("METER", False))
 
     def test_issue121(self):
-        ureg = UnitRegistry()
         z, v = 0, 2.0
         self.assertEqual(z + v * ureg.meter, v * ureg.meter)
         self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
@@ -400,7 +379,6 @@ class TestIssues(QuantityTestCase):
     @helpers.requires_numpy18()
     def test_issue121b(self):
         sh = (2, 1)
-        ureg = UnitRegistry()
 
         z, v = 0, 2.0
         self.assertEqual(z + v * ureg.meter, v * ureg.meter)
@@ -441,15 +419,12 @@ class TestIssues(QuantityTestCase):
         self.assertIsInstance(iq, int)
 
     def test_angstrom_creation(self):
-        ureg = UnitRegistry()
         ureg.Quantity(2, "Å")
 
     def test_alternative_angstrom_definition(self):
-        ureg = UnitRegistry()
         ureg.Quantity(2, "\u212B")
 
     def test_micro_creation(self):
-        ureg = UnitRegistry()
         ureg.Quantity(2, "µm")
 
     @helpers.requires_numpy()
@@ -505,8 +480,6 @@ class TestIssues(QuantityTestCase):
         self.assertEqual("{:~}".format(1 * self.ureg("MiB")), "1 MiB")
 
     def test_issue468(self):
-        ureg = UnitRegistry()
-
         @ureg.wraps(("kg"), "meter")
         def f(x):
             return x
@@ -548,7 +521,6 @@ class TestIssues(QuantityTestCase):
         self.assertRaises(DimensionalityError, f, ureg.Quantity(1, "m"))
 
     def test_issue625a(self):
-        ureg = UnitRegistry()
         Q_ = ureg.Quantity
         from math import sqrt
 
@@ -574,7 +546,6 @@ class TestIssues(QuantityTestCase):
         self.assertAlmostEqual(t2, Q_(3.508232077228117, "s"))
 
     def test_issue625b(self):
-        ureg = UnitRegistry()
         Q_ = ureg.Quantity
 
         @ureg.wraps("=A*B", ("=A", "=B"))
@@ -601,7 +572,6 @@ class TestIssues(QuantityTestCase):
         self.assertEqual(get_product(c=1 * u.dimensionless), 6 * u.m ** 2)
 
     def test_issue655a(self):
-        ureg = UnitRegistry()
         distance = 1 * ureg.m
         time = 1 * ureg.s
         velocity = distance / time
@@ -611,7 +581,6 @@ class TestIssues(QuantityTestCase):
         self.assertEqual(velocity.check("1 / [time] * [length]"), True)
 
     def test_issue655b(self):
-        ureg = UnitRegistry()
         Q_ = ureg.Quantity
 
         @ureg.check("[length]", "[length]/[time]^2")
@@ -629,7 +598,6 @@ class TestIssues(QuantityTestCase):
         self.assertAlmostEqual(t, Q_("4.928936075204336 second"))
 
     def test_issue783(self):
-        ureg = UnitRegistry()
         assert not ureg("g") == []
 
     def test_issue856(self):
@@ -682,13 +650,11 @@ class TestIssues(QuantityTestCase):
         handles TypeError, but not generic Exceptions. This test will fail if
         pint.DimensionalityError stops being a subclass of TypeError.
         """
-        ureg = UnitRegistry()
         meter_units = ureg.get_compatible_units(ureg.meter)
         hertz_units = ureg.get_compatible_units(ureg.hertz)
         pprint.pformat(meter_units | hertz_units)
 
     def test_issue932(self):
-        ureg = UnitRegistry()
         q = ureg.Quantity("1 kg")
         with self.assertRaises(DimensionalityError):
             q.to("joule")
@@ -697,3 +663,44 @@ class TestIssues(QuantityTestCase):
         ureg.disable_contexts()
         with self.assertRaises(DimensionalityError):
             q.to("joule")
+
+
+try:
+
+    @pytest.mark.skipif(np is None, reason="NumPy is not available")
+    @pytest.mark.parametrize(
+        "callable",
+        [
+            lambda x: np.sin(x / x.units),  # Issue 399
+            lambda x: np.cos(x / x.units),  # Issue 399
+            np.isfinite,  # Issue 481
+            np.shape,  # Issue 509
+            np.size,  # Issue 509
+            np.sqrt,  # Issue 622
+            lambda x: x.mean(),  # Issue 678
+            lambda x: x.copy(),  # Issue 678
+            np.array,
+            lambda x: x.conjugate,
+        ],
+    )
+    @pytest.mark.parametrize(
+        "q",
+        [
+            pytest.param(ureg.Quantity(1, "m"), id="python scalar int"),
+            pytest.param(ureg.Quantity([1, 2, 3, 4], "m"), id="array int"),
+            pytest.param(ureg.Quantity([1], "m")[0], id="numpy scalar int"),
+            pytest.param(ureg.Quantity(1.0, "m"), id="python scalar float"),
+            pytest.param(ureg.Quantity([1.0, 2.0, 3.0, 4.0], "m"), id="array float"),
+            pytest.param(ureg.Quantity([1.0], "m")[0], id="numpy scalar float"),
+        ],
+    )
+    def test_issue925(callable, q):
+        # Test for immutability of type
+        type_before = type(q._magnitude)
+        callable(q)
+        assert isinstance(q._magnitude, type_before)
+
+
+except AttributeError:
+    # Calling attributes on np will fail if NumPy is not available
+    pass
