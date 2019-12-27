@@ -22,7 +22,7 @@ class Converter:
 
 
 class ScaleConverter(Converter):
-    """A linear transformation"""
+    """A linear transformation."""
 
     is_multiplicative = True
 
@@ -47,7 +47,7 @@ class ScaleConverter(Converter):
 
 
 class OffsetConverter(Converter):
-    """An affine transformation"""
+    """An affine transformation."""
 
     def __init__(self, scale, offset):
         self.scale = scale

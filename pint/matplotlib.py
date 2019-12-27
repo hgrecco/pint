@@ -31,19 +31,6 @@ class PintConverter(matplotlib.units.ConversionInterface):
 
     def convert(self, value, unit, axis):
         """Convert :`Quantity` instances for matplotlib to use.
-
-        Parameters
-        ----------
-        value :
-            
-        unit :
-            
-        axis :
-            
-
-        Returns
-        -------
-
         """
         if iterable(value):
             return [self._convert_value(v, unit, axis) for v in value]
@@ -52,19 +39,6 @@ class PintConverter(matplotlib.units.ConversionInterface):
 
     def _convert_value(self, value, unit, axis):
         """Handle converting using attached unit or falling back to axis units.
-
-        Parameters
-        ----------
-        value :
-            
-        unit :
-            
-        axis :
-            
-
-        Returns
-        -------
-
         """
         if hasattr(value, "units"):
             return value.to(unit).magnitude
@@ -73,37 +47,13 @@ class PintConverter(matplotlib.units.ConversionInterface):
 
     @staticmethod
     def axisinfo(unit, axis):
-        """
+        """Return axis information for this particular unit."""
 
-        Parameters
-        ----------
-        unit :
-            
-        axis :
-            
-
-        Returns
-        -------
-        type
-            
-
-        """
         return PintAxisInfo(unit)
 
     @staticmethod
     def default_units(x, axis):
         """Get the default unit to use for the given combination of unit and axis.
-
-        Parameters
-        ----------
-        x :
-            
-        axis :
-            
-
-        Returns
-        -------
-
         """
         if iterable(x) and sized(x):
             return getattr(x[0], "units", None)
@@ -116,9 +66,9 @@ def setup_matplotlib_handlers(registry, enable):
     Parameters
     ----------
     registry : UnitRegistry
-        the registry that will be used
+        The registry that will be used.
     enable : bool
-        whether support should be enabled or disabled
+        Whether support should be enabled or disabled.
 
     Returns
     -------

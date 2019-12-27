@@ -51,7 +51,7 @@ def _to_units_container(a, registry=None):
 
     Returns
     -------
-    type
+    UnitsContainer, bool
         
 
     """
@@ -157,19 +157,6 @@ def _apply_defaults(func, args, kwargs):
     
     Named keywords may have been left blank. This function applies the default
     values so that every argument is defined.
-
-    Parameters
-    ----------
-    func :
-        
-    args :
-        
-    kwargs :
-        
-
-    Returns
-    -------
-
     """
 
     sig = signature(func)
@@ -203,12 +190,12 @@ def wraps(ureg, ret, args, strict=True):
         output units.
     args :
         iterable of input units.
-    strict :
-        boolean to indicate that only quantities are accepted. (Default value = True)
+    strict : bool
+        Indicates that only quantities are accepted. (Default value = True)
 
     Returns
     -------
-    type
+    callable
         the wrapped function.
 
     """

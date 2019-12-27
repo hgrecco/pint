@@ -153,38 +153,37 @@ if not HAS_BABEL:
 
 
 def is_upcast_type(other):
-    """check if the type object is a upcast type
+    """Check if the type object is a upcast type.
 
     Parameters
     ----------
-    other :
-        type
+    other : object
 
     Returns
     -------
-
+    bool
     """
     # Check if class name is in preset list
     return other.__name__ in ("PintArray", "Series", "DataArray")
 
 
-def eq(first, second, check_all):
-    """Comparison of scalars and arrays
+def eq(lhs, rhs, check_all):
+    """Comparison of scalars and arrays.
 
     Parameters
     ----------
-    first :
-        
-    second :
-        
-    check_all :
-        
+    lhs : object
+        left-hand side
+    rhs : object
+        right-hand side
+    check_all : bool
+        if True, reduce sequence to single bool.
 
     Returns
     -------
-
+    bool or array_like of bool
     """
-    out = first == second
+    out = lhs == rhs
     if check_all and isinstance(out, ndarray):
         return np.all(out)
     return out

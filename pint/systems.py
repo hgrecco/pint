@@ -41,13 +41,6 @@ class Group(SharedRegistryObject):
             ...
             <definition N>
         @end
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-
     """
 
     #: Regex to match the header parts of a definition.
@@ -96,12 +89,6 @@ class Group(SharedRegistryObject):
         
         Calculated to include to all units in all included _used_groups.
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-
         """
         if self._computed_members is None:
             self._computed_members = set(self._unit_names)
@@ -137,15 +124,6 @@ class Group(SharedRegistryObject):
 
     def add_units(self, *unit_names):
         """Add units to group.
-
-        Parameters
-        ----------
-        *unit_names :
-            
-
-        Returns
-        -------
-
         """
         for unit_name in unit_names:
             self._unit_names.add(unit_name)
@@ -158,15 +136,6 @@ class Group(SharedRegistryObject):
 
     def remove_units(self, *unit_names):
         """Remove units from group.
-
-        Parameters
-        ----------
-        *unit_names :
-            
-
-        Returns
-        -------
-
         """
         for unit_name in unit_names:
             self._unit_names.remove(unit_name)
@@ -175,15 +144,6 @@ class Group(SharedRegistryObject):
 
     def add_groups(self, *group_names):
         """Add groups to group.
-
-        Parameters
-        ----------
-        *group_names :
-            
-
-        Returns
-        -------
-
         """
         d = self._REGISTRY._groups
         for group_name in group_names:
@@ -203,15 +163,6 @@ class Group(SharedRegistryObject):
 
     def remove_groups(self, *group_names):
         """Remove groups from group.
-
-        Parameters
-        ----------
-        *group_names :
-            
-
-        Returns
-        -------
-
         """
         d = self._REGISTRY._groups
         for group_name in group_names:
@@ -314,13 +265,6 @@ class System(SharedRegistryObject):
         - new_unit_name: a non root unit which is going to replace the old_unit.
     
     If the new_unit_name and the old_unit_name, the later and the colon can be ommited.
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-
     """
 
     #: Regex to match the header parts of a context.
@@ -390,15 +334,6 @@ class System(SharedRegistryObject):
 
     def add_groups(self, *group_names):
         """Add groups to group.
-
-        Parameters
-        ----------
-        *group_names :
-            
-
-        Returns
-        -------
-
         """
         self._used_groups |= set(group_names)
 
@@ -406,31 +341,13 @@ class System(SharedRegistryObject):
 
     def remove_groups(self, *group_names):
         """Remove groups from group.
-
-        Parameters
-        ----------
-        *group_names :
-            
-
-        Returns
-        -------
-
         """
         self._used_groups -= set(group_names)
 
         self.invalidate_members()
 
     def format_babel(self, locale):
-        """translate the name of the system
-
-        Parameters
-        ----------
-        locale :
-            
-
-        Returns
-        -------
-
+        """translate the name of the system.
         """
         if locale and self.name in _babel_systems:
             name = _babel_systems[self.name]

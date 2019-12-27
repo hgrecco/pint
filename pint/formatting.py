@@ -25,13 +25,14 @@ def _join(fmt, iterable):
 
     Parameters
     ----------
-    fmt :
+    fmt : str
         
     iterable :
         
 
     Returns
     -------
+    str
 
     """
     if not iterable:
@@ -54,11 +55,11 @@ def _pretty_fmt_exponent(num):
 
     Parameters
     ----------
-    num :
-        
+    num : int
 
     Returns
     -------
+    str
 
     """
     # TODO: Will not work for decimals
@@ -132,33 +133,33 @@ def formatter(
 
     Parameters
     ----------
-    items :
+    items : list
         a list of (name, exponent) pairs.
-    as_ratio :
+    as_ratio : bool, optional
         True to display as ratio, False as negative powers. (Default value = True)
-    single_denominator :
+    single_denominator : bool, optional
         all with terms with negative exponents are
         collected together. (Default value = False)
-    product_fmt :
+    product_fmt : str
         the format used for multiplication. (Default value = " * ")
-    division_fmt :
+    division_fmt : str
         the format used for division. (Default value = " / ")
-    power_fmt :
+    power_fmt : str
         the format used for exponentiation. (Default value = "{} ** {}")
-    parentheses_fmt :
+    parentheses_fmt : str
         the format used for parenthesis. (Default value = "({0})")
-    locale :
+    locale : str
         the locale object as defined in babel. (Default value = None)
-    babel_length :
+    babel_length : str
         the length of the translated unit, as defined in babel cldr. (Default value = "long")
-    babel_plural_form :
+    babel_plural_form : str
         the plural form, calculated as defined in babel. (Default value = "one")
-    exp_call :
+    exp_call : callable
          (Default value = lambda x: f"{x:n}")
 
     Returns
     -------
-    type
+    str
         the formula as a string.
 
     """
@@ -279,16 +280,8 @@ def format_unit(unit, spec, **kwspec):
 
 def siunitx_format_unit(units):
     """Returns LaTeX code for the unit that can be put into an siunitx command.
-
-    Parameters
-    ----------
-    units :
-        
-
-    Returns
-    -------
-
     """
+
     # NOTE: unit registry is required to identify unit prefixes.
     registry = units._REGISTRY
 

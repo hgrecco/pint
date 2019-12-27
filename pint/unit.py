@@ -116,7 +116,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     @property
     def dimensionless(self):
-        """ """
+        """Return true if the Unit is dimensionless."""
         return not bool(self.dimensionality)
 
     @property

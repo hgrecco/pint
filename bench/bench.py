@@ -12,13 +12,13 @@ def time_stmt(stmt="pass", setup="pass", number=0, repeat=3):
 
     Parameters
     ----------
-    stmt :
+    stmt : str
          (Default value = "pass")
-    setup :
+    setup : str
          (Default value = "pass")
-    number :
+    number : int
          (Default value = 0)
-    repeat :
+    repeat : int
          (Default value = 3)
 
     Returns

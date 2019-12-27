@@ -63,13 +63,12 @@ def _unpickle(cls, *args):
 
     Parameters
     ----------
-    cls :
-        Quantity, Magnitude, or Unit
-    *args :
-        
+    cls : Quantity, Magnitude, or Unit
+    *args
 
     Returns
     -------
+    object of type cls
 
     """
     from .unit import UnitsContainer
@@ -91,11 +90,7 @@ def set_application_registry(registry):
 
     Parameters
     ----------
-    registry :
-        a UnitRegistry instance.
-
-    Returns
-    -------
+    registry : UnitRegistry
 
     """
     if not isinstance(registry, (LazyRegistry, UnitRegistry)):
@@ -110,29 +105,19 @@ def get_application_registry():
     invoked, return a registry built using :file:`defaults_en.txt` embedded in the pint
     package.
 
-    Parameters
-    ----------
-    registry :
-        a UnitRegistry instance.
-
     Returns
     -------
-
+    UnitRegistry
     """
     return _APP_REGISTRY
 
 
 def test():
     """Run all tests.
-    
-    :return: a :class:`unittest.TestResult` object
-
-    Parameters
-    ----------
 
     Returns
     -------
-
+    unittest.TestResult
     """
     from .testsuite import run
 

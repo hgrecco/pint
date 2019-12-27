@@ -32,18 +32,14 @@ class Definition:
 
     Parameters
     ----------
-    name :
-        name.
-    symbol :
-        a short name or symbol for the definition
-    aliases :
-        iterable of other names.
-    converter :
+    name : str
+        Canonical name of the unit/prefix/etc.
+    symbol : str or None
+        A short name or symbol for the definition.
+    aliases : iterable of str
+        Other names for the unit/prefix/etc.
+    converter : callable
         an instance of Converter.
-
-    Returns
-    -------
-
     """
 
     def __init__(self, name, symbol, aliases, converter):
@@ -144,13 +140,10 @@ class UnitDefinition(Definition):
 
     Parameters
     ----------
-    reference :
-        Units container with reference units.
-    is_base :
-        indicates if it is a base unit.
-
-    Returns
-    -------
+    reference : UnitsContainer
+        Reference units.
+    is_base : bool
+        Indicates if it is a base unit.
 
     """
 

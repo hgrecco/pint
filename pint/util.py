@@ -891,12 +891,6 @@ class SourceIterator:
     for lineno, line in SourceIterator(sequence):
         # do something here
 
-    Parameters
-    ----------
-
-    Returns
-    -------
-
     """
 
     def __new__(cls, sequence):
@@ -933,13 +927,6 @@ class SourceIterator:
 class BlockIterator(SourceIterator):
     """Like SourceIterator but stops when it finds '@end'
     It also raises an error if another '@' directive is found inside.
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-
     """
 
     def __new__(cls, line_iterator):
@@ -978,10 +965,6 @@ def iterable(y):
     type :
         object
     y :
-        
-
-    Returns
-    -------
 
     """
     try:
@@ -1001,10 +984,6 @@ def sized(y):
     type :
         object
     y :
-        
-
-    Returns
-    -------
 
     """
     try:

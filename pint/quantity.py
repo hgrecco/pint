@@ -112,17 +112,6 @@ def check_implemented(f):
 def printoptions(*args, **kwargs):
     """Numpy printoptions context manager released with version 1.15.0
     https://docs.scipy.org/doc/numpy/reference/generated/numpy.printoptions.html
-
-    Parameters
-    ----------
-    *args :
-        
-    **kwargs :
-        
-
-    Returns
-    -------
-
     """
 
     opts = np.get_printoptions()
@@ -140,9 +129,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     Parameters
     ----------
     value : str, pint.Quantity or any numeric type
-        value of the physical quantity to be created
+        Value of the physical quantity to be created.
     units : UnitsContainer, str or pint.Quantity
-        units of the physical quantity to be created
+        Units of the physical quantity to be created.
 
     Returns
     -------
@@ -420,18 +409,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._dimensionality
 
     def check(self, dimension):
-        """
-
-        Parameters
-        ----------
-        dimension :
-            
-
-        Returns
-        -------
-        type
-            
-
+        """Return true if the quantity's dimension matches passed dimension.
         """
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
 
@@ -446,14 +424,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         Parameters
         ----------
-        quant_list : list: list of pint.Quantity
+        quant_list : list of pint.Quantity
             list of pint.Quantity
         units : UnitsContainer, str or pint.Quantity
             units of the physical quantity to be created (Default value = None)
 
         Returns
         -------
-
+        pint.Quantity
         """
         return cls.from_sequence(quant_list, units=units)
 
@@ -474,7 +452,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         Returns
         -------
-
+        pint.Quantity
         """
 
         len_seq = len(seq)
@@ -531,14 +509,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         Parameters
         ----------
         other : pint.Quantity, str or dict
-            destination units. (Default value = None)
-        *contexts :
-            
+            Destination units. (Default value = None)
+        *contexts : str or Context
+            Contexts to use in the transformation.
         **ctx_kwargs :
-            
-
-        Returns
-        -------
+            Values for the Context/s
 
         """
         other = to_units_container(other, self._REGISTRY)
@@ -555,13 +530,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ----------
         other : pint.Quantity, str or dict
             destination units. (Default value = None)
-        *contexts :
-            
+        *contexts : str or Context
+            Contexts to use in the transformation.
         **ctx_kwargs :
-            
+            Values for the Context/s
 
         Returns
         -------
+        pint.Quantity
 
         """
         other = to_units_container(other, self._REGISTRY)
@@ -571,7 +547,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, other)
 
     def ito_root_units(self):
-        """ """
+        """Return Quantity rescaled to root units."""
 
         _, other = self._REGISTRY._get_root_units(self._units)
 
@@ -581,7 +557,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return None
 
     def to_root_units(self):
-        """ """
+        """Return Quantity rescaled to root units."""
+
         _, other = self._REGISTRY._get_root_units(self._units)
 
         magnitude = self._convert_magnitude_not_inplace(other)
@@ -589,7 +566,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, other)
 
     def ito_base_units(self):
-        """ """
+        """Return Quantity rescaled to base units."""
 
         _, other = self._REGISTRY._get_base_units(self._units)
 
@@ -599,7 +576,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return None
 
     def to_base_units(self):
-        """ """
+        """Return Quantity rescaled to base units."""
+
         _, other = self._REGISTRY._get_base_units(self._units)
 
         magnitude = self._convert_magnitude_not_inplace(other)
@@ -607,18 +585,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, other)
 
     def ito_reduced_units(self):
+        """Return Quantity scaled in place to reduced units, i.e. one unit per
+        dimension. This will not reduce compound units (intentionally), nor
+        can it make use of contexts at this time.
         """
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        type
-            dimension. This will not reduce compound units (intentionally), nor
-            can it make use of contexts at this time.
-
-        """
         # shortcuts in case we're dimensionless or only a single unit
         if self.dimensionless:
             return self.ito({})
@@ -639,35 +610,25 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self.ito(newunits)
 
     def to_reduced_units(self):
+        """Return Quantity scaled in place to reduced units, i.e. one unit per
+        dimension. This will not reduce compound units (intentionally), nor
+        can it make use of contexts at this time.
         """
 
-        Parameters
-        ----------
 
-        Returns
-        -------
-        type
-            dimension. This will not reduce compound units (intentionally), nor
-            can it make use of contexts at this time.
-
-        """
         # can we make this more efficient?
         newq = copy.copy(self)
         newq.ito_reduced_units()
         return newq
 
     def to_compact(self, unit=None):
-        """
+        """"Return Quantity rescaled to compact, human-readable units.
 
-        Parameters
-        ----------
-        unit :
-             (Default value = None)
+        To get output in terms of a different unit, use the unit parameter.
 
-        Returns
+
+        Example
         -------
-        type
-            To get output in terms of a different unit, use the unit parameter.
 
         >>> import pint
         >>> ureg = pint.UnitRegistry()
@@ -676,6 +637,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
         <Quantity(10.0, 'millinewton')>
         """
+
         if not isinstance(self.magnitude, numbers.Number):
             msg = (
                 "to_compact applied to non numerical types "
@@ -760,9 +722,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             object to be added to / subtracted from self
         op : function
             operator function (e.g. operator.add, operator.isub)
-
-        Returns
-        -------
 
         """
         if not self._check(other):
@@ -875,8 +834,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         op : function
             operator function (e.g. operator.add, operator.isub)
 
-        Returns
-        -------
 
         """
         if not self._check(other):
@@ -1520,20 +1477,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def _numpy_method_wrap(self, func, *args, **kwargs):
         """Convenience method to wrap on the fly NumPy ndarray methods taking
         care of the units.
-
-        Parameters
-        ----------
-        func :
-            
-        *args :
-            
-        **kwargs :
-            
-
-        Returns
-        -------
-
         """
+
         # Set input units if needed
         if func.__name__ in set_units_ufuncs:
             self.__ito_if_needed(set_units_ufuncs[func.__name__][0])
@@ -1655,16 +1600,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Dot product of two arrays.
         
         Wraps np.dot().
-
-        Parameters
-        ----------
-        b :
-            
-
-        Returns
-        -------
-
         """
+
         return np.dot(self, b)
 
     def __ito_if_needed(self, to_units):
@@ -1800,7 +1737,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return not self._get_non_multiplicative_units()
 
     def _get_non_multiplicative_units(self):
-        """ """
+        """Return a list of the of non-multiplicative units of the Quantity object."""
         offset_units = [
             unit
             for unit in self._units.keys()
@@ -1809,21 +1746,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return offset_units
 
     def _get_delta_units(self):
-        """ """
+        """Return list of delta units ot the Quantity object."""
         delta_units = [u for u in self._units.keys() if u.startswith("delta_")]
         return delta_units
 
     def _has_compatible_delta(self, unit):
         """"Check if Quantity object has a delta_unit that is compatible with unit
-
-        Parameters
-        ----------
-        unit :
-            
-
-        Returns
-        -------
-
         """
         deltas = self._get_delta_units()
         if "delta_" + unit in deltas:
@@ -1837,19 +1765,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def _ok_for_muldiv(self, no_offset_units=None):
         """Checks if Quantity object can be multiplied or divided
-        
-        :q: pint.Quantity object that is checked
-        :no_offset_units: number of offset units in q
-
-        Parameters
-        ----------
-        no_offset_units :
-             (Default value = None)
-
-        Returns
-        -------
-
         """
+
         is_ok = True
         if no_offset_units is None:
             no_offset_units = len(self._get_non_multiplicative_units())

@@ -38,19 +38,15 @@ _UNARY_OPERATOR_MAP = {"+": lambda x: x, "-": lambda x: x * -1}
 
 
 class EvalTreeNode:
-    def __init__(self, left, operator=None, right=None):
-    """left + operator + right --> binary op
-        left + operator --> unary op
-        left + right --> implicit op
-        left --> single value
+    """Single node within an evaluation tree
 
-    Parameters
-    ----------
-
-    Returns
-    -------
-
+    left + operator + right --> binary op
+    left + operator --> unary op
+    left + right --> implicit op
+    left --> single value
     """
+
+    def __init__(self, left, operator=None, right=None):
         self.left = left
         self.operator = operator
         self.right = right
@@ -68,25 +64,25 @@ class EvalTreeNode:
             return self.left[1]
         return "(%s)" % " ".join(comps)
 
-    def evaluate(
-        self, define_op, bin_op=_BINARY_OPERATOR_MAP, un_op=_UNARY_OPERATOR_MAP
-    ):
-        """define_op is a callable that translates tokens into objects
-        bin_op and un_op provide functions for performing binary and unary operations
+    def evaluate(self, define_op, bin_op=None, un_op=None):
+        """Evaluate node.
 
         Parameters
         ----------
-        define_op :
-            
-        bin_op :
+        define_op : callable
+            Translates tokens into objects.
+        bin_op : dict or None, optional
              (Default value = _BINARY_OPERATOR_MAP)
-        un_op :
+        un_op : dict or None, optional
              (Default value = _UNARY_OPERATOR_MAP)
 
         Returns
         -------
 
         """
+
+        bin_op = bin_op or _BINARY_OPERATOR_MAP
+        un_op = un_op or _UNARY_OPERATOR_MAP
 
         if self.right:
             # binary or implicit operator
@@ -107,49 +103,24 @@ class EvalTreeNode:
 
 
 def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=None):
-    """
+    """Build an evaluation tree from a set of tokens.
 
-    Parameters
-    ----------
-    Index :
-        depth
-    Tokens :
-        is an iterable of tokens from an expression to be evaluated
-    Transform :
-        the tokens from an expression into a recursive parse tree
-    of :
-        operations
-    unary :
-        ops
-    General :
-        Strategy
-    1 :
-        Get left side of operator
-    2 :
-        If no tokens left
-    3 :
-        Get operator
-    4 :
-        Use recursion to create tree starting at token on right side of operator
-    4 :
-        
-    5 :
-        Combine left side
-    6 :
-        Go back to step
-    tokens :
-        
-    op_priority :
-         (Default value = _OP_PRIORITY)
-    index :
-         (Default value = 0)
-    depth :
-         (Default value = 0)
-    prev_op :
-         (Default value = None)
+    Params:
+    Index, depth, and prev_op used recursively, so don't touch.
+    Tokens is an iterable of tokens from an expression to be evaluated.
 
-    Returns
-    -------
+    Transform the tokens from an expression into a recursive parse tree, following order
+    of operations. Operations can include binary ops (3 + 4), implicit ops (3 kg), or
+    unary ops (-1).
+
+    General Strategy:
+    1) Get left side of operator
+    2) If no tokens left, return final result
+    3) Get operator
+    4) Use recursion to create tree starting at token on right side of operator (start at step #1)
+    4.1) If recursive call encounters an operator with lower or equal priority to step #2, exit recursion
+    5) Combine left side, operator, and right side into a new left side
+    6) Go back to step #2
 
     """
 
