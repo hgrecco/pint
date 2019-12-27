@@ -4,6 +4,8 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Added tests for immutability of the magnitude's type under common operations
+  (Issue #956, Thanks Jon Thielen)
 - Switched test configuration to pytest and added tests of Pint's matplotlib support.
   (Issue #954)
 - Removed eval usage when creating UnitDefinition and PrefixDefinition from string.
