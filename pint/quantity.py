@@ -714,6 +714,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             return complex(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
 
+    @check_implemented
     def _iadd_sub(self, other, op):
         """Perform addition or subtraction operation in-place and return the result.
 
@@ -966,6 +967,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             return -self._add_sub(other, operator.sub)
 
+    @check_implemented
     @ireduce_dimensions
     def _imul_div(self, other, magnitude_op, units_op=None):
         """Perform multiplication or division operation in-place and return the
@@ -1185,6 +1187,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             raise DimensionalityError(self._units, "dimensionless")
         return self.__class__(magnitude, UnitsContainer({}))
 
+    @check_implemented
     def __imod__(self, other):
         if not self._check(other):
             other = self.__class__(other, UnitsContainer({}))
@@ -1228,6 +1231,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             raise DimensionalityError(self._units, "dimensionless")
         return (self.__class__(q, UnitsContainer({})), self.__class__(r, unit))
 
+    @check_implemented
     def __ipow__(self, other):
         if not isinstance(self._magnitude, ndarray):
             return self.__pow__(other)
@@ -1408,6 +1412,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         except DimensionalityError:
             return False
 
+    @check_implemented
     def __ne__(self, other):
         out = self.__eq__(other)
         if isinstance(out, ndarray):

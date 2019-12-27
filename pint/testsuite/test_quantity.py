@@ -536,14 +536,14 @@ class TestQuantity(QuantityTestCase):
     def test_no_ndarray_coercion_without_numpy(self):
         self.assertRaises(ValueError, self.Q_(1, "m").__array__)
 
-    @patch("pint.compat.upcast_types", ['FakeWrapper'])
+    @patch("pint.compat.upcast_types", ["FakeWrapper"])
     def test_upcast_type_rejection_on_creation(self):
         class FakeWrapper:
             def __init__(self, q):
                 self.q = q
 
-        self.assertRaises(TypeError, self.Q_, FakeWrapper(42), 'm')
-        self.assertEqual(FakeWrapper(self.Q_(42, 'm')).q, self.Q_(42, 'm'))
+        self.assertRaises(TypeError, self.Q_, FakeWrapper(42), "m")
+        self.assertEqual(FakeWrapper(self.Q_(42, "m")).q, self.Q_(42, "m"))
 
 
 class TestQuantityToCompact(QuantityTestCase):
