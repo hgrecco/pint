@@ -159,6 +159,15 @@ memory and CPU cycles. Therefore, for numerically intensive code, you
 might want to convert the objects first and then use directly the magnitude,
 such as by using Pint's `wraps` utility (see :ref:`wrapping`).
 
+Array interface protocol attributes (such as `__array_struct__` and
+`__array_interface__`) are available on Pint Quantities by deferring to the
+corresponding `__array_*` attribute on the magnitude as casted to an ndarray. This
+has been found to be potentially incorrect and to cause unexpected behavior, and has
+therefore been deprecated. As of the next minor version of Pint (or when the
+`PINT_ARRAY_PROTOCOL_FALLBACK` environment variable is set to 0 prior to importing
+Pint), attempting to access these attributes will instead raise an AttributeError.
+
+
 
 
 

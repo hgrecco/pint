@@ -532,6 +532,10 @@ class TestQuantity(QuantityTestCase):
             warnings.filterwarnings("error")
             self.Q_([])
 
+    @helpers.requires_not_numpy()
+    def test_no_ndarray_coercion_without_numpy(self):
+        self.assertRaises(ValueError, self.Q_(1, "m").__array__)
+
 
 class TestQuantityToCompact(QuantityTestCase):
     def assertQuantityAlmostIdentical(self, q1, q2):

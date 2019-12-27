@@ -5,7 +5,12 @@ Pint Changelog
 -----------------
 
 - Switched test configuration to pytest and added tests of Pint's matplotlib support.
-  (Issue #954)
+  (Issue #954, Thanks Jon Thielen)
+- Deprecate array protocol fallback except where explicitly defined (`__array__`,
+  `__array_priority__`, `__array_function__`, `__array_ufunc__`). The fallback will
+  remain until the next minor version, or if the environment variable
+  `PINT_ARRAY_PROTOCOL_FALLBACK` is set to 0.
+  (Issue #953, Thanks Jon Thielen)
 - Removed eval usage when creating UnitDefinition and PrefixDefinition from string.
   (Issue #942)
 - Added `fmt_locale` argument to registry.
