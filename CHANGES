@@ -4,6 +4,7 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Moved docstrings to Numpy Docs
 - Added tests for immutability of the magnitude's type under common operations
   (Issue #956, Thanks Jon Thielen)
 - Switched test configuration to pytest and added tests of Pint's matplotlib support.

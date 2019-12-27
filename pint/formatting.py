@@ -22,6 +22,18 @@ def _join(fmt, iterable):
     The format can be specified in two ways:
     - PEP3101 format with two replacement fields (eg. '{} * {}')
     - The concatenating string (eg. ' * ')
+
+    Parameters
+    ----------
+    fmt : str
+
+    iterable :
+
+
+    Returns
+    -------
+    str
+
     """
     if not iterable:
         return ""
@@ -40,6 +52,15 @@ _PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 
 def _pretty_fmt_exponent(num):
     """Format an number into a pretty printed exponent.
+
+    Parameters
+    ----------
+    num : int
+
+    Returns
+    -------
+    str
+
     """
     # TODO: Will not work for decimals
     ret = f"{num:n}".replace("-", "⁻")
@@ -110,19 +131,37 @@ def formatter(
 ):
     """Format a list of (name, exponent) pairs.
 
-    :param items: a list of (name, exponent) pairs.
-    :param as_ratio: True to display as ratio, False as negative powers.
-    :param single_denominator: all with terms with negative exponents are
-                               collected together.
-    :param product_fmt: the format used for multiplication.
-    :param division_fmt: the format used for division.
-    :param power_fmt: the format used for exponentiation.
-    :param parentheses_fmt: the format used for parenthesis.
-    :param locale: the locale object as defined in babel.
-    :param babel_length: the length of the translated unit, as defined in babel cldr.
-    :param babel_plural_form: the plural form, calculated as defined in babel.
+    Parameters
+    ----------
+    items : list
+        a list of (name, exponent) pairs.
+    as_ratio : bool, optional
+        True to display as ratio, False as negative powers. (Default value = True)
+    single_denominator : bool, optional
+        all with terms with negative exponents are
+        collected together. (Default value = False)
+    product_fmt : str
+        the format used for multiplication. (Default value = " * ")
+    division_fmt : str
+        the format used for division. (Default value = " / ")
+    power_fmt : str
+        the format used for exponentiation. (Default value = "{} ** {}")
+    parentheses_fmt : str
+        the format used for parenthesis. (Default value = "({0})")
+    locale : str
+        the locale object as defined in babel. (Default value = None)
+    babel_length : str
+        the length of the translated unit, as defined in babel cldr. (Default value = "long")
+    babel_plural_form : str
+        the plural form, calculated as defined in babel. (Default value = "one")
+    exp_call : callable
+         (Default value = lambda x: f"{x:n}")
 
-    :return: the formula as a string.
+    Returns
+    -------
+    str
+        the formula as a string.
+
     """
 
     if not items:
@@ -240,7 +279,9 @@ def format_unit(unit, spec, **kwspec):
 
 
 def siunitx_format_unit(units):
-    """Returns LaTeX code for the unit that can be put into an siunitx command."""
+    """Returns LaTeX code for the unit that can be put into an siunitx command.
+    """
+
     # NOTE: unit registry is required to identify unit prefixes.
     registry = units._REGISTRY
 

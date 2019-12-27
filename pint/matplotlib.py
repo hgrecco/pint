@@ -30,14 +30,16 @@ class PintConverter(matplotlib.units.ConversionInterface):
         self._reg = registry
 
     def convert(self, value, unit, axis):
-        """Convert :`Quantity` instances for matplotlib to use."""
+        """Convert :`Quantity` instances for matplotlib to use.
+        """
         if iterable(value):
             return [self._convert_value(v, unit, axis) for v in value]
         else:
             return self._convert_value(value, unit, axis)
 
     def _convert_value(self, value, unit, axis):
-        """Handle converting using attached unit or falling back to axis units."""
+        """Handle converting using attached unit or falling back to axis units.
+        """
         if hasattr(value, "units"):
             return value.to(unit).magnitude
         else:
@@ -46,11 +48,13 @@ class PintConverter(matplotlib.units.ConversionInterface):
     @staticmethod
     def axisinfo(unit, axis):
         """Return axis information for this particular unit."""
+
         return PintAxisInfo(unit)
 
     @staticmethod
     def default_units(x, axis):
-        """Get the default unit to use for the given combination of unit and axis."""
+        """Get the default unit to use for the given combination of unit and axis.
+        """
         if iterable(x) and sized(x):
             return getattr(x[0], "units", None)
         return getattr(x, "units", None)
@@ -58,10 +62,17 @@ class PintConverter(matplotlib.units.ConversionInterface):
 
 def setup_matplotlib_handlers(registry, enable):
     """Set up matplotlib's unit support to handle units from a registry.
-       :param registry: the registry that will be used
-       :type registry: UnitRegistry
-       :param enable: whether support should be enabled or disabled
-       :type enable: bool
+
+    Parameters
+    ----------
+    registry : UnitRegistry
+        The registry that will be used.
+    enable : bool
+        Whether support should be enabled or disabled.
+
+    Returns
+    -------
+
     """
     if matplotlib.__version__ < "2.0":
         raise RuntimeError("Matplotlib >= 2.0 required to work with pint.")

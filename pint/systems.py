@@ -89,7 +89,6 @@ class Group(SharedRegistryObject):
 
         Calculated to include to all units in all included _used_groups.
 
-        :rtype: frozenset[str]
         """
         if self._computed_members is None:
             self._computed_members = set(self._unit_names)
@@ -102,8 +101,7 @@ class Group(SharedRegistryObject):
         return self._computed_members
 
     def invalidate_members(self):
-        """Invalidate computed members in this Group and all parent nodes.
-        """
+        """Invalidate computed members in this Group and all parent nodes."""
         self._computed_members = None
         d = self._REGISTRY._groups
         for name in self._used_by:
@@ -126,8 +124,6 @@ class Group(SharedRegistryObject):
 
     def add_units(self, *unit_names):
         """Add units to group.
-
-        :type unit_names: str
         """
         for unit_name in unit_names:
             self._unit_names.add(unit_name)
@@ -140,8 +136,6 @@ class Group(SharedRegistryObject):
 
     def remove_units(self, *unit_names):
         """Remove units from group.
-
-        :type unit_names: str
         """
         for unit_name in unit_names:
             self._unit_names.remove(unit_name)
@@ -150,8 +144,6 @@ class Group(SharedRegistryObject):
 
     def add_groups(self, *group_names):
         """Add groups to group.
-
-        :type group_names: str
         """
         d = self._REGISTRY._groups
         for group_name in group_names:
@@ -171,8 +163,6 @@ class Group(SharedRegistryObject):
 
     def remove_groups(self, *group_names):
         """Remove groups from group.
-
-        :type group_names: str
         """
         d = self._REGISTRY._groups
         for group_name in group_names:
@@ -187,10 +177,16 @@ class Group(SharedRegistryObject):
     def from_lines(cls, lines, define_func):
         """Return a Group object parsing an iterable of lines.
 
-        :param lines: iterable
-        :type lines: list[str]
-        :param define_func: Function to define a unit in the registry.
-        :type define_func: str -> None
+        Parameters
+        ----------
+        lines : list[str]
+            iterable
+        define_func : str -> None
+            Function to define a unit in the registry.
+
+        Returns
+        -------
+
         """
         lines = SourceIterator(lines)
         lineno, header = next(lines)
@@ -333,14 +329,11 @@ class System(SharedRegistryObject):
         return self._computed_members
 
     def invalidate_members(self):
-        """Invalidate computed members in this Group and all parent nodes.
-        """
+        """Invalidate computed members in this Group and all parent nodes."""
         self._computed_members = None
 
     def add_groups(self, *group_names):
         """Add groups to group.
-
-        :type group_names: str
         """
         self._used_groups |= set(group_names)
 
@@ -348,17 +341,13 @@ class System(SharedRegistryObject):
 
     def remove_groups(self, *group_names):
         """Remove groups from group.
-
-        :type group_names: str
         """
         self._used_groups -= set(group_names)
 
         self.invalidate_members()
 
     def format_babel(self, locale):
-        """translate the name of the system
-
-        :type locale: Locale
+        """translate the name of the system.
         """
         if locale and self.name in _babel_systems:
             name = _babel_systems[self.name]

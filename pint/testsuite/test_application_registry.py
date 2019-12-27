@@ -145,6 +145,13 @@ class TestCustomApplicationRegistry(BaseTestCase):
 class TestSwapApplicationRegistry(BaseTestCase):
     """Test that the constructors of Quantity, Unit, and Measurement capture
     the registry that is set as the application registry at creation time
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def setUp(self):

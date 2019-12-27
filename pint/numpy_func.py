@@ -21,26 +21,47 @@ HANDLED_FUNCTIONS = {}
 # Shared Implementation Utilities
 
 
-def _is_quantity(arg):
+def _is_quantity(obj):
     """Test for _units and _magnitude attrs.
 
     This is done in place of isinstance(Quantity, arg), which would cause a circular import.
+
+    Parameters
+    ----------
+    obj : Object
+
+
+    Returns
+    -------
+    bool
     """
-    return hasattr(arg, "_units") and hasattr(arg, "_magnitude")
+    return hasattr(obj, "_units") and hasattr(obj, "_magnitude")
 
 
-def _is_quantity_sequence(arg):
-    """Test for sequences of quantities."""
+def _is_quantity_sequence(obj):
+    """Test for sequences of quantities.
+
+    Parameters
+    ----------
+    obj : object
+
+
+    Returns
+    -------
+    bool
+    """
     return (
-        iterable(arg)
-        and sized(arg)
-        and not isinstance(arg, str)
-        and all(_is_quantity(item) for item in arg)
+        iterable(obj)
+        and sized(obj)
+        and not isinstance(obj, str)
+        and all(_is_quantity(item) for item in obj)
     )
 
 
-def _get_first_input_units(args, kwargs={}):
-    """Obtain the first valid unit from a collection of args and kwargs."""
+def _get_first_input_units(args, kwargs=None):
+    """Obtain the first valid unit from a collection of args and kwargs.
+    """
+    kwargs = kwargs or {}
     for arg in chain(args, kwargs.values()):
         if _is_quantity(arg):
             return arg.units
@@ -53,6 +74,7 @@ def convert_arg(arg, pre_calc_units):
 
     Helper function for convert_to_consistent_units. pre_calc_units must be given as a pint
     Unit or None.
+
     """
     if pre_calc_units is not None:
         if _is_quantity(arg):
@@ -79,6 +101,7 @@ def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
     any Quantity or Sequence of Quantities into the units of the first Quantiy/Sequence of
     Quantities and returns the magnitudes. Other args/kwargs are treated as dimensionless
     Quantities. If pre_calc_units is None, units are simply stripped.
+
     """
     return (
         tuple(convert_arg(arg, pre_calc_units=pre_calc_units) for arg in args),
@@ -94,6 +117,7 @@ def unwrap_and_wrap_consistent_units(*args):
 
     Returns the given args as parsed by convert_to_consistent_units assuming units of
     first arg with units, along with a wrapper to restore that unit to the output.
+
     """
     first_input_units = _get_first_input_units(args)
     args, _ = convert_to_consistent_units(*args, pre_calc_units=first_input_units)
@@ -103,7 +127,7 @@ def unwrap_and_wrap_consistent_units(*args):
     )
 
 
-def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
+def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     """Determine resulting unit from given operation.
 
     Options for `unit_op`:
@@ -121,7 +145,24 @@ def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
     - "sqrt": square root of `first_input_units`
     - "reciprocal": reciprocal of `first_input_units`
     - "size": `first_input_units` raised to the power of `size`
+
+    Parameters
+    ----------
+    unit_op :
+
+    first_input_units :
+
+    all_args :
+         (Default value = None)
+    size :
+         (Default value = None)
+
+    Returns
+    -------
+
     """
+    all_args = all_args or []
+
     if unit_op == "sum":
         result_unit = (1 * first_input_units + 1 * first_input_units).units
     elif unit_op == "mul":
@@ -169,6 +210,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=[], size=None):
 def implements(numpy_func_string, func_type):
     """Register an __array_function__/__array_ufunc__ implementation for Quantity
     objects.
+
     """
 
     def decorator(func):
@@ -206,6 +248,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
         in `get_op_output_unit`, output is wrapped by the unit determined by
         `get_op_output_unit`. If some other string, the string is parsed as a unit,
         which becomes the unit of the output. If None, the bare magnitude is returned.
+
 
     """
     # If NumPy is not available, do not attempt implement that which does not exist
@@ -797,7 +840,9 @@ for func_str in ["var", "nanvar"]:
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):
-    """Return the result from a NumPy function/ufunc as wrapped by Pint."""
+    """Return the result from a NumPy function/ufunc as wrapped by Pint.
+    """
+
     if func_type == "function":
         handled = HANDLED_FUNCTIONS
     elif func_type == "ufunc":

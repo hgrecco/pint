@@ -42,18 +42,30 @@ class TestUFuncs(QuantityTestCase):
     ):
         """Test function that takes a single argument and returns Quantity.
 
-        :param func: function callable.
-        :param ok_with: iterables of values that work fine.
-        :param raise_with: iterables of values that raise exceptions.
-        :param output_units: units to be used when building results.
-                             'same': ok_with[n].units (default).
-                             is float: ok_with[n].units ** output_units.
-                             None: no output units, the result should be an ndarray.
-                             Other value will be parsed as unit.
-        :param results: iterable of results.
-                        If None, the result will be obtained by applying
-                        func to each ok_with value
-        :param rtol: relative tolerance.
+        Parameters
+        ----------
+        func :
+            function callable.
+        ok_with :
+            iterables of values that work fine.
+        raise_with :
+            iterables of values that raise exceptions. (Default value = ())
+        output_units :
+            units to be used when building results.
+            'same': ok_with[n].units (default).
+            is float: ok_with[n].units ** output_units.
+            None: no output units, the result should be an ndarray.
+            Other value will be parsed as unit.
+        results :
+            iterable of results.
+            If None, the result will be obtained by applying
+            func to each ok_with value (Default value = None)
+        rtol :
+            relative tolerance. (Default value = 1e-6)
+
+        Returns
+        -------
+
         """
         if results is None:
             results = [None] * len(ok_with)
@@ -83,12 +95,22 @@ class TestUFuncs(QuantityTestCase):
     def _testn(self, func, ok_with, raise_with=(), results=None):
         """Test function that takes a single argument and returns and ndarray (not a Quantity)
 
-        :param func: function callable.
-        :param ok_with: iterables of values that work fine.
-        :param raise_with: iterables of values that raise exceptions.
-        :param results: iterable of results.
-                        If None, the result will be obtained by applying
-                        func to each ok_with value
+        Parameters
+        ----------
+        func :
+            function callable.
+        ok_with :
+            iterables of values that work fine.
+        raise_with :
+            iterables of values that raise exceptions. (Default value = ())
+        results :
+            iterable of results.
+            If None, the result will be obtained by applying
+            func to each ok_with value (Default value = None)
+
+        Returns
+        -------
+
         """
         self._test1(func, ok_with, raise_with, output_units=None, results=results)
 
@@ -103,18 +125,32 @@ class TestUFuncs(QuantityTestCase):
     ):
         """Test functions that takes a single argument and return two Quantities.
 
-        :param func: function callable.
-        :param ok_with: iterables of values that work fine.
-        :param raise_with: iterables of values that raise exceptions.
-        :param output_units: tuple of units to be used when building the result tuple.
-                             'same': ok_with[n].units (default).
-                             is float: ok_with[n].units ** output_units.
-                             None: no output units, the result should be an ndarray.
-                             Other value will be parsed as unit.
-        :param results: iterable of results.
-                        If None, the result will be obtained by applying
-                        func to each ok_with value
-        :param rtol: relative tolerance.
+        Parameters
+        ----------
+        func :
+            function callable.
+        ok_with :
+            iterables of values that work fine.
+        raise_with :
+            iterables of values that raise exceptions. (Default value = ())
+        output_units :
+            tuple of units to be used when building the result tuple.
+            'same': ok_with[n].units (default).
+            is float: ok_with[n].units ** output_units.
+            None: no output units, the result should be an ndarray.
+            Other value will be parsed as unit.
+        results :
+            iterable of results.
+            If None, the result will be obtained by applying
+            func to each ok_with value (Default value = None)
+        rtol :
+            relative tolerance. (Default value = 1e-6)
+        "same") :
+
+
+        Returns
+        -------
+
         """
 
         if results is None:
@@ -152,19 +188,32 @@ class TestUFuncs(QuantityTestCase):
     ):
         """Test function that takes two arguments and return a Quantity.
 
-        :param func: function callable.
-        :param x1: first argument of func.
-        :param ok_with: iterables of values that work fine.
-        :param raise_with: iterables of values that raise exceptions.
-        :param output_units: units to be used when building results.
-                             'same': x1.units (default).
-                             'prod': x1.units * ok_with[n].units
-                             'div': x1.units / ok_with[n].units
-                             'second': x1.units * ok_with[n]
-                             None: no output units, the result should be an ndarray.
-                             Other value will be parsed as unit.
-        :param rtol: relative tolerance.
-        :param convert2: if the ok_with[n] should be converted to x1.units.
+        Parameters
+        ----------
+        func :
+            function callable.
+        x1 :
+            first argument of func.
+        ok_with :
+            iterables of values that work fine.
+        raise_with :
+            iterables of values that raise exceptions. (Default value = ())
+        output_units :
+            units to be used when building results.
+            'same': x1.units (default).
+            'prod': x1.units * ok_with[n].units
+            'div': x1.units / ok_with[n].units
+            'second': x1.units * ok_with[n]
+            None: no output units, the result should be an ndarray.
+            Other value will be parsed as unit.
+        rtol :
+            relative tolerance. (Default value = 1e-6)
+        convert2 :
+            if the ok_with[n] should be converted to x1.units. (Default value = True)
+
+        Returns
+        -------
+
         """
         for x2 in ok_with:
             err_msg = "At {} with {} and {}".format(func.__name__, x1, x2)
@@ -201,10 +250,20 @@ class TestUFuncs(QuantityTestCase):
     def _testn2(self, func, x1, ok_with, raise_with=()):
         """Test function that takes two arguments and return a ndarray.
 
-        :param func: function callable.
-        :param x1: first argument of func.
-        :param ok_with: iterables of values that work fine.
-        :param raise_with: iterables of values that raise exceptions.
+        Parameters
+        ----------
+        func :
+            function callable.
+        x1 :
+            first argument of func.
+        ok_with :
+            iterables of values that work fine.
+        raise_with :
+            iterables of values that raise exceptions. (Default value = ())
+
+        Returns
+        -------
+
         """
         self._test2(func, x1, ok_with, raise_with, output_units=None)
 
@@ -243,6 +302,13 @@ class TestMathUfuncs(TestUFuncs):
     square(x[, out]) 	Return the element-wise square of the input.
     reciprocal(x[, out]) 	Return the reciprocal of the argument, element-wise.
     ones_like(x[, out]) 	Returns an array of ones with the same shape and type as a given array.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def test_add(self):
@@ -372,6 +438,13 @@ class TestTrigUfuncs(TestUFuncs):
     arctanh(x[, out]) 	Inverse hyperbolic tangent elementwise.
     deg2rad(x[, out]) 	Convert angles from degrees to radians.
     rad2deg(x[, out]) 	Convert angles from radians to degrees.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def test_sin(self):
@@ -612,6 +685,13 @@ class TestComparisonUfuncs(TestUFuncs):
     less_equal(x1, x2[, out]) 	Return the truth value of (x1 =< x2) element-wise.
     not_equal(x1, x2[, out]) 	Return (x1 != x2) element-wise.
     equal(x1, x2[, out]) 	Return (x1 == x2) element-wise.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def test_greater(self):
@@ -653,6 +733,13 @@ class TestFloatingUfuncs(TestUFuncs):
     floor(x[, out]) 	Return the floor of the input, element-wise.
     ceil(x[, out]) 	Return the ceiling of the input, element-wise.
     trunc(x[, out]) 	Return the truncated value of the input, element-wise.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
     """
 
     def test_isreal(self):

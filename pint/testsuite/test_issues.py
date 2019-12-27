@@ -533,6 +533,19 @@ class TestIssues(QuantityTestCase):
 
             d = .5 * g * t**2
             t = sqrt(2 * d / g)
+
+            Parameters
+            ----------
+            height :
+
+            gravity :
+                 (Default value = Q_(9.8)
+            "m/s^2") :
+
+
+            Returns
+            -------
+
             """
             return sqrt(2 * height / gravity)
 
@@ -551,6 +564,19 @@ class TestIssues(QuantityTestCase):
         @ureg.wraps("=A*B", ("=A", "=B"))
         def get_displacement(time, rate=Q_(1, "m/s")):
             """Calculates displacement from a duration and default rate.
+
+            Parameters
+            ----------
+            time :
+
+            rate :
+                 (Default value = Q_(1)
+            "m/s") :
+
+
+            Returns
+            -------
+
             """
             return time * rate
 
@@ -649,6 +675,13 @@ class TestIssues(QuantityTestCase):
         """pprint.pformat() invokes sorted() on large sets and frozensets and graciously
         handles TypeError, but not generic Exceptions. This test will fail if
         pint.DimensionalityError stops being a subclass of TypeError.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
         """
         meter_units = ureg.get_compatible_units(ureg.meter)
         hertz_units = ureg.get_compatible_units(ureg.hertz)

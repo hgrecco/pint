@@ -10,8 +10,22 @@ def time_stmt(stmt="pass", setup="pass", number=0, repeat=3):
     """Timer function with the same behaviour as running `python -m timeit `
     in the command line.
 
-    :return: elapsed time in seconds or NaN if the command failed.
-    :rtype: float
+    Parameters
+    ----------
+    stmt : str
+         (Default value = "pass")
+    setup : str
+         (Default value = "pass")
+    number : int
+         (Default value = 0)
+    repeat : int
+         (Default value = 3)
+
+    Returns
+    -------
+    float
+        elapsed time in seconds or NaN if the command failed.
+
     """
 
     t = Timer(stmt, setup)
@@ -77,6 +91,23 @@ def time_file(filename, name="", setup="", number=0, repeat=3):
     """Open a yaml benchmark file an time each statement,
 
     yields a tuple with filename, task name, time in seconds.
+
+    Parameters
+    ----------
+    filename :
+
+    name :
+         (Default value = "")
+    setup :
+         (Default value = "")
+    number :
+         (Default value = 0)
+    repeat :
+         (Default value = 3)
+
+    Returns
+    -------
+
     """
     with open(filename, "r") as fp:
         tasks = yaml.load(fp)

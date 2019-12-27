@@ -37,35 +37,49 @@ class Context:
     dimension to another. Each Dimension are specified using a UnitsContainer.
     Simple transformation are given with a function taking a single parameter.
 
-        >>> from pint.util import UnitsContainer
-        >>> timedim = UnitsContainer({'[time]': 1})
-        >>> spacedim = UnitsContainer({'[length]': 1})
-        >>> def f(time):
-        ...     'Time to length converter'
-        ...     return 3. * time
-        >>> c = Context()
-        >>> c.add_transformation(timedim, spacedim, f)
-        >>> c.transform(timedim, spacedim, 2)
-        6
 
     Conversion functions may take optional keyword arguments and the context
     can have default values for these arguments.
 
-        >>> def f(time, n):
-        ...     'Time to length converter, n is the index of refraction of the material'
-        ...     return 3. * time / n
-        >>> c = Context(n=3)
-        >>> c.add_transformation(timedim, spacedim, f)
-        >>> c.transform(timedim, spacedim, 2)
-        2
 
     Additionally, a context may host redefinitions:
 
-        >>> c.redefine("pound = 0.5 kg")
 
     A redefinition must be performed among units that already exist in the registry. It
     cannot change the dimensionality of a unit. The symbol and aliases are automatically
     inherited from the registry.
+
+    Parameters
+    ----------
+    name : str or None (default), optional
+        Name of the context (must be unique within the registry).
+        Use None for anonymous Context.
+    aliases : iterable of str
+        Other names for the context.
+    defaults : None or dict
+        Maps variable names to values.
+
+    Example
+    -------
+
+    >>> from pint.util import UnitsContainer
+    >>> timedim = UnitsContainer({'[time]': 1})
+    >>> spacedim = UnitsContainer({'[length]': 1})
+    >>> def f(time):
+    ...     'Time to length converter'
+    ...     return 3. * time
+    >>> c = Context()
+    >>> c.add_transformation(timedim, spacedim, f)
+    >>> c.transform(timedim, spacedim, 2)
+    6
+    >>> def f(time, n):
+    ...     'Time to length converter, n is the index of refraction of the material'
+    ...     return 3. * time / n
+    >>> c = Context(n=3)
+    >>> c.add_transformation(timedim, spacedim, f)
+    >>> c.transform(timedim, spacedim, 2)
+    2
+    >>> c.redefine("pound = 0.5 kg")
     """
 
     def __init__(self, name=None, aliases=(), defaults=None):
@@ -96,6 +110,18 @@ class Context:
         context and updated with the new defaults.
 
         If defaults is empty, return the same context.
+
+        Parameters
+        ----------
+        context : Context
+            Original context.
+        **defaults
+
+
+        Returns
+        -------
+        Context
+
         """
         if defaults:
             newdef = dict(context.defaults, **defaults)
@@ -193,6 +219,7 @@ class Context:
     def add_transformation(self, src, dst, func):
         """Add a transformation function to the context.
         """
+
         _key = self.__keytransform__(src, dst)
         self.funcs[_key] = func
         self.relation_to_context[_key] = self
@@ -200,6 +227,7 @@ class Context:
     def remove_transformation(self, src, dst):
         """Add a transformation function to the context.
         """
+
         _key = self.__keytransform__(src, dst)
         del self.funcs[_key]
         del self.relation_to_context[_key]
@@ -211,15 +239,19 @@ class Context:
     def transform(self, src, dst, registry, value):
         """Transform a value.
         """
+
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)
 
     def redefine(self, definition: str) -> None:
         """Override the definition of a unit in the registry.
 
-        :param definition:
-            ``<unit> = <new definition>``, e.g. ``pound = 0.5 kg``
+        Parameters
+        ----------
+        definition : str
+            <unit> = <new definition>``, e.g. ``pound = 0.5 kg``
         """
+
         for line in definition.splitlines():
             d = Definition.from_string(line)
             if not isinstance(d, UnitDefinition):
@@ -238,6 +270,10 @@ class Context:
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
         mutable, and the Python interpreter does cache the output of ``__hash__``.
+
+        Returns
+        -------
+        tuple
         """
         return (
             self.name,
@@ -266,13 +302,20 @@ class ContextChain(ChainMap):
         To facilitate the identification of the context with the matching rule,
         the *relation_to_context* dictionary of the context is used.
         """
+
         self.contexts = list(reversed(contexts)) + self.contexts
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
     def remove_contexts(self, n: int = None):
         """Remove the last n inserted contexts from the chain.
+
+        Parameters
+        ----------
+        n: int
+            (Default value = None)
         """
+
         del self.contexts[:n]
         del self.maps[:n]
         self._graph = None
@@ -285,8 +328,7 @@ class ContextChain(ChainMap):
 
     @property
     def graph(self):
-        """The graph relating
-        """
+        """The graph relating"""
         if self._graph is None:
             self._graph = defaultdict(set)
             for fr_, to_ in self:
@@ -296,8 +338,6 @@ class ContextChain(ChainMap):
     def transform(self, src, dst, registry, value):
         """Transform the value, finding the rule in the chained context.
         (A rule in last context will take precedence)
-
-        :raises: KeyError if the rule is not found.
         """
         return self[(src, dst)].transform(src, dst, registry, value)
 

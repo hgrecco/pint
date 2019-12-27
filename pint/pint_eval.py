@@ -38,13 +38,15 @@ _UNARY_OPERATOR_MAP = {"+": lambda x: x, "-": lambda x: x * -1}
 
 
 class EvalTreeNode:
+    """Single node within an evaluation tree
+
+    left + operator + right --> binary op
+    left + operator --> unary op
+    left + right --> implicit op
+    left --> single value
+    """
+
     def __init__(self, left, operator=None, right=None):
-        """
-        left + operator + right --> binary op
-        left + operator --> unary op
-        left + right --> implicit op
-        left --> single value
-        """
         self.left = left
         self.operator = operator
         self.right = right
@@ -62,13 +64,25 @@ class EvalTreeNode:
             return self.left[1]
         return "(%s)" % " ".join(comps)
 
-    def evaluate(
-        self, define_op, bin_op=_BINARY_OPERATOR_MAP, un_op=_UNARY_OPERATOR_MAP
-    ):
+    def evaluate(self, define_op, bin_op=None, un_op=None):
+        """Evaluate node.
+
+        Parameters
+        ----------
+        define_op : callable
+            Translates tokens into objects.
+        bin_op : dict or None, optional
+             (Default value = _BINARY_OPERATOR_MAP)
+        un_op : dict or None, optional
+             (Default value = _UNARY_OPERATOR_MAP)
+
+        Returns
+        -------
+
         """
-        define_op is a callable that translates tokens into objects
-        bin_op and un_op provide functions for performing binary and unary operations
-        """
+
+        bin_op = bin_op or _BINARY_OPERATOR_MAP
+        un_op = un_op or _UNARY_OPERATOR_MAP
 
         if self.right:
             # binary or implicit operator
@@ -89,7 +103,8 @@ class EvalTreeNode:
 
 
 def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=None):
-    """
+    """Build an evaluation tree from a set of tokens.
+
     Params:
     Index, depth, and prev_op used recursively, so don't touch.
     Tokens is an iterable of tokens from an expression to be evaluated.
@@ -106,6 +121,7 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
     4.1) If recursive call encounters an operator with lower or equal priority to step #2, exit recursion
     5) Combine left side, operator, and right side into a new left side
     6) Go back to step #2
+
     """
 
     if depth == 0 and prev_op is None:

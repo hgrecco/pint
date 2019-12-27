@@ -61,8 +61,15 @@ def _unpickle(cls, *args):
     """Rebuild object upon unpickling.
     All units must exist in the application registry.
 
-    :param cls:
-        Quantity, Magnitude, or Unit
+    Parameters
+    ----------
+    cls : Quantity, Magnitude, or Unit
+    *args
+
+    Returns
+    -------
+    object of type cls
+
     """
     from .unit import UnitsContainer
 
@@ -81,7 +88,10 @@ def set_application_registry(registry):
     """Set the application registry, which is used for unpickling operations
     and when invoking pint.Quantity or pint.Unit directly.
 
-    :param registry: a UnitRegistry instance.
+    Parameters
+    ----------
+    registry : UnitRegistry
+
     """
     if not isinstance(registry, (LazyRegistry, UnitRegistry)):
         raise TypeError("Expected UnitRegistry; got %s" % type(registry))
@@ -95,7 +105,9 @@ def get_application_registry():
     invoked, return a registry built using :file:`defaults_en.txt` embedded in the pint
     package.
 
-    :param registry: a UnitRegistry instance.
+    Returns
+    -------
+    UnitRegistry
     """
     return _APP_REGISTRY
 
@@ -103,7 +115,9 @@ def get_application_registry():
 def test():
     """Run all tests.
 
-    :return: a :class:`unittest.TestResult` object
+    Returns
+    -------
+    unittest.TestResult
     """
     from .testsuite import run
 

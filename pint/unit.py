@@ -20,11 +20,7 @@ from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
 
 class Unit(PrettyIPython, SharedRegistryObject):
-    """Implements a class to describe a unit supporting math operations.
-
-    :type units: UnitsContainer, str, Unit or Quantity.
-
-    """
+    """Implements a class to describe a unit supporting math operations."""
 
     #: Default formatting string.
     default_format = ""
@@ -120,16 +116,12 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     @property
     def dimensionless(self):
-        """Return true if the Unit is dimensionless.
-
-        """
+        """Return true if the Unit is dimensionless."""
         return not bool(self.dimensionality)
 
     @property
     def dimensionality(self):
-        """Unit's dimensionality (e.g. {length: 1, time: -1})
-
-        """
+        """Unit's dimensionality (e.g. {length: 1, time: -1})"""
         try:
             return self._dimensionality
         except AttributeError:
@@ -263,12 +255,20 @@ class Unit(PrettyIPython, SharedRegistryObject):
     def from_(self, value, strict=True, name="value"):
         """Converts a numerical value or quantity to this unit
 
-        :param value: a Quantity (or numerical value if strict=False) to convert
-        :param strict: boolean to indicate that only quanities are accepted
-        :param name: descriptive name to use if an exception occurs
-        :return: The converted value as this unit
-        :raises:
-            :class:`ValueError` if strict and one of the arguments is not a Quantity.
+        Parameters
+        ----------
+        value :
+            a Quantity (or numerical value if strict=False) to convert
+        strict :
+            boolean to indicate that only quanities are accepted (Default value = True)
+        name :
+            descriptive name to use if an exception occurs (Default value = "value")
+
+        Returns
+        -------
+        type
+            The converted value as this unit
+
         """
         if self._check(value):
             if not isinstance(value, self._REGISTRY.Quantity):
@@ -283,12 +283,20 @@ class Unit(PrettyIPython, SharedRegistryObject):
         """Converts a numerical value or quantity to this unit, then returns
         the magnitude of the converted value
 
-        :param value: a Quantity (or numerical value if strict=False) to convert
-        :param strict: boolean to indicate that only quanities are accepted
-        :param name: descriptive name to use if an exception occurs
-        :return: The magnitude of the converted value
-        :raises:
-            :class:`ValueError` if strict and one of the arguments is not a Quantity.
+        Parameters
+        ----------
+        value :
+            a Quantity (or numerical value if strict=False) to convert
+        strict :
+            boolean to indicate that only quanities are accepted (Default value = True)
+        name :
+            descriptive name to use if an exception occurs (Default value = "value")
+
+        Returns
+        -------
+        type
+            The magnitude of the converted value
+
         """
         return self.from_(value, strict=strict, name=name).magnitude
 
