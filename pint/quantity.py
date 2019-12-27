@@ -158,7 +158,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __new__(cls, value, units=None):
         global SKIP_ARRAY_FUNCTION_CHANGE_WARNING
 
-        if units is None:
+        if is_upcast_type(type(value)):
+            raise TypeError(f"Quantity cannot wrap upcast type {type(value)}")
+        elif units is None:
             if isinstance(value, str):
                 if value == "":
                     raise ValueError(

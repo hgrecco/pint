@@ -150,6 +150,7 @@ if not HAS_BABEL:
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast and
 # downcast/wrappable types
+upcast_types = ["PintArray", "Series", "DataArray"]
 
 
 def is_upcast_type(other):
@@ -164,7 +165,7 @@ def is_upcast_type(other):
     bool
     """
     # Check if class name is in preset list
-    return other.__name__ in ("PintArray", "Series", "DataArray")
+    return other.__name__ in upcast_types
 
 
 def eq(lhs, rhs, check_all):
