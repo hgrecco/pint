@@ -112,7 +112,7 @@ The following ufuncs_ can be applied to a Quantity object:
 
 And the following NumPy functions:
 
-- alen, amax, amin, append, argmax, argmin, argsort, around, atleast_1d, atleast_2d, atleast_3d, average, block, broadcast_to, clip, column_stack, compress, concatenate, copy, copyto, count_nonzero, cross, cumprod, cumproduct, cumsum, diagonal, diff, dot, dstack, ediff1d, einsum, empty_like, expand_dims, fix, flip, full_like, gradient, hstack, insert, interp, isclose, iscomplex, isin, isreal, linspace, mean, median, meshgrid, moveaxis, nan_to_num, nanargmax, nanargmin, nancumprod, nancumsum, nanmax, nanmean, nanmedian, nanmin, nanpercentile, nanstd, nanvar, ndim, nonzero, ones_like, percentile, ptp, ravel, result_type, rollaxis, rot90, round\_, searchsorted, shape, size, sort, squeeze, stack, std, sum, swapaxes, tile, transpose, trapz, trim_zeros, unwrap, var, vstack, where, zeros_like
+- alen, amax, amin, append, argmax, argmin, argsort, around, atleast_1d, atleast_2d, atleast_3d, average, block, broadcast_to, clip, column_stack, compress, concatenate, copy, copyto, count_nonzero, cross, cumprod, cumproduct, cumsum, diagonal, diff, dot, dstack, ediff1d, einsum, empty_like, expand_dims, fix, flip, full_like, gradient, hstack, insert, interp, isclose, iscomplex, isin, isreal, linspace, mean, median, meshgrid, moveaxis, nan_to_num, nanargmax, nanargmin, nancumprod, nancumsum, nanmax, nanmean, nanmedian, nanmin, nanpercentile, nanstd, nanvar, ndim, nonzero, ones_like, pad, percentile, ptp, ravel, resize, result_type, rollaxis, rot90, round\_, searchsorted, shape, size, sort, squeeze, stack, std, sum, swapaxes, tile, transpose, trapz, trim_zeros, unwrap, var, vstack, where, zeros_like
 
 And the following `NumPy ndarray methods`_:
 

@@ -1025,6 +1025,102 @@ class TestNumpyUnclassified(TestNumpyMethods):
         for attr in ("__array_struct__", "__array_interface__"):
             self.assertRaises(AttributeError, getattr, self.q, attr)
 
+    @helpers.requires_array_function_protocol()
+    def test_resize(self):
+        self.assertQuantityEqual(
+            np.resize(self.q, (2, 4)), [[1, 2, 3, 4], [1, 2, 3, 4]] * self.ureg.m
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_pad(self):
+        # Tests reproduced with modification from NumPy documentation
+        a = [1, 2, 3, 4, 5] * self.ureg.m
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "constant", constant_values=(4, 600 * self.ureg.cm)),
+            [4, 4, 1, 2, 3, 4, 5, 6, 6, 6] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "edge"), [1, 1, 1, 2, 3, 4, 5, 5, 5, 5] * self.ureg.m
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "linear_ramp", end_values=(5, -4) * self.ureg.m),
+            [5, 3, 1, 2, 3, 4, 5, 2, -1, -4] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2,), "maximum"), [5, 5, 1, 2, 3, 4, 5, 5, 5] * self.ureg.m
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2,), "mean"), [3, 3, 1, 2, 3, 4, 5, 3, 3] * self.ureg.m
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2,), "median"), [3, 3, 1, 2, 3, 4, 5, 3, 3] * self.ureg.m
+        )
+        self.assertQuantityEqual(
+            np.pad(self.q, ((3, 2), (2, 3)), "minimum"),
+            [
+                [1, 1, 1, 2, 1, 1, 1],
+                [1, 1, 1, 2, 1, 1, 1],
+                [1, 1, 1, 2, 1, 1, 1],
+                [1, 1, 1, 2, 1, 1, 1],
+                [3, 3, 3, 4, 3, 3, 3],
+                [1, 1, 1, 2, 1, 1, 1],
+                [1, 1, 1, 2, 1, 1, 1],
+            ]
+            * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "reflect"), [3, 2, 1, 2, 3, 4, 5, 4, 3, 2] * self.ureg.m
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "reflect", reflect_type="odd"),
+            [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "symmetric"), [2, 1, 1, 2, 3, 4, 5, 5, 4, 3] * self.ureg.m
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "symmetric", reflect_type="odd"),
+            [0, 1, 1, 2, 3, 4, 5, 5, 6, 7] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "wrap"), [4, 5, 1, 2, 3, 4, 5, 1, 2, 3] * self.ureg.m
+        )
+
+        def pad_with(vector, pad_width, iaxis, kwargs):
+            pad_value = kwargs.get("padder", 10)
+            vector[: pad_width[0]] = pad_value
+            vector[-pad_width[1] :] = pad_value
+
+        b = self.Q_(np.arange(6).reshape((2, 3)), "degC")
+        self.assertQuantityEqual(
+            np.pad(b, 2, pad_with),
+            self.Q_(
+                [
+                    [10, 10, 10, 10, 10, 10, 10],
+                    [10, 10, 10, 10, 10, 10, 10],
+                    [10, 10, 0, 1, 2, 10, 10],
+                    [10, 10, 3, 4, 5, 10, 10],
+                    [10, 10, 10, 10, 10, 10, 10],
+                    [10, 10, 10, 10, 10, 10, 10],
+                ],
+                "degC",
+            ),
+        )
+        self.assertQuantityEqual(
+            np.pad(b, 2, pad_with, padder=100),
+            self.Q_(
+                [
+                    [100, 100, 100, 100, 100, 100, 100],
+                    [100, 100, 100, 100, 100, 100, 100],
+                    [100, 100, 0, 1, 2, 100, 100],
+                    [100, 100, 3, 4, 5, 100, 100],
+                    [100, 100, 100, 100, 100, 100, 100],
+                    [100, 100, 100, 100, 100, 100, 100],
+                ],
+                "degC",
+            ),
+        )  # Note: Does not support Quantity pad_with vectorized callable use
+
 
 @unittest.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):
