@@ -143,7 +143,7 @@ def main():
 
 def run():
     """Run all tests.
-    
+
     :return: a :class:`unittest.TestResult` object
 
     Parameters
@@ -173,7 +173,7 @@ def add_docs(suite):
     Parameters
     ----------
     suite :
-        
+
 
     Returns
     -------

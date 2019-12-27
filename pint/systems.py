@@ -26,16 +26,16 @@ from .util import (
 
 class Group(SharedRegistryObject):
     """A group is a set of units.
-    
+
     Units can be added directly or by including other groups.
-    
+
     Members are computed dynamically, that is if a unit is added to a group X
     all groups that include X are affected.
-    
+
     The group belongs to one Registry.
-    
+
     It can be specified in the definition file as::
-    
+
         @group <name> [using <group 1>, ..., <group N>]
             <definition 1>
             ...
@@ -86,7 +86,7 @@ class Group(SharedRegistryObject):
     @property
     def members(self):
         """Names of the units that are members of the group.
-        
+
         Calculated to include to all units in all included _used_groups.
 
         """
@@ -242,28 +242,28 @@ class Group(SharedRegistryObject):
 
 class System(SharedRegistryObject):
     """A system is a Group plus a set of base units.
-    
+
     Members are computed dynamically, that is if a unit is added to a group X
     all groups that include X are affected.
-    
+
     The System belongs to one Registry.
-    
+
     It can be specified in the definition file as::
-    
+
         @system <name> [using <group 1>, ..., <group N>]
             <rule 1>
             ...
             <rule N>
         @end
-    
+
     The syntax for the rule is:
-    
+
         new_unit_name : old_unit_name
-    
+
     where:
         - old_unit_name: a root unit part which is going to be removed from the system.
         - new_unit_name: a non root unit which is going to replace the old_unit.
-    
+
     If the new_unit_name and the old_unit_name, the later and the colon can be ommited.
     """
 

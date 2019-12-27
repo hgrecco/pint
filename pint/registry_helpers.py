@@ -45,14 +45,14 @@ def _to_units_container(a, registry=None):
     Parameters
     ----------
     a :
-        
+
     registry :
          (Default value = None)
 
     Returns
     -------
     UnitsContainer, bool
-        
+
 
     """
     if isinstance(a, str) and "=" in a:
@@ -154,7 +154,7 @@ def _parse_wrap_args(args, registry=None):
 
 def _apply_defaults(func, args, kwargs):
     """Apply default keyword arguments.
-    
+
     Named keywords may have been left blank. This function applies the default
     values so that every argument is defined.
     """
@@ -170,15 +170,15 @@ def _apply_defaults(func, args, kwargs):
 
 def wraps(ureg, ret, args, strict=True):
     """Wraps a function to become pint-aware.
-    
+
     Use it when a function requires a numerical value but in some specific
     units. The wrapper function will take a pint quantity, convert to the units
     specified in `args` and then call the wrapped function with the resulting
     magnitude.
-    
+
     The value returned by the wrapped function will be converted to the units
     specified in `ret`.
-    
+
     Use None to skip argument conversion.
     Set strict to False, to accept also numerical values.
 
@@ -256,10 +256,10 @@ def wraps(ureg, ret, args, strict=True):
 
 def check(ureg, *args):
     """Decorator to for quantity type checking for function inputs.
-    
+
     Use it to ensure that the decorated function input parameters match
     the expected type of pint quantity.
-    
+
     Use None to skip argument checking.
 
     Parameters
@@ -269,7 +269,7 @@ def check(ureg, *args):
     args :
         iterable of input units.
     *args :
-        
+
 
     Returns
     -------

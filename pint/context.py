@@ -36,15 +36,15 @@ class Context:
     """A specialized container that defines transformation functions from one
     dimension to another. Each Dimension are specified using a UnitsContainer.
     Simple transformation are given with a function taking a single parameter.
-    
+
 
     Conversion functions may take optional keyword arguments and the context
     can have default values for these arguments.
-    
-    
+
+
     Additionally, a context may host redefinitions:
-    
-    
+
+
     A redefinition must be performed among units that already exist in the registry. It
     cannot change the dimensionality of a unit. The symbol and aliases are automatically
     inherited from the registry.
@@ -108,7 +108,7 @@ class Context:
         """Creates a new context that shares the funcs dictionary with the
         original context. The default values are copied from the original
         context and updated with the new defaults.
-        
+
         If defaults is empty, return the same context.
 
         Parameters
@@ -116,7 +116,7 @@ class Context:
         context : Context
             Original context.
         **defaults
-            
+
 
         Returns
         -------
@@ -298,7 +298,7 @@ class ContextChain(ChainMap):
     def insert_contexts(self, *contexts):
         """Insert one or more contexts in reversed order the chained map.
         (A rule in last context will take precedence)
-        
+
         To facilitate the identification of the context with the matching rule,
         the *relation_to_context* dictionary of the context is used.
         """

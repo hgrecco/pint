@@ -146,7 +146,7 @@ class TestUFuncs(QuantityTestCase):
         rtol :
             relative tolerance. (Default value = 1e-6)
         "same") :
-            
+
 
         Returns
         -------
@@ -271,9 +271,9 @@ class TestUFuncs(QuantityTestCase):
 @helpers.requires_numpy()
 class TestMathUfuncs(TestUFuncs):
     """Universal functions (ufunc) > Math operations
-    
+
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#math-operations
-    
+
     add(x1, x2[, out]) 	Add arguments element-wise.
     subtract(x1, x2[, out]) 	Subtract arguments, element-wise.
     multiply(x1, x2[, out]) 	Multiply arguments element-wise.
@@ -419,9 +419,9 @@ class TestMathUfuncs(TestUFuncs):
 @helpers.requires_numpy()
 class TestTrigUfuncs(TestUFuncs):
     """Universal functions (ufunc) > Trigonometric functions
-    
+
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#trigonometric-functions
-    
+
     sin(x[, out]) 	Trigonometric sine, element-wise.
     cos(x[, out]) 	Cosine elementwise.
     tan(x[, out]) 	Compute tangent element-wise.
@@ -676,9 +676,9 @@ class TestTrigUfuncs(TestUFuncs):
 
 class TestComparisonUfuncs(TestUFuncs):
     """Universal functions (ufunc) > Comparison functions
-    
+
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#comparison-functions
-    
+
     greater(x1, x2[, out]) 	Return the truth value of (x1 > x2) element-wise.
     greater_equal(x1, x2[, out]) 	Return the truth value of (x1 >= x2) element-wise.
     less(x1, x2[, out]) 	Return the truth value of (x1 < x2) element-wise.
@@ -715,9 +715,9 @@ class TestComparisonUfuncs(TestUFuncs):
 
 class TestFloatingUfuncs(TestUFuncs):
     """Universal functions (ufunc) > Floating functions
-    
+
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#floating-functions
-    
+
     isreal(x) 	Returns a bool array, where True if input element is real.
     iscomplex(x) 	Returns a bool array, where True if input element is complex.
     isfinite(x[, out]) 	Test element-wise for finite-ness (not infinity or not Not a Number).

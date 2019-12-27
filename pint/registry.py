@@ -122,9 +122,9 @@ class ContextCacheOverlay:
 
 class BaseRegistry(metaclass=RegistryMeta):
     """Base class for all registries.
-    
+
     Capabilities:
-    
+
     - Register units, prefixes, and dimensions, and their relations.
     - Convert between units.
     - Find dimensionality of a unit.
@@ -329,7 +329,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _define(self, definition):
         """Add unit to the registry.
-        
+
         This method defines only multiplicative units, converting any other type
         to `delta_` units.
 
@@ -434,7 +434,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _define_single_adder(self, key, value, unit_dict, casei_unit_dict):
         """Helper function to store a definition in the internal dictionaries.
-        
+
         It warns or raise error on redefinition.
         """
         if key in unit_dict:
@@ -723,7 +723,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def get_root_units(self, input_units, check_nonmult=True):
         """Convert unit or dict of units to the root units.
-        
+
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
 
@@ -750,7 +750,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _get_root_units(self, input_units, check_nonmult=True):
         """Convert unit or dict of units to the root units.
-        
+
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
 
@@ -794,7 +794,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def get_base_units(self, input_units, check_nonmult=True, system=None):
         """Convert unit or dict of units to the base units.
-        
+
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
 
@@ -937,7 +937,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         Parameters
         ----------
         unit_name :
-            
+
         case_sensitive :
              (Default value = True)
 
@@ -981,10 +981,10 @@ class BaseRegistry(metaclass=RegistryMeta):
     @staticmethod
     def _dedup_candidates(candidates):
         """Helper of parse_unit_name.
-        
+
         Given an iterable of unit triplets (prefix, name, suffix), remove those with
         different names but equal value, preferring those with a prefix.
-        
+
         e.g. ('kilo', 'gram', '') and ('', 'kilogram', '')
         """
         candidates = dict.fromkeys(candidates)  # ordered set
@@ -1000,7 +1000,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     def parse_units(self, input_string, as_delta=None):
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
-        
+
         The expression can only contain products, ratios and powers of units.
 
         Parameters
@@ -1085,20 +1085,20 @@ class BaseRegistry(metaclass=RegistryMeta):
         self, input_string, case_sensitive=True, use_decimal=False, **values
     ):
         """Parse a mathematical expression including units and return a quantity object.
-        
+
         Numerical constants can be specified as keyword arguments and will take precedence
         over the names defined in the registry.
 
         Parameters
         ----------
         input_string :
-            
+
         case_sensitive :
              (Default value = True)
         use_decimal :
              (Default value = False)
         **values :
-            
+
 
         Returns
         -------
@@ -1124,7 +1124,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
 class NonMultiplicativeRegistry(BaseRegistry):
     """Handle of non multiplicative units (e.g. Temperature).
-    
+
     Capabilities:
     - Register non-multiplicative units and their relations.
     - Convert between non-multiplicative units.
@@ -1163,7 +1163,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
     def _define(self, definition):
         """Add unit to the registry.
-        
+
         In addition to what is done by the BaseRegistry,
         registers also non-multiplicative units.
 
@@ -1232,7 +1232,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
-        
+
         In addition to what is done by the BaseRegistry,
         converts between non-multiplicative units.
 
@@ -1304,11 +1304,11 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
 class ContextRegistry(BaseRegistry):
     """Handle of Contexts.
-    
+
     Conversion between units with different dimenstions according
     to previously established relations (contexts).
     (e.g. in the spectroscopy, conversion between frequency and energy is possible)
-    
+
     Capabilities:
     - Register contexts.
     - Enable and disable contexts.
@@ -1344,9 +1344,9 @@ class ContextRegistry(BaseRegistry):
 
     def add_context(self, context: Context) -> None:
         """Add a context object to the registry.
-        
+
         The context will be accessible by its name and aliases.
-        
+
         Notice that this method will NOT enable the context. Use `enable_contexts`.
 
         """
@@ -1367,7 +1367,7 @@ class ContextRegistry(BaseRegistry):
 
     def remove_context(self, name_or_alias: str) -> Context:
         """Remove a context from the registry and return it.
-        
+
         Notice that this methods will not disable the context. Use `disable_contexts`.
 
         """
@@ -1474,7 +1474,7 @@ class ContextRegistry(BaseRegistry):
         kwargs :
             keyword arguments for the context
         *names_or_contexts :
-            
+
         **kwargs :
 
         """
@@ -1535,23 +1535,23 @@ class ContextRegistry(BaseRegistry):
             name of the context.
         kwargs :
             keyword arguments for the contexts.
-            
+
             Context are called by their name::
-            
-            
+
+
             If the context has an argument, you can specify its value as a keyword
             argument::
-            
-            
+
+
             Multiple contexts can be entered in single call:
-            
-            
+
+
             or nested allowing you to give different values to the same keyword argument::
-            
-            
+
+
             A nested context inherits the defaults from the containing context::
         *names :
-            
+
         **kwargs :
 
 
@@ -1586,7 +1586,7 @@ class ContextRegistry(BaseRegistry):
 
     def with_context(self, name, **kw):
         """Decorator to wrap a function call in a Pint context.
-        
+
         Use it to ensure that a certain context is active when
         calling a function::
 
@@ -1597,9 +1597,9 @@ class ContextRegistry(BaseRegistry):
         kwargs :
             keyword arguments for the contexts.
         name :
-            
+
         **kw :
-            
+
 
         Returns
         -------
@@ -1632,7 +1632,7 @@ class ContextRegistry(BaseRegistry):
 
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
-        
+
         In addition to what is done by the BaseRegistry,
         converts between units with different dimensions by following
         transformation rules defined in the context.
@@ -1693,11 +1693,11 @@ class ContextRegistry(BaseRegistry):
 
 class SystemRegistry(BaseRegistry):
     """Handle of Systems and Groups.
-    
+
     Conversion between units with different dimenstions according
     to previously established relations (contexts).
     (e.g. in the spectroscopy, conversion between frequency and energy is possible)
-    
+
     Capabilities:
     - Register systems and groups.
     - List systems
@@ -1729,7 +1729,7 @@ class SystemRegistry(BaseRegistry):
 
     def _after_init(self):
         """After init function
-        
+
         Create default group.
         Add all orphan units to it.
         Set default system.
@@ -1847,10 +1847,10 @@ class SystemRegistry(BaseRegistry):
 
     def get_base_units(self, input_units, check_nonmult=True, system=None):
         """Convert unit or dict of units to the base units.
-        
+
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
-        
+
         Unlike BaseRegistry, in this registry root_units might be different
         from base_units
 

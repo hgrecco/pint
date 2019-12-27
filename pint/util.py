@@ -37,7 +37,7 @@ def matrix_to_string(
     Parameters
     ----------
     matrix :
-        
+
     row_headers :
          (Default value = None)
     col_headers :
@@ -69,7 +69,7 @@ def transpose(matrix):
     Parameters
     ----------
     matrix :
-        
+
 
     Returns
     -------
@@ -305,7 +305,7 @@ class udict(dict):
 class UnitsContainer(Mapping):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations.
-    
+
     UnitsContainer is a read-only mapping. All operations (even in place ones)
 
     Parameters
@@ -314,7 +314,7 @@ class UnitsContainer(Mapping):
     Returns
     -------
     type
-        
+
 
     """
 
@@ -351,7 +351,7 @@ class UnitsContainer(Mapping):
         Parameters
         ----------
         keys :
-            
+
 
         Returns
         -------
@@ -369,9 +369,9 @@ class UnitsContainer(Mapping):
         Parameters
         ----------
         oldkey :
-            
+
         newkey :
-            
+
 
         Returns
         -------
@@ -490,7 +490,7 @@ class UnitsContainer(Mapping):
 class ParserHelper(UnitsContainer):
     """The ParserHelper stores in place the product of variables and
     their respective exponent and implements the corresponding operations.
-    
+
     ParserHelper is a read-only mapping. All operations (even in place ones)
 
     Parameters
@@ -514,13 +514,13 @@ class ParserHelper(UnitsContainer):
     @classmethod
     def from_word(cls, input_word):
         """Creates a ParserHelper object with a single variable with exponent one.
-        
+
         Equivalent to: ParserHelper({'word': 1})
 
         Parameters
         ----------
         input_word :
-            
+
 
         Returns
         -------
@@ -552,7 +552,7 @@ class ParserHelper(UnitsContainer):
         Parameters
         ----------
         input_string :
-            
+
 
         Returns
         -------
@@ -736,7 +736,7 @@ def _is_dim(name):
 
 class SharedRegistryObject:
     """Base class for object keeping a reference to the registree.
-    
+
     Such object are for now Quantity and Unit, in a number of places it is
     that an object from this class has a '_units' attribute.
 
@@ -765,7 +765,7 @@ class SharedRegistryObject:
         Parameters
         ----------
         other :
-            
+
 
         Returns
         -------
@@ -814,7 +814,7 @@ def to_units_container(unit_like, registry=None):
     Parameters
     ----------
     unit_like :
-        
+
     registry :
          (Default value = None)
 
@@ -842,12 +842,12 @@ def infer_base_unit(q):
     Parameters
     ----------
     q :
-        
+
 
     Returns
     -------
     type
-        
+
 
     """
     d = udict()
@@ -868,7 +868,7 @@ def getattr_maybe_raise(self, item):
     Parameters
     ----------
     item :
-        
+
 
     Returns
     -------
@@ -882,12 +882,12 @@ def getattr_maybe_raise(self, item):
 
 class SourceIterator:
     """Iterator to facilitate reading the definition files.
-    
+
     Accepts any sequence (like a list of lines, a file or another SourceIterator)
-    
+
     The iterator yields the line number and line (skipping comments and empty lines)
     and stripping white spaces.
-    
+
     for lineno, line in SourceIterator(sequence):
         # do something here
 
@@ -954,7 +954,7 @@ class BlockIterator(SourceIterator):
 
 def iterable(y):
     """Check whether or not an object can be iterated over.
-    
+
     Vendored from numpy under the terms of the BSD 3-Clause License. (Copyright
     (c) 2005-2019, NumPy Developers.)
 

@@ -59,7 +59,7 @@ class Definition:
         Parameters
         ----------
         definition :
-            
+
 
         Returns
         -------

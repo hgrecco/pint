@@ -23,13 +23,13 @@ HANDLED_FUNCTIONS = {}
 
 def _is_quantity(obj):
     """Test for _units and _magnitude attrs.
-    
+
     This is done in place of isinstance(Quantity, arg), which would cause a circular import.
 
     Parameters
     ----------
     obj : Object
-        
+
 
     Returns
     -------
@@ -44,7 +44,7 @@ def _is_quantity_sequence(obj):
     Parameters
     ----------
     obj : object
-        
+
 
     Returns
     -------
@@ -71,7 +71,7 @@ def _get_first_input_units(args, kwargs=None):
 
 def convert_arg(arg, pre_calc_units):
     """Convert quantities and sequences of quantities to pre_calc_units and strip units.
-    
+
     Helper function for convert_to_consistent_units. pre_calc_units must be given as a pint
     Unit or None.
 
@@ -96,7 +96,7 @@ def convert_arg(arg, pre_calc_units):
 
 def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
     """Prepare args and kwargs for wrapping by unit conversion and stripping.
-    
+
     If pre_calc_units is not None, takes the args and kwargs for a NumPy function and converts
     any Quantity or Sequence of Quantities into the units of the first Quantiy/Sequence of
     Quantities and returns the magnitudes. Other args/kwargs are treated as dimensionless
@@ -114,7 +114,7 @@ def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
 
 def unwrap_and_wrap_consistent_units(*args):
     """Strip units from args while providing a rewrapping function.
-    
+
     Returns the given args as parsed by convert_to_consistent_units assuming units of
     first arg with units, along with a wrapper to restore that unit to the output.
 
@@ -129,9 +129,9 @@ def unwrap_and_wrap_consistent_units(*args):
 
 def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     """Determine resulting unit from given operation.
-    
+
     Options for `unit_op`:
-    
+
     - "sum": `first_input_units`, unless non-multiplicative, which raises
       OffsetUnitCalculusError
     - "mul": product of all units in `all_args`
@@ -149,9 +149,9 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     Parameters
     ----------
     unit_op :
-        
+
     first_input_units :
-        
+
     all_args :
          (Default value = None)
     size :
@@ -249,7 +249,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
         `get_op_output_unit`. If some other string, the string is parsed as a unit,
         which becomes the unit of the output. If None, the bare magnitude is returned.
 
-    
+
     """
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:

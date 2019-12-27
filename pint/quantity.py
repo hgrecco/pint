@@ -418,7 +418,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
-        
+
         If units is not specified and list is empty, the unit cannot be determined
         and a ValueError is raised.
 
@@ -439,7 +439,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def from_sequence(cls, seq, units=None):
         """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
-        
+
         If units is not specified and sequence is empty, the unit cannot be determined
         and a ValueError is raised.
 
@@ -1597,7 +1597,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def dot(self, b):
         """Dot product of two arrays.
-        
+
         Wraps np.dot().
         """
 

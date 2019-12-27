@@ -89,13 +89,13 @@ def time_task(name, stmt="pass", setup="pass", number=0, repeat=3, stmts="", bas
 
 def time_file(filename, name="", setup="", number=0, repeat=3):
     """Open a yaml benchmark file an time each statement,
-    
+
     yields a tuple with filename, task name, time in seconds.
 
     Parameters
     ----------
     filename :
-        
+
     name :
          (Default value = "")
     setup :

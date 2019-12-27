@@ -18,7 +18,7 @@ __JOIN_REG_EXP = re.compile(r"\{\d*\}")
 
 def _join(fmt, iterable):
     """Join an iterable with the format specified in fmt.
-    
+
     The format can be specified in two ways:
     - PEP3101 format with two replacement fields (eg. '{} * {}')
     - The concatenating string (eg. ' * ')
@@ -26,9 +26,9 @@ def _join(fmt, iterable):
     Parameters
     ----------
     fmt : str
-        
+
     iterable :
-        
+
 
     Returns
     -------

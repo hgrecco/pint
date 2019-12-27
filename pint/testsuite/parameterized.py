@@ -109,7 +109,7 @@ class ParameterizedTestMixin(metaclass=ParameterizedTestCaseMetaClass):
         cls, param_names, data, func_name_format="{func_name}_{case_num:05d}"
     ):
         """Decorator for parameterizing a test method - example:
-        
+
         @ParameterizedTestCase.parameterize(
             ("isbn", "expected_title"), [
                 ("0262033844", "Introduction to Algorithms"),
@@ -118,9 +118,9 @@ class ParameterizedTestMixin(metaclass=ParameterizedTestCaseMetaClass):
         Parameters
         ----------
         param_names :
-            
+
         data :
-            
+
         func_name_format :
              (Default value = "{func_name}_{case_num:05d}")
 

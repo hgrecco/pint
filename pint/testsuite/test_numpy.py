@@ -1124,9 +1124,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
 @unittest.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):
     """Universal functions (ufuncs) >  Bittwiddling functions
-    
+
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#bittwiddlingfunctions
-    
+
     bitwise_and(x1, x2[, out])         Compute the bitwise AND of two arrays elementwise.
     bitwise_or(x1, x2[, out])  Compute the bitwise OR of two arrays elementwise.
     bitwise_xor(x1, x2[, out])         Compute the bitwise XOR of two arrays elementwise.
