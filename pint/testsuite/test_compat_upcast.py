@@ -59,18 +59,18 @@ def test_quantification(ds):
         (1 * ureg.m, xr.DataArray(q)),
     ],
 )
-def test_binary_arithmatic_commutivity(op, pair):
+def test_binary_arithmetic_commutativity(op, pair):
     z0 = op(*pair)
     z1 = op(*pair[::-1])
     z1 = z1.transpose(*z0.dims)
     assert np.all(np.isclose(z0.data, z1.data.to(z0.data.units)))
 
 
-def test_eq_commutivity(da):
+def test_eq_commutativity(da):
     assert np.all((q.T == da) == (da.transpose() == q))
 
 
-def test_ne_commutivity(da):
+def test_ne_commutativity(da):
     assert np.all((q != da.transpose()) == (da != q.T))
 
 
@@ -81,7 +81,7 @@ def test_dataset_operation_with_unit(ds):
     assert np.isclose(ds0["air"].mean().item(), 274.166259765625 * ureg.K)
 
 
-def test_dataarray_inplace_arithmatic_roundtrip(da):
+def test_dataarray_inplace_arithmetic_roundtrip(da):
     da_original = da.copy()
     q_to_modify = q.copy()
     da += q
