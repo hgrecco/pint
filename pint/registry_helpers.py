@@ -214,7 +214,7 @@ def wraps(ureg, ret, args, strict=True):
         args = (args,)
 
     for arg in args:
-        if not isinstance(arg, (ureg.Unit, str)):
+        if arg is not None and not isinstance(arg, (ureg.Unit, str)):
             raise TypeError(
                 "wraps arguments must by of type str or Unit, not %s (%s)"
                 % (type(arg), arg)
@@ -225,14 +225,14 @@ def wraps(ureg, ret, args, strict=True):
     is_ret_container = isinstance(ret, (list, tuple))
     if is_ret_container:
         for arg in ret:
-            if not isinstance(arg, (ureg.Unit, str)):
+            if arg is not None and not isinstance(arg, (ureg.Unit, str)):
                 raise TypeError(
                     "wraps 'ret' argument must by of type str or Unit, not %s (%s)"
                     % (type(arg), arg)
                 )
         ret = ret.__class__([_to_units_container(arg, ureg) for arg in ret])
     else:
-        if not isinstance(ret, (ureg.Unit, str)):
+        if ret is not None and not isinstance(ret, (ureg.Unit, str)):
             raise TypeError(
                 "wraps 'ret' argument must by of type str or Unit, not %s (%s)"
                 % (type(ret), ret)
