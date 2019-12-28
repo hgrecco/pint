@@ -205,13 +205,11 @@ def wraps(ureg, ret, args, strict=True):
 
     converter = _parse_wrap_args(args)
 
-    if isinstance(ret, (list, tuple)):
-        container, ret = (
-            True,
-            ret.__class__([_to_units_container(arg, ureg) for arg in ret]),
-        )
+    is_ret_container = isinstance(ret, (list, tuple))
+    if is_ret_container:
+        ret = ret.__class__([_to_units_container(arg, ureg) for arg in ret])
     else:
-        container, ret = False, _to_units_container(ret, ureg)
+        ret = _to_units_container(ret, ureg)
 
     def decorator(func):
 
@@ -240,7 +238,7 @@ def wraps(ureg, ret, args, strict=True):
 
             result = func(*new_values, **kw)
 
-            if container:
+            if is_ret_container:
                 out_units = (
                     _replace_units(r, values_by_name) if is_ref else r
                     for (r, is_ref) in ret
