@@ -179,24 +179,28 @@ def wraps(ureg, ret, args, strict=True):
     The value returned by the wrapped function will be converted to the units
     specified in `ret`.
 
-    Use None to skip argument conversion.
-    Set strict to False, to accept also numerical values.
-
     Parameters
     ----------
-    ureg :
+    ureg : UnitRegistry
         a UnitRegistry instance.
-    ret :
-        output units.
-    args :
-        iterable of input units.
+    ret : iterable of str or iterable of Unit
+        Units of each of the return values. Use `None` to skip argument conversion.
+    args : iterable of str or iterable of Unit
+        Units of each of the input arguments. Use `None` to skip argument conversion.
     strict : bool
         Indicates that only quantities are accepted. (Default value = True)
 
     Returns
     -------
     callable
-        the wrapped function.
+        the wrapper function.
+
+    Raises
+    ------
+    TypeError
+        if the number of given dimensions does not match the number of function parameters.
+    ValueError
+        if the any of the provided dimensions cannot be parsed as a dimension.
 
     """
 
@@ -264,28 +268,27 @@ def check(ureg, *args):
     """Decorator to for quantity type checking for function inputs.
 
     Use it to ensure that the decorated function input parameters match
-    the expected type of pint quantity.
+    the expected dimension of pint quantity.
 
-    Use None to skip argument checking.
+    The wrapper function raises:
+      - `pint.DimensionalityError` if an argument doesn't match the required dimensions.
 
-    Parameters
-    ----------
-    ureg :
+    ureg : UnitRegistry
         a UnitRegistry instance.
-    args :
-        iterable of input units.
-    *args :
-
+    *args : iterable of str or iterable of UnitContainer
+        Dimensions of each of the input arguments. Use `None` to skip argument conversion.
 
     Returns
     -------
-    type
+    callable
         the wrapped function.
 
     Raises
     ------
-    pint.DimensionalityError
-        if the parameters don't match dimensions
+    TypeError
+        if the number of given dimensions does not match the number of function parameters.
+    ValueError
+        if the any of the provided dimensions cannot be parsed as a dimension.
 
     """
     dimensions = [
