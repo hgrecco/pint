@@ -139,13 +139,20 @@ def _parse_wrap_args(args, registry=None):
                 )
             else:
                 if strict:
-                    raise ValueError(
-                        "A wrapped function using strict=True requires "
-                        "quantity for all arguments with not None units. "
-                        "(error found for {}, {})".format(
-                            args_as_uc[ndx][0], new_values[ndx]
+                    if isinstance(values[ndx], str):
+                        # if the value is a string, we try to parse it
+                        tmp_value = ureg.parse_expression(values[ndx])
+                        new_values[ndx] = ureg._convert(
+                            tmp_value._magnitude, tmp_value._units, args_as_uc[ndx][0]
                         )
-                    )
+                    else:
+                        raise ValueError(
+                            "A wrapped function using strict=True requires "
+                            "quantity or a string for all arguments with not None units. "
+                            "(error found for {}, {})".format(
+                                args_as_uc[ndx][0], new_values[ndx]
+                            )
+                        )
 
         return new_values, values_by_name
 
