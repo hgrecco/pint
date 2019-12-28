@@ -139,13 +139,20 @@ def _parse_wrap_args(args, registry=None):
                 )
             else:
                 if strict:
-                    raise ValueError(
-                        "A wrapped function using strict=True requires "
-                        "quantity for all arguments with not None units. "
-                        "(error found for {}, {})".format(
-                            args_as_uc[ndx][0], new_values[ndx]
+                    if isinstance(values[ndx], str):
+                        # if the value is a string, we try to parse it
+                        tmp_value = ureg.parse_expression(values[ndx])
+                        new_values[ndx] = ureg._convert(
+                            tmp_value._magnitude, tmp_value._units, args_as_uc[ndx][0]
                         )
-                    )
+                    else:
+                        raise ValueError(
+                            "A wrapped function using strict=True requires "
+                            "quantity or a string for all arguments with not None units. "
+                            "(error found for {}, {})".format(
+                                args_as_uc[ndx][0], new_values[ndx]
+                            )
+                        )
 
         return new_values, values_by_name
 
@@ -179,41 +186,68 @@ def wraps(ureg, ret, args, strict=True):
     The value returned by the wrapped function will be converted to the units
     specified in `ret`.
 
-    Use None to skip argument conversion.
-    Set strict to False, to accept also numerical values.
-
     Parameters
     ----------
-    ureg :
+    ureg : UnitRegistry
         a UnitRegistry instance.
-    ret :
-        output units.
-    args :
-        iterable of input units.
+    ret : iterable of str or iterable of Unit
+        Units of each of the return values. Use `None` to skip argument conversion.
+    args : iterable of str or iterable of Unit
+        Units of each of the input arguments. Use `None` to skip argument conversion.
     strict : bool
         Indicates that only quantities are accepted. (Default value = True)
 
     Returns
     -------
     callable
-        the wrapped function.
+        the wrapper function.
+
+    Raises
+    ------
+    TypeError
+        if the number of given arguments does not match the number of function parameters.
+        if the any of the provided arguments is not a unit a string or Quantity
 
     """
 
     if not isinstance(args, (list, tuple)):
         args = (args,)
 
+    for arg in args:
+        if arg is not None and not isinstance(arg, (ureg.Unit, str)):
+            raise TypeError(
+                "wraps arguments must by of type str or Unit, not %s (%s)"
+                % (type(arg), arg)
+            )
+
     converter = _parse_wrap_args(args)
 
-    if isinstance(ret, (list, tuple)):
-        container, ret = (
-            True,
-            ret.__class__([_to_units_container(arg, ureg) for arg in ret]),
-        )
+    is_ret_container = isinstance(ret, (list, tuple))
+    if is_ret_container:
+        for arg in ret:
+            if arg is not None and not isinstance(arg, (ureg.Unit, str)):
+                raise TypeError(
+                    "wraps 'ret' argument must by of type str or Unit, not %s (%s)"
+                    % (type(arg), arg)
+                )
+        ret = ret.__class__([_to_units_container(arg, ureg) for arg in ret])
     else:
-        container, ret = False, _to_units_container(ret, ureg)
+        if ret is not None and not isinstance(ret, (ureg.Unit, str)):
+            raise TypeError(
+                "wraps 'ret' argument must by of type str or Unit, not %s (%s)"
+                % (type(ret), ret)
+            )
+        ret = _to_units_container(ret, ureg)
 
     def decorator(func):
+
+        count_params = len(signature(func).parameters)
+        if len(args) != count_params:
+            raise TypeError(
+                "%s takes %i parameters, but %i units were passed"
+                % (func.__name__, count_params, len(args))
+            )
+
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
         )
@@ -232,7 +266,7 @@ def wraps(ureg, ret, args, strict=True):
 
             result = func(*new_values, **kw)
 
-            if container:
+            if is_ret_container:
                 out_units = (
                     _replace_units(r, values_by_name) if is_ref else r
                     for (r, is_ref) in ret
@@ -258,28 +292,27 @@ def check(ureg, *args):
     """Decorator to for quantity type checking for function inputs.
 
     Use it to ensure that the decorated function input parameters match
-    the expected type of pint quantity.
+    the expected dimension of pint quantity.
 
-    Use None to skip argument checking.
+    The wrapper function raises:
+      - `pint.DimensionalityError` if an argument doesn't match the required dimensions.
 
-    Parameters
-    ----------
-    ureg :
+    ureg : UnitRegistry
         a UnitRegistry instance.
-    args :
-        iterable of input units.
-    *args :
-
+    *args : iterable of str or iterable of UnitContainer
+        Dimensions of each of the input arguments. Use `None` to skip argument conversion.
 
     Returns
     -------
-    type
+    callable
         the wrapped function.
 
     Raises
     ------
-    pint.DimensionalityError
-        if the parameters don't match dimensions
+    TypeError
+        if the number of given dimensions does not match the number of function parameters.
+    ValueError
+        if the any of the provided dimensions cannot be parsed as a dimension.
 
     """
     dimensions = [
@@ -287,6 +320,14 @@ def check(ureg, *args):
     ]
 
     def decorator(func):
+
+        count_params = len(signature(func).parameters)
+        if len(dimensions) != count_params:
+            raise TypeError(
+                "%s takes %i parameters, but %i dimensions were passed"
+                % (func.__name__, count_params, len(dimensions))
+            )
+
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
         )
@@ -297,11 +338,7 @@ def check(ureg, *args):
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*args, **kwargs):
             list_args, empty = _apply_defaults(func, args, kwargs)
-            if len(dimensions) > len(list_args):
-                raise TypeError(
-                    "%s takes %i parameters, but %i dimensions were passed"
-                    % (func.__name__, len(list_args), len(dimensions))
-                )
+
             for dim, value in zip(dimensions, list_args):
 
                 if dim is None:
