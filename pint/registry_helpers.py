@@ -205,23 +205,31 @@ def wraps(ureg, ret, args, strict=True):
     Raises
     ------
     TypeError
-        if the number of given dimensions does not match the number of function parameters.
-    ValueError
-        if the any of the provided dimensions cannot be parsed as a dimension.
+        if the number of given arguments does not match the number of function parameters.
+        if the any of the provided arguments is not a unit a string or Quantity
 
     """
 
     if not isinstance(args, (list, tuple)):
         args = (args,)
 
+    for arg in args:
+        if not isinstance(arg, (ureg.Unit, str)):
+            raise TypeError("wraps arguments must by of type str or Unit, not %s (%s)" % (type(arg), arg))
+
     converter = _parse_wrap_args(args)
 
     is_ret_container = isinstance(ret, (list, tuple))
     if is_ret_container:
+        for arg in ret:
+            if not isinstance(arg, (ureg.Unit, str)):
+                raise TypeError("wraps 'ret' argument must by of type str or Unit, not %s (%s)" % (type(arg), arg))
         ret = ret.__class__([_to_units_container(arg, ureg) for arg in ret])
     else:
+        if not isinstance(ret, (ureg.Unit, str)):
+            raise TypeError("wraps 'ret' argument must by of type str or Unit, not %s (%s)" % (type(ret), ret))
         ret = _to_units_container(ret, ureg)
-
+        
     def decorator(func):
 
         count_params = len(signature(func).parameters)
