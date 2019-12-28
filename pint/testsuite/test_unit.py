@@ -433,6 +433,9 @@ class TestRegistry(QuantityTestCase):
 
         ureg = self.ureg
 
+        self.assertRaises(TypeError, ureg.wraps, (3 * ureg.meter, [None]))
+        self.assertRaises(TypeError, ureg.wraps, (None, [3 * ureg.meter]))
+
         f0 = ureg.wraps(None, [None])(func)
         self.assertEqual(f0(3.0), 3.0)
 
@@ -450,6 +453,16 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(f1b(3.0 * ureg.centimeter), 0.03)
         self.assertEqual(f1b(3.0 * ureg.meter), 3.0)
         self.assertRaises(DimensionalityError, f1b, 3 * ureg.second)
+
+        f1c = ureg.wraps("meter", [ureg.meter])(func)
+        self.assertEqual(f1c(3.0 * ureg.centimeter), 0.03 * ureg.meter)
+        self.assertEqual(f1c(3.0 * ureg.meter), 3.0 * ureg.meter)
+        self.assertRaises(DimensionalityError, f1c, 3 * ureg.second)
+
+        f1d = ureg.wraps(ureg.meter, [ureg.meter])(func)
+        self.assertEqual(f1d(3.0 * ureg.centimeter), 0.03 * ureg.meter)
+        self.assertEqual(f1d(3.0 * ureg.meter), 3.0 * ureg.meter)
+        self.assertRaises(DimensionalityError, f1d, 3 * ureg.second)
 
         f1 = ureg.wraps(None, "meter")(func)
         self.assertRaises(ValueError, f1, 3.0)
@@ -565,17 +578,8 @@ class TestRegistry(QuantityTestCase):
             1 * ureg.meter / ureg.second ** 2,
         )
 
-        g2 = ureg.check("[speed]")(gfunc)
-        self.assertRaises(DimensionalityError, g2, 3.0, 1)
-        self.assertRaises(TypeError, g2, 2 * ureg.parsec)
-        self.assertRaises(DimensionalityError, g2, 2 * ureg.parsec, 1.0)
-        self.assertEqual(g2(2.0 * ureg.km / ureg.hour, 2), 1 * ureg.km / ureg.hour)
-
-        g3 = ureg.check("[speed]", "[time]", "[mass]")(gfunc)
-        self.assertRaises(TypeError, g3, 1 * ureg.parsec, 1 * ureg.angstrom)
-        self.assertRaises(
-            TypeError, g3, 1 * ureg.parsec, 1 * ureg.angstrom, 1 * ureg.kilogram
-        )
+        self.assertRaises(TypeError, ureg.check("[speed]"), gfunc)
+        self.assertRaises(TypeError, ureg.check("[speed]", "[time]", "[mass]"), gfunc)
 
     def test_to_ref_vs_to(self):
         self.ureg.autoconvert_offset_to_baseunit = True
