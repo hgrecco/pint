@@ -1017,7 +1017,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             return self
 
         if isinstance(other, self._REGISTRY.Unit):
-            other = 1.0 * other
+            other = 1 * other
 
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, other._units)
@@ -1087,7 +1087,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             return self.__class__(magnitude, units)
 
         if isinstance(other, self._REGISTRY.Unit):
-            other = 1.0 * other
+            other = 1 * other
 
         new_self = self
 
