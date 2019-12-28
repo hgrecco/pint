@@ -214,6 +214,14 @@ def wraps(ureg, ret, args, strict=True):
         container, ret = False, _to_units_container(ret, ureg)
 
     def decorator(func):
+
+        count_params = len(signature(func).parameters)
+        if len(args) != count_params:
+            raise TypeError(
+                "%s takes %i parameters, but %i units were passed"
+                % (func.__name__, count_params, len(args))
+            )
+
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
         )
@@ -287,6 +295,14 @@ def check(ureg, *args):
     ]
 
     def decorator(func):
+
+        count_params = len(signature(func).parameters)
+        if len(dimensions) != count_params:
+            raise TypeError(
+                "%s takes %i parameters, but %i dimensions were passed"
+                % (func.__name__, count_params, len(dimensions))
+            )
+
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
         )
@@ -297,11 +313,7 @@ def check(ureg, *args):
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*args, **kwargs):
             list_args, empty = _apply_defaults(func, args, kwargs)
-            if len(dimensions) > len(list_args):
-                raise TypeError(
-                    "%s takes %i parameters, but %i dimensions were passed"
-                    % (func.__name__, len(list_args), len(dimensions))
-                )
+
             for dim, value in zip(dimensions, list_args):
 
                 if dim is None:
