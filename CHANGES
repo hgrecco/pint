@@ -4,6 +4,7 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Add revolutions per second (rps)
 - Improved compatbility for upcast types like xarray's DataArray or Dataset, to which
   Pint Quantities now fully defer for arithmetic and NumPy operations. A collection of
   basic tests for proper deferral has been added (for full integration tests, see
