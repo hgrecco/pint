@@ -140,6 +140,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         the default definition file. None to leave the UnitRegistry empty.
     force_ndarray : bool
         convert any input, scalar or not to a numpy.ndarray.
+    force_ndarray_like : bool
+        convert all inputs other than duck arrays to a numpy.ndarray.
     on_redefinition : str
         action to take in case a unit is redefined: 'warn', 'raise', 'ignore'
     auto_reduce_dimensions :
@@ -179,6 +181,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         self,
         filename="",
         force_ndarray=False,
+        force_ndarray_like=False,
         on_redefinition="warn",
         auto_reduce_dimensions=False,
         preprocessors=None,
@@ -189,6 +192,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         self._filename = filename
         self.force_ndarray = force_ndarray
+        self.force_ndarray_like = force_ndarray_like
         self.preprocessors = preprocessors or []
 
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
@@ -1950,8 +1954,10 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         path of the units definition file to load or line-iterable object.
         Empty to load the default definition file.
         None to leave the UnitRegistry empty.
-    force_ndarray :
+    force_ndarray : bool
         convert any input, scalar or not to a numpy.ndarray.
+    force_ndarray_like : bool
+        convert all inputs other than duck arrays to a numpy.ndarray.
     default_as_delta :
         In the context of a multiplication of units, interpret
         non-multiplicative units as their *delta* counterparts.
@@ -1975,6 +1981,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         self,
         filename="",
         force_ndarray=False,
+        force_ndarray_like=False,
         default_as_delta=True,
         autoconvert_offset_to_baseunit=False,
         on_redefinition="warn",
@@ -1987,6 +1994,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         super().__init__(
             filename=filename,
             force_ndarray=force_ndarray,
+            force_ndarray_like=force_ndarray_like,
             on_redefinition=on_redefinition,
             default_as_delta=default_as_delta,
             autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,

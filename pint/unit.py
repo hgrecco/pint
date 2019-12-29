@@ -13,7 +13,7 @@ import locale
 import operator
 from numbers import Number
 
-from .compat import NUMERIC_TYPES
+from .compat import NUMERIC_TYPES, is_upcast_type
 from .definitions import UnitDefinition
 from .formatting import siunitx_format_unit
 from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
@@ -230,18 +230,32 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     __array_priority__ = 17
 
-    def __array_prepare__(self, array, context=None):
-        return 1
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if method != "__call__":
+            # Only handle ufuncs as callables
+            return NotImplemented
 
-    def __array_wrap__(self, array, context=None):
-        uf, objs, huh = context
+        # Check types and return NotImplemented when upcast type encountered
+        types = set(
+            type(arg)
+            for arg in list(inputs) + list(kwargs.values())
+            if hasattr(arg, "__array_ufunc__")
+        )
+        if any(is_upcast_type(other) for other in types):
+            return NotImplemented
 
-        if uf.__name__ in ("true_divide", "divide", "floor_divide"):
-            return self._REGISTRY.Quantity(array, 1 / self._units)
-        elif uf.__name__ in ("multiply",):
-            return self._REGISTRY.Quantity(array, self._units)
+        # Act on limited implementations by conversion to multiplicative identity
+        # Quantity
+        if ufunc.__name__ in ("true_divide", "divide", "floor_divide", "multiply"):
+            return ufunc(
+                *tuple(
+                    self._REGISTRY.Quantity(1, self._units) if arg is self else arg
+                    for arg in inputs
+                ),
+                **kwargs,
+            )
         else:
-            raise ValueError("Unsupproted operation for Unit")
+            return NotImplemented
 
     @property
     def systems(self):
