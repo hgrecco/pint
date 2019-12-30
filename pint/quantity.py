@@ -29,6 +29,7 @@ from .compat import (
     array_function_change_msg,
     babel_parse,
     eq,
+    is_duck_array_type,
     is_upcast_type,
     ndarray,
     np,
@@ -145,6 +146,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def force_ndarray(self):
         return self._REGISTRY.force_ndarray
 
+    @property
+    def force_ndarray_like(self):
+        return self._REGISTRY.force_ndarray_like
+
     def __reduce__(self):
         """Allow pickling quantities. Since UnitRegistries are not pickled, upon
         unpickling the new object is always attached to the application registry.
@@ -173,15 +178,21 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 inst = copy.copy(value)
             else:
                 inst = SharedRegistryObject.__new__(cls)
-                inst._magnitude = _to_magnitude(value, inst.force_ndarray)
+                inst._magnitude = _to_magnitude(
+                    value, inst.force_ndarray, inst.force_ndarray_like
+                )
                 inst._units = UnitsContainer()
         elif isinstance(units, (UnitsContainer, UnitDefinition)):
             inst = SharedRegistryObject.__new__(cls)
-            inst._magnitude = _to_magnitude(value, inst.force_ndarray)
+            inst._magnitude = _to_magnitude(
+                value, inst.force_ndarray, inst.force_ndarray_like
+            )
             inst._units = units
         elif isinstance(units, str):
             inst = SharedRegistryObject.__new__(cls)
-            inst._magnitude = _to_magnitude(value, inst.force_ndarray)
+            inst._magnitude = _to_magnitude(
+                value, inst.force_ndarray, inst.force_ndarray_like
+            )
             inst._units = inst._REGISTRY.parse_units(units)._units
         elif isinstance(units, SharedRegistryObject):
             if isinstance(units, Quantity) and units.magnitude != 1:
@@ -192,7 +203,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             else:
                 inst = SharedRegistryObject.__new__(cls)
                 inst._units = units._units
-            inst._magnitude = _to_magnitude(value, inst.force_ndarray)
+            inst._magnitude = _to_magnitude(
+                value, inst.force_ndarray, inst.force_ndarray_like
+            )
         else:
             raise TypeError(
                 "units must be of type str, Quantity or "
@@ -502,7 +515,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             self._magnitude,
             self._units,
             other,
-            inplace=isinstance(self._magnitude, ndarray),
+            inplace=is_duck_array_type(type(self._magnitude)),
         )
 
     def ito(self, other=None, *contexts, **ctx_kwargs):
@@ -729,7 +742,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         if not self._check(other):
             # other not from same Registry or not a Quantity
             try:
-                other_magnitude = _to_magnitude(other, self.force_ndarray)
+                other_magnitude = _to_magnitude(
+                    other, self.force_ndarray, self.force_ndarray_like
+                )
             except PintTypeError:
                 raise
             except TypeError:
@@ -848,12 +863,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # the operation.
                 units = self._units
                 magnitude = op(
-                    self._magnitude, _to_magnitude(other, self.force_ndarray)
+                    self._magnitude,
+                    _to_magnitude(other, self.force_ndarray, self.force_ndarray_like),
                 )
             elif self.dimensionless:
                 units = UnitsContainer()
                 magnitude = op(
-                    self.to(units)._magnitude, _to_magnitude(other, self.force_ndarray)
+                    self.to(units)._magnitude,
+                    _to_magnitude(other, self.force_ndarray, self.force_ndarray_like),
                 )
             else:
                 raise DimensionalityError(self._units, "dimensionless")
@@ -939,10 +956,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):
             return self.to_timedelta() + other
-        elif not isinstance(self._magnitude, ndarray):
-            return self._add_sub(other, operator.add)
-        else:
+        elif is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.iadd)
+        else:
+            return self._add_sub(other, operator.add)
 
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
@@ -953,10 +970,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     __radd__ = __add__
 
     def __isub__(self, other):
-        if not isinstance(self._magnitude, ndarray):
-            return self._add_sub(other, operator.sub)
-        else:
+        if is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.isub)
+        else:
+            return self._add_sub(other, operator.sub)
 
     def __sub__(self, other):
         return self._add_sub(other, operator.sub)
@@ -1007,7 +1024,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                         self._units, getattr(other, "units", "")
                     )
             try:
-                other_magnitude = _to_magnitude(other, self.force_ndarray)
+                other_magnitude = _to_magnitude(
+                    other, self.force_ndarray, self.force_ndarray_like
+                )
             except PintTypeError:
                 raise
             except TypeError:
@@ -1075,7 +1094,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                         self._units, getattr(other, "units", "")
                     )
             try:
-                other_magnitude = _to_magnitude(other, self.force_ndarray)
+                other_magnitude = _to_magnitude(
+                    other, self.force_ndarray, self.force_ndarray_like
+                )
             except PintTypeError:
                 raise
             except TypeError:
@@ -1109,10 +1130,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, units)
 
     def __imul__(self, other):
-        if not isinstance(self._magnitude, ndarray):
-            return self._mul_div(other, operator.mul)
-        else:
+        if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.imul)
+        else:
+            return self._mul_div(other, operator.mul)
 
     def __mul__(self, other):
         return self._mul_div(other, operator.mul)
@@ -1129,17 +1150,19 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     __rmatmul__ = __matmul__
 
     def __itruediv__(self, other):
-        if not isinstance(self._magnitude, ndarray):
-            return self._mul_div(other, operator.truediv)
-        else:
+        if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.itruediv)
+        else:
+            return self._mul_div(other, operator.truediv)
 
     def __truediv__(self, other):
         return self._mul_div(other, operator.truediv)
 
     def __rtruediv__(self, other):
         try:
-            other_magnitude = _to_magnitude(other, self.force_ndarray)
+            other_magnitude = _to_magnitude(
+                other, self.force_ndarray, self.force_ndarray_like
+            )
         except PintTypeError:
             raise
         except TypeError:
@@ -1233,11 +1256,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __ipow__(self, other):
-        if not isinstance(self._magnitude, ndarray):
+        if not is_duck_array_type(type(self._magnitude)):
             return self.__pow__(other)
 
         try:
-            _to_magnitude(other, self.force_ndarray)
+            _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
             raise
         except TypeError:
@@ -1246,7 +1269,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             if not self._ok_for_muldiv:
                 raise OffsetUnitCalculusError(self._units)
 
-            if isinstance(getattr(other, "_magnitude", other), ndarray):
+            if is_duck_array_type(type(getattr(other, "_magnitude", other))):
                 # arrays are refused as exponent, because they would create
                 # len(array) quantities of len(set(array)) different units
                 # unless the base is dimensionless.
@@ -1286,13 +1309,15 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 else:
                     self._units **= other
 
-            self._magnitude **= _to_magnitude(other, self.force_ndarray)
+            self._magnitude **= _to_magnitude(
+                other, self.force_ndarray, self.force_ndarray_like
+            )
             return self
 
     @check_implemented
     def __pow__(self, other):
         try:
-            _to_magnitude(other, self.force_ndarray)
+            _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
             raise
         except TypeError:
@@ -1301,7 +1326,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             if not self._ok_for_muldiv:
                 raise OffsetUnitCalculusError(self._units)
 
-            if isinstance(getattr(other, "_magnitude", other), ndarray):
+            if is_duck_array_type(type(getattr(other, "_magnitude", other))):
                 # arrays are refused as exponent, because they would create
                 # len(array) quantities of len(set(array)) different units
                 # unless the base is dimensionless.
@@ -1339,7 +1364,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 elif not getattr(other, "dimensionless", True):
                     raise DimensionalityError(other._units, "dimensionless")
                 else:
-                    exponent = _to_magnitude(other, self.force_ndarray)
+                    exponent = _to_magnitude(
+                        other, self.force_ndarray, self.force_ndarray_like
+                    )
                     units = new_self._units ** exponent
 
             magnitude = new_self._magnitude ** exponent
@@ -1348,7 +1375,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     @check_implemented
     def __rpow__(self, other):
         try:
-            _to_magnitude(other, self.force_ndarray)
+            _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
             raise
         except TypeError:
@@ -1356,7 +1383,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             if not self.dimensionless:
                 raise DimensionalityError(self._units, "dimensionless")
-            if isinstance(self._magnitude, ndarray):
+            if is_duck_array_type(type(self._magnitude)):
                 if np.size(self._magnitude) > 1:
                     raise DimensionalityError(self._units, "dimensionless")
             new_self = self.to_root_units()
@@ -1415,7 +1442,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     @check_implemented
     def __ne__(self, other):
         out = self.__eq__(other)
-        if isinstance(out, ndarray):
+        if is_duck_array_type(type(out)):
             return np.logical_not(out)
         return not out
 
@@ -1637,12 +1664,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                     stacklevel=2,
                 )
 
-                if isinstance(self._magnitude, ndarray):
+                if is_duck_array_type(type(self._magnitude)):
+                    # Defer to magnitude, and don't catch any AttributeErrors
                     return getattr(self._magnitude, item)
                 else:
-                    # If an `__array_` attributes is requested but the magnitude is not an ndarray,
-                    # we convert the magnitude to a numpy ndarray.
-                    # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays
+                    # If an `__array_` attribute is requested but the magnitude is not
+                    # a duck array, we convert the magnitude to a numpy ndarray.
                     magnitude_as_array = _to_magnitude(
                         self._magnitude, force_ndarray=True
                     )
@@ -1651,13 +1678,23 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # TODO (next minor version): ARRAY_FALLBACK is removed and this becomes the standard behavior
                 raise AttributeError(f"Array protocol attribute {item} not available.")
         elif item in HANDLED_UFUNCS or item in self._wrapped_numpy_methods:
-            # TODO (#905 follow-up): Potentially problematic, investigate for duck arrays/scalars
-            magnitude_as_array = _to_magnitude(self._magnitude, True)
-            attr = getattr(magnitude_as_array, item)
-            if callable(attr):
+            magnitude_as_duck_array = _to_magnitude(
+                self._magnitude, force_ndarray_like=True
+            )
+            try:
+                attr = getattr(magnitude_as_duck_array, item)
                 return functools.partial(self._numpy_method_wrap, attr)
-            else:
-                raise AttributeError("NumPy method {} was not callable.".format(item))
+            except AttributeError:
+                raise AttributeError(
+                    f"NumPy method {item} not available on {type(magnitude_as_duck_array)}"
+                )
+            except TypeError as exc:
+                if "not callable" in str(exc):
+                    raise AttributeError(
+                        f"NumPy method {item} not callable on {type(magnitude_as_duck_array)}"
+                    )
+                else:
+                    raise exc
 
         try:
             return getattr(self._magnitude, item)

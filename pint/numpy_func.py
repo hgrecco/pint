@@ -424,7 +424,7 @@ for ufunc_str in strip_unit_input_output_ufuncs:
     implement_func("ufunc", ufunc_str, input_units=None, output_unit=None)
 
 for ufunc_str in matching_input_bare_output_ufuncs:
-    # Require all inputs to match units, but output base ndarray
+    # Require all inputs to match units, but output base ndarray/duck array
     implement_func("ufunc", ufunc_str, input_units="all_consistent", output_unit=None)
 
 for ufunc_str, out_unit in matching_input_set_units_output_ufuncs.items():
@@ -744,6 +744,7 @@ for func_str, unit_arguments, wrap_output in [
     ("rot90", "m", True),
     ("insert", ["arr", "values"], True),
     ("resize", "a", True),
+    ("reshape", "a", True),
 ]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 

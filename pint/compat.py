@@ -66,14 +66,16 @@ try:
     NUMPY_VER = np.__version__
     NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
-    def _to_magnitude(value, force_ndarray=False):
+    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
         if isinstance(value, (dict, bool)) or value is None:
             raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
         elif isinstance(value, str) and value == "":
             raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
-        if force_ndarray:
+        if force_ndarray or (
+            force_ndarray_like and not is_duck_array_type(type(value))
+        ):
             return np.asarray(value)
         return value
 
@@ -112,9 +114,11 @@ except ImportError:
     NP_NO_VALUE = None
     ARRAY_FALLBACK = False
 
-    def _to_magnitude(value, force_ndarray=False):
-        if force_ndarray:
-            raise ValueError("Cannot force to ndarray when NumPy is not present.")
+    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
+        if force_ndarray or force_ndarray_like:
+            raise ValueError(
+                "Cannot force to ndarray or ndarray-like when NumPy is not present."
+            )
         elif isinstance(value, (dict, bool)) or value is None:
             raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
         elif isinstance(value, str) and value == "":
@@ -148,8 +152,8 @@ except ImportError:
 if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
 
-# Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast and
-# downcast/wrappable types using guarded imports
+# Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
+# types using guarded imports
 upcast_types = []
 
 # pint-pandas (PintArray)
@@ -189,6 +193,28 @@ def is_upcast_type(other):
     bool
     """
     return other in upcast_types
+
+
+def is_duck_array_type(other):
+    """Check if the type object represents a (non-Quantity) duck array type.
+
+    Parameters
+    ----------
+    other : object
+
+    Returns
+    -------
+    bool
+    """
+    # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
+    return other is ndarray or (
+        not hasattr(other, "_magnitude")
+        and not hasattr(other, "_units")
+        and HAS_NUMPY_ARRAY_FUNCTION
+        and hasattr(other, "__array_function__")
+        and hasattr(other, "ndim")
+        and hasattr(other, "dtype")
+    )
 
 
 def eq(lhs, rhs, check_all):
