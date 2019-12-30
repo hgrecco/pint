@@ -374,6 +374,13 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.array([30, 80, 130, 180, 230]) * self.ureg.m ** 2,
         )
 
+    @helpers.requires_array_function_protocol()
+    def test_solve(self):
+        self.assertQuantityAlmostEqual(
+            np.linalg.solve(self.q, [[3], [7]] * self.ureg.s),
+            self.Q_([[1], [1]], "m / s"),
+        )
+
     # Arithmetic operations
     def test_addition_with_scalar(self):
         a = np.array([0, 1, 2])
@@ -413,6 +420,14 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             self.q ** self.Q_(2), self.Q_([[1, 4], [9, 16]], "m**2")
         )
         self.assertNDArrayEqual(arr ** self.Q_(2), np.array([0, 1, 4]))
+
+    def test_sqrt(self):
+        q = self.Q_(100, "m**2")
+        self.assertQuantityEqual(np.sqrt(q), self.Q_(10, "m"))
+
+    def test_cbrt(self):
+        q = self.Q_(1000, "m**3")
+        self.assertQuantityEqual(np.cbrt(q), self.Q_(10, "m"))
 
     @unittest.expectedFailure
     @helpers.requires_numpy()
@@ -536,6 +551,18 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_nonzero_numpy_func(self):
         q = [1, 0, 5, 6, 0, 9] * self.ureg.m
         self.assertNDArrayEqual(np.nonzero(q)[0], [0, 2, 3, 5])
+
+    @helpers.requires_array_function_protocol()
+    def test_any_numpy_func(self):
+        q = [0, 1] * self.ureg.m
+        self.assertTrue(np.any(q))
+        self.assertRaises(ValueError, np.any, self.q_temperature)
+
+    @helpers.requires_array_function_protocol()
+    def test_all_numpy_func(self):
+        q = [0, 1] * self.ureg.m
+        self.assertFalse(np.all(q))
+        self.assertRaises(ValueError, np.all, self.q_temperature)
 
     @helpers.requires_array_function_protocol()
     def test_count_nonzero_numpy_func(self):

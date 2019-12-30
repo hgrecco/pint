@@ -4,6 +4,10 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- **BREAKING CHANGE**:
+  Boolean value of Quantities with offsets units is ambiguous, and so, now a ValueError
+  is raised when attempting to cast such a Quantity to boolean.
+  (Issue #965, Thanks Jon Thielen)
 - Documentation on Pint's array type compatibility has been added to the NumPy support
   page, including a graph of the duck array type casting hierarchy as understood by Pint
   for N-dimensional arrays.

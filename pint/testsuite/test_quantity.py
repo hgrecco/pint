@@ -54,6 +54,8 @@ class TestQuantity(QuantityTestCase):
         self.assertTrue(self.Q_(1, "meter"))
         self.assertFalse(self.Q_(0, None))
         self.assertFalse(self.Q_(0, "meter"))
+        self.assertRaises(ValueError, bool, self.Q_(0, "degC"))
+        self.assertFalse(self.Q_(0, "delta_degC"))
 
     def test_quantity_comparison(self):
         x = self.Q_(4.2, "meter")

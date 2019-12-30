@@ -194,6 +194,8 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         result_unit = first_input_units ** 2
     elif unit_op == "sqrt":
         result_unit = first_input_units ** 0.5
+    elif unit_op == "cbrt":
+        result_unit = first_input_units ** (1 / 3)
     elif unit_op == "reciprocal":
         result_unit = first_input_units ** -1
     elif unit_op == "size":
@@ -255,7 +257,11 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
     if np is None:
         return
 
-    func = getattr(np, func_str)
+    # Handle functions in submodules
+    func_str_split = func_str.split(".")
+    func = getattr(np, func_str_split[0])
+    for func_str_piece in func_str_split[1:]:
+        func = getattr(func, func_str_piece)
 
     @implements(func_str, func_type)
     def implementation(*args, **kwargs):
@@ -295,6 +301,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             "variance",
             "square",
             "sqrt",
+            "cbrt",
             "reciprocal",
             "size",
         ]:
@@ -408,6 +415,7 @@ op_units_output_ufuncs = {
     "divide": "div",
     "floor_divide": "div",
     "sqrt": "sqrt",
+    "cbrt": "cbrt",
     "square": "square",
     "reciprocal": "reciprocal",
     "std": "sum",
@@ -665,6 +673,24 @@ def _pad(array, pad_width, mode="constant", **kwargs):
     )
 
 
+@implements("any", "function")
+def _any(a, *args, **kwargs):
+    # Only valid when multiplicative unit/no offset
+    if a._is_multiplicative:
+        return np.any(a._magnitude, *args, **kwargs)
+    else:
+        raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+
+
+@implements("all", "function")
+def _all(a, *args, **kwargs):
+    # Only valid when multiplicative unit/no offset
+    if a._is_multiplicative:
+        return np.all(a._magnitude, *args, **kwargs)
+    else:
+        raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
@@ -836,6 +862,8 @@ for func_str in ["diff", "ediff1d"]:
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ["gradient"]:
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
+for func_str in ["linalg.solve"]:
+    implement_func("function", func_str, input_units=None, output_unit="div")
 for func_str in ["var", "nanvar"]:
     implement_func("function", func_str, input_units=None, output_unit="variance")
 
@@ -846,11 +874,15 @@ def numpy_wrap(func_type, func, args, kwargs, types):
 
     if func_type == "function":
         handled = HANDLED_FUNCTIONS
+        # Need to handle functions in submodules
+        name = ".".join(func.__module__.split(".")[1:] + [func.__name__])
     elif func_type == "ufunc":
         handled = HANDLED_UFUNCS
+        # ufuncs do not have func.__module__
+        name = func.__name__
     else:
         raise ValueError("Invalid func_type {}".format(func_type))
 
-    if func.__name__ not in handled or any(is_upcast_type(t) for t in types):
+    if name not in handled or any(is_upcast_type(t) for t in types):
         return NotImplemented
-    return handled[func.__name__](*args, **kwargs)
+    return handled[name](*args, **kwargs)

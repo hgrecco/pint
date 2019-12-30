@@ -1481,7 +1481,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     __gt__ = lambda self, other: self.compare(other, op=operator.gt)
 
     def __bool__(self):
-        return bool(self._magnitude)
+        # Only cast when non-ambiguous (when multiplicative unit)
+        if self._is_multiplicative:
+            return bool(self._magnitude)
+        else:
+            raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
     __nonzero__ = __bool__
 
