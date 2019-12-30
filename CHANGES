@@ -4,6 +4,13 @@ Pint Changelog
 0.10 (unreleased)
 -----------------
 
+- Documentation on Pint's array type compatibility has been added to the NumPy support
+  page, including a graph of the duck array type casting hierarchy as understood by Pint
+  for N-dimensional arrays.
+  (Issue #963, Thanks Jon Thielen, Stephan Hoyer, and Guido Imperiale)
+- Improved compatibility for downcast duck array types like Sparse and Masked Arrays. A
+  collection of basic tests has been added.
+  (Issue #963, Thanks Jon Thielen)
 - Improvements to wraps and check:
   - fail upon decoration (not execution) by checking wrapped function signature against
     wraps/check arguments.
@@ -12,7 +19,7 @@ Pint Changelog
     (might BREAK code not conforming to documentation)
   - when strict=True, strings that can be parsed to quantities are accepted as arguments.
 - Add revolutions per second (rps)
-- Improved compatbility for upcast types like xarray's DataArray or Dataset, to which
+- Improved compatibility for upcast types like xarray's DataArray or Dataset, to which
   Pint Quantities now fully defer for arithmetic and NumPy operations. A collection of
   basic tests for proper deferral has been added (for full integration tests, see
   xarray's test suite). The list of upcast types is available at
