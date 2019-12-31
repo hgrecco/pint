@@ -8,12 +8,21 @@ Pint Changelog
   Boolean value of Quantities with offsets units is ambiguous, and so, now a ValueError
   is raised when attempting to cast such a Quantity to boolean.
   (Issue #965, Thanks Jon Thielen)
+- **BREAKING CHANGE**:
+  `__array_ufunc__` has been implemented on `pint.Unit` to permit
+  multiplication/division by units on the right of ufunc-reliant array types (like
+  Sparse) with proper respect for the type casting hierarchy. However, until [an
+  upstream issue with NumPy is resolved](https://github.com/numpy/numpy/issues/15200),
+  this breaks creation of Masked Array Quantities by multiplication on the right.
+  Read Pint's [NumPy support
+  documentation](https://pint.readthedocs.io/en/latest/numpy.html) for more details.
+  (Issues #963 and #966, Thanks Jon Thielen)
 - Documentation on Pint's array type compatibility has been added to the NumPy support
   page, including a graph of the duck array type casting hierarchy as understood by Pint
   for N-dimensional arrays.
   (Issue #963, Thanks Jon Thielen, Stephan Hoyer, and Guido Imperiale)
-- Improved compatibility for downcast duck array types like Sparse and Masked Arrays. A
-  collection of basic tests has been added.
+- Improved compatibility for downcast duck array types like Sparse.COO. A collection
+  of basic tests has been added.
   (Issue #963, Thanks Jon Thielen)
 - Improvements to wraps and check:
   - fail upon decoration (not execution) by checking wrapped function signature against
