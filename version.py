@@ -1,3 +1,3 @@
 # This is just for zest.releaser. Do not touch
 
-__version__ = "0.10.dev0"
+__version__ = '0.10'
