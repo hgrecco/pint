@@ -1,3 +1,5 @@
+ipython
 matplotlib
-numpy
 nbsphinx
+numpy
+pytest

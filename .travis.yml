@@ -16,7 +16,7 @@ env:
   # for min/max Python versions supported by uncertainties
 
   - PKGS="python=3.7 flake8 black isort"  # Have linters fail first and quickly
-  - PKGS="python=3.7 sphinx nbsphinx matplotlib numpy"
+  - PKGS="python=3.7 ipython matplotlib nbsphinx numpy sphinx"
   - PKGS="python=3.6"
   - PKGS="python=3.7"
   - PKGS="python=3.8"
@@ -70,10 +70,10 @@ script:
   # - if [[ $PANDAS == '1' ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" -m py.test -rfsxEX; fi
   # test notebooks too if pandas available
   # - if [[ $PANDAS == '1' ]]; then pip install -e .; pytest --nbval notebooks/*; fi
-  - if [[ $PANDAS == 0 && $LINT == 0 && DOCS == 0 ]]; then python -bb -m pytest $TEST_OPTS; fi
+  - if [[ $PANDAS == 0 && $LINT == 0 && $DOCS == 0 ]]; then python -bb -m pytest $TEST_OPTS; fi
   - if [[ $LINT == 1 ]]; then black -t py36 --check . && isort -rc -c . && flake8; fi
   - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -n -j auto -b html -d build/doctrees docs build/html; fi
-  - if [[ $LINT == 0 && DOCS == 0 ]]; then coverage report -m; fi
+  - if [[ $LINT == 0 && $DOCS == 0 ]]; then coverage report -m; fi
 
 after_success:
   - coveralls --verbose

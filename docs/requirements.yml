@@ -3,7 +3,9 @@ channels:
   - conda-forge
 dependencies:
   - python=3.7
-  - sphinx
+  - ipython
+  - matplotlib
   - nbsphinx
   - numpy
-  - matplotlib
+  - pytest
+  - sphinx
