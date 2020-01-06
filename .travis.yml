@@ -16,7 +16,8 @@ env:
   # for min/max Python versions supported by uncertainties
 
   - PKGS="python=3.7 flake8 black isort"  # Have linters fail first and quickly
-  - PKGS="python=3.7 ipython matplotlib nbsphinx numpy sphinx"
+  # Pinned packages to match readthedocs CI https://readthedocs.org/projects/pint/
+  - PKGS="python=3.7 ipython matplotlib nbsphinx numpy sphinx Pygments==2.3.1 docutils==0.14 alabaster commonmark==0.8.1 recommonmark==0.5.0"
   - PKGS="python=3.6"
   - PKGS="python=3.7"
   - PKGS="python=3.8"
