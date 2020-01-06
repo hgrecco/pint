@@ -90,32 +90,56 @@ Full documentation is available at http://pint.readthedocs.org/
 GUI Website 
 -----------
 
-This [website](www.dimensionalanalysis.org) wraps Pint's "dimensional analysis" methods to provide a GUI.
+This Website_ wraps Pint's "dimensional analysis" methods to provide a GUI.
 
 
 Design principles
 -----------------
 
 Although there are already a few very good Python packages to handle physical
-quantities, no one was really fitting my needs. Like most developers, I programed
-Pint to scratch my own itches.
+quantities, no one was really fitting my needs. Like most developers, I
+programmed Pint to scratch my own itches.
 
-- Unit parsing: prefixed and pluralized forms of units are recognized without
-  explicitly defining them. In other words: as the prefix *kilo* and the unit *meter*
-  are defined, Pint understands *kilometers*. This results in a much shorter and
-  maintainable unit definition list as compared to other packages.
+**Unit parsing**: prefixed and pluralized forms of units are recognized without
+explicitly defining them. In other words: as the prefix *kilo* and the unit
+*meter* are defined, Pint understands *kilometers*. This results in a much
+shorter and maintainable unit definition list as compared to other packages.
 
-- Standalone unit definitions: units definitions are loaded from simple and
-  easy to edit text file. Adding and changing units and their definitions does
-  not involve changing the code.
+**Standalone unit definitions**: units definitions are loaded from a text file
+which is simple and easy to edit. Adding and changing units and their
+definitions does not involve changing the code.
 
-- Advanced string formatting: a quantity can be formatted into string using
-  PEP 3101 syntax. Extended conversion flags are given to provide latex and pretty
-  formatting.
+**Advanced string formatting**: a quantity can be formatted into string using
+`PEP 3101`_ syntax. Extended conversion flags are given to provide symbolic,
+LaTeX and pretty formatting. Unit name translation is available if Babel_ is
+installed.
 
-- Small codebase: small and easy to maintain with a flat hierarchy.
+**Free to choose the numerical type**: You can use any numerical type
+(`fraction`, `float`, `decimal`, `numpy.ndarray`, etc). NumPy_ is not required
+but supported.
 
-- Dependency free: it depends only on Python and its standard library.
+**Awesome NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and
+ufuncs are supported including automatic conversion of units. For example
+`numpy.arccos(q)` will require a dimensionless `q` and the units of the output
+quantity will be radian.
 
-- Advanced NumPy support: While NumPy is not a requirement for Pint,
-  when available ndarray methods and ufuncs can be used in Quantity objects.
+**Uncertainties integration**:  transparently handles calculations with
+quantities with uncertainties (like 3.14±0.01) meter via the `uncertainties
+package`_.
+
+**Handle temperature**: conversion between units with different reference
+points, like positions on a map or absolute temperature scales.
+
+**Dependency free**: it depends only on Python and its standard library. It interacts with other packages
+like numpy and uncertainties if they are installed
+
+**Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas. Operations on DataFrames and between columns are units aware, providing even more convenience for users of Pandas DataFrames. For full details, see the `pint-pandas Jupyter notebook`_.
+
+
+When you choose to use a NumPy_ ndarray, its methods and
+ufuncs are supported including automatic conversion of units. For example
+`numpy.arccos(q)` will require a dimensionless `q` and the units of the output
+quantity will be radian.
+
+
+.. _Website: http://www.dimensionalanalysis.org/
