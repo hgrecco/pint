@@ -90,8 +90,7 @@ def set_application_registry(registry):
 
     Parameters
     ----------
-    registry : UnitRegistry
-
+    registry : pint.UnitRegistry
     """
     if not isinstance(registry, (LazyRegistry, UnitRegistry)):
         raise TypeError("Expected UnitRegistry; got %s" % type(registry))
@@ -107,7 +106,7 @@ def get_application_registry():
 
     Returns
     -------
-    UnitRegistry
+    pint.UnitRegistry
     """
     return _APP_REGISTRY
 

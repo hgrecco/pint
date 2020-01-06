@@ -188,11 +188,11 @@ def wraps(ureg, ret, args, strict=True):
 
     Parameters
     ----------
-    ureg : UnitRegistry
+    ureg : pint.UnitRegistry
         a UnitRegistry instance.
-    ret : iterable of str or iterable of Unit
+    ret : str, pint.Unit, iterable of str, or iterable of pint.Unit
         Units of each of the return values. Use `None` to skip argument conversion.
-    args : iterable of str or iterable of Unit
+    args : str, pint.Unit, iterable of str, or iterable of pint.Unit
         Units of each of the input arguments. Use `None` to skip argument conversion.
     strict : bool
         Indicates that only quantities are accepted. (Default value = True)
@@ -299,8 +299,9 @@ def check(ureg, *args):
 
     ureg : UnitRegistry
         a UnitRegistry instance.
-    *args : iterable of str or iterable of UnitContainer
-        Dimensions of each of the input arguments. Use `None` to skip argument conversion.
+    args : str or UnitContainer or None
+        Dimensions of each of the input arguments.
+        Use `None` to skip argument conversion.
 
     Returns
     -------
@@ -310,10 +311,10 @@ def check(ureg, *args):
     Raises
     ------
     TypeError
-        if the number of given dimensions does not match the number of function parameters.
+        If the number of given dimensions does not match the number of function
+        parameters.
     ValueError
-        if the any of the provided dimensions cannot be parsed as a dimension.
-
+        If the any of the provided dimensions cannot be parsed as a dimension.
     """
     dimensions = [
         ureg.get_dimensionality(dim) if dim is not None else None for dim in args

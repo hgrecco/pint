@@ -65,7 +65,7 @@ def setup_matplotlib_handlers(registry, enable):
 
     Parameters
     ----------
-    registry : UnitRegistry
+    registry : pint.UnitRegistry
         The registry that will be used.
     enable : bool
         Whether support should be enabled or disabled.
