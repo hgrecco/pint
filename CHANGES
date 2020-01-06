@@ -100,8 +100,10 @@ Pint Changelog
   (Issue #915, Thanks Guido Imperiale)
 - All Exceptions can now be pickled and can be accessed from the top-level package.
   (Issue #915, Thanks Guido Imperiale)
-- TODO #913
-- TODO #911
+- Mark regex as raw strings to avoid unnecessary warnings.
+  (Issue #913, Thanks keewis)
+- Implement registry-based string preprocessing as list of callables.
+  (Issues #429 and #851, thanks Jon Thielen)
 - Context activation and deactivation is now instantaneous; drastically reduced memory
   footprint of a context (it used to be ~1.6MB per context; now it's a few bytes)
   (Issues #909 / #923 / #938, Thanks Guido Imperiale)
@@ -111,12 +113,14 @@ Pint Changelog
   Pint now adheres to NEP-29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>
   as a rolling dependencies version policy.
   (Issues #908 and #910, Thanks Guido Imperiale)
-- TODO #907
-- TODO #891
-- TODO #890
-- TODO #889
-- TODO #888
-- TODO #884
+- Show proper code location of UnitStrippedWarning exception.
+  (Issue #907, thanks Martin K. Scherer)
+- Reimplement _Quantity.__iter__ to return an iterator.
+  (Issues #751 and #760, Thanks Jon Thielen)
+- Add http://www.dimensionalanalysis.org/ to README
+  (Thanks  Shiri Avni)
+- Allow for user defined units formatting.
+  (Issue #873, Thanks Ryan Clary)
 - Quantity, Unit, and Measurement are now accessible as top-level classes
   (pint.Quantity, pint.Unit, pint.Measurement) and can be
   instantiated without explicitly creating a UnitRegistry
@@ -133,35 +137,42 @@ Pint Changelog
   (Issue #863, Thanks Guido Imperiale)
 - Document the '_' symbols found in the definitions files
   (Issue #862, Thanks Guido Imperiale)
-- TODO #846
-- TODO #837
-- TODO #835
-- TODO #834
-- TODO #830
-- TODO #829
-- TODO #825
-- TODO #824
-- TODO #822
-- TODO #813
-- TODO #811
-- TODO #809
-- TODO #805
-- TODO #802
-- TODO #798
-- TODO #796
-- TODO #791
-- TODO #788
-- TODO #781
-- TODO #776
-- TODO #784
-- TODO #773
-- TODO #768
-- TODO #767
-- TODO #762
-- TODO #759
-- TODO #756
-- TODO #754
-- TODO #680
+- Improve OffsetUnitCalculusError message.
+  (Issue #839, Thanks Christoph Buchner)
+- Atomic units for intensity and electric field.
+  (Issue #834, Thanks Øyvind Sigmundson Schøyen)
+- Allow np arrays of scalar quantities to be plotted.
+  (Issue #825, Thanks andrewgsavage)
+- Updated gravitational constant to CODATA 2018.
+  (Issue #816, Thanks Jellby)
+- Update to new SI definition and CODATA 2018.
+  (Issue #811, Thanks Jellby)
+- Allow units with aliases but no symbol.
+  (Issue #808, Thanks Jellby)
+- Fix definition of dimensionless units and constants.
+  (Issue #805, Thanks Jellby)
+- Added RKM unit (used in textile industry).
+  (Issue #802, Thanks Giuseppe Corbelli)
+- Remove __name__ method definition in BaseRegistry.
+  (Issue #787, Thanks Carlos Pascual)
+- Added t_force, short_ton_force and long_ton_force.
+  (Issue #796, Thanks Jan Hein de Jong)
+- Fixed error message of DefinitionSyntaxError
+  (Issue #791, Thanks Clément Pit-Claudel)
+- Expanded the potential use of Decimal type to parsing.
+  (Issue #788, Thanks Francisco Couzo)
+- Fixed gram name to allow translation by babel.
+  (Issue #776, Thanks Hervé Cauwelier)
+- Default group should only have orphan units.
+  (Issue #766, Thanks Jules Chéron)
+- Added custom constructors from_sequence and from_list.
+  (Issue #761, Thanks deniz195)
+- Add quantity formatting with ndarray.
+  (Issue #559, Thanks Jules Chéron)
+- Add pint-pandas notebook docs
+  (Issue #754, Thanks andrewgsavage)
+- Use µ as default abbreviation for micro.
+  (Issue #666, Thanks Eric Prestat)
 
 
 0.9 (2019-01-12)
