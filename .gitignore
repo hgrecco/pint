@@ -9,6 +9,7 @@ build/
 dist/
 MANIFEST
 *pytest_cache*
+.eggs
 
 # WebDAV file system cache files
 .DAV/
