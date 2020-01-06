@@ -1,7 +1,8 @@
-include README AUTHORS CHANGES LICENSE README.rst BADGES.rst
+include AUTHORS CHANGES LICENSE README.rst BADGES.rst
 recursive-include pint *
 recursive-include docs *
 recursive-include bench *
 prune docs/_build
 prune docs/_themes/.git
+exclude .editorconfig bors.toml pull_request_template.md requirements_docs.txt
 global-exclude *.pyc *~ .DS_Store *__pycache__* *.pyo .travis-exclude.yml

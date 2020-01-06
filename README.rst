@@ -143,3 +143,10 @@ quantity will be radian.
 
 
 .. _Website: http://www.dimensionalanalysis.org/
+.. _`comprehensive list of physical units, prefixes and constants`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
+.. _`uncertainties package`: https://pythonhosted.org/uncertainties/
+.. _`NumPy`: http://www.numpy.org/
+.. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/
+.. _`Babel`: http://babel.pocoo.org/
+.. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/extending.html#extension-types
+.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb

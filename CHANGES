@@ -25,12 +25,14 @@ Pint Changelog
   of basic tests has been added.
   (Issue #963, Thanks Jon Thielen)
 - Improvements to wraps and check:
+
   - fail upon decoration (not execution) by checking wrapped function signature against
     wraps/check arguments.
     (might BREAK test code)
   - wraps only accepts strings and Units (not quantities) to avoid confusion with magnitude.
     (might BREAK code not conforming to documentation)
   - when strict=True, strings that can be parsed to quantities are accepted as arguments.
+
 - Add revolutions per second (rps)
 - Improved compatibility for upcast types like xarray's DataArray or Dataset, to which
   Pint Quantities now fully defer for arithmetic and NumPy operations. A collection of
