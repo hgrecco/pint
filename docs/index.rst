@@ -83,7 +83,7 @@ installed.
 (`fraction`, `float`, `decimal`, `numpy.ndarray`, etc). NumPy_ is not required
 but supported.
 
-**NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and
+**Awesome NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and
 ufuncs are supported including automatic conversion of units. For example
 `numpy.arccos(q)` will require a dimensionless `q` and the units of the output
 quantity will be radian.
@@ -95,9 +95,8 @@ package`_.
 **Handle temperature**: conversion between units with different reference
 points, like positions on a map or absolute temperature scales.
 
-**Small codebase**: easy to maintain codebase with a flat hierarchy.
-
-**Dependency free**: it depends only on Python and its standard library.
+**Dependency free**: it depends only on Python and its standard library. It interacts with other packages
+like numpy and uncertainties if they are installed
 
 **Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas. Operations on DataFrames and between columns are units aware, providing even more convenience for users of Pandas DataFrames. For full details, see the `pint-pandas Jupyter notebook`_.
 
