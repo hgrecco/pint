@@ -417,7 +417,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @property
     def dimensionality(self):
-        """Quantity's dimensionality (e.g. {length: 1, time: -1})"""
+        """
+        Returns
+        -------
+        dict
+            Dimensionality of the Quantity, e.g. ``{length: 1, time: -1}``
+        """
         if self._dimensionality is None:
             self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
 
@@ -525,11 +530,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ----------
         other : pint.Quantity, str or dict
             Destination units. (Default value = None)
-        *contexts : str or Context
+        *contexts : str or pint.Context
             Contexts to use in the transformation.
         **ctx_kwargs :
             Values for the Context/s
-
         """
         other = to_units_container(other, self._REGISTRY)
 
@@ -545,7 +549,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ----------
         other : pint.Quantity, str or dict
             destination units. (Default value = None)
-        *contexts : str or Context
+        *contexts : str or pint.Context
             Contexts to use in the transformation.
         **ctx_kwargs :
             Values for the Context/s
@@ -553,7 +557,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         Returns
         -------
         pint.Quantity
-
         """
         other = to_units_container(other, self._REGISTRY)
 

@@ -51,9 +51,9 @@ class Context:
 
     Parameters
     ----------
-    name : str or None (default), optional
+    name : str or None, optional
         Name of the context (must be unique within the registry).
-        Use None for anonymous Context.
+        Use None for anonymous Context. (Default value = None).
     aliases : iterable of str
         Other names for the context.
     defaults : None or dict
@@ -113,15 +113,14 @@ class Context:
 
         Parameters
         ----------
-        context : Context
+        context : pint.Context
             Original context.
         **defaults
 
 
         Returns
         -------
-        Context
-
+        pint.Context
         """
         if defaults:
             newdef = dict(context.defaults, **defaults)

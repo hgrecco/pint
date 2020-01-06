@@ -116,12 +116,18 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     @property
     def dimensionless(self):
-        """Return true if the Unit is dimensionless."""
+        """Return True if the Unit is dimensionless; False otherwise.
+        """
         return not bool(self.dimensionality)
 
     @property
     def dimensionality(self):
-        """Unit's dimensionality (e.g. {length: 1, time: -1})"""
+        """
+        Returns
+        -------
+        dict
+            Dimensionality of the Unit, e.g. ``{length: 1, time: -1}``
+        """
         try:
             return self._dimensionality
         except AttributeError:

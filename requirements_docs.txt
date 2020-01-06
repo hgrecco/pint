@@ -1,3 +1,5 @@
-matplotlib>=2
-numpy
+ipython
+matplotlib
 nbsphinx
+numpy
+pytest

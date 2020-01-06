@@ -4,8 +4,8 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
-- Nothing changed yet.
-
+- Fixed several Sphinx issues. Fixed intersphinx hooks to all classes missing.
+  (Issue #881, Thanks Guido Imperiale)
 
 0.10 (2020-01-05)
 -----------------

@@ -181,8 +181,9 @@ class Group(SharedRegistryObject):
         ----------
         lines : list[str]
             iterable
-        define_func : str -> None
-            Function to define a unit in the registry.
+        define_func : callable
+            Function to define a unit in the registry; it must accept a single string as
+            a parameter.
 
         Returns
         -------
