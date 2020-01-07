@@ -3,6 +3,7 @@
 # Language: english
 # Source: https://physics.nist.gov/cuu/Constants/
 #         https://physics.nist.gov/PhysRefData/XrayTrans/Html/search.html
+#         https://www.bipm.org/en/publications/mises-en-pratique/
 # :copyright: 2013,2019 by Pint Authors, see AUTHORS for more details.
 
 #### MATHEMATICAL CONSTANTS ####
@@ -16,15 +17,15 @@ wien_u = 2.8214393721220788934031913302944851953458817440731      # solution to 
 
 #### DEFINED EXACT CONSTANTS ####
 
-speed_of_light = 299792458 m/s = c = c_0                      # since 1983
-planck_constant = 6.62607015e-34 J s = h                      # since May 2019
-elementary_charge = 1.602176634e-19 C = e                     # since May 2019
-avogadro_number = 6.02214076e23                               # since May 2019
-boltzmann_constant = 1.380649e-23 J K^-1 = k = k_B            # since May 2019
-standard_gravity = 9.80665 m/s^2 = g_0 = g0 = g_n = gravity   # since 1901
-standard_atmosphere = 1.01325e5 Pa = atm = atmosphere         # since 1954
-conventional_josephson_constant = 4.835979e14 Hz / V = K_J90  # since Jan 1990
-conventional_von_klitzing_constant = 2.5812807e4 ohm = R_K90  # since Jan 1990
+speed_of_light = 299792458 m/s = c = c_0                          # since 1983
+planck_constant = 6.62607015e-34 J s = h                          # since May 2019
+elementary_charge = 1.602176634e-19 C = e                         # since May 2019
+avogadro_number = 6.02214076e23                                   # since May 2019
+boltzmann_constant = 1.380649e-23 J K^-1 = k = k_B                # since May 2019
+standard_gravity = 9.80665 m/s^2 = g_0 = g0 = g_n = gravity       # since 1901
+standard_atmosphere = 1.01325e5 Pa = atm = atmosphere             # since 1954
+conventional_josephson_constant = 483597.848416984 Hz/V = K_J     # since May 2019
+conventional_von_klitzing_constant = 2.58128074593045 ohm = R_K   # since May 2019
 
 #### DERIVED EXACT CONSTANTS ####
 # Floating-point conversion may introduce inaccuracies
