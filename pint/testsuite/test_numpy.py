@@ -1036,6 +1036,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
         with self.assertWarns(UnitStrippedWarning):
             np.asarray(self.q)
 
+    @patch("pint.quantity.ARRAY_FALLBACK", False)
+    def test_ndarray_downcast_with_dtype(self):
+        with self.assertWarns(UnitStrippedWarning):
+            qarr = np.asarray(self.q, dtype=np.float64)
+            self.assertEqual(qarr.dtype, np.float64)
+
     def test_array_protocol_fallback(self):
         with self.assertWarns(DeprecationWarning) as cm:
             for attr in ("__array_struct__", "__array_interface__"):

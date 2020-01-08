@@ -6,6 +6,7 @@ Pint Changelog
 
 - Fixed several Sphinx issues. Fixed intersphinx hooks to all classes missing.
   (Issue #881, Thanks Guido Imperiale)
+- Fixed __array__ signature to match numpy docs (Issue #974, Thanks Ryan May)
 
 0.10 (2020-01-05)
 -----------------
