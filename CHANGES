@@ -1,8 +1,8 @@
 Pint Changelog
 ==============
 
-0.11 (unreleased)
------------------
+0.10.1 (2020-01-07)
+-------------------
 
 - Fixed bug introduced in 0.10 that prevented creation of size-zero Quantities
   from NumPy arrays by multiplication.
