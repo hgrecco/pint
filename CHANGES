@@ -4,8 +4,8 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
-- Nothing changed yet.
-
+- Added additional NumPy function implementations (allclose, intersect1d)
+  (Issue #979, Thanks Jon Thielen)
 
 0.10.1 (2020-01-07)
 -------------------

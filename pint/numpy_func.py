@@ -772,6 +772,8 @@ for func_str, unit_arguments, wrap_output in [
     ("insert", ["arr", "values"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
+    ("allclose", ["a", "b"], False),
+    ("intersect1d", ["ar1", "ar2"], True),
 ]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
