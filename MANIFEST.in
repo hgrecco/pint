@@ -1,4 +1,4 @@
-include AUTHORS CHANGES LICENSE README.rst BADGES.rst version.txt
+include AUTHORS CHANGES LICENSE README.rst BADGES.rst version.txt readthedocs.yml
 recursive-include pint *
 recursive-include docs *
 recursive-include bench *
