@@ -1551,7 +1551,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             return value
 
-    def __array__(self):
+    def __array__(self, t=None):
         warnings.warn(
             "The unit of the quantity is stripped when downcasting to ndarray.",
             UnitStrippedWarning,
