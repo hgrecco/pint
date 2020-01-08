@@ -733,6 +733,15 @@ try:
         callable(q)
         assert isinstance(q._magnitude, type_before)
 
+    @pytest.mark.skipif(np is None, reason="NumPy is not available")
+    def test_issue973():
+        """Verify that an empty array Quantity can be created through multiplication."""
+        q0 = np.array([]) * ureg.m  # by Unit
+        q1 = np.array([]) * ureg("m")  # by Quantity
+        assert isinstance(q0, ureg.Quantity)
+        assert isinstance(q1, ureg.Quantity)
+        assert len(q0) == len(q1) == 0
+
 
 except AttributeError:
     # Calling attributes on np will fail if NumPy is not available

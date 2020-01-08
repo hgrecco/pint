@@ -5,7 +5,7 @@ from pint import DimensionalityError, OffsetUnitCalculusError
 from pint.compat import np
 from pint.numpy_func import (
     _is_quantity,
-    _is_quantity_sequence,
+    _is_sequence_with_quantity_elements,
     convert_to_consistent_units,
     get_op_output_unit,
     implements,
@@ -48,14 +48,20 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         self.assertFalse(_is_quantity("not-a-quantity"))
         # TODO (#905 follow-up): test other duck arrays that wrap or are wrapped by Pint
 
-    def test_is_quantity_sequence(self):
-        self.assertTrue(_is_quantity_sequence((self.Q_(0, "m"), self.Q_(32.0, "degF"))))
-        self.assertTrue(_is_quantity_sequence(np.arange(4) * self.ureg.m))
-        self.assertFalse(_is_quantity_sequence((self.Q_(0), True)))
-        self.assertFalse(_is_quantity_sequence([1, 3, 5]))
-        self.assertFalse(_is_quantity_sequence(9 * self.ureg.m))
-        self.assertFalse(_is_quantity_sequence(np.arange(4)))
-        self.assertFalse(_is_quantity_sequence("0123"))
+    def test_is_sequence_with_quantity_elements(self):
+        self.assertTrue(
+            _is_sequence_with_quantity_elements(
+                (self.Q_(0, "m"), self.Q_(32.0, "degF"))
+            )
+        )
+        self.assertTrue(_is_sequence_with_quantity_elements(np.arange(4) * self.ureg.m))
+        self.assertFalse(_is_sequence_with_quantity_elements((self.Q_(0), True)))
+        self.assertFalse(_is_sequence_with_quantity_elements([1, 3, 5]))
+        self.assertFalse(_is_sequence_with_quantity_elements(9 * self.ureg.m))
+        self.assertFalse(_is_sequence_with_quantity_elements(np.arange(4)))
+        self.assertFalse(_is_sequence_with_quantity_elements("0123"))
+        self.assertFalse(_is_sequence_with_quantity_elements([]))
+        self.assertFalse(_is_sequence_with_quantity_elements(np.array([])))
 
     def test_convert_to_consistent_units_with_pre_calc_units(self):
         args, kwargs = convert_to_consistent_units(
