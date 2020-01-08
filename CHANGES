@@ -1,9 +1,12 @@
 Pint Changelog
 ==============
 
-0.11 (unreleased)
+0.10.1 (unreleased)
 -----------------
 
+- Fixed bug introduced in 0.10 that prevented creation of size-zero Quantities
+  from NumPy arrays by multiplication.
+  (Issue #977, Thanks Jon Thielen)
 - Fixed several Sphinx issues. Fixed intersphinx hooks to all classes missing.
   (Issue #881, Thanks Guido Imperiale)
 - Fixed __array__ signature to match numpy docs (Issue #974, Thanks Ryan May)
