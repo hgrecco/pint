@@ -1153,6 +1153,22 @@ class TestNumpyUnclassified(TestNumpyMethods):
             ),
         )  # Note: Does not support Quantity pad_with vectorized callable use
 
+    @helpers.requires_array_function_protocol()
+    def test_allclose(self):
+        self.assertTrue(
+            np.allclose([1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m)
+        )
+        self.assertFalse(
+            np.allclose([1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.mm)
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_intersect1d(self):
+        self.assertQuantityEqual(
+            np.intersect1d([1, 3, 4, 3] * self.ureg.m, [3, 1, 2, 1] * self.ureg.m),
+            [1, 3] * self.ureg.m,
+        )
+
 
 @unittest.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):
