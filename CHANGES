@@ -3,7 +3,8 @@ Pint Changelog
 
 0.11 (unreleased)
 -----------------
-
+- **BREAKING CHANGE**:
+  Modified definition of R_K and K_J to changes of SI May 2019, definitions of R_K90 and K_J90 have been removed (Issue #971).
 - Fixed several Sphinx issues. Fixed intersphinx hooks to all classes missing.
   (Issue #881, Thanks Guido Imperiale)
 
