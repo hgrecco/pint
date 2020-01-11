@@ -1036,6 +1036,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
         with self.assertWarns(UnitStrippedWarning):
             np.asarray(self.q)
 
+    @patch("pint.quantity.ARRAY_FALLBACK", False)
+    def test_ndarray_downcast_with_dtype(self):
+        with self.assertWarns(UnitStrippedWarning):
+            qarr = np.asarray(self.q, dtype=np.float64)
+            self.assertEqual(qarr.dtype, np.float64)
+
     def test_array_protocol_fallback(self):
         with self.assertWarns(DeprecationWarning) as cm:
             for attr in ("__array_struct__", "__array_interface__"):
@@ -1146,6 +1152,22 @@ class TestNumpyUnclassified(TestNumpyMethods):
                 "degC",
             ),
         )  # Note: Does not support Quantity pad_with vectorized callable use
+
+    @helpers.requires_array_function_protocol()
+    def test_allclose(self):
+        self.assertTrue(
+            np.allclose([1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m)
+        )
+        self.assertFalse(
+            np.allclose([1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.mm)
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_intersect1d(self):
+        self.assertQuantityEqual(
+            np.intersect1d([1, 3, 4, 3] * self.ureg.m, [3, 1, 2, 1] * self.ureg.m),
+            [1, 3] * self.ureg.m,
+        )
 
 
 @unittest.skip

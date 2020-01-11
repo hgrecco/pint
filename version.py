@@ -1,3 +1,6 @@
 # This is just for zest.releaser. Do not touch
+# flake8: noqa
 
-__version__ = "0.11.dev0"
+# fmt: off
+__version__ = '0.11.dev0'
+# fmt: on

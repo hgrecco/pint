@@ -5,8 +5,18 @@ Pint Changelog
 -----------------
 - **BREAKING CHANGE**:
   Modified definition of R_K and K_J to changes of SI May 2019, definitions of R_K90 and K_J90 have been removed (Issue #971).
+- Added additional NumPy function implementations (allclose, intersect1d)
+  (Issue #979, Thanks Jon Thielen)
+
+0.10.1 (2020-01-07)
+-------------------
+
+- Fixed bug introduced in 0.10 that prevented creation of size-zero Quantities
+  from NumPy arrays by multiplication.
+  (Issue #977, Thanks Jon Thielen)
 - Fixed several Sphinx issues. Fixed intersphinx hooks to all classes missing.
   (Issue #881, Thanks Guido Imperiale)
+- Fixed __array__ signature to match numpy docs (Issue #974, Thanks Ryan May)
 
 0.10 (2020-01-05)
 -----------------

@@ -38,7 +38,7 @@ def _is_quantity(obj):
     return hasattr(obj, "_units") and hasattr(obj, "_magnitude")
 
 
-def _is_quantity_sequence(obj):
+def _is_sequence_with_quantity_elements(obj):
     """Test for sequences of quantities.
 
     Parameters
@@ -54,6 +54,7 @@ def _is_quantity_sequence(obj):
         iterable(obj)
         and sized(obj)
         and not isinstance(obj, str)
+        and len(obj) > 0
         and all(_is_quantity(item) for item in obj)
     )
 
@@ -65,7 +66,7 @@ def _get_first_input_units(args, kwargs=None):
     for arg in chain(args, kwargs.values()):
         if _is_quantity(arg):
             return arg.units
-        elif _is_quantity_sequence(arg):
+        elif _is_sequence_with_quantity_elements(arg):
             return arg[0].units
 
 
@@ -79,7 +80,7 @@ def convert_arg(arg, pre_calc_units):
     if pre_calc_units is not None:
         if _is_quantity(arg):
             return arg.m_as(pre_calc_units)
-        elif _is_quantity_sequence(arg):
+        elif _is_sequence_with_quantity_elements(arg):
             return [item.m_as(pre_calc_units) for item in arg]
         elif arg is not None:
             if pre_calc_units.dimensionless:
@@ -89,7 +90,7 @@ def convert_arg(arg, pre_calc_units):
     else:
         if _is_quantity(arg):
             return arg.m
-        elif _is_quantity_sequence(arg):
+        elif _is_sequence_with_quantity_elements(arg):
             return [item.m for item in arg]
     return arg
 
@@ -626,7 +627,7 @@ def _isin(element, test_elements, assume_unique=False, invert=False):
         except DimensionalityError:
             # Incompatible unit test elements cannot be in element
             return np.full(element.shape, False)
-    elif _is_quantity_sequence(test_elements):
+    elif _is_sequence_with_quantity_elements(test_elements):
         compatible_test_elements = []
         for test_element in test_elements:
             try:
@@ -771,6 +772,8 @@ for func_str, unit_arguments, wrap_output in [
     ("insert", ["arr", "values"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
+    ("allclose", ["a", "b"], False),
+    ("intersect1d", ["ar1", "ar2"], True),
 ]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
