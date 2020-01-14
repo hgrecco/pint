@@ -52,7 +52,7 @@ before_install:
   # But broke travis 2019-08
   # - sudo rm -rf /dev/shm
   # - sudo ln -s /run/shm /dev/shm
-  - export TEST_OPTS="-rfsxEX -s --cov=pint"
+  - export TEST_OPTS="-rfsxEX -s --cov=pint --cov-config=.coveragerc"
 
 install:
   - conda create -n travis $PKGS pytest pytest-cov coveralls
