@@ -6,6 +6,8 @@ Pint Changelog
 
 - Added additional NumPy function implementations (allclose, intersect1d)
   (Issue #979, Thanks Jon Thielen)
+- Allow constants in units by using a leading underscore (Issue #989, Thanks
+  Juan Nunez-Iglesias)
 
 0.10.1 (2020-01-07)
 -------------------
