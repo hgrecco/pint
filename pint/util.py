@@ -882,7 +882,7 @@ def getattr_maybe_raise(self, item):
     # automatically prefixed with the class name - which may be a subclass of self
     if (
         item.startswith("_")
-        and not item.lstrip('_')[0].isdigit()
+        and not item.lstrip("_")[0].isdigit()
         or item.endswith("__")
     ):
         raise AttributeError("%r object has no attribute %r" % (self, item))
