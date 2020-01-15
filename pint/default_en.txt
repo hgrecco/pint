@@ -36,7 +36,7 @@
 #     [density] = [mass] / [volume]
 #
 # Note that primary dimensions don't need to be declared; they can be
-# defined or the first time in a unit definition.
+# defined for the first time in a unit definition.
 # E.g. see below `meter = [length]`
 #
 #
