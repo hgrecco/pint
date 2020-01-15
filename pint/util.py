@@ -862,12 +862,16 @@ def infer_base_unit(q):
 
 
 def getattr_maybe_raise(self, item):
-    """Helper function to invoke at the beginning of all overridden ``__getattr__``
-    methods. Raise AttributeError if the user tries to ask for a _ or __ attribute.
+    """Helper function invoked at start of all overridden ``__getattr__``.
+
+    Raise AttributeError if the user tries to ask for a _ or __ attribute,
+    *unless* it is immediately followed by a number, to enable units
+    encompassing constants, such as ``L / _100km``.
 
     Parameters
     ----------
-    item :
+    item : string
+        Item to be found.
 
 
     Returns
