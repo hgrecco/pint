@@ -697,6 +697,14 @@ class TestIssues(QuantityTestCase):
         with self.assertRaises(DimensionalityError):
             q.to("joule")
 
+    def test_issue507(self):
+        # leading underscore in unit works with numbers
+        u.define('_100km = 100 * kilometer')
+        battery_ec = 16 * u.kWh / u._100km
+        # ... but not with text
+        u.define('_home = 4700 * kWh / year')
+        with self.assertRaises(AttributeError):
+            home_elec_power = 1 * u._home
 
 try:
 
