@@ -705,6 +705,10 @@ class TestIssues(QuantityTestCase):
         ureg.define("_home = 4700 * kWh / year")
         with self.assertRaises(AttributeError):
             home_elec_power = 1 * ureg._home
+        # ... or with *only* underscores
+        ureg.define("_ = 45 * km")
+        with self.assertRaises(AttributeError):
+            one_blank = 1 * ureg._
 
 
 try:

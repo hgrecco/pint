@@ -880,10 +880,10 @@ def getattr_maybe_raise(self, item):
     """
     # Double-underscore attributes are tricky to detect because they are
     # automatically prefixed with the class name - which may be a subclass of self
-    if item.endswith("__") or (
-        item.startswith("_")
-        and len(item.lstrip("_")) > 1
-        and not item.lstrip("_")[0].isdigit()
+    if (
+        item.endswith("__")
+        or len(item.lstrip("_")) == 0
+        or (item.startswith("_") and not item.lstrip("_")[0].isdigit())
     ):
         raise AttributeError("%r object has no attribute %r" % (self, item))
 
