@@ -862,12 +862,16 @@ def infer_base_unit(q):
 
 
 def getattr_maybe_raise(self, item):
-    """Helper function to invoke at the beginning of all overridden ``__getattr__``
-    methods. Raise AttributeError if the user tries to ask for a _ or __ attribute.
+    """Helper function invoked at start of all overridden ``__getattr__``.
+
+    Raise AttributeError if the user tries to ask for a _ or __ attribute,
+    *unless* it is immediately followed by a number, to enable units
+    encompassing constants, such as ``L / _100km``.
 
     Parameters
     ----------
-    item :
+    item : string
+        Item to be found.
 
 
     Returns
@@ -876,7 +880,11 @@ def getattr_maybe_raise(self, item):
     """
     # Double-underscore attributes are tricky to detect because they are
     # automatically prefixed with the class name - which may be a subclass of self
-    if item.startswith("_") or item.endswith("__"):
+    if (
+        item.endswith("__")
+        or len(item.lstrip("_")) == 0
+        or (item.startswith("_") and not item.lstrip("_")[0].isdigit())
+    ):
         raise AttributeError("%r object has no attribute %r" % (self, item))
 
 

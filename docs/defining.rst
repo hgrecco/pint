@@ -138,3 +138,17 @@ Same for aliases and derived dimensions:
 .. warning::
    Units, prefixes, aliases and dimensions added programmatically are forgotten when the
    program ends.
+
+
+Units with constants
+--------------------
+
+Some units, such as ``L/100km``, contain constants. These can be defined with a
+leading underscore:
+
+.. doctest::
+
+   >>> ureg.define('_100km = 100 * kilometer')
+   >>> ureg.define('mpg = 1 * mile / gallon')
+   >>> fuel_ec_europe = 5 * ureg.L / ureg._100km
+   >>> fuel_ec_us = (1 / fuel_ec_europe).to(ureg.mpg)
