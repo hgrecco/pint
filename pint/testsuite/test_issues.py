@@ -699,12 +699,12 @@ class TestIssues(QuantityTestCase):
 
     def test_issue507(self):
         # leading underscore in unit works with numbers
-        u.define("_100km = 100 * kilometer")
-        battery_ec = 16 * u.kWh / u._100km
+        ureg.define("_100km = 100 * kilometer")
+        battery_ec = 16 * ureg.kWh / ureg._100km
         # ... but not with text
-        u.define("_home = 4700 * kWh / year")
+        ureg.define("_home = 4700 * kWh / year")
         with self.assertRaises(AttributeError):
-            home_elec_power = 1 * u._home
+            home_elec_power = 1 * ureg._home
 
 
 try:
