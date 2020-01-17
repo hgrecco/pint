@@ -504,6 +504,24 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.get_compatible_units(self._units)
 
+    def is_compatible_with(self, other, *contexts, **ctx_kwargs):
+        if contexts:
+            try:
+                self.to(other, *contexts, **ctx_kwargs)
+                return True
+            except DimensionalityError:
+                return False
+
+        if isinstance(other, (self._REGISTRY.Quantity, self._REGISTRY.Unit)):
+            return self.dimensionality == other.dimensionality
+
+        if isinstance(other, str):
+            return (
+                self.dimensionality == self._REGISTRY.parse_units(other).dimensionality
+            )
+
+        return self.dimensionless
+
     def _convert_magnitude_not_inplace(self, other, *contexts, **ctx_kwargs):
         if contexts:
             with self._REGISTRY.context(*contexts, **ctx_kwargs):

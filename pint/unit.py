@@ -15,6 +15,7 @@ from numbers import Number
 
 from .compat import NUMERIC_TYPES, is_upcast_type
 from .definitions import UnitDefinition
+from .errors import DimensionalityError
 from .formatting import siunitx_format_unit
 from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
@@ -142,6 +143,24 @@ class Unit(PrettyIPython, SharedRegistryObject):
                 return self._REGISTRY.get_compatible_units(self)
 
         return self._REGISTRY.get_compatible_units(self)
+
+    def is_compatible_with(self, other, *contexts, **ctx_kwargs):
+        if contexts:
+            try:
+                (1 * self).to(other, *contexts, **ctx_kwargs)
+                return True
+            except DimensionalityError:
+                return False
+
+        if isinstance(other, (self._REGISTRY.Quantity, self._REGISTRY.Unit)):
+            return self.dimensionality == other.dimensionality
+
+        if isinstance(other, str):
+            return (
+                self.dimensionality == self._REGISTRY.parse_units(other).dimensionality
+            )
+
+        return self.dimensionless
 
     def __mul__(self, other):
         if self._check(other):

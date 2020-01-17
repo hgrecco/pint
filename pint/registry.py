@@ -854,6 +854,17 @@ class BaseRegistry(metaclass=RegistryMeta):
         src_dim = self._get_dimensionality(input_units)
         return self._cache.dimensional_equivalents[src_dim]
 
+    def is_compatible_with(self, obj1, obj2, *contexts, **ctx_kwargs):
+        if isinstance(obj1, (self.Quantity, self.Unit)):
+            return obj1.is_compatible_with(obj2, *contexts, **ctx_kwargs)
+
+        if isinstance(obj1, str):
+            return self.parse_expression(obj1).is_compatible_with(
+                obj2, *contexts, **ctx_kwargs
+            )
+
+        return not isinstance(obj2, (self.Quantity, self.Unit))
+
     def convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
 
