@@ -505,6 +505,22 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self._units)
 
     def is_compatible_with(self, other, *contexts, **ctx_kwargs):
+        """ check if the other object is compatible
+
+        Parameters
+        ----------
+        other
+            The object to check. Treated as dimensionless if not a
+            Quantity, Unit or str.
+        *contexts : str or pint.Context
+            Contexts to use in the transformation.
+        **ctx_kwargs :
+            Values for the Context/s
+
+        Returns
+        -------
+        bool
+        """
         if contexts:
             try:
                 self.to(other, *contexts, **ctx_kwargs)
