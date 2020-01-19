@@ -296,7 +296,7 @@ class udict(dict):
     """Custom dict implementing __missing__."""
 
     def __missing__(self, key):
-        return 0.0
+        return 0
 
     def copy(self):
         return udict(self)
@@ -601,8 +601,8 @@ class ParserHelper(UnitsContainer):
         return self.__copy__()
 
     def __hash__(self):
-        if self.scale != 1.0:
-            mess = "Only scale 1.0 ParserHelper instance should be considered hashable"
+        if self.scale != 1:
+            mess = "Only scale 1 ParserHelper instance should be considered hashable"
             raise ValueError(mess)
         return super().__hash__()
 
@@ -614,7 +614,7 @@ class ParserHelper(UnitsContainer):
         elif isinstance(other, Number):
             return self.scale == other and not len(self._d)
         else:
-            return self.scale == 1.0 and super().__eq__(other)
+            return self.scale == 1 and super().__eq__(other)
 
     def operate(self, items, op=operator.iadd, cleanup=True):
         d = udict(self._d)

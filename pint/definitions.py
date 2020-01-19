@@ -261,7 +261,7 @@ class UnitDefinition(Definition):
             )
         reference = UnitsContainer(converter)
 
-        if modifiers.get("offset", 0.0) != 0.0:
+        if modifiers.get("offset", 0) != 0:
             converter = OffsetConverter(converter.scale, modifiers["offset"])
         else:
             converter = ScaleConverter(converter.scale)
