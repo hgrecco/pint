@@ -1067,9 +1067,18 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_pad(self):
         # Tests reproduced with modification from NumPy documentation
         a = [1, 2, 3, 4, 5] * self.ureg.m
+        b = self.Q_([4, 6, 8, 9, -3], "degC")
+
         self.assertQuantityEqual(
-            np.pad(a, (2, 3), "constant", constant_values=(4, 600 * self.ureg.cm)),
-            [4, 4, 1, 2, 3, 4, 5, 6, 6, 6] * self.ureg.m,
+            np.pad(a, (2, 3), "constant", constant_values=(0, 600 * self.ureg.cm)),
+            [0, 0, 1, 2, 3, 4, 5, 6, 6, 6] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.pad(b, (2, 1), "constant", constant_values=self.Q_(10, "degC")),
+            self.Q_([10, 10, 4, 6, 8, 9, -3, 10], "degC"),
+        )
+        self.assertRaises(
+            DimensionalityError, np.pad, a, (2, 3), "constant", constant_values=4
         )
         self.assertQuantityEqual(
             np.pad(a, (2, 3), "edge"), [1, 1, 1, 2, 3, 4, 5, 5, 5, 5] * self.ureg.m
