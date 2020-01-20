@@ -654,14 +654,13 @@ def _pad(array, pad_width, mode="constant", **kwargs):
     def _recursive_convert(arg, unit):
         if iterable(arg):
             return tuple(_recursive_convert(a, unit=unit) for a in arg)
-        else:
-            if not _is_quantity(arg):
-                if arg == 0:
-                    arg = unit._REGISTRY.Quantity(arg, unit)
-                else:
-                    arg = unit._REGISTRY.Quantity(arg, "dimensionless")
+        elif not _is_quantity(arg):
+            if arg == 0:
+                arg = unit._REGISTRY.Quantity(arg, unit)
+            else:
+                arg = unit._REGISTRY.Quantity(arg, "dimensionless")
 
-            return arg.m_as(unit)
+        return arg.m_as(unit)
 
     # pad only dispatches on array argument, so we know it is a Quantity
     units = array.units
