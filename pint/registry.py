@@ -250,7 +250,6 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _after_init(self):
         """This should be called after all __init__"""
-        self.define(UnitDefinition("pi", "π", (), ScaleConverter(math.pi)))
 
         if self._filename == "":
             self.load_definitions("default_en.txt", True)

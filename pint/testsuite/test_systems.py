@@ -6,7 +6,6 @@ class TestGroup(QuantityTestCase):
     def _build_empty_reg_root(self):
         ureg = UnitRegistry(None)
         grp = ureg.get_group("root")
-        grp.remove_units("pi")
         grp.invalidate_members()
         return ureg, ureg.get_group("root")
 
@@ -163,7 +162,6 @@ class TestSystem(QuantityTestCase):
     def _build_empty_reg_root(self):
         ureg = UnitRegistry(None)
         grp = ureg.get_group("root")
-        grp.remove_units("pi")
         grp.invalidate_members()
         return ureg, ureg.get_group("root")
 
