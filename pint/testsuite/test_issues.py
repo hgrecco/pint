@@ -710,6 +710,11 @@ class TestIssues(QuantityTestCase):
         with self.assertRaises(AttributeError):
             one_blank = 1 * ureg._  # noqa: F841
 
+    def test_issue960(self):
+        q = (1 * ureg.nanometer).to_compact("micrometer")
+        assert q.units == ureg.nanometer
+        assert q.magnitude == 1
+
 
 try:
 
