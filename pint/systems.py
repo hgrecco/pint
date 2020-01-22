@@ -423,9 +423,7 @@ class System(SharedRegistryObject):
                 # old_unit is inferred as the root unit with the same dimensionality.
 
                 new_unit = line
-                old_unit_dict = to_units_container(
-                    get_root_func(line)[1], cls._REGISTRY
-                )
+                old_unit_dict = to_units_container(get_root_func(line)[1])
 
                 if len(old_unit_dict) != 1:
                     raise ValueError(
