@@ -689,6 +689,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         if unit is None:
             unit = infer_base_unit(self)
+        else:
+            unit = infer_base_unit(self.__class__(1, unit))
 
         q_base = self.to(unit)
 
