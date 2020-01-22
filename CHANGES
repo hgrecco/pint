@@ -4,6 +4,13 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
+- Moved Pi to defintions files.
+- Use ints (not floats) a defaults at many points in the codebase as in Python 3
+  the true division is the default one.
+- **BREAKING CHANGE**:
+  Added `from_string` method to all Definitions subclasses. The value/converter
+  argument of the constructor no longer accepts an string.
+  It is unlikely that this change affects the end user.
 - Added additional NumPy function implementations (allclose, intersect1d)
   (Issue #979, Thanks Jon Thielen)
 
