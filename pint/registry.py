@@ -37,7 +37,6 @@ import copy
 import functools
 import itertools
 import locale
-import math
 import os
 import re
 from collections import ChainMap, defaultdict
