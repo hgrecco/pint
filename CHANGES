@@ -4,6 +4,10 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
+- Add full support for Decimal and Fraction at the registry level.
+  **BREAKING CHANGE**: 
+  `use_decimal` is deprecated. Use `non_int_type=Decimal` when instantiating
+  the registry.
 - Moved Pi to defintions files.
 - Use ints (not floats) a defaults at many points in the codebase as in Python 3
   the true division is the default one.

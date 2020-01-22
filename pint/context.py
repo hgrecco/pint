@@ -133,7 +133,7 @@ class Context:
         return context
 
     @classmethod
-    def from_lines(cls, lines, to_base_func=None):
+    def from_lines(cls, lines, to_base_func=None, non_int_type=float):
         lines = SourceIterator(lines)
 
         lineno, header = next(lines)
@@ -186,14 +186,20 @@ class Context:
                 func = _expression_to_function(eq)
 
                 if "<->" in rel:
-                    src, dst = (ParserHelper.from_string(s) for s in rel.split("<->"))
+                    src, dst = (
+                        ParserHelper.from_string(s, non_int_type)
+                        for s in rel.split("<->")
+                    )
                     if to_base_func:
                         src = to_base_func(src)
                         dst = to_base_func(dst)
                     ctx.add_transformation(src, dst, func)
                     ctx.add_transformation(dst, src, func)
                 elif "->" in rel:
-                    src, dst = (ParserHelper.from_string(s) for s in rel.split("->"))
+                    src, dst = (
+                        ParserHelper.from_string(s, non_int_type)
+                        for s in rel.split("->")
+                    )
                     if to_base_func:
                         src = to_base_func(src)
                         dst = to_base_func(dst)

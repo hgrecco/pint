@@ -152,6 +152,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         string
     fmt_locale :
         locale identifier string, used in `format_babel`
+    non_int_type : type
+        numerical type used for non integer values. (Default: float)
 
     """
 
@@ -164,6 +166,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     _dir = [
         "Quantity",
         "Unit",
+        "UnitsContainer",
         "Measurement",
         "define",
         "load_definitions",
@@ -187,6 +190,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         auto_reduce_dimensions=False,
         preprocessors=None,
         fmt_locale=None,
+        non_int_type=float,
     ):
         self._register_parsers()
         self._init_dynamic_classes()
@@ -204,6 +208,9 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
         self.fmt_locale = self.set_fmt_locale(fmt_locale)
+
+        #: Numerical type used for non integer values.
+        self.non_int_type = non_int_type
 
         #: Map between name (string) and value (string) of defaults stored in the
         #: definitions file.
@@ -306,6 +313,9 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         self.fmt_locale = loc
 
+    def UnitsContainer(self, *args, **kwargs):
+        return UnitsContainer(*args, non_int_type=self.non_int_type, **kwargs)
+
     @property
     def default_format(self):
         """Default formatting string for quantities."""
@@ -327,7 +337,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         if isinstance(definition, str):
             for line in definition.split("\n"):
-                self._define(Definition.from_string(line))
+                self._define(Definition.from_string(line, self.non_int_type))
         else:
             self._define(definition)
 
@@ -398,7 +408,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 "delta_" + alias for alias in definition.aliases
             )
 
-            d_reference = UnitsContainer(
+            d_reference = self.UnitsContainer(
                 {ref: value for ref, value in definition.reference.items()}
             )
 
@@ -548,7 +558,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                         raise ex
             else:
                 try:
-                    self.define(Definition.from_string(line))
+                    self.define(Definition.from_string(line, self.non_int_type))
                 except DefinitionSyntaxError as ex:
                     if ex.lineno is None:
                         ex.lineno = no
@@ -576,7 +586,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                     prefix, base_name = "", unit_name
 
                 try:
-                    uc = ParserHelper.from_word(base_name)
+                    uc = ParserHelper.from_word(base_name, self.non_int_type)
 
                     bu = self._get_root_units(uc)
                     di = self._get_dimensionality(uc)
@@ -622,7 +632,11 @@ class BaseRegistry(metaclass=RegistryMeta):
             symbol = self.get_symbol(name)
             prefix_def = self._prefixes[prefix]
             self._units[name] = UnitDefinition(
-                name, symbol, (), prefix_def.converter, UnitsContainer({unit_name: 1})
+                name,
+                symbol,
+                (),
+                prefix_def.converter,
+                self.UnitsContainer({unit_name: 1}),
             )
             return prefix + unit_name
 
@@ -652,6 +666,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         """Convert unit or dict of units or dimensions to a dict of base dimensions
         dimensions
         """
+
+        # TODO: This should be to_units_container(input_units, self)
+        # but this tries to reparse and fail for dimensions.
         input_units = to_units_container(input_units)
 
         return self._get_dimensionality(input_units)
@@ -660,7 +677,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         """Convert a UnitsContainer to base dimensions.
         """
         if not input_units:
-            return UnitsContainer()
+            return self.UnitsContainer()
 
         cache = self._cache.dimensionality
 
@@ -675,7 +692,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         if "[]" in accumulator:
             del accumulator["[]"]
 
-        dims = UnitsContainer({k: v for k, v in accumulator.items() if v != 0})
+        dims = self.UnitsContainer({k: v for k, v in accumulator.items() if v != 0})
 
         cache[input_units] = dims
 
@@ -746,7 +763,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             multiplicative factor, base units
 
         """
-        input_units = to_units_container(input_units)
+        input_units = to_units_container(input_units, self)
 
         f, units = self._get_root_units(input_units, check_nonmult)
 
@@ -774,7 +791,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         """
         if not input_units:
-            return 1, UnitsContainer()
+            return 1, self.UnitsContainer()
 
         cache = self._cache.root_units
         try:
@@ -786,7 +803,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._get_root_units_recurse(input_units, 1, accumulators)
 
         factor = accumulators[0]
-        units = UnitsContainer({k: v for k, v in accumulators[1].items() if v != 0})
+        units = self.UnitsContainer(
+            {k: v for k, v in accumulators[1].items() if v != 0}
+        )
 
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:
@@ -1035,12 +1054,12 @@ class BaseRegistry(metaclass=RegistryMeta):
                 pass
 
         if not input_string:
-            return UnitsContainer()
+            return self.UnitsContainer()
 
         # Sanitize input_string with whitespaces.
         input_string = input_string.strip()
 
-        units = ParserHelper.from_string(input_string)
+        units = ParserHelper.from_string(input_string, self.non_int_type)
         if units.scale != 1:
             raise ValueError("Unit expression cannot have a scaling factor.")
 
@@ -1057,14 +1076,25 @@ class BaseRegistry(metaclass=RegistryMeta):
                     cname = "delta_" + cname
             ret[cname] = value
 
-        ret = UnitsContainer(ret)
+        ret = self.UnitsContainer(ret)
 
         if as_delta:
             cache[input_string] = ret
 
         return ret
 
-    def _eval_token(self, token, case_sensitive=True, use_decimal=False, **values):
+    def _eval_token(
+        self, token, case_sensitive=True, use_decimal=False, **values,
+    ):
+
+        # TODO: remove this code when use_decimal is deprecated
+        if use_decimal:
+            raise DeprecationWarning(
+                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
+                ">>> from decimal import Decimal\n"
+                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
+            )
+
         token_type = token[0]
         token_text = token[1]
         if token_type == NAME:
@@ -1075,17 +1105,17 @@ class BaseRegistry(metaclass=RegistryMeta):
             else:
                 return self.Quantity(
                     1,
-                    UnitsContainer(
+                    self.UnitsContainer(
                         {self.get_name(token_text, case_sensitive=case_sensitive): 1}
                     ),
                 )
         elif token_type == NUMBER:
-            return ParserHelper.eval_token(token, use_decimal=use_decimal)
+            return ParserHelper.eval_token(token, non_int_type=self.non_int_type)
         else:
             raise Exception("unknown token type")
 
     def parse_expression(
-        self, input_string, case_sensitive=True, use_decimal=False, **values
+        self, input_string, case_sensitive=True, use_decimal=False, **values,
     ):
         """Parse a mathematical expression including units and return a quantity object.
 
@@ -1108,6 +1138,14 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         """
 
+        # TODO: remove this code when use_decimal is deprecated
+        if use_decimal:
+            raise DeprecationWarning(
+                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
+                ">>> from decimal import Decimal\n"
+                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
+            )
+
         if not input_string:
             return self.Quantity(1)
 
@@ -1117,9 +1155,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         gen = tokenizer(input_string)
 
         return build_eval_tree(gen).evaluate(
-            lambda x: self._eval_token(
-                x, case_sensitive=case_sensitive, use_decimal=use_decimal, **values
-            )
+            lambda x: self._eval_token(x, case_sensitive=case_sensitive, **values)
         )
 
     __call__ = parse_expression
@@ -1341,7 +1377,11 @@ class ContextRegistry(BaseRegistry):
     def _parse_context(self, ifile):
         try:
             self.add_context(
-                Context.from_lines(ifile.block_iter(), self.get_dimensionality)
+                Context.from_lines(
+                    ifile.block_iter(),
+                    self.get_dimensionality,
+                    non_int_type=self.non_int_type,
+                )
             )
         except KeyError as e:
             raise DefinitionSyntaxError(f"unknown dimension {e} in context")
@@ -1746,10 +1786,12 @@ class SystemRegistry(BaseRegistry):
         self._register_parser("@system", self._parse_system)
 
     def _parse_group(self, ifile):
-        self.Group.from_lines(ifile.block_iter(), self.define)
+        self.Group.from_lines(ifile.block_iter(), self.define, self.non_int_type)
 
     def _parse_system(self, ifile):
-        self.System.from_lines(ifile.block_iter(), self.get_root_units)
+        self.System.from_lines(
+            ifile.block_iter(), self.get_root_units, self.non_int_type
+        )
 
     def get_group(self, name, create_if_needed=True):
         """Return a Group.
@@ -1886,7 +1928,7 @@ class SystemRegistry(BaseRegistry):
         # as it has a UnitsContainer intermediate
         units = to_units_container(units, self)
 
-        destination_units = UnitsContainer()
+        destination_units = self.UnitsContainer()
 
         bu = self.get_system(system, False).base_units
 
@@ -1896,7 +1938,7 @@ class SystemRegistry(BaseRegistry):
                 new_unit = to_units_container(new_unit, self)
                 destination_units *= new_unit ** value
             else:
-                destination_units *= UnitsContainer({unit: value})
+                destination_units *= self.UnitsContainer({unit: value})
 
         base_factor = self.convert(factor, units, destination_units)
 
@@ -1970,6 +2012,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         auto_reduce_dimensions=False,
         preprocessors=None,
         fmt_locale=None,
+        non_int_type=float,
     ):
 
         super().__init__(
@@ -1983,6 +2026,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
             auto_reduce_dimensions=auto_reduce_dimensions,
             preprocessors=preprocessors,
             fmt_locale=fmt_locale,
+            non_int_type=non_int_type,
         )
 
     def pi_theorem(self, quantities):

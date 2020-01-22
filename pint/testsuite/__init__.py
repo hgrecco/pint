@@ -106,7 +106,13 @@ class QuantityTestCase(BaseTestCase):
 
     def assertQuantityAlmostEqual(self, first, second, rtol=1e-07, atol=0, msg=None):
         if msg is None:
-            msg = "Comparing %r and %r. " % (first, second)
+            try:
+                msg = "Comparing %r and %r. " % (first, second)
+            except TypeError:
+                try:
+                    msg = "Comparing %s and %s. " % (first, second)
+                except Exception:
+                    msg = "Comparing"
 
         m1, m2 = self._get_comparable_magnitudes(first, second, msg)
 
