@@ -95,7 +95,7 @@ class TestDefinition(BaseTestCase):
         )
 
     def test_dimension_definition(self):
-        x = DimensionDefinition("[time]", "", (), converter="")
+        x = DimensionDefinition("[time]", "", (), None, is_base=True)
         self.assertTrue(x.is_base)
         self.assertEqual(x.name, "[time]")
 

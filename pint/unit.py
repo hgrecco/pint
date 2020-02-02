@@ -148,7 +148,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
             if isinstance(other, self.__class__):
                 return self.__class__(self._units * other._units)
             else:
-                qself = self._REGISTRY.Quantity(1.0, self._units)
+                qself = self._REGISTRY.Quantity(1, self._units)
                 return qself * other
 
         if isinstance(other, Number) and other == 1:
@@ -163,7 +163,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
             if isinstance(other, self.__class__):
                 return self.__class__(self._units / other._units)
             else:
-                qself = 1.0 * self
+                qself = 1 * self
                 return qself / other
 
         return self._REGISTRY.Quantity(1 / other, self._units)

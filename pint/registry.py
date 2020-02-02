@@ -37,7 +37,6 @@ import copy
 import functools
 import itertools
 import locale
-import math
 import os
 import re
 from collections import ChainMap, defaultdict
@@ -250,7 +249,6 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _after_init(self):
         """This should be called after all __init__"""
-        self.define(UnitDefinition("pi", "π", (), ScaleConverter(math.pi)))
 
         if self._filename == "":
             self.load_definitions("default_en.txt", True)
@@ -384,7 +382,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             raise TypeError("{} is not a valid definition.".format(definition))
 
         # define "delta_" units for units with an offset
-        if getattr(definition.converter, "offset", 0.0) != 0.0:
+        if getattr(definition.converter, "offset", 0) != 0:
 
             if definition.name.startswith("["):
                 d_name = "[delta_" + definition.name[1:]
@@ -671,13 +669,13 @@ class BaseRegistry(metaclass=RegistryMeta):
         except KeyError:
             pass
 
-        accumulator = defaultdict(float)
-        self._get_dimensionality_recurse(input_units, 1.0, accumulator)
+        accumulator = defaultdict(int)
+        self._get_dimensionality_recurse(input_units, 1, accumulator)
 
         if "[]" in accumulator:
             del accumulator["[]"]
 
-        dims = UnitsContainer({k: v for k, v in accumulator.items() if v != 0.0})
+        dims = UnitsContainer({k: v for k, v in accumulator.items() if v != 0})
 
         cache[input_units] = dims
 
@@ -776,7 +774,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         """
         if not input_units:
-            return 1.0, UnitsContainer()
+            return 1, UnitsContainer()
 
         cache = self._cache.root_units
         try:
@@ -784,8 +782,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         except KeyError:
             pass
 
-        accumulators = [1.0, defaultdict(float)]
-        self._get_root_units_recurse(input_units, 1.0, accumulators)
+        accumulators = [1, defaultdict(int)]
+        self._get_root_units_recurse(input_units, 1, accumulators)
 
         factor = accumulators[0]
         units = UnitsContainer({k: v for k, v in accumulators[1].items() if v != 0})
@@ -1187,7 +1185,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         definition, d, di = super()._define(definition)
 
         # define additional units for units with an offset
-        if getattr(definition.converter, "offset", 0.0) != 0.0:
+        if getattr(definition.converter, "offset", 0) != 0:
             self._define_adder(definition, d, di)
 
         return definition, d, di
