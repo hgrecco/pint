@@ -885,7 +885,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_result_type_numpy_func(self):
-        self.assertEqual(np.result_type(self.q), np.dtype("int64"))
+        self.assertEqual(np.result_type(self.q), np.dtype("int"))
 
     @helpers.requires_array_function_protocol()
     def test_nan_to_num_numpy_func(self):
