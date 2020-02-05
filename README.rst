@@ -142,6 +142,13 @@ ufuncs are supported including automatic conversion of units. For example
 quantity will be radian.
 
 
+Pint is maintained by a community of scientists, programmers and entusiasts around the world.
+See AUTHORS_ for a complete list.
+
+To review an ordered list of notable changes for each version of a project,
+see CHANGES_
+
+
 .. _Website: http://www.dimensionalanalysis.org/
 .. _`comprehensive list of physical units, prefixes and constants`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
 .. _`uncertainties package`: https://pythonhosted.org/uncertainties/
@@ -150,3 +157,5 @@ quantity will be radian.
 .. _`Babel`: http://babel.pocoo.org/
 .. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/extending.html#extension-types
 .. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb
+.. _`AUTHORS`: https://github.com/hgrecco/pint/blob/master/AUTHORS
+.. _`CHANGES`: https://github.com/hgrecco/pint/blob/master/CHANGES
