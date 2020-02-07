@@ -307,6 +307,7 @@ class UnitsContainer(Mapping):
     exponent and implements the corresponding operations.
 
     UnitsContainer is a read-only mapping. All operations (even in place ones)
+    return new instances.
 
     Parameters
     ----------
@@ -492,6 +493,7 @@ class ParserHelper(UnitsContainer):
     their respective exponent and implements the corresponding operations.
 
     ParserHelper is a read-only mapping. All operations (even in place ones)
+    return new instances.
 
     Parameters
     ----------
