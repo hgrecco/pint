@@ -301,6 +301,7 @@ inch_H2O_39F = inch * water_39F * g_0
 inch_H2O_60F = inch * water_60F * g_0
 foot_H2O = foot * water * g_0 = ftH2O = feet_H2O
 centimeter_H2O = centimeter * water * g_0 = cmH2O = cm_H2O
+sound_pressure_level = 20e-6 * pascal = SPL
 
 # Torque
 [torque] = [force] * [length]
