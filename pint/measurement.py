@@ -50,7 +50,9 @@ class Measurement(Quantity):
             mag = value
         elif error < 0:
             raise ValueError(
-                "The magnitude of the error cannot be negative".format(value, error)
+                "In {0} \u00b1 {1}, the magnitude of the error ({1}) cannot be negative ".format(
+                    value, error
+                )
             )
         else:
             mag = ufloat(value, error)
