@@ -10,7 +10,7 @@
 
 from collections import namedtuple
 
-from .converters import OffsetConverter, ScaleConverter
+from .converters import LogarithmicConverter, OffsetConverter, ScaleConverter
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
@@ -276,14 +276,32 @@ class UnitDefinition(Definition):
 
         # Finally, assign converter variable to the correct class
 
-        # If the unit uses an offset modifier to convert, such as for a Temperature conversion
-        if modifiers.get("offset", 0) != 0:
-            # Assign the offset converter to the unit
-            converter = OffsetConverter(converter.scale, modifiers["offset"])
-        # Otherwise, it is a basic unit that needs a scale converter
-        else:
+        # If modifiers is empty ... which happens most of the time
+        if not modifiers:
             # Use the scale converter, as for all regular units
             converter = ScaleConverter(converter.scale)
+
+        # Otherwise, if the unit is a Temperature, which uses an offset modifier
+        elif "offset" in modifiers:
+            # If the offset is non zero
+            if modifiers.get("offset", 0.0) != 0.0:
+                # Use the full OffsetCoverter
+                converter = OffsetConverter(converter.scale, modifiers["offset"])
+            else:
+                # You can use the ScaleCoverter, because offset is zero
+                converter = ScaleConverter(converter.scale)
+
+        # Otherwise, if the unit is Logarithmic (dB, decade, pH) which use logbase and logfactor modifiers
+        elif "logbase" in modifiers and "logfactor" in modifiers:
+            # Use the LogaritmicCoverter
+            converter = LogarithmicConverter(
+                converter.scale, modifiers["logbase"], modifiers["logfactor"]
+            )
+
+        # Otherwise, you might have at hand a new unit, with a new converter...
+        else:
+            # Raise An Exemption that states you don't know how to handle the unit
+            raise DefinitionSyntaxError("Unable to assing a converter to the unit")
 
         # Return a unit instance with the chosen converter
         return cls(
