@@ -101,6 +101,7 @@ class Definition:
     aliases : iterable of str
         Other names for the unit/prefix/etc.
     converter : callable or Converter or None
+        an instance of Converter.
     """
 
     def __init__(self, name, symbol, aliases, converter):
@@ -121,7 +122,7 @@ class Definition:
 
     @classmethod
     def from_string(cls, definition):
-        """Parse a definition.
+        """Parse a definition into alias, dimension, prefix or unit.
 
         Parameters
         ----------
@@ -214,6 +215,7 @@ class UnitDefinition(Definition):
     ----------
     reference : UnitsContainer
         Reference units.
+
     is_base : bool
         Indicates if it is a base unit.
 
@@ -230,25 +232,36 @@ class UnitDefinition(Definition):
         if isinstance(definition, str):
             definition = ParsedDefinition.from_string(definition)
 
+        # Unit definitions that include ";" contain modifiers, which are need to convert between units
+        # For example, Temperature conversion between Celsius and Kelvin needs the offset 273.15 K as input, which is defined as offset modifier
+        #     degree_Celsius = kelvin; offset: 273.15 = °C
+
+        # If the unit at hand contains modifiers in its definition
         if ";" in definition.value:
+            # separate the converter string from the modifiers
             [converter, modifiers] = definition.value.split(";", 2)
 
+            # place modifiers into a dictionary
             try:
                 modifiers = dict(
                     (key.strip(), numeric_parse(value))
                     for key, value in (part.split(":") for part in modifiers.split(";"))
                 )
+            # and handle non-numeric modifier values gracefully
             except _NotNumeric as ex:
                 raise ValueError(
                     f"Unit definition ('{definition.name}') must contain only numbers in modifier, not {ex.value}"
                 )
 
+        # Otherwise, the unit at hand does not include modifiers and conversion is a matter or scaling
         else:
             converter = definition.value
             modifiers = {}
 
+        # reassignt the converter to the normal dictionary datatype, output by ParserHelp
         converter = ParserHelper.from_string(converter)
 
+        # based on its content, decide whether the unit is a base unit or not
         if not any(_is_dim(key) for key in converter.keys()):
             is_base = False
         elif all(_is_dim(key) for key in converter.keys()):
@@ -261,11 +274,18 @@ class UnitDefinition(Definition):
             )
         reference = UnitsContainer(converter)
 
+        # Finally, assign converter variable to the correct class
+
+        # If the unit uses an offset modifier to convert, such as for a Temperature conversion
         if modifiers.get("offset", 0) != 0:
+            # Assign the offset converter to the unit
             converter = OffsetConverter(converter.scale, modifiers["offset"])
+        # Otherwise, it is a basic unit that needs a scale converter
         else:
+            # Use the scale converter, as for all regular units
             converter = ScaleConverter(converter.scale)
 
+        # Return a unit instance with the chosen converter
         return cls(
             definition.name,
             definition.symbol,
