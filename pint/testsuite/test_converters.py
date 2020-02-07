@@ -9,7 +9,6 @@ from pint.converters import (
 )
 from pint.testsuite import BaseTestCase, helpers
 
-
 class TestConverter(BaseTestCase):
     def test_converter(self):
         c = Converter()
@@ -53,3 +52,18 @@ class TestConverter(BaseTestCase):
                 r = fun(a, inplace)
                 np.testing.assert_allclose(r, ac)
                 comp(a, r)
+
+    @helpers.requires_numpy()
+    def test_log_converter_inplace(self):
+        arb_value = 3.14
+        c = LogarithmicConverter(scale=1, logbase=10, logfactor=1)
+        from_to = lambda value, inplace: c.from_reference(c.to_reference(value, inplace), inplace)
+        to_from = lambda value, inplace: c.to_reference(c.from_reference(value, inplace), inplace)
+
+        for fun, (inplace, comp) in itertools.product(
+            (from_to, to_from), ((True, self.assertIs), (False, self.assertIsNot))
+        ):
+            arb_array = arb_value * np.ones((1, 10))
+            result = fun(arb_array, inplace)
+            np.testing.assert_allclose(result, arb_array)
+            comp(arb_array, result)
