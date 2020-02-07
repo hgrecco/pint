@@ -12,6 +12,7 @@ from itertools import chain
 
 from .compat import eq, is_upcast_type, np
 from .errors import DimensionalityError
+from .messages import ERROR_MSG_MULTIPLICATIVE
 from .util import iterable, sized
 
 HANDLED_UFUNCS = {}
@@ -683,7 +684,7 @@ def _any(a, *args, **kwargs):
     if a._is_multiplicative:
         return np.any(a._magnitude, *args, **kwargs)
     else:
-        raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+        raise ValueError(ERROR_MSG_MULTIPLICATIVE)
 
 
 @implements("all", "function")
@@ -692,7 +693,7 @@ def _all(a, *args, **kwargs):
     if a._is_multiplicative:
         return np.all(a._magnitude, *args, **kwargs)
     else:
-        raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+        raise ValueError(ERROR_MSG_MULTIPLICATIVE)
 
 
 # Implement simple matching-unit or stripped-unit functions based on signature

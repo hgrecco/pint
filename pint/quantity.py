@@ -48,6 +48,7 @@ from .formatting import (
     remove_custom_flags,
     siunitx_format_unit,
 )
+from .messages import ERROR_MSG_MULTIPLICATIVE
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
@@ -530,8 +531,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ----------
         other : pint.Quantity, str or dict
             Destination units. (Default value = None)
+
         *contexts : str or pint.Context
             Contexts to use in the transformation.
+
         **ctx_kwargs :
             Values for the Context/s
         """
@@ -549,8 +552,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ----------
         other : pint.Quantity, str or dict
             destination units. (Default value = None)
+
         *contexts : str or pint.Context
             Contexts to use in the transformation.
+
         **ctx_kwargs :
             Values for the Context/s
 
@@ -1490,7 +1495,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         if self._is_multiplicative:
             return bool(self._magnitude)
         else:
-            raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+            raise ValueError(ERROR_MSG_MULTIPLICATIVE)
 
     __nonzero__ = __bool__
 
