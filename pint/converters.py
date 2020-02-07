@@ -151,7 +151,7 @@ class LogarithmicConverter(Converter):
     def to_reference(self, value, inplace=False):
         if inplace:
             value /= self.scale
-            value = log(value)
+            log(value, value)
             value *= self.logfactor / log(self.logbase)
         else:
             value = self.logfactor * log(value / self.scale) / log(self.logbase)
@@ -161,8 +161,8 @@ class LogarithmicConverter(Converter):
     def from_reference(self, value, inplace=False):
         if inplace:
             value /= self.logfactor
-            value *= self.logbase
-            value = exp(value)
+            value *= log(self.logbase)
+            exp(value, value)
             value *= self.scale
         else:
             value = self.scale * exp(log(self.logbase) * (value / self.logfactor))
