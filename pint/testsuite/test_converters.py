@@ -35,9 +35,8 @@ class TestConverter(BaseTestCase):
         self.assertEqual(c.to_reference(10), 1)
         self.assertEqual(c.to_reference(100), 2)
         arb_value = 3.14
-        c_arb_value = 3.1399999999999997
-        self.assertEqual(c.from_reference(c.to_reference(arb_value)), c_arb_value)
-        self.assertEqual(c.to_reference(c.from_reference(arb_value)), arb_value)
+        np.testing.assert_allclose(c.from_reference(c.to_reference(arb_value)), arb_value)
+        np.testing.assert_allclose(c.to_reference(c.from_reference(arb_value)), arb_value)
 
     @helpers.requires_numpy()
     def test_converter_inplace(self):
