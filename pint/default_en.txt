@@ -219,7 +219,7 @@ counts_per_second = count / second = cps
 
 # Wavenumber
 [wavenumber] = 1 / [length]
-reciprocal_centimeter = 1 / cm = cm_1 = kayser
+reciprocal_centimeter = 1 / cm = cm_1 = kayser = inverse_centimeter
 
 # Velocity
 [velocity] = [length] / [time] = [speed]
