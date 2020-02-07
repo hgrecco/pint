@@ -9,6 +9,7 @@ from pint.converters import (
 )
 from pint.testsuite import BaseTestCase, helpers
 
+
 class TestConverter(BaseTestCase):
     def test_converter(self):
         c = Converter()
@@ -35,8 +36,12 @@ class TestConverter(BaseTestCase):
         self.assertEqual(c.to_reference(10), 1)
         self.assertEqual(c.to_reference(100), 2)
         arb_value = 3.14
-        np.testing.assert_allclose(c.from_reference(c.to_reference(arb_value)), arb_value)
-        np.testing.assert_allclose(c.to_reference(c.from_reference(arb_value)), arb_value)
+        np.testing.assert_allclose(
+            c.from_reference(c.to_reference(arb_value)), arb_value
+        )
+        np.testing.assert_allclose(
+            c.to_reference(c.from_reference(arb_value)), arb_value
+        )
 
     @helpers.requires_numpy()
     def test_converter_inplace(self):
@@ -56,8 +61,14 @@ class TestConverter(BaseTestCase):
     def test_log_converter_inplace(self):
         arb_value = 3.14
         c = LogarithmicConverter(scale=1, logbase=10, logfactor=1)
-        from_to = lambda value, inplace: c.from_reference(c.to_reference(value, inplace), inplace)
-        to_from = lambda value, inplace: c.to_reference(c.from_reference(value, inplace), inplace)
+
+        from_to = lambda value, inplace: c.from_reference(
+            c.to_reference(value, inplace), inplace
+        )
+
+        to_from = lambda value, inplace: c.to_reference(
+            c.from_reference(value, inplace), inplace
+        )
 
         for fun, (inplace, comp) in itertools.product(
             (from_to, to_from), ((True, self.assertIs), (False, self.assertIsNot))
