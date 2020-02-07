@@ -22,7 +22,18 @@ class Converter:
 
 
 class ScaleConverter(Converter):
-    """A linear transformation."""
+    """A linear transformation
+
+    Parameters
+    ----------
+
+    scale : float
+        scaling factor for linear unit conversion
+
+    inplace : bool
+        controls if computation is done in place
+
+    """
 
     is_multiplicative = True
 
@@ -47,7 +58,21 @@ class ScaleConverter(Converter):
 
 
 class OffsetConverter(Converter):
-    """An affine transformation."""
+    """An affine transformation
+    
+    Parameters
+    ----------
+
+    scale : float
+        multiplicative factor for unit conversion
+
+    offset : float
+        offset correction for unit conversion
+
+    inplace : bool
+        controls if computation is done in place
+
+    """
 
     def __init__(self, scale, offset):
         self.scale = scale
