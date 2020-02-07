@@ -136,7 +136,7 @@ steradian = radian ** 2 = sr
 square_degree = (π / 180) ** 2 * sr = sq_deg = sqdeg
 
 # Information
-byte = 8 * bit = B = octet
+byte = 8 * bit = octet
 baud = bit / second = Bd = bps
 
 # Length
@@ -170,7 +170,7 @@ week = 7 * day
 fortnight = 2 * week
 year = 365.25 * day = a = yr = julian_year
 month = year / 12
-decade = 10 * year
+# decade = 10 * year
 century = 100 * year = _ = centuries
 millennium = 1e3 * year = _ = millennia
 eon = 1e9 * year
@@ -464,6 +464,19 @@ buckingham = debye * angstrom
 bohr_magneton = e * hbar / (2 * m_e) = µ_B = mu_B
 nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 
+# Logaritmic Unit Definition
+## Unit = scale; logbase; logfactor 
+## x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )
+ 
+# Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
+
+bell = 1 ; logbase: 10; logfactor: 1 = B = decade
+
+neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfactor: 0.5 = Np
+# neper = 1 ; logbase: eulers_number; logfactor: 0.5 = Np
+
+octave = 1 ; logbase: 2; logfactor: 1 = oct
+semitone = 1/12 * octave 
 
 #### UNIT GROUPS ####
 # Mostly for length, area, volume, mass, force
