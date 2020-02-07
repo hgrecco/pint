@@ -8,7 +8,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from .compat import log, exp, HAS_NUMPY
+from .compat import HAS_NUMPY, exp, log
 
 
 class Converter:
@@ -124,6 +124,7 @@ class LogarithmicConverter(Converter):
         controls if computation is done in place
 
     """
+
     def __init__(self, scale, logbase, logfactor):
         """
 
@@ -141,12 +142,18 @@ class LogarithmicConverter(Converter):
         """
 
         if HAS_NUMPY is False:
-            print("'numpy' package is not installed. Will use math.log() "
-                  "for logarithmic units.")
+            print(
+                "'numpy' package is not installed. Will use math.log() "
+                "for logarithmic units."
+            )
 
         self.scale = scale
         self.logbase = logbase
         self.logfactor = logfactor
+
+    @property
+    def is_multiplicative(self):
+        return False
 
     def to_reference(self, value, inplace=False):
         if inplace:
