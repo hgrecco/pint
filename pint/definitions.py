@@ -239,7 +239,7 @@ class UnitDefinition(Definition):
         # If the unit at hand contains modifiers in its definition
         if ";" in definition.value:
             # separate the converter string from the modifiers
-            [converter, modifiers] = definition.value.split(";", 2)
+            [converter, modifiers] = definition.value.split(";", 1)
 
             # place modifiers into a dictionary
             try:
