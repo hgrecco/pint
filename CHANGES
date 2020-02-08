@@ -4,9 +4,10 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
-- Remove `default_en_0.6.txt`
+- Added pint-convert script.
+- Remove `default_en_0.6.txt`.
 - Reorganize long_description.
-- Moved Pi to defintions files.
+- Moved Pi to definitions files.
 - Use ints (not floats) a defaults at many points in the codebase as in Python 3
   the true division is the default one.
 - **BREAKING CHANGE**:
