@@ -14,7 +14,7 @@ import sys
 
 from pint import UnitRegistry
 
-parser = argparse.ArgumentParser(description='Unit converter.')
+parser = argparse.ArgumentParser(description='Unit converter.', usage=argparse.SUPPRESS)
 parser.add_argument('-s', '--system', metavar='sys', default='SI', help='unit system to convert to (default: SI)')
 parser.add_argument('-p', '--prec', metavar='n', type=int, default=12, help='number of maximum significant figures (default: 12)')
 parser.add_argument('-u', '--prec-unc', metavar='n', type=int, default=2, help='number of maximum uncertainty digits (default: 2)')
@@ -22,7 +22,11 @@ parser.add_argument('-U', '--no-unc', dest='unc', action='store_false', help='ig
 parser.add_argument('-C', '--no-corr', dest='corr', action='store_false', help='ignore correlations between constants')
 parser.add_argument('fr', metavar='from', type=str, help='unit or quantity to convert from')
 parser.add_argument('to', type=str, nargs='?', help='unit to convert to')
-args = parser.parse_args()
+try:
+    args = parser.parse_args()
+except SystemExit:
+    parser.print_help()
+    raise
 
 ureg = UnitRegistry()
 ureg.auto_reduce_dimensions = True

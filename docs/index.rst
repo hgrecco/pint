@@ -128,6 +128,7 @@ User Guide
     systems
     currencies
     pint-pandas.ipynb
+    pint-convert
 
 More information
 ----------------
