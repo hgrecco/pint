@@ -143,8 +143,8 @@ class LogarithmicConverter(Converter):
 
         if HAS_NUMPY is False:
             print(
-                "'numpy' package is not installed. Will use math.log() "
-                "for logarithmic units."
+                "'numpy' package not installed: "
+                " using math.log() for logarithmic units."
             )
 
         self.scale = scale
@@ -158,7 +158,10 @@ class LogarithmicConverter(Converter):
     def to_reference(self, value, inplace=False):
         if inplace:
             value /= self.scale
-            log(value, value)
+            if HAS_NUMPY:
+                log(value, value)
+            else:
+                value = log(value)
             value *= self.logfactor / log(self.logbase)
         else:
             value = self.logfactor * log(value / self.scale) / log(self.logbase)
@@ -169,7 +172,10 @@ class LogarithmicConverter(Converter):
         if inplace:
             value /= self.logfactor
             value *= log(self.logbase)
-            exp(value, value)
+            if HAS_NUMPY:
+                exp(value, value)
+            else:
+                value = exp(value)
             value *= self.scale
         else:
             value = self.scale * exp(log(self.logbase) * (value / self.logfactor))
