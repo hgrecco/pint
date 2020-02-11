@@ -152,17 +152,23 @@ class BaseRegistry(metaclass=RegistryMeta):
     filename : str or None
         path of the units definition file to load or line iterable object. Empty to load
         the default definition file. None to leave the UnitRegistry empty.
+
     force_ndarray : bool
         convert any input, scalar or not to a numpy.ndarray.
+
     force_ndarray_like : bool
         convert all inputs other than duck arrays to a numpy.ndarray.
+
     on_redefinition : str
         action to take in case a unit is redefined: 'warn', 'raise', 'ignore'
+
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
+
     preprocessors :
         list of callables which are iteratively ran on any input expression or unit
         string
+
     fmt_locale :
         locale identifier string, used in `format_babel`
 
@@ -337,11 +343,16 @@ class BaseRegistry(metaclass=RegistryMeta):
         definition : str or Definition
             a dimension, unit or prefix definition.
         """
-
+        # if the definition is given as a string
         if isinstance(definition, str):
+            # split in pieces at new line
             for line in definition.split("\n"):
+                # and let the pieces be defined bit by bit by the Definition's string handling method
                 self._define(Definition.from_string(line))
+
+        # otherwise, the definition is given as a Definition instance
         else:
+            # and can be fed to _define method directly
             self._define(definition)
 
     def _define(self, definition):
@@ -357,12 +368,20 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         Returns
         -------
-        Definition, dict, dict
-            Definition instance, case sensitive unit dict, case insensitive unit dict.
+        Definition instance: definition
+
+        case sensitive unit dict: dict
+
+        case insensitive unit dict: dict
 
         """
 
+        # Below we indicate:
+        # -  d: unit dictionary
+        # - di: (case i)nsensitive unit dictionary
+
         if isinstance(definition, DimensionDefinition):
+            # case insensitive dimensions do not exist
             d, di = self._dimensions, None
 
         elif isinstance(definition, UnitDefinition):
@@ -394,7 +413,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         else:
             raise TypeError("{} is not a valid definition.".format(definition))
 
-        # define "delta_" units for units with an offset
+        # define "delta_" units for units with non-zero offset
         if getattr(definition.converter, "offset", 0) != 0:
 
             if definition.name.startswith("["):
@@ -872,10 +891,13 @@ class BaseRegistry(metaclass=RegistryMeta):
         ----------
         value :
             value
+
         src : pint.Quantity or str
             source units.
+
         dst : pint.Quantity or str
             destination units.
+
         inplace :
              (Default value = False)
 
@@ -901,12 +923,16 @@ class BaseRegistry(metaclass=RegistryMeta):
         ----------
         value :
             value
+
         src : UnitsContainer
             source units.
+
         dst : UnitsContainer
             destination units.
+
         inplace :
              (Default value = False)
+
         check_dimensionality :
              (Default value = True)
 
@@ -1206,6 +1232,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
     default_as_delta : bool
         If True, non-multiplicative units are interpreted as
         their *delta* counterparts in multiplications.
+
     autoconvert_offset_to_baseunit : bool
         If True, non-multiplicative units are
         converted to base units in multiplications.
@@ -1275,6 +1302,8 @@ class NonMultiplicativeRegistry(BaseRegistry):
             raise UndefinedUnitError(u)
 
     def _validate_and_extract(self, units):
+        """Convert value from some source to destination units.
+        """
 
         nonmult_units = [
             (u, e) for u, e in units.items() if not self._is_multiplicative(u)
@@ -1312,10 +1341,13 @@ class NonMultiplicativeRegistry(BaseRegistry):
         ----------
         value :
             value
+
         src : UnitsContainer
             source units.
+
         dst : UnitsContainer
             destination units.
+
         inplace :
              (Default value = False)
 
@@ -1326,10 +1358,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         """
 
-        # Conversion needs to consider if non-multiplicative (AKA offset
-        # units) are involved. Conversion is only possible if src and dst
-        # have at most one offset unit per dimension. Other rules are applied
-        # by validate and extract.
+        # Conversion needs to consider if non-multiplicative (Offset) units are involved.
+        # Conversion is only possible if src and dst have at most one offset unit per dimension
+        # Other rules are applied by validate and extract.
         try:
             src_offset_unit = self._validate_and_extract(src)
         except ValueError as ex:
@@ -1749,9 +1780,7 @@ class ContextRegistry(BaseRegistry):
 class SystemRegistry(BaseRegistry):
     """Handle of Systems and Groups.
 
-    Conversion between units with different dimenstions according
-    to previously established relations (contexts).
-    (e.g. in the spectroscopy, conversion between frequency and energy is possible)
+    Group unit and changing of base units (e.g. in MKS, meter, kilogram and second are base units.)
 
     Capabilities:
 
@@ -1869,6 +1898,7 @@ class SystemRegistry(BaseRegistry):
         ----------
         name : str
             Name of the group to be
+
         create_if_needed : bool
             If True, create a group if not found. If False, raise an Exception.
             (Default value = True)
@@ -2004,25 +2034,33 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         path of the units definition file to load or line-iterable object.
         Empty to load the default definition file.
         None to leave the UnitRegistry empty.
+
     force_ndarray : bool
         convert any input, scalar or not to a numpy.ndarray.
+
     force_ndarray_like : bool
         convert all inputs other than duck arrays to a numpy.ndarray.
+
     default_as_delta :
         In the context of a multiplication of units, interpret
         non-multiplicative units as their *delta* counterparts.
+
     autoconvert_offset_to_baseunit :
         If True converts offset units in quantites are
         converted to their base units in multiplicative
         context. If False no conversion happens.
+
     on_redefinition : str
         action to take in case a unit is redefined.
         'warn', 'raise', 'ignore'
+
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
+
     preprocessors :
         list of callables which are iteratively ran on any input expression
         or unit string
+
     fmt_locale :
         locale identifier string, used in `format_babel`. Default to None
     """

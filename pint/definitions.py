@@ -26,7 +26,7 @@ class ParsedDefinition(
     a = b = c = d = e
     |   |   |   -------> aliases (optional)
     |   |   |
-    |   |   -----------> symbol (use "_" to
+    |   |   -----------> symbol (use "_" to avoid specifying a symbol)
     |   |
     |   ---------------> value
     |
@@ -96,10 +96,13 @@ class Definition:
     ----------
     name : str
         Canonical name of the unit/prefix/etc.
+
     symbol : str or None
         A short name or symbol for the definition.
+
     aliases : iterable of str
         Other names for the unit/prefix/etc.
+
     converter : callable or Converter or None
         an instance of Converter.
     """
@@ -138,10 +141,13 @@ class Definition:
 
         if definition.name.startswith("@alias "):
             return AliasDefinition.from_string(definition)
+
         elif definition.name.startswith("["):
             return DimensionDefinition.from_string(definition)
+
         elif definition.name.endswith("-"):
             return PrefixDefinition.from_string(definition)
+
         else:
             return UnitDefinition.from_string(definition)
 
@@ -258,7 +264,7 @@ class UnitDefinition(Definition):
             converter = definition.value
             modifiers = {}
 
-        # reassignt the converter to the normal dictionary datatype, output by ParserHelp
+        # reassignt the converter to the normal dictionary datatype, output by ParserHelper
         converter = ParserHelper.from_string(converter)
 
         # based on its content, decide whether the unit is a base unit or not
@@ -272,6 +278,7 @@ class UnitDefinition(Definition):
                 "Base units must be referenced only to dimensions. "
                 "Derived units must be referenced only to units."
             )
+
         reference = UnitsContainer(converter)
 
         # Finally, assign converter variable to the correct class
