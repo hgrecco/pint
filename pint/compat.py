@@ -11,7 +11,13 @@ import os
 import tokenize
 from decimal import Decimal
 from io import BytesIO
+from math import exp as math_exp
+from math import log as math_log
 from numbers import Number
+
+# Defines Logarithm and Exponential for Logarithmic Converter
+from numpy import exp as np_exp
+from numpy import log as np_log
 
 
 def missing_dependency(package, display_name=None):
@@ -149,13 +155,13 @@ try:
 except ImportError:
     HAS_BABEL = False
 
-# Defines Logarithm and Exponential for Logarithmic Converter
+
 if HAS_NUMPY:
-    from numpy import log
-    from numpy import exp
+    exp = np_exp
+    log = np_log
 else:
-    from math import log
-    from math import exp
+    exp = math_exp
+    log = math_log
 
 if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
