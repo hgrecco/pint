@@ -172,6 +172,9 @@ class BaseRegistry(metaclass=RegistryMeta):
     #: type: Dict[str, (SourceIterator -> None)]
     _parsers = None
 
+    #: Babel.Locale instance or None
+    fmt_locale = None
+
     #: List to be used in addition of units when dir(registry) is called.
     #: Also used for autocompletion in IPython.
     _dir = [
@@ -216,7 +219,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         self.auto_reduce_dimensions = auto_reduce_dimensions
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
-        self.fmt_locale = self.set_fmt_locale(fmt_locale)
+        self.set_fmt_locale(fmt_locale)
 
         #: Map between name (string) and value (string) of defaults stored in the
         #: definitions file.

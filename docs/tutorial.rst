@@ -419,9 +419,26 @@ Finally, if Babel_ is installed you can translate unit names to any language
    >>> accel.format_babel(locale='fr_FR')
    '1.3 mètre par seconde²'
 
-You can also specify the format locale at u
+You can also specify the format locale at the registry level either at creation:
 
     >>> ureg = UnitRegistry(fmt_locale='fr_FR')
+
+or later:
+
+.. doctest::
+
+    >>> ureg.set_fmt_locale('fr_FR')
+
+and by doing that, string formatting is now localized:
+
+.. doctest::
+
+    >>> str(accel)
+    '1.3 mètre par seconde²'
+    >>> "%s" % accel
+    '1.3 mètre par seconde²'
+    >>> "{}".format(accel)
+    '1.3 mètre par seconde²'
 
 
 Using Pint in your projects

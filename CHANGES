@@ -4,6 +4,7 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
+- Make `__str__` and `__format__` locale aware
 - Remove `default_en_0.6.txt`
 - Reorganize long_description.
 - Moved Pi to defintions files.
