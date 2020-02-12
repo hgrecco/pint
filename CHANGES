@@ -18,6 +18,7 @@ Pint Changelog
 - Allow constants in units by using a leading underscore (Issue #989, Thanks
   Juan Nunez-Iglesias)
 - Fixed bug where to_compact handled prefix units incorrectly (Issue #960)
+- Implements Logarithmic Units like dBm, dB, decade, neper or octave (Issue #71)
 
 0.10.1 (2020-01-07)
 -------------------
