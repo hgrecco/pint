@@ -29,12 +29,12 @@ class TestConverter(BaseTestCase):
 
     def test_log_converter(self):
         c = LogarithmicConverter(scale=1, logbase=10, logfactor=1)
-        self.assertEqual(c.from_reference(0), 1)
-        self.assertEqual(c.from_reference(1), 10.000000000000002)
-        self.assertEqual(c.from_reference(2), 100.00000000000004)
-        self.assertEqual(c.to_reference(1), 0)
-        self.assertEqual(c.to_reference(10), 1)
-        self.assertEqual(c.to_reference(100), 2)
+        self.assertEqual(c.to_reference(0), 1)
+        self.assertAlmostEqual(c.to_reference(1), 10.000000000000002)
+        self.assertAlmostEqual(c.to_reference(2), 100.00000000000004)
+        self.assertEqual(c.from_reference(1), 0)
+        self.assertEqual(c.from_reference(10), 1)
+        self.assertEqual(c.from_reference(100), 2)
         arb_value = 3.14
         np.testing.assert_allclose(
             c.from_reference(c.to_reference(arb_value)), arb_value
