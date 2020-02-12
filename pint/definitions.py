@@ -135,16 +135,12 @@ class Definition:
 
         if isinstance(definition, str):
             definition = ParsedDefinition.from_string(definition)
-
         if definition.name.startswith("@alias "):
             return AliasDefinition.from_string(definition)
-
         elif definition.name.startswith("["):
             return DimensionDefinition.from_string(definition)
-
         elif definition.name.endswith("-"):
             return PrefixDefinition.from_string(definition)
-
         else:
             return UnitDefinition.from_string(definition)
 

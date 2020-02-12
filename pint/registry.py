@@ -357,9 +357,8 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         Returns
         -------
-        Definition instance: definition
-        case sensitive unit dict: dict
-        case insensitive unit dict: dict
+        Definition, dict, dict
+            Definition instance, case sensitive unit dict, case insensitive unit dict.
 
         """
 
@@ -1207,7 +1206,6 @@ class NonMultiplicativeRegistry(BaseRegistry):
     default_as_delta : bool
         If True, non-multiplicative units are interpreted as
         their *delta* counterparts in multiplications.
-
     autoconvert_offset_to_baseunit : bool
         If True, non-multiplicative units are
         converted to base units in multiplications.
@@ -1277,9 +1275,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
             raise UndefinedUnitError(u)
 
     def _validate_and_extract(self, units):
-        """Convert value from some source to destination units.
-        """
-
+        
         nonmult_units = [
             (u, e) for u, e in units.items() if not self._is_multiplicative(u)
         ]
@@ -1331,8 +1327,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
         """
 
         # Conversion needs to consider if non-multiplicative (AKA offset
-        # Conversion needs to consider if non-multiplicative (Offset) units are involved.
         # units) are involved. Conversion is only possible if src and dst
+        # have at most one offset unit per dimension. Other rules are applied
+        # by validate and extract.
         try:
             src_offset_unit = self._validate_and_extract(src)
         except ValueError as ex:

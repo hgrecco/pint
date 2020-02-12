@@ -774,13 +774,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
 
-        # Next we define for (self) quantity  some variables to make if-clauses more readable.
+        # Next we define some variables to make if-clauses more readable.
         self_non_mul_units = self._get_non_multiplicative_units()
         is_self_multiplicative = len(self_non_mul_units) == 0
         if len(self_non_mul_units) == 1:
             self_non_mul_unit = self_non_mul_units[0]
-
-        # Repeat for (other) quantity
         other_non_mul_units = other._get_non_multiplicative_units()
         is_other_multiplicative = len(other_non_mul_units) == 0
         if len(other_non_mul_units) == 1:
@@ -812,7 +810,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             self._units = self._units.rename(
                 self_non_mul_unit, "delta_" + self_non_mul_unit
             )
-
         elif (
             op == operator.isub
             and len(other_non_mul_units) == 1
@@ -821,7 +818,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ):
             # we convert to self directly since it is multiplicative
             self._magnitude = op(self._magnitude, other.to(self._units)._magnitude)
-
         elif (
             len(self_non_mul_units) == 1
             # order of the dimension of offset unit == 1 ?
@@ -832,7 +828,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             # This is done to prevent a shift by offset in the to()-call.
             tu = self._units.rename(self_non_mul_unit, "delta_" + self_non_mul_unit)
             self._magnitude = op(self._magnitude, other.to(tu)._magnitude)
-
         elif (
             len(other_non_mul_units) == 1
             # order of the dimension of offset unit == 1 ?
@@ -844,7 +839,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             tu = other._units.rename(other_non_mul_unit, "delta_" + other_non_mul_unit)
             self._magnitude = op(self._convert_magnitude(tu), other._magnitude)
             self._units = other._units
-
         else:
             raise OffsetUnitCalculusError(self._units, other._units)
 

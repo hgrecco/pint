@@ -21,7 +21,6 @@ class Measurement(Quantity):
     ----------
     value : pint.Quantity or any numeric type
         The expected value of the measurement
-
     error : pint.Quantity or any numeric type
         The error or uncertainty of the measurement
 
