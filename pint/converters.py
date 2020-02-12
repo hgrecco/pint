@@ -155,7 +155,12 @@ class LogarithmicConverter(Converter):
     def is_multiplicative(self):
         return False
 
-    def to_reference(self, value, inplace=False):
+    def from_reference(self, value, inplace=False):
+        """Converts value to the logarithmic unit from the reference unit.
+
+             dBm   <------   W
+           y dBm = 10 log10( x / 1mW )
+        """
         if inplace:
             value /= self.scale
             if HAS_NUMPY:
@@ -168,7 +173,12 @@ class LogarithmicConverter(Converter):
 
         return value
 
-    def from_reference(self, value, inplace=False):
+    def to_reference(self, value, inplace=False):
+        """Converts value from the logarithmic unit to the reference unit.
+
+             dBm   ------>   W
+           y dBm = 10 log10( x / 1mW )
+        """
         if inplace:
             value /= self.logfactor
             value *= log(self.logbase)
