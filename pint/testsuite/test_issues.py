@@ -7,6 +7,7 @@ import pytest
 
 from pint import Context, DimensionalityError, UnitRegistry
 from pint.compat import np
+from pint.errors import OffsetUnitCalculusError
 from pint.testsuite import QuantityTestCase, helpers
 from pint.unit import UnitsContainer
 from pint.util import ParserHelper
@@ -194,6 +195,61 @@ class TestIssues(QuantityTestCase):
     def test_issue69(self):
         q = ureg("m").to(ureg("in"))
         self.assertEqual(q, ureg("m").to("in"))
+
+    def test_issue71(self):
+        Q_ = ureg.Quantity
+        # Test dB
+        self.assertAlmostEqual(Q_(0.0, "dB").to("dimensionless"), Q_(1.0))  # 0 dB == 1
+        self.assertAlmostEqual(Q_(-10.0, "dB").to("dimensionless"), Q_(0.1))  # -10 dB == 0.1
+        self.assertAlmostEqual(Q_(+10.0, "dB").to("dimensionless"), Q_(10.0))  # +10 dB == 10
+        # self.assertAlmostEqual(Q_(1.0, 'dB').to("dimensionless"), Q_(1, 'bell')/10)  # 1 dB = 1/10 * bel
+        self.assertAlmostEqual(Q_(30.0, "dB").to("dimensionless"), Q_(1e3))  # 30 dB == 1e3
+        self.assertAlmostEqual(Q_(60.0, "dB").to("dimensionless"), Q_(1e6))  # 60 dB == 1e6
+
+        # Test decade
+        self.assertAlmostEqual(Q_(1.0, "decade").to("dimensionless"), Q_(10.0))  # 1 decade == 10
+        self.assertAlmostEqual(Q_(2.0, "decade").to("dimensionless"), Q_(100.0))  # 2 decade == 100
+
+        # Test dBm
+        self.assertAlmostEqual(Q_(0.0, "dBm").to("mW"), Q_(1.0, "mW"))  # 0 dBm = 1 mW
+        self.assertAlmostEqual(Q_(10.0, "dBm").to("mW"), Q_(10.0, "mW"))  # 10 dBm = 10 mW
+        self.assertAlmostEqual(Q_(20.0, "dBm").to("mW"), Q_(100.0, "mW"))  # 20 dBm = 100 mW
+        self.assertAlmostEqual(Q_(-10.0, "dBm").to("mW"), Q_(0.1, "mW"))  # -10 dBm = 0.1 mW
+        self.assertAlmostEqual(Q_(-20.0, "dBm").to("mW"), Q_(0.01, "mW"))  # -20 dBm = 0.01 mW
+        self.assertAlmostEqual(Q_(3.0, "dBm").to("mW"), Q_(1.9952623149688797, "mW"))  # 3 dBm ≈ 2 mW
+
+        # Test octave
+        self.assertAlmostEqual(Q_(1.0, "octave"), Q_(2.0))  # 1 octave = 2
+
+        # Test neper
+        self.assertAlmostEqual(Q_(0.0, "neper"), Q_(1.0))  # 1 octave = 2
+
+        # Test regular-logarithmic mixed definition
+        #
+        # Multiplications and divisions with a mix of Logarithmic Units and regular Units is normally not possible.
+        with self.assertRaises(OffsetUnitCalculusError):
+            (-10.0 * ureg.dB) / (1 * ureg.cm)
+        # However, if the flag autoconvert_offset_to_baseunit=True is given to UnitRegsitry, then the definition is possible:
+        #
+        ureg_bu = UnitRegistry(autoconvert_offset_to_baseunit=True)
+        self.assertAlmostEqual(-10 * ureg_bu.dB / ureg_bu.cm, 0.1 / ureg_bu.cm)  # 1 decade == 10
+
+        # dB operations should be done in base units
+        # logarithmic sum -> product
+        # logarithmic product -> exponentiation
+
+        # Pure dB arithmetic
+        # 5 dBm + 10 dB = 15 dBm
+        # 100*dBm -10*dB = 90*dBm
+        # 100 dBW - 5 dBW = 95 dB
+        # 20 dB + 0 dBW == 20 dBW
+
+        # Mixed Linear / dB unit arithmetic
+        # 1 W + 20 dB = 100 W
+        # 1 V + 20 dB = 10 V
+
+        # 100 Hz + 1 octave = 200 Hz
+        # 1000 Hz + 1 octave = 2000 Hz
 
     @helpers.requires_numpy()
     def test_issue74(self):
