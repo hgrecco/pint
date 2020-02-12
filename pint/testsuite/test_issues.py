@@ -210,8 +210,9 @@ class TestIssues(QuantityTestCase):
         # +10 dB == 10
         self.assertAlmostEqual(Q_(+10.0, "dB").to("dimensionless"), Q_(10.0))
 
-        # 1 dB = 1/10 * bel
-        self.assertAlmostEqual(Q_(1.0, "dB").to("dimensionless"), Q_(1, "bell") / 10)
+        # Uncomment Bell unit in default_en.txt
+        # # 1 dB = 1/10 * bel
+        # self.assertAlmostEqual(Q_(1.0, "dB").to("dimensionless"), Q_(1, "bell") / 10)
 
         # 30 dB == 1e3
         self.assertAlmostEqual(Q_(30.0, "dB").to("dimensionless"), Q_(1e3))
