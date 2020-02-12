@@ -198,41 +198,74 @@ class TestIssues(QuantityTestCase):
 
     def test_issue71(self):
         Q_ = ureg.Quantity
-        # Test dB
-        self.assertAlmostEqual(Q_(0.0, "dB").to("dimensionless"), Q_(1.0))  # 0 dB == 1
-        self.assertAlmostEqual(Q_(-10.0, "dB").to("dimensionless"), Q_(0.1))  # -10 dB == 0.1
-        self.assertAlmostEqual(Q_(+10.0, "dB").to("dimensionless"), Q_(10.0))  # +10 dB == 10
-        # self.assertAlmostEqual(Q_(1.0, 'dB').to("dimensionless"), Q_(1, 'bell')/10)  # 1 dB = 1/10 * bel
-        self.assertAlmostEqual(Q_(30.0, "dB").to("dimensionless"), Q_(1e3))  # 30 dB == 1e3
-        self.assertAlmostEqual(Q_(60.0, "dB").to("dimensionless"), Q_(1e6))  # 60 dB == 1e6
 
-        # Test decade
-        self.assertAlmostEqual(Q_(1.0, "decade").to("dimensionless"), Q_(10.0))  # 1 decade == 10
-        self.assertAlmostEqual(Q_(2.0, "decade").to("dimensionless"), Q_(100.0))  # 2 decade == 100
+        # ## Test dB
 
-        # Test dBm
-        self.assertAlmostEqual(Q_(0.0, "dBm").to("mW"), Q_(1.0, "mW"))  # 0 dBm = 1 mW
-        self.assertAlmostEqual(Q_(10.0, "dBm").to("mW"), Q_(10.0, "mW"))  # 10 dBm = 10 mW
-        self.assertAlmostEqual(Q_(20.0, "dBm").to("mW"), Q_(100.0, "mW"))  # 20 dBm = 100 mW
-        self.assertAlmostEqual(Q_(-10.0, "dBm").to("mW"), Q_(0.1, "mW"))  # -10 dBm = 0.1 mW
-        self.assertAlmostEqual(Q_(-20.0, "dBm").to("mW"), Q_(0.01, "mW"))  # -20 dBm = 0.01 mW
-        self.assertAlmostEqual(Q_(3.0, "dBm").to("mW"), Q_(1.9952623149688797, "mW"))  # 3 dBm ≈ 2 mW
+        # 0 dB == 1
+        self.assertAlmostEqual(Q_(0.0, "dB").to("dimensionless"), Q_(1.0))
 
-        # Test octave
-        self.assertAlmostEqual(Q_(1.0, "octave"), Q_(2.0))  # 1 octave = 2
+        # -10 dB == 0.1
+        self.assertAlmostEqual(Q_(-10.0, "dB").to("dimensionless"), Q_(0.1))
 
-        # Test neper
-        self.assertAlmostEqual(Q_(0.0, "neper"), Q_(1.0))  # 1 octave = 2
+        # +10 dB == 10
+        self.assertAlmostEqual(Q_(+10.0, "dB").to("dimensionless"), Q_(10.0))
 
-        # Test regular-logarithmic mixed definition
+        # 1 dB = 1/10 * bel
+        self.assertAlmostEqual(Q_(1.0, "dB").to("dimensionless"), Q_(1, "bell") / 10)
+
+        # 30 dB == 1e3
+        self.assertAlmostEqual(Q_(30.0, "dB").to("dimensionless"), Q_(1e3))
+
+        # 60 dB == 1e6
+        self.assertAlmostEqual(Q_(60.0, "dB").to("dimensionless"), Q_(1e6))
+
+        # ## Test decade
+
+        # 1 decade == 10
+        self.assertAlmostEqual(Q_(1.0, "decade").to("dimensionless"), Q_(10.0))
+
+        # 2 decade == 100
+        self.assertAlmostEqual(Q_(2.0, "decade").to("dimensionless"), Q_(100.0))
+
+        # ## Test dBm
+
+        # 0 dBm = 1 mW
+        self.assertAlmostEqual(Q_(0.0, "dBm").to("mW"), Q_(1.0, "mW"))
+
+        # 10 dBm = 10 mW
+        self.assertAlmostEqual(Q_(10.0, "dBm").to("mW"), Q_(10.0, "mW"))
+
+        # 20 dBm = 100 mW
+        self.assertAlmostEqual(Q_(20.0, "dBm").to("mW"), Q_(100.0, "mW"))
+
+        # -10 dBm = 0.1 mW
+        self.assertAlmostEqual(Q_(-10.0, "dBm").to("mW"), Q_(0.1, "mW"))
+
+        # -20 dBm = 0.01 mW
+        self.assertAlmostEqual(Q_(-20.0, "dBm").to("mW"), Q_(0.01, "mW"))
+
+        # 3 dBm ≈ 2 mW
+        self.assertAlmostEqual(Q_(3.0, "dBm").to("mW"), Q_(1.9952623149688797, "mW"))
+
+        # ## Test octave
+
+        # 1 octave = 2
+        self.assertAlmostEqual(Q_(1.0, "octave"), Q_(2.0))
+
+        # ## Test neper
+        # # 1 octave = 2
+        self.assertAlmostEqual(Q_(0.0, "neper"), Q_(1.0))
+
+        # ## Test regular-logarithmic mixed definition
         #
-        # Multiplications and divisions with a mix of Logarithmic Units and regular Units is normally not possible.
+        # # Multiplications and divisions with a mix of Logarithmic Units and regular Units is normally not possible.
         with self.assertRaises(OffsetUnitCalculusError):
             (-10.0 * ureg.dB) / (1 * ureg.cm)
         # However, if the flag autoconvert_offset_to_baseunit=True is given to UnitRegsitry, then the definition is possible:
         #
+        # 1 decade == 10
         ureg_bu = UnitRegistry(autoconvert_offset_to_baseunit=True)
-        self.assertAlmostEqual(-10 * ureg_bu.dB / ureg_bu.cm, 0.1 / ureg_bu.cm)  # 1 decade == 10
+        self.assertAlmostEqual(-10 * ureg_bu.dB / ureg_bu.cm, 0.1 / ureg_bu.cm)
 
         # dB operations should be done in base units
         # logarithmic sum -> product
