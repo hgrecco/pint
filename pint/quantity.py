@@ -132,7 +132,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     ----------
     value : str, pint.Quantity or any numeric type
         Value of the physical quantity to be created.
-
     units : UnitsContainer, str or pint.Quantity
         Units of the physical quantity to be created.
 
@@ -167,9 +166,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         if is_upcast_type(type(value)):
             raise TypeError(f"Quantity cannot wrap upcast type {type(value)}")
-
         elif units is None:
-
             if isinstance(value, str):
                 if value == "":
                     raise ValueError(
@@ -534,10 +531,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ----------
         other : pint.Quantity, str or dict
             Destination units. (Default value = None)
-
         *contexts : str or pint.Context
             Contexts to use in the transformation.
-
         **ctx_kwargs :
             Values for the Context/s
         """
@@ -555,10 +550,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ----------
         other : pint.Quantity, str or dict
             destination units. (Default value = None)
-
         *contexts : str or pint.Context
             Contexts to use in the transformation.
-
         **ctx_kwargs :
             Values for the Context/s
 
@@ -781,13 +774,13 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
 
-        # Next we define for the current quantity (self) some variables to make if-clauses more readable.
+        # Next we define for (self) quantity  some variables to make if-clauses more readable.
         self_non_mul_units = self._get_non_multiplicative_units()
         is_self_multiplicative = len(self_non_mul_units) == 0
         if len(self_non_mul_units) == 1:
             self_non_mul_unit = self_non_mul_units[0]
 
-        # Repeat the same for the second quantity (other)
+        # Repeat for (other) quantity
         other_non_mul_units = other._get_non_multiplicative_units()
         is_other_multiplicative = len(other_non_mul_units) == 0
         if len(other_non_mul_units) == 1:
@@ -797,6 +790,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         if is_self_multiplicative and is_other_multiplicative:
             if self._units == other._units:
                 self._magnitude = op(self._magnitude, other._magnitude)
+            # If only self has a delta unit, other determines unit of result.
             elif self._get_delta_units() and not other._get_delta_units():
                 self._magnitude = op(
                     self._convert_magnitude(other._units), other._magnitude
@@ -825,10 +819,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             and other._units[other_non_mul_unit] == 1
             and not self._has_compatible_delta(other_non_mul_unit)
         ):
+            # we convert to self directly since it is multiplicative
             self._magnitude = op(self._magnitude, other.to(self._units)._magnitude)
 
         elif (
             len(self_non_mul_units) == 1
+            # order of the dimension of offset unit == 1 ?
             and self._units[self_non_mul_unit] == 1
             and other._has_compatible_delta(self_non_mul_unit)
         ):
@@ -839,6 +835,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         elif (
             len(other_non_mul_units) == 1
+            # order of the dimension of offset unit == 1 ?
             and other._units[other_non_mul_unit] == 1
             and self._has_compatible_delta(other_non_mul_unit)
         ):

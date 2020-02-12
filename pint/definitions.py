@@ -96,13 +96,10 @@ class Definition:
     ----------
     name : str
         Canonical name of the unit/prefix/etc.
-
     symbol : str or None
         A short name or symbol for the definition.
-
     aliases : iterable of str
         Other names for the unit/prefix/etc.
-
     converter : callable or Converter or None
         an instance of Converter.
     """
@@ -221,7 +218,6 @@ class UnitDefinition(Definition):
     ----------
     reference : UnitsContainer
         Reference units.
-
     is_base : bool
         Indicates if it is a base unit.
 

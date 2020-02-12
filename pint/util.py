@@ -761,7 +761,7 @@ class SharedRegistryObject:
         return inst
 
     def _check(self, other):
-        """Check if the other object use a registry and, if so, that it is the
+        """Check if the other object use a registry and if so that it is the
         same registry.
 
         Parameters
@@ -776,18 +776,14 @@ class SharedRegistryObject:
             same unit registry.
 
         """
-        # If the other operand's registry is the same as self
         if self._REGISTRY is getattr(other, "_REGISTRY", None):
             return True
 
-        # If the other operand's registry is not the same as self
         elif isinstance(other, SharedRegistryObject):
             mess = "Cannot operate with {} and {} of different registries."
             raise ValueError(
                 mess.format(self.__class__.__name__, other.__class__.__name__)
             )
-
-        # If the other operand's does not use a registry
         else:
             return False
 

@@ -152,23 +152,17 @@ class BaseRegistry(metaclass=RegistryMeta):
     filename : str or None
         path of the units definition file to load or line iterable object. Empty to load
         the default definition file. None to leave the UnitRegistry empty.
-
     force_ndarray : bool
         convert any input, scalar or not to a numpy.ndarray.
-
     force_ndarray_like : bool
         convert all inputs other than duck arrays to a numpy.ndarray.
-
     on_redefinition : str
         action to take in case a unit is redefined: 'warn', 'raise', 'ignore'
-
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
-
     preprocessors :
         list of callables which are iteratively ran on any input expression or unit
         string
-
     fmt_locale :
         locale identifier string, used in `format_babel`
 
@@ -364,9 +358,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         Returns
         -------
         Definition instance: definition
-
         case sensitive unit dict: dict
-
         case insensitive unit dict: dict
 
         """
@@ -881,13 +873,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         ----------
         value :
             value
-
         src : pint.Quantity or str
             source units.
-
         dst : pint.Quantity or str
             destination units.
-
         inplace :
              (Default value = False)
 
@@ -913,16 +902,12 @@ class BaseRegistry(metaclass=RegistryMeta):
         ----------
         value :
             value
-
         src : UnitsContainer
             source units.
-
         dst : UnitsContainer
             destination units.
-
         inplace :
              (Default value = False)
-
         check_dimensionality :
              (Default value = True)
 
@@ -1331,13 +1316,10 @@ class NonMultiplicativeRegistry(BaseRegistry):
         ----------
         value :
             value
-
         src : UnitsContainer
             source units.
-
         dst : UnitsContainer
             destination units.
-
         inplace :
              (Default value = False)
 
@@ -1888,7 +1870,6 @@ class SystemRegistry(BaseRegistry):
         ----------
         name : str
             Name of the group to be
-
         create_if_needed : bool
             If True, create a group if not found. If False, raise an Exception.
             (Default value = True)
@@ -2024,33 +2005,25 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         path of the units definition file to load or line-iterable object.
         Empty to load the default definition file.
         None to leave the UnitRegistry empty.
-
     force_ndarray : bool
         convert any input, scalar or not to a numpy.ndarray.
-
     force_ndarray_like : bool
         convert all inputs other than duck arrays to a numpy.ndarray.
-
     default_as_delta :
         In the context of a multiplication of units, interpret
         non-multiplicative units as their *delta* counterparts.
-
     autoconvert_offset_to_baseunit :
         If True converts offset units in quantites are
         converted to their base units in multiplicative
         context. If False no conversion happens.
-
     on_redefinition : str
         action to take in case a unit is redefined.
         'warn', 'raise', 'ignore'
-
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
-
     preprocessors :
         list of callables which are iteratively ran on any input expression
         or unit string
-
     fmt_locale :
         locale identifier string, used in `format_babel`. Default to None
     """
