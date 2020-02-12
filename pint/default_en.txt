@@ -136,8 +136,10 @@ steradian = radian ** 2 = sr
 square_degree = (π / 180) ** 2 * sr = sq_deg = sqdeg
 
 # Information
-byte = 8 * bit = octet
 baud = bit / second = Bd = bps
+byte = 8 * bit = B = octet
+# byte = 8 * bit = _ = octet 
+## NOTE: B (byte) symbol can conflict with Bell
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
@@ -470,13 +472,24 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
  
 # Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
 
-bell = 1 ; logbase: 10; logfactor: 1 = B = decade
+decibell = 1 ; logbase: 10; logfactor: 10 = dB
+# bell = 1 ; logbase: 10; logfactor: = B
+## NOTE: B (Bell) symbol conflicts with byte
+##       Defining dB as deci- Bell causes bad assignment of the unit to ScaleConverter, with poor results
+
+decade = 1 ; logbase: 10; logfactor: 1 
 
 neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfactor: 0.5 = Np
 # neper = 1 ; logbase: eulers_number; logfactor: 0.5 = Np
+## NOTE: modifier cannot parse eulers_number, magic number given instead
 
 octave = 1 ; logbase: 2; logfactor: 1 = oct
-semitone = 1/12 * octave 
+
+decibellmilliwatt = 1 W; logbase: 10; logfactor: 10 = dBm
+## NOTE: decibellmilliwatt definition above works, but there's a factor of 1e-3 off in the definition
+
+# decibellmilliwatt = 1 mW; logbase: 10; logfactor: 10 = dBm
+## NOTE: decibellmilliwatt definition does not work, but is what is expected to be correct
 
 #### UNIT GROUPS ####
 # Mostly for length, area, volume, mass, force
