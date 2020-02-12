@@ -343,16 +343,11 @@ class BaseRegistry(metaclass=RegistryMeta):
         definition : str or Definition
             a dimension, unit or prefix definition.
         """
-        # if the definition is given as a string
-        if isinstance(definition, str):
-            # split in pieces at new line
-            for line in definition.split("\n"):
-                # and let the pieces be defined bit by bit by the Definition's string handling method
-                self._define(Definition.from_string(line))
 
-        # otherwise, the definition is given as a Definition instance
+        if isinstance(definition, str):
+            for line in definition.split("\n"):
+                self._define(Definition.from_string(line))
         else:
-            # and can be fed to _define method directly
             self._define(definition)
 
     def _define(self, definition):
@@ -376,12 +371,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         """
 
-        # Below we indicate:
-        # -  d: unit dictionary
-        # - di: (case i)nsensitive unit dictionary
-
         if isinstance(definition, DimensionDefinition):
-            # case insensitive dimensions do not exist
             d, di = self._dimensions, None
 
         elif isinstance(definition, UnitDefinition):
@@ -413,7 +403,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         else:
             raise TypeError("{} is not a valid definition.".format(definition))
 
-        # define "delta_" units for units with non-zero offset
+        # define "delta_" units for units with an offset
         if getattr(definition.converter, "offset", 0) != 0:
 
             if definition.name.startswith("["):
@@ -1358,9 +1348,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         """
 
+        # Conversion needs to consider if non-multiplicative (AKA offset
         # Conversion needs to consider if non-multiplicative (Offset) units are involved.
-        # Conversion is only possible if src and dst have at most one offset unit per dimension
-        # Other rules are applied by validate and extract.
+        # units) are involved. Conversion is only possible if src and dst
         try:
             src_offset_unit = self._validate_and_extract(src)
         except ValueError as ex:

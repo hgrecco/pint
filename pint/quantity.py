@@ -168,10 +168,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         if is_upcast_type(type(value)):
             raise TypeError(f"Quantity cannot wrap upcast type {type(value)}")
 
-        # value can be a str, a pint.Quantity or any numeric type
-        # units can be a UnitsContainer, a str or any pint.Quantity
-
-        # If quantity does't have a unit
         elif units is None:
 
             if isinstance(value, str):
@@ -798,26 +794,17 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             other_non_mul_unit = other_non_mul_units[0]
 
         # Presence of non-multiplicative units gives rise to several cases.
-
-        # Case 0: both units are multiplicative ... which happens most of the time
         if is_self_multiplicative and is_other_multiplicative:
-            # If units are the same
             if self._units == other._units:
-                # Proceed with operation on magnitudes
                 self._magnitude = op(self._magnitude, other._magnitude)
-
-            # If only self has a delta unit, other determines unit of result.
             elif self._get_delta_units() and not other._get_delta_units():
                 self._magnitude = op(
                     self._convert_magnitude(other._units), other._magnitude
                 )
                 self._units = other._units
-
-            # If only self has a delta unit, other determines unit of result.
             else:
                 self._magnitude = op(self._magnitude, other.to(self._units)._magnitude)
 
-        # Case 1:
         elif (
             op == operator.isub
             and len(self_non_mul_units) == 1
@@ -832,20 +819,16 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 self_non_mul_unit, "delta_" + self_non_mul_unit
             )
 
-        # Case 2:
         elif (
             op == operator.isub
             and len(other_non_mul_units) == 1
             and other._units[other_non_mul_unit] == 1
             and not self._has_compatible_delta(other_non_mul_unit)
         ):
-            # we convert to self directly since it is multiplicative
             self._magnitude = op(self._magnitude, other.to(self._units)._magnitude)
 
-        # Case 3:
         elif (
             len(self_non_mul_units) == 1
-            # order of the dimension of offset unit == 1 ?
             and self._units[self_non_mul_unit] == 1
             and other._has_compatible_delta(self_non_mul_unit)
         ):
@@ -854,10 +837,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             tu = self._units.rename(self_non_mul_unit, "delta_" + self_non_mul_unit)
             self._magnitude = op(self._magnitude, other.to(tu)._magnitude)
 
-        # Case 4:
         elif (
             len(other_non_mul_units) == 1
-            # order of the dimension of offset unit == 1 ?
             and other._units[other_non_mul_unit] == 1
             and self._has_compatible_delta(other_non_mul_unit)
         ):
@@ -867,7 +848,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             self._magnitude = op(self._convert_magnitude(tu), other._magnitude)
             self._units = other._units
 
-        # Default Case: raise an exception
         else:
             raise OffsetUnitCalculusError(self._units, other._units)
 

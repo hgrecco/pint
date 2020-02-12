@@ -238,36 +238,25 @@ class UnitDefinition(Definition):
         if isinstance(definition, str):
             definition = ParsedDefinition.from_string(definition)
 
-        # Unit definitions that include ";" contain modifiers, which are need to convert between units
-        # For example, Temperature conversion between Celsius and Kelvin needs the offset 273.15 K as input, which is defined as offset modifier
-        #     degree_Celsius = kelvin; offset: 273.15 = °C
-
-        # If the unit at hand contains modifiers in its definition
         if ";" in definition.value:
-            # separate the converter string from the modifiers
             [converter, modifiers] = definition.value.split(";", 1)
 
-            # place modifiers into a dictionary
             try:
                 modifiers = dict(
                     (key.strip(), numeric_parse(value))
                     for key, value in (part.split(":") for part in modifiers.split(";"))
                 )
-            # and handle non-numeric modifier values gracefully
             except _NotNumeric as ex:
                 raise ValueError(
                     f"Unit definition ('{definition.name}') must contain only numbers in modifier, not {ex.value}"
                 )
 
-        # Otherwise, the unit at hand does not include modifiers and conversion is a matter or scaling
         else:
             converter = definition.value
             modifiers = {}
 
-        # reassignt the converter to the normal dictionary datatype, output by ParserHelper
         converter = ParserHelper.from_string(converter)
 
-        # based on its content, decide whether the unit is a base unit or not
         if not any(_is_dim(key) for key in converter.keys()):
             is_base = False
         elif all(_is_dim(key) for key in converter.keys()):
@@ -281,36 +270,23 @@ class UnitDefinition(Definition):
 
         reference = UnitsContainer(converter)
 
-        # Finally, assign converter variable to the correct class
-
-        # If modifiers is empty ... which happens most of the time
         if not modifiers:
-            # Use the scale converter, as for all regular units
             converter = ScaleConverter(converter.scale)
 
-        # Otherwise, if the unit is a Temperature, which uses an offset modifier
         elif "offset" in modifiers:
-            # If the offset is non zero
             if modifiers.get("offset", 0.0) != 0.0:
-                # Use the full OffsetCoverter
                 converter = OffsetConverter(converter.scale, modifiers["offset"])
             else:
-                # You can use the ScaleCoverter, because offset is zero
                 converter = ScaleConverter(converter.scale)
 
-        # Otherwise, if the unit is Logarithmic (dB, decade, pH) which use logbase and logfactor modifiers
         elif "logbase" in modifiers and "logfactor" in modifiers:
-            # Use the LogaritmicCoverter
             converter = LogarithmicConverter(
                 converter.scale, modifiers["logbase"], modifiers["logfactor"]
             )
 
-        # Otherwise, you might have at hand a new unit, with a new converter...
         else:
-            # Raise An Exemption that states you don't know how to handle the unit
             raise DefinitionSyntaxError("Unable to assing a converter to the unit")
 
-        # Return a unit instance with the chosen converter
         return cls(
             definition.name,
             definition.symbol,
