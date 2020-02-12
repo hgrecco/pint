@@ -790,7 +790,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         is_self_multiplicative = len(self_non_mul_units) == 0
         if len(self_non_mul_units) == 1:
             self_non_mul_unit = self_non_mul_units[0]
-        
+
         # Repeat the same for the second quantity (other)
         other_non_mul_units = other._get_non_multiplicative_units()
         is_other_multiplicative = len(other_non_mul_units) == 0
@@ -816,7 +816,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             # If only self has a delta unit, other determines unit of result.
             else:
                 self._magnitude = op(self._magnitude, other.to(self._units)._magnitude)
-        
+
         # Case 1:
         elif (
             op == operator.isub
@@ -831,7 +831,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             self._units = self._units.rename(
                 self_non_mul_unit, "delta_" + self_non_mul_unit
             )
-        
+
         # Case 2:
         elif (
             op == operator.isub
@@ -841,7 +841,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         ):
             # we convert to self directly since it is multiplicative
             self._magnitude = op(self._magnitude, other.to(self._units)._magnitude)
-        
+
         # Case 3:
         elif (
             len(self_non_mul_units) == 1
