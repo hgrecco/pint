@@ -82,6 +82,7 @@ class OffsetConverter(Converter):
 class LogarithmicConverter(Converter):
     """ Converts between linear units and logarithmic units, such as dB, octave, neper or pH.
     Q_log = logfactor * log( Q_lin / scale ) / log(log_base)
+
     Parameters
     ----------
     scale : float
@@ -106,31 +107,45 @@ class LogarithmicConverter(Converter):
             factor multiplied to logarithm for unit conversion
         """
 
-        if HAS_NUMPY is False:
-            print(
-                "'numpy' package is not installed. Will use math.log() "
-                "for logarithmic units."
-            )
-
         self.scale = scale
         self.logbase = logbase
         self.logfactor = logfactor
 
-    def to_reference(self, value, inplace=False):
+    @property
+    def is_multiplicative(self):
+        return False
+
+    def from_reference(self, value, inplace=False):
+        """Converts value from the reference unit to the logarithmic unit
+
+             dBm   <------   mW
+           y dBm = 10 log10( x / 1mW )
+        """
         if inplace:
             value /= self.scale
-            value = log(value)
+            if HAS_NUMPY:
+                log(value, value)
+            else:
+                value = log(value)
             value *= self.logfactor / log(self.logbase)
         else:
             value = self.logfactor * log(value / self.scale) / log(self.logbase)
 
         return value
 
-    def from_reference(self, value, inplace=False):
+    def to_reference(self, value, inplace=False):
+        """Converts value to the reference unit from the logarithmic unit
+
+             dBm   ------>   mW
+           y dBm = 10 log10( x / 1mW )
+        """
         if inplace:
             value /= self.logfactor
-            value *= self.logbase
-            value = exp(value)
+            value *= log(self.logbase)
+            if HAS_NUMPY:
+                exp(value, value)
+            else:
+                value = exp(value)
             value *= self.scale
         else:
             value = self.scale * exp(log(self.logbase) * (value / self.logfactor))
