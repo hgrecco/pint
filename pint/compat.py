@@ -149,6 +149,14 @@ try:
 except ImportError:
     HAS_BABEL = False
 
+# Defines Logarithm and Exponential for Logarithmic Converter
+if HAS_NUMPY:
+    from numpy import log
+    from numpy import exp
+else:
+    from math import log
+    from math import exp
+
 if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
 
