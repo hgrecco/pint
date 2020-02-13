@@ -1622,3 +1622,111 @@ class TestCompareZero(QuantityTestCase):
         self.assertTrue(q1 > 0)
         self.assertTrue(q2 > 0)
         self.assertRaises(DimensionalityError, q1.__gt__, ureg.Quantity(0, ""))
+
+class TestLogarithmicQuantity(QuantityTestCase):
+    FORCE_NDARRAY = False
+
+    def test_log_quantity_creation(self):
+
+        # Following Quantity Creation Pattern
+        for args in (
+            (4.2, 'dBm'),
+            (4.2, UnitsContainer(dBm=1)),
+            (4.2, self.ureg.dBm),
+            ('4.2 * dBm',),
+            ("4.2/meter**(-1)",),
+            (self.Q_(4.2, 'dBm')),
+        ):
+            x = self.Q_(*args)
+            self.assertEqual(x.magnitude, 4.2)
+            self.assertEqual(x.units, UnitsContainer(dBm=1))
+        
+        x = self.Q_(4.2, UnitsContainer(dBm=1))
+        y = self.Q_(x)
+        self.assertEqual(x.magnitude, y.magnitude)
+        self.assertEqual(x.units, y.units)
+        self.assertIsNot(x, y)
+
+        with self.capture_log() as buffer:
+            self.assertEqual(4.2 * self.ureg.dBm, self.Q_(4.2, 2 * self.ureg.dBm))
+            self.assertEqual(len(buffer), 1)
+
+    def test_log_convert(self):
+        self.assertQuantityAlmostEqual(
+            self.Q_("2 inch").to("meter"), self.Q_(2.0 * 0.0254, "meter")
+        )
+        
+        # ## Test dB
+        # 0 dB == 1
+        self.assertQuantityAlmostEqual(Q_(0.0, "dB").to("dimensionless"), Q_(1.0))
+        # -10 dB == 0.1
+        self.assertQuantityAlmostEqual(Q_(-10.0, "dB").to("dimensionless"), Q_(0.1))
+        # +10 dB == 10
+        self.assertQuantityAlmostEqual(Q_(+10.0, "dB").to("dimensionless"), Q_(10.0))
+        # 30 dB == 1e3
+        self.assertQuantityAlmostEqual(Q_(30.0, "dB").to("dimensionless"), Q_(1e3))
+        # 60 dB == 1e6
+        self.assertQuantityAlmostEqual(Q_(60.0, "dB").to("dimensionless"), Q_(1e6))
+        # # 1 dB = 1/10 * bel
+        # self.assertQuantityAlmostEqual(Q_(1.0, "dB").to("dimensionless"), Q_(1, "bell") / 10)
+        # # Uncomment Bell unit in default_en.txt
+       
+        # ## Test decade
+        # 1 decade == 10
+        self.assertQuantityAlmostEqual(Q_(1.0, "decade").to("dimensionless"), Q_(10.0))
+        # 2 decade == 100
+        self.assertQuantityAlmostEqual(Q_(2.0, "decade").to("dimensionless"), Q_(100.0))
+
+        # ## Test dBm
+        # 0 dBm = 1 mW
+        self.assertQuantityAlmostEqual(Q_(0.0, "dBm").to("mW"), Q_(1.0, "mW"))
+        # 10 dBm = 10 mW
+        self.assertQuantityAlmostEqual(Q_(10.0, "dBm").to("mW"), Q_(10.0, "mW"))
+        # 20 dBm = 100 mW
+        self.assertQuantityAlmostEqual(Q_(20.0, "dBm").to("mW"), Q_(100.0, "mW"))
+        # -10 dBm = 0.1 mW
+        self.assertQuantityAlmostEqual(Q_(-10.0, "dBm").to("mW"), Q_(0.1, "mW"))
+        # -20 dBm = 0.01 mW
+        self.assertQuantityAlmostEqual(Q_(-20.0, "dBm").to("mW"), Q_(0.01, "mW"))
+        # 3 dBm ≈ 2 mW
+        self.assertQuantityAlmostEqual(Q_(3.0, "dBm").to("mW"), Q_(1.9952623149688797, "mW"))
+
+        # ## Test octave
+        # 1 octave = 2
+        self.assertQuantityAlmostEqual(Q_(1.0, "octave").to("dimensionless"), Q_(2.0))
+
+    def test_mix_regular_log_units(self):
+        # Test regular-logarithmic mixed definition, such as dB/km or dB/cm
+
+        # Multiplications and divisions with a mix of Logarithmic Units and regular Units is normally not possible.
+        # The reason is that dB are considereded by pint like offset unit.
+        # Multiplications and divisions that involve offset units are badly defined, so pint raises an error
+        with self.assertRaises(OffsetUnitCalculusError):
+            (-10.0 * ureg.dB) / (1 * ureg.cm)
+        #
+        # However, if the flag autoconvert_offset_to_baseunit=True is given to UnitRegistry, then pint converts the unit to base.
+        # With this flag on multiplications and divisions are now possible:
+        self.ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
+        self.assertQuantityAlmostEqual(-10 * self.ureg.dB / self.ureg.cm, 0.1 / self.ureg.cm)
+
+    # def _test_log_quantity_add_sub_raises_exception(self, unit, func):
+    #     # Warning should be provided when trying to sum log units
+    #     pass
+
+# class TestLogarithmicQuantityBasicMath(QuantityTestCase):
+#     FORCE_NDARRAY = False
+#
+#     def _test_log_quantity_add_sub(self, unit, func):
+#
+#         # Pure dB arithmetic
+#         # 5 dBm + 10 dB = 15 dBm
+#         self.assertQuantityAlmostEqual(5 * self.ureg.dBm + 10 * self.ureg.dB, 15 * self.ureg.dBm)
+#         # 100*dBm -10*dB = 90*dB
+#         self.assertQuantityAlmostEqual(100 * self.ureg.dB - 10 * self.ureg.dB, 90 * self.ureg.dB)
+#         # 100 dBW - 5 dBW = 95 dB
+#         self.assertQuantityAlmostEqual(100 * self.ureg.dBm - 5 * self.ureg.dBm, 95 * self.ureg.dB)
+#         # 20 dB + 0 dBW == 20 dBW
+
+#         # 100 Hz + 1 octave = 200 Hz
+#         self.assertQuantityAlmostEqual(100 * self.ureg.Hz + 1 * self.ureg.octave, 200 * self.ureg.Hz)
+
