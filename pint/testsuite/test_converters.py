@@ -1,7 +1,12 @@
 import itertools
 
 from pint.compat import np
-from pint.converters import Converter, OffsetConverter, ScaleConverter
+from pint.converters import (
+    Converter,
+    LogarithmicConverter,
+    OffsetConverter,
+    ScaleConverter,
+)
 from pint.testsuite import BaseTestCase, helpers
 
 
@@ -21,6 +26,18 @@ class TestConverter(BaseTestCase):
         c = OffsetConverter(20.0, 2)
         self.assertEqual(c.from_reference(c.to_reference(100)), 100)
         self.assertEqual(c.to_reference(c.from_reference(100)), 100)
+
+    def test_log_converter(self):
+        c = LogarithmicConverter(scale=1, logbase=10, logfactor=1)
+        self.assertAlmostEqual(c.from_reference(0), 1)
+        self.assertAlmostEqual(c.from_reference(1), 10)
+        self.assertAlmostEqual(c.from_reference(2), 100)
+        self.assertAlmostEqual(c.to_reference(1), 0)
+        self.assertAlmostEqual(c.to_reference(10), 1)
+        self.assertAlmostEqual(c.to_reference(100), 2)
+        arb_value = 20.0
+        self.assertAlmostEqual(c.from_reference(c.to_reference(arb_value)), arb_value)
+        self.assertAlmostEqual(c.to_reference(c.from_reference(arb_value)), arb_value)
 
     @helpers.requires_numpy()
     def test_converter_inplace(self):
