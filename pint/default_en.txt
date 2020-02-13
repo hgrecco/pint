@@ -476,7 +476,7 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
  
 # Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
 
-decibellmilliwatt = 1e-3 W; logbase: 10; logfactor: 10 = dBm
+decibellmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm
 
 decibell = 1 ; logbase: 10; logfactor: 10 = dB
 # bell = 1 ; logbase: 10; logfactor: = B

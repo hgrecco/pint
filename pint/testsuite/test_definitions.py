@@ -95,24 +95,15 @@ class TestDefinition(BaseTestCase):
         )
 
     def test_log_unit_definition(self):
-        
-        x = Definition.from_string("decibellmilliwatt = 1 mW; logbase: 10; logfactor: 10 = dBm")
-        self.assertIsInstance(x, UnitDefinition)
-        self.assertFalse(x.is_base)
-        self.assertIsInstance(x.converter, LogarithmicConverter)
-        self.assertEqual(x.converter.scale, 1e-3)
-        self.assertEqual(x.converter.logbase, 10)
-        self.assertEqual(x.converter.logfactor, 10)
-        self.assertEqual(x.reference, UnitsContainer())
 
-        x = Definition.from_string("decibellmilliwatt = 1e-3 W; logbase: 10; logfactor: 10 = dBm")
+        x = Definition.from_string("decibellmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm")
         self.assertIsInstance(x, UnitDefinition)
         self.assertFalse(x.is_base)
         self.assertIsInstance(x.converter, LogarithmicConverter)
         self.assertEqual(x.converter.scale, 1e-3)
         self.assertEqual(x.converter.logbase, 10)
         self.assertEqual(x.converter.logfactor, 10)
-        self.assertEqual(x.reference, UnitsContainer())
+        self.assertEqual(x.reference, UnitsContainer(watt=1))
 
         x = Definition.from_string("decibell = 1 ; logbase: 10; logfactor: 10 = dB")
         self.assertIsInstance(x, UnitDefinition)
