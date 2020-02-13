@@ -108,7 +108,6 @@ gram = [mass] = g
 mole = [substance] = mol
 kelvin = [temperature]; offset: 0 = K = degK = °K = degree_Kelvin = degreeK  # older names supported for compatibility
 radian = [] = rad
-neper = [] = Np
 bit = []
 count = []
 
@@ -136,12 +135,12 @@ mil = π / 32000 * radian
 steradian = radian ** 2 = sr
 square_degree = (π / 180) ** 2 * sr = sq_deg = sqdeg
 
-# Logarithmic ratio
-bel = 0.5 * ln10 * neper
-
 # Information
-byte = 8 * bit = B = octet
 baud = bit / second = Bd = bps
+
+byte = 8 * bit = B = octet
+# byte = 8 * bit = _ = octet
+## NOTE: B (byte) symbol can conflict with Bell
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
@@ -174,7 +173,10 @@ week = 7 * day
 fortnight = 2 * week
 year = 365.25 * day = a = yr = julian_year
 month = year / 12
-decade = 10 * year
+
+# decade = 10 * year
+## NOTE: decade [time] can conflict with decade [dimensionless]
+
 century = 100 * year = _ = centuries
 millennium = 1e3 * year = _ = millennia
 eon = 1e9 * year
@@ -305,6 +307,7 @@ inch_H2O_39F = inch * water_39F * g_0
 inch_H2O_60F = inch * water_60F * g_0
 foot_H2O = foot * water * g_0 = ftH2O = feet_H2O
 centimeter_H2O = centimeter * water * g_0 = cmH2O = cm_H2O
+sound_pressure_level = 20e-6 * pascal = SPL
 
 # Torque
 [torque] = [force] * [length]
@@ -467,6 +470,23 @@ buckingham = debye * angstrom
 bohr_magneton = e * hbar / (2 * m_e) = µ_B = mu_B
 nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 
+# Logaritmic Unit Definition
+#  Unit = scale; logbase; logfactor 
+#  x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )
+ 
+# Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
+
+decibellmilliwatt = 1e-3 W; logbase: 10; logfactor: 10 = dBm
+
+decibell = 1 ; logbase: 10; logfactor: 10 = dB
+# bell = 1 ; logbase: 10; logfactor: = B
+## NOTE: B (Bell) symbol conflicts with byte
+
+decade = 1 ; logbase: 10; logfactor: 1
+## NOTE: decade [time] can conflict with decade [dimensionless]
+
+neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfactor: 0.5 = Np
+# neper = 1 ; logbase: eulers_number; logfactor: 0.5 = Np
 
 #### UNIT GROUPS ####
 # Mostly for length, area, volume, mass, force
