@@ -151,11 +151,11 @@ except ImportError:
 
 # Defines Logarithm and Exponential for Logarithmic Converter
 if HAS_NUMPY:
-    from numpy import log
-    from numpy import exp
+    from numpy import log  # noqa: F401
+    from numpy import exp  # noqa: F401
 else:
-    from math import log
-    from math import exp
+    from math import log  # noqa: F401
+    from math import exp  # noqa: F401
 
 if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
