@@ -51,7 +51,7 @@ import pkg_resources
 from . import registry_helpers, systems
 from .compat import babel_parse, tokenizer
 from .context import Context, ContextChain
-from .converters import ScaleConverter, LogarithmicConverter
+from .converters import LogarithmicConverter, ScaleConverter
 from .definitions import (
     AliasDefinition,
     Definition,
@@ -1206,7 +1206,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
             raise UndefinedUnitError(u)
 
     def _validate_and_extract(self, units):
-
+        # u is for unit, e is for exponent
         nonmult_units = [
             (u, e) for u, e in units.items() if not self._is_multiplicative(u)
         ]
@@ -1232,6 +1232,21 @@ class NonMultiplicativeRegistry(BaseRegistry):
             return nonmult_unit
 
         return None
+
+    def _add_ref_of_log_unit(self, offset_unit, all_units):
+
+        slct_unit = self._units[offset_unit]
+        if isinstance(slct_unit.converter, LogarithmicConverter):
+            # Extract reference unit
+            slct_ref = slct_unit.reference
+            # If reference unit is not dimensionless
+            if slct_ref != UnitsContainer():
+                # Extract reference unit
+                (u, e) = [(u, e) for u, e in slct_ref.items()].pop()
+                # Add it back to the unit list
+                return all_units.add(u, e)
+        # Otherwise, return the units unmodified
+        return all_units
 
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
@@ -1288,22 +1303,16 @@ class NonMultiplicativeRegistry(BaseRegistry):
         if src_offset_unit:
             value = self._units[src_offset_unit].converter.to_reference(value, inplace)
             src = src.remove([src_offset_unit])
-            if isinstance(self._units[src_offset_unit].converter, LogarithmicConverter):
-                # Add src reference unit back, for multiplicative section
-                src_ref = self._units[src_offset_unit].reference
-                (dim_key, dim_value) = [(dim_key, dim_value) for dim_key, dim_value in src_ref.items()][0]
-                src = src.add(dim_key, dim_value)
+            # Add reference unit for multiplicative section
+            src = self._add_ref_of_log_unit(src_offset_unit, src)
 
         # clean dst units from offset units
         if dst_offset_unit:
             dst = dst.remove([dst_offset_unit])
-            if isinstance(self._units[dst_offset_unit].converter, LogarithmicConverter):
-                # Add reference Unit back, for multiplicative section
-                dst_ref = self._units[dst_offset_unit].reference
-                (dim_key, dim_value) = [(dim_key, dim_value) for dim_key, dim_value in dst_ref.items()][0]
-                dst = dst.add(dim_key, dim_value)
+            # Add reference unit for multiplicative section
+            dst = self._add_ref_of_log_unit(dst_offset_unit, dst)
 
-        # Convert multiplicative parts to the dst.
+        # Convert non multiplicative units to the dst.
         value = super()._convert(value, src, dst, inplace, False)
 
         # Finally convert to offset units specified in destination
