@@ -51,7 +51,7 @@ import pkg_resources
 from . import registry_helpers, systems
 from .compat import babel_parse, tokenizer
 from .context import Context, ContextChain
-from .converters import ScaleConverter
+from .converters import ScaleConverter, LogarithmicConverter
 from .definitions import (
     AliasDefinition,
     Definition,
@@ -1288,12 +1288,22 @@ class NonMultiplicativeRegistry(BaseRegistry):
         if src_offset_unit:
             value = self._units[src_offset_unit].converter.to_reference(value, inplace)
             src = src.remove([src_offset_unit])
+            if isinstance(self._units[src_offset_unit].converter, LogarithmicConverter):
+                # Add src reference unit back, for multiplicative section
+                src_ref = self._units[src_offset_unit].reference
+                (dim_key, dim_value) = [(dim_key, dim_value) for dim_key, dim_value in src_ref.items()][0]
+                src = src.add(dim_key, dim_value)
 
         # clean dst units from offset units
         if dst_offset_unit:
             dst = dst.remove([dst_offset_unit])
+            if isinstance(self._units[dst_offset_unit].converter, LogarithmicConverter):
+                # Add reference Unit back, for multiplicative section
+                dst_ref = self._units[dst_offset_unit].reference
+                (dim_key, dim_value) = [(dim_key, dim_value) for dim_key, dim_value in dst_ref.items()][0]
+                dst = dst.add(dim_key, dim_value)
 
-        # Convert non multiplicative units to the dst.
+        # Convert multiplicative parts to the dst.
         value = super()._convert(value, src, dst, inplace, False)
 
         # Finally convert to offset units specified in destination
