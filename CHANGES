@@ -20,7 +20,7 @@ Pint Changelog
   Juan Nunez-Iglesias)
 - Fixed bug where to_compact handled prefix units incorrectly (Issue #960)
 - Implements Logarithmic Units like dBm, dB or decade
-  (Issue #71, Thanks Giorgio Signorello)
+  (Issue #71, Thanks Dima Pustakhod, Giorgio Signorello, Jonathan Wheeler)
 
 0.10.1 (2020-01-07)
 -------------------
