@@ -2,10 +2,16 @@ import copy
 import datetime
 import math
 import operator as op
+import unittest
 import warnings
 from unittest.mock import patch
 
-from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
+from pint import (
+    DimensionalityError,
+    LogarithmicUnitCalculusError,
+    OffsetUnitCalculusError,
+    UnitRegistry,
+)
 from pint.compat import BehaviorChangeWarning, np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
@@ -1761,24 +1767,35 @@ class TestLogarithmicQuantity(QuantityTestCase):
         new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
         self.assertQuantityAlmostEqual(-10 * new_reg.dB / new_reg.cm, 0.1 / new_reg.cm)
 
-    # def _test_log_quantity_add_sub_raises_exception(self, unit, func):
-    #     # Warning should be provided when trying to sum log units
-    #     pass
 
+class TestLogarithmicQuantityBasicMath(QuantityTestCase):
 
-# class TestLogarithmicQuantityBasicMath(QuantityTestCase):
-#     FORCE_NDARRAY = False
-#
-#     def _test_log_quantity_add_sub(self, unit, func):
-#
-#         # Pure dB arithmetic
-#         # 5 dBm + 10 dB = 15 dBm
-#         self.assertQuantityAlmostEqual(5 * self.ureg.dBm + 10 * self.ureg.dB, 15 * self.ureg.dBm)
-#         # 100*dBm -10*dB = 90*dB
-#         self.assertQuantityAlmostEqual(100 * self.ureg.dB - 10 * self.ureg.dB, 90 * self.ureg.dB)
-#         # 100 dBW - 5 dBW = 95 dB
-#         self.assertQuantityAlmostEqual(100 * self.ureg.dBm - 5 * self.ureg.dBm, 95 * self.ureg.dB)
-#         # 20 dB + 0 dBW == 20 dBW
+    FORCE_NDARRAY = False
 
-#         # 100 Hz + 1 octave = 200 Hz
-#         self.assertQuantityAlmostEqual(100 * self.ureg.Hz + 1 * self.ureg.octave, 200 * self.ureg.Hz)
+    @unittest.expectedFailure
+    def _test_log_quantity_add_sub_raises_exception(self, unit, func):
+        # Warning should be provided when trying to ....
+        self.assertRaises(LogarithmicUnitCalculusError)
+
+    @unittest.expectedFailure
+    def _test_log_quantity_add_sub(self, unit, func):
+
+        # Pure dB arithmetic
+        # 5 dBm + 10 dB = 15 dBm
+        self.assertQuantityAlmostEqual(
+            5 * self.ureg.dBm + 10 * self.ureg.dB, 15 * self.ureg.dBm
+        )
+        # 100*dBm -10*dB = 90*dB
+        self.assertQuantityAlmostEqual(
+            100 * self.ureg.dB - 10 * self.ureg.dB, 90 * self.ureg.dB
+        )
+        # 100 dBW - 5 dBW = 95 dB
+        self.assertQuantityAlmostEqual(
+            100 * self.ureg.dBm - 5 * self.ureg.dBm, 95 * self.ureg.dB
+        )
+        # 20 dB + 0 dBW == 20 dBW
+
+        # 100 Hz + 1 octave = 200 Hz
+        self.assertQuantityAlmostEqual(
+            100 * self.ureg.Hz + 1 * self.ureg.octave, 200 * self.ureg.Hz
+        )

@@ -16,9 +16,10 @@ import sys
 import pkg_resources
 
 from .context import Context
-from .errors import (
+from .errors import (  # noqa: F401
     DefinitionSyntaxError,
     DimensionalityError,
+    LogarithmicUnitCalculusError,
     OffsetUnitCalculusError,
     RedefinitionError,
     UndefinedUnitError,
