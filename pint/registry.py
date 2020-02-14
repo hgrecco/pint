@@ -84,6 +84,19 @@ from .util import (
 _BLOCK_RE = re.compile(r" |\(")
 
 
+@functools.lru_cache()
+def pattern_to_regex(pattern):
+    if hasattr(pattern, "finditer"):
+        pattern = pattern.pattern
+
+    # Replace "{unit_name}" match string with float regex with unit_name as group
+    pattern = re.sub(
+        r"{(\w+)}", r"(?P<\1>[+-]?[0-9]+(?:.[0-9]+)?(?:[Ee][+-]?[0-9]+)?)", pattern
+    )
+
+    return re.compile(pattern)
+
+
 class RegistryMeta(type):
     """This is just to call after_init at the right time
     instead of asking the developer to do it when subclassing.
@@ -1083,6 +1096,62 @@ class BaseRegistry(metaclass=RegistryMeta):
             return ParserHelper.eval_token(token, use_decimal=use_decimal)
         else:
             raise Exception("unknown token type")
+
+    def parse_pattern(
+        self, input_string, pattern, case_sensitive=True, use_decimal=False, many=False
+    ):
+        """Parse a string with a given regex pattern and returns result.
+
+        Parameters
+        ----------
+        input_string :
+
+        pattern_string:
+             The regex parse string
+        case_sensitive :
+             (Default value = True)
+        use_decimal :
+             (Default value = False)
+        many :
+             Match many results
+             (Default value = False)
+
+
+        Returns
+        -------
+
+        """
+
+        if not input_string:
+            return self.Quantity(1)
+
+        # Parse string
+        pattern = pattern_to_regex(pattern)
+        matched = re.finditer(pattern, input_string)
+
+        # Extract result(s)
+        results = []
+        for match in matched:
+            # Extract units from result
+            match = match.groupdict()
+
+            # Parse units
+            units = []
+            for unit, value in match.items():
+                # Construct measure by multiplying value by unit
+                units.append(
+                    float(value)
+                    * self.parse_expression(unit, case_sensitive, use_decimal)
+                )
+
+            # Add to results
+            results.append(units)
+
+            # Return first match only
+            if not many:
+                return results[0]
+
+        return results
 
     def parse_expression(
         self, input_string, case_sensitive=True, use_decimal=False, **values
