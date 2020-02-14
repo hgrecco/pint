@@ -1,8 +1,11 @@
 import pickle
 
+from pint.errors import OFFSET_ERROR_DOCS_HTML, LOG_ERROR_DOCS_HTML
+
 from pint import (
     DefinitionSyntaxError,
     DimensionalityError,
+    LogarithmicUnitCalculusError,
     OffsetUnitCalculusError,
     Quantity,
     RedefinitionError,
@@ -79,13 +82,34 @@ class TestErrors(BaseTestCase):
         self.assertEqual(
             str(ex),
             "Ambiguous operation with offset unit (kilogram). See "
-            "https://pint.readthedocs.io/en/latest/nonmult.html for guidance.",
+            + OFFSET_ERROR_DOCS_HTML
+            + " for guidance.",
         )
         ex = OffsetUnitCalculusError(Quantity("1 kg")._units, Quantity("1 s")._units)
         self.assertEqual(
             str(ex),
             "Ambiguous operation with offset unit (kilogram, second). See "
-            "https://pint.readthedocs.io/en/latest/nonmult.html for guidance.",
+            + OFFSET_ERROR_DOCS_HTML
+            + " for guidance.",
+        )
+
+    def test_logarithmic_unit_calculus_error(self):
+        Quantity = UnitRegistry(autoconvert_offset_to_baseunit=True).Quantity
+        ex = LogarithmicUnitCalculusError(Quantity("1 dB")._units)
+        self.assertEqual(
+            str(ex),
+            "Ambiguous operation with logarithmic unit (decibell). See "
+            + LOG_ERROR_DOCS_HTML
+            + " for guidance.",
+        )
+        ex = LogarithmicUnitCalculusError(
+            Quantity("1 dB")._units, Quantity("1 octave")._units
+        )
+        self.assertEqual(
+            str(ex),
+            "Ambiguous operation with logarithmic unit (decibell, octave). See "
+            + LOG_ERROR_DOCS_HTML
+            + " for guidance.",
         )
 
     def test_pickle_definition_syntax_error(self):
