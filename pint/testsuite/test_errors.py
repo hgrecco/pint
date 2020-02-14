@@ -1,7 +1,5 @@
 import pickle
 
-from pint.errors import OFFSET_ERROR_DOCS_HTML, LOG_ERROR_DOCS_HTML
-
 from pint import (
     DefinitionSyntaxError,
     DimensionalityError,
@@ -12,6 +10,7 @@ from pint import (
     UndefinedUnitError,
     UnitRegistry,
 )
+from pint.errors import LOG_ERROR_DOCS_HTML, OFFSET_ERROR_DOCS_HTML
 from pint.testsuite import BaseTestCase
 
 
