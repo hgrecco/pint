@@ -14,21 +14,28 @@ class TestConverter(BaseTestCase):
     def test_converter(self):
         c = Converter()
         self.assertTrue(c.is_multiplicative)
+        self.assertFalse(c.is_logarithmic)
         self.assertTrue(c.to_reference(8))
         self.assertTrue(c.from_reference(8))
 
     def test_multiplicative_converter(self):
         c = ScaleConverter(20.0)
+        self.assertTrue(c.is_multiplicative)
+        self.assertFalse(c.is_logarithmic)
         self.assertEqual(c.from_reference(c.to_reference(100)), 100)
         self.assertEqual(c.to_reference(c.from_reference(100)), 100)
 
     def test_offset_converter(self):
         c = OffsetConverter(20.0, 2)
+        self.assertFalse(c.is_multiplicative)
+        self.assertFalse(c.is_logarithmic)
         self.assertEqual(c.from_reference(c.to_reference(100)), 100)
         self.assertEqual(c.to_reference(c.from_reference(100)), 100)
 
     def test_log_converter(self):
         c = LogarithmicConverter(scale=1, logbase=10, logfactor=1)
+        self.assertFalse(c.is_multiplicative)
+        self.assertTrue(c.is_logarithmic)
         self.assertAlmostEqual(c.to_reference(0), 1)
         self.assertAlmostEqual(c.to_reference(1), 10)
         self.assertAlmostEqual(c.to_reference(2), 100)

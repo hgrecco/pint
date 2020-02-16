@@ -15,7 +15,13 @@ from .compat import HAS_NUMPY, exp, log  # noqa: F401
 class Converter:
     """Base class for value converters."""
 
-    is_multiplicative = True
+    @property
+    def is_multiplicative(self):
+        return True
+
+    @property
+    def is_logarithmic(self):
+        return False
 
     def to_reference(self, value, inplace=False):
         return value
@@ -26,8 +32,6 @@ class Converter:
 
 class ScaleConverter(Converter):
     """A linear transformation."""
-
-    is_multiplicative = True
 
     def __init__(self, scale):
         self.scale = scale
@@ -114,6 +118,10 @@ class LogarithmicConverter(Converter):
     @property
     def is_multiplicative(self):
         return False
+
+    @property
+    def is_logarithmic(self):
+        return True
 
     def from_reference(self, value, inplace=False):
         """Converts value from the reference unit to the logarithmic unit
