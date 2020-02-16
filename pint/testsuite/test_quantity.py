@@ -1656,14 +1656,15 @@ class TestLogarithmicQuantity(QuantityTestCase):
         self.assertEqual(x.units, y.units)
         self.assertIsNot(x, y)
 
-        # new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
-        # x = new_reg.Q_('4.2 * dBm')
-        # new_reg.assertEqual(x.magnitude, 4.2)
-        # new_reg.assertEqual(x.units, UnitsContainer(decibellmilliwatt=1))
+        # Using multiplications for dB units requires autoconversion to baseunits
+        new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
+        x = new_reg.Quantity("4.2 * dBm")
+        self.assertEqual(x.magnitude, 4.2)
+        self.assertEqual(x.units, UnitsContainer(decibellmilliwatt=1))
 
-        # with self.capture_log() as buffer:
-        #     self.assertEqual(4.2 * self.ureg.dBm, self.Q_(4.2, 2 * self.ureg.dBm))
-        #     self.assertEqual(len(buffer), 1)
+        with self.capture_log() as buffer:
+            self.assertEqual(4.2 * new_reg.dBm, new_reg.Quantity(4.2, 2 * new_reg.dBm))
+            self.assertEqual(len(buffer), 1)
 
     def test_log_convert(self):
 
