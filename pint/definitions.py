@@ -119,6 +119,10 @@ class Definition:
     def is_multiplicative(self):
         return self._converter.is_multiplicative
 
+    @property
+    def is_logarithmic(self):
+        return self._converter.is_logarithmic
+
     @classmethod
     def from_string(cls, definition):
         """Parse a definition.
