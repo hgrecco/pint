@@ -1790,12 +1790,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def _get_non_multiplicative_units(self):
         """Return a list of the of non-multiplicative units of the Quantity object."""
-        offset_units = [
+        non_mul_units = [
             unit
             for unit in self._units.keys()
             if not self._REGISTRY._units[unit].is_multiplicative
         ]
-        return offset_units
+        return non_mul_units
 
     def _get_delta_units(self):
         """Return list of delta units ot the Quantity object."""
