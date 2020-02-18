@@ -7,7 +7,6 @@
     :copyright: 2013 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-import os
 import tokenize
 from decimal import Decimal
 from io import BytesIO
@@ -97,8 +96,6 @@ try:
 
     NP_NO_VALUE = np._NoValue
 
-    ARRAY_FALLBACK = bool(int(os.environ.get("PINT_ARRAY_PROTOCOL_FALLBACK", 1)))
-
 except ImportError:
 
     np = None
@@ -112,7 +109,6 @@ except ImportError:
     HAS_NUMPY_ARRAY_FUNCTION = False
     SKIP_ARRAY_FUNCTION_CHANGE_WARNING = True
     NP_NO_VALUE = None
-    ARRAY_FALLBACK = False
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
         if force_ndarray or force_ndarray_like:

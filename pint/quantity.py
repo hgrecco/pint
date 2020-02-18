@@ -22,7 +22,6 @@ from pkg_resources.extern.packaging import version
 
 from .compat import SKIP_ARRAY_FUNCTION_CHANGE_WARNING  # noqa: F401
 from .compat import (
-    ARRAY_FALLBACK,
     NUMPY_VER,
     BehaviorChangeWarning,
     _to_magnitude,
@@ -1658,34 +1657,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __getattr__(self, item):
         if item.startswith("__array_"):
             # Handle array protocol attributes other than `__array__`
-            if ARRAY_FALLBACK:
-                # Deprecated fallback behavior
-                warnings.warn(
-                    (
-                        f"Array protocol attribute {item} accessed, with unit of the "
-                        "Quantity being stripped. This attribute will become unavailable "
-                        "in the next minor version of Pint. To make this potentially "
-                        "incorrect attribute unavailable now, set the "
-                        "PINT_ARRAY_PROTOCOL_FALLBACK environment variable to 0 before "
-                        "importing Pint."
-                    ),
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-                if is_duck_array_type(type(self._magnitude)):
-                    # Defer to magnitude, and don't catch any AttributeErrors
-                    return getattr(self._magnitude, item)
-                else:
-                    # If an `__array_` attribute is requested but the magnitude is not
-                    # a duck array, we convert the magnitude to a numpy ndarray.
-                    magnitude_as_array = _to_magnitude(
-                        self._magnitude, force_ndarray=True
-                    )
-                    return getattr(magnitude_as_array, item)
-            else:
-                # TODO (next minor version): ARRAY_FALLBACK is removed and this becomes the standard behavior
-                raise AttributeError(f"Array protocol attribute {item} not available.")
+            raise AttributeError(f"Array protocol attribute {item} not available.")
         elif item in HANDLED_UFUNCS or item in self._wrapped_numpy_methods:
             magnitude_as_duck_array = _to_magnitude(
                 self._magnitude, force_ndarray_like=True

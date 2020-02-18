@@ -4,6 +4,9 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
+- **BREAKING CHANGE**:
+  The array protocol fallback deprecated in version 0.10 has been removed.
+  (Issue #1029, Thanks Jon Thielen)
 - Now we use `pyproject.toml` for providing `setuptools_scm` settings
 - Remove `default_en_0.6.txt`
 - Reorganize long_description.
