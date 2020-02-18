@@ -1,7 +1,6 @@
 import copy
 import operator as op
 import unittest
-from unittest.mock import patch
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from pint.compat import np
