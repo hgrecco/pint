@@ -4,7 +4,15 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
-- Make `__str__` and `__format__` locale aware
+- Make `__str__` and `__format__` locale configurable.
+  (Issue #984)
+- Quantities wrapping NumPy arrays will no longer warning for the changed
+  array function behavior introduced in 0.10.
+  (Issue #1029, Thanks Jon Thielen)
+- **BREAKING CHANGE**:
+  The array protocol fallback deprecated in version 0.10 has been removed.
+  (Issue #1029, Thanks Jon Thielen)
+- Now we use `pyproject.toml` for providing `setuptools_scm` settings
 - Remove `default_en_0.6.txt`
 - Reorganize long_description.
 - Moved Pi to defintions files.

@@ -7,7 +7,6 @@
     :copyright: 2013 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-import os
 import tokenize
 from decimal import Decimal
 from io import BytesIO
@@ -35,27 +34,6 @@ def tokenizer(input_string):
 # TODO: remove this warning after v0.10
 class BehaviorChangeWarning(UserWarning):
     pass
-
-
-array_function_change_msg = """The way Pint handles NumPy operations has changed with the
-implementation of NEP 18. Unimplemented NumPy operations will now fail instead of making
-assumptions about units. Some functions, eg concat, will now return Quanties with units, where
-they returned ndarrays previously. See https://github.com/hgrecco/pint/pull/905.
-
-To hide this warning, wrap your first creation of an array Quantity with
-warnings.catch_warnings(), like the following:
-
-import numpy as np
-import warnings
-from pint import Quantity
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    Quantity([])
-
-To disable the new behavior, see
-https://www.numpy.org/neps/nep-0018-array-function-protocol.html#implementation
-"""
 
 
 try:
@@ -93,11 +71,8 @@ try:
             return False
 
     HAS_NUMPY_ARRAY_FUNCTION = _test_array_function_protocol()
-    SKIP_ARRAY_FUNCTION_CHANGE_WARNING = not HAS_NUMPY_ARRAY_FUNCTION
 
     NP_NO_VALUE = np._NoValue
-
-    ARRAY_FALLBACK = bool(int(os.environ.get("PINT_ARRAY_PROTOCOL_FALLBACK", 1)))
 
 except ImportError:
 
@@ -110,9 +85,7 @@ except ImportError:
     NUMPY_VER = "0"
     NUMERIC_TYPES = (Number, Decimal)
     HAS_NUMPY_ARRAY_FUNCTION = False
-    SKIP_ARRAY_FUNCTION_CHANGE_WARNING = True
     NP_NO_VALUE = None
-    ARRAY_FALLBACK = False
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
         if force_ndarray or force_ndarray_like:
