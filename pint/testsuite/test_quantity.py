@@ -6,7 +6,7 @@ import warnings
 from unittest.mock import patch
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
-from pint.compat import BehaviorChangeWarning, np
+from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
 from pint.unit import UnitsContainer
@@ -531,11 +531,8 @@ class TestQuantity(QuantityTestCase):
             iter(x)
 
     @helpers.requires_array_function_protocol()
-    @patch("pint.quantity.SKIP_ARRAY_FUNCTION_CHANGE_WARNING", False)
-    def test_array_function_warning_on_creation(self):
-        # Test that warning is raised on first creation, but not second
-        with self.assertWarns(BehaviorChangeWarning):
-            self.Q_([])
+    def test_no_longer_array_function_warning_on_creation(self):
+        # Test that warning is no longer raised on first creation
         with warnings.catch_warnings():
             warnings.filterwarnings("error")
             self.Q_([])

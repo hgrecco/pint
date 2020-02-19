@@ -1,7 +1,6 @@
 import copy
 import operator as op
 import unittest
-from unittest.mock import patch
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from pint.compat import np
@@ -1031,28 +1030,15 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.array([[1, 0, 2], [3, 0, 4]]) * self.ureg.m,
         )
 
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_ndarray_downcast(self):
         with self.assertWarns(UnitStrippedWarning):
             np.asarray(self.q)
 
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_ndarray_downcast_with_dtype(self):
         with self.assertWarns(UnitStrippedWarning):
             qarr = np.asarray(self.q, dtype=np.float64)
             self.assertEqual(qarr.dtype, np.float64)
 
-    def test_array_protocol_fallback(self):
-        with self.assertWarns(DeprecationWarning) as cm:
-            for attr in ("__array_struct__", "__array_interface__"):
-                getattr(self.q, attr)
-                warning_text = str(cm.warnings[0].message)
-                self.assertTrue(
-                    f"unit of the Quantity being stripped" in warning_text
-                    and "will become unavailable" in warning_text
-                )
-
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_array_protocol_unavailable(self):
         for attr in ("__array_struct__", "__array_interface__"):
             self.assertRaises(AttributeError, getattr, self.q, attr)
