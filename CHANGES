@@ -4,6 +4,8 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
+- Added pint-convert script.
+- Remove `default_en_0.6.txt`.
 - Make `__str__` and `__format__` locale configurable.
   (Issue #984)
 - Quantities wrapping NumPy arrays will no longer warning for the changed
@@ -15,7 +17,7 @@ Pint Changelog
 - Now we use `pyproject.toml` for providing `setuptools_scm` settings
 - Remove `default_en_0.6.txt`
 - Reorganize long_description.
-- Moved Pi to defintions files.
+- Moved Pi to definitions files.
 - Use ints (not floats) a defaults at many points in the codebase as in Python 3
   the true division is the default one.
 - **BREAKING CHANGE**:
