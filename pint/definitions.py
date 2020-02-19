@@ -15,8 +15,8 @@ from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
 
-class ParsedDefinition(
-    namedtuple("ParsedDefinition", "name symbol aliases value rhs_parts")
+class PreprocessedDefinition(
+    namedtuple("PreprocessedDefinition", "name symbol aliases value rhs_parts")
 ):
     """Splits a definition into the constitutive parts.
 
@@ -125,7 +125,7 @@ class Definition:
 
         Parameters
         ----------
-        definition : str or ParsedDefinition
+        definition : str or PreprocessedDefinition
 
         Returns
         -------
@@ -133,7 +133,7 @@ class Definition:
         """
 
         if isinstance(definition, str):
-            definition = ParsedDefinition.from_string(definition)
+            definition = PreprocessedDefinition.from_string(definition)
 
         if definition.name.startswith("@alias "):
             return AliasDefinition.from_string(definition)
@@ -184,7 +184,7 @@ class PrefixDefinition(Definition):
     @classmethod
     def from_string(cls, definition):
         if isinstance(definition, str):
-            definition = ParsedDefinition.from_string(definition)
+            definition = PreprocessedDefinition.from_string(definition)
 
         aliases = tuple(alias.strip("-") for alias in definition.aliases)
         if definition.symbol:
@@ -228,7 +228,7 @@ class UnitDefinition(Definition):
     @classmethod
     def from_string(cls, definition):
         if isinstance(definition, str):
-            definition = ParsedDefinition.from_string(definition)
+            definition = PreprocessedDefinition.from_string(definition)
 
         if ";" in definition.value:
             [converter, modifiers] = definition.value.split(";", 2)
@@ -294,7 +294,7 @@ class DimensionDefinition(Definition):
     @classmethod
     def from_string(cls, definition):
         if isinstance(definition, str):
-            definition = ParsedDefinition.from_string(definition)
+            definition = PreprocessedDefinition.from_string(definition)
 
         converter = ParserHelper.from_string(definition.value)
 
@@ -336,7 +336,7 @@ class AliasDefinition(Definition):
     def from_string(cls, definition):
 
         if isinstance(definition, str):
-            definition = ParsedDefinition.from_string(definition)
+            definition = PreprocessedDefinition.from_string(definition)
 
         name = definition.name[len("@alias ") :].lstrip()
         return AliasDefinition(name, tuple(definition.rhs_parts))
