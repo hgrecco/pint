@@ -4,6 +4,8 @@ Pint Changelog
 0.11 (unreleased)
 -----------------
 
+- Make `__str__` and `__format__` locale configurable.
+  (Issue #984)
 - Quantities wrapping NumPy arrays will no longer warning for the changed
   array function behavior introduced in 0.10.
   (Issue #1029, Thanks Jon Thielen)

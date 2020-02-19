@@ -240,6 +240,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return ret
 
     def __str__(self):
+        if self._REGISTRY.fmt_locale is not None:
+            return self.format_babel()
+
         return format(self)
 
     def __bytes__(self):
@@ -258,6 +261,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     _exp_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
     def __format__(self, spec):
+        if self._REGISTRY.fmt_locale is not None:
+            return self.format_babel(spec)
+
         spec = spec or self.default_format
 
         if "L" in spec:
