@@ -667,10 +667,9 @@ def _pad(array, pad_width, mode="constant", **kwargs):
 
     # Handle flexible constant_values and end_values, converting to units if Quantity
     # and ignoring if not
-    if mode == "constant":
-        kwargs["constant_values"] = _recursive_convert(kwargs["constant_values"], units)
-    elif mode == "linear_ramp":
-        kwargs["end_values"] = _recursive_convert(kwargs["end_values"], units)
+    for key in ("constant_values", "end_values"):
+        if key in kwargs:
+            kwargs[key] = _recursive_convert(kwargs[key], units)
 
     return units._REGISTRY.Quantity(
         np.pad(array._magnitude, pad_width, mode=mode, **kwargs), units
