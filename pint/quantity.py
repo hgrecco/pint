@@ -146,6 +146,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def force_ndarray_like(self):
         return self._REGISTRY.force_ndarray_like
 
+    @property
+    def UnitsContainer(self):
+        return self._REGISTRY.UnitsContainer
+
     def __reduce__(self):
         """Allow pickling quantities. Since UnitRegistries are not pickled, upon
         unpickling the new object is always attached to the application registry.
@@ -175,7 +179,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 inst._magnitude = _to_magnitude(
                     value, inst.force_ndarray, inst.force_ndarray_like
                 )
-                inst._units = UnitsContainer()
+                inst._units = inst.UnitsContainer()
         elif isinstance(units, (UnitsContainer, UnitDefinition)):
             inst = SharedRegistryObject.__new__(cls)
             inst._magnitude = _to_magnitude(
@@ -486,7 +490,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @classmethod
     def from_tuple(cls, tup):
-        return cls(tup[0], UnitsContainer(tup[1]))
+        return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
 
     def to_tuple(self):
         return self.m, tuple(self._units.items())
@@ -790,7 +794,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # the operation.
                 self._magnitude = op(self._magnitude, other_magnitude)
             elif self.dimensionless:
-                self.ito(UnitsContainer())
+                self.ito(self.UnitsContainer())
                 self._magnitude = op(self._magnitude, other_magnitude)
             else:
                 raise DimensionalityError(self._units, "dimensionless")
@@ -900,7 +904,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                     _to_magnitude(other, self.force_ndarray, self.force_ndarray_like),
                 )
             elif self.dimensionless:
-                units = UnitsContainer()
+                units = self.UnitsContainer()
                 magnitude = op(
                     self.to(units)._magnitude,
                     _to_magnitude(other, self.force_ndarray, self.force_ndarray_like),
@@ -1065,7 +1069,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             except TypeError:
                 return NotImplemented
             self._magnitude = magnitude_op(self._magnitude, other_magnitude)
-            self._units = units_op(self._units, UnitsContainer())
+            self._units = units_op(self._units, self.UnitsContainer())
             return self
 
         if isinstance(other, self._REGISTRY.Unit):
@@ -1136,7 +1140,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 return NotImplemented
 
             magnitude = magnitude_op(self._magnitude, other_magnitude)
-            units = units_op(self._units, UnitsContainer())
+            units = units_op(self._units, self.UnitsContainer())
 
             return self.__class__(magnitude, units)
 
@@ -1220,7 +1224,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             self._magnitude = self.to("")._magnitude // other
         else:
             raise DimensionalityError(self._units, "dimensionless")
-        self._units = UnitsContainer({})
+        self._units = self.UnitsContainer({})
         return self
 
     @check_implemented
@@ -1231,7 +1235,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             magnitude = self.to("")._magnitude // other
         else:
             raise DimensionalityError(self._units, "dimensionless")
-        return self.__class__(magnitude, UnitsContainer({}))
+        return self.__class__(magnitude, self.UnitsContainer({}))
 
     @check_implemented
     def __rfloordiv__(self, other):
@@ -1241,19 +1245,19 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             magnitude = other // self.to("")._magnitude
         else:
             raise DimensionalityError(self._units, "dimensionless")
-        return self.__class__(magnitude, UnitsContainer({}))
+        return self.__class__(magnitude, self.UnitsContainer({}))
 
     @check_implemented
     def __imod__(self, other):
         if not self._check(other):
-            other = self.__class__(other, UnitsContainer({}))
+            other = self.__class__(other, self.UnitsContainer({}))
         self._magnitude %= other.to(self._units)._magnitude
         return self
 
     @check_implemented
     def __mod__(self, other):
         if not self._check(other):
-            other = self.__class__(other, UnitsContainer({}))
+            other = self.__class__(other, self.UnitsContainer({}))
         magnitude = self._magnitude % other.to(self._units)._magnitude
         return self.__class__(magnitude, self._units)
 
@@ -1264,16 +1268,19 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             return self.__class__(magnitude, other._units)
         elif self.dimensionless:
             magnitude = other % self.to("")._magnitude
-            return self.__class__(magnitude, UnitsContainer({}))
+            return self.__class__(magnitude, self.UnitsContainer({}))
         else:
             raise DimensionalityError(self._units, "dimensionless")
 
     @check_implemented
     def __divmod__(self, other):
         if not self._check(other):
-            other = self.__class__(other, UnitsContainer({}))
+            other = self.__class__(other, self.UnitsContainer({}))
         q, r = divmod(self._magnitude, other.to(self._units)._magnitude)
-        return (self.__class__(q, UnitsContainer({})), self.__class__(r, self._units))
+        return (
+            self.__class__(q, self.UnitsContainer({})),
+            self.__class__(r, self._units),
+        )
 
     @check_implemented
     def __rdivmod__(self, other):
@@ -1282,10 +1289,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             unit = other._units
         elif self.dimensionless:
             q, r = divmod(other, self.to("")._magnitude)
-            unit = UnitsContainer({})
+            unit = self.UnitsContainer({})
         else:
             raise DimensionalityError(self._units, "dimensionless")
-        return (self.__class__(q, UnitsContainer({})), self.__class__(r, unit))
+        return (self.__class__(q, self.UnitsContainer({})), self.__class__(r, unit))
 
     @check_implemented
     def __ipow__(self, other):
@@ -1326,7 +1333,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             if other == 1:
                 return self
             elif other == 0:
-                self._units = UnitsContainer()
+                self._units = self.UnitsContainer()
             else:
                 if not self._is_multiplicative:
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
@@ -1383,7 +1390,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 return self
             elif other == 0:
                 exponent = 0
-                units = UnitsContainer()
+                units = self.UnitsContainer()
             else:
                 if not self._is_multiplicative:
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
@@ -1454,7 +1461,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                         raise OffsetUnitCalculusError(self._units)
 
             return self.dimensionless and eq(
-                self._convert_magnitude(UnitsContainer()), other, False
+                self._convert_magnitude(self.UnitsContainer()), other, False
             )
 
         if eq(self._magnitude, 0, True) and eq(other._magnitude, 0, True):
@@ -1483,7 +1490,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def compare(self, other, op):
         if not isinstance(other, self.__class__):
             if self.dimensionless:
-                return op(self._convert_magnitude_not_inplace(UnitsContainer()), other)
+                return op(
+                    self._convert_magnitude_not_inplace(self.UnitsContainer()), other
+                )
             elif eq(other, 0, True):
                 # Handle the special case in which we compare to zero
                 # (or an array of zeros)

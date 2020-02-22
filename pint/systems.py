@@ -174,7 +174,7 @@ class Group(SharedRegistryObject):
         self.invalidate_members()
 
     @classmethod
-    def from_lines(cls, lines, define_func):
+    def from_lines(cls, lines, define_func, non_int_type=float):
         """Return a Group object parsing an iterable of lines.
 
         Parameters
@@ -208,7 +208,7 @@ class Group(SharedRegistryObject):
         for lineno, line in lines:
             if "=" in line:
                 # Is a definition
-                definition = Definition.from_string(line)
+                definition = Definition.from_string(line, non_int_type=non_int_type)
                 if not isinstance(definition, UnitDefinition):
                     raise DefinitionSyntaxError(
                         "Only UnitDefinition are valid inside _used_groups, not "
@@ -357,7 +357,7 @@ class System(SharedRegistryObject):
         return self.name
 
     @classmethod
-    def from_lines(cls, lines, get_root_func):
+    def from_lines(cls, lines, get_root_func, non_int_type=float):
         lines = SourceIterator(lines)
 
         lineno, header = next(lines)
@@ -399,7 +399,9 @@ class System(SharedRegistryObject):
                     )
 
                 # Here we find new_unit expanded in terms of root_units
-                new_unit_expanded = to_units_container(get_root_func(new_unit)[1])
+                new_unit_expanded = to_units_container(
+                    get_root_func(new_unit)[1], cls._REGISTRY
+                )
 
                 # We require that the old unit is present in the new_unit expanded
                 if old_unit not in new_unit_expanded:

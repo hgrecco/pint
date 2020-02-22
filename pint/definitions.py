@@ -65,12 +65,13 @@ class _NotNumeric(Exception):
         self.value = value
 
 
-def numeric_parse(s):
+def numeric_parse(s, non_int_type=float):
     """Try parse a string into a number (without using eval).
 
     Parameters
     ----------
     s : str
+    non_int_type : type
 
     Returns
     -------
@@ -81,7 +82,7 @@ def numeric_parse(s):
     _NotNumeric
         If the string cannot be parsed as a number.
     """
-    ph = ParserHelper.from_string(s)
+    ph = ParserHelper.from_string(s, non_int_type)
 
     if len(ph):
         raise _NotNumeric(s)
@@ -120,12 +121,13 @@ class Definition:
         return self._converter.is_multiplicative
 
     @classmethod
-    def from_string(cls, definition):
+    def from_string(cls, definition, non_int_type=float):
         """Parse a definition.
 
         Parameters
         ----------
         definition : str or PreprocessedDefinition
+        non_int_type : type
 
         Returns
         -------
@@ -136,13 +138,13 @@ class Definition:
             definition = PreprocessedDefinition.from_string(definition)
 
         if definition.name.startswith("@alias "):
-            return AliasDefinition.from_string(definition)
+            return AliasDefinition.from_string(definition, non_int_type)
         elif definition.name.startswith("["):
-            return DimensionDefinition.from_string(definition)
+            return DimensionDefinition.from_string(definition, non_int_type)
         elif definition.name.endswith("-"):
-            return PrefixDefinition.from_string(definition)
+            return PrefixDefinition.from_string(definition, non_int_type)
         else:
-            return UnitDefinition.from_string(definition)
+            return UnitDefinition.from_string(definition, non_int_type)
 
     @property
     def name(self):
@@ -182,7 +184,7 @@ class PrefixDefinition(Definition):
     """
 
     @classmethod
-    def from_string(cls, definition):
+    def from_string(cls, definition, non_int_type=float):
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
@@ -193,7 +195,7 @@ class PrefixDefinition(Definition):
             symbol = definition.symbol
 
         try:
-            converter = ScaleConverter(numeric_parse(definition.value))
+            converter = ScaleConverter(numeric_parse(definition.value, non_int_type))
         except _NotNumeric as ex:
             raise ValueError(
                 f"Prefix definition ('{definition.name}') must contain only numbers, not {ex.value}"
@@ -226,7 +228,7 @@ class UnitDefinition(Definition):
         super().__init__(name, symbol, aliases, converter)
 
     @classmethod
-    def from_string(cls, definition):
+    def from_string(cls, definition, non_int_type=float):
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
@@ -235,7 +237,7 @@ class UnitDefinition(Definition):
 
             try:
                 modifiers = dict(
-                    (key.strip(), numeric_parse(value))
+                    (key.strip(), numeric_parse(value, non_int_type))
                     for key, value in (part.split(":") for part in modifiers.split(";"))
                 )
             except _NotNumeric as ex:
@@ -247,7 +249,7 @@ class UnitDefinition(Definition):
             converter = definition.value
             modifiers = {}
 
-        converter = ParserHelper.from_string(converter)
+        converter = ParserHelper.from_string(converter, non_int_type)
 
         if not any(_is_dim(key) for key in converter.keys()):
             is_base = False
@@ -292,11 +294,11 @@ class DimensionDefinition(Definition):
         super().__init__(name, symbol, aliases, converter=None)
 
     @classmethod
-    def from_string(cls, definition):
+    def from_string(cls, definition, non_int_type=float):
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
-        converter = ParserHelper.from_string(definition.value)
+        converter = ParserHelper.from_string(definition.value, non_int_type)
 
         if not converter:
             is_base = True
@@ -308,7 +310,7 @@ class DimensionDefinition(Definition):
                 "Derived dimensions must only be referenced "
                 "to dimensions."
             )
-        reference = UnitsContainer(converter)
+        reference = UnitsContainer(converter, non_int_type=non_int_type)
 
         return cls(
             definition.name,
@@ -333,7 +335,7 @@ class AliasDefinition(Definition):
         super().__init__(name=name, symbol=None, aliases=aliases, converter=None)
 
     @classmethod
-    def from_string(cls, definition):
+    def from_string(cls, definition, non_int_type=float):
 
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)

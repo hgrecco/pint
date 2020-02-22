@@ -4,7 +4,12 @@ Pint Changelog
 0.12 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Add full support for Decimal and Fraction at the registry level.
+  **BREAKING CHANGE**: 
+  `use_decimal` is deprecated. Use `non_int_type=Decimal` when instantiating
+  the registry.
+- Fixed bug where numpy.pad didn't work without specifying constant_values or
+  end_values (Issue #1026)
 
 
 0.11 (2020-02-19)
@@ -35,8 +40,7 @@ Pint Changelog
 - Allow constants in units by using a leading underscore (Issue #989, Thanks
   Juan Nunez-Iglesias)
 - Fixed bug where to_compact handled prefix units incorrectly (Issue #960)
-- Fixed bug where numpy.pad didn't work without specifying constant_values or
-  end_values (Issue #1026)
+
 
 0.10.1 (2020-01-07)
 -------------------
