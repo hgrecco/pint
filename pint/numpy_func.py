@@ -654,20 +654,22 @@ def _pad(array, pad_width, mode="constant", **kwargs):
     def _recursive_convert(arg, unit):
         if iterable(arg):
             return tuple(_recursive_convert(a, unit=unit) for a in arg)
-        elif _is_quantity(arg):
-            return arg.m_as(unit)
-        else:
-            return arg
+        elif not _is_quantity(arg):
+            if arg == 0 or np.isnan(arg):
+                arg = unit._REGISTRY.Quantity(arg, unit)
+            else:
+                arg = unit._REGISTRY.Quantity(arg, "dimensionless")
+
+        return arg.m_as(unit)
 
     # pad only dispatches on array argument, so we know it is a Quantity
     units = array.units
 
     # Handle flexible constant_values and end_values, converting to units if Quantity
     # and ignoring if not
-    if mode == "constant":
-        kwargs["constant_values"] = _recursive_convert(kwargs["constant_values"], units)
-    elif mode == "linear_ramp":
-        kwargs["end_values"] = _recursive_convert(kwargs["end_values"], units)
+    for key in ("constant_values", "end_values"):
+        if key in kwargs:
+            kwargs[key] = _recursive_convert(kwargs[key], units)
 
     return units._REGISTRY.Quantity(
         np.pad(array._magnitude, pad_width, mode=mode, **kwargs), units

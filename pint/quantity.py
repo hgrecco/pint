@@ -20,13 +20,9 @@ import warnings
 
 from pkg_resources.extern.packaging import version
 
-from .compat import SKIP_ARRAY_FUNCTION_CHANGE_WARNING  # noqa: F401
 from .compat import (
-    ARRAY_FALLBACK,
     NUMPY_VER,
-    BehaviorChangeWarning,
     _to_magnitude,
-    array_function_change_msg,
     babel_parse,
     eq,
     is_duck_array_type,
@@ -165,8 +161,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return _unpickle, (Quantity, self.magnitude, self._units)
 
     def __new__(cls, value, units=None):
-        global SKIP_ARRAY_FUNCTION_CHANGE_WARNING
-
         if is_upcast_type(type(value)):
             raise TypeError(f"Quantity cannot wrap upcast type {type(value)}")
         elif units is None:
@@ -219,12 +213,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         inst.__used = False
         inst.__handling = None
 
-        if not SKIP_ARRAY_FUNCTION_CHANGE_WARNING and isinstance(
-            inst._magnitude, ndarray
-        ):
-            warnings.warn(array_function_change_msg, BehaviorChangeWarning)
-            SKIP_ARRAY_FUNCTION_CHANGE_WARNING = True
-
         return inst
 
     @property
@@ -256,6 +244,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return ret
 
     def __str__(self):
+        if self._REGISTRY.fmt_locale is not None:
+            return self.format_babel()
+
         return format(self)
 
     def __bytes__(self):
@@ -274,6 +265,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     _exp_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
     def __format__(self, spec):
+        if self._REGISTRY.fmt_locale is not None:
+            return self.format_babel(spec)
+
         spec = spec or self.default_format
 
         if "L" in spec:
@@ -508,6 +502,40 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.get_compatible_units(self._units)
 
+    def is_compatible_with(self, other, *contexts, **ctx_kwargs):
+        """ check if the other object is compatible
+
+        Parameters
+        ----------
+        other
+            The object to check. Treated as dimensionless if not a
+            Quantity, Unit or str.
+        *contexts : str or pint.Context
+            Contexts to use in the transformation.
+        **ctx_kwargs :
+            Values for the Context/s
+
+        Returns
+        -------
+        bool
+        """
+        if contexts:
+            try:
+                self.to(other, *contexts, **ctx_kwargs)
+                return True
+            except DimensionalityError:
+                return False
+
+        if isinstance(other, (self._REGISTRY.Quantity, self._REGISTRY.Unit)):
+            return self.dimensionality == other.dimensionality
+
+        if isinstance(other, str):
+            return (
+                self.dimensionality == self._REGISTRY.parse_units(other).dimensionality
+            )
+
+        return self.dimensionless
+
     def _convert_magnitude_not_inplace(self, other, *contexts, **ctx_kwargs):
         if contexts:
             with self._REGISTRY.context(*contexts, **ctx_kwargs):
@@ -693,6 +721,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         if unit is None:
             unit = infer_base_unit(self)
+        else:
+            unit = infer_base_unit(self.__class__(1, unit))
 
         q_base = self.to(unit)
 
@@ -1665,34 +1695,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __getattr__(self, item):
         if item.startswith("__array_"):
             # Handle array protocol attributes other than `__array__`
-            if ARRAY_FALLBACK:
-                # Deprecated fallback behavior
-                warnings.warn(
-                    (
-                        f"Array protocol attribute {item} accessed, with unit of the "
-                        "Quantity being stripped. This attribute will become unavailable "
-                        "in the next minor version of Pint. To make this potentially "
-                        "incorrect attribute unavailable now, set the "
-                        "PINT_ARRAY_PROTOCOL_FALLBACK environment variable to 0 before "
-                        "importing Pint."
-                    ),
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-                if is_duck_array_type(type(self._magnitude)):
-                    # Defer to magnitude, and don't catch any AttributeErrors
-                    return getattr(self._magnitude, item)
-                else:
-                    # If an `__array_` attribute is requested but the magnitude is not
-                    # a duck array, we convert the magnitude to a numpy ndarray.
-                    magnitude_as_array = _to_magnitude(
-                        self._magnitude, force_ndarray=True
-                    )
-                    return getattr(magnitude_as_array, item)
-            else:
-                # TODO (next minor version): ARRAY_FALLBACK is removed and this becomes the standard behavior
-                raise AttributeError(f"Array protocol attribute {item} not available.")
+            raise AttributeError(f"Array protocol attribute {item} not available.")
         elif item in HANDLED_UFUNCS or item in self._wrapped_numpy_methods:
             magnitude_as_duck_array = _to_magnitude(
                 self._magnitude, force_ndarray_like=True

@@ -1,7 +1,6 @@
 import copy
 import operator as op
 import unittest
-from unittest.mock import patch
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from pint.compat import np
@@ -885,7 +884,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_result_type_numpy_func(self):
-        self.assertEqual(np.result_type(self.q), np.dtype("int64"))
+        self.assertEqual(np.result_type(self.q), np.dtype("int"))
 
     @helpers.requires_array_function_protocol()
     def test_nan_to_num_numpy_func(self):
@@ -1031,28 +1030,15 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.array([[1, 0, 2], [3, 0, 4]]) * self.ureg.m,
         )
 
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_ndarray_downcast(self):
         with self.assertWarns(UnitStrippedWarning):
             np.asarray(self.q)
 
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_ndarray_downcast_with_dtype(self):
         with self.assertWarns(UnitStrippedWarning):
             qarr = np.asarray(self.q, dtype=np.float64)
             self.assertEqual(qarr.dtype, np.float64)
 
-    def test_array_protocol_fallback(self):
-        with self.assertWarns(DeprecationWarning) as cm:
-            for attr in ("__array_struct__", "__array_interface__"):
-                getattr(self.q, attr)
-                warning_text = str(cm.warnings[0].message)
-                self.assertTrue(
-                    f"unit of the Quantity being stripped" in warning_text
-                    and "will become unavailable" in warning_text
-                )
-
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_array_protocol_unavailable(self):
         for attr in ("__array_struct__", "__array_interface__"):
             self.assertRaises(AttributeError, getattr, self.q, attr)
@@ -1067,12 +1053,30 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_pad(self):
         # Tests reproduced with modification from NumPy documentation
         a = [1, 2, 3, 4, 5] * self.ureg.m
+        b = self.Q_([4.0, 6.0, 8.0, 9.0, -3.0], "degC")
+
         self.assertQuantityEqual(
-            np.pad(a, (2, 3), "constant", constant_values=(4, 600 * self.ureg.cm)),
-            [4, 4, 1, 2, 3, 4, 5, 6, 6, 6] * self.ureg.m,
+            np.pad(a, (2, 3), "constant"), [0, 0, 1, 2, 3, 4, 5, 0, 0, 0] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "constant", constant_values=(0, 600 * self.ureg.cm)),
+            [0, 0, 1, 2, 3, 4, 5, 6, 6, 6] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.pad(
+                b, (2, 1), "constant", constant_values=(np.nan, self.Q_(10, "degC"))
+            ),
+            self.Q_([np.nan, np.nan, 4, 6, 8, 9, -3, 10], "degC"),
+        )
+        self.assertRaises(
+            DimensionalityError, np.pad, a, (2, 3), "constant", constant_values=4
         )
         self.assertQuantityEqual(
             np.pad(a, (2, 3), "edge"), [1, 1, 1, 2, 3, 4, 5, 5, 5, 5] * self.ureg.m
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "linear_ramp"),
+            [0, 0, 1, 2, 3, 4, 5, 3, 1, 0] * self.ureg.m,
         )
         self.assertQuantityEqual(
             np.pad(a, (2, 3), "linear_ramp", end_values=(5, -4) * self.ureg.m),

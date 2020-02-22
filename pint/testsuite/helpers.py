@@ -67,6 +67,10 @@ def requires_babel():
     return unittest.skipUnless(HAS_BABEL, "Requires Babel with units support")
 
 
+def requires_not_babel():
+    return unittest.skipIf(HAS_BABEL, "Requires Babel is not installed")
+
+
 def requires_uncertainties():
     return unittest.skipUnless(HAS_UNCERTAINTIES, "Requires Uncertainties")
 

@@ -697,6 +697,24 @@ class TestIssues(QuantityTestCase):
         with self.assertRaises(DimensionalityError):
             q.to("joule")
 
+    def test_issue507(self):
+        # leading underscore in unit works with numbers
+        ureg.define("_100km = 100 * kilometer")
+        battery_ec = 16 * ureg.kWh / ureg._100km  # noqa: F841
+        # ... but not with text
+        ureg.define("_home = 4700 * kWh / year")
+        with self.assertRaises(AttributeError):
+            home_elec_power = 1 * ureg._home  # noqa: F841
+        # ... or with *only* underscores
+        ureg.define("_ = 45 * km")
+        with self.assertRaises(AttributeError):
+            one_blank = 1 * ureg._  # noqa: F841
+
+    def test_issue960(self):
+        q = (1 * ureg.nanometer).to_compact("micrometer")
+        assert q.units == ureg.nanometer
+        assert q.magnitude == 1
+
 
 try:
 

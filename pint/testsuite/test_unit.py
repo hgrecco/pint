@@ -658,6 +658,47 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(ureg.parse_units(""), ureg.Unit(""))
         self.assertRaises(ValueError, ureg.parse_units, "2 * meter")
 
+    def test_parse_string_pattern(self):
+        ureg = self.ureg
+        self.assertEqual(
+            ureg.parse_pattern("10'11", r"{foot}'{inch}"),
+            [ureg.Quantity(10.0, "foot"), ureg.Quantity(11.0, "inch")],
+        )
+
+    def test_parse_string_pattern_no_preprocess(self):
+        """Were preprocessors enabled, this would be interpreted as 10*11, not
+        two separate units, and thus cause the parsing to fail"""
+        ureg = self.ureg
+        self.assertEqual(
+            ureg.parse_pattern("10 11", r"{kg} {lb}"),
+            [ureg.Quantity(10.0, "kilogram"), ureg.Quantity(11.0, "pound")],
+        )
+
+    def test_parse_pattern_many_results(self):
+        ureg = self.ureg
+        self.assertEqual(
+            ureg.parse_pattern(
+                "1.5kg or 2kg will be fine, if you do not have 3kg",
+                r"{kg}kg",
+                many=True,
+            ),
+            [
+                [ureg.Quantity(1.5, "kilogram")],
+                [ureg.Quantity(2.0, "kilogram")],
+                [ureg.Quantity(3.0, "kilogram")],
+            ],
+        )
+
+    def test_parse_pattern_many_results_two_units(self):
+        ureg = self.ureg
+        self.assertEqual(
+            ureg.parse_pattern("10'10 or 10'11", "{foot}'{inch}", many=True),
+            [
+                [ureg.Quantity(10.0, "foot"), ureg.Quantity(10.0, "inch")],
+                [ureg.Quantity(10.0, "foot"), ureg.Quantity(11.0, "inch")],
+            ],
+        )
+
 
 class TestCompatibleUnits(QuantityTestCase):
     FORCE_NDARRAY = False

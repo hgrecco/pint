@@ -5,6 +5,14 @@ from pint.testsuite import BaseTestCase, helpers
 
 
 class TestBabel(BaseTestCase):
+    @helpers.requires_not_babel()
+    def test_no_babel(self):
+        ureg = UnitRegistry()
+        distance = 24.0 * ureg.meter
+        self.assertRaises(
+            Exception, distance.format_babel, locale="fr_FR", length="long"
+        )
+
     @helpers.requires_babel()
     def test_format(self):
         ureg = UnitRegistry()
@@ -46,9 +54,32 @@ class TestBabel(BaseTestCase):
         mks = ureg.get_system("mks")
         self.assertEqual(mks.format_babel(locale="fr_FR"), "métrique")
 
-    def test_nobabel(self):
+    @helpers.requires_babel()
+    def test_no_registry_locale(self):
         ureg = UnitRegistry()
         distance = 24.0 * ureg.meter
         self.assertRaises(
-            Exception, distance.format_babel, locale="fr_FR", length="long"
+            Exception, distance.format_babel,
         )
+
+    @helpers.requires_babel()
+    def test_str(self):
+        ureg = UnitRegistry()
+        d = 24.0 * ureg.meter
+
+        s = "24.0 meter"
+        self.assertEqual(str(d), s)
+        self.assertEqual("%s" % d, s)
+        self.assertEqual("{}".format(d), s)
+
+        ureg.set_fmt_locale("fr_FR")
+        s = "24.0 mètres"
+        self.assertEqual(str(d), s)
+        self.assertEqual("%s" % d, s)
+        self.assertEqual("{}".format(d), s)
+
+        ureg.set_fmt_locale(None)
+        s = "24.0 meter"
+        self.assertEqual(str(d), s)
+        self.assertEqual("%s" % d, s)
+        self.assertEqual("{}".format(d), s)

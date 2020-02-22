@@ -1,14 +1,34 @@
 Pint Changelog
 ==============
 
-0.11 (unreleased)
+0.12 (unreleased)
 -----------------
 
 - Add full support for Decimal and Fraction at the registry level.
   **BREAKING CHANGE**: 
   `use_decimal` is deprecated. Use `non_int_type=Decimal` when instantiating
   the registry.
-- Moved Pi to defintions files.
+- Fixed bug where numpy.pad didn't work without specifying constant_values or
+  end_values (Issue #1026)
+
+
+0.11 (2020-02-19)
+-----------------
+
+- Added pint-convert script.
+- Remove `default_en_0.6.txt`.
+- Make `__str__` and `__format__` locale configurable.
+  (Issue #984)
+- Quantities wrapping NumPy arrays will no longer warning for the changed
+  array function behavior introduced in 0.10.
+  (Issue #1029, Thanks Jon Thielen)
+- **BREAKING CHANGE**:
+  The array protocol fallback deprecated in version 0.10 has been removed.
+  (Issue #1029, Thanks Jon Thielen)
+- Now we use `pyproject.toml` for providing `setuptools_scm` settings
+- Remove `default_en_0.6.txt`
+- Reorganize long_description.
+- Moved Pi to definitions files.
 - Use ints (not floats) a defaults at many points in the codebase as in Python 3
   the true division is the default one.
 - **BREAKING CHANGE**:
@@ -17,6 +37,10 @@ Pint Changelog
   It is unlikely that this change affects the end user.
 - Added additional NumPy function implementations (allclose, intersect1d)
   (Issue #979, Thanks Jon Thielen)
+- Allow constants in units by using a leading underscore (Issue #989, Thanks
+  Juan Nunez-Iglesias)
+- Fixed bug where to_compact handled prefix units incorrectly (Issue #960)
+
 
 0.10.1 (2020-01-07)
 -------------------
@@ -233,7 +257,7 @@ Pint Changelog
 - Added several new units and Systems
   (Issues #749, #737, )
 - Started experimental pandas support
-  (Issue #746 and others. Thanks andrewgsavage, znicholls and others)  
+  (Issue #746 and others. Thanks andrewgsavage, znicholls and others)
 - wraps and checks now supports kwargs and defaults.
   (Issue #660, thanks jondoesntgit)
 
