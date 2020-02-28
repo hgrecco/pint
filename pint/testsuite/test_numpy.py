@@ -765,16 +765,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.nanstd(self.q_nan), 0.81650 * self.ureg.m, rtol=1e-5
         )
 
-    @helpers.requires_numpy_previous_than("1.10")
-    def test_integer_div(self):
-        a = [1] * self.ureg.m
-        b = [2] * self.ureg.m
-        c = a / b  # Should be float division
-        self.assertEqual(c.magnitude[0], 0.5)
-
-        a /= b  # Should be integer division
-        self.assertEqual(a.magnitude[0], 0)
-
     def test_conj(self):
         self.assertQuantityEqual((self.q * (1 + 1j)).conj(), self.q * (1 - 1j))
         self.assertQuantityEqual((self.q * (1 + 1j)).conjugate(), self.q * (1 - 1j))
