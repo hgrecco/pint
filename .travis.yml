@@ -31,7 +31,7 @@ env:
   - PKGS="python=3.6 numpy uncertainties"
   - PKGS="python=3.7 numpy uncertainties"
   - PKGS="python=3.8 numpy uncertainties"
-  - PKGS="python=3.7 numpy uncertainties sparse xarray netCDF4"
+  - PKGS="python=3.8 numpy uncertainties sparse xarray netCDF4"
 
   # TODO: pandas tests
   # - PKGS="python=3.7 numpy pandas uncertainties pandas"

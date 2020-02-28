@@ -10,6 +10,8 @@ Pint Changelog
   the registry.
 - Fixed bug where numpy.pad didn't work without specifying constant_values or
   end_values (Issue #1026)
+- Reinstated support for pickle protocol 0 and 1, which is required by pytables
+  (Issue #1036, Thanks Guido Imperiale)
 
 
 0.11 (2020-02-19)
