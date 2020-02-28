@@ -366,6 +366,7 @@ class TestIssues(QuantityTestCase):
 
         self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
 
+    @helpers.requires_numpy()
     def test_issue121b(self):
         sh = (2, 1)
 
