@@ -325,16 +325,6 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(x + y, 5.1 * ureg.meter)
         self.assertQuantityAlmostEqual(z, 5.1 * ureg.meter)
 
-    @helpers.requires_numpy_previous_than("1.10")
-    def test_issue94(self):
-        v1 = np.array([5, 5]) * ureg.meter
-        v2 = 0.1 * ureg.meter
-        v3 = np.array([5, 5]) * ureg.meter
-        v3 += v2
-
-        np.testing.assert_array_equal((v1 + v2).magnitude, np.array([5.1, 5.1]))
-        np.testing.assert_array_equal(v3.magnitude, np.array([5, 5]))
-
     def test_issue104(self):
 
         x = [ureg("1 meter"), ureg("1 meter"), ureg("1 meter")]
@@ -376,7 +366,7 @@ class TestIssues(QuantityTestCase):
 
         self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
 
-    @helpers.requires_numpy18()
+    @helpers.requires_numpy()
     def test_issue121b(self):
         sh = (2, 1)
 

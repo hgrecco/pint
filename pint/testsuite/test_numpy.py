@@ -1,5 +1,6 @@
 import copy
 import operator as op
+import pickle
 import unittest
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
@@ -765,16 +766,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.nanstd(self.q_nan), 0.81650 * self.ureg.m, rtol=1e-5
         )
 
-    @helpers.requires_numpy_previous_than("1.10")
-    def test_integer_div(self):
-        a = [1] * self.ureg.m
-        b = [2] * self.ureg.m
-        c = a / b  # Should be float division
-        self.assertEqual(c.magnitude[0], 0.5)
-
-        a /= b  # Should be integer division
-        self.assertEqual(a.magnitude[0], 0)
-
     def test_conj(self):
         self.assertQuantityEqual((self.q * (1 + 1j)).conj(), self.q * (1 - 1j))
         self.assertQuantityEqual((self.q * (1 + 1j)).conjugate(), self.q * (1 - 1j))
@@ -837,14 +828,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityEqual(x - u, -(u - x))
 
     def test_pickle(self):
-        import pickle
-
-        def pickle_test(q):
-            pq = pickle.loads(pickle.dumps(q))
-            self.assertNDArrayEqual(q.magnitude, pq.magnitude)
-            self.assertEqual(q.units, pq.units)
-
-        pickle_test([10, 20] * self.ureg.m)
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+            with self.subTest(protocol):
+                q1 = [10, 20] * self.ureg.m
+                q2 = pickle.loads(pickle.dumps(q1, protocol))
+                self.assertNDArrayEqual(q1.magnitude, q2.magnitude)
+                self.assertEqual(q1.units, q2.units)
 
     def test_equal(self):
         x = self.q.magnitude

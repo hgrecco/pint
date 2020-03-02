@@ -29,14 +29,6 @@ def requires_not_array_function_protocol():
     )
 
 
-def requires_numpy18():
-    if not HAS_NUMPY:
-        return unittest.skip("Requires NumPy")
-    return unittest.skipUnless(
-        StrictVersion(NUMPY_VER) >= StrictVersion("1.8"), "Requires NumPy >= 1.8"
-    )
-
-
 def requires_numpy_previous_than(version):
     if not HAS_NUMPY:
         return unittest.skip("Requires NumPy")
@@ -60,7 +52,7 @@ def requires_numpy():
 
 
 def requires_not_numpy():
-    return unittest.skipIf(HAS_NUMPY, "Requires NumPy is not installed.")
+    return unittest.skipIf(HAS_NUMPY, "Requires NumPy not to be installed.")
 
 
 def requires_babel():
@@ -68,7 +60,7 @@ def requires_babel():
 
 
 def requires_not_babel():
-    return unittest.skipIf(HAS_BABEL, "Requires Babel is not installed")
+    return unittest.skipIf(HAS_BABEL, "Requires Babel not to be installed")
 
 
 def requires_uncertainties():
@@ -77,7 +69,7 @@ def requires_uncertainties():
 
 def requires_not_uncertainties():
     return unittest.skipIf(
-        HAS_UNCERTAINTIES, "Requires Uncertainties is not installed."
+        HAS_UNCERTAINTIES, "Requires Uncertainties not to be installed."
     )
 
 

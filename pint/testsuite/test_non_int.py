@@ -1,6 +1,7 @@
 import copy
 import math
 import operator as op
+import pickle
 from decimal import Decimal
 from fractions import Fraction
 
@@ -351,15 +352,17 @@ class _TestBasic:
         )
 
     def test_pickle(self):
-        import pickle
-
-        def pickle_test(q):
-            self.assertEqual(q, pickle.loads(pickle.dumps(q)))
-
-        pickle_test(self.QP_("32", ""))
-        pickle_test(self.QP_("2.4", ""))
-        pickle_test(self.QP_("32", "m/s"))
-        pickle_test(self.QP_("2.4", "m/s"))
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+            for magnitude, unit in (
+                ("32", ""),
+                ("2.4", ""),
+                ("32", "m/s"),
+                ("2.4", "m/s"),
+            ):
+                with self.subTest(protocol=protocol, magnitude=magnitude, unit=unit):
+                    q1 = self.QP_(magnitude, unit)
+                    q2 = pickle.loads(pickle.dumps(q1, protocol))
+                    self.assertEqual(q1, q2)
 
     def test_notiter(self):
         # Verify that iter() crashes immediately, without needing to draw any
