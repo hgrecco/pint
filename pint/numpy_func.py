@@ -763,7 +763,7 @@ for func_str, unit_arguments, wrap_output in [
     ("amax", ["a", "initial"], True),
     ("amin", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
-    ("isclose", ["a", "b", "rtol", "atol"], False),
+    ("isclose", ["a", "b"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
     ("clip", ["a", "a_min", "a_max"], True),
     ("append", ["arr", "values"], True),

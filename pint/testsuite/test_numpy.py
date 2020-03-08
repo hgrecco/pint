@@ -896,6 +896,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertNDArrayEqual(
             np.isclose(self.q, q2), np.array([[False, True], [True, False]])
         )
+        self.assertNDArrayEqual(
+            np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
+            np.array([[False, True], [True, False]]),
+        )
 
     @helpers.requires_array_function_protocol()
     def test_interp_numpy_func(self):
@@ -1045,7 +1049,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         b = self.Q_([4.0, 6.0, 8.0, 9.0, -3.0], "degC")
 
         self.assertQuantityEqual(
-            np.pad(a, (2, 3), "constant"), [0, 0, 1, 2, 3, 4, 5, 0, 0, 0] * self.ureg.m,
+            np.pad(a, (2, 3), "constant"), [0, 0, 1, 2, 3, 4, 5, 0, 0, 0] * self.ureg.m
         )
         self.assertQuantityEqual(
             np.pad(a, (2, 3), "constant", constant_values=(0, 600 * self.ureg.cm)),

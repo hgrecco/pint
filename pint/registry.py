@@ -1126,9 +1126,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return ret
 
-    def _eval_token(
-        self, token, case_sensitive=True, use_decimal=False, **values,
-    ):
+    def _eval_token(self, token, case_sensitive=True, use_decimal=False, **values):
 
         # TODO: remove this code when use_decimal is deprecated
         if use_decimal:
@@ -1214,7 +1212,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return results
 
     def parse_expression(
-        self, input_string, case_sensitive=True, use_decimal=False, **values,
+        self, input_string, case_sensitive=True, use_decimal=False, **values
     ):
         """Parse a mathematical expression including units and return a quantity object.
 
