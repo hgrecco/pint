@@ -896,6 +896,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertNDArrayEqual(
             np.isclose(self.q, q2), np.array([[False, True], [True, False]])
         )
+        self.assertNDArrayEqual(
+            np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
+            np.array([[False, True], [True, False]]),
+        )
 
     @helpers.requires_array_function_protocol()
     def test_interp_numpy_func(self):
