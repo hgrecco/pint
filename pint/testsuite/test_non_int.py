@@ -220,9 +220,7 @@ class _TestBasic:
 
     def test_dimensionless_units(self):
         twopi = self.NON_INT_TYPE("2") * self.ureg.pi
-        self.assertAlmostEqual(
-            self.QP_("360", "degree").to("radian").magnitude, twopi,
-        )
+        self.assertAlmostEqual(self.QP_("360", "degree").to("radian").magnitude, twopi)
         self.assertAlmostEqual(self.Q_(twopi, "radian"), self.QP_("360", "degree"))
         self.assertEqual(self.QP_("1", "radian").dimensionality, UnitsContainer())
         self.assertTrue(self.QP_("1", "radian").dimensionless)
