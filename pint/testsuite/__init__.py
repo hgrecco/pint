@@ -101,6 +101,10 @@ class QuantityTestCase(BaseTestCase):
 
         if isinstance(m1, ndarray) or isinstance(m2, ndarray):
             np.testing.assert_array_equal(m1, m2, err_msg=msg)
+        elif math.isnan(m1):
+            self.assertTrue(math.isnan(m2), msg)
+        elif math.isnan(m2):
+            self.assertTrue(math.isnan(m1), msg)
         else:
             self.assertEqual(m1, m2, msg)
 
@@ -118,6 +122,10 @@ class QuantityTestCase(BaseTestCase):
 
         if isinstance(m1, ndarray) or isinstance(m2, ndarray):
             np.testing.assert_allclose(m1, m2, rtol=rtol, atol=atol, err_msg=msg)
+        elif math.isnan(m1):
+            self.assertTrue(math.isnan(m2), msg)
+        elif math.isnan(m2):
+            self.assertTrue(math.isnan(m1), msg)
         else:
             self.assertLessEqual(abs(m1 - m2), atol + rtol * abs(m2), msg=msg)
 

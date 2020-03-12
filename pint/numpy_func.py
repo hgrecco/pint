@@ -10,7 +10,7 @@ import warnings
 from inspect import signature
 from itertools import chain
 
-from .compat import eq, is_upcast_type, np
+from .compat import is_upcast_type, np, zero_or_nan
 from .errors import DimensionalityError
 from .util import iterable, sized
 
@@ -485,12 +485,13 @@ def _power(x1, x2):
 
 
 def _add_subtract_handle_non_quantity_zero(x1, x2):
-    # As in #121/#122, if a value is 0 (but not Quantity 0) do the operation without
-    # checking units. We do the calculation instead of just returning the same value to
-    # enforce any shape checking and type casting due to the operation.
-    if eq(x1, 0, True):
+    # As in #121, #122, and #1051, if a value is 0 or NaN (but not a Quantity) do the
+    # operation without checking units. We do the calculation instead of just returning
+    # the same value to enforce any shape checking and type casting due to the
+    # operation.
+    if zero_or_nan(x1, True):
         (x2,), output_wrap = unwrap_and_wrap_consistent_units(x2)
-    elif eq(x2, 0, True):
+    elif zero_or_nan(x2, True):
         (x1,), output_wrap = unwrap_and_wrap_consistent_units(x1)
     else:
         (x1, x2), output_wrap = unwrap_and_wrap_consistent_units(x1, x2)
