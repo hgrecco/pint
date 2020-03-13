@@ -12,6 +12,8 @@ Pint Changelog
   end_values (Issue #1026)
 - Reinstated support for pickle protocol 0 and 1, which is required by pytables
   (Issue #1036, Thanks Guido Imperiale)
+- NaN is now treated the same as zero in addition, equality, and disequality
+  (Issue #1051, Thanks Guido Imperiale)
 
 
 0.11 (2020-02-19)

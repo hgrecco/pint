@@ -357,40 +357,6 @@ class TestIssues(QuantityTestCase):
                 func("METER")
             self.assertEqual(val, func("METER", False))
 
-    def test_issue121(self):
-        z, v = 0, 2.0
-        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
-
-        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
-
-    @helpers.requires_numpy()
-    def test_issue121b(self):
-        sh = (2, 1)
-
-        z, v = 0, 2.0
-        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
-
-        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
-
-        z, v = np.zeros(sh), 2.0 * np.ones(sh)
-        self.assertQuantityEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertQuantityEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertQuantityEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertQuantityEqual(v * ureg.meter - z, v * ureg.meter)
-
-        z, v = np.zeros((3, 1)), 2.0 * np.ones(sh)
-        for x, y in ((z, v), (z, v * ureg.meter), (v * ureg.meter, z)):
-            with self.assertRaises(ValueError):
-                x + y
-            with self.assertRaises(ValueError):
-                x - y
-
     @helpers.requires_numpy()
     def test_issue127(self):
         q = [1.0, 2.0, 3.0, 4.0] * self.ureg.meter

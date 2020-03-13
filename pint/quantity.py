@@ -29,6 +29,7 @@ from .compat import (
     is_upcast_type,
     ndarray,
     np,
+    zero_or_nan,
 )
 from .definitions import UnitDefinition
 from .errors import (
@@ -99,8 +100,7 @@ def check_implemented(f):
         # and expects Quantity * array[Quantity] should return NotImplemented
         elif isinstance(other, list) and other and isinstance(other[0], type(self)):
             return NotImplemented
-        result = f(self, *args, **kwargs)
-        return result
+        return f(self, *args, **kwargs)
 
     return wrapped
 
@@ -786,7 +786,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 raise
             except TypeError:
                 return NotImplemented
-            if eq(other, 0, True):
+            if zero_or_nan(other, True):
                 # If the other value is 0 (but not Quantity 0)
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same
@@ -887,13 +887,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             object to be added to / subtracted from self
         op : function
             operator function (e.g. operator.add, operator.isub)
-
-
         """
         if not self._check(other):
             # other not from same Registry or not a Quantity
-            if eq(other, 0, True):
-                # If the other value is 0 (but not Quantity 0)
+            if zero_or_nan(other, True):
+                # If the other value is 0 or NaN (but not a Quantity)
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same
                 # value to enforce any shape checking and type casting due to
@@ -1446,9 +1444,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
         if not isinstance(other, Quantity):
-            if eq(other, 0, True):
-                # Handle the special case in which we compare to zero
-                # (or an array of zeros)
+            if zero_or_nan(other, True):
+                # Handle the special case in which we compare to zero or NaN
+                # (or an array of zeros or NaNs)
                 if self._is_multiplicative:
                     # compare magnitude
                     return eq(self._magnitude, other, False)
@@ -1493,9 +1491,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 return op(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()), other
                 )
-            elif eq(other, 0, True):
-                # Handle the special case in which we compare to zero
-                # (or an array of zeros)
+            elif zero_or_nan(other, True):
+                # Handle the special case in which we compare to zero or NaN
+                # (or an array of zeros or NaNs)
                 if self._is_multiplicative:
                     # compare magnitude
                     return op(self._magnitude, other)
