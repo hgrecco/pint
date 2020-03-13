@@ -14,7 +14,7 @@ Pint Changelog
   (Issue #1036, Thanks Guido Imperiale)
 - NaN is now treated the same as zero in addition, equality, and disequality
   (Issue #1051, Thanks Guido Imperiale)
-
+- Fixed bug with multiplication of Quantity by dict (Issue #1032)
 
 0.11 (2020-02-19)
 -----------------

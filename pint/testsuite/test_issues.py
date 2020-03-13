@@ -671,6 +671,19 @@ class TestIssues(QuantityTestCase):
         assert q.units == ureg.nanometer
         assert q.magnitude == 1
 
+    def test_issue1032(self):
+        class MultiplicativeDictionary(dict):
+            def __rmul__(self, other):
+                return self.__class__(
+                    {key: value * other for key, value in self.items()}
+                )
+
+        q = 3 * ureg.s
+        d = MultiplicativeDictionary({4: 5, 6: 7})
+        assert q * d == MultiplicativeDictionary({4: 15 * ureg.s, 6: 21 * ureg.s})
+        with self.assertRaises(TypeError):
+            d * q
+
 
 try:
 
