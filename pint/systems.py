@@ -17,7 +17,7 @@ from .definitions import Definition, UnitDefinition
 from .errors import DefinitionSyntaxError, RedefinitionError
 from .util import to_units_container, SharedRegistryObject, SourceIterator, logger
 from .babel_names import _babel_systems
-from pint.compat import Loc
+from .compat import Loc
 
 
 class _Group(SharedRegistryObject):
