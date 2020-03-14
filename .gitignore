@@ -5,11 +5,12 @@ __pycache__
 .DS_Store
 docs/_build/
 .idea
+.vscode
 build/
 dist/
 MANIFEST
-.tox
 *pytest_cache*
+.eggs
 
 # WebDAV file system cache files
 .DAV/

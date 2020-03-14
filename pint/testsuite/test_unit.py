@@ -1,22 +1,24 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import division, unicode_literals, print_function, absolute_import
-
 import copy
+import functools
 import math
+import re
 
-from pint.registry import (UnitRegistry, LazyRegistry)
-from pint.util import (UnitsContainer, ParserHelper)
-from pint import DimensionalityError, UndefinedUnitError
-from pint.compat import u, np, string_types
+from pint import (
+    DefinitionSyntaxError,
+    DimensionalityError,
+    RedefinitionError,
+    UndefinedUnitError,
+)
+from pint.compat import np
+from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
+from pint.util import ParserHelper, UnitsContainer
 
 
 class TestUnit(QuantityTestCase):
-
     def test_creation(self):
-        for arg in ('meter', UnitsContainer(meter=1), self.U_('m')):
+        for arg in ("meter", UnitsContainer(meter=1), self.U_("m")):
             self.assertEqual(self.U_(arg)._units, UnitsContainer(meter=1))
         self.assertRaises(TypeError, self.U_, 1)
 
@@ -26,142 +28,174 @@ class TestUnit(QuantityTestCase):
 
     def test_unit_repr(self):
         x = self.U_(UnitsContainer(meter=1))
-        self.assertEqual(str(x), 'meter')
+        self.assertEqual(str(x), "meter")
         self.assertEqual(repr(x), "<Unit('meter')>")
 
     def test_unit_formatting(self):
         x = self.U_(UnitsContainer(meter=2, kilogram=1, second=-1))
-        for spec, result in (('{0}', str(x)), ('{0!s}', str(x)),
-                             ('{0!r}', repr(x)),
-                             ('{0:L}', r'\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
-                             ('{0:P}', 'kilogram·meter²/second'),
-                             ('{0:H}', 'kilogram meter<sup>2</sup>/second'),
-                             ('{0:C}', 'kilogram*meter**2/second'),
-                             ('{0:Lx}', r'\si[]{\kilo\gram\meter\squared\per\second}'),
-                             ('{0:~}', 'kg * m ** 2 / s'),
-                             ('{0:L~}', r'\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
-                             ('{0:P~}', 'kg·m²/s'),
-                             ('{0:H~}', 'kg m<sup>2</sup>/s'),
-                             ('{0:C~}', 'kg*m**2/s'),
-                             ):
-            self.assertEqual(spec.format(x), result)
+        for spec, result in (
+            ("{}", str(x)),
+            ("{!s}", str(x)),
+            ("{!r}", repr(x)),
+            (
+                "{:L}",
+                r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
+            ),
+            ("{:P}", "kilogram·meter²/second"),
+            ("{:H}", r"\[kilogram\ meter^2/second\]"),
+            ("{:C}", "kilogram*meter**2/second"),
+            ("{:Lx}", r"\si[]{\kilo\gram\meter\squared\per\second}"),
+            ("{:~}", "kg * m ** 2 / s"),
+            ("{:L~}", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
+            ("{:P~}", "kg·m²/s"),
+            ("{:H~}", r"\[kg\ m^2/s\]"),
+            ("{:C~}", "kg*m**2/s"),
+        ):
+            with self.subTest(spec):
+                self.assertEqual(spec.format(x), result)
 
     def test_unit_default_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        for spec, result in (('L', r'\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}'),
-                             ('P', 'kilogram·meter²/second'),
-                             ('H', 'kilogram meter<sup>2</sup>/second'),
-                             ('C', 'kilogram*meter**2/second'),
-                             ('~', 'kg * m ** 2 / s'),
-                             ('L~', r'\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}'),
-                             ('P~', 'kg·m²/s'),
-                             ('H~', 'kg m<sup>2</sup>/s'),
-                             ('C~', 'kg*m**2/s'),
-                             ):
-            ureg.default_format = spec
-            self.assertEqual('{0}'.format(x), result,
-                             'Failed for {0}, {1}'.format(spec, result))
+        for spec, result in (
+            (
+                "L",
+                r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
+            ),
+            ("P", "kilogram·meter²/second"),
+            ("H", r"\[kilogram\ meter^2/second\]"),
+            ("C", "kilogram*meter**2/second"),
+            ("~", "kg * m ** 2 / s"),
+            ("L~", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
+            ("P~", "kg·m²/s"),
+            ("H~", r"\[kg\ m^2/s\]"),
+            ("C~", "kg*m**2/s"),
+        ):
+            with self.subTest(spec):
+                ureg.default_format = spec
+                self.assertEqual(f"{x}", result, f"Failed for {spec}, {result}")
+
+    def test_unit_formatting_snake_case(self):
+        # Test that snake_case units are escaped where appropriate
+        ureg = UnitRegistry()
+        x = ureg.Unit(UnitsContainer(oil_barrel=1))
+        for spec, result in (
+            ("L", r"\mathrm{oil\_barrel}"),
+            ("P", "oil_barrel"),
+            ("H", r"\[oil\_barrel\]"),
+            ("C", "oil_barrel"),
+            ("~", "oil_bbl"),
+            ("L~", r"\mathrm{oil\_bbl}"),
+            ("P~", "oil_bbl"),
+            ("H~", r"\[oil\_bbl\]"),
+            ("C~", "oil_bbl"),
+        ):
+            with self.subTest(spec):
+                ureg.default_format = spec
+                self.assertEqual(f"{x}", result, f"Failed for {spec}, {result}")
 
     def test_ipython(self):
         alltext = []
 
-        class Pretty(object):
+        class Pretty:
             @staticmethod
             def text(text):
                 alltext.append(text)
 
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        self.assertEqual(x._repr_html_(), "kilogram meter<sup>2</sup>/second")
-        self.assertEqual(x._repr_latex_(), r'$\frac{\mathrm{kilogram} \cdot '
-                                           r'\mathrm{meter}^{2}}{\mathrm{second}}$')
+        self.assertEqual(x._repr_html_(), r"\[kilogram\ meter^2/second\]")
+        self.assertEqual(
+            x._repr_latex_(),
+            r"$\frac{\mathrm{kilogram} \cdot " r"\mathrm{meter}^{2}}{\mathrm{second}}$",
+        )
         x._repr_pretty_(Pretty, False)
         self.assertEqual("".join(alltext), "kilogram·meter²/second")
         ureg.default_format = "~"
-        self.assertEqual(x._repr_html_(), "kg m<sup>2</sup>/s")
-        self.assertEqual(x._repr_latex_(),
-                         r'$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$')
+        self.assertEqual(x._repr_html_(), r"\[kg\ m^2/s\]")
+        self.assertEqual(
+            x._repr_latex_(), r"$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$"
+        )
         alltext = []
         x._repr_pretty_(Pretty, False)
         self.assertEqual("".join(alltext), "kg·m²/s")
 
     def test_unit_mul(self):
-        x = self.U_('m')
-        self.assertEqual(x*1, self.Q_(1, 'm'))
-        self.assertEqual(x*0.5, self.Q_(0.5, 'm'))
-        self.assertEqual(x*self.Q_(1, 'm'), self.Q_(1, 'm**2'))
-        self.assertEqual(1*x, self.Q_(1, 'm'))
+        x = self.U_("m")
+        self.assertEqual(x * 1, self.Q_(1, "m"))
+        self.assertEqual(x * 0.5, self.Q_(0.5, "m"))
+        self.assertEqual(x * self.Q_(1, "m"), self.Q_(1, "m**2"))
+        self.assertEqual(1 * x, self.Q_(1, "m"))
 
     def test_unit_div(self):
-        x = self.U_('m')
-        self.assertEqual(x/1, self.Q_(1, 'm'))
-        self.assertEqual(x/0.5, self.Q_(2.0, 'm'))
-        self.assertEqual(x/self.Q_(1, 'm'), self.Q_(1))
+        x = self.U_("m")
+        self.assertEqual(x / 1, self.Q_(1, "m"))
+        self.assertEqual(x / 0.5, self.Q_(2.0, "m"))
+        self.assertEqual(x / self.Q_(1, "m"), self.Q_(1))
 
     def test_unit_rdiv(self):
-        x = self.U_('m')
-        self.assertEqual(1/x, self.Q_(1, '1/m'))
+        x = self.U_("m")
+        self.assertEqual(1 / x, self.Q_(1, "1/m"))
 
     def test_unit_pow(self):
-        x = self.U_('m')
-        self.assertEqual(x**2, self.U_('m**2'))
+        x = self.U_("m")
+        self.assertEqual(x ** 2, self.U_("m**2"))
 
     def test_unit_hash(self):
-        x = self.U_('m')
+        x = self.U_("m")
         self.assertEqual(hash(x), hash(x._units))
 
     def test_unit_eqs(self):
-        x = self.U_('m')
-        self.assertEqual(x, self.U_('m'))
-        self.assertNotEqual(x, self.U_('cm'))
+        x = self.U_("m")
+        self.assertEqual(x, self.U_("m"))
+        self.assertNotEqual(x, self.U_("cm"))
 
-        self.assertEqual(x, self.Q_(1, 'm'))
-        self.assertNotEqual(x, self.Q_(2, 'm'))
+        self.assertEqual(x, self.Q_(1, "m"))
+        self.assertNotEqual(x, self.Q_(2, "m"))
 
-        self.assertEqual(x, UnitsContainer({'meter': 1}))
+        self.assertEqual(x, UnitsContainer({"meter": 1}))
 
-        y = self.U_('cm/m')
+        y = self.U_("cm/m")
         self.assertEqual(y, 0.01)
 
-        self.assertEqual(self.U_('byte') == self.U_('byte'), True)
-        self.assertEqual(self.U_('byte') != self.U_('byte'), False)
+        self.assertEqual(self.U_("byte") == self.U_("byte"), True)
+        self.assertEqual(self.U_("byte") != self.U_("byte"), False)
 
     def test_unit_cmp(self):
 
-        x = self.U_('m')
-        self.assertLess(x, self.U_('km'))
-        self.assertGreater(x, self.U_('mm'))
+        x = self.U_("m")
+        self.assertLess(x, self.U_("km"))
+        self.assertGreater(x, self.U_("mm"))
 
-        y = self.U_('m/mm')
+        y = self.U_("m/mm")
         self.assertGreater(y, 1)
         self.assertLess(y, 1e6)
 
     def test_dimensionality(self):
 
-        x = self.U_('m')
-        self.assertEqual(x.dimensionality, UnitsContainer({'[length]': 1}))
+        x = self.U_("m")
+        self.assertEqual(x.dimensionality, UnitsContainer({"[length]": 1}))
 
     def test_dimensionless(self):
 
-        self.assertTrue(self.U_('m/mm').dimensionless)
-        self.assertFalse(self.U_('m').dimensionless)
+        self.assertTrue(self.U_("m/mm").dimensionless)
+        self.assertFalse(self.U_("m").dimensionless)
 
     def test_unit_casting(self):
 
-        self.assertEqual(int(self.U_('m/mm')), 1000)
-        self.assertEqual(float(self.U_('mm/m')), 1e-3)
-        self.assertEqual(complex(self.U_('mm/mm')), 1+0j)
+        self.assertEqual(int(self.U_("m/mm")), 1000)
+        self.assertEqual(float(self.U_("mm/m")), 1e-3)
+        self.assertEqual(complex(self.U_("mm/mm")), 1 + 0j)
 
     @helpers.requires_numpy()
     def test_array_interface(self):
         import numpy as np
 
-        x = self.U_('m')
+        x = self.U_("m")
         arr = np.ones(10)
-        self.assertQuantityEqual(arr*x, self.Q_(arr, 'm'))
-        self.assertQuantityEqual(arr/x, self.Q_(arr, '1/m'))
-        self.assertQuantityEqual(x/arr, self.Q_(arr, 'm'))
+        self.assertQuantityEqual(arr * x, self.Q_(arr, "m"))
+        self.assertQuantityEqual(arr / x, self.Q_(arr, "1/m"))
+        self.assertQuantityEqual(x / arr, self.Q_(arr, "m"))
 
 
 class TestRegistry(QuantityTestCase):
@@ -173,10 +207,10 @@ class TestRegistry(QuantityTestCase):
 
     def test_base(self):
         ureg = UnitRegistry(None)
-        ureg.define('meter = [length]')
-        self.assertRaises(ValueError, ureg.define, 'meter = [length]')
+        ureg.define("meter = [length]")
+        self.assertRaises(DefinitionSyntaxError, ureg.define, "meter = [length]")
         self.assertRaises(TypeError, ureg.define, list())
-        x = ureg.define('degC = kelvin; offset: 273.15')
+        ureg.define("degC = kelvin; offset: 273.15")
 
     def test_define(self):
         ureg = UnitRegistry(None)
@@ -186,122 +220,212 @@ class TestRegistry(QuantityTestCase):
     def test_load(self):
         import pkg_resources
         from pint import unit
-        data = pkg_resources.resource_filename(unit.__name__, 'default_en.txt')
+
+        data = pkg_resources.resource_filename(unit.__name__, "default_en.txt")
         ureg1 = UnitRegistry()
         ureg2 = UnitRegistry(data)
         self.assertEqual(dir(ureg1), dir(ureg2))
-        self.assertRaises(ValueError, UnitRegistry(None).load_definitions, 'notexisting')
+        self.assertRaises(
+            ValueError, UnitRegistry(None).load_definitions, "notexisting"
+        )
 
     def test_default_format(self):
         ureg = UnitRegistry()
         q = ureg.meter
-        s1 = '{0}'.format(q)
-        s2 = '{0:~}'.format(q)
-        ureg.default_format = '~'
-        s3 = '{0}'.format(q)
+        s1 = f"{q}"
+        s2 = f"{q:~}"
+        ureg.default_format = "~"
+        s3 = f"{q}"
         self.assertEqual(s2, s3)
         self.assertNotEqual(s1, s3)
-        self.assertEqual(ureg.default_format, '~')
+        self.assertEqual(ureg.default_format, "~")
 
     def test_parse_number(self):
-        self.assertEqual(self.ureg.parse_expression('pi'), math.pi)
-        self.assertEqual(self.ureg.parse_expression('x', x=2), 2)
-        self.assertEqual(self.ureg.parse_expression('x', x=2.3), 2.3)
-        self.assertEqual(self.ureg.parse_expression('x * y', x=2.3, y=3), 2.3 * 3)
-        self.assertEqual(self.ureg.parse_expression('x', x=(1+1j)), (1+1j))
+        self.assertEqual(self.ureg.parse_expression("pi"), math.pi)
+        self.assertEqual(self.ureg.parse_expression("x", x=2), 2)
+        self.assertEqual(self.ureg.parse_expression("x", x=2.3), 2.3)
+        self.assertEqual(self.ureg.parse_expression("x * y", x=2.3, y=3), 2.3 * 3)
+        self.assertEqual(self.ureg.parse_expression("x", x=(1 + 1j)), (1 + 1j))
 
     def test_parse_single(self):
-        self.assertEqual(self.ureg.parse_expression('meter'), self.Q_(1, UnitsContainer(meter=1.)))
-        self.assertEqual(self.ureg.parse_expression('second'), self.Q_(1, UnitsContainer(second=1.)))
+        self.assertEqual(
+            self.ureg.parse_expression("meter"), self.Q_(1, UnitsContainer(meter=1.0))
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("second"), self.Q_(1, UnitsContainer(second=1.0))
+        )
 
     def test_parse_alias(self):
-        self.assertEqual(self.ureg.parse_expression('metre'), self.Q_(1, UnitsContainer(meter=1.)))
+        self.assertEqual(
+            self.ureg.parse_expression("metre"), self.Q_(1, UnitsContainer(meter=1.0))
+        )
 
     def test_parse_plural(self):
-        self.assertEqual(self.ureg.parse_expression('meters'), self.Q_(1, UnitsContainer(meter=1.)))
+        self.assertEqual(
+            self.ureg.parse_expression("meters"), self.Q_(1, UnitsContainer(meter=1.0))
+        )
 
     def test_parse_prefix(self):
-        self.assertEqual(self.ureg.parse_expression('kilometer'), self.Q_(1, UnitsContainer(kilometer=1.)))
-        #self.assertEqual(self.ureg._units['kilometer'], self.Q_(1000., UnitsContainer(meter=1.)))
+        self.assertEqual(
+            self.ureg.parse_expression("kilometer"),
+            self.Q_(1, UnitsContainer(kilometer=1.0)),
+        )
 
     def test_parse_complex(self):
-        self.assertEqual(self.ureg.parse_expression('kilometre'), self.Q_(1, UnitsContainer(kilometer=1.)))
-        self.assertEqual(self.ureg.parse_expression('kilometres'), self.Q_(1, UnitsContainer(kilometer=1.)))
-
-    def test_str_errors(self):
-        self.assertEqual(str(UndefinedUnitError('rabbits')), "'{0!s}' is not defined in the unit registry".format('rabbits'))
-        self.assertEqual(str(UndefinedUnitError(('rabbits', 'horses'))), "'{0!s}' are not defined in the unit registry".format(('rabbits', 'horses')))
-        self.assertEqual(u(str(DimensionalityError('meter', 'second'))),
-                         "Cannot convert from 'meter' to 'second'")
-        self.assertEqual(str(DimensionalityError('meter', 'second', 'length', 'time')),
-                         "Cannot convert from 'meter' (length) to 'second' (time)")
+        self.assertEqual(
+            self.ureg.parse_expression("kilometre"),
+            self.Q_(1, UnitsContainer(kilometer=1.0)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("kilometres"),
+            self.Q_(1, UnitsContainer(kilometer=1.0)),
+        )
 
     def test_parse_mul_div(self):
-        self.assertEqual(self.ureg.parse_expression('meter*meter'), self.Q_(1, UnitsContainer(meter=2.)))
-        self.assertEqual(self.ureg.parse_expression('meter**2'), self.Q_(1, UnitsContainer(meter=2.)))
-        self.assertEqual(self.ureg.parse_expression('meter*second'), self.Q_(1, UnitsContainer(meter=1., second=1)))
-        self.assertEqual(self.ureg.parse_expression('meter/second'), self.Q_(1, UnitsContainer(meter=1., second=-1)))
-        self.assertEqual(self.ureg.parse_expression('meter/second**2'), self.Q_(1, UnitsContainer(meter=1., second=-2)))
+        self.assertEqual(
+            self.ureg.parse_expression("meter*meter"),
+            self.Q_(1, UnitsContainer(meter=2.0)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("meter**2"),
+            self.Q_(1, UnitsContainer(meter=2.0)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("meter*second"),
+            self.Q_(1, UnitsContainer(meter=1.0, second=1)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("meter/second"),
+            self.Q_(1, UnitsContainer(meter=1.0, second=-1)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("meter/second**2"),
+            self.Q_(1, UnitsContainer(meter=1.0, second=-2)),
+        )
 
     def test_parse_pretty(self):
-        self.assertEqual(self.ureg.parse_expression('meter/second²'),
-                         self.Q_(1, UnitsContainer(meter=1., second=-2)))
-        self.assertEqual(self.ureg.parse_expression('m³/s³'),
-                         self.Q_(1, UnitsContainer(meter=3., second=-3)))
-        self.assertEqual(self.ureg.parse_expression('meter² · second'),
-                         self.Q_(1, UnitsContainer(meter=2., second=1)))
-        self.assertEqual(self.ureg.parse_expression('meter⁰.⁵·second'),
-                         self.Q_(1, UnitsContainer(meter=0.5, second=1)))
-        self.assertEqual(self.ureg.parse_expression('meter³⁷/second⁴.³²¹'),
-                         self.Q_(1, UnitsContainer(meter=37, second=-4.321)))
+        self.assertEqual(
+            self.ureg.parse_expression("meter/second²"),
+            self.Q_(1, UnitsContainer(meter=1.0, second=-2)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("m³/s³"),
+            self.Q_(1, UnitsContainer(meter=3.0, second=-3)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("meter² · second"),
+            self.Q_(1, UnitsContainer(meter=2.0, second=1)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("meter⁰.⁵·second"),
+            self.Q_(1, UnitsContainer(meter=0.5, second=1)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("meter³⁷/second⁴.³²¹"),
+            self.Q_(1, UnitsContainer(meter=37, second=-4.321)),
+        )
 
     def test_parse_factor(self):
-        self.assertEqual(self.ureg.parse_expression('42*meter'), self.Q_(42, UnitsContainer(meter=1.)))
-        self.assertEqual(self.ureg.parse_expression('meter*42'), self.Q_(42, UnitsContainer(meter=1.)))
+        self.assertEqual(
+            self.ureg.parse_expression("42*meter"),
+            self.Q_(42, UnitsContainer(meter=1.0)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("meter*42"),
+            self.Q_(42, UnitsContainer(meter=1.0)),
+        )
 
     def test_rep_and_parse(self):
-        q = self.Q_(1, 'g/(m**2*s)')
+        q = self.Q_(1, "g/(m**2*s)")
         self.assertEqual(self.Q_(q.magnitude, str(q.units)), q)
 
     def test_as_delta(self):
         parse = self.ureg.parse_units
-        self.assertEqual(parse('kelvin', as_delta=True), UnitsContainer(kelvin=1))
-        self.assertEqual(parse('kelvin', as_delta=False), UnitsContainer(kelvin=1))
-        self.assertEqual(parse('kelvin**(-1)', as_delta=True), UnitsContainer(kelvin=-1))
-        self.assertEqual(parse('kelvin**(-1)', as_delta=False), UnitsContainer(kelvin=-1))
-        self.assertEqual(parse('kelvin**2', as_delta=True), UnitsContainer(kelvin=2))
-        self.assertEqual(parse('kelvin**2', as_delta=False), UnitsContainer(kelvin=2))
-        self.assertEqual(parse('kelvin*meter', as_delta=True), UnitsContainer(kelvin=1, meter=1))
-        self.assertEqual(parse('kelvin*meter', as_delta=False), UnitsContainer(kelvin=1, meter=1))
+        self.assertEqual(parse("kelvin", as_delta=True), UnitsContainer(kelvin=1))
+        self.assertEqual(parse("kelvin", as_delta=False), UnitsContainer(kelvin=1))
+        self.assertEqual(
+            parse("kelvin**(-1)", as_delta=True), UnitsContainer(kelvin=-1)
+        )
+        self.assertEqual(
+            parse("kelvin**(-1)", as_delta=False), UnitsContainer(kelvin=-1)
+        )
+        self.assertEqual(parse("kelvin**2", as_delta=True), UnitsContainer(kelvin=2))
+        self.assertEqual(parse("kelvin**2", as_delta=False), UnitsContainer(kelvin=2))
+        self.assertEqual(
+            parse("kelvin*meter", as_delta=True), UnitsContainer(kelvin=1, meter=1)
+        )
+        self.assertEqual(
+            parse("kelvin*meter", as_delta=False), UnitsContainer(kelvin=1, meter=1)
+        )
+
+    def test_parse_expression_with_preprocessor(self):
+        # Add parsing of UDUNITS-style power
+        self.ureg.preprocessors.append(
+            functools.partial(
+                re.sub,
+                r"(?<=[A-Za-z])(?![A-Za-z])(?<![0-9\-][eE])(?<![0-9\-])(?=[0-9\-])",
+                "**",
+            )
+        )
+        # Test equality
+        self.assertEqual(
+            self.ureg.parse_expression("42 m2"), self.Q_(42, UnitsContainer(meter=2.0))
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("1e6 Hz s-2"),
+            self.Q_(1e6, UnitsContainer(second=-3.0)),
+        )
+        self.assertEqual(
+            self.ureg.parse_expression("3 metre3"),
+            self.Q_(3, UnitsContainer(meter=3.0)),
+        )
+        # Clean up and test previously expected value
+        self.ureg.preprocessors.pop()
+        self.assertEqual(
+            self.ureg.parse_expression("1e6 Hz s-2"),
+            self.Q_(999998.0, UnitsContainer()),
+        )
+
+    def test_parse_unit_with_preprocessor(self):
+        # Add parsing of UDUNITS-style power
+        self.ureg.preprocessors.append(
+            functools.partial(
+                re.sub,
+                r"(?<=[A-Za-z])(?![A-Za-z])(?<![0-9\-][eE])(?<![0-9\-])(?=[0-9\-])",
+                "**",
+            )
+        )
+        # Test equality
+        self.assertEqual(self.ureg.parse_units("m2"), UnitsContainer(meter=2.0))
+        self.assertEqual(self.ureg.parse_units("m-2"), UnitsContainer(meter=-2.0))
+        # Clean up
+        self.ureg.preprocessors.pop()
 
     def test_name(self):
-        self.assertRaises(UndefinedUnitError, self.ureg.get_name, 'asdf')
+        self.assertRaises(UndefinedUnitError, self.ureg.get_name, "asdf")
 
     def test_symbol(self):
-        self.assertRaises(UndefinedUnitError, self.ureg.get_symbol, 'asdf')
+        self.assertRaises(UndefinedUnitError, self.ureg.get_symbol, "asdf")
 
-        self.assertEqual(self.ureg.get_symbol('meter'), 'm')
-        self.assertEqual(self.ureg.get_symbol('second'), 's')
-        self.assertEqual(self.ureg.get_symbol('hertz'), 'Hz')
+        self.assertEqual(self.ureg.get_symbol("meter"), "m")
+        self.assertEqual(self.ureg.get_symbol("second"), "s")
+        self.assertEqual(self.ureg.get_symbol("hertz"), "Hz")
 
-        self.assertEqual(self.ureg.get_symbol('kilometer'), 'km')
-        self.assertEqual(self.ureg.get_symbol('megahertz'), 'MHz')
-        self.assertEqual(self.ureg.get_symbol('millisecond'), 'ms')
+        self.assertEqual(self.ureg.get_symbol("kilometer"), "km")
+        self.assertEqual(self.ureg.get_symbol("megahertz"), "MHz")
+        self.assertEqual(self.ureg.get_symbol("millisecond"), "ms")
 
     def test_imperial_symbol(self):
-        self.assertEqual(self.ureg.get_symbol('inch'), 'in')
-        self.assertEqual(self.ureg.get_symbol('foot'), 'ft')
-        self.assertEqual(self.ureg.get_symbol('inches'), 'in')
-        self.assertEqual(self.ureg.get_symbol('feet'), 'ft')
-        self.assertEqual(self.ureg.get_symbol('international_foot'), 'ft')
-        self.assertEqual(self.ureg.get_symbol('international_inch'), 'in')
+        self.assertEqual(self.ureg.get_symbol("inch"), "in")
+        self.assertEqual(self.ureg.get_symbol("foot"), "ft")
+        self.assertEqual(self.ureg.get_symbol("inches"), "in")
+        self.assertEqual(self.ureg.get_symbol("feet"), "ft")
+        self.assertEqual(self.ureg.get_symbol("international_foot"), "ft")
+        self.assertEqual(self.ureg.get_symbol("international_inch"), "in")
 
     def test_pint(self):
-        p = self.ureg.pint
-        l = self.ureg.liter
-        ip = self.ureg.imperial_pint
-        self.assertLess(p, l)
-        self.assertLess(p, ip)
+        self.assertLess(self.ureg.pint, self.ureg.liter)
+        self.assertLess(self.ureg.pint, self.ureg.imperial_pint)
 
     def test_wraps(self):
         def func(x):
@@ -309,39 +433,52 @@ class TestRegistry(QuantityTestCase):
 
         ureg = self.ureg
 
-        f0 = ureg.wraps(None, [None, ])(func)
-        self.assertEqual(f0(3.), 3.)
+        self.assertRaises(TypeError, ureg.wraps, (3 * ureg.meter, [None]))
+        self.assertRaises(TypeError, ureg.wraps, (None, [3 * ureg.meter]))
 
-        f0 = ureg.wraps(None, None, )(func)
-        self.assertEqual(f0(3.), 3.)
+        f0 = ureg.wraps(None, [None])(func)
+        self.assertEqual(f0(3.0), 3.0)
 
-        f1 = ureg.wraps(None, ['meter', ])(func)
-        self.assertRaises(ValueError, f1, 3.)
-        self.assertEqual(f1(3. * ureg.centimeter), 0.03)
-        self.assertEqual(f1(3. * ureg.meter), 3.)
-        self.assertRaises(ValueError, f1, 3 * ureg.second)
+        f0 = ureg.wraps(None, None)(func)
+        self.assertEqual(f0(3.0), 3.0)
 
-        f1b = ureg.wraps(None, [ureg.meter, ])(func)
-        self.assertRaises(ValueError, f1b, 3.)
-        self.assertEqual(f1b(3. * ureg.centimeter), 0.03)
-        self.assertEqual(f1b(3. * ureg.meter), 3.)
-        self.assertRaises(ValueError, f1b, 3 * ureg.second)
+        f1 = ureg.wraps(None, ["meter"])(func)
+        self.assertRaises(ValueError, f1, 3.0)
+        self.assertEqual(f1(3.0 * ureg.centimeter), 0.03)
+        self.assertEqual(f1(3.0 * ureg.meter), 3.0)
+        self.assertRaises(DimensionalityError, f1, 3 * ureg.second)
 
-        f1 = ureg.wraps(None, 'meter')(func)
-        self.assertRaises(ValueError, f1, 3.)
-        self.assertEqual(f1(3. * ureg.centimeter), 0.03)
-        self.assertEqual(f1(3. * ureg.meter), 3.)
-        self.assertRaises(ValueError, f1, 3 * ureg.second)
+        f1b = ureg.wraps(None, [ureg.meter])(func)
+        self.assertRaises(ValueError, f1b, 3.0)
+        self.assertEqual(f1b(3.0 * ureg.centimeter), 0.03)
+        self.assertEqual(f1b(3.0 * ureg.meter), 3.0)
+        self.assertRaises(DimensionalityError, f1b, 3 * ureg.second)
 
-        f2 = ureg.wraps('centimeter', ['meter', ])(func)
-        self.assertRaises(ValueError, f2, 3.)
-        self.assertEqual(f2(3. * ureg.centimeter), 0.03 * ureg.centimeter)
-        self.assertEqual(f2(3. * ureg.meter), 3 * ureg.centimeter)
+        f1c = ureg.wraps("meter", [ureg.meter])(func)
+        self.assertEqual(f1c(3.0 * ureg.centimeter), 0.03 * ureg.meter)
+        self.assertEqual(f1c(3.0 * ureg.meter), 3.0 * ureg.meter)
+        self.assertRaises(DimensionalityError, f1c, 3 * ureg.second)
 
-        f3 = ureg.wraps('centimeter', ['meter', ], strict=False)(func)
+        f1d = ureg.wraps(ureg.meter, [ureg.meter])(func)
+        self.assertEqual(f1d(3.0 * ureg.centimeter), 0.03 * ureg.meter)
+        self.assertEqual(f1d(3.0 * ureg.meter), 3.0 * ureg.meter)
+        self.assertRaises(DimensionalityError, f1d, 3 * ureg.second)
+
+        f1 = ureg.wraps(None, "meter")(func)
+        self.assertRaises(ValueError, f1, 3.0)
+        self.assertEqual(f1(3.0 * ureg.centimeter), 0.03)
+        self.assertEqual(f1(3.0 * ureg.meter), 3.0)
+        self.assertRaises(DimensionalityError, f1, 3 * ureg.second)
+
+        f2 = ureg.wraps("centimeter", ["meter"])(func)
+        self.assertRaises(ValueError, f2, 3.0)
+        self.assertEqual(f2(3.0 * ureg.centimeter), 0.03 * ureg.centimeter)
+        self.assertEqual(f2(3.0 * ureg.meter), 3 * ureg.centimeter)
+
+        f3 = ureg.wraps("centimeter", ["meter"], strict=False)(func)
         self.assertEqual(f3(3), 3 * ureg.centimeter)
-        self.assertEqual(f3(3. * ureg.centimeter), 0.03 * ureg.centimeter)
-        self.assertEqual(f3(3. * ureg.meter), 3. * ureg.centimeter)
+        self.assertEqual(f3(3.0 * ureg.centimeter), 0.03 * ureg.centimeter)
+        self.assertEqual(f3(3.0 * ureg.meter), 3.0 * ureg.centimeter)
 
         def gfunc(x, y):
             return x + y
@@ -349,7 +486,7 @@ class TestRegistry(QuantityTestCase):
         g0 = ureg.wraps(None, [None, None])(gfunc)
         self.assertEqual(g0(3, 1), 4)
 
-        g1 = ureg.wraps(None, ['meter', 'centimeter'])(gfunc)
+        g1 = ureg.wraps(None, ["meter", "centimeter"])(gfunc)
         self.assertRaises(ValueError, g1, 3 * ureg.meter, 1)
         self.assertEqual(g1(3 * ureg.meter, 1 * ureg.centimeter), 4)
         self.assertEqual(g1(3 * ureg.meter, 1 * ureg.meter), 3 + 100)
@@ -360,10 +497,10 @@ class TestRegistry(QuantityTestCase):
         h0 = ureg.wraps(None, [None, None])(hfunc)
         self.assertEqual(h0(3, 1), (3, 1))
 
-        h1 = ureg.wraps(['meter', 'centimeter'], [None, None])(hfunc)
+        h1 = ureg.wraps(["meter", "centimeter"], [None, None])(hfunc)
         self.assertEqual(h1(3, 1), [3 * ureg.meter, 1 * ureg.cm])
 
-        h2 = ureg.wraps(('meter', 'centimeter'), [None, None])(hfunc)
+        h2 = ureg.wraps(("meter", "centimeter"), [None, None])(hfunc)
         self.assertEqual(h2(3, 1), (3 * ureg.meter, 1 * ureg.cm))
 
         h3 = ureg.wraps((None,), (None, None))(hfunc)
@@ -382,29 +519,32 @@ class TestRegistry(QuantityTestCase):
         def gfunc3(x, y):
             return x ** 2 * y
 
-        rst = 3. * ureg.meter + 1. * ureg.centimeter
+        rst = 3.0 * ureg.meter + 1.0 * ureg.centimeter
 
-        g0 = ureg.wraps('=A', ['=A', '=A'])(gfunc)
-        self.assertEqual(g0(3. * ureg.meter, 1. * ureg.centimeter), rst.to('meter'))
+        g0 = ureg.wraps("=A", ["=A", "=A"])(gfunc)
+        self.assertEqual(g0(3.0 * ureg.meter, 1.0 * ureg.centimeter), rst.to("meter"))
         self.assertEqual(g0(3, 1), 4)
 
-        g1 = ureg.wraps('=A', ['=A', '=A'])(gfunc)
-        self.assertEqual(g1(3. * ureg.meter, 1. * ureg.centimeter), rst.to('centimeter'))
+        g1 = ureg.wraps("=A", ["=A", "=A"])(gfunc)
+        self.assertEqual(
+            g1(3.0 * ureg.meter, 1.0 * ureg.centimeter), rst.to("centimeter")
+        )
 
-        g2 = ureg.wraps('=A', ['=A', '=A'])(gfunc)
-        self.assertEqual(g2(3. * ureg.meter, 1. * ureg.centimeter), rst.to('meter'))
+        g2 = ureg.wraps("=A", ["=A", "=A"])(gfunc)
+        self.assertEqual(g2(3.0 * ureg.meter, 1.0 * ureg.centimeter), rst.to("meter"))
 
-        g3 = ureg.wraps('=A**2', ['=A', '=A**2'])(gfunc2)
-        a = 3. * ureg.meter
-        b = (2. * ureg.centimeter) ** 2
+        g3 = ureg.wraps("=A**2", ["=A", "=A**2"])(gfunc2)
+        a = 3.0 * ureg.meter
+        b = (2.0 * ureg.centimeter) ** 2
         self.assertEqual(g3(a, b), gfunc2(a, b))
         self.assertEqual(g3(3, 2), gfunc2(3, 2))
 
-        g4 = ureg.wraps('=A**2 * B', ['=A', '=B'])(gfunc3)
-        self.assertEqual(g4(3. * ureg.meter, 2. * ureg.second), ureg('(3*meter)**2 * 2 *second'))
-        self.assertEqual(g4(3. * ureg.meter, 2.), ureg('(3*meter)**2 * 2'))
-        self.assertEqual(g4(3., 2. * ureg.second), ureg('3**2 * 2 * second'))
-
+        g4 = ureg.wraps("=A**2 * B", ["=A", "=B"])(gfunc3)
+        self.assertEqual(
+            g4(3.0 * ureg.meter, 2.0 * ureg.second), ureg("(3*meter)**2 * 2 *second")
+        )
+        self.assertEqual(g4(3.0 * ureg.meter, 2.0), ureg("(3*meter)**2 * 2"))
+        self.assertEqual(g4(3.0, 2.0 * ureg.second), ureg("3**2 * 2 * second"))
 
     def test_check(self):
         def func(x):
@@ -412,15 +552,15 @@ class TestRegistry(QuantityTestCase):
 
         ureg = self.ureg
 
-        f0 = ureg.check('[length]')(func)
-        self.assertRaises(DimensionalityError, f0, 3.)
-        self.assertEqual(f0(3. * ureg.centimeter), 0.03 * ureg.meter)
-        self.assertRaises(DimensionalityError, f0, 3. * ureg.kilogram)
+        f0 = ureg.check("[length]")(func)
+        self.assertRaises(DimensionalityError, f0, 3.0)
+        self.assertEqual(f0(3.0 * ureg.centimeter), 0.03 * ureg.meter)
+        self.assertRaises(DimensionalityError, f0, 3.0 * ureg.kilogram)
 
         f0b = ureg.check(ureg.meter)(func)
-        self.assertRaises(DimensionalityError, f0b, 3.)
-        self.assertEqual(f0b(3. * ureg.centimeter), 0.03 * ureg.meter)
-        self.assertRaises(DimensionalityError, f0b, 3. * ureg.kilogram)
+        self.assertRaises(DimensionalityError, f0b, 3.0)
+        self.assertEqual(f0b(3.0 * ureg.centimeter), 0.03 * ureg.meter)
+        self.assertRaises(DimensionalityError, f0b, 3.0 * ureg.kilogram)
 
         def gfunc(x, y):
             return x / y
@@ -429,49 +569,55 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(g0(6, 2), 3)
         self.assertEqual(g0(6 * ureg.parsec, 2), 3 * ureg.parsec)
 
-        g1 = ureg.check('[speed]', '[time]')(gfunc)
+        g1 = ureg.check("[speed]", "[time]")(gfunc)
         self.assertRaises(DimensionalityError, g1, 3.0, 1)
         self.assertRaises(DimensionalityError, g1, 1 * ureg.parsec, 1 * ureg.angstrom)
         self.assertRaises(TypeError, g1, 1 * ureg.km / ureg.hour, 1 * ureg.hour, 3.0)
-        self.assertEqual(g1(3.6 * ureg.km / ureg.hour, 1 * ureg.second), 1 * ureg.meter / ureg.second ** 2)
+        self.assertEqual(
+            g1(3.6 * ureg.km / ureg.hour, 1 * ureg.second),
+            1 * ureg.meter / ureg.second ** 2,
+        )
 
-        g2 = ureg.check('[speed]')(gfunc)
-        self.assertRaises(DimensionalityError, g2, 3.0, 1)
-        self.assertRaises(TypeError, g2, 2 * ureg.parsec)
-        self.assertRaises(DimensionalityError, g2, 2 * ureg.parsec, 1.0)
-        self.assertEqual(g2(2.0 * ureg.km / ureg.hour, 2), 1 * ureg.km / ureg.hour)
-
-        g3 = ureg.check('[speed]', '[time]', '[mass]')(gfunc)
-        self.assertRaises(TypeError, g3, 1 * ureg.parsec, 1 * ureg.angstrom)
-        self.assertRaises(TypeError, g3, 1 * ureg.parsec, 1 * ureg.angstrom, 1 * ureg.kilogram)
+        self.assertRaises(TypeError, ureg.check("[speed]"), gfunc)
+        self.assertRaises(TypeError, ureg.check("[speed]", "[time]", "[mass]"), gfunc)
 
     def test_to_ref_vs_to(self):
         self.ureg.autoconvert_offset_to_baseunit = True
-        q = 8. * self.ureg.inch
-        t = 8. * self.ureg.degF
-        dt = 8. * self.ureg.delta_degF
-        self.assertEqual(q.to('yard').magnitude, self.ureg._units['inch'].converter.to_reference(8.))
-        self.assertEqual(t.to('kelvin').magnitude, self.ureg._units['degF'].converter.to_reference(8.))
-        self.assertEqual(dt.to('kelvin').magnitude, self.ureg._units['delta_degF'].converter.to_reference(8.))
+        q = 8.0 * self.ureg.inch
+        t = 8.0 * self.ureg.degF
+        dt = 8.0 * self.ureg.delta_degF
+        self.assertEqual(
+            q.to("yard").magnitude, self.ureg._units["inch"].converter.to_reference(8.0)
+        )
+        self.assertEqual(
+            t.to("kelvin").magnitude,
+            self.ureg._units["degF"].converter.to_reference(8.0),
+        )
+        self.assertEqual(
+            dt.to("kelvin").magnitude,
+            self.ureg._units["delta_degF"].converter.to_reference(8.0),
+        )
 
     def test_redefinition(self):
         d = UnitRegistry().define
 
         with self.capture_log() as buffer:
-            d('meter = [fruits]')
-            d('kilo- = 1000')
-            d('[speed] = [vegetables]')
+            d("meter = [fruits]")
+            d("kilo- = 1000")
+            d("[speed] = [vegetables]")
 
             # aliases
-            d('bla = 3.2 meter = inch')
-            d('myk- = 1000 = kilo-')
+            d("bla = 3.2 meter = inch")
+            d("myk- = 1000 = kilo-")
 
             self.assertEqual(len(buffer), 5)
 
     def test_convert_parse_str(self):
         ureg = self.ureg
-        self.assertEqual(ureg.convert(1, 'meter', 'inch'),
-                         ureg.convert(1, UnitsContainer(meter=1), UnitsContainer(inch=1)))
+        self.assertEqual(
+            ureg.convert(1, "meter", "inch"),
+            ureg.convert(1, UnitsContainer(meter=1), UnitsContainer(inch=1)),
+        )
 
     @helpers.requires_numpy()
     def test_convert_inplace(self):
@@ -482,7 +628,7 @@ class TestRegistry(QuantityTestCase):
         src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
         src_dst2 = UnitsContainer(meter=1, second=-1), UnitsContainer(inch=1, minute=-1)
         for src, dst in (src_dst1, src_dst2):
-            v = ureg.convert(1, src, dst),
+            v = (ureg.convert(1, src, dst),)
 
             a = np.ones((3, 1))
             ac = np.ones((3, 1))
@@ -502,22 +648,63 @@ class TestRegistry(QuantityTestCase):
 
     def test_singular_SI_prefix_convert(self):
         # Fix for issue 156
-        self.ureg.convert(1, 'mm', 'm')
-        self.ureg.convert(1, 'ms', 's')
-        self.ureg.convert(1, 'm', 'mm')
-        self.ureg.convert(1, 's', 'ms')
+        self.ureg.convert(1, "mm", "m")
+        self.ureg.convert(1, "ms", "s")
+        self.ureg.convert(1, "m", "mm")
+        self.ureg.convert(1, "s", "ms")
 
     def test_parse_units(self):
         ureg = self.ureg
-        self.assertEqual(ureg.parse_units(''), ureg.Unit(''))
-        self.assertRaises(ValueError, ureg.parse_units, '2 * meter')
+        self.assertEqual(ureg.parse_units(""), ureg.Unit(""))
+        self.assertRaises(ValueError, ureg.parse_units, "2 * meter")
+
+    def test_parse_string_pattern(self):
+        ureg = self.ureg
+        self.assertEqual(
+            ureg.parse_pattern("10'11", r"{foot}'{inch}"),
+            [ureg.Quantity(10.0, "foot"), ureg.Quantity(11.0, "inch")],
+        )
+
+    def test_parse_string_pattern_no_preprocess(self):
+        """Were preprocessors enabled, this would be interpreted as 10*11, not
+        two separate units, and thus cause the parsing to fail"""
+        ureg = self.ureg
+        self.assertEqual(
+            ureg.parse_pattern("10 11", r"{kg} {lb}"),
+            [ureg.Quantity(10.0, "kilogram"), ureg.Quantity(11.0, "pound")],
+        )
+
+    def test_parse_pattern_many_results(self):
+        ureg = self.ureg
+        self.assertEqual(
+            ureg.parse_pattern(
+                "1.5kg or 2kg will be fine, if you do not have 3kg",
+                r"{kg}kg",
+                many=True,
+            ),
+            [
+                [ureg.Quantity(1.5, "kilogram")],
+                [ureg.Quantity(2.0, "kilogram")],
+                [ureg.Quantity(3.0, "kilogram")],
+            ],
+        )
+
+    def test_parse_pattern_many_results_two_units(self):
+        ureg = self.ureg
+        self.assertEqual(
+            ureg.parse_pattern("10'10 or 10'11", "{foot}'{inch}", many=True),
+            [
+                [ureg.Quantity(10.0, "foot"), ureg.Quantity(10.0, "inch")],
+                [ureg.Quantity(10.0, "foot"), ureg.Quantity(11.0, "inch")],
+            ],
+        )
 
 
 class TestCompatibleUnits(QuantityTestCase):
     FORCE_NDARRAY = False
 
     def setUp(self):
-        super(TestCompatibleUnits, self).setUp()
+        super().setUp()
         self.ureg = UnitRegistry(force_ndarray=self.FORCE_NDARRAY)
         self.Q_ = self.ureg.Quantity
         self.U_ = self.ureg.Unit
@@ -546,10 +733,14 @@ class TestCompatibleUnits(QuantityTestCase):
         gd = self.ureg.get_dimensionality
 
         # length, frequency, energy
-        valid = [gd(self.ureg.meter), gd(self.ureg.hertz),
-                 gd(self.ureg.joule), 1/gd(self.ureg.meter)]
+        valid = [
+            gd(self.ureg.meter),
+            gd(self.ureg.hertz),
+            gd(self.ureg.joule),
+            1 / gd(self.ureg.meter),
+        ]
 
-        with self.ureg.context('sp'):
+        with self.ureg.context("sp"):
             equiv = self.ureg.get_compatible_units(self.ureg.meter)
             result = set()
             for eq in equiv:
@@ -561,42 +752,49 @@ class TestCompatibleUnits(QuantityTestCase):
 
     def test_get_base_units(self):
         ureg = UnitRegistry()
-        self.assertEqual(ureg.get_base_units(''), (1, ureg.Unit('')))
-        self.assertEqual(ureg.get_base_units('meter'), ureg.get_base_units(ParserHelper(meter=1)))
+        self.assertEqual(ureg.get_base_units(""), (1, ureg.Unit("")))
+        self.assertEqual(ureg.get_base_units("pi"), (math.pi, ureg.Unit("")))
+        self.assertEqual(ureg.get_base_units("ln10"), (math.log(10), ureg.Unit("")))
+        self.assertEqual(
+            ureg.get_base_units("meter"), ureg.get_base_units(ParserHelper(meter=1))
+        )
 
     def test_get_compatible_units(self):
         ureg = UnitRegistry()
-        self.assertEqual(ureg.get_compatible_units(''), frozenset())
-        self.assertEqual(ureg.get_compatible_units('meter'),
-                         ureg.get_compatible_units(ParserHelper(meter=1)))
+        self.assertEqual(ureg.get_compatible_units(""), frozenset())
+        self.assertEqual(
+            ureg.get_compatible_units("meter"),
+            ureg.get_compatible_units(ParserHelper(meter=1)),
+        )
 
 
 class TestRegistryWithDefaultRegistry(TestRegistry):
-
     @classmethod
     def setUpClass(cls):
         from pint import _DEFAULT_REGISTRY
+
         cls.ureg = _DEFAULT_REGISTRY
         cls.Q_ = cls.ureg.Quantity
 
     def test_lazy(self):
         x = LazyRegistry()
-        x.test = 'test'
+        x.test = "test"
         self.assertIsInstance(x, UnitRegistry)
         y = LazyRegistry()
-        q = y('meter')
+        y("meter")
         self.assertIsInstance(y, UnitRegistry)
 
     def test_redefinition(self):
         d = self.ureg.define
-        self.assertRaises(ValueError, d, 'meter = [time]')
-        self.assertRaises(ValueError, d, 'kilo- = 1000')
-        self.assertRaises(ValueError, d, '[speed] = [length]')
+        self.assertRaises(DefinitionSyntaxError, d, "meter = [time]")
+        self.assertRaises(RedefinitionError, d, "meter = [newdim]")
+        self.assertRaises(RedefinitionError, d, "kilo- = 1000")
+        self.assertRaises(RedefinitionError, d, "[speed] = [length]")
 
         # aliases
-        self.assertIn('inch', self.ureg._units)
-        self.assertRaises(ValueError, d, 'bla = 3.2 meter = inch')
-        self.assertRaises(ValueError, d, 'myk- = 1000 = kilo-')
+        self.assertIn("inch", self.ureg._units)
+        self.assertRaises(RedefinitionError, d, "bla = 3.2 meter = inch")
+        self.assertRaises(RedefinitionError, d, "myk- = 1000 = kilo-")
 
 
 class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
@@ -604,45 +802,97 @@ class TestConvertWithOffset(QuantityTestCase, ParameterizedTestCase):
     # The dicts in convert_with_offset are used to create a UnitsContainer.
     # We create UnitsContainer to avoid any auto-conversion of units.
     convert_with_offset = [
-        (({'degC': 1}, {'degC': 1}), 10),
-        (({'degC': 1}, {'kelvin': 1}), 283.15),
-        (({'degC': 1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
-        (({'degC': 1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 283150),
+        (({"degC": 1}, {"degC": 1}), 10),
+        (({"degC": 1}, {"kelvin": 1}), 283.15),
+        (({"degC": 1}, {"degC": 1, "millimeter": 1, "meter": -1}), "error"),
+        (({"degC": 1}, {"kelvin": 1, "millimeter": 1, "meter": -1}), 283150),
+        (({"kelvin": 1}, {"degC": 1}), -263.15),
+        (({"kelvin": 1}, {"kelvin": 1}), 10),
+        (({"kelvin": 1}, {"degC": 1, "millimeter": 1, "meter": -1}), "error"),
+        (({"kelvin": 1}, {"kelvin": 1, "millimeter": 1, "meter": -1}), 10000),
+        (({"degC": 1, "millimeter": 1, "meter": -1}, {"degC": 1}), "error"),
+        (({"degC": 1, "millimeter": 1, "meter": -1}, {"kelvin": 1}), "error"),
+        (
+            (
+                {"degC": 1, "millimeter": 1, "meter": -1},
+                {"degC": 1, "millimeter": 1, "meter": -1},
+            ),
+            10,
+        ),
+        (
+            (
+                {"degC": 1, "millimeter": 1, "meter": -1},
+                {"kelvin": 1, "millimeter": 1, "meter": -1},
+            ),
+            "error",
+        ),
+        (({"kelvin": 1, "millimeter": 1, "meter": -1}, {"degC": 1}), -273.14),
+        (({"kelvin": 1, "millimeter": 1, "meter": -1}, {"kelvin": 1}), 0.01),
+        (
+            (
+                {"kelvin": 1, "millimeter": 1, "meter": -1},
+                {"degC": 1, "millimeter": 1, "meter": -1},
+            ),
+            "error",
+        ),
+        (
+            (
+                {"kelvin": 1, "millimeter": 1, "meter": -1},
+                {"kelvin": 1, "millimeter": 1, "meter": -1},
+            ),
+            10,
+        ),
+        (({"degC": 2}, {"kelvin": 2}), "error"),
+        (({"degC": 1, "degF": 1}, {"kelvin": 2}), "error"),
+        (({"degC": 1, "kelvin": 1}, {"kelvin": 2}), "error"),
+    ]
 
-        (({'kelvin': 1}, {'degC': 1}), -263.15),
-        (({'kelvin': 1}, {'kelvin': 1}), 10),
-        (({'kelvin': 1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
-        (({'kelvin': 1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 10000),
-
-        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1}), 'error'),
-        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1}), 'error'),
-        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 10),
-        (({'degC': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 'error'),
-
-        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1}), -273.14),
-        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1}), 0.01),
-        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'degC': 1, 'millimeter': 1, 'meter': -1}), 'error'),
-        (({'kelvin': 1, 'millimeter': 1, 'meter': -1}, {'kelvin': 1, 'millimeter': 1, 'meter': -1}), 10),
-
-        (({'degC': 2}, {'kelvin': 2}), 'error'),
-        (({'degC': 1, 'degF': 1}, {'kelvin': 2}), 'error'),
-        (({'degC': 1, 'kelvin': 1}, {'kelvin': 2}), 'error'),
-        ]
-
-    @ParameterizedTestCase.parameterize(("input", "expected_output"),
-                                        convert_with_offset)
+    @ParameterizedTestCase.parameterize(
+        ("input", "expected_output"), convert_with_offset
+    )
     def test_to_and_from_offset_units(self, input_tuple, expected):
         src, dst = input_tuple
         src, dst = UnitsContainer(src), UnitsContainer(dst)
-        value = 10.
+        value = 10.0
         convert = self.ureg.convert
-        if isinstance(expected, string_types):
+        if isinstance(expected, str):
             self.assertRaises(DimensionalityError, convert, value, src, dst)
             if src != dst:
                 self.assertRaises(DimensionalityError, convert, value, dst, src)
         else:
-            self.assertQuantityAlmostEqual(convert(value, src, dst),
-                                           expected, atol=0.001)
+            self.assertQuantityAlmostEqual(
+                convert(value, src, dst), expected, atol=0.001
+            )
             if src != dst:
-                self.assertQuantityAlmostEqual(convert(expected, dst, src),
-                                               value, atol=0.001)
+                self.assertQuantityAlmostEqual(
+                    convert(expected, dst, src), value, atol=0.001
+                )
+
+    def test_alias(self):
+        # Use load_definitions
+        ureg = UnitRegistry(
+            [
+                "canonical = [] = can = alias1 = alias2\n",
+                # overlapping aliases
+                "@alias canonical = alias2 = alias3\n",
+                # Against another alias
+                "@alias alias3 = alias4\n",
+            ]
+        )
+
+        # Use define
+        ureg.define("@alias canonical = alias5")
+
+        # Test that new aliases work
+        # Test that pre-existing aliases and symbol are not eliminated
+        for a in ("can", "alias1", "alias2", "alias3", "alias4", "alias5"):
+            self.assertEqual(ureg.Unit(a), ureg.Unit("canonical"))
+
+        # Test that aliases defined multiple times are not duplicated
+        self.assertEqual(
+            ureg._units["canonical"].aliases,
+            ("alias1", "alias2", "alias3", "alias4", "alias5"),
+        )
+
+        # Define against unknown name
+        self.assertRaises(KeyError, ureg.define, "@alias notexist = something")

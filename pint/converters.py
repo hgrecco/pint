@@ -1,20 +1,16 @@
-# -*- coding: utf-8 -*-
 """
     pint.converters
-    ~~~~~~~~~
+    ~~~~~~~~~~~~~~~
 
     Functions and classes related to unit conversions.
 
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
 
 
-class Converter(object):
-    """Base class for value converters.
-    """
+class Converter:
+    """Base class for value converters."""
 
     is_multiplicative = True
 
@@ -26,8 +22,7 @@ class Converter(object):
 
 
 class ScaleConverter(Converter):
-    """A linear transformation
-    """
+    """A linear transformation."""
 
     is_multiplicative = True
 
@@ -52,8 +47,7 @@ class ScaleConverter(Converter):
 
 
 class OffsetConverter(Converter):
-    """An affine transformation
-    """
+    """An affine transformation."""
 
     def __init__(self, scale, offset):
         self.scale = scale

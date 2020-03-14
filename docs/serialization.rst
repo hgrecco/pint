@@ -51,9 +51,24 @@ UnitRegistry dependent.
 In certain cases, you want a binary representation of the data. Python's standard algorithm
 for serialization is called Pickle_. Pint quantities implement the magic `__reduce__`
 method and therefore can be *Pickled* and *Unpickled*. However, you have to bear in mind, that
-the **DEFAULT_REGISTRY** is used for unpickling and this might be different from the one
-that was used during pickling. If you want to have control over the deserialization, the
-best way is to create a tuple with the magnitude and the units:
+the **application registry** is used for unpickling and this might be different from the one
+that was used during pickling.
+
+By default, the application registry is one initialized with :file:`defaults_en.txt`; in
+other words, the same as what you get when creating a :class:`pint.UnitRegistry` without
+arguments and without adding any definitions afterwards.
+
+If your application is fine just using :file:`defaults_en.txt`, you don't need to worry
+further.
+
+If your application needs a single, global registry with custom definitions, you must
+make sure that it is registered using :func:`pint.set_application_registry` before
+unpickling anything. You may use :func:`pint.get_application_registry` to get the
+current instance of the application registry.
+
+Finally, if you need multiple custom registries, it's impossible to correctly unpickle
+:class:`pint.Quantity` or :class:`pint.Unit` objects.The best way is to create a tuple
+with the magnitude and the units:
 
 .. doctest::
 
@@ -94,7 +109,7 @@ Using the serialize_ package you can load and read from multiple formats:
 .. _Pickle: http://docs.python.org/3/library/pickle.html
 .. _json: http://docs.python.org/3/library/json.html
 .. _yaml: http://pyyaml.org/
-.. _shelve: http://docs.python.org/3.4/library/shelve.html
+.. _shelve: http://docs.python.org/3.6/library/shelve.html
 .. _hdf5: http://www.h5py.org/
 .. _PyTables: http://www.pytables.org
 .. _dill: https://pypi.python.org/pypi/dill
