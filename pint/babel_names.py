@@ -7,7 +7,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from pint.compat import HAS_PROPER_BABEL
+from .compat import HAS_PROPER_BABEL
 
 _babel_units = dict(
    	standard_gravity='acceleration-g-force',
