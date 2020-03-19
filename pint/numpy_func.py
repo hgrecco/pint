@@ -260,7 +260,10 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 
     # Handle functions in submodules
     func_str_split = func_str.split(".")
-    func = getattr(np, func_str_split[0])
+    func = getattr(np, func_str_split[0], None)
+    # If the function is not available, do not attempt to implement it
+    if func is None:
+        return
     for func_str_piece in func_str_split[1:]:
         func = getattr(func, func_str_piece)
 
