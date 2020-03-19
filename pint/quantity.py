@@ -741,7 +741,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             power = int(math.ceil(math.log10(abs(magnitude)) / unit_power / 3)) * 3
 
-        prefix = SI_bases[bisect.bisect_left(SI_powers, power)]
+        index = bisect.bisect_left(SI_powers, power)
+
+        if index >= len(SI_bases):
+            index = -1
+
+        prefix = SI_bases[index]
 
         new_unit_str = prefix + unit_str
         new_unit_container = q_base._units.rename(unit_str, new_unit_str)
