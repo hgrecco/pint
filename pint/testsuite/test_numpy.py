@@ -190,7 +190,7 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         for func in (np.concatenate, np.stack, np.hstack, np.vstack, np.dstack):
             with self.subTest(func=func):
                 self.assertQuantityEqual(
-                    func([self.q] * 2), self.Q_(func([self.q.m] * 2), self.ureg.m),
+                    func([self.q] * 2), self.Q_(func([self.q.m] * 2), self.ureg.m)
                 )
                 # One or more of the args is a bare array full of zeros or NaNs
                 self.assertQuantityEqual(
@@ -1019,7 +1019,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
     @helpers.requires_array_function_protocol()
     def test_nanquantile(self):
         self.assertQuantityEqual(np.nanquantile(self.q_nan, 0.25), self.Q_(1.5, "m"))
-
 
     @helpers.requires_array_function_protocol()
     def test_copyto(self):
