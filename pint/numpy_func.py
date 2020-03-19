@@ -675,7 +675,10 @@ def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output
     if np is None:
         return
 
-    func = getattr(np, func_str)
+    func = getattr(np, func_str, None)
+    # if NumPy does not implement it, do not implement it either
+    if func is None:
+        return
 
     @implements(func_str, "function")
     def implementation(*args, **kwargs):
