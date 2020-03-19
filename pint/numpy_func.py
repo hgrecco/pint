@@ -726,6 +726,8 @@ for func_str, unit_arguments, wrap_output in [
     ("nanmax", "a", True),
     ("percentile", "a", True),
     ("nanpercentile", "a", True),
+    ("quantile", "a", True),
+    ("nanquantile", "a", True),
     ("flip", "m", True),
     ("fix", "x", True),
     ("trim_zeros", ["filt"], True),
