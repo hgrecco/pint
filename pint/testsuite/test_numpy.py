@@ -30,6 +30,10 @@ class TestNumpyMethods(QuantityTestCase):
         return [[1, 2], [3, np.nan]] * self.ureg.m
 
     @property
+    def q_zero_or_nan(self):
+        return [[0, 0], [0, np.nan]] * self.ureg.m
+
+    @property
     def q_temperature(self):
         return self.Q_([[1, 2], [3, 4]], self.ureg.degC)
 
@@ -182,45 +186,60 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     # Changing number of dimensions
     # Joining arrays
     @helpers.requires_array_function_protocol()
-    def test_concatentate(self):
-        self.assertQuantityEqual(
-            np.concatenate([self.q] * 2),
-            self.Q_(np.concatenate([self.q.m] * 2), self.ureg.m),
-        )
+    def test_concat_stack(self):
+        for func in (np.concatenate, np.stack, np.hstack, np.vstack, np.dstack):
+            with self.subTest(func=func):
+                self.assertQuantityEqual(
+                    func([self.q] * 2), self.Q_(func([self.q.m] * 2), self.ureg.m),
+                )
+                # One or more of the args is a bare array full of zeros or NaNs
+                self.assertQuantityEqual(
+                    func([self.q_zero_or_nan.m, self.q]),
+                    self.Q_(func([self.q_zero_or_nan.m, self.q.m]), self.ureg.m),
+                )
+                # One or more of the args is a bare array with at least one non-zero,
+                # non-NaN element
+                nz = self.q_zero_or_nan
+                nz.m[0, 0] = 1
+                with self.assertRaises(DimensionalityError):
+                    func([nz.m, self.q])
 
     @helpers.requires_array_function_protocol()
-    def test_stack(self):
-        self.assertQuantityEqual(
-            np.stack([self.q] * 2), self.Q_(np.stack([self.q.m] * 2), self.ureg.m)
-        )
+    def test_block_column_stack(self):
+        for func in (np.block, np.column_stack):
+            with self.subTest(func=func):
 
-    @helpers.requires_array_function_protocol()
-    def test_column_stack(self):
-        self.assertQuantityEqual(np.column_stack([self.q[:, 0], self.q[:, 1]]), self.q)
+                self.assertQuantityEqual(
+                    func([self.q[:, 0], self.q[:, 1]]),
+                    self.Q_(func([self.q[:, 0].m, self.q[:, 1].m]), self.ureg.m),
+                )
 
-    @helpers.requires_array_function_protocol()
-    def test_dstack(self):
-        self.assertQuantityEqual(
-            np.dstack([self.q] * 2), self.Q_(np.dstack([self.q.m] * 2), self.ureg.m)
-        )
-
-    @helpers.requires_array_function_protocol()
-    def test_hstack(self):
-        self.assertQuantityEqual(
-            np.hstack([self.q] * 2), self.Q_(np.hstack([self.q.m] * 2), self.ureg.m)
-        )
-
-    @helpers.requires_array_function_protocol()
-    def test_vstack(self):
-        self.assertQuantityEqual(
-            np.vstack([self.q] * 2), self.Q_(np.vstack([self.q.m] * 2), self.ureg.m)
-        )
-
-    @helpers.requires_array_function_protocol()
-    def test_block(self):
-        self.assertQuantityEqual(
-            np.block([self.q[0, :], self.q[1, :]]), self.Q_([1, 2, 3, 4], self.ureg.m)
-        )
+                # One or more of the args is a bare array full of zeros or NaNs
+                self.assertQuantityEqual(
+                    func(
+                        [
+                            self.q_zero_or_nan[:, 0].m,
+                            self.q[:, 0],
+                            self.q_zero_or_nan[:, 1].m,
+                        ]
+                    ),
+                    self.Q_(
+                        func(
+                            [
+                                self.q_zero_or_nan[:, 0].m,
+                                self.q[:, 0].m,
+                                self.q_zero_or_nan[:, 1].m,
+                            ]
+                        ),
+                        self.ureg.m,
+                    ),
+                )
+                # One or more of the args is a bare array with at least one non-zero,
+                # non-NaN element
+                nz = self.q_zero_or_nan
+                nz.m[0, 0] = 1
+                with self.assertRaises(DimensionalityError):
+                    func([nz[:, 0].m, self.q[:, 0]])
 
     @helpers.requires_array_function_protocol()
     def test_append(self):
