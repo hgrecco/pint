@@ -260,7 +260,10 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 
     # Handle functions in submodules
     func_str_split = func_str.split(".")
-    func = getattr(np, func_str_split[0])
+    func = getattr(np, func_str_split[0], None)
+    # If the function is not available, do not attempt to implement it
+    if func is None:
+        return
     for func_str_piece in func_str_split[1:]:
         func = getattr(func, func_str_piece)
 
@@ -672,7 +675,10 @@ def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output
     if np is None:
         return
 
-    func = getattr(np, func_str)
+    func = getattr(np, func_str, None)
+    # if NumPy does not implement it, do not implement it either
+    if func is None:
+        return
 
     @implements(func_str, "function")
     def implementation(*args, **kwargs):
@@ -726,6 +732,8 @@ for func_str, unit_arguments, wrap_output in [
     ("nanmax", "a", True),
     ("percentile", "a", True),
     ("nanpercentile", "a", True),
+    ("quantile", "a", True),
+    ("nanquantile", "a", True),
     ("flip", "m", True),
     ("fix", "x", True),
     ("trim_zeros", ["filt"], True),

@@ -1013,6 +1013,14 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityEqual(np.nanpercentile(self.q_nan, 25), self.Q_(1.5, "m"))
 
     @helpers.requires_array_function_protocol()
+    def test_quantile(self):
+        self.assertQuantityEqual(np.quantile(self.q, 0.25), self.Q_(1.75, "m"))
+
+    @helpers.requires_array_function_protocol()
+    def test_nanquantile(self):
+        self.assertQuantityEqual(np.nanquantile(self.q_nan, 0.25), self.Q_(1.5, "m"))
+
+    @helpers.requires_array_function_protocol()
     def test_copyto(self):
         a = self.q.m
         q = copy.copy(self.q)
