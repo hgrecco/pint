@@ -936,9 +936,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityAlmostEqual(
             np.interp(x_, xp_, fp), self.Q_([6.6667, 20.0], self.ureg.degC), rtol=1e-5
         )
-        self.assertQuantityAlmostEqual(
-            np.interp(x, xp, fp_), [6.6667, 20.0], rtol=1e-5
-        )
+        self.assertQuantityAlmostEqual(np.interp(x, xp, fp_), [6.6667, 20.0], rtol=1e-5)
 
     def test_comparisons(self):
         self.assertNDArrayEqual(
