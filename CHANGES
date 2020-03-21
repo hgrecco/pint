@@ -18,6 +18,8 @@ Pint Changelog
   (Issue #1050, Thanks Guido Imperiale)
 - NaN is now treated the same as zero in addition, subtraction, equality, and
   disequality (Issue #1051, Thanks Guido Imperiale)
+- Fixed issue where quantities with a very large magnitude would throw an IndexError 
+  when using to_compact()
 
 
 0.11 (2020-02-19)
