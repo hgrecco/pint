@@ -95,6 +95,7 @@ Sometimes, the magnitude of the quantity will be very large or very small.
 The method 'to_compact' can adjust the units to make the quantity more
 human-readable.
 
+
 .. doctest::
 
    >>> wavelength = 1550 * ureg.nm
