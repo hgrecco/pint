@@ -459,6 +459,19 @@ class TestIssues(QuantityTestCase):
         p = (q ** q).m
         np.testing.assert_array_equal(p, a ** a)
 
+    def test_issue507(self):
+        # leading underscore in unit works with numbers
+        ureg.define("_100km = 100 * kilometer")
+        battery_ec = 16 * ureg.kWh / ureg._100km  # noqa: F841
+        # ... but not with text
+        ureg.define("_home = 4700 * kWh / year")
+        with self.assertRaises(AttributeError):
+            home_elec_power = 1 * ureg._home  # noqa: F841
+        # ... or with *only* underscores
+        ureg.define("_ = 45 * km")
+        with self.assertRaises(AttributeError):
+            one_blank = 1 * ureg._  # noqa: F841
+
     def test_issue523(self):
         src, dst = UnitsContainer({"meter": 1}), UnitsContainer({"degF": 1})
         value = 10.0
@@ -653,28 +666,23 @@ class TestIssues(QuantityTestCase):
         with self.assertRaises(DimensionalityError):
             q.to("joule")
 
-    def test_issue507(self):
-        # leading underscore in unit works with numbers
-        ureg.define("_100km = 100 * kilometer")
-        battery_ec = 16 * ureg.kWh / ureg._100km  # noqa: F841
-        # ... but not with text
-        ureg.define("_home = 4700 * kWh / year")
-        with self.assertRaises(AttributeError):
-            home_elec_power = 1 * ureg._home  # noqa: F841
-        # ... or with *only* underscores
-        ureg.define("_ = 45 * km")
-        with self.assertRaises(AttributeError):
-            one_blank = 1 * ureg._  # noqa: F841
-
     def test_issue960(self):
         q = (1 * ureg.nanometer).to_compact("micrometer")
         assert q.units == ureg.nanometer
         assert q.magnitude == 1
 
+    @helpers.requires_numpy()
+    def test_issue973(self):
+        """Verify that an empty array Quantity can be created through multiplication."""
+        q0 = np.array([]) * ureg.m  # by Unit
+        q1 = np.array([]) * ureg("m")  # by Quantity
+        assert isinstance(q0, ureg.Quantity)
+        assert isinstance(q1, ureg.Quantity)
+        assert len(q0) == len(q1) == 0
 
-try:
 
-    @pytest.mark.skipif(np is None, reason="NumPy is not available")
+if np is not None:
+
     @pytest.mark.parametrize(
         "callable",
         [
@@ -706,17 +714,3 @@ try:
         type_before = type(q._magnitude)
         callable(q)
         assert isinstance(q._magnitude, type_before)
-
-    @pytest.mark.skipif(np is None, reason="NumPy is not available")
-    def test_issue973():
-        """Verify that an empty array Quantity can be created through multiplication."""
-        q0 = np.array([]) * ureg.m  # by Unit
-        q1 = np.array([]) * ureg("m")  # by Quantity
-        assert isinstance(q0, ureg.Quantity)
-        assert isinstance(q1, ureg.Quantity)
-        assert len(q0) == len(q1) == 0
-
-
-except AttributeError:
-    # Calling attributes on np will fail if NumPy is not available
-    pass
