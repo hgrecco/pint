@@ -10,9 +10,8 @@
 
 import re
 
-from .compat import babel_parse
-
 from .babel_names import _babel_systems
+from .compat import babel_parse
 from .definitions import Definition, UnitDefinition
 from .errors import DefinitionSyntaxError, RedefinitionError
 from .util import (
