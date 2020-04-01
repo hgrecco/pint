@@ -120,6 +120,9 @@ def unwrap_and_wrap_consistent_units(*args):
     first arg with units, along with a wrapper to restore that unit to the output.
 
     """
+    if all(not _is_quantity(arg) for arg in args):
+        return args, lambda x: x
+
     first_input_units = _get_first_input_units(args)
     args, _ = convert_to_consistent_units(*args, pre_calc_units=first_input_units)
     return (
