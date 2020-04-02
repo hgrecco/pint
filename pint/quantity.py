@@ -74,9 +74,12 @@ class _Exception(Exception):  # pragma: no cover
 def reduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
-        if result._REGISTRY.auto_reduce_dimensions:
-            return result.to_reduced_units()
-        else:
+        try:
+            if result._REGISTRY.auto_reduce_dimensions:
+                return result.to_reduced_units()
+            else:
+                return result
+        except AttributeError:
             return result
 
     return wrapped
@@ -85,8 +88,11 @@ def reduce_dimensions(f):
 def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
-        if result._REGISTRY.auto_reduce_dimensions:
-            result.ito_reduced_units()
+        try:
+            if result._REGISTRY.auto_reduce_dimensions:
+                result.ito_reduced_units()
+        except AttributeError:
+            pass
         return result
 
     return wrapped
