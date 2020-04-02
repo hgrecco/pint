@@ -4,5 +4,5 @@ nbsphinx
 numpy
 pytest
 pandas
-pint-pandas
+git+https://github.com/hgrecco/pint-pandas.git
 jupyter_client
