@@ -17,7 +17,7 @@ env:
 
   - PKGS="python=3.7 flake8 black isort"  # Have linters fail first and quickly
   # Pinned packages to match readthedocs CI https://readthedocs.org/projects/pint/
-  - PKGS="python=3.7 ipython matplotlib nbsphinx numpy pandas git+https://github.com/hgrecco/pint-pandas.git jupyter_client ipykernel graphviz xarray sparse dask[complete] sphinx Pygments==2.3.1 docutils==0.14 alabaster commonmark==0.8.1 recommonmark==0.5.0"
+  - PKGS="python=3.7 ipython matplotlib nbsphinx numpy pandas jupyter_client ipykernel graphviz xarray sparse dask[complete] sphinx Pygments==2.3.1 docutils==0.14 alabaster commonmark==0.8.1 recommonmark==0.5.0"
   - PKGS="python=3.6"
   - PKGS="python=3.7"
   - PKGS="python=3.8"
@@ -73,7 +73,7 @@ script:
   # - if [[ $PANDAS == '1' ]]; then pip install -e .; pytest --nbval notebooks/*; fi
   - if [[ $PANDAS == 0 && $LINT == 0 && $DOCS == 0 ]]; then python -bb -m pytest $TEST_OPTS; fi
   - if [[ $LINT == 1 ]]; then black -t py36 --check . && isort -rc -c . && flake8; fi
-  - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -n -j auto -b html -d build/doctrees docs build/html; fi
+  - if [[ $DOCS == 1 ]]; then pip install git+https://github.com/hgrecco/pint-pandas.git && PYTHONPATH=$PWD sphinx-build -n -j auto -b html -d build/doctrees docs build/html; fi
   - if [[ $LINT == 0 && $DOCS == 0 ]]; then coverage report -m; fi
 
 after_success:
