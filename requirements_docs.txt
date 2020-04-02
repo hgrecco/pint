@@ -3,3 +3,6 @@ matplotlib
 nbsphinx
 numpy
 pytest
+pandas
+pint-pandas
+jupyter_client
