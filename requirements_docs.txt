@@ -10,4 +10,4 @@ ipykernel
 graphviz
 xarray
 sparse
-dask
+dask[complete]
