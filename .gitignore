@@ -11,6 +11,7 @@ dist/
 MANIFEST
 *pytest_cache*
 .eggs
+.mypy_cache
 
 # WebDAV file system cache files
 .DAV/

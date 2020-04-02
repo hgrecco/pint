@@ -17,6 +17,7 @@ import numbers
 import operator
 import re
 import warnings
+from typing import List
 
 from pkg_resources.extern.packaging import version
 
@@ -1795,38 +1796,46 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
 
+    def _get_unit_definition(self, unit: str) -> UnitDefinition:
+        try:
+            return self._REGISTRY._units[unit]
+        except KeyError:
+            # pint#1062: The __init__ method of this object added the unit to
+            # UnitRegistry._units (e.g. units with prefix are added on the fly the
+            # first time they're used) but the key was later removed, e.g. because
+            # a Context with unit redefinitions was deactivated.
+            self._REGISTRY.parse_units(unit)
+            return self._REGISTRY._units[unit]
+
     # methods/properties that help for math operations with offset units
     @property
-    def _is_multiplicative(self):
+    def _is_multiplicative(self) -> bool:
         """Check if the Quantity object has only multiplicative units."""
         return not self._get_non_multiplicative_units()
 
-    def _get_non_multiplicative_units(self):
+    def _get_non_multiplicative_units(self) -> List[str]:
         """Return a list of the of non-multiplicative units of the Quantity object."""
-        offset_units = [
+        return [
             unit
-            for unit in self._units.keys()
-            if not self._REGISTRY._units[unit].is_multiplicative
+            for unit in self._units
+            if not self._get_unit_definition(unit).is_multiplicative
         ]
-        return offset_units
 
-    def _get_delta_units(self):
+    def _get_delta_units(self) -> List[str]:
         """Return list of delta units ot the Quantity object."""
-        delta_units = [u for u in self._units.keys() if u.startswith("delta_")]
-        return delta_units
+        return [u for u in self._units if u.startswith("delta_")]
 
-    def _has_compatible_delta(self, unit):
+    def _has_compatible_delta(self, unit: str) -> bool:
         """"Check if Quantity object has a delta_unit that is compatible with unit
         """
         deltas = self._get_delta_units()
         if "delta_" + unit in deltas:
             return True
-        else:  # Look for delta units with same dimension as the offset unit
-            offset_unit_dim = self._REGISTRY._units[unit].reference
-            for d in deltas:
-                if self._REGISTRY._units[d].reference == offset_unit_dim:
-                    return True
-        return False
+        # Look for delta units with same dimension as the offset unit
+        offset_unit_dim = self._get_unit_definition(unit).reference
+        return any(
+            self._get_unit_definition(d).reference == offset_unit_dim for d in deltas
+        )
 
     def _ok_for_muldiv(self, no_offset_units=None):
         """Checks if Quantity object can be multiplied or divided
