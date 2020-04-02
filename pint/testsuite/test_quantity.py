@@ -608,6 +608,12 @@ class TestQuantityToCompact(QuantityTestCase):
         with self.assertWarns(RuntimeWarning):
             self.compareQuantity_compact(x, x)
 
+    def test_very_large_to_compact(self):
+        # This should not raise an IndexError
+        self.compareQuantity_compact(
+            self.Q_(10000, "yottameter"), self.Q_(10 ** 28, "meter").to_compact()
+        )
+
 
 class TestQuantityBasicMath(QuantityTestCase):
 

@@ -1181,7 +1181,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
 
         if not input_string:
-            return self.Quantity(1)
+            return [] if many else None
 
         # Parse string
         pattern = pattern_to_regex(pattern)
