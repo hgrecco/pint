@@ -8,3 +8,6 @@ git+https://github.com/hgrecco/pint-pandas.git
 jupyter_client
 ipykernel
 graphviz
+xarray
+sparse
+dask
