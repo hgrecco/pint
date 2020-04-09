@@ -23,6 +23,8 @@ Pint Changelog
   when using to_compact()
 - Fixed crash when a Unit with prefix is declared for the first time while a Context
   containing unit redefinitions is active (Issue #1062, Thanks Guido Imperiale)
+- Added link to budding `pint-xarray` interface library to the docs, next to
+  the link to pint-pandas. (Thanks Tom Nicholas.)
 
 
 0.11 (2020-02-19)
