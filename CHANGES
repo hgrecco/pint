@@ -23,6 +23,9 @@ Pint Changelog
   when using to_compact()
 - Fixed crash when a Unit with prefix is declared for the first time while a Context
   containing unit redefinitions is active (Issue #1062, Thanks Guido Imperiale)
+- Removed outdated `_dir` attribute of `UnitsRegistry`, and added `__iter__`
+  method so that now `list(ureg)` returns a list of all units in registry.
+  (Issue #1072, Thanks Tom Nicholas)
 
 
 0.11 (2020-02-19)
