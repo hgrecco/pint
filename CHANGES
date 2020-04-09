@@ -25,6 +25,9 @@ Pint Changelog
   containing unit redefinitions is active (Issue #1062, Thanks Guido Imperiale)
 - Added link to budding `pint-xarray` interface library to the docs, next to
   the link to pint-pandas. (Thanks Tom Nicholas.)
+- Removed outdated `_dir` attribute of `UnitsRegistry`, and added `__iter__`
+  method so that now `list(ureg)` returns a list of all units in registry.
+  (Issue #1072, Thanks Tom Nicholas)
 
 
 0.11 (2020-02-19)

@@ -240,6 +240,10 @@ class TestRegistry(QuantityTestCase):
         self.assertNotEqual(s1, s3)
         self.assertEqual(ureg.default_format, "~")
 
+    def test_iterate(self):
+        ureg = UnitRegistry()
+        self.assertTrue("meter" in list(ureg))
+
     def test_parse_number(self):
         self.assertEqual(self.ureg.parse_expression("pi"), math.pi)
         self.assertEqual(self.ureg.parse_expression("x", x=2), 2)
