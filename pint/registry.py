@@ -177,26 +177,6 @@ class BaseRegistry(metaclass=RegistryMeta):
     #: Babel.Locale instance or None
     fmt_locale = None
 
-    #: List to be used in addition of units when dir(registry) is called.
-    #: Also used for autocompletion in IPython.
-    _dir = [
-        "Quantity",
-        "Unit",
-        "UnitsContainer",
-        "Measurement",
-        "define",
-        "load_definitions",
-        "get_name",
-        "get_symbol",
-        "get_dimensionality",
-        "get_base_units",
-        "get_root_units",
-        "parse_unit_name",
-        "parse_units",
-        "parse_expression",
-        "convert",
-    ]
-
     def __init__(
         self,
         filename="",
@@ -310,7 +290,18 @@ class BaseRegistry(metaclass=RegistryMeta):
         return self.parse_expression(item)
 
     def __dir__(self):
-        return list(self._units.keys()) + self._dir
+        #: Calling dir(registry) gives all units, methods, and attributes.
+        #: Also used for autocompletion in IPython.
+        return list(self._units.keys()) + list(object.__dir__(self))
+
+    def __iter__(self):
+        """Allows for listing all units in registry with `list(ureg)`.
+
+        Returns
+        -------
+        Iterator over names of all units in registry, ordered alphabetically.
+        """
+        return iter(sorted(self._units.keys()))
 
     def set_fmt_locale(self, loc):
         """Change the locale used by default by `format_babel`.
