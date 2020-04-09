@@ -50,13 +50,13 @@ class TestMeasurement(QuantityTestCase):
             ("{:L}", r"\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}"),
             ("{:H}", r"\[(4.00 &plusmn; 0.10)\ second^2\]"),
             ("{:C}", "(4.00+/-0.10) second**2"),
-            ("{:Lx}", r"\SI[separate-uncertainty=true]{4.00(10)}{\second\squared}"),
+            ("{:Lx}", r"\SI{4.00 +- 0.10}{\second\squared}"),
             ("{:.1f}", "(4.0 +/- 0.1) second ** 2"),
             ("{:.1fP}", "(4.0 ± 0.1) second²"),
             ("{:.1fL}", r"\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}"),
             ("{:.1fH}", r"\[(4.0 &plusmn; 0.1)\ second^2\]"),
             ("{:.1fC}", "(4.0+/-0.1) second**2"),
-            ("{:.1fLx}", r"\SI[separate-uncertainty=true]{4.0(1)}{\second\squared}"),
+            ("{:.1fLx}", r"\SI{4.0 +- 0.1}{\second\squared}"),
         ):
             with self.subTest(spec):
                 self.assertEqual(spec.format(m), result)
@@ -86,11 +86,8 @@ class TestMeasurement(QuantityTestCase):
             ("{:.3uL}", r"\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}"),
             ("{:.3uH}", r"\[(0.2000 &plusmn; 0.0100)\ second^2\]"),
             ("{:.3uC}", "(0.2000+/-0.0100) second**2"),
-            (
-                "{:.3uLx}",
-                r"\SI[separate-uncertainty=true]{0.2000(100)}{\second\squared}",
-            ),
-            ("{:.1uLx}", r"\SI[separate-uncertainty=true]{0.20(1)}{\second\squared}"),
+            ("{:.3uLx}", r"\SI{0.2000 +- 0.0100}{\second\squared}",),
+            ("{:.1uLx}", r"\SI{0.20 +- 0.01}{\second\squared}"),
         ):
             with self.subTest(spec):
                 self.assertEqual(spec.format(m), result)
@@ -137,7 +134,7 @@ class TestMeasurement(QuantityTestCase):
             ("{:L}", r"\left(4.00 \pm 0.10\right) \times 10^{20}\ \mathrm{second}^{2}"),
             ("{:H}", r"\[(4.00 &plusmn; 0.10)×10^{20}\ second^2\]"),
             ("{:C}", "(4.00+/-0.10)e+20 second**2"),
-            ("{:Lx}", r"\SI[separate-uncertainty=true]{4.00(10)e+20}{\second\squared}"),
+            ("{:Lx}", r"\SI{4.00 +- 0.10 e+20}{\second\squared}"),
         ):
             with self.subTest(spec):
                 self.assertEqual(spec.format(m), result)
@@ -154,7 +151,7 @@ class TestMeasurement(QuantityTestCase):
             ),
             ("{:H}", r"\[(4.00 &plusmn; 0.10)×10^{-20}\ second^2\]"),
             ("{:C}", "(4.00+/-0.10)e-20 second**2"),
-            ("{:Lx}", r"\SI[separate-uncertainty=true]{4.00(10)e-20}{\second\squared}"),
+            ("{:Lx}", r"\SI{4.00 +- 0.10 e-20}{\second\squared}"),
         ):
             with self.subTest(spec):
                 self.assertEqual(spec.format(m), result)

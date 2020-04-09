@@ -389,7 +389,7 @@ The same is true for latex (`L`) and HTML (`H`) specs.
 The formatting specs (ie 'L', 'H', 'P') can be used with Python string 'formatting
 syntax'_ for custom float representations. For example, scientific notation:
 
-..doctest::
+.. doctest::
    >>> 'Scientific notation: {:.3e~L}'.format(accel)
    'Scientific notation: 1.300\\times 10^{0}\\ \\frac{\\mathrm{m}}{\\mathrm{s}^{2}}'
 
@@ -400,7 +400,10 @@ Pint also supports the LaTeX siunitx package:
    >>> accel = 1.3 * ureg['meter/second**2']
    >>> # siunitx Latex print
    >>> print('The siunitx representation is {:Lx}'.format(accel))
-   The siunitx representation is \SI[]{1.3}{\meter\per\second\squared}
+   The siunitx representation is \SI{1.3}{\meter\per\second\squared}
+   >>> accel = accel.plus_minus(0.2)
+   >>> print('The siunitx representation is {:Lx}'.format(accel))
+   The siunitx representation is \SI{1.3 +- 0.2}{\meter\per\second\squared}
 
 Additionally, you can specify a default format specification:
 
