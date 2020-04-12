@@ -19,7 +19,7 @@ import re
 import warnings
 from typing import List
 
-from pkg_resources.extern.packaging import version
+from packaging import version
 
 from .compat import (
     NUMPY_VER,
