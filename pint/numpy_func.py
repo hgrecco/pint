@@ -670,6 +670,28 @@ def _all(a, *args, **kwargs):
         raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
 
+@implements("prod", "function")
+def _prod(a, *args, **kwargs):
+    arg_names = ("axis", "dtype", "out", "keepdims", "initial", "where")
+    all_kwargs = dict(**dict(zip(arg_names, args)), **kwargs)
+    axis = all_kwargs.get("axis", None)
+    where = all_kwargs.get("where", None)
+
+    if axis is not None and where is not None:
+        raise ValueError("passing axis and where is not supported")
+
+    result = np.prod(a._magnitude, *args, **kwargs)
+
+    if axis is not None:
+        exponent = a.size // result.size
+        units = a.units ** exponent
+    elif where is not None:
+        exponent = np.asarray(where, dtype=np.bool_).sum()
+        units = a.units ** exponent
+
+    return units._REGISTRY.Quantity(result, units)
+
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
