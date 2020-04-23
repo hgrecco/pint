@@ -33,6 +33,7 @@ Pint Changelog
 - Removed outdated `_dir` attribute of `UnitsRegistry`, and added `__iter__`
   method so that now `list(ureg)` returns a list of all units in registry.
   (Issue #1072, Thanks Tom Nicholas)
+- Replace pkg_resources.version to importlib.metadata.version. (Issue #1083)
 
 
 0.11 (2020-02-19)

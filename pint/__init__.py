@@ -13,8 +13,6 @@
 
 import sys
 
-import pkg_resources
-
 from .context import Context
 from .errors import (
     DefinitionSyntaxError,
@@ -32,6 +30,12 @@ from .unit import Unit
 from .util import logger, pi_theorem
 
 try:
+    from importlib.metadata import version
+except ImportError:
+    # Backport for Python < 3.8
+    from importlib_metadata import version
+
+try:
     from pintpandas import PintArray, PintType
 
     del PintType
@@ -43,7 +47,7 @@ except ImportError:
     _, _pintpandas_error, _ = sys.exc_info()
 
 try:  # pragma: no cover
-    __version__ = pkg_resources.get_distribution("pint").version
+    __version__ = version("pint")
 except Exception:  # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown
