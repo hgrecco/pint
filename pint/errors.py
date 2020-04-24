@@ -1,83 +1,86 @@
-# -*- coding: utf-8 -*-
 """
     pint.errors
-    ~~~~~~~~~
+    ~~~~~~~~~~~
 
     Functions and classes related to unit definitions and conversions.
 
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import (division, unicode_literals, print_function,
-                        absolute_import)
-
-from .compat import string_types
 
 
-class DefinitionSyntaxError(ValueError):
-    """Raised when a textual definition has a syntax error.
-    """
+def _file_prefix(filename=None, lineno=None):
+    if filename and lineno is not None:
+        return f"While opening {filename}, in line {lineno}: "
+    elif filename:
+        return f"While opening {filename}: "
+    elif lineno is not None:
+        return f"In line {lineno}: "
+    else:
+        return ""
 
-    def __init__(self, msg, filename=None, lineno=None):
-        super(DefinitionSyntaxError, self).__init__()
-        self.msg = msg
-        self.filename = None
-        self.lineno = None
+
+class DefinitionSyntaxError(SyntaxError):
+    """Raised when a textual definition has a syntax error."""
+
+    def __init__(self, msg, *, filename=None, lineno=None):
+        super().__init__(msg)
+        self.filename = filename
+        self.lineno = lineno
 
     def __str__(self):
-        mess = "While opening {}, in line {}: "
-        return mess.format(self.filename, self.lineno) + self.msg
+        return _file_prefix(self.filename, self.lineno) + str(self.args[0])
+
+    @property
+    def __dict__(self):
+        # SyntaxError.filename and lineno are special fields that don't appear in
+        # the __dict__. This messes up pickling and deepcopy, as well
+        # as any other Python library that expects sane behaviour.
+        return {"filename": self.filename, "lineno": self.lineno}
+
+    def __reduce__(self):
+        return DefinitionSyntaxError, self.args, self.__dict__
 
 
 class RedefinitionError(ValueError):
-    """Raised when a unit or prefix is redefined.
-    """
+    """Raised when a unit or prefix is redefined."""
 
-    def __init__(self, name, definition_type):
-        super(RedefinitionError, self).__init__()
-        self.name = name
-        self.definition_type = definition_type
-        self.filename = None
-        self.lineno = None
+    def __init__(self, name, definition_type, *, filename=None, lineno=None):
+        super().__init__(name, definition_type)
+        self.filename = filename
+        self.lineno = lineno
 
     def __str__(self):
-        msg = "cannot redefine '{}' ({})".format(self.name,
-                                                   self.definition_type)
-        if self.filename:
-            mess = "While opening {}, in line {}: "
-            return mess.format(self.filename, self.lineno) + msg
-        return msg
+        msg = f"Cannot redefine '{self.args[0]}' ({self.args[1]})"
+        return _file_prefix(self.filename, self.lineno) + msg
+
+    def __reduce__(self):
+        return RedefinitionError, self.args, self.__dict__
 
 
 class UndefinedUnitError(AttributeError):
-    """Raised when the units are not defined in the unit registry.
-    """
+    """Raised when the units are not defined in the unit registry."""
 
-    def __init__(self, unit_names):
-        super(UndefinedUnitError, self).__init__()
-        self.unit_names = unit_names
+    def __init__(self, *unit_names):
+        if len(unit_names) == 1 and not isinstance(unit_names[0], str):
+            unit_names = unit_names[0]
+        super().__init__(*unit_names)
 
     def __str__(self):
-        mess = "'{}' is not defined in the unit registry"
-        mess_plural = "'{}' are not defined in the unit registry"
-        if isinstance(self.unit_names, string_types):
-            return mess.format(self.unit_names)
-        elif isinstance(self.unit_names, (list, tuple))\
-                and len(self.unit_names) == 1:
-            return mess.format(self.unit_names[0])
-        elif isinstance(self.unit_names, set) and len(self.unit_names) == 1:
-            uname = list(self.unit_names)[0]
-            return mess.format(uname)
-        else:
-            return mess_plural.format(self.unit_names)
+        if len(self.args) == 1:
+            return f"'{self.args[0]}' is not defined in the unit registry"
+        return f"{self.args} are not defined in the unit registry"
 
 
-class DimensionalityError(ValueError):
-    """Raised when trying to convert between incompatible units.
-    """
+class PintTypeError(TypeError):
+    pass
 
-    def __init__(self, units1, units2, dim1=None, dim2=None, extra_msg=''):
-        super(DimensionalityError, self).__init__()
+
+class DimensionalityError(PintTypeError):
+    """Raised when trying to convert between incompatible units."""
+
+    def __init__(self, units1, units2, dim1="", dim2="", *, extra_msg=""):
+        super().__init__()
         self.units1 = units1
         self.units2 = units2
         self.dim1 = dim1
@@ -86,31 +89,30 @@ class DimensionalityError(ValueError):
 
     def __str__(self):
         if self.dim1 or self.dim2:
-            dim1 = ' ({})'.format(self.dim1)
-            dim2 = ' ({})'.format(self.dim2)
+            dim1 = f" ({self.dim1})"
+            dim2 = f" ({self.dim2})"
         else:
-            dim1 = ''
-            dim2 = ''
+            dim1 = ""
+            dim2 = ""
 
-        msg = "Cannot convert from '{}'{} to '{}'{}" + self.extra_msg
+        return (
+            f"Cannot convert from '{self.units1}'{dim1} to "
+            f"'{self.units2}'{dim2}{self.extra_msg}"
+        )
 
-        return msg.format(self.units1, dim1, self.units2, dim2)
+    def __reduce__(self):
+        return TypeError.__new__, (DimensionalityError,), self.__dict__
 
 
-class OffsetUnitCalculusError(ValueError):
-    """Raised on ambiguous operations with offset units.
-    """
-    def __init__(self, units1, units2='', extra_msg=''):
-        super(ValueError, self).__init__()
-        self.units1 = units1
-        self.units2 = units2
-        self.extra_msg = extra_msg
+class OffsetUnitCalculusError(PintTypeError):
+    """Raised on ambiguous operations with offset units."""
 
     def __str__(self):
-        msg = ("Ambiguous operation with offset unit (%s)." %
-               ', '.join(['%s' % u for u in [self.units1, self.units2] if u])
-               + self.extra_msg)
-        return msg.format(self.units1, self.units2)
+        return (
+            "Ambiguous operation with offset unit (%s)."
+            % ", ".join(str(u) for u in self.args)
+            + " See https://pint.readthedocs.io/en/latest/nonmult.html for guidance."
+        )
 
 
 class UnitStrippedWarning(UserWarning):

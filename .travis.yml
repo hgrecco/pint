@@ -7,53 +7,75 @@ branches:
   - trying.tmp
 
 env:
-  - UNCERTAINTIES="N" PYTHON="3.3" NUMPY_VERSION=1.9.2
-  - UNCERTAINTIES="N" PYTHON="3.4" NUMPY_VERSION=1.11.2
-  - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=1.11.2
-  - UNCERTAINTIES="Y" PYTHON="3.5" NUMPY_VERSION=1.11.2
-  - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.11.2
-  - UNCERTAINTIES="N" PYTHON="2.7" NUMPY_VERSION=0
-  - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=0
-  # Test with the latest numpy version
-  - UNCERTAINTIES="N" PYTHON="2.7" NUMPY_VERSION=1.14
-  - UNCERTAINTIES="N" PYTHON="3.4" NUMPY_VERSION=1.14
-  - UNCERTAINTIES="N" PYTHON="3.5" NUMPY_VERSION=1.14
-  - UNCERTAINTIES="Y" PYTHON="3.5" NUMPY_VERSION=1.14
-  - UNCERTAINTIES="N" PYTHON="3.6" NUMPY_VERSION=1.14
+  # This project adheres to NEP-29
+  # https://numpy.org/neps/nep-0029-deprecation_policy.html
+
+  # Refer to https://docs.scipy.org/doc/numpy/release.html for
+  # min/max Python version supported by numpy
+  # Refer to history of https://github.com/lebigot/uncertainties/blob/master/setup.py
+  # for min/max Python versions supported by uncertainties
+
+  - PKGS="python=3.7 flake8 black isort"  # Have linters fail first and quickly
+  # Pinned packages to match readthedocs CI https://readthedocs.org/projects/pint/
+  - PKGS="python=3.7 ipython matplotlib nbsphinx numpy pandas jupyter_client ipykernel python-graphviz graphviz xarray sparse dask[complete] sphinx Pygments==2.3.1 docutils==0.14 alabaster commonmark==0.8.1 recommonmark==0.5.0"
+  - PKGS="python=3.6"
+  - PKGS="python=3.7"
+  - PKGS="python=3.8"
+  - PKGS="python=3.6 uncertainties=3.0"
+  - PKGS="python=3.7 uncertainties=3.0"
+  - PKGS="python=3.6 numpy=1.14 matplotlib"
+  - PKGS="python=3.7 numpy=1.14 matplotlib"
+  - PKGS="python=3.8 numpy=1.17 matplotlib"
+  - PKGS="python=3.6 numpy=1.14 uncertainties=3.0"
+  - PKGS="python=3.7 numpy=1.14 uncertainties=3.0"
+  - PKGS="python=3.6 numpy uncertainties"
+  - PKGS="python=3.7 numpy uncertainties"
+  - PKGS="python=3.8 numpy uncertainties"
+  - PKGS="python=3.8 numpy uncertainties sparse xarray netCDF4"
+
+  # TODO: pandas tests
+  # - PKGS="python=3.7 numpy pandas uncertainties pandas"
 
 before_install:
   - sudo apt-get update
-  - if [[ "$PYTHON" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
+  - conda config --add channels conda-forge
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
 
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
-  - sudo rm -rf /dev/shm
-  - sudo ln -s /run/shm /dev/shm
-
-  - export ENV_NAME=travis
+  # But broke travis 2019-08
+  # - sudo rm -rf /dev/shm
+  # - sudo ln -s /run/shm /dev/shm
+  - export TEST_OPTS="-rfsxEX -s --cov=pint --cov-config=.coveragerc"
 
 install:
-  - conda create --yes -n $ENV_NAME python=$PYTHON pip
-  - source activate $ENV_NAME
-  - if [ $UNCERTAINTIES == 'Y' ]; then pip install 'uncertainties==2.4.7.1'; fi
-  - if [ $NUMPY_VERSION != '0' ]; then conda install --yes numpy==$NUMPY_VERSION; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $NUMPY_VERSION == 1.11.2 && $UNCERTAINTIES == "Y" ]]; then pip install babel serialize pyyaml; fi
-  - pip install coveralls
+  - conda create -n travis $PKGS pytest pytest-cov coveralls
+  - source activate travis
+  - if [[ $PKGS =~ pandas ]]; then PANDAS=1; else PANDAS=0; fi
+  - if [[ $PKGS =~ flake8 ]]; then LINT=1; else LINT=0; fi
+  - if [[ $PKGS =~ sphinx ]]; then DOCS=1; else DOCS=0; fi
+  - if [[ $PKGS =~ matplotlib && $DOCS == 0 ]]; then pip install pytest-mpl; export TEST_OPTS="$TEST_OPTS --mpl"; fi
+  - if [[ $DOCS == 1 ]]; then pip install git+https://github.com/hgrecco/pint-pandas.git; fi
+  # this is superslow but suck it up until updates to pandas are made
+  # - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
+  - conda list
 
 script:
-  - python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" setup.py test
-  - coverage combine
-  - coverage report -m
+  # if we're doing the pandas tests and hence have pytest available, we can
+  # simply use it to run all the tests
+  # - if [[ $PANDAS == '1' ]]; then python -bb -m coverage run -p --source=pint --omit="*test*","*compat*" -m py.test -rfsxEX; fi
+  # test notebooks too if pandas available
+  # - if [[ $PANDAS == '1' ]]; then pip install -e .; pytest --nbval notebooks/*; fi
+  - if [[ $PANDAS == 0 && $LINT == 0 && $DOCS == 0 ]]; then python -bb -m pytest $TEST_OPTS; fi
+  - if [[ $LINT == 1 ]]; then black -t py36 --check . && isort -rc -c . && flake8; fi
+  - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -n -j auto -b html -d build/doctrees docs build/html; fi
+  - if [[ $LINT == 0 && $DOCS == 0 ]]; then coverage report -m; fi
 
 after_success:
   - coveralls --verbose

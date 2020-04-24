@@ -144,7 +144,7 @@ the extra outputs. For example, given the NREL SOLPOS calculator that outputs
 solar zenith, azimuth and air mass, the following wrapper assumes no units for
 airmass::
 
-    @UREG.wraps(('deg', 'deg'), ('deg', 'deg', 'millibar', 'degC')
+    @ureg.wraps(('deg', 'deg'), ('deg', 'deg', 'millibar', 'degC'))
     def solar_position(lat, lon, press, tamb, timestamp):
         return zenith, azimuth, airmass
 
@@ -183,8 +183,9 @@ arguments:
 Specifying relations between arguments
 --------------------------------------
 
-In certain cases the actual units but just their relation. This is done using string
-starting with the equal sign `=`:
+In certain cases, you may not be concerned with the actual units and only care about the unit relations among arguments.
+
+This is done using a string starting with the equal sign `=`:
 
 .. doctest::
 

@@ -7,7 +7,7 @@ If you work frequently on certain topics, you will probably find the need to
 convert between dimensions based on some pre-established (physical)
 relationships. For example, in spectroscopy you need to transform from
 wavelength to frequency. These are incompatible units and therefore Pint will
-raise an error if your do this directly:
+raise an error if you do this directly:
 
 .. doctest::
 
@@ -17,7 +17,7 @@ raise an error if your do this directly:
     >>> q.to('Hz')
     Traceback (most recent call last):
     ...
-    pint.errors.DimensionalityError: Cannot convert from 'nanometer' ([length]) to 'hertz' (1 / [time])
+    DimensionalityError: Cannot convert from 'nanometer' ([length]) to 'hertz' (1 / [time])
 
 
 You probably want to use the relation `frequency = speed_of_light / wavelength`:
@@ -138,7 +138,8 @@ context and the parameters that you wish to set.
     398.496240602
 
 
-This decorator can be combined with **wraps** or **check** decorators described in `wrapping`_
+This decorator can be combined with **wraps** or **check** decorators described in
+:doc:`wrapping`.
 
 
 Defining contexts in a file
@@ -188,7 +189,139 @@ functions. For example:
     >>> ureg = pint.UnitRegistry()
     >>> c = pint.Context('ab')
     >>> c.add_transformation('[length]', '[time]',
-    ...                      lambda ureg, x: ureg.speed_of_light / x)
+    ...                      lambda ureg, x: x / ureg.speed_of_light)
     >>> c.add_transformation('[time]', '[length]',
-    ...                      lambda ureg, x: ureg.speed_of_light * x)
+    ...                      lambda ureg, x: x * ureg.speed_of_light)
     >>> ureg.add_context(c)
+    >>> ureg("1 s").to("km", "ab")
+    299792.458 kilometer
+
+It is also possible to create anonymous contexts without invoking add_context:
+
+   >>> c = pint.Context()
+   ...
+   >>> ureg("1 s").to("km", c)
+   299792.458 kilometer
+
+Using contexts for unit redefinition
+------------------------------------
+
+The exact definition of a unit of measure can change slightly depending on the country,
+year, and more in general convention. For example, the ISO board released over the years
+several revisions of its whitepapers, which subtly change the value of some of the more
+obscure units. And as soon as one steps out of the SI system and starts wandering into
+imperial and colonial measuring systems, the same unit may start being defined slightly
+differently every time - with no clear 'right' or 'wrong' definition.
+
+The default pint definitions file (default_en.txt) tries to mitigate the problem by
+offering multiple variants of the same unit by calling them with different names; for
+example, one will find multiple definitions of a "BTU"::
+
+    british_thermal_unit = 1055.056 * joule = Btu = BTU = Btu_iso
+    international_british_thermal_unit = 1e3 * pound / kilogram * degR / kelvin * international_calorie = Btu_it
+    thermochemical_british_thermal_unit = 1e3 * pound / kilogram * degR / kelvin * calorie = Btu_th
+
+That's sometimes insufficient, as Wikipedia reports `no less than 6 different
+definitions <https://en.wikipedia.org/wiki/British_thermal_unit>`_ for BTU, and it's
+entirely possible that some companies in the energy sector, or even individual energy
+contracts, may redefine it to something new entirely, e.g. with a different rounding.
+
+Pint allows changing the definition of a unit within the scope of a context.
+This allows layering; in the example above, a company may use the global definition
+of BTU from default_en.txt above, then override it with a customer-specific one in
+a context, and then override it again with a contract-specific one on top of it.
+
+A redefinition follows the following syntax::
+
+    <unit name> = <new definition>
+
+where <unit name> can be the base unit name or one of its aliases.
+For example::
+
+    BTU = 1055 J
+
+
+Programmatically:
+
+.. code-block:: python
+
+    >>> ureg = pint.UnitRegistry()
+    >>> q = ureg.Quantity("1 BTU")
+    >>> q.to("J")
+    1055.056 joule
+    >>> ctx = pint.Context()
+    >>> ctx.redefine("BTU = 1055 J")
+    >>> q.to("J", ctx)
+    1055.0 joule
+    # When the context is disabled, pint reverts to the base definition
+    >>> q.to("J")
+    1055.056 joule
+
+Or with a definitions file::
+
+    @context somecontract
+        BTU = 1055 J
+    @end
+
+.. code-block:: python
+
+    >>> ureg = pint.UnitRegistry()
+    >>> ureg.load_definitions("somefile.txt")
+    >>> q = ureg.Quantity("1 BTU")
+    >>> q.to("J")
+    1055.056 joule
+    >>> q.to("J", "somecontract")
+    1055.0 joule
+
+
+.. note::
+   Redefinitions are transitive; if the registry defines B as a function of A
+   and C as a function of B, redefining B will also impact the conversion from C to A.
+
+**Limitations**
+
+- You can't create brand new units ; all units must be defined outside of the context
+  first.
+- You can't change the dimensionality of a unit within a context. For example, you
+  can't define a context that redefines grams as a force instead of a mass (but see
+  the unit ``force_gram`` in default_en.txt).
+- You can't redefine a unit with a prefix; e.g. you can redefine a liter, but not a
+  decaliter.
+- You can't redefine a base unit, such as grams.
+- You can't add or remove aliases, or change the symbol. Symbol and aliases are
+  automatically inherited from the UnitRegistry.
+- You can't redefine dimensions or prefixes.
+
+Working without a default definition
+------------------------------------
+
+In some cases, the definition of a certain unit may be so volatile to make it unwise to
+define a default conversion rate in the UnitRegistry.
+
+This can be solved by using 'NaN' (any capitalization) instead of a conversion rate rate
+in the UnitRegistry, and then override it in contexts::
+
+    truckload = nan kg
+
+    @context Euro_TIR
+        truckload = 2000 kg
+    @end
+
+    @context British_grocer
+        truckload = 500 lb
+    @end
+
+This allows you, before any context is activated, to define quantities and perform
+dimensional analysis:
+
+.. code-block:: python
+
+    >>> ureg.truckload.dimensionality
+    [mass]
+    >>> q = ureg.Quantity("2 truckloads")
+    >>> q.to("kg")
+    nan kg
+    >>> q.to("kg", "Euro_TIR")
+    4000 kilogram
+    >>> q.to("kg", "British_grocer")
+    453.59237 kilogram

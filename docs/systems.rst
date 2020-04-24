@@ -28,10 +28,10 @@ or more drastically to:
     >>> '{:.3f}'.format(q.to_base_units())
     '1.094 yard / second'
 
-..warning: In versions previous to 0.7 `to_base_units` returns quantities in the
-           units of the definition files (which are called root units). For the definition file
-           bundled with pint this is meter/gram/second. To get back this behaviour use `to_root_units`,
-           set `ureg.system = None`
+.. warning:: In versions previous to 0.7 ``to_base_units`` returns quantities in the
+             units of the definition files (which are called root units). For the definition file
+             bundled with pint this is meter/gram/second. To get back this behaviour use ``to_root_units``,
+             set ``ureg.system = None``
 
 
 You can also use system to narrow down the list of compatible units:
