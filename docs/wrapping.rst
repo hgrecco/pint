@@ -156,7 +156,7 @@ arguments:
 
 .. doctest::
 
-    >>> @ureg.wraps(ureg.second, (ureg.meters, ureg.meters/ureg.second**2))
+    >>> @ureg.wraps(ureg.second, (ureg.meters, ureg.meters/ureg.second**2, None))
     ... def calculate_time_to_fall(height, gravity=Q_(9.8, 'm/s^2'), verbose=False):
     ...     """Calculate time to fall from a height h.
     ...
