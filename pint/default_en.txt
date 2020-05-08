@@ -280,6 +280,9 @@ refrigeration_ton = 12e3 * Btu / hour = _ = ton_of_refrigeration  # approximate,
 standard_liter_per_minute = atmosphere * liter / minute = slpm = slm
 conventional_watt_90 = K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt = W_90
 
+# Momentum
+[momentum] = [length] * [mass] / [time]
+
 # Density (as auxiliary for pressure)
 [density] = [mass] / [volume]
 mercury = 13.5951 * kilogram / liter = Hg = Hg_0C = Hg_32F = conventional_mercury
