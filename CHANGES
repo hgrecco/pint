@@ -35,6 +35,7 @@ Pint Changelog
   (Issue #1072, Thanks Tom Nicholas)
 - Replace pkg_resources.version to importlib.metadata.version. (Issue #1083)
 - Fix typo in docs for wraps example with optional arguments. (Issue #1088)
+- Add momentum as a dimension
 
 0.11 (2020-02-19)
 -----------------
