@@ -693,10 +693,10 @@ class TestIssues(QuantityTestCase):
         assert isinstance(q1, ureg.Quantity)
         assert len(q0) == len(q1) == 0
 
-    def test_issue1062(self):
+    def test_issue1062_issue1097(self):
         # Must not be used by any other tests
         assert "nanometer" not in ureg._units
-        for i in range(2):
+        for i in range(5):
             ctx = Context.from_lines(["@context _", "cal = 4 J"])
             with ureg.context("sp", ctx):
                 q = ureg.Quantity(1, "nm")
