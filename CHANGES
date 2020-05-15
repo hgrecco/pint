@@ -22,7 +22,8 @@ Pint Changelog
 - Fixed issue where quantities with a very large magnitude would throw an IndexError 
   when using to_compact()
 - Fixed crash when a Unit with prefix is declared for the first time while a Context
-  containing unit redefinitions is active (Issue #1062, Thanks Guido Imperiale)
+  containing unit redefinitions is active
+  (Issues #1062 and #1097, Thanks Guido Imperiale)
 - New implementation of 'Lx' String Format Type Option
   The old implementation treated 'Lx' as 'S' as produced by 'uncertainties'
   package, but that is not fully compatible with SIunitx. The new code protects
@@ -36,6 +37,7 @@ Pint Changelog
 - Replace pkg_resources.version to importlib.metadata.version. (Issue #1083)
 - Fix typo in docs for wraps example with optional arguments. (Issue #1088)
 - Add momentum as a dimension
+
 
 0.11 (2020-02-19)
 -----------------
@@ -76,6 +78,7 @@ Pint Changelog
 - Fixed several Sphinx issues. Fixed intersphinx hooks to all classes missing.
   (Issue #881, Thanks Guido Imperiale)
 - Fixed __array__ signature to match numpy docs (Issue #974, Thanks Ryan May)
+
 
 0.10 (2020-01-05)
 -----------------
@@ -353,6 +356,7 @@ Pint Changelog
   (Issue #357, thanks noahl)
 - Allow changing shape for Quantities with numpy arrays.
   (Issue #344, thanks tecki)
+
 
 0.7.2 (2016-03-02)
 ------------------

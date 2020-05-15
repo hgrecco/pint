@@ -1081,11 +1081,11 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
 
         cache = self._cache.parse_unit
-        if as_delta:
-            try:
-                return cache[input_string]
-            except KeyError:
-                pass
+        # Issue #1097: it is possible, when a unit was defined while a different context
+        # was active, that the unit is in self._cache.parse_unit but not in self._units.
+        # If this is the case, force self._units to be repopulated.
+        if as_delta and input_string in cache and input_string in self._units:
+            return cache[input_string]
 
         if not input_string:
             return self.UnitsContainer()
