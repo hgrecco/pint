@@ -37,6 +37,7 @@ Pint Changelog
 - Replace pkg_resources.version to importlib.metadata.version. (Issue #1083)
 - Fix typo in docs for wraps example with optional arguments. (Issue #1088)
 - Add momentum as a dimension
+- Fixed a bug where unit exponents were only partially superscripted in HTML format
 
 
 0.11 (2020-02-19)
