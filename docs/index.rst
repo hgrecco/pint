@@ -117,6 +117,7 @@ User Guide
     tutorial
     numpy
     nonmult
+    log_units
     wrapping
     plotting
     serialization
