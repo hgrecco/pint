@@ -62,8 +62,8 @@ def _pretty_fmt_exponent(num):
     str
 
     """
-    # TODO: Will not work for decimals
-    ret = f"{num:n}".replace("-", "⁻")
+    # unicode dot operator (U+22C5) looks like a superscript decimal
+    ret = f"{num:n}".replace("-", "⁻").replace(".", "\u22C5")
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
@@ -95,7 +95,7 @@ _FORMATS = {
         "single_denominator": True,
         "product_fmt": r" ",
         "division_fmt": r"{}/{}",
-        "power_fmt": "{}^{}",
+        "power_fmt": "{{{}}}^{{{}}}",  # braces superscript whole exponent
         "parentheses_fmt": r"({})",
     },
     "": {  # Default format.
