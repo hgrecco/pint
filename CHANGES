@@ -1,15 +1,9 @@
 Pint Changelog
 ==============
 
-0.12 (unreleased)
+0.13 (unreleased)
 -----------------
 
-- Add full support for Decimal and Fraction at the registry level.
-  **BREAKING CHANGE**: 
-  `use_decimal` is deprecated. Use `non_int_type=Decimal` when instantiating
-  the registry.
-- Fixed bug where numpy.pad didn't work without specifying constant_values or
-  end_values (Issue #1026)
 - Reinstated support for pickle protocol 0 and 1, which is required by pytables
   (Issue #1036, Thanks Guido Imperiale)
 - Fixed bug with multiplication of Quantity by dict (Issue #1032)
@@ -19,7 +13,7 @@ Pint Changelog
   (Issue #1050, Thanks Guido Imperiale)
 - NaN is now treated the same as zero in addition, subtraction, equality, and
   disequality (Issue #1051, Thanks Guido Imperiale)
-- Fixed issue where quantities with a very large magnitude would throw an IndexError 
+- Fixed issue where quantities with a very large magnitude would throw an IndexError
   when using to_compact()
 - Fixed crash when a Unit with prefix is declared for the first time while a Context
   containing unit redefinitions is active
@@ -37,6 +31,17 @@ Pint Changelog
 - Replace pkg_resources.version to importlib.metadata.version. (Issue #1083)
 - Fix typo in docs for wraps example with optional arguments. (Issue #1088)
 - Add momentum as a dimension
+
+
+0.12 (2020-05-29)
+-----------------
+
+- Add full support for Decimal and Fraction at the registry level.
+  **BREAKING CHANGE**: 
+  `use_decimal` is deprecated. Use `non_int_type=Decimal` when instantiating
+  the registry.
+- Fixed bug where numpy.pad didn't work without specifying constant_values or
+  end_values (Issue #1026)
 
 
 0.11 (2020-02-19)
