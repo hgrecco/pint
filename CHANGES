@@ -33,6 +33,7 @@ Pint Changelog
 - Add momentum as a dimension
 - Multiple contexts containing the same redefinition can now be stacked
   (Issue #1108, Thanks Guido Imperiale)
+- Fixed a bug where unit exponents were only partially superscripted in HTML format
 
 
 0.12 (2020-05-29)
