@@ -702,6 +702,17 @@ class TestIssues(QuantityTestCase):
                 q = ureg.Quantity(1, "nm")
                 q.to("J")
 
+    def test_issue1086(self):
+        # units with prefixes should correctly test as 'in' the registry
+        assert "bits" in ureg
+        assert "gigabits" in ureg
+        assert "meters" in ureg
+        assert "kilometers" in ureg
+        # unknown or incorrect units should test as 'not in' the registry
+        assert "magicbits" not in ureg
+        assert "unknownmeters" not in ureg
+        assert "gigatrees" not in ureg
+
     def test_issue1112(self):
         ureg = UnitRegistry(
             """

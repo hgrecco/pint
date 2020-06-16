@@ -289,6 +289,15 @@ class BaseRegistry(metaclass=RegistryMeta):
         )
         return self.parse_expression(item)
 
+    def __contains__(self, item):
+        """Support checking prefixed units with the `in` operator
+        """
+        try:
+            self.__getattr__(item)
+            return True
+        except UndefinedUnitError:
+            return False
+
     def __dir__(self):
         #: Calling dir(registry) gives all units, methods, and attributes.
         #: Also used for autocompletion in IPython.
