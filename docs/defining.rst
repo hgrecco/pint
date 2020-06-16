@@ -152,3 +152,17 @@ leading underscore:
    >>> ureg.define('mpg = 1 * mile / gallon')
    >>> fuel_ec_europe = 5 * ureg.L / ureg._100km
    >>> fuel_ec_us = (1 / fuel_ec_europe).to(ureg.mpg)
+
+
+Checking if a unit is already defined
+-------------------------------------
+
+The python ``in`` keyword works as expected with unit registries. Check if
+a unit has been defined with the following:
+
+.. doctest::
+
+   >>> 'MHz' in ureg
+   True
+   >>> 'gigatrees' in ureg
+   False

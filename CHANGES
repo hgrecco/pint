@@ -36,13 +36,14 @@ Pint Changelog
   (Issue #1108, Thanks Guido Imperiale)
 - Fixed crash when some specific combinations of contexts were enabled
   (Issue #1112, Thanks Guido Imperiale)
+- Added support for checking prefixed units using `in` keyword (Issue #1086)
 
 
 0.12 (2020-05-29)
 -----------------
 
 - Add full support for Decimal and Fraction at the registry level.
-  **BREAKING CHANGE**: 
+  **BREAKING CHANGE**:
   `use_decimal` is deprecated. Use `non_int_type=Decimal` when instantiating
   the registry.
 - Fixed bug where numpy.pad didn't work without specifying constant_values or
