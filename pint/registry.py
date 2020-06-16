@@ -1546,7 +1546,7 @@ class ContextRegistry(BaseRegistry):
         on_redefinition_backup = self._on_redefinition
         self._on_redefinition = "ignore"
         try:
-            for ctx in self._active_ctx.contexts:
+            for ctx in reversed(self._active_ctx.contexts):
                 for definition in ctx.redefinitions:
                     self._redefine(definition)
         finally:
