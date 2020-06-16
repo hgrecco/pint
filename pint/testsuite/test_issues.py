@@ -702,6 +702,31 @@ class TestIssues(QuantityTestCase):
                 q = ureg.Quantity(1, "nm")
                 q.to("J")
 
+    def test_issue1112(self):
+        ureg = UnitRegistry(
+            """
+            m = [length]
+            g = [mass]
+            s = [time]
+
+            ft = 0.305 m
+            lb = 454 g
+
+            @context c1
+                [time]->[length] : value * 10 m/s
+            @end
+            @context c2
+                ft = 0.3 m
+            @end
+            @context c3
+                lb = 500 g
+            @end
+            """.splitlines()
+        )
+        ureg.enable_contexts("c1")
+        ureg.enable_contexts("c2")
+        ureg.enable_contexts("c3")
+
 
 if np is not None:
 

@@ -34,6 +34,8 @@ Pint Changelog
 - Fixed a bug where unit exponents were only partially superscripted in HTML format
 - Multiple contexts containing the same redefinition can now be stacked
   (Issue #1108, Thanks Guido Imperiale)
+- Fixed crash when some specific combinations of contexts were enabled
+  (Issue #1112, Thanks Guido Imperiale)
 
 
 0.12 (2020-05-29)

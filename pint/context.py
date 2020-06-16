@@ -327,8 +327,8 @@ class ContextChain(ChainMap):
 
     @property
     def defaults(self):
-        if self:
-            return next(iter(self.maps[0].values())).defaults
+        for ctx in self.values():
+            return ctx.defaults
         return {}
 
     @property
