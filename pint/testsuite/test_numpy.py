@@ -291,6 +291,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         axis = 0
         where = [[True, False], [True, True]]
 
+        self.assertQuantityEqual(np.prod(self.q), 24 * self.ureg.m ** 4)
         self.assertQuantityEqual(np.prod(self.q, axis=axis), [3, 8] * self.ureg.m ** 2)
         self.assertQuantityEqual(np.prod(self.q, where=where), 12 * self.ureg.m ** 3)
 
