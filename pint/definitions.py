@@ -20,17 +20,17 @@ class PreprocessedDefinition(
 ):
     """Splits a definition into the constitutive parts.
 
-    A definition is given as a string with equalities in a single line.
+    A definition is given as a string with equalities in a single line::
 
         ---------------> rhs
-    a = b = c = d = e
-    |   |   |   -------> aliases (optional)
-    |   |   |
-    |   |   -----------> symbol (use "_" to
-    |   |
-    |   ---------------> value
-    |
-    -------------------> name
+        a = b = c = d = e
+        |   |   |   -------> aliases (optional)
+        |   |   |
+        |   |   -----------> symbol (use "_" for no symbol)
+        |   |
+        |   ---------------> value
+        |
+        -------------------> name
 
     Attributes
     ----------
@@ -175,11 +175,12 @@ class Definition:
 
 
 class PrefixDefinition(Definition):
-    """Definition of a prefix.
+    """Definition of a prefix::
 
-    <prefix>- = <amount> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+        <prefix>- = <amount> [= <symbol>] [= <alias>] [ = <alias> ] [...]
 
-    Example:
+    Example::
+
         deca- =  1e+1  = da- = deka-
     """
 
@@ -205,11 +206,12 @@ class PrefixDefinition(Definition):
 
 
 class UnitDefinition(Definition):
-    """Definition of a unit.
+    """Definition of a unit::
 
-    <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+        <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
 
-    Example:
+    Example::
+
         millennium = 1e3 * year = _ = millennia
 
     Parameters
@@ -279,11 +281,12 @@ class UnitDefinition(Definition):
 
 
 class DimensionDefinition(Definition):
-    """Definition of a dimension.
+    """Definition of a dimension::
 
-    [dimension name] = <relation to other dimensions>
+        [dimension name] = <relation to other dimensions>
 
-    Example:
+    Example::
+
         [density] = [mass] / [volume]
     """
 
@@ -323,11 +326,12 @@ class DimensionDefinition(Definition):
 
 
 class AliasDefinition(Definition):
-    """Additional alias(es) for an already existing unit.
+    """Additional alias(es) for an already existing unit::
 
-    @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
+        @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
 
-    Example:
+    Example::
+
         @alias meter = my_meter
     """
 

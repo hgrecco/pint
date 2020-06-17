@@ -835,6 +835,38 @@ class TestContextRedefinitions(QuantityTestCase):
             with ureg.context("mult_to_nonmult"):
                 self.assertAlmostEqual(k.to("bogodegrees").magnitude, (100 - 123) / 5)
 
+    def test_stack_contexts(self):
+        ureg = UnitRegistry(
+            """
+            a = [dim1]
+            b = 1/2 a
+            c = 1/3 a
+            d = [dim2]
+
+            @context c1
+                b = 1/4 a
+                c = 1/6 a
+                [dim1]->[dim2]: value * 2 d/a
+            @end
+            @context c2
+                b = 1/5 a
+                [dim1]->[dim2]: value * 3 d/a
+            @end
+            """.splitlines()
+        )
+        q = ureg.Quantity(1, "a")
+        assert q.to("b").magnitude == 2
+        assert q.to("c").magnitude == 3
+        assert q.to("b", "c1").magnitude == 4
+        assert q.to("c", "c1").magnitude == 6
+        assert q.to("d", "c1").magnitude == 2
+        assert q.to("b", "c2").magnitude == 5
+        assert q.to("c", "c2").magnitude == 3
+        assert q.to("d", "c2").magnitude == 3
+        assert q.to("b", "c1", "c2").magnitude == 5  # c2 takes precedence
+        assert q.to("c", "c1", "c2").magnitude == 6  # c2 doesn't change it, so use c1
+        assert q.to("d", "c1", "c2").magnitude == 3  # c2 takes precedence
+
     def test_err_to_base_unit(self):
         with self.assertRaises(DefinitionSyntaxError) as e:
             Context.from_lines(["@context c", "x = [d]"])

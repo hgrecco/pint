@@ -17,8 +17,9 @@ import numbers
 import operator
 import re
 import warnings
+from typing import List
 
-from pkg_resources.extern.packaging import version
+from packaging import version
 
 from .compat import (
     NUMPY_VER,
@@ -29,6 +30,7 @@ from .compat import (
     is_upcast_type,
     ndarray,
     np,
+    zero_or_nan,
 )
 from .definitions import UnitDefinition
 from .errors import (
@@ -72,9 +74,12 @@ class _Exception(Exception):  # pragma: no cover
 def reduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
-        if result._REGISTRY.auto_reduce_dimensions:
-            return result.to_reduced_units()
-        else:
+        try:
+            if result._REGISTRY.auto_reduce_dimensions:
+                return result.to_reduced_units()
+            else:
+                return result
+        except AttributeError:
             return result
 
     return wrapped
@@ -83,8 +88,11 @@ def reduce_dimensions(f):
 def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
-        if result._REGISTRY.auto_reduce_dimensions:
-            result.ito_reduced_units()
+        try:
+            if result._REGISTRY.auto_reduce_dimensions:
+                result.ito_reduced_units()
+        except AttributeError:
+            pass
         return result
 
     return wrapped
@@ -99,8 +107,7 @@ def check_implemented(f):
         # and expects Quantity * array[Quantity] should return NotImplemented
         elif isinstance(other, list) and other and isinstance(other[0], type(self)):
             return NotImplemented
-        result = f(self, *args, **kwargs)
-        return result
+        return f(self, *args, **kwargs)
 
     return wrapped
 
@@ -253,7 +260,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self):
-        return f"<Quantity({self._magnitude}, '{self._units}')>"
+        if isinstance(self._magnitude, float):
+            return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
+        else:
+            return f"<Quantity({self._magnitude}, '{self._units}')>"
 
     def __hash__(self):
         self_base = self.to_base_units()
@@ -741,7 +751,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             power = int(math.ceil(math.log10(abs(magnitude)) / unit_power / 3)) * 3
 
-        prefix = SI_bases[bisect.bisect_left(SI_powers, power)]
+        index = bisect.bisect_left(SI_powers, power)
+
+        if index >= len(SI_bases):
+            index = -1
+
+        prefix = SI_bases[index]
 
         new_unit_str = prefix + unit_str
         new_unit_container = q_base._units.rename(unit_str, new_unit_str)
@@ -786,7 +801,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 raise
             except TypeError:
                 return NotImplemented
-            if eq(other, 0, True):
+            if zero_or_nan(other, True):
                 # If the other value is 0 (but not Quantity 0)
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same
@@ -887,13 +902,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             object to be added to / subtracted from self
         op : function
             operator function (e.g. operator.add, operator.isub)
-
-
         """
         if not self._check(other):
             # other not from same Registry or not a Quantity
-            if eq(other, 0, True):
-                # If the other value is 0 (but not Quantity 0)
+            if zero_or_nan(other, True):
+                # If the other value is 0 or NaN (but not a Quantity)
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same
                 # value to enforce any shape checking and type casting due to
@@ -1446,9 +1459,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
         if not isinstance(other, Quantity):
-            if eq(other, 0, True):
-                # Handle the special case in which we compare to zero
-                # (or an array of zeros)
+            if zero_or_nan(other, True):
+                # Handle the special case in which we compare to zero or NaN
+                # (or an array of zeros or NaNs)
                 if self._is_multiplicative:
                     # compare magnitude
                     return eq(self._magnitude, other, False)
@@ -1493,9 +1506,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 return op(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()), other
                 )
-            elif eq(other, 0, True):
-                # Handle the special case in which we compare to zero
-                # (or an array of zeros)
+            elif zero_or_nan(other, True):
+                # Handle the special case in which we compare to zero or NaN
+                # (or an array of zeros or NaNs)
                 if self._is_multiplicative:
                     # compare magnitude
                     return op(self._magnitude, other)
@@ -1792,38 +1805,46 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
 
+    def _get_unit_definition(self, unit: str) -> UnitDefinition:
+        try:
+            return self._REGISTRY._units[unit]
+        except KeyError:
+            # pint#1062: The __init__ method of this object added the unit to
+            # UnitRegistry._units (e.g. units with prefix are added on the fly the
+            # first time they're used) but the key was later removed, e.g. because
+            # a Context with unit redefinitions was deactivated.
+            self._REGISTRY.parse_units(unit)
+            return self._REGISTRY._units[unit]
+
     # methods/properties that help for math operations with offset units
     @property
-    def _is_multiplicative(self):
+    def _is_multiplicative(self) -> bool:
         """Check if the Quantity object has only multiplicative units."""
         return not self._get_non_multiplicative_units()
 
-    def _get_non_multiplicative_units(self):
+    def _get_non_multiplicative_units(self) -> List[str]:
         """Return a list of the of non-multiplicative units of the Quantity object."""
-        offset_units = [
+        return [
             unit
-            for unit in self._units.keys()
-            if not self._REGISTRY._units[unit].is_multiplicative
+            for unit in self._units
+            if not self._get_unit_definition(unit).is_multiplicative
         ]
-        return offset_units
 
-    def _get_delta_units(self):
+    def _get_delta_units(self) -> List[str]:
         """Return list of delta units ot the Quantity object."""
-        delta_units = [u for u in self._units.keys() if u.startswith("delta_")]
-        return delta_units
+        return [u for u in self._units if u.startswith("delta_")]
 
-    def _has_compatible_delta(self, unit):
+    def _has_compatible_delta(self, unit: str) -> bool:
         """"Check if Quantity object has a delta_unit that is compatible with unit
         """
         deltas = self._get_delta_units()
         if "delta_" + unit in deltas:
             return True
-        else:  # Look for delta units with same dimension as the offset unit
-            offset_unit_dim = self._REGISTRY._units[unit].reference
-            for d in deltas:
-                if self._REGISTRY._units[d].reference == offset_unit_dim:
-                    return True
-        return False
+        # Look for delta units with same dimension as the offset unit
+        offset_unit_dim = self._get_unit_definition(unit).reference
+        return any(
+            self._get_unit_definition(d).reference == offset_unit_dim for d in deltas
+        )
 
     def _ok_for_muldiv(self, no_offset_units=None):
         """Checks if Quantity object can be multiplied or divided

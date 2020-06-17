@@ -10,15 +10,10 @@ Converting Quantities
 Pint has the concept of Unit Registry, an object within which units are defined
 and handled. You start by creating your registry:
 
+.. doctest::
+
    >>> from pint import UnitRegistry
    >>> ureg = UnitRegistry()
-
-.. testsetup:: *
-
-   from pint import UnitRegistry
-   ureg = UnitRegistry()
-   Q_ = ureg.Quantity
-
 
 If no parameter is given to the constructor, the unit registry is populated
 with the default list of units and prefixes.
@@ -62,7 +57,7 @@ convert quantities to the unit of choice:
 .. doctest::
 
    >>> speed.to(ureg.inch / ureg.minute )
-   <Quantity(7086.614173228345, 'inch / minute')>
+   <Quantity(7086.61417, 'inch / minute')>
 
 This method returns a new object leaving the original intact as can be seen by:
 
@@ -78,9 +73,9 @@ use the `ito` method:
 
    >>> speed.ito(ureg.inch / ureg.minute )
    >>> speed
-   <Quantity(7086.614173228345, 'inch / minute')>
+   <Quantity(7086.61417, 'inch / minute')>
    >>> print(speed)
-   7086.614173228345 inch / minute
+   7086.6141... inch / minute
 
 If you ask Pint to perform an invalid conversion:
 
@@ -95,6 +90,7 @@ Sometimes, the magnitude of the quantity will be very large or very small.
 The method 'to_compact' can adjust the units to make the quantity more
 human-readable.
 
+
 .. doctest::
 
    >>> wavelength = 1550 * ureg.nm
@@ -102,7 +98,7 @@ human-readable.
    >>> print(frequency)
    193414489032258.03 hertz
    >>> print(frequency.to_compact())
-   193.41448903225802 terahertz
+   193.414489032... terahertz
 
 There are also methods 'to_base_units' and 'ito_base_units' which automatically
 convert to the reference units with the correct dimensionality:
@@ -113,12 +109,12 @@ convert to the reference units with the correct dimensionality:
    >>> print(height)
    5.75 foot
    >>> print(height.to_base_units())
-   1.7526 meter
+   1.752... meter
    >>> print(height)
    5.75 foot
    >>> height.ito_base_units()
    >>> print(height)
-   1.7526 meter
+   1.752... meter
 
 There are also methods 'to_reduced_units' and 'ito_reduced_units' which perform
 a simplified dimensional reduction, combining units with the same dimensionality
@@ -130,11 +126,11 @@ but otherwise keeping your unit definitions intact.
    >>> volume = 10*ureg.cc
    >>> mass = density*volume
    >>> print(mass)
-   14.0 cc * gram / centimeter ** 3
+   14.0 cubic_centimeter * gram / centimeter ** 3
    >>> print(mass.to_reduced_units())
    14.0 gram
    >>> print(mass)
-   14.0 cc * gram / centimeter ** 3
+   14.0 cubic_centimeter * gram / centimeter ** 3
    >>> mass.ito_reduced_units()
    >>> print(mass)
    14.0 gram
@@ -279,7 +275,7 @@ Strings containing values can be parsed using the ``ureg.parse_pattern`` functio
    >>> input_string = '10 feet 10 inches'
    >>> pattern = '{feet} feet {inch} inches'
    >>> ureg.parse_pattern(input_string, pattern)
-   [10.0 <Unit('foot')>, 10.0 <Unit('inch')>]
+   [<Quantity(10.0, 'foot')>, <Quantity(10.0, 'inch')>]
 
 To search for multiple matches, set the ``many`` parameter to ``True``. The following example also demonstrates how the parser is able to find matches in amongst filler characters:
 
@@ -288,7 +284,7 @@ To search for multiple matches, set the ``many`` parameter to ``True``. The foll
    >>> input_string = '10 feet - 20 feet ! 30 feet.'
    >>> pattern = '{feet} feet'
    >>> ureg.parse_pattern(input_string, pattern, many=True)
-   [[10.0 <Unit('foot')>], [20.0 <Unit('foot')>], [30.0 <Unit('foot')>]]
+   [[<Quantity(10.0, 'foot')>], [<Quantity(20.0, 'foot')>], [<Quantity(30.0, 'foot')>]]
 
 The full power of regex can also be employed when writing patterns:
 
@@ -297,7 +293,7 @@ The full power of regex can also be employed when writing patterns:
    >>> input_string = "10` - 20 feet ! 30 ft."
    >>> pattern = r"{feet}(`| feet| ft)"
    >>> ureg.parse_pattern(input_string, pattern, many=True)
-   [[10.0 <Unit('foot')>], [20.0 <Unit('foot')>], [30.0 <Unit('foot')>]]
+   [[<Quantity(10.0, 'foot')>], [<Quantity(20.0, 'foot')>], [<Quantity(30.0, 'foot')>]]
 
 *Note that the curly brackets (``{}``) are converted to a float-matching pattern by the parser.*
 
@@ -328,6 +324,7 @@ Pint supports float formatting for numpy arrays as well:
 
 .. doctest::
 
+   >>> import numpy as np
    >>> accel = np.array([-1.1, 1e-6, 1.2505, 1.3]) * ureg['meter/second**2']
    >>> # float formatting numpy arrays
    >>> print('The array is {:.2f}'.format(accel))
@@ -349,8 +346,8 @@ Pint also supports 'f-strings'_ from python>=3.6 :
    The str is 1.3 m / s ** 2
    >>> print(f'The str is {accel:~.3e}')
    The str is 1.300e+00 m / s ** 2
-   >>> print(f'The str is {accel:~H}')
-   The str is 1.3 m/s²
+   >>> print(f'The str is {accel:~H}')      # HTML format (displays well in Jupyter)
+   The str is \[1.3\ m/{s}^{2}\]
 
 But Pint also extends the standard formatting capabilities for unicode and
 LaTeX representations:
@@ -364,9 +361,9 @@ LaTeX representations:
    >>> # Latex print
    >>> 'The latex representation is {:L}'.format(accel)
    'The latex representation is 1.3\\ \\frac{\\mathrm{meter}}{\\mathrm{second}^{2}}'
-   >>> # HTML print
+   >>> # HTML print - good for Jupyter notebooks
    >>> 'The HTML representation is {:H}'.format(accel)
-   'The HTML representation is 1.3 meter/second<sup>2</sup>'
+   'The HTML representation is \\[1.3\\ meter/{second}^{2}\\]'
 
 If you want to use abbreviated unit names, prefix the specification with `~`:
 
@@ -388,7 +385,8 @@ The same is true for latex (`L`) and HTML (`H`) specs.
 The formatting specs (ie 'L', 'H', 'P') can be used with Python string 'formatting
 syntax'_ for custom float representations. For example, scientific notation:
 
-..doctest::
+.. doctest::
+
    >>> 'Scientific notation: {:.3e~L}'.format(accel)
    'Scientific notation: 1.300\\times 10^{0}\\ \\frac{\\mathrm{m}}{\\mathrm{s}^{2}}'
 
@@ -400,11 +398,15 @@ Pint also supports the LaTeX siunitx package:
    >>> # siunitx Latex print
    >>> print('The siunitx representation is {:Lx}'.format(accel))
    The siunitx representation is \SI[]{1.3}{\meter\per\second\squared}
+   >>> accel = accel.plus_minus(0.2)
+   >>> print('The siunitx representation is {:Lx}'.format(accel))
+   The siunitx representation is \SI{1.30 +- 0.20}{\meter\per\second\squared}
 
 Additionally, you can specify a default format specification:
 
 .. doctest::
 
+   >>> accel = 1.3 * ureg['meter/second**2']
    >>> 'The acceleration is {}'.format(accel)
    'The acceleration is 1.3 meter / second ** 2'
    >>> ureg.default_format = 'P'
@@ -421,6 +423,8 @@ Finally, if Babel_ is installed you can translate unit names to any language
 
 You can also specify the format locale at the registry level either at creation:
 
+.. doctest::
+
     >>> ureg = UnitRegistry(fmt_locale='fr_FR')
 
 or later:
@@ -433,6 +437,7 @@ and by doing that, string formatting is now localized:
 
 .. doctest::
 
+    >>> accel = 1.3 * ureg['meter/second**2']
     >>> str(accel)
     '1.3 mètre par seconde²'
     >>> "%s" % accel
@@ -447,14 +452,18 @@ Using Pint in your projects
 If you use Pint in multiple modules within your Python package, you normally
 want to avoid creating multiple instances of the unit registry.
 The best way to do this is by instantiating the registry in a single place. For
-example, you can add the following code to your package `__init__.py`::
+example, you can add the following code to your package `__init__.py`
+
+.. code-block::
 
    from pint import UnitRegistry
    ureg = UnitRegistry()
    Q_ = ureg.Quantity
 
 
-Then in `yourmodule.py` the code would be::
+Then in `yourmodule.py` the code would be
+
+.. code-block::
 
    from . import ureg, Q_
 
@@ -462,7 +471,9 @@ Then in `yourmodule.py` the code would be::
    my_speed = Q_(20, 'm/s')
 
 If you are pickling and unplicking Quantities within your project, you should
-also define the registry as the application registry::
+also define the registry as the application registry
+
+.. code-block::
 
    from pint import UnitRegistry, set_application_registry
    ureg = UnitRegistry()

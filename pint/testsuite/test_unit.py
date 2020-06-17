@@ -42,13 +42,13 @@ class TestUnit(QuantityTestCase):
                 r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
             ("{:P}", "kilogram·meter²/second"),
-            ("{:H}", r"\[kilogram\ meter^2/second\]"),
+            ("{:H}", r"\[kilogram\ {meter}^{2}/second\]"),
             ("{:C}", "kilogram*meter**2/second"),
             ("{:Lx}", r"\si[]{\kilo\gram\meter\squared\per\second}"),
             ("{:~}", "kg * m ** 2 / s"),
             ("{:L~}", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
             ("{:P~}", "kg·m²/s"),
-            ("{:H~}", r"\[kg\ m^2/s\]"),
+            ("{:H~}", r"\[kg\ {m}^{2}/s\]"),
             ("{:C~}", "kg*m**2/s"),
         ):
             with self.subTest(spec):
@@ -63,12 +63,12 @@ class TestUnit(QuantityTestCase):
                 r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
             ("P", "kilogram·meter²/second"),
-            ("H", r"\[kilogram\ meter^2/second\]"),
+            ("H", r"\[kilogram\ {meter}^{2}/second\]"),
             ("C", "kilogram*meter**2/second"),
             ("~", "kg * m ** 2 / s"),
             ("L~", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
             ("P~", "kg·m²/s"),
-            ("H~", r"\[kg\ m^2/s\]"),
+            ("H~", r"\[kg\ {m}^{2}/s\]"),
             ("C~", "kg*m**2/s"),
         ):
             with self.subTest(spec):
@@ -104,7 +104,7 @@ class TestUnit(QuantityTestCase):
 
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        self.assertEqual(x._repr_html_(), r"\[kilogram\ meter^2/second\]")
+        self.assertEqual(x._repr_html_(), r"\[kilogram\ {meter}^{2}/second\]")
         self.assertEqual(
             x._repr_latex_(),
             r"$\frac{\mathrm{kilogram} \cdot " r"\mathrm{meter}^{2}}{\mathrm{second}}$",
@@ -112,7 +112,7 @@ class TestUnit(QuantityTestCase):
         x._repr_pretty_(Pretty, False)
         self.assertEqual("".join(alltext), "kilogram·meter²/second")
         ureg.default_format = "~"
-        self.assertEqual(x._repr_html_(), r"\[kg\ m^2/s\]")
+        self.assertEqual(x._repr_html_(), r"\[kg\ {m}^{2}/s\]")
         self.assertEqual(
             x._repr_latex_(), r"$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$"
         )
@@ -239,6 +239,10 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(s2, s3)
         self.assertNotEqual(s1, s3)
         self.assertEqual(ureg.default_format, "~")
+
+    def test_iterate(self):
+        ureg = UnitRegistry()
+        self.assertTrue("meter" in list(ureg))
 
     def test_parse_number(self):
         self.assertEqual(self.ureg.parse_expression("pi"), math.pi)

@@ -177,26 +177,6 @@ class BaseRegistry(metaclass=RegistryMeta):
     #: Babel.Locale instance or None
     fmt_locale = None
 
-    #: List to be used in addition of units when dir(registry) is called.
-    #: Also used for autocompletion in IPython.
-    _dir = [
-        "Quantity",
-        "Unit",
-        "UnitsContainer",
-        "Measurement",
-        "define",
-        "load_definitions",
-        "get_name",
-        "get_symbol",
-        "get_dimensionality",
-        "get_base_units",
-        "get_root_units",
-        "parse_unit_name",
-        "parse_units",
-        "parse_expression",
-        "convert",
-    ]
-
     def __init__(
         self,
         filename="",
@@ -309,8 +289,28 @@ class BaseRegistry(metaclass=RegistryMeta):
         )
         return self.parse_expression(item)
 
+    def __contains__(self, item):
+        """Support checking prefixed units with the `in` operator
+        """
+        try:
+            self.__getattr__(item)
+            return True
+        except UndefinedUnitError:
+            return False
+
     def __dir__(self):
-        return list(self._units.keys()) + self._dir
+        #: Calling dir(registry) gives all units, methods, and attributes.
+        #: Also used for autocompletion in IPython.
+        return list(self._units.keys()) + list(object.__dir__(self))
+
+    def __iter__(self):
+        """Allows for listing all units in registry with `list(ureg)`.
+
+        Returns
+        -------
+        Iterator over names of all units in registry, ordered alphabetically.
+        """
+        return iter(sorted(self._units.keys()))
 
     def set_fmt_locale(self, loc):
         """Change the locale used by default by `format_babel`.
@@ -1090,11 +1090,11 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
 
         cache = self._cache.parse_unit
-        if as_delta:
-            try:
-                return cache[input_string]
-            except KeyError:
-                pass
+        # Issue #1097: it is possible, when a unit was defined while a different context
+        # was active, that the unit is in self._cache.parse_unit but not in self._units.
+        # If this is the case, force self._units to be repopulated.
+        if as_delta and input_string in cache and input_string in self._units:
+            return cache[input_string]
 
         if not input_string:
             return self.UnitsContainer()
@@ -1126,9 +1126,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return ret
 
-    def _eval_token(
-        self, token, case_sensitive=True, use_decimal=False, **values,
-    ):
+    def _eval_token(self, token, case_sensitive=True, use_decimal=False, **values):
 
         # TODO: remove this code when use_decimal is deprecated
         if use_decimal:
@@ -1183,7 +1181,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
 
         if not input_string:
-            return self.Quantity(1)
+            return [] if many else None
 
         # Parse string
         pattern = pattern_to_regex(pattern)
@@ -1214,7 +1212,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return results
 
     def parse_expression(
-        self, input_string, case_sensitive=True, use_decimal=False, **values,
+        self, input_string, case_sensitive=True, use_decimal=False, **values
     ):
         """Parse a mathematical expression including units and return a quantity object.
 
@@ -1557,7 +1555,7 @@ class ContextRegistry(BaseRegistry):
         on_redefinition_backup = self._on_redefinition
         self._on_redefinition = "ignore"
         try:
-            for ctx in self._active_ctx.contexts:
+            for ctx in reversed(self._active_ctx.contexts):
                 for definition in ctx.redefinitions:
                     self._redefine(definition)
         finally:
@@ -1677,12 +1675,16 @@ class ContextRegistry(BaseRegistry):
 
         Examples
         --------
-        Context can be called by their name::
+        Context can be called by their name:
 
+          >>> import pint
+          >>> ureg = pint.UnitRegistry()
+          >>> ureg.add_context(pint.Context('one'))
+          >>> ureg.add_context(pint.Context('two'))
           >>> with ureg.context('one'):
           ...     pass
 
-        If a context has an argument, you can specify its value as a keyword argument::
+        If a context has an argument, you can specify its value as a keyword argument:
 
           >>> with ureg.context('one', n=1):
           ...     pass
@@ -1692,13 +1694,13 @@ class ContextRegistry(BaseRegistry):
           >>> with ureg.context('one', 'two', n=1):
           ...     pass
 
-        Or nested allowing you to give different values to the same keyword argument::
+        Or nested allowing you to give different values to the same keyword argument:
 
           >>> with ureg.context('one', n=1):
           ...     with ureg.context('two', n=2):
           ...         pass
 
-        A nested context inherits the defaults from the containing context::
+        A nested context inherits the defaults from the containing context:
 
           >>> with ureg.context('one', n=1):
           ...     # Here n takes the value of the outer context
@@ -1738,9 +1740,9 @@ class ContextRegistry(BaseRegistry):
 
         Example
         -------
-        >>> @ureg.with_context('sp')
-            ... def my_cool_fun(wavelenght):
-            ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
+          >>> @ureg.with_context('sp')
+          ... def my_cool_fun(wavelength):
+          ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
         """
 
         def decorator(func):

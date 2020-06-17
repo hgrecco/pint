@@ -58,9 +58,7 @@ class TestBabel(BaseTestCase):
     def test_no_registry_locale(self):
         ureg = UnitRegistry()
         distance = 24.0 * ureg.meter
-        self.assertRaises(
-            Exception, distance.format_babel,
-        )
+        self.assertRaises(Exception, distance.format_babel)
 
     @helpers.requires_babel()
     def test_str(self):

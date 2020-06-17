@@ -13,7 +13,11 @@
 
 import datetime
 
-import pkg_resources
+try:
+    from importlib.metadata import version
+except ImportError:
+    # Backport for Python < 3.8
+    from importlib_metadata import version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -60,7 +64,7 @@ author = "Hernan E. Grecco"
 # built documents.
 
 try:  # pragma: no cover
-    version = pkg_resources.get_distribution(project).version
+    version = version(project)
 except Exception:  # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown

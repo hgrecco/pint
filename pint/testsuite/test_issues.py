@@ -325,16 +325,6 @@ class TestIssues(QuantityTestCase):
         self.assertQuantityAlmostEqual(x + y, 5.1 * ureg.meter)
         self.assertQuantityAlmostEqual(z, 5.1 * ureg.meter)
 
-    @helpers.requires_numpy_previous_than("1.10")
-    def test_issue94(self):
-        v1 = np.array([5, 5]) * ureg.meter
-        v2 = 0.1 * ureg.meter
-        v3 = np.array([5, 5]) * ureg.meter
-        v3 += v2
-
-        np.testing.assert_array_equal((v1 + v2).magnitude, np.array([5.1, 5.1]))
-        np.testing.assert_array_equal(v3.magnitude, np.array([5, 5]))
-
     def test_issue104(self):
 
         x = [ureg("1 meter"), ureg("1 meter"), ureg("1 meter")]
@@ -366,40 +356,6 @@ class TestIssues(QuantityTestCase):
             with self.assertRaises(AttributeError):
                 func("METER")
             self.assertEqual(val, func("METER", False))
-
-    def test_issue121(self):
-        z, v = 0, 2.0
-        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
-
-        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
-
-    @helpers.requires_numpy18()
-    def test_issue121b(self):
-        sh = (2, 1)
-
-        z, v = 0, 2.0
-        self.assertEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertEqual(v * ureg.meter - z, v * ureg.meter)
-
-        self.assertEqual(sum([v * ureg.meter, v * ureg.meter]), 2 * v * ureg.meter)
-
-        z, v = np.zeros(sh), 2.0 * np.ones(sh)
-        self.assertQuantityEqual(z + v * ureg.meter, v * ureg.meter)
-        self.assertQuantityEqual(z - v * ureg.meter, -v * ureg.meter)
-        self.assertQuantityEqual(v * ureg.meter + z, v * ureg.meter)
-        self.assertQuantityEqual(v * ureg.meter - z, v * ureg.meter)
-
-        z, v = np.zeros((3, 1)), 2.0 * np.ones(sh)
-        for x, y in ((z, v), (z, v * ureg.meter), (v * ureg.meter, z)):
-            with self.assertRaises(ValueError):
-                x + y
-            with self.assertRaises(ValueError):
-                x - y
 
     @helpers.requires_numpy()
     def test_issue127(self):
@@ -502,6 +458,19 @@ class TestIssues(QuantityTestCase):
         q = [1, 2, 3] * ureg.dimensionless
         p = (q ** q).m
         np.testing.assert_array_equal(p, a ** a)
+
+    def test_issue507(self):
+        # leading underscore in unit works with numbers
+        ureg.define("_100km = 100 * kilometer")
+        battery_ec = 16 * ureg.kWh / ureg._100km  # noqa: F841
+        # ... but not with text
+        ureg.define("_home = 4700 * kWh / year")
+        with self.assertRaises(AttributeError):
+            home_elec_power = 1 * ureg._home  # noqa: F841
+        # ... or with *only* underscores
+        ureg.define("_ = 45 * km")
+        with self.assertRaises(AttributeError):
+            one_blank = 1 * ureg._  # noqa: F841
 
     def test_issue523(self):
         src, dst = UnitsContainer({"meter": 1}), UnitsContainer({"degF": 1})
@@ -697,28 +666,81 @@ class TestIssues(QuantityTestCase):
         with self.assertRaises(DimensionalityError):
             q.to("joule")
 
-    def test_issue507(self):
-        # leading underscore in unit works with numbers
-        ureg.define("_100km = 100 * kilometer")
-        battery_ec = 16 * ureg.kWh / ureg._100km  # noqa: F841
-        # ... but not with text
-        ureg.define("_home = 4700 * kWh / year")
-        with self.assertRaises(AttributeError):
-            home_elec_power = 1 * ureg._home  # noqa: F841
-        # ... or with *only* underscores
-        ureg.define("_ = 45 * km")
-        with self.assertRaises(AttributeError):
-            one_blank = 1 * ureg._  # noqa: F841
-
     def test_issue960(self):
         q = (1 * ureg.nanometer).to_compact("micrometer")
         assert q.units == ureg.nanometer
         assert q.magnitude == 1
 
+    def test_issue1032(self):
+        class MultiplicativeDictionary(dict):
+            def __rmul__(self, other):
+                return self.__class__(
+                    {key: value * other for key, value in self.items()}
+                )
 
-try:
+        q = 3 * ureg.s
+        d = MultiplicativeDictionary({4: 5, 6: 7})
+        assert q * d == MultiplicativeDictionary({4: 15 * ureg.s, 6: 21 * ureg.s})
+        with self.assertRaises(TypeError):
+            d * q
 
-    @pytest.mark.skipif(np is None, reason="NumPy is not available")
+    @helpers.requires_numpy()
+    def test_issue973(self):
+        """Verify that an empty array Quantity can be created through multiplication."""
+        q0 = np.array([]) * ureg.m  # by Unit
+        q1 = np.array([]) * ureg("m")  # by Quantity
+        assert isinstance(q0, ureg.Quantity)
+        assert isinstance(q1, ureg.Quantity)
+        assert len(q0) == len(q1) == 0
+
+    def test_issue1062_issue1097(self):
+        # Must not be used by any other tests
+        assert "nanometer" not in ureg._units
+        for i in range(5):
+            ctx = Context.from_lines(["@context _", "cal = 4 J"])
+            with ureg.context("sp", ctx):
+                q = ureg.Quantity(1, "nm")
+                q.to("J")
+
+    def test_issue1086(self):
+        # units with prefixes should correctly test as 'in' the registry
+        assert "bits" in ureg
+        assert "gigabits" in ureg
+        assert "meters" in ureg
+        assert "kilometers" in ureg
+        # unknown or incorrect units should test as 'not in' the registry
+        assert "magicbits" not in ureg
+        assert "unknownmeters" not in ureg
+        assert "gigatrees" not in ureg
+
+    def test_issue1112(self):
+        ureg = UnitRegistry(
+            """
+            m = [length]
+            g = [mass]
+            s = [time]
+
+            ft = 0.305 m
+            lb = 454 g
+
+            @context c1
+                [time]->[length] : value * 10 m/s
+            @end
+            @context c2
+                ft = 0.3 m
+            @end
+            @context c3
+                lb = 500 g
+            @end
+            """.splitlines()
+        )
+        ureg.enable_contexts("c1")
+        ureg.enable_contexts("c2")
+        ureg.enable_contexts("c3")
+
+
+if np is not None:
+
     @pytest.mark.parametrize(
         "callable",
         [
@@ -750,17 +772,3 @@ try:
         type_before = type(q._magnitude)
         callable(q)
         assert isinstance(q._magnitude, type_before)
-
-    @pytest.mark.skipif(np is None, reason="NumPy is not available")
-    def test_issue973():
-        """Verify that an empty array Quantity can be created through multiplication."""
-        q0 = np.array([]) * ureg.m  # by Unit
-        q1 = np.array([]) * ureg("m")  # by Quantity
-        assert isinstance(q0, ureg.Quantity)
-        assert isinstance(q1, ureg.Quantity)
-        assert len(q0) == len(q1) == 0
-
-
-except AttributeError:
-    # Calling attributes on np will fail if NumPy is not available
-    pass

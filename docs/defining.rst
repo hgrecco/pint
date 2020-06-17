@@ -112,7 +112,7 @@ Let's add a dog_year (sometimes written as dy) equivalent to 52 (human) days:
    # We create a quantity based on that unit and we convert to years.
    >>> lassie_lifespan = Q_(10, 'year')
    >>> print(lassie_lifespan.to('dog_years'))
-   70.23888438100961 dog_year
+   70.240384... dog_year
 
 Note that we have used the name `dog_years` even though we have not defined the
 plural form as an alias. Pint takes care of that, so you don't have to.
@@ -132,7 +132,7 @@ Same for aliases and derived dimensions:
 .. doctest::
 
    >>> ureg.define('@alias meter = metro = metr')
-   >>> ureg.define('[hypervolume] = [length ** 4]')
+   >>> ureg.define('[hypervolume] = [length] ** 4')
 
 
 .. warning::
@@ -152,3 +152,17 @@ leading underscore:
    >>> ureg.define('mpg = 1 * mile / gallon')
    >>> fuel_ec_europe = 5 * ureg.L / ureg._100km
    >>> fuel_ec_us = (1 / fuel_ec_europe).to(ureg.mpg)
+
+
+Checking if a unit is already defined
+-------------------------------------
+
+The python ``in`` keyword works as expected with unit registries. Check if
+a unit has been defined with the following:
+
+.. doctest::
+
+   >>> 'MHz' in ureg
+   True
+   >>> 'gigatrees' in ureg
+   False

@@ -3,3 +3,13 @@ matplotlib
 nbsphinx
 numpy
 pytest
+pandas
+git+https://github.com/hgrecco/pint-pandas.git
+jupyter_client
+ipykernel
+graphviz
+xarray
+sparse
+dask[complete]
+setuptools>=41.2
+Serialize
