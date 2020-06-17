@@ -1736,9 +1736,9 @@ class ContextRegistry(BaseRegistry):
 
         Example
         -------
-        >>> @ureg.with_context('sp')
-            ... def my_cool_fun(wavelenght):
-            ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
+          >>> @ureg.with_context('sp')
+          ... def my_cool_fun(wavelength):
+          ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
         """
 
         def decorator(func):
