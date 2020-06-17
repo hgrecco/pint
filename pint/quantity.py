@@ -260,7 +260,10 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self):
-        return f"<Quantity({self._magnitude}, '{self._units}')>"
+        if isinstance(self._magnitude, float):
+            return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
+        else:
+            return f"<Quantity({self._magnitude}, '{self._units}')>"
 
     def __hash__(self):
         self_base = self.to_base_units()
