@@ -12,3 +12,4 @@ xarray
 sparse
 dask[complete]
 setuptools>=41.2
+Serialize

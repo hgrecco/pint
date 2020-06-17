@@ -14,30 +14,24 @@ kelvin and rankine abbreviated as degF, degC, degK, and degR.
 
 For example, to convert from celsius to fahrenheit:
 
-.. testsetup::
-
-   from pint import UnitRegistry
-   ureg = UnitRegistry()
-   ureg.default_format = '.3f'
-   Q_ = ureg.Quantity
-
 .. doctest::
 
-   >>> from pint import UnitRegistry
-   >>> ureg = UnitRegistry()
-   >>> Q_ = ureg.Quantity
-   >>> home = Q_(25.4, ureg.degC)
-   >>> print(home.to('degF'))
-   77.7200004 degF
+    >>> from pint import UnitRegistry
+    >>> ureg = UnitRegistry()
+    >>> ureg.default_format = '.3f'
+    >>> Q_ = ureg.Quantity
+    >>> home = Q_(25.4, ureg.degC)
+    >>> print(home.to('degF'))
+    77.720 degree_Fahrenheit
 
 or to other kelvin or rankine:
 
 .. doctest::
 
     >>> print(home.to('kelvin'))
-    298.55 kelvin
+    298.550 kelvin
     >>> print(home.to('degR'))
-    537.39 degR
+    537.390 degree_Rankine
 
 Additionally, for every non-multiplicative temperature unit
 in the registry, there is also a *delta* counterpart to specify
@@ -48,18 +42,18 @@ is different).
 
 .. doctest::
 
-   >>> increase = 12.3 * ureg.delta_degC
-   >>> print(increase.to(ureg.kelvin))
-   12.3 kelvin
-   >>> print(increase.to(ureg.delta_degF))
-   22.14 delta_degF
+    >>> increase = 12.3 * ureg.delta_degC
+    >>> print(increase.to(ureg.kelvin))
+    12.300 kelvin
+    >>> print(increase.to(ureg.delta_degF))
+    22.140 delta_degree_Fahrenheit
 
 Subtraction of two temperatures given in offset units yields a *delta* unit:
 
 .. doctest::
 
     >>> Q_(25.4, ureg.degC) - Q_(10., ureg.degC)
-    <Quantity(15.4, 'delta_degC')>
+    <Quantity(15.4, 'delta_degree_Celsius')>
 
 You can add or subtract a quantity with *delta* unit and a quantity with
 offset unit:
@@ -67,9 +61,9 @@ offset unit:
 .. doctest::
 
     >>> Q_(25.4, ureg.degC) + Q_(10., ureg.delta_degC)
-    <Quantity(35.4, 'degC')>
+    <Quantity(35.4, 'degree_Celsius')>
     >>> Q_(25.4, ureg.degC) - Q_(10., ureg.delta_degC)
-    <Quantity(15.4, 'degC')>
+    <Quantity(15.4, 'degree_Celsius')>
 
 If you want to add a quantity with absolute unit to one with offset unit, like here
 
@@ -94,7 +88,7 @@ or convert the absolute unit to a *delta* unit:
 .. doctest::
 
     >>> Q_(10., ureg.degC) + heating_rate.to('delta_degC/min') * Q_(30, ureg.min)
-    <Quantity(25.0, 'degC')>
+    <Quantity(25.0, 'degree_Celsius')>
 
 In contrast to subtraction, the addition of quantities with offset units
 is ambiguous, e.g. for *10 degC + 100 degC* two different result are reasonable
@@ -108,7 +102,7 @@ Quantities with *delta* units are multiplicative:
 
     >>> speed = 60. * ureg.delta_degC / ureg.min
     >>> print(speed.to('delta_degC/second'))
-    1.0 delta_degC / second
+    1.000 delta_degree_Celsius / second
 
 However, multiplication, division and exponentiation of quantities with
 offset units is problematic just like addition. Pint (since version 0.6)
@@ -125,7 +119,7 @@ to be explicitly created:
         ...
     OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
     >>> Q_(25.4, ureg.degC)
-    <Quantity(25.4, 'degC')>
+    <Quantity(25.4, 'degree_Celsius')>
 
 As an alternative to raising an error, pint can be configured to work more
 relaxed via setting the UnitRegistry parameter *autoconvert_offset_to_baseunit*
@@ -139,19 +133,23 @@ to true. In this mode, pint behaves differently:
     >>> ureg = UnitRegistry(autoconvert_offset_to_baseunit = True)
     >>> T = 25.4 * ureg.degC
     >>> T
-    <Quantity(25.4, 'degC')>
+    <Quantity(25.4, 'degree_Celsius')>
 
 * Before all other multiplications, all divisions and in case of
   exponentiation [#f1]_ involving quantities with offset-units, pint
   will convert the quantities with offset units automatically to the
   corresponding base unit before performing the operation.
 
+.. doctest::
+
     >>> 1/T
-    <Quantity(0.00334952269302, '1 / kelvin')>
+    <Quantity(0.0033495..., '1 / kelvin')>
     >>> T * 10 * ureg.meter
     <Quantity(527.15, 'kelvin * meter')>
 
 You can change the behaviour at any time:
+
+.. doctest::
 
     >>> ureg.autoconvert_offset_to_baseunit = False
     >>> 1/T
@@ -165,28 +163,28 @@ is found in a multiplicative context. For example, here:
 .. doctest::
 
     >>> print(ureg.parse_units('degC/meter'))
-    delta_degC / meter
+    delta_degree_Celsius / meter
 
 but not here:
 
 .. doctest::
 
     >>> print(ureg.parse_units('degC'))
-    degC
+    degree_Celsius
 
 You can override this behaviour:
 
 .. doctest::
 
     >>> print(ureg.parse_units('degC/meter', as_delta=False))
-    degC / meter
+    degree_Celsius / meter
 
 Note that the magnitude is left unchanged:
 
 .. doctest::
 
     >>> Q_(10, 'degC/meter')
-    <Quantity(10, 'delta_degC / meter')>
+    <Quantity(10, 'delta_degree_Celsius / meter')>
 
 To define a new temperature, you need to specify the offset. For example,
 this is the definition of the celsius and fahrenheit::

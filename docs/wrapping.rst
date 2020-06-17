@@ -13,19 +13,19 @@ requires you to provide numerical values in certain units:
 
 .. testsetup:: *
 
-   import math
-   G = 9.806650
-   def pendulum_period(length):
-       return 2*math.pi*math.sqrt(length/G)
+    import math
+    G = 9.806650
+    def pendulum_period(length):
+        return 2*math.pi*math.sqrt(length/G)
 
-   def pendulum_period2(length, swing_amplitude):
-       pass
+    def pendulum_period2(length, swing_amplitude):
+        pass
 
-   def pendulum_period_maxspeed(length, swing_amplitude):
-       pass
+    def pendulum_period_maxspeed(length, swing_amplitude):
+        pass
 
-   def pendulum_period_error(length):
-       pass
+    def pendulum_period_error(length):
+        pass
 
 .. doctest::
 
@@ -47,6 +47,7 @@ You could wrap this function to use Quantities instead:
 
     >>> from pint import UnitRegistry
     >>> ureg = UnitRegistry()
+    >>> Q_ = ureg.Quantity
     >>> def mypp_caveman(length):
     ...     return pendulum_period(length.to(ureg.meter).magnitude) * ureg.second
 
@@ -55,7 +56,7 @@ and:
 .. doctest::
 
     >>> mypp_caveman(100 * ureg.centimeter)
-    <Quantity(2.0064092925890407, 'second')>
+    <Quantity(2.00640929, 'second')>
 
 Pint provides a more convenient way to do this:
 
@@ -71,7 +72,7 @@ Or in the decorator format:
     ... def mypp(length):
     ...     return pendulum_period(length)
     >>> mypp(100 * ureg.centimeter)
-    <Quantity(2.0064092925890407, 'second')>
+    <Quantity(2.00640929, 'second')>
 
 
 `wraps` takes 3 input arguments:
@@ -94,7 +95,7 @@ the input arguments assigned to units must be a Quantities.
 .. doctest::
 
     >>> mypp(1. * ureg.meter)
-    <Quantity(2.0064092925890407, 'second')>
+    <Quantity(2.00640929, 'second')>
     >>> mypp(1.)
     Traceback (most recent call last):
     ...
@@ -106,9 +107,9 @@ To enable using non-Quantity numerical values, set strict to False`.
 
     >>> mypp_ns = ureg.wraps(ureg.second, ureg.meter, False)(pendulum_period)
     >>> mypp_ns(1. * ureg.meter)
-    <Quantity(2.0064092925890407, 'second')>
+    <Quantity(2.00640929, 'second')>
     >>> mypp_ns(1.)
-    <Quantity(2.0064092925890407, 'second')>
+    <Quantity(2.00640929, 'second')>
 
 In this mode, the value is assumed to have the correct units.
 
@@ -142,7 +143,9 @@ Or if the function has multiple outputs:
 If there are more return values than specified units, ``None`` is assumed for
 the extra outputs. For example, given the NREL SOLPOS calculator that outputs
 solar zenith, azimuth and air mass, the following wrapper assumes no units for
-airmass::
+airmass
+
+.. doctest::
 
     @ureg.wraps(('deg', 'deg'), ('deg', 'deg', 'millibar', 'degC'))
     def solar_position(lat, lon, press, tamb, timestamp):
@@ -166,18 +169,17 @@ arguments:
     ...     d = .5 * g * t**2
     ...     t = sqrt(2 * d / g)
     ...     """
-    ...     t = sqrt(2 * height / gravity)
+    ...     t = math.sqrt(2 * height / gravity)
     ...     if verbose: print(str(t) + " seconds to fall")
     ...     return t
     ...
     >>> lunar_module_height = Q_(22, 'feet') + Q_(11, 'inches')
     >>> calculate_time_to_fall(lunar_module_height, verbose=True)
     1.1939473204801092 seconds to fall
-    <Quantity(1.1939473204801092, 'second')>
-    >>>
+    <Quantity(1.19394732, 'second')>
     >>> moon_gravity = Q_(1.625, 'm/s^2')
-    >>> tcalculate_time_to_fall(lunar_module_height, moon_gravity)
-    <Quantity(2.932051001760214, 'second')>
+    >>> calculate_time_to_fall(lunar_module_height, gravity=moon_gravity)
+    <Quantity(2.932051, 'second')>
 
 
 Specifying relations between arguments
@@ -198,6 +200,8 @@ the second argument (`y`) has the same units as the first (`A` again). The retur
 has the unit of `x` squared (`A**2`)
 
 You can use more than one label:
+
+.. doctest::
 
     >>> @ureg.wraps('=A**2*B', ('=A', '=A*B', '=B'))
     ... def some_function(x, y, z):
