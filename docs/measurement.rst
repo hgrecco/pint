@@ -54,7 +54,7 @@ Mathematical operations with Measurements, return new measurements following the
 .. doctest::
 
    >>> print(2 * book_length)
-   (40.0 +/- 4.0) centimeter
+   (40 +/- 4) centimeter
    >>> width = (10 * ureg.centimeter).plus_minus(1)
    >>> print('{:.02f}'.format(book_length + width))
    (30.00 +/- 2.24) centimeter

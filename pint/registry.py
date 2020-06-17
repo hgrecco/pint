@@ -1675,12 +1675,16 @@ class ContextRegistry(BaseRegistry):
 
         Examples
         --------
-        Context can be called by their name::
+        Context can be called by their name:
 
+          >>> import pint
+          >>> ureg = pint.UnitRegistry()
+          >>> ureg.add_context(pint.Context('one'))
+          >>> ureg.add_context(pint.Context('two'))
           >>> with ureg.context('one'):
           ...     pass
 
-        If a context has an argument, you can specify its value as a keyword argument::
+        If a context has an argument, you can specify its value as a keyword argument:
 
           >>> with ureg.context('one', n=1):
           ...     pass
@@ -1690,13 +1694,13 @@ class ContextRegistry(BaseRegistry):
           >>> with ureg.context('one', 'two', n=1):
           ...     pass
 
-        Or nested allowing you to give different values to the same keyword argument::
+        Or nested allowing you to give different values to the same keyword argument:
 
           >>> with ureg.context('one', n=1):
           ...     with ureg.context('two', n=2):
           ...         pass
 
-        A nested context inherits the defaults from the containing context::
+        A nested context inherits the defaults from the containing context:
 
           >>> with ureg.context('one', n=1):
           ...     # Here n takes the value of the outer context
@@ -1736,9 +1740,9 @@ class ContextRegistry(BaseRegistry):
 
         Example
         -------
-        >>> @ureg.with_context('sp')
-            ... def my_cool_fun(wavelenght):
-            ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
+          >>> @ureg.with_context('sp')
+          ... def my_cool_fun(wavelength):
+          ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
         """
 
         def decorator(func):

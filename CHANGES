@@ -37,6 +37,7 @@ Pint Changelog
 - Fixed crash when some specific combinations of contexts were enabled
   (Issue #1112, Thanks Guido Imperiale)
 - Added support for checking prefixed units using `in` keyword (Issue #1086)
+- Updated many examples in the documentation to reflect Pint's current behavior
 
 
 0.12 (2020-05-29)

@@ -73,7 +73,7 @@ There are 3 fundamental physical units in this equation: time, mass, and length,
     ...                  'M': '[mass]',
     ...                  'L': '[length]',
     ...                  'g': '[acceleration]'})
-    [{'T': 2.0, 'g': 1.0, 'L': -1.0}]
+    [{'T': 2.0, 'L': -1.0, 'g': 1.0}]
 
 which means that the dimensionless quantity is:
 
