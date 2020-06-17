@@ -688,6 +688,8 @@ def _prod(a, *args, **kwargs):
     elif where is not None:
         exponent = np.asarray(where, dtype=np.bool_).sum()
         units = a.units ** exponent
+    else:
+        units = a.units ** a.size
 
     return units._REGISTRY.Quantity(result, units)
 
