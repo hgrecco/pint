@@ -1716,7 +1716,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         Wraps np.prod().
         """
         # TODO: remove after support for 1.16 has been dropped
-        if HAS_NUMPY_ARRAY_FUNCTION:
+        if not HAS_NUMPY_ARRAY_FUNCTION:
             raise NotImplementedError(
                 "prod is only defined for"
                 " numpy == 1.16 with NUMPY_ARRAY_FUNCTION_PROTOCOL enabled"
