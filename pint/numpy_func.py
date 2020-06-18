@@ -416,7 +416,6 @@ matching_input_copy_units_output_ufuncs = [
 copy_units_output_ufuncs = ["ldexp", "fmod", "mod", "remainder"]
 op_units_output_ufuncs = {
     "var": "square",
-    "prod": "size",
     "multiply": "mul",
     "true_divide": "div",
     "divide": "div",
