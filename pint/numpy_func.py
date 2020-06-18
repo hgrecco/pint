@@ -677,8 +677,16 @@ def _prod(a, *args, **kwargs):
     axis = all_kwargs.get("axis", None)
     where = all_kwargs.get("where", None)
 
+    registry = a.units._REGISTRY
+
     if axis is not None and where is not None:
-        raise ValueError("passing axis and where is not supported")
+        _, where_ = np.broadcast_arrays(a._magnitude, where)
+        exponents = np.unique(np.sum(where_, axis=axis))
+        if len(exponents) == 1 or (len(exponents) == 2 and 0 in exponents):
+            units = a.units ** np.max(exponents)
+        else:
+            units = registry.dimensionless
+            a = a.to(units)
     elif axis is not None:
         units = a.units ** a.shape[axis]
     elif where is not None:
@@ -689,7 +697,7 @@ def _prod(a, *args, **kwargs):
 
     result = np.prod(a._magnitude, *args, **kwargs)
 
-    return units._REGISTRY.Quantity(result, units)
+    return registry.Quantity(result, units)
 
 
 # Implement simple matching-unit or stripped-unit functions based on signature
