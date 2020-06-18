@@ -22,8 +22,8 @@ from typing import List
 from packaging import version
 
 from .compat import (
-    NUMPY_VER,
     HAS_NUMPY_ARRAY_FUNCTION,
+    NUMPY_VER,
     _to_magnitude,
     babel_parse,
     eq,
