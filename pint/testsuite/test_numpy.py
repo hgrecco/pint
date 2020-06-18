@@ -283,6 +283,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     # Sums, products, differences
 
+    @helpers.requires_array_function_protocol()
     def test_prod(self):
         axis = 0
         where = [[True, False], [True, True]]
