@@ -55,89 +55,15 @@ class TestLogarithmicQuantity(QuantityTestCase):
             self.assertEqual(len(buffer), 1)
 
     def test_log_convert(self):
-
-        # ## Test dB
-        # 0 dB == 1
-        self.assertQuantityAlmostEqual(
-            self.Q_(0.0, "dB").to("dimensionless"), self.Q_(1.0)
-        )
-        # -10 dB == 0.1
-        self.assertQuantityAlmostEqual(
-            self.Q_(-10.0, "dB").to("dimensionless"), self.Q_(0.1)
-        )
-        # +10 dB == 10
-        self.assertQuantityAlmostEqual(
-            self.Q_(+10.0, "dB").to("dimensionless"), self.Q_(10.0)
-        )
-        # 30 dB == 1e3
-        self.assertQuantityAlmostEqual(
-            self.Q_(30.0, "dB").to("dimensionless"), self.Q_(1e3)
-        )
-        # 60 dB == 1e6
-        self.assertQuantityAlmostEqual(
-            self.Q_(60.0, "dB").to("dimensionless"), self.Q_(1e6)
-        )
         # # 1 dB = 1/10 * bel
         # self.assertQuantityAlmostEqual(self.Q_(1.0, "dB").to("dimensionless"), self.Q_(1, "bell") / 10)
         # # Uncomment Bell unit in default_en.txt
-
-        # ## Test decade
-        # 1 decade == 10
-        self.assertQuantityAlmostEqual(
-            self.Q_(1.0, "decade").to("dimensionless"), self.Q_(10.0)
-        )
-        # 2 decade == 100
-        self.assertQuantityAlmostEqual(
-            self.Q_(2.0, "decade").to("dimensionless"), self.Q_(100.0)
-        )
-
-        # ## Test octave
-        # 1 octave = 2
-        self.assertQuantityAlmostEqual(
-            self.Q_(1.0, "octave").to("dimensionless"), self.Q_(2.0)
-        )
 
         # ## Test dB to dB units octave - decade
         # 1 decade = log2(10) octave
         self.assertQuantityAlmostEqual(
             self.Q_(1.0, "decade"), self.Q_(math.log(10, 2), "octave")
         )
-
-        # ## Test dBm
-        # 0 dBm = 1 mW
-        self.assertQuantityAlmostEqual(self.Q_(0.0, "dBm").to("mW"), self.Q_(1.0, "mW"))
-        self.assertQuantityAlmostEqual(
-            self.Q_(0.0, "dBm"), self.Q_(1.0, "mW").to("dBm")
-        )
-        # 10 dBm = 10 mW
-        self.assertQuantityAlmostEqual(
-            self.Q_(10.0, "dBm").to("mW"), self.Q_(10.0, "mW")
-        )
-        self.assertQuantityAlmostEqual(
-            self.Q_(10.0, "dBm"), self.Q_(10.0, "mW").to("dBm")
-        )
-        # 20 dBm = 100 mW
-        self.assertQuantityAlmostEqual(
-            self.Q_(20.0, "dBm").to("mW"), self.Q_(100.0, "mW")
-        )
-        self.assertQuantityAlmostEqual(
-            self.Q_(20.0, "dBm"), self.Q_(100.0, "mW").to("dBm")
-        )
-        # -10 dBm = 0.1 mW
-        self.assertQuantityAlmostEqual(
-            self.Q_(-10.0, "dBm").to("mW"), self.Q_(0.1, "mW")
-        )
-        self.assertQuantityAlmostEqual(
-            self.Q_(-10.0, "dBm"), self.Q_(0.1, "mW").to("dBm")
-        )
-        # -20 dBm = 0.01 mW
-        self.assertQuantityAlmostEqual(
-            self.Q_(-20.0, "dBm").to("mW"), self.Q_(0.01, "mW")
-        )
-        self.assertQuantityAlmostEqual(
-            self.Q_(-20.0, "dBm"), self.Q_(0.01, "mW").to("dBm")
-        )
-
         # ## Test dB to dB units dBm - dBu
         # 0 dBm = 1mW = 1e3 uW = 30 dBu
         self.assertAlmostEqual(self.Q_(0.0, "dBm"), self.Q_(29.999999999999996, "dBu"))
@@ -155,6 +81,78 @@ class TestLogarithmicQuantity(QuantityTestCase):
         # With this flag on multiplications and divisions are now possible:
         new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
         self.assertQuantityAlmostEqual(-10 * new_reg.dB / new_reg.cm, 0.1 / new_reg.cm)
+
+
+@pytest.mark.parametrize(
+    "db_value,scalar",
+    [
+        (0.0, 1.0),  # 0 dB == 1x
+        (-10.0, 0.1),  # -10 dB == 0.1x
+        (10.0, 10.0),
+        (30.0, 1e3),
+        (60.0, 1e6),
+    ],
+)
+def test_db_conversion(ureg, db_value, scalar):
+    """Test that a dB value can be converted to a scalar and back.
+    """
+    Q_ = ureg.Quantity
+    assert Q_(db_value, "dB").to("dimensionless").magnitude == pytest.approx(scalar)
+    assert Q_(scalar, "dimensionless").to("dB").magnitude == pytest.approx(db_value)
+
+
+@pytest.mark.parametrize(
+    "octave,scalar",
+    [
+        (2.0, 4.0),  # 2 octave == 4x
+        (1.0, 2.0),  # 1 octave == 2x
+        (0.0, 1.0),
+        (-1.0, 0.5),
+        (-2.0, 0.25),
+    ],
+)
+def test_octave_conversion(ureg, octave, scalar):
+    """Test that an octave can be converted to a scalar and back.
+    """
+    Q_ = ureg.Quantity
+    assert Q_(octave, "octave").to("dimensionless").magnitude == pytest.approx(scalar)
+    assert Q_(scalar, "dimensionless").to("octave").magnitude == pytest.approx(octave)
+
+
+@pytest.mark.parametrize(
+    "decade,scalar",
+    [
+        (2.0, 100.0),  # 2 decades == 100x
+        (1.0, 10.0),  # 1 octave == 2x
+        (0.0, 1.0),
+        (-1.0, 0.1),
+        (-2.0, 0.01),
+    ],
+)
+def test_decade_conversion(ureg, decade, scalar):
+    """Test that a decade can be converted to a scalar and back.
+    """
+    Q_ = ureg.Quantity
+    assert Q_(decade, "decade").to("dimensionless").magnitude == pytest.approx(scalar)
+    assert Q_(scalar, "dimensionless").to("decade").magnitude == pytest.approx(decade)
+
+
+@pytest.mark.parametrize(
+    "dbm_value,mw_value",
+    [
+        (0.0, 1.0),  # 0.0 dBm == 1.0 mW
+        (10.0, 10.0),
+        (20.0, 100.0),
+        (-10.0, 0.1),
+        (-20.0, 0.01),
+    ],
+)
+def test_dbm_mw_conversion(ureg, dbm_value, mw_value):
+    """Test dBm values can convert to mW and back.
+    """
+    Q_ = ureg.Quantity
+    assert Q_(dbm_value, "dBm").to("mW").magnitude == pytest.approx(mw_value)
+    assert Q_(mw_value, "mW").to("dBm").magnitude == pytest.approx(dbm_value)
 
 
 def test_compound_log_unit_multiply_definition(auto_ureg):
@@ -182,6 +180,14 @@ def test_compound_log_unit_parse_definition(auto_ureg):
     canonical_def = Q_(-161, "dBm") / auto_ureg.Hz
     parse_def = auto_ureg.parse_expression("-161 dBm/Hz")
     assert canonical_def == parse_def
+
+
+@pytest.mark.xfail
+def test_dbm_db_addition(auto_ureg):
+    """Test a dB value can be added to a dBm and the answer is correct.
+    """
+    power = (5 * auto_ureg.dBm) + (10 * auto_ureg.dB)
+    assert power.to('dBm').magnitude == pytest.approx(15)
 
 
 class TestLogarithmicQuantityBasicMath(QuantityTestCase):
