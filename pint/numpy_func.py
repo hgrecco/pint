@@ -682,7 +682,7 @@ def _prod(a, *args, **kwargs):
     elif axis is not None:
         units = a.units ** a.shape[axis]
     elif where is not None:
-        exponent = np.asarray(where, dtype=np.bool_).sum()
+        exponent = np.sum(where)
         units = a.units ** exponent
     else:
         units = a.units ** a.size
