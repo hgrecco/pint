@@ -680,8 +680,6 @@ def _prod(a, *args, **kwargs):
     if axis is not None and where is not None:
         raise ValueError("passing axis and where is not supported")
 
-    result = np.prod(a._magnitude, *args, **kwargs)
-
     if axis is not None:
         units = a.units ** a.shape[axis]
     elif where is not None:
@@ -689,6 +687,8 @@ def _prod(a, *args, **kwargs):
         units = a.units ** exponent
     else:
         units = a.units ** a.size
+
+    result = np.prod(a._magnitude, *args, **kwargs)
 
     return units._REGISTRY.Quantity(result, units)
 
