@@ -789,9 +789,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityAlmostEqual(np.std(self.q), 1.11803 * self.ureg.m, rtol=1e-5)
         self.assertRaises(OffsetUnitCalculusError, np.std, self.q_temperature)
 
-    def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m ** 4)
-
     def test_cumprod(self):
         self.assertRaises(DimensionalityError, self.q.cumprod)
         self.assertQuantityEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
