@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.13 (unreleased)
+0.13 (2020-06-17)
 -----------------
 - Reinstated support for pickle protocol 0 and 1, which is required by pytables
   (Issue #1036, Thanks Guido Imperiale)
