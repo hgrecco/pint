@@ -679,8 +679,7 @@ def _prod(a, *args, **kwargs):
 
     if axis is not None and where is not None:
         raise ValueError("passing axis and where is not supported")
-
-    if axis is not None:
+    elif axis is not None:
         units = a.units ** a.shape[axis]
     elif where is not None:
         exponent = np.asarray(where, dtype=np.bool_).sum()
