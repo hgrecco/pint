@@ -683,8 +683,7 @@ def _prod(a, *args, **kwargs):
     result = np.prod(a._magnitude, *args, **kwargs)
 
     if axis is not None:
-        exponent = a.size // result.size
-        units = a.units ** exponent
+        units = a.units ** a.shape[axis]
     elif where is not None:
         exponent = np.asarray(where, dtype=np.bool_).sum()
         units = a.units ** exponent
