@@ -301,7 +301,14 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         self.assertQuantityEqual(np.prod(self.q, axis=axis), [3, 8] * self.ureg.m ** 2)
         self.assertQuantityEqual(np.prod(self.q, where=where), 12 * self.ureg.m ** 3)
 
-        self.assertRaises(ValueError, np.prod, self.q, axis=axis, where=where)
+        self.assertRaises(DimensionalityError, np.prod, self.q, axis=axis, where=where)
+        self.assertQuantityEqual(
+            np.prod(self.q, axis=axis, where=[[True, False], [False, True]]),
+            [1, 4] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.prod(self.q, axis=axis, where=[True, False]), [3, 1] * self.ureg.m ** 2
+        )
 
     def test_sum(self):
         self.assertEqual(self.q.sum(), 10 * self.ureg.m)
