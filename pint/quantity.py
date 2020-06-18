@@ -23,6 +23,7 @@ from packaging import version
 
 from .compat import (
     NUMPY_VER,
+    HAS_NUMPY_ARRAY_FUNCTION,
     _to_magnitude,
     babel_parse,
     eq,
@@ -1714,10 +1715,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         Wraps np.prod().
         """
-        if version.parse(np.__version__) < version.parse("1.17"):
+        # TODO: remove after support for 1.16 has been dropped
+        if HAS_NUMPY_ARRAY_FUNCTION:
             raise NotImplementedError(
-                f"prod is only correctly defined for numpy >= 1.17 ({np.__version__} is installed)."
-                " Please try to update your numpy version."
+                "prod is only defined for"
+                " numpy == 1.16 with NUMPY_ARRAY_FUNCTION_PROTOCOL enabled"
+                f" or for numpy >= 1.17 ({np.__version__} is installed)."
+                " Please try setting the NUMPY_ARRAY_FUNCTION_PROTOCOL environment variable"
+                " or updating your numpy version."
             )
         return np.prod(self, *args, **kwargs)
 
