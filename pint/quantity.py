@@ -1714,6 +1714,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         Wraps np.prod().
         """
+        if version.parse(np.__version__) < version.parse("1.17"):
+            raise NotImplementedError(
+                f"prod is only correctly defined for numpy >= 1.17 ({np.__version__} is installed)."
+                " Please try to update your numpy version."
+            )
         return np.prod(self, *args, **kwargs)
 
     def __ito_if_needed(self, to_units):
