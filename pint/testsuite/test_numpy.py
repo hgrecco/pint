@@ -284,7 +284,12 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # Sums, products, differences
 
     def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m ** 4)
+        axis = 0
+        where = [[True, False], [True, True]]
+
+        self.assertQuantityEqual(self.q.prod(), 24 * self.ureg.m ** 4)
+        self.assertQuantityEqual(self.q.prod(axis=axis), [3, 8] * self.ureg.m ** 2)
+        self.assertQuantityEqual(self.q.prod(where=where), 12 * self.ureg.m ** 3)
 
     @helpers.requires_array_function_protocol()
     def test_prod_numpy_func(self):

@@ -112,6 +112,15 @@ def check_implemented(f):
     return wrapped
 
 
+def method_wraps(numpy_func):
+    def wrapper(func):
+        func.__wrapped__ = numpy_func
+
+        return func
+
+    return wrapper
+
+
 @contextlib.contextmanager
 def printoptions(*args, **kwargs):
     """Numpy printoptions context manager released with version 1.15.0
@@ -1695,6 +1704,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """
 
         return np.dot(self, b)
+
+    @method_wraps(np.prod)
+    def prod(self, *args, **kwargs):
+        """ Return the product of quantity elements over a given axis
+
+        Wraps np.prod().
+        """
+        return np.prod(self, *args, **kwargs)
 
     def __ito_if_needed(self, to_units):
         if self.unitless and to_units == "radian":
