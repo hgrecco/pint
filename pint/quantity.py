@@ -113,6 +113,9 @@ def check_implemented(f):
 
 
 def method_wraps(numpy_func):
+    if isinstance(numpy_func, str):
+        numpy_func = getattr(np, numpy_func, None)
+
     def wrapper(func):
         func.__wrapped__ = numpy_func
 
@@ -1705,7 +1708,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         return np.dot(self, b)
 
-    @method_wraps(np.prod)
+    @method_wraps("prod")
     def prod(self, *args, **kwargs):
         """ Return the product of quantity elements over a given axis
 
