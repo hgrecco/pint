@@ -677,7 +677,7 @@ def implement_prod_func(name):
     if func is None:
         return
 
-    @implements("prod", "function")
+    @implements(name, "function")
     def _prod(a, *args, **kwargs):
         arg_names = ("axis", "dtype", "out", "keepdims", "initial", "where")
         all_kwargs = dict(**dict(zip(arg_names, args)), **kwargs)
