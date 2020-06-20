@@ -11,7 +11,7 @@ from inspect import signature
 from itertools import chain
 
 from .compat import is_upcast_type, np, zero_or_nan
-from .errors import DimensionalityError
+from .errors import DimensionalityError, UnitStrippedWarning
 from .util import iterable, sized
 
 HANDLED_UFUNCS = {}
@@ -575,6 +575,7 @@ def _copyto(dst, src, casting="same_kind", where=True):
     else:
         warnings.warn(
             "The unit of the quantity is stripped when copying to non-quantity",
+            UnitStrippedWarning,
             stacklevel=2,
         )
         np.copyto(dst, src.m, casting=casting, where=where)
