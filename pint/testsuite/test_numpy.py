@@ -878,6 +878,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_equal(self):
         x = self.q.magnitude
         u = self.Q_(np.ones(x.shape))
+        true = np.ones_like(x, dtype=np.bool_)
         false = np.zeros_like(x, dtype=np.bool_)
 
         self.assertQuantityEqual(u, u)
@@ -890,6 +891,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertNDArrayEqual(
             self.Q_(np.zeros_like(x), "m") == self.Q_(np.zeros_like(x), "s"), false,
         )
+        self.assertNDArrayEqual(v == v, true)
         self.assertNDArrayEqual(v == w, false)
         self.assertNDArrayEqual(v == w.to("mm"), false)
         self.assertNDArrayEqual(u == v, false)

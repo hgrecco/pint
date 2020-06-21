@@ -1479,7 +1479,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 other = other._magnitude
 
             template, _ = np.broadcast_arrays(self._magnitude, other)
-            return np.full_like(template, fill_value=False, dtype=np.bool_)
+            return np.full_like(template, fill_value=value, dtype=np.bool_)
 
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
