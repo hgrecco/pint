@@ -1470,11 +1470,16 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     @check_implemented
     def __eq__(self, other):
         def bool_result(value):
+            nonlocal other
+
             if not is_duck_array_type(type(self._magnitude)):
                 return value
 
-            shape = np.broadcast(self._magnitude, other).shape
-            return np.full(shape=shape, fill_value=False)
+            if isinstance(other, Quantity):
+                other = other._magnitude
+
+            template, _ = np.broadcast_arrays(self._magnitude, other)
+            return np.full_like(template, fill_value=False)
 
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
@@ -1498,6 +1503,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
             return bool_result(False)
 
+        # TODO: this might be expensive. Do we even need it?
         if eq(self._magnitude, 0, True) and eq(other._magnitude, 0, True):
             return bool_result(self.dimensionality == other.dimensionality)
 
