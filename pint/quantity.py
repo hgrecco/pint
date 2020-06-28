@@ -233,13 +233,15 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         inst.__used = False
         inst.__handling = None
 
+        if hasattr(inst._magnitude, '__iter__'):
+            inst.__iter__ = inst._iter
         return inst
 
     @property
     def debug_used(self):
         return self.__used
 
-    def __iter__(self):
+    def _iter(self):
         # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
         # as one calls iter(self) without waiting for the first element to be drawn from
         # the iterator

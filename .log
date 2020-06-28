@@ -1,0 +1,551 @@
+============================= test session starts =============================
+platform win32 -- Python 3.7.7, pytest-5.4.1, py-1.8.1, pluggy-0.13.1
+rootdir: C:\Users\A\repos\pint
+collected 0 items / 19 errors
+
+=================================== ERRORS ====================================
+________ ERROR collecting pint/testsuite/test_application_registry.py _________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\c_timestamp.pxd:7: in init pandas._libs.tslibs.conversion
+    ???
+pandas\_libs\tslibs\c_timestamp.pyx:1: in init pandas._libs.tslibs.c_timestamp
+    ???
+pandas\_libs\tslibs\tzconversion.pyx:1: in init pandas._libs.tslibs.tzconversion
+    ???
+pandas\_libs\tslibs\timedeltas.pyx:1: in init pandas._libs.tslibs.timedeltas
+    ???
+pandas\_libs\tslibs\offsets.pyx:1: in init pandas._libs.tslibs.offsets
+    ???
+pandas\_libs\tslibs\ccalendar.pyx:13: in init pandas._libs.tslibs.ccalendar
+    ???
+pandas\_libs\tslibs\strptime.pyx:615: in init pandas._libs.tslibs.strptime
+    ???
+pandas\_libs\tslibs\strptime.pyx:558: in pandas._libs.tslibs.strptime.TimeRE.__init__
+    ???
+pandas\_libs\tslibs\strptime.pyx:574: in pandas._libs.tslibs.strptime.TimeRE.__seqToRE
+    ???
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pytz\lazy.py:101: in _lazy
+    list.extend(self, fill_iter.pop())
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pytz\__init__.py:1104: in <genexpr>
+    tz for tz in all_timezones if resource_exists(tz))
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pytz\__init__.py:114: in resource_exists
+    open_resource(name).close()
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pytz\__init__.py:108: in open_resource
+    return open(filename, 'rb')
+E   KeyboardInterrupt
+________________ ERROR collecting pint/testsuite/test_babel.py ________________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_______________ ERROR collecting pint/testsuite/test_compat.py ________________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+___________ ERROR collecting pint/testsuite/test_compat_downcast.py ___________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+____________ ERROR collecting pint/testsuite/test_compat_upcast.py ____________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+______________ ERROR collecting pint/testsuite/test_contexts.py _______________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_____________ ERROR collecting pint/testsuite/test_converters.py ______________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_____________ ERROR collecting pint/testsuite/test_definitions.py _____________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_______________ ERROR collecting pint/testsuite/test_errors.py ________________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+______________ ERROR collecting pint/testsuite/test_formatter.py ______________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+___________ ERROR collecting pint/testsuite/test_infer_base_unit.py ___________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_______________ ERROR collecting pint/testsuite/test_issues.py ________________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_____________ ERROR collecting pint/testsuite/test_matplotlib.py ______________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_____________ ERROR collecting pint/testsuite/test_measurement.py _____________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_______________ ERROR collecting pint/testsuite/test_non_int.py _______________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+________________ ERROR collecting pint/testsuite/test_numpy.py ________________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+_____________ ERROR collecting pint/testsuite/test_numpy_func.py ______________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+______________ ERROR collecting pint/testsuite/test_pint_eval.py ______________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+______________ ERROR collecting pint/testsuite/test_pitheorem.py ______________
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\py\_path\local.py:701: in pyimport
+    __import__(modname)
+pint\__init__.py:18: in <module>
+    from .context import Context
+pint\context.py:15: in <module>
+    from .definitions import Definition, UnitDefinition
+pint\definitions.py:15: in <module>
+    from .util import ParserHelper, UnitsContainer, _is_dim
+pint\util.py:22: in <module>
+    from .compat import NUMERIC_TYPES, tokenizer
+pint\compat.py:138: in <module>
+    from pintpandas import PintArray
+..\pint-pandas\pintpandas\__init__.py:1: in <module>
+    from .pint_array import *
+..\pint-pandas\pintpandas\pint_array.py:1: in <module>
+    import pandas as pd
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\__init__.py:30: in <module>
+    from pandas._libs import hashtable as _hashtable, lib as _lib, tslib as _tslib
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\__init__.py:3: in <module>
+    from .tslibs import (
+..\..\anaconda3\envs\py37_pd251\lib\site-packages\pandas\_libs\tslibs\__init__.py:3: in <module>
+    from .conversion import localize_pydatetime, normalize_date
+pandas\_libs\tslibs\conversion.pyx:234: in init pandas._libs.tslibs.conversion
+    ???
+E   AttributeError: type object 'pandas._libs.tslibs.conversion._TSObject' has no attribute '__reduce_cython__'
+============================== warnings summary ===============================
+C:\Users\A\anaconda3\envs\py37_pd251\lib\site-packages\win32\lib\pywintypes.py:2
+  C:\Users\A\anaconda3\envs\py37_pd251\lib\site-packages\win32\lib\pywintypes.py:2: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+    import imp, sys, os
+
+-- Docs: https://docs.pytest.org/en/latest/warnings.html
+=========================== short test summary info ===========================
+ERROR pint/testsuite/test_application_registry.py - KeyboardInterrupt
+ERROR pint/testsuite/test_babel.py - AttributeError: type object 'pandas._lib...
+ERROR pint/testsuite/test_compat.py - AttributeError: type object 'pandas._li...
+ERROR pint/testsuite/test_compat_downcast.py - AttributeError: type object 'p...
+ERROR pint/testsuite/test_compat_upcast.py - AttributeError: type object 'pan...
+ERROR pint/testsuite/test_contexts.py - AttributeError: type object 'pandas._...
+ERROR pint/testsuite/test_converters.py - AttributeError: type object 'pandas...
+ERROR pint/testsuite/test_definitions.py - AttributeError: type object 'panda...
+ERROR pint/testsuite/test_errors.py - AttributeError: type object 'pandas._li...
+ERROR pint/testsuite/test_formatter.py - AttributeError: type object 'pandas....
+ERROR pint/testsuite/test_infer_base_unit.py - AttributeError: type object 'p...
+ERROR pint/testsuite/test_issues.py - AttributeError: type object 'pandas._li...
+ERROR pint/testsuite/test_matplotlib.py - AttributeError: type object 'pandas...
+ERROR pint/testsuite/test_measurement.py - AttributeError: type object 'panda...
+ERROR pint/testsuite/test_non_int.py - AttributeError: type object 'pandas._l...
+ERROR pint/testsuite/test_numpy.py - AttributeError: type object 'pandas._lib...
+ERROR pint/testsuite/test_numpy_func.py - AttributeError: type object 'pandas...
+ERROR pint/testsuite/test_pint_eval.py - AttributeError: type object 'pandas....
+ERROR pint/testsuite/test_pitheorem.py - AttributeError: type object 'pandas....
+======================== 1 warning, 19 errors in 3.01s ========================
