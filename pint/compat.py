@@ -135,7 +135,7 @@ upcast_types = []
 
 # pint-pandas (PintArray)
 try:
-    from pintpandas import PintArray
+    from pint_pandas import PintArray
 
     upcast_types.append(PintArray)
 except ImportError:
