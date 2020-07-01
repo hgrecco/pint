@@ -11,7 +11,7 @@ You can install it (or upgrade to the latest version) using pip_::
 
 That's all! You can check that Pint is correctly installed by starting up python, and importing pint:
 
-.. code-block::
+.. code-block:: python
 
     >>> import pint
     >>> pint.__version__  # doctest: +SKIP
@@ -25,7 +25,7 @@ That's all! You can check that Pint is correctly installed by starting up python
 
 You can check the installation with the following command:
 
-.. code-block::
+.. code-block:: python
 
     >>> pint.test()  # doctest: +SKIP
 
