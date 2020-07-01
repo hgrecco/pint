@@ -11,10 +11,10 @@ You can install it (or upgrade to the latest version) using pip_::
 
 That's all! You can check that Pint is correctly installed by starting up python, and importing pint:
 
-.. code-block::
+.. code-block:: python
 
     >>> import pint
-    >>> pint.__version__
+    >>> pint.__version__  # doctest: +SKIP
 
 .. note:: If you have an old system installation of Python and you don't want to
    mess with it, you can try `Anaconda CE`_. It is a free Python distribution by
@@ -25,9 +25,9 @@ That's all! You can check that Pint is correctly installed by starting up python
 
 You can check the installation with the following command:
 
-.. code-block::
+.. code-block:: python
 
-    >>> pint.test()
+    >>> pint.test()  # doctest: +SKIP
 
 
 On Arch Linux, you can alternatively install Pint from the Arch User Repository
