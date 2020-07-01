@@ -233,7 +233,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         inst.__used = False
         inst.__handling = None
 
-        if hasattr(inst._magnitude, '__iter__') and not isinstance(inst._magnitude, str):
+        if hasattr(inst._magnitude, "__iter__") and not isinstance(
+            inst._magnitude, str
+        ):
             inst.__iter__ = inst._iter
             inst.__getitem__ = inst._getitem
         return inst
