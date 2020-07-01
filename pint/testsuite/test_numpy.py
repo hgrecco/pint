@@ -283,8 +283,14 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     # Sums, products, differences
 
+    @helpers.requires_array_function_protocol()
     def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m ** 4)
+        axis = 0
+        where = [[True, False], [True, True]]
+
+        self.assertQuantityEqual(self.q.prod(), 24 * self.ureg.m ** 4)
+        self.assertQuantityEqual(self.q.prod(axis=axis), [3, 8] * self.ureg.m ** 2)
+        self.assertQuantityEqual(self.q.prod(where=where), 12 * self.ureg.m ** 3)
 
     @helpers.requires_array_function_protocol()
     def test_prod_numpy_func(self):
@@ -295,7 +301,14 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         self.assertQuantityEqual(np.prod(self.q, axis=axis), [3, 8] * self.ureg.m ** 2)
         self.assertQuantityEqual(np.prod(self.q, where=where), 12 * self.ureg.m ** 3)
 
-        self.assertRaises(ValueError, np.prod, self.q, axis=axis, where=where)
+        self.assertRaises(DimensionalityError, np.prod, self.q, axis=axis, where=where)
+        self.assertQuantityEqual(
+            np.prod(self.q, axis=axis, where=[[True, False], [False, True]]),
+            [1, 4] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.prod(self.q, axis=axis, where=[True, False]), [3, 1] * self.ureg.m ** 2
+        )
 
     def test_sum(self):
         self.assertEqual(self.q.sum(), 10 * self.ureg.m)
@@ -782,9 +795,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_std_numpy_func(self):
         self.assertQuantityAlmostEqual(np.std(self.q), 1.11803 * self.ureg.m, rtol=1e-5)
         self.assertRaises(OffsetUnitCalculusError, np.std, self.q_temperature)
-
-    def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m ** 4)
 
     def test_cumprod(self):
         self.assertRaises(DimensionalityError, self.q.cumprod)

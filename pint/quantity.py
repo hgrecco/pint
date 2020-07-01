@@ -22,6 +22,7 @@ from typing import List
 from packaging import version
 
 from .compat import (
+    HAS_NUMPY_ARRAY_FUNCTION,
     NUMPY_VER,
     _to_magnitude,
     babel_parse,
@@ -110,6 +111,18 @@ def check_implemented(f):
         return f(self, *args, **kwargs)
 
     return wrapped
+
+
+def method_wraps(numpy_func):
+    if isinstance(numpy_func, str):
+        numpy_func = getattr(np, numpy_func, None)
+
+    def wrapper(func):
+        func.__wrapped__ = numpy_func
+
+        return func
+
+    return wrapper
 
 
 @contextlib.contextmanager
@@ -1695,6 +1708,23 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """
 
         return np.dot(self, b)
+
+    @method_wraps("prod")
+    def prod(self, *args, **kwargs):
+        """ Return the product of quantity elements over a given axis
+
+        Wraps np.prod().
+        """
+        # TODO: remove after support for 1.16 has been dropped
+        if not HAS_NUMPY_ARRAY_FUNCTION:
+            raise NotImplementedError(
+                "prod is only defined for"
+                " numpy == 1.16 with NUMPY_ARRAY_FUNCTION_PROTOCOL enabled"
+                f" or for numpy >= 1.17 ({np.__version__} is installed)."
+                " Please try setting the NUMPY_ARRAY_FUNCTION_PROTOCOL environment variable"
+                " or updating your numpy version."
+            )
+        return np.prod(self, *args, **kwargs)
 
     def __ito_if_needed(self, to_units):
         if self.unitless and to_units == "radian":
