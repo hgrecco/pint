@@ -235,6 +235,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         if hasattr(inst._magnitude, '__iter__') and not isinstance(inst._magnitude, str):
             inst.__iter__ = inst._iter
+            inst.__getitem__ = inst._getitem
         return inst
 
     @property
@@ -1768,7 +1769,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 "has attribute '{}'".format(self._magnitude, item)
             )
 
-    def __getitem__(self, key):
+    def _getitem(self, key):
         try:
             return type(self)(self._magnitude[key], self._units)
         except PintTypeError:
