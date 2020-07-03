@@ -157,6 +157,14 @@ try:
 except ImportError:
     pass
 
+try:
+    from dask.base import compute, persist, visualize
+    import dask.array as dask_array
+
+except ImportError:
+    compute, persist, visualize = None, None, None
+    dask_array = None
+
 
 def is_upcast_type(other) -> bool:
     """Check if the type object is a upcast type using preset list.
