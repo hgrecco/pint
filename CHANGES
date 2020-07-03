@@ -4,7 +4,7 @@ Pint Changelog
 0.15 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Implement Dask collection interface to support Pint Quantity wrapped Dask arrays.
 
 
 0.14 (2020-07-01)
