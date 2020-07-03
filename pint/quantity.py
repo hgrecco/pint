@@ -1928,13 +1928,13 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __dask_keys__(self):
         return self._magnitude.__dask_keys__()
 
-    @staticmethod
-    def __dask_optimize__(dsk, keys, **kwargs):
-        return dask_array.Array.__dask_optimize__(dsk, keys, **kwargs)
+    @property
+    def __dask_optimize__(self):
+        return dask_array.Array.__dask_optimize__
 
-    @staticmethod
-    def __dask_scheduler__(dsk, keys, **kwargs):
-        return dask_array.Array.__dask_scheduler__(dsk, keys, **kwargs)
+    @property
+    def __dask_scheduler__(self):
+        return dask_array.Array.__dask_scheduler__
 
     def __dask_postcompute__(self):
         func, args = self._magnitude.__dask_postcompute__()
