@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from pint import UnitRegistry
@@ -82,8 +84,31 @@ def test_convenience_methods(dask_array, numpy_array, method):
     assert q.magnitude is dask_array
 
 
-def test_visualize():
-    pass
+def test_compute_persist_equivalent_single_machine(dask_array, numpy_array):
+    """Test that compute() and persist() return the same result for calls made
+    on a single machine.
+    """
+    q = ureg.Quantity(dask_array, units_)
+
+    comps = add_five(q)
+    res_compute = comps.compute()
+    res_persist = comps.persist()
+
+    assert np.all(res_compute == res_persist)
+    assert res_compute.units == res_persist.units == units_
+
+
+def test_visualize(dask_array):
+    """Test the visualize() method on a pint.Quantity wrapped Dask array."""
+    q = ureg.Quantity(dask_array, units_)
+
+    comps = add_five(q)
+    res = comps.visualize()
+
+    assert res is None
+    # These commands only work on Unix and Windows
+    assert os.path.exists("mydask.png")
+    os.remove("mydask.png")
 
 
 @pytest.mark.parametrize("method", ["compute", "persist", "visualize"])
