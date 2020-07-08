@@ -1,3 +1,4 @@
+import importlib
 import os
 
 import pytest
@@ -91,6 +92,9 @@ def test_persist(dask_array, numpy_array):
     assert q.magnitude is dask_array
 
 
+@pytest.mark.skipif(
+    importlib.util.find_spec("graphviz") is None, reason="GraphViz is not available"
+)
 def test_visualize(dask_array):
     """Test the visualize() method on a pint.Quantity wrapped Dask array."""
     q = ureg.Quantity(dask_array, units_)
@@ -105,7 +109,7 @@ def test_visualize(dask_array):
 
 
 def test_compute_persist_equivalent(dask_array, numpy_array):
-    """Test that compute() and persist() return the same result."""
+    """Test that compute() and persist() return the same numeric results."""
     q = ureg.Quantity(dask_array, units_)
 
     comps = add_five(q)

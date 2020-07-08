@@ -219,6 +219,7 @@ class TestRegistry(QuantityTestCase):
 
     def test_load(self):
         import pkg_resources
+
         from pint import unit
 
         data = pkg_resources.resource_filename(unit.__name__, "default_en.txt")

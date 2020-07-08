@@ -39,7 +39,8 @@ class BehaviorChangeWarning(UserWarning):
 
 try:
     import numpy as np
-    from numpy import ndarray, datetime64 as np_datetime64
+    from numpy import datetime64 as np_datetime64
+    from numpy import ndarray
 
     HAS_NUMPY = True
     NUMPY_VER = np.__version__
@@ -158,8 +159,8 @@ except ImportError:
     pass
 
 try:
+    from dask import array as dask_array
     from dask.base import compute, persist, visualize
-    import dask.array as dask_array
 
 except ImportError:
     compute, persist, visualize = None, None, None

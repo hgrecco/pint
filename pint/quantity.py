@@ -1951,49 +1951,43 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_dask_array
     def compute(self, **kwargs):
-        """Compute a dask collection wrapped by pint.Quantity.
+        """Compute the Dask array wrapped by pint.Quantity.
 
         Parameters
         ----------
         **kwargs : dict
-            Any keyword arguments to pass to the ``dask.base.compute`` function.
+            Any keyword arguments to pass to ``dask.compute``.
 
         Returns
         -------
         pint.Quantity
-            Returns either the result of calling ``dask.base.compute``, in the case
-            that dask is enabled, or the object on which the ``compute`` method was
-            called without any modifications.
+            A pint.Quantity wrapped numpy array.
         """
         (result,) = compute(self, **kwargs)
         return result
 
     @check_dask_array
     def persist(self, **kwargs):
-        """Compute a dask collection, and keep as a dask collection, wrapped by
-        pint.Quantity.
+        """Persist the Dask Array wrapped by pint.Quantity.
 
         Parameters
         ----------
         **kwargs : dict
-            Any keyword arguments to pass to the ``dask.base.persist`` function.
+            Any keyword arguments to pass to ``dask.persist``.
 
         Returns
         -------
         pint.Quantity
-            Returns either the result of calling ``dask.base.persist``, in the case
-            that dask is enabled, or the object on which the ``persist`` method was
-            called without any modifications.
+            A pint.Quantity wrapped Dask array.
         """
         (result,) = persist(self, **kwargs)
         return result
 
     @check_dask_array
     def visualize(self, **kwargs):
-        """Produce a visual representation of the graph contained in the wrapped
-        Dask collection.
+        """Produce a visual representation of the Dask graph.
 
-        The graphviz and python-graphviz libraries are required.
+        The graphviz library is required.
 
         Parameters
         ----------
