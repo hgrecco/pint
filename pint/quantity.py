@@ -1487,6 +1487,18 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __eq__(self, other):
+        def bool_result(value):
+            nonlocal other
+
+            if not is_duck_array_type(type(self._magnitude)):
+                return value
+
+            if isinstance(other, Quantity):
+                other = other._magnitude
+
+            template, _ = np.broadcast_arrays(self._magnitude, other)
+            return np.full_like(template, fill_value=value, dtype=np.bool_)
+
         # We compare to the base class of Quantity because
         # each Quantity class is unique.
         if not isinstance(other, Quantity):
@@ -1504,12 +1516,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                     else:
                         raise OffsetUnitCalculusError(self._units)
 
-            return self.dimensionless and eq(
-                self._convert_magnitude(self.UnitsContainer()), other, False
-            )
+            if self.dimensionless:
+                return eq(self._convert_magnitude(self.UnitsContainer()), other, False)
 
+            return bool_result(False)
+
+        # TODO: this might be expensive. Do we even need it?
         if eq(self._magnitude, 0, True) and eq(other._magnitude, 0, True):
-            return self.dimensionality == other.dimensionality
+            return bool_result(self.dimensionality == other.dimensionality)
 
         if self._units == other._units:
             return eq(self._magnitude, other._magnitude, False)
@@ -1521,7 +1535,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 False,
             )
         except DimensionalityError:
-            return False
+            return bool_result(False)
 
     @check_implemented
     def __ne__(self, other):

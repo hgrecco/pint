@@ -221,7 +221,7 @@ def eq(lhs, rhs, check_all: bool):
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and isinstance(out, ndarray):
+    if check_all and is_duck_array_type(type(out)):
         return out.all()
     return out
 
