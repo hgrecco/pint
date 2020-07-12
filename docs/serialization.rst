@@ -98,6 +98,7 @@ numerical type such as `numpy.ndarray`).
 Using the serialize_ package you can load and read from multiple formats:
 
 .. doctest::
+    :skipif: not_installed['serialize']
 
     >>> from serialize import dump, load, register_class
     >>> register_class(ureg.Quantity, ureg.Quantity.to_tuple, ureg.Quantity.from_tuple)

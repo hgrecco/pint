@@ -321,3 +321,20 @@ epub_copyright = copyright
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {"http://docs.python.org/": None}
+
+# -- Doctest configuration -----------------------------------------------------
+
+# fill a dictionary with package names that may be missing
+# this is checked by :skipif: clauses in certain doctests that rely
+# on optional dependencies
+doctest_global_setup = """
+from importlib.util import find_spec
+
+not_installed = {
+    pkg_name: find_spec(pkg_name) is None
+    for pkg_name in [
+        'uncertainties',
+        'serialize',
+    ]
+}
+"""

@@ -393,6 +393,7 @@ syntax'_ for custom float representations. For example, scientific notation:
 Pint also supports the LaTeX siunitx package:
 
 .. doctest::
+   :skipif: not_installed['uncertainties']
 
    >>> accel = 1.3 * ureg['meter/second**2']
    >>> # siunitx Latex print
