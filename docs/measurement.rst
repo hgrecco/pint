@@ -7,6 +7,7 @@ Using Measurements
 Measurements are the combination of two quantities: the mean value and the error (or uncertainty). The easiest ways to generate a measurement object is from a quantity using the `plus_minus` operator.
 
 .. doctest::
+   :skipif: not_installed['uncertainties']
 
    >>> import numpy as np
    >>> from pint import UnitRegistry
@@ -15,16 +16,10 @@ Measurements are the combination of two quantities: the mean value and the error
    >>> print(book_length)
    (20.0 +/- 2.0) centimeter
 
-.. testsetup:: *
-
-   import numpy as np
-   from pint import UnitRegistry
-   ureg = UnitRegistry()
-   Q_ = ureg.Quantity
-
 You can inspect the mean value, the absolute error and the relative error:
 
 .. doctest::
+   :skipif: not_installed['uncertainties']
 
    >>> print(book_length.value)
    20.0 centimeter
@@ -36,6 +31,7 @@ You can inspect the mean value, the absolute error and the relative error:
 You can also create a Measurement object giving the relative error:
 
 .. doctest::
+   :skipif: not_installed['uncertainties']
 
    >>> book_length = (20. * ureg.centimeter).plus_minus(.1, relative=True)
    >>> print(book_length)
@@ -44,6 +40,7 @@ You can also create a Measurement object giving the relative error:
 Measurements support the same formatting codes as Quantity. For example, to pretty print a measurement with 2 decimal positions:
 
 .. doctest::
+   :skipif: not_installed['uncertainties']
 
    >>> print('{:.02fP}'.format(book_length))
    (20.00 ± 2.00) centimeter
@@ -52,6 +49,7 @@ Measurements support the same formatting codes as Quantity. For example, to pret
 Mathematical operations with Measurements, return new measurements following the `Propagation of uncertainty`_ rules.
 
 .. doctest::
+   :skipif: not_installed['uncertainties']
 
    >>> print(2 * book_length)
    (40 +/- 4) centimeter

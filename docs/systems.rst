@@ -36,28 +36,10 @@ or more drastically to:
     >>> '{:.3f}'.format(q.to_base_units())
     '1.094 yard / second'
 
-.. warning:: In versions previous to 0.7 ``to_base_units`` returns quantities in the
+.. warning:: In versions previous to 0.7, ``to_base_units()`` returns quantities in the
              units of the definition files (which are called root units). For the definition file
-             bundled with pint this is meter/gram/second. To get back this behaviour use ``to_root_units``,
+             bundled with pint this is meter/gram/second. To get back this behaviour use ``to_root_units()``,
              set ``ureg.system = None``
-
-
-You can also use system to narrow down the list of compatible units:
-
-.. doctest::
-
-    >>> ureg.default_system = 'mks'
-    >>> ureg.get_compatible_units('meter')
-    frozenset({<Unit('light_year')>, <Unit('angstrom')>})
-
-or for imperial units:
-
-.. doctest::
-
-    >>> ureg.default_system = 'imperial'
-    >>> ureg.get_compatible_units('meter')
-    frozenset({<Unit('thou')>, <Unit('league')>, <Unit('nautical_mile')>, <Unit('inch')>, <Unit('mile')>, <Unit('yard')>, <Unit('foot')>})
-
 
 You can check which unit systems are available:
 
@@ -71,7 +53,7 @@ Or which units are available within a particular system:
 .. doctest::
 
     >>> dir(ureg.sys.imperial)
-    ['UK_hundredweight', 'UK_ton', 'acre_foot', 'cubic_foot', 'cubic_inch', 'cubic_yard', 'drachm', 'foot', 'grain', 'imperial_barrel', 'imperial_bushel', 'imperial_cup', 'imperial_fluid_drachm', 'imperial_fluid_ounce', 'imperial_gallon', 'imperial_gill', 'imperial_peck', 'imperial_pint', 'imperial_quart', 'inch', 'long_hunderweight', 'long_ton', 'mile', 'ounce', 'pound', 'quarter', 'short_hunderdweight', 'short_ton', 'square_foot', 'square_inch', 'square_mile', 'square_yard', 'stone', 'yard']
+    ['UK_force_ton', 'UK_hundredweight', ... 'cubic_foot', 'cubic_inch', ... 'thou', 'ton', 'yard']
 
 Notice that this give you the opportunity to choose within units with colliding names:
 

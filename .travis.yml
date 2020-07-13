@@ -75,6 +75,7 @@ script:
   - if [[ $PANDAS == 0 && $LINT == 0 && $DOCS == 0 ]]; then python -bb -m pytest $TEST_OPTS; fi
   - if [[ $LINT == 1 ]]; then black -t py36 --check . && isort -rc -c . && flake8; fi
   - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -n -j auto -b html -d build/doctrees docs build/html; fi
+  - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest; fi
   - if [[ $LINT == 0 && $DOCS == 0 ]]; then coverage report -m; fi
 
 after_success:
