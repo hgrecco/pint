@@ -677,8 +677,8 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def ito_reduced_units(self):
         """Return Quantity scaled in place to reduced units, i.e. one unit per
-        dimension. This will not reduce compound units (intentionally), nor
-        can it make use of contexts at this time.
+        dimension. This will not reduce compound units (e.g., 'J/kg' will not 
+        be reduced to m**2/s**2), nor can it make use of contexts at this time.
         """
 
         # shortcuts in case we're dimensionless or only a single unit
@@ -691,6 +691,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         # loop through individual units and compare to each other unit
         # can we do better than a nested loop here?
         for unit1, exp in self._units.items():
+            # make sure it wasn't already reduced to zero exponent on prior pass
+            if unit1 not in newunits:
+                continue
             for unit2 in newunits:
                 if unit1 != unit2:
                     power = self._REGISTRY._get_dimensionality_ratio(unit1, unit2)
