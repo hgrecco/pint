@@ -677,7 +677,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def ito_reduced_units(self):
         """Return Quantity scaled in place to reduced units, i.e. one unit per
-        dimension. This will not reduce compound units (e.g., 'J/kg' will not 
+        dimension. This will not reduce compound units (e.g., 'J/kg' will not
         be reduced to m**2/s**2), nor can it make use of contexts at this time.
         """
 

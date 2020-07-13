@@ -6,6 +6,8 @@ Pint Changelog
 
 - Implement Dask collection interface to support Pint Quantity wrapped Dask arrays.
 - Started automatically testing examples in the documentation
+- Fixed an exception generated when reducing dimensions with three or more
+  units of the same type
 
 0.14 (2020-07-01)
 -----------------
