@@ -119,6 +119,7 @@ User Guide
 
     getting
     tutorial
+    defining-quantities
     numpy
     nonmult
     wrapping

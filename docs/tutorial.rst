@@ -2,10 +2,11 @@
 Tutorial
 ========
 
-Follow the steps below to get up and running quickly with Pint.
+Follow the steps below and learn how to use Pint to track physical quantities
+and perform unit conversions in Python.
 
-Initialize a Registry
----------------------
+Initializing a Registry
+-----------------------
 
 Before using Pint, initialize a :class:`UnitRegistry() <pint.registry.UnitRegistry>`
 object. The ``UnitRegistry`` stores the unit definitions, their relationships,
@@ -19,10 +20,10 @@ and handles conversions between units.
 If no parameters are given to the constructor, the ``UnitRegistry`` is populated
 with the `default list of units`_ and prefixes.
 
-Define a Quantity
------------------
+Defining a Quantity
+-------------------
 
-Once you've initialized your registry, you can define quantities easily:
+Once you've initialized your ``UnitRegistry``, you can define quantities easily:
 
 .. doctest::
 
@@ -45,7 +46,7 @@ magnitude, units, and dimensionality:
    >>> print(distance.dimensionality)
    [length]
 
-and can handle many mathematical operations, including with other
+and can correctly handle many mathematical operations, including with other
 :class:`Quantity() <pint.quantity.Quantity>` objects:
 
 .. doctest::
@@ -61,13 +62,40 @@ and can handle many mathematical operations, including with other
    >>> print(speed.dimensionality)
    [length] / [time]
 
-See `String parsing`_ for more ways of defining a ``Quantity()`` object.
+Notice the built-in parser recognizes prefixed and pluralized units even though
+they are not in the definition list:
+
+.. doctest::
+
+   >>> distance = 42 * ureg.kilometers
+   >>> print(distance)
+   42 kilometer
+   >>> print(distance.to(ureg.meter))
+   42000.0 meter
+
+Pint will complain if you try to use a unit which is not in the registry:
+
+.. doctest::
+
+   >>> speed = 23 * ureg.snail_speed
+   Traceback (most recent call last):
+   ...
+   UndefinedUnitError: 'snail_speed' is not defined in the unit registry
+
+You can add your own units to the existing registry, or build your own list.
+See the page on :ref:`defining` for more information on that.
+
+See `String parsing`_ and :doc:`defining-quantities` for more ways of defining
+a ``Quantity()`` object.
+
+``Quantity()`` objects also work well with NumPy arrays, which you can
+read about in the section on :doc:`NumPy support <numpy>`.
 
 Converting to Different Units
 -----------------------------
 
-As the underlying ``UnitRegistry`` knows about the relationship between
-different units, you can convert quantities to the units of your choice using
+As the underlying ``UnitRegistry`` knows the relationships between
+different units, you can convert a ``Quantity`` to the units of your choice using
 the ``to()`` method, which accepts a string or a :class:`Unit() <pint.unit.Unit>` object:
 
 .. doctest::
@@ -97,7 +125,8 @@ use the ``ito()`` method:
    >>> print(speed)
    7086.6141... inch / minute
 
-If you ask Pint to perform an invalid conversion:
+Pint will complain if you ask it to perform a conversion it doesn't know
+how to do:
 
 .. doctest::
 
@@ -105,6 +134,12 @@ If you ask Pint to perform an invalid conversion:
    Traceback (most recent call last):
    ...
    DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
+
+See the section on :doc:`contexts` for information about expanding Pint's
+automatic conversion capabilities for your application.
+
+Simplifying units
+-----------------
 
 Sometimes, the magnitude of the quantity will be very large or very small.
 The method ``to_compact()`` can adjust the units to make a quantity more
@@ -158,50 +193,11 @@ If you want pint to automatically perform dimensional reduction when producing
 new quantities, the ``UnitRegistry`` class accepts a parameter ``auto_reduce_dimensions``.
 Dimensional reduction can be slow, so auto-reducing is disabled by default.
 
-In some cases it is useful to define physical quantities objects using the
-class constructor:
-
-.. doctest::
-
-   >>> Q_ = ureg.Quantity
-   >>> Q_(1.78, ureg.meter) == 1.78 * ureg.meter
-   True
-
-(I tend to abbreviate Quantity as ``Q_``) The built-in parser recognizes prefixed
-and pluralized units even though they are not in the definition list:
-
-.. doctest::
-
-   >>> distance = 42 * ureg.kilometers
-   >>> print(distance)
-   42 kilometer
-   >>> print(distance.to(ureg.meter))
-   42000.0 meter
-
-Pint will complain if you try to use a unit which is not in the registry:
-
-.. doctest::
-
-   >>> speed = 23 * ureg.snail_speed
-   Traceback (most recent call last):
-   ...
-   UndefinedUnitError: 'snail_speed' is not defined in the unit registry
-
-You can add your own units to the existing registry, or build your own list.
-See the page on :ref:`defining` units for more information on that.
-
-
 String parsing
 --------------
 
-Pint can also handle units provided as strings:
-
-.. doctest::
-
-   >>> 2.54 * ureg.parse_expression('centimeter')
-   <Quantity(2.54, 'centimeter')>
-
-or using the registry as a callable for a short form for ``parse_expression()``:
+Pint includes powerful string parsing for identifying magnitudes and units. In
+many cases, units can be defined as strings:
 
 .. doctest::
 
@@ -212,6 +208,7 @@ or using the ``Quantity`` constructor:
 
 .. doctest::
 
+   >>> Q_ = ureg.Quantity
    >>> Q_(2.54, 'centimeter')
    <Quantity(2.54, 'centimeter')>
 
@@ -221,11 +218,6 @@ Numbers are also parsed, so you can use an expression:
 
    >>> ureg('2.54 * centimeter')
    <Quantity(2.54, 'centimeter')>
-
-or:
-
-.. doctest::
-
    >>> Q_('2.54 * centimeter')
    <Quantity(2.54, 'centimeter')>
 
@@ -244,47 +236,6 @@ This enables you to build a simple unit converter in 3 lines:
    >>> src, dst = user_input.split(' to ')
    >>> Q_(src).to(dst)
    <Quantity(1.0, 'inch')>
-
-Dimensionless quantities can also be parsed into an appropriate object:
-
-.. doctest::
-
-   >>> ureg('2.54')
-   2.54
-   >>> type(ureg('2.54'))
-   <class 'float'>
-
-or
-
-.. doctest::
-
-   >>> Q_('2.54')
-   <Quantity(2.54, 'dimensionless')>
-   >>> type(Q_('2.54'))
-   <class 'pint.quantity.build_quantity_class.<locals>.Quantity'>
-
-.. note:: Pint´s rule for parsing strings with a mixture of numbers and
-   units is that **units are treated with the same precedence as numbers**.
-
-For example, the units of
-
-.. doctest::
-
-   >>> Q_('3 l / 100 km')
-   <Quantity(0.03, 'kilometer * liter')>
-
-may be unexpected at first but, are a consequence of applying this rule. Use
-brackets to get the expected result:
-
-.. doctest::
-
-   >>> Q_('3 l / (100 km)')
-   <Quantity(0.03, 'liter / kilometer')>
-
-.. note:: Since version 0.7, Pint **does not** use eval_ under the hood.
-   This change removes the `serious security problems`_ that the system is
-   exposed to when parsing information from untrusted sources.
-
 
 Strings containing values can be parsed using the ``ureg.parse_pattern()`` function.
 A ``format``-like string with the units defined in it is used as the pattern:
@@ -317,7 +268,8 @@ The full power of regex can also be employed when writing patterns:
 
 *Note that the curly brackets (``{}``) are converted to a float-matching pattern by the parser.*
 
-This function is useful for tasks such as bulk extraction of units from thousands of uniform strings or even very large texts with units dotted around in no particular pattern.
+This function is useful for tasks such as bulk extraction of units from thousands
+of uniform strings or even very large texts with units dotted around in no particular pattern.
 
 
 .. _sec-string-formatting:
@@ -523,8 +475,6 @@ also define the registry as the application registry
 
 
 .. _`default list of units`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
-.. _eval: http://docs.python.org/3/library/functions.html#eval
-.. _`serious security problems`: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
 .. _`Babel`: http://babel.pocoo.org/
 .. _`formatting syntax`: https://docs.python.org/3/library/string.html#format-specification-mini-language
 .. _`f-strings`: https://www.python.org/dev/peps/pep-0498/
