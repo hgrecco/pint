@@ -134,7 +134,7 @@ class TestQuantity(QuantityTestCase):
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
             ("{:P}", "4.12345678 kilogram·meter²/second"),
-            ("{:H}", r"\[4.12345678\ kilogram\ {meter}^{2}/second\]"),
+            ("{:H}", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("{:C}", "4.12345678 kilogram*meter**2/second"),
             ("{:~}", "4.12345678 kg * m ** 2 / s"),
             (
@@ -142,7 +142,7 @@ class TestQuantity(QuantityTestCase):
                 r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}",
             ),
             ("{:P~}", "4.12345678 kg·m²/s"),
-            ("{:H~}", r"\[4.12345678\ kg\ {m}^{2}/s\]"),
+            ("{:H~}", "4.12345678 kg m<sup>2</sup>/s"),
             ("{:C~}", "4.12345678 kg*m**2/s"),
             ("{:Lx}", r"\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}"),
         ):
@@ -176,6 +176,15 @@ class TestQuantity(QuantityTestCase):
             ),
             ("{:.2f~P}", "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg·m²"),
             ("{:g~P}", "[1e-16 1 1e+07 1e+12 nan inf] kg·m²"),
+            (
+                "{:.2f~H}",
+                (
+                    "<table><tbody><tr><th>Magnitude</th><td style='text-align:left;'>"
+                    "<pre>[0.00 1.00 10000000.00 1000000000000.00 nan inf]</pre></td></tr>"
+                    "<tr><th>Units</th><td style='text-align:left;'>kg m<sup>2</sup></td></tr>"
+                    "</tbody></table>"
+                ),
+            ),
         ):
             with self.subTest(spec):
                 self.assertEqual(spec.format(x), result)
@@ -209,12 +218,12 @@ class TestQuantity(QuantityTestCase):
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
             ("P", "4.12345678 kilogram·meter²/second"),
-            ("H", r"\[4.12345678\ kilogram\ {meter}^{2}/second\]"),
+            ("H", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("C", "4.12345678 kilogram*meter**2/second"),
             ("~", "4.12345678 kg * m ** 2 / s"),
             ("L~", r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
             ("P~", "4.12345678 kg·m²/s"),
-            ("H~", r"\[4.12345678\ kg\ {m}^{2}/s\]"),
+            ("H~", "4.12345678 kg m<sup>2</sup>/s"),
             ("C~", "4.12345678 kg*m**2/s"),
         ):
             with self.subTest(spec):
@@ -224,12 +233,12 @@ class TestQuantity(QuantityTestCase):
     def test_exponent_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Quantity(1e20, "meter")
-        self.assertEqual(f"{x:~H}", r"\[1×10^{20}\ m\]")
+        self.assertEqual(f"{x:~H}", r"1×10<sup>20</sup> m")
         self.assertEqual(f"{x:~L}", r"1\times 10^{20}\ \mathrm{m}")
         self.assertEqual(f"{x:~P}", r"1×10²⁰ m")
 
         x /= 1e40
-        self.assertEqual(f"{x:~H}", r"\[1×10^{-20}\ m\]")
+        self.assertEqual(f"{x:~H}", r"1×10<sup>-20</sup> m")
         self.assertEqual(f"{x:~L}", r"1\times 10^{-20}\ \mathrm{m}")
         self.assertEqual(f"{x:~P}", r"1×10⁻²⁰ m")
 
@@ -250,7 +259,7 @@ class TestQuantity(QuantityTestCase):
 
         ureg = UnitRegistry()
         x = 3.5 * ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        self.assertEqual(x._repr_html_(), r"\[3.5\ kilogram\ {meter}^{2}/second\]")
+        self.assertEqual(x._repr_html_(), "3.5 kilogram meter<sup>2</sup>/second")
         self.assertEqual(
             x._repr_latex_(),
             r"$3.5\ \frac{\mathrm{kilogram} \cdot "
@@ -259,7 +268,7 @@ class TestQuantity(QuantityTestCase):
         x._repr_pretty_(Pretty, False)
         self.assertEqual("".join(alltext), "3.5 kilogram·meter²/second")
         ureg.default_format = "~"
-        self.assertEqual(x._repr_html_(), r"\[3.5\ kg\ {m}^{2}/s\]")
+        self.assertEqual(x._repr_html_(), "3.5 kg m<sup>2</sup>/s")
         self.assertEqual(
             x._repr_latex_(),
             r"$3.5\ \frac{\mathrm{kg} \cdot " r"\mathrm{m}^{2}}{\mathrm{s}}$",

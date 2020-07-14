@@ -319,10 +319,10 @@ Pint also supports `f-strings`_ from python>=3.6 :
    >>> print(f'The str is {accel:~.3e}')
    The str is 1.300e+00 m / s ** 2
    >>> print(f'The str is {accel:~H}')      # HTML format (displays well in Jupyter)
-   The str is \[1.3\ m/{s}^{2}\]
+   The str is 1.3 m/s<sup>2</sup>
 
-But Pint also extends the standard formatting capabilities for unicode and
-LaTeX representations:
+But Pint also extends the standard formatting capabilities for unicode, LaTeX, and HTML
+representations:
 
 .. doctest::
 
@@ -335,7 +335,7 @@ LaTeX representations:
    'The LaTeX representation is 1.3\\ \\frac{\\mathrm{meter}}{\\mathrm{second}^{2}}'
    >>> # HTML print - good for Jupyter notebooks
    >>> 'The HTML representation is {:H}'.format(accel)
-   'The HTML representation is \\[1.3\\ meter/{second}^{2}\\]'
+   'The HTML representation is 1.3 meter/second<sup>2</sup>'
 
 If you want to use abbreviated unit names, prefix the specification with `~`:
 
