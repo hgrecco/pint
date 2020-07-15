@@ -17,7 +17,7 @@ env:
 
   - PKGS="python=3.7 flake8 black isort"  # Have linters fail first and quickly
   # Pinned packages to match readthedocs CI https://readthedocs.org/projects/pint/
-  - PKGS="python=3.7 ipython matplotlib nbsphinx numpy sphinx Pygments==2.3.1 docutils==0.14 alabaster commonmark==0.8.1 recommonmark==0.5.0"
+  - PKGS="python=3.7 ipython matplotlib nbsphinx numpy pandas jupyter_client ipykernel python-graphviz graphviz xarray sparse dask[complete] sphinx Pygments==2.3.1 docutils==0.14 alabaster commonmark==0.8.1 recommonmark==0.5.0"
   - PKGS="python=3.6"
   - PKGS="python=3.7"
   - PKGS="python=3.8"
@@ -31,7 +31,7 @@ env:
   - PKGS="python=3.6 numpy uncertainties"
   - PKGS="python=3.7 numpy uncertainties"
   - PKGS="python=3.8 numpy uncertainties"
-  - PKGS="python xarray netCDF4"
+  - PKGS="python=3.8 numpy uncertainties sparse xarray netCDF4"
 
   # TODO: pandas tests
   # - PKGS="python=3.7 numpy pandas uncertainties pandas"
@@ -61,6 +61,7 @@ install:
   - if [[ $PKGS =~ flake8 ]]; then LINT=1; else LINT=0; fi
   - if [[ $PKGS =~ sphinx ]]; then DOCS=1; else DOCS=0; fi
   - if [[ $PKGS =~ matplotlib && $DOCS == 0 ]]; then pip install pytest-mpl; export TEST_OPTS="$TEST_OPTS --mpl"; fi
+  - if [[ $DOCS == 1 ]]; then pip install pint-pandas; fi
   # this is superslow but suck it up until updates to pandas are made
   # - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
   - conda list
@@ -74,6 +75,7 @@ script:
   - if [[ $PANDAS == 0 && $LINT == 0 && $DOCS == 0 ]]; then python -bb -m pytest $TEST_OPTS; fi
   - if [[ $LINT == 1 ]]; then black -t py36 --check . && isort -rc -c . && flake8; fi
   - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -n -j auto -b html -d build/doctrees docs build/html; fi
+  - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest; fi
   - if [[ $LINT == 0 && $DOCS == 0 ]]; then coverage report -m; fi
 
 after_success:

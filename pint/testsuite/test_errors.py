@@ -117,24 +117,28 @@ class TestErrors(BaseTestCase):
         ureg = UnitRegistry(filename=None)
         ureg.define("foo = [bar]")
         ureg.define("bar = 2 foo")
-        pik = pickle.dumps(ureg.Quantity("1 foo"))
-        with self.assertRaises(UndefinedUnitError):
-            pickle.loads(pik)
         q1 = ureg.Quantity("1 foo")
         q2 = ureg.Quantity("1 bar")
 
-        for ex in [
-            DefinitionSyntaxError("foo", filename="a.txt", lineno=123),
-            RedefinitionError("foo", "bar"),
-            UndefinedUnitError("meter"),
-            DimensionalityError("a", "b", "c", "d", extra_msg=": msg"),
-            OffsetUnitCalculusError(Quantity("1 kg")._units, Quantity("1 s")._units),
-            OffsetUnitCalculusError(q1._units, q2._units),
-        ]:
-            with self.subTest(etype=type(ex)):
-                # assert False, ex.__reduce__()
-                ex2 = pickle.loads(pickle.dumps(ex))
-                assert type(ex) is type(ex2)
-                self.assertEqual(ex.args, ex2.args)
-                self.assertEqual(ex.__dict__, ex2.__dict__)
-                self.assertEqual(str(ex), str(ex2))
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+            for ex in [
+                DefinitionSyntaxError("foo", filename="a.txt", lineno=123),
+                RedefinitionError("foo", "bar"),
+                UndefinedUnitError("meter"),
+                DimensionalityError("a", "b", "c", "d", extra_msg=": msg"),
+                OffsetUnitCalculusError(
+                    Quantity("1 kg")._units, Quantity("1 s")._units
+                ),
+                OffsetUnitCalculusError(q1._units, q2._units),
+            ]:
+                with self.subTest(protocol=protocol, etype=type(ex)):
+                    pik = pickle.dumps(ureg.Quantity("1 foo"), protocol)
+                    with self.assertRaises(UndefinedUnitError):
+                        pickle.loads(pik)
+
+                    # assert False, ex.__reduce__()
+                    ex2 = pickle.loads(pickle.dumps(ex, protocol))
+                    assert type(ex) is type(ex2)
+                    self.assertEqual(ex.args, ex2.args)
+                    self.assertEqual(ex.__dict__, ex2.__dict__)
+                    self.assertEqual(str(ex), str(ex2))

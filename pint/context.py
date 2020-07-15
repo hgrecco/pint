@@ -63,22 +63,24 @@ class Context:
     -------
 
     >>> from pint.util import UnitsContainer
+    >>> from pint import Context, UnitRegistry
+    >>> ureg = UnitRegistry()
     >>> timedim = UnitsContainer({'[time]': 1})
     >>> spacedim = UnitsContainer({'[length]': 1})
-    >>> def f(time):
+    >>> def time_to_len(ureg, time):
     ...     'Time to length converter'
     ...     return 3. * time
     >>> c = Context()
-    >>> c.add_transformation(timedim, spacedim, f)
-    >>> c.transform(timedim, spacedim, 2)
-    6
-    >>> def f(time, n):
+    >>> c.add_transformation(timedim, spacedim, time_to_len)
+    >>> c.transform(timedim, spacedim, ureg, 2)
+    6.0
+    >>> def time_to_len_indexed(ureg, time, n=1):
     ...     'Time to length converter, n is the index of refraction of the material'
     ...     return 3. * time / n
-    >>> c = Context(n=3)
-    >>> c.add_transformation(timedim, spacedim, f)
-    >>> c.transform(timedim, spacedim, 2)
-    2
+    >>> c = Context(defaults={'n':3})
+    >>> c.add_transformation(timedim, spacedim, time_to_len_indexed)
+    >>> c.transform(timedim, spacedim, ureg, 2)
+    2.0
     >>> c.redefine("pound = 0.5 kg")
     """
 
@@ -133,7 +135,7 @@ class Context:
         return context
 
     @classmethod
-    def from_lines(cls, lines, to_base_func=None):
+    def from_lines(cls, lines, to_base_func=None, non_int_type=float):
         lines = SourceIterator(lines)
 
         lineno, header = next(lines)
@@ -186,14 +188,20 @@ class Context:
                 func = _expression_to_function(eq)
 
                 if "<->" in rel:
-                    src, dst = (ParserHelper.from_string(s) for s in rel.split("<->"))
+                    src, dst = (
+                        ParserHelper.from_string(s, non_int_type)
+                        for s in rel.split("<->")
+                    )
                     if to_base_func:
                         src = to_base_func(src)
                         dst = to_base_func(dst)
                     ctx.add_transformation(src, dst, func)
                     ctx.add_transformation(dst, src, func)
                 elif "->" in rel:
-                    src, dst = (ParserHelper.from_string(s) for s in rel.split("->"))
+                    src, dst = (
+                        ParserHelper.from_string(s, non_int_type)
+                        for s in rel.split("->")
+                    )
                     if to_base_func:
                         src = to_base_func(src)
                         dst = to_base_func(dst)
@@ -321,8 +329,8 @@ class ContextChain(ChainMap):
 
     @property
     def defaults(self):
-        if self:
-            return next(iter(self.maps[0].values())).defaults
+        for ctx in self.values():
+            return ctx.defaults
         return {}
 
     @property

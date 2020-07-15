@@ -5,6 +5,7 @@ from pint import UnitRegistry
 # Conditionally import NumPy and any upcast type libraries
 np = pytest.importorskip("numpy", reason="NumPy is not available")
 sparse = pytest.importorskip("sparse", reason="sparse is not available")
+da = pytest.importorskip("dask.array", reason="Dask is not available")
 
 # Set up unit registry and sample
 ureg = UnitRegistry(force_ndarray_like=True)
@@ -16,7 +17,7 @@ def identity(x):
     return x
 
 
-@pytest.fixture(params=["sparse", "masked_array"])
+@pytest.fixture(params=["sparse", "masked_array", "dask_array"])
 def array(request):
     """Generate 5x5 arrays of given type for tests."""
     if request.param == "sparse":
@@ -30,6 +31,8 @@ def array(request):
             np.arange(25, dtype=np.float).reshape((5, 5)),
             mask=np.logical_not(np.triu(np.ones((5, 5)))),
         )
+    elif request.param == "dask_array":
+        return da.arange(25, chunks=5, dtype=float).reshape((5, 5))
 
 
 @pytest.mark.parametrize(
@@ -57,8 +60,8 @@ def array(request):
         pytest.param(np.sum, np.sum, identity, id="sum ufunc"),
         pytest.param(np.sqrt, np.sqrt, lambda u: u ** 0.5, id="sqrt ufunc"),
         pytest.param(
-            lambda x: np.reshape(x, 25),
-            lambda x: np.reshape(x, 25),
+            lambda x: np.reshape(x, (25,)),
+            lambda x: np.reshape(x, (25,)),
             identity,
             id="reshape function",
         ),

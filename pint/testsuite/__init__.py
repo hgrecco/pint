@@ -101,17 +101,31 @@ class QuantityTestCase(BaseTestCase):
 
         if isinstance(m1, ndarray) or isinstance(m2, ndarray):
             np.testing.assert_array_equal(m1, m2, err_msg=msg)
+        elif math.isnan(m1):
+            self.assertTrue(math.isnan(m2), msg)
+        elif math.isnan(m2):
+            self.assertTrue(math.isnan(m1), msg)
         else:
             self.assertEqual(m1, m2, msg)
 
     def assertQuantityAlmostEqual(self, first, second, rtol=1e-07, atol=0, msg=None):
         if msg is None:
-            msg = "Comparing %r and %r. " % (first, second)
+            try:
+                msg = "Comparing %r and %r. " % (first, second)
+            except TypeError:
+                try:
+                    msg = "Comparing %s and %s. " % (first, second)
+                except Exception:
+                    msg = "Comparing"
 
         m1, m2 = self._get_comparable_magnitudes(first, second, msg)
 
         if isinstance(m1, ndarray) or isinstance(m2, ndarray):
             np.testing.assert_allclose(m1, m2, rtol=rtol, atol=atol, err_msg=msg)
+        elif math.isnan(m1):
+            self.assertTrue(math.isnan(m2), msg)
+        elif math.isnan(m2):
+            self.assertTrue(math.isnan(m1), msg)
         else:
             self.assertLessEqual(abs(m1 - m2), atol + rtol * abs(m2), msg=msg)
 

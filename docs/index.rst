@@ -17,8 +17,7 @@ without changing the source code. It supports a lot of numpy mathematical
 operations **without monkey patching or wrapping numpy**.
 
 It has a complete test coverage. It runs in Python 3.6+ with no other
-dependency. It is licensed under BSD.
-
+dependencies. It is licensed under a `BSD 3-clause style license`_.
 
 It is extremely easy and natural to use:
 
@@ -39,6 +38,7 @@ and you can make good use of numpy if you want:
     >>> np.sum(_)
     <Quantity(7.07, 'meter')>
 
+See the :ref:`Tutorial` for more help getting started.
 
 Quick Installation
 ------------------
@@ -56,6 +56,8 @@ or utilizing conda, with the conda-forge channel:
     $ conda install -c conda-forge pint
 
 and then simply enjoy it!
+
+(See :ref:`Installation <getting>` for more detail.)
 
 
 Design principles
@@ -80,12 +82,12 @@ LaTeX and pretty formatting. Unit name translation is available if Babel_ is
 installed.
 
 **Free to choose the numerical type**: You can use any numerical type
-(`fraction`, `float`, `decimal`, `numpy.ndarray`, etc). NumPy_ is not required
-but supported.
+(``fraction``, ``float``, ``decimal``, ``numpy.ndarray``, etc). NumPy_ is not
+required, but is supported.
 
 **Awesome NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and
 ufuncs are supported including automatic conversion of units. For example
-`numpy.arccos(q)` will require a dimensionless `q` and the units of the output
+``numpy.arccos(q)`` will require a dimensionless ``q`` and the units of the output
 quantity will be radian.
 
 **Uncertainties integration**:  transparently handles calculations with
@@ -98,13 +100,15 @@ points, like positions on a map or absolute temperature scales.
 **Dependency free**: it depends only on Python and its standard library. It interacts with other packages
 like numpy and uncertainties if they are installed
 
-**Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas. Operations on DataFrames and between columns are units aware, providing even more convenience for users of Pandas DataFrames. For full details, see the `pint-pandas Jupyter notebook`_.
+**Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas.
+Operations on DataFrames and between columns are units aware, providing even more convenience for users
+of Pandas DataFrames. For full details, see the `pint-pandas Jupyter notebook`_.
 
 
 When you choose to use a NumPy_ ndarray, its methods and
 ufuncs are supported including automatic conversion of units. For example
-`numpy.arccos(q)` will require a dimensionless `q` and the units of the output
-quantity will be radian.
+``numpy.arccos(q)`` will require a dimensionless ``q`` and the units
+of the output quantity will be radian.
 
 
 User Guide
@@ -115,6 +119,7 @@ User Guide
 
     getting
     tutorial
+    defining-quantities
     numpy
     nonmult
     log_units
@@ -129,6 +134,7 @@ User Guide
     systems
     currencies
     pint-pandas.ipynb
+    pint-convert
 
 More information
 ----------------
@@ -160,3 +166,4 @@ One last thing
 .. _`Babel`: http://babel.pocoo.org/
 .. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/extending.html#extension-types
 .. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb
+.. _`BSD 3-clause style license`: https://github.com/hgrecco/pint/blob/master/LICENSE

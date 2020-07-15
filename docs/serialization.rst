@@ -10,10 +10,6 @@ deserialize the object.
 
 The easiest way to do this is by converting the quantity to a string:
 
-.. testsetup:: *
-
-   import pint
-
 .. doctest::
 
    >>> import pint
@@ -74,14 +70,18 @@ with the magnitude and the units:
 
     >>> to_serialize = duration.to_tuple()
     >>> print(to_serialize)
-    (24.2, (('year', 1.0),))
+    (24.2, (('year', 1),))
 
 And then you can just pickle that:
+
+.. doctest::
 
     >>> import pickle
     >>> serialized = pickle.dumps(to_serialize, -1)
 
 To unpickle, just
+
+.. doctest::
 
     >>> loaded = pickle.loads(serialized)
     >>> ureg.Quantity.from_tuple(loaded)
@@ -96,6 +96,9 @@ Notice that not all of these packages will serialize properly the magnitude (whi
 numerical type such as `numpy.ndarray`).
 
 Using the serialize_ package you can load and read from multiple formats:
+
+.. doctest::
+    :skipif: not_installed['serialize']
 
     >>> from serialize import dump, load, register_class
     >>> register_class(ureg.Quantity, ureg.Quantity.to_tuple, ureg.Quantity.from_tuple)
@@ -113,6 +116,3 @@ Using the serialize_ package you can load and read from multiple formats:
 .. _hdf5: http://www.h5py.org/
 .. _PyTables: http://www.pytables.org
 .. _dill: https://pypi.python.org/pypi/dill
-
-
-

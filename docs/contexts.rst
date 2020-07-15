@@ -1,4 +1,3 @@
-.. _contexts:
 
 Contexts
 ========
@@ -55,11 +54,15 @@ Contexts can be also enabled for blocks of code using the `with` statement:
     <Quantity(5.99584916e+14, 'hertz')>
 
 If you need a particular context in all your code, you can enable it for all
-operations with the registry::
+operations with the registry
+
+.. doctest::
 
     >>> ureg.enable_contexts('sp')
 
-To disable the context, just call::
+To disable the context, just call
+
+.. doctest::
 
     >>> ureg.disable_contexts()
 
@@ -69,16 +72,22 @@ Enabling multiple contexts
 
 You can enable multiple contexts:
 
+.. doctest::
+
     >>> q.to('Hz', 'sp', 'boltzmann')
     <Quantity(5.99584916e+14, 'hertz')>
 
 This works also using the `with` statement:
+
+.. doctest::
 
     >>> with ureg.context('sp', 'boltzmann'):
     ...     q.to('Hz')
     <Quantity(5.99584916e+14, 'hertz')>
 
 or in the registry:
+
+.. doctest::
 
     >>> ureg.enable_contexts('sp', 'boltzmann')
     >>> q.to('Hz')
@@ -87,6 +96,8 @@ or in the registry:
 If a conversion rule between two dimensions appears in more than one context,
 the one in the last context has precedence. This is easy to remember if you
 think that the previous syntax is equivalent to nest contexts:
+
+.. doctest::
 
     >>> with ureg.context('sp'):
     ...     with ureg.context('boltzmann') :
@@ -106,7 +117,7 @@ calculate, for example, the wavelength in water of a laser which on air is 530 n
     >>> wl = 530. * ureg.nm
     >>> f = wl.to('Hz', 'sp')
     >>> f.to('nm', 'sp', n=1.33)
-    <Quantity(398.496240602, 'nanometer')>
+    <Quantity(398.4962..., 'nanometer')>
 
 Contexts can also accept Pint Quantity objects as parameters. For example, the
 'chemistry' context accepts the molecular weight of a substance (as a Quantity
@@ -135,7 +146,7 @@ context and the parameters that you wish to set.
     ... def f(wl):
     ...     return wl.to('Hz').magnitude
     >>> f(wl)
-    398.496240602
+    425297855014895.6
 
 
 This decorator can be combined with **wraps** or **check** decorators described in
@@ -194,14 +205,16 @@ functions. For example:
     ...                      lambda ureg, x: x * ureg.speed_of_light)
     >>> ureg.add_context(c)
     >>> ureg("1 s").to("km", "ab")
-    299792.458 kilometer
+    <Quantity(299792.458, 'kilometer')>
 
 It is also possible to create anonymous contexts without invoking add_context:
 
+.. doctest::
+
    >>> c = pint.Context()
-   ...
+   >>> c.add_transformation('[time]', '[length]', lambda ureg, x: x * ureg.speed_of_light)
    >>> ureg("1 s").to("km", c)
-   299792.458 kilometer
+   <Quantity(299792.458, 'kilometer')>
 
 Using contexts for unit redefinition
 ------------------------------------
