@@ -4,80 +4,100 @@
 Logarithmic Units
 =================
 
-Pint supports some logarithmic units, including dB, dBm, octave, and decade
-as well as conversions between them and their base units where applicable.
+.. warning::
+
+    Support for logarithmic units in Pint is currently in Beta. Please take
+    careful note of the information below, particularly around `compound log units`_
+    to avoid calculation errors. Bug reports and pull requests are always
+    welcome, please see :doc:`contributing` for more information on
+    how you can help improve this feature (and Pint in general).
+
+Pint supports some logarithmic units, including `dB`, `dBm`, `octave`, and `decade`
+as well as some conversions between them and their base units where applicable.
 These units behave much like those described in :ref:`nonmult`, so many of
 the recommendations there apply here as well.
 
-.. note::
+Setting up the ``UnitRegistry()``
+---------------------------------
 
-    If you're making heavy use of logarithmic units, you may find it helpful to
-    pass ``autoconvert_offset_to_baseunit=True`` when initializing your ``UnitRegistry()``,
-    this will allow you to use syntax like ``10.0 * ureg.dBm`` in lieu of the
-    explicit ``Quantity()`` constructor. Many examples on this page assume
-    you've passed this parameter, and will not work otherwise.
-
-Defining log units
-------------------
-
-First, set up your ``UnitRegistry`` with the suggested flag.
-
-If you do not wish to use the ``autoconvert_offset_to_baseunit`` flag, you
-will need to define all logarithmic units using the ``Quanity()`` constructor:
-
-.. doctest::
-
-    >>> from pint import UnitRegistry
-    >>> ureg = UnitRegistry()
-    >>> Q_ = ureg.Quantity
-    >>> signal_power_dbm = 20 * ureg.dBm    # must pass flag for this to work
-    Traceback (most recent call last):
-        ...
-    OffsetUnitCalculusError: Ambiguous operation with offset unit (decibellmilliwatt, ).
-    >>> Q_(20, 'dBm')                       # define like this instead
-    <Quantity(20, 'decibellmilliwatt')>
-
-You will also be restricted in the kinds of operations you can do without
-converting to base units first.
-
-.. doctest::
-
-    >>> Q_(10, 'dBm/Hz') * (100 * ureg.Hz)  # not feasible without flag
-    Traceback (most recent call last):
-        ...
-    UndefinedUnitError: 'delta_decibellmilliwatt' is not defined in the unit registry
-
-Passing the flag will allow you to use a more natural syntax for defining
-logarithmic units:
+Many of the examples below will fail without supplying the
+``autoconvert_offset_to_baseunit=True`` flag. To use logarithmic units,
+intialize your ``UnitRegistry()`` like so:
 
 .. doctest::
 
     >>> from pint import UnitRegistry
     >>> ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
     >>> Q_ = ureg.Quantity
+
+If you can't pass that flag you will need to define all logarithmic units
+:ref:`using the Quantity() constructor<Using the constructor>`, and you will
+be restricted in the kinds of operations you can do without explicitly calling
+`.to_base_units()` first.
+
+Defining log quantities
+-----------------------
+
+After you've set up your ``UnitRegistry()`` with the ``autoconvert...`` flag,
+you can define simple logarithmic quantities like most others:
+
+.. doctest::
+
     >>> 20.0 * ureg.dBm
     <Quantity(20.0, 'decibellmilliwatt')>
+    >>> ureg('20.0 dBm')
+    <Quantity(20.0, 'decibellmilliwatt')>
+    >>> ureg('20 dB')
+    <Quantity(20, 'decibell')>
+
 
 Converting to and from base units
 ---------------------------------
 
-    >>> signal_power_dbm = 20.0 * ureg.dBm
-    >>> signal_power_dbm.to('mW')
+Get a sense of how logarithmic units are handled by using the `.to()` and
+`.to_base_units()` methods:
+
+.. doctest::
+
+    >>> ureg('20 dBm').to('mW')
     <Quantity(100.0, 'milliwatt')>
-    >>> signal_power_mw = 100.0 * ureg.mW
-    >>> signal_power_mw
-    <Quantity(100.0, 'milliwatt')>
-    >>> signal_power_mw.to('dBm')
+    >>> ureg('20 dB').to_base_units()
+    <Quantity(100.0, 'dimensionless')>
+
+.. note::
+
+    Notice in the above example how the `dB` unit is defined for
+    power quantities (10*log(p/p0)) not field (amplitude) quantities
+    (20*log(v/v0)). Take care that you're only using it to multiply power
+    levels, and not e.g. Voltages.
+
+Convert back from a base unit to a logarithmic unit using the `.to()` method:
+
+.. doctest::
+
+    >>> (100.0 * ureg('mW')).to('dBm')
     <Quantity(20.0, 'decibellmilliwatt')>
+    >>> shift = Q_(4, '')
+    >>> shift
+    <Quantity(4, 'dimensionless')>
+    >>> shift.to('octave')
+    <Quantity(2.0, 'octave')>
 
 Compound log units
 ------------------
 
-Pint also works with mixtures of logarithmic and other units.
+.. warning::
+
+    Support for compound logarithmic units is not comprehensive. The following
+    examples work, but many others will not. Consider converting the logarithmic
+    portion to base units before adding more units.
+
+Pint sometimes works with mixtures of logarithmic and other units. Below is an
+example of computing RMS noise from a noise density and a bandwidth:
 
 .. doctest::
 
-    >>> noise_density = -161.0 * ureg['dBm/Hz']
+    >>> noise_density = -161.0 * ureg.dBm / ureg.Hz
     >>> bandwidth = 10.0 * ureg.kHz
     >>> noise_power = noise_density * bandwidth
     >>> noise_power.to('dBm')
@@ -85,9 +105,23 @@ Pint also works with mixtures of logarithmic and other units.
     >>> noise_power.to('mW')
     <Quantity(7.94328235e-13, 'milliwatt')>
 
-Multiplication, division and exponentiation of quantities with
-offset units is problematic just like addition. Pint (since version 0.6)
-will by default raise an error when a quantity with offset unit is used in
-these operations. Due to this quantities with offset units cannot be created
-like other quantities by multiplication of magnitude and unit but have
-to be explicitly created:
+There are still issues with parsing compound units, so for now the following
+will not work:
+
+.. doctest::
+
+    >>> -161.0 * ureg('dBm/Hz') == (-161.0 * ureg.dBm / ureg.Hz)
+    False
+
+But this will:
+
+.. doctest::
+
+    >>> ureg('-161.0 dBm/Hz') == (-161.0 * ureg.dBm / ureg.Hz)
+    True
+    >>> Q_(-161.0, 'dBm') / ureg.Hz == (-161.0 * ureg.dBm / ureg.Hz)
+    True
+
+To begin using this feature while avoiding problems, define logarithmic units
+as single-unit quantities and convert them to their base units as quickly as
+possible.
