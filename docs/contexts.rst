@@ -1,4 +1,3 @@
-.. _contexts:
 
 Contexts
 ========
