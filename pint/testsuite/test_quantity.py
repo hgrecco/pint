@@ -2,9 +2,9 @@ import copy
 import datetime
 import math
 import operator as op
+import pickle
 import warnings
 from unittest.mock import patch
-import pickle
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
 from pint.compat import np
