@@ -1808,7 +1808,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def __setitem__(self, key, value):
         try:
-            if math.isnan(value):
+            if np.ma.is_masked(value) or math.isnan(value):
                 self._magnitude[key] = value
                 return
         except TypeError:
