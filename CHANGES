@@ -6,6 +6,7 @@ Pint Changelog
 
 - Implement Dask collection interface to support Pint Quantity wrapped Dask arrays.
 - Started automatically testing examples in the documentation
+- Fixed right operand power for dimensionless Quantity to reflect numpy behavior. (Issue #1136)
 
 0.14 (2020-07-01)
 -----------------
