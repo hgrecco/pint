@@ -1467,9 +1467,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             if not self.dimensionless:
                 raise DimensionalityError(self._units, "dimensionless")
-            if is_duck_array_type(type(self._magnitude)):
-                if np.size(self._magnitude) > 1:
-                    raise DimensionalityError(self._units, "dimensionless")
             new_self = self.to_root_units()
             return other ** new_self._magnitude
 
