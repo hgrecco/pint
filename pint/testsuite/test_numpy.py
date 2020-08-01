@@ -2,6 +2,7 @@ import copy
 import operator as op
 import pickle
 import unittest
+import warnings
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from pint.compat import np
@@ -849,6 +850,16 @@ class TestNumpyUnclassified(TestNumpyMethods):
         q = [0.0, 1.0, 2.0, 3.0] * self.ureg.m / self.ureg.mm
         q[0] = 1.0
         self.assertQuantityEqual(q, [0.001, 1, 2, 3] * self.ureg.m / self.ureg.mm)
+
+        # Check that this properly masks the first item without warning
+        q = self.ureg.Quantity(
+            np.ma.array([0.0, 1.0, 2.0, 3.0], mask=[False, True, False, False]), "m"
+        )
+        with warnings.catch_warnings(record=True) as w:
+            q[0] = np.ma.masked
+            # Check for no warnings
+            assert not w
+            assert q.mask[0]
 
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
