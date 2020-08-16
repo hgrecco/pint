@@ -130,6 +130,14 @@ class QuantityTestCase(BaseTestCase):
             self.assertLessEqual(abs(m1 - m2), atol + rtol * abs(m2), msg=msg)
 
 
+class CaseInsensitveQuantityTestCase(QuantityTestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.ureg = UnitRegistry(case_sensitive=False)
+        cls.Q_ = cls.ureg.Quantity
+        cls.U_ = cls.ureg.Unit
+
+
 def testsuite():
     """A testsuite that has all the pint tests."""
     suite = unittest.TestLoader().discover(os.path.dirname(__file__))
