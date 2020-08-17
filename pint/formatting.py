@@ -95,7 +95,7 @@ _FORMATS = {
         "single_denominator": True,
         "product_fmt": r" ",
         "division_fmt": r"{}/{}",
-        "power_fmt": "{{{}}}^{{{}}}",  # braces superscript whole exponent
+        "power_fmt": r"{}<sup>{}</sup>",
         "parentheses_fmt": r"({})",
     },
     "": {  # Default format.
@@ -270,12 +270,8 @@ def format_unit(unit, spec, **kwspec):
             (r"\mathrm{{{}}}".format(u.replace("_", r"\_")), p) for u, p in unit.items()
         ]
         return formatter(rm, **fmt).replace("[", "{").replace("]", "}")
-    elif spec == "H":
-        # HTML (Jupyter Notebook)
-        rm = [(u.replace("_", r"\_"), p) for u, p in unit.items()]
-        return formatter(rm, **fmt)
     else:
-        # Plain text
+        # HTML and Text
         return formatter(unit.items(), **fmt)
 
 
