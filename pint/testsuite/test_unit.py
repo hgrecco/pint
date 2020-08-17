@@ -11,7 +11,7 @@ from pint import (
 )
 from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
-from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite import CaseInsensitveQuantityTestCase, QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
 from pint.util import ParserHelper, UnitsContainer
 
@@ -702,6 +702,48 @@ class TestRegistry(QuantityTestCase):
                 [ureg.Quantity(10.0, "foot"), ureg.Quantity(10.0, "inch")],
                 [ureg.Quantity(10.0, "foot"), ureg.Quantity(11.0, "inch")],
             ],
+        )
+
+    def test_case_sensitivity(self):
+        ureg = self.ureg
+        # Default
+        self.assertRaises(UndefinedUnitError, ureg.parse_units, "Meter")
+        self.assertRaises(UndefinedUnitError, ureg.parse_units, "j")
+        # Force True
+        self.assertRaises(
+            UndefinedUnitError, ureg.parse_units, "Meter", case_sensitive=True
+        )
+        self.assertRaises(
+            UndefinedUnitError, ureg.parse_units, "j", case_sensitive=True
+        )
+        # Force False
+        self.assertEqual(
+            ureg.parse_units("Meter", case_sensitive=False), UnitsContainer(meter=1)
+        )
+        self.assertEqual(
+            ureg.parse_units("j", case_sensitive=False), UnitsContainer(joule=1)
+        )
+
+
+class TestCaseInsensitiveRegistry(CaseInsensitveQuantityTestCase):
+    def test_case_sensitivity(self):
+        ureg = self.ureg
+        # Default
+        self.assertEqual(ureg.parse_units("Meter"), UnitsContainer(meter=1))
+        self.assertEqual(ureg.parse_units("j"), UnitsContainer(joule=1))
+        # Force True
+        self.assertRaises(
+            UndefinedUnitError, ureg.parse_units, "Meter", case_sensitive=True
+        )
+        self.assertRaises(
+            UndefinedUnitError, ureg.parse_units, "j", case_sensitive=True
+        )
+        # Force False
+        self.assertEqual(
+            ureg.parse_units("Meter", case_sensitive=False), UnitsContainer(meter=1)
+        )
+        self.assertEqual(
+            ureg.parse_units("j", case_sensitive=False), UnitsContainer(joule=1)
         )
 
 
