@@ -63,6 +63,32 @@ To build the documentation, invoke Sphinx from the ``docs`` directory::
     $ cd docs
     $ make html
 
+Extension Packages
+------------------
+
+Pint naturally integrates with other libraries in the scientific Python ecosystem, and
+a small number of
+`extension/compatibility packages<numpy.html#Compatibility-Packages>`_ have arisen to
+aid in compatibility between certain packages. Pint's rule of thumb for integration
+features that work best as an extension pacakage versus direct inclusion in Pint is:
+
+* Extension (separate packages)
+
+  * Duck array types that wrap Pint (come above Pint in
+    `the type casting hierarchy<numpy.html#Technical-Commentary>`_)
+
+  * Uses features independent/on top of the libraries
+
+  * Examples: xarray, Pandas
+
+* Integration (built in to Pint)
+
+  * Duck array types wrapped by Pint (below Pint in the type casting hierarchy)
+
+  * Intermingling of APIs occurs
+
+  * Examples: Dask
+
 
 .. _github: http://github.com/hgrecco/pint
 .. _`issue tracker`: https://github.com/hgrecco/pint/issues
