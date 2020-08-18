@@ -13,6 +13,7 @@ Pint Changelog
 - Started automatically testing examples in the documentation
 - Fixed right operand power for dimensionless Quantity to reflect numpy behavior. (Issue #1136)
 - Eliminated warning when setting a masked value on an underlying MaskedArray.
+- Add `sort` option to `formatting.formatter` to permit disabling sorting of component units in format string
 
 0.14 (2020-07-01)
 -----------------
