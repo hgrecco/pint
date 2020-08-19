@@ -1964,6 +1964,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __dask_keys__(self):
         return self._magnitude.__dask_keys__()
 
+    def __dask_tokenize__(self):
+        return (Quantity, self._magnitude.name, self.units)
+
     @property
     def __dask_optimize__(self):
         return dask_array.Array.__dask_optimize__
@@ -2028,7 +2031,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         Parameters
         ----------
         **kwargs : dict
-            Any keyword arguments to pass to the ``dask.base.visualize`` function.
+            Any keyword arguments to pass to ``dask.visualize``.
 
         Returns
         -------
