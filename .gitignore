@@ -27,3 +27,6 @@ test/
 
 # test csv which should be user generated
 notebooks/pandas_test.csv
+
+# dask stuff
+dask-worker-space

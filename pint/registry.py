@@ -167,6 +167,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         locale identifier string, used in `format_babel`
     non_int_type : type
         numerical type used for non integer values. (Default: float)
+    case_sensitive : bool, optional
+        Control default case sensitivity of unit parsing. (Default: True)
 
     """
 
@@ -187,6 +189,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         preprocessors=None,
         fmt_locale=None,
         non_int_type=float,
+        case_sensitive=True,
     ):
         self._register_parsers()
         self._init_dynamic_classes()
@@ -207,6 +210,9 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         #: Numerical type used for non integer values.
         self.non_int_type = non_int_type
+
+        #: Default unit case sensitivity
+        self.case_sensitive = case_sensitive
 
         #: Map between name (string) and value (string) of defaults stored in the
         #: definitions file.
@@ -619,7 +625,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
 
-    def get_name(self, name_or_alias, case_sensitive=True):
+    def get_name(self, name_or_alias, case_sensitive=None):
         """Return the canonical name of a unit.
         """
 
@@ -645,7 +651,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         if prefix:
             name = prefix + unit_name
-            symbol = self.get_symbol(name)
+            symbol = self.get_symbol(name, case_sensitive)
             prefix_def = self._prefixes[prefix]
             self._units[name] = UnitDefinition(
                 name,
@@ -658,10 +664,10 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return unit_name
 
-    def get_symbol(self, name_or_alias):
+    def get_symbol(self, name_or_alias, case_sensitive=None):
         """Return the preferred alias for a unit.
         """
-        candidates = self.parse_unit_name(name_or_alias)
+        candidates = self.parse_unit_name(name_or_alias, case_sensitive)
         if not candidates:
             raise UndefinedUnitError(name_or_alias)
         elif len(candidates) == 1:
@@ -994,7 +1000,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return value
 
-    def parse_unit_name(self, unit_name, case_sensitive=True):
+    def parse_unit_name(self, unit_name, case_sensitive=None):
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
         In case of equivalent combinations (e.g. ('kilo', 'gram', '') and
@@ -1004,8 +1010,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         ----------
         unit_name :
 
-        case_sensitive :
-             (Default value = True)
+        case_sensitive : bool or None
+            Control if unit lookup is case sensitive. Defaults to None, which uses the
+            registry's case_sensitive setting
 
         Returns
         -------
@@ -1016,9 +1023,12 @@ class BaseRegistry(metaclass=RegistryMeta):
             self._parse_unit_name(unit_name, case_sensitive=case_sensitive)
         )
 
-    def _parse_unit_name(self, unit_name, case_sensitive=True):
+    def _parse_unit_name(self, unit_name, case_sensitive=None):
         """Helper of parse_unit_name.
         """
+        case_sensitive = (
+            self.case_sensitive if case_sensitive is None else case_sensitive
+        )
         stw = unit_name.startswith
         edw = unit_name.endswith
         for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
@@ -1062,7 +1072,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 candidates.pop(("", cp + cu, ""), None)
         return tuple(candidates)
 
-    def parse_units(self, input_string, as_delta=None):
+    def parse_units(self, input_string, as_delta=None, case_sensitive=None):
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
 
@@ -1074,6 +1084,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         as_delta : bool or None
             if the expression has multiple units, the parser will
             interpret non multiplicative units as their `delta_` counterparts. (Default value = None)
+        case_sensitive : bool or None
+            Control if unit parsing is case sensitive. Defaults to None, which uses the
+            registry's setting.
 
         Returns
         -------
@@ -1081,10 +1094,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
         for p in self.preprocessors:
             input_string = p(input_string)
-        units = self._parse_units(input_string, as_delta)
+        units = self._parse_units(input_string, as_delta, case_sensitive)
         return self.Unit(units)
 
-    def _parse_units(self, input_string, as_delta=True):
+    def _parse_units(self, input_string, as_delta=True, case_sensitive=None):
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
         """
@@ -1109,7 +1122,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         ret = {}
         many = len(units) > 1
         for name in units:
-            cname = self.get_name(name)
+            cname = self.get_name(name, case_sensitive=case_sensitive)
             value = units[name]
             if not cname:
                 continue
@@ -1126,7 +1139,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return ret
 
-    def _eval_token(self, token, case_sensitive=True, use_decimal=False, **values):
+    def _eval_token(self, token, case_sensitive=None, use_decimal=False, **values):
 
         # TODO: remove this code when use_decimal is deprecated
         if use_decimal:
@@ -1156,7 +1169,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             raise Exception("unknown token type")
 
     def parse_pattern(
-        self, input_string, pattern, case_sensitive=True, use_decimal=False, many=False
+        self, input_string, pattern, case_sensitive=None, use_decimal=False, many=False
     ):
         """Parse a string with a given regex pattern and returns result.
 
@@ -1167,7 +1180,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         pattern_string:
              The regex parse string
         case_sensitive :
-             (Default value = True)
+             (Default value = None, which uses registry setting)
         use_decimal :
              (Default value = False)
         many :
@@ -1212,7 +1225,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return results
 
     def parse_expression(
-        self, input_string, case_sensitive=True, use_decimal=False, **values
+        self, input_string, case_sensitive=None, use_decimal=False, **values
     ):
         """Parse a mathematical expression including units and return a quantity object.
 
@@ -1224,7 +1237,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         input_string :
 
         case_sensitive :
-             (Default value = True)
+             (Default value = None, which uses registry setting)
         use_decimal :
              (Default value = False)
         **values :
@@ -1289,13 +1302,13 @@ class NonMultiplicativeRegistry(BaseRegistry):
         # base units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
-    def _parse_units(self, input_string, as_delta=None):
+    def _parse_units(self, input_string, as_delta=None, case_sensitive=None):
         """
         """
         if as_delta is None:
             as_delta = self.default_as_delta
 
-        return super()._parse_units(input_string, as_delta)
+        return super()._parse_units(input_string, as_delta, case_sensitive)
 
     def _define(self, definition):
         """Add unit to the registry.
@@ -2118,6 +2131,8 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         or unit string
     fmt_locale :
         locale identifier string, used in `format_babel`. Default to None
+    case_sensitive : bool, optional
+        Control default case sensitivity of unit parsing. (Default: True)
     """
 
     def __init__(
@@ -2133,6 +2148,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         preprocessors=None,
         fmt_locale=None,
         non_int_type=float,
+        case_sensitive=True,
     ):
 
         super().__init__(
@@ -2147,6 +2163,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
             preprocessors=preprocessors,
             fmt_locale=fmt_locale,
             non_int_type=non_int_type,
+            case_sensitive=case_sensitive,
         )
 
     def pi_theorem(self, quantities):

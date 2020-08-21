@@ -11,7 +11,7 @@ from pint import (
 )
 from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
-from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite import CaseInsensitveQuantityTestCase, QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
 from pint.util import ParserHelper, UnitsContainer
 
@@ -42,13 +42,13 @@ class TestUnit(QuantityTestCase):
                 r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
             ("{:P}", "kilogram·meter²/second"),
-            ("{:H}", r"\[kilogram\ {meter}^{2}/second\]"),
+            ("{:H}", "kilogram meter<sup>2</sup>/second"),
             ("{:C}", "kilogram*meter**2/second"),
             ("{:Lx}", r"\si[]{\kilo\gram\meter\squared\per\second}"),
             ("{:~}", "kg * m ** 2 / s"),
             ("{:L~}", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
             ("{:P~}", "kg·m²/s"),
-            ("{:H~}", r"\[kg\ {m}^{2}/s\]"),
+            ("{:H~}", "kg m<sup>2</sup>/s"),
             ("{:C~}", "kg*m**2/s"),
         ):
             with self.subTest(spec):
@@ -63,12 +63,12 @@ class TestUnit(QuantityTestCase):
                 r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
             ("P", "kilogram·meter²/second"),
-            ("H", r"\[kilogram\ {meter}^{2}/second\]"),
+            ("H", "kilogram meter<sup>2</sup>/second"),
             ("C", "kilogram*meter**2/second"),
             ("~", "kg * m ** 2 / s"),
             ("L~", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
             ("P~", "kg·m²/s"),
-            ("H~", r"\[kg\ {m}^{2}/s\]"),
+            ("H~", "kg m<sup>2</sup>/s"),
             ("C~", "kg*m**2/s"),
         ):
             with self.subTest(spec):
@@ -82,12 +82,12 @@ class TestUnit(QuantityTestCase):
         for spec, result in (
             ("L", r"\mathrm{oil\_barrel}"),
             ("P", "oil_barrel"),
-            ("H", r"\[oil\_barrel\]"),
+            ("H", "oil_barrel"),
             ("C", "oil_barrel"),
             ("~", "oil_bbl"),
             ("L~", r"\mathrm{oil\_bbl}"),
             ("P~", "oil_bbl"),
-            ("H~", r"\[oil\_bbl\]"),
+            ("H~", "oil_bbl"),
             ("C~", "oil_bbl"),
         ):
             with self.subTest(spec):
@@ -104,7 +104,7 @@ class TestUnit(QuantityTestCase):
 
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        self.assertEqual(x._repr_html_(), r"\[kilogram\ {meter}^{2}/second\]")
+        self.assertEqual(x._repr_html_(), "kilogram meter<sup>2</sup>/second")
         self.assertEqual(
             x._repr_latex_(),
             r"$\frac{\mathrm{kilogram} \cdot " r"\mathrm{meter}^{2}}{\mathrm{second}}$",
@@ -112,7 +112,7 @@ class TestUnit(QuantityTestCase):
         x._repr_pretty_(Pretty, False)
         self.assertEqual("".join(alltext), "kilogram·meter²/second")
         ureg.default_format = "~"
-        self.assertEqual(x._repr_html_(), r"\[kg\ {m}^{2}/s\]")
+        self.assertEqual(x._repr_html_(), "kg m<sup>2</sup>/s")
         self.assertEqual(
             x._repr_latex_(), r"$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$"
         )
@@ -702,6 +702,48 @@ class TestRegistry(QuantityTestCase):
                 [ureg.Quantity(10.0, "foot"), ureg.Quantity(10.0, "inch")],
                 [ureg.Quantity(10.0, "foot"), ureg.Quantity(11.0, "inch")],
             ],
+        )
+
+    def test_case_sensitivity(self):
+        ureg = self.ureg
+        # Default
+        self.assertRaises(UndefinedUnitError, ureg.parse_units, "Meter")
+        self.assertRaises(UndefinedUnitError, ureg.parse_units, "j")
+        # Force True
+        self.assertRaises(
+            UndefinedUnitError, ureg.parse_units, "Meter", case_sensitive=True
+        )
+        self.assertRaises(
+            UndefinedUnitError, ureg.parse_units, "j", case_sensitive=True
+        )
+        # Force False
+        self.assertEqual(
+            ureg.parse_units("Meter", case_sensitive=False), UnitsContainer(meter=1)
+        )
+        self.assertEqual(
+            ureg.parse_units("j", case_sensitive=False), UnitsContainer(joule=1)
+        )
+
+
+class TestCaseInsensitiveRegistry(CaseInsensitveQuantityTestCase):
+    def test_case_sensitivity(self):
+        ureg = self.ureg
+        # Default
+        self.assertEqual(ureg.parse_units("Meter"), UnitsContainer(meter=1))
+        self.assertEqual(ureg.parse_units("j"), UnitsContainer(joule=1))
+        # Force True
+        self.assertRaises(
+            UndefinedUnitError, ureg.parse_units, "Meter", case_sensitive=True
+        )
+        self.assertRaises(
+            UndefinedUnitError, ureg.parse_units, "j", case_sensitive=True
+        )
+        # Force False
+        self.assertEqual(
+            ureg.parse_units("Meter", case_sensitive=False), UnitsContainer(meter=1)
+        )
+        self.assertEqual(
+            ureg.parse_units("j", case_sensitive=False), UnitsContainer(joule=1)
         )
 
 

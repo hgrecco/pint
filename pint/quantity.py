@@ -47,7 +47,6 @@ from .errors import (
 from .formatting import (
     _pretty_fmt_exponent,
     ndarray_to_latex,
-    ndarray_to_latex_parts,
     remove_custom_flags,
     siunitx_format_unit,
 )
@@ -66,6 +65,7 @@ from .util import (
     SharedRegistryObject,
     UnitsContainer,
     infer_base_unit,
+    iterable,
     logger,
     to_units_container,
 )
@@ -311,11 +311,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         spec = spec or self.default_format
 
-        if "L" in spec:
-            allf = plain_allf = r"{}\ {}"
-        else:
-            allf = plain_allf = "{} {}"
-
         # If Compact is selected, do it at the beginning
         if "#" in spec:
             spec = spec.replace("#", "")
@@ -323,36 +318,65 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             obj = self
 
-        # the LaTeX siunitx code
+        if "L" in spec:
+            allf = plain_allf = r"{}\ {}"
+        elif "H" in spec:
+            allf = plain_allf = "{} {}"
+            if iterable(obj.magnitude):
+                # Use HTML table instead of plain text template for array-likes
+                allf = (
+                    "<table><tbody>"
+                    "<tr><th>Magnitude</th>"
+                    "<td style='text-align:left;'>{}</td></tr>"
+                    "<tr><th>Units</th><td style='text-align:left;'>{}</td></tr>"
+                    "</tbody></table>"
+                )
+        else:
+            allf = plain_allf = "{} {}"
+
         if "Lx" in spec:
+            # the LaTeX siunitx code
             spec = spec.replace("Lx", "")
             # TODO: add support for extracting options
             opts = ""
             ustr = siunitx_format_unit(obj.units)
             allf = r"\SI[%s]{{{}}}{{{}}}" % opts
-        elif "H" in spec:
-            ustr = format(obj.units, spec)
-            assert ustr[:2] == r"\["
-            assert ustr[-2:] == r"\]"
-            ustr = ustr[2:-2]
-            allf = r"\[{}\ {}\]"
         else:
+            # Hand off to unit formatting
             ustr = format(obj.units, spec)
 
         mspec = remove_custom_flags(spec)
-        if isinstance(self.magnitude, ndarray):
-            if "L" in spec:
-                mstr = ndarray_to_latex(obj.magnitude, mspec)
-            elif "H" in spec:
-                allf = r"\[{} {}\]"
-                # this is required to have the magnitude and unit in the same line
-                parts = ndarray_to_latex_parts(obj.magnitude, mspec)
-
-                if len(parts) > 1:
-                    return "\n".join(allf.format(part, ustr) for part in parts)
-
-                mstr = parts[0]
+        if "H" in spec:
+            # HTML formatting
+            if hasattr(obj.magnitude, "_repr_html_"):
+                # If magnitude has an HTML repr, nest it within Pint's
+                mstr = obj.magnitude._repr_html_()
             else:
+                if isinstance(self.magnitude, ndarray):
+                    # Use custom ndarray text formatting with monospace font
+                    formatter = "{{:{}}}".format(mspec)
+                    with printoptions(formatter={"float_kind": formatter.format}):
+                        mstr = (
+                            "<pre>"
+                            + format(obj.magnitude).replace("\n", "<br>")
+                            + "</pre>"
+                        )
+                elif not iterable(obj.magnitude):
+                    # Use plain text for scalars
+                    mstr = format(obj.magnitude, mspec)
+                else:
+                    # Use monospace font for other array-likes
+                    mstr = (
+                        "<pre>"
+                        + format(obj.magnitude, mspec).replace("\n", "<br>")
+                        + "</pre>"
+                    )
+        elif isinstance(self.magnitude, ndarray):
+            if "L" in spec:
+                # Use ndarray LaTeX special formatting
+                mstr = ndarray_to_latex(obj.magnitude, mspec)
+            else:
+                # Use custom ndarray text formatting
                 formatter = "{{:{}}}".format(mspec)
                 with printoptions(formatter={"float_kind": formatter.format}):
                     mstr = format(obj.magnitude).replace("\n", "")
@@ -361,13 +385,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         if "L" in spec:
             mstr = self._exp_pattern.sub(r"\1\\times 10^{\2\3}", mstr)
-        elif "H" in spec:
-            mstr = self._exp_pattern.sub(r"\1×10^{\2\3}", mstr)
-        elif "P" in spec:
+        elif "H" in spec or "P" in spec:
             m = self._exp_pattern.match(mstr)
+            _exp_formatter = (
+                _pretty_fmt_exponent if "P" in spec else lambda s: f"<sup>{s}</sup>"
+            )
             if m:
                 exp = int(m.group(2) + m.group(3))
-                mstr = self._exp_pattern.sub(r"\1×10" + _pretty_fmt_exponent(exp), mstr)
+                mstr = self._exp_pattern.sub(r"\1×10" + _exp_formatter(exp), mstr)
 
         if allf == plain_allf and ustr.startswith("1 /"):
             # Write e.g. "3 / s" instead of "3 1 / s"
@@ -1467,9 +1492,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         else:
             if not self.dimensionless:
                 raise DimensionalityError(self._units, "dimensionless")
-            if is_duck_array_type(type(self._magnitude)):
-                if np.size(self._magnitude) > 1:
-                    raise DimensionalityError(self._units, "dimensionless")
             new_self = self.to_root_units()
             return other ** new_self._magnitude
 
@@ -1811,7 +1833,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def __setitem__(self, key, value):
         try:
-            if math.isnan(value):
+            if np.ma.is_masked(value) or math.isnan(value):
                 self._magnitude[key] = value
                 return
         except TypeError:
@@ -1942,6 +1964,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __dask_keys__(self):
         return self._magnitude.__dask_keys__()
 
+    def __dask_tokenize__(self):
+        return (Quantity, self._magnitude.name, self.units)
+
     @property
     def __dask_optimize__(self):
         return dask_array.Array.__dask_optimize__
@@ -2006,7 +2031,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         Parameters
         ----------
         **kwargs : dict
-            Any keyword arguments to pass to the ``dask.base.visualize`` function.
+            Any keyword arguments to pass to ``dask.visualize``.
 
         Returns
         -------

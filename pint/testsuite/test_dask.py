@@ -59,6 +59,15 @@ def test_dask_scheduler(dask_array):
     assert scheduler_name == true_name
 
 
+def test_dask_tokenize(dask_array):
+    """Test that a pint.Quantity wrapped Dask array has a unique token."""
+    dask_token = dask.base.tokenize(dask_array)
+    q = ureg.Quantity(dask_array, units_)
+
+    assert dask.base.tokenize(dask_array) != dask.base.tokenize(q)
+    assert dask.base.tokenize(dask_array) == dask_token
+
+
 def test_dask_optimize(dask_array):
     """Test that a pint.Quantity wrapped Dask array can be optimized."""
     q = ureg.Quantity(dask_array, units_)

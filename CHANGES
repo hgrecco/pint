@@ -4,11 +4,18 @@ Pint Changelog
 0.15 (unreleased)
 -----------------
 
+- Change `Quantity` and `Unit` HTML (i.e., Jupyter notebook) repr away from LaTeX to a
+  simpler, more performant pretty-text and table based repr inspired by Sparse and Dask.
+  (Issue #654)
+- Add `case_sensitive` option to registry for case (in)sensitive handling when parsing
+  units (Issue #1145)
 - Implement Dask collection interface to support Pint Quantity wrapped Dask arrays.
 - Started automatically testing examples in the documentation
+- Fixed right operand power for dimensionless Quantity to reflect numpy behavior. (Issue #1136)
+- Eliminated warning when setting a masked value on an underlying MaskedArray.
+- Add `sort` option to `formatting.formatter` to permit disabling sorting of component units in format string
 - Implements Logarithmic Units like dBm, dB or decade
   (Issue #71, Thanks Dima Pustakhod, Giorgio Signorello, Jonathan Wheeler)
-
 
 0.14 (2020-07-01)
 -----------------

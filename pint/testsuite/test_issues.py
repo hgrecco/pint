@@ -738,6 +738,13 @@ class TestIssues(QuantityTestCase):
         ureg.enable_contexts("c2")
         ureg.enable_contexts("c3")
 
+    @helpers.requires_numpy()
+    def test_issue_1136(self):
+        assert (2 ** ureg.Quantity([2, 3], "") == 2 ** np.array([2, 3])).all()
+
+        with pytest.raises(DimensionalityError):
+            2 ** ureg.Quantity([2, 3], "m")
+
 
 if np is not None:
 

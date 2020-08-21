@@ -95,7 +95,7 @@ _FORMATS = {
         "single_denominator": True,
         "product_fmt": r" ",
         "division_fmt": r"{}/{}",
-        "power_fmt": "{{{}}}^{{{}}}",  # braces superscript whole exponent
+        "power_fmt": r"{}<sup>{}</sup>",
         "parentheses_fmt": r"({})",
     },
     "": {  # Default format.
@@ -129,6 +129,7 @@ def formatter(
     locale=None,
     babel_length="long",
     babel_plural_form="one",
+    sort=True,
 ):
     """Format a list of (name, exponent) pairs.
 
@@ -157,6 +158,8 @@ def formatter(
         the plural form, calculated as defined in babel. (Default value = "one")
     exp_call : callable
          (Default value = lambda x: f"{x:n}")
+    sort : bool, optional
+        True to sort the formatted units alphabetically (Default value = True)
 
     Returns
     -------
@@ -175,7 +178,9 @@ def formatter(
 
     pos_terms, neg_terms = [], []
 
-    for key, value in sorted(items):
+    if sort:
+        items = sorted(items)
+    for key, value in items:
         if locale and babel_length and babel_plural_form and key in _babel_units:
             _key = _babel_units[key]
             locale = babel_parse(locale)
@@ -270,12 +275,8 @@ def format_unit(unit, spec, **kwspec):
             (r"\mathrm{{{}}}".format(u.replace("_", r"\_")), p) for u, p in unit.items()
         ]
         return formatter(rm, **fmt).replace("[", "{").replace("]", "}")
-    elif spec == "H":
-        # HTML (Jupyter Notebook)
-        rm = [(u.replace("_", r"\_"), p) for u, p in unit.items()]
-        return formatter(rm, **fmt)
     else:
-        # Plain text
+        # HTML and Text
         return formatter(unit.items(), **fmt)
 
 
