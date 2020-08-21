@@ -13,7 +13,11 @@
 
 import datetime
 
-import pkg_resources
+try:
+    from importlib.metadata import version
+except ImportError:
+    # Backport for Python < 3.8
+    from importlib_metadata import version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -29,6 +33,7 @@ import pkg_resources
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.coverage",
@@ -60,7 +65,7 @@ author = "Hernan E. Grecco"
 # built documents.
 
 try:  # pragma: no cover
-    version = pkg_resources.get_distribution(project).version
+    version = version(project)
 except Exception:  # pragma: no cover
     # we seem to have a local copy not installed without setuptools
     # so the reported version will be unknown
@@ -317,3 +322,20 @@ epub_copyright = copyright
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {"http://docs.python.org/": None}
+
+# -- Doctest configuration -----------------------------------------------------
+
+# fill a dictionary with package names that may be missing
+# this is checked by :skipif: clauses in certain doctests that rely
+# on optional dependencies
+doctest_global_setup = """
+from importlib.util import find_spec
+
+not_installed = {
+    pkg_name: find_spec(pkg_name) is None
+    for pkg_name in [
+        'uncertainties',
+        'serialize',
+    ]
+}
+"""

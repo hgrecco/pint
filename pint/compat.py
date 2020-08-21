@@ -7,7 +7,7 @@
     :copyright: 2013 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-import os
+import math
 import tokenize
 from decimal import Decimal
 from io import BytesIO
@@ -37,29 +37,9 @@ class BehaviorChangeWarning(UserWarning):
     pass
 
 
-array_function_change_msg = """The way Pint handles NumPy operations has changed with the
-implementation of NEP 18. Unimplemented NumPy operations will now fail instead of making
-assumptions about units. Some functions, eg concat, will now return Quanties with units, where
-they returned ndarrays previously. See https://github.com/hgrecco/pint/pull/905.
-
-To hide this warning, wrap your first creation of an array Quantity with
-warnings.catch_warnings(), like the following:
-
-import numpy as np
-import warnings
-from pint import Quantity
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    Quantity([])
-
-To disable the new behavior, see
-https://www.numpy.org/neps/nep-0018-array-function-protocol.html#implementation
-"""
-
-
 try:
     import numpy as np
+    from numpy import datetime64 as np_datetime64
     from numpy import ndarray
 
     HAS_NUMPY = True
@@ -93,11 +73,8 @@ try:
             return False
 
     HAS_NUMPY_ARRAY_FUNCTION = _test_array_function_protocol()
-    SKIP_ARRAY_FUNCTION_CHANGE_WARNING = not HAS_NUMPY_ARRAY_FUNCTION
 
     NP_NO_VALUE = np._NoValue
-
-    ARRAY_FALLBACK = bool(int(os.environ.get("PINT_ARRAY_PROTOCOL_FALLBACK", 1)))
 
 except ImportError:
 
@@ -106,13 +83,14 @@ except ImportError:
     class ndarray:
         pass
 
+    class np_datetime64:
+        pass
+
     HAS_NUMPY = False
     NUMPY_VER = "0"
     NUMERIC_TYPES = (Number, Decimal)
     HAS_NUMPY_ARRAY_FUNCTION = False
-    SKIP_ARRAY_FUNCTION_CHANGE_WARNING = True
     NP_NO_VALUE = None
-    ARRAY_FALLBACK = False
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
         if force_ndarray or force_ndarray_like:
@@ -166,7 +144,7 @@ upcast_types = []
 
 # pint-pandas (PintArray)
 try:
-    from pintpandas import PintArray
+    from pint_pandas import PintArray
 
     upcast_types.append(PintArray)
 except ImportError:
@@ -188,8 +166,16 @@ try:
 except ImportError:
     pass
 
+try:
+    from dask import array as dask_array
+    from dask.base import compute, persist, visualize
 
-def is_upcast_type(other):
+except ImportError:
+    compute, persist, visualize = None, None, None
+    dask_array = None
+
+
+def is_upcast_type(other) -> bool:
     """Check if the type object is a upcast type using preset list.
 
     Parameters
@@ -203,29 +189,29 @@ def is_upcast_type(other):
     return other in upcast_types
 
 
-def is_duck_array_type(other):
+def is_duck_array_type(cls) -> bool:
     """Check if the type object represents a (non-Quantity) duck array type.
 
     Parameters
     ----------
-    other : object
+    cls : class
 
     Returns
     -------
     bool
     """
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
-    return other is ndarray or (
-        not hasattr(other, "_magnitude")
-        and not hasattr(other, "_units")
+    return issubclass(cls, ndarray) or (
+        not hasattr(cls, "_magnitude")
+        and not hasattr(cls, "_units")
         and HAS_NUMPY_ARRAY_FUNCTION
-        and hasattr(other, "__array_function__")
-        and hasattr(other, "ndim")
-        and hasattr(other, "dtype")
+        and hasattr(cls, "__array_function__")
+        and hasattr(cls, "ndim")
+        and hasattr(cls, "dtype")
     )
 
 
-def eq(lhs, rhs, check_all):
+def eq(lhs, rhs, check_all: bool):
     """Comparison of scalars and arrays.
 
     Parameters
@@ -235,13 +221,69 @@ def eq(lhs, rhs, check_all):
     rhs : object
         right-hand side
     check_all : bool
-        if True, reduce sequence to single bool.
+        if True, reduce sequence to single bool;
+        return True if all the elements are equal.
 
     Returns
     -------
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and isinstance(out, ndarray):
-        return np.all(out)
+    if check_all and is_duck_array_type(type(out)):
+        return out.all()
+    return out
+
+
+def isnan(obj, check_all: bool):
+    """Test for NaN or NaT
+
+    Parameters
+    ----------
+    obj : object
+        scalar or vector
+    check_all : bool
+        if True, reduce sequence to single bool;
+        return True if any of the elements are NaN.
+
+    Returns
+    -------
+    bool or array_like of bool.
+    Always return False for non-numeric types.
+    """
+    if is_duck_array_type(type(obj)):
+        if obj.dtype.kind in "if":
+            out = np.isnan(obj)
+        elif obj.dtype.kind in "Mm":
+            out = np.isnat(obj)
+        else:
+            # Not a numeric or datetime type
+            out = np.full(obj.shape, False)
+        return out.any() if check_all else out
+    if isinstance(obj, np_datetime64):
+        return np.isnat(obj)
+    try:
+        return math.isnan(obj)
+    except TypeError:
+        return False
+
+
+def zero_or_nan(obj, check_all: bool):
+    """Test if obj is zero, NaN, or NaT
+
+    Parameters
+    ----------
+    obj : object
+        scalar or vector
+    check_all : bool
+        if True, reduce sequence to single bool;
+        return True if all the elements are zero, NaN, or NaT.
+
+    Returns
+    -------
+    bool or array_like of bool.
+    Always return False for non-numeric types.
+    """
+    out = eq(obj, 0, False) + isnan(obj, False)
+    if check_all and is_duck_array_type(type(out)):
+        return out.all()
     return out

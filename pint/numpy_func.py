@@ -10,8 +10,8 @@ import warnings
 from inspect import signature
 from itertools import chain
 
-from .compat import eq, is_upcast_type, np
-from .errors import DimensionalityError
+from .compat import is_upcast_type, np, zero_or_nan
+from .errors import DimensionalityError, UnitStrippedWarning
 from .util import iterable, sized
 
 HANDLED_UFUNCS = {}
@@ -48,14 +48,13 @@ def _is_sequence_with_quantity_elements(obj):
 
     Returns
     -------
-    bool
+    True if obj is a sequence and at least one element is a Quantity; False otherwise
     """
     return (
         iterable(obj)
         and sized(obj)
         and not isinstance(obj, str)
-        and len(obj) > 0
-        and all(_is_quantity(item) for item in obj)
+        and any(_is_quantity(item) for item in obj)
     )
 
 
@@ -67,42 +66,43 @@ def _get_first_input_units(args, kwargs=None):
         if _is_quantity(arg):
             return arg.units
         elif _is_sequence_with_quantity_elements(arg):
-            return arg[0].units
+            return next(arg_i.units for arg_i in arg if _is_quantity(arg_i))
+    raise TypeError("Expected at least one Quantity; found none")
 
 
 def convert_arg(arg, pre_calc_units):
     """Convert quantities and sequences of quantities to pre_calc_units and strip units.
 
-    Helper function for convert_to_consistent_units. pre_calc_units must be given as a pint
-    Unit or None.
-
+    Helper function for convert_to_consistent_units. pre_calc_units must be given as a
+    pint Unit or None.
     """
     if pre_calc_units is not None:
         if _is_quantity(arg):
             return arg.m_as(pre_calc_units)
         elif _is_sequence_with_quantity_elements(arg):
-            return [item.m_as(pre_calc_units) for item in arg]
+            return [convert_arg(item, pre_calc_units) for item in arg]
         elif arg is not None:
             if pre_calc_units.dimensionless:
                 return pre_calc_units._REGISTRY.Quantity(arg).m_as(pre_calc_units)
+            elif not _is_quantity(arg) and zero_or_nan(arg, True):
+                return arg
             else:
                 raise DimensionalityError("dimensionless", pre_calc_units)
-    else:
-        if _is_quantity(arg):
-            return arg.m
-        elif _is_sequence_with_quantity_elements(arg):
-            return [item.m for item in arg]
+    elif _is_quantity(arg):
+        return arg.m
+    elif _is_sequence_with_quantity_elements(arg):
+        return [convert_arg(item, pre_calc_units) for item in arg]
     return arg
 
 
 def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
     """Prepare args and kwargs for wrapping by unit conversion and stripping.
 
-    If pre_calc_units is not None, takes the args and kwargs for a NumPy function and converts
-    any Quantity or Sequence of Quantities into the units of the first Quantiy/Sequence of
-    Quantities and returns the magnitudes. Other args/kwargs are treated as dimensionless
-    Quantities. If pre_calc_units is None, units are simply stripped.
-
+    If pre_calc_units is not None, takes the args and kwargs for a NumPy function and
+    converts any Quantity or Sequence of Quantities into the units of the first
+    Quantity/Sequence of Quantities and returns the magnitudes. Other args/kwargs are
+    treated as dimensionless Quantities. If pre_calc_units is None, units are simply
+    stripped.
     """
     return (
         tuple(convert_arg(arg, pre_calc_units=pre_calc_units) for arg in args),
@@ -120,6 +120,9 @@ def unwrap_and_wrap_consistent_units(*args):
     first arg with units, along with a wrapper to restore that unit to the output.
 
     """
+    if all(not _is_quantity(arg) for arg in args):
+        return args, lambda x: x
+
     first_input_units = _get_first_input_units(args)
     args, _ = convert_to_consistent_units(*args, pre_calc_units=first_input_units)
     return (
@@ -260,7 +263,10 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 
     # Handle functions in submodules
     func_str_split = func_str.split(".")
-    func = getattr(np, func_str_split[0])
+    func = getattr(np, func_str_split[0], None)
+    # If the function is not available, do not attempt to implement it
+    if func is None:
+        return
     for func_str_piece in func_str_split[1:]:
         func = getattr(func, func_str_piece)
 
@@ -410,7 +416,6 @@ matching_input_copy_units_output_ufuncs = [
 copy_units_output_ufuncs = ["ldexp", "fmod", "mod", "remainder"]
 op_units_output_ufuncs = {
     "var": "square",
-    "prod": "size",
     "multiply": "mul",
     "true_divide": "div",
     "divide": "div",
@@ -484,28 +489,15 @@ def _power(x1, x2):
         return x2.__rpow__(x1)
 
 
-def _add_subtract_handle_non_quantity_zero(x1, x2):
-    # As in #121/#122, if a value is 0 (but not Quantity 0) do the operation without
-    # checking units. We do the calculation instead of just returning the same value to
-    # enforce any shape checking and type casting due to the operation.
-    if eq(x1, 0, True):
-        (x2,), output_wrap = unwrap_and_wrap_consistent_units(x2)
-    elif eq(x2, 0, True):
-        (x1,), output_wrap = unwrap_and_wrap_consistent_units(x1)
-    else:
-        (x1, x2), output_wrap = unwrap_and_wrap_consistent_units(x1, x2)
-    return x1, x2, output_wrap
-
-
 @implements("add", "ufunc")
 def _add(x1, x2, *args, **kwargs):
-    x1, x2, output_wrap = _add_subtract_handle_non_quantity_zero(x1, x2)
+    (x1, x2), output_wrap = unwrap_and_wrap_consistent_units(x1, x2)
     return output_wrap(np.add(x1, x2, *args, **kwargs))
 
 
 @implements("subtract", "ufunc")
 def _subtract(x1, x2, *args, **kwargs):
-    x1, x2, output_wrap = _add_subtract_handle_non_quantity_zero(x1, x2)
+    (x1, x2), output_wrap = unwrap_and_wrap_consistent_units(x1, x2)
     return output_wrap(np.subtract(x1, x2, *args, **kwargs))
 
 
@@ -549,26 +541,7 @@ def _interp(x, xp, fp, left=None, right=None, period=None):
 
 @implements("where", "function")
 def _where(condition, *args):
-    if (
-        len(args) == 2
-        and not _is_quantity(args[1])
-        and not iterable(args[1])
-        and (args[1] == 0 or np.isnan(args[1]))
-    ):
-        # Special case for y being bare zero or nan
-        (x,), output_wrap = unwrap_and_wrap_consistent_units(args[0])
-        args = x, args[1]
-    elif (
-        len(args) == 2
-        and not _is_quantity(args[0])
-        and not iterable(args[0])
-        and (args[0] == 0 or np.isnan(args[0]))
-    ):
-        # Special case for x being bare zero or nan
-        (y,), output_wrap = unwrap_and_wrap_consistent_units(args[1])
-        args = args[0], y
-    else:
-        args, output_wrap = unwrap_and_wrap_consistent_units(*args)
+    args, output_wrap = unwrap_and_wrap_consistent_units(*args)
     return output_wrap(np.where(condition, *args))
 
 
@@ -602,6 +575,7 @@ def _copyto(dst, src, casting="same_kind", where=True):
     else:
         warnings.warn(
             "The unit of the quantity is stripped when copying to non-quantity",
+            UnitStrippedWarning,
             stacklevel=2,
         )
         np.copyto(dst, src.m, casting=casting, where=where)
@@ -630,6 +604,8 @@ def _isin(element, test_elements, assume_unique=False, invert=False):
     elif _is_sequence_with_quantity_elements(test_elements):
         compatible_test_elements = []
         for test_element in test_elements:
+            if not _is_quantity(test_element):
+                pass
             try:
                 compatible_test_elements.append(test_element.m_as(element.units))
             except DimensionalityError:
@@ -667,10 +643,9 @@ def _pad(array, pad_width, mode="constant", **kwargs):
 
     # Handle flexible constant_values and end_values, converting to units if Quantity
     # and ignoring if not
-    if mode == "constant":
-        kwargs["constant_values"] = _recursive_convert(kwargs["constant_values"], units)
-    elif mode == "linear_ramp":
-        kwargs["end_values"] = _recursive_convert(kwargs["end_values"], units)
+    for key in ("constant_values", "end_values"):
+        if key in kwargs:
+            kwargs[key] = _recursive_convert(kwargs[key], units)
 
     return units._REGISTRY.Quantity(
         np.pad(array._magnitude, pad_width, mode=mode, **kwargs), units
@@ -695,6 +670,36 @@ def _all(a, *args, **kwargs):
         raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
 
+@implements("prod", "function")
+def _prod(a, *args, **kwargs):
+    arg_names = ("axis", "dtype", "out", "keepdims", "initial", "where")
+    all_kwargs = dict(**dict(zip(arg_names, args)), **kwargs)
+    axis = all_kwargs.get("axis", None)
+    where = all_kwargs.get("where", None)
+
+    registry = a.units._REGISTRY
+
+    if axis is not None and where is not None:
+        _, where_ = np.broadcast_arrays(a._magnitude, where)
+        exponents = np.unique(np.sum(where_, axis=axis))
+        if len(exponents) == 1 or (len(exponents) == 2 and 0 in exponents):
+            units = a.units ** np.max(exponents)
+        else:
+            units = registry.dimensionless
+            a = a.to(units)
+    elif axis is not None:
+        units = a.units ** a.shape[axis]
+    elif where is not None:
+        exponent = np.sum(where)
+        units = a.units ** exponent
+    else:
+        units = a.units ** a.size
+
+    result = np.prod(a._magnitude, *args, **kwargs)
+
+    return registry.Quantity(result, units)
+
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
@@ -703,7 +708,10 @@ def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output
     if np is None:
         return
 
-    func = getattr(np, func_str)
+    func = getattr(np, func_str, None)
+    # if NumPy does not implement it, do not implement it either
+    if func is None:
+        return
 
     @implements(func_str, "function")
     def implementation(*args, **kwargs):
@@ -757,6 +765,8 @@ for func_str, unit_arguments, wrap_output in [
     ("nanmax", "a", True),
     ("percentile", "a", True),
     ("nanpercentile", "a", True),
+    ("quantile", "a", True),
+    ("nanquantile", "a", True),
     ("flip", "m", True),
     ("fix", "x", True),
     ("trim_zeros", ["filt"], True),
@@ -764,7 +774,7 @@ for func_str, unit_arguments, wrap_output in [
     ("amax", ["a", "initial"], True),
     ("amin", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
-    ("isclose", ["a", "b", "rtol", "atol"], False),
+    ("isclose", ["a", "b"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
     ("clip", ["a", "a_min", "a_max"], True),
     ("append", ["arr", "values"], True),

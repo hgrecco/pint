@@ -2,17 +2,12 @@ import copy
 import datetime
 import math
 import operator as op
-import unittest
+import pickle
 import warnings
 from unittest.mock import patch
 
-from pint import (
-    DimensionalityError,
-    LogarithmicUnitCalculusError,
-    OffsetUnitCalculusError,
-    UnitRegistry,
-)
-from pint.compat import BehaviorChangeWarning, np
+from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
+from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
 from pint.unit import UnitsContainer
@@ -139,7 +134,7 @@ class TestQuantity(QuantityTestCase):
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
             ("{:P}", "4.12345678 kilogram·meter²/second"),
-            ("{:H}", r"\[4.12345678\ kilogram\ meter^2/second\]"),
+            ("{:H}", r"\[4.12345678\ kilogram\ {meter}^{2}/second\]"),
             ("{:C}", "4.12345678 kilogram*meter**2/second"),
             ("{:~}", "4.12345678 kg * m ** 2 / s"),
             (
@@ -147,7 +142,7 @@ class TestQuantity(QuantityTestCase):
                 r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}",
             ),
             ("{:P~}", "4.12345678 kg·m²/s"),
-            ("{:H~}", r"\[4.12345678\ kg\ m^2/s\]"),
+            ("{:H~}", r"\[4.12345678\ kg\ {m}^{2}/s\]"),
             ("{:C~}", "4.12345678 kg*m**2/s"),
             ("{:Lx}", r"\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}"),
         ):
@@ -214,12 +209,12 @@ class TestQuantity(QuantityTestCase):
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
             ("P", "4.12345678 kilogram·meter²/second"),
-            ("H", r"\[4.12345678\ kilogram\ meter^2/second\]"),
+            ("H", r"\[4.12345678\ kilogram\ {meter}^{2}/second\]"),
             ("C", "4.12345678 kilogram*meter**2/second"),
             ("~", "4.12345678 kg * m ** 2 / s"),
             ("L~", r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
             ("P~", "4.12345678 kg·m²/s"),
-            ("H~", r"\[4.12345678\ kg\ m^2/s\]"),
+            ("H~", r"\[4.12345678\ kg\ {m}^{2}/s\]"),
             ("C~", "4.12345678 kg*m**2/s"),
         ):
             with self.subTest(spec):
@@ -255,7 +250,7 @@ class TestQuantity(QuantityTestCase):
 
         ureg = UnitRegistry()
         x = 3.5 * ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
-        self.assertEqual(x._repr_html_(), r"\[3.5\ kilogram\ meter^2/second\]")
+        self.assertEqual(x._repr_html_(), r"\[3.5\ kilogram\ {meter}^{2}/second\]")
         self.assertEqual(
             x._repr_latex_(),
             r"$3.5\ \frac{\mathrm{kilogram} \cdot "
@@ -264,7 +259,7 @@ class TestQuantity(QuantityTestCase):
         x._repr_pretty_(Pretty, False)
         self.assertEqual("".join(alltext), "3.5 kilogram·meter²/second")
         ureg.default_format = "~"
-        self.assertEqual(x._repr_html_(), r"\[3.5\ kg\ m^2/s\]")
+        self.assertEqual(x._repr_html_(), r"\[3.5\ kg\ {m}^{2}/s\]")
         self.assertEqual(
             x._repr_latex_(),
             r"$3.5\ \frac{\mathrm{kg} \cdot " r"\mathrm{m}^{2}}{\mathrm{s}}$",
@@ -489,15 +484,12 @@ class TestQuantity(QuantityTestCase):
         )
 
     def test_pickle(self):
-        import pickle
-
-        def pickle_test(q):
-            self.assertEqual(q, pickle.loads(pickle.dumps(q)))
-
-        pickle_test(self.Q_(32, ""))
-        pickle_test(self.Q_(2.4, ""))
-        pickle_test(self.Q_(32, "m/s"))
-        pickle_test(self.Q_(2.4, "m/s"))
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+            for magnitude, unit in ((32, ""), (2.4, ""), (32, "m/s"), (2.4, "m/s")):
+                with self.subTest(protocol=protocol, magnitude=magnitude, unit=unit):
+                    q1 = self.Q_(magnitude, unit)
+                    q2 = pickle.loads(pickle.dumps(q1, protocol))
+                    self.assertEqual(q1, q2)
 
     @helpers.requires_numpy()
     def test_from_sequence(self):
@@ -537,11 +529,8 @@ class TestQuantity(QuantityTestCase):
             iter(x)
 
     @helpers.requires_array_function_protocol()
-    @patch("pint.quantity.SKIP_ARRAY_FUNCTION_CHANGE_WARNING", False)
-    def test_array_function_warning_on_creation(self):
-        # Test that warning is raised on first creation, but not second
-        with self.assertWarns(BehaviorChangeWarning):
-            self.Q_([])
+    def test_no_longer_array_function_warning_on_creation(self):
+        # Test that warning is no longer raised on first creation
         with warnings.catch_warnings():
             warnings.filterwarnings("error")
             self.Q_([])
@@ -618,6 +607,12 @@ class TestQuantityToCompact(QuantityTestCase):
         x = "some string" * ureg.m
         with self.assertWarns(RuntimeWarning):
             self.compareQuantity_compact(x, x)
+
+    def test_very_large_to_compact(self):
+        # This should not raise an IndexError
+        self.compareQuantity_compact(
+            self.Q_(10000, "yottameter"), self.Q_(10 ** 28, "meter").to_compact()
+        )
 
 
 class TestQuantityBasicMath(QuantityTestCase):
@@ -852,6 +847,106 @@ class TestQuantityBasicMath(QuantityTestCase):
             self.assertEqual(fun(x), fun(x.magnitude))
             self.assertEqual(fun(y), fun(y.magnitude))
             self.assertRaises(DimensionalityError, fun, z)
+
+
+class TestQuantityNeutralAdd(QuantityTestCase):
+    """Addition to zero or NaN is allowed between a Quantity and a non-Quantity
+    """
+
+    FORCE_NDARRAY = False
+
+    def test_bare_zero(self):
+        v = self.Q_(2.0, "m")
+        self.assertEqual(v + 0, v)
+        self.assertEqual(v - 0, v)
+        self.assertEqual(0 + v, v)
+        self.assertEqual(0 - v, -v)
+
+    def test_bare_zero_inplace(self):
+        v = self.Q_(2.0, "m")
+        v2 = self.Q_(2.0, "m")
+        v2 += 0
+        self.assertEqual(v2, v)
+        v2 = self.Q_(2.0, "m")
+        v2 -= 0
+        self.assertEqual(v2, v)
+        v2 = 0
+        v2 += v
+        self.assertEqual(v2, v)
+        v2 = 0
+        v2 -= v
+        self.assertEqual(v2, -v)
+
+    def test_bare_nan(self):
+        v = self.Q_(2.0, "m")
+        self.assertQuantityEqual(v + math.nan, self.Q_(math.nan, v.units))
+        self.assertQuantityEqual(v - math.nan, self.Q_(math.nan, v.units))
+        self.assertQuantityEqual(math.nan + v, self.Q_(math.nan, v.units))
+        self.assertQuantityEqual(math.nan - v, self.Q_(math.nan, v.units))
+
+    def test_bare_nan_inplace(self):
+        v = self.Q_(2.0, "m")
+        v2 = self.Q_(2.0, "m")
+        v2 += math.nan
+        self.assertQuantityEqual(v2, self.Q_(math.nan, v.units))
+        v2 = self.Q_(2.0, "m")
+        v2 -= math.nan
+        self.assertQuantityEqual(v2, self.Q_(math.nan, v.units))
+        v2 = math.nan
+        v2 += v
+        self.assertQuantityEqual(v2, self.Q_(math.nan, v.units))
+        v2 = math.nan
+        v2 -= v
+        self.assertQuantityEqual(v2, self.Q_(math.nan, v.units))
+
+    @helpers.requires_numpy()
+    def test_bare_zero_or_nan_numpy(self):
+        z = np.array([0.0, np.nan])
+        v = self.Q_([1.0, 2.0], "m")
+        e = self.Q_([1.0, np.nan], "m")
+        self.assertQuantityEqual(z + v, e)
+        self.assertQuantityEqual(z - v, -e)
+        self.assertQuantityEqual(v + z, e)
+        self.assertQuantityEqual(v - z, e)
+
+        # If any element is non-zero and non-NaN, raise DimensionalityError
+        nz = np.array([0.0, 1.0])
+        with self.assertRaises(DimensionalityError):
+            nz + v
+        with self.assertRaises(DimensionalityError):
+            nz - v
+        with self.assertRaises(DimensionalityError):
+            v + nz
+        with self.assertRaises(DimensionalityError):
+            v - nz
+
+        # Mismatched shape
+        z = np.array([0.0, np.nan, 0.0])
+        v = self.Q_([1.0, 2.0], "m")
+        for x, y in ((z, v), (v, z)):
+            with self.assertRaises(ValueError):
+                x + y
+            with self.assertRaises(ValueError):
+                x - y
+
+    @helpers.requires_numpy()
+    def test_bare_zero_or_nan_numpy_inplace(self):
+        z = np.array([0.0, np.nan])
+        v = self.Q_([1.0, 2.0], "m")
+        e = self.Q_([1.0, np.nan], "m")
+        v += z
+        self.assertQuantityEqual(v, e)
+        v = self.Q_([1.0, 2.0], "m")
+        v -= z
+        self.assertQuantityEqual(v, e)
+        v = self.Q_([1.0, 2.0], "m")
+        z = np.array([0.0, np.nan])
+        z += v
+        self.assertQuantityEqual(z, e)
+        v = self.Q_([1.0, 2.0], "m")
+        z = np.array([0.0, np.nan])
+        z -= v
+        self.assertQuantityEqual(z, -e)
 
 
 class TestDimensions(QuantityTestCase):
@@ -1517,38 +1612,36 @@ class TestTimedelta(QuantityTestCase):
             after -= d
 
 
-class TestCompareZero(QuantityTestCase):
-    """This test case checks the special treatment that the zero value
-    receives in the comparisons: pint>=0.9 supports comparisons against zero
-    even for non-dimensionless quantities
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-
+class TestCompareNeutral(QuantityTestCase):
+    """Test comparisons against non-Quantity zero or NaN values for for
+    non-dimensionless quantities
     """
 
     def test_equal_zero(self):
-        ureg = self.ureg
-        ureg.autoconvert_offset_to_baseunit = False
-        self.assertTrue(ureg.Quantity(0, ureg.J) == 0)
-        self.assertFalse(ureg.Quantity(0, ureg.J) == ureg.Quantity(0, ""))
-        self.assertFalse(ureg.Quantity(5, ureg.J) == 0)
+        self.ureg.autoconvert_offset_to_baseunit = False
+        self.assertTrue(self.Q_(0, "J") == 0)
+        self.assertFalse(self.Q_(0, "J") == self.Q_(0, ""))
+        self.assertFalse(self.Q_(5, "J") == 0)
+
+    def test_equal_nan(self):
+        # nan == nan returns False
+        self.ureg.autoconvert_offset_to_baseunit = False
+        self.assertFalse(self.Q_(math.nan, "J") == 0)
+        self.assertFalse(self.Q_(math.nan, "J") == math.nan)
+        self.assertFalse(self.Q_(math.nan, "J") == self.Q_(math.nan, ""))
+        self.assertFalse(self.Q_(5, "J") == math.nan)
 
     @helpers.requires_numpy()
-    def test_equal_zero_NP(self):
-        ureg = self.ureg
-        ureg.autoconvert_offset_to_baseunit = False
+    def test_equal_zero_nan_NP(self):
+        self.ureg.autoconvert_offset_to_baseunit = False
         aeq = np.testing.assert_array_equal
-        aeq(ureg.Quantity(0, ureg.J) == np.zeros(3), np.asarray([True, True, True]))
-        aeq(ureg.Quantity(5, ureg.J) == np.zeros(3), np.asarray([False, False, False]))
+        aeq(self.Q_(0, "J") == np.array([0, np.nan]), np.array([True, False]))
+        aeq(self.Q_(5, "J") == np.array([0, np.nan]), np.array([False, False]))
         aeq(
-            ureg.Quantity(np.arange(3), ureg.J) == np.zeros(3),
+            self.Q_([0, 1, 2], "J") == np.array([0, 0, np.nan]),
             np.asarray([True, False, False]),
         )
-        self.assertFalse(ureg.Quantity(np.arange(4), ureg.J) == np.zeros(3))
+        self.assertFalse(self.Q_(np.arange(4), "J") == np.zeros(3))
 
     def test_offset_equal_zero(self):
         ureg = self.ureg
@@ -1573,39 +1666,47 @@ class TestCompareZero(QuantityTestCase):
         self.assertFalse(q0 == ureg.Quantity(0, ""))
 
     def test_gt_zero(self):
-        ureg = self.ureg
-        ureg.autoconvert_offset_to_baseunit = False
-        q0 = ureg.Quantity(0, "J")
-        q0m = ureg.Quantity(0, "m")
-        q0less = ureg.Quantity(0, "")
-        qpos = ureg.Quantity(5, "J")
-        qneg = ureg.Quantity(-5, "J")
+        self.ureg.autoconvert_offset_to_baseunit = False
+        q0 = self.Q_(0, "J")
+        q0m = self.Q_(0, "m")
+        q0less = self.Q_(0, "")
+        qpos = self.Q_(5, "J")
+        qneg = self.Q_(-5, "J")
         self.assertTrue(qpos > q0)
         self.assertTrue(qpos > 0)
         self.assertFalse(qneg > 0)
-        self.assertRaises(DimensionalityError, qpos.__gt__, q0less)
-        self.assertRaises(DimensionalityError, qpos.__gt__, q0m)
+        with self.assertRaises(DimensionalityError):
+            qpos > q0less
+        with self.assertRaises(DimensionalityError):
+            qpos > q0m
+
+    def test_gt_nan(self):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        qn = self.Q_(math.nan, "J")
+        qnm = self.Q_(math.nan, "m")
+        qnless = self.Q_(math.nan, "")
+        qpos = self.Q_(5, "J")
+        self.assertFalse(qpos > qn)
+        self.assertFalse(qpos > math.nan)
+        with self.assertRaises(DimensionalityError):
+            qpos > qnless
+        with self.assertRaises(DimensionalityError):
+            qpos > qnm
 
     @helpers.requires_numpy()
-    def test_gt_zero_NP(self):
-        ureg = self.ureg
-        ureg.autoconvert_offset_to_baseunit = False
-        qpos = ureg.Quantity(5, "J")
-        qneg = ureg.Quantity(-5, "J")
+    def test_gt_zero_nan_NP(self):
+        self.ureg.autoconvert_offset_to_baseunit = False
+        qpos = self.Q_(5, "J")
+        qneg = self.Q_(-5, "J")
         aeq = np.testing.assert_array_equal
-        aeq(qpos > np.zeros(3), np.asarray([True, True, True]))
-        aeq(qneg > np.zeros(3), np.asarray([False, False, False]))
+        aeq(qpos > np.array([0, np.nan]), np.asarray([True, False]))
+        aeq(qneg > np.array([0, np.nan]), np.asarray([False, False]))
         aeq(
-            ureg.Quantity(np.arange(-1, 2), ureg.J) > np.zeros(3),
-            np.asarray([False, False, True]),
+            self.Q_(np.arange(-2, 3), "J") > np.array([np.nan, 0, 0, 0, np.nan]),
+            np.asarray([False, False, False, True, False]),
         )
-        aeq(
-            ureg.Quantity(np.arange(-1, 2), ureg.J) > np.zeros(3),
-            np.asarray([False, False, True]),
-        )
-        self.assertRaises(
-            ValueError, ureg.Quantity(np.arange(-1, 2), ureg.J).__gt__, np.zeros(4)
-        )
+        with self.assertRaises(ValueError):
+            self.Q_(np.arange(-1, 2), "J") > np.zeros(4)
 
     def test_offset_gt_zero(self):
         ureg = self.ureg
@@ -1628,175 +1729,3 @@ class TestCompareZero(QuantityTestCase):
         self.assertTrue(q1 > 0)
         self.assertTrue(q2 > 0)
         self.assertRaises(DimensionalityError, q1.__gt__, ureg.Quantity(0, ""))
-
-
-class TestLogarithmicQuantity(QuantityTestCase):
-
-    FORCE_NDARRAY = False
-
-    def test_log_quantity_creation(self):
-
-        # Following Quantity Creation Pattern
-        for args in (
-            (4.2, "dBm"),
-            (4.2, UnitsContainer(decibellmilliwatt=1)),
-            (4.2, self.ureg.dBm),
-        ):
-            x = self.Q_(*args)
-            self.assertEqual(x.magnitude, 4.2)
-            self.assertEqual(x.units, UnitsContainer(decibellmilliwatt=1))
-
-        x = self.Q_(self.Q_(4.2, "dBm"))
-        self.assertEqual(x.magnitude, 4.2)
-        self.assertEqual(x.units, UnitsContainer(decibellmilliwatt=1))
-
-        x = self.Q_(4.2, UnitsContainer(decibellmilliwatt=1))
-        y = self.Q_(x)
-        self.assertEqual(x.magnitude, y.magnitude)
-        self.assertEqual(x.units, y.units)
-        self.assertIsNot(x, y)
-
-        # Using multiplications for dB units requires autoconversion to baseunits
-        new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
-        x = new_reg.Quantity("4.2 * dBm")
-        self.assertEqual(x.magnitude, 4.2)
-        self.assertEqual(x.units, UnitsContainer(decibellmilliwatt=1))
-
-        with self.capture_log() as buffer:
-            self.assertEqual(4.2 * new_reg.dBm, new_reg.Quantity(4.2, 2 * new_reg.dBm))
-            self.assertEqual(len(buffer), 1)
-
-    def test_log_convert(self):
-
-        # ## Test dB
-        # 0 dB == 1
-        self.assertQuantityAlmostEqual(
-            self.Q_(0.0, "dB").to("dimensionless"), self.Q_(1.0)
-        )
-        # -10 dB == 0.1
-        self.assertQuantityAlmostEqual(
-            self.Q_(-10.0, "dB").to("dimensionless"), self.Q_(0.1)
-        )
-        # +10 dB == 10
-        self.assertQuantityAlmostEqual(
-            self.Q_(+10.0, "dB").to("dimensionless"), self.Q_(10.0)
-        )
-        # 30 dB == 1e3
-        self.assertQuantityAlmostEqual(
-            self.Q_(30.0, "dB").to("dimensionless"), self.Q_(1e3)
-        )
-        # 60 dB == 1e6
-        self.assertQuantityAlmostEqual(
-            self.Q_(60.0, "dB").to("dimensionless"), self.Q_(1e6)
-        )
-        # # 1 dB = 1/10 * bel
-        # self.assertQuantityAlmostEqual(self.Q_(1.0, "dB").to("dimensionless"), self.Q_(1, "bell") / 10)
-        # # Uncomment Bell unit in default_en.txt
-
-        # ## Test decade
-        # 1 decade == 10
-        self.assertQuantityAlmostEqual(
-            self.Q_(1.0, "decade").to("dimensionless"), self.Q_(10.0)
-        )
-        # 2 decade == 100
-        self.assertQuantityAlmostEqual(
-            self.Q_(2.0, "decade").to("dimensionless"), self.Q_(100.0)
-        )
-
-        # ## Test octave
-        # 1 octave = 2
-        self.assertQuantityAlmostEqual(
-            self.Q_(1.0, "octave").to("dimensionless"), self.Q_(2.0)
-        )
-
-        # ## Test dB to dB units octave - decade
-        # 1 decade = log2(10) octave
-        self.assertQuantityAlmostEqual(
-            self.Q_(1.0, "decade"), self.Q_(math.log(10, 2), "octave")
-        )
-
-        # ## Test dBm
-        # 0 dBm = 1 mW
-        self.assertQuantityAlmostEqual(self.Q_(0.0, "dBm").to("mW"), self.Q_(1.0, "mW"))
-        self.assertQuantityAlmostEqual(
-            self.Q_(0.0, "dBm"), self.Q_(1.0, "mW").to("dBm")
-        )
-        # 10 dBm = 10 mW
-        self.assertQuantityAlmostEqual(
-            self.Q_(10.0, "dBm").to("mW"), self.Q_(10.0, "mW")
-        )
-        self.assertQuantityAlmostEqual(
-            self.Q_(10.0, "dBm"), self.Q_(10.0, "mW").to("dBm")
-        )
-        # 20 dBm = 100 mW
-        self.assertQuantityAlmostEqual(
-            self.Q_(20.0, "dBm").to("mW"), self.Q_(100.0, "mW")
-        )
-        self.assertQuantityAlmostEqual(
-            self.Q_(20.0, "dBm"), self.Q_(100.0, "mW").to("dBm")
-        )
-        # -10 dBm = 0.1 mW
-        self.assertQuantityAlmostEqual(
-            self.Q_(-10.0, "dBm").to("mW"), self.Q_(0.1, "mW")
-        )
-        self.assertQuantityAlmostEqual(
-            self.Q_(-10.0, "dBm"), self.Q_(0.1, "mW").to("dBm")
-        )
-        # -20 dBm = 0.01 mW
-        self.assertQuantityAlmostEqual(
-            self.Q_(-20.0, "dBm").to("mW"), self.Q_(0.01, "mW")
-        )
-        self.assertQuantityAlmostEqual(
-            self.Q_(-20.0, "dBm"), self.Q_(0.01, "mW").to("dBm")
-        )
-
-        # ## Test dB to dB units dBm - dBu
-        # 0 dBm = 1mW = 1e3 uW = 30 dBu
-        self.assertAlmostEqual(self.Q_(0.0, "dBm"), self.Q_(29.999999999999996, "dBu"))
-
-    def test_mix_regular_log_units(self):
-        # Test regular-logarithmic mixed definition, such as dB/km or dB/cm
-
-        # Multiplications and divisions with a mix of Logarithmic Units and regular Units is normally not possible.
-        # The reason is that dB are considereded by pint like offset unit.
-        # Multiplications and divisions that involve offset units are badly defined, so pint raises an error
-        with self.assertRaises(OffsetUnitCalculusError):
-            (-10.0 * self.ureg.dB) / (1 * self.ureg.cm)
-        #
-        # However, if the flag autoconvert_offset_to_baseunit=True is given to UnitRegistry, then pint converts the unit to base.
-        # With this flag on multiplications and divisions are now possible:
-        new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
-        self.assertQuantityAlmostEqual(-10 * new_reg.dB / new_reg.cm, 0.1 / new_reg.cm)
-
-
-class TestLogarithmicQuantityBasicMath(QuantityTestCase):
-
-    FORCE_NDARRAY = False
-
-    @unittest.expectedFailure
-    def _test_log_quantity_add_sub_raises_exception(self, unit, func):
-        # Warning should be provided when trying to ....
-        self.assertRaises(LogarithmicUnitCalculusError)
-
-    @unittest.expectedFailure
-    def _test_log_quantity_add_sub(self, unit, func):
-
-        # Pure dB arithmetic
-        # 5 dBm + 10 dB = 15 dBm
-        self.assertQuantityAlmostEqual(
-            5 * self.ureg.dBm + 10 * self.ureg.dB, 15 * self.ureg.dBm
-        )
-        # 100*dBm -10*dB = 90*dB
-        self.assertQuantityAlmostEqual(
-            100 * self.ureg.dB - 10 * self.ureg.dB, 90 * self.ureg.dB
-        )
-        # 100 dBW - 5 dBW = 95 dB
-        self.assertQuantityAlmostEqual(
-            100 * self.ureg.dBm - 5 * self.ureg.dBm, 95 * self.ureg.dB
-        )
-        # 20 dB + 0 dBW == 20 dBW
-
-        # 100 Hz + 1 octave = 200 Hz
-        self.assertQuantityAlmostEqual(
-            100 * self.ureg.Hz + 1 * self.ureg.octave, 200 * self.ureg.Hz
-        )

@@ -1,7 +1,7 @@
 import copy
 import operator as op
+import pickle
 import unittest
-from unittest.mock import patch
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from pint.compat import np
@@ -28,6 +28,10 @@ class TestNumpyMethods(QuantityTestCase):
     @property
     def q_nan(self):
         return [[1, 2], [3, np.nan]] * self.ureg.m
+
+    @property
+    def q_zero_or_nan(self):
+        return [[0, 0], [0, np.nan]] * self.ureg.m
 
     @property
     def q_temperature(self):
@@ -182,45 +186,60 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     # Changing number of dimensions
     # Joining arrays
     @helpers.requires_array_function_protocol()
-    def test_concatentate(self):
-        self.assertQuantityEqual(
-            np.concatenate([self.q] * 2),
-            self.Q_(np.concatenate([self.q.m] * 2), self.ureg.m),
-        )
+    def test_concat_stack(self):
+        for func in (np.concatenate, np.stack, np.hstack, np.vstack, np.dstack):
+            with self.subTest(func=func):
+                self.assertQuantityEqual(
+                    func([self.q] * 2), self.Q_(func([self.q.m] * 2), self.ureg.m)
+                )
+                # One or more of the args is a bare array full of zeros or NaNs
+                self.assertQuantityEqual(
+                    func([self.q_zero_or_nan.m, self.q]),
+                    self.Q_(func([self.q_zero_or_nan.m, self.q.m]), self.ureg.m),
+                )
+                # One or more of the args is a bare array with at least one non-zero,
+                # non-NaN element
+                nz = self.q_zero_or_nan
+                nz.m[0, 0] = 1
+                with self.assertRaises(DimensionalityError):
+                    func([nz.m, self.q])
 
     @helpers.requires_array_function_protocol()
-    def test_stack(self):
-        self.assertQuantityEqual(
-            np.stack([self.q] * 2), self.Q_(np.stack([self.q.m] * 2), self.ureg.m)
-        )
+    def test_block_column_stack(self):
+        for func in (np.block, np.column_stack):
+            with self.subTest(func=func):
 
-    @helpers.requires_array_function_protocol()
-    def test_column_stack(self):
-        self.assertQuantityEqual(np.column_stack([self.q[:, 0], self.q[:, 1]]), self.q)
+                self.assertQuantityEqual(
+                    func([self.q[:, 0], self.q[:, 1]]),
+                    self.Q_(func([self.q[:, 0].m, self.q[:, 1].m]), self.ureg.m),
+                )
 
-    @helpers.requires_array_function_protocol()
-    def test_dstack(self):
-        self.assertQuantityEqual(
-            np.dstack([self.q] * 2), self.Q_(np.dstack([self.q.m] * 2), self.ureg.m)
-        )
-
-    @helpers.requires_array_function_protocol()
-    def test_hstack(self):
-        self.assertQuantityEqual(
-            np.hstack([self.q] * 2), self.Q_(np.hstack([self.q.m] * 2), self.ureg.m)
-        )
-
-    @helpers.requires_array_function_protocol()
-    def test_vstack(self):
-        self.assertQuantityEqual(
-            np.vstack([self.q] * 2), self.Q_(np.vstack([self.q.m] * 2), self.ureg.m)
-        )
-
-    @helpers.requires_array_function_protocol()
-    def test_block(self):
-        self.assertQuantityEqual(
-            np.block([self.q[0, :], self.q[1, :]]), self.Q_([1, 2, 3, 4], self.ureg.m)
-        )
+                # One or more of the args is a bare array full of zeros or NaNs
+                self.assertQuantityEqual(
+                    func(
+                        [
+                            self.q_zero_or_nan[:, 0].m,
+                            self.q[:, 0],
+                            self.q_zero_or_nan[:, 1].m,
+                        ]
+                    ),
+                    self.Q_(
+                        func(
+                            [
+                                self.q_zero_or_nan[:, 0].m,
+                                self.q[:, 0].m,
+                                self.q_zero_or_nan[:, 1].m,
+                            ]
+                        ),
+                        self.ureg.m,
+                    ),
+                )
+                # One or more of the args is a bare array with at least one non-zero,
+                # non-NaN element
+                nz = self.q_zero_or_nan
+                nz.m[0, 0] = 1
+                with self.assertRaises(DimensionalityError):
+                    func([nz[:, 0].m, self.q[:, 0]])
 
     @helpers.requires_array_function_protocol()
     def test_append(self):
@@ -264,8 +283,32 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     # Sums, products, differences
 
+    @helpers.requires_array_function_protocol()
     def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m ** 4)
+        axis = 0
+        where = [[True, False], [True, True]]
+
+        self.assertQuantityEqual(self.q.prod(), 24 * self.ureg.m ** 4)
+        self.assertQuantityEqual(self.q.prod(axis=axis), [3, 8] * self.ureg.m ** 2)
+        self.assertQuantityEqual(self.q.prod(where=where), 12 * self.ureg.m ** 3)
+
+    @helpers.requires_array_function_protocol()
+    def test_prod_numpy_func(self):
+        axis = 0
+        where = [[True, False], [True, True]]
+
+        self.assertQuantityEqual(np.prod(self.q), 24 * self.ureg.m ** 4)
+        self.assertQuantityEqual(np.prod(self.q, axis=axis), [3, 8] * self.ureg.m ** 2)
+        self.assertQuantityEqual(np.prod(self.q, where=where), 12 * self.ureg.m ** 3)
+
+        self.assertRaises(DimensionalityError, np.prod, self.q, axis=axis, where=where)
+        self.assertQuantityEqual(
+            np.prod(self.q, axis=axis, where=[[True, False], [False, True]]),
+            [1, 4] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.prod(self.q, axis=axis, where=[True, False]), [3, 1] * self.ureg.m ** 2
+        )
 
     def test_sum(self):
         self.assertEqual(self.q.sum(), 10 * self.ureg.m)
@@ -753,9 +796,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityAlmostEqual(np.std(self.q), 1.11803 * self.ureg.m, rtol=1e-5)
         self.assertRaises(OffsetUnitCalculusError, np.std, self.q_temperature)
 
-    def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m ** 4)
-
     def test_cumprod(self):
         self.assertRaises(DimensionalityError, self.q.cumprod)
         self.assertQuantityEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
@@ -765,16 +805,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityAlmostEqual(
             np.nanstd(self.q_nan), 0.81650 * self.ureg.m, rtol=1e-5
         )
-
-    @helpers.requires_numpy_previous_than("1.10")
-    def test_integer_div(self):
-        a = [1] * self.ureg.m
-        b = [2] * self.ureg.m
-        c = a / b  # Should be float division
-        self.assertEqual(c.magnitude[0], 0.5)
-
-        a /= b  # Should be integer division
-        self.assertEqual(a.magnitude[0], 0)
 
     def test_conj(self):
         self.assertQuantityEqual((self.q * (1 + 1j)).conj(), self.q * (1 - 1j))
@@ -838,22 +868,33 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityEqual(x - u, -(u - x))
 
     def test_pickle(self):
-        import pickle
-
-        def pickle_test(q):
-            pq = pickle.loads(pickle.dumps(q))
-            self.assertNDArrayEqual(q.magnitude, pq.magnitude)
-            self.assertEqual(q.units, pq.units)
-
-        pickle_test([10, 20] * self.ureg.m)
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+            with self.subTest(protocol):
+                q1 = [10, 20] * self.ureg.m
+                q2 = pickle.loads(pickle.dumps(q1, protocol))
+                self.assertNDArrayEqual(q1.magnitude, q2.magnitude)
+                self.assertEqual(q1.units, q2.units)
 
     def test_equal(self):
         x = self.q.magnitude
         u = self.Q_(np.ones(x.shape))
+        true = np.ones_like(x, dtype=np.bool_)
+        false = np.zeros_like(x, dtype=np.bool_)
 
         self.assertQuantityEqual(u, u)
         self.assertQuantityEqual(u == u, u.magnitude == u.magnitude)
         self.assertQuantityEqual(u == 1, u.magnitude == 1)
+
+        v = self.Q_(np.zeros(x.shape), "m")
+        w = self.Q_(np.ones(x.shape), "m")
+        self.assertNDArrayEqual(v == 1, false)
+        self.assertNDArrayEqual(
+            self.Q_(np.zeros_like(x), "m") == self.Q_(np.zeros_like(x), "s"), false,
+        )
+        self.assertNDArrayEqual(v == v, true)
+        self.assertNDArrayEqual(v == w, false)
+        self.assertNDArrayEqual(v == w.to("mm"), false)
+        self.assertNDArrayEqual(u == v, false)
 
     def test_shape(self):
         u = self.Q_(np.arange(12))
@@ -908,6 +949,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertNDArrayEqual(
             np.isclose(self.q, q2), np.array([[False, True], [True, False]])
         )
+        self.assertNDArrayEqual(
+            np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
+            np.array([[False, True], [True, False]]),
+        )
 
     @helpers.requires_array_function_protocol()
     def test_interp_numpy_func(self):
@@ -917,6 +962,15 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityAlmostEqual(
             np.interp(x, xp, fp), self.Q_([6.66667, 20.0], self.ureg.degC), rtol=1e-5
         )
+
+        x_ = np.array([1, 4])
+        xp_ = np.linspace(0, 3, 5)
+        fp_ = [0, 5, 10, 15, 20]
+
+        self.assertQuantityAlmostEqual(
+            np.interp(x_, xp_, fp), self.Q_([6.6667, 20.0], self.ureg.degC), rtol=1e-5
+        )
+        self.assertQuantityAlmostEqual(np.interp(x, xp, fp_), [6.6667, 20.0], rtol=1e-5)
 
     def test_comparisons(self):
         self.assertNDArrayEqual(
@@ -1002,6 +1056,14 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityEqual(np.nanpercentile(self.q_nan, 25), self.Q_(1.5, "m"))
 
     @helpers.requires_array_function_protocol()
+    def test_quantile(self):
+        self.assertQuantityEqual(np.quantile(self.q, 0.25), self.Q_(1.75, "m"))
+
+    @helpers.requires_array_function_protocol()
+    def test_nanquantile(self):
+        self.assertQuantityEqual(np.nanquantile(self.q_nan, 0.25), self.Q_(1.5, "m"))
+
+    @helpers.requires_array_function_protocol()
     def test_copyto(self):
         a = self.q.m
         q = copy.copy(self.q)
@@ -1031,28 +1093,15 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.array([[1, 0, 2], [3, 0, 4]]) * self.ureg.m,
         )
 
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_ndarray_downcast(self):
         with self.assertWarns(UnitStrippedWarning):
             np.asarray(self.q)
 
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_ndarray_downcast_with_dtype(self):
         with self.assertWarns(UnitStrippedWarning):
             qarr = np.asarray(self.q, dtype=np.float64)
             self.assertEqual(qarr.dtype, np.float64)
 
-    def test_array_protocol_fallback(self):
-        with self.assertWarns(DeprecationWarning) as cm:
-            for attr in ("__array_struct__", "__array_interface__"):
-                getattr(self.q, attr)
-                warning_text = str(cm.warnings[0].message)
-                self.assertTrue(
-                    f"unit of the Quantity being stripped" in warning_text
-                    and "will become unavailable" in warning_text
-                )
-
-    @patch("pint.quantity.ARRAY_FALLBACK", False)
     def test_array_protocol_unavailable(self):
         for attr in ("__array_struct__", "__array_interface__"):
             self.assertRaises(AttributeError, getattr, self.q, attr)
@@ -1070,6 +1119,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
         b = self.Q_([4.0, 6.0, 8.0, 9.0, -3.0], "degC")
 
         self.assertQuantityEqual(
+            np.pad(a, (2, 3), "constant"), [0, 0, 1, 2, 3, 4, 5, 0, 0, 0] * self.ureg.m
+        )
+        self.assertQuantityEqual(
             np.pad(a, (2, 3), "constant", constant_values=(0, 600 * self.ureg.cm)),
             [0, 0, 1, 2, 3, 4, 5, 6, 6, 6] * self.ureg.m,
         )
@@ -1084,6 +1136,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
         )
         self.assertQuantityEqual(
             np.pad(a, (2, 3), "edge"), [1, 1, 1, 2, 3, 4, 5, 5, 5, 5] * self.ureg.m
+        )
+        self.assertQuantityEqual(
+            np.pad(a, (2, 3), "linear_ramp"),
+            [0, 0, 1, 2, 3, 4, 5, 3, 1, 0] * self.ureg.m,
         )
         self.assertQuantityEqual(
             np.pad(a, (2, 3), "linear_ramp", end_values=(5, -4) * self.ureg.m),

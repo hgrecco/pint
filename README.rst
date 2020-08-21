@@ -87,10 +87,18 @@ Documentation
 
 Full documentation is available at http://pint.readthedocs.org/
 
+
 GUI Website 
 -----------
 
 This Website_ wraps Pint's "dimensional analysis" methods to provide a GUI.
+
+
+Command-line converter
+----------------------
+
+A command-line script `pint-convert` provides a quick way to convert between
+units or get conversion factors.
 
 
 Design principles

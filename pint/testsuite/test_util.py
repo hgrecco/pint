@@ -2,7 +2,6 @@ import collections
 import copy
 import math
 import operator as op
-from decimal import Decimal
 
 from pint.testsuite import BaseTestCase, QuantityTestCase
 from pint.util import (
@@ -51,8 +50,8 @@ class TestUnitsContainer(QuantityTestCase):
 
     def test_unitcontainer_creation(self):
         x = UnitsContainer(meter=1, second=2)
-        y = UnitsContainer({"meter": 1.0, "second": 2.0})
-        self.assertIsInstance(x["meter"], float)
+        y = UnitsContainer({"meter": 1, "second": 2})
+        self.assertIsInstance(x["meter"], int)
         self.assertEqual(x, y)
         self.assertIsNot(x, y)
         z = copy.copy(x)
@@ -68,10 +67,10 @@ class TestUnitsContainer(QuantityTestCase):
         self.assertEqual(repr(x), "<UnitsContainer({})>")
         x = UnitsContainer(meter=1, second=2)
         self.assertEqual(str(x), "meter * second ** 2")
-        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1.0, 'second': 2.0})>")
+        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1, 'second': 2})>")
         x = UnitsContainer(meter=1, second=2.5)
         self.assertEqual(str(x), "meter * second ** 2.5")
-        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1.0, 'second': 2.5})>")
+        self.assertEqual(repr(x), "<UnitsContainer({'meter': 1, 'second': 2.5})>")
 
     def test_unitcontainer_bool(self):
         self.assertTrue(UnitsContainer(meter=1, second=2))
@@ -161,7 +160,7 @@ class TestParseHelper(BaseTestCase):
         self.assertEqual(x(), xp())
         self.assertNotEqual(x(), y())
         self.assertEqual(ParserHelper.from_string(""), ParserHelper())
-        self.assertEqual(repr(x()), "<ParserHelper(1, {'meter': 2.0})>")
+        self.assertEqual(repr(x()), "<ParserHelper(1, {'meter': 2})>")
 
         self.assertEqual(ParserHelper(2), 2)
 
@@ -199,10 +198,7 @@ class TestParseHelper(BaseTestCase):
     def test_eval_token(self):
         self._test_eval_token(1000.0, "1e3")
         self._test_eval_token(1000.0, "1E3")
-        self._test_eval_token(Decimal(1000), "1e3", use_decimal=True)
         self._test_eval_token(1000, "1000")
-        # integer numbers are represented as ints, not Decimals
-        self._test_eval_token(1000, "1000", use_decimal=True)
 
     def test_nan(self):
         for s in ("nan", "NAN", "NaN", "123 NaN nan NAN 456"):

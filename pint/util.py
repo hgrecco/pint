@@ -13,9 +13,8 @@ import math
 import operator
 import re
 from collections.abc import Mapping
-from decimal import Decimal
 from fractions import Fraction
-from functools import lru_cache
+from functools import lru_cache, partial
 from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
@@ -178,14 +177,16 @@ def pi_theorem(quantities, registry=None):
 
     if registry is None:
         getdim = lambda x: x
+        non_int_type = float
     else:
         getdim = registry.get_dimensionality
+        non_int_type = registry.non_int_type
 
     for name, value in quantities.items():
         if isinstance(value, str):
-            value = ParserHelper.from_string(value)
+            value = ParserHelper.from_string(value, non_int_type=non_int_type)
         if isinstance(value, dict):
-            dims = getdim(UnitsContainer(value))
+            dims = getdim(registry.UnitsContainer(value))
         elif not hasattr(value, "dimensionality"):
             dims = getdim(value)
         else:
@@ -318,9 +319,21 @@ class UnitsContainer(Mapping):
 
     """
 
-    __slots__ = ("_d", "_hash")
+    __slots__ = ("_d", "_hash", "_one", "_non_int_type")
 
     def __init__(self, *args, **kwargs):
+        if args and isinstance(args[0], UnitsContainer):
+            default_non_int_type = args[0]._non_int_type
+        else:
+            default_non_int_type = float
+
+        self._non_int_type = kwargs.pop("non_int_type", default_non_int_type)
+
+        if self._non_int_type is float:
+            self._one = 1
+        else:
+            self._one = self._non_int_type("1")
+
         d = udict(*args, **kwargs)
         self._d = d
         for key, value in d.items():
@@ -328,8 +341,8 @@ class UnitsContainer(Mapping):
                 raise TypeError("key must be a str, not {}".format(type(key)))
             if not isinstance(value, Number):
                 raise TypeError("value must be a number, not {}".format(type(value)))
-            if not isinstance(value, float):
-                d[key] = float(value)
+            if not isinstance(value, int) and not isinstance(value, self._non_int_type):
+                d[key] = self._non_int_type(value)
         self._hash = None
 
     def copy(self):
@@ -399,6 +412,13 @@ class UnitsContainer(Mapping):
             self._hash = hash(frozenset(self._d.items()))
         return self._hash
 
+    # Only needed by pickle protocol 0 and 1 (used by pytables)
+    def __getstate__(self):
+        return self._d, self._hash, self._one, self._non_int_type
+
+    def __setstate__(self, state):
+        self._d, self._hash, self._one, self._non_int_type = state
+
     def __eq__(self, other):
         if isinstance(other, UnitsContainer):
             # UnitsContainer.__hash__(self) is not the same as hash(self); see
@@ -411,7 +431,7 @@ class UnitsContainer(Mapping):
             other = other._d
 
         elif isinstance(other, str):
-            other = ParserHelper.from_string(other)
+            other = ParserHelper.from_string(other, self._non_int_type)
             other = other._d
 
         return dict.__eq__(self._d, other)
@@ -436,6 +456,8 @@ class UnitsContainer(Mapping):
         out = object.__new__(self.__class__)
         out._d = self._d.copy()
         out._hash = self._hash
+        out._non_int_type = self._non_int_type
+        out._one = self._one
         return out
 
     def __mul__(self, other):
@@ -512,7 +534,7 @@ class ParserHelper(UnitsContainer):
         self.scale = scale
 
     @classmethod
-    def from_word(cls, input_word):
+    def from_word(cls, input_word, non_int_type=float):
         """Creates a ParserHelper object with a single variable with exponent one.
 
         Equivalent to: ParserHelper({'word': 1})
@@ -526,27 +548,41 @@ class ParserHelper(UnitsContainer):
         -------
 
         """
-        return cls(1, [(input_word, 1)])
+        if non_int_type is float:
+            return cls(1, [(input_word, 1)], non_int_type=non_int_type)
+        else:
+            ONE = non_int_type("1.0")
+            return cls(ONE, [(input_word, ONE)], non_int_type=non_int_type)
 
     @classmethod
-    def eval_token(cls, token, use_decimal=False):
+    def eval_token(cls, token, use_decimal=False, non_int_type=float):
+
+        # TODO: remove this code when use_decimal is deprecated
+        if use_decimal:
+            raise DeprecationWarning(
+                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
+                ">>> from decimal import Decimal\n"
+                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
+            )
+
         token_type = token.type
         token_text = token.string
         if token_type == NUMBER:
-            try:
-                return int(token_text)
-            except ValueError:
-                if use_decimal:
-                    return Decimal(token_text)
-                return float(token_text)
+            if non_int_type is float:
+                try:
+                    return int(token_text)
+                except ValueError:
+                    return float(token_text)
+            else:
+                return non_int_type(token_text)
         elif token_type == NAME:
-            return ParserHelper.from_word(token_text)
+            return ParserHelper.from_word(token_text, non_int_type=non_int_type)
         else:
             raise Exception("unknown token type")
 
     @classmethod
     @lru_cache()
-    def from_string(cls, input_string):
+    def from_string(cls, input_string, non_int_type=float):
         """Parse linear expression mathematical units and return a quantity object.
 
         Parameters
@@ -559,7 +595,7 @@ class ParserHelper(UnitsContainer):
 
         """
         if not input_string:
-            return cls()
+            return cls(non_int_type=non_int_type)
 
         input_string = string_preprocessor(input_string)
         if "[" in input_string:
@@ -571,10 +607,12 @@ class ParserHelper(UnitsContainer):
             reps = False
 
         gen = tokenizer(input_string)
-        ret = build_eval_tree(gen).evaluate(cls.eval_token)
+        ret = build_eval_tree(gen).evaluate(
+            partial(cls.eval_token, non_int_type=non_int_type)
+        )
 
         if isinstance(ret, Number):
-            return ParserHelper(ret)
+            return ParserHelper(ret, non_int_type=non_int_type)
 
         if reps:
             ret = ParserHelper(
@@ -583,6 +621,7 @@ class ParserHelper(UnitsContainer):
                     key.replace("__obra__", "[").replace("__cbra__", "]"): value
                     for key, value in ret.items()
                 },
+                non_int_type=non_int_type,
             )
 
         for k in list(ret):
@@ -606,11 +645,19 @@ class ParserHelper(UnitsContainer):
             raise ValueError(mess)
         return super().__hash__()
 
+    # Only needed by pickle protocol 0 and 1 (used by pytables)
+    def __getstate__(self):
+        return super().__getstate__() + (self.scale,)
+
+    def __setstate__(self, state):
+        super().__setstate__(state[:-1])
+        self.scale = state[-1]
+
     def __eq__(self, other):
         if isinstance(other, ParserHelper):
             return self.scale == other.scale and super().__eq__(other)
         elif isinstance(other, str):
-            return self == ParserHelper.from_string(other)
+            return self == ParserHelper.from_string(other, self._non_int_type)
         elif isinstance(other, Number):
             return self.scale == other and not len(self._d)
         else:
@@ -626,7 +673,7 @@ class ParserHelper(UnitsContainer):
             for key in keys:
                 del d[key]
 
-        return self.__class__(self.scale, d)
+        return self.__class__(self.scale, d, non_int_type=self._non_int_type)
 
     def __str__(self):
         tmp = "{%s}" % ", ".join(
@@ -642,7 +689,7 @@ class ParserHelper(UnitsContainer):
 
     def __mul__(self, other):
         if isinstance(other, str):
-            new = self.add(other, 1)
+            new = self.add(other, self._one)
         elif isinstance(other, Number):
             new = self.copy()
             new.scale *= other
@@ -659,7 +706,7 @@ class ParserHelper(UnitsContainer):
         d = self._d.copy()
         for key in self._d:
             d[key] *= other
-        return self.__class__(self.scale ** other, d)
+        return self.__class__(self.scale ** other, d, non_int_type=self._non_int_type)
 
     def __truediv__(self, other):
         if isinstance(other, str):
@@ -679,7 +726,7 @@ class ParserHelper(UnitsContainer):
     def __rtruediv__(self, other):
         new = self.__pow__(-1)
         if isinstance(other, str):
-            new = new.add(other, 1)
+            new = new.add(other, self._one)
         elif isinstance(other, Number):
             new.scale *= other
         elif isinstance(other, self.__class__):
@@ -833,7 +880,10 @@ def to_units_container(unit_like, registry=None):
         else:
             return ParserHelper.from_string(unit_like)
     elif dict in mro:
-        return UnitsContainer(unit_like)
+        if registry:
+            return registry.UnitsContainer(unit_like)
+        else:
+            return UnitsContainer(unit_like)
 
 
 def infer_base_unit(q):
