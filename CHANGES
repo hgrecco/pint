@@ -11,9 +11,12 @@ Pint Changelog
   units (Issue #1145)
 - Implement Dask collection interface to support Pint Quantity wrapped Dask arrays.
 - Started automatically testing examples in the documentation
+- Fixed an exception generated when reducing dimensions with three or more
+  units of the same type
 - Fixed right operand power for dimensionless Quantity to reflect numpy behavior. (Issue #1136)
 - Eliminated warning when setting a masked value on an underlying MaskedArray.
 - Add `sort` option to `formatting.formatter` to permit disabling sorting of component units in format string
+
 
 0.14 (2020-07-01)
 -----------------
