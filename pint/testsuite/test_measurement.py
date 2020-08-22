@@ -48,13 +48,13 @@ class TestMeasurement(QuantityTestCase):
             ("{!r}", "<Measurement(4.0, 0.1, second ** 2)>"),
             ("{:P}", "(4.00 ± 0.10) second²"),
             ("{:L}", r"\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}"),
-            ("{:H}", r"\[(4.00 &plusmn; 0.10)\ {second}^{2}\]"),
+            ("{:H}", "(4.00 &plusmn; 0.10) second<sup>2</sup>"),
             ("{:C}", "(4.00+/-0.10) second**2"),
             ("{:Lx}", r"\SI{4.00 +- 0.10}{\second\squared}"),
             ("{:.1f}", "(4.0 +/- 0.1) second ** 2"),
             ("{:.1fP}", "(4.0 ± 0.1) second²"),
             ("{:.1fL}", r"\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}"),
-            ("{:.1fH}", r"\[(4.0 &plusmn; 0.1)\ {second}^{2}\]"),
+            ("{:.1fH}", "(4.0 &plusmn; 0.1) second<sup>2</sup>"),
             ("{:.1fC}", "(4.0+/-0.1) second**2"),
             ("{:.1fLx}", r"\SI{4.0 +- 0.1}{\second\squared}"),
         ):
@@ -70,7 +70,7 @@ class TestMeasurement(QuantityTestCase):
             ("{:.3uS}", "0.2000(100) second ** 2"),
             ("{:.3uSP}", "0.2000(100) second²"),
             ("{:.3uSL}", r"0.2000\left(100\right)\ \mathrm{second}^{2}"),
-            ("{:.3uSH}", r"\[0.2000(100)\ {second}^{2}\]"),
+            ("{:.3uSH}", "0.2000(100) second<sup>2</sup>"),
             ("{:.3uSC}", "0.2000(100) second**2"),
         ):
             with self.subTest(spec):
@@ -84,7 +84,7 @@ class TestMeasurement(QuantityTestCase):
             ("{:.3u}", "(0.2000 +/- 0.0100) second ** 2"),
             ("{:.3uP}", "(0.2000 ± 0.0100) second²"),
             ("{:.3uL}", r"\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}"),
-            ("{:.3uH}", r"\[(0.2000 &plusmn; 0.0100)\ {second}^{2}\]"),
+            ("{:.3uH}", "(0.2000 &plusmn; 0.0100) second<sup>2</sup>"),
             ("{:.3uC}", "(0.2000+/-0.0100) second**2"),
             ("{:.3uLx}", r"\SI{0.2000 +- 0.0100}{\second\squared}",),
             ("{:.1uLx}", r"\SI{0.20 +- 0.01}{\second\squared}"),
@@ -101,7 +101,7 @@ class TestMeasurement(QuantityTestCase):
             ("{:.1u%}", "(20 +/- 1)% second ** 2"),
             ("{:.1u%P}", "(20 ± 1)% second²"),
             ("{:.1u%L}", r"\left(20 \pm 1\right) \%\ \mathrm{second}^{2}"),
-            ("{:.1u%H}", r"\[(20 &plusmn; 1)%\ {second}^{2}\]"),
+            ("{:.1u%H}", "(20 &plusmn; 1)% second<sup>2</sup>"),
             ("{:.1u%C}", "(20+/-1)% second**2"),
         ):
             with self.subTest(spec):
@@ -117,7 +117,7 @@ class TestMeasurement(QuantityTestCase):
                 "{:.1ueL}",
                 r"\left(2.0 \pm 0.1\right) \times 10^{-1}\ \mathrm{second}^{2}",
             ),
-            ("{:.1ueH}", r"\[(2.0 &plusmn; 0.1)×10^{-1}\ {second}^{2}\]"),
+            ("{:.1ueH}", "(2.0 &plusmn; 0.1)×10<sup>-1</sup> second<sup>2</sup>"),
             ("{:.1ueC}", "(2.0+/-0.1)e-01 second**2"),
         ):
             with self.subTest(spec):
@@ -132,7 +132,7 @@ class TestMeasurement(QuantityTestCase):
             ("{!r}", "<Measurement(4e+20, 1e+19, second ** 2)>"),
             ("{:P}", "(4.00 ± 0.10)×10²⁰ second²"),
             ("{:L}", r"\left(4.00 \pm 0.10\right) \times 10^{20}\ \mathrm{second}^{2}"),
-            ("{:H}", r"\[(4.00 &plusmn; 0.10)×10^{20}\ {second}^{2}\]"),
+            ("{:H}", "(4.00 &plusmn; 0.10)×10<sup>20</sup> second<sup>2</sup>"),
             ("{:C}", "(4.00+/-0.10)e+20 second**2"),
             ("{:Lx}", r"\SI{4.00 +- 0.10 e+20}{\second\squared}"),
         ):
@@ -149,7 +149,7 @@ class TestMeasurement(QuantityTestCase):
                 "{:L}",
                 r"\left(4.00 \pm 0.10\right) \times 10^{-20}\ \mathrm{second}^{2}",
             ),
-            ("{:H}", r"\[(4.00 &plusmn; 0.10)×10^{-20}\ {second}^{2}\]"),
+            ("{:H}", "(4.00 &plusmn; 0.10)×10<sup>-20</sup> second<sup>2</sup>"),
             ("{:C}", "(4.00+/-0.10)e-20 second**2"),
             ("{:Lx}", r"\SI{4.00 +- 0.10 e-20}{\second\squared}"),
         ):

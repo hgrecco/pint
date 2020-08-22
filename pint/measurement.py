@@ -147,7 +147,7 @@ class Measurement(Quantity):
         if "L" in newspec and "S" in newspec:
             mag = mag.replace("(", r"\left(").replace(")", r"\right)")
 
-        if "L" in newspec or "H" in spec:
+        if "L" in newspec:
             space = r"\ "
         else:
             space = " "
@@ -158,14 +158,10 @@ class Measurement(Quantity):
 
         if "H" in spec:
             # Fix exponential format
-            mag = re.sub(r"\)e\+0?(\d+)", r")×10^{\1}", mag)
-            mag = re.sub(r"\)e-0?(\d+)", r")×10^{-\1}", mag)
+            mag = re.sub(r"\)e\+0?(\d+)", r")×10<sup>\1</sup>", mag)
+            mag = re.sub(r"\)e-0?(\d+)", r")×10<sup>-\1</sup>", mag)
 
-            assert ustr[:2] == r"\["
-            assert ustr[-2:] == r"\]"
-            return r"\[" + mag + space + ustr[2:]
-        else:
-            return mag + space + ustr
+        return mag + space + ustr
 
 
 _Measurement = Measurement
