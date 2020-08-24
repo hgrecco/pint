@@ -1007,7 +1007,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 units = self._units
             # If only self has a delta unit, other determines unit of result.
             elif self._get_delta_units() and not other._get_delta_units():
-                magnitude = op(self._convert_magnitude_not_inplace(other._units), other._magnitude)
+                magnitude = op(
+                    self._convert_magnitude_not_inplace(other._units), other._magnitude
+                )
                 units = other._units
             else:
                 units = self._units
@@ -1542,7 +1544,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                         raise OffsetUnitCalculusError(self._units)
 
             if self.dimensionless:
-                return eq(self._convert_magnitude_not_inplace(self.UnitsContainer()), other, False)
+                return eq(
+                    self._convert_magnitude_not_inplace(self.UnitsContainer()),
+                    other,
+                    False,
+                )
 
             return bool_result(False)
 
