@@ -4,7 +4,8 @@ Pint Changelog
 0.16 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fixed issue where performing an operation of a Quantity with certain units would perform an in-place
+  unit conversion that modified the operand in addition to the returned value (Issues #1102 & #1144)
 
 
 0.15 (2020-08-22)
