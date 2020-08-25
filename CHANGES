@@ -4,7 +4,8 @@ Pint Changelog
 0.16 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Clark Willison, Giorgio Signorello, Steven Casagrande, Jonathan Wheeler)
 
 
 0.15 (2020-08-22)
