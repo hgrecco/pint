@@ -4,7 +4,8 @@ Pint Changelog
 0.16 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Clark Willison, Giorgio Signorello, Steven Casagrande, Jonathan Wheeler)
 
 
 0.15 (2020-08-22)
@@ -22,6 +23,8 @@ Pint Changelog
 - Fixed right operand power for dimensionless Quantity to reflect numpy behavior. (Issue #1136)
 - Eliminated warning when setting a masked value on an underlying MaskedArray.
 - Add `sort` option to `formatting.formatter` to permit disabling sorting of component units in format string
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Giorgio Signorello, Jonathan Wheeler)
 
 
 0.14 (2020-07-01)

@@ -520,7 +520,7 @@ class TestIssues(QuantityTestCase):
 
         lunar_module_height = Q_(10, "m")
         t1 = calculate_time_to_fall(lunar_module_height)
-        print(t1)
+        # print(t1)
         self.assertAlmostEqual(t1, Q_(1.4285714285714286, "s"))
 
         moon_gravity = Q_(1.625, "m/s^2")
@@ -580,7 +580,7 @@ class TestIssues(QuantityTestCase):
 
         @ureg.check("[length]", "[length]/[time]^2")
         def pendulum_period(length, G=Q_(1, "standard_gravity")):
-            print(length)
+            # print(length)
             return (2 * math.pi * (length / G) ** 0.5).to("s")
 
         length = Q_(1, ureg.m)

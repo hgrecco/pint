@@ -122,6 +122,7 @@ User Guide
     defining-quantities
     numpy
     nonmult
+    log_units
     wrapping
     plotting
     serialization
