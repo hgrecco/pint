@@ -745,6 +745,7 @@ class TestIssues(QuantityTestCase):
         ureg.enable_contexts("c2")
         ureg.enable_contexts("c3")
 
+    @helpers.requires_numpy()
     def test_issue1144_1102(self):
         # Performing operations shouldn't modify the original objects
         # Issue 1144
@@ -761,7 +762,7 @@ class TestIssues(QuantityTestCase):
         val = [30.0, 45.0, 60.0] * ureg.degree
         val == 1
         1 == val
-        assert all(val == ([30.0, 45.0, 60.0] * ureg.degree))
+        assert all(val == ureg.Quantity([30.0, 45.0, 60.0], "degree"))
         # Test for another bug identified by searching on "_convert_magnitude"
         q2 = ureg.Quantity(3, "degree_Kelvin")
         q1 - q2
