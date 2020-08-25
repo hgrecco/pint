@@ -263,7 +263,7 @@ def test_dbm_db_addition(auto_ureg):
 
 @pytest.mark.xfail
 @pytest.mark.parametrize(
-    "freq1,octaves,freq2", [(100, 2.0, 400), (50, 1.0, 100), (200, 0.0, 200),],
+    "freq1,octaves,freq2", [(100, 2.0, 400), (50, 1.0, 100), (200, 0.0, 200)],
 )
 def test_frequency_octave_addition(auto_ureg, freq1, octaves, freq2):
     """Test an Octave can be added to a frequency correctly
