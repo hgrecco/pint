@@ -693,6 +693,13 @@ class TestIssues(QuantityTestCase):
         assert isinstance(q1, ureg.Quantity)
         assert len(q0) == len(q1) == 0
 
+    def test_issue1058(self):
+        """ verify that auto-reducing quantities with three or more units
+        of same base type succeeds """
+        q = 1 * ureg.mg / ureg.g / ureg.kg
+        q.ito_reduced_units()
+        self.assertIsInstance(q, ureg.Quantity)
+
     def test_issue1062_issue1097(self):
         # Must not be used by any other tests
         assert "nanometer" not in ureg._units
