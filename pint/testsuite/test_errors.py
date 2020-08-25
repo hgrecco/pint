@@ -97,7 +97,7 @@ class TestErrors(BaseTestCase):
         ex = LogarithmicUnitCalculusError(Quantity("1 dB")._units)
         self.assertEqual(
             str(ex),
-            "Ambiguous operation with logarithmic unit (decibell). See "
+            "Ambiguous operation with logarithmic unit (decibel). See "
             + LOG_ERROR_DOCS_HTML
             + " for guidance.",
         )
@@ -106,7 +106,7 @@ class TestErrors(BaseTestCase):
         )
         self.assertEqual(
             str(ex),
-            "Ambiguous operation with logarithmic unit (decibell, octave). See "
+            "Ambiguous operation with logarithmic unit (decibel, octave). See "
             + LOG_ERROR_DOCS_HTML
             + " for guidance.",
         )

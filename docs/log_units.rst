@@ -44,11 +44,11 @@ you can define simple logarithmic quantities like most others:
 .. doctest::
 
     >>> 20.0 * ureg.dBm
-    <Quantity(20.0, 'decibellmilliwatt')>
+    <Quantity(20.0, 'decibelmilliwatt')>
     >>> ureg('20.0 dBm')
-    <Quantity(20.0, 'decibellmilliwatt')>
+    <Quantity(20.0, 'decibelmilliwatt')>
     >>> ureg('20 dB')
-    <Quantity(20, 'decibell')>
+    <Quantity(20, 'decibel')>
 
 
 Converting to and from base units
@@ -76,7 +76,7 @@ Convert back from a base unit to a logarithmic unit using the `.to()` method:
 .. doctest::
 
     >>> (100.0 * ureg('mW')).to('dBm')
-    <Quantity(20.0, 'decibellmilliwatt')>
+    <Quantity(20.0, 'decibelmilliwatt')>
     >>> shift = Q_(4, '')
     >>> shift
     <Quantity(4, 'dimensionless')>
@@ -101,7 +101,7 @@ example of computing RMS noise from a noise density and a bandwidth:
     >>> bandwidth = 10.0 * ureg.kHz
     >>> noise_power = noise_density * bandwidth
     >>> noise_power.to('dBm')
-    <Quantity(-121.0, 'decibellmilliwatt')>
+    <Quantity(-121.0, 'decibelmilliwatt')>
     >>> noise_power.to('mW')
     <Quantity(7.94328235e-13, 'milliwatt')>
 

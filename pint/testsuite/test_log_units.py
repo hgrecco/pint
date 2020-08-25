@@ -26,18 +26,18 @@ class TestLogarithmicQuantity(QuantityTestCase):
         # Following Quantity Creation Pattern
         for args in (
             (4.2, "dBm"),
-            (4.2, UnitsContainer(decibellmilliwatt=1)),
+            (4.2, UnitsContainer(decibelmilliwatt=1)),
             (4.2, self.ureg.dBm),
         ):
             x = self.Q_(*args)
             self.assertEqual(x.magnitude, 4.2)
-            self.assertEqual(x.units, UnitsContainer(decibellmilliwatt=1))
+            self.assertEqual(x.units, UnitsContainer(decibelmilliwatt=1))
 
         x = self.Q_(self.Q_(4.2, "dBm"))
         self.assertEqual(x.magnitude, 4.2)
-        self.assertEqual(x.units, UnitsContainer(decibellmilliwatt=1))
+        self.assertEqual(x.units, UnitsContainer(decibelmilliwatt=1))
 
-        x = self.Q_(4.2, UnitsContainer(decibellmilliwatt=1))
+        x = self.Q_(4.2, UnitsContainer(decibelmilliwatt=1))
         y = self.Q_(x)
         self.assertEqual(x.magnitude, y.magnitude)
         self.assertEqual(x.units, y.units)
@@ -47,7 +47,7 @@ class TestLogarithmicQuantity(QuantityTestCase):
         new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
         x = new_reg.Quantity("4.2 * dBm")
         self.assertEqual(x.magnitude, 4.2)
-        self.assertEqual(x.units, UnitsContainer(decibellmilliwatt=1))
+        self.assertEqual(x.units, UnitsContainer(decibelmilliwatt=1))
 
         with self.capture_log() as buffer:
             self.assertEqual(4.2 * new_reg.dBm, new_reg.Quantity(4.2, 2 * new_reg.dBm))
@@ -83,11 +83,11 @@ class TestLogarithmicQuantity(QuantityTestCase):
 
 
 log_unit_names = [
-    "decibellmilliwatt",
+    "decibelmilliwatt",
     "dBm",
-    "decibellmicrowatt",
+    "decibelmicrowatt",
     "dBu",
-    "decibell",
+    "decibel",
     "dB",
     "decade",
     "octave",
@@ -134,9 +134,9 @@ def test_quantity_by_multiplication(auto_ureg, unit_name, mag):
 @pytest.mark.parametrize(
     "unit1,unit2",
     [
-        ("decibellmilliwatt", "dBm"),
-        ("decibellmicrowatt", "dBu"),
-        ("decibell", "dB"),
+        ("decibelmilliwatt", "dBm"),
+        ("decibelmicrowatt", "dBu"),
+        ("decibel", "dB"),
         ("octave", "oct"),
     ],
 )
