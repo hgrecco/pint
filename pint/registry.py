@@ -40,13 +40,17 @@ import locale
 import os
 import re
 from collections import ChainMap, defaultdict
-from contextlib import closing, contextmanager
+from contextlib import contextmanager
 from decimal import Decimal
 from fractions import Fraction
 from io import StringIO
 from tokenize import NAME, NUMBER
 
-import pkg_resources
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    # Backport for Python < 3.7
+    import importlib_resources
 
 from . import registry_helpers, systems
 from .compat import babel_parse, tokenizer
@@ -531,8 +535,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         if isinstance(file, str):
             try:
                 if is_resource:
-                    with closing(pkg_resources.resource_stream(__name__, file)) as fp:
-                        rbytes = fp.read()
+                    rbytes = importlib_resources.read_binary(__package__, file)
                     return self.load_definitions(
                         StringIO(rbytes.decode("utf-8")), is_resource
                     )

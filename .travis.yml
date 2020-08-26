@@ -65,6 +65,7 @@ install:
   # this is superslow but suck it up until updates to pandas are made
   # - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
   - conda list
+  - pip install .
 
 script:
   # if we're doing the pandas tests and hence have pytest available, we can
