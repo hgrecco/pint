@@ -6,6 +6,8 @@ Pint Changelog
 
 - Implements Logarithmic Units like dBm, dB or decade
   (Issue #71, Thanks Dima Pustakhod, Clark Willison, Giorgio Signorello, Steven Casagrande, Jonathan Wheeler)
+- Drop dependency on setuptools pkg_resources to read package resources, using std lib importlib.resources instead.
+  (Issue #1080)
 
 
 0.15 (2020-08-22)
