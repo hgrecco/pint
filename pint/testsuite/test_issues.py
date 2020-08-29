@@ -746,6 +746,29 @@ class TestIssues(QuantityTestCase):
         ureg.enable_contexts("c3")
 
     @helpers.requires_numpy()
+    def test_issue1144_1102(self):
+        # Performing operations shouldn't modify the original objects
+        # Issue 1144
+        ddc = "delta_degree_Celsius"
+        q1 = ureg.Quantity([-287.78, -32.24, -1.94], ddc)
+        q2 = ureg.Quantity(70.0, "degree_Fahrenheit")
+        q1 - q2
+        assert all(q1 == ureg.Quantity([-287.78, -32.24, -1.94], ddc))
+        assert q2 == ureg.Quantity(70.0, "degree_Fahrenheit")
+        q2 - q1
+        assert all(q1 == ureg.Quantity([-287.78, -32.24, -1.94], ddc))
+        assert q2 == ureg.Quantity(70.0, "degree_Fahrenheit")
+        # Issue 1102
+        val = [30.0, 45.0, 60.0] * ureg.degree
+        val == 1
+        1 == val
+        assert all(val == ureg.Quantity([30.0, 45.0, 60.0], "degree"))
+        # Test for another bug identified by searching on "_convert_magnitude"
+        q2 = ureg.Quantity(3, "degree_Kelvin")
+        q1 - q2
+        assert all(q1 == ureg.Quantity([-287.78, -32.24, -1.94], ddc))
+
+    @helpers.requires_numpy()
     def test_issue_1136(self):
         assert (2 ** ureg.Quantity([2, 3], "") == 2 ** np.array([2, 3])).all()
 

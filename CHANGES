@@ -4,6 +4,8 @@ Pint Changelog
 0.16 (unreleased)
 -----------------
 
+- Fixed issue where performing an operation of a Quantity with certain units would perform an in-place
+  unit conversion that modified the operand in addition to the returned value (Issues #1102 & #1144)
 - Implements Logarithmic Units like dBm, dB or decade
   (Issue #71, Thanks Dima Pustakhod, Clark Willison, Giorgio Signorello, Steven Casagrande, Jonathan Wheeler)
 - Drop dependency on setuptools pkg_resources to read package resources, using std lib importlib.resources instead.
