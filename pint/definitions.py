@@ -10,7 +10,7 @@
 
 from collections import namedtuple
 
-from .converters import OffsetConverter, ScaleConverter
+from .converters import LogarithmicConverter, OffsetConverter, ScaleConverter
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
@@ -119,6 +119,10 @@ class Definition:
     @property
     def is_multiplicative(self):
         return self._converter.is_multiplicative
+
+    @property
+    def is_logarithmic(self):
+        return self._converter.is_logarithmic
 
     @classmethod
     def from_string(cls, definition, non_int_type=float):
@@ -235,7 +239,7 @@ class UnitDefinition(Definition):
             definition = PreprocessedDefinition.from_string(definition)
 
         if ";" in definition.value:
-            [converter, modifiers] = definition.value.split(";", 2)
+            [converter, modifiers] = definition.value.split(";", 1)
 
             try:
                 modifiers = dict(
@@ -265,10 +269,22 @@ class UnitDefinition(Definition):
             )
         reference = UnitsContainer(converter)
 
-        if modifiers.get("offset", 0) != 0:
-            converter = OffsetConverter(converter.scale, modifiers["offset"])
-        else:
+        if not modifiers:
             converter = ScaleConverter(converter.scale)
+
+        elif "offset" in modifiers:
+            if modifiers.get("offset", 0.0) != 0.0:
+                converter = OffsetConverter(converter.scale, modifiers["offset"])
+            else:
+                converter = ScaleConverter(converter.scale)
+
+        elif "logbase" in modifiers and "logfactor" in modifiers:
+            converter = LogarithmicConverter(
+                converter.scale, modifiers["logbase"], modifiers["logfactor"]
+            )
+
+        else:
+            raise DefinitionSyntaxError("Unable to assing a converter to the unit")
 
         return cls(
             definition.name,

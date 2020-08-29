@@ -40,18 +40,22 @@ import locale
 import os
 import re
 from collections import ChainMap, defaultdict
-from contextlib import closing, contextmanager
+from contextlib import contextmanager
 from decimal import Decimal
 from fractions import Fraction
 from io import StringIO
 from tokenize import NAME, NUMBER
 
-import pkg_resources
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    # Backport for Python < 3.7
+    import importlib_resources
 
 from . import registry_helpers, systems
 from .compat import babel_parse, tokenizer
 from .context import Context, ContextChain
-from .converters import ScaleConverter
+from .converters import LogarithmicConverter, ScaleConverter
 from .definitions import (
     AliasDefinition,
     Definition,
@@ -531,8 +535,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         if isinstance(file, str):
             try:
                 if is_resource:
-                    with closing(pkg_resources.resource_stream(__name__, file)) as fp:
-                        rbytes = fp.read()
+                    rbytes = importlib_resources.read_binary(__package__, file)
                     return self.load_definitions(
                         StringIO(rbytes.decode("utf-8")), is_resource
                     )
@@ -1352,7 +1355,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
             raise UndefinedUnitError(u)
 
     def _validate_and_extract(self, units):
-
+        # u is for unit, e is for exponent
         nonmult_units = [
             (u, e) for u, e in units.items() if not self._is_multiplicative(u)
         ]
@@ -1378,6 +1381,21 @@ class NonMultiplicativeRegistry(BaseRegistry):
             return nonmult_unit
 
         return None
+
+    def _add_ref_of_log_unit(self, offset_unit, all_units):
+
+        slct_unit = self._units[offset_unit]
+        if isinstance(slct_unit.converter, LogarithmicConverter):
+            # Extract reference unit
+            slct_ref = slct_unit.reference
+            # If reference unit is not dimensionless
+            if slct_ref != UnitsContainer():
+                # Extract reference unit
+                (u, e) = [(u, e) for u, e in slct_ref.items()].pop()
+                # Add it back to the unit list
+                return all_units.add(u, e)
+        # Otherwise, return the units unmodified
+        return all_units
 
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
@@ -1434,10 +1452,14 @@ class NonMultiplicativeRegistry(BaseRegistry):
         if src_offset_unit:
             value = self._units[src_offset_unit].converter.to_reference(value, inplace)
             src = src.remove([src_offset_unit])
+            # Add reference unit for multiplicative section
+            src = self._add_ref_of_log_unit(src_offset_unit, src)
 
         # clean dst units from offset units
         if dst_offset_unit:
             dst = dst.remove([dst_offset_unit])
+            # Add reference unit for multiplicative section
+            dst = self._add_ref_of_log_unit(dst_offset_unit, dst)
 
         # Convert non multiplicative units to the dst.
         value = super()._convert(value, src, dst, inplace, False)

@@ -6,6 +6,10 @@ Pint Changelog
 
 - Fixed issue where performing an operation of a Quantity with certain units would perform an in-place
   unit conversion that modified the operand in addition to the returned value (Issues #1102 & #1144)
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Clark Willison, Giorgio Signorello, Steven Casagrande, Jonathan Wheeler)
+- Drop dependency on setuptools pkg_resources to read package resources, using std lib importlib.resources instead.
+  (Issue #1080)
 
 
 0.15 (2020-08-22)
@@ -23,6 +27,8 @@ Pint Changelog
 - Fixed right operand power for dimensionless Quantity to reflect numpy behavior. (Issue #1136)
 - Eliminated warning when setting a masked value on an underlying MaskedArray.
 - Add `sort` option to `formatting.formatter` to permit disabling sorting of component units in format string
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Giorgio Signorello, Jonathan Wheeler)
 
 
 0.14 (2020-07-01)
