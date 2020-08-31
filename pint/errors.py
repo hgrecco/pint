@@ -8,6 +8,9 @@
     :license: BSD, see LICENSE for more details.
 """
 
+OFFSET_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/latest/nonmult.html"
+LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/latest/nonmult.html"
+
 
 def _file_prefix(filename=None, lineno=None):
     if filename and lineno is not None:
@@ -111,7 +114,22 @@ class OffsetUnitCalculusError(PintTypeError):
         return (
             "Ambiguous operation with offset unit (%s)."
             % ", ".join(str(u) for u in self.args)
-            + " See https://pint.readthedocs.io/en/latest/nonmult.html for guidance."
+            + " See "
+            + OFFSET_ERROR_DOCS_HTML
+            + " for guidance."
+        )
+
+
+class LogarithmicUnitCalculusError(PintTypeError):
+    """Raised on inappropriate operations with logarithmic units."""
+
+    def __str__(self):
+        return (
+            "Ambiguous operation with logarithmic unit (%s)."
+            % ", ".join(str(u) for u in self.args)
+            + " See "
+            + LOG_ERROR_DOCS_HTML
+            + " for guidance."
         )
 
 

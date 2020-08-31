@@ -10,7 +10,7 @@
 
 from collections import namedtuple
 
-from .converters import OffsetConverter, ScaleConverter
+from .converters import LogarithmicConverter, OffsetConverter, ScaleConverter
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
@@ -20,17 +20,17 @@ class PreprocessedDefinition(
 ):
     """Splits a definition into the constitutive parts.
 
-    A definition is given as a string with equalities in a single line.
+    A definition is given as a string with equalities in a single line::
 
         ---------------> rhs
-    a = b = c = d = e
-    |   |   |   -------> aliases (optional)
-    |   |   |
-    |   |   -----------> symbol (use "_" to
-    |   |
-    |   ---------------> value
-    |
-    -------------------> name
+        a = b = c = d = e
+        |   |   |   -------> aliases (optional)
+        |   |   |
+        |   |   -----------> symbol (use "_" for no symbol)
+        |   |
+        |   ---------------> value
+        |
+        -------------------> name
 
     Attributes
     ----------
@@ -120,6 +120,10 @@ class Definition:
     def is_multiplicative(self):
         return self._converter.is_multiplicative
 
+    @property
+    def is_logarithmic(self):
+        return self._converter.is_logarithmic
+
     @classmethod
     def from_string(cls, definition, non_int_type=float):
         """Parse a definition.
@@ -175,11 +179,12 @@ class Definition:
 
 
 class PrefixDefinition(Definition):
-    """Definition of a prefix.
+    """Definition of a prefix::
 
-    <prefix>- = <amount> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+        <prefix>- = <amount> [= <symbol>] [= <alias>] [ = <alias> ] [...]
 
-    Example:
+    Example::
+
         deca- =  1e+1  = da- = deka-
     """
 
@@ -205,11 +210,12 @@ class PrefixDefinition(Definition):
 
 
 class UnitDefinition(Definition):
-    """Definition of a unit.
+    """Definition of a unit::
 
-    <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+        <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
 
-    Example:
+    Example::
+
         millennium = 1e3 * year = _ = millennia
 
     Parameters
@@ -233,7 +239,7 @@ class UnitDefinition(Definition):
             definition = PreprocessedDefinition.from_string(definition)
 
         if ";" in definition.value:
-            [converter, modifiers] = definition.value.split(";", 2)
+            [converter, modifiers] = definition.value.split(";", 1)
 
             try:
                 modifiers = dict(
@@ -263,10 +269,22 @@ class UnitDefinition(Definition):
             )
         reference = UnitsContainer(converter)
 
-        if modifiers.get("offset", 0) != 0:
-            converter = OffsetConverter(converter.scale, modifiers["offset"])
-        else:
+        if not modifiers:
             converter = ScaleConverter(converter.scale)
+
+        elif "offset" in modifiers:
+            if modifiers.get("offset", 0.0) != 0.0:
+                converter = OffsetConverter(converter.scale, modifiers["offset"])
+            else:
+                converter = ScaleConverter(converter.scale)
+
+        elif "logbase" in modifiers and "logfactor" in modifiers:
+            converter = LogarithmicConverter(
+                converter.scale, modifiers["logbase"], modifiers["logfactor"]
+            )
+
+        else:
+            raise DefinitionSyntaxError("Unable to assing a converter to the unit")
 
         return cls(
             definition.name,
@@ -279,11 +297,12 @@ class UnitDefinition(Definition):
 
 
 class DimensionDefinition(Definition):
-    """Definition of a dimension.
+    """Definition of a dimension::
 
-    [dimension name] = <relation to other dimensions>
+        [dimension name] = <relation to other dimensions>
 
-    Example:
+    Example::
+
         [density] = [mass] / [volume]
     """
 
@@ -323,11 +342,12 @@ class DimensionDefinition(Definition):
 
 
 class AliasDefinition(Definition):
-    """Additional alias(es) for an already existing unit.
+    """Additional alias(es) for an already existing unit::
 
-    @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
+        @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
 
-    Example:
+    Example::
+
         @alias meter = my_meter
     """
 

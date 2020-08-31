@@ -39,7 +39,8 @@ class BehaviorChangeWarning(UserWarning):
 
 try:
     import numpy as np
-    from numpy import ndarray, datetime64 as np_datetime64
+    from numpy import datetime64 as np_datetime64
+    from numpy import ndarray
 
     HAS_NUMPY = True
     NUMPY_VER = np.__version__
@@ -126,6 +127,14 @@ try:
 except ImportError:
     HAS_BABEL = False
 
+# Defines Logarithm and Exponential for Logarithmic Converter
+if HAS_NUMPY:
+    from numpy import exp  # noqa: F401
+    from numpy import log  # noqa: F401
+else:
+    from math import exp  # noqa: F401
+    from math import log  # noqa: F401
+
 if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
 
@@ -135,7 +144,7 @@ upcast_types = []
 
 # pint-pandas (PintArray)
 try:
-    from pintpandas import PintArray
+    from pint_pandas import PintArray
 
     upcast_types.append(PintArray)
 except ImportError:
@@ -156,6 +165,14 @@ try:
     upcast_types += [DataArray, Dataset, Variable]
 except ImportError:
     pass
+
+try:
+    from dask import array as dask_array
+    from dask.base import compute, persist, visualize
+
+except ImportError:
+    compute, persist, visualize = None, None, None
+    dask_array = None
 
 
 def is_upcast_type(other) -> bool:
@@ -212,7 +229,7 @@ def eq(lhs, rhs, check_all: bool):
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and isinstance(out, ndarray):
+    if check_all and is_duck_array_type(type(out)):
         return out.all()
     return out
 

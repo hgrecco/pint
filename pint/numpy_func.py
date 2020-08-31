@@ -11,7 +11,7 @@ from inspect import signature
 from itertools import chain
 
 from .compat import is_upcast_type, np, zero_or_nan
-from .errors import DimensionalityError
+from .errors import DimensionalityError, UnitStrippedWarning
 from .util import iterable, sized
 
 HANDLED_UFUNCS = {}
@@ -416,7 +416,6 @@ matching_input_copy_units_output_ufuncs = [
 copy_units_output_ufuncs = ["ldexp", "fmod", "mod", "remainder"]
 op_units_output_ufuncs = {
     "var": "square",
-    "prod": "size",
     "multiply": "mul",
     "true_divide": "div",
     "divide": "div",
@@ -576,6 +575,7 @@ def _copyto(dst, src, casting="same_kind", where=True):
     else:
         warnings.warn(
             "The unit of the quantity is stripped when copying to non-quantity",
+            UnitStrippedWarning,
             stacklevel=2,
         )
         np.copyto(dst, src.m, casting=casting, where=where)
@@ -677,19 +677,27 @@ def _prod(a, *args, **kwargs):
     axis = all_kwargs.get("axis", None)
     where = all_kwargs.get("where", None)
 
+    registry = a.units._REGISTRY
+
     if axis is not None and where is not None:
-        raise ValueError("passing axis and where is not supported")
+        _, where_ = np.broadcast_arrays(a._magnitude, where)
+        exponents = np.unique(np.sum(where_, axis=axis))
+        if len(exponents) == 1 or (len(exponents) == 2 and 0 in exponents):
+            units = a.units ** np.max(exponents)
+        else:
+            units = registry.dimensionless
+            a = a.to(units)
+    elif axis is not None:
+        units = a.units ** a.shape[axis]
+    elif where is not None:
+        exponent = np.sum(where)
+        units = a.units ** exponent
+    else:
+        units = a.units ** a.size
 
     result = np.prod(a._magnitude, *args, **kwargs)
 
-    if axis is not None:
-        exponent = a.size // result.size
-        units = a.units ** exponent
-    elif where is not None:
-        exponent = np.asarray(where, dtype=np.bool_).sum()
-        units = a.units ** exponent
-
-    return units._REGISTRY.Quantity(result, units)
+    return registry.Quantity(result, units)
 
 
 # Implement simple matching-unit or stripped-unit functions based on signature

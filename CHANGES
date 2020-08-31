@@ -1,15 +1,44 @@
 Pint Changelog
 ==============
 
-0.12 (unreleased)
+0.16 (unreleased)
 -----------------
 
-- Add full support for Decimal and Fraction at the registry level.
-  **BREAKING CHANGE**: 
-  `use_decimal` is deprecated. Use `non_int_type=Decimal` when instantiating
-  the registry.
-- Fixed bug where numpy.pad didn't work without specifying constant_values or
-  end_values (Issue #1026)
+- Fixed issue where performing an operation of a Quantity with certain units would perform an in-place
+  unit conversion that modified the operand in addition to the returned value (Issues #1102 & #1144)
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Clark Willison, Giorgio Signorello, Steven Casagrande, Jonathan Wheeler)
+- Drop dependency on setuptools pkg_resources to read package resources, using std lib importlib.resources instead.
+  (Issue #1080)
+
+
+0.15 (2020-08-22)
+-----------------
+
+- Change `Quantity` and `Unit` HTML (i.e., Jupyter notebook) repr away from LaTeX to a
+  simpler, more performant pretty-text and table based repr inspired by Sparse and Dask.
+  (Issue #654)
+- Add `case_sensitive` option to registry for case (in)sensitive handling when parsing
+  units (Issue #1145)
+- Implement Dask collection interface to support Pint Quantity wrapped Dask arrays.
+- Started automatically testing examples in the documentation
+- Fixed an exception generated when reducing dimensions with three or more
+  units of the same type
+- Fixed right operand power for dimensionless Quantity to reflect numpy behavior. (Issue #1136)
+- Eliminated warning when setting a masked value on an underlying MaskedArray.
+- Add `sort` option to `formatting.formatter` to permit disabling sorting of component units in format string
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Giorgio Signorello, Jonathan Wheeler)
+
+
+0.14 (2020-07-01)
+-----------------
+
+- Changes required to support Pint-Pandas 0.1.
+
+
+0.13 (2020-06-17)
+-----------------
 - Reinstated support for pickle protocol 0 and 1, which is required by pytables
   (Issue #1036, Thanks Guido Imperiale)
 - Fixed bug with multiplication of Quantity by dict (Issue #1032)
@@ -19,10 +48,11 @@ Pint Changelog
   (Issue #1050, Thanks Guido Imperiale)
 - NaN is now treated the same as zero in addition, subtraction, equality, and
   disequality (Issue #1051, Thanks Guido Imperiale)
-- Fixed issue where quantities with a very large magnitude would throw an IndexError 
+- Fixed issue where quantities with a very large magnitude would throw an IndexError
   when using to_compact()
 - Fixed crash when a Unit with prefix is declared for the first time while a Context
-  containing unit redefinitions is active (Issue #1062, Thanks Guido Imperiale)
+  containing unit redefinitions is active
+  (Issues #1062 and #1097, Thanks Guido Imperiale)
 - New implementation of 'Lx' String Format Type Option
   The old implementation treated 'Lx' as 'S' as produced by 'uncertainties'
   package, but that is not fully compatible with SIunitx. The new code protects
@@ -34,6 +64,26 @@ Pint Changelog
   method so that now `list(ureg)` returns a list of all units in registry.
   (Issue #1072, Thanks Tom Nicholas)
 - Replace pkg_resources.version to importlib.metadata.version. (Issue #1083)
+- Fix typo in docs for wraps example with optional arguments. (Issue #1088)
+- Add momentum as a dimension
+- Fixed a bug where unit exponents were only partially superscripted in HTML format
+- Multiple contexts containing the same redefinition can now be stacked
+  (Issue #1108, Thanks Guido Imperiale)
+- Fixed crash when some specific combinations of contexts were enabled
+  (Issue #1112, Thanks Guido Imperiale)
+- Added support for checking prefixed units using `in` keyword (Issue #1086)
+- Updated many examples in the documentation to reflect Pint's current behavior
+
+
+0.12 (2020-05-29)
+-----------------
+
+- Add full support for Decimal and Fraction at the registry level.
+  **BREAKING CHANGE**:
+  `use_decimal` is deprecated. Use `non_int_type=Decimal` when instantiating
+  the registry.
+- Fixed bug where numpy.pad didn't work without specifying constant_values or
+  end_values (Issue #1026)
 
 
 0.11 (2020-02-19)
@@ -75,6 +125,7 @@ Pint Changelog
 - Fixed several Sphinx issues. Fixed intersphinx hooks to all classes missing.
   (Issue #881, Thanks Guido Imperiale)
 - Fixed __array__ signature to match numpy docs (Issue #974, Thanks Ryan May)
+
 
 0.10 (2020-01-05)
 -----------------
@@ -352,6 +403,7 @@ Pint Changelog
   (Issue #357, thanks noahl)
 - Allow changing shape for Quantities with numpy arrays.
   (Issue #344, thanks tecki)
+
 
 0.7.2 (2016-03-02)
 ------------------

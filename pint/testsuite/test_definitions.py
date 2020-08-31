@@ -1,4 +1,4 @@
-from pint.converters import OffsetConverter, ScaleConverter
+from pint.converters import LogarithmicConverter, OffsetConverter, ScaleConverter
 from pint.definitions import (
     AliasDefinition,
     Definition,
@@ -93,6 +93,67 @@ class TestDefinition(BaseTestCase):
             Definition.from_string,
             "degF = 9 / 5 * kelvin; offset: 255.372222 bla",
         )
+
+    def test_log_unit_definition(self):
+
+        x = Definition.from_string(
+            "decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm"
+        )
+        self.assertIsInstance(x, UnitDefinition)
+        self.assertFalse(x.is_base)
+        self.assertIsInstance(x.converter, LogarithmicConverter)
+        self.assertEqual(x.converter.scale, 1e-3)
+        self.assertEqual(x.converter.logbase, 10)
+        self.assertEqual(x.converter.logfactor, 10)
+        self.assertEqual(x.reference, UnitsContainer(watt=1))
+
+        x = Definition.from_string("decibel = 1 ; logbase: 10; logfactor: 10 = dB")
+        self.assertIsInstance(x, UnitDefinition)
+        self.assertFalse(x.is_base)
+        self.assertIsInstance(x.converter, LogarithmicConverter)
+        self.assertEqual(x.converter.scale, 1)
+        self.assertEqual(x.converter.logbase, 10)
+        self.assertEqual(x.converter.logfactor, 10)
+        self.assertEqual(x.reference, UnitsContainer())
+
+        x = Definition.from_string("bell = 1 ; logbase: 10; logfactor: 1 = B")
+        self.assertIsInstance(x, UnitDefinition)
+        self.assertFalse(x.is_base)
+        self.assertIsInstance(x.converter, LogarithmicConverter)
+        self.assertEqual(x.converter.scale, 1)
+        self.assertEqual(x.converter.logbase, 10)
+        self.assertEqual(x.converter.logfactor, 1)
+        self.assertEqual(x.reference, UnitsContainer())
+
+        x = Definition.from_string("decade = 1 ; logbase: 10; logfactor: 1")
+        self.assertIsInstance(x, UnitDefinition)
+        self.assertFalse(x.is_base)
+        self.assertIsInstance(x.converter, LogarithmicConverter)
+        self.assertEqual(x.converter.scale, 1)
+        self.assertEqual(x.converter.logbase, 10)
+        self.assertEqual(x.converter.logfactor, 1)
+        self.assertEqual(x.reference, UnitsContainer())
+
+        eulersnumber = 2.71828182845904523536028747135266249775724709369995
+        x = Definition.from_string(
+            "neper = 1 ; logbase: %1.50f; logfactor: 0.5 = Np" % eulersnumber
+        )
+        self.assertIsInstance(x, UnitDefinition)
+        self.assertFalse(x.is_base)
+        self.assertIsInstance(x.converter, LogarithmicConverter)
+        self.assertEqual(x.converter.scale, 1)
+        self.assertEqual(x.converter.logbase, eulersnumber)
+        self.assertEqual(x.converter.logfactor, 0.5)
+        self.assertEqual(x.reference, UnitsContainer())
+
+        x = Definition.from_string("octave = 1 ; logbase: 2; logfactor: 1 = oct")
+        self.assertIsInstance(x, UnitDefinition)
+        self.assertFalse(x.is_base)
+        self.assertIsInstance(x.converter, LogarithmicConverter)
+        self.assertEqual(x.converter.scale, 1)
+        self.assertEqual(x.converter.logbase, 2)
+        self.assertEqual(x.converter.logfactor, 1)
+        self.assertEqual(x.reference, UnitsContainer())
 
     def test_dimension_definition(self):
         x = DimensionDefinition("[time]", "", (), None, is_base=True)

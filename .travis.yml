@@ -61,10 +61,11 @@ install:
   - if [[ $PKGS =~ flake8 ]]; then LINT=1; else LINT=0; fi
   - if [[ $PKGS =~ sphinx ]]; then DOCS=1; else DOCS=0; fi
   - if [[ $PKGS =~ matplotlib && $DOCS == 0 ]]; then pip install pytest-mpl; export TEST_OPTS="$TEST_OPTS --mpl"; fi
-  - if [[ $DOCS == 1 ]]; then pip install git+https://github.com/hgrecco/pint-pandas.git; fi
+  - if [[ $DOCS == 1 ]]; then pip install pint-pandas; fi
   # this is superslow but suck it up until updates to pandas are made
   # - if [[ $PANDAS == '1' ]]; then pip install numpy cython pytest pytest-cov nbval; pip install git+https://github.com/pandas-dev/pandas.git@bdb7a1603f1e0948ca0cab011987f616e7296167; python -c 'import pandas; print(pandas.__version__)'; fi
   - conda list
+  - pip install .
 
 script:
   # if we're doing the pandas tests and hence have pytest available, we can
@@ -75,6 +76,7 @@ script:
   - if [[ $PANDAS == 0 && $LINT == 0 && $DOCS == 0 ]]; then python -bb -m pytest $TEST_OPTS; fi
   - if [[ $LINT == 1 ]]; then black -t py36 --check . && isort -rc -c . && flake8; fi
   - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -n -j auto -b html -d build/doctrees docs build/html; fi
+  - if [[ $DOCS == 1 ]]; then PYTHONPATH=$PWD sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest; fi
   - if [[ $LINT == 0 && $DOCS == 0 ]]; then coverage report -m; fi
 
 after_success:

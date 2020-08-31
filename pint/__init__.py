@@ -14,9 +14,10 @@
 import sys
 
 from .context import Context
-from .errors import (
+from .errors import (  # noqa: F401
     DefinitionSyntaxError,
     DimensionalityError,
+    LogarithmicUnitCalculusError,
     OffsetUnitCalculusError,
     RedefinitionError,
     UndefinedUnitError,
@@ -36,15 +37,15 @@ except ImportError:
     from importlib_metadata import version
 
 try:
-    from pintpandas import PintArray, PintType
+    from pint_pandas import PintArray, PintType
 
     del PintType
     del PintArray
 
-    _HAS_PINTPANDAS = True
+    _HAS_PINT_PANDAS = True
 except ImportError:
-    _HAS_PINTPANDAS = False
-    _, _pintpandas_error, _ = sys.exc_info()
+    _HAS_PINT_PANDAS = False
+    _, _pint_pandas_error, _ = sys.exc_info()
 
 try:  # pragma: no cover
     __version__ = version("pint")

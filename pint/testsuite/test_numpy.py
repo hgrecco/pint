@@ -2,6 +2,7 @@ import copy
 import operator as op
 import pickle
 import unittest
+import warnings
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from pint.compat import np
@@ -283,18 +284,32 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     # Sums, products, differences
 
+    @helpers.requires_array_function_protocol()
     def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m ** 4)
+        axis = 0
+        where = [[True, False], [True, True]]
+
+        self.assertQuantityEqual(self.q.prod(), 24 * self.ureg.m ** 4)
+        self.assertQuantityEqual(self.q.prod(axis=axis), [3, 8] * self.ureg.m ** 2)
+        self.assertQuantityEqual(self.q.prod(where=where), 12 * self.ureg.m ** 3)
 
     @helpers.requires_array_function_protocol()
     def test_prod_numpy_func(self):
         axis = 0
         where = [[True, False], [True, True]]
 
+        self.assertQuantityEqual(np.prod(self.q), 24 * self.ureg.m ** 4)
         self.assertQuantityEqual(np.prod(self.q, axis=axis), [3, 8] * self.ureg.m ** 2)
         self.assertQuantityEqual(np.prod(self.q, where=where), 12 * self.ureg.m ** 3)
 
-        self.assertRaises(ValueError, np.prod, self.q, axis=axis, where=where)
+        self.assertRaises(DimensionalityError, np.prod, self.q, axis=axis, where=where)
+        self.assertQuantityEqual(
+            np.prod(self.q, axis=axis, where=[[True, False], [False, True]]),
+            [1, 4] * self.ureg.m,
+        )
+        self.assertQuantityEqual(
+            np.prod(self.q, axis=axis, where=[True, False]), [3, 1] * self.ureg.m ** 2
+        )
 
     def test_sum(self):
         self.assertEqual(self.q.sum(), 10 * self.ureg.m)
@@ -782,9 +797,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
         self.assertQuantityAlmostEqual(np.std(self.q), 1.11803 * self.ureg.m, rtol=1e-5)
         self.assertRaises(OffsetUnitCalculusError, np.std, self.q_temperature)
 
-    def test_prod(self):
-        self.assertEqual(self.q.prod(), 24 * self.ureg.m ** 4)
-
     def test_cumprod(self):
         self.assertRaises(DimensionalityError, self.q.cumprod)
         self.assertQuantityEqual((self.q / self.ureg.m).cumprod(), [1, 2, 6, 24])
@@ -839,6 +851,16 @@ class TestNumpyUnclassified(TestNumpyMethods):
         q[0] = 1.0
         self.assertQuantityEqual(q, [0.001, 1, 2, 3] * self.ureg.m / self.ureg.mm)
 
+        # Check that this properly masks the first item without warning
+        q = self.ureg.Quantity(
+            np.ma.array([0.0, 1.0, 2.0, 3.0], mask=[False, True, False, False]), "m"
+        )
+        with warnings.catch_warnings(record=True) as w:
+            q[0] = np.ma.masked
+            # Check for no warnings
+            assert not w
+            assert q.mask[0]
+
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
             self.assertEqual(q, v * self.ureg.m)
@@ -867,10 +889,23 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_equal(self):
         x = self.q.magnitude
         u = self.Q_(np.ones(x.shape))
+        true = np.ones_like(x, dtype=np.bool_)
+        false = np.zeros_like(x, dtype=np.bool_)
 
         self.assertQuantityEqual(u, u)
         self.assertQuantityEqual(u == u, u.magnitude == u.magnitude)
         self.assertQuantityEqual(u == 1, u.magnitude == 1)
+
+        v = self.Q_(np.zeros(x.shape), "m")
+        w = self.Q_(np.ones(x.shape), "m")
+        self.assertNDArrayEqual(v == 1, false)
+        self.assertNDArrayEqual(
+            self.Q_(np.zeros_like(x), "m") == self.Q_(np.zeros_like(x), "s"), false,
+        )
+        self.assertNDArrayEqual(v == v, true)
+        self.assertNDArrayEqual(v == w, false)
+        self.assertNDArrayEqual(v == w.to("mm"), false)
+        self.assertNDArrayEqual(u == v, false)
 
     def test_shape(self):
         u = self.Q_(np.arange(12))

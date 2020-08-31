@@ -520,7 +520,7 @@ class TestIssues(QuantityTestCase):
 
         lunar_module_height = Q_(10, "m")
         t1 = calculate_time_to_fall(lunar_module_height)
-        print(t1)
+        # print(t1)
         self.assertAlmostEqual(t1, Q_(1.4285714285714286, "s"))
 
         moon_gravity = Q_(1.625, "m/s^2")
@@ -580,7 +580,7 @@ class TestIssues(QuantityTestCase):
 
         @ureg.check("[length]", "[length]/[time]^2")
         def pendulum_period(length, G=Q_(1, "standard_gravity")):
-            print(length)
+            # print(length)
             return (2 * math.pi * (length / G) ** 0.5).to("s")
 
         length = Q_(1, ureg.m)
@@ -693,14 +693,87 @@ class TestIssues(QuantityTestCase):
         assert isinstance(q1, ureg.Quantity)
         assert len(q0) == len(q1) == 0
 
-    def test_issue1062(self):
+    def test_issue1058(self):
+        """ verify that auto-reducing quantities with three or more units
+        of same base type succeeds """
+        q = 1 * ureg.mg / ureg.g / ureg.kg
+        q.ito_reduced_units()
+        self.assertIsInstance(q, ureg.Quantity)
+
+    def test_issue1062_issue1097(self):
         # Must not be used by any other tests
         assert "nanometer" not in ureg._units
-        for i in range(2):
+        for i in range(5):
             ctx = Context.from_lines(["@context _", "cal = 4 J"])
             with ureg.context("sp", ctx):
                 q = ureg.Quantity(1, "nm")
                 q.to("J")
+
+    def test_issue1086(self):
+        # units with prefixes should correctly test as 'in' the registry
+        assert "bits" in ureg
+        assert "gigabits" in ureg
+        assert "meters" in ureg
+        assert "kilometers" in ureg
+        # unknown or incorrect units should test as 'not in' the registry
+        assert "magicbits" not in ureg
+        assert "unknownmeters" not in ureg
+        assert "gigatrees" not in ureg
+
+    def test_issue1112(self):
+        ureg = UnitRegistry(
+            """
+            m = [length]
+            g = [mass]
+            s = [time]
+
+            ft = 0.305 m
+            lb = 454 g
+
+            @context c1
+                [time]->[length] : value * 10 m/s
+            @end
+            @context c2
+                ft = 0.3 m
+            @end
+            @context c3
+                lb = 500 g
+            @end
+            """.splitlines()
+        )
+        ureg.enable_contexts("c1")
+        ureg.enable_contexts("c2")
+        ureg.enable_contexts("c3")
+
+    @helpers.requires_numpy()
+    def test_issue1144_1102(self):
+        # Performing operations shouldn't modify the original objects
+        # Issue 1144
+        ddc = "delta_degree_Celsius"
+        q1 = ureg.Quantity([-287.78, -32.24, -1.94], ddc)
+        q2 = ureg.Quantity(70.0, "degree_Fahrenheit")
+        q1 - q2
+        assert all(q1 == ureg.Quantity([-287.78, -32.24, -1.94], ddc))
+        assert q2 == ureg.Quantity(70.0, "degree_Fahrenheit")
+        q2 - q1
+        assert all(q1 == ureg.Quantity([-287.78, -32.24, -1.94], ddc))
+        assert q2 == ureg.Quantity(70.0, "degree_Fahrenheit")
+        # Issue 1102
+        val = [30.0, 45.0, 60.0] * ureg.degree
+        val == 1
+        1 == val
+        assert all(val == ureg.Quantity([30.0, 45.0, 60.0], "degree"))
+        # Test for another bug identified by searching on "_convert_magnitude"
+        q2 = ureg.Quantity(3, "degree_Kelvin")
+        q1 - q2
+        assert all(q1 == ureg.Quantity([-287.78, -32.24, -1.94], ddc))
+
+    @helpers.requires_numpy()
+    def test_issue_1136(self):
+        assert (2 ** ureg.Quantity([2, 3], "") == 2 ** np.array([2, 3])).all()
+
+        with pytest.raises(DimensionalityError):
+            2 ** ureg.Quantity([2, 3], "m")
 
 
 if np is not None:

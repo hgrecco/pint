@@ -40,18 +40,22 @@ import locale
 import os
 import re
 from collections import ChainMap, defaultdict
-from contextlib import closing, contextmanager
+from contextlib import contextmanager
 from decimal import Decimal
 from fractions import Fraction
 from io import StringIO
 from tokenize import NAME, NUMBER
 
-import pkg_resources
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    # Backport for Python < 3.7
+    import importlib_resources
 
 from . import registry_helpers, systems
 from .compat import babel_parse, tokenizer
 from .context import Context, ContextChain
-from .converters import ScaleConverter
+from .converters import LogarithmicConverter, ScaleConverter
 from .definitions import (
     AliasDefinition,
     Definition,
@@ -167,6 +171,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         locale identifier string, used in `format_babel`
     non_int_type : type
         numerical type used for non integer values. (Default: float)
+    case_sensitive : bool, optional
+        Control default case sensitivity of unit parsing. (Default: True)
 
     """
 
@@ -187,6 +193,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         preprocessors=None,
         fmt_locale=None,
         non_int_type=float,
+        case_sensitive=True,
     ):
         self._register_parsers()
         self._init_dynamic_classes()
@@ -207,6 +214,9 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         #: Numerical type used for non integer values.
         self.non_int_type = non_int_type
+
+        #: Default unit case sensitivity
+        self.case_sensitive = case_sensitive
 
         #: Map between name (string) and value (string) of defaults stored in the
         #: definitions file.
@@ -288,6 +298,15 @@ class BaseRegistry(metaclass=RegistryMeta):
             "use `parse_expression` method or use the registry as a callable."
         )
         return self.parse_expression(item)
+
+    def __contains__(self, item):
+        """Support checking prefixed units with the `in` operator
+        """
+        try:
+            self.__getattr__(item)
+            return True
+        except UndefinedUnitError:
+            return False
 
     def __dir__(self):
         #: Calling dir(registry) gives all units, methods, and attributes.
@@ -516,8 +535,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         if isinstance(file, str):
             try:
                 if is_resource:
-                    with closing(pkg_resources.resource_stream(__name__, file)) as fp:
-                        rbytes = fp.read()
+                    rbytes = importlib_resources.read_binary(__package__, file)
                     return self.load_definitions(
                         StringIO(rbytes.decode("utf-8")), is_resource
                     )
@@ -610,7 +628,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
 
-    def get_name(self, name_or_alias, case_sensitive=True):
+    def get_name(self, name_or_alias, case_sensitive=None):
         """Return the canonical name of a unit.
         """
 
@@ -636,7 +654,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         if prefix:
             name = prefix + unit_name
-            symbol = self.get_symbol(name)
+            symbol = self.get_symbol(name, case_sensitive)
             prefix_def = self._prefixes[prefix]
             self._units[name] = UnitDefinition(
                 name,
@@ -649,10 +667,10 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return unit_name
 
-    def get_symbol(self, name_or_alias):
+    def get_symbol(self, name_or_alias, case_sensitive=None):
         """Return the preferred alias for a unit.
         """
-        candidates = self.parse_unit_name(name_or_alias)
+        candidates = self.parse_unit_name(name_or_alias, case_sensitive)
         if not candidates:
             raise UndefinedUnitError(name_or_alias)
         elif len(candidates) == 1:
@@ -985,7 +1003,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return value
 
-    def parse_unit_name(self, unit_name, case_sensitive=True):
+    def parse_unit_name(self, unit_name, case_sensitive=None):
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
         In case of equivalent combinations (e.g. ('kilo', 'gram', '') and
@@ -995,8 +1013,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         ----------
         unit_name :
 
-        case_sensitive :
-             (Default value = True)
+        case_sensitive : bool or None
+            Control if unit lookup is case sensitive. Defaults to None, which uses the
+            registry's case_sensitive setting
 
         Returns
         -------
@@ -1007,9 +1026,12 @@ class BaseRegistry(metaclass=RegistryMeta):
             self._parse_unit_name(unit_name, case_sensitive=case_sensitive)
         )
 
-    def _parse_unit_name(self, unit_name, case_sensitive=True):
+    def _parse_unit_name(self, unit_name, case_sensitive=None):
         """Helper of parse_unit_name.
         """
+        case_sensitive = (
+            self.case_sensitive if case_sensitive is None else case_sensitive
+        )
         stw = unit_name.startswith
         edw = unit_name.endswith
         for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
@@ -1053,7 +1075,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 candidates.pop(("", cp + cu, ""), None)
         return tuple(candidates)
 
-    def parse_units(self, input_string, as_delta=None):
+    def parse_units(self, input_string, as_delta=None, case_sensitive=None):
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
 
@@ -1065,6 +1087,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         as_delta : bool or None
             if the expression has multiple units, the parser will
             interpret non multiplicative units as their `delta_` counterparts. (Default value = None)
+        case_sensitive : bool or None
+            Control if unit parsing is case sensitive. Defaults to None, which uses the
+            registry's setting.
 
         Returns
         -------
@@ -1072,20 +1097,20 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
         for p in self.preprocessors:
             input_string = p(input_string)
-        units = self._parse_units(input_string, as_delta)
+        units = self._parse_units(input_string, as_delta, case_sensitive)
         return self.Unit(units)
 
-    def _parse_units(self, input_string, as_delta=True):
+    def _parse_units(self, input_string, as_delta=True, case_sensitive=None):
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
         """
 
         cache = self._cache.parse_unit
-        if as_delta:
-            try:
-                return cache[input_string]
-            except KeyError:
-                pass
+        # Issue #1097: it is possible, when a unit was defined while a different context
+        # was active, that the unit is in self._cache.parse_unit but not in self._units.
+        # If this is the case, force self._units to be repopulated.
+        if as_delta and input_string in cache and input_string in self._units:
+            return cache[input_string]
 
         if not input_string:
             return self.UnitsContainer()
@@ -1100,7 +1125,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         ret = {}
         many = len(units) > 1
         for name in units:
-            cname = self.get_name(name)
+            cname = self.get_name(name, case_sensitive=case_sensitive)
             value = units[name]
             if not cname:
                 continue
@@ -1117,7 +1142,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return ret
 
-    def _eval_token(self, token, case_sensitive=True, use_decimal=False, **values):
+    def _eval_token(self, token, case_sensitive=None, use_decimal=False, **values):
 
         # TODO: remove this code when use_decimal is deprecated
         if use_decimal:
@@ -1147,7 +1172,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             raise Exception("unknown token type")
 
     def parse_pattern(
-        self, input_string, pattern, case_sensitive=True, use_decimal=False, many=False
+        self, input_string, pattern, case_sensitive=None, use_decimal=False, many=False
     ):
         """Parse a string with a given regex pattern and returns result.
 
@@ -1158,7 +1183,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         pattern_string:
              The regex parse string
         case_sensitive :
-             (Default value = True)
+             (Default value = None, which uses registry setting)
         use_decimal :
              (Default value = False)
         many :
@@ -1203,7 +1228,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return results
 
     def parse_expression(
-        self, input_string, case_sensitive=True, use_decimal=False, **values
+        self, input_string, case_sensitive=None, use_decimal=False, **values
     ):
         """Parse a mathematical expression including units and return a quantity object.
 
@@ -1215,7 +1240,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         input_string :
 
         case_sensitive :
-             (Default value = True)
+             (Default value = None, which uses registry setting)
         use_decimal :
              (Default value = False)
         **values :
@@ -1280,13 +1305,13 @@ class NonMultiplicativeRegistry(BaseRegistry):
         # base units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
-    def _parse_units(self, input_string, as_delta=None):
+    def _parse_units(self, input_string, as_delta=None, case_sensitive=None):
         """
         """
         if as_delta is None:
             as_delta = self.default_as_delta
 
-        return super()._parse_units(input_string, as_delta)
+        return super()._parse_units(input_string, as_delta, case_sensitive)
 
     def _define(self, definition):
         """Add unit to the registry.
@@ -1330,7 +1355,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
             raise UndefinedUnitError(u)
 
     def _validate_and_extract(self, units):
-
+        # u is for unit, e is for exponent
         nonmult_units = [
             (u, e) for u, e in units.items() if not self._is_multiplicative(u)
         ]
@@ -1356,6 +1381,21 @@ class NonMultiplicativeRegistry(BaseRegistry):
             return nonmult_unit
 
         return None
+
+    def _add_ref_of_log_unit(self, offset_unit, all_units):
+
+        slct_unit = self._units[offset_unit]
+        if isinstance(slct_unit.converter, LogarithmicConverter):
+            # Extract reference unit
+            slct_ref = slct_unit.reference
+            # If reference unit is not dimensionless
+            if slct_ref != UnitsContainer():
+                # Extract reference unit
+                (u, e) = [(u, e) for u, e in slct_ref.items()].pop()
+                # Add it back to the unit list
+                return all_units.add(u, e)
+        # Otherwise, return the units unmodified
+        return all_units
 
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
@@ -1412,10 +1452,14 @@ class NonMultiplicativeRegistry(BaseRegistry):
         if src_offset_unit:
             value = self._units[src_offset_unit].converter.to_reference(value, inplace)
             src = src.remove([src_offset_unit])
+            # Add reference unit for multiplicative section
+            src = self._add_ref_of_log_unit(src_offset_unit, src)
 
         # clean dst units from offset units
         if dst_offset_unit:
             dst = dst.remove([dst_offset_unit])
+            # Add reference unit for multiplicative section
+            dst = self._add_ref_of_log_unit(dst_offset_unit, dst)
 
         # Convert non multiplicative units to the dst.
         value = super()._convert(value, src, dst, inplace, False)
@@ -1546,7 +1590,7 @@ class ContextRegistry(BaseRegistry):
         on_redefinition_backup = self._on_redefinition
         self._on_redefinition = "ignore"
         try:
-            for ctx in self._active_ctx.contexts:
+            for ctx in reversed(self._active_ctx.contexts):
                 for definition in ctx.redefinitions:
                     self._redefine(definition)
         finally:
@@ -1666,12 +1710,16 @@ class ContextRegistry(BaseRegistry):
 
         Examples
         --------
-        Context can be called by their name::
+        Context can be called by their name:
 
+          >>> import pint
+          >>> ureg = pint.UnitRegistry()
+          >>> ureg.add_context(pint.Context('one'))
+          >>> ureg.add_context(pint.Context('two'))
           >>> with ureg.context('one'):
           ...     pass
 
-        If a context has an argument, you can specify its value as a keyword argument::
+        If a context has an argument, you can specify its value as a keyword argument:
 
           >>> with ureg.context('one', n=1):
           ...     pass
@@ -1681,13 +1729,13 @@ class ContextRegistry(BaseRegistry):
           >>> with ureg.context('one', 'two', n=1):
           ...     pass
 
-        Or nested allowing you to give different values to the same keyword argument::
+        Or nested allowing you to give different values to the same keyword argument:
 
           >>> with ureg.context('one', n=1):
           ...     with ureg.context('two', n=2):
           ...         pass
 
-        A nested context inherits the defaults from the containing context::
+        A nested context inherits the defaults from the containing context:
 
           >>> with ureg.context('one', n=1):
           ...     # Here n takes the value of the outer context
@@ -1727,9 +1775,9 @@ class ContextRegistry(BaseRegistry):
 
         Example
         -------
-        >>> @ureg.with_context('sp')
-            ... def my_cool_fun(wavelenght):
-            ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
+          >>> @ureg.with_context('sp')
+          ... def my_cool_fun(wavelength):
+          ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
         """
 
         def decorator(func):
@@ -2086,6 +2134,8 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         or unit string
     fmt_locale :
         locale identifier string, used in `format_babel`. Default to None
+    case_sensitive : bool, optional
+        Control default case sensitivity of unit parsing. (Default: True)
     """
 
     def __init__(
@@ -2101,6 +2151,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         preprocessors=None,
         fmt_locale=None,
         non_int_type=float,
+        case_sensitive=True,
     ):
 
         super().__init__(
@@ -2115,6 +2166,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
             preprocessors=preprocessors,
             fmt_locale=fmt_locale,
             non_int_type=non_int_type,
+            case_sensitive=case_sensitive,
         )
 
     def pi_theorem(self, quantities):
