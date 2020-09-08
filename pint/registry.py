@@ -46,12 +46,6 @@ from fractions import Fraction
 from io import StringIO
 from tokenize import NAME, NUMBER
 
-try:
-    import importlib.resources as importlib_resources
-except ImportError:
-    # Backport for Python < 3.7
-    import importlib_resources
-
 from . import registry_helpers, systems
 from .compat import babel_parse, tokenizer
 from .context import Context, ContextChain
@@ -84,6 +78,13 @@ from .util import (
     string_preprocessor,
     to_units_container,
 )
+
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    # Backport for Python < 3.7
+    import importlib_resources
+
 
 _BLOCK_RE = re.compile(r" |\(")
 

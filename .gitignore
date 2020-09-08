@@ -12,6 +12,7 @@ MANIFEST
 *pytest_cache*
 .eggs
 .mypy_cache
+pip-wheel-metadata
 
 # WebDAV file system cache files
 .DAV/
