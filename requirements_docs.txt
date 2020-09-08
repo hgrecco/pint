@@ -3,7 +3,7 @@ matplotlib
 nbsphinx
 numpy
 pytest
-pandas
+pandas>=1.0.4
 pint-pandas
 jupyter_client
 ipykernel
