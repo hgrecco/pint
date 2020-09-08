@@ -4,7 +4,7 @@ nbsphinx
 numpy
 pytest
 pandas
-git+https://github.com/hgrecco/pint-pandas.git
+pint-pandas
 jupyter_client
 ipykernel
 graphviz
