@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.16 (unreleased)
+0.16 (2020-09-13)
 -----------------
 
 - Fixed issue where performing an operation of a Quantity with certain units would perform an in-place
