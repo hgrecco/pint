@@ -777,7 +777,8 @@ class TestIssues(QuantityTestCase):
 
     def test_issue1175(self):
         import pickle
-        foo1 = get_application_registry().Quantity(1, 's')
+
+        foo1 = get_application_registry().Quantity(1, "s")
         foo2 = pickle.loads(pickle.dumps(foo1))
         self.assertIsInstance(foo1, foo2.__class__)
         self.assertIsInstance(foo2, foo1.__class__)
