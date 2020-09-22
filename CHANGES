@@ -1,8 +1,8 @@
 Pint Changelog
 ==============
 
-0.17 (unreleased)
---------------
+0.16.1 (2020-09-22)
+-------------------
 
 - Fix unpickling, now it is using the APP_REGISTRY as expected.
   (Issue #1175)
