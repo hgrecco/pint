@@ -5,7 +5,7 @@ import unittest
 
 import pytest
 
-from pint import Context, DimensionalityError, UnitRegistry
+from pint import Context, DimensionalityError, UnitRegistry, get_application_registry
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.unit import UnitsContainer
@@ -774,6 +774,13 @@ class TestIssues(QuantityTestCase):
 
         with pytest.raises(DimensionalityError):
             2 ** ureg.Quantity([2, 3], "m")
+
+    def test_issue1175(self):
+        import pickle
+        foo1 = get_application_registry().Quantity(1, 's')
+        foo2 = pickle.loads(pickle.dumps(foo1))
+        self.assertIsInstance(foo1, foo2.__class__)
+        self.assertIsInstance(foo2, foo1.__class__)
 
 
 if np is not None:

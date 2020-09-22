@@ -28,9 +28,9 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
-        from . import _unpickle
+        from . import _unpickle_unit
 
-        return _unpickle, (Unit, self._units)
+        return _unpickle_unit, (Unit, self._units)
 
     def __init__(self, units):
         super().__init__()
