@@ -192,11 +192,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         """Allow pickling quantities. Since UnitRegistries are not pickled, upon
         unpickling the new object is always attached to the application registry.
         """
-        from . import _unpickle
+        from . import _unpickle_quantity
 
         # Note: type(self) would be a mistake as subclasses built by
         # build_quantity_class can't be pickled
-        return _unpickle, (Quantity, self.magnitude, self._units)
+        return _unpickle_quantity, (Quantity, self.magnitude, self._units)
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
