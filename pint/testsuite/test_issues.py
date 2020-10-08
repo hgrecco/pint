@@ -837,9 +837,3 @@ if np is not None:
         type_before = type(q._magnitude)
         callable(q)
         assert isinstance(q._magnitude, type_before)
-
-
-if __name__ == "__main__":
-    obj = TestIssues()
-    obj.setUp()
-    obj.test_issue_1185()
