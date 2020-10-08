@@ -783,6 +783,26 @@ class TestIssues(QuantityTestCase):
         self.assertIsInstance(foo1, foo2.__class__)
         self.assertIsInstance(foo2, foo1.__class__)
 
+    @helpers.requires_numpy()
+    def test_issue_1185(self):
+        # Test __pow__
+        foo = ureg.Quantity((3, 3), "mm / cm")
+        assert np.allclose(foo ** ureg.Quantity([2, 3], ""), 0.3 ** np.array([2, 3]))
+        assert np.allclose(foo ** np.array([2, 3]), 0.3 ** np.array([2, 3]))
+        assert np.allclose(np.array([2, 3]) ** foo, np.array([2, 3]) ** 0.3)
+        # Test __ipow__
+        foo **= np.array([2, 3])
+        assert np.allclose(foo, 0.3 ** np.array([2, 3]))
+        # Test __rpow__
+        assert np.allclose(
+            np.array((1, 1)).__rpow__(ureg.Quantity((2, 3), "mm / cm")),
+            np.array((0.2, 0.3)),
+        )
+        assert np.allclose(
+            ureg.Quantity((20, 20), "mm / cm").__rpow__(np.array((0.2, 0.3))),
+            np.array((0.04, 0.09)),
+        )
+
 
 if np is not None:
 
@@ -817,3 +837,9 @@ if np is not None:
         type_before = type(q._magnitude)
         callable(q)
         assert isinstance(q._magnitude, type_before)
+
+
+if __name__ == "__main__":
+    obj = TestIssues()
+    obj.setUp()
+    obj.test_issue_1185()
