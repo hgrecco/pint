@@ -3,8 +3,8 @@ matplotlib
 nbsphinx
 numpy
 pytest
-pandas
-git+https://github.com/hgrecco/pint-pandas.git
+pandas>=1.0.4
+pint-pandas
 jupyter_client
 ipykernel
 graphviz
@@ -13,3 +13,4 @@ sparse
 dask[complete]
 setuptools>=41.2
 Serialize
+pygments>=2.4

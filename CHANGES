@@ -1,7 +1,19 @@
 Pint Changelog
 ==============
 
-0.16 (unreleased)
+0.17 (unreleased)
+-----------------
+
+- Nothing changed yet.
+
+
+0.16.1 (2020-09-22)
+-------------------
+
+- Fix unpickling, now it is using the APP_REGISTRY as expected.
+  (Issue #1175)
+
+0.16 (2020-09-13)
 -----------------
 
 - Fixed issue where performing an operation of a Quantity with certain units would perform an in-place

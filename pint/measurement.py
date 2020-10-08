@@ -70,9 +70,9 @@ class Measurement(Quantity):
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
-        from . import _unpickle
+        from . import _unpickle_measurement
 
-        return _unpickle, (Measurement, self.magnitude, self._units)
+        return _unpickle_measurement, (Measurement, self.magnitude, self._units)
 
     def __repr__(self):
         return "<Measurement({}, {}, {})>".format(

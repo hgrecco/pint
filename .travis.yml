@@ -15,7 +15,7 @@ env:
   # Refer to history of https://github.com/lebigot/uncertainties/blob/master/setup.py
   # for min/max Python versions supported by uncertainties
 
-  - PKGS="python=3.7 flake8 black isort"  # Have linters fail first and quickly
+  - PKGS="python=3.7 flake8 black==19.10b0 isort"  # Have linters fail first and quickly
   # Pinned packages to match readthedocs CI https://readthedocs.org/projects/pint/
   - PKGS="python=3.7 ipython matplotlib nbsphinx numpy pandas jupyter_client ipykernel python-graphviz graphviz xarray sparse dask[complete] sphinx Pygments==2.3.1 docutils==0.14 alabaster commonmark==0.8.1 recommonmark==0.5.0"
   - PKGS="python=3.6"

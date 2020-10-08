@@ -431,7 +431,7 @@ want to avoid creating multiple instances of the unit registry.
 The best way to do this is by instantiating the registry in a single place. For
 example, you can add the following code to your package ``__init__.py``
 
-.. code-block::
+.. code-block:: python
 
    from pint import UnitRegistry
    ureg = UnitRegistry()
@@ -440,7 +440,7 @@ example, you can add the following code to your package ``__init__.py``
 
 Then in ``yourmodule.py`` the code would be
 
-.. code-block::
+.. code-block:: python
 
    from . import ureg, Q_
 
@@ -450,7 +450,7 @@ Then in ``yourmodule.py`` the code would be
 If you are pickling and unplicking Quantities within your project, you should
 also define the registry as the application registry
 
-.. code-block::
+.. code-block:: python
 
    from pint import UnitRegistry, set_application_registry
    ureg = UnitRegistry()
