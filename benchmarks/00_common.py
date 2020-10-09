@@ -1,2 +1,2 @@
 def time_import():
-    import pint
+    import pint  # noqa: F401
