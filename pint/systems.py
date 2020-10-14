@@ -264,7 +264,7 @@ class System(SharedRegistryObject):
         - old_unit_name: a root unit part which is going to be removed from the system.
         - new_unit_name: a non root unit which is going to replace the old_unit.
 
-    If the new_unit_name and the old_unit_name, the later and the colon can be ommited.
+    If the new_unit_name and the old_unit_name, the later and the colon can be omitted.
     """
 
     #: Regex to match the header parts of a context.
