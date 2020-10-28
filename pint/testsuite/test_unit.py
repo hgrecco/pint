@@ -3,6 +3,8 @@ import functools
 import math
 import re
 
+import pytest
+
 from pint import (
     DefinitionSyntaxError,
     DimensionalityError,
@@ -12,6 +14,7 @@ from pint import (
 from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import CaseInsensitveQuantityTestCase, QuantityTestCase, helpers
+from pint.testsuite.helpers import requires_numpy
 from pint.testsuite.parameterized import ParameterizedTestCase
 from pint.util import ParserHelper, UnitsContainer
 
@@ -723,6 +726,55 @@ class TestRegistry(QuantityTestCase):
         self.assertEqual(
             ureg.parse_units("j", case_sensitive=False), UnitsContainer(joule=1)
         )
+
+    def test_is_compatible_with(self):
+        ureg = self.ureg
+
+        assert ureg.is_compatible_with(ureg.deg, 10.0)
+        assert ureg.is_compatible_with(10.0, ureg.deg)
+        assert ureg.is_compatible_with(ureg.km, ureg.m)
+
+        assert ureg.is_compatible_with(999.0, 10.0)
+        assert ureg.is_compatible_with("80 in", "35000 ft")
+        assert ureg.is_compatible_with("in", "35000 ft")
+        assert ureg.is_compatible_with("in", "ft")
+        assert ureg.is_compatible_with("3500 in", "ft")
+        assert ureg.is_compatible_with(ureg.m, "35000 ft")
+        assert ureg.is_compatible_with(ureg.m / ureg.inch, 10.0)
+
+        assert ureg.is_compatible_with(ureg.degC, ureg.K)
+        assert ureg.is_compatible_with(ureg.degC, ureg.degF)
+        assert ureg.is_compatible_with(ureg.degC, ureg.delta_degC)
+
+        assert not ureg.is_compatible_with(10.0, ureg.m)
+        assert not ureg.is_compatible_with(ureg.m, 10.0)
+        assert not ureg.is_compatible_with(ureg.m, "1 N")
+        assert not ureg.is_compatible_with("1 N", ureg.m)
+
+        assert not ureg.is_compatible_with(ureg.degC, ureg.m)
+        assert not ureg.is_compatible_with(ureg.m, ureg.degC)
+
+        assert ureg.is_compatible_with(ureg.hertz, ureg.nm, "spectroscopy")
+        assert not ureg.is_compatible_with(ureg.hertz, ureg.nm)
+
+        with pytest.raises(TypeError):
+            ureg.is_compatible_with({}, {})
+            ureg.is_compatible_with(None, ureg.deg)
+            ureg.is_compatible_with(True, ureg.deg)
+
+        with pytest.raises(UndefinedUnitError):
+            ureg.is_compatible_with("undefined_unit", "m")
+            ureg.is_compatible_with("m", "undefined_unit")
+            ureg.is_compatible_with(ureg.undefined_unit, ureg.m)
+
+    @requires_numpy()
+    def test_is_compatible_with_numpy(self):
+        ureg = self.ureg
+
+        assert ureg.is_compatible_with([1, 2, 3, 4], 10.0)
+        assert ureg.is_compatible_with(np.array([1, 2, 3, 4]), ureg.deg)
+        assert ureg.is_compatible_with(10.0, np.array([1, 2, 3, 4]))
+        assert not ureg.is_compatible_with(10.0 * ureg.m, np.array([1, 2, 3, 4]))
 
 
 class TestCaseInsensitiveRegistry(CaseInsensitveQuantityTestCase):

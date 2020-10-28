@@ -141,7 +141,9 @@ class Unit(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self)
 
     def is_compatible_with(self, other, *contexts, **ctx_kwargs):
-        """ check if the other object is compatible
+        """Check if the other object is compatible.
+
+        Compatibility is decided based on the dimensionality.
 
         Parameters
         ----------
@@ -169,7 +171,8 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
         if isinstance(other, str):
             return (
-                self.dimensionality == self._REGISTRY.parse_units(other).dimensionality
+                self.dimensionality
+                == self._REGISTRY.parse_expression(other).dimensionality
             )
 
         return self.dimensionless

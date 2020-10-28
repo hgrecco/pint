@@ -898,7 +898,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         return self._cache.dimensional_equivalents[src_dim]
 
     def is_compatible_with(self, obj1, obj2, *contexts, **ctx_kwargs):
-        """ check if the other object is compatible
+        """Check if both objects are compatible with each other.
+
+        Compatibility is decided based on the dimensionality.
 
         Parameters
         ----------
@@ -913,7 +915,19 @@ class BaseRegistry(metaclass=RegistryMeta):
         Returns
         -------
         bool
+
+        Raises
+        ------
+        TypeError
+            If any objects can't be casted to Quantity to check dimensionality.
+        UnitUndefinedError
+            If string parsing does not return any defined unit.
         """
+        if isinstance(obj1, (dict, bool, type(None))) or isinstance(
+            obj2, (dict, bool, type(None))
+        ):
+            raise TypeError("Type can't be casted to Quantity")
+
         if isinstance(obj1, (self.Quantity, self.Unit)):
             return obj1.is_compatible_with(obj2, *contexts, **ctx_kwargs)
 
@@ -922,7 +936,10 @@ class BaseRegistry(metaclass=RegistryMeta):
                 obj2, *contexts, **ctx_kwargs
             )
 
-        return not isinstance(obj2, (self.Quantity, self.Unit))
+        if isinstance(obj2, (self.Quantity, self.Unit, str)):
+            return self.is_compatible_with(obj2, obj1, *contexts, **ctx_kwargs)
+        else:
+            return self.Quantity(obj1).is_compatible_with(obj2, *contexts, **ctx_kwargs)
 
     def convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.

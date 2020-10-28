@@ -4,7 +4,7 @@ Pint Changelog
 0.17 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fix bugs on `is_compatible_with` with dimensionless types & string parsing errors. (Issue #1190)
 
 
 0.16.1 (2020-09-22)
