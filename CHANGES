@@ -4,7 +4,7 @@ Pint Changelog
 0.17 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fix tolist function with scalar ndarray. (Issue #1195)
 
 
 0.16.1 (2020-09-22)

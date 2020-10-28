@@ -1879,12 +1879,22 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def tolist(self):
         units = self._units
-        return [
-            self.__class__(value, units).tolist()
-            if isinstance(value, list)
-            else self.__class__(value, units)
-            for value in self._magnitude.tolist()
-        ]
+
+        try:
+            values = self._magnitude.tolist()
+            if not isinstance(values, list):
+                return self.__class__(values, units)
+
+            return [
+                self.__class__(value, units).tolist()
+                if isinstance(value, list)
+                else self.__class__(value, units)
+                for value in self._magnitude.tolist()
+            ]
+        except AttributeError:
+            raise AttributeError(
+                f"Magnitude '{type(self._magnitude).__name__}' does not support tolist."
+            )
 
     # Measurement support
     def plus_minus(self, error, relative=False):
