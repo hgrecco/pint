@@ -86,7 +86,7 @@ class TestMeasurement(QuantityTestCase):
             ("{:.3uL}", r"\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}"),
             ("{:.3uH}", "(0.2000 &plusmn; 0.0100) second<sup>2</sup>"),
             ("{:.3uC}", "(0.2000+/-0.0100) second**2"),
-            ("{:.3uLx}", r"\SI{0.2000 +- 0.0100}{\second\squared}",),
+            ("{:.3uLx}", r"\SI{0.2000 +- 0.0100}{\second\squared}"),
             ("{:.1uLx}", r"\SI{0.20 +- 0.01}{\second\squared}"),
         ):
             with self.subTest(spec):
@@ -236,3 +236,9 @@ class TestMeasurement(QuantityTestCase):
                 r.value.magnitude, ml.value.magnitude / mr.value.magnitude
             )
             self.assertEqual(r.value.units, ml.value.units / mr.value.units)
+
+    def test_measurement_comparison(self):
+        x = self.Q_(4.2, "meter")
+        y = self.Q_(5.0, "meter").plus_minus(0.1)
+        self.assertTrue(x<=y)
+        self.assertFalse(x>=y)
