@@ -4,7 +4,8 @@ Pint Changelog
 0.17 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fix comparisons between Quantities and Measurements.
+   (Issue #1134)
 
 
 0.16.1 (2020-09-22)

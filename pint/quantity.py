@@ -1598,13 +1598,12 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             else:
                 raise ValueError("Cannot compare Quantity and {}".format(type(other)))
 
-
         # Registry equality check based on util.SharedRegistryObject
         if self._REGISTRY is not other._REGISTRY:
             mess = "Cannot operate with {} and {} of different registries."
             raise ValueError(
                 mess.format(self.__class__.__name__, other.__class__.__name__)
-                )
+            )
 
         if self._units == other._units:
             return op(self._magnitude, other._magnitude)

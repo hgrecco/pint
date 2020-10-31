@@ -240,5 +240,5 @@ class TestMeasurement(QuantityTestCase):
     def test_measurement_comparison(self):
         x = self.Q_(4.2, "meter")
         y = self.Q_(5.0, "meter").plus_minus(0.1)
-        self.assertTrue(x<=y)
-        self.assertFalse(x>=y)
+        self.assertTrue(x <= y)
+        self.assertFalse(x >= y)
