@@ -113,8 +113,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     @property
     def dimensionless(self):
-        """Return True if the Unit is dimensionless; False otherwise.
-        """
+        """Return True if the Unit is dimensionless; False otherwise."""
         return not bool(self.dimensionality)
 
     @property
@@ -141,7 +140,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self)
 
     def is_compatible_with(self, other, *contexts, **ctx_kwargs):
-        """ check if the other object is compatible
+        """check if the other object is compatible
 
         Parameters
         ----------

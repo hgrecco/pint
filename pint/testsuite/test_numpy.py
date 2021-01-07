@@ -900,7 +900,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
         w = self.Q_(np.ones(x.shape), "m")
         self.assertNDArrayEqual(v == 1, false)
         self.assertNDArrayEqual(
-            self.Q_(np.zeros_like(x), "m") == self.Q_(np.zeros_like(x), "s"), false,
+            self.Q_(np.zeros_like(x), "m") == self.Q_(np.zeros_like(x), "s"),
+            false,
         )
         self.assertNDArrayEqual(v == v, true)
         self.assertNDArrayEqual(v == w, false)

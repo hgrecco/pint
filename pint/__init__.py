@@ -90,20 +90,17 @@ def _unpickle(cls, *args):
 
 
 def _unpickle_quantity(cls, *args):
-    """Rebuild quantity upon unpickling using the application registry.
-    """
+    """Rebuild quantity upon unpickling using the application registry."""
     return _unpickle(_APP_REGISTRY.Quantity, *args)
 
 
 def _unpickle_unit(cls, *args):
-    """Rebuild unit upon unpickling using the application registry.
-    """
+    """Rebuild unit upon unpickling using the application registry."""
     return _unpickle(_APP_REGISTRY.Unit, *args)
 
 
 def _unpickle_measurement(cls, *args):
-    """Rebuild measurement upon unpickling using the application registry.
-    """
+    """Rebuild measurement upon unpickling using the application registry."""
     return _unpickle(_APP_REGISTRY.Measurement, *args)
 
 

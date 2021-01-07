@@ -122,8 +122,7 @@ class Group(SharedRegistryObject):
         return False
 
     def add_units(self, *unit_names):
-        """Add units to group.
-        """
+        """Add units to group."""
         for unit_name in unit_names:
             self._unit_names.add(unit_name)
 
@@ -134,16 +133,14 @@ class Group(SharedRegistryObject):
         return frozenset(self._unit_names)
 
     def remove_units(self, *unit_names):
-        """Remove units from group.
-        """
+        """Remove units from group."""
         for unit_name in unit_names:
             self._unit_names.remove(unit_name)
 
         self.invalidate_members()
 
     def add_groups(self, *group_names):
-        """Add groups to group.
-        """
+        """Add groups to group."""
         d = self._REGISTRY._groups
         for group_name in group_names:
 
@@ -161,8 +158,7 @@ class Group(SharedRegistryObject):
         self.invalidate_members()
 
     def remove_groups(self, *group_names):
-        """Remove groups from group.
-        """
+        """Remove groups from group."""
         d = self._REGISTRY._groups
         for group_name in group_names:
             grp = d[group_name]
@@ -333,22 +329,19 @@ class System(SharedRegistryObject):
         self._computed_members = None
 
     def add_groups(self, *group_names):
-        """Add groups to group.
-        """
+        """Add groups to group."""
         self._used_groups |= set(group_names)
 
         self.invalidate_members()
 
     def remove_groups(self, *group_names):
-        """Remove groups from group.
-        """
+        """Remove groups from group."""
         self._used_groups -= set(group_names)
 
         self.invalidate_members()
 
     def format_babel(self, locale):
-        """translate the name of the system.
-        """
+        """translate the name of the system."""
         if locale and self.name in _babel_systems:
             name = _babel_systems[self.name]
             locale = babel_parse(locale)

@@ -156,8 +156,7 @@ def test_unit_equivalence(ureg, unit1, unit2):
     ],
 )
 def test_db_conversion(ureg, db_value, scalar):
-    """Test that a dB value can be converted to a scalar and back.
-    """
+    """Test that a dB value can be converted to a scalar and back."""
     Q_ = ureg.Quantity
     assert Q_(db_value, "dB").to("dimensionless").magnitude == pytest.approx(scalar)
     assert Q_(scalar, "dimensionless").to("dB").magnitude == pytest.approx(db_value)
@@ -174,8 +173,7 @@ def test_db_conversion(ureg, db_value, scalar):
     ],
 )
 def test_octave_conversion(ureg, octave, scalar):
-    """Test that an octave can be converted to a scalar and back.
-    """
+    """Test that an octave can be converted to a scalar and back."""
     Q_ = ureg.Quantity
     assert Q_(octave, "octave").to("dimensionless").magnitude == pytest.approx(scalar)
     assert Q_(scalar, "dimensionless").to("octave").magnitude == pytest.approx(octave)
@@ -192,8 +190,7 @@ def test_octave_conversion(ureg, octave, scalar):
     ],
 )
 def test_decade_conversion(ureg, decade, scalar):
-    """Test that a decade can be converted to a scalar and back.
-    """
+    """Test that a decade can be converted to a scalar and back."""
     Q_ = ureg.Quantity
     assert Q_(decade, "decade").to("dimensionless").magnitude == pytest.approx(scalar)
     assert Q_(scalar, "dimensionless").to("decade").magnitude == pytest.approx(decade)
@@ -210,8 +207,7 @@ def test_decade_conversion(ureg, decade, scalar):
     ],
 )
 def test_dbm_mw_conversion(ureg, dbm_value, mw_value):
-    """Test dBm values can convert to mW and back.
-    """
+    """Test dBm values can convert to mW and back."""
     Q_ = ureg.Quantity
     assert Q_(dbm_value, "dBm").to("mW").magnitude == pytest.approx(mw_value)
     assert Q_(mw_value, "mW").to("dBm").magnitude == pytest.approx(dbm_value)
@@ -219,8 +215,7 @@ def test_dbm_mw_conversion(ureg, dbm_value, mw_value):
 
 @pytest.mark.xfail
 def test_compound_log_unit_multiply_definition(auto_ureg):
-    """Check that compound log units can be defined using multiply.
-    """
+    """Check that compound log units can be defined using multiply."""
     Q_ = auto_ureg.Quantity
     canonical_def = Q_(-161, "dBm") / auto_ureg.Hz
     mult_def = -161 * auto_ureg("dBm/Hz")
@@ -229,8 +224,7 @@ def test_compound_log_unit_multiply_definition(auto_ureg):
 
 @pytest.mark.xfail
 def test_compound_log_unit_quantity_definition(auto_ureg):
-    """Check that compound log units can be defined using ``Quantity()``.
-    """
+    """Check that compound log units can be defined using ``Quantity()``."""
     Q_ = auto_ureg.Quantity
     canonical_def = Q_(-161, "dBm") / auto_ureg.Hz
     quantity_def = Q_(-161, "dBm/Hz")
@@ -245,8 +239,7 @@ def test_compound_log_unit_parse_definition(auto_ureg):
 
 
 def test_compound_log_unit_parse_expr(auto_ureg):
-    """Check that compound log units can be defined using ``parse_expression()``.
-    """
+    """Check that compound log units can be defined using ``parse_expression()``."""
     Q_ = auto_ureg.Quantity
     canonical_def = Q_(-161, "dBm") / auto_ureg.Hz
     parse_def = auto_ureg.parse_expression("-161 dBm/Hz")
@@ -255,8 +248,7 @@ def test_compound_log_unit_parse_expr(auto_ureg):
 
 @pytest.mark.xfail
 def test_dbm_db_addition(auto_ureg):
-    """Test a dB value can be added to a dBm and the answer is correct.
-    """
+    """Test a dB value can be added to a dBm and the answer is correct."""
     power = (5 * auto_ureg.dBm) + (10 * auto_ureg.dB)
     assert power.to("dBm").magnitude == pytest.approx(15)
 
@@ -264,11 +256,14 @@ def test_dbm_db_addition(auto_ureg):
 @pytest.mark.xfail
 @pytest.mark.parametrize(
     "freq1,octaves,freq2",
-    [(100, 2.0, 400), (50, 1.0, 100), (200, 0.0, 200),],  # noqa: E231
+    [
+        (100, 2.0, 400),
+        (50, 1.0, 100),
+        (200, 0.0, 200),
+    ],  # noqa: E231
 )
 def test_frequency_octave_addition(auto_ureg, freq1, octaves, freq2):
-    """Test an Octave can be added to a frequency correctly
-    """
+    """Test an Octave can be added to a frequency correctly"""
     freq1 = freq1 * auto_ureg.Hz
     shift = octaves * auto_ureg.Octave
     new_freq = freq1 + shift

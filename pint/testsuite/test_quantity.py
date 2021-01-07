@@ -859,8 +859,7 @@ class TestQuantityBasicMath(QuantityTestCase):
 
 
 class TestQuantityNeutralAdd(QuantityTestCase):
-    """Addition to zero or NaN is allowed between a Quantity and a non-Quantity
-    """
+    """Addition to zero or NaN is allowed between a Quantity and a non-Quantity"""
 
     FORCE_NDARRAY = False
 

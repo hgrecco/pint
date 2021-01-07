@@ -59,8 +59,7 @@ def _is_sequence_with_quantity_elements(obj):
 
 
 def _get_first_input_units(args, kwargs=None):
-    """Obtain the first valid unit from a collection of args and kwargs.
-    """
+    """Obtain the first valid unit from a collection of args and kwargs."""
     kwargs = kwargs or {}
     for arg in chain(args, kwargs.values()):
         if _is_quantity(arg):
@@ -885,8 +884,7 @@ for func_str in ["var", "nanvar"]:
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):
-    """Return the result from a NumPy function/ufunc as wrapped by Pint.
-    """
+    """Return the result from a NumPy function/ufunc as wrapped by Pint."""
 
     if func_type == "function":
         handled = HANDLED_FUNCTIONS
