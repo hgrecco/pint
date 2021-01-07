@@ -5,7 +5,7 @@ Pint Changelog
 -----------------
 
 - Fix comparisons between Quantities and Measurements.
-   (Issue #1134)
+   (Issue #1134, thanks lewisamarshall)
 - Implemented benchmarks based on airspeed velocity.
 
 
