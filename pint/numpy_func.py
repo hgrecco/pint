@@ -339,7 +339,7 @@ Define ufunc behavior collections.
 - `op_units_output_ufuncs`: determine output unit from input unit as determined by
   operation (see `get_op_output_unit`)
 """
-strip_unit_input_output_ufuncs = ["isnan", "isinf", "isfinite", "signbit"]
+strip_unit_input_output_ufuncs = ["isnan", "isinf", "isfinite", "signbit", "sign"]
 matching_input_bare_output_ufuncs = [
     "equal",
     "greater",
