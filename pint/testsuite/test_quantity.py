@@ -72,7 +72,7 @@ class TestQuantity(QuantityTestCase):
 
         # Include a comparison to the application registry
         k = 5 * get_application_registry().meter
-        l = Quantity(5, "meter")  # Include a comparison to a directly created Quantity
+        m = Quantity(5, "meter")  # Include a comparison to a directly created Quantity
 
         # identity for single object
         self.assertTrue(x == x)
@@ -92,9 +92,9 @@ class TestQuantity(QuantityTestCase):
         self.assertTrue(x < z)
 
         # Compare with items to the separate application registry
-        self.assertTrue(k >= l)  # These should both be from application registry
+        self.assertTrue(k >= m)  # These should both be from application registry
         with self.assertRaises(ValueError):
-            z > l  # One from local registry, one from application registry
+            z > m  # One from local registry, one from application registry
 
         self.assertTrue(z != j)
 
