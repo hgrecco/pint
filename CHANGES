@@ -5,6 +5,7 @@ Pint Changelog
 -----------------
 
 - Added Python 3.9 support
+- Implemented benchmarks based on airspeed velocity.
 
 
 0.16.1 (2020-09-22)
@@ -12,6 +13,7 @@ Pint Changelog
 
 - Fix unpickling, now it is using the APP_REGISTRY as expected.
   (Issue #1175)
+  
 
 0.16 (2020-09-13)
 -----------------
