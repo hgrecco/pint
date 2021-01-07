@@ -493,8 +493,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._dimensionality
 
     def check(self, dimension):
-        """Return true if the quantity's dimension matches passed dimension.
-        """
+        """Return true if the quantity's dimension matches passed dimension."""
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
 
     @classmethod
@@ -569,7 +568,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self._units)
 
     def is_compatible_with(self, other, *contexts, **ctx_kwargs):
-        """ check if the other object is compatible
+        """check if the other object is compatible
 
         Parameters
         ----------
@@ -740,7 +739,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return newq
 
     def to_compact(self, unit=None):
-        """"Return Quantity rescaled to compact, human-readable units.
+        """ "Return Quantity rescaled to compact, human-readable units.
 
         To get output in terms of a different unit, use the unit parameter.
 
@@ -1774,7 +1773,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @method_wraps("prod")
     def prod(self, *args, **kwargs):
-        """ Return the product of quantity elements over a given axis
+        """Return the product of quantity elements over a given axis
 
         Wraps np.prod().
         """
@@ -1928,8 +1927,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return [u for u in self._units if u.startswith("delta_")]
 
     def _has_compatible_delta(self, unit: str) -> bool:
-        """"Check if Quantity object has a delta_unit that is compatible with unit
-        """
+        """ "Check if Quantity object has a delta_unit that is compatible with unit"""
         deltas = self._get_delta_units()
         if "delta_" + unit in deltas:
             return True
@@ -1940,8 +1938,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         )
 
     def _ok_for_muldiv(self, no_offset_units=None):
-        """Checks if Quantity object can be multiplied or divided
-        """
+        """Checks if Quantity object can be multiplied or divided"""
 
         is_ok = True
         if no_offset_units is None:

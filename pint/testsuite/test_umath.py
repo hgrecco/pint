@@ -274,34 +274,34 @@ class TestMathUfuncs(TestUFuncs):
 
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#math-operations
 
-    add(x1, x2[, out]) 	Add arguments element-wise.
-    subtract(x1, x2[, out]) 	Subtract arguments, element-wise.
-    multiply(x1, x2[, out]) 	Multiply arguments element-wise.
-    divide(x1, x2[, out]) 	Divide arguments element-wise.
-    logaddexp(x1, x2[, out]) 	Logarithm of the sum of exponentiations of the inputs.
-    logaddexp2(x1, x2[, out]) 	Logarithm of the sum of exponentiations of the inputs in base-2.
-    true_divide(x1, x2[, out]) 	Returns a true division of the inputs, element-wise.
-    floor_divide(x1, x2[, out]) 	Return the largest integer smaller or equal to the division of the inputs.
-    negative(x[, out]) 	Returns an array with the negative of each element of the original array.
-    power(x1, x2[, out]) 	First array elements raised to powers from second array, element-wise. NOT IMPLEMENTED
-    remainder(x1, x2[, out]) 	Return element-wise remainder of division.
-    mod(x1, x2[, out]) 	Return element-wise remainder of division.
-    fmod(x1, x2[, out]) 	Return the element-wise remainder of division.
-    absolute(x[, out]) 	Calculate the absolute value element-wise.
-    rint(x[, out]) 	Round elements of the array to the nearest integer.
-    sign(x[, out]) 	Returns an element-wise indication of the sign of a number.
-    conj(x[, out]) 	Return the complex conjugate, element-wise.
-    exp(x[, out]) 	Calculate the exponential of all elements in the input array.
-    exp2(x[, out]) 	Calculate 2**p for all p in the input array.
-    log(x[, out]) 	Natural logarithm, element-wise.
-    log2(x[, out]) 	Base-2 logarithm of x.
-    log10(x[, out]) 	Return the base 10 logarithm of the input array, element-wise.
-    expm1(x[, out]) 	Calculate exp(x) - 1 for all elements in the array.
-    log1p(x[, out]) 	Return the natural logarithm of one plus the input array, element-wise.
-    sqrt(x[, out]) 	Return the positive square-root of an array, element-wise.
-    square(x[, out]) 	Return the element-wise square of the input.
-    reciprocal(x[, out]) 	Return the reciprocal of the argument, element-wise.
-    ones_like(x[, out]) 	Returns an array of ones with the same shape and type as a given array.
+    add(x1, x2[, out]) Add arguments element-wise.
+    subtract(x1, x2[, out]) Subtract arguments, element-wise.
+    multiply(x1, x2[, out]) Multiply arguments element-wise.
+    divide(x1, x2[, out]) Divide arguments element-wise.
+    logaddexp(x1, x2[, out]) Logarithm of the sum of exponentiations of the inputs.
+    logaddexp2(x1, x2[, out]) Logarithm of the sum of exponentiations of the inputs in base-2.
+    true_divide(x1, x2[, out]) Returns a true division of the inputs, element-wise.
+    floor_divide(x1, x2[, out]) Return the largest integer smaller or equal to the division of the inputs.
+    negative(x[, out]) Returns an array with the negative of each element of the original array.
+    power(x1, x2[, out]) First array elements raised to powers from second array, element-wise. NOT IMPLEMENTED
+    remainder(x1, x2[, out]) Return element-wise remainder of division.
+    mod(x1, x2[, out]) Return element-wise remainder of division.
+    fmod(x1, x2[, out]) Return the element-wise remainder of division.
+    absolute(x[, out]) Calculate the absolute value element-wise.
+    rint(x[, out]) Round elements of the array to the nearest integer.
+    sign(x[, out]) Returns an element-wise indication of the sign of a number.
+    conj(x[, out]) Return the complex conjugate, element-wise.
+    exp(x[, out]) Calculate the exponential of all elements in the input array.
+    exp2(x[, out]) Calculate 2**p for all p in the input array.
+    log(x[, out]) Natural logarithm, element-wise.
+    log2(x[, out]) Base-2 logarithm of x.
+    log10(x[, out]) Return the base 10 logarithm of the input array, element-wise.
+    expm1(x[, out]) Calculate exp(x) - 1 for all elements in the array.
+    log1p(x[, out]) Return the natural logarithm of one plus the input array, element-wise.
+    sqrt(x[, out]) Return the positive square-root of an array, element-wise.
+    square(x[, out]) Return the element-wise square of the input.
+    reciprocal(x[, out]) Return the reciprocal of the argument, element-wise.
+    ones_like(x[, out]) Returns an array of ones with the same shape and type as a given array.
 
     Parameters
     ----------
@@ -422,22 +422,22 @@ class TestTrigUfuncs(TestUFuncs):
 
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#trigonometric-functions
 
-    sin(x[, out]) 	Trigonometric sine, element-wise.
-    cos(x[, out]) 	Cosine elementwise.
-    tan(x[, out]) 	Compute tangent element-wise.
-    arcsin(x[, out]) 	Inverse sine, element-wise.
-    arccos(x[, out]) 	Trigonometric inverse cosine, element-wise.
-    arctan(x[, out]) 	Trigonometric inverse tangent, element-wise.
-    arctan2(x1, x2[, out]) 	Element-wise arc tangent of x1/x2 choosing the quadrant correctly.
-    hypot(x1, x2[, out]) 	Given the “legs” of a right triangle, return its hypotenuse.
-    sinh(x[, out]) 	Hyperbolic sine, element-wise.
-    cosh(x[, out]) 	Hyperbolic cosine, element-wise.
-    tanh(x[, out]) 	Compute hyperbolic tangent element-wise.
-    arcsinh(x[, out]) 	Inverse hyperbolic sine elementwise.
-    arccosh(x[, out]) 	Inverse hyperbolic cosine, elementwise.
-    arctanh(x[, out]) 	Inverse hyperbolic tangent elementwise.
-    deg2rad(x[, out]) 	Convert angles from degrees to radians.
-    rad2deg(x[, out]) 	Convert angles from radians to degrees.
+    sin(x[, out]) Trigonometric sine, element-wise.
+    cos(x[, out]) Cosine elementwise.
+    tan(x[, out]) Compute tangent element-wise.
+    arcsin(x[, out]) Inverse sine, element-wise.
+    arccos(x[, out]) Trigonometric inverse cosine, element-wise.
+    arctan(x[, out]) Trigonometric inverse tangent, element-wise.
+    arctan2(x1, x2[, out]) Element-wise arc tangent of x1/x2 choosing the quadrant correctly.
+    hypot(x1, x2[, out]) Given the “legs” of a right triangle, return its hypotenuse.
+    sinh(x[, out]) Hyperbolic sine, element-wise.
+    cosh(x[, out]) Hyperbolic cosine, element-wise.
+    tanh(x[, out]) Compute hyperbolic tangent element-wise.
+    arcsinh(x[, out]) Inverse hyperbolic sine elementwise.
+    arccosh(x[, out]) Inverse hyperbolic cosine, elementwise.
+    arctanh(x[, out]) Inverse hyperbolic tangent elementwise.
+    deg2rad(x[, out]) Convert angles from degrees to radians.
+    rad2deg(x[, out]) Convert angles from radians to degrees.
 
     Parameters
     ----------
@@ -679,12 +679,12 @@ class TestComparisonUfuncs(TestUFuncs):
 
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#comparison-functions
 
-    greater(x1, x2[, out]) 	Return the truth value of (x1 > x2) element-wise.
-    greater_equal(x1, x2[, out]) 	Return the truth value of (x1 >= x2) element-wise.
-    less(x1, x2[, out]) 	Return the truth value of (x1 < x2) element-wise.
-    less_equal(x1, x2[, out]) 	Return the truth value of (x1 =< x2) element-wise.
-    not_equal(x1, x2[, out]) 	Return (x1 != x2) element-wise.
-    equal(x1, x2[, out]) 	Return (x1 == x2) element-wise.
+    greater(x1, x2[, out]) Return the truth value of (x1 > x2) element-wise.
+    greater_equal(x1, x2[, out]) Return the truth value of (x1 >= x2) element-wise.
+    less(x1, x2[, out]) Return the truth value of (x1 < x2) element-wise.
+    less_equal(x1, x2[, out]) Return the truth value of (x1 =< x2) element-wise.
+    not_equal(x1, x2[, out]) Return (x1 != x2) element-wise.
+    equal(x1, x2[, out]) Return (x1 == x2) element-wise.
 
     Parameters
     ----------
@@ -718,21 +718,21 @@ class TestFloatingUfuncs(TestUFuncs):
 
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#floating-functions
 
-    isreal(x) 	Returns a bool array, where True if input element is real.
-    iscomplex(x) 	Returns a bool array, where True if input element is complex.
-    isfinite(x[, out]) 	Test element-wise for finite-ness (not infinity or not Not a Number).
-    isinf(x[, out]) 	Test element-wise for positive or negative infinity.
-    isnan(x[, out]) 	Test element-wise for Not a Number (NaN), return result as a bool array.
-    signbit(x[, out]) 	Returns element-wise True where signbit is set (less than zero).
-    copysign(x1, x2[, out]) 	Change the sign of x1 to that of x2, element-wise.
-    nextafter(x1, x2[, out]) 	Return the next representable floating-point value after x1 in the direction of x2 element-wise.
-    modf(x[, out1, out2]) 	Return the fractional and integral parts of an array, element-wise.
-    ldexp(x1, x2[, out]) 	Compute y = x1 * 2**x2.
-    frexp(x[, out1, out2]) 	Split the number, x, into a normalized fraction (y1) and exponent (y2)
-    fmod(x1, x2[, out]) 	Return the element-wise remainder of division.
-    floor(x[, out]) 	Return the floor of the input, element-wise.
-    ceil(x[, out]) 	Return the ceiling of the input, element-wise.
-    trunc(x[, out]) 	Return the truncated value of the input, element-wise.
+    isreal(x) Returns a bool array, where True if input element is real.
+    iscomplex(x) Returns a bool array, where True if input element is complex.
+    isfinite(x[, out]) Test element-wise for finite-ness (not infinity or not Not a Number).
+    isinf(x[, out]) Test element-wise for positive or negative infinity.
+    isnan(x[, out]) Test element-wise for Not a Number (NaN), return result as a bool array.
+    signbit(x[, out]) Returns element-wise True where signbit is set (less than zero).
+    copysign(x1, x2[, out]) Change the sign of x1 to that of x2, element-wise.
+    nextafter(x1, x2[, out]) Return the next representable floating-point value after x1 in the direction of x2 element-wise.
+    modf(x[, out1, out2]) Return the fractional and integral parts of an array, element-wise.
+    ldexp(x1, x2[, out]) Compute y = x1 * 2**x2.
+    frexp(x[, out1, out2]) Split the number, x, into a normalized fraction (y1) and exponent (y2)
+    fmod(x1, x2[, out]) Return the element-wise remainder of division.
+    floor(x[, out]) Return the floor of the input, element-wise.
+    ceil(x[, out]) Return the ceiling of the input, element-wise.
+    trunc(x[, out]) Return the truncated value of the input, element-wise.
 
     Parameters
     ----------

@@ -58,8 +58,7 @@ class PreprocessedDefinition(
 
 
 class _NotNumeric(Exception):
-    """Internal exception. Do not expose outside Pint
-    """
+    """Internal exception. Do not expose outside Pint"""
 
     def __init__(self, value):
         self.value = value

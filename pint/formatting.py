@@ -281,8 +281,7 @@ def format_unit(unit, spec, **kwspec):
 
 
 def siunitx_format_unit(units):
-    """Returns LaTeX code for the unit that can be put into an siunitx command.
-    """
+    """Returns LaTeX code for the unit that can be put into an siunitx command."""
 
     # NOTE: unit registry is required to identify unit prefixes.
     registry = units._REGISTRY
