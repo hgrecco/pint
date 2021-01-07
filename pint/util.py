@@ -431,7 +431,11 @@ class UnitsContainer(Mapping):
             other = other._d
 
         elif isinstance(other, str):
-            other = ParserHelper.from_string(other, self._non_int_type)
+            try:
+                other = ParserHelper.from_string(other, self._non_int_type)
+            except DefinitionSyntaxError:
+                return False
+
             other = other._d
 
         return dict.__eq__(self._d, other)
