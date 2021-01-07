@@ -9,7 +9,8 @@ Pint Changelog
 - Implemented benchmarks based on airspeed velocity.
 - Fix tolist function with scalar ndarray. 
   (Issue #1195, thanks jules-ch)
-
+- UnitsContainer returns false if other is str and cannnot be parsed
+  (Issue #1179, thanks rfrowe)
 
 0.16.1 (2020-09-22)
 -------------------
