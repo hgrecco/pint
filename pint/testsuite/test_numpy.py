@@ -27,6 +27,10 @@ class TestNumpyMethods(QuantityTestCase):
         return [[1, 2], [3, 4]] * self.ureg.m
 
     @property
+    def q_scalar(self):
+        return np.array(5) * self.ureg.m
+
+    @property
     def q_nan(self):
         return [[1, 2], [3, np.nan]] * self.ureg.m
 
@@ -497,6 +501,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
             self.q.tolist(),
             [[1 * self.ureg.m, 2 * self.ureg.m], [3 * self.ureg.m, 4 * self.ureg.m]],
         )
+        self.assertEqual(self.q_scalar.tolist(), 5 * self.ureg.m)
+
+        with self.assertRaises(AttributeError):
+            (5 * self.ureg.m).tolist()
 
     def test_fill(self):
         tmp = self.q

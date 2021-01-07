@@ -239,3 +239,9 @@ class TestMeasurement(QuantityTestCase):
                 r.value.magnitude, ml.value.magnitude / mr.value.magnitude
             )
             self.assertEqual(r.value.units, ml.value.units / mr.value.units)
+
+    def test_measurement_comparison(self):
+        x = self.Q_(4.2, "meter")
+        y = self.Q_(5.0, "meter").plus_minus(0.1)
+        self.assertTrue(x <= y)
+        self.assertFalse(x >= y)

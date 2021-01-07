@@ -6,7 +6,13 @@ import pickle
 import warnings
 from unittest.mock import patch
 
-from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
+from pint import (
+    DimensionalityError,
+    OffsetUnitCalculusError,
+    Quantity,
+    UnitRegistry,
+    get_application_registry,
+)
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.testsuite.parameterized import ParameterizedTestCase
@@ -64,6 +70,10 @@ class TestQuantity(QuantityTestCase):
         z = self.Q_(5, "meter")
         j = self.Q_(5, "meter*meter")
 
+        # Include a comparison to the application registry
+        k = 5 * get_application_registry().meter
+        m = Quantity(5, "meter")  # Include a comparison to a directly created Quantity
+
         # identity for single object
         self.assertTrue(x == x)
         self.assertFalse(x != x)
@@ -80,6 +90,11 @@ class TestQuantity(QuantityTestCase):
         self.assertFalse(x == z)
         self.assertTrue(x != z)
         self.assertTrue(x < z)
+
+        # Compare with items to the separate application registry
+        self.assertTrue(k >= m)  # These should both be from application registry
+        with self.assertRaises(ValueError):
+            z > m  # One from local registry, one from application registry
 
         self.assertTrue(z != j)
 
