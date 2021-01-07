@@ -4,6 +4,8 @@ Pint Changelog
 0.17 (unreleased)
 -----------------
 
+- Fix comparisons between Quantities and Measurements.
+   (Issue #1134)
 - Implemented benchmarks based on airspeed velocity.
 
 

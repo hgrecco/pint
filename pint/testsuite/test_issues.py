@@ -783,6 +783,12 @@ class TestIssues(QuantityTestCase):
         self.assertIsInstance(foo1, foo2.__class__)
         self.assertIsInstance(foo2, foo1.__class__)
 
+    @helpers.requires_numpy()
+    def test_issue1174(self):
+        q = [1.0, -2.0, 3.0, -4.0] * self.ureg.meter
+        self.assertTrue(np.sign(q[0].magnitude))
+        self.assertTrue(np.sign(q[1].magnitude))
+
 
 if np is not None:
 

@@ -1576,7 +1576,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def compare(self, other, op):
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, Quantity):
             if self.dimensionless:
                 return op(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()), other
@@ -1596,6 +1596,13 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                         raise OffsetUnitCalculusError(self._units)
             else:
                 raise ValueError("Cannot compare Quantity and {}".format(type(other)))
+
+        # Registry equality check based on util.SharedRegistryObject
+        if self._REGISTRY is not other._REGISTRY:
+            mess = "Cannot operate with {} and {} of different registries."
+            raise ValueError(
+                mess.format(self.__class__.__name__, other.__class__.__name__)
+            )
 
         if self._units == other._units:
             return op(self._magnitude, other._magnitude)
