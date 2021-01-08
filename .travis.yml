@@ -55,7 +55,7 @@ before_install:
   - export TEST_OPTS="-rfsxEX -s --cov=pint --cov-config=.coveragerc"
 
 install:
-  - conda create -n travis $PKGS pytest pytest-cov coveralls
+  - conda create -n travis $PKGS pytest pytest-cov coveralls pytest-subtests
   - source activate travis
   - if [[ $PKGS =~ pandas ]]; then PANDAS=1; else PANDAS=0; fi
   - if [[ $PKGS =~ pre-commit ]]; then LINT=1; else LINT=0; fi
