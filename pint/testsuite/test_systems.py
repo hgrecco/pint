@@ -9,7 +9,7 @@ class TestGroup(QuantityTestCase):
         grp.invalidate_members()
         return ureg, ureg.get_group("root")
 
-    def test_units_programatically(self):
+    def test_units_programmatically(self):
         ureg, root = self._build_empty_reg_root()
         d = ureg._groups
 
@@ -31,7 +31,7 @@ class TestGroup(QuantityTestCase):
         self.assertRaises(ValueError, g3.add_groups, "g2")
         self.assertRaises(ValueError, g3.add_groups, "root")
 
-    def test_groups_programatically(self):
+    def test_groups_programmatically(self):
         ureg, root = self._build_empty_reg_root()
         d = ureg._groups
         g2 = ureg.Group("g2")

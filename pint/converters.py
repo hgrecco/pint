@@ -94,7 +94,7 @@ class LogarithmicConverter(Converter):
     logbase : float
         base of logarithm used in the logarithmic unit conversion
     logfactor : float
-        factor multupled to logarithm for unit conversion
+        factor multiplied to logarithm for unit conversion
     inplace : bool
         controls if computation is done in place
     """

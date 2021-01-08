@@ -436,7 +436,7 @@ class TestIssues(QuantityTestCase):
         self.assertEqual("{:~}".format(1 * self.ureg("MiB")), "1 MiB")
 
     def test_issue468(self):
-        @ureg.wraps(("kg"), "meter")
+        @ureg.wraps("kg", "meter")
         def f(x):
             return x
 
