@@ -86,7 +86,7 @@ except ImportError:
     import importlib_resources
 
 
-_BLOCK_RE = re.compile(r" |\(")
+_BLOCK_RE = re.compile(r"[ (]")
 
 
 @functools.lru_cache()

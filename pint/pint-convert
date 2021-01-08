@@ -161,7 +161,7 @@ def use_unc(num, fmt, prec_unc):
     try:
         if isinstance(num, uncertainties.UFloat):
             full = ("{:" + fmt + "}").format(num)
-            unc = re.search(r"\+\/-[0.]*([\d.]*)", full).group(1)
+            unc = re.search(r"\+/-[0.]*([\d.]*)", full).group(1)
             unc = len(unc.replace(".", ""))
     except Exception:
         pass

@@ -13,7 +13,7 @@ import re
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse
 
-__JOIN_REG_EXP = re.compile(r"\{\d*\}")
+__JOIN_REG_EXP = re.compile(r"{\d*}")
 
 
 def _join(fmt, iterable):
