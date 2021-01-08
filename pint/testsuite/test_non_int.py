@@ -971,7 +971,7 @@ class _TestOffsetUnitMath(ParameterizedTestCase):
                 self.assertEqual(op.truediv(in1, in2).units, expected.units)
                 self.assertQuantityAlmostEqual(op.truediv(in1, in2), expected)
 
-    exponentiation = [  # resuls without / with autoconvert
+    exponentiation = [  # results without / with autoconvert
         ((("10", "degC"), "1"), [("10", "degC"), ("10", "degC")]),
         # ((('10', "degC"), 0.5), ["error", (283.15 ** '0.5', "kelvin**0.5")]),
         ((("10", "degC"), "0"), [("1.0", ""), ("1.0", "")]),

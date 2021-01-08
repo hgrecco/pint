@@ -70,7 +70,7 @@ ureg.default_system = args.system
 if args.unc:
     import uncertainties
 
-    # Measured constans subject to correlation
+    # Measured constants subject to correlation
     #  R_i: Rydberg constant
     #  g_e: Electron g factor
     #  m_u: Atomic mass constant
