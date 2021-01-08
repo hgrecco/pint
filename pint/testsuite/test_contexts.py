@@ -793,9 +793,9 @@ class TestContextRedefinitions(QuantityTestCase):
         )
 
         q = ureg.Quantity("10 GBP")
-        self.assertEquals(q.magnitude, 10)
-        self.assertEquals(q.units.dimensionality, {"[currency]": 1})
-        self.assertEquals(q.to("GBP").magnitude, 10)
+        self.assertEqual(q.magnitude, 10)
+        self.assertEqual(q.units.dimensionality, {"[currency]": 1})
+        self.assertEqual(q.to("GBP").magnitude, 10)
         self.assertTrue(math.isnan(q.to("USD").magnitude))
         self.assertAlmostEqual(q.to("USD", "c").magnitude, 10 * 1.18 * 1.11)
 
@@ -870,7 +870,7 @@ class TestContextRedefinitions(QuantityTestCase):
     def test_err_to_base_unit(self):
         with self.assertRaises(DefinitionSyntaxError) as e:
             Context.from_lines(["@context c", "x = [d]"])
-        self.assertEquals(str(e.exception), "Can't define base units within a context")
+        self.assertEqual(str(e.exception), "Can't define base units within a context")
 
     def test_err_change_base_unit(self):
         ureg = UnitRegistry(
@@ -886,7 +886,7 @@ class TestContextRedefinitions(QuantityTestCase):
 
         with self.assertRaises(ValueError) as e:
             ureg.enable_contexts("c")
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "Can't redefine a base unit to a derived one"
         )
 
@@ -904,7 +904,7 @@ class TestContextRedefinitions(QuantityTestCase):
         )
         with self.assertRaises(ValueError) as e:
             ureg.enable_contexts("c")
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception),
             "Can't change dimensionality of baz from [d1] to [d2] in a context",
         )
@@ -932,14 +932,14 @@ class TestContextRedefinitions(QuantityTestCase):
     def test_err_dimension_redefinition(self):
         with self.assertRaises(DefinitionSyntaxError) as e:
             Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "Expected <unit> = <converter>; got [d1] = [d2] * [d3]"
         )
 
     def test_err_prefix_redefinition(self):
         with self.assertRaises(DefinitionSyntaxError) as e:
             Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "Expected <unit> = <converter>; got [d1] = [d2] * [d3]"
         )
 
@@ -948,7 +948,7 @@ class TestContextRedefinitions(QuantityTestCase):
             with self.subTest(s):
                 with self.assertRaises(DefinitionSyntaxError) as e:
                     Context.from_lines(["@context c", s])
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception),
                     "Can't change a unit's symbol or aliases within a context",
                 )
@@ -967,7 +967,7 @@ class TestContextRedefinitions(QuantityTestCase):
         )
         with self.assertRaises(ValueError) as e:
             ureg.enable_contexts("c")
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "Can't redefine a unit with a prefix: kilopound"
         )
 
@@ -982,4 +982,4 @@ class TestContextRedefinitions(QuantityTestCase):
         )
         with self.assertRaises(UndefinedUnitError) as e:
             ureg.enable_contexts("c")
-        self.assertEquals(str(e.exception), "'bar' is not defined in the unit registry")
+        self.assertEqual(str(e.exception), "'bar' is not defined in the unit registry")
