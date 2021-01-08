@@ -1,7 +1,7 @@
 import doctest
 import re
 import unittest
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 from ..compat import (
     HAS_BABEL,
@@ -33,7 +33,7 @@ def requires_numpy_previous_than(version):
     if not HAS_NUMPY:
         return unittest.skip("Requires NumPy")
     return unittest.skipUnless(
-        StrictVersion(NUMPY_VER) < StrictVersion(version),
+        LooseVersion(NUMPY_VER) < LooseVersion(version),
         "Requires NumPy < %s" % version,
     )
 
@@ -42,7 +42,7 @@ def requires_numpy_at_least(version):
     if not HAS_NUMPY:
         return unittest.skip("Requires NumPy")
     return unittest.skipUnless(
-        StrictVersion(NUMPY_VER) >= StrictVersion(version),
+        LooseVersion(NUMPY_VER) >= LooseVersion(version),
         "Requires NumPy >= %s" % version,
     )
 
