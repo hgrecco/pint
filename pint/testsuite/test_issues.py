@@ -102,7 +102,7 @@ class TestIssues(QuantityTestCase):
         import math
 
         self.assertAlmostEqual(math.sqrt(4 * ureg.m / ureg.cm), math.sqrt(4 * 100))
-        self.assertAlmostEqual(float(ureg.V / ureg.mV), 1000.0)
+        self.assertAlmostEqual(ureg.V / ureg.mV, 1000.0)
 
     @helpers.requires_numpy()
     def test_issue45b(self):
