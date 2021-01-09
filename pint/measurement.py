@@ -66,7 +66,7 @@ class Measurement(Quantity):
 
     @property
     def rel(self):
-        return float(abs(self.magnitude.std_dev / self.magnitude.nominal_value))
+        return abs(self.magnitude.std_dev / self.magnitude.nominal_value)
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
