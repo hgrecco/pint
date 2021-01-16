@@ -805,9 +805,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             unit_str, unit_power = units[0]
 
         if unit_power > 0:
-            power = int(math.floor(math.log10(abs(magnitude)) / unit_power / 3)) * 3
+            power = math.floor(math.log10(abs(magnitude)) / unit_power / 3) * 3
         else:
-            power = int(math.ceil(math.log10(abs(magnitude)) / unit_power / 3)) * 3
+            power = math.ceil(math.log10(abs(magnitude)) / unit_power / 3) * 3
 
         index = bisect.bisect_left(SI_powers, power)
 

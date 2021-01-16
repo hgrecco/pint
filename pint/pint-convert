@@ -70,7 +70,7 @@ ureg.default_system = args.system
 if args.unc:
     import uncertainties
 
-    # Measured constans subject to correlation
+    # Measured constants subject to correlation
     #  R_i: Rydberg constant
     #  g_e: Electron g factor
     #  m_u: Atomic mass constant
@@ -161,7 +161,7 @@ def use_unc(num, fmt, prec_unc):
     try:
         if isinstance(num, uncertainties.UFloat):
             full = ("{:" + fmt + "}").format(num)
-            unc = re.search(r"\+\/-[0.]*([\d.]*)", full).group(1)
+            unc = re.search(r"\+/-[0.]*([\d.]*)", full).group(1)
             unc = len(unc.replace(".", ""))
     except Exception:
         pass

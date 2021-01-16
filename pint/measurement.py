@@ -66,7 +66,7 @@ class Measurement(Quantity):
 
     @property
     def rel(self):
-        return float(abs(self.magnitude.std_dev / self.magnitude.nominal_value))
+        return abs(self.magnitude.std_dev / self.magnitude.nominal_value)
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
@@ -110,7 +110,7 @@ class Measurement(Quantity):
             pm_fmt = _FORMATS["Lx"]["pm_fmt"]
             mstr = format(self.magnitude, spec).replace(r"+/-", pm_fmt)
             # Also, SIunitx doesn't accept parentheses, which uncs uses with
-            # scientific notation ('e' or 'E' and somtimes 'g' or 'G').
+            # scientific notation ('e' or 'E' and sometimes 'g' or 'G').
             mstr = mstr.replace("(", "").replace(")", " ")
             ustr = siunitx_format_unit(self.units)
             return r"\SI%s{%s}{%s}" % (opts, mstr, ustr)

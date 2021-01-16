@@ -934,26 +934,6 @@ def test_err_change_base_unit():
     with pytest.raises(ValueError, match=expected):
         ureg.enable_contexts("c")
 
-
-def test_err_change_dimensionality():
-    ureg = UnitRegistry(
-        """
-        foo = [d1]
-        bar = [d2]
-        baz = foo
-
-        @context c
-            baz = bar
-        @end
-        """.splitlines()
-    )
-    expected = re.escape(
-        "Can't change dimensionality of baz from [d1] to [d2] in a context"
-    )
-    with pytest.raises(ValueError, match=expected):
-        ureg.enable_contexts("c")
-
-
 def test_err_cyclic_dependency():
     ureg = UnitRegistry(
         """
@@ -1010,19 +990,4 @@ def test_err_redefine_with_prefix():
 
     expected = "Can't redefine a unit with a prefix: kilopound"
     with pytest.raises(ValueError, match=expected):
-        ureg.enable_contexts("c")
-
-
-def test_err_new_unit():
-    ureg = UnitRegistry(
-        """
-        foo = [d]
-        @context c
-            bar = foo
-        @end
-        """.splitlines()
-    )
-
-    expected = "'bar' is not defined in the unit registry"
-    with pytest.raises(UndefinedUnitError, match=expected):
         ureg.enable_contexts("c")

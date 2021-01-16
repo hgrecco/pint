@@ -102,6 +102,7 @@ class TestIssues(QuantityTestCase):
         )
         helpers.assert_quantity_almost_equal(float(ureg.V / ureg.mV), 1000.0)
 
+
     @helpers.requires_numpy
     def test_issue45b(self):
         helpers.assert_quantity_almost_equal(
@@ -440,7 +441,7 @@ class TestIssues(QuantityTestCase):
         assert "{:~}".format(1 * self.ureg("MiB")) == "1 MiB"
 
     def test_issue468(self):
-        @ureg.wraps(("kg"), "meter")
+        @ureg.wraps("kg", "meter")
         def f(x):
             return x
 
