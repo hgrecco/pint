@@ -7,6 +7,7 @@ from distutils.version import LooseVersion
 from numbers import Number
 
 import pytest
+from _pytest.mark.structures import store_mark
 
 from pint import Quantity
 from pint.compat import ndarray, np
@@ -169,7 +170,7 @@ def assert_quantity_almost_equal(first, second, rtol=1e-07, atol=0, msg=None):
 def multi_mark(*funcs):
     def _deco(f):
         for func in funcs:
-            pytest.mark.store_mark(f, func)
+            store_mark(f, func)
 
     return _deco
 
