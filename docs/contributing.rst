@@ -76,6 +76,7 @@ We use pytest_ for testing. If you contribute code you need to add tests:
 - When using classes, derive from `QuantityTestCase`.
 - Use `parametrize` as much as possible.
 - Use `fixtures` (see conftest.py) instead of instantiating the registry yourself.
+- Checkout `helpers.py` for some convenience functions before reinventing the wheel.
 - When your test does not modify the registry, use `sess_registry` fixture.
 
 

@@ -7,7 +7,6 @@ from distutils.version import LooseVersion
 from numbers import Number
 
 import pytest
-from _pytest.mark.structures import store_mark
 
 from pint import Quantity
 from pint.compat import ndarray, np
@@ -166,54 +165,45 @@ def assert_quantity_almost_equal(first, second, rtol=1e-07, atol=0, msg=None):
         assert abs(m1 - m2) <= max(rtol * max(abs(m1), abs(m2)), atol), msg
 
 
-# Requirements
-def multi_mark(*funcs):
-    def _deco(f):
-        for func in funcs:
-            store_mark(f, func)
-
-    return _deco
-
-
 requires_numpy = pytest.mark.skipif(not HAS_NUMPY, reason="Requires NumPy")
 requires_not_numpy = pytest.mark.skipif(
     HAS_NUMPY, reason="Requires NumPy not to be installed."
 )
 
-requires_array_function_protocol = multi_mark(
-    requires_numpy,
-    pytest.mark.skipif(
+
+def requires_array_function_protocol():
+    if not HAS_NUMPY:
+        return pytest.mark.skip("Requires NumPy")
+    return pytest.mark.skipif(
         not HAS_NUMPY_ARRAY_FUNCTION,
         reason="Requires __array_function__ protocol to be enabled",
-    ),
-)
-
-requires_not_array_function_protocol = multi_mark(
-    requires_not_numpy,
-    pytest.mark.skipif(
-        HAS_NUMPY_ARRAY_FUNCTION,
-        reason="Requires __array_function__ protocol to be unavailable or disabled",
-    ),
-)
-
-
-def requires_numpy_previous_than(version):
-    return multi_mark(
-        requires_numpy,
-        pytest.mark.skip(
-            not LooseVersion(NUMPY_VER) < LooseVersion(version),
-            reason="Requires NumPy < %s" % version,
-        ),
     )
 
 
+def requires_not_array_function_protocol():
+    if not HAS_NUMPY:
+        return pytest.mark.skip("Requires NumPy")
+    return pytest.mark.skipif(
+        HAS_NUMPY_ARRAY_FUNCTION,
+        reason="Requires __array_function__ protocol to be unavailable or disabled",
+    )
+
+
+def requires_numpy_previous_than(version):
+    if not HAS_NUMPY:
+        return pytest.mark.skip("Requires NumPy")
+    return pytest.mark.skipif(
+            not LooseVersion(NUMPY_VER) < LooseVersion(version),
+            reason="Requires NumPy < %s" % version,
+        )
+
+
 def requires_numpy_at_least(version):
-    return multi_mark(
-        requires_numpy,
-        pytest.mark.skip(
+    if not HAS_NUMPY:
+        return pytest.mark.skip("Requires NumPy")
+    return pytest.mark.skipif(
             not LooseVersion(NUMPY_VER) >= LooseVersion(version),
             reason="Requires NumPy >= %s" % version,
-        ),
     )
 
 
