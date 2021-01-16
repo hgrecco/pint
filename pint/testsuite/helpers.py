@@ -193,17 +193,17 @@ def requires_numpy_previous_than(version):
     if not HAS_NUMPY:
         return pytest.mark.skip("Requires NumPy")
     return pytest.mark.skipif(
-            not LooseVersion(NUMPY_VER) < LooseVersion(version),
-            reason="Requires NumPy < %s" % version,
-        )
+        not LooseVersion(NUMPY_VER) < LooseVersion(version),
+        reason="Requires NumPy < %s" % version,
+    )
 
 
 def requires_numpy_at_least(version):
     if not HAS_NUMPY:
         return pytest.mark.skip("Requires NumPy")
     return pytest.mark.skipif(
-            not LooseVersion(NUMPY_VER) >= LooseVersion(version),
-            reason="Requires NumPy >= %s" % version,
+        not LooseVersion(NUMPY_VER) >= LooseVersion(version),
+        reason="Requires NumPy >= %s" % version,
     )
 
 
