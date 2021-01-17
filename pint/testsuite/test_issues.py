@@ -102,7 +102,6 @@ class TestIssues(QuantityTestCase):
         )
         helpers.assert_quantity_almost_equal(float(ureg.V / ureg.mV), 1000.0)
 
-
     @helpers.requires_numpy
     def test_issue45b(self):
         helpers.assert_quantity_almost_equal(

@@ -839,7 +839,7 @@ def test_define_nan():
     assert q.units.dimensionality == {"[currency]": 1}
     assert q.to("GBP").magnitude == 10
     assert math.isnan(q.to("USD").magnitude)
-    assert round(abs(q.to("USD", "c").magnitude - 10 * 1.18 * 1.11), 7) == 0
+    assert math.isclose(q.to("USD", "c").magnitude, 10 * 1.18 * 1.11)
 
 
 def test_non_multiplicative(subtests):
@@ -863,20 +863,28 @@ def test_non_multiplicative(subtests):
     k = ureg.Quantity(100, "kelvin")
 
     with subtests.test("baseline"):
-        assert round(abs(k.to("fahrenheit").magnitude - (100 - 255) * 9 / 5), 7) == 0
-        assert round(abs(k.to("bogodegrees").magnitude - 100 / 9), 7) == 0
+        helpers.assert_quantity_almost_equal(
+            k.to("fahrenheit").magnitude, (100 - 255) * 9 / 5
+        )
+        helpers.assert_quantity_almost_equal(k.to("bogodegrees").magnitude, 100 / 9)
 
     with subtests.test("nonmult_to_nonmult"):
         with ureg.context("nonmult_to_nonmult"):
-            assert round(abs(k.to("fahrenheit").magnitude - (100 - 123) / 7), 7) == 0
+            helpers.assert_quantity_almost_equal(
+                k.to("fahrenheit").magnitude, (100 - 123) / 7
+            )
 
     with subtests.test("nonmult_to_mult"):
         with ureg.context("nonmult_to_mult"):
-            assert round(abs(k.to("fahrenheit").magnitude - 100 / 123), 7) == 0
+            helpers.assert_quantity_almost_equal(
+                k.to("fahrenheit").magnitude, 100 / 123
+            )
 
     with subtests.test("mult_to_nonmult"):
         with ureg.context("mult_to_nonmult"):
-            assert round(abs(k.to("bogodegrees").magnitude - (100 - 123) / 5), 7) == 0
+            helpers.assert_quantity_almost_equal(
+                k.to("bogodegrees").magnitude, (100 - 123) / 5
+            )
 
 
 def test_stack_contexts():
@@ -912,12 +920,6 @@ def test_stack_contexts():
     assert q.to("d", "c1", "c2").magnitude == 3  # c2 takes precedence
 
 
-def test_err_to_base_unit():
-    expected = "Can't define base units within a context"
-    with pytest.raises(DefinitionSyntaxError, match=expected):
-        Context.from_lines(["@context c", "x = [d]"])
-
-
 def test_err_change_base_unit():
     ureg = UnitRegistry(
         """
@@ -933,6 +935,33 @@ def test_err_change_base_unit():
     expected = "Can't redefine a base unit to a derived one"
     with pytest.raises(ValueError, match=expected):
         ureg.enable_contexts("c")
+
+
+def test_err_to_base_unit():
+    expected = "Can't define base units within a context"
+    with pytest.raises(DefinitionSyntaxError, match=expected):
+        Context.from_lines(["@context c", "x = [d]"])
+
+
+def test_err_change_dimensionality():
+    ureg = UnitRegistry(
+        """
+        foo = [d1]
+        bar = [d2]
+        baz = foo
+
+        @context c
+            baz = bar
+        @end
+        """.splitlines()
+    )
+
+    expected = re.escape(
+        "Can't change dimensionality of baz from [d1] to [d2] in a context"
+    )
+    with pytest.raises(ValueError, match=expected):
+        ureg.enable_contexts("c")
+
 
 def test_err_cyclic_dependency():
     ureg = UnitRegistry(
@@ -990,4 +1019,18 @@ def test_err_redefine_with_prefix():
 
     expected = "Can't redefine a unit with a prefix: kilopound"
     with pytest.raises(ValueError, match=expected):
+        ureg.enable_contexts("c")
+
+
+def test_err_new_unit():
+    ureg = UnitRegistry(
+        """
+        foo = [d]
+        @context c
+            bar = foo
+        @end
+        """.splitlines()
+    )
+    expected = "'bar' is not defined in the unit registry"
+    with pytest.raises(UndefinedUnitError, match=expected):
         ureg.enable_contexts("c")
