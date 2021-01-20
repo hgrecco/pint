@@ -1,8 +1,10 @@
+import pytest
+
 from pint import UnitRegistry
 from pint.testsuite import QuantityTestCase
 
 
-class TestGroup(QuantityTestCase):
+class TestGroup:
     def _build_empty_reg_root(self):
         ureg = UnitRegistry(None)
         grp = ureg.get_group("root")
@@ -13,13 +15,13 @@ class TestGroup(QuantityTestCase):
         ureg, root = self._build_empty_reg_root()
         d = ureg._groups
 
-        self.assertEqual(root._used_groups, set())
-        self.assertEqual(root._used_by, set())
+        assert root._used_groups == set()
+        assert root._used_by == set()
         root.add_units("meter", "second", "meter")
-        self.assertEqual(root._unit_names, {"meter", "second"})
-        self.assertEqual(root.members, {"meter", "second"})
+        assert root._unit_names == {"meter", "second"}
+        assert root.members == {"meter", "second"}
 
-        self.assertEqual(d.keys(), {"root"})
+        assert d.keys() == {"root"}
 
     def test_cyclic(self):
         ureg, root = self._build_empty_reg_root()
@@ -27,22 +29,25 @@ class TestGroup(QuantityTestCase):
         g3 = ureg.Group("g3")
         g2.add_groups("g3")
 
-        self.assertRaises(ValueError, g2.add_groups, "root")
-        self.assertRaises(ValueError, g3.add_groups, "g2")
-        self.assertRaises(ValueError, g3.add_groups, "root")
+        with pytest.raises(ValueError):
+            g2.add_groups("root")
+        with pytest.raises(ValueError):
+            g3.add_groups("g2")
+        with pytest.raises(ValueError):
+            g3.add_groups("root")
 
     def test_groups_programmatically(self):
         ureg, root = self._build_empty_reg_root()
         d = ureg._groups
         g2 = ureg.Group("g2")
 
-        self.assertEqual(d.keys(), {"root", "g2"})
+        assert d.keys() == {"root", "g2"}
 
-        self.assertEqual(root._used_groups, {"g2"})
-        self.assertEqual(root._used_by, set())
+        assert root._used_groups == {"g2"}
+        assert root._used_by == set()
 
-        self.assertEqual(g2._used_groups, set())
-        self.assertEqual(g2._used_by, {"root"})
+        assert g2._used_groups == set()
+        assert g2._used_by == {"root"}
 
     def test_simple(self):
         lines = ["@group mygroup", "meter", "second"]
@@ -52,13 +57,13 @@ class TestGroup(QuantityTestCase):
 
         grp = ureg.Group.from_lines(lines, lambda x: None)
 
-        self.assertEqual(d.keys(), {"root", "mygroup"})
+        assert d.keys() == {"root", "mygroup"}
 
-        self.assertEqual(grp.name, "mygroup")
-        self.assertEqual(grp._unit_names, {"meter", "second"})
-        self.assertEqual(grp._used_groups, set())
-        self.assertEqual(grp._used_by, {root.name})
-        self.assertEqual(grp.members, frozenset(["meter", "second"]))
+        assert grp.name == "mygroup"
+        assert grp._unit_names == {"meter", "second"}
+        assert grp._used_groups == set()
+        assert grp._used_by == {root.name}
+        assert grp.members == frozenset(["meter", "second"])
 
     def test_using1(self):
         lines = ["@group mygroup using group1", "meter", "second"]
@@ -66,10 +71,10 @@ class TestGroup(QuantityTestCase):
         ureg, root = self._build_empty_reg_root()
         ureg.Group("group1")
         grp = ureg.Group.from_lines(lines, lambda x: None)
-        self.assertEqual(grp.name, "mygroup")
-        self.assertEqual(grp._unit_names, {"meter", "second"})
-        self.assertEqual(grp._used_groups, {"group1"})
-        self.assertEqual(grp.members, frozenset(["meter", "second"]))
+        assert grp.name == "mygroup"
+        assert grp._unit_names == {"meter", "second"}
+        assert grp._used_groups == {"group1"}
+        assert grp.members == frozenset(["meter", "second"])
 
     def test_using2(self):
         lines = ["@group mygroup using group1,group2", "meter", "second"]
@@ -78,10 +83,10 @@ class TestGroup(QuantityTestCase):
         ureg.Group("group1")
         ureg.Group("group2")
         grp = ureg.Group.from_lines(lines, lambda x: None)
-        self.assertEqual(grp.name, "mygroup")
-        self.assertEqual(grp._unit_names, {"meter", "second"})
-        self.assertEqual(grp._used_groups, {"group1", "group2"})
-        self.assertEqual(grp.members, frozenset(["meter", "second"]))
+        assert grp.name == "mygroup"
+        assert grp._unit_names == {"meter", "second"}
+        assert grp._used_groups == {"group1", "group2"}
+        assert grp.members == frozenset(["meter", "second"])
 
     def test_spaces(self):
         lines = ["@group   mygroup   using   group1 , group2", " meter ", " second  "]
@@ -90,10 +95,10 @@ class TestGroup(QuantityTestCase):
         ureg.Group("group1")
         ureg.Group("group2")
         grp = ureg.Group.from_lines(lines, lambda x: None)
-        self.assertEqual(grp.name, "mygroup")
-        self.assertEqual(grp._unit_names, {"meter", "second"})
-        self.assertEqual(grp._used_groups, {"group1", "group2"})
-        self.assertEqual(grp.members, frozenset(["meter", "second"]))
+        assert grp.name == "mygroup"
+        assert grp._unit_names == {"meter", "second"}
+        assert grp._used_groups == {"group1", "group2"}
+        assert grp.members == frozenset(["meter", "second"])
 
     def test_invalidate_members(self):
         lines = ["@group mygroup using group1", "meter", "second"]
@@ -101,17 +106,17 @@ class TestGroup(QuantityTestCase):
         ureg, root = self._build_empty_reg_root()
         ureg.Group("group1")
         grp = ureg.Group.from_lines(lines, lambda x: None)
-        self.assertIs(root._computed_members, None)
-        self.assertIs(grp._computed_members, None)
-        self.assertEqual(grp.members, frozenset(["meter", "second"]))
-        self.assertIs(root._computed_members, None)
-        self.assertIsNot(grp._computed_members, None)
-        self.assertEqual(root.members, frozenset(["meter", "second"]))
-        self.assertIsNot(root._computed_members, None)
-        self.assertIsNot(grp._computed_members, None)
+        assert root._computed_members is None
+        assert grp._computed_members is None
+        assert grp.members == frozenset(["meter", "second"])
+        assert root._computed_members is None
+        assert grp._computed_members is not None
+        assert root.members == frozenset(["meter", "second"])
+        assert root._computed_members is not None
+        assert grp._computed_members is not None
         grp.invalidate_members()
-        self.assertIs(root._computed_members, None)
-        self.assertIs(grp._computed_members, None)
+        assert root._computed_members is None
+        assert grp._computed_members is None
 
     def test_with_defintions(self):
         lines = [
@@ -129,7 +134,7 @@ class TestGroup(QuantityTestCase):
         ureg, root = self._build_empty_reg_root()
         ureg.Group.from_lines(lines, define)
 
-        self.assertEqual(["kings_leg", "kings_head"], defs)
+        assert ["kings_leg", "kings_head"] == defs
 
     def test_members_including(self):
         ureg, root = self._build_empty_reg_root()
@@ -144,10 +149,10 @@ class TestGroup(QuantityTestCase):
         g3.add_units("meter", "second")
         g3.add_groups("group1", "group2")
 
-        self.assertEqual(root.members, frozenset(["meter", "second", "newton", "inch"]))
-        self.assertEqual(g1.members, frozenset(["second", "inch"]))
-        self.assertEqual(g2.members, frozenset(["second", "newton"]))
-        self.assertEqual(g3.members, frozenset(["meter", "second", "newton", "inch"]))
+        assert root.members == frozenset(["meter", "second", "newton", "inch"])
+        assert g1.members == frozenset(["second", "inch"])
+        assert g2.members == frozenset(["second", "newton"])
+        assert g3.members == frozenset(["meter", "second", "newton", "inch"])
 
     def test_get_compatible_units(self):
         ureg = UnitRegistry()
@@ -155,7 +160,7 @@ class TestGroup(QuantityTestCase):
         g = ureg.get_group("test-imperial")
         g.add_units("inch", "yard", "pint")
         c = ureg.get_compatible_units("meter", "test-imperial")
-        self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
+        assert c == frozenset([ureg.inch, ureg.yard])
 
 
 class TestSystem(QuantityTestCase):
@@ -185,7 +190,7 @@ class TestSystem(QuantityTestCase):
         ureg, root = self._build_empty_reg_root()
         root.add_units("second")
         s = ureg.System.from_lines(lines, lambda x: x)
-        self.assertEqual(s.members, frozenset(["second"]))
+        assert s.members == frozenset(["second"])
 
     def test_get_compatible_units(self):
         sysname = "mysys1"
@@ -195,13 +200,13 @@ class TestSystem(QuantityTestCase):
 
         g.add_units("inch", "yard", "pint")
         c = ureg.get_compatible_units("meter", "test-imperial")
-        self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
+        assert c == frozenset([ureg.inch, ureg.yard])
 
         lines = ["@system %s using test-imperial" % sysname, "inch"]
 
         ureg.System.from_lines(lines, lambda x: x)
         c = ureg.get_compatible_units("meter", sysname)
-        self.assertEqual(c, frozenset([ureg.inch, ureg.yard]))
+        assert c == frozenset([ureg.inch, ureg.yard])
 
     def test_get_base_units(self):
         sysname = "mysys2"
@@ -217,12 +222,12 @@ class TestSystem(QuantityTestCase):
 
         # base_factor, destination_units
         c = ureg.get_base_units("inch", system=sysname)
-        self.assertAlmostEqual(c[0], 1)
-        self.assertEqual(c[1], {"inch": 1})
+        assert round(abs(c[0] - 1), 7) == 0
+        assert c[1] == {"inch": 1}
 
         c = ureg.get_base_units("cm", system=sysname)
-        self.assertAlmostEqual(c[0], 1.0 / 2.54)
-        self.assertEqual(c[1], {"inch": 1})
+        assert round(abs(c[0] - 1.0 / 2.54), 7) == 0
+        assert c[1] == {"inch": 1}
 
     def test_get_base_units_different_exponent(self):
         sysname = "mysys3"
@@ -239,20 +244,20 @@ class TestSystem(QuantityTestCase):
 
         # base_factor, destination_units
         c = ureg.get_base_units("inch", system=sysname)
-        self.assertAlmostEqual(c[0], 0.326, places=3)
-        self.assertEqual(c[1], {"pint": 1.0 / 3})
+        assert round(abs(c[0] - 0.326), 3) == 0
+        assert c[1] == {"pint": 1.0 / 3}
 
         c = ureg.get_base_units("cm", system=sysname)
-        self.assertAlmostEqual(c[0], 0.1283, places=3)
-        self.assertEqual(c[1], {"pint": 1.0 / 3})
+        assert round(abs(c[0] - 0.1283), 3) == 0
+        assert c[1] == {"pint": 1.0 / 3}
 
         c = ureg.get_base_units("inch**2", system=sysname)
-        self.assertAlmostEqual(c[0], 0.326 ** 2, places=3)
-        self.assertEqual(c[1], {"pint": 2.0 / 3})
+        assert round(abs(c[0] - 0.326 ** 2), 3) == 0
+        assert c[1] == {"pint": 2.0 / 3}
 
         c = ureg.get_base_units("cm**2", system=sysname)
-        self.assertAlmostEqual(c[0], 0.1283 ** 2, places=3)
-        self.assertEqual(c[1], {"pint": 2.0 / 3})
+        assert round(abs(c[0] - 0.1283 ** 2), 3) == 0
+        assert c[1] == {"pint": 2.0 / 3}
 
     def test_get_base_units_relation(self):
         sysname = "mysys4"
@@ -267,12 +272,12 @@ class TestSystem(QuantityTestCase):
         ureg._systems[s.name] = s
         # base_factor, destination_units
         c = ureg.get_base_units("inch", system=sysname)
-        self.assertAlmostEqual(c[0], 0.056, places=2)
-        self.assertEqual(c[1], {"mph": 1, "second": 1})
+        assert round(abs(c[0] - 0.056), 2) == 0
+        assert c[1] == {"mph": 1, "second": 1}
 
         c = ureg.get_base_units("kph", system=sysname)
-        self.assertAlmostEqual(c[0], 0.6213, places=3)
-        self.assertEqual(c[1], {"mph": 1})
+        assert round(abs(c[0] - 0.6213), 3) == 0
+        assert c[1] == {"mph": 1}
 
     def test_members_nowarning(self):
         ureg = self.ureg

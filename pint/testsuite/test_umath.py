@@ -1,6 +1,8 @@
-from pint import DimensionalityError
+import pytest
+
+from pint import DimensionalityError, UnitRegistry
 from pint.compat import np
-from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite import helpers
 
 # Following http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
@@ -8,10 +10,17 @@ if np:
     pi = np.pi
 
 
-@helpers.requires_numpy()
-class TestUFuncs(QuantityTestCase):
+@helpers.requires_numpy
+class TestUFuncs:
+    @classmethod
+    def setup_class(cls):
+        cls.ureg = UnitRegistry(force_ndarray=True)
+        cls.Q_ = cls.ureg.Quantity
 
-    FORCE_NDARRAY = True
+    @classmethod
+    def teardown_class(cls):
+        cls.ureg = None
+        cls.Q_ = None
 
     @property
     def qless(self):
@@ -84,12 +93,10 @@ class TestUFuncs(QuantityTestCase):
                 if ou is not None:
                     res = self.Q_(res, ou)
 
-            self.assertQuantityAlmostEqual(qm, res, rtol=rtol, msg=err_msg)
+            helpers.assert_quantity_almost_equal(qm, res, rtol=rtol, msg=err_msg)
 
         for x1 in raise_with:
-            with self.assertRaises(
-                DimensionalityError, msg=f"At {func.__name__} with {x1}"
-            ):
+            with pytest.raises(DimensionalityError):
                 func(x1)
 
     def _testn(self, func, ok_with, raise_with=(), results=None):
@@ -170,10 +177,10 @@ class TestUFuncs(QuantityTestCase):
                 if ou is not None:
                     re = self.Q_(re, ou)
 
-                self.assertQuantityAlmostEqual(qm, re, rtol=rtol, msg=err_msg)
+                helpers.assert_quantity_almost_equal(qm, re, rtol=rtol, msg=err_msg)
 
         for x1 in raise_with:
-            with self.assertRaises(ValueError, msg=f"At {func.__name__} with {x1}"):
+            with pytest.raises(ValueError):
                 func(x1)
 
     def _test2(
@@ -239,12 +246,10 @@ class TestUFuncs(QuantityTestCase):
             if ou is not None:
                 res = self.Q_(res, ou)
 
-            self.assertQuantityAlmostEqual(qm, res, rtol=rtol, msg=err_msg)
+            helpers.assert_quantity_almost_equal(qm, res, rtol=rtol, msg=err_msg)
 
         for x2 in raise_with:
-            with self.assertRaises(
-                DimensionalityError, msg=f"At {func.__name__} with {x1} and {x2}"
-            ):
+            with pytest.raises(DimensionalityError):
                 func(x1, x2)
 
     def _testn2(self, func, x1, ok_with, raise_with=()):
@@ -268,7 +273,7 @@ class TestUFuncs(QuantityTestCase):
         self._test2(func, x1, ok_with, raise_with, output_units=None)
 
 
-@helpers.requires_numpy()
+@helpers.requires_numpy
 class TestMathUfuncs(TestUFuncs):
     """Universal functions (ufunc) > Math operations
 
@@ -416,7 +421,7 @@ class TestMathUfuncs(TestUFuncs):
         self._test1(np.reciprocal, (self.q2, self.qs, self.qless, self.qi), (), -1)
 
 
-@helpers.requires_numpy()
+@helpers.requires_numpy
 class TestTrigUfuncs(TestUFuncs):
     """Universal functions (ufunc) > Trigonometric functions
 
@@ -552,13 +557,9 @@ class TestTrigUfuncs(TestUFuncs):
         )
 
     def test_hypot(self):
-        self.assertTrue(
-            np.hypot(3.0 * self.ureg.m, 4.0 * self.ureg.m) == 5.0 * self.ureg.m
-        )
-        self.assertTrue(
-            np.hypot(3.0 * self.ureg.m, 400.0 * self.ureg.cm) == 5.0 * self.ureg.m
-        )
-        with self.assertRaises(DimensionalityError):
+        assert np.hypot(3.0 * self.ureg.m, 4.0 * self.ureg.m) == 5.0 * self.ureg.m
+        assert np.hypot(3.0 * self.ureg.m, 400.0 * self.ureg.cm) == 5.0 * self.ureg.m
+        with pytest.raises(DimensionalityError):
             np.hypot(1.0 * self.ureg.m, 2.0 * self.ureg.J)
 
     def test_sinh(self):
