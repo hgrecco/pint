@@ -1,0 +1,86 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        numpy: [null, "numpy>=1.14,<2.0.0"]
+        uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
+        extras: [null]
+        include:
+          - python-version: 3.6
+            numpy: numpy==1.14.6
+            extras: matplotlib==2.2.5
+          - python-version: 3.8
+            numpy: "numpy"
+            uncertainties: "uncertainties"
+            extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
+          - python-version: 3.9
+            numpy: numpy
+
+    runs-on: ubuntu-latest
+
+    env:
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 100
+
+      - name: Get tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Setup caching
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: pip-${{ matrix.python-version }}
+          restore-keys: |
+            pip-${{ matrix.python-version }}
+
+      - name: Install numpy
+        if: ${{ matrix.numpy != null }}
+        run: pip install "${{matrix.numpy}}"
+      
+      - name: Install uncertainties
+        if: ${{ matrix.uncertainties != null }}
+        run: pip install "${{matrix.uncertainties}}"
+
+      - name: Install extras
+        if: ${{ matrix.extras != null }}
+        run: pip install ${{matrix.extras}}
+
+      - name: Install dependencies
+        run: |
+          sudo apt install -y graphviz
+          pip install .[test]
+
+      - name: Run Tests
+        run: |
+          pytest $TEST_OPTS
+
+      - name: Coverage report
+        run: coverage report -m
+
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@v1.1.2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true

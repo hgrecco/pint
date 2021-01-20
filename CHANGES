@@ -11,6 +11,7 @@ Pint Changelog
   (Issue #1195, thanks jules-ch)
 - UnitsContainer returns false if other is str and cannnot be parsed
   (Issue #1179, thanks rfrowe)
+- Add Github Actions CI. (Issue #1236)
 
 0.16.1 (2020-09-22)
 -------------------
