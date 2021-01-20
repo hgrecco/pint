@@ -75,12 +75,27 @@ jobs:
       - name: Coverage report
         run: coverage report -m
 
-  finish:
+      - name: Coveralls Parallel
+        env:
+          COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
+          COVERALLS_PARALLEL: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_SERVICE_NAME: github
+        run: |
+          pip install coveralls
+          coveralls
+
+  coveralls:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@v1.1.2
+    - uses: actions/setup-python@v2
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
+        python-version: 3.x
+    - name: Coveralls Finished
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_SERVICE_NAME: github
+      run: |
+        pip install coveralls
+        coveralls --finish
