@@ -1,0 +1,46 @@
+name: Documentation Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 100
+
+      - name: Get tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Setup pip cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: pip-docs
+          restore-keys: pip-docs
+
+      - name: Install dependencies
+        run: |
+          sudo apt install -y pandoc
+          pip install --upgrade pip setuptools wheel
+          pip install -r "requirements_docs.txt"
+          pip install docutils==0.14 commonmark==0.8.1 recommonmark==0.5.0 babel==2.8
+          pip install .
+
+      - name: Build documentation
+        run: sphinx-build -n -j auto -b html -d build/doctrees docs build/html
+
+      - name: Doc Tests
+        run: sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest
+        
