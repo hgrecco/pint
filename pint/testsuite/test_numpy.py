@@ -449,10 +449,13 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_solve(self):
-        helpers.assert_quantity_almost_equal(
-            np.linalg.solve(self.q, [[3], [7]] * self.ureg.s),
-            self.Q_([[1], [1]], "m / s"),
-        )
+        A = self.q
+        b = [[3], [7]] * self.ureg.s
+        x = np.linalg.solve(A, b)
+
+        helpers.assert_quantity_almost_equal(x, self.Q_([[1], [1]], "s / m"))
+
+        helpers.assert_quantity_almost_equal(np.dot(A, x), b)
 
     # Arithmetic operations
     def test_addition_with_scalar(self):

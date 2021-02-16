@@ -12,6 +12,7 @@ Pint Changelog
 - UnitsContainer returns false if other is str and cannnot be parsed
   (Issue #1179, thanks rfrowe)
 - Add Github Actions CI. (Issue #1236)
+- Fix numpy.linalg.solve unit output. (Issue #1246)
 
 0.16.1 (2020-09-22)
 -------------------
