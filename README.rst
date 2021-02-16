@@ -14,9 +14,13 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Python Versions
 
-.. image:: https://travis-ci.org/hgrecco/pint.svg?branch=master
-    :target: https://travis-ci.org/hgrecco/pint
+.. image:: https://github.com/hgrecco/pint/workflows/CI/badge.svg
+    :target: https://github.com/hgrecco/pint/actions?query=workflow%3ACI
     :alt: CI
+
+.. image:: https://github.com/hgrecco/pint/workflows/Lint/badge.svg
+    :target: https://github.com/hgrecco/pint/actions?query=workflow%3ALint
+    :alt: LINTER
 
 .. image:: https://coveralls.io/repos/github/hgrecco/pint/badge.svg?branch=master
     :target: https://coveralls.io/github/hgrecco/pint?branch=master
