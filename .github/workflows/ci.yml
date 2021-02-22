@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  test:
+  test-linux:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
