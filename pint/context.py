@@ -224,16 +224,14 @@ class Context:
         return ctx
 
     def add_transformation(self, src, dst, func):
-        """Add a transformation function to the context.
-        """
+        """Add a transformation function to the context."""
 
         _key = self.__keytransform__(src, dst)
         self.funcs[_key] = func
         self.relation_to_context[_key] = self
 
     def remove_transformation(self, src, dst):
-        """Add a transformation function to the context.
-        """
+        """Add a transformation function to the context."""
 
         _key = self.__keytransform__(src, dst)
         del self.funcs[_key]
@@ -244,8 +242,7 @@ class Context:
         return to_units_container(src), to_units_container(dst)
 
     def transform(self, src, dst, registry, value):
-        """Transform a value.
-        """
+        """Transform a value."""
 
         _key = self.__keytransform__(src, dst)
         return self.funcs[_key](registry, value, **self.defaults)

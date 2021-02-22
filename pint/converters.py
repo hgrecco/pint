@@ -84,7 +84,7 @@ class OffsetConverter(Converter):
 
 
 class LogarithmicConverter(Converter):
-    """ Converts between linear units and logarithmic units, such as dB, octave, neper or pH.
+    """Converts between linear units and logarithmic units, such as dB, octave, neper or pH.
     Q_log = logfactor * log( Q_lin / scale ) / log(log_base)
 
     Parameters
@@ -94,7 +94,7 @@ class LogarithmicConverter(Converter):
     logbase : float
         base of logarithm used in the logarithmic unit conversion
     logfactor : float
-        factor multupled to logarithm for unit conversion
+        factor multiplied to logarithm for unit conversion
     inplace : bool
         controls if computation is done in place
     """
@@ -126,8 +126,8 @@ class LogarithmicConverter(Converter):
     def from_reference(self, value, inplace=False):
         """Converts value from the reference unit to the logarithmic unit
 
-            dBm   <------   mW
-            y dBm = 10 log10( x / 1mW )
+        dBm   <------   mW
+        y dBm = 10 log10( x / 1mW )
         """
         if inplace:
             value /= self.scale
@@ -144,8 +144,8 @@ class LogarithmicConverter(Converter):
     def to_reference(self, value, inplace=False):
         """Converts value to the reference unit from the logarithmic unit
 
-            dBm   ------>   mW
-            y dBm = 10 log10( x / 1mW )
+        dBm   ------>   mW
+        y dBm = 10 log10( x / 1mW )
         """
         if inplace:
             value /= self.logfactor

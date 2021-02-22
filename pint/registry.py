@@ -4,7 +4,7 @@ pint.registry
 
 Defines the Registry, a class to contain units and their relations.
 
-The module actually defines 5 registries with different capabilites:
+The module actually defines 5 registries with different capabilities:
 
 - BaseRegistry: Basic unit definition and querying.
                 Conversion between multiplicative units.
@@ -86,7 +86,7 @@ except ImportError:
     import importlib_resources
 
 
-_BLOCK_RE = re.compile(r" |\(")
+_BLOCK_RE = re.compile(r"[ (]")
 
 
 @functools.lru_cache()
@@ -276,8 +276,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._register_parser("@defaults", self._parse_defaults)
 
     def _parse_defaults(self, ifile):
-        """Loader for a @default section.
-        """
+        """Loader for a @default section."""
         next(ifile)
         for lineno, part in ifile.block_iter():
             k, v = part.split("=")
@@ -301,8 +300,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return self.parse_expression(item)
 
     def __contains__(self, item):
-        """Support checking prefixed units with the `in` operator
-        """
+        """Support checking prefixed units with the `in` operator"""
         try:
             self.__getattr__(item)
             return True
@@ -630,8 +628,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
 
     def get_name(self, name_or_alias, case_sensitive=None):
-        """Return the canonical name of a unit.
-        """
+        """Return the canonical name of a unit."""
 
         if name_or_alias == "dimensionless":
             return ""
@@ -669,8 +666,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return unit_name
 
     def get_symbol(self, name_or_alias, case_sensitive=None):
-        """Return the preferred alias for a unit.
-        """
+        """Return the preferred alias for a unit."""
         candidates = self.parse_unit_name(name_or_alias, case_sensitive)
         if not candidates:
             raise UndefinedUnitError(name_or_alias)
@@ -700,8 +696,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return self._get_dimensionality(input_units)
 
     def _get_dimensionality(self, input_units):
-        """Convert a UnitsContainer to base dimensions.
-        """
+        """Convert a UnitsContainer to base dimensions."""
         if not input_units:
             return self.UnitsContainer()
 
@@ -880,8 +875,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                     self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
     def get_compatible_units(self, input_units, group_or_system=None):
-        """
-        """
+        """"""
         input_units = to_units_container(input_units)
 
         equiv = self._get_compatible_units(input_units, group_or_system)
@@ -889,8 +883,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return frozenset(self.Unit(eq) for eq in equiv)
 
     def _get_compatible_units(self, input_units, group_or_system):
-        """
-        """
+        """"""
         if not input_units:
             return frozenset()
 
@@ -898,7 +891,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return self._cache.dimensional_equivalents[src_dim]
 
     def is_compatible_with(self, obj1, obj2, *contexts, **ctx_kwargs):
-        """ check if the other object is compatible
+        """check if the other object is compatible
 
         Parameters
         ----------
@@ -1028,8 +1021,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         )
 
     def _parse_unit_name(self, unit_name, case_sensitive=None):
-        """Helper of parse_unit_name.
-        """
+        """Helper of parse_unit_name."""
         case_sensitive = (
             self.case_sensitive if case_sensitive is None else case_sensitive
         )
@@ -1307,8 +1299,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
     def _parse_units(self, input_string, as_delta=None, case_sensitive=None):
-        """
-        """
+        """"""
         if as_delta is None:
             as_delta = self.default_as_delta
 
@@ -1477,7 +1468,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
 class ContextRegistry(BaseRegistry):
     """Handle of Contexts.
 
-    Conversion between units with different dimenstions according
+    Conversion between units with different dimensions according
     to previously established relations (contexts).
     (e.g. in the spectroscopy, conversion between frequency and energy is possible)
 
@@ -1598,8 +1589,7 @@ class ContextRegistry(BaseRegistry):
             self._on_redefinition = on_redefinition_backup
 
     def _redefine(self, definition: UnitDefinition) -> None:
-        """Redefine a unit from a context
-        """
+        """Redefine a unit from a context"""
         # Find original definition in the UnitRegistry
         candidates = self.parse_unit_name(definition.name)
         if not candidates:
@@ -1950,7 +1940,7 @@ class SystemRegistry(BaseRegistry):
             return self._groups[name]
 
         if not create_if_needed:
-            raise ValueError("Unkown group %s" % name)
+            raise ValueError("Unknown group %s" % name)
 
         return self.Group(name)
 
@@ -1993,7 +1983,7 @@ class SystemRegistry(BaseRegistry):
             return self._systems[name]
 
         if not create_if_needed:
-            raise ValueError("Unkown system %s" % name)
+            raise ValueError("Unknown system %s" % name)
 
         return self.System(name)
 
@@ -2122,7 +2112,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         In the context of a multiplication of units, interpret
         non-multiplicative units as their *delta* counterparts.
     autoconvert_offset_to_baseunit :
-        If True converts offset units in quantites are
+        If True converts offset units in quantities are
         converted to their base units in multiplicative
         context. If False no conversion happens.
     on_redefinition : str

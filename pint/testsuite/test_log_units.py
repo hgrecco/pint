@@ -1,9 +1,10 @@
+import logging
 import math
 
 import pytest
 
 from pint import OffsetUnitCalculusError, UnitRegistry
-from pint.testsuite import QuantityTestCase
+from pint.testsuite import QuantityTestCase, helpers
 from pint.unit import Unit, UnitsContainer
 
 
@@ -18,10 +19,7 @@ def ureg():
 
 
 class TestLogarithmicQuantity(QuantityTestCase):
-
-    FORCE_NDARRAY = False
-
-    def test_log_quantity_creation(self):
+    def test_log_quantity_creation(self, caplog):
 
         # Following Quantity Creation Pattern
         for args in (
@@ -30,42 +28,46 @@ class TestLogarithmicQuantity(QuantityTestCase):
             (4.2, self.ureg.dBm),
         ):
             x = self.Q_(*args)
-            self.assertEqual(x.magnitude, 4.2)
-            self.assertEqual(x.units, UnitsContainer(decibelmilliwatt=1))
+            assert x.magnitude == 4.2
+            assert x.units == UnitsContainer(decibelmilliwatt=1)
 
         x = self.Q_(self.Q_(4.2, "dBm"))
-        self.assertEqual(x.magnitude, 4.2)
-        self.assertEqual(x.units, UnitsContainer(decibelmilliwatt=1))
+        assert x.magnitude == 4.2
+        assert x.units == UnitsContainer(decibelmilliwatt=1)
 
         x = self.Q_(4.2, UnitsContainer(decibelmilliwatt=1))
         y = self.Q_(x)
-        self.assertEqual(x.magnitude, y.magnitude)
-        self.assertEqual(x.units, y.units)
-        self.assertIsNot(x, y)
+        assert x.magnitude == y.magnitude
+        assert x.units == y.units
+        assert x is not y
 
         # Using multiplications for dB units requires autoconversion to baseunits
         new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
         x = new_reg.Quantity("4.2 * dBm")
-        self.assertEqual(x.magnitude, 4.2)
-        self.assertEqual(x.units, UnitsContainer(decibelmilliwatt=1))
+        assert x.magnitude == 4.2
+        assert x.units == UnitsContainer(decibelmilliwatt=1)
 
-        with self.capture_log() as buffer:
-            self.assertEqual(4.2 * new_reg.dBm, new_reg.Quantity(4.2, 2 * new_reg.dBm))
-            self.assertEqual(len(buffer), 1)
+        with caplog.at_level(logging.DEBUG):
+            assert "wally" not in caplog.text
+            assert 4.2 * new_reg.dBm == new_reg.Quantity(4.2, 2 * new_reg.dBm)
+
+        assert len(caplog.records) == 1
 
     def test_log_convert(self):
         # # 1 dB = 1/10 * bel
-        # self.assertQuantityAlmostEqual(self.Q_(1.0, "dB").to("dimensionless"), self.Q_(1, "bell") / 10)
+        # helpers.assert_quantity_almost_equal(self.Q_(1.0, "dB").to("dimensionless"), self.Q_(1, "bell") / 10)
         # # Uncomment Bell unit in default_en.txt
 
         # ## Test dB to dB units octave - decade
         # 1 decade = log2(10) octave
-        self.assertQuantityAlmostEqual(
+        helpers.assert_quantity_almost_equal(
             self.Q_(1.0, "decade"), self.Q_(math.log(10, 2), "octave")
         )
         # ## Test dB to dB units dBm - dBu
         # 0 dBm = 1mW = 1e3 uW = 30 dBu
-        self.assertAlmostEqual(self.Q_(0.0, "dBm"), self.Q_(29.999999999999996, "dBu"))
+        helpers.assert_quantity_almost_equal(
+            self.Q_(0.0, "dBm"), self.Q_(29.999999999999996, "dBu"), atol=1e-7
+        )
 
     def test_mix_regular_log_units(self):
         # Test regular-logarithmic mixed definition, such as dB/km or dB/cm
@@ -73,13 +75,15 @@ class TestLogarithmicQuantity(QuantityTestCase):
         # Multiplications and divisions with a mix of Logarithmic Units and regular Units is normally not possible.
         # The reason is that dB are considered by pint like offset units.
         # Multiplications and divisions that involve offset units are badly defined, so pint raises an error
-        with self.assertRaises(OffsetUnitCalculusError):
+        with pytest.raises(OffsetUnitCalculusError):
             (-10.0 * self.ureg.dB) / (1 * self.ureg.cm)
 
         # However, if the flag autoconvert_offset_to_baseunit=True is given to UnitRegistry, then pint converts the unit to base.
         # With this flag on multiplications and divisions are now possible:
         new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
-        self.assertQuantityAlmostEqual(-10 * new_reg.dB / new_reg.cm, 0.1 / new_reg.cm)
+        helpers.assert_quantity_almost_equal(
+            -10 * new_reg.dB / new_reg.cm, 0.1 / new_reg.cm
+        )
 
 
 log_unit_names = [
@@ -156,8 +160,7 @@ def test_unit_equivalence(ureg, unit1, unit2):
     ],
 )
 def test_db_conversion(ureg, db_value, scalar):
-    """Test that a dB value can be converted to a scalar and back.
-    """
+    """Test that a dB value can be converted to a scalar and back."""
     Q_ = ureg.Quantity
     assert Q_(db_value, "dB").to("dimensionless").magnitude == pytest.approx(scalar)
     assert Q_(scalar, "dimensionless").to("dB").magnitude == pytest.approx(db_value)
@@ -174,8 +177,7 @@ def test_db_conversion(ureg, db_value, scalar):
     ],
 )
 def test_octave_conversion(ureg, octave, scalar):
-    """Test that an octave can be converted to a scalar and back.
-    """
+    """Test that an octave can be converted to a scalar and back."""
     Q_ = ureg.Quantity
     assert Q_(octave, "octave").to("dimensionless").magnitude == pytest.approx(scalar)
     assert Q_(scalar, "dimensionless").to("octave").magnitude == pytest.approx(octave)
@@ -192,8 +194,7 @@ def test_octave_conversion(ureg, octave, scalar):
     ],
 )
 def test_decade_conversion(ureg, decade, scalar):
-    """Test that a decade can be converted to a scalar and back.
-    """
+    """Test that a decade can be converted to a scalar and back."""
     Q_ = ureg.Quantity
     assert Q_(decade, "decade").to("dimensionless").magnitude == pytest.approx(scalar)
     assert Q_(scalar, "dimensionless").to("decade").magnitude == pytest.approx(decade)
@@ -210,8 +211,7 @@ def test_decade_conversion(ureg, decade, scalar):
     ],
 )
 def test_dbm_mw_conversion(ureg, dbm_value, mw_value):
-    """Test dBm values can convert to mW and back.
-    """
+    """Test dBm values can convert to mW and back."""
     Q_ = ureg.Quantity
     assert Q_(dbm_value, "dBm").to("mW").magnitude == pytest.approx(mw_value)
     assert Q_(mw_value, "mW").to("dBm").magnitude == pytest.approx(dbm_value)
@@ -219,8 +219,7 @@ def test_dbm_mw_conversion(ureg, dbm_value, mw_value):
 
 @pytest.mark.xfail
 def test_compound_log_unit_multiply_definition(auto_ureg):
-    """Check that compound log units can be defined using multiply.
-    """
+    """Check that compound log units can be defined using multiply."""
     Q_ = auto_ureg.Quantity
     canonical_def = Q_(-161, "dBm") / auto_ureg.Hz
     mult_def = -161 * auto_ureg("dBm/Hz")
@@ -229,8 +228,7 @@ def test_compound_log_unit_multiply_definition(auto_ureg):
 
 @pytest.mark.xfail
 def test_compound_log_unit_quantity_definition(auto_ureg):
-    """Check that compound log units can be defined using ``Quantity()``.
-    """
+    """Check that compound log units can be defined using ``Quantity()``."""
     Q_ = auto_ureg.Quantity
     canonical_def = Q_(-161, "dBm") / auto_ureg.Hz
     quantity_def = Q_(-161, "dBm/Hz")
@@ -245,8 +243,7 @@ def test_compound_log_unit_parse_definition(auto_ureg):
 
 
 def test_compound_log_unit_parse_expr(auto_ureg):
-    """Check that compound log units can be defined using ``parse_expression()``.
-    """
+    """Check that compound log units can be defined using ``parse_expression()``."""
     Q_ = auto_ureg.Quantity
     canonical_def = Q_(-161, "dBm") / auto_ureg.Hz
     parse_def = auto_ureg.parse_expression("-161 dBm/Hz")
@@ -255,8 +252,7 @@ def test_compound_log_unit_parse_expr(auto_ureg):
 
 @pytest.mark.xfail
 def test_dbm_db_addition(auto_ureg):
-    """Test a dB value can be added to a dBm and the answer is correct.
-    """
+    """Test a dB value can be added to a dBm and the answer is correct."""
     power = (5 * auto_ureg.dBm) + (10 * auto_ureg.dB)
     assert power.to("dBm").magnitude == pytest.approx(15)
 
@@ -264,11 +260,14 @@ def test_dbm_db_addition(auto_ureg):
 @pytest.mark.xfail
 @pytest.mark.parametrize(
     "freq1,octaves,freq2",
-    [(100, 2.0, 400), (50, 1.0, 100), (200, 0.0, 200),],  # noqa: E231
+    [
+        (100, 2.0, 400),
+        (50, 1.0, 100),
+        (200, 0.0, 200),
+    ],  # noqa: E231
 )
 def test_frequency_octave_addition(auto_ureg, freq1, octaves, freq2):
-    """Test an Octave can be added to a frequency correctly
-    """
+    """Test an Octave can be added to a frequency correctly"""
     freq1 = freq1 * auto_ureg.Hz
     shift = octaves * auto_ureg.Octave
     new_freq = freq1 + shift

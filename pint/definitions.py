@@ -58,8 +58,7 @@ class PreprocessedDefinition(
 
 
 class _NotNumeric(Exception):
-    """Internal exception. Do not expose outside Pint
-    """
+    """Internal exception. Do not expose outside Pint"""
 
     def __init__(self, value):
         self.value = value
@@ -284,7 +283,7 @@ class UnitDefinition(Definition):
             )
 
         else:
-            raise DefinitionSyntaxError("Unable to assing a converter to the unit")
+            raise DefinitionSyntaxError("Unable to assign a converter to the unit")
 
         return cls(
             definition.name,

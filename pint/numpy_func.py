@@ -59,8 +59,7 @@ def _is_sequence_with_quantity_elements(obj):
 
 
 def _get_first_input_units(args, kwargs=None):
-    """Obtain the first valid unit from a collection of args and kwargs.
-    """
+    """Obtain the first valid unit from a collection of args and kwargs."""
     kwargs = kwargs or {}
     for arg in chain(args, kwargs.values()):
         if _is_quantity(arg):
@@ -149,6 +148,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     - "sqrt": square root of `first_input_units`
     - "reciprocal": reciprocal of `first_input_units`
     - "size": `first_input_units` raised to the power of `size`
+    - "invdiv": inverse of `div`, product of all following units divided by first argument unit
 
     Parameters
     ----------
@@ -206,7 +206,15 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         if size is None:
             raise ValueError('size argument must be given when unit_op=="size"')
         result_unit = first_input_units ** size
-
+    elif unit_op == "invdiv":
+        # Start with first arg in numerator, all others in denominator
+        product = getattr(
+            all_args[0], "units", first_input_units._REGISTRY.parse_units("")
+        )
+        for x in all_args[1:]:
+            if hasattr(x, "units"):
+                product /= x.units
+        result_unit = product ** -1
     else:
         raise ValueError("Output unit method {} not understood".format(unit_op))
 
@@ -305,6 +313,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             "delta",
             "delta,div",
             "div",
+            "invdiv",
             "variance",
             "square",
             "sqrt",
@@ -339,7 +348,7 @@ Define ufunc behavior collections.
 - `op_units_output_ufuncs`: determine output unit from input unit as determined by
   operation (see `get_op_output_unit`)
 """
-strip_unit_input_output_ufuncs = ["isnan", "isinf", "isfinite", "signbit"]
+strip_unit_input_output_ufuncs = ["isnan", "isinf", "isfinite", "signbit", "sign"]
 matching_input_bare_output_ufuncs = [
     "equal",
     "greater",
@@ -879,14 +888,13 @@ for func_str in ["diff", "ediff1d"]:
 for func_str in ["gradient"]:
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
 for func_str in ["linalg.solve"]:
-    implement_func("function", func_str, input_units=None, output_unit="div")
+    implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ["var", "nanvar"]:
     implement_func("function", func_str, input_units=None, output_unit="variance")
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):
-    """Return the result from a NumPy function/ufunc as wrapped by Pint.
-    """
+    """Return the result from a NumPy function/ufunc as wrapped by Pint."""
 
     if func_type == "function":
         handled = HANDLED_FUNCTIONS

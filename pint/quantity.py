@@ -493,8 +493,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._dimensionality
 
     def check(self, dimension):
-        """Return true if the quantity's dimension matches passed dimension.
-        """
+        """Return true if the quantity's dimension matches passed dimension."""
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
 
     @classmethod
@@ -569,7 +568,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self._units)
 
     def is_compatible_with(self, other, *contexts, **ctx_kwargs):
-        """ check if the other object is compatible
+        """check if the other object is compatible
 
         Parameters
         ----------
@@ -740,7 +739,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return newq
 
     def to_compact(self, unit=None):
-        """"Return Quantity rescaled to compact, human-readable units.
+        """ "Return Quantity rescaled to compact, human-readable units.
 
         To get output in terms of a different unit, use the unit parameter.
 
@@ -806,9 +805,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             unit_str, unit_power = units[0]
 
         if unit_power > 0:
-            power = int(math.floor(math.log10(abs(magnitude)) / unit_power / 3)) * 3
+            power = math.floor(math.log10(abs(magnitude)) / unit_power / 3) * 3
         else:
-            power = int(math.ceil(math.log10(abs(magnitude)) / unit_power / 3)) * 3
+            power = math.ceil(math.log10(abs(magnitude)) / unit_power / 3) * 3
 
         index = bisect.bisect_left(SI_powers, power)
 
@@ -1588,7 +1587,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def compare(self, other, op):
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, Quantity):
             if self.dimensionless:
                 return op(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()), other
@@ -1608,6 +1607,13 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                         raise OffsetUnitCalculusError(self._units)
             else:
                 raise ValueError("Cannot compare Quantity and {}".format(type(other)))
+
+        # Registry equality check based on util.SharedRegistryObject
+        if self._REGISTRY is not other._REGISTRY:
+            mess = "Cannot operate with {} and {} of different registries."
+            raise ValueError(
+                mess.format(self.__class__.__name__, other.__class__.__name__)
+            )
 
         if self._units == other._units:
             return op(self._magnitude, other._magnitude)
@@ -1785,7 +1791,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     @method_wraps("prod")
     def prod(self, *args, **kwargs):
-        """ Return the product of quantity elements over a given axis
+        """Return the product of quantity elements over a given axis
 
         Wraps np.prod().
         """
@@ -1890,12 +1896,22 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
     def tolist(self):
         units = self._units
-        return [
-            self.__class__(value, units).tolist()
-            if isinstance(value, list)
-            else self.__class__(value, units)
-            for value in self._magnitude.tolist()
-        ]
+
+        try:
+            values = self._magnitude.tolist()
+            if not isinstance(values, list):
+                return self.__class__(values, units)
+
+            return [
+                self.__class__(value, units).tolist()
+                if isinstance(value, list)
+                else self.__class__(value, units)
+                for value in self._magnitude.tolist()
+            ]
+        except AttributeError:
+            raise AttributeError(
+                f"Magnitude '{type(self._magnitude).__name__}' does not support tolist."
+            )
 
     # Measurement support
     def plus_minus(self, error, relative=False):
@@ -1939,8 +1955,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return [u for u in self._units if u.startswith("delta_")]
 
     def _has_compatible_delta(self, unit: str) -> bool:
-        """"Check if Quantity object has a delta_unit that is compatible with unit
-        """
+        """ "Check if Quantity object has a delta_unit that is compatible with unit"""
         deltas = self._get_delta_units()
         if "delta_" + unit in deltas:
             return True
@@ -1951,8 +1966,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         )
 
     def _ok_for_muldiv(self, no_offset_units=None):
-        """Checks if Quantity object can be multiplied or divided
-        """
+        """Checks if Quantity object can be multiplied or divided"""
 
         is_ok = True
         if no_offset_units is None:

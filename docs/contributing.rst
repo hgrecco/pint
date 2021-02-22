@@ -3,8 +3,17 @@
 Contributing to Pint
 ====================
 
-You can contribute in different ways:
+Pint uses (and thanks):
+- github_ to host the code
+- travis_ to test all commits and PRs.
+- coveralls_ to monitor coverage test coverage
+- readthedocs_ to host the documentation.
+- `bors-ng`_ as a merge bot and therefore every PR is tested before merging.
+- black_, isort_ and flake8_ as code linters and pre-commit_ to enforce them.
+- pytest_ to write tests
+- sphinx_ to write docs.
 
+You can contribute in different ways:
 
 Report issues
 -------------
@@ -19,17 +28,22 @@ Contribute code
 To contribute fixes, code or documentation to Pint, fork Pint in github_ and submit
 the changes using a pull request against the **master** branch.
 
-- If you are fixing a bug, add a test to test_issues.py, or amend/enrich the general
-  test suite to cover the use case.
-- If you are submitting new code, add tests and documentation.
+- If you are submitting new code, add tests (see below) and documentation.
 - Write "Closes #<bug number>" in the PR description or a comment, as described in the
   `github docs`_.
 - Log the change in the CHANGES file.
-- Execute ``black -t py36 . && isort -rc . && flake8`` and resolve any issues.
-
-Pint uses `bors-ng` as a merge bot and therefore every PR is tested before merging.
+- Execute ``pre-commit run --all-files`` and resolve any issues.
 
 In any case, feel free to use the `issue tracker`_ to discuss ideas for new features or improvements.
+
+Notice that we will not merge a PR if tests are failing. In certain cases tests pass in your
+machine but not in travis. There might be multiple reasons for this but these are some of
+the most common
+
+- Your new code does not work for other Python or Numpy versions.
+- The documentation is not being built properly or the examples in the docs are
+  not working.
+- linters are reporting that the code does no adhere to the standards.
 
 
 Setting up your environment
@@ -44,6 +58,27 @@ environment on Linux or OSX with the following commands::
     $ source venv/bin/activate
     $ pip install -e .
     $ pip install -r requirements_docs.txt
+    $ pip install pre-commit # This step and the next are optional but recommended.
+    $ pre-commit install
+
+
+Writing tests
+-------------
+
+We use pytest_ for testing. If you contribute code you need to add tests:
+
+- If you are fixing a bug, add a test to `test_issues.py`, or amend/enrich the general
+  test suite to cover the use case.
+- If you are adding a new feature, add a test in the appropiate place. There is usually
+  a `test_X.py` for each `X.py` file. There are some other test files that deal with
+  individual/specific features. If in doubt, ask.
+- Prefer functions to classes.
+- When using classes, derive from `QuantityTestCase`.
+- Use `parametrize` as much as possible.
+- Use `fixtures` (see conftest.py) instead of instantiating the registry yourself.
+- Checkout `helpers.py` for some convenience functions before reinventing the wheel.
+- When your test does not modify the registry, use `sess_registry` fixture.
+
 
 Running tests and building documentation
 ----------------------------------------
@@ -94,3 +129,12 @@ features that work best as an extension pacakage versus direct inclusion in Pint
 .. _`issue tracker`: https://github.com/hgrecco/pint/issues
 .. _`bors-ng`: https://github.com/bors-ng/bors-ng
 .. _`github docs`: https://help.github.com/articles/closing-issues-via-commit-messages/
+.. _travis: https://travis-ci.com/
+.. _coveralls: https://coveralls.io/
+.. _readthedocs: https://readthedocs.org/
+.. _pre-commit: https://pre-commit.com/
+.. _black: https://black.readthedocs.io/en/stable/
+.. _isort: https://pycqa.github.io/isort/
+.. _flake8: https://flake8.pycqa.org/en/latest/
+.. _pytest: https://docs.pytest.org/en/stable/
+.. _sphinx: https://www.sphinx-doc.org/en/master/

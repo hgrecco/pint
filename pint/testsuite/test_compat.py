@@ -1,23 +1,18 @@
 import math
 from datetime import datetime, timedelta
 
-import pytest
-
-from pint.compat import eq, isnan, zero_or_nan
-
-from .helpers import requires_numpy
+from pint.compat import eq, isnan, np, zero_or_nan
+from pint.testsuite import helpers
 
 
-@pytest.mark.parametrize("check_all", [False, True])
+@helpers.check_all_bool
 def test_eq(check_all):
     assert eq(0, 0, check_all)
     assert not eq(0, 1, check_all)
 
 
-@requires_numpy()
+@helpers.requires_numpy
 def test_eq_numpy():
-    import numpy as np
-
     assert eq(np.array([1, 2]), np.array([1, 2]), True)
     assert not eq(np.array([1, 2]), np.array([1, 3]), True)
     np.testing.assert_equal(
@@ -34,7 +29,7 @@ def test_eq_numpy():
     assert not eq(np.array([1, 2]), 1, True)
 
 
-@pytest.mark.parametrize("check_all", [False, True])
+@helpers.check_all_bool
 def test_isnan(check_all):
     assert not isnan(0, check_all)
     assert not isnan(0.0, check_all)
@@ -44,10 +39,8 @@ def test_isnan(check_all):
     assert not isnan("foo", check_all)
 
 
-@requires_numpy()
+@helpers.requires_numpy
 def test_isnan_numpy():
-    import numpy as np
-
     assert isnan(np.nan, True)
     assert isnan(np.nan, False)
     assert not isnan(np.array([0, 0]), True)
@@ -61,10 +54,8 @@ def test_isnan_numpy():
     )
 
 
-@requires_numpy()
+@helpers.requires_numpy
 def test_isnan_nat():
-    import numpy as np
-
     a = np.array(["2000-01-01", "NaT"], dtype="M8")
     b = np.array(["2000-01-01", "2000-01-02"], dtype="M8")
     assert isnan(a, True)
@@ -79,7 +70,7 @@ def test_isnan_nat():
     assert isnan(a[1], False)
 
 
-@pytest.mark.parametrize("check_all", [False, True])
+@helpers.check_all_bool
 def test_zero_or_nan(check_all):
     assert zero_or_nan(0, check_all)
     assert zero_or_nan(math.nan, check_all)
@@ -89,10 +80,8 @@ def test_zero_or_nan(check_all):
     assert not zero_or_nan("foo", check_all)
 
 
-@requires_numpy()
+@helpers.requires_numpy
 def test_zero_or_nan_numpy():
-    import numpy as np
-
     assert zero_or_nan(np.nan, True)
     assert zero_or_nan(np.nan, False)
     assert zero_or_nan(np.array([0, np.nan]), True)

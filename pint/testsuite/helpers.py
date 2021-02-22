@@ -1,7 +1,15 @@
 import doctest
+import math
+import pickle
 import re
-import unittest
-from distutils.version import StrictVersion
+import warnings
+from distutils.version import LooseVersion
+from numbers import Number
+
+import pytest
+
+from pint import Quantity
+from pint.compat import ndarray, np
 
 from ..compat import (
     HAS_BABEL,
@@ -10,68 +18,6 @@ from ..compat import (
     HAS_UNCERTAINTIES,
     NUMPY_VER,
 )
-
-
-def requires_array_function_protocol():
-    if not HAS_NUMPY:
-        return unittest.skip("Requires NumPy")
-    return unittest.skipUnless(
-        HAS_NUMPY_ARRAY_FUNCTION, "Requires __array_function__ protocol to be enabled"
-    )
-
-
-def requires_not_array_function_protocol():
-    if not HAS_NUMPY:
-        return unittest.skip("Requires NumPy")
-    return unittest.skipIf(
-        HAS_NUMPY_ARRAY_FUNCTION,
-        "Requires __array_function__ protocol to be unavailable or disabled",
-    )
-
-
-def requires_numpy_previous_than(version):
-    if not HAS_NUMPY:
-        return unittest.skip("Requires NumPy")
-    return unittest.skipUnless(
-        StrictVersion(NUMPY_VER) < StrictVersion(version),
-        "Requires NumPy < %s" % version,
-    )
-
-
-def requires_numpy_at_least(version):
-    if not HAS_NUMPY:
-        return unittest.skip("Requires NumPy")
-    return unittest.skipUnless(
-        StrictVersion(NUMPY_VER) >= StrictVersion(version),
-        "Requires NumPy >= %s" % version,
-    )
-
-
-def requires_numpy():
-    return unittest.skipUnless(HAS_NUMPY, "Requires NumPy")
-
-
-def requires_not_numpy():
-    return unittest.skipIf(HAS_NUMPY, "Requires NumPy not to be installed.")
-
-
-def requires_babel():
-    return unittest.skipUnless(HAS_BABEL, "Requires Babel with units support")
-
-
-def requires_not_babel():
-    return unittest.skipIf(HAS_BABEL, "Requires Babel not to be installed")
-
-
-def requires_uncertainties():
-    return unittest.skipUnless(HAS_UNCERTAINTIES, "Requires Uncertainties")
-
-
-def requires_not_uncertainties():
-    return unittest.skipIf(
-        HAS_UNCERTAINTIES, "Requires Uncertainties not to be installed."
-    )
-
 
 _number_re = r"([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)"
 _q_re = re.compile(
@@ -140,3 +86,144 @@ class PintOutputChecker(doctest.OutputChecker):
             return self.check_output(parsed_want, parsed_got, optionflags)
 
         return False
+
+
+def _get_comparable_magnitudes(first, second, msg):
+    if isinstance(first, Quantity) and isinstance(second, Quantity):
+        second = second.to(first)
+        assert first.units == second.units, msg + " Units are not equal."
+        m1, m2 = first.magnitude, second.magnitude
+    elif isinstance(first, Quantity):
+        assert first.dimensionless, msg + " The first is not dimensionless."
+        first = first.to("")
+        m1, m2 = first.magnitude, second
+    elif isinstance(second, Quantity):
+        assert second.dimensionless, msg + " The second is not dimensionless."
+        second = second.to("")
+        m1, m2 = first, second.magnitude
+    else:
+        m1, m2 = first, second
+
+    return m1, m2
+
+
+def assert_quantity_equal(first, second, msg=None):
+    if msg is None:
+        msg = "Comparing %r and %r. " % (first, second)
+
+    m1, m2 = _get_comparable_magnitudes(first, second, msg)
+    msg += " (Converted to %r and %r)" % (m1, m2)
+
+    if isinstance(m1, ndarray) or isinstance(m2, ndarray):
+        np.testing.assert_array_equal(m1, m2, err_msg=msg)
+    elif not isinstance(m1, Number):
+        warnings.warn(RuntimeWarning)
+        return
+    elif not isinstance(m2, Number):
+        warnings.warn(RuntimeWarning)
+        return
+    elif math.isnan(m1):
+        assert math.isnan(m2), msg
+    elif math.isnan(m2):
+        assert math.isnan(m1), msg
+    else:
+        assert m1 == m2, msg
+
+
+def assert_quantity_almost_equal(first, second, rtol=1e-07, atol=0, msg=None):
+    if msg is None:
+        try:
+            msg = "Comparing %r and %r. " % (first, second)
+        except TypeError:
+            try:
+                msg = "Comparing %s and %s. " % (first, second)
+            except Exception:
+                msg = "Comparing"
+
+    m1, m2 = _get_comparable_magnitudes(first, second, msg)
+    msg += " (Converted to %r and %r)" % (m1, m2)
+
+    if isinstance(m1, ndarray) or isinstance(m2, ndarray):
+        np.testing.assert_allclose(m1, m2, rtol=rtol, atol=atol, err_msg=msg)
+    elif not isinstance(m1, Number):
+        warnings.warn(RuntimeWarning)
+        return
+    elif not isinstance(m2, Number):
+        warnings.warn(RuntimeWarning)
+        return
+    elif math.isnan(m1):
+        assert math.isnan(m2), msg
+    elif math.isnan(m2):
+        assert math.isnan(m1), msg
+    elif math.isinf(m1):
+        assert math.isinf(m2), msg
+    elif math.isinf(m2):
+        assert math.isinf(m1), msg
+    else:
+        # Numpy version (don't like because is not symmetric)
+        # assert abs(m1 - m2) <= atol + rtol * abs(m2), msg
+        assert abs(m1 - m2) <= max(rtol * max(abs(m1), abs(m2)), atol), msg
+
+
+requires_numpy = pytest.mark.skipif(not HAS_NUMPY, reason="Requires NumPy")
+requires_not_numpy = pytest.mark.skipif(
+    HAS_NUMPY, reason="Requires NumPy not to be installed."
+)
+
+
+def requires_array_function_protocol():
+    if not HAS_NUMPY:
+        return pytest.mark.skip("Requires NumPy")
+    return pytest.mark.skipif(
+        not HAS_NUMPY_ARRAY_FUNCTION,
+        reason="Requires __array_function__ protocol to be enabled",
+    )
+
+
+def requires_not_array_function_protocol():
+    if not HAS_NUMPY:
+        return pytest.mark.skip("Requires NumPy")
+    return pytest.mark.skipif(
+        HAS_NUMPY_ARRAY_FUNCTION,
+        reason="Requires __array_function__ protocol to be unavailable or disabled",
+    )
+
+
+def requires_numpy_previous_than(version):
+    if not HAS_NUMPY:
+        return pytest.mark.skip("Requires NumPy")
+    return pytest.mark.skipif(
+        not LooseVersion(NUMPY_VER) < LooseVersion(version),
+        reason="Requires NumPy < %s" % version,
+    )
+
+
+def requires_numpy_at_least(version):
+    if not HAS_NUMPY:
+        return pytest.mark.skip("Requires NumPy")
+    return pytest.mark.skipif(
+        not LooseVersion(NUMPY_VER) >= LooseVersion(version),
+        reason="Requires NumPy >= %s" % version,
+    )
+
+
+requires_babel = pytest.mark.skipif(
+    not HAS_BABEL, reason="Requires Babel with units support"
+)
+requires_not_babel = pytest.mark.skipif(
+    HAS_BABEL, reason="Requires Babel not to be installed"
+)
+requires_uncertainties = pytest.mark.skipif(
+    not HAS_UNCERTAINTIES, reason="Requires Uncertainties"
+)
+requires_not_uncertainties = pytest.mark.skipif(
+    HAS_UNCERTAINTIES, reason="Requires Uncertainties not to be installed."
+)
+
+# Parametrization
+
+allprotos = pytest.mark.parametrize(
+    ("protocol",), [(p,) for p in range(pickle.HIGHEST_PROTOCOL + 1)]
+)
+
+check_all_bool = pytest.mark.parametrize("check_all", [False, True])

@@ -31,3 +31,7 @@ notebooks/pandas_test.csv
 
 # dask stuff
 dask-worker-space
+
+# airspeed velocity bechmark
+.asv/
+benchmarks/hashes.txt
