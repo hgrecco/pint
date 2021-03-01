@@ -36,17 +36,6 @@ except ImportError:
     # Backport for Python < 3.8
     from importlib_metadata import version
 
-try:
-    from pint_pandas import PintArray, PintType
-
-    del PintType
-    del PintArray
-
-    _HAS_PINT_PANDAS = True
-except ImportError:
-    _HAS_PINT_PANDAS = False
-    _, _pint_pandas_error, _ = sys.exc_info()
-
 try:  # pragma: no cover
     __version__ = version("pint")
 except Exception:  # pragma: no cover
