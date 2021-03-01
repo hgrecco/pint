@@ -11,8 +11,6 @@
     :license: BSD, see LICENSE for more details.
 """
 
-import sys
-
 from .context import Context
 from .errors import (  # noqa: F401
     DefinitionSyntaxError,
