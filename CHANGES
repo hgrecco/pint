@@ -9,12 +9,13 @@ Pint Changelog
 - Fix comparisons between Quantities and Measurements.
    (Issue #1134, thanks lewisamarshall)
 - Implemented benchmarks based on airspeed velocity.
-- Fix tolist function with scalar ndarray. 
+- Fix tolist function with scalar ndarray.
   (Issue #1195, thanks jules-ch)
 - UnitsContainer returns false if other is str and cannnot be parsed
   (Issue #1179, thanks rfrowe)
 - Add Github Actions CI. (Issue #1236)
 - Fix numpy.linalg.solve unit output. (Issue #1246)
+- Add numpy.linalg.norm implementation. (Issue #1250)
 
 
 0.16.1 (2020-09-22)
