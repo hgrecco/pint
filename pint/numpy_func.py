@@ -724,7 +724,7 @@ def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output
         module = np
         for part in parts[:-1]:
             module = getattr(module, part, None)
-        func = getattr(module, part[-1], None)
+        func = getattr(module, parts[-1], None)
 
     # if NumPy does not implement it, do not implement it either
     if func is None:
