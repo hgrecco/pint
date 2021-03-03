@@ -1158,7 +1158,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_sliding_window_view(self):
         q = self.Q_([[1, 2, 2, 1], [2, 1, 1, 2], [1, 2, 2, 1]], "m")
         actual = np.lib.stride_tricks.sliding_window_view(q, window_shape=(3, 3))
-        expected = self.Q_([[[[1, 2, 2], [2, 1, 1], [1, 2, 2]], [[2, 2, 1], [1, 1, 2], [2, 2, 1]]]], "m")
+        expected = self.Q_(
+            [[[[1, 2, 2], [2, 1, 1], [1, 2, 2]], [[2, 2, 1], [1, 1, 2], [2, 2, 1]]]],
+            "m",
+        )
         helpers.assert_quantity_equal(actual, expected)
 
     @helpers.requires_array_function_protocol()
