@@ -717,7 +717,13 @@ def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output
     if np is None:
         return
 
-    func = getattr(np, func_str, None)
+    if "." not in func_str:
+        func = getattr(np, func_str, None)
+    else:
+        func = np
+        for part in func_str.split("."):
+            func = getattr(func, part)
+
     # if NumPy does not implement it, do not implement it either
     if func is None:
         return
@@ -790,6 +796,7 @@ for func_str, unit_arguments, wrap_output in [
     ("compress", "a", True),
     ("linspace", ["start", "stop"], True),
     ("tile", "A", True),
+    ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
     ("insert", ["arr", "values"], True),
     ("resize", "a", True),
