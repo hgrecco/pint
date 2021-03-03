@@ -15,6 +15,7 @@ Pint Changelog
   (Issue #1179, thanks rfrowe)
 - Add Github Actions CI. (Issue #1236)
 - Fix numpy.linalg.solve unit output. (Issue #1246)
+- Support numpy.lib.stride_tricks.sliding_window_view. (Issue #1255)
 
 
 0.16.1 (2020-09-22)

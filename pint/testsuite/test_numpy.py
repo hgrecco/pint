@@ -1154,6 +1154,17 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.tile(self.q, 2), np.array([[1, 2, 1, 2], [3, 4, 3, 4]]) * self.ureg.m
         )
 
+    @helpers.requires_numpy_at_least("1.20")
+    @helpers.requires_array_function_protocol()
+    def test_sliding_window_view(self):
+        q = self.Q_([[1, 2, 2, 1], [2, 1, 1, 2], [1, 2, 2, 1]], "m")
+        actual = np.lib.stride_tricks.sliding_window_view(q, window_shape=(3, 3))
+        expected = self.Q_(
+            [[[[1, 2, 2], [2, 1, 1], [1, 2, 2]], [[2, 2, 1], [1, 1, 2], [2, 2, 1]]]],
+            "m",
+        )
+        helpers.assert_quantity_equal(actual, expected)
+
     @helpers.requires_array_function_protocol()
     def test_rot90(self):
         helpers.assert_quantity_equal(
