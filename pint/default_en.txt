@@ -397,6 +397,7 @@ coulomb = ampere * second = C
 abcoulomb = 10 * C = abC
 faraday = e * N_A * mole
 conventional_coulomb_90 = K_J90 * R_K90 / (K_J * R_K) * coulomb = C_90
+ampere_hour = ampere * hour = Ah
 
 # Electric potential
 [electric_potential] = [energy] / [charge]
