@@ -15,9 +15,9 @@ It's significantly faster to perform mathematical operations on magnitudes (even
 
 .. doctest::
 
-   In [1]: from pint import UnitRegistry
+   In [1]: import pint
 
-   In [2]: ureg = UnitRegistry()
+   In [2]: ureg = pint.get_application_registry()
 
    In [3]: q1 =ureg('1m')
 
@@ -67,7 +67,7 @@ A better way to use magnitudes is to use pint's wraps decorator (See :ref:`wrapp
 
     In [1]: import pint
 
-    In [2]: ureg = pint.UnitRegistry()
+    In [2]: ureg = pint.get_application_registry()
 
     In [3]: import numpy as np
 

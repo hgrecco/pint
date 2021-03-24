@@ -748,7 +748,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         -------
 
         >>> import pint
-        >>> ureg = pint.UnitRegistry()
+        >>> ureg = pint.get_application_registry()
         >>> (200e-9*ureg.s).to_compact()
         <Quantity(200.0, 'nanosecond')>
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')

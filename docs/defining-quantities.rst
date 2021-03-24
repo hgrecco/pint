@@ -16,8 +16,8 @@ quantity by multiplying a ``Unit()`` and a scalar:
 
 .. doctest::
 
-    >>> from pint import UnitRegistry
-    >>> ureg = UnitRegistry()
+    >>> import pint
+    >>> ureg = pint.get_application_registry()
     >>> ureg.meter
     <Unit('meter')>
     >>> 30.0 * ureg.meter

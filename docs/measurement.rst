@@ -16,8 +16,8 @@ quantity using the ``plus_minus()`` method.
    :skipif: not_installed['uncertainties']
 
    >>> import numpy as np
-   >>> from pint import UnitRegistry
-   >>> ureg = UnitRegistry()
+   >>> import pint
+   >>> ureg = pint.get_application_registry()
    >>> book_length = (20. * ureg.centimeter).plus_minus(2.)
    >>> print(book_length)
    (20.0 +/- 2.0) centimeter

@@ -1704,7 +1704,7 @@ class ContextRegistry(BaseRegistry):
         Context can be called by their name:
 
           >>> import pint
-          >>> ureg = pint.UnitRegistry()
+          >>> ureg = pint.get_application_registry()
           >>> ureg.add_context(pint.Context('one'))
           >>> ureg.add_context(pint.Context('two'))
           >>> with ureg.context('one'):

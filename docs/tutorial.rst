@@ -5,12 +5,13 @@ Tutorial
 Follow the steps below and learn how to use Pint to track physical quantities
 and perform unit conversions in Python.
 
-Initializing a Registry
------------------------
+Obtaining / Initializing a Registry
+-----------------------------------
 
-Before using Pint, initialize a :class:`UnitRegistry() <pint.registry.UnitRegistry>`
-object. The ``UnitRegistry`` stores the unit definitions, their relationships,
-and handles conversions between units.
+Before using Pint, you need to obtain an existing (or initialize a new)
+:class:`UnitRegistry() <pint.registry.UnitRegistry>` object. The ``UnitRegistry``
+stores the unit definitions, their relationships, and handles conversions
+between units.
 
 .. doctest::
 
@@ -20,10 +21,23 @@ and handles conversions between units.
 If no parameters are given to the constructor, the ``UnitRegistry`` is populated
 with the `default list of units`_ and prefixes.
 
+If you work with other packages that also use pint, it is usually convenient
+to use a common ``UnitRegistry``. Pint provides a global "application Registry" that
+can be accessed by all packages in the same process. Because of this, unless
+you need a custom Registry, the preferred way of obtaining the Registry for your
+application is to use :func:`pint.get_application_registry()` instead of
+directly creating one with :class:`UnitRegistry() <pint.registry.UnitRegistry>`:
+
+.. doctest::
+
+   >>> import pint
+   >>> ureg = pint.get_application_registry()
+
+
 Defining a Quantity
 -------------------
 
-Once you've initialized your ``UnitRegistry``, you can define quantities easily:
+Once you've obtained your ``UnitRegistry``, you can define quantities easily:
 
 .. doctest::
 
@@ -428,7 +442,19 @@ Using Pint in your projects
 
 If you use Pint in multiple modules within your Python package, you normally
 want to avoid creating multiple instances of the unit registry.
-The best way to do this is by instantiating the registry in a single place. For
+
+If possible, try to use the default application registry, which will be shared
+with all other packages that also use ``get_application_registry()`` to obtain
+their Registry:
+
+.. code-block:: python
+
+   import pint
+   ureg = pint.get_application_registry()
+   Q_ = ureg.Quantity
+
+Alternatively, if you need a custom unit registry within your package, the best
+way to do this is by instantiating the registry in a single place. For
 example, you can add the following code to your package ``__init__.py``
 
 .. code-block:: python

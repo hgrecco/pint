@@ -63,8 +63,8 @@ class Context:
     -------
 
     >>> from pint.util import UnitsContainer
-    >>> from pint import Context, UnitRegistry
-    >>> ureg = UnitRegistry()
+    >>> from pint import Context, get_application_registry
+    >>> ureg = get_application_registry()
     >>> timedim = UnitsContainer({'[time]': 1})
     >>> spacedim = UnitsContainer({'[length]': 1})
     >>> def time_to_len(ureg, time):

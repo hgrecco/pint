@@ -10,8 +10,8 @@ parameters.
 
 .. testsetup:: *
 
-   from pint import UnitRegistry
-   ureg = UnitRegistry()
+   import pint
+   ureg = pint.get_application_registry()
    Q_ = ureg.Quantity
 
 To start with a very simple case, consider that you want to find a dimensionless
@@ -41,8 +41,8 @@ you can use derived dimensions such as speed:
 
 .. doctest::
 
-    >>> from pint import UnitRegistry
-    >>> ureg = UnitRegistry()
+    >>> import pint
+    >>> ureg = pint.get_application_registry()
     >>> ureg.pi_theorem({'V': '[speed]', 'T': '[time]', 'L': '[length]'})
     [{'V': 1.0, 'T': 1.0, 'L': -1.0}]
 
