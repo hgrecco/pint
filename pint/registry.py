@@ -4,7 +4,7 @@ pint.registry
 
 Defines the Registry, a class to contain units and their relations.
 
-The module actually defines 5 registries with different capabilites:
+The module actually defines 5 registries with different capabilities:
 
 - BaseRegistry: Basic unit definition and querying.
                 Conversion between multiplicative units.
@@ -86,7 +86,7 @@ except ImportError:
     import importlib_resources
 
 
-_BLOCK_RE = re.compile(r" |\(")
+_BLOCK_RE = re.compile(r"[ (]")
 
 
 @functools.lru_cache()
@@ -1468,7 +1468,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
 class ContextRegistry(BaseRegistry):
     """Handle of Contexts.
 
-    Conversion between units with different dimenstions according
+    Conversion between units with different dimensions according
     to previously established relations (contexts).
     (e.g. in the spectroscopy, conversion between frequency and energy is possible)
 
@@ -1940,7 +1940,7 @@ class SystemRegistry(BaseRegistry):
             return self._groups[name]
 
         if not create_if_needed:
-            raise ValueError("Unkown group %s" % name)
+            raise ValueError("Unknown group %s" % name)
 
         return self.Group(name)
 
@@ -1983,7 +1983,7 @@ class SystemRegistry(BaseRegistry):
             return self._systems[name]
 
         if not create_if_needed:
-            raise ValueError("Unkown system %s" % name)
+            raise ValueError("Unknown system %s" % name)
 
         return self.System(name)
 
@@ -2112,7 +2112,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         In the context of a multiplication of units, interpret
         non-multiplicative units as their *delta* counterparts.
     autoconvert_offset_to_baseunit :
-        If True converts offset units in quantites are
+        If True converts offset units in quantities are
         converted to their base units in multiplicative
         context. If False no conversion happens.
     on_redefinition : str

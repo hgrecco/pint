@@ -805,9 +805,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             unit_str, unit_power = units[0]
 
         if unit_power > 0:
-            power = int(math.floor(math.log10(abs(magnitude)) / unit_power / 3)) * 3
+            power = math.floor(math.log10(abs(magnitude)) / unit_power / 3) * 3
         else:
-            power = int(math.ceil(math.log10(abs(magnitude)) / unit_power / 3)) * 3
+            power = math.ceil(math.log10(abs(magnitude)) / unit_power / 3) * 3
 
         index = bisect.bisect_left(SI_powers, power)
 
@@ -1385,15 +1385,19 @@ class Quantity(PrettyIPython, SharedRegistryObject):
             if is_duck_array_type(type(getattr(other, "_magnitude", other))):
                 # arrays are refused as exponent, because they would create
                 # len(array) quantities of len(set(array)) different units
-                # unless the base is dimensionless.
+                # unless the base is dimensionless. Ensure dimensionless
+                # units are reduced to "dimensionless".
+                # Note: this will strip Units of degrees or radians from Quantity
                 if self.dimensionless:
                     if getattr(other, "dimensionless", False):
-                        self._magnitude **= other.m_as("")
+                        self._magnitude = self.m_as("") ** other.m_as("")
+                        self._units = self.UnitsContainer()
                         return self
                     elif not getattr(other, "dimensionless", True):
                         raise DimensionalityError(other._units, "dimensionless")
                     else:
-                        self._magnitude **= other
+                        self._magnitude = self.m_as("") ** other
+                        self._units = self.UnitsContainer()
                         return self
                 elif np.size(other) > 1:
                     raise DimensionalityError(
@@ -1443,13 +1447,20 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # arrays are refused as exponent, because they would create
                 # len(array) quantities of len(set(array)) different units
                 # unless the base is dimensionless.
+                # Note: this will strip Units of degrees or radians from Quantity
                 if self.dimensionless:
                     if getattr(other, "dimensionless", False):
-                        return self.__class__(self.m ** other.m_as(""))
+                        return self.__class__(
+                            self._convert_magnitude_not_inplace(self.UnitsContainer())
+                            ** other.m_as("")
+                        )
                     elif not getattr(other, "dimensionless", True):
                         raise DimensionalityError(other._units, "dimensionless")
                     else:
-                        return self.__class__(self.m ** other)
+                        return self.__class__(
+                            self._convert_magnitude_not_inplace(self.UnitsContainer())
+                            ** other
+                        )
                 elif np.size(other) > 1:
                     raise DimensionalityError(
                         self._units,

@@ -13,7 +13,7 @@ import re
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse
 
-__JOIN_REG_EXP = re.compile(r"\{\d*\}")
+__JOIN_REG_EXP = re.compile(r"{\d*}")
 
 
 def _join(fmt, iterable):
@@ -235,7 +235,7 @@ def formatter(
     return _join(division_fmt, [pos_ret, neg_ret])
 
 
-# Extract just the type from the specification mini-langage: see
+# Extract just the type from the specification mini-language: see
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
 # We also add uS for uncertainties.
 _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
