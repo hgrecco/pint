@@ -130,7 +130,7 @@ to true. In this mode, pint behaves differently:
 
 .. doctest::
 
-    >>> ureg = UnitRegistry(autoconvert_offset_to_baseunit = True)
+    >>> ureg = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
     >>> T = 25.4 * ureg.degC
     >>> T
     <Quantity(25.4, 'degree_Celsius')>
