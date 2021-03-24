@@ -4,7 +4,8 @@ Pint Changelog
 0.18 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Encourage using application registry in docs
+  (PR #1275, thanks cpascual)
 
 
 0.17 (2021-03-22)
