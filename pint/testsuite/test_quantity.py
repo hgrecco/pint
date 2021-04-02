@@ -58,6 +58,11 @@ class TestQuantity(QuantityTestCase):
             assert 4.2 * self.ureg.meter == self.Q_(4.2, 2 * self.ureg.meter)
         assert len(caplog.records) == 1
 
+    def test_quantity_with_quantity(self):
+        x = self.Q_(4.2, "m")
+        assert self.Q_(x, "m").magnitude == 4.2
+        assert self.Q_(x, "cm").magnitude == 420.0
+
     def test_quantity_bool(self):
         assert self.Q_(1, None)
         assert self.Q_(1, "meter")
