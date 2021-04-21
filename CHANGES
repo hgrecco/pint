@@ -4,7 +4,7 @@ Pint Changelog
 0.18 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Added dBW, decibel Watts, which is used in RF high power applications
 
 
 0.17 (2021-03-22)

@@ -68,6 +68,10 @@ class TestLogarithmicQuantity(QuantityTestCase):
         helpers.assert_quantity_almost_equal(
             self.Q_(0.0, "dBm"), self.Q_(29.999999999999996, "dBu"), atol=1e-7
         )
+        # ## Test dB to dB units dBm - dBW
+        # 0 dBW = 1W = 1e3 mW = 30 dBm
+        helpers.assert_quantity_almost_equal(
+            self.Q_(0.0, "dBW"), self.Q_(29.999999999999996, "dBm"), atol=1e-7
 
     def test_mix_regular_log_units(self):
         # Test regular-logarithmic mixed definition, such as dB/km or dB/cm
@@ -87,6 +91,8 @@ class TestLogarithmicQuantity(QuantityTestCase):
 
 
 log_unit_names = [
+    "decibelwatt",
+    "dBW",
     "decibelmilliwatt",
     "dBm",
     "decibelmicrowatt",
@@ -138,6 +144,7 @@ def test_quantity_by_multiplication(auto_ureg, unit_name, mag):
 @pytest.mark.parametrize(
     "unit1,unit2",
     [
+        ("decibelwatt", "dBW"),
         ("decibelmilliwatt", "dBm"),
         ("decibelmicrowatt", "dBu"),
         ("decibel", "dB"),
