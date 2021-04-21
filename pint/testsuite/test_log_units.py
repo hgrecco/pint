@@ -72,6 +72,7 @@ class TestLogarithmicQuantity(QuantityTestCase):
         # 0 dBW = 1W = 1e3 mW = 30 dBm
         helpers.assert_quantity_almost_equal(
             self.Q_(0.0, "dBW"), self.Q_(29.999999999999996, "dBm"), atol=1e-7
+        )
 
     def test_mix_regular_log_units(self):
         # Test regular-logarithmic mixed definition, such as dB/km or dB/cm
