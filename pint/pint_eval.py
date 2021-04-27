@@ -25,8 +25,24 @@ _OP_PRIORITY = {
     "-": 0,
 }
 
+
+def _power(left, right):
+    from .compat import is_duck_array
+    from .quantity import Quantity
+
+    if (
+        isinstance(left, Quantity)
+        and is_duck_array(left.magnitude)
+        and left.dtype.kind not in "cf"
+        and right < 0
+    ):
+        left = left.astype(float)
+
+    return operator.pow(left, right)
+
+
 _BINARY_OPERATOR_MAP = {
-    "**": operator.pow,
+    "**": _power,
     "*": operator.mul,
     "": operator.mul,  # operator for implicit ops
     "/": operator.truediv,
