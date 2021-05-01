@@ -4,6 +4,7 @@ Contributing to Pint
 ====================
 
 Pint uses (and thanks):
+
 - github_ to host the code
 - travis_ to test all commits and PRs.
 - coveralls_ to monitor coverage test coverage
@@ -105,7 +106,7 @@ Pint naturally integrates with other libraries in the scientific Python ecosyste
 a small number of
 `extension/compatibility packages<numpy.html#Compatibility-Packages>`_ have arisen to
 aid in compatibility between certain packages. Pint's rule of thumb for integration
-features that work best as an extension pacakage versus direct inclusion in Pint is:
+features that work best as an extension package versus direct inclusion in Pint is:
 
 * Extension (separate packages)
 
