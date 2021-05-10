@@ -875,7 +875,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                     self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
     def get_compatible_units(self, input_units, group_or_system=None):
-        """"""
+        """ """
         input_units = to_units_container(input_units)
 
         equiv = self._get_compatible_units(input_units, group_or_system)
@@ -883,7 +883,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return frozenset(self.Unit(eq) for eq in equiv)
 
     def _get_compatible_units(self, input_units, group_or_system):
-        """"""
+        """ """
         if not input_units:
             return frozenset()
 
@@ -1299,7 +1299,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
     def _parse_units(self, input_string, as_delta=None, case_sensitive=None):
-        """"""
+        """ """
         if as_delta is None:
             as_delta = self.default_as_delta
 
