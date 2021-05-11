@@ -17,7 +17,7 @@ jobs:
           - python-version: 3.8
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
+            extras: "sparse xarray pooch netCDF4 dask[complete] graphviz babel==2.8"
           - python-version: 3.9
             numpy: numpy
 

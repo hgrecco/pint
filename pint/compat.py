@@ -211,6 +211,10 @@ def is_duck_array_type(cls) -> bool:
     )
 
 
+def is_duck_array(obj):
+    return is_duck_array_type(type(obj))
+
+
 def eq(lhs, rhs, check_all: bool):
     """Comparison of scalars and arrays.
 
