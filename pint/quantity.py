@@ -201,52 +201,49 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
             raise TypeError(f"Quantity cannot wrap upcast type {type(value)}")
-        elif units is None:
-            if isinstance(value, str):
-                if value == "":
-                    raise ValueError(
-                        "Expression to parse as Quantity cannot " "be an empty string."
-                    )
-                ureg = SharedRegistryObject.__new__(cls)._REGISTRY
-                inst = ureg.parse_expression(value)
-                return cls.__new__(cls, inst)
-            elif isinstance(value, cls):
-                inst = copy.copy(value)
-            else:
-                inst = SharedRegistryObject.__new__(cls)
-                inst._magnitude = _to_magnitude(
-                    value, inst.force_ndarray, inst.force_ndarray_like
-                )
-                inst._units = inst.UnitsContainer()
-        elif isinstance(units, (UnitsContainer, UnitDefinition)):
-            inst = SharedRegistryObject.__new__(cls)
-            inst._magnitude = _to_magnitude(
-                value, inst.force_ndarray, inst.force_ndarray_like
+
+        if units is None and isinstance(value, str) and value == "":
+            raise ValueError(
+                "Expression to parse as Quantity cannot be an empty string."
             )
-            inst._units = units
-        elif isinstance(units, str):
-            inst = SharedRegistryObject.__new__(cls)
-            inst._magnitude = _to_magnitude(
-                value, inst.force_ndarray, inst.force_ndarray_like
-            )
-            inst._units = inst._REGISTRY.parse_units(units)._units
-        elif isinstance(units, SharedRegistryObject):
-            if isinstance(units, Quantity) and units.magnitude != 1:
-                inst = copy.copy(units)
-                logger.warning(
-                    "Creating new Quantity using a non unity " "Quantity as units."
-                )
-            else:
-                inst = SharedRegistryObject.__new__(cls)
-                inst._units = units._units
-            inst._magnitude = _to_magnitude(
-                value, inst.force_ndarray, inst.force_ndarray_like
-            )
+
+        if units is None and isinstance(value, str):
+            ureg = SharedRegistryObject.__new__(cls)._REGISTRY
+            inst = ureg.parse_expression(value)
+            return cls.__new__(cls, inst)
+
+        if units is None and isinstance(value, cls):
+            return copy.copy(value)
+
+        inst = SharedRegistryObject().__new__(cls)
+        if units is None:
+            units = inst.UnitsContainer()
         else:
-            raise TypeError(
-                "units must be of type str, Quantity or "
-                "UnitsContainer; not {}.".format(type(units))
+            if isinstance(units, (UnitsContainer, UnitDefinition)):
+                units = units
+            elif isinstance(units, str):
+                units = inst._REGISTRY.parse_units(units)._units
+            elif isinstance(units, SharedRegistryObject):
+                if isinstance(units, Quantity) and units.magnitude != 1:
+                    units = copy.copy(units)._units
+                    logger.warning(
+                        "Creating new Quantity using a non unity Quantity as units."
+                    )
+                else:
+                    units = units._units
+            else:
+                raise TypeError(
+                    "units must be of type str, Quantity or "
+                    "UnitsContainer; not {}.".format(type(units))
+                )
+        if isinstance(value, cls):
+            magnitude = value.to(units)._magnitude
+        else:
+            magnitude = _to_magnitude(
+                value, inst.force_ndarray, inst.force_ndarray_like
             )
+        inst._magnitude = magnitude
+        inst._units = units
 
         inst.__used = False
         inst.__handling = None
