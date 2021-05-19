@@ -1847,7 +1847,7 @@ class ContextRegistry(BaseRegistry):
 class SystemRegistry(BaseRegistry):
     """Handle of Systems and Groups.
 
-    Conversion between units with different dimenstions according
+    Conversion between units with different dimensions according
     to previously established relations (contexts).
     (e.g. in the spectroscopy, conversion between frequency and energy is possible)
 

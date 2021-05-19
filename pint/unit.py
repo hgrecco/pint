@@ -310,7 +310,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         value :
             a Quantity (or numerical value if strict=False) to convert
         strict :
-            boolean to indicate that only quanities are accepted (Default value = True)
+            boolean to indicate that only quantities are accepted (Default value = True)
         name :
             descriptive name to use if an exception occurs (Default value = "value")
 
@@ -338,7 +338,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         value :
             a Quantity (or numerical value if strict=False) to convert
         strict :
-            boolean to indicate that only quanities are accepted (Default value = True)
+            boolean to indicate that only quantities are accepted (Default value = True)
         name :
             descriptive name to use if an exception occurs (Default value = "value")
 
