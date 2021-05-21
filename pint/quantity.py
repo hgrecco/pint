@@ -1996,7 +1996,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._magnitude.__dask_keys__()
 
     def __dask_tokenize__(self):
-        return (Quantity, self._magnitude.name, self.units)
+        from dask.base import tokenize
+
+        return (Quantity, tokenize(self._magnitude), self.units)
 
     @property
     def __dask_optimize__(self):
