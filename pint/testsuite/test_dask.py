@@ -59,13 +59,24 @@ def test_dask_scheduler(dask_array):
     assert scheduler_name == true_name
 
 
-def test_dask_tokenize(dask_array):
-    """Test that a pint.Quantity wrapped Dask array has a unique token."""
-    dask_token = dask.base.tokenize(dask_array)
-    q = ureg.Quantity(dask_array, units_)
+@pytest.mark.parametrize(
+    "item",
+    (
+        pytest.param(1, id="int"),
+        pytest.param(1.3, id="float"),
+        pytest.param(np.array([1, 2]), id="numpy"),
+        pytest.param(
+            dask.array.arange(0, 25, chunks=5, dtype=float).reshape((5, 5)), id="dask"
+        ),
+    ),
+)
+def test_dask_tokenize(item):
+    """Test that a scalar pint.Quantity wrapping something has a unique token."""
+    dask_token = dask.base.tokenize(item)
+    q = ureg.Quantity(item, units_)
 
-    assert dask.base.tokenize(dask_array) != dask.base.tokenize(q)
-    assert dask.base.tokenize(dask_array) == dask_token
+    assert dask.base.tokenize(item) != dask.base.tokenize(q)
+    assert dask.base.tokenize(item) == dask_token
 
 
 def test_dask_optimize(dask_array):
