@@ -6,6 +6,7 @@ Pint Changelog
 
 - Implement use of Quantity in the Quantity constructor (convert to specified units).
   (Issue #1231)
+- Rename .readthedocs.yml to .readthedocs.yaml (Issue #1311)
 
 
 0.17 (2021-03-22)
