@@ -19,6 +19,8 @@ Pint Changelog
 
 - pint no longer supports Python 3.6
 - Minimum Numpy version supported is 1.17+
+- Add supports for type hints for Quantity class. Quantity is now a Generic (PEP560).
+- Add support for [PEP561](https://www.python.org/dev/peps/pep-0561/) (Package Type information)
 
 
 0.17 (2021-03-22)

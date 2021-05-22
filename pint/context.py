@@ -8,13 +8,21 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import re
 import weakref
 from collections import ChainMap, defaultdict
+from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
 
 from .definitions import Definition, UnitDefinition
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, SourceIterator, to_units_container
+
+if TYPE_CHECKING:
+    from .quantity import Quantity
+    from .registry import UnitRegistry
+    from .util import UnitsContainer
 
 #: Regex to match the header parts of a context.
 _header_re = re.compile(
@@ -25,8 +33,8 @@ _header_re = re.compile(
 _varname_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
-def _expression_to_function(eq):
-    def func(ureg, value, **kwargs):
+def _expression_to_function(eq: str) -> Callable[..., Quantity[Any]]:
+    def func(ureg: UnitRegistry, value: Any, **kwargs: Any) -> Quantity[Any]:
         return ureg.parse_expression(eq, value=value, **kwargs)
 
     return func
@@ -84,7 +92,12 @@ class Context:
     >>> c.redefine("pound = 0.5 kg")
     """
 
-    def __init__(self, name=None, aliases=(), defaults=None):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        aliases: Tuple[str, ...] = (),
+        defaults: Optional[dict] = None,
+    ) -> None:
 
         self.name = name
         self.aliases = aliases
@@ -106,7 +119,7 @@ class Context:
         self.relation_to_context = weakref.WeakValueDictionary()
 
     @classmethod
-    def from_context(cls, context, **defaults):
+    def from_context(cls, context: Context, **defaults) -> Context:
         """Creates a new context that shares the funcs dictionary with the
         original context. The default values are copied from the original
         context and updated with the new defaults.
@@ -135,7 +148,7 @@ class Context:
         return context
 
     @classmethod
-    def from_lines(cls, lines, to_base_func=None, non_int_type=float):
+    def from_lines(cls, lines, to_base_func=None, non_int_type=float) -> Context:
         lines = SourceIterator(lines)
 
         lineno, header = next(lines)
@@ -223,14 +236,14 @@ class Context:
 
         return ctx
 
-    def add_transformation(self, src, dst, func):
+    def add_transformation(self, src, dst, func) -> None:
         """Add a transformation function to the context."""
 
         _key = self.__keytransform__(src, dst)
         self.funcs[_key] = func
         self.relation_to_context[_key] = self
 
-    def remove_transformation(self, src, dst):
+    def remove_transformation(self, src, dst) -> None:
         """Add a transformation function to the context."""
 
         _key = self.__keytransform__(src, dst)
@@ -238,7 +251,7 @@ class Context:
         del self.relation_to_context[_key]
 
     @staticmethod
-    def __keytransform__(src, dst):
+    def __keytransform__(src, dst) -> Tuple[UnitsContainer, UnitsContainer]:
         return to_units_container(src), to_units_container(dst)
 
     def transform(self, src, dst, registry, value):
@@ -270,7 +283,9 @@ class Context:
                 raise DefinitionSyntaxError("Can't define base units within a context")
             self.redefinitions.append(d)
 
-    def hashable(self):
+    def hashable(
+        self,
+    ) -> Tuple[Optional[str], Tuple[str, ...], frozenset, frozenset, tuple]:
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
         mutable, and the Python interpreter does cache the output of ``__hash__``.
