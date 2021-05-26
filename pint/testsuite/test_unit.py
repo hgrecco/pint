@@ -345,6 +345,12 @@ class TestRegistry(QuantityTestCase):
             kelvin=1, meter=1
         )
 
+    @helpers.requires_numpy
+    def test_parse_with_force_ndarray(self):
+        ureg = UnitRegistry(force_ndarray=True)
+
+        assert ureg.parse_expression("m * s ** -2").units == ureg.m / ureg.s ** 2
+
     def test_parse_expression_with_preprocessor(self):
         # Add parsing of UDUNITS-style power
         self.ureg.preprocessors.append(

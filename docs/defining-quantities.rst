@@ -56,6 +56,16 @@ the same results:
     >>> Q_(9.8, ureg.meter / ureg.second**2)
     <Quantity(9.8, 'meter / second ** 2')>
 
+Quantity can be created with itself, if units is specified ``pint`` will try to convert it to the desired units.
+If not, pint will just copy the quantity.
+
+.. doctest::
+
+    >>> length = Q_(30.0, ureg.meter)
+    >>> Q_(length, 'cm')
+    <Quantity(3000.0, 'centimeter')>
+    >>> Q_(length)
+    <Quantity(30.0, 'meter')>
 
 Using string parsing
 --------------------
