@@ -71,7 +71,7 @@ def test_dask_scheduler(dask_array):
     ),
 )
 def test_dask_tokenize(item):
-    """Test that a scalar pint.Quantity wrapping something has a unique token."""
+    """Test that a pint.Quantity wrapping something has a unique token."""
     dask_token = dask.base.tokenize(item)
     q = ureg.Quantity(item, units_)
 
