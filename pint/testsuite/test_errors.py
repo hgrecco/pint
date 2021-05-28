@@ -7,6 +7,7 @@ from pint import (
     DimensionalityError,
     LogarithmicUnitCalculusError,
     OffsetUnitCalculusError,
+    PintError,
     Quantity,
     RedefinitionError,
     UndefinedUnitError,
@@ -56,18 +57,34 @@ class TestErrors:
             str(ex) == "While opening a.txt, in line 123: Cannot redefine 'foo' (bar)"
         )
 
+        with pytest.raises(PintError):
+            raise ex
+
     def test_undefined_unit_error(self):
         x = ("meter",)
         msg = "'meter' is not defined in the unit registry"
-        assert str(UndefinedUnitError(x)) == msg
-        assert str(UndefinedUnitError(list(x))) == msg
-        assert str(UndefinedUnitError(set(x))) == msg
+
+        ex = UndefinedUnitError(x)
+        assert str(ex) == msg
+        ex = UndefinedUnitError(list(x))
+        assert str(ex) == msg
+        ex = UndefinedUnitError(set(x))
+        assert str(ex) == msg
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_undefined_unit_error_multi(self):
         x = ("meter", "kg")
         msg = "('meter', 'kg') are not defined in the unit registry"
-        assert str(UndefinedUnitError(x)) == msg
-        assert str(UndefinedUnitError(list(x))) == msg
+
+        ex = UndefinedUnitError(x)
+        assert str(ex) == msg
+        ex = UndefinedUnitError(list(x))
+        assert str(ex) == msg
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_dimensionality_error(self):
         ex = DimensionalityError("a", "b")
@@ -76,6 +93,9 @@ class TestErrors:
         assert str(ex) == "Cannot convert from 'a' (c) to 'b' ()"
         ex = DimensionalityError("a", "b", "c", "d", extra_msg=": msg")
         assert str(ex) == "Cannot convert from 'a' (c) to 'b' (d): msg"
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_offset_unit_calculus_error(self):
         ex = OffsetUnitCalculusError(Quantity("1 kg")._units)
@@ -92,6 +112,9 @@ class TestErrors:
             + OFFSET_ERROR_DOCS_HTML
             + " for guidance."
         )
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_logarithmic_unit_calculus_error(self):
         Quantity = UnitRegistry(autoconvert_offset_to_baseunit=True).Quantity
@@ -111,6 +134,9 @@ class TestErrors:
             + LOG_ERROR_DOCS_HTML
             + " for guidance."
         )
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_pickle_definition_syntax_error(self, subtests):
         # OffsetUnitCalculusError raised from a custom ureg must be pickleable even if
@@ -143,3 +169,6 @@ class TestErrors:
                     assert ex.args == ex2.args
                     assert ex.__dict__ == ex2.__dict__
                     assert str(ex) == str(ex2)
+
+                    with pytest.raises(PintError):
+                        raise ex
