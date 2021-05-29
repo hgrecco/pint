@@ -47,6 +47,7 @@ Pint Changelog
 0.17 (2021-03-22)
 -----------------
 
+- Do not build "universal" wheel as Python 2 is not supported.
 - Add the Wh unit for battery capacity measurements
   (PR #1260, thanks Maciej Grela)
 - Fix issue with reducable dimensionless units when using power (Quantity**ndarray)
