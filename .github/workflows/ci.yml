@@ -6,13 +6,13 @@ jobs:
   test-linux:
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
-        numpy: [null, "numpy>=1.14,<2.0.0"]
+        python-version: [3.7, 3.8]
+        numpy: [null, "numpy>=1.17,<2.0.0"]
         uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
         extras: [null]
         include:
-          - python-version: 3.6
-            numpy: numpy==1.14.6
+          - python-version: 3.7
+            numpy: numpy==1.17.5
             extras: matplotlib==2.2.5
           - python-version: 3.8
             numpy: "numpy"

@@ -16,7 +16,7 @@ Due to its modular design, you can extend (or even rewrite!) the complete list
 without changing the source code. It supports a lot of numpy mathematical
 operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 3.6+ with no other
+It has a complete test coverage. It runs in Python 3.7+ with no other
 dependencies. It is licensed under a `BSD 3-clause style license`_.
 
 It is extremely easy and natural to use:

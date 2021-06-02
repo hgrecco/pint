@@ -35,6 +35,7 @@ The module actually defines 5 registries with different capabilities:
 
 import copy
 import functools
+import importlib.resources
 import itertools
 import locale
 import os
@@ -78,13 +79,6 @@ from .util import (
     string_preprocessor,
     to_units_container,
 )
-
-try:
-    import importlib.resources as importlib_resources
-except ImportError:
-    # Backport for Python < 3.7
-    import importlib_resources
-
 
 _BLOCK_RE = re.compile(r"[ (]")
 
@@ -534,7 +528,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         if isinstance(file, str):
             try:
                 if is_resource:
-                    rbytes = importlib_resources.read_binary(__package__, file)
+                    rbytes = importlib.resources.read_binary(__package__, file)
                     return self.load_definitions(
                         StringIO(rbytes.decode("utf-8")), is_resource
                     )

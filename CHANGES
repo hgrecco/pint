@@ -7,6 +7,11 @@ Pint Changelog
 - Implement use of Quantity in the Quantity constructor (convert to specified units).
   (Issue #1231)
 
+### Breaking Changes
+
+- pint no longer supports Python 3.6
+- Minimum Numpy version supported is 1.17+
+
 
 0.17 (2021-03-22)
 -----------------
