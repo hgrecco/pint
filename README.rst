@@ -2,8 +2,8 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Latest Version
 
-.. image:: https://readthedocs.org/projects/pip/badge/
-    :target: http://pint.readthedocs.org/
+.. image:: https://readthedocs.org/projects/pint/badge/
+    :target: https://pint.readthedocs.org/
     :alt: Documentation
 
 .. image:: https://img.shields.io/pypi/l/pint.svg
@@ -25,10 +25,6 @@
 .. image:: https://coveralls.io/repos/github/hgrecco/pint/badge.svg?branch=master
     :target: https://coveralls.io/github/hgrecco/pint?branch=master
     :alt: Coverage
-
-.. image:: https://readthedocs.org/projects/pint/badge/
-    :target: http://pint.readthedocs.org/
-    :alt: Docs
 
 
 Pint: makes units easy
