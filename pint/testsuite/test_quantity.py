@@ -1564,8 +1564,8 @@ class TestOffsetUnitMath(QuantityTestCase):
 
     @helpers.requires_numpy
     def test_exponentiation_force_ndarray(self):
-        self.ureg.force_ndarray_like = True
-        q = self.Q_(1, "1 / hours")
+        ureg = UnitRegistry(force_ndarray_like=True)
+        q = ureg.Quantity(1, "1 / hours")
 
         q1 = q ** 2
         assert all(isinstance(v, int) for v in q1._units.values())
