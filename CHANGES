@@ -6,6 +6,8 @@ Pint Changelog
 
 - Implement use of Quantity in the Quantity constructor (convert to specified units).
   (Issue #1231)
+- Fix a few small typos.
+  (Issue #1308)
 
 
 0.17 (2021-03-22)

@@ -88,7 +88,7 @@ class Measurement(Quantity):
             # the uncertainties module supports formatting
             # numbers in value(unc) notation (i.e. 1.23(45) instead of 1.23 +/- 0.45),
             # using type code 'S', which siunitx actually accepts as input.
-            # However, the implimentation is incompatible with siunitx.
+            # However, the implementation is incompatible with siunitx.
             # Uncertainties will do 9.1(1.1), which is invalid, should be 9.1(11).
             # TODO: add support for extracting options
             #

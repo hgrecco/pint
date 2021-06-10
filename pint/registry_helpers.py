@@ -2,7 +2,7 @@
     pint.registry_helpers
     ~~~~~~~~~~~~~~~~~~~~~
 
-    Miscellaneous methods of the registry writen as separate functions.
+    Miscellaneous methods of the registry written as separate functions.
 
     :copyright: 2016 by Pint Authors, see AUTHORS for more details..
     :license: BSD, see LICENSE for more details.
