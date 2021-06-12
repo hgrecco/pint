@@ -19,11 +19,7 @@ import re
 import warnings
 from typing import List
 
-from packaging import version
-
 from .compat import (
-    HAS_NUMPY_ARRAY_FUNCTION,
-    NUMPY_VER,
     _to_magnitude,
     babel_parse,
     compute,
@@ -1248,11 +1244,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     __rmul__ = __mul__
 
     def __matmul__(self, other):
-        # Use NumPy ufunc (existing since 1.16) for matrix multiplication
-        if version.parse(NUMPY_VER) >= version.parse("1.16"):
-            return np.matmul(self, other)
-        else:
-            return NotImplemented
+        return np.matmul(self, other)
 
     __rmatmul__ = __matmul__
 
@@ -1792,15 +1784,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         Wraps np.prod().
         """
-        # TODO: remove after support for 1.16 has been dropped
-        if not HAS_NUMPY_ARRAY_FUNCTION:
-            raise NotImplementedError(
-                "prod is only defined for"
-                " numpy == 1.16 with NUMPY_ARRAY_FUNCTION_PROTOCOL enabled"
-                f" or for numpy >= 1.17 ({np.__version__} is installed)."
-                " Please try setting the NUMPY_ARRAY_FUNCTION_PROTOCOL environment variable"
-                " or updating your numpy version."
-            )
         return np.prod(self, *args, **kwargs)
 
     def __ito_if_needed(self, to_units):

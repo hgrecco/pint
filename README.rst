@@ -40,8 +40,8 @@ and constants. Due to its modular design, you can extend (or even rewrite!)
 the complete list without changing the source code. It supports a lot of
 numpy mathematical operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 3.6+ with no other dependency.
-If you need Python 2.7 or 3.4/3.5 compatibility, use Pint 0.9.
+It has a complete test coverage. It runs in Python 3.7+ with no other dependency.
+If you need Python 3.6 compatibility, use Pint 0.17.
 It is licensed under BSD.
 
 It is extremely easy and natural to use:

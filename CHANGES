@@ -9,6 +9,11 @@ Pint Changelog
 - Fix a few small typos.
   (Issue #1308)
 
+### Breaking Changes
+
+- pint no longer supports Python 3.6
+- Minimum Numpy version supported is 1.17+
+
 
 0.17 (2021-03-22)
 -----------------
