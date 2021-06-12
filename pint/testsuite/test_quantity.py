@@ -1563,6 +1563,18 @@ class TestOffsetUnitMath(QuantityTestCase):
                 helpers.assert_quantity_almost_equal(op.pow(in1, in2), expected)
 
     @helpers.requires_numpy
+    def test_exponentiation_force_ndarray(self):
+        ureg = UnitRegistry(force_ndarray_like=True)
+        q = ureg.Quantity(1, "1 / hours")
+
+        q1 = q ** 2
+        assert all(isinstance(v, int) for v in q1._units.values())
+
+        q2 = q.copy()
+        q2 **= 2
+        assert all(isinstance(v, int) for v in q2._units.values())
+
+    @helpers.requires_numpy
     @pytest.mark.parametrize(("input_tuple", "expected"), exponentiation)
     def test_inplace_exponentiation(self, input_tuple, expected):
         self.ureg.default_as_delta = False

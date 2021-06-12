@@ -1486,7 +1486,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                     raise DimensionalityError(other._units, "dimensionless")
                 else:
                     exponent = _to_magnitude(
-                        other, self.force_ndarray, self.force_ndarray_like
+                        other, force_ndarray=False, force_ndarray_like=False
                     )
                     units = new_self._units ** exponent
 
