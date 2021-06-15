@@ -35,6 +35,7 @@ The module actually defines 5 registries with different capabilities:
 
 import copy
 import functools
+import importlib.resources
 import itertools
 import locale
 import os
@@ -78,13 +79,6 @@ from .util import (
     string_preprocessor,
     to_units_container,
 )
-
-try:
-    import importlib.resources as importlib_resources
-except ImportError:
-    # Backport for Python < 3.7
-    import importlib_resources
-
 
 _BLOCK_RE = re.compile(r"[ (]")
 
@@ -534,7 +528,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         if isinstance(file, str):
             try:
                 if is_resource:
-                    rbytes = importlib_resources.read_binary(__package__, file)
+                    rbytes = importlib.resources.read_binary(__package__, file)
                     return self.load_definitions(
                         StringIO(rbytes.decode("utf-8")), is_resource
                     )
@@ -875,7 +869,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                     self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
     def get_compatible_units(self, input_units, group_or_system=None):
-        """"""
+        """ """
         input_units = to_units_container(input_units)
 
         equiv = self._get_compatible_units(input_units, group_or_system)
@@ -883,7 +877,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return frozenset(self.Unit(eq) for eq in equiv)
 
     def _get_compatible_units(self, input_units, group_or_system):
-        """"""
+        """ """
         if not input_units:
             return frozenset()
 
@@ -1299,7 +1293,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
     def _parse_units(self, input_string, as_delta=None, case_sensitive=None):
-        """"""
+        """ """
         if as_delta is None:
             as_delta = self.default_as_delta
 
@@ -1847,7 +1841,7 @@ class ContextRegistry(BaseRegistry):
 class SystemRegistry(BaseRegistry):
     """Handle of Systems and Groups.
 
-    Conversion between units with different dimenstions according
+    Conversion between units with different dimensions according
     to previously established relations (contexts).
     (e.g. in the spectroscopy, conversion between frequency and energy is possible)
 

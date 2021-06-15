@@ -19,11 +19,7 @@ import re
 import warnings
 from typing import List
 
-from packaging import version
-
 from .compat import (
-    HAS_NUMPY_ARRAY_FUNCTION,
-    NUMPY_VER,
     _to_magnitude,
     babel_parse,
     compute,
@@ -1248,11 +1244,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
     __rmul__ = __mul__
 
     def __matmul__(self, other):
-        # Use NumPy ufunc (existing since 1.16) for matrix multiplication
-        if version.parse(NUMPY_VER) >= version.parse("1.16"):
-            return np.matmul(self, other)
-        else:
-            return NotImplemented
+        return np.matmul(self, other)
 
     __rmatmul__ = __matmul__
 
@@ -1486,7 +1478,7 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                     raise DimensionalityError(other._units, "dimensionless")
                 else:
                     exponent = _to_magnitude(
-                        other, self.force_ndarray, self.force_ndarray_like
+                        other, force_ndarray=False, force_ndarray_like=False
                     )
                     units = new_self._units ** exponent
 
@@ -1792,15 +1784,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
 
         Wraps np.prod().
         """
-        # TODO: remove after support for 1.16 has been dropped
-        if not HAS_NUMPY_ARRAY_FUNCTION:
-            raise NotImplementedError(
-                "prod is only defined for"
-                " numpy == 1.16 with NUMPY_ARRAY_FUNCTION_PROTOCOL enabled"
-                f" or for numpy >= 1.17 ({np.__version__} is installed)."
-                " Please try setting the NUMPY_ARRAY_FUNCTION_PROTOCOL environment variable"
-                " or updating your numpy version."
-            )
         return np.prod(self, *args, **kwargs)
 
     def __ito_if_needed(self, to_units):
@@ -1996,7 +1979,9 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return self._magnitude.__dask_keys__()
 
     def __dask_tokenize__(self):
-        return (Quantity, self._magnitude.name, self.units)
+        from dask.base import tokenize
+
+        return (Quantity, tokenize(self._magnitude), self.units)
 
     @property
     def __dask_optimize__(self):

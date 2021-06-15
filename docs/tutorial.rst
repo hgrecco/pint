@@ -91,7 +91,7 @@ a ``Quantity()`` object.
 ``Quantity()`` objects also work well with NumPy arrays, which you can
 read about in the section on :doc:`NumPy support <numpy>`.
 
-Converting to Different Units
+Converting to different units
 -----------------------------
 
 As the underlying ``UnitRegistry`` knows the relationships between
@@ -447,7 +447,7 @@ Then in ``yourmodule.py`` the code would be
    length = 10 * ureg.meter
    my_speed = Q_(20, 'm/s')
 
-If you are pickling and unplicking Quantities within your project, you should
+If you are pickling and unpickling Quantities within your project, you should
 also define the registry as the application registry
 
 .. code-block:: python
