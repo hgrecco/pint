@@ -8,6 +8,8 @@ Pint Changelog
   (Issue #1231)
 - Fix a few small typos.
   (Issue #1308)
+- Fix babel format for `Unit`.
+  (Issue #1085)
 
 ### Breaking Changes
 

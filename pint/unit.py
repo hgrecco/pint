@@ -13,7 +13,7 @@ import locale
 import operator
 from numbers import Number
 
-from .compat import NUMERIC_TYPES, is_upcast_type
+from .compat import NUMERIC_TYPES, babel_parse, is_upcast_type
 from .definitions import UnitDefinition
 from .errors import DimensionalityError
 from .formatting import siunitx_format_unit
@@ -93,7 +93,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
         return format(units, spec)
 
-    def format_babel(self, spec="", **kwspec):
+    def format_babel(self, spec="", locale=None, **kwspec):
         spec = spec or self.default_format
 
         if "~" in spec:
@@ -109,7 +109,14 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             units = self._units
 
-        return "%s" % (units.format_babel(spec, **kwspec))
+        locale = self._REGISTRY.fmt_locale if locale is None else locale
+
+        if locale is None:
+            raise ValueError("Provide a `locale` value to localize translation.")
+        else:
+            kwspec["locale"] = babel_parse(locale)
+
+        return units.format_babel(spec, **kwspec)
 
     @property
     def dimensionless(self):
