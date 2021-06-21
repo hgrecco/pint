@@ -1664,6 +1664,14 @@ class TestDimensionReduction:
 
 
 class TestTimedelta(QuantityTestCase):
+    def test_from_timedelta(self):
+        td = datetime.timedelta(seconds=3)
+        assert 3 * self.ureg.seconds == self.ureg.Quantity.from_timedelta(td)
+
+    def test_to_timedelta(self):
+        q = self.ureg.Quantity(3, "seconds")
+        assert datetime.timedelta(seconds=3) == q.to_timedelta()
+
     def test_add_sub(self):
         d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
         after = d + 3 * self.ureg.second

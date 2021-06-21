@@ -547,6 +547,11 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         return cls(a, units)
 
     @classmethod
+    def from_timedelta(cls, value):
+        total_microseconds = value / datetime.timedelta(microseconds=1)
+        return cls(total_microseconds, "microseconds")
+
+    @classmethod
     def from_tuple(cls, tup):
         return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
 
