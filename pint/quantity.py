@@ -1700,9 +1700,6 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         if minimum is None and maximum is None:
             raise TypeError("clip() takes at least 3 arguments (2 given)")
 
-        if maximum is None and "min" not in kwargs:
-            minimum, maximum = maximum, minimum
-
         kwargs = {"out": out}
 
         if minimum is not None:
