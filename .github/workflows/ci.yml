@@ -6,21 +6,18 @@ jobs:
   test-linux:
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
         numpy: [null, "numpy>=1.17,<2.0.0"]
         uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
         extras: [null]
         include:
-          - python-version: 3.7
+          - python-version: 3.7 # Minimal versions
             numpy: numpy==1.17.5
             extras: matplotlib==2.2.5
           - python-version: 3.8
             numpy: "numpy"
             uncertainties: "uncertainties"
             extras: "sparse xarray pooch netCDF4 dask[complete] graphviz babel==2.8"
-          - python-version: 3.9
-            numpy: numpy
-
     runs-on: ubuntu-latest
 
     env:
