@@ -1693,32 +1693,24 @@ class Quantity(PrettyIPython, SharedRegistryObject):
         )
         return _to_magnitude(self._magnitude, force_ndarray=True)
 
-    def clip(self, first=None, second=None, out=None, **kwargs):
-        minimum = kwargs.get("min", first)
-        maximum = kwargs.get("max", second)
+    def clip(self, min=None, max=None, out=None, **kwargs):
 
-        if minimum is None and maximum is None:
-            raise TypeError("clip() takes at least 3 arguments (2 given)")
-
-        kwargs = {"out": out}
-
-        if minimum is not None:
-            if isinstance(minimum, self.__class__):
-                kwargs["min"] = minimum.to(self).magnitude
+        if min is not None:
+            if isinstance(min, self.__class__):
+                min = min.to(self).magnitude
             elif self.dimensionless:
-                kwargs["min"] = minimum
+                pass
             else:
                 raise DimensionalityError("dimensionless", self._units)
 
-        if maximum is not None:
-            if isinstance(maximum, self.__class__):
-                kwargs["max"] = maximum.to(self).magnitude
+        if max is not None:
+            if isinstance(max, self.__class__):
+                max = max.to(self).magnitude
             elif self.dimensionless:
-                kwargs["max"] = maximum
+                pass
             else:
                 raise DimensionalityError("dimensionless", self._units)
-
-        return self.__class__(self.magnitude.clip(**kwargs), self._units)
+        return self.__class__(self.magnitude.clip(min, max, out, **kwargs), self._units)
 
     def fill(self, value):
         self._units = value._units
