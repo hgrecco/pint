@@ -751,6 +751,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
             self.q.clip(min=2 * self.ureg.m, max=3 * self.ureg.m),
             [[2, 2], [3, 3]] * self.ureg.m,
         )
+        helpers.assert_quantity_equal(
+            self.q.clip(3 * self.ureg.m, None), [[3, 3], [3, 4]] * self.ureg.m
+        )
+        helpers.assert_quantity_equal(
+            self.q.clip(3 * self.ureg.m), [[3, 3], [3, 4]] * self.ureg.m
+        )
         with pytest.raises(DimensionalityError):
             self.q.clip(self.ureg.J)
         with pytest.raises(DimensionalityError):
