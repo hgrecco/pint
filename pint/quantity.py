@@ -348,12 +348,18 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 if isinstance(self.magnitude, ndarray):
                     # Use custom ndarray text formatting with monospace font
                     formatter = "{{:{}}}".format(mspec)
-                    with printoptions(formatter={"float_kind": formatter.format}):
-                        mstr = (
-                            "<pre>"
-                            + format(obj.magnitude).replace("\n", "<br>")
-                            + "</pre>"
-                        )
+                    # Need to override for scalars, which are detected as iterable,
+                    # and don't respond to printoptions.
+                    if self.magnitude.ndim == 0:
+                        allf = plain_allf = "{} {}"
+                        mstr = formatter.format(obj.magnitude)
+                    else:
+                        with printoptions(formatter={"float_kind": formatter.format}):
+                            mstr = (
+                                "<pre>"
+                                + format(obj.magnitude).replace("\n", "<br>")
+                                + "</pre>"
+                            )
                 elif not iterable(obj.magnitude):
                     # Use plain text for scalars
                     mstr = format(obj.magnitude, mspec)
@@ -369,10 +375,14 @@ class Quantity(PrettyIPython, SharedRegistryObject):
                 # Use ndarray LaTeX special formatting
                 mstr = ndarray_to_latex(obj.magnitude, mspec)
             else:
-                # Use custom ndarray text formatting
+                # Use custom ndarray text formatting--need to handle scalars differently
+                # since they don't respond to printoptions
                 formatter = "{{:{}}}".format(mspec)
-                with printoptions(formatter={"float_kind": formatter.format}):
-                    mstr = format(obj.magnitude).replace("\n", "")
+                if obj.magnitude.ndim == 0:
+                    mstr = formatter.format(obj.magnitude)
+                else:
+                    with printoptions(formatter={"float_kind": formatter.format}):
+                        mstr = format(obj.magnitude).replace("\n", "")
         else:
             mstr = format(obj.magnitude, mspec).replace("\n", "")
 

@@ -210,6 +210,16 @@ class TestQuantity(QuantityTestCase):
             with subtests.test(spec):
                 assert spec.format(x) == result
 
+    @helpers.requires_numpy
+    def test_quantity_array_scalar_format(self, subtests):
+        x = self.Q_(np.array(4.12345678), "kg * m ** 2")
+        for spec, result in (
+            ("{:.2f}", "4.12 kilogram * meter ** 2"),
+            ("{:.2fH}", "4.12 kilogram meter<sup>2</sup>"),
+        ):
+            with subtests.test(spec):
+                assert spec.format(x) == result
+
     def test_format_compact(self):
         q1 = (200e-9 * self.ureg.s).to_compact()
         q1b = self.Q_(200.0, "nanosecond")

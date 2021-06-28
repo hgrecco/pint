@@ -13,6 +13,7 @@ Pint Changelog
   (Issue #1085)
 - Fix handling of positional max/min arguments in clip function.
   (Issue #1244)
+- Fix string formatting of numpy array scalars
 
 ### Breaking Changes
 
