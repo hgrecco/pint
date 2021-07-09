@@ -88,12 +88,6 @@ Documentation
 Full documentation is available at http://pint.readthedocs.org/
 
 
-GUI Website 
------------
-
-This Website_ wraps Pint's "dimensional analysis" methods to provide a GUI.
-
-
 Command-line converter
 ----------------------
 
