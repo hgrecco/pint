@@ -440,8 +440,13 @@ class TestIssues(QuantityTestCase):
         assert "{:~}".format(1 * self.ureg("MiB")) == "1 MiB"
 
     def test_issue_386(self):
-        x = ureg.Quantity(7, "degC")
-        y = ureg.Quantity("7 degC")
+        x = ureg.Quantity(42, "degC")
+        y = ureg.Quantity("42 degC")
+        assert x == y
+
+        # make sure normal combined units still work
+        x = ureg.Quantity(42, ureg.mm * ureg.s)
+        y = ureg.Quantity("42 mm s")
         assert x == y
 
     def test_issue468(self):

@@ -229,7 +229,7 @@ class TestStringProcessor:
         self._test("sq bcd", "bcd**2")
         self._test("square bcd", "bcd**2")
         self._test("cubic bcd", "bcd**3")
-        self._test("bcd efg", "bcd*efg")
+        self._test("bcd efg", "bcd efg")
 
     def test_per(self):
         self._test("miles per hour", "miles/hour")
@@ -244,25 +244,25 @@ class TestStringProcessor:
         self._test("1E24", "1E24")
 
     def test_space_multiplication(self):
-        self._test("bcd efg", "bcd*efg")
-        self._test("bcd  efg", "bcd*efg")
-        self._test("1 hour", "1*hour")
-        self._test("1. hour", "1.*hour")
-        self._test("1.1 hour", "1.1*hour")
-        self._test("1E24 hour", "1E24*hour")
-        self._test("1E-24 hour", "1E-24*hour")
-        self._test("1E+24 hour", "1E+24*hour")
-        self._test("1.2E24 hour", "1.2E24*hour")
-        self._test("1.2E-24 hour", "1.2E-24*hour")
-        self._test("1.2E+24 hour", "1.2E+24*hour")
+        self._test("bcd efg", "bcd efg")
+        self._test("bcd  efg", "bcd efg")
+        self._test("1 hour", "1 hour")
+        self._test("1. hour", "1. hour")
+        self._test("1.1 hour", "1.1 hour")
+        self._test("1E24 hour", "1E24 hour")
+        self._test("1E-24 hour", "1E-24 hour")
+        self._test("1E+24 hour", "1E+24 hour")
+        self._test("1.2E24 hour", "1.2E24 hour")
+        self._test("1.2E-24 hour", "1.2E-24 hour")
+        self._test("1.2E+24 hour", "1.2E+24 hour")
 
     def test_joined_multiplication(self):
-        self._test("1hour", "1*hour")
-        self._test("1.hour", "1.*hour")
-        self._test("1.1hour", "1.1*hour")
-        self._test("1h", "1*h")
-        self._test("1.h", "1.*h")
-        self._test("1.1h", "1.1*h")
+        self._test("1hour", "1 hour")
+        self._test("1.hour", "1. hour")
+        self._test("1.1hour", "1.1 hour")
+        self._test("1h", "1 h")
+        self._test("1.h", "1. h")
+        self._test("1.1h", "1.1 h")
 
     def test_names(self):
         self._test("g_0", "g_0")
