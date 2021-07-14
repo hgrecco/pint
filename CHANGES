@@ -17,6 +17,8 @@ Pint Changelog
 - Fix default format for Measurement class (Issue #1300)
 - Fix parsing of pretty units with same exponents but different sign. (Issue #1360)
 - Convert the application registry to a wrapper object (Issue #1365)
+- Parse both Greek mu and micro Unicode points without error.
+  (Issue #1030, #574)
 
 ### Breaking Changes
 
@@ -52,7 +54,7 @@ Pint Changelog
 - Fix tolist function with scalar ndarray.
   (Issue #1195, thanks jules-ch)
 - Corrected typos and dacstrings
-- Implements a first benchmark suite in airspeed velocity (asv). 
+- Implements a first benchmark suite in airspeed velocity (asv).
 - Power for pseudo-dimensionless units.
   (Issue #1185, thanks Kevin Fuhr)
 
