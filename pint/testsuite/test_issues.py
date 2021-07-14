@@ -13,6 +13,7 @@ import pytest
 from pint import (
     Context,
     DimensionalityError,
+    OffsetUnitCalculusError,
     UndefinedUnitError,
     UnitRegistry,
     get_application_registry,
@@ -452,9 +453,18 @@ class TestIssues(QuantityTestCase):
         assert "{:~}".format(1 * module_registry("MiB")) == "1 MiB"
 
     def test_issue_386(self, module_registry):
-        x = module_registry.Quantity(7, "degC")
-        y = module_registry.Quantity("7 degC")
+        x = module_registry.Quantity(42, "degC")
+        y = module_registry.Quantity("42 degC")
         assert x == y
+
+        # make sure normal combined units still work
+        x = module_registry.Quantity(42, module_registry.mm * module_registry.s)
+        y = module_registry.Quantity("42 mm s")
+        assert x == y
+
+        # offset unit combined with another unit should still fail
+        with pytest.raises(OffsetUnitCalculusError):
+            module_registry.Quantity("42 degC/m")
 
     def test_issue468(self, module_registry):
         @module_registry.wraps("kg", "meter")

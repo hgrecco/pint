@@ -67,7 +67,7 @@ from ...errors import (
     RedefinitionError,
     UndefinedUnitError,
 )
-from ...pint_eval import build_eval_tree
+from ...pint_eval import _BINARY_OPERATOR_MAP, build_eval_tree
 from ...util import (
     ParserHelper,
     _is_dim,
@@ -1478,7 +1478,15 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         def _define_op(s: str):
             return self._eval_token(s, case_sensitive=case_sensitive, **values)
 
-        result = build_eval_tree(gen).evaluate(_define_op)
+        def _eval_implicit_mul(left, right):
+            if isinstance(left, self.Quantity):
+                return left * right
+            if isinstance(right, self.Quantity):
+                return self.Quantity(left, right)
+            return left * right
+
+        bin_op = {**_BINARY_OPERATOR_MAP, "": _eval_implicit_mul}
+        result = build_eval_tree(gen).evaluate(_define_op, bin_op=bin_op)
 
         if not isinstance(result, self.Quantity):
             return self.Quantity(result)
