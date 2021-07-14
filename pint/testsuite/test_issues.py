@@ -439,6 +439,11 @@ class TestIssues(QuantityTestCase):
         assert "{:~}".format(1 * self.ureg.count) == "1 count"
         assert "{:~}".format(1 * self.ureg("MiB")) == "1 MiB"
 
+    def test_issue_386(self):
+        x = ureg.Quantity(7, "degC")
+        y = ureg.Quantity("7 degC")
+        assert x == y
+
     def test_issue468(self):
         @ureg.wraps("kg", "meter")
         def f(x):
