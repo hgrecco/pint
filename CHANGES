@@ -35,6 +35,9 @@ Pint Changelog
 - Improved the application registry.
   (Issue #1366, thanks keewis)
 - Improved testing isolation using pytest fixtures.
+- Fix string formatting of numpy array scalars
+- Allow string parsing of offset units
+  (Issue #386)
 
 ### Breaking Changes
 
