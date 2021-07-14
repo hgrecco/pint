@@ -451,6 +451,11 @@ class TestIssues(QuantityTestCase):
         assert f"{1 * module_registry.count:~}" == "1 count"
         assert "{:~}".format(1 * module_registry("MiB")) == "1 MiB"
 
+    def test_issue_386(self, module_registry):
+        x = module_registry.Quantity(7, "degC")
+        y = module_registry.Quantity("7 degC")
+        assert x == y
+
     def test_issue468(self, module_registry):
         @module_registry.wraps("kg", "meter")
         def f(x):
