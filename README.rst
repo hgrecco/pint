@@ -138,12 +138,6 @@ like numpy and uncertainties if they are installed
 **Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas. Operations on DataFrames and between columns are units aware, providing even more convenience for users of Pandas DataFrames. For full details, see the `pint-pandas Jupyter notebook`_.
 
 
-When you choose to use a NumPy_ ndarray, its methods and
-ufuncs are supported including automatic conversion of units. For example
-`numpy.arccos(q)` will require a dimensionless `q` and the units of the output
-quantity will be radian.
-
-
 Pint is maintained by a community of scientists, programmers and enthusiasts around the world.
 See AUTHORS_ for a complete list.
 
