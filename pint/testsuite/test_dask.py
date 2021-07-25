@@ -192,7 +192,7 @@ def test_distributed_persist(loop, dask_array):
     assert q.magnitude is dask_array
 
 
-@gen_cluster(client=True, timeout=None)
+@gen_cluster(client=True)
 async def test_async(c, s, a, b):
     """Test asynchronous operations."""
     da = dask.array.arange(0, 25, chunks=5, dtype=float).reshape((5, 5))
