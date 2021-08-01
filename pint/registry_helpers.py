@@ -11,9 +11,18 @@
 import functools
 from inspect import signature
 from itertools import zip_longest
+from typing import TYPE_CHECKING, Callable, Iterable, TypeVar, Union
 
+from ._typing import F
 from .errors import DimensionalityError
+from .quantity import Quantity
 from .util import UnitsContainer, to_units_container
+
+if TYPE_CHECKING:
+    from .registry import UnitRegistry
+    from .unit import Unit
+
+T = TypeVar("T")
 
 
 def _replace_units(original_units, values_by_name):
@@ -175,7 +184,12 @@ def _apply_defaults(func, args, kwargs):
     return args, {}
 
 
-def wraps(ureg, ret, args, strict=True):
+def wraps(
+    ureg: "UnitRegistry",
+    ret: Union[str, "Unit", Iterable[str], Iterable["Unit"], None],
+    args: Union[str, "Unit", Iterable[str], Iterable["Unit"], None],
+    strict: bool = True,
+) -> Callable[[Callable[..., T]], Callable[..., Quantity[T]]]:
     """Wraps a function to become pint-aware.
 
     Use it when a function requires a numerical value but in some specific
@@ -239,7 +253,7 @@ def wraps(ureg, ret, args, strict=True):
             )
         ret = _to_units_container(ret, ureg)
 
-    def decorator(func):
+    def decorator(func: Callable[..., T]) -> Callable[..., Quantity[T]]:
 
         count_params = len(signature(func).parameters)
         if len(args) != count_params:
@@ -256,7 +270,7 @@ def wraps(ureg, ret, args, strict=True):
         )
 
         @functools.wraps(func, assigned=assigned, updated=updated)
-        def wrapper(*values, **kw):
+        def wrapper(*values, **kw) -> Quantity[T]:
 
             values, kw = _apply_defaults(func, values, kw)
 
@@ -288,7 +302,9 @@ def wraps(ureg, ret, args, strict=True):
     return decorator
 
 
-def check(ureg, *args):
+def check(
+    ureg: "UnitRegistry", *args: Union[str, UnitsContainer, "Unit", None]
+) -> Callable[[F], F]:
     """Decorator to for quantity type checking for function inputs.
 
     Use it to ensure that the decorated function input parameters match

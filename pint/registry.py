@@ -33,6 +33,8 @@ The module actually defines 5 registries with different capabilities:
 :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import copy
 import functools
 import importlib.resources
@@ -45,10 +47,29 @@ from contextlib import contextmanager
 from decimal import Decimal
 from fractions import Fraction
 from io import StringIO
+from numbers import Number
 from tokenize import NAME, NUMBER
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ContextManager,
+    Dict,
+    FrozenSet,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from . import registry_helpers, systems
-from .compat import babel_parse, tokenizer
+from ._typing import F, QuantityOrUnitLike
+from .compat import HAS_BABEL, babel_parse, tokenizer
 from .context import Context, ContextChain
 from .converters import LogarithmicConverter, ScaleConverter
 from .definitions import (
@@ -65,6 +86,7 @@ from .errors import (
     UndefinedUnitError,
 )
 from .pint_eval import build_eval_tree
+from .systems import Group, System
 from .util import (
     ParserHelper,
     SourceIterator,
@@ -79,6 +101,21 @@ from .util import (
     string_preprocessor,
     to_units_container,
 )
+
+if TYPE_CHECKING:
+    from ._typing import UnitLike
+    from .quantity import Quantity
+    from .unit import Unit
+    from .unit import UnitsContainer as UnitsContainerT
+
+    if HAS_BABEL:
+        import babel
+
+        Locale = babel.Locale
+    else:
+        Locale = None
+
+T = TypeVar("T")
 
 _BLOCK_RE = re.compile(r"[ (]")
 
@@ -110,15 +147,15 @@ class RegistryMeta(type):
 class RegistryCache:
     """Cache to speed up unit registries"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         #: Maps dimensionality (UnitsContainer) to Units (str)
-        self.dimensional_equivalents = {}
+        self.dimensional_equivalents: Dict[UnitsContainer, Set[str]] = {}
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self.root_units = {}
         #: Maps dimensionality (UnitsContainer) to Units (UnitsContainer)
-        self.dimensionality = {}
+        self.dimensionality: Dict[UnitsContainer, UnitsContainer] = {}
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit = {}
+        self.parse_unit: Dict[str, UnitsContainer] = {}
 
 
 class ContextCacheOverlay:
@@ -126,11 +163,15 @@ class ContextCacheOverlay:
     active contexts which contain unit redefinitions.
     """
 
-    def __init__(self, registry_cache: RegistryCache):
+    def __init__(self, registry_cache: RegistryCache) -> None:
         self.dimensional_equivalents = registry_cache.dimensional_equivalents
         self.root_units = {}
         self.dimensionality = registry_cache.dimensionality
         self.parse_unit = registry_cache.parse_unit
+
+
+NON_INT_TYPE = Type[Union[float, Decimal, Fraction]]
+PreprocessorType = Callable[[str], str]
 
 
 class BaseRegistry(metaclass=RegistryMeta):
@@ -173,22 +214,22 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     #: Map context prefix to function
     #: type: Dict[str, (SourceIterator -> None)]
-    _parsers = None
+    _parsers: Dict[str, Callable[[SourceIterator], None]] = None
 
     #: Babel.Locale instance or None
-    fmt_locale = None
+    fmt_locale: Optional[Locale] = None
 
     def __init__(
         self,
         filename="",
-        force_ndarray=False,
-        force_ndarray_like=False,
-        on_redefinition="warn",
-        auto_reduce_dimensions=False,
-        preprocessors=None,
-        fmt_locale=None,
-        non_int_type=float,
-        case_sensitive=True,
+        force_ndarray: bool = False,
+        force_ndarray_like: bool = False,
+        on_redefinition: str = "warn",
+        auto_reduce_dimensions: bool = False,
+        preprocessors: Optional[List[PreprocessorType]] = None,
+        fmt_locale: Optional[str] = None,
+        non_int_type: NON_INT_TYPE = float,
+        case_sensitive: bool = True,
     ):
         self._register_parsers()
         self._init_dynamic_classes()
@@ -215,33 +256,35 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         #: Map between name (string) and value (string) of defaults stored in the
         #: definitions file.
-        self._defaults = {}
+        self._defaults: Dict[str, str] = {}
 
         #: Map dimension name (string) to its definition (DimensionDefinition).
-        self._dimensions = {}
+        self._dimensions: Dict[str, DimensionDefinition] = {}
 
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
-        self._units = {}
+        self._units: Dict[str, UnitDefinition] = {}
 
         #: Map unit name in lower case (string) to a set of unit names with the right
         #: case.
         #: Does not contain prefixed units.
         #: e.g: 'hz' - > set('Hz', )
-        self._units_casei = defaultdict(set)
+        self._units_casei: Dict[str, Set[str]] = defaultdict(set)
 
         #: Map prefix name (string) to its definition (PrefixDefinition).
-        self._prefixes = {"": PrefixDefinition("", "", (), 1)}
+        self._prefixes: Dict[str, PrefixDefinition] = {
+            "": PrefixDefinition("", "", (), 1)
+        }
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
-        self._suffixes = {"": "", "s": ""}
+        self._suffixes: Dict[str, str] = {"": "", "s": ""}
 
         #: Map contexts to RegistryCache
         self._cache = RegistryCache()
 
         self._initialized = False
 
-    def _init_dynamic_classes(self):
+    def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
         from .unit import build_unit_class
 
@@ -249,13 +292,13 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         from .quantity import build_quantity_class
 
-        self.Quantity = build_quantity_class(self)
+        self.Quantity: Type["Quantity"] = build_quantity_class(self)
 
         from .measurement import build_measurement_class
 
         self.Measurement = build_measurement_class(self)
 
-    def _after_init(self):
+    def _after_init(self) -> None:
         """This should be called after all __init__"""
 
         if self._filename == "":
@@ -266,17 +309,17 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._build_cache()
         self._initialized = True
 
-    def _register_parsers(self):
+    def _register_parsers(self) -> None:
         self._register_parser("@defaults", self._parse_defaults)
 
-    def _parse_defaults(self, ifile):
+    def _parse_defaults(self, ifile) -> None:
         """Loader for a @default section."""
         next(ifile)
         for lineno, part in ifile.block_iter():
             k, v = part.split("=")
             self._defaults[k.strip()] = v.strip()
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo) -> "BaseRegistry":
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
@@ -293,7 +336,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         )
         return self.parse_expression(item)
 
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         """Support checking prefixed units with the `in` operator"""
         try:
             self.__getattr__(item)
@@ -301,12 +344,12 @@ class BaseRegistry(metaclass=RegistryMeta):
         except UndefinedUnitError:
             return False
 
-    def __dir__(self):
+    def __dir__(self) -> List[str]:
         #: Calling dir(registry) gives all units, methods, and attributes.
         #: Also used for autocompletion in IPython.
         return list(self._units.keys()) + list(object.__dir__(self))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Allows for listing all units in registry with `list(ureg)`.
 
         Returns
@@ -315,7 +358,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         """
         return iter(sorted(self._units.keys()))
 
-    def set_fmt_locale(self, loc):
+    def set_fmt_locale(self, loc: Optional[str]) -> None:
         """Change the locale used by default by `format_babel`.
 
         Parameters
@@ -332,20 +375,20 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         self.fmt_locale = loc
 
-    def UnitsContainer(self, *args, **kwargs):
+    def UnitsContainer(self, *args, **kwargs) -> UnitsContainerT:
         return UnitsContainer(*args, non_int_type=self.non_int_type, **kwargs)
 
     @property
-    def default_format(self):
+    def default_format(self) -> str:
         """Default formatting string for quantities."""
         return self.Quantity.default_format
 
     @default_format.setter
-    def default_format(self, value):
+    def default_format(self, value: str):
         self.Unit.default_format = value
         self.Quantity.default_format = value
 
-    def define(self, definition):
+    def define(self, definition: Union[str, Definition]) -> None:
         """Add unit to the registry.
 
         Parameters
@@ -360,7 +403,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         else:
             self._define(definition)
 
-    def _define(self, definition):
+    def _define(self, definition: Definition) -> Tuple[Definition, dict, dict]:
         """Add unit to the registry.
 
         This method defines only multiplicative units, converting any other type
@@ -509,7 +552,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         else:
             raise ValueError("Prefix directives must start with '@'")
 
-    def load_definitions(self, file, is_resource=False):
+    def load_definitions(self, file, is_resource: bool = False) -> None:
         """Add units and prefixes defined in a definition text file.
 
         Parameters
@@ -584,7 +627,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 except Exception as ex:
                     logger.error("In line {}, cannot add '{}' {}".format(no, line, ex))
 
-    def _build_cache(self):
+    def _build_cache(self) -> None:
         """Build a cache of dimensionality and base units."""
         self._cache = RegistryCache()
 
@@ -621,7 +664,9 @@ class BaseRegistry(metaclass=RegistryMeta):
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
 
-    def get_name(self, name_or_alias, case_sensitive=None):
+    def get_name(
+        self, name_or_alias: str, case_sensitive: Optional[bool] = None
+    ) -> str:
         """Return the canonical name of a unit."""
 
         if name_or_alias == "dimensionless":
@@ -659,7 +704,9 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return unit_name
 
-    def get_symbol(self, name_or_alias, case_sensitive=None):
+    def get_symbol(
+        self, name_or_alias: str, case_sensitive: Optional[bool] = None
+    ) -> str:
         """Return the preferred alias for a unit."""
         candidates = self.parse_unit_name(name_or_alias, case_sensitive)
         if not candidates:
@@ -675,10 +722,10 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return self._prefixes[prefix].symbol + self._units[unit_name].symbol
 
-    def _get_symbol(self, name):
+    def _get_symbol(self, name: str) -> str:
         return self._units[name].symbol
 
-    def get_dimensionality(self, input_units):
+    def get_dimensionality(self, input_units) -> UnitsContainerT:
         """Convert unit or dict of units or dimensions to a dict of base dimensions
         dimensions
         """
@@ -689,7 +736,9 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return self._get_dimensionality(input_units)
 
-    def _get_dimensionality(self, input_units):
+    def _get_dimensionality(
+        self, input_units: Optional[UnitsContainerT]
+    ) -> UnitsContainerT:
         """Convert a UnitsContainer to base dimensions."""
         if not input_units:
             return self.UnitsContainer()
@@ -757,7 +806,9 @@ class BaseRegistry(metaclass=RegistryMeta):
             return first
         return None
 
-    def get_root_units(self, input_units, check_nonmult=True):
+    def get_root_units(
+        self, input_units: UnitLike, check_nonmult: bool = True
+    ) -> Tuple[Number, Unit]:
         """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -868,7 +919,9 @@ class BaseRegistry(metaclass=RegistryMeta):
                 if reg.reference is not None:
                     self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
-    def get_compatible_units(self, input_units, group_or_system=None):
+    def get_compatible_units(
+        self, input_units, group_or_system=None
+    ) -> FrozenSet["Unit"]:
         """ """
         input_units = to_units_container(input_units)
 
@@ -884,7 +937,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         src_dim = self._get_dimensionality(input_units)
         return self._cache.dimensional_equivalents[src_dim]
 
-    def is_compatible_with(self, obj1, obj2, *contexts, **ctx_kwargs):
+    def is_compatible_with(
+        self, obj1: Any, obj2: Any, *contexts: Union[str, Context], **ctx_kwargs
+    ) -> bool:
         """check if the other object is compatible
 
         Parameters
@@ -911,7 +966,13 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return not isinstance(obj2, (self.Quantity, self.Unit))
 
-    def convert(self, value, src, dst, inplace=False):
+    def convert(
+        self,
+        value: T,
+        src: QuantityOrUnitLike,
+        dst: QuantityOrUnitLike,
+        inplace: bool = False,
+    ) -> T:
         """Convert value from some source to destination units.
 
         Parameters
@@ -991,7 +1052,9 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return value
 
-    def parse_unit_name(self, unit_name, case_sensitive=None):
+    def parse_unit_name(
+        self, unit_name: str, case_sensitive: Optional[bool] = None
+    ) -> Tuple[Tuple[str, str, str], ...]:
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
         In case of equivalent combinations (e.g. ('kilo', 'gram', '') and
@@ -1014,7 +1077,9 @@ class BaseRegistry(metaclass=RegistryMeta):
             self._parse_unit_name(unit_name, case_sensitive=case_sensitive)
         )
 
-    def _parse_unit_name(self, unit_name, case_sensitive=None):
+    def _parse_unit_name(
+        self, unit_name: str, case_sensitive: Optional[bool] = None
+    ) -> Iterator[Tuple[str, str, str]]:
         """Helper of parse_unit_name."""
         case_sensitive = (
             self.case_sensitive if case_sensitive is None else case_sensitive
@@ -1044,7 +1109,9 @@ class BaseRegistry(metaclass=RegistryMeta):
                         )
 
     @staticmethod
-    def _dedup_candidates(candidates):
+    def _dedup_candidates(
+        candidates: Iterable[Tuple[str, str, str]]
+    ) -> Tuple[Tuple[str, str, str], ...]:
         """Helper of parse_unit_name.
 
         Given an iterable of unit triplets (prefix, name, suffix), remove those with
@@ -1062,7 +1129,12 @@ class BaseRegistry(metaclass=RegistryMeta):
                 candidates.pop(("", cp + cu, ""), None)
         return tuple(candidates)
 
-    def parse_units(self, input_string, as_delta=None, case_sensitive=None):
+    def parse_units(
+        self,
+        input_string: str,
+        as_delta: Optional[bool] = None,
+        case_sensitive: Optional[bool] = None,
+    ) -> Unit:
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
 
@@ -1080,6 +1152,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         Returns
         -------
+            pint.Unit
 
         """
         for p in self.preprocessors:
@@ -1159,8 +1232,13 @@ class BaseRegistry(metaclass=RegistryMeta):
             raise Exception("unknown token type")
 
     def parse_pattern(
-        self, input_string, pattern, case_sensitive=None, use_decimal=False, many=False
-    ):
+        self,
+        input_string: str,
+        pattern: str,
+        case_sensitive: Optional[bool] = None,
+        use_decimal: bool = False,
+        many: bool = False,
+    ) -> Union[List[str], str, None]:
         """Parse a string with a given regex pattern and returns result.
 
         Parameters
@@ -1215,8 +1293,12 @@ class BaseRegistry(metaclass=RegistryMeta):
         return results
 
     def parse_expression(
-        self, input_string, case_sensitive=None, use_decimal=False, **values
-    ):
+        self,
+        input_string: str,
+        case_sensitive: Optional[bool] = None,
+        use_decimal: bool = False,
+        **values,
+    ) -> Quantity:
         """Parse a mathematical expression including units and return a quantity object.
 
         Numerical constants can be specified as keyword arguments and will take precedence
@@ -1280,8 +1362,11 @@ class NonMultiplicativeRegistry(BaseRegistry):
     """
 
     def __init__(
-        self, default_as_delta=True, autoconvert_offset_to_baseunit=False, **kwargs
-    ):
+        self,
+        default_as_delta: bool = True,
+        autoconvert_offset_to_baseunit: bool = False,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
 
         #: When performing a multiplication of units, interpret
@@ -1292,14 +1377,19 @@ class NonMultiplicativeRegistry(BaseRegistry):
         # base units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
-    def _parse_units(self, input_string, as_delta=None, case_sensitive=None):
+    def _parse_units(
+        self,
+        input_string: str,
+        as_delta: Optional[bool] = None,
+        case_sensitive: Optional[bool] = None,
+    ):
         """ """
         if as_delta is None:
             as_delta = self.default_as_delta
 
         return super()._parse_units(input_string, as_delta, case_sensitive)
 
-    def _define(self, definition):
+    def _define(self, definition: Union[str, Definition]):
         """Add unit to the registry.
 
         In addition to what is done by the BaseRegistry,
@@ -1325,7 +1415,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         return definition, d, di
 
-    def _is_multiplicative(self, u):
+    def _is_multiplicative(self, u) -> bool:
         if u in self._units:
             return self._units[u].is_multiplicative
 
@@ -1473,9 +1563,9 @@ class ContextRegistry(BaseRegistry):
     - Parse @context directive.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         # Map context name (string) or abbreviation to context.
-        self._contexts = {}
+        self._contexts: Dict[str, Context] = {}
         # Stores active contexts.
         self._active_ctx = ContextChain()
         # Map context chain to cache
@@ -1488,11 +1578,11 @@ class ContextRegistry(BaseRegistry):
         # Allow contexts to add override layers to the units
         self._units = ChainMap(self._units)
 
-    def _register_parsers(self):
+    def _register_parsers(self) -> None:
         super()._register_parsers()
         self._register_parser("@context", self._parse_context)
 
-    def _parse_context(self, ifile):
+    def _parse_context(self, ifile) -> None:
         try:
             self.add_context(
                 Context.from_lines(
@@ -1624,7 +1714,9 @@ class ContextRegistry(BaseRegistry):
         # Write into the context-specific self._units.maps[0] and self._cache.root_units
         self.define(definition)
 
-    def enable_contexts(self, *names_or_contexts, **kwargs) -> None:
+    def enable_contexts(
+        self, *names_or_contexts: Union[str, Context], **kwargs
+    ) -> None:
         """Enable contexts provided by name or by object.
 
         Parameters
@@ -1664,10 +1756,10 @@ class ContextRegistry(BaseRegistry):
             ctx.checked = True
 
         # and create a new one with the new defaults.
-        ctxs = tuple(Context.from_context(ctx, **kwargs) for ctx in ctxs)
+        contexts = tuple(Context.from_context(ctx, **kwargs) for ctx in ctxs)
 
         # Finally we add them to the active context.
-        self._active_ctx.insert_contexts(*ctxs)
+        self._active_ctx.insert_contexts(*contexts)
         self._switch_context_cache_and_units()
 
     def disable_contexts(self, n: int = None) -> None:
@@ -1682,7 +1774,7 @@ class ContextRegistry(BaseRegistry):
         self._switch_context_cache_and_units()
 
     @contextmanager
-    def context(self, *names, **kwargs):
+    def context(self, *names, **kwargs) -> ContextManager[Context]:
         """Used as a context manager, this function enables to activate a context
         which is removed after usage.
 
@@ -1739,7 +1831,7 @@ class ContextRegistry(BaseRegistry):
             # the added contexts are removed from the active one.
             self.disable_contexts(len(names))
 
-    def with_context(self, name, **kwargs):
+    def with_context(self, name, **kwargs) -> Callable[[F], F]:
         """Decorator to wrap a function call in a Pint context.
 
         Use it to ensure that a certain context is active when
@@ -1858,23 +1950,23 @@ class SystemRegistry(BaseRegistry):
 
         #: Map system name to system.
         #: :type: dict[ str | System]
-        self._systems = {}
+        self._systems: Dict[str, System] = {}
 
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self._base_units_cache = dict()
 
         #: Map group name to group.
         #: :type: dict[ str | Group]
-        self._groups = {}
+        self._groups: Dict[str, Group] = {}
         self._groups["root"] = self.Group("root")
         self._default_system = system
 
-    def _init_dynamic_classes(self):
+    def _init_dynamic_classes(self) -> None:
         super()._init_dynamic_classes()
         self.Group = systems.build_group_class(self)
         self.System = systems.build_system_class(self)
 
-    def _after_init(self):
+    def _after_init(self) -> None:
         """Invoked at the end of ``__init__``.
 
         - Create default group and add all orphan units to it
@@ -1901,20 +1993,20 @@ class SystemRegistry(BaseRegistry):
             "system", None
         )
 
-    def _register_parsers(self):
+    def _register_parsers(self) -> None:
         super()._register_parsers()
         self._register_parser("@group", self._parse_group)
         self._register_parser("@system", self._parse_system)
 
-    def _parse_group(self, ifile):
+    def _parse_group(self, ifile) -> None:
         self.Group.from_lines(ifile.block_iter(), self.define, self.non_int_type)
 
-    def _parse_system(self, ifile):
+    def _parse_system(self, ifile) -> None:
         self.System.from_lines(
             ifile.block_iter(), self.get_root_units, self.non_int_type
         )
 
-    def get_group(self, name, create_if_needed=True):
+    def get_group(self, name: str, create_if_needed: bool = True) -> Group:
         """Return a Group.
 
         Parameters
@@ -1943,7 +2035,7 @@ class SystemRegistry(BaseRegistry):
         return systems.Lister(self._systems)
 
     @property
-    def default_system(self):
+    def default_system(self) -> System:
         return self._default_system
 
     @default_system.setter
@@ -1956,7 +2048,7 @@ class SystemRegistry(BaseRegistry):
 
         self._default_system = name
 
-    def get_system(self, name, create_if_needed=True):
+    def get_system(self, name: str, create_if_needed: bool = True) -> System:
         """Return a Group.
 
         Parameters
@@ -1994,7 +2086,12 @@ class SystemRegistry(BaseRegistry):
 
         return definition, d, di
 
-    def get_base_units(self, input_units, check_nonmult=True, system=None):
+    def get_base_units(
+        self,
+        input_units: Union[UnitLike, Quantity],
+        check_nonmult: bool = True,
+        system: Union[str, System, None] = None,
+    ) -> Tuple[Number, Unit]:
         """Convert unit or dict of units to the base units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -2027,7 +2124,12 @@ class SystemRegistry(BaseRegistry):
 
         return f, self.Unit(units)
 
-    def _get_base_units(self, input_units, check_nonmult=True, system=None):
+    def _get_base_units(
+        self,
+        input_units: UnitsContainerT,
+        check_nonmult: bool = True,
+        system: Union[str, System, None] = None,
+    ):
 
         if system is None:
             system = self._default_system
@@ -2068,7 +2170,7 @@ class SystemRegistry(BaseRegistry):
 
         return base_factor, destination_units
 
-    def _get_compatible_units(self, input_units, group_or_system):
+    def _get_compatible_units(self, input_units, group_or_system) -> FrozenSet[Unit]:
 
         if group_or_system is None:
             group_or_system = self._default_system
@@ -2126,17 +2228,17 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
     def __init__(
         self,
         filename="",
-        force_ndarray=False,
-        force_ndarray_like=False,
-        default_as_delta=True,
-        autoconvert_offset_to_baseunit=False,
-        on_redefinition="warn",
+        force_ndarray: bool = False,
+        force_ndarray_like: bool = False,
+        default_as_delta: bool = True,
+        autoconvert_offset_to_baseunit: bool = False,
+        on_redefinition: str = "warn",
         system=None,
         auto_reduce_dimensions=False,
         preprocessors=None,
         fmt_locale=None,
         non_int_type=float,
-        case_sensitive=True,
+        case_sensitive: bool = True,
     ):
 
         super().__init__(
@@ -2170,7 +2272,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         """
         return pi_theorem(quantities, self)
 
-    def setup_matplotlib(self, enable=True):
+    def setup_matplotlib(self, enable: bool = True) -> None:
         """Set up handlers for matplotlib's unit support.
 
         Parameters

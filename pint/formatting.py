@@ -9,6 +9,7 @@
 """
 
 import re
+from typing import Dict
 
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse
@@ -71,7 +72,7 @@ def _pretty_fmt_exponent(num):
 
 #: _FORMATS maps format specifications to the corresponding argument set to
 #: formatter().
-_FORMATS = {
+_FORMATS: Dict[str, dict] = {
     "P": {  # Pretty format.
         "as_ratio": True,
         "single_denominator": False,
