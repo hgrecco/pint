@@ -387,6 +387,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     def default_format(self, value: str):
         self.Unit.default_format = value
         self.Quantity.default_format = value
+        self.Measurement.default_format = value
 
     def define(self, definition: Union[str, Definition]) -> None:
         """Add unit to the registry.

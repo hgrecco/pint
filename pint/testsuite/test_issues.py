@@ -817,6 +817,13 @@ class TestIssues(QuantityTestCase):
             np.array((0.04, 0.09)),
         )
 
+    @helpers.requires_uncertainties()
+    def test_issue_1300(self):
+        ureg = UnitRegistry()
+        ureg.default_format = "~P"
+        m = ureg.Measurement(1, 0.1, "meter")
+        assert m.default_format == "~P"
+
 
 if np is not None:
 
