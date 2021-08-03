@@ -23,7 +23,11 @@ def _file_prefix(filename=None, lineno=None):
         return ""
 
 
-class DefinitionSyntaxError(SyntaxError):
+class PintError(Exception):
+    """Base exception for all Pint errors."""
+
+
+class DefinitionSyntaxError(SyntaxError, PintError):
     """Raised when a textual definition has a syntax error."""
 
     def __init__(self, msg, *, filename=None, lineno=None):
@@ -45,7 +49,7 @@ class DefinitionSyntaxError(SyntaxError):
         return DefinitionSyntaxError, self.args, self.__dict__
 
 
-class RedefinitionError(ValueError):
+class RedefinitionError(ValueError, PintError):
     """Raised when a unit or prefix is redefined."""
 
     def __init__(self, name, definition_type, *, filename=None, lineno=None):
@@ -61,7 +65,7 @@ class RedefinitionError(ValueError):
         return RedefinitionError, self.args, self.__dict__
 
 
-class UndefinedUnitError(AttributeError):
+class UndefinedUnitError(AttributeError, PintError):
     """Raised when the units are not defined in the unit registry."""
 
     def __init__(self, *unit_names):
@@ -75,7 +79,7 @@ class UndefinedUnitError(AttributeError):
         return f"{self.args} are not defined in the unit registry"
 
 
-class PintTypeError(TypeError):
+class PintTypeError(TypeError, PintError):
     pass
 
 
@@ -133,5 +137,5 @@ class LogarithmicUnitCalculusError(PintTypeError):
         )
 
 
-class UnitStrippedWarning(UserWarning):
+class UnitStrippedWarning(UserWarning, PintError):
     pass
