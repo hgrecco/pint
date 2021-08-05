@@ -2329,6 +2329,9 @@ class ApplicationRegistry:
     def __init__(self, registry):
         self._registry = registry
 
+    def get(self):
+        return self._registry
+
     def set(self, new_registry):
         if isinstance(new_registry, type(self)):
             new_registry = new_registry._registry

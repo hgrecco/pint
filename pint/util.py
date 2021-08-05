@@ -820,7 +820,7 @@ class SharedRegistryObject:
             # UnitRegistry._init_dynamic_classes
             from . import _APP_REGISTRY
 
-            inst._REGISTRY = _APP_REGISTRY
+            inst._REGISTRY = _APP_REGISTRY.get()
         return inst
 
     def _check(self, other) -> bool:
