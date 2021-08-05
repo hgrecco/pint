@@ -47,8 +47,8 @@ except Exception:  # pragma: no cover
 _DEFAULT_REGISTRY = LazyRegistry()
 
 #: Registry used for unpickling operations.
-_APP_REGISTRY = _DEFAULT_REGISTRY
 application_registry = ApplicationRegistry(_DEFAULT_REGISTRY)
+_APP_REGISTRY = application_registry
 
 
 def _unpickle(cls, *args):
