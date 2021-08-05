@@ -25,7 +25,7 @@ from .errors import (  # noqa: F401
 from .formatting import formatter
 from .measurement import Measurement
 from .quantity import Quantity
-from .registry import LazyRegistry, UnitRegistry
+from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
 from .unit import Unit
 from .util import logger, pi_theorem
 
@@ -48,6 +48,7 @@ _DEFAULT_REGISTRY = LazyRegistry()
 
 #: Registry used for unpickling operations.
 _APP_REGISTRY = _DEFAULT_REGISTRY
+application_registry = ApplicationRegistry(_DEFAULT_REGISTRY)
 
 
 def _unpickle(cls, *args):
