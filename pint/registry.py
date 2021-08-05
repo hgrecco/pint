@@ -2323,3 +2323,17 @@ class LazyRegistry:
     def __call__(self, *args, **kwargs):
         self.__init()
         return self(*args, **kwargs)
+
+
+class ApplicationRegistry:
+    def __init__(self, registry):
+        self._registry = registry
+
+    def set(self, new_registry):
+        self._registry = new_registry
+
+    def __getattr__(self, name):
+        return getattr(self._registry, name)
+
+    def __dir__(self):
+        return dir(self._registry)
