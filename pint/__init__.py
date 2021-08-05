@@ -27,7 +27,7 @@ from .measurement import Measurement
 from .quantity import Quantity
 from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
 from .unit import Unit
-from .util import logger, pi_theorem
+from .util import logger, pi_theorem  # noqa: F401
 
 try:
     from importlib.metadata import version
@@ -101,11 +101,7 @@ def set_application_registry(registry):
     ----------
     registry : pint.UnitRegistry
     """
-    if not isinstance(registry, (LazyRegistry, UnitRegistry)):
-        raise TypeError("Expected UnitRegistry; got %s" % type(registry))
-    global _APP_REGISTRY
-    logger.debug("Changing app registry from %r to %r.", _APP_REGISTRY, registry)
-    _APP_REGISTRY = registry
+    application_registry.set(registry)
 
 
 def get_application_registry():
@@ -117,7 +113,7 @@ def get_application_registry():
     -------
     pint.UnitRegistry
     """
-    return _APP_REGISTRY
+    return application_registry
 
 
 def test():
