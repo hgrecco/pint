@@ -2337,3 +2337,15 @@ class ApplicationRegistry:
 
     def __dir__(self):
         return dir(self._registry)
+
+    def __getitem__(self, item):
+        return self._registry[item]
+
+    def __call__(self, *args, **kwargs):
+        return self._registry(*args, **kwargs)
+
+    def __contains__(self, item):
+        return self._registry.__contains__(item)
+
+    def __iter__(self):
+        return iter(self._registry)
