@@ -48,7 +48,6 @@ _DEFAULT_REGISTRY = LazyRegistry()
 
 #: Registry used for unpickling operations.
 application_registry = ApplicationRegistry(_DEFAULT_REGISTRY)
-_APP_REGISTRY = application_registry
 
 
 def _unpickle(cls, *args):
@@ -73,24 +72,24 @@ def _unpickle(cls, *args):
         # We need to make sure that this happens before using.
         if isinstance(arg, UnitsContainer):
             for name in arg:
-                _APP_REGISTRY.parse_units(name)
+                application_registry.parse_units(name)
 
     return cls(*args)
 
 
 def _unpickle_quantity(cls, *args):
     """Rebuild quantity upon unpickling using the application registry."""
-    return _unpickle(_APP_REGISTRY.Quantity, *args)
+    return _unpickle(application_registry.Quantity, *args)
 
 
 def _unpickle_unit(cls, *args):
     """Rebuild unit upon unpickling using the application registry."""
-    return _unpickle(_APP_REGISTRY.Unit, *args)
+    return _unpickle(application_registry.Unit, *args)
 
 
 def _unpickle_measurement(cls, *args):
     """Rebuild measurement upon unpickling using the application registry."""
-    return _unpickle(_APP_REGISTRY.Measurement, *args)
+    return _unpickle(application_registry.Measurement, *args)
 
 
 def set_application_registry(registry):
