@@ -2334,7 +2334,7 @@ class ApplicationRegistry:
 
     def set(self, new_registry):
         if isinstance(new_registry, type(self)):
-            new_registry = new_registry._registry
+            new_registry = new_registry.get()
 
         if not isinstance(new_registry, (LazyRegistry, UnitRegistry)):
             raise TypeError("Expected UnitRegistry; got %s" % type(new_registry))
