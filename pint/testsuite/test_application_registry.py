@@ -258,3 +258,15 @@ class TestSwapApplicationRegistry:
         assert m1.to("bar").error.magnitude == 2
         assert m2.to("bar").error.magnitude == 3
         assert m3.to("bar").error.magnitude == 3
+
+
+@pytest.mark.usefixtures("isolate_application_registry")
+def test_update_saved_registries():
+    ureg1 = get_application_registry()
+    ureg2 = get_application_registry()
+
+    new = UnitRegistry()
+    new.define("foo = []")
+    set_application_registry(new)
+
+    assert ureg1.Unit("foo") == ureg2.Unit("foo")
