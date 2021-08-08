@@ -710,7 +710,9 @@ def implement_prod_func(name):
             exponent = np.sum(where)
             units = a.units ** exponent
         else:
-            exponent = np.sum(np.logical_not(np.isnan(a))) if name == "nanprod" else a.size
+            exponent = (
+                np.sum(np.logical_not(np.isnan(a))) if name == "nanprod" else a.size
+            )
             units = a.units ** exponent
 
         result = func(a._magnitude, *args, **kwargs)
