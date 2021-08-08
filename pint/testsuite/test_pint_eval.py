@@ -1,12 +1,10 @@
-import unittest
-
 from pint.compat import tokenizer
 from pint.pint_eval import build_eval_tree
 
 
-class TestPintEval(unittest.TestCase):
+class TestPintEval:
     def _test_one(self, input_text, parsed):
-        self.assertEqual(build_eval_tree(tokenizer(input_text)).to_string(), parsed)
+        assert build_eval_tree(tokenizer(input_text)).to_string() == parsed
 
     def test_build_eval_tree(self):
         self._test_one("3", "3")

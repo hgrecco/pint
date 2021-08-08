@@ -12,6 +12,7 @@ MANIFEST
 *pytest_cache*
 .eggs
 .mypy_cache
+pip-wheel-metadata
 
 # WebDAV file system cache files
 .DAV/
@@ -27,3 +28,10 @@ test/
 
 # test csv which should be user generated
 notebooks/pandas_test.csv
+
+# dask stuff
+dask-worker-space
+
+# airspeed velocity bechmark
+.asv/
+benchmarks/hashes.txt

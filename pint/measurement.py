@@ -66,13 +66,13 @@ class Measurement(Quantity):
 
     @property
     def rel(self):
-        return float(abs(self.magnitude.std_dev / self.magnitude.nominal_value))
+        return abs(self.magnitude.std_dev / self.magnitude.nominal_value)
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
-        from . import _unpickle
+        from . import _unpickle_measurement
 
-        return _unpickle, (Measurement, self.magnitude, self._units)
+        return _unpickle_measurement, (Measurement, self.magnitude, self._units)
 
     def __repr__(self):
         return "<Measurement({}, {}, {})>".format(
@@ -88,7 +88,7 @@ class Measurement(Quantity):
             # the uncertainties module supports formatting
             # numbers in value(unc) notation (i.e. 1.23(45) instead of 1.23 +/- 0.45),
             # using type code 'S', which siunitx actually accepts as input.
-            # However, the implimentation is incompatible with siunitx.
+            # However, the implementation is incompatible with siunitx.
             # Uncertainties will do 9.1(1.1), which is invalid, should be 9.1(11).
             # TODO: add support for extracting options
             #
@@ -110,7 +110,7 @@ class Measurement(Quantity):
             pm_fmt = _FORMATS["Lx"]["pm_fmt"]
             mstr = format(self.magnitude, spec).replace(r"+/-", pm_fmt)
             # Also, SIunitx doesn't accept parentheses, which uncs uses with
-            # scientific notation ('e' or 'E' and somtimes 'g' or 'G').
+            # scientific notation ('e' or 'E' and sometimes 'g' or 'G').
             mstr = mstr.replace("(", "").replace(")", " ")
             ustr = siunitx_format_unit(self.units)
             return r"\SI%s{%s}{%s}" % (opts, mstr, ustr)
@@ -147,7 +147,7 @@ class Measurement(Quantity):
         if "L" in newspec and "S" in newspec:
             mag = mag.replace("(", r"\left(").replace(")", r"\right)")
 
-        if "L" in newspec or "H" in spec:
+        if "L" in newspec:
             space = r"\ "
         else:
             space = " "
@@ -158,14 +158,10 @@ class Measurement(Quantity):
 
         if "H" in spec:
             # Fix exponential format
-            mag = re.sub(r"\)e\+0?(\d+)", r")×10^{\1}", mag)
-            mag = re.sub(r"\)e-0?(\d+)", r")×10^{-\1}", mag)
+            mag = re.sub(r"\)e\+0?(\d+)", r")×10<sup>\1</sup>", mag)
+            mag = re.sub(r"\)e-0?(\d+)", r")×10<sup>-\1</sup>", mag)
 
-            assert ustr[:2] == r"\["
-            assert ustr[-2:] == r"\]"
-            return r"\[" + mag + space + ustr[2:]
-        else:
-            return mag + space + ustr
+        return mag + space + ustr
 
 
 _Measurement = Measurement

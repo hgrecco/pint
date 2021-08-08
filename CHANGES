@@ -1,10 +1,99 @@
 Pint Changelog
 ==============
 
-0.14 (unreleased)
+0.18 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Implement use of Quantity in the Quantity constructor (convert to specified units).
+  (Issue #1231)
+- Rename .readthedocs.yml to .readthedocs.yaml, update MANIFEST.in (Issue #1311)
+- Fix a few small typos.
+  (Issue #1308)
+- Fix babel format for `Unit`.
+  (Issue #1085)
+- Fix handling of positional max/min arguments in clip function.
+  (Issue #1244)
+- Fix string formatting of numpy array scalars
+- Fix default format for Measurement class (Issue #1300)
+
+### Breaking Changes
+
+- pint no longer supports Python 3.6
+- Minimum Numpy version supported is 1.17+
+- Add supports for type hints for Quantity class. Quantity is now a Generic (PEP560).
+- Add support for [PEP561](https://www.python.org/dev/peps/pep-0561/) (Package Type information)
+
+
+0.17 (2021-03-22)
+-----------------
+
+- Add the Wh unit for battery capacity measurements
+  (PR #1260, thanks Maciej Grela)
+- Fix issue with reducable dimensionless units when using power (Quantity**ndarray)
+  (Issue #1185)
+- Fix comparisons between Quantities and Measurements.
+  (Issue #1134, thanks lewisamarshall)
+- UnitsContainer returns false if other is str and cannnot be parsed
+  (Issue #1179, thanks rfrowe)
+- Fix numpy.linalg.solve unit output. (Issue #1246)
+- Support numpy.lib.stride_tricks.sliding_window_view. (Issue #1255)
+- NEP29 Support docs.
+- Move all tests to pytest.
+- Fix to __pow__ and __ipow__
+- Migrate to Github Actions.
+  (Issue #1236)
+- Update linter to use pre-commit.
+- Quantity comparisons now ensure other is Quantity.
+- Add sign function compatibility.
+  (thanks Robin Tesse)
+- Fix scalar to ndarray tolist.
+- Fix tolist function with scalar ndarray.
+  (Issue #1195, thanks jules-ch)
+- Corrected typos and dacstrings
+- Implements a first benchmark suite in airspeed velocity (asv). 
+- Power for pseudo-dimensionless units.
+  (Issue #1185, thanks Kevin Fuhr)
+
+0.16.1 (2020-09-22)
+-------------------
+
+- Fix unpickling, now it is using the APP_REGISTRY as expected.
+  (Issue #1175)
+
+0.16 (2020-09-13)
+-----------------
+
+- Fixed issue where performing an operation of a Quantity with certain units would perform an in-place
+  unit conversion that modified the operand in addition to the returned value (Issues #1102 & #1144)
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Clark Willison, Giorgio Signorello, Steven Casagrande, Jonathan Wheeler)
+- Drop dependency on setuptools pkg_resources to read package resources, using std lib importlib.resources instead.
+  (Issue #1080)
+
+
+0.15 (2020-08-22)
+-----------------
+
+- Change `Quantity` and `Unit` HTML (i.e., Jupyter notebook) repr away from LaTeX to a
+  simpler, more performant pretty-text and table based repr inspired by Sparse and Dask.
+  (Issue #654)
+- Add `case_sensitive` option to registry for case (in)sensitive handling when parsing
+  units (Issue #1145)
+- Implement Dask collection interface to support Pint Quantity wrapped Dask arrays.
+- Started automatically testing examples in the documentation
+- Fixed an exception generated when reducing dimensions with three or more
+  units of the same type
+- Fixed right operand power for dimensionless Quantity to reflect numpy behavior. (Issue #1136)
+- Eliminated warning when setting a masked value on an underlying MaskedArray.
+- Add `sort` option to `formatting.formatter` to permit disabling sorting of component units in format string
+- Implements Logarithmic Units like dBm, dB or decade
+  (Issue #71, Thanks Dima Pustakhod, Giorgio Signorello, Jonathan Wheeler)
+
+
+0.14 (2020-07-01)
+-----------------
+
+- Changes required to support Pint-Pandas 0.1.
 
 
 0.13 (2020-06-17)

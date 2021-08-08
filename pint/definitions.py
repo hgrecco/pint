@@ -8,9 +8,12 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from collections import namedtuple
+from __future__ import annotations
 
-from .converters import OffsetConverter, ScaleConverter
+from collections import namedtuple
+from typing import Callable, Iterable, Optional, Union
+
+from .converters import Converter, LogarithmicConverter, OffsetConverter, ScaleConverter
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
@@ -42,7 +45,7 @@ class PreprocessedDefinition(
     """
 
     @classmethod
-    def from_string(cls, definition):
+    def from_string(cls, definition: str) -> PreprocessedDefinition:
         name, definition = definition.split("=", 1)
         name = name.strip()
 
@@ -58,14 +61,13 @@ class PreprocessedDefinition(
 
 
 class _NotNumeric(Exception):
-    """Internal exception. Do not expose outside Pint
-    """
+    """Internal exception. Do not expose outside Pint"""
 
     def __init__(self, value):
         self.value = value
 
 
-def numeric_parse(s, non_int_type=float):
+def numeric_parse(s: str, non_int_type: type = float):
     """Try parse a string into a number (without using eval).
 
     Parameters
@@ -104,7 +106,13 @@ class Definition:
     converter : callable or Converter or None
     """
 
-    def __init__(self, name, symbol, aliases, converter):
+    def __init__(
+        self,
+        name: str,
+        symbol: Optional[str],
+        aliases: Iterable[str],
+        converter: Optional[Union[Callable, Converter]],
+    ):
 
         if isinstance(converter, str):
             raise TypeError(
@@ -113,15 +121,21 @@ class Definition:
 
         self._name = name
         self._symbol = symbol
-        self._aliases = aliases
+        self._aliases = tuple(aliases)
         self._converter = converter
 
     @property
-    def is_multiplicative(self):
+    def is_multiplicative(self) -> bool:
         return self._converter.is_multiplicative
 
+    @property
+    def is_logarithmic(self) -> bool:
+        return self._converter.is_logarithmic
+
     @classmethod
-    def from_string(cls, definition, non_int_type=float):
+    def from_string(
+        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
+    ) -> "Definition":
         """Parse a definition.
 
         Parameters
@@ -147,30 +161,30 @@ class Definition:
             return UnitDefinition.from_string(definition, non_int_type)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def symbol(self):
+    def symbol(self) -> str:
         return self._symbol or self._name
 
     @property
-    def has_symbol(self):
+    def has_symbol(self) -> bool:
         return bool(self._symbol)
 
     @property
-    def aliases(self):
+    def aliases(self) -> Iterable[str]:
         return self._aliases
 
-    def add_aliases(self, *alias):
+    def add_aliases(self, *alias: str) -> None:
         alias = tuple(a for a in alias if a not in self._aliases)
         self._aliases = self._aliases + alias
 
     @property
-    def converter(self):
+    def converter(self) -> Converter:
         return self._converter
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -185,7 +199,9 @@ class PrefixDefinition(Definition):
     """
 
     @classmethod
-    def from_string(cls, definition, non_int_type=float):
+    def from_string(
+        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
+    ) -> "PrefixDefinition":
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
@@ -223,19 +239,29 @@ class UnitDefinition(Definition):
 
     """
 
-    def __init__(self, name, symbol, aliases, converter, reference=None, is_base=False):
+    def __init__(
+        self,
+        name: str,
+        symbol: Optional[str],
+        aliases: Iterable[str],
+        converter: Converter,
+        reference: Optional[UnitsContainer] = None,
+        is_base: bool = False,
+    ) -> None:
         self.reference = reference
         self.is_base = is_base
 
         super().__init__(name, symbol, aliases, converter)
 
     @classmethod
-    def from_string(cls, definition, non_int_type=float):
+    def from_string(
+        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
+    ) -> "UnitDefinition":
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
         if ";" in definition.value:
-            [converter, modifiers] = definition.value.split(";", 2)
+            [converter, modifiers] = definition.value.split(";", 1)
 
             try:
                 modifiers = dict(
@@ -265,10 +291,22 @@ class UnitDefinition(Definition):
             )
         reference = UnitsContainer(converter)
 
-        if modifiers.get("offset", 0) != 0:
-            converter = OffsetConverter(converter.scale, modifiers["offset"])
-        else:
+        if not modifiers:
             converter = ScaleConverter(converter.scale)
+
+        elif "offset" in modifiers:
+            if modifiers.get("offset", 0.0) != 0.0:
+                converter = OffsetConverter(converter.scale, modifiers["offset"])
+            else:
+                converter = ScaleConverter(converter.scale)
+
+        elif "logbase" in modifiers and "logfactor" in modifiers:
+            converter = LogarithmicConverter(
+                converter.scale, modifiers["logbase"], modifiers["logfactor"]
+            )
+
+        else:
+            raise DefinitionSyntaxError("Unable to assign a converter to the unit")
 
         return cls(
             definition.name,
@@ -290,14 +328,24 @@ class DimensionDefinition(Definition):
         [density] = [mass] / [volume]
     """
 
-    def __init__(self, name, symbol, aliases, converter, reference=None, is_base=False):
+    def __init__(
+        self,
+        name: str,
+        symbol: Optional[str],
+        aliases: Iterable[str],
+        converter: Optional[Converter],
+        reference: Optional[UnitsContainer] = None,
+        is_base: bool = False,
+    ) -> None:
         self.reference = reference
         self.is_base = is_base
 
         super().__init__(name, symbol, aliases, converter=None)
 
     @classmethod
-    def from_string(cls, definition, non_int_type=float):
+    def from_string(
+        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
+    ) -> "DimensionDefinition":
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
@@ -335,11 +383,13 @@ class AliasDefinition(Definition):
         @alias meter = my_meter
     """
 
-    def __init__(self, name, aliases):
+    def __init__(self, name: str, aliases: Iterable[str]) -> None:
         super().__init__(name=name, symbol=None, aliases=aliases, converter=None)
 
     @classmethod
-    def from_string(cls, definition, non_int_type=float):
+    def from_string(
+        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
+    ) -> AliasDefinition:
 
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)

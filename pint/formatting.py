@@ -9,11 +9,12 @@
 """
 
 import re
+from typing import Dict
 
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse
 
-__JOIN_REG_EXP = re.compile(r"\{\d*\}")
+__JOIN_REG_EXP = re.compile(r"{\d*}")
 
 
 def _join(fmt, iterable):
@@ -71,7 +72,7 @@ def _pretty_fmt_exponent(num):
 
 #: _FORMATS maps format specifications to the corresponding argument set to
 #: formatter().
-_FORMATS = {
+_FORMATS: Dict[str, dict] = {
     "P": {  # Pretty format.
         "as_ratio": True,
         "single_denominator": False,
@@ -95,7 +96,7 @@ _FORMATS = {
         "single_denominator": True,
         "product_fmt": r" ",
         "division_fmt": r"{}/{}",
-        "power_fmt": "{{{}}}^{{{}}}",  # braces superscript whole exponent
+        "power_fmt": r"{}<sup>{}</sup>",
         "parentheses_fmt": r"({})",
     },
     "": {  # Default format.
@@ -129,6 +130,7 @@ def formatter(
     locale=None,
     babel_length="long",
     babel_plural_form="one",
+    sort=True,
 ):
     """Format a list of (name, exponent) pairs.
 
@@ -157,6 +159,8 @@ def formatter(
         the plural form, calculated as defined in babel. (Default value = "one")
     exp_call : callable
          (Default value = lambda x: f"{x:n}")
+    sort : bool, optional
+        True to sort the formatted units alphabetically (Default value = True)
 
     Returns
     -------
@@ -175,7 +179,9 @@ def formatter(
 
     pos_terms, neg_terms = [], []
 
-    for key, value in sorted(items):
+    if sort:
+        items = sorted(items)
+    for key, value in items:
         if locale and babel_length and babel_plural_form and key in _babel_units:
             _key = _babel_units[key]
             locale = babel_parse(locale)
@@ -230,7 +236,7 @@ def formatter(
     return _join(division_fmt, [pos_ret, neg_ret])
 
 
-# Extract just the type from the specification mini-langage: see
+# Extract just the type from the specification mini-language: see
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
 # We also add uS for uncertainties.
 _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
@@ -270,18 +276,13 @@ def format_unit(unit, spec, **kwspec):
             (r"\mathrm{{{}}}".format(u.replace("_", r"\_")), p) for u, p in unit.items()
         ]
         return formatter(rm, **fmt).replace("[", "{").replace("]", "}")
-    elif spec == "H":
-        # HTML (Jupyter Notebook)
-        rm = [(u.replace("_", r"\_"), p) for u, p in unit.items()]
-        return formatter(rm, **fmt)
     else:
-        # Plain text
+        # HTML and Text
         return formatter(unit.items(), **fmt)
 
 
 def siunitx_format_unit(units):
-    """Returns LaTeX code for the unit that can be put into an siunitx command.
-    """
+    """Returns LaTeX code for the unit that can be put into an siunitx command."""
 
     # NOTE: unit registry is required to identify unit prefixes.
     registry = units._REGISTRY

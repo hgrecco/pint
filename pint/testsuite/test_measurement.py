@@ -1,22 +1,19 @@
+import pytest
+
 from pint import DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 
 
 @helpers.requires_not_uncertainties()
 class TestNotMeasurement(QuantityTestCase):
-
-    FORCE_NDARRAY = False
-
     def test_instantiate(self):
         M_ = self.ureg.Measurement
-        self.assertRaises(RuntimeError, M_, 4.0, 0.1, "s")
+        with pytest.raises(RuntimeError):
+            M_(4.0, 0.1, "s")
 
 
 @helpers.requires_uncertainties()
 class TestMeasurement(QuantityTestCase):
-
-    FORCE_NDARRAY = False
-
     def test_simple(self):
         M_ = self.ureg.Measurement
         M_(4.0, 0.1, "s")
@@ -35,11 +32,11 @@ class TestMeasurement(QuantityTestCase):
         )
 
         for m in ms:
-            self.assertEqual(m.value, v)
-            self.assertEqual(m.error, u)
-            self.assertEqual(m.rel, m.error / abs(m.value))
+            assert m.value == v
+            assert m.error == u
+            assert m.rel == m.error / abs(m.value)
 
-    def test_format(self):
+    def test_format(self, subtests):
         v, u = self.Q_(4.0, "s ** 2"), self.Q_(0.1, "s ** 2")
         m = self.ureg.Measurement(v, u)
 
@@ -48,20 +45,20 @@ class TestMeasurement(QuantityTestCase):
             ("{!r}", "<Measurement(4.0, 0.1, second ** 2)>"),
             ("{:P}", "(4.00 ± 0.10) second²"),
             ("{:L}", r"\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}"),
-            ("{:H}", r"\[(4.00 &plusmn; 0.10)\ {second}^{2}\]"),
+            ("{:H}", "(4.00 &plusmn; 0.10) second<sup>2</sup>"),
             ("{:C}", "(4.00+/-0.10) second**2"),
             ("{:Lx}", r"\SI{4.00 +- 0.10}{\second\squared}"),
             ("{:.1f}", "(4.0 +/- 0.1) second ** 2"),
             ("{:.1fP}", "(4.0 ± 0.1) second²"),
             ("{:.1fL}", r"\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}"),
-            ("{:.1fH}", r"\[(4.0 &plusmn; 0.1)\ {second}^{2}\]"),
+            ("{:.1fH}", "(4.0 &plusmn; 0.1) second<sup>2</sup>"),
             ("{:.1fC}", "(4.0+/-0.1) second**2"),
             ("{:.1fLx}", r"\SI{4.0 +- 0.1}{\second\squared}"),
         ):
-            with self.subTest(spec):
-                self.assertEqual(spec.format(m), result)
+            with subtests.test(spec):
+                assert spec.format(m) == result
 
-    def test_format_paru(self):
+    def test_format_paru(self, subtests):
         v, u = self.Q_(0.20, "s ** 2"), self.Q_(0.01, "s ** 2")
         m = self.ureg.Measurement(v, u)
 
@@ -70,13 +67,13 @@ class TestMeasurement(QuantityTestCase):
             ("{:.3uS}", "0.2000(100) second ** 2"),
             ("{:.3uSP}", "0.2000(100) second²"),
             ("{:.3uSL}", r"0.2000\left(100\right)\ \mathrm{second}^{2}"),
-            ("{:.3uSH}", r"\[0.2000(100)\ {second}^{2}\]"),
+            ("{:.3uSH}", "0.2000(100) second<sup>2</sup>"),
             ("{:.3uSC}", "0.2000(100) second**2"),
         ):
-            with self.subTest(spec):
-                self.assertEqual(spec.format(m), result)
+            with subtests.test(spec):
+                assert spec.format(m) == result
 
-    def test_format_u(self):
+    def test_format_u(self, subtests):
         v, u = self.Q_(0.20, "s ** 2"), self.Q_(0.01, "s ** 2")
         m = self.ureg.Measurement(v, u)
 
@@ -84,16 +81,19 @@ class TestMeasurement(QuantityTestCase):
             ("{:.3u}", "(0.2000 +/- 0.0100) second ** 2"),
             ("{:.3uP}", "(0.2000 ± 0.0100) second²"),
             ("{:.3uL}", r"\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}"),
-            ("{:.3uH}", r"\[(0.2000 &plusmn; 0.0100)\ {second}^{2}\]"),
+            ("{:.3uH}", "(0.2000 &plusmn; 0.0100) second<sup>2</sup>"),
             ("{:.3uC}", "(0.2000+/-0.0100) second**2"),
-            ("{:.3uLx}", r"\SI{0.2000 +- 0.0100}{\second\squared}",),
+            (
+                "{:.3uLx}",
+                r"\SI{0.2000 +- 0.0100}{\second\squared}",
+            ),
             ("{:.1uLx}", r"\SI{0.20 +- 0.01}{\second\squared}"),
         ):
-            with self.subTest(spec):
-                self.assertEqual(spec.format(m), result)
+            with subtests.test(spec):
+                assert spec.format(m) == result
 
-    def test_format_percu(self):
-        self.test_format_perce()
+    def test_format_percu(self, subtests):
+        self.test_format_perce(subtests)
         v, u = self.Q_(0.20, "s ** 2"), self.Q_(0.01, "s ** 2")
         m = self.ureg.Measurement(v, u)
 
@@ -101,13 +101,13 @@ class TestMeasurement(QuantityTestCase):
             ("{:.1u%}", "(20 +/- 1)% second ** 2"),
             ("{:.1u%P}", "(20 ± 1)% second²"),
             ("{:.1u%L}", r"\left(20 \pm 1\right) \%\ \mathrm{second}^{2}"),
-            ("{:.1u%H}", r"\[(20 &plusmn; 1)%\ {second}^{2}\]"),
+            ("{:.1u%H}", "(20 &plusmn; 1)% second<sup>2</sup>"),
             ("{:.1u%C}", "(20+/-1)% second**2"),
         ):
-            with self.subTest(spec):
-                self.assertEqual(spec.format(m), result)
+            with subtests.test(spec):
+                assert spec.format(m) == result
 
-    def test_format_perce(self):
+    def test_format_perce(self, subtests):
         v, u = self.Q_(0.20, "s ** 2"), self.Q_(0.01, "s ** 2")
         m = self.ureg.Measurement(v, u)
         for spec, result in (
@@ -117,13 +117,13 @@ class TestMeasurement(QuantityTestCase):
                 "{:.1ueL}",
                 r"\left(2.0 \pm 0.1\right) \times 10^{-1}\ \mathrm{second}^{2}",
             ),
-            ("{:.1ueH}", r"\[(2.0 &plusmn; 0.1)×10^{-1}\ {second}^{2}\]"),
+            ("{:.1ueH}", "(2.0 &plusmn; 0.1)×10<sup>-1</sup> second<sup>2</sup>"),
             ("{:.1ueC}", "(2.0+/-0.1)e-01 second**2"),
         ):
-            with self.subTest(spec):
-                self.assertEqual(spec.format(m), result)
+            with subtests.test(spec):
+                assert spec.format(m) == result
 
-    def test_format_exponential_pos(self):
+    def test_format_exponential_pos(self, subtests):
         # Quantities in exponential format come with their own parenthesis, don't wrap
         # them twice
         m = self.ureg.Quantity(4e20, "s^2").plus_minus(1e19)
@@ -132,14 +132,14 @@ class TestMeasurement(QuantityTestCase):
             ("{!r}", "<Measurement(4e+20, 1e+19, second ** 2)>"),
             ("{:P}", "(4.00 ± 0.10)×10²⁰ second²"),
             ("{:L}", r"\left(4.00 \pm 0.10\right) \times 10^{20}\ \mathrm{second}^{2}"),
-            ("{:H}", r"\[(4.00 &plusmn; 0.10)×10^{20}\ {second}^{2}\]"),
+            ("{:H}", "(4.00 &plusmn; 0.10)×10<sup>20</sup> second<sup>2</sup>"),
             ("{:C}", "(4.00+/-0.10)e+20 second**2"),
             ("{:Lx}", r"\SI{4.00 +- 0.10 e+20}{\second\squared}"),
         ):
-            with self.subTest(spec):
-                self.assertEqual(spec.format(m), result)
+            with subtests.test(spec):
+                assert spec.format(m) == result
 
-    def test_format_exponential_neg(self):
+    def test_format_exponential_neg(self, subtests):
         m = self.ureg.Quantity(4e-20, "s^2").plus_minus(1e-21)
         for spec, result in (
             ("{}", "(4.00 +/- 0.10)e-20 second ** 2"),
@@ -149,23 +149,23 @@ class TestMeasurement(QuantityTestCase):
                 "{:L}",
                 r"\left(4.00 \pm 0.10\right) \times 10^{-20}\ \mathrm{second}^{2}",
             ),
-            ("{:H}", r"\[(4.00 &plusmn; 0.10)×10^{-20}\ {second}^{2}\]"),
+            ("{:H}", "(4.00 &plusmn; 0.10)×10<sup>-20</sup> second<sup>2</sup>"),
             ("{:C}", "(4.00+/-0.10)e-20 second**2"),
             ("{:Lx}", r"\SI{4.00 +- 0.10 e-20}{\second\squared}"),
         ):
-            with self.subTest(spec):
-                self.assertEqual(spec.format(m), result)
+            with subtests.test(spec):
+                assert spec.format(m) == result
 
     def test_raise_build(self):
         v, u = self.Q_(1.0, "s"), self.Q_(0.1, "s")
         o = self.Q_(0.1, "m")
 
         M_ = self.ureg.Measurement
-        with self.assertRaises(DimensionalityError):
+        with pytest.raises(DimensionalityError):
             M_(v, o)
-        with self.assertRaises(DimensionalityError):
+        with pytest.raises(DimensionalityError):
             v.plus_minus(o)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             v.plus_minus(u, relative=True)
 
     def test_propagate_linear(self):
@@ -180,35 +180,41 @@ class TestMeasurement(QuantityTestCase):
 
         for factor, m in zip((3, -3, 3, -3), (m1, m3, m1, m3)):
             r = factor * m
-            self.assertAlmostEqual(r.value.magnitude, factor * m.value.magnitude)
-            self.assertAlmostEqual(r.error.magnitude, abs(factor * m.error.magnitude))
-            self.assertEqual(r.value.units, m.value.units)
+            helpers.assert_quantity_almost_equal(
+                r.value.magnitude, factor * m.value.magnitude
+            )
+            helpers.assert_quantity_almost_equal(
+                r.error.magnitude, abs(factor * m.error.magnitude)
+            )
+            assert r.value.units == m.value.units
 
         for ml, mr in zip((m1, m1, m1, m3), (m1, m2, m3, m3)):
             r = ml + mr
-            self.assertAlmostEqual(
+            helpers.assert_quantity_almost_equal(
                 r.value.magnitude, ml.value.magnitude + mr.value.magnitude
             )
-            self.assertAlmostEqual(
+            helpers.assert_quantity_almost_equal(
                 r.error.magnitude,
-                ml.error.magnitude + mr.error.magnitude
-                if ml is mr
-                else (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** 0.5,
+                (
+                    ml.error.magnitude + mr.error.magnitude
+                    if ml is mr
+                    else (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** 0.5
+                ),
             )
-            self.assertEqual(r.value.units, ml.value.units)
+            assert r.value.units == ml.value.units
 
         for ml, mr in zip((m1, m1, m1, m3), (m1, m2, m3, m3)):
             r = ml - mr
-            self.assertAlmostEqual(
+            helpers.assert_quantity_almost_equal(
                 r.value.magnitude, ml.value.magnitude - mr.value.magnitude
             )
-            self.assertAlmostEqual(
+            helpers.assert_quantity_almost_equal(
                 r.error.magnitude,
                 0
                 if ml is mr
                 else (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** 0.5,
             )
-            self.assertEqual(r.value.units, ml.value.units)
+            assert r.value.units == ml.value.units
 
     def test_propagate_product(self):
 
@@ -225,14 +231,20 @@ class TestMeasurement(QuantityTestCase):
 
         for ml, mr in zip((m1, m1, m1, m3, m4), (m1, m2, m3, m3, m5)):
             r = ml * mr
-            self.assertAlmostEqual(
+            helpers.assert_quantity_almost_equal(
                 r.value.magnitude, ml.value.magnitude * mr.value.magnitude
             )
-            self.assertEqual(r.value.units, ml.value.units * mr.value.units)
+            assert r.value.units == ml.value.units * mr.value.units
 
         for ml, mr in zip((m1, m1, m1, m3, m4), (m1, m2, m3, m3, m5)):
             r = ml / mr
-            self.assertAlmostEqual(
+            helpers.assert_quantity_almost_equal(
                 r.value.magnitude, ml.value.magnitude / mr.value.magnitude
             )
-            self.assertEqual(r.value.units, ml.value.units / mr.value.units)
+            assert r.value.units == ml.value.units / mr.value.units
+
+    def test_measurement_comparison(self):
+        x = self.Q_(4.2, "meter")
+        y = self.Q_(5.0, "meter").plus_minus(0.1)
+        assert x <= y
+        assert not (x >= y)

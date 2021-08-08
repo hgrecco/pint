@@ -2,8 +2,8 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Latest Version
 
-.. image:: https://readthedocs.org/projects/pip/badge/
-    :target: http://pint.readthedocs.org/
+.. image:: https://readthedocs.org/projects/pint/badge/
+    :target: https://pint.readthedocs.org/
     :alt: Documentation
 
 .. image:: https://img.shields.io/pypi/l/pint.svg
@@ -14,17 +14,17 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Python Versions
 
-.. image:: https://travis-ci.org/hgrecco/pint.svg?branch=master
-    :target: https://travis-ci.org/hgrecco/pint
+.. image:: https://github.com/hgrecco/pint/workflows/CI/badge.svg
+    :target: https://github.com/hgrecco/pint/actions?query=workflow%3ACI
     :alt: CI
+
+.. image:: https://github.com/hgrecco/pint/workflows/Lint/badge.svg
+    :target: https://github.com/hgrecco/pint/actions?query=workflow%3ALint
+    :alt: LINTER
 
 .. image:: https://coveralls.io/repos/github/hgrecco/pint/badge.svg?branch=master
     :target: https://coveralls.io/github/hgrecco/pint?branch=master
     :alt: Coverage
-
-.. image:: https://readthedocs.org/projects/pint/badge/
-    :target: http://pint.readthedocs.org/
-    :alt: Docs
 
 
 Pint: makes units easy
@@ -40,8 +40,8 @@ and constants. Due to its modular design, you can extend (or even rewrite!)
 the complete list without changing the source code. It supports a lot of
 numpy mathematical operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 3.6+ with no other dependency.
-If you need Python 2.7 or 3.4/3.5 compatibility, use Pint 0.9.
+It has a complete test coverage. It runs in Python 3.7+ with no other dependency.
+If you need Python 3.6 compatibility, use Pint 0.17.
 It is licensed under BSD.
 
 It is extremely easy and natural to use:
@@ -86,12 +86,6 @@ Documentation
 -------------
 
 Full documentation is available at http://pint.readthedocs.org/
-
-
-GUI Website 
------------
-
-This Website_ wraps Pint's "dimensional analysis" methods to provide a GUI.
 
 
 Command-line converter
@@ -144,13 +138,7 @@ like numpy and uncertainties if they are installed
 **Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas. Operations on DataFrames and between columns are units aware, providing even more convenience for users of Pandas DataFrames. For full details, see the `pint-pandas Jupyter notebook`_.
 
 
-When you choose to use a NumPy_ ndarray, its methods and
-ufuncs are supported including automatic conversion of units. For example
-`numpy.arccos(q)` will require a dimensionless `q` and the units of the output
-quantity will be radian.
-
-
-Pint is maintained by a community of scientists, programmers and entusiasts around the world.
+Pint is maintained by a community of scientists, programmers and enthusiasts around the world.
 See AUTHORS_ for a complete list.
 
 To review an ordered list of notable changes for each version of a project,

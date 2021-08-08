@@ -8,31 +8,38 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import copy
 import locale
 import operator
 from numbers import Number
+from typing import TYPE_CHECKING, Any, Type, Union
 
-from .compat import NUMERIC_TYPES, is_upcast_type
+from ._typing import UnitLike
+from .compat import NUMERIC_TYPES, babel_parse, is_upcast_type
 from .definitions import UnitDefinition
 from .errors import DimensionalityError
 from .formatting import siunitx_format_unit
 from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
+
+if TYPE_CHECKING:
+    from .context import Context
 
 
 class Unit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations."""
 
     #: Default formatting string.
-    default_format = ""
+    default_format: str = ""
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
-        from . import _unpickle
+        from . import _unpickle_unit
 
-        return _unpickle, (Unit, self._units)
+        return _unpickle_unit, (Unit, self._units)
 
-    def __init__(self, units):
+    def __init__(self, units: UnitLike) -> None:
         super().__init__()
         if isinstance(units, (UnitsContainer, UnitDefinition)):
             self._units = units
@@ -50,29 +57,29 @@ class Unit(PrettyIPython, SharedRegistryObject):
         self.__handling = None
 
     @property
-    def debug_used(self):
+    def debug_used(self) -> Any:
         return self.__used
 
-    def __copy__(self):
+    def __copy__(self) -> Unit:
         ret = self.__class__(self._units)
         ret.__used = self.__used
         return ret
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo) -> Unit:
         ret = self.__class__(copy.deepcopy(self._units, memo))
         ret.__used = self.__used
         return ret
 
-    def __str__(self):
+    def __str__(self) -> str:
         return format(self)
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<Unit('{}')>".format(self._units)
 
-    def __format__(self, spec):
+    def __format__(self, spec) -> str:
         spec = spec or self.default_format
         # special cases
         if "Lx" in spec:  # the LaTeX siunitx code
@@ -91,13 +98,9 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             units = self._units
 
-        if "H" in spec:
-            # HTML / Jupyter Notebook
-            return r"\[" + format(units, spec).replace(" ", r"\ ") + r"\]"
-
         return format(units, spec)
 
-    def format_babel(self, spec="", **kwspec):
+    def format_babel(self, spec="", locale=None, **kwspec: Any) -> str:
         spec = spec or self.default_format
 
         if "~" in spec:
@@ -113,16 +116,22 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             units = self._units
 
-        return "%s" % (units.format_babel(spec, **kwspec))
+        locale = self._REGISTRY.fmt_locale if locale is None else locale
+
+        if locale is None:
+            raise ValueError("Provide a `locale` value to localize translation.")
+        else:
+            kwspec["locale"] = babel_parse(locale)
+
+        return units.format_babel(spec, **kwspec)
 
     @property
-    def dimensionless(self):
-        """Return True if the Unit is dimensionless; False otherwise.
-        """
+    def dimensionless(self) -> bool:
+        """Return True if the Unit is dimensionless; False otherwise."""
         return not bool(self.dimensionality)
 
     @property
-    def dimensionality(self):
+    def dimensionality(self) -> UnitsContainer:
         """
         Returns
         -------
@@ -144,8 +153,10 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.get_compatible_units(self)
 
-    def is_compatible_with(self, other, *contexts, **ctx_kwargs):
-        """ check if the other object is compatible
+    def is_compatible_with(
+        self, other: Any, *contexts: Union[str, Context], **ctx_kwargs: Any
+    ) -> bool:
+        """check if the other object is compatible
 
         Parameters
         ----------
@@ -216,7 +227,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
-    def __pow__(self, other):
+    def __pow__(self, other) -> "Unit":
         if isinstance(other, NUMERIC_TYPES):
             return self.__class__(self._units ** other)
 
@@ -224,10 +235,10 @@ class Unit(PrettyIPython, SharedRegistryObject):
             mess = "Cannot power Unit by {}".format(type(other))
             raise TypeError(mess)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self._units.__hash__()
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         # We compare to the base class of Unit because each Unit class is
         # unique.
         if self._check(other):
@@ -242,10 +253,10 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             return self._units == other
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not (self == other)
 
-    def compare(self, other, op):
+    def compare(self, other, op) -> bool:
         self_q = self._REGISTRY.Quantity(1, self)
 
         if isinstance(other, NUMERIC_TYPES):
@@ -260,13 +271,13 @@ class Unit(PrettyIPython, SharedRegistryObject):
     __ge__ = lambda self, other: self.compare(other, op=operator.ge)
     __gt__ = lambda self, other: self.compare(other, op=operator.gt)
 
-    def __int__(self):
+    def __int__(self) -> int:
         return int(self._REGISTRY.Quantity(1, self._units))
 
-    def __float__(self):
+    def __float__(self) -> float:
         return float(self._REGISTRY.Quantity(1, self._units))
 
-    def __complex__(self):
+    def __complex__(self) -> complex:
         return complex(self._REGISTRY.Quantity(1, self._units))
 
     __array_priority__ = 17
@@ -315,7 +326,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         value :
             a Quantity (or numerical value if strict=False) to convert
         strict :
-            boolean to indicate that only quanities are accepted (Default value = True)
+            boolean to indicate that only quantities are accepted (Default value = True)
         name :
             descriptive name to use if an exception occurs (Default value = "value")
 
@@ -343,7 +354,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         value :
             a Quantity (or numerical value if strict=False) to convert
         strict :
-            boolean to indicate that only quanities are accepted (Default value = True)
+            boolean to indicate that only quantities are accepted (Default value = True)
         name :
             descriptive name to use if an exception occurs (Default value = "value")
 
@@ -359,7 +370,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
 _Unit = Unit
 
 
-def build_unit_class(registry):
+def build_unit_class(registry) -> Type[Unit]:
     class Unit(_Unit):
         _REGISTRY = registry
 

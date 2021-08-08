@@ -8,6 +8,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import logging
 import math
 import operator
@@ -18,11 +20,18 @@ from functools import lru_cache, partial
 from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
+from typing import TYPE_CHECKING, ClassVar, Optional, Union
 
 from .compat import NUMERIC_TYPES, tokenizer
 from .errors import DefinitionSyntaxError
 from .formatting import format_unit
 from .pint_eval import build_eval_tree
+
+if TYPE_CHECKING:
+    from ._typing import UnitLike
+    from .quantity import Quantity
+    from .registry import BaseRegistry
+
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -321,7 +330,7 @@ class UnitsContainer(Mapping):
 
     __slots__ = ("_d", "_hash", "_one", "_non_int_type")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         if args and isinstance(args[0], UnitsContainer):
             default_non_int_type = args[0]._non_int_type
         else:
@@ -398,7 +407,7 @@ class UnitsContainer(Mapping):
     def __iter__(self):
         return iter(self._d)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._d)
 
     def __getitem__(self, key):
@@ -419,7 +428,7 @@ class UnitsContainer(Mapping):
     def __setstate__(self, state):
         self._d, self._hash, self._one, self._non_int_type = state
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, UnitsContainer):
             # UnitsContainer.__hash__(self) is not the same as hash(self); see
             # ParserHelper.__hash__ and __eq__.
@@ -431,24 +440,28 @@ class UnitsContainer(Mapping):
             other = other._d
 
         elif isinstance(other, str):
-            other = ParserHelper.from_string(other, self._non_int_type)
+            try:
+                other = ParserHelper.from_string(other, self._non_int_type)
+            except DefinitionSyntaxError:
+                return False
+
             other = other._d
 
         return dict.__eq__(self._d, other)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__format__("")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         tmp = "{%s}" % ", ".join(
             ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
         )
         return "<UnitsContainer({})>".format(tmp)
 
-    def __format__(self, spec):
+    def __format__(self, spec: str) -> str:
         return format_unit(self, spec)
 
-    def format_babel(self, spec, **kwspec):
+    def format_babel(self, spec: str, **kwspec) -> str:
         return format_unit(self, spec, **kwspec)
 
     def __copy__(self):
@@ -738,7 +751,7 @@ class ParserHelper(UnitsContainer):
 
 
 #: List of regex substitution pairs.
-_subs_re = [
+_subs_re_list = [
     ("\N{DEGREE SIGN}", " degree"),
     (r"([\w\.\-\+\*\\\^])\s+", r"\1 "),  # merge multiple spaces
     (r"({}) squared", r"\1**2"),  # Handle square and cube
@@ -754,12 +767,14 @@ _subs_re = [
 ]
 
 #: Compiles the regex and replace {} by a regex that matches an identifier.
-_subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
+_subs_re = [
+    (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re_list
+]
 _pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⁻", "0123456789*-")
 _pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
 
 
-def string_preprocessor(input_string):
+def string_preprocessor(input_string: str) -> str:
     input_string = input_string.replace(",", "")
     input_string = input_string.replace(" per ", "/")
 
@@ -777,7 +792,7 @@ def string_preprocessor(input_string):
     return input_string
 
 
-def _is_dim(name):
+def _is_dim(name: str) -> bool:
     return name[0] == "[" and name[-1] == "]"
 
 
@@ -795,6 +810,9 @@ class SharedRegistryObject:
 
     """
 
+    _REGISTRY: ClassVar[BaseRegistry]
+    _units: UnitsContainer
+
     def __new__(cls, *args, **kwargs):
         inst = object.__new__(cls)
         if not hasattr(cls, "_REGISTRY"):
@@ -805,7 +823,7 @@ class SharedRegistryObject:
             inst._REGISTRY = _APP_REGISTRY
         return inst
 
-    def _check(self, other):
+    def _check(self, other) -> bool:
         """Check if the other object use a registry and if so that it is the
         same registry.
 
@@ -836,6 +854,8 @@ class SharedRegistryObject:
 class PrettyIPython:
     """Mixin to add pretty-printers for IPython"""
 
+    default_format: str
+
     def _repr_html_(self):
         if "~" in self.default_format:
             return "{:~H}".format(self)
@@ -855,7 +875,9 @@ class PrettyIPython:
             p.text("{:P}".format(self))
 
 
-def to_units_container(unit_like, registry=None):
+def to_units_container(
+    unit_like: Union[UnitLike, Quantity], registry: Optional[BaseRegistry] = None
+) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 
     Parameters
@@ -1010,7 +1032,7 @@ class BlockIterator(SourceIterator):
     next = __next__
 
 
-def iterable(y):
+def iterable(y) -> bool:
     """Check whether or not an object can be iterated over.
 
     Vendored from numpy under the terms of the BSD 3-Clause License. (Copyright
@@ -1032,7 +1054,7 @@ def iterable(y):
     return True
 
 
-def sized(y):
+def sized(y) -> bool:
     """Check whether or not an object has a defined length.
 
     Parameters

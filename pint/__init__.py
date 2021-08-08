@@ -11,13 +11,13 @@
     :license: BSD, see LICENSE for more details.
 """
 
-import sys
-
 from .context import Context
-from .errors import (
+from .errors import (  # noqa: F401
     DefinitionSyntaxError,
     DimensionalityError,
+    LogarithmicUnitCalculusError,
     OffsetUnitCalculusError,
+    PintError,
     RedefinitionError,
     UndefinedUnitError,
     UnitStrippedWarning,
@@ -34,17 +34,6 @@ try:
 except ImportError:
     # Backport for Python < 3.8
     from importlib_metadata import version
-
-try:
-    from pintpandas import PintArray, PintType
-
-    del PintType
-    del PintArray
-
-    _HAS_PINTPANDAS = True
-except ImportError:
-    _HAS_PINTPANDAS = False
-    _, _pintpandas_error, _ = sys.exc_info()
 
 try:  # pragma: no cover
     __version__ = version("pint")
@@ -86,6 +75,21 @@ def _unpickle(cls, *args):
                 _APP_REGISTRY.parse_units(name)
 
     return cls(*args)
+
+
+def _unpickle_quantity(cls, *args):
+    """Rebuild quantity upon unpickling using the application registry."""
+    return _unpickle(_APP_REGISTRY.Quantity, *args)
+
+
+def _unpickle_unit(cls, *args):
+    """Rebuild unit upon unpickling using the application registry."""
+    return _unpickle(_APP_REGISTRY.Unit, *args)
+
+
+def _unpickle_measurement(cls, *args):
+    """Rebuild measurement upon unpickling using the application registry."""
+    return _unpickle(_APP_REGISTRY.Measurement, *args)
 
 
 def set_application_registry(registry):
@@ -136,6 +140,7 @@ __all__ = (
     "Quantity",
     "Unit",
     "UnitRegistry",
+    "PintError",
     "DefinitionSyntaxError",
     "DimensionalityError",
     "OffsetUnitCalculusError",
