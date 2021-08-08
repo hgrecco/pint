@@ -18,7 +18,17 @@ def da():
 
 @pytest.fixture
 def ds():
-    return xr.tutorial.load_dataset("air_temperature")
+    return xr.Dataset(
+        {
+            "a": (("x", "y"), [[0, 1], [2, 3], [4, 5]], {"units": "K"}),
+            "b": ("x", [0, 2, 4], {"units": "degC"}),
+            "c": ("y", [-1, 1], {"units": "hPa"}),
+        },
+        coords={
+            "x": ("x", [-1, 0, 1], {"units": "degree"}),
+            "y": ("y", [0, 1], {"units": "degree"}),
+        },
+    )
 
 
 def test_xarray_quantity_creation():
@@ -29,11 +39,11 @@ def test_xarray_quantity_creation():
 
 
 def test_quantification(ds):
-    da = ds["air"][0]
+    da = ds["a"]
     da.data = ureg.Quantity(da.values, da.attrs.pop("units"))
     mean = da.mean().item()
     assert mean.units == ureg.K
-    assert np.isclose(mean, 274.166259765625 * ureg.K)
+    assert np.isclose(mean, 2.5 * ureg.K)
 
 
 @pytest.mark.parametrize(
@@ -75,10 +85,10 @@ def test_ne_commutativity(da):
 
 
 def test_dataset_operation_with_unit(ds):
-    ds0 = ureg.K * ds.isel(time=0)
-    ds1 = (ds * ureg.K).isel(time=0)
+    ds0 = ureg.K * ds.isel(x=0)
+    ds1 = (ds * ureg.K).isel(x=0)
     xr.testing.assert_identical(ds0, ds1)
-    assert np.isclose(ds0["air"].mean().item(), 274.166259765625 * ureg.K)
+    assert np.isclose(ds0["a"].mean().item(), 0.5 * ureg.K)
 
 
 def test_dataarray_inplace_arithmetic_roundtrip(da):
