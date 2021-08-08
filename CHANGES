@@ -15,6 +15,7 @@ Pint Changelog
   (Issue #1244)
 - Fix string formatting of numpy array scalars
 - Fix default format for Measurement class (Issue #1300)
+- Implement `numpy.nanprod` (Issue #1369)
 
 ### Breaking Changes
 
