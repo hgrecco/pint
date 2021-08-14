@@ -70,52 +70,8 @@ def _pretty_fmt_exponent(num):
     return ret
 
 
-#: _FORMATS maps format specifications to the corresponding argument set to
-#: formatter().
-_FORMATS: Dict[str, dict] = {
-    "P": {  # Pretty format.
-        "as_ratio": True,
-        "single_denominator": False,
-        "product_fmt": "·",
-        "division_fmt": "/",
-        "power_fmt": "{}{}",
-        "parentheses_fmt": "({})",
-        "exp_call": _pretty_fmt_exponent,
-    },
-    "L": {  # Latex format.
-        "as_ratio": True,
-        "single_denominator": True,
-        "product_fmt": r" \cdot ",
-        "division_fmt": r"\frac[{}][{}]",
-        "power_fmt": "{}^[{}]",
-        "parentheses_fmt": r"\left({}\right)",
-    },
-    "Lx": {"siopts": "", "pm_fmt": " +- "},  # Latex format with SIunitx.
-    "H": {  # HTML format.
-        "as_ratio": True,
-        "single_denominator": True,
-        "product_fmt": r" ",
-        "division_fmt": r"{}/{}",
-        "power_fmt": r"{}<sup>{}</sup>",
-        "parentheses_fmt": r"({})",
-    },
-    "": {  # Default format.
-        "as_ratio": True,
-        "single_denominator": False,
-        "product_fmt": " * ",
-        "division_fmt": " / ",
-        "power_fmt": "{} ** {}",
-        "parentheses_fmt": r"({})",
-    },
-    "C": {  # Compact format.
-        "as_ratio": True,
-        "single_denominator": False,
-        "product_fmt": "*",  # TODO: Should this just be ''?
-        "division_fmt": "/",
-        "power_fmt": "{}**{}",
-        "parentheses_fmt": r"({})",
-    },
-}
+#: _FORMATS maps format names to callables doing the formatting
+_FORMATS: Dict[str, dict] = {}
 
 
 def formatter(
