@@ -9,7 +9,7 @@
 """
 
 import re
-from typing import Dict
+from typing import Callable, Dict
 
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse
@@ -71,7 +71,16 @@ def _pretty_fmt_exponent(num):
 
 
 #: _FORMATS maps format names to callables doing the formatting
-_FORMATS: Dict[str, dict] = {}
+_FORMATS: Dict[str, Callable] = {}
+
+
+def register_unit_format(name):
+    def wrapper(func):
+        if name in _FORMATS:
+            raise ValueError("format already exists")  # or warn instead
+        _FORMATS[name] = func
+
+    return wrapper
 
 
 def formatter(
