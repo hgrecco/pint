@@ -83,6 +83,81 @@ def register_unit_format(name):
     return wrapper
 
 
+@register_unit_format("P")
+def format_pretty(unit):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=False,
+        product_fmt="·",
+        division_fmt="/",
+        power_fmt="{}{}",
+        parenthesis_fmt="({})",
+        exp_call=_pretty_fmt_exponent,
+    )
+
+
+@register_unit_format("L")
+def format_latex(unit):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=True,
+        product_fmt=r" \cdot ",
+        division_fmt=r"\frac[{}][{}]",
+        power_fmt="{}^[{}]",
+        parentheses_fmt=r"\left({}\right)",
+    )
+
+
+@register_unit_format("Lx")
+def format_latex_siunitx(unit):
+    return formatter(
+        unit.items(),
+        siopts="",
+        pm_fmt=" +- ",
+    )
+
+
+@register_unit_format("H")
+def format_html(unit):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=True,
+        product_fmt=r" ",
+        division_fmt=r"{}/{}",
+        power_fmt=r"{}<sup>{}</sup>",
+        parentheses_fmt=r"({})",
+    )
+
+
+@register_unit_format("D")
+def format_default(unit):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=False,
+        product_fmt=" * ",
+        division_fmt=" / ",
+        power_fmt="{} ** {}",
+        parentheses_fmt=r"({})",
+    )
+
+
+@register_unit_format("C")
+def format_compact(unit):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=False,
+        product_fmt="*",  # TODO: Should this just be ''?
+        division_fmt="/",
+        power_fmt="{}**{}",
+        parentheses_fmt=r"({})",
+    )
+
+
 def formatter(
     items,
     as_ratio=True,
