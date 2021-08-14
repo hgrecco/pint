@@ -2326,13 +2326,27 @@ class LazyRegistry:
 
 
 class ApplicationRegistry:
+    """A wrapper class used to distribute changes to the application registry."""
+
     def __init__(self, registry):
         self._registry = registry
 
     def get(self):
+        """Get the wrapped registry"""
         return self._registry
 
     def set(self, new_registry):
+        """Set the new registry
+
+        Parameters
+        ----------
+        new_registry : ApplicationRegistry or LazyRegistry or UnitRegistry
+            The new registry.
+
+        See Also
+        --------
+        set_application_registry
+        """
         if isinstance(new_registry, type(self)):
             new_registry = new_registry.get()
 
