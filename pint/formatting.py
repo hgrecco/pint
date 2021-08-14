@@ -99,8 +99,11 @@ def format_pretty(unit):
 
 @register_unit_format("L")
 def format_latex(unit):
-    return formatter(
-        unit.items(),
+    preprocessed = {
+        r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in unit.items()
+    }
+    formatted = formatter(
+        preprocessed.items(),
         as_ratio=True,
         single_denominator=True,
         product_fmt=r" \cdot ",
@@ -108,6 +111,7 @@ def format_latex(unit):
         power_fmt="{}^[{}]",
         parentheses_fmt=r"\left({}\right)",
     )
+    return formatted.replace("[", "{").replace("]", "}")
 
 
 @register_unit_format("Lx")
