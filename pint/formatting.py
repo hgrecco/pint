@@ -311,6 +311,9 @@ def format_unit(unit, spec):
             return "dimensionless"
 
     spec = _parse_spec(spec)
+    if not spec:
+        spec = "D"
+
     fmt = _FORMATS[spec]
 
     return fmt(unit)
