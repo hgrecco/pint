@@ -303,7 +303,7 @@ def _parse_spec(spec):
     return result
 
 
-def format_unit(unit, spec, **kwspec):
+def format_unit(unit, spec):
     if not unit:
         if spec.endswith("%"):
             return ""
@@ -311,18 +311,9 @@ def format_unit(unit, spec, **kwspec):
             return "dimensionless"
 
     spec = _parse_spec(spec)
-    fmt = dict(_FORMATS[spec])
-    fmt.update(kwspec)
+    fmt = _FORMATS[spec]
 
-    if spec == "L":
-        # Latex
-        rm = [
-            (r"\mathrm{{{}}}".format(u.replace("_", r"\_")), p) for u, p in unit.items()
-        ]
-        return formatter(rm, **fmt).replace("[", "{").replace("]", "}")
-    else:
-        # HTML and Text
-        return formatter(unit.items(), **fmt)
+    return fmt(unit)
 
 
 def siunitx_format_unit(units):
