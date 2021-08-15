@@ -5,8 +5,8 @@ on: [push, pull_request]
 jobs:
   test-linux:
     strategy:
+      fail-fast: false
       matrix:
-        fail-fast: false
         python-version: [3.7, 3.8, 3.9]
         numpy: [null, "numpy>=1.17,<2.0.0"]
         uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
