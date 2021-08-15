@@ -1,5 +1,5 @@
 status = [
-  "test-linux",
+  "ci-success",
   "docbuild",
   "lint"
 ]
