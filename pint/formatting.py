@@ -92,7 +92,7 @@ def format_pretty(unit):
         product_fmt="·",
         division_fmt="/",
         power_fmt="{}{}",
-        parenthesis_fmt="({})",
+        parentheses_fmt="({})",
         exp_call=_pretty_fmt_exponent,
     )
 
