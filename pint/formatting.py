@@ -70,15 +70,15 @@ def _pretty_fmt_exponent(num):
     return ret
 
 
-#: _FORMATS maps format names to callables doing the formatting
-_FORMATS: Dict[str, Callable] = {}
+#: _FORMATTERS maps format names to callables doing the formatting
+_FORMATTERS: Dict[str, Callable] = {}
 
 
 def register_unit_format(name):
     def wrapper(func):
-        if name in _FORMATS:
+        if name in _FORMATTERS:
             raise ValueError("format already exists")  # or warn instead
-        _FORMATS[name] = func
+        _FORMATTERS[name] = func
 
     return wrapper
 
@@ -291,7 +291,7 @@ def _parse_spec(spec):
     for ch in reversed(spec):
         if ch == "~" or ch in _BASIC_TYPES:
             continue
-        elif ch in list(_FORMATS.keys()) + ["~"]:
+        elif ch in list(_FORMATTERS.keys()) + ["~"]:
             if result:
                 raise ValueError("expected ':' after format specifier")
             else:
@@ -314,7 +314,7 @@ def format_unit(unit, spec):
     if not spec:
         spec = "D"
 
-    fmt = _FORMATS[spec]
+    fmt = _FORMATTERS[spec]
 
     return fmt(unit)
 
@@ -365,7 +365,7 @@ def siunitx_format_unit(units):
 
 
 def remove_custom_flags(spec):
-    for flag in list(_FORMATS.keys()) + ["~"]:
+    for flag in list(_FORMATTERS.keys()) + ["~"]:
         if flag:
             spec = spec.replace(flag, "")
     return spec
