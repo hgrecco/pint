@@ -122,6 +122,34 @@ _FORMATTERS: Dict[str, Callable] = {}
 
 
 def register_unit_format(name):
+    """register a function as a new format for units
+
+    The registered function must have a signature of:
+
+    .. code:: python
+
+        def new_format(unit, **options):
+            pass
+
+    Parameters
+    ----------
+    name : str
+        The name of the new format (to be used in the format mini-language). A error is
+        raised if the new format would overwrite a existing format.
+
+    Examples
+    --------
+    >>> @pint.register_unit_format("S")
+    ... def format_custom(unit, **options):
+    ...     result = "<formatted unit>"  # do the formatting
+    ...     return result
+    ...
+    >>> ureg = pint.UnitRegistry()
+    >>> u = ureg.m / ureg.s ** 2
+    >>> f"{u:S}"
+    <formatted unit>
+    """
+
     def wrapper(func):
         if name in _FORMATTERS:
             raise ValueError("format already exists")  # or warn instead
