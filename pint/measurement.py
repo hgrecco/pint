@@ -8,7 +8,7 @@
 import re
 
 from .compat import ufloat
-from .formatting import _FORMATS, siunitx_format_unit
+from .formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
 from .quantity import Quantity
 
 MISSING = object()
@@ -152,7 +152,8 @@ class Measurement(Quantity):
         else:
             space = " "
 
-        ustr = format(self.units, spec)
+        uspec = extract_custom_flags(spec)
+        ustr = format(self.units, uspec)
         if not ("uS" in newspec or "ue" in newspec or "u%" in newspec):
             mag = pars.format(mag)
 
