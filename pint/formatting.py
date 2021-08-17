@@ -139,14 +139,14 @@ def register_unit_format(name):
 
     Examples
     --------
-    >>> @pint.register_unit_format("S")
+    >>> @pint.register_unit_format("custom")
     ... def format_custom(unit, **options):
     ...     result = "<formatted unit>"  # do the formatting
     ...     return result
     ...
     >>> ureg = pint.UnitRegistry()
     >>> u = ureg.m / ureg.s ** 2
-    >>> f"{u:S}"
+    >>> f"{u:custom}"
     <formatted unit>
     """
 
