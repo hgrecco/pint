@@ -131,7 +131,7 @@ def register_unit_format(name):
 
 
 @register_unit_format("P")
-def format_pretty(unit):
+def format_pretty(unit, **options):
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -141,11 +141,12 @@ def format_pretty(unit):
         power_fmt="{}{}",
         parentheses_fmt="({})",
         exp_call=_pretty_fmt_exponent,
+        **options,
     )
 
 
 @register_unit_format("L")
-def format_latex(unit):
+def format_latex(unit, **options):
     preprocessed = {
         r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in unit.items()
     }
@@ -157,21 +158,23 @@ def format_latex(unit):
         division_fmt=r"\frac[{}][{}]",
         power_fmt="{}^[{}]",
         parentheses_fmt=r"\left({}\right)",
+        **options,
     )
     return formatted.replace("[", "{").replace("]", "}")
 
 
 @register_unit_format("Lx")
-def format_latex_siunitx(unit):
+def format_latex_siunitx(unit, **options):
     return formatter(
         unit.items(),
         siopts="",
         pm_fmt=" +- ",
+        **options,
     )
 
 
 @register_unit_format("H")
-def format_html(unit):
+def format_html(unit, **options):
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -180,11 +183,12 @@ def format_html(unit):
         division_fmt=r"{}/{}",
         power_fmt=r"{}<sup>{}</sup>",
         parentheses_fmt=r"({})",
+        **options,
     )
 
 
 @register_unit_format("D")
-def format_default(unit):
+def format_default(unit, **options):
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -193,11 +197,12 @@ def format_default(unit):
         division_fmt=" / ",
         power_fmt="{} ** {}",
         parentheses_fmt=r"({})",
+        **options,
     )
 
 
 @register_unit_format("C")
-def format_compact(unit):
+def format_compact(unit, **options):
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -206,6 +211,7 @@ def format_compact(unit):
         division_fmt="/",
         power_fmt="{}**{}",
         parentheses_fmt=r"({})",
+        **options,
     )
 
 
@@ -350,7 +356,7 @@ def _parse_spec(spec):
     return result
 
 
-def format_unit(unit, spec):
+def format_unit(unit, spec, **options):
     if not unit:
         if spec.endswith("%"):
             return ""
@@ -363,7 +369,7 @@ def format_unit(unit, spec):
 
     fmt = _FORMATTERS[spec]
 
-    return fmt(unit)
+    return fmt(unit, **options)
 
 
 def siunitx_format_unit(units):
