@@ -128,7 +128,7 @@ def register_unit_format(name):
 
     .. code:: python
 
-        def new_format(unit, **options):
+        def new_format(unit, registry, **options):
             pass
 
     Parameters
@@ -140,7 +140,7 @@ def register_unit_format(name):
     Examples
     --------
     >>> @pint.register_unit_format("custom")
-    ... def format_custom(unit, **options):
+    ... def format_custom(unit, registry, **options):
     ...     result = "<formatted unit>"  # do the formatting
     ...     return result
     ...
@@ -159,7 +159,7 @@ def register_unit_format(name):
 
 
 @register_unit_format("P")
-def format_pretty(unit, **options):
+def format_pretty(unit, registry, **options):
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -174,7 +174,7 @@ def format_pretty(unit, **options):
 
 
 @register_unit_format("L")
-def format_latex(unit, **options):
+def format_latex(unit, registry, **options):
     preprocessed = {
         r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in unit.items()
     }
@@ -192,13 +192,21 @@ def format_latex(unit, **options):
 
 
 @register_unit_format("Lx")
-def format_latex_siunitx(unit, **options):
-    formatted = siunitx_format_unit(unit)
+def format_latex_siunitx(unit, registry, **options):
+    if registry is None:
+        raise ValueError(
+            "Can't format as siunitx without a registry."
+            " This is usually triggered when formatting a instance"
+            ' of the internal `UnitsContainer` with a spec of `"Lx"`'
+            " and might indicate a bug in `pint`."
+        )
+
+    formatted = siunitx_format_unit(unit, registry)
     return rf"\si[]{{{formatted}}}"
 
 
 @register_unit_format("H")
-def format_html(unit, **options):
+def format_html(unit, registry, **options):
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -212,7 +220,7 @@ def format_html(unit, **options):
 
 
 @register_unit_format("D")
-def format_default(unit, **options):
+def format_default(unit, registry, **options):
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -226,7 +234,7 @@ def format_default(unit, **options):
 
 
 @register_unit_format("C")
-def format_compact(unit, **options):
+def format_compact(unit, registry, **options):
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -380,7 +388,10 @@ def _parse_spec(spec):
     return result
 
 
-def format_unit(unit, spec, **options):
+def format_unit(unit, spec, registry=None, **options):
+    # registry may be None to allow formatting `UnitsContainer` objects
+    # in that case, the spec may not be "Lx"
+
     if not unit:
         if spec.endswith("%"):
             return ""
@@ -394,14 +405,11 @@ def format_unit(unit, spec, **options):
     if fmt is None:
         raise ValueError(f"Unknown conversion specified: {spec}")
 
-    return fmt(unit, **options)
+    return fmt(unit, registry=registry, **options)
 
 
-def siunitx_format_unit(units):
+def siunitx_format_unit(units, registry):
     """Returns LaTeX code for the unit that can be put into an siunitx command."""
-
-    # NOTE: unit registry is required to identify unit prefixes.
-    registry = units._REGISTRY
 
     def _tothe(power):
         if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
@@ -420,7 +428,7 @@ def siunitx_format_unit(units):
     lpos = []
     lneg = []
     # loop through all units in the container
-    for unit, power in sorted(units._units.items()):
+    for unit, power in sorted(units.items()):
         # remove unit prefix if it exists
         # siunitx supports \prefix commands
 

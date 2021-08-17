@@ -461,8 +461,8 @@ class UnitsContainer(Mapping):
     def __format__(self, spec: str) -> str:
         return format_unit(self, spec)
 
-    def format_babel(self, spec: str, **kwspec) -> str:
-        return format_unit(self, spec, **kwspec)
+    def format_babel(self, spec: str, registry=None, **kwspec) -> str:
+        return format_unit(self, spec, registry=registry, **kwspec)
 
     def __copy__(self):
         # Skip expensive health checks performed by __init__

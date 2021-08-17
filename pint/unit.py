@@ -20,6 +20,7 @@ from ._typing import UnitLike
 from .compat import NUMERIC_TYPES, babel_parse, is_upcast_type
 from .definitions import UnitDefinition
 from .errors import DimensionalityError
+from .formatting import format_unit
 from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
 if TYPE_CHECKING:
@@ -93,7 +94,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             units = self._units
 
-        return format(units, spec)
+        return format_unit(units, spec, registry=self._REGISTRY)
 
     def format_babel(self, spec="", locale=None, **kwspec: Any) -> str:
         spec = spec or self.default_format
@@ -118,7 +119,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             kwspec["locale"] = babel_parse(locale)
 
-        return units.format_babel(spec, **kwspec)
+        return units.format_babel(spec, registry=self._REGISTRY, **kwspec)
 
     @property
     def dimensionless(self) -> bool:

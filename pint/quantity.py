@@ -390,7 +390,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             spec = spec.replace("Lx", "")
             # TODO: add support for extracting options
             opts = ""
-            ustr = siunitx_format_unit(obj.units)
+            ustr = siunitx_format_unit(obj.units._units, obj._REGISTRY)
             allf = r"\SI[%s]{{{}}}{{{}}}" % opts
         else:
             # Hand off to unit formatting
