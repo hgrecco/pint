@@ -387,11 +387,12 @@ def format_unit(unit, spec, **options):
         else:
             return "dimensionless"
 
-    spec = _parse_spec(spec)
     if not spec:
         spec = "D"
 
-    fmt = _FORMATTERS[spec]
+    fmt = _FORMATTERS.get(spec)
+    if fmt is None:
+        raise ValueError(f"Unknown conversion specified: {spec}")
 
     return fmt(unit, **options)
 
