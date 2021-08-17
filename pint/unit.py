@@ -20,7 +20,6 @@ from ._typing import UnitLike
 from .compat import NUMERIC_TYPES, babel_parse, is_upcast_type
 from .definitions import UnitDefinition
 from .errors import DimensionalityError
-from .formatting import siunitx_format_unit
 from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
 if TYPE_CHECKING:
@@ -81,10 +80,6 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __format__(self, spec) -> str:
         spec = spec or self.default_format
-        # special cases
-        if "Lx" in spec:  # the LaTeX siunitx code
-            return r"\si[]{%s}" % siunitx_format_unit(self)
-
         if "~" in spec:
             if not self._units:
                 return ""

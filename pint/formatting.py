@@ -193,12 +193,8 @@ def format_latex(unit, **options):
 
 @register_unit_format("Lx")
 def format_latex_siunitx(unit, **options):
-    return formatter(
-        unit.items(),
-        siopts="",
-        pm_fmt=" +- ",
-        **options,
-    )
+    formatted = siunitx_format_unit(unit)
+    return rf"\si[]{{{formatted}}}"
 
 
 @register_unit_format("H")
