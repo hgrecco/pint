@@ -22,7 +22,7 @@ from .errors import (  # noqa: F401
     UndefinedUnitError,
     UnitStrippedWarning,
 )
-from .formatting import formatter
+from .formatting import formatter, register_unit_format
 from .measurement import Measurement
 from .quantity import Quantity
 from .registry import LazyRegistry, UnitRegistry
@@ -150,6 +150,7 @@ __all__ = (
     "formatter",
     "get_application_registry",
     "set_application_registry",
+    "register_unit_format",
     "pi_theorem",
     "__version__",
 )
