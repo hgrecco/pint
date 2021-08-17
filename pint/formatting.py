@@ -442,6 +442,15 @@ def siunitx_format_unit(units):
     return "".join(lpos) + "".join(lneg)
 
 
+def extract_custom_flags(spec):
+    import re
+
+    flag_re = re.compile("(" + "|".join(list(_FORMATTERS.keys()) + ["~"]) + ")")
+    custom_flags = flag_re.findall(spec)
+
+    return "".join(custom_flags)
+
+
 def remove_custom_flags(spec):
     for flag in list(_FORMATTERS.keys()) + ["~"]:
         if flag:

@@ -62,6 +62,7 @@ from .errors import (
 )
 from .formatting import (
     _pretty_fmt_exponent,
+    extract_custom_flags,
     ndarray_to_latex,
     remove_custom_flags,
     siunitx_format_unit,
@@ -393,7 +394,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             allf = r"\SI[%s]{{{}}}{{{}}}" % opts
         else:
             # Hand off to unit formatting
-            ustr = format(obj.units, spec)
+            uspec = extract_custom_flags(spec)
+            ustr = format(obj.units, uspec)
 
         mspec = remove_custom_flags(spec)
         if "H" in spec:
