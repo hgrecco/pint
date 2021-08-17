@@ -152,7 +152,7 @@ def register_unit_format(name):
 
     def wrapper(func):
         if name in _FORMATTERS:
-            raise ValueError("format already exists")  # or warn instead
+            raise ValueError(f"format {name:!r} already exists")  # or warn instead
         _FORMATTERS[name] = func
 
     return wrapper
