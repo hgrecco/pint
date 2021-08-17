@@ -112,7 +112,7 @@ class Measurement(Quantity):
             # Also, SIunitx doesn't accept parentheses, which uncs uses with
             # scientific notation ('e' or 'E' and sometimes 'g' or 'G').
             mstr = mstr.replace("(", "").replace(")", " ")
-            ustr = siunitx_format_unit(self.units._units, self._registry)
+            ustr = siunitx_format_unit(self.units._units, self._REGISTRY)
             return r"\SI%s{%s}{%s}" % (opts, mstr, ustr)
 
         # standard cases
