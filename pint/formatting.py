@@ -147,7 +147,7 @@ def register_unit_format(name):
     >>> ureg = pint.UnitRegistry()
     >>> u = ureg.m / ureg.s ** 2
     >>> f"{u:custom}"
-    <formatted unit>
+    '<formatted unit>'
     """
 
     def wrapper(func):
