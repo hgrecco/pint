@@ -139,15 +139,17 @@ def register_unit_format(name):
 
     Examples
     --------
-    >>> @pint.register_unit_format("custom")
-    ... def format_custom(unit, registry, **options):
-    ...     result = "<formatted unit>"  # do the formatting
-    ...     return result
-    ...
-    >>> ureg = pint.UnitRegistry()
-    >>> u = ureg.m / ureg.s ** 2
-    >>> f"{u:custom}"
-    '<formatted unit>'
+    .. code:: python
+
+        @pint.register_unit_format("custom")
+        def format_custom(unit, registry, **options):
+            result = "<formatted unit>"  # do the formatting
+            return result
+
+
+        ureg = pint.UnitRegistry()
+        u = ureg.m / ureg.s ** 2
+        f"{u:custom}"
     """
 
     def wrapper(func):
