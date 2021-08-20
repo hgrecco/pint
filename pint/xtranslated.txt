@@ -3,7 +3,7 @@
 
 dietary_calorie = 1000 * calorie = Cal = Calorie
 metric_cup = liter / 4
-square_meter = kilometer ** 2 = sq_m
+square_meter = meter ** 2 = sq_m
 square_kilometer = kilometer ** 2 = sq_km
 mile_scandinavian = 10000 * meter
 cubic_mile = 1 * mile ** 3 = cu_mile = cubic_miles
