@@ -5,6 +5,7 @@ on: [push, pull_request]
 jobs:
   test-linux:
     strategy:
+      fail-fast: false
       matrix:
         python-version: [3.7, 3.8, 3.9]
         numpy: [null, "numpy>=1.17,<2.0.0"]
