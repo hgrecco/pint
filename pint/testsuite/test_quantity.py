@@ -240,6 +240,26 @@ class TestQuantity(QuantityTestCase):
         assert f"{q2:#.1f}" == f"{q2b}"
         assert f"{q3:#.1f}" == f"{q3b}"
 
+    def test_format_no_prefix(self):
+        q1 = 200e-9 * self.ureg.s
+        q1b = self.Q_(200.0, "nanosecond").to_no_prefix()
+        assert round(abs(q1.magnitude - q1b.magnitude), 7) == 0
+        assert q1.units == q1b.units
+
+        q2 = (1e-2 * self.ureg("kg m/s^2")).to("N")
+        q2b = self.Q_(10.0, "millinewton").to_no_prefix()
+        assert q2.magnitude == q2b.magnitude
+        assert q2.units == q2b.units
+
+        q3 = -1000.0 * self.ureg("meters")
+        q3b = self.Q_(-1000.0, "meter").to_no_prefix()
+        assert q3.magnitude == q3b.magnitude
+        assert q3.units == q3b.units
+
+        assert f"{q1b:.1e}" == f"{q1:.1e}"
+        assert f"{q2b:.1e}" == f"{q2:.1e}"
+        assert f"{q3b:.1e}" == f"{q3:.1e}"
+
     def test_default_formatting(self, subtests):
         ureg = UnitRegistry()
         x = ureg.Quantity(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))

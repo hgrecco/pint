@@ -883,6 +883,28 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return self.to(new_unit_container)
 
+    def to_no_prefix(self) -> Quantity[_MagnitudeType]:
+        """Return Quantity rescaled to no SI-prefix.
+
+        Example
+        -------
+
+        >>> import pint
+        >>> Q_ = pint.Quantity
+        >>> (Q_('8 um')).to_no_prefix()
+        <Quantity(8e-6, 'meter')>
+        """
+        unit = str(self.u)
+
+        prefix = None
+        for p in self._REGISTRY._prefixes.values():
+            p = str(p)
+            if len(p) > 0 and unit.find(p) == 0:
+                prefix = p
+
+        no_prefix = unit.replace(prefix, "") if prefix is not None else unit
+        return self.to(no_prefix)
+
     # Mathematical operations
     def __int__(self) -> int:
         if self.dimensionless:
