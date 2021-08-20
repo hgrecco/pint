@@ -771,7 +771,7 @@ _subs_re = [
     (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re_list
 ]
 _pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⁻", "0123456789*-")
-_pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
+_pretty_exp_re = re.compile(r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?)")
 
 
 def string_preprocessor(input_string: str) -> str:
@@ -781,10 +781,8 @@ def string_preprocessor(input_string: str) -> str:
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)
 
+    input_string = _pretty_exp_re.sub(r"**(\1)", input_string)
     # Replace pretty format characters
-    for pretty_exp in _pretty_exp_re.findall(input_string):
-        exp = "**" + pretty_exp.translate(_pretty_table)
-        input_string = input_string.replace(pretty_exp, exp)
     input_string = input_string.translate(_pretty_table)
 
     # Handle caret exponentiation

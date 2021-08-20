@@ -313,6 +313,9 @@ class TestRegistry(QuantityTestCase):
         assert self.ureg.parse_expression("meter² · second") == self.Q_(
             1, UnitsContainer(meter=2.0, second=1)
         )
+        assert self.ureg.parse_expression("m²·s⁻²") == self.Q_(
+            1, UnitsContainer(meter=2, second=-2)
+        )
         assert self.ureg.parse_expression("meter⁰.⁵·second") == self.Q_(
             1, UnitsContainer(meter=0.5, second=1)
         )
