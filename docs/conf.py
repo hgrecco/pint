@@ -111,6 +111,10 @@ pygments_style = "sphinx"
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
 
+# -- Options for extensions ----------------------------------------------------
+# napoleon
+napoleon_preprocess_types = True
+
 
 # -- Options for HTML output ---------------------------------------------------
 
