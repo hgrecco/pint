@@ -10,3 +10,4 @@ python:
      - requirements: requirements_docs.txt
      - method: pip
        path: .
+   system_packages: false
