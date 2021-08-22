@@ -49,8 +49,6 @@ Let's look at some examples:
    ureg.default_format = ""  # TODO: switch to None
    f"{u}"  # default: default
 
-**TODO**: describe quantity formats
-
 Unit Format Types
 -----------------
 ``pint`` comes with a variety of unit formats:
@@ -66,8 +64,13 @@ Spec    Name            Example
 ``C``   compact         ``kilogram*meter/second**2``
 ======= =============== ======================================================================
 
-Quantity Formats
-----------------
+Quantity Format Specifications
+------------------------------
+In addition to the structure of :py:class:`Unit` format specifications,
+:py:class:`Quantity` format specifications also may contain a format spec for the
+magnitude. For example, ``".8f~P"`` formats the magnitude in floating point notation
+with 8 digits and the unit in the short pretty format.
+
 .. ipython:: python
 
     q = 1e-6 * u
@@ -80,6 +83,10 @@ Quantity Formats
     # additional magnitude format
     f"{q:.2f~#P}"  # short compact pretty with 8 float digits
     f"{q:#~}"  # compact short default
+
+Quantity Format Types
+---------------------
+There are no special quantity formats yet.
 
 Modifiers
 ---------
