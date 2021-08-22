@@ -66,6 +66,18 @@ Spec    Name            Example
 
 Quantity Formats
 ----------------
+.. ipython:: python
+
+    q = 1e-6 * u
+
+    # modifiers
+    f"{q:~P}"  # short pretty
+    f"{q:~#P}"  # compact short pretty
+    f"{q:P#~}"  # also compact short pretty
+
+    # additional magnitude format
+    f"{q:.2f~#P}"  # short compact pretty with 8 float digits
+    f"{q:#~}"  # compact short default
 
 Modifiers
 ---------
