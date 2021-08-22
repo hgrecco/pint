@@ -10,6 +10,8 @@
 
 String formatting
 =================
+Unit Format Specifications
+--------------------------
 A :doc:`format specification <formatspec>` used to format :py:class:`Unit` objects in
 e.g. f-strings consists of a ``type`` and optionally a "modifier", where the order does
 not matter. For example, ``P~`` and ``~P`` have the same effect. If the ``type`` is
