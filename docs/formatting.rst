@@ -71,6 +71,8 @@ In addition to the structure of :py:class:`Unit` format specifications,
 magnitude. For example, ``".8f~P"`` formats the magnitude in floating point notation
 with 8 digits and the unit in the short pretty format.
 
+Let's look at some more examples:
+
 .. ipython:: python
 
     q = 1e-6 * u
