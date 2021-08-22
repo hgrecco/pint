@@ -327,7 +327,13 @@ epub_copyright = copyright
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {"http://docs.python.org/": None}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "dask": ("https://docs.dask.org/en/latest", None),
+    "sparse": ("https://sparse.pydata.org/en/latest/", None),
+}
 
 # -- Doctest configuration -----------------------------------------------------
 
