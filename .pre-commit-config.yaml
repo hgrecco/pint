@@ -1,4 +1,10 @@
 repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-yaml
 -   repo: https://github.com/psf/black
     rev: 21.11b1
     hooks:
@@ -11,4 +17,3 @@ repos:
     rev: 3.9.2
     hooks:
     - id: flake8
-
