@@ -51,7 +51,7 @@ Pint Changelog
 - Fix tolist function with scalar ndarray.
   (Issue #1195, thanks jules-ch)
 - Corrected typos and dacstrings
-- Implements a first benchmark suite in airspeed velocity (asv). 
+- Implements a first benchmark suite in airspeed velocity (asv).
 - Power for pseudo-dimensionless units.
   (Issue #1185, thanks Kevin Fuhr)
 

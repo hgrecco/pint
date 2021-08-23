@@ -52,7 +52,7 @@ jobs:
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
-      
+
       - name: Install uncertainties
         if: ${{ matrix.uncertainties != null }}
         run: pip install "${{matrix.uncertainties}}"
