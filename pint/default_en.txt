@@ -475,9 +475,9 @@ bohr_magneton = e * hbar / (2 * m_e) = µ_B = mu_B
 nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 
 # Logaritmic Unit Definition
-#  Unit = scale; logbase; logfactor 
+#  Unit = scale; logbase; logfactor
 #  x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )
- 
+
 # Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
 
 decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm
