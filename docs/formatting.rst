@@ -10,20 +10,30 @@
 
 String formatting
 =================
-Unit Format Specifications
---------------------------
-A :doc:`format specification <formatspec>` used to format :py:class:`Unit` objects in
-e.g. f-strings consists of a ``type`` and optionally a "modifier", where the order does
-not matter. For example, ``P~`` and ``~P`` have the same effect. If the ``type`` is
-omitted, or when using the :py:class:`str` builtin, the object's
-:py:attr:`Unit.default_format` property is used, falling back to
-:py:attr:`UnitRegistry.default_format` if that is not set. If both are unset, the
-default format (``"D"``) is used.
+The conversion of :py:class:`Unit` and :py:class:`Quantity` objects to strings (e.g.
+through the :py:class:`str` builtin or f-strings) can be customized using :ref:`format
+specifications <formatspec>`. The basic format is::
+
+   [magnitude format][modifier][unit format]
+
+where each part is optional and the order of these is arbitrary.
+
+In case any part (except the modifier) is omitted, the corresponding value in
+:py:attr:`Quantity.default_format` or :py:attr:`Unit.default_format` is filled in. If
+that is not set (it evaluates to ``False``), :py:attr:`UnitRegistry.default_format` is
+used.  If both are not set, the global default of ``"D"`` and the magnitude's default
+format are used instead.
 
 .. note::
 
-   Modifiers may still be used without specifying the type: ``"~"`` is a valid format
+   Modifiers may be used without specifying any format: ``"~"`` is a valid format
    specification.
+
+
+Unit Format Specifications
+--------------------------
+The :py:class:`Unit` class ignores the magnitude format part, and the unit format
+consists of just the type.
 
 Let's look at some examples:
 
