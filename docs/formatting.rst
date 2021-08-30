@@ -33,7 +33,7 @@ format are used instead.
 Unit Format Specifications
 --------------------------
 The :py:class:`Unit` class ignores the magnitude format part, and the unit format
-consists of just the type.
+consists of just the format type.
 
 Let's look at some examples:
 
@@ -52,6 +52,7 @@ Let's look at some examples:
    str(u)  # default: default
    f"{u:~}"  # default: short default
    ureg.default_format = "C"  # registry default to compact
+   str(u)  # default: compact
    f"{u}"  # default: compact
    u.default_format = "P"
    f"{u}"  # default: pretty
