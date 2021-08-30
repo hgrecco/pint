@@ -91,7 +91,7 @@ Let's look at some more examples:
     f"{q:P#~}"  # also compact short pretty
 
     # additional magnitude format
-    f"{q:.2f~#P}"  # short compact pretty with 8 float digits
+    f"{q:.2f~#P}"  # short compact pretty with 2 float digits
     f"{q:#~}"  # short compact default
 
 Quantity Format Types
