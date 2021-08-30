@@ -76,10 +76,8 @@ Spec    Name            Example
 
 Quantity Format Specifications
 ------------------------------
-In addition to the structure of :py:class:`Unit` format specifications,
-:py:class:`Quantity` format specifications also may contain a format spec for the
-magnitude. For example, ``".8f~P"`` formats the magnitude in floating point notation
-with 8 digits and the unit in the short pretty format.
+The magnitude format is forwarded to the magnitude (for a unit-spec of ``H`` the
+magnitude's ``_repr_html_`` is called).
 
 Let's look at some more examples:
 
@@ -94,7 +92,7 @@ Let's look at some more examples:
 
     # additional magnitude format
     f"{q:.2f~#P}"  # short compact pretty with 8 float digits
-    f"{q:#~}"  # compact short default
+    f"{q:#~}"  # short compact default
 
 Quantity Format Types
 ---------------------
