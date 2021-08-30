@@ -806,8 +806,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         To get output in terms of a different unit, use the unit parameter.
 
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> import pint
         >>> ureg = pint.UnitRegistry()
