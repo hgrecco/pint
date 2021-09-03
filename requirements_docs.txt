@@ -1,3 +1,4 @@
+sphinx>=3
 ipython
 matplotlib
 nbsphinx
