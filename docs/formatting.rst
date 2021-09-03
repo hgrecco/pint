@@ -12,11 +12,11 @@ String formatting
 =================
 The conversion of :py:class:`Unit` and :py:class:`Quantity` objects to strings (e.g.
 through the :py:class:`str` builtin or f-strings) can be customized using :ref:`format
-specifications <formatspec>`. The basic format is::
+specifications <formatspec>`. The basic format is:
 
+::
 
    [magnitude format][modifier][unit format]
-
 
 where each part is optional and the order of these is arbitrary.
 
