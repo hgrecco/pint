@@ -13,15 +13,15 @@ Pint is a unit and sounds like Python in the first syllable. Most important, it 
 You mention other similar Python libraries. Can you point me to those?
 ----------------------------------------------------------------------
 
-`natu <http://kdavies4.github.io/natu/>`_
+`natu <https://kdavies4.github.io/natu/>`_
 
-`Buckingham <https://code.google.com/p/buckingham/>`_
+`Buckingham <https://github.com/mdipierro/buckingham>`_
 
-`Magnitude <http://github.com/juanre/magnitude.git>`_
+`Magnitude <https://github.com/juanre/magnitude>`_
 
-`SciMath <https://github.com/enthought/scimath.git>`_
+`SciMath <https://github.com/enthought/scimath>`_
 
-`Python-quantities <https://github.com/python-quantities/python-quantities.git>`_
+`Python-quantities <https://github.com/python-quantities/python-quantities>`_
 
 `Unum <https://bitbucket.org/kiv/unum>`_
 
@@ -29,7 +29,7 @@ You mention other similar Python libraries. Can you point me to those?
 
 `udunitspy <https://github.com/blazetopher/udunitspy>`_
 
-`SymPy <http://docs.sympy.org/dev/modules/physics/units.html>`_
+`SymPy <https://docs.sympy.org/latest/modules/physics/units/index.html>`_
 
 `cf units <https://github.com/SciTools/cf_units>`_
 
