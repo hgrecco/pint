@@ -816,9 +816,9 @@ class SharedRegistryObject:
         if not hasattr(cls, "_REGISTRY"):
             # Base class, not subclasses dynamically by
             # UnitRegistry._init_dynamic_classes
-            from . import _APP_REGISTRY
+            from . import application_registry
 
-            inst._REGISTRY = _APP_REGISTRY
+            inst._REGISTRY = application_registry.get()
         return inst
 
     def _check(self, other) -> bool:
