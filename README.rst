@@ -126,7 +126,7 @@ ufuncs are supported including automatic conversion of units. For example
 quantity will be radian.
 
 **Uncertainties integration**:  transparently handles calculations with
-quantities with uncertainties (like 3.14±0.01) meter via the `uncertainties
+quantities with uncertainties (like 3.14±0.01 meter) via the `uncertainties
 package`_.
 
 **Handle temperature**: conversion between units with different reference
