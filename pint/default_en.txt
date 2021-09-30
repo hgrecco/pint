@@ -336,6 +336,12 @@ particle = 1 / N_A = _ = molec = molecule
 [concentration] = [substance] / [volume]
 molar = mole / liter = M
 
+# Volume mixing ratio
+[Volume mixing ratio] = [substance] / [substance]
+ppmV = 1e-6 mole / mole = ppm
+ppbV = 1e-3 ppmV = ppb
+pptV = 1e-6 ppmV = ppt
+
 # Catalytic activity
 [activity] = [substance] / [time]
 katal = mole / second = kat
