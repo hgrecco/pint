@@ -16,6 +16,7 @@ Pint Changelog
 - Fix string formatting of numpy array scalars
 - Fix default format for Measurement class (Issue #1300)
 - Fix parsing of pretty units with same exponents but different sign. (Issue #1360)
+- Convert the application registry to a wrapper object (Issue #1365)
 - Add documentation for the string format options (Issue #1357, #1375)
 
 ### Breaking Changes

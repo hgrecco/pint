@@ -25,9 +25,9 @@ from .errors import (  # noqa: F401
 from .formatting import formatter
 from .measurement import Measurement
 from .quantity import Quantity
-from .registry import LazyRegistry, UnitRegistry
+from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
 from .unit import Unit
-from .util import logger, pi_theorem
+from .util import logger, pi_theorem  # noqa: F401
 
 try:
     from importlib.metadata import version
@@ -47,7 +47,7 @@ except Exception:  # pragma: no cover
 _DEFAULT_REGISTRY = LazyRegistry()
 
 #: Registry used for unpickling operations.
-_APP_REGISTRY = _DEFAULT_REGISTRY
+application_registry = ApplicationRegistry(_DEFAULT_REGISTRY)
 
 
 def _unpickle(cls, *args):
@@ -72,24 +72,24 @@ def _unpickle(cls, *args):
         # We need to make sure that this happens before using.
         if isinstance(arg, UnitsContainer):
             for name in arg:
-                _APP_REGISTRY.parse_units(name)
+                application_registry.parse_units(name)
 
     return cls(*args)
 
 
 def _unpickle_quantity(cls, *args):
     """Rebuild quantity upon unpickling using the application registry."""
-    return _unpickle(_APP_REGISTRY.Quantity, *args)
+    return _unpickle(application_registry.Quantity, *args)
 
 
 def _unpickle_unit(cls, *args):
     """Rebuild unit upon unpickling using the application registry."""
-    return _unpickle(_APP_REGISTRY.Unit, *args)
+    return _unpickle(application_registry.Unit, *args)
 
 
 def _unpickle_measurement(cls, *args):
     """Rebuild measurement upon unpickling using the application registry."""
-    return _unpickle(_APP_REGISTRY.Measurement, *args)
+    return _unpickle(application_registry.Measurement, *args)
 
 
 def set_application_registry(registry):
@@ -100,11 +100,7 @@ def set_application_registry(registry):
     ----------
     registry : pint.UnitRegistry
     """
-    if not isinstance(registry, (LazyRegistry, UnitRegistry)):
-        raise TypeError("Expected UnitRegistry; got %s" % type(registry))
-    global _APP_REGISTRY
-    logger.debug("Changing app registry from %r to %r.", _APP_REGISTRY, registry)
-    _APP_REGISTRY = registry
+    application_registry.set(registry)
 
 
 def get_application_registry():
@@ -116,7 +112,7 @@ def get_application_registry():
     -------
     pint.UnitRegistry
     """
-    return _APP_REGISTRY
+    return application_registry
 
 
 def test():
