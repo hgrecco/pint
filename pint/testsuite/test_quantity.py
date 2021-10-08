@@ -273,6 +273,30 @@ class TestQuantity(QuantityTestCase):
         assert f"{x:~L}" == r"1\times 10^{-20}\ \mathrm{m}"
         assert f"{x:~P}" == r"1×10⁻²⁰ m"
 
+    def test_default_formatting_consistency(self):
+        ureg = UnitRegistry()
+        x = ureg.Quantity(4.12345678, UnitsContainer(meter=2, kilogram=1, second=-1))
+
+        ureg.default_format = "0.3f"
+        assert str(x) == "4.123 kilogram * meter ** 2 / second"
+        assert x._repr_html_() == "4.123 kilogram meter<sup>2</sup>/second"
+        assert x._repr_latex_() == r"$4.123\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}$"
+
+        ureg.default_format = "0.4f~P"
+        assert str(x) == "4.1235 kg·m²/s"
+        assert x._repr_html_() == "4.1235 kg m<sup>2</sup>/s"
+        assert x._repr_latex_() == r"$4.1235\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$"
+
+        ureg.default_format = "0.2E~"
+        assert str(x) == "4.12E+00 kg * m ** 2 / s"
+        assert x._repr_html_() == "4.12E+00 kg m<sup>2</sup>/s"
+        assert x._repr_latex_() == r"$4.12E+00\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$"
+
+        ureg.default_format = "0.2g~H"
+        assert str(x) == "4.1 kg m<sup>2</sup>/s"
+        assert x._repr_html_() == "4.1 kg m<sup>2</sup>/s"
+        assert x._repr_latex_() == r"$4.1\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$"
+
     def test_ipython(self):
         alltext = []
 

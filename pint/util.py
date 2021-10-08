@@ -854,23 +854,22 @@ class PrettyIPython:
 
     default_format: str
 
+    def _reformat(self, new_fmt: str):
+        fmt = self.default_format
+        for ch in ["Lx", "L", "P", "H", "C"]:
+            fmt = fmt.replace(ch ,"")
+        fmt+=new_fmt
+        return fmt
+        
+
     def _repr_html_(self):
-        if "~" in self.default_format:
-            return "{:~H}".format(self)
-        else:
-            return "{:H}".format(self)
+        return "{:{fmt}}".format(self, fmt=self._reformat("H"))
 
     def _repr_latex_(self):
-        if "~" in self.default_format:
-            return "${:~L}$".format(self)
-        else:
-            return "${:L}$".format(self)
+        return "${:{fmt}}$".format(self, fmt=self._reformat("L"))
 
     def _repr_pretty_(self, p, cycle):
-        if "~" in self.default_format:
-            p.text("{:~P}".format(self))
-        else:
-            p.text("{:P}".format(self))
+        return "{:{fmt}}".format(self, fmt=self._reformat("P"))
 
 
 def to_units_container(
