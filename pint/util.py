@@ -857,10 +857,9 @@ class PrettyIPython:
     def _reformat(self, new_fmt: str):
         fmt = self.default_format
         for ch in ["Lx", "L", "P", "H", "C"]:
-            fmt = fmt.replace(ch ,"")
-        fmt+=new_fmt
+            fmt = fmt.replace(ch, "")
+        fmt += new_fmt
         return fmt
-        
 
     def _repr_html_(self):
         return "{:{fmt}}".format(self, fmt=self._reformat("H"))
