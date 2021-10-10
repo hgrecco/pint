@@ -416,7 +416,7 @@ atomic_unit_of_electric_field = e * k_C / a_0 ** 2 = a_u_electric_field
 
 # Resistance
 [resistance] = [electric_potential] / [current]
-ohm = volt / ampere = Ω
+ohm = volt / ampere = Ohm = Ω
 abohm = 1e-9 * ohm = abΩ
 mean_international_ohm = 1.00049 * ohm = Ω_it = ohm_it  # approximate
 US_international_ohm = 1.000495 * ohm = Ω_US = ohm_US   # approximate
