@@ -120,6 +120,7 @@ User Guide
     getting
     tutorial
     defining-quantities
+    formatting
     numpy
     nonmult
     log_units

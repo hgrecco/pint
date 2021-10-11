@@ -1,3 +1,4 @@
+sphinx
 ipython
 matplotlib
 nbsphinx
@@ -7,6 +8,7 @@ pandas==1.2.4
 pint-pandas
 jupyter_client
 ipykernel
+ipython
 graphviz
 xarray
 pooch
