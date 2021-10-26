@@ -96,12 +96,12 @@ jobs:
       with:
         python-version: 3.x
     - name: Coveralls Finished
+      continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
       run: |
-        pip install coveralls
-        coveralls --finish
+        exit 1
 
   # Dummy task to summarize all. See https://github.com/bors-ng/bors-ng/issues/1300
   ci-success:
