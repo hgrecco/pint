@@ -24,7 +24,7 @@ It is extremely easy and natural to use:
 .. code-block:: python
 
     >>> import pint
-    >>> ureg = pint.UnitRegistry()
+    >>> ureg = pint.get_application_registry()
     >>> 3 * ureg.meter + 4 * ureg.cm
     <Quantity(3.04, 'meter')>
 

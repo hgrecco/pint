@@ -39,8 +39,8 @@ Notice that the serialized quantity is likely to be parsed in **another** regist
 as shown in this example. Pint Quantities do not exist on their own but they are
 always related to a **UnitRegistry**. Everything will work as expected if both registries,
 are compatible (e.g. they were created using the same definition file). However, things
-could go wrong if the registries are incompatible. For example, **year** could not be
-defined in the target registry. Or what is even worse, it could be defined in a different
+could go wrong if the registries are incompatible. For example, **year** could be
+not defined in the target registry. Or what is even worse, it could be defined in a different
 way. Always have to keep in mind that the interpretation and conversion of Quantities are
 UnitRegistry dependent.
 

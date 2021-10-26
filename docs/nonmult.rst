@@ -16,8 +16,8 @@ For example, to convert from celsius to fahrenheit:
 
 .. doctest::
 
-    >>> from pint import UnitRegistry
-    >>> ureg = UnitRegistry()
+    >>> import pint
+    >>> ureg = pint.get_application_registry()
     >>> ureg.default_format = '.3f'
     >>> Q_ = ureg.Quantity
     >>> home = Q_(25.4, ureg.degC)
@@ -113,7 +113,7 @@ to be explicitly created:
 
 .. doctest::
 
-    >>> ureg = UnitRegistry()
+    >>> ureg = pint.get_application_registry()
     >>> home = 25.4 * ureg.degC
     Traceback (most recent call last):
         ...
@@ -130,7 +130,7 @@ to true. In this mode, pint behaves differently:
 
 .. doctest::
 
-    >>> ureg = UnitRegistry(autoconvert_offset_to_baseunit = True)
+    >>> ureg = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
     >>> T = 25.4 * ureg.degC
     >>> T
     <Quantity(25.4, 'degree_Celsius')>

@@ -45,8 +45,8 @@ You could wrap this function to use Quantities instead:
 
 .. doctest::
 
-    >>> from pint import UnitRegistry
-    >>> ureg = UnitRegistry()
+    >>> import pint
+    >>> ureg = pint.get_application_registry()
     >>> Q_ = ureg.Quantity
     >>> def mypp_caveman(length):
     ...     return pendulum_period(length.to(ureg.meter).magnitude) * ureg.second
