@@ -4,6 +4,8 @@ Pint Changelog
 0.18 (unreleased)
 -----------------
 
+### Release Manager: jules-cheron
+
 - Implement use of Quantity in the Quantity constructor (convert to specified units).
   (Issue #1231)
 - Rename .readthedocs.yml to .readthedocs.yaml, update MANIFEST.in (Issue #1311)
@@ -13,11 +15,18 @@ Pint Changelog
   (Issue #1085)
 - Fix handling of positional max/min arguments in clip function.
   (Issue #1244)
-- Fix string formatting of numpy array scalars
+- Fix string formatting of numpy array scalars.
 - Fix default format for Measurement class (Issue #1300)
 - Fix parsing of pretty units with same exponents but different sign. (Issue #1360)
 - Convert the application registry to a wrapper object (Issue #1365)
-- Add documentation for the string format options (Issue #1357, #1375)
+- Add documentation for the string format options.
+   (Issue #1357, #1375, thanks keewis)
+- Support custom units formats.
+  (Issue #1371, thanks keewis)
+- Autoupdate pre-commit hooks.
+- Improved the application registry.
+  (Issue #1366, thanks keewis)
+- Improved testing isolation using pytest fixtures.
 
 ### Breaking Changes
 
