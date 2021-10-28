@@ -133,6 +133,18 @@ class TestToUnitsContainer:
     def test_str_conversion(self):
         assert to_units_container("m") == UnitsContainer(m=1)
 
+    def test_str_conversion_with_preprocessing(self):
+        from pint.registry import UnitRegistry
+
+        ureg = UnitRegistry(
+            preprocessors=[
+                lambda s: s.replace("%", " percent "),
+            ]
+        )
+        ureg.define("percent = 0.01 = %")
+
+        assert to_units_container("%", registry=ureg) == UnitsContainer(percent=1)
+
     def test_uc_conversion(self):
         a = UnitsContainer(m=1)
         assert to_units_container(a) is a
