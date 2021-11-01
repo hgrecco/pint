@@ -4,7 +4,7 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fix setting options of the application registry (Issue #1403).
 
 
 0.18 (2021-10-26)
