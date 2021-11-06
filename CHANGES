@@ -5,6 +5,7 @@ Pint Changelog
 -----------------
 
 - Nothing changed yet.
+- Fix a bug for self-defined offset units (Issue #1066, thanks dalito)
 
 
 0.18 (2021-10-26)

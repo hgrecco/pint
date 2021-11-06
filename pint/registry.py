@@ -1459,10 +1459,10 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         return None
 
-    def _add_ref_of_log_unit(self, offset_unit, all_units):
-
+    def _add_ref_of_log_or_offset_unit(self, offset_unit, all_units):
+        
         slct_unit = self._units[offset_unit]
-        if isinstance(slct_unit.converter, LogarithmicConverter):
+        if slct_unit.is_logarithmic  or (not slct_unit.is_multiplicative):
             # Extract reference unit
             slct_ref = slct_unit.reference
             # If reference unit is not dimensionless
@@ -1530,13 +1530,13 @@ class NonMultiplicativeRegistry(BaseRegistry):
             value = self._units[src_offset_unit].converter.to_reference(value, inplace)
             src = src.remove([src_offset_unit])
             # Add reference unit for multiplicative section
-            src = self._add_ref_of_log_unit(src_offset_unit, src)
+            src = self._add_ref_of_log_or_offset_unit(src_offset_unit, src)
 
         # clean dst units from offset units
         if dst_offset_unit:
             dst = dst.remove([dst_offset_unit])
             # Add reference unit for multiplicative section
-            dst = self._add_ref_of_log_unit(dst_offset_unit, dst)
+            dst = self._add_ref_of_log_or_offset_unit(dst_offset_unit, dst)
 
         # Convert non multiplicative units to the dst.
         value = super()._convert(value, src, dst, inplace, False)

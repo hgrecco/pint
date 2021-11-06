@@ -717,6 +717,17 @@ class TestIssues(QuantityTestCase):
                 q = ureg.Quantity(1, "nm")
                 q.to("J")
 
+    def test_issue1066(self):
+        """Verify calculations with self-defined offset units"""
+        ureg = UnitRegistry()
+        ureg.define("barga = 1e5 * Pa; offset: 1e5")
+        ureg.define("bargb = 1 * bar; offset: 1")
+        q_4barg_a = ureg.Quantity(4, ureg.barga)
+        q_4barg_b = ureg.Quantity(4, ureg.bargb)
+        q_5bar = ureg.Quantity(5, ureg.bar)
+        helpers.assert_quantity_equal(q_4barg_a, q_5bar)
+        helpers.assert_quantity_equal(q_4barg_b, q_5bar)
+
     def test_issue1086(self):
         # units with prefixes should correctly test as 'in' the registry
         assert "bits" in ureg
