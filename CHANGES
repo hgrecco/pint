@@ -4,7 +4,8 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
-- Fix a bug for self-defined offset units (Issue #1066, thanks dalito)
+- Fix a bug for offset units of higher dimension, e.g. gauge pressure.
+  (Issue #1066, thanks dalito)
 
 
 0.18 (2021-10-26)

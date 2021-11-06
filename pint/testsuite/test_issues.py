@@ -718,7 +718,7 @@ class TestIssues(QuantityTestCase):
                 q.to("J")
 
     def test_issue1066(self):
-        """Verify calculations with self-defined offset units"""
+        """Verify calculations for offset units of higher dimension"""
         ureg = UnitRegistry()
         ureg.define("barga = 1e5 * Pa; offset: 1e5")
         ureg.define("bargb = 1 * bar; offset: 1")
