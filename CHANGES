@@ -4,7 +4,7 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Implement numpy broadcast_array (Related to issue #981)
 
 
 0.18 (2021-10-26)
