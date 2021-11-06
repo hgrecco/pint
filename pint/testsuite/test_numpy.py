@@ -185,6 +185,13 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         )
 
     @helpers.requires_array_function_protocol()
+    def test_broadcast_arrays(self):
+        helpers.assert_quantity_equal(
+            np.broadcast_array(self.q[:, 1], np.array([1,2])),
+            [np.array([[2, 4], [2, 4]]) * self.ureg.m, np.array([1, 2])]
+        )
+        
+    @helpers.requires_array_function_protocol()
     def test_expand_dims(self):
         helpers.assert_quantity_equal(
             np.expand_dims(self.q, 0), np.array([[[1, 2], [3, 4]]]) * self.ureg.m
