@@ -4,7 +4,6 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
-- Nothing changed yet.
 - Fix a bug for self-defined offset units (Issue #1066, thanks dalito)
 
 
