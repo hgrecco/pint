@@ -71,7 +71,7 @@ from . import registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
 from .compat import HAS_BABEL, babel_parse, tokenizer
 from .context import Context, ContextChain
-from .converters import LogarithmicConverter, ScaleConverter
+from .converters import ScaleConverter
 from .definitions import (
     AliasDefinition,
     Definition,
@@ -1460,9 +1460,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
         return None
 
     def _add_ref_of_log_or_offset_unit(self, offset_unit, all_units):
-        
+
         slct_unit = self._units[offset_unit]
-        if slct_unit.is_logarithmic  or (not slct_unit.is_multiplicative):
+        if slct_unit.is_logarithmic or (not slct_unit.is_multiplicative):
             # Extract reference unit
             slct_ref = slct_unit.reference
             # If reference unit is not dimensionless
