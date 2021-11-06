@@ -715,7 +715,7 @@ def _broadcast_arrays(*args, **kwargs):
     input_units = []
     unitless_args = []
     for x in args:
-        if hasattr(x, 'units'):
+        if hasattr(x, "units"):
             input_units.append(x.units)
             unitless_args.append(x.m)
         else:
