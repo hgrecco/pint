@@ -725,6 +725,7 @@ def _broadcast_arrays(*args, **kwargs):
     res = np.broadcast_arrays(*unitless_args, **kwargs)
     return [out * unit for out, unit in zip(res, input_units)]
 
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
