@@ -709,6 +709,22 @@ def _prod(a, *args, **kwargs):
     return registry.Quantity(result, units)
 
 
+@implements("broadcast_arrays", "function")
+def _broadcast_arrays(*args, **kwargs):
+    # Simply need to map input units to onto list of outputs
+    input_units = []
+    unitless_args = []
+    for x in args:
+        if hasattr(x, 'units'):
+            input_units.append(x.units)
+            unitless_args.append(x.m)
+        else:
+            input_units.append(1)
+            unitless_args.append(x)
+
+    res = np.broadcast_arrays(*unitless_args, **kwargs)
+    return [out * unit for out, unit in zip(res, input_units)]
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
