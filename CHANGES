@@ -4,7 +4,7 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Upgrade min version of uncertainties to 3.1.4
 
 
 0.18 (2021-10-26)

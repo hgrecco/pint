@@ -9,7 +9,7 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
         numpy: [null, "numpy>=1.17,<2.0.0"]
-        uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
+        uncertainties: [null, "uncertainties==3.1.4", "uncertainties>=3.1.4,<4.0.0"]
         extras: [null]
         include:
           - python-version: 3.7 # Minimal versions
@@ -101,7 +101,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
       run: |
-        exit 1
+        pip install coveralls
+        coveralls --finish
 
   # Dummy task to summarize all. See https://github.com/bors-ng/bors-ng/issues/1300
   ci-success:
