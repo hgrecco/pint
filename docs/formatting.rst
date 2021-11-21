@@ -87,6 +87,7 @@ formats:
    In [1]: u = ureg.Unit("m ** 3 / (s ** 2 * kg)")
 
    In [2]: import itertools
+      ...:
       ...: @pint.register_unit_format("simple")
       ...: def format_unit_simple(unit, registry, **options):
       ...:     preformatted = [
@@ -99,6 +100,9 @@ formats:
       ...:     ))
 
    In [3]: f"{u:~simple}"
+
+where ``unit`` is a :py:class:`dict` subclass containing the unit names and
+their exponents.
 
 Quantity Format Specifications
 ------------------------------
