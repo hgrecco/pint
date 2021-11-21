@@ -96,7 +96,7 @@ formats:
       ...:     ]
       ...:     return " ".join(itertools.chain.from_iterable(
       ...:         [o, u] if i != 0 else [u]
-      ...:         for i, (n, p) in enumerate(preformatted)
+      ...:         for i, (o, u) in enumerate(preformatted)
       ...:     ))
 
    In [3]: f"{u:~simple}"
