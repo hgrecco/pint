@@ -4,7 +4,7 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- deprecate the old format defaulting behavior and prepare for the new one (Issue #1407)
 
 
 0.18 (2021-10-26)
