@@ -77,6 +77,29 @@ Spec    Name            Example
 ``C``   compact         ``kilogram*meter/second**2``
 ======= =============== ======================================================================
 
+Custom Unit Format Types
+------------------------
+Using :py:func:`pint.register_unit_format`, it is possible to add custom
+formats:
+
+.. ipython::
+
+   In [1]: u = ureg.Unit("m ** 3 / (s ** 2 * kg)")
+
+   In [2]: import itertools
+      ...: @pint.register_unit_format("simple")
+      ...: def format_unit_simple(unit, registry, **options):
+      ...:     preformatted = [
+      ...:         ("*" if p >= 0 else "/", n if abs(p) == 1 else f"{n} ** {abs(p)}")
+      ...:         for n, p in unit.items()
+      ...:     ]
+      ...:     return " ".join(itertools.chain.from_iterable(
+      ...:         [o, u] if i != 0 else [u]
+      ...:         for i, (n, p) in enumerate(preformatted)
+      ...:     ))
+
+   In [3]: f"{u:~simple}"
+
 Quantity Format Specifications
 ------------------------------
 The magnitude format is forwarded to the magnitude (for a unit-spec of ``H`` the
