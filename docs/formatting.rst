@@ -20,10 +20,9 @@ specifications <formatspec>`. The basic format is:
 
 where each part is optional and the order of these is arbitrary.
 
-In case the format is omitted, the corresponding value in
-:py:attr:`Quantity.default_format` or :py:attr:`Unit.default_format` is filled in. If
-that is not set (it evaluates to ``False``), :py:attr:`UnitRegistry.default_format` is
-used. For example:
+In case the format is omitted, the corresponding value in the object's
+``.default_format`` attribute (:py:attr:`Quantity.default_format` or
+:py:attr:`Unit.default_format`) is filled in. For example:
 
 .. ipython::
 
