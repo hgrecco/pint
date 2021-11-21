@@ -13,7 +13,9 @@ except ImportError:
 
 def _get_comparable_magnitudes(first, second, msg):
     if isinstance(first, Quantity) and isinstance(second, Quantity):
-        second = second.to(first)
+        ctx = first._REGISTRY._active_ctx.contexts
+        if first.is_compatible_with(second, *ctx):
+            second = second.to(first)
         assert first.units == second.units, msg + " Units are not equal."
         m1, m2 = first.magnitude, second.magnitude
     elif isinstance(first, Quantity):
