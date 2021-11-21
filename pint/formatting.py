@@ -455,6 +455,9 @@ def siunitx_format_unit(units, registry):
 def extract_custom_flags(spec):
     import re
 
+    if not spec:
+        return ""
+
     flag_re = re.compile("(" + "|".join(list(_FORMATTERS.keys()) + ["~"]) + ")")
     custom_flags = flag_re.findall(spec)
 
