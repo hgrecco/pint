@@ -261,6 +261,15 @@ class TestQuantity(QuantityTestCase):
                 ureg.default_format = spec
                 assert f"{x}" == result
 
+    def test_formatting_override_default_units(self):
+        ureg = UnitRegistry()
+        ureg.default_format = "~"
+        x = ureg.Quantity(4, "m ** 2")
+
+        assert f"{x:dP}" == "4 meter²"
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:d}" == "4 meter ** 2"
+
     def test_exponent_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Quantity(1e20, "meter")
