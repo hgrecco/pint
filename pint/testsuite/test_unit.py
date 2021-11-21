@@ -97,6 +97,19 @@ class TestUnit(QuantityTestCase):
                 ureg.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
+    def test_unit_formatting_custom(self, monkeypatch):
+        from pint import formatting, register_unit_format
+
+        monkeypatch.setattr(formatting, "_FORMATTERS", formatting._FORMATTERS.copy())
+
+        @register_unit_format("new")
+        def format_new(unit, **options):
+            return "new format"
+
+        ureg = UnitRegistry()
+
+        assert "{:new}".format(ureg.m) == "new format"
+
     def test_ipython(self):
         alltext = []
 
@@ -312,6 +325,9 @@ class TestRegistry(QuantityTestCase):
         )
         assert self.ureg.parse_expression("meter² · second") == self.Q_(
             1, UnitsContainer(meter=2.0, second=1)
+        )
+        assert self.ureg.parse_expression("m²·s⁻²") == self.Q_(
+            1, UnitsContainer(meter=2, second=-2)
         )
         assert self.ureg.parse_expression("meter⁰.⁵·second") == self.Q_(
             1, UnitsContainer(meter=0.5, second=1)

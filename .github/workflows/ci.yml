@@ -5,10 +5,11 @@ on: [push, pull_request]
 jobs:
   test-linux:
     strategy:
+      fail-fast: false
       matrix:
         python-version: [3.7, 3.8, 3.9]
         numpy: [null, "numpy>=1.17,<2.0.0"]
-        uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
+        uncertainties: [null, "uncertainties==3.1.4", "uncertainties>=3.1.4,<4.0.0"]
         extras: [null]
         include:
           - python-version: 3.7 # Minimal versions
@@ -17,7 +18,7 @@ jobs:
           - python-version: 3.8
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray pooch netCDF4 dask[complete] graphviz babel==2.8"
+            extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
     runs-on: ubuntu-latest
 
     env:
@@ -95,9 +96,20 @@ jobs:
       with:
         python-version: 3.x
     - name: Coveralls Finished
+      continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
       run: |
         pip install coveralls
         coveralls --finish
+
+  # Dummy task to summarize all. See https://github.com/bors-ng/bors-ng/issues/1300
+  ci-success:
+    name: ci
+    if: ${{ success() }}
+    needs: test-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: CI succeeded
+        run: exit 0

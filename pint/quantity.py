@@ -62,6 +62,7 @@ from .errors import (
 )
 from .formatting import (
     _pretty_fmt_exponent,
+    extract_custom_flags,
     ndarray_to_latex,
     remove_custom_flags,
     siunitx_format_unit,
@@ -389,11 +390,12 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             spec = spec.replace("Lx", "")
             # TODO: add support for extracting options
             opts = ""
-            ustr = siunitx_format_unit(obj.units)
+            ustr = siunitx_format_unit(obj.units._units, obj._REGISTRY)
             allf = r"\SI[%s]{{{}}}{{{}}}" % opts
         else:
             # Hand off to unit formatting
-            ustr = format(obj.units, spec)
+            uspec = extract_custom_flags(spec)
+            ustr = format(obj.units, uspec)
 
         mspec = remove_custom_flags(spec)
         if "H" in spec:
@@ -806,8 +808,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         To get output in terms of a different unit, use the unit parameter.
 
 
-        Example
-        -------
+        Examples
+        --------
 
         >>> import pint
         >>> ureg = pint.UnitRegistry()
