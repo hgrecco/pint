@@ -596,6 +596,27 @@ class TestQuantity(QuantityTestCase):
             self.Q_(FakeWrapper(42), "m")
         assert FakeWrapper(self.Q_(42, "m")).q == self.Q_(42, "m")
 
+    def test_is_compatible_with(self):
+        a = self.Q_(1, "kg")
+        b = self.Q_(20, "g")
+        c = self.Q_(550)
+
+        assert a.is_compatible_with(b)
+        assert a.is_compatible_with("lb")
+        assert a.is_compatible_with(self.U_("lb"))
+        assert not a.is_compatible_with("km")
+        assert not a.is_compatible_with("")
+        assert not a.is_compatible_with(12)
+
+        assert c.is_compatible_with(12)
+
+    def test_is_compatible_with_with_context(self):
+        a = self.Q_(532.0, "nm")
+        b = self.Q_(563.5, "terahertz")
+        assert a.is_compatible_with(b, "sp")
+        with self.ureg.context("sp"):
+            assert a.is_compatible_with(b)
+
 
 class TestQuantityToCompact(QuantityTestCase):
     def assertQuantityAlmostIdentical(self, q1, q2):
