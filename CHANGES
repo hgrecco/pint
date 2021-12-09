@@ -4,6 +4,7 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
+- Fix type hints of function wrapper (Issue #1431)
 - Upgrade min version of uncertainties to 3.1.4
 - Fix setting options of the application registry (Issue #1403).
 - Fix Quantity & Unit `is_compatible_with` with registry active contexts (Issue #1424).
