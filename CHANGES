@@ -42,6 +42,7 @@ Pint Changelog
 - Minimum Numpy version supported is 1.17+
 - Add supports for type hints for Quantity class. Quantity is now a Generic (PEP560).
 - Add support for [PEP561](https://www.python.org/dev/peps/pep-0561/) (Package Type information)
+- Added dBW, decibel Watts, which is used in RF high power applications
 
 
 0.17 (2021-03-22)
