@@ -35,3 +35,7 @@ dask-worker-space
 # airspeed velocity bechmark
 .asv/
 benchmarks/hashes.txt
+
+# local envs
+venv/*
+env/*
