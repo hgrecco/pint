@@ -1,20 +1,20 @@
-exclude: '^pint/_vendor'
+exclude: "^pint/_vendor"
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.3.0
     hooks:
-    - id: trailing-whitespace
-    - id: end-of-file-fixer
-    - id: check-yaml
--   repo: https://github.com/psf/black
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+  - repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:
-    - id: black
--   repo: https://github.com/pycqa/isort
+      - id: black
+  - repo: https://github.com/pycqa/isort
     rev: 5.10.1
     hooks:
-    - id: isort
--   repo: https://gitlab.com/pycqa/flake8
+      - id: isort
+  - repo: https://gitlab.com/pycqa/flake8
     rev: 3.9.2
     hooks:
-    - id: flake8
+      - id: flake8
