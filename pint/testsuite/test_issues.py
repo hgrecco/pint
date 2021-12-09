@@ -791,6 +791,10 @@ class TestIssues(QuantityTestCase):
         assert isinstance(foo1, foo2.__class__)
         assert isinstance(foo2, foo1.__class__)
 
+    def test_issue1433(self):
+        assert ureg.Quantity("1 micron") == ureg.Quantity("1 micrometer")
+        assert ureg.Unit("micron") == ureg.Unit("micrometer")
+
     @helpers.requires_numpy
     def test_issue1174(self):
         q = [1.0, -2.0, 3.0, -4.0] * self.ureg.meter
