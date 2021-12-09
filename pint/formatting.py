@@ -333,9 +333,14 @@ def formatter(
                     # Don't remove this positional! This is the format used in Babel
                     key = pat.replace("{0}", "").strip()
                     break
-            division_fmt = compound_unit_patterns.get("per", {}).get(
-                babel_length, division_fmt
-            )
+
+            tmp = compound_unit_patterns.get("per", {}).get(babel_length, division_fmt)
+
+            try:
+                division_fmt = tmp.get("compound", division_fmt)
+            except AttributeError:
+                division_fmt = tmp
+
             power_fmt = "{}{}"
             exp_call = _pretty_fmt_exponent
         if value == 1:

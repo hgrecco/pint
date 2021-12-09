@@ -1944,6 +1944,7 @@ class SystemRegistry(BaseRegistry):
     - List systems
     - Get or get the default system.
     - Parse @system and @group directive.
+    - Show provide a constants property.
     """
 
     def __init__(self, system=None, **kwargs):
@@ -1961,6 +1962,10 @@ class SystemRegistry(BaseRegistry):
         self._groups: Dict[str, Group] = {}
         self._groups["root"] = self.Group("root")
         self._default_system = system
+
+    @property
+    def constants(self):
+        return self._groups["constants"]
 
     def _init_dynamic_classes(self) -> None:
         super()._init_dynamic_classes()
