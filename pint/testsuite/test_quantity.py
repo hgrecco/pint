@@ -605,6 +605,45 @@ class TestQuantity(QuantityTestCase):
             self.Q_(FakeWrapper(42), "m")
         assert FakeWrapper(self.Q_(42, "m")).q == self.Q_(42, "m")
 
+    def test_is_compatible_with(self):
+        a = self.Q_(1, "kg")
+        b = self.Q_(20, "g")
+        c = self.Q_(550)
+
+        assert a.is_compatible_with(b)
+        assert a.is_compatible_with("lb")
+        assert a.is_compatible_with(self.U_("lb"))
+        assert not a.is_compatible_with("km")
+        assert not a.is_compatible_with("")
+        assert not a.is_compatible_with(12)
+
+        assert c.is_compatible_with(12)
+
+    def test_is_compatible_with_with_context(self):
+        a = self.Q_(532.0, "nm")
+        b = self.Q_(563.5, "terahertz")
+        assert a.is_compatible_with(b, "sp")
+        with self.ureg.context("sp"):
+            assert a.is_compatible_with(b)
+
+    @pytest.mark.parametrize(["inf_str"], [("inf",), ("-infinity",), ("INFINITY",)])
+    @pytest.mark.parametrize(["has_unit"], [(True,), (False,)])
+    def test_infinity(self, inf_str, has_unit):
+        inf = float(inf_str)
+        ref = self.Q_(inf, "meter" if has_unit else None)
+        test = self.Q_(inf_str + (" meter" if has_unit else ""))
+        assert ref == test
+
+    @pytest.mark.parametrize(["nan_str"], [("nan",), ("NAN",)])
+    @pytest.mark.parametrize(["has_unit"], [(True,), (False,)])
+    def test_nan(self, nan_str, has_unit):
+        nan = float(nan_str)
+        ref = self.Q_(nan, " meter" if has_unit else None)
+        test = self.Q_(nan_str + (" meter" if has_unit else ""))
+        assert ref.units == test.units
+        assert math.isnan(test.magnitude)
+        assert ref != test
+
 
 class TestQuantityToCompact(QuantityTestCase):
     def assertQuantityAlmostIdentical(self, q1, q2):

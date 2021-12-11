@@ -270,3 +270,12 @@ def test_update_saved_registries():
     set_application_registry(new)
 
     assert ureg1.Unit("foo") == ureg2.Unit("foo")
+
+
+@pytest.mark.usefixtures("isolate_application_registry")
+def test_modify_application_registry():
+    ar = get_application_registry()
+    u = ar.get()
+    ar.force_ndarray_like = True
+
+    assert ar.force_ndarray_like == u.force_ndarray_like
