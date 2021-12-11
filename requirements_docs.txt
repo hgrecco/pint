@@ -1,4 +1,4 @@
-sphinx
+sphinx>4
 ipython
 matplotlib
 nbsphinx

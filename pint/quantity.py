@@ -650,7 +650,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         """
         from .unit import Unit
 
-        if contexts:
+        if contexts or self._REGISTRY._active_ctx:
             try:
                 self.to(other, *contexts, **ctx_kwargs)
                 return True

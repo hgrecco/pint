@@ -170,7 +170,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         """
         from .quantity import Quantity
 
-        if contexts:
+        if contexts or self._REGISTRY._active_ctx:
             try:
                 (1 * self).to(other, *contexts, **ctx_kwargs)
                 return True
