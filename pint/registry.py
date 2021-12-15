@@ -1231,7 +1231,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                         {self.get_name(token_text, case_sensitive=case_sensitive): 1}
                     ),
                 )
-        elif token_type == NUMBER:
+        elif token_type == NUMBER or token_text.isnumeric():
             return ParserHelper.eval_token(token, non_int_type=self.non_int_type)
         else:
             raise Exception("unknown token type")

@@ -21,6 +21,7 @@ from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
 from typing import TYPE_CHECKING, ClassVar, Optional, Union
+from unicodedata import decomposition, numeric
 
 from .compat import NUMERIC_TYPES, tokenizer
 from .errors import DefinitionSyntaxError
@@ -580,6 +581,22 @@ class ParserHelper(UnitsContainer):
 
         token_type = token.type
         token_text = token.string
+
+        if token_text.isnumeric() and token_type != NUMBER:
+            try:
+                if decomposition(token_text).split()[0] == "<fraction>":
+                    _val = numeric(token_text)
+                else:
+                    raise Exception("unknown token type")
+            except IndexError:
+                raise Exception("unknown token type")
+            if non_int_type is float:
+                return float(_val)
+            elif non_int_type is Fraction:
+                return Fraction(_val).limit_denominator(11)
+            else:
+                return non_int_type(_val)
+
         if token_type == NUMBER:
             if non_int_type is float:
                 try:

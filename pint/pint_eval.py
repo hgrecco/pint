@@ -152,6 +152,8 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
         token_text = current_token[1]
 
         if token_type == tokenlib.OP:
+            if token_text.isnumeric():
+                pass
             if token_text == ")":
                 if prev_op is None:
                     raise DefinitionSyntaxError(
@@ -202,7 +204,11 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
                         tokens, op_priority, index + 1, depth + 1, "unary"
                     )
                     result = EvalTreeNode(left=right, operator=current_token)
-        elif token_type == tokenlib.NUMBER or token_type == tokenlib.NAME:
+        if (
+            token_type == tokenlib.NUMBER
+            or token_type == tokenlib.NAME
+            or token_text.isnumeric()
+        ):
             if result:
                 # tokens with an implicit operation i.e. "1 kg"
                 if op_priority[""] <= op_priority.get(prev_op, -1):
