@@ -617,6 +617,24 @@ class TestQuantity(QuantityTestCase):
         with self.ureg.context("sp"):
             assert a.is_compatible_with(b)
 
+    @pytest.mark.parametrize(["inf_str"], [("inf",), ("-infinity",), ("INFINITY",)])
+    @pytest.mark.parametrize(["has_unit"], [(True,), (False,)])
+    def test_infinity(self, inf_str, has_unit):
+        inf = float(inf_str)
+        ref = self.Q_(inf, "meter" if has_unit else None)
+        test = self.Q_(inf_str + (" meter" if has_unit else ""))
+        assert ref == test
+
+    @pytest.mark.parametrize(["nan_str"], [("nan",), ("NAN",)])
+    @pytest.mark.parametrize(["has_unit"], [(True,), (False,)])
+    def test_nan(self, nan_str, has_unit):
+        nan = float(nan_str)
+        ref = self.Q_(nan, " meter" if has_unit else None)
+        test = self.Q_(nan_str + (" meter" if has_unit else ""))
+        assert ref.units == test.units
+        assert math.isnan(test.magnitude)
+        assert ref != test
+
 
 class TestQuantityToCompact(QuantityTestCase):
     def assertQuantityAlmostIdentical(self, q1, q2):
