@@ -43,4 +43,3 @@ jobs:
 
       - name: Doc Tests
         run: sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest
-        
