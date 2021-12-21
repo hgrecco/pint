@@ -471,9 +471,11 @@ class PlainRegistry(metaclass=RegistryMeta):
         else:
             raise TypeError("{} is not a valid definition.".format(definition))
 
-        # define "delta_" units for units with an offset
-        if getattr(definition.converter, "offset", 0) != 0:
-
+        # define "delta_" units for units with an offset and
+        # define "delta_" units for logarithmic units
+        if getattr(definition.converter, "offset", 0) != 0 or getattr(
+            definition.converter, "is_logarithmic", False
+        ):
             if definition.name.startswith("["):
                 d_name = "[delta_" + definition.name[1:]
             else:
@@ -487,6 +489,8 @@ class PlainRegistry(metaclass=RegistryMeta):
             d_aliases = tuple("Δ" + alias for alias in definition.aliases) + tuple(
                 "delta_" + alias for alias in definition.aliases
             )
+            if definition.has_symbol:
+                d_aliases = (*d_aliases, "delta_" + definition.symbol)
 
             d_reference = self.UnitsContainer(
                 {ref: value for ref, value in definition.reference.items()}

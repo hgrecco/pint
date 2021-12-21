@@ -86,7 +86,9 @@ class NonMultiplicativeRegistry(PlainRegistry):
         definition, d, di = super()._define(definition)
 
         # define additional units for units with an offset
-        if getattr(definition.converter, "offset", 0) != 0:
+        if getattr(definition.converter, "offset", 0) != 0 or getattr(
+            definition.converter, "is_logarithmic", False
+        ):
             self._define_adder(definition, d, di)
 
         return definition, d, di
