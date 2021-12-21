@@ -36,6 +36,6 @@ dask-worker-space
 .asv/
 benchmarks/hashes.txt
 
-# local envs
+# local python environment
 venv/*
 env/*

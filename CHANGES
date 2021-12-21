@@ -12,7 +12,6 @@ Pint Changelog
 
 - Adds `delta_` logarithmic units to the unit registry.
 
-
 0.18 (2021-10-26)
 -----------------
 

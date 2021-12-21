@@ -461,7 +461,6 @@ class BaseRegistry(metaclass=RegistryMeta):
             or getattr(definition.converter, "is_logarithmic", False)
             and definition.name != "decade"
         ):
-
             if definition.name.startswith("["):
                 d_name = "[delta_" + definition.name[1:]
             else:
@@ -1224,6 +1223,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         if token_type == NAME:
             if token_text == "dimensionless":
                 return 1 * self.dimensionless
+            elif token_text.lower() in ("inf", "infinity"):
+                return float("inf")
+            elif token_text.lower() == "nan":
+                return float("nan")
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:
