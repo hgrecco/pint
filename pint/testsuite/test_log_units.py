@@ -19,12 +19,6 @@ def ureg():
 
 
 class TestLogarithmicQuantity(QuantityTestCase):
-    def test_other_quantity_creation(self, caplog):
-        x = self.Q_(4, "dBm")
-        assert x.units == UnitsContainer(decibelmilliwatt=1)
-        # x = self.Q_(4, "degC")
-        # assert x.units == UnitsContainer(degree_Celsius=1)
-
     def test_log_quantity_creation(self, caplog):
 
         # Following Quantity Creation Pattern
@@ -77,8 +71,7 @@ class TestLogarithmicQuantity(QuantityTestCase):
             assert "wally" not in caplog.text
             assert 4.2 * new_reg.dBm == new_reg.Quantity(4.2, 2 * new_reg.dBm)
 
-        # TODO: caplog.records is 2 now
-        # assert len(caplog.records) == 1
+        assert len(caplog.records) == 1
 
     def test_log_convert(self):
         # # 1 dB = 1/10 * bel

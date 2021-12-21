@@ -455,9 +455,11 @@ class BaseRegistry(metaclass=RegistryMeta):
             raise TypeError("{} is not a valid definition.".format(definition))
 
         # define "delta_" units for units with an offset and
-        # define "delta_" units for logarithmic units
-        if getattr(definition.converter, "offset", 0) != 0 or getattr(
-            definition.converter, "is_logarithmic", False
+        # define "delta_" units for logarithmic  (except decade to avoid unit redefinition)
+        if (
+            getattr(definition.converter, "offset", 0) != 0
+            or getattr(definition.converter, "is_logarithmic", False)
+            and definition.name != "decade"
         ):
 
             if definition.name.startswith("["):
@@ -1414,9 +1416,11 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         definition, d, di = super()._define(definition)
 
-        # define additional units for units with an offset
-        if getattr(definition.converter, "offset", 0) != 0 or getattr(
-            definition.converter, "is_logarithmic", False
+        # define additional units for units with an offset or logarithmic (except decade, to avoid redefinition)
+        if (
+            getattr(definition.converter, "offset", 0) != 0
+            or getattr(definition.converter, "is_logarithmic", False)
+            and definition.name != "decade"
         ):
             self._define_adder(definition, d, di)
 
