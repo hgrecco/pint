@@ -41,6 +41,26 @@ class TestLogarithmicQuantity(QuantityTestCase):
         assert x.units == y.units
         assert x is not y
 
+        #  Following Quantity Creation Pattern for "delta_" units:
+        # tests the quantity creation of an absolute decibel unit: decibelmilliwatt.
+        for args in (
+            (4.2, "delta_dBm"),
+            (4.2, UnitsContainer(delta_decibelmilliwatt=1)),
+            (4.2, self.ureg.delta_dBm),
+        ):
+            x = self.Q_(*args)
+            assert x.magnitude == 4.2
+            assert x.units == UnitsContainer(delta_decibelmilliwatt=1)
+        # tests the quantity creation of an absolute decibel unit: decibelmilliwatt.
+        for args in (
+            (4.2, "delta_dB"),
+            (4.2, UnitsContainer(delta_decibel=1)),
+            (4.2, self.ureg.delta_dB),
+        ):
+            x = self.Q_(*args)
+            assert x.magnitude == 4.2
+            assert x.units == UnitsContainer(delta_decibel=1)
+
         # Using multiplications for dB units requires autoconversion to baseunits
         new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
         x = new_reg.Quantity("4.2 * dBm")
@@ -132,6 +152,45 @@ def test_quantity_by_constructor(ureg, unit_name, mag):
 @pytest.mark.parametrize("mag", [1.0, 4.2])
 @pytest.mark.parametrize("unit_name", log_unit_names)
 def test_quantity_by_multiplication(auto_ureg, unit_name, mag):
+    """Test that logarithmic units can be defined with multiplication
+
+    Requires setting `autoconvert_offset_to_baseunit` to True
+    """
+    unit = getattr(auto_ureg, unit_name)
+    q = mag * unit
+    assert q.magnitude == pytest.approx(mag)
+    assert q.units == unit
+
+
+log_delta_unit_names = ["delta_" + name for name in log_unit_names if name != "decade"]
+
+
+@pytest.mark.parametrize("unit_name", log_delta_unit_names)
+def test_deltaunit_by_attribute(ureg, unit_name):
+    """Can the logarithmic units be accessed by attribute lookups?"""
+    unit = getattr(ureg, unit_name)
+    assert isinstance(unit, Unit)
+
+
+@pytest.mark.parametrize("unit_name", log_delta_unit_names)
+def test_deltaunit_parsing(ureg, unit_name):
+    """Can the logarithmic units be understood by the parser?"""
+    unit = ureg.parse_units(unit_name)
+    assert isinstance(unit, Unit)
+
+
+@pytest.mark.parametrize("mag", [1.0, 4.2])
+@pytest.mark.parametrize("unit_name", log_delta_unit_names)
+def test_deltaquantity_by_constructor(ureg, unit_name, mag):
+    """Can Quantity() objects be constructed using logarithmic units?"""
+    q = ureg.Quantity(mag, unit_name)
+    assert q.magnitude == pytest.approx(mag)
+    assert q.units == getattr(ureg, unit_name)
+
+
+@pytest.mark.parametrize("mag", [1.0, 4.2])
+@pytest.mark.parametrize("unit_name", log_delta_unit_names)
+def test_deltaquantity_by_multiplication(auto_ureg, unit_name, mag):
     """Test that logarithmic units can be defined with multiplication
 
     Requires setting `autoconvert_offset_to_baseunit` to True
