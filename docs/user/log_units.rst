@@ -19,7 +19,7 @@ the recommendations there apply here as well.
 
 Mathematical operations with logarithmic units are often ambiguous.
 For example, the sum of two powers with decibel units is a logarithmic quantity of the power squared, thus without obvious meaning and not decibel units.
-Therefore the main Pint distribution raises an `OffsetUnitCalculusError` as a result of the sum of two quantities with decibel units,
+Therefore the main Pint distribution raises an ``OffsetUnitCalculusError`` as a result of the sum of two quantities with decibel units,
 as it does for all other ambiguous mathematical operations.
 
 Valispace's fork of Pint makes some options.
@@ -51,7 +51,7 @@ be restricted in the kinds of operations you can do without explicitly calling
 `.to_base_units()` first.
 
 The sum of decibel absolute units will raise an error by default.
-However, you can set the registry flag `logarithmic_math` to `True` when starting the unit registry, like:
+However, you can set up your  ``UnitRegistry()`` with the ``logarithmic_math`` flag, like:
 
 .. doctest::
 
