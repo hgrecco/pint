@@ -11,6 +11,7 @@ Pint Changelog
 ### Breaking Changes
 
 - Adds `delta_` logarithmic units to the unit registry.
+- Implements logarithmic addition if the registry's flag `logarithmic_math` is True.
 
 0.18 (2021-10-26)
 -----------------

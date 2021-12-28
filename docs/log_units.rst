@@ -17,6 +17,21 @@ as well as some conversions between them and their base units where applicable.
 These units behave much like those described in :ref:`nonmult`, so many of
 the recommendations there apply here as well.
 
+Mathematical operations with logarithmic units are often ambiguous.
+For example, the sum of two powers with decibel units is a logarithmic quantity of the power squared, thus without obvious meaning and not decibel units.
+Therefore the main Pint distribution raises an `OffsetUnitCalculusError` as a result of the sum of two quantities with decibel units,
+as it does for all other ambiguous mathematical operations.
+
+Valispace's fork of Pint makes some options.
+We distiguish between *absolute logarithmic units* and *relative logarithmic units*.
+
+Absolute logarithmic units are the logarithmic units with a constant reference, e.g. `dBW` corresponds to a power change in relation to 1 `Watt`.
+We consider general logarithmic units like `dB` as general absolute logarithmic units.
+
+Relative logarithmic units are the logarithmic units of gains and losses, thus a power change in relation to the previous power level.
+In coherence with the default behaviour of subtraction between absolute logarithmic units,
+relative logarithmic units are represented by `delta_` before the name of the correspondent absolute logarithmic unit, e.g. `delta_dBu` corresponds to a power change in relation to a power level in `dBu`.
+
 Setting up the ``UnitRegistry()``
 ---------------------------------
 
@@ -35,6 +50,15 @@ If you can't pass that flag you will need to define all logarithmic units
 be restricted in the kinds of operations you can do without explicitly calling
 `.to_base_units()` first.
 
+The sum of decibel absolute units will raise an error by default.
+However, you can set the registry flag `logarithmic_math` to `True` when starting the unit registry, like:
+
+.. doctest::
+
+    >>> ureg = UnitRegistry(autoconvert_offset_to_baseunit=True, logarithmic_math=True)
+
+If you switch on this flag, it will convert additions of quantities with logarithmic units into logarithmic additions.
+
 Defining log quantities
 -----------------------
 
@@ -49,6 +73,8 @@ you can define simple logarithmic quantities like most others:
     <Quantity(20.0, 'decibelmilliwatt')>
     >>> ureg('20 dB')
     <Quantity(20, 'decibel')>
+    >>> ureg('20 delta_dB')
+    <Quantity(20, 'delta_decibel')>
 
 
 Converting to and from base units
