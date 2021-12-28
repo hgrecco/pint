@@ -32,6 +32,9 @@ class NonMultiplicativeRegistry(PlainRegistry):
     autoconvert_offset_to_baseunit : bool
         If True, non-multiplicative units are
         converted to plain units in multiplications.
+    logarithmic_math : bool
+        If True, logarithmic units are
+        added as logarithmic additions.
 
     """
 
@@ -41,6 +44,7 @@ class NonMultiplicativeRegistry(PlainRegistry):
         self,
         default_as_delta: bool = True,
         autoconvert_offset_to_baseunit: bool = False,
+        logarithmic_math: bool = False,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -52,6 +56,10 @@ class NonMultiplicativeRegistry(PlainRegistry):
         # Determines if quantities with offset units are converted to their
         # plain units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
+
+        # When performing addition of logarithmic units, interpret
+        # the addition as a logarithmic addition
+        self.logarithmic_math = logarithmic_math
 
     def _parse_units(
         self,

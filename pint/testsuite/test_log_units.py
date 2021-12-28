@@ -330,3 +330,17 @@ def test_frequency_octave_addition(module_registry_auto_offset, freq1, octaves, 
     new_freq = freq1 + shift
     assert new_freq.units == freq1.units
     assert new_freq.magnitude == pytest.approx(freq2)
+
+
+def test_db_db_addition(auto_ureg):
+    """Test a dB value can be added to a dB and the answer is correct."""
+    # adding two dB units
+    auto_ureg.logarithmic_math = True
+    power = (5 * auto_ureg.dB) + (10 * auto_ureg.dB)
+    assert power.magnitude == pytest.approx(11.19331048066)
+    assert power.units == auto_ureg.dB
+
+    # Adding two absolute dB units
+    power = (5 * auto_ureg.dBW) + (10 * auto_ureg.dBW)
+    assert power.magnitude == pytest.approx(11.19331048066)
+    assert power.units == auto_ureg.dBW

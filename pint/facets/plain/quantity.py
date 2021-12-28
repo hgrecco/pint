@@ -926,6 +926,25 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             tu = other._units.rename(other_non_mul_unit, "delta_" + other_non_mul_unit)
             magnitude = op(self._convert_magnitude_not_inplace(tu), other._magnitude)
             units = other._units
+        elif (
+            self._REGISTRY.logarithmic_math
+            and op == operator.add
+            and len(self_non_mul_units) == 1
+            and len(other_non_mul_units) == 1
+            and getattr(
+                self._get_unit_definition(self_non_mul_units[0]),
+                "is_logarithmic",
+                False,
+            )
+            and getattr(
+                other._get_unit_definition(other_non_mul_units[0]),
+                "is_logarithmic",
+                False,
+            )
+        ):
+            return (self.to_base_units() + other.to_base_units()).to(
+                self.units
+            )  # logarithmic addition: converts logarithmic unit to dimensionless and converts back to the unit of the self
         else:
             raise OffsetUnitCalculusError(self._units, other._units)
 
