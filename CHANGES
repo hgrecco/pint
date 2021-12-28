@@ -69,6 +69,8 @@ Pint Changelog
 - Replace `h` with `ℎ` (U+210E) as default symbol for planck constant.
 - Change minimal Python version support to 3.8+
 - Change minimal Numpy version support to 1.19+
+- Adds `delta_` logarithmic units to the unit registry.
+- Implements logarithmic addition if the registry's flag `logarithmic_math` is True.
 
 0.18 (2021-10-26)
 -----------------
