@@ -341,6 +341,7 @@ def test_frequency_octave_addition(auto_ureg, freq1, octaves, freq2):
     assert new_freq.units == freq1.units
     assert new_freq.magnitude == pytest.approx(freq2)
 
+
 def test_db_db_addition(auto_ureg):
     """Test a dB value can be added to a dB and the answer is correct."""
     # adding two dB units

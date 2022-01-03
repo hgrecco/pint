@@ -2238,6 +2238,9 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         If True converts offset units in quantities are
         converted to their base units in multiplicative
         context. If False no conversion happens.
+    logarithmic_math : bool
+        If True, logarithmic units are
+        added as logarithmic additions.
     on_redefinition : str
         action to take in case a unit is redefined.
         'warn', 'raise', 'ignore'
@@ -2259,6 +2262,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         force_ndarray_like: bool = False,
         default_as_delta: bool = True,
         autoconvert_offset_to_baseunit: bool = False,
+        logarithmic_math: bool = False,
         on_redefinition: str = "warn",
         system=None,
         auto_reduce_dimensions=False,
@@ -2275,6 +2279,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
             on_redefinition=on_redefinition,
             default_as_delta=default_as_delta,
             autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
+            logarithmic_math=logarithmic_math,
             system=system,
             auto_reduce_dimensions=auto_reduce_dimensions,
             preprocessors=preprocessors,
