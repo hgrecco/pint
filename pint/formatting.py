@@ -453,6 +453,15 @@ def siunitx_format_unit(units, registry):
     return "".join(lpos) + "".join(lneg)
 
 
+def split_unit_format(uspec):
+    modifiers_re = re.compile(rf"[{''.join(_UNIT_MODIFIERS)}]")
+    modifiers = modifiers_re.findall(uspec)
+
+    uspec = modifiers_re.sub("", uspec)
+
+    return modifiers, uspec
+
+
 def extract_custom_flags(spec):
     flag_re = re.compile(
         "(" + "|".join(list(_FORMATTERS.keys()) + list(_UNIT_MODIFIERS)) + ")"
