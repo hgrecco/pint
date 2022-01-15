@@ -463,10 +463,10 @@ def extract_custom_flags(spec):
 
 
 def remove_custom_flags(spec):
-    for flag in list(_FORMATTERS.keys()) + ["~"]:
-        if flag:
-            spec = spec.replace(flag, "")
-    return spec
+    flag_re = re.compile(
+        "(" + "|".join(list(_FORMATTERS.keys()) + list(_UNIT_MODIFIERS)) + ")"
+    )
+    return flag_re.sub("", spec)
 
 
 def vector_to_latex(vec, fmtfun=lambda x: format(x, ".2f")):
