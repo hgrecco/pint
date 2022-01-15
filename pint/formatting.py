@@ -160,10 +160,28 @@ def register_unit_format(name):
     return wrapper
 
 
+def apply_unit_modifiers(unit, modifiers, registry):
+    from .util import UnitsContainer
+
+    raw = unit if isinstance(unit, UnitsContainer) else unit._units
+    if not raw:
+        return UnitsContainer({})
+
+    if "~" in modifiers:
+        applied = UnitsContainer(
+            {registry._get_symbol(key): value for key, value in raw.items()}
+        )
+    else:
+        applied = raw
+
+    return applied
+
+
 @register_unit_format("P")
-def format_pretty(unit, registry, **options):
+def format_pretty(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     return formatter(
-        unit.items(),
+        modified.items(),
         as_ratio=True,
         single_denominator=False,
         product_fmt="·",
@@ -176,9 +194,10 @@ def format_pretty(unit, registry, **options):
 
 
 @register_unit_format("L")
-def format_latex(unit, registry, **options):
+def format_latex(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     preprocessed = {
-        r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in unit.items()
+        r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in modified.items()
     }
     formatted = formatter(
         preprocessed.items(),
@@ -194,7 +213,7 @@ def format_latex(unit, registry, **options):
 
 
 @register_unit_format("Lx")
-def format_latex_siunitx(unit, registry, **options):
+def format_latex_siunitx(unit, registry, modifiers, **options):
     if registry is None:
         raise ValueError(
             "Can't format as siunitx without a registry."
@@ -203,14 +222,16 @@ def format_latex_siunitx(unit, registry, **options):
             " and might indicate a bug in `pint`."
         )
 
-    formatted = siunitx_format_unit(unit, registry)
+    modified = apply_unit_modifiers(unit, modifiers, registry)
+    formatted = siunitx_format_unit(modified, registry)
     return rf"\si[]{{{formatted}}}"
 
 
 @register_unit_format("H")
-def format_html(unit, registry, **options):
+def format_html(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     return formatter(
-        unit.items(),
+        modified.items(),
         as_ratio=True,
         single_denominator=True,
         product_fmt=r" ",
@@ -222,9 +243,10 @@ def format_html(unit, registry, **options):
 
 
 @register_unit_format("D")
-def format_default(unit, registry, **options):
+def format_default(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     return formatter(
-        unit.items(),
+        modified.items(),
         as_ratio=True,
         single_denominator=False,
         product_fmt=" * ",
@@ -236,9 +258,10 @@ def format_default(unit, registry, **options):
 
 
 @register_unit_format("C")
-def format_compact(unit, registry, **options):
+def format_compact(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     return formatter(
-        unit.items(),
+        modified.items(),
         as_ratio=True,
         single_denominator=False,
         product_fmt="*",  # TODO: Should this just be ''?
@@ -401,14 +424,15 @@ def format_unit(unit, spec, registry=None, **options):
         else:
             return "dimensionless"
 
-    if not spec:
-        spec = "D"
+    uspec, modifiers = split_unit_format(spec)
+    if not uspec:
+        uspec = "D"
 
-    fmt = _FORMATTERS.get(spec)
+    fmt = _FORMATTERS.get(uspec)
     if fmt is None:
         raise ValueError(f"Unknown conversion specified: {spec}")
 
-    return fmt(unit, registry=registry, **options)
+    return fmt(unit, registry=registry, modifiers=modifiers, **options)
 
 
 def siunitx_format_unit(units, registry):
@@ -455,11 +479,11 @@ def siunitx_format_unit(units, registry):
 
 def split_unit_format(uspec):
     modifiers_re = re.compile(rf"[{''.join(_UNIT_MODIFIERS)}]")
-    modifiers = modifiers_re.findall(uspec)
+    modifiers = "".join(modifiers_re.findall(uspec))
 
     uspec = modifiers_re.sub("", uspec)
 
-    return modifiers, uspec
+    return uspec, modifiers
 
 
 def extract_custom_flags(spec):
