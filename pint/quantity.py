@@ -771,6 +771,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             if unit1 not in units:
                 continue
             for unit2 in units:
+                # get exponent after reduction
+                exp = units[unit1]
                 if unit1 != unit2:
                     power = self._REGISTRY._get_dimensionality_ratio(unit1, unit2)
                     if power:
