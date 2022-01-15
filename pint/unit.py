@@ -81,36 +81,11 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __format__(self, spec) -> str:
         spec = spec or extract_custom_flags(self.default_format)
-        if "~" in spec:
-            if not self._units:
-                return ""
-            units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
-                    for key, value in self._units.items()
-                )
-            )
-            spec = spec.replace("~", "")
-        else:
-            units = self._units
 
-        return format_unit(units, spec, registry=self._REGISTRY)
+        return format_unit(self, spec, registry=self._REGISTRY)
 
     def format_babel(self, spec="", locale=None, **kwspec: Any) -> str:
         spec = spec or extract_custom_flags(self.default_format)
-
-        if "~" in spec:
-            if self.dimensionless:
-                return ""
-            units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
-                    for key, value in self._units.items()
-                )
-            )
-            spec = spec.replace("~", "")
-        else:
-            units = self._units
 
         locale = self._REGISTRY.fmt_locale if locale is None else locale
 
@@ -119,7 +94,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             kwspec["locale"] = babel_parse(locale)
 
-        return units.format_babel(spec, registry=self._REGISTRY, **kwspec)
+        return self._units.format_babel(spec, registry=self._REGISTRY, **kwspec)
 
     @property
     def dimensionless(self) -> bool:
