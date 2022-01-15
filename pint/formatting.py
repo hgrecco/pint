@@ -371,6 +371,7 @@ def formatter(
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
 # We also add uS for uncertainties.
 _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
+_UNIT_MODIFIERS = frozenset("~")
 
 
 def _parse_spec(spec):
@@ -378,7 +379,7 @@ def _parse_spec(spec):
     for ch in reversed(spec):
         if ch == "~" or ch in _BASIC_TYPES:
             continue
-        elif ch in list(_FORMATTERS.keys()) + ["~"]:
+        elif ch in list(_FORMATTERS.keys()) + list(_UNIT_MODIFIERS):
             if result:
                 raise ValueError("expected ':' after format specifier")
             else:
@@ -453,9 +454,9 @@ def siunitx_format_unit(units, registry):
 
 
 def extract_custom_flags(spec):
-    import re
-
-    flag_re = re.compile("(" + "|".join(list(_FORMATTERS.keys()) + ["~"]) + ")")
+    flag_re = re.compile(
+        "(" + "|".join(list(_FORMATTERS.keys()) + list(_UNIT_MODIFIERS)) + ")"
+    )
     custom_flags = flag_re.findall(spec)
 
     return "".join(custom_flags)
