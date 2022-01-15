@@ -161,6 +161,22 @@ def register_unit_format(name):
 
 
 def apply_unit_modifiers(unit, modifiers, registry):
+    """apply modifiers to a unit
+
+    Parameters
+    ----------
+    unit : Unit or UnitsContainer
+        The input unit.
+    modifiers : str
+        The modifiers to apply.
+    registry : UnitRegistry
+        The unit registry associated with `unit`.
+
+    Returns
+    -------
+    UnitsContainer
+        A dict-like container with the preprocessed unit components.
+    """
     from .util import UnitsContainer
 
     raw = unit if isinstance(unit, UnitsContainer) else unit._units
