@@ -110,6 +110,21 @@ class TestUnit(QuantityTestCase):
 
         assert "{:new}".format(ureg.m) == "new format"
 
+    def test_unit_formatting_custom_modifiers(self, monkeypatch):
+        from pint import formatting, register_unit_format
+
+        monkeypatch.setattr(formatting, "_FORMATTERS", formatting._FORMATTERS.copy())
+
+        @register_unit_format("new")
+        def format_new(unit, *, modifiers, **options):
+            return f"new format for {unit:~P} with '{modifiers}'"
+
+        ureg = UnitRegistry()
+        u = ureg.m
+
+        assert f"{u:new}" == "new format for m with ''"
+        assert f"{u:~new}" == "new format for m with '~'"
+
     def test_ipython(self):
         alltext = []
 
