@@ -17,6 +17,10 @@ Pint Changelog
 - Implement `numpy.nanprod` (Issue #1369)
 - Fix default_format ignored for measurement (Issue #1456)
 
+### Breaking Changes
+
+- Change minimal Python version support to 3.8+
+- Change minimal Numpy version support to 1.19+
 
 0.18 (2021-10-26)
 -----------------
