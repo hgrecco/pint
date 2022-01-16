@@ -12,6 +12,10 @@ Pint Changelog
 - Fix casting error when using to_reduced_units with array of int.
   (Issue #1184)
 
+### Breaking Changes
+
+- Change minimal Python version support to 3.8+
+- Change minimal Numpy version support to 1.19+
 
 0.18 (2021-10-26)
 -----------------

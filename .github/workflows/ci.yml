@@ -7,21 +7,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-        numpy: [null, "numpy>=1.17,<2.0.0"]
-        uncertainties: [null, "uncertainties==3.1.4", "uncertainties>=3.1.4,<4.0.0"]
+        python-version: [3.8, 3.9, "3.10"]
+        numpy: [null, "numpy>=1.19.5,<2.0.0"]
+        uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - python-version: 3.7 # Minimal versions
-            numpy: numpy==1.17.5
+          - python-version: 3.8 # Minimal versions
+            numpy: numpy==1.19.5
             extras: matplotlib==2.2.5
           - python-version: 3.8
             numpy: "numpy"
             uncertainties: "uncertainties"
             extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
-          - python-version: "3.10"
-            numpy: null
-            extras: null
     runs-on: ubuntu-latest
 
     env:
