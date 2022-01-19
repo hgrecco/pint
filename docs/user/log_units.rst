@@ -56,6 +56,7 @@ However, you can set up your  ``UnitRegistry()`` with the ``logarithmic_math`` f
 .. doctest::
 
     >>> ureg = UnitRegistry(autoconvert_offset_to_baseunit=True, logarithmic_math=True)
+    >>> Q_ = ureg.Quantity
 
 If you switch on this flag, it will convert additions of quantities with logarithmic units into logarithmic additions.
 
