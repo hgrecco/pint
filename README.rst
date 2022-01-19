@@ -65,6 +65,15 @@ and you can make good use of numpy if you want:
     >>> np.sum(_)
     <Quantity(7.07, 'meter')>
 
+Pint: Valispace's Fork
+======================
+
+Valispace's Pint Fork is up to date with the original Pint's master repository.
+
+We opted to use a custom Pint package because we wanted to implement our own solutions specifically for Valispace and our customers.
+For example, we define the *delta_* version of logarithmic units, as done for the temperature units with an offset,
+and we allow the option to turn the sum of logarithmic quantities into logarithmic addition.
+Any other change will be commited to the original Pint package.
 
 Quick Installation
 ------------------
@@ -73,21 +82,20 @@ To install Pint, simply:
 
 .. code-block:: bash
 
-    $ pip install pint
+    $ pip install -e git+https://git@github.com/valispace/pint.git#egg=pint
 
-or utilizing conda, with the conda-forge channel:
-
-.. code-block:: bash
-
-    $ conda install -c conda-forge pint
-
-and then simply enjoy it!
+This way you are substituting pint by valispace's fork version. Use ``#egg=valispacepint`` to run both versions in the same system.
+And then simply enjoy it!
 
 
 Documentation
 -------------
 
-Full documentation is available at http://pint.readthedocs.org/
+Full documentation is available at http://pint.readthedocs.org/.
+At the moment we rely on the same documentation as the original repository.
+
+The main difference is that you can set up the unit registry as ``ureg = UnitRegistry(logarithmic_math=True)``,
+and it will convert additions of quantities with logarithmic units into logarithmic additions.
 
 
 Command-line converter
@@ -141,7 +149,7 @@ like numpy and uncertainties if they are installed
 
 
 Pint is maintained by a community of scientists, programmers and enthusiasts around the world.
-See AUTHORS_ for a complete list.
+See AUTHORS_ for a complete list. Valispace's fork additionally includes contributions from the Valispace development team.
 
 To review an ordered list of notable changes for each version of a project,
 see CHANGES_
