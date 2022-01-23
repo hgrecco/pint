@@ -12,6 +12,10 @@ Pint Changelog
 - Fix casting error when using to_reduced_units with array of int.
   (Issue #1184)
 
+### Breaking Changes
+
+- Update hour default symobl to `h`. (Issue #719)
+- Replace `h` with `ℎ` (U+210E) as default symbol for planck constant.
 
 0.18 (2021-10-26)
 -----------------
