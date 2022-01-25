@@ -11,6 +11,7 @@ Pint Changelog
 - Allow Quantity to parse 'NaN' and 'inf(inity)', case insensitive
 - Fix casting error when using to_reduced_units with array of int.
   (Issue #1184)
+- Use default numpy `np.printoptions` available since numpy 1.15.
 
 
 0.18 (2021-10-26)

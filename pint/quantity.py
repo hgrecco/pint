@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import bisect
-import contextlib
 import copy
 import datetime
 import functools
@@ -166,20 +165,6 @@ def check_dask_array(f):
             raise AttributeError(msg)
 
     return wrapper
-
-
-@contextlib.contextmanager
-def printoptions(*args, **kwargs):
-    """Numpy printoptions context manager released with version 1.15.0
-    https://docs.scipy.org/doc/numpy/reference/generated/numpy.printoptions.html
-    """
-
-    opts = np.get_printoptions()
-    try:
-        np.set_printoptions(*args, **kwargs)
-        yield np.get_printoptions()
-    finally:
-        np.set_printoptions(**opts)
 
 
 # Workaround to bypass dynamically generated Quantity with overload method
@@ -413,7 +398,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                         allf = plain_allf = "{} {}"
                         mstr = formatter.format(obj.magnitude)
                     else:
-                        with printoptions(formatter={"float_kind": formatter.format}):
+                        with np.printoptions(
+                            formatter={"float_kind": formatter.format}
+                        ):
                             mstr = (
                                 "<pre>"
                                 + format(obj.magnitude).replace("\n", "<br>")
@@ -440,7 +427,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                 if obj.magnitude.ndim == 0:
                     mstr = formatter.format(obj.magnitude)
                 else:
-                    with printoptions(formatter={"float_kind": formatter.format}):
+                    with np.printoptions(formatter={"float_kind": formatter.format}):
                         mstr = format(obj.magnitude).replace("\n", "")
         else:
             mstr = format(obj.magnitude, mspec).replace("\n", "")
