@@ -461,8 +461,8 @@ class UnitsContainer(Mapping):
     def __format__(self, spec: str) -> str:
         return format_unit(self, spec)
 
-    def format_babel(self, spec: str, **kwspec) -> str:
-        return format_unit(self, spec, **kwspec)
+    def format_babel(self, spec: str, registry=None, **kwspec) -> str:
+        return format_unit(self, spec, registry=registry, **kwspec)
 
     def __copy__(self):
         # Skip expensive health checks performed by __init__
@@ -816,9 +816,9 @@ class SharedRegistryObject:
         if not hasattr(cls, "_REGISTRY"):
             # Base class, not subclasses dynamically by
             # UnitRegistry._init_dynamic_classes
-            from . import _APP_REGISTRY
+            from . import application_registry
 
-            inst._REGISTRY = _APP_REGISTRY
+            inst._REGISTRY = application_registry.get()
         return inst
 
     def _check(self, other) -> bool:

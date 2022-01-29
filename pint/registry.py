@@ -1218,6 +1218,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         if token_type == NAME:
             if token_text == "dimensionless":
                 return 1 * self.dimensionless
+            elif token_text.lower() in ("inf", "infinity"):
+                return float("inf")
+            elif token_text.lower() == "nan":
+                return float("nan")
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:
@@ -2323,3 +2327,62 @@ class LazyRegistry:
     def __call__(self, *args, **kwargs):
         self.__init()
         return self(*args, **kwargs)
+
+
+class ApplicationRegistry:
+    """A wrapper class used to distribute changes to the application registry."""
+
+    __slots__ = ["_registry"]
+
+    def __init__(self, registry):
+        self._registry = registry
+
+    def get(self):
+        """Get the wrapped registry"""
+        return self._registry
+
+    def set(self, new_registry):
+        """Set the new registry
+
+        Parameters
+        ----------
+        new_registry : ApplicationRegistry or LazyRegistry or UnitRegistry
+            The new registry.
+
+        See Also
+        --------
+        set_application_registry
+        """
+        if isinstance(new_registry, type(self)):
+            new_registry = new_registry.get()
+
+        if not isinstance(new_registry, (LazyRegistry, UnitRegistry)):
+            raise TypeError("Expected UnitRegistry; got %s" % type(new_registry))
+        logger.debug(
+            "Changing app registry from %r to %r.", self._registry, new_registry
+        )
+        self._registry = new_registry
+
+    def __getattr__(self, name):
+        return getattr(self._registry, name)
+
+    def __setattr__(self, name, value):
+        if name in self.__slots__:
+            super().__setattr__(name, value)
+        else:
+            setattr(self._registry, name, value)
+
+    def __dir__(self):
+        return dir(self._registry)
+
+    def __getitem__(self, item):
+        return self._registry[item]
+
+    def __call__(self, *args, **kwargs):
+        return self._registry(*args, **kwargs)
+
+    def __contains__(self, item):
+        return self._registry.__contains__(item)
+
+    def __iter__(self):
+        return iter(self._registry)

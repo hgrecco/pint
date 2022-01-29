@@ -20,7 +20,7 @@ from ._typing import UnitLike
 from .compat import NUMERIC_TYPES, babel_parse, is_upcast_type
 from .definitions import UnitDefinition
 from .errors import DimensionalityError
-from .formatting import siunitx_format_unit
+from .formatting import extract_custom_flags, format_unit
 from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
 if TYPE_CHECKING:
@@ -80,11 +80,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         return "<Unit('{}')>".format(self._units)
 
     def __format__(self, spec) -> str:
-        spec = spec or self.default_format
-        # special cases
-        if "Lx" in spec:  # the LaTeX siunitx code
-            return r"\si[]{%s}" % siunitx_format_unit(self)
-
+        spec = spec or extract_custom_flags(self.default_format)
         if "~" in spec:
             if not self._units:
                 return ""
@@ -98,10 +94,10 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             units = self._units
 
-        return format(units, spec)
+        return format_unit(units, spec, registry=self._REGISTRY)
 
     def format_babel(self, spec="", locale=None, **kwspec: Any) -> str:
-        spec = spec or self.default_format
+        spec = spec or extract_custom_flags(self.default_format)
 
         if "~" in spec:
             if self.dimensionless:
@@ -123,7 +119,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         else:
             kwspec["locale"] = babel_parse(locale)
 
-        return units.format_babel(spec, **kwspec)
+        return units.format_babel(spec, registry=self._REGISTRY, **kwspec)
 
     @property
     def dimensionless(self) -> bool:
@@ -172,7 +168,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         -------
         bool
         """
-        if contexts:
+        if contexts or self._REGISTRY._active_ctx:
             try:
                 (1 * self).to(other, *contexts, **ctx_kwargs)
                 return True

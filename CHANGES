@@ -1,8 +1,24 @@
 Pint Changelog
 ==============
 
-0.18 (unreleased)
+0.19 (unreleased)
 -----------------
+
+- Fix type hints of function wrapper (Issue #1431)
+- Upgrade min version of uncertainties to 3.1.4
+- Fix setting options of the application registry (Issue #1403).
+- Fix Quantity & Unit `is_compatible_with` with registry active contexts (Issue #1424).
+- Allow Quantity to parse 'NaN' and 'inf(inity)', case insensitive
+- Fix casting error when using to_reduced_units with array of int.
+  (Issue #1184)
+- Use default numpy `np.printoptions` available since numpy 1.15.
+- Implement `numpy.nanprod` (Issue #1369)
+
+
+0.18 (2021-10-26)
+-----------------
+
+### Release Manager: jules-cheron
 
 - Implement use of Quantity in the Quantity constructor (convert to specified units).
   (Issue #1231)
@@ -13,10 +29,18 @@ Pint Changelog
   (Issue #1085)
 - Fix handling of positional max/min arguments in clip function.
   (Issue #1244)
-- Fix string formatting of numpy array scalars
+- Fix string formatting of numpy array scalars.
 - Fix default format for Measurement class (Issue #1300)
-- Implement `numpy.nanprod` (Issue #1369)
 - Fix parsing of pretty units with same exponents but different sign. (Issue #1360)
+- Convert the application registry to a wrapper object (Issue #1365)
+- Add documentation for the string format options.
+   (Issue #1357, #1375, thanks keewis)
+- Support custom units formats.
+  (Issue #1371, thanks keewis)
+- Autoupdate pre-commit hooks.
+- Improved the application registry.
+  (Issue #1366, thanks keewis)
+- Improved testing isolation using pytest fixtures.
 
 ### Breaking Changes
 
@@ -52,7 +76,7 @@ Pint Changelog
 - Fix tolist function with scalar ndarray.
   (Issue #1195, thanks jules-ch)
 - Corrected typos and dacstrings
-- Implements a first benchmark suite in airspeed velocity (asv). 
+- Implements a first benchmark suite in airspeed velocity (asv).
 - Power for pseudo-dimensionless units.
   (Issue #1185, thanks Kevin Fuhr)
 

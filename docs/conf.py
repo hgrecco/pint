@@ -42,6 +42,8 @@ extensions = [
     "sphinx.ext.mathjax",
     "matplotlib.sphinxext.plot_directive",
     "nbsphinx",
+    "IPython.sphinxext.ipython_directive",
+    "IPython.sphinxext.ipython_console_highlighting",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -108,6 +110,10 @@ pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
+
+# -- Options for extensions ----------------------------------------------------
+# napoleon
+napoleon_preprocess_types = True
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -321,7 +327,13 @@ epub_copyright = copyright
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {"http://docs.python.org/": None}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "dask": ("https://docs.dask.org/en/latest", None),
+    "sparse": ("https://sparse.pydata.org/en/latest/", None),
+}
 
 # -- Doctest configuration -----------------------------------------------------
 
