@@ -12,6 +12,7 @@ Pint Changelog
 - Fix casting error when using to_reduced_units with array of int.
   (Issue #1184)
 - Use default numpy `np.printoptions` available since numpy 1.15.
+- Implement `numpy.nanprod` (Issue #1369)
 - Fix default_format ignored for measurement (Issue #1456)
 
 
