@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import bisect
-import contextlib
 import copy
 import datetime
 import functools
@@ -166,20 +165,6 @@ def check_dask_array(f):
             raise AttributeError(msg)
 
     return wrapper
-
-
-@contextlib.contextmanager
-def printoptions(*args, **kwargs):
-    """Numpy printoptions context manager released with version 1.15.0
-    https://docs.scipy.org/doc/numpy/reference/generated/numpy.printoptions.html
-    """
-
-    opts = np.get_printoptions()
-    try:
-        np.set_printoptions(*args, **kwargs)
-        yield np.get_printoptions()
-    finally:
-        np.set_printoptions(**opts)
 
 
 # Workaround to bypass dynamically generated Quantity with overload method
@@ -413,7 +398,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                         allf = plain_allf = "{} {}"
                         mstr = formatter.format(obj.magnitude)
                     else:
-                        with printoptions(formatter={"float_kind": formatter.format}):
+                        with np.printoptions(
+                            formatter={"float_kind": formatter.format}
+                        ):
                             mstr = (
                                 "<pre>"
                                 + format(obj.magnitude).replace("\n", "<br>")
@@ -440,7 +427,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                 if obj.magnitude.ndim == 0:
                     mstr = formatter.format(obj.magnitude)
                 else:
-                    with printoptions(formatter={"float_kind": formatter.format}):
+                    with np.printoptions(formatter={"float_kind": formatter.format}):
                         mstr = format(obj.magnitude).replace("\n", "")
         else:
             mstr = format(obj.magnitude, mspec).replace("\n", "")
@@ -763,6 +750,23 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return self.__class__(magnitude, other)
 
+    def _get_reduced_units(self, units):
+        # loop through individual units and compare to each other unit
+        # can we do better than a nested loop here?
+        for unit1, exp in units.items():
+            # make sure it wasn't already reduced to zero exponent on prior pass
+            if unit1 not in units:
+                continue
+            for unit2 in units:
+                # get exponent after reduction
+                exp = units[unit1]
+                if unit1 != unit2:
+                    power = self._REGISTRY._get_dimensionality_ratio(unit1, unit2)
+                    if power:
+                        units = units.add(unit2, exp / power).remove([unit1])
+                        break
+        return units
+
     def ito_reduced_units(self) -> None:
         """Return Quantity scaled in place to reduced units, i.e. one unit per
         dimension. This will not reduce compound units (e.g., 'J/kg' will not
@@ -775,21 +779,10 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         if len(self._units) == 1:
             return None
 
-        newunits = self._units.copy()
-        # loop through individual units and compare to each other unit
-        # can we do better than a nested loop here?
-        for unit1, exp in self._units.items():
-            # make sure it wasn't already reduced to zero exponent on prior pass
-            if unit1 not in newunits:
-                continue
-            for unit2 in newunits:
-                if unit1 != unit2:
-                    power = self._REGISTRY._get_dimensionality_ratio(unit1, unit2)
-                    if power:
-                        newunits = newunits.add(unit2, exp / power).remove([unit1])
-                        break
+        units = self._units.copy()
+        new_units = self._get_reduced_units(units)
 
-        return self.ito(newunits)
+        return self.ito(new_units)
 
     def to_reduced_units(self) -> Quantity[_MagnitudeType]:
         """Return Quantity scaled in place to reduced units, i.e. one unit per
@@ -797,10 +790,16 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         can it make use of contexts at this time.
         """
 
-        # can we make this more efficient?
-        newq = copy.copy(self)
-        newq.ito_reduced_units()
-        return newq
+        # shortcuts in case we're dimensionless or only a single unit
+        if self.dimensionless:
+            return self.ito({})
+        if len(self._units) == 1:
+            return None
+
+        units = self._units.copy()
+        new_units = self._get_reduced_units(units)
+
+        return self.to(new_units)
 
     def to_compact(self, unit=None) -> Quantity[_MagnitudeType]:
         """ "Return Quantity rescaled to compact, human-readable units.

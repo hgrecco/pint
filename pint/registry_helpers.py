@@ -186,8 +186,8 @@ def _apply_defaults(func, args, kwargs):
 
 def wraps(
     ureg: "UnitRegistry",
-    ret: Union[str, "Unit", Iterable[str], Iterable["Unit"], None],
-    args: Union[str, "Unit", Iterable[str], Iterable["Unit"], None],
+    ret: Union[str, "Unit", Iterable[Union[str, "Unit", None]], None],
+    args: Union[str, "Unit", Iterable[Union[str, "Unit", None]], None],
     strict: bool = True,
 ) -> Callable[[Callable[..., T]], Callable[..., Quantity[T]]]:
     """Wraps a function to become pint-aware.
@@ -204,9 +204,9 @@ def wraps(
     ----------
     ureg : pint.UnitRegistry
         a UnitRegistry instance.
-    ret : str, pint.Unit, iterable of str, or iterable of pint.Unit
+    ret : str, pint.Unit, or iterable of str or pint.Unit
         Units of each of the return values. Use `None` to skip argument conversion.
-    args : str, pint.Unit, iterable of str, or iterable of pint.Unit
+    args : str, pint.Unit, or iterable of str or pint.Unit
         Units of each of the input arguments. Use `None` to skip argument conversion.
     strict : bool
         Indicates that only quantities are accepted. (Default value = True)
@@ -220,7 +220,7 @@ def wraps(
     ------
     TypeError
         if the number of given arguments does not match the number of function parameters.
-        if the any of the provided arguments is not a unit a string or Quantity
+        if any of the provided arguments is not a unit a string or Quantity
 
     """
 
