@@ -792,9 +792,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         # shortcuts in case we're dimensionless or only a single unit
         if self.dimensionless:
-            return self.ito({})
+            return self.to({})
         if len(self._units) == 1:
-            return None
+            return self
 
         units = self._units.copy()
         new_units = self._get_reduced_units(units)
