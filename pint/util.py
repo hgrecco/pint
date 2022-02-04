@@ -761,9 +761,8 @@ _subs_re_list = [
     (r"sq ({})", r"\1**2"),
     (
         r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])",
-        r"\1*",
+        r"\1 ",
     ),  # Handle numberLetter for multiplication
-    (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
 ]
 
 #: Compiles the regex and replace {} by a regex that matches an identifier.

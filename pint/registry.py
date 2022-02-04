@@ -85,7 +85,7 @@ from .errors import (
     RedefinitionError,
     UndefinedUnitError,
 )
-from .pint_eval import build_eval_tree
+from .pint_eval import _BINARY_OPERATOR_MAP, build_eval_tree
 from .systems import Group, System
 from .util import (
     ParserHelper,
@@ -1236,6 +1236,11 @@ class BaseRegistry(metaclass=RegistryMeta):
         else:
             raise Exception("unknown token type")
 
+    def _eval_implicit_mul(self, left, right):
+        if isinstance(left, self.Quantity):
+            return left * right
+        return self.Quantity(left, right)
+
     def parse_pattern(
         self,
         input_string: str,
@@ -1341,8 +1346,13 @@ class BaseRegistry(metaclass=RegistryMeta):
         input_string = string_preprocessor(input_string)
         gen = tokenizer(input_string)
 
+        # replace implicit multiplication with self._eval_implicit_mul
+        bin_op = dict(_BINARY_OPERATOR_MAP)
+        bin_op[""] = self._eval_implicit_mul
+
         return build_eval_tree(gen).evaluate(
-            lambda x: self._eval_token(x, case_sensitive=case_sensitive, **values)
+            lambda x: self._eval_token(x, case_sensitive=case_sensitive, **values),
+            bin_op=bin_op,
         )
 
     __call__ = parse_expression
