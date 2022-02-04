@@ -4,6 +4,8 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
+- Fix a bug for offset units of higher dimension, e.g. gauge pressure.
+  (Issue #1066, thanks dalito)
 - Fix type hints of function wrapper (Issue #1431)
 - Upgrade min version of uncertainties to 3.1.4
 - Fix setting options of the application registry (Issue #1403).
@@ -11,11 +13,16 @@ Pint Changelog
 - Allow Quantity to parse 'NaN' and 'inf(inity)', case insensitive
 - Fix casting error when using to_reduced_units with array of int.
   (Issue #1184)
+- Use default numpy `np.printoptions` available since numpy 1.15.
+- Implement `numpy.nanprod` (Issue #1369)
+- Fix default_format ignored for measurement (Issue #1456)
 
 ### Breaking Changes
 
 - Update hour default symobl to `h`. (Issue #719)
 - Replace `h` with `ℎ` (U+210E) as default symbol for planck constant.
+- Change minimal Python version support to 3.8+
+- Change minimal Numpy version support to 1.19+
 
 0.18 (2021-10-26)
 -----------------

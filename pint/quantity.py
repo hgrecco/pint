@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import bisect
-import contextlib
 import copy
 import datetime
 import functools
@@ -166,20 +165,6 @@ def check_dask_array(f):
             raise AttributeError(msg)
 
     return wrapper
-
-
-@contextlib.contextmanager
-def printoptions(*args, **kwargs):
-    """Numpy printoptions context manager released with version 1.15.0
-    https://docs.scipy.org/doc/numpy/reference/generated/numpy.printoptions.html
-    """
-
-    opts = np.get_printoptions()
-    try:
-        np.set_printoptions(*args, **kwargs)
-        yield np.get_printoptions()
-    finally:
-        np.set_printoptions(**opts)
 
 
 # Workaround to bypass dynamically generated Quantity with overload method
@@ -413,7 +398,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                         allf = plain_allf = "{} {}"
                         mstr = formatter.format(obj.magnitude)
                     else:
-                        with printoptions(formatter={"float_kind": formatter.format}):
+                        with np.printoptions(
+                            formatter={"float_kind": formatter.format}
+                        ):
                             mstr = (
                                 "<pre>"
                                 + format(obj.magnitude).replace("\n", "<br>")
@@ -440,7 +427,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                 if obj.magnitude.ndim == 0:
                     mstr = formatter.format(obj.magnitude)
                 else:
-                    with printoptions(formatter={"float_kind": formatter.format}):
+                    with np.printoptions(formatter={"float_kind": formatter.format}):
                         mstr = format(obj.magnitude).replace("\n", "")
         else:
             mstr = format(obj.magnitude, mspec).replace("\n", "")
@@ -771,6 +758,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             if unit1 not in units:
                 continue
             for unit2 in units:
+                # get exponent after reduction
+                exp = units[unit1]
                 if unit1 != unit2:
                     power = self._REGISTRY._get_dimensionality_ratio(unit1, unit2)
                     if power:
@@ -803,9 +792,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         # shortcuts in case we're dimensionless or only a single unit
         if self.dimensionless:
-            return self.ito({})
+            return self.to({})
         if len(self._units) == 1:
-            return None
+            return self
 
         units = self._units.copy()
         new_units = self._get_reduced_units(units)
