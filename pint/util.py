@@ -906,29 +906,40 @@ def to_units_container(
             return UnitsContainer(unit_like)
 
 
-def infer_base_unit(q):
+def infer_base_unit(
+    unit_like: Union[UnitLike, Quantity], registry: Optional[BaseRegistry] = None
+) -> UnitsContainer:
     """
+    Given a Quantity or UnitLike, give the UnitsContainer for it's base units.
 
     Parameters
     ----------
-    q :
+    unit_like : Union[UnitLike, Quantity]
+        Quantity or Unit to infer the base units from.
+
+    registry: Optional[BaseRegistry]
+        If provided, uses the registry's UnitsContainer rather than the base UnitsContainer.  If None,
+        uses the registry attached to unit_like.
 
 
     Returns
     -------
-    type
-
+    UnitsContainer
 
     """
     d = udict()
-    for unit_name, power in q._units.items():
-        candidates = q._REGISTRY.parse_unit_name(unit_name)
+    for unit_name, power in unit_like._units.items():
+        candidates = unit_like._REGISTRY.parse_unit_name(unit_name)
         assert len(candidates) == 1
         _, base_unit, _ = candidates[0]
         d[base_unit] += power
 
     # remove values that resulted in a power of 0
-    return UnitsContainer({k: v for k, v in d.items() if v != 0})
+    nonzero_dict = {k: v for k, v in d.items() if v != 0}
+    if registry is not None:
+        return registry.UnitsContainer(nonzero_dict)
+    else:
+        return unit_like._REGISTRY.UnitsContainer(nonzero_dict)
 
 
 def getattr_maybe_raise(self, item):

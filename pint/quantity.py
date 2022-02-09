@@ -851,9 +851,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         SI_bases = [item[1] for item in SI_prefixes_list]
 
         if unit is None:
-            unit = infer_base_unit(self)
+            unit = infer_base_unit(self, registry=self._REGISTRY)
         else:
-            unit = infer_base_unit(self.__class__(1, unit))
+            unit = infer_base_unit(self.__class__(1, unit), registry=self._REGISTRY)
 
         q_base = self.to(unit)
 
@@ -867,10 +867,18 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         else:
             unit_str, unit_power = units[0]
 
-        if unit_power > 0:
-            power = math.floor(math.log10(abs(magnitude)) / unit_power / 3) * 3
+        if self._REGISTRY.non_int_type is float:
+            log10_abs_m = math.log10(abs(magnitude))
         else:
-            power = math.ceil(math.log10(abs(magnitude)) / unit_power / 3) * 3
+            # We don't necessarily know how to compute log10 for an
+            # arbitrary non-integer type.  We'll assume the type has
+            # a log10 method, as decimal.Decimal does.
+            log10_abs_m = abs(magnitude).log10()
+
+        if unit_power > 0:
+            power = math.floor(log10_abs_m / unit_power / 3) * 3
+        else:
+            power = math.ceil(log10_abs_m / unit_power / 3) * 3
 
         index = bisect.bisect_left(SI_powers, power)
 
