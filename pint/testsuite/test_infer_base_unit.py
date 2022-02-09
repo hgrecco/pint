@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+import pytest
+
 from pint import Quantity as Q
 from pint import UnitRegistry
 from pint.testsuite import helpers
@@ -10,18 +12,32 @@ class TestInferBaseUnit:
     def test_infer_base_unit(self):
         from pint.util import infer_base_unit
 
-        assert infer_base_unit(Q(1, "millimeter * nanometer")) == Q(1, "meter**2").units
+        test_units = Q(1, "meter**2").units
+        registry = Q(1, "meter**2")._REGISTRY
+
+        assert infer_base_unit(Q(1, "millimeter * nanometer")) == test_units
+
+        assert infer_base_unit("millimeter * nanometer", registry) == test_units
+
+        assert (
+            infer_base_unit(Q(1, "millimeter * nanometer").units, registry)
+            == test_units
+        )
+
+        with pytest.raises(ValueError, match=r"No registry provided."):
+            infer_base_unit("millimeter")
 
     def test_infer_base_unit_decimal(self):
         from pint.util import infer_base_unit
 
         ureg = UnitRegistry(non_int_type=Decimal)
-        Q = ureg.Quantity
+        QD = ureg.Quantity
 
-        assert (
-            infer_base_unit(Q(Decimal("1"), "millimeter * nanometer"))
-            == Q(Decimal("1"), "meter**2").units
-        )
+        ibu_d = infer_base_unit(QD(Decimal("1"), "millimeter * nanometer"))
+
+        assert ibu_d == QD(Decimal("1"), "meter**2").units
+
+        assert all(isinstance(v, Decimal) for v in ibu_d.values())
 
     def test_units_adding_to_zero(self):
         assert infer_base_unit(Q(1, "m * mm / m / um * s")) == Q(1, "s").units
@@ -49,9 +65,9 @@ class TestInferBaseUnit:
         assert compact_r == expected
 
         r = (
-            Q(Decimal(1), "m") * Q(1, "mm") / Q(1, "m") / Q(2, "um") * Q(2, "s")
+            Q(Decimal(1), "m") * Q(1, "mm") / Q(1, "m**2") / Q(2, "um") * Q(2, "s")
         ).to_compact()
-        assert r == Q(1000, "s")
+        assert r == Q(1000, "s/m")
 
     def test_volts(self):
         from pint.util import infer_base_unit
