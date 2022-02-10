@@ -1,4 +1,5 @@
 from decimal import Decimal
+from fractions import Fraction
 
 import pytest
 
@@ -39,6 +40,18 @@ class TestInferBaseUnit:
 
         assert all(isinstance(v, Decimal) for v in ibu_d.values())
 
+    def test_infer_base_unit_fraction(self):
+        from pint.util import infer_base_unit
+
+        ureg = UnitRegistry(non_int_type=Fraction)
+        QD = ureg.Quantity
+
+        ibu_d = infer_base_unit(QD(Fraction("1"), "millimeter * nanometer"))
+
+        assert ibu_d == QD(Fraction("1"), "meter**2").units
+
+        assert all(isinstance(v, Fraction) for v in ibu_d.values())
+
     def test_units_adding_to_zero(self):
         assert infer_base_unit(Q(1, "m * mm / m / um * s")) == Q(1, "s").units
 
@@ -66,6 +79,24 @@ class TestInferBaseUnit:
 
         r = (
             Q(Decimal(1), "m") * Q(1, "mm") / Q(1, "m**2") / Q(2, "um") * Q(2, "s")
+        ).to_compact()
+        assert r == Q(1000, "s/m")
+
+    def test_to_compact_fraction(self):
+        ureg = UnitRegistry(non_int_type=Fraction)
+        Q = ureg.Quantity
+        r = (
+            Q(Fraction("10000000000/10"), "m")
+            * Q(Fraction("1"), "mm")
+            / Q(Fraction("1"), "s")
+            / Q(Fraction("1"), "ms")
+        )
+        compact_r = r.to_compact()
+        expected = Q(Fraction("1000.0"), "kilometer**2 / second**2")
+        assert compact_r == expected
+
+        r = (
+            Q(Fraction(1), "m") * Q(1, "mm") / Q(1, "m**2") / Q(2, "um") * Q(2, "s")
         ).to_compact()
         assert r == Q(1000, "s/m")
 

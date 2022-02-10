@@ -867,18 +867,10 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         else:
             unit_str, unit_power = units[0]
 
-        if self._REGISTRY.non_int_type is float:
-            log10_abs_m = math.log10(abs(magnitude))
-        else:
-            # We don't necessarily know how to compute log10 for an
-            # arbitrary non-integer type.  We'll assume the type has
-            # a log10 method, as decimal.Decimal does.
-            log10_abs_m = abs(magnitude).log10()
-
         if unit_power > 0:
-            power = math.floor(log10_abs_m / unit_power / 3) * 3
+            power = math.floor(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
         else:
-            power = math.ceil(log10_abs_m / unit_power / 3) * 3
+            power = math.ceil(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
 
         index = bisect.bisect_left(SI_powers, power)
 
