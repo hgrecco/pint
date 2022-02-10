@@ -166,7 +166,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer({"[length]": 1, "[time]": -1})
 
     def test_alias_definition(self):
-        x = Definition.from_string("@alias meter = metro = metr")
+        x = AliasDefinition.from_string("@alias meter = metro = metr")
         assert isinstance(x, AliasDefinition)
         assert x.name == "meter"
         assert x.aliases == ("metro", "metr")

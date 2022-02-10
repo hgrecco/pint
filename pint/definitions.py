@@ -151,9 +151,7 @@ class Definition:
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
-        if definition.name.startswith("@alias "):
-            return AliasDefinition.from_string(definition, non_int_type)
-        elif definition.name.startswith("["):
+        if definition.name.startswith("["):
             return DimensionDefinition.from_string(definition, non_int_type)
         elif definition.name.endswith("-"):
             return PrefixDefinition.from_string(definition, non_int_type)

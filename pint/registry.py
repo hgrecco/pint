@@ -324,7 +324,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     def _parse_alias(self, ifile: SourceIterator) -> None:
         """Loader for an @alias directive"""
         lineno, line = ifile.last
-        self.define(Definition.from_string(line, self.non_int_type))
+        self.define(AliasDefinition.from_string(line, self.non_int_type))
 
     def _parse_import(self, source_iterator: SourceIterator) -> None:
         lineno, line = source_iterator.last
@@ -419,7 +419,11 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         if isinstance(definition, str):
             for line in definition.split("\n"):
-                self._define(Definition.from_string(line, self.non_int_type))
+                if line.startswith("@alias"):
+                    # TODO why alias can be defined like this but not other directives?
+                    self._define(AliasDefinition.from_string(line, self.non_int_type))
+                else:
+                    self._define(Definition.from_string(line, self.non_int_type))
         else:
             self._define(definition)
 
