@@ -311,6 +311,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _register_parsers(self) -> None:
         self._register_parser("@defaults", self._parse_defaults)
+        self._register_parser("@alias", self._parse_alias)
 
     def _parse_defaults(self, ifile) -> None:
         """Loader for a @default section."""
@@ -318,6 +319,11 @@ class BaseRegistry(metaclass=RegistryMeta):
         for lineno, part in ifile.block_iter():
             k, v = part.split("=")
             self._defaults[k.strip()] = v.strip()
+
+    def _parse_alias(self, ifile: SourceIterator) -> None:
+        """Loader for an @alias directive"""
+        lineno, line = ifile.last
+        self.define(Definition.from_string(line, self.non_int_type))
 
     def __deepcopy__(self, memo) -> "BaseRegistry":
         new = object.__new__(type(self))
@@ -589,7 +595,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         ifile = SourceIterator(file)
         for no, line in ifile:
-            if line.startswith("@") and not line.startswith("@alias"):
+            if line.startswith("@"):
                 if line.startswith("@import"):
                     if is_resource:
                         path = line[7:].strip()
