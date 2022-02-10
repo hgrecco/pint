@@ -314,16 +314,16 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._register_parser("@alias", self._parse_alias)
         self._register_parser("@import", self._parse_import)
 
-    def _parse_defaults(self, ifile) -> None:
+    def _parse_defaults(self, source_iterator) -> None:
         """Loader for a @default section."""
-        next(ifile)
-        for lineno, part in ifile.block_iter():
+        next(source_iterator)
+        for lineno, part in source_iterator.block_iter():
             k, v = part.split("=")
             self._defaults[k.strip()] = v.strip()
 
-    def _parse_alias(self, ifile: SourceIterator) -> None:
+    def _parse_alias(self, source_iterator: SourceIterator) -> None:
         """Loader for an @alias directive"""
-        lineno, line = ifile.last
+        lineno, line = source_iterator.last
         self.define(AliasDefinition.from_string(line, self.non_int_type))
 
     def _parse_import(self, source_iterator: SourceIterator) -> None:
@@ -1603,11 +1603,11 @@ class ContextRegistry(BaseRegistry):
         super()._register_parsers()
         self._register_parser("@context", self._parse_context)
 
-    def _parse_context(self, ifile) -> None:
+    def _parse_context(self, source_iterator: SourceIterator) -> None:
         try:
             self.add_context(
                 Context.from_lines(
-                    ifile.block_iter(),
+                    source_iterator.block_iter(),
                     self.get_dimensionality,
                     non_int_type=self.non_int_type,
                 )
@@ -2019,12 +2019,14 @@ class SystemRegistry(BaseRegistry):
         self._register_parser("@group", self._parse_group)
         self._register_parser("@system", self._parse_system)
 
-    def _parse_group(self, ifile) -> None:
-        self.Group.from_lines(ifile.block_iter(), self.define, self.non_int_type)
+    def _parse_group(self, source_iterator: SourceIterator) -> None:
+        self.Group.from_lines(
+            source_iterator.block_iter(), self.define, self.non_int_type
+        )
 
-    def _parse_system(self, ifile) -> None:
+    def _parse_system(self, source_iterator: SourceIterator) -> None:
         self.System.from_lines(
-            ifile.block_iter(), self.get_root_units, self.non_int_type
+            source_iterator.block_iter(), self.get_root_units, self.non_int_type
         )
 
     def get_group(self, name: str, create_if_needed: bool = True) -> Group:
