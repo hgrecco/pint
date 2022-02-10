@@ -465,7 +465,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                         continue
 
                     self.define(
-                        DimensionDefinition(dimension, "", (), None, is_base=True)
+                        DimensionDefinition(dimension, "", (), None, None, True)
                     )
 
         elif isinstance(definition, PrefixDefinition):
@@ -547,8 +547,9 @@ class BaseRegistry(metaclass=RegistryMeta):
     def _define_alias(self, definition):
         unit_dict, casei_unit_dict = self._units, self._units_casei
         unit = unit_dict[definition.name]
-        unit.add_aliases(*definition.aliases)
-        for alias in unit.aliases:
+        while not isinstance(unit, UnitDefinition):
+            unit = unit_dict[unit.name]
+        for alias in definition.aliases:
             unit_dict[alias] = unit
             casei_unit_dict[alias.lower()].add(alias)
 
@@ -674,7 +675,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                         dimeq_set = self._cache.dimensional_equivalents.setdefault(
                             di, set()
                         )
-                        dimeq_set.add(self._units[base_name]._name)
+                        dimeq_set.add(self._units[base_name].name)
 
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
@@ -688,7 +689,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             return ""
 
         try:
-            return self._units[name_or_alias]._name
+            return self._units[name_or_alias].name
         except KeyError:
             pass
 
@@ -930,7 +931,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             if reg.is_base:
                 accumulators[1][key] += exp2
             else:
-                accumulators[0] *= reg._converter.scale ** exp2
+                accumulators[0] *= reg.converter.scale ** exp2
                 if reg.reference is not None:
                     self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
@@ -1723,7 +1724,7 @@ class ContextRegistry(BaseRegistry):
         # be shared by other registries, and (2) it would alter the cache key
         definition = UnitDefinition(
             name=basedef.name,
-            symbol=basedef.symbol,
+            defined_symbol=basedef.symbol,
             aliases=basedef.aliases,
             is_base=False,
             reference=definition.reference,
