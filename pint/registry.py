@@ -324,7 +324,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     def _parse_alias(self, source_iterator: SourceIterator) -> None:
         """Loader for an @alias directive"""
         lineno, line = source_iterator.last
-        self.define(AliasDefinition.from_string(line, self.non_int_type))
+        self._define_alias(AliasDefinition.from_string(line, self.non_int_type))
 
     def _parse_import(self, source_iterator: SourceIterator) -> None:
         lineno, line = source_iterator.last
@@ -421,7 +421,9 @@ class BaseRegistry(metaclass=RegistryMeta):
             for line in definition.split("\n"):
                 if line.startswith("@alias"):
                     # TODO why alias can be defined like this but not other directives?
-                    self._define(AliasDefinition.from_string(line, self.non_int_type))
+                    self._define_alias(
+                        AliasDefinition.from_string(line, self.non_int_type)
+                    )
                 else:
                     self._define(Definition.from_string(line, self.non_int_type))
         else:
@@ -468,11 +470,6 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         elif isinstance(definition, PrefixDefinition):
             d, di = self._prefixes, None
-
-        elif isinstance(definition, AliasDefinition):
-            d, di = self._units, self._units_casei
-            self._define_alias(definition, d, di)
-            return d[definition.name], d, di
 
         else:
             raise TypeError("{} is not a valid definition.".format(definition))
@@ -547,7 +544,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         if casei_unit_dict is not None:
             casei_unit_dict[key.lower()].add(key)
 
-    def _define_alias(self, definition, unit_dict, casei_unit_dict):
+    def _define_alias(self, definition):
+        unit_dict, casei_unit_dict = self._units, self._units_casei
         unit = unit_dict[definition.name]
         unit.add_aliases(*definition.aliases)
         for alias in unit.aliases:
