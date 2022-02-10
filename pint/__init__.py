@@ -11,6 +11,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from importlib.metadata import version
+
 from .context import Context
 from .errors import (  # noqa: F401
     DefinitionSyntaxError,
@@ -28,12 +30,6 @@ from .quantity import Quantity
 from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
 from .unit import Unit
 from .util import logger, pi_theorem  # noqa: F401
-
-try:
-    from importlib.metadata import version
-except ImportError:
-    # Backport for Python < 3.8
-    from importlib_metadata import version
 
 try:  # pragma: no cover
     __version__ = version("pint")
@@ -138,6 +134,7 @@ __all__ = (
     "UnitRegistry",
     "PintError",
     "DefinitionSyntaxError",
+    "LogarithmicUnitCalculusError",
     "DimensionalityError",
     "OffsetUnitCalculusError",
     "RedefinitionError",

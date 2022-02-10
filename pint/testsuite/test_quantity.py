@@ -635,6 +635,16 @@ class TestQuantity(QuantityTestCase):
         assert math.isnan(test.magnitude)
         assert ref != test
 
+    @helpers.requires_numpy
+    def test_to_reduced_units(self):
+        q = self.Q_([3, 4], "s * ms")
+        helpers.assert_quantity_equal(
+            q.to_reduced_units(), self.Q_([3000.0, 4000.0], "ms**2")
+        )
+
+        q = self.Q_(0.5, "g*t/kg")
+        helpers.assert_quantity_equal(q.to_reduced_units(), self.Q_(0.5, "kg"))
+
 
 class TestQuantityToCompact(QuantityTestCase):
     def assertQuantityAlmostIdentical(self, q1, q2):
