@@ -679,34 +679,49 @@ def _all(a, *args, **kwargs):
         raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
 
-@implements("prod", "function")
-def _prod(a, *args, **kwargs):
-    arg_names = ("axis", "dtype", "out", "keepdims", "initial", "where")
-    all_kwargs = dict(**dict(zip(arg_names, args)), **kwargs)
-    axis = all_kwargs.get("axis", None)
-    where = all_kwargs.get("where", None)
+def implement_prod_func(name):
+    if np is None:
+        return
 
-    registry = a.units._REGISTRY
+    func = getattr(np, name, None)
+    if func is None:
+        return
 
-    if axis is not None and where is not None:
-        _, where_ = np.broadcast_arrays(a._magnitude, where)
-        exponents = np.unique(np.sum(where_, axis=axis))
-        if len(exponents) == 1 or (len(exponents) == 2 and 0 in exponents):
-            units = a.units ** np.max(exponents)
+    @implements(name, "function")
+    def _prod(a, *args, **kwargs):
+        arg_names = ("axis", "dtype", "out", "keepdims", "initial", "where")
+        all_kwargs = dict(**dict(zip(arg_names, args)), **kwargs)
+        axis = all_kwargs.get("axis", None)
+        where = all_kwargs.get("where", None)
+
+        registry = a.units._REGISTRY
+
+        if axis is not None and where is not None:
+            _, where_ = np.broadcast_arrays(a._magnitude, where)
+            exponents = np.unique(np.sum(where_, axis=axis))
+            if len(exponents) == 1 or (len(exponents) == 2 and 0 in exponents):
+                units = a.units ** np.max(exponents)
+            else:
+                units = registry.dimensionless
+                a = a.to(units)
+        elif axis is not None:
+            units = a.units ** a.shape[axis]
+        elif where is not None:
+            exponent = np.sum(where)
+            units = a.units ** exponent
         else:
-            units = registry.dimensionless
-            a = a.to(units)
-    elif axis is not None:
-        units = a.units ** a.shape[axis]
-    elif where is not None:
-        exponent = np.sum(where)
-        units = a.units ** exponent
-    else:
-        units = a.units ** a.size
+            exponent = (
+                np.sum(np.logical_not(np.isnan(a))) if name == "nanprod" else a.size
+            )
+            units = a.units ** exponent
 
-    result = np.prod(a._magnitude, *args, **kwargs)
+        result = func(a._magnitude, *args, **kwargs)
 
-    return registry.Quantity(result, units)
+        return registry.Quantity(result, units)
+
+
+for name in ["prod", "nanprod"]:
+    implement_prod_func(name)
 
 
 # Implement simple matching-unit or stripped-unit functions based on signature

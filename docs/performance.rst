@@ -37,23 +37,23 @@ This is especially important when using pint Quantities in conjunction with an i
 
     In [2]: def foobar_with_quantity(x):
                 # find the value of x that equals q2
-            
+
                 # assign x the same units as q2
                 qx = ureg(str(x)+str(q2.units))
-        
+
                 # compare the two quantities, then take their magnitude because
                 # brentq requires a dimensionless return type
                 return (qx - q2).magnitude
-        
+
     In [3]: def foobar_with_magnitude(x):
                 # find the value of x that equals q2
-    
+
                 # don't bother converting x to a quantity, just compare it with q2's magnitude
                 return x - q2.magnitude
-    
+
     In [4]: %timeit brentq(foobar_with_quantity,0,q2.magnitude)
     1000 loops, best of 3: 310 µs per loop
-    
+
     In [5]: %timeit brentq(foobar_with_magnitude,0,q2.magnitude)
     1000000 loops, best of 3: 1.63 µs per loop
 
