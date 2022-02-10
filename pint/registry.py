@@ -579,12 +579,14 @@ class BaseRegistry(metaclass=RegistryMeta):
             try:
                 if is_resource:
                     rbytes = importlib.resources.read_binary(__package__, file)
-                    return self.load_definitions(
-                        StringIO(rbytes.decode("utf-8")), is_resource
+                    si = SourceIterator(
+                        StringIO(rbytes.decode("utf-8")), file, is_resource=True
                     )
+                    return self._load_definitions(si)
                 else:
                     with open(file, encoding="utf-8") as fp:
-                        return self.load_definitions(fp, is_resource)
+                        si = SourceIterator(fp, file, is_resource=False)
+                        return self._load_definitions(si)
             except (RedefinitionError, DefinitionSyntaxError) as e:
                 if e.filename is None:
                     e.filename = file
@@ -593,19 +595,22 @@ class BaseRegistry(metaclass=RegistryMeta):
                 msg = getattr(e, "message", "") or str(e)
                 raise ValueError("While opening {}\n{}".format(file, msg))
 
-        ifile = SourceIterator(file)
-        for no, line in ifile:
+        si = SourceIterator(file)
+        return self._load_definitions(si)
+
+    def _load_definitions(self, source_iterator: SourceIterator):
+        for no, line in source_iterator:
             if line.startswith("@"):
                 if line.startswith("@import"):
-                    if is_resource:
+                    if source_iterator.is_resource:
                         path = line[7:].strip()
                     else:
                         try:
-                            path = os.path.dirname(file.name)
+                            path = os.path.dirname(source_iterator.filename)
                         except AttributeError:
                             path = os.getcwd()
                         path = os.path.join(path, os.path.normpath(line[7:].strip()))
-                    self.load_definitions(path, is_resource)
+                    self.load_definitions(path, source_iterator.is_resource)
                 else:
                     parts = _BLOCK_RE.split(line)
 
@@ -619,7 +624,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                         )
 
                     try:
-                        loader(ifile)
+                        loader(source_iterator)
                     except DefinitionSyntaxError as ex:
                         if ex.lineno is None:
                             ex.lineno = no

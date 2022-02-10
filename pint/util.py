@@ -971,7 +971,7 @@ class SourceIterator:
 
     """
 
-    def __new__(cls, sequence):
+    def __new__(cls, sequence, filename=None, is_resource=False):
         if isinstance(sequence, SourceIterator):
             return sequence
 
@@ -980,6 +980,8 @@ class SourceIterator:
         if sequence is not None:
             obj.internal = enumerate(sequence, 1)
             obj.last = (None, None)
+            obj.filename = filename or getattr(sequence, "name", None)
+            obj.is_resource = is_resource
 
         return obj
 
