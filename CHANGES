@@ -16,6 +16,7 @@ Pint Changelog
 - Use default numpy `np.printoptions` available since numpy 1.15.
 - Implement `numpy.nanprod` (Issue #1369)
 - Fix default_format ignored for measurement (Issue #1456)
+- Add `pint.testing` with functions to compare pint objects in tests (Issue #1421).
 
 ### Breaking Changes
 
