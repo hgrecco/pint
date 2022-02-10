@@ -312,6 +312,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     def _register_parsers(self) -> None:
         self._register_parser("@defaults", self._parse_defaults)
         self._register_parser("@alias", self._parse_alias)
+        self._register_parser("@import", self._parse_import)
 
     def _parse_defaults(self, ifile) -> None:
         """Loader for a @default section."""
@@ -324,6 +325,18 @@ class BaseRegistry(metaclass=RegistryMeta):
         """Loader for an @alias directive"""
         lineno, line = ifile.last
         self.define(Definition.from_string(line, self.non_int_type))
+
+    def _parse_import(self, source_iterator: SourceIterator) -> None:
+        lineno, line = source_iterator.last
+        if source_iterator.is_resource:
+            path = line[7:].strip()
+        else:
+            try:
+                path = os.path.dirname(source_iterator.filename)
+            except AttributeError:
+                path = os.getcwd()
+            path = os.path.join(path, os.path.normpath(line[7:].strip()))
+        self.load_definitions(path, source_iterator.is_resource)
 
     def __deepcopy__(self, memo) -> "BaseRegistry":
         new = object.__new__(type(self))
@@ -601,34 +614,22 @@ class BaseRegistry(metaclass=RegistryMeta):
     def _load_definitions(self, source_iterator: SourceIterator):
         for no, line in source_iterator:
             if line.startswith("@"):
-                if line.startswith("@import"):
-                    if source_iterator.is_resource:
-                        path = line[7:].strip()
-                    else:
-                        try:
-                            path = os.path.dirname(source_iterator.filename)
-                        except AttributeError:
-                            path = os.getcwd()
-                        path = os.path.join(path, os.path.normpath(line[7:].strip()))
-                    self.load_definitions(path, source_iterator.is_resource)
-                else:
-                    parts = _BLOCK_RE.split(line)
+                # Handle @ directives dispatching to the appropriate parsers
+                parts = _BLOCK_RE.split(line)
 
-                    loader = (
-                        self._parsers.get(parts[0], None) if self._parsers else None
+                loader = self._parsers.get(parts[0], None) if self._parsers else None
+
+                if loader is None:
+                    raise DefinitionSyntaxError(
+                        "Unknown directive %s" % line, lineno=no
                     )
 
-                    if loader is None:
-                        raise DefinitionSyntaxError(
-                            "Unknown directive %s" % line, lineno=no
-                        )
-
-                    try:
-                        loader(source_iterator)
-                    except DefinitionSyntaxError as ex:
-                        if ex.lineno is None:
-                            ex.lineno = no
-                        raise ex
+                try:
+                    loader(source_iterator)
+                except DefinitionSyntaxError as ex:
+                    if ex.lineno is None:
+                        ex.lineno = no
+                    raise ex
             else:
                 try:
                     self.define(Definition.from_string(line, self.non_int_type))
