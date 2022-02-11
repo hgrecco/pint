@@ -37,16 +37,13 @@ from __future__ import annotations
 
 import copy
 import functools
-import importlib.resources
 import itertools
 import locale
-import os
 import re
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
 from decimal import Decimal
 from fractions import Fraction
-from io import StringIO
 from numbers import Number
 from tokenize import NAME, NUMBER
 from typing import (
@@ -67,10 +64,10 @@ from typing import (
     Union,
 )
 
-from . import registry_helpers, systems
+from . import parser, registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
 from .compat import HAS_BABEL, babel_parse, tokenizer
-from .context import Context, ContextChain
+from .context import Context, ContextChain, ContextDefinition
 from .converters import ScaleConverter
 from .definitions import (
     AliasDefinition,
@@ -85,8 +82,9 @@ from .errors import (
     RedefinitionError,
     UndefinedUnitError,
 )
+from .parser import DefaultsDefinition, Parser
 from .pint_eval import build_eval_tree
-from .systems import Group, System
+from .systems import Group, GroupDefinition, System, SystemDefinition
 from .util import (
     ParserHelper,
     SourceIterator,
@@ -212,10 +210,6 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     """
 
-    #: Map context prefix to function
-    #: type: Dict[str, (SourceIterator -> None)]
-    _parsers: Dict[str, Callable[[SourceIterator], None]] = None
-
     #: Babel.Locale instance or None
     fmt_locale: Optional[Locale] = None
 
@@ -231,7 +225,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         non_int_type: NON_INT_TYPE = float,
         case_sensitive: bool = True,
     ):
-        self._register_parsers()
+        #: Map context prefix to (loader function, parser function, single_line)
+        #: type: Dict[str, Tuple[Callable[[Any], None]], Any]
+        self._directives = {}
+        self._register_directives()
         self._init_dynamic_classes()
 
         self._filename = filename
@@ -309,34 +306,26 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._build_cache()
         self._initialized = True
 
-    def _register_parsers(self) -> None:
-        self._register_parser("@defaults", self._parse_defaults)
-        self._register_parser("@alias", self._parse_alias)
-        self._register_parser("@import", self._parse_import)
+    def _register_directives(self) -> None:
+        self._register_directive(
+            "@import", self._loader_import, parser.ImportDefinition
+        )
+        self._register_directive("@alias", self._load_alias, AliasDefinition)
+        self._register_directive("@defaults", self._load_defaults, DefaultsDefinition)
 
-    def _parse_defaults(self, source_iterator) -> None:
+    def _load_defaults(self, defaults_definition: DefaultsDefinition) -> None:
         """Loader for a @default section."""
-        next(source_iterator)
-        for lineno, part in source_iterator.block_iter():
-            k, v = part.split("=")
-            self._defaults[k.strip()] = v.strip()
 
-    def _parse_alias(self, source_iterator: SourceIterator) -> None:
+        for k, v in defaults_definition.content:
+            self._defaults[k] = v
+
+    def _load_alias(self, alias_definition: AliasDefinition) -> None:
         """Loader for an @alias directive"""
-        lineno, line = source_iterator.last
-        self._define_alias(AliasDefinition.from_string(line, self.non_int_type))
+        self._define_alias(alias_definition)
 
-    def _parse_import(self, source_iterator: SourceIterator) -> None:
-        lineno, line = source_iterator.last
-        if source_iterator.is_resource:
-            path = line[7:].strip()
-        else:
-            try:
-                path = os.path.dirname(source_iterator.filename)
-            except AttributeError:
-                path = os.getcwd()
-            path = os.path.join(path, os.path.normpath(line[7:].strip()))
-        self.load_definitions(path, source_iterator.is_resource)
+    def _loader_import(self, source_iterator: SourceIterator) -> None:
+        """ """
+        # TODO who should handled this?
 
     def __deepcopy__(self, memo) -> "BaseRegistry":
         new = object.__new__(type(self))
@@ -553,25 +542,20 @@ class BaseRegistry(metaclass=RegistryMeta):
             unit_dict[alias] = unit
             casei_unit_dict[alias.lower()].add(alias)
 
-    def _register_parser(self, prefix, parserfunc):
-        """Register a loader for a given @ directive..
+    def _register_directive(self, prefix: str, loaderfunc, definition_class):
+        """Register a loader for a given @ directive.
 
         Parameters
         ----------
-        prefix :
-            string identifying the section (e.g. @context)
-        parserfunc : SourceIterator -> None
-            A function that is able to parse a Definition section.
-
-        Returns
-        -------
-
+        prefix
+            string identifying the section (e.g. @context).
+        loaderfunc
+            function to load the definition into the registry.
+        definition_class
+            a class that represents the directive content.
         """
-        if self._parsers is None:
-            self._parsers = {}
-
         if prefix and prefix[0] == "@":
-            self._parsers[prefix] = parserfunc
+            self._directives[prefix] = (loaderfunc, definition_class)
         else:
             raise ValueError("Prefix directives must start with '@'")
 
@@ -585,63 +569,29 @@ class BaseRegistry(metaclass=RegistryMeta):
         is_resource :
             used to indicate that the file is a resource file
             and therefore should be loaded from the package. (Default value = False)
-
-        Returns
-        -------
-
         """
-        # Permit both filenames and line-iterables
-        if isinstance(file, str):
-            try:
-                if is_resource:
-                    rbytes = importlib.resources.read_binary(__package__, file)
-                    si = SourceIterator(
-                        StringIO(rbytes.decode("utf-8")), file, is_resource=True
-                    )
-                    return self._load_definitions(si)
+
+        loaders = {}
+        p = Parser(self.non_int_type)
+        for prefix, (loaderfunc, definition_class) in self._directives.items():
+            loaders[definition_class] = loaderfunc
+            p.register_class(prefix, definition_class)
+
+        parsed_files = p.parse(file, is_resource)
+        for definition_file in parsed_files[::-1]:
+            for lineno, definition in definition_file.parsed_lines:
+                loaderfunc = loaders.get(definition.__class__, None)
+                if loaderfunc is not None:
+                    loaderfunc(definition)
                 else:
-                    with open(file, encoding="utf-8") as fp:
-                        si = SourceIterator(fp, file, is_resource=False)
-                        return self._load_definitions(si)
-            except (RedefinitionError, DefinitionSyntaxError) as e:
-                if e.filename is None:
-                    e.filename = file
-                raise e
-            except Exception as e:
-                msg = getattr(e, "message", "") or str(e)
-                raise ValueError("While opening {}\n{}".format(file, msg))
-
-        si = SourceIterator(file)
-        return self._load_definitions(si)
-
-    def _load_definitions(self, source_iterator: SourceIterator):
-        for no, line in source_iterator:
-            if line.startswith("@"):
-                # Handle @ directives dispatching to the appropriate parsers
-                parts = _BLOCK_RE.split(line)
-
-                loader = self._parsers.get(parts[0], None) if self._parsers else None
-
-                if loader is None:
-                    raise DefinitionSyntaxError(
-                        "Unknown directive %s" % line, lineno=no
-                    )
-
-                try:
-                    loader(source_iterator)
-                except DefinitionSyntaxError as ex:
-                    if ex.lineno is None:
-                        ex.lineno = no
-                    raise ex
-            else:
-                try:
-                    self.define(Definition.from_string(line, self.non_int_type))
-                except DefinitionSyntaxError as ex:
-                    if ex.lineno is None:
-                        ex.lineno = no
-                    raise ex
-                except Exception as ex:
-                    logger.error("In line {}, cannot add '{}' {}".format(no, line, ex))
+                    try:
+                        self._define(definition)
+                    except Exception as ex:
+                        logger.error(
+                            "In line {}, cannot add '{}' {}".format(
+                                lineno, definition, ex
+                            )
+                        )
 
     def _build_cache(self) -> None:
         """Build a cache of dimensionality and base units."""
@@ -1598,19 +1548,13 @@ class ContextRegistry(BaseRegistry):
         # Allow contexts to add override layers to the units
         self._units = ChainMap(self._units)
 
-    def _register_parsers(self) -> None:
-        super()._register_parsers()
-        self._register_parser("@context", self._parse_context)
+    def _register_directives(self) -> None:
+        super()._register_directives()
+        self._register_directive("@context", self._load_context, ContextDefinition)
 
-    def _parse_context(self, source_iterator: SourceIterator) -> None:
+    def _load_context(self, cd: ContextDefinition) -> None:
         try:
-            self.add_context(
-                Context.from_lines(
-                    source_iterator.block_iter(),
-                    self.get_dimensionality,
-                    non_int_type=self.non_int_type,
-                )
-            )
+            self.add_context(Context.from_definition(cd, self.get_dimensionality))
         except KeyError as e:
             raise DefinitionSyntaxError(f"unknown dimension {e} in context")
 
@@ -2013,19 +1957,17 @@ class SystemRegistry(BaseRegistry):
             "system", None
         )
 
-    def _register_parsers(self) -> None:
-        super()._register_parsers()
-        self._register_parser("@group", self._parse_group)
-        self._register_parser("@system", self._parse_system)
-
-    def _parse_group(self, source_iterator: SourceIterator) -> None:
-        self.Group.from_lines(
-            source_iterator.block_iter(), self.define, self.non_int_type
+    def _register_directives(self) -> None:
+        super()._register_directives()
+        self._register_directive(
+            "@system",
+            lambda gd: self.System.from_definition(gd, self.get_root_units),
+            SystemDefinition,
         )
-
-    def _parse_system(self, source_iterator: SourceIterator) -> None:
-        self.System.from_lines(
-            source_iterator.block_iter(), self.get_root_units, self.non_int_type
+        self._register_directive(
+            "@group",
+            lambda gd: self.Group.from_definition(gd, self.define),
+            GroupDefinition,
         )
 
     def get_group(self, name: str, create_if_needed: bool = True) -> Group:
