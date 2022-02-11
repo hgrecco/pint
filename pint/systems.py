@@ -268,6 +268,58 @@ class Group(SharedRegistryObject):
         return self._REGISTRY
 
 
+@dataclass(frozen=True)
+class SystemDefinition:
+    #: Regex to match the header parts of a context.
+    _header_re = re.compile(r"@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
+
+    name: str
+    unit_replacements: Tuple[Tuple[int, str, str], ...]
+    parent_group_names: Tuple[str, ...]
+
+    @classmethod
+    def from_lines(cls, lines, get_root_func, non_int_type=float):
+        lines = SourceIterator(lines)
+
+        lineno, header = next(lines)
+
+        r = cls._header_re.search(header)
+
+        if r is None:
+            raise ValueError("Invalid System header syntax '%s'" % header)
+
+        name = r.groupdict()["name"].strip()
+        groups = r.groupdict()["used_groups"]
+
+        # If the systems has no group, it automatically uses the root group.
+        if groups:
+            group_names = tuple(a.strip() for a in groups.split(","))
+        else:
+            group_names = ("root",)
+
+        unit_replacements = []
+        for lineno, line in lines:
+            line = line.strip()
+
+            # We would identify a
+            #  - old_unit: a root unit part which is going to be removed from the system.
+            #  - new_unit: a non root unit which is going to replace the old_unit.
+
+            if ":" in line:
+                # The syntax is new_unit:old_unit
+
+                new_unit, old_unit = line.split(":")
+                new_unit, old_unit = new_unit.strip(), old_unit.strip()
+
+                unit_replacements.append((lineno, new_unit, old_unit))
+            else:
+                # The syntax is new_unit
+                # old_unit is inferred as the root unit with the same dimensionality.
+                unit_replacements.append((lineno, line, None))
+
+        return cls(name, tuple(unit_replacements), group_names)
+
+
 class System(SharedRegistryObject):
     """A system is a Group plus a set of base units.
 
@@ -294,9 +346,6 @@ class System(SharedRegistryObject):
 
     If the new_unit_name and the old_unit_name, the later and the colon can be omitted.
     """
-
-    #: Regex to match the header parts of a context.
-    _header_re = re.compile(r"@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
 
     def __init__(self, name):
         """
@@ -382,44 +431,28 @@ class System(SharedRegistryObject):
 
     @classmethod
     def from_lines(cls, lines, get_root_func, non_int_type=float):
-        lines = SourceIterator(lines)
-
-        lineno, header = next(lines)
-
-        r = cls._header_re.search(header)
-
-        if r is None:
-            raise ValueError("Invalid System header syntax '%s'" % header)
-
-        name = r.groupdict()["name"].strip()
-        groups = r.groupdict()["used_groups"]
-
-        # If the systems has no group, it automatically uses the root group.
-        if groups:
-            group_names = tuple(a.strip() for a in groups.split(","))
-        else:
-            group_names = ("root",)
+        sd = SystemDefinition.from_lines(lines, get_root_func, non_int_type)
 
         base_unit_names = {}
         derived_unit_names = []
-        for lineno, line in lines:
-            line = line.strip()
+        for lineno, new_unit, old_unit in sd.unit_replacements:
+            if old_unit is None:
+                old_unit_dict = to_units_container(get_root_func(new_unit)[1])
 
-            # We would identify a
-            #  - old_unit: a root unit part which is going to be removed from the system.
-            #  - new_unit: a non root unit which is going to replace the old_unit.
+                if len(old_unit_dict) != 1:
+                    raise ValueError(
+                        "The new base must be a root dimension if not discarded unit is specified."
+                    )
 
-            if ":" in line:
-                # The syntax is new_unit:old_unit
+                old_unit, value = dict(old_unit_dict).popitem()
 
-                new_unit, old_unit = line.split(":")
-                new_unit, old_unit = new_unit.strip(), old_unit.strip()
-
+                base_unit_names[old_unit] = {new_unit: 1 / value}
+            else:
                 # The old unit MUST be a root unit, if not raise an error.
                 if old_unit != str(get_root_func(old_unit)[1]):
                     raise ValueError(
-                        "In `%s`, the unit at the right of the `:` must be a root unit."
-                        % line
+                        "In `%s`, the unit at the right of the `:` (%s) must be a root unit."
+                        % (lineno, old_unit)
                     )
 
                 # Here we find new_unit expanded in terms of root_units
@@ -442,26 +475,8 @@ class System(SharedRegistryObject):
 
                 base_unit_names[old_unit] = new_unit_dict
 
-            else:
-                # The syntax is new_unit
-                # old_unit is inferred as the root unit with the same dimensionality.
-
-                new_unit = line
-                old_unit_dict = to_units_container(get_root_func(line)[1])
-
-                if len(old_unit_dict) != 1:
-                    raise ValueError(
-                        "The new base must be a root dimension if not discarded unit is specified."
-                    )
-
-                old_unit, value = dict(old_unit_dict).popitem()
-
-                base_unit_names[old_unit] = {new_unit: 1 / value}
-
-        system = cls(name)
-
-        system.add_groups(*group_names)
-
+        system = cls(sd.name)
+        system.add_groups(*sd.parent_group_names)
         system.base_units.update(**base_unit_names)
         system.derived_units |= set(derived_unit_names)
 
