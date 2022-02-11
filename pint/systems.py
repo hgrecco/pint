@@ -9,6 +9,8 @@
 """
 
 import re
+from dataclasses import dataclass
+from typing import Tuple
 
 from .babel_names import _babel_systems
 from .compat import babel_parse
@@ -21,6 +23,66 @@ from .util import (
     logger,
     to_units_container,
 )
+
+
+@dataclass(frozen=True)
+class GroupDefinition:
+
+    #: Regex to match the header parts of a definition.
+    _header_re = re.compile(r"@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
+
+    name: str
+    units: Tuple[Tuple[int, UnitDefinition], ...]
+    parent_group_names: Tuple[str, ...]
+
+    @property
+    def unit_names(self) -> Tuple[str, ...]:
+        return tuple(u.name for lineno, u in self.units)
+
+    @classmethod
+    def from_lines(cls, lines, non_int_type=float):
+        """Return a Group object parsing an iterable of lines.
+
+        Parameters
+        ----------
+        lines : list[str]
+            iterable
+        define_func : callable
+            Function to define a unit in the registry; it must accept a single string as
+            a parameter.
+
+        Returns
+        -------
+
+        """
+
+        lines = SourceIterator(lines)
+        lineno, header = next(lines)
+
+        r = cls._header_re.search(header)
+
+        if r is None:
+            raise ValueError("Invalid Group header syntax: '%s'" % header)
+
+        name = r.groupdict()["name"].strip()
+        groups = r.groupdict()["used_groups"]
+        if groups:
+            parent_group_names = tuple(a.strip() for a in groups.split(","))
+        else:
+            parent_group_names = ()
+
+        units = []
+        for lineno, line in lines:
+            definition = Definition.from_string(line, non_int_type=non_int_type)
+            if not isinstance(definition, UnitDefinition):
+                raise DefinitionSyntaxError(
+                    "Only UnitDefinition are valid inside _used_groups, not "
+                    + str(definition),
+                    lineno=lineno,
+                )
+            units.append((lineno, definition))
+
+        return cls(name, tuple(units), parent_group_names)
 
 
 class Group(SharedRegistryObject):
@@ -41,9 +103,6 @@ class Group(SharedRegistryObject):
             <definition N>
         @end
     """
-
-    #: Regex to match the header parts of a definition.
-    _header_re = re.compile(r"@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
 
     def __init__(self, name):
         """
@@ -184,50 +243,23 @@ class Group(SharedRegistryObject):
         -------
 
         """
-        lines = SourceIterator(lines)
-        lineno, header = next(lines)
 
-        r = cls._header_re.search(header)
+        gd = GroupDefinition.from_lines(lines, non_int_type)
 
-        if r is None:
-            raise ValueError("Invalid Group header syntax: '%s'" % header)
+        for lineno, definition in gd.units:
+            try:
+                define_func(definition)
+            except (RedefinitionError, DefinitionSyntaxError) as ex:
+                if ex.lineno is None:
+                    ex.lineno = lineno
+                raise ex
 
-        name = r.groupdict()["name"].strip()
-        groups = r.groupdict()["used_groups"]
-        if groups:
-            group_names = tuple(a.strip() for a in groups.split(","))
-        else:
-            group_names = ()
+        grp = cls(gd.name)
 
-        unit_names = []
-        for lineno, line in lines:
-            if "=" in line:
-                # Is a definition
-                definition = Definition.from_string(line, non_int_type=non_int_type)
-                if not isinstance(definition, UnitDefinition):
-                    raise DefinitionSyntaxError(
-                        "Only UnitDefinition are valid inside _used_groups, not "
-                        + str(definition),
-                        lineno=lineno,
-                    )
+        grp.add_units(*(unit.name for lineno, unit in gd.units))
 
-                try:
-                    define_func(definition)
-                except (RedefinitionError, DefinitionSyntaxError) as ex:
-                    if ex.lineno is None:
-                        ex.lineno = lineno
-                    raise ex
-
-                unit_names.append(definition.name)
-            else:
-                unit_names.append(line.strip())
-
-        grp = cls(name)
-
-        grp.add_units(*unit_names)
-
-        if group_names:
-            grp.add_groups(*group_names)
+        if gd.parent_group_names:
+            grp.add_groups(*gd.parent_group_names)
 
         return grp
 
