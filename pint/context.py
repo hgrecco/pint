@@ -35,11 +35,12 @@ _header_re = re.compile(
 _varname_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
-def _expression_to_function(eq: str) -> Callable[..., Quantity[Any]]:
-    def func(ureg: UnitRegistry, value: Any, **kwargs: Any) -> Quantity[Any]:
-        return ureg.parse_expression(eq, value=value, **kwargs)
+class Expression:
+    def __init__(self, eq):
+        self._eq = eq
 
-    return func
+    def __call__(self, ureg: UnitRegistry, value: Any, **kwargs: Any):
+        return ureg.parse_expression(self._eq, value=value, **kwargs)
 
 
 @dataclass(frozen=True)
@@ -153,7 +154,7 @@ class ContextDefinition:
                     rel, eq = line.split(":")
                     variables.update(_varname_re.findall(eq))
 
-                    func = _expression_to_function(eq)
+                    func = Expression(eq)
 
                     bidir = True
                     parts = rel.split("<->")
