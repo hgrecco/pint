@@ -53,6 +53,30 @@ class Relation:
 
 @dataclass(frozen=True)
 class ContextDefinition:
+    """Definition of a Context
+
+        @context[(defaults)] <canonical name> [= <alias>] [= <alias>]
+            # units can be redefined within the context
+            <redefined unit> = <relation to another unit>
+
+            # can establish unidirectional relationships between dimensions
+            <dimension 1> -> <dimension 2>: <transformation function>
+
+            # can establish bidirectionl relationships between dimensions
+            <dimension 3> <-> <dimension 4>: <transformation function>
+        @end
+
+    Example::
+
+        @context(n=1) spectroscopy = sp
+            # n index of refraction of the medium.
+            [length] <-> [frequency]: speed_of_light / n / value
+            [frequency] -> [energy]: planck_constant * value
+            [energy] -> [frequency]: value / planck_constant
+            # allow wavenumber / kayser
+            [wavenumber] <-> [length]: 1 / value
+        @end
+    """
 
     name: str
     aliases: Tuple[str, ...]
@@ -174,17 +198,16 @@ class Context:
     dimension to another. Each Dimension are specified using a UnitsContainer.
     Simple transformation are given with a function taking a single parameter.
 
-
     Conversion functions may take optional keyword arguments and the context
     can have default values for these arguments.
 
-
-    Additionally, a context may host redefinitions:
-
+    Additionally, a context may host redefinitions.
 
     A redefinition must be performed among units that already exist in the registry. It
     cannot change the dimensionality of a unit. The symbol and aliases are automatically
     inherited from the registry.
+
+    See ContextDefinition for the definition file syntax.
 
     Parameters
     ----------
@@ -279,7 +302,10 @@ class Context:
     @classmethod
     def from_lines(cls, lines, to_base_func=None, non_int_type=float) -> Context:
         cd = ContextDefinition.from_lines(lines, non_int_type)
+        return cls.from_definition(cd, to_base_func)
 
+    @classmethod
+    def from_definition(cls, cd: ContextDefinition, to_base_func=None) -> Context:
         ctx = cls(cd.name, cd.aliases, cd.defaults)
 
         for lineno, definition in cd.redefinitions:

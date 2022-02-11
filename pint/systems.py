@@ -7,6 +7,7 @@
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+from __future__ import annotations
 
 import re
 from dataclasses import dataclass
@@ -27,13 +28,30 @@ from .util import (
 
 @dataclass(frozen=True)
 class GroupDefinition:
+    """Definition of a group.
+
+        @group <name> [using <group 1>, ..., <group N>]
+            <definition 1>
+            ...
+            <definition N>
+        @end
+
+    Example::
+
+        @group AvoirdupoisUS using Avoirdupois
+            US_hundredweight = hundredweight = US_cwt
+            US_ton = ton
+            US_force_ton = force_ton = _ = US_ton_force
+        @end
+
+    """
 
     #: Regex to match the header parts of a definition.
     _header_re = re.compile(r"@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
 
     name: str
     units: Tuple[Tuple[int, UnitDefinition], ...]
-    parent_group_names: Tuple[str, ...]
+    using_group_names: Tuple[str, ...]
 
     @property
     def unit_names(self) -> Tuple[str, ...]:
@@ -95,13 +113,7 @@ class Group(SharedRegistryObject):
 
     The group belongs to one Registry.
 
-    It can be specified in the definition file as::
-
-        @group <name> [using <group 1>, ..., <group N>]
-            <definition 1>
-            ...
-            <definition N>
-        @end
+    See GroupDefinition for the definition file syntax.
     """
 
     def __init__(self, name):
@@ -228,7 +240,7 @@ class Group(SharedRegistryObject):
         self.invalidate_members()
 
     @classmethod
-    def from_lines(cls, lines, define_func, non_int_type=float):
+    def from_lines(cls, lines, define_func, non_int_type=float) -> Group:
         """Return a Group object parsing an iterable of lines.
 
         Parameters
@@ -243,9 +255,11 @@ class Group(SharedRegistryObject):
         -------
 
         """
-
         gd = GroupDefinition.from_lines(lines, non_int_type)
+        return cls.from_definition(gd, define_func)
 
+    @classmethod
+    def from_definition(cls, gd: GroupDefinition, define_func) -> Group:
         for lineno, definition in gd.units:
             try:
                 define_func(definition)
@@ -258,8 +272,8 @@ class Group(SharedRegistryObject):
 
         grp.add_units(*(unit.name for lineno, unit in gd.units))
 
-        if gd.parent_group_names:
-            grp.add_groups(*gd.parent_group_names)
+        if gd.using_group_names:
+            grp.add_groups(*gd.using_group_names)
 
         return grp
 
@@ -270,15 +284,34 @@ class Group(SharedRegistryObject):
 
 @dataclass(frozen=True)
 class SystemDefinition:
+    """Definition of a System:
+
+        @system <name> [using <group 1>, ..., <group N>]
+            <rule 1>
+            ...
+            <rule N>
+        @end
+
+    The syntax for the rule is:
+
+        new_unit_name : old_unit_name
+
+    where:
+        - old_unit_name: a root unit part which is going to be removed from the system.
+        - new_unit_name: a non root unit which is going to replace the old_unit.
+
+    If the new_unit_name and the old_unit_name, the later and the colon can be omitted.
+    """
+
     #: Regex to match the header parts of a context.
     _header_re = re.compile(r"@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
 
     name: str
     unit_replacements: Tuple[Tuple[int, str, str], ...]
-    parent_group_names: Tuple[str, ...]
+    using_group_names: Tuple[str, ...]
 
     @classmethod
-    def from_lines(cls, lines, get_root_func, non_int_type=float):
+    def from_lines(cls, lines, non_int_type=float):
         lines = SourceIterator(lines)
 
         lineno, header = next(lines)
@@ -328,23 +361,7 @@ class System(SharedRegistryObject):
 
     The System belongs to one Registry.
 
-    It can be specified in the definition file as::
-
-        @system <name> [using <group 1>, ..., <group N>]
-            <rule 1>
-            ...
-            <rule N>
-        @end
-
-    The syntax for the rule is:
-
-        new_unit_name : old_unit_name
-
-    where:
-        - old_unit_name: a root unit part which is going to be removed from the system.
-        - new_unit_name: a non root unit which is going to replace the old_unit.
-
-    If the new_unit_name and the old_unit_name, the later and the colon can be omitted.
+    See SystemDefinition for the definition file syntax.
     """
 
     def __init__(self, name):
@@ -431,8 +448,11 @@ class System(SharedRegistryObject):
 
     @classmethod
     def from_lines(cls, lines, get_root_func, non_int_type=float):
-        sd = SystemDefinition.from_lines(lines, get_root_func, non_int_type)
+        sd = SystemDefinition.from_lines(lines, get_root_func)
+        return cls.from_definition(sd, get_root_func)
 
+    @classmethod
+    def from_definition(cls, sd: SystemDefinition, get_root_func):
         base_unit_names = {}
         derived_unit_names = []
         for lineno, new_unit, old_unit in sd.unit_replacements:
@@ -476,7 +496,7 @@ class System(SharedRegistryObject):
                 base_unit_names[old_unit] = new_unit_dict
 
         system = cls(sd.name)
-        system.add_groups(*sd.parent_group_names)
+        system.add_groups(*sd.using_group_names)
         system.base_units.update(**base_unit_names)
         system.derived_units |= set(derived_unit_names)
 
