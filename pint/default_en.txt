@@ -255,7 +255,7 @@ joule = newton * meter = J
 erg = dyne * centimeter
 watt_hour = watt * hour = Wh = watthour
 electron_volt = e * volt = eV
-rydberg = h * c * R_inf = Ry
+rydberg = ℎ * c * R_inf = Ry
 hartree = 2 * rydberg = E_h = Eh = hartree_energy = atomic_unit_of_energy = a_u_energy
 calorie = 4.184 * joule = cal = thermochemical_calorie = cal_th
 international_calorie = 4.1868 * joule = cal_it = international_steam_table_calorie
