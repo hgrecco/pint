@@ -39,6 +39,7 @@ import copy
 import functools
 import itertools
 import locale
+import pathlib
 import re
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
@@ -589,12 +590,22 @@ class BaseRegistry(metaclass=RegistryMeta):
             DimensionDefinition: self._define,
             PrefixDefinition: self._define,
         }
-        p = Parser(self.non_int_type)
+        p = Parser(self.non_int_type, use_cache=False)
         for prefix, (loaderfunc, definition_class) in self._directives.items():
             loaders[definition_class] = loaderfunc
             p.register_class(prefix, definition_class)
 
-        parsed_files = p.parse(file, is_resource)
+        if isinstance(file, (str, pathlib.Path)):
+            try:
+                parsed_files = p.parse(file, is_resource)
+            except Exception as ex:
+                # TODO: Change this is in the future
+                # this is kept for backwards compatibility
+                msg = getattr(ex, "message", "") or str(ex)
+                raise ValueError("While opening {}\n{}".format(file, msg))
+        else:
+            parsed_files = [p.parse_lines(file)]
+
         for definition_file in parsed_files[::-1]:
             for lineno, definition in definition_file.parsed_lines:
                 loaderfunc = loaders.get(definition.__class__, None)

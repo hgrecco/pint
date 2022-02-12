@@ -10,15 +10,15 @@
 
 from __future__ import annotations
 
-import os
 import pathlib
 import re
 from dataclasses import dataclass
 from functools import cached_property
 from importlib import resources
 from io import StringIO
-from typing import Any, Callable, Dict, Generator, Optional, Tuple
+from typing import Any, Callable, Dict, Generator, Iterable, Optional, Tuple
 
+from . import diskcache
 from .definitions import Definition
 from .errors import DefinitionSyntaxError
 from .util import SourceIterator, logger
@@ -81,11 +81,12 @@ class Parser:
     #: Map context prefix to function
     _directives: Dict[str, ParserFuncT]
 
-    def __init__(self, non_int_type=float, raise_on_error=True):
+    def __init__(self, non_int_type=float, raise_on_error=True, use_cache=True):
         self._directives = {}
         self._non_int_type = non_int_type
         self._raise_on_error = raise_on_error
         self.register_class("@import", ImportDefinition)
+        self._use_cache = use_cache
 
     def register_directive(
         self, prefix: str, parserfunc: ParserFuncT, single_line: bool
@@ -114,6 +115,9 @@ class Parser:
             raise ValueError("Prefix directives must start with '@'")
 
     def register_class(self, prefix: str, klass):
+        """Register a definition class for a directive and try to guess
+        if it is a line or block directive from the signature.
+        """
         if hasattr(klass, "from_string"):
             self.register_directive(prefix, klass.from_string, True)
         elif hasattr(klass, "from_lines"):
@@ -124,8 +128,7 @@ class Parser:
             )
 
     def parse(self, file, is_resource: bool = False) -> Tuple[DefinitionFile, ...]:
-        """Parse a file, resource, iterable of strings or SourceIterator
-        into a collection of DefinitionFile.
+        """Parse a file or resource into a collection of DefinitionFile.
 
         Parameters
         ----------
@@ -136,9 +139,17 @@ class Parser:
             and therefore should be loaded from the package.
             (Default value = False)
         """
-        out = []
-        parsed = self.parse_single(file, is_resource)
-        out.append(parsed)
+
+        if is_resource:
+            parsed = self.parse_single_resource(file)
+        else:
+            path = pathlib.Path(file)
+            if self._use_cache:
+                parsed = self.parse_single_cache(path)
+            else:
+                parsed = self.parse_single(path)
+
+        out = [parsed]
         for lineno, content in parsed.filter_by(ImportDefinition):
             if parsed.is_resource:
                 path = content.path
@@ -151,64 +162,92 @@ class Parser:
             out.extend(self.parse(path, parsed.is_resource))
         return tuple(out)
 
-    def parse_single(self, file, is_resource: bool = False) -> DefinitionFile:
-        """Parse a file, resource, iterable of strings or SourceIterator
-        without nesting into dependent files.
+    def parse_single_resource(self, resource_name: str) -> DefinitionFile:
+        """Parse a resource in the package into a DefinitionFile.
+
+        This method will try to load it first as a regular file
+        (with a path and mtime) to allow caching.
+        If this files (i.e. the resource is not filesystem file)
+        it will use python importlib.resources.read_binary
+        """
+
+        with resources.path(__package__, resource_name) as p:
+            filepath = p.resolve()
+
+        # This is the only way I could come up to decide if the
+        # resource is a real file in the filesystem.
+        # It will not allow me to cache a resource inside a Zip file
+        # (which is logical fine)
+        if filepath.exists():
+            return self.parse_single(filepath)
+
+        logger.debug("Cannot use_cache resource without a real path")
+        return self._parse_single_resource(resource_name)
+
+    def _parse_single_resource(self, resource_name: str) -> DefinitionFile:
+        rbytes = resources.read_binary(__package__, resource_name)
+        si = SourceIterator(
+            StringIO(rbytes.decode("utf-8")), resource_name, is_resource=True
+        )
+        parsed_lines = tuple(self.yield_from_source_iterator(si))
+        return DefinitionFile(pathlib.Path(resource_name), True, None, parsed_lines)
+
+    def parse_single(self, filepath: pathlib.Path) -> DefinitionFile:
+        """Parse a filepath without nesting into dependent files.
 
         Parameters
         ----------
-        file
+        filepath
             definitions or file containing definition.
-        is_resource
-            indicates that the file is a resource file
-            and therefore should be loaded from the package.
-            (Default value = False)
         """
-        # Permit both filenames and line-iterables
+        with filepath.open(encoding="utf-8") as fp:
+            si = SourceIterator(fp, filepath, is_resource=False)
+            parsed_lines = tuple(self.yield_from_source_iterator(si))
 
-        try:
-            if not isinstance(file, (str, pathlib.Path)):
-                si = SourceIterator(file)
-                parsed_lines = tuple(self._parse(si))
+        filename = filepath.resolve()
+        mtime = filepath.stat().st_mtime
 
-                filename = None
-                mtime = None  # TODO What is the right value here?
-            elif is_resource:
-                rbytes = resources.read_binary(__package__, file)
-                si = SourceIterator(
-                    StringIO(rbytes.decode("utf-8")), file, is_resource=True
-                )
-                parsed_lines = tuple(self._parse(si))
+        return DefinitionFile(filename, False, mtime, parsed_lines)
 
-                filename = file
-                mtime = None
-                try:
-                    with resources.path(__package__, file) as p:
-                        filename = p.resolve()
-                        mtime = p.stat().st_mtime  # Will this always work:
-                except Exception:
-                    pass
-            else:
-                with open(file, encoding="utf-8") as fp:
-                    si = SourceIterator(fp, file, is_resource=False)
-                    parsed_lines = tuple(self._parse(si))
+    def parse_single_cache(self, filepath: pathlib.Path) -> DefinitionFile:
+        """Parse a filepath into a DefinitionFile object
+        without importing dependent files.
 
-                filename = pathlib.Path(file).resolve()
-                mtime = os.stat(file).st_mtime
-        except Exception as e:
-            msg = getattr(e, "message", "") or str(e)
-            raise ValueError("While opening {}\n{}".format(file, msg))
+        A cached version is used if available.
 
-        return DefinitionFile(filename, is_resource, mtime, parsed_lines)
+        Parameters
+        ----------
+        filepath
+            definitions or file containing definition.
+        """
+        content = diskcache.load(filepath)
+        if content:
+            return content
+        content = self.parse_single(filepath)
+        diskcache.save(content, filepath)
+        return content
 
-    def _parse(self, source_iterator: SourceIterator) -> Generator[Tuple[int, Any]]:
+    def parse_lines(self, lines: Iterable[str]) -> DefinitionFile:
+        """Parse an iterable of strings into a dependent file"""
+        si = SourceIterator(lines, None, False)
+        parsed_lines = tuple(self.yield_from_source_iterator(si))
+        df = DefinitionFile(None, False, None, parsed_lines=parsed_lines)
+        if any(df.filter_by(ImportDefinition)):
+            raise ValueError(
+                "Cannot use the @import directive when parsing "
+                "an iterable of strings."
+            )
+        return df
+
+    def yield_from_source_iterator(
+        self, source_iterator: SourceIterator
+    ) -> Generator[Tuple[int, Any]]:
         """Iterates through the source iterator, yields line numbers and
         the coresponding parsed definition object.
 
         Parameters
         ----------
         source_iterator
-
         """
         for lineno, line in source_iterator:
             try:
