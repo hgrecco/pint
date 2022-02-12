@@ -66,7 +66,7 @@ from typing import (
     Union,
 )
 
-from . import registry_helpers, systems
+from . import diskcache, registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
 from .compat import HAS_BABEL, babel_parse, tokenizer
 from .context import Context, ContextChain, ContextDefinition
@@ -174,6 +174,17 @@ class RegistryCache:
         self.dimensionality: Dict[UnitsContainer, UnitsContainer] = {}
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit: Dict[str, UnitsContainer] = {}
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        attrs = (
+            "dimensional_equivalents",
+            "root_units",
+            "dimensionality",
+            "parse_unit",
+        )
+        return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
 
 class ContextCacheOverlay:
@@ -319,11 +330,24 @@ class BaseRegistry(metaclass=RegistryMeta):
         """This should be called after all __init__"""
 
         if self._filename == "":
-            self.load_definitions("default_en.txt", True)
+            pfs = self.load_definitions("default_en.txt", True)
         elif self._filename is not None:
-            self.load_definitions(self._filename)
+            pfs = self.load_definitions(self._filename)
+        else:
+            pfs = None
 
-        self._build_cache()
+        pfs = None  # This disables de cache.
+        if pfs is None or any((fn is None for fn, _ in pfs.keys())):
+            # TODO: I think this is not necessary.
+            self._build_cache()
+        else:
+            cache = diskcache.load_referred(pfs)
+            if cache is None:
+                self._build_cache()
+                diskcache.save_referred(self._cache, pfs)
+            else:
+                self._build_cache(cache)
+
         self._initialized = True
 
     def _register_directives(self) -> None:
@@ -572,7 +596,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         else:
             raise ValueError("Prefix directives must start with '@'")
 
-    def load_definitions(self, file, is_resource: bool = False) -> None:
+    def load_definitions(self, file, is_resource: bool = False):
         """Add units and prefixes defined in a definition text file.
 
         Parameters
@@ -590,6 +614,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             DimensionDefinition: self._define,
             PrefixDefinition: self._define,
         }
+
         p = Parser(self.non_int_type, use_cache=False)
         for prefix, (loaderfunc, definition_class) in self._directives.items():
             loaders[definition_class] = loaderfunc
@@ -618,8 +643,14 @@ class BaseRegistry(metaclass=RegistryMeta):
                     )
                 loaderfunc(definition)
 
-    def _build_cache(self) -> None:
+        return {(pf.filename, pf.is_resource): pf.mtime for pf in parsed_files}
+
+    def _build_cache(self, cache=None) -> None:
         """Build a cache of dimensionality and base units."""
+        if cache:
+            self._cache = cache
+            return
+
         self._cache = RegistryCache()
 
         deps = {
@@ -1620,8 +1651,8 @@ class ContextRegistry(BaseRegistry):
 
         return context
 
-    def _build_cache(self) -> None:
-        super()._build_cache()
+    def _build_cache(self, cache=None) -> None:
+        super()._build_cache(cache)
         self._caches[()] = self._cache
 
     def _switch_context_cache_and_units(self) -> None:
