@@ -99,3 +99,7 @@ time_convert_from_uc.setup = my_setup
 time_convert_from_uc.params = [
     (("uc_meter", "uc_kilometer"), ("uc_kilometer/second", "uc_angstrom/minute"))
 ]
+
+
+def time_parse_math_expression():
+    ureg.parse_expression("3 + 5 * 2 + value", value=10)
