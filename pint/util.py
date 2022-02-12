@@ -423,10 +423,11 @@ class UnitsContainer(Mapping):
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
     def __getstate__(self):
-        return self._d, self._hash, self._one, self._non_int_type
+        return self._d, self._one, self._non_int_type
 
     def __setstate__(self, state):
-        self._d, self._hash, self._one, self._non_int_type = state
+        self._d, self._one, self._non_int_type = state
+        self._hash = None
 
     def __eq__(self, other) -> bool:
         if isinstance(other, UnitsContainer):
