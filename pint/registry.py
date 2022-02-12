@@ -608,12 +608,15 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         for definition_file in parsed_files[::-1]:
             for lineno, definition in definition_file.parsed_lines:
+                if definition.__class__ in p.handled_classes:
+                    continue
                 loaderfunc = loaders.get(definition.__class__, None)
-                if loaderfunc:
-                    # this will skip definitions for which
-                    # there is no loader
-                    # (for example the import directive)
-                    loaderfunc(definition)
+                if not loaderfunc:
+                    raise ValueError(
+                        f"No loader function defined "
+                        f"for {definition.__class__.__name__}"
+                    )
+                loaderfunc(definition)
 
     def _build_cache(self) -> None:
         """Build a cache of dimensionality and base units."""

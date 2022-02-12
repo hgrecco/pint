@@ -81,6 +81,8 @@ class Parser:
     #: Map context prefix to function
     _directives: Dict[str, ParserFuncT]
 
+    handled_classes = (ImportDefinition,)
+
     def __init__(self, non_int_type=float, raise_on_error=True, use_cache=True):
         self._directives = {}
         self._non_int_type = non_int_type
