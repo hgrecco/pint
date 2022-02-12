@@ -42,6 +42,7 @@ import locale
 import re
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
+from dataclasses import dataclass
 from decimal import Decimal
 from fractions import Fraction
 from numbers import Number
@@ -64,7 +65,7 @@ from typing import (
     Union,
 )
 
-from . import parser, registry_helpers, systems
+from . import registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
 from .compat import HAS_BABEL, babel_parse, tokenizer
 from .context import Context, ContextChain, ContextDefinition
@@ -82,7 +83,7 @@ from .errors import (
     RedefinitionError,
     UndefinedUnitError,
 )
-from .parser import DefaultsDefinition, Parser
+from .parser import Parser
 from .pint_eval import build_eval_tree
 from .systems import Group, GroupDefinition, System, SystemDefinition
 from .util import (
@@ -116,6 +117,24 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 _BLOCK_RE = re.compile(r"[ (]")
+
+
+@dataclass(frozen=True)
+class DefaultsDefinition:
+    """Definition for the @default directive"""
+
+    content: Tuple[Tuple[str, str], ...]
+
+    @classmethod
+    def from_lines(cls, lines, non_int_type=float) -> DefaultsDefinition:
+        source_iterator = SourceIterator(lines)
+        next(source_iterator)
+        out = []
+        for lineno, part in source_iterator:
+            k, v = part.split("=")
+            out.append((k.strip(), v.strip()))
+
+        return DefaultsDefinition(tuple(out))
 
 
 @functools.lru_cache()
@@ -307,9 +326,6 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._initialized = True
 
     def _register_directives(self) -> None:
-        self._register_directive(
-            "@import", self._loader_import, parser.ImportDefinition
-        )
         self._register_directive("@alias", self._load_alias, AliasDefinition)
         self._register_directive("@defaults", self._load_defaults, DefaultsDefinition)
 
@@ -322,10 +338,6 @@ class BaseRegistry(metaclass=RegistryMeta):
     def _load_alias(self, alias_definition: AliasDefinition) -> None:
         """Loader for an @alias directive"""
         self._define_alias(alias_definition)
-
-    def _loader_import(self, source_iterator: SourceIterator) -> None:
-        """ """
-        # TODO who should handled this?
 
     def __deepcopy__(self, memo) -> "BaseRegistry":
         new = object.__new__(type(self))
@@ -571,7 +583,12 @@ class BaseRegistry(metaclass=RegistryMeta):
             and therefore should be loaded from the package. (Default value = False)
         """
 
-        loaders = {}
+        loaders = {
+            AliasDefinition: self._define,
+            UnitDefinition: self._define,
+            DimensionDefinition: self._define,
+            PrefixDefinition: self._define,
+        }
         p = Parser(self.non_int_type)
         for prefix, (loaderfunc, definition_class) in self._directives.items():
             loaders[definition_class] = loaderfunc
@@ -581,17 +598,11 @@ class BaseRegistry(metaclass=RegistryMeta):
         for definition_file in parsed_files[::-1]:
             for lineno, definition in definition_file.parsed_lines:
                 loaderfunc = loaders.get(definition.__class__, None)
-                if loaderfunc is not None:
+                if loaderfunc:
+                    # this will skip definitions for which
+                    # there is no loader
+                    # (for example the import directive)
                     loaderfunc(definition)
-                else:
-                    try:
-                        self._define(definition)
-                    except Exception as ex:
-                        logger.error(
-                            "In line {}, cannot add '{}' {}".format(
-                                lineno, definition, ex
-                            )
-                        )
 
     def _build_cache(self) -> None:
         """Build a cache of dimensionality and base units."""

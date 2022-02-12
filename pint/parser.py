@@ -55,6 +55,19 @@ class DefinitionFile:
         return bool(self.errors)
 
 
+@dataclass(frozen=True)
+class ImportDefinition:
+    """Definition for the @import directive"""
+
+    path: str
+
+    @classmethod
+    def from_string(
+        cls, definition: str, non_int_type: type = float
+    ) -> ImportDefinition:
+        return ImportDefinition(definition[7:].strip())
+
+
 class Parser:
     """Class to parse a definition file into an intermediate object representation.
 
@@ -72,6 +85,7 @@ class Parser:
         self._directives = {}
         self._non_int_type = non_int_type
         self._raise_on_error = raise_on_error
+        self.register_class("@import", ImportDefinition)
 
     def register_directive(
         self, prefix: str, parserfunc: ParserFuncT, single_line: bool
@@ -222,34 +236,3 @@ class Parser:
             except Exception as ex:
                 logger.error("In line {}, cannot add '{}' {}".format(lineno, line, ex))
                 raise ex
-
-
-@dataclass(frozen=True)
-class DefaultsDefinition:
-    """Definition for the @default directive"""
-
-    content: Tuple[Tuple[str, str], ...]
-
-    @classmethod
-    def from_lines(cls, lines, non_int_type=float) -> DefaultsDefinition:
-        source_iterator = SourceIterator(lines)
-        next(source_iterator)
-        out = []
-        for lineno, part in source_iterator:
-            k, v = part.split("=")
-            out.append((k.strip(), v.strip()))
-
-        return DefaultsDefinition(tuple(out))
-
-
-@dataclass(frozen=True)
-class ImportDefinition:
-    """Definition for the @import directive"""
-
-    path: str
-
-    @classmethod
-    def from_string(
-        cls, definition: str, non_int_type: type = float
-    ) -> ImportDefinition:
-        return ImportDefinition(definition[7:].strip())
