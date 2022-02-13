@@ -71,7 +71,7 @@ from . import registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
 from .compat import HAS_BABEL, babel_parse, tokenizer
 from .context import Context, ContextChain
-from .converters import LogarithmicConverter, ScaleConverter
+from .converters import ScaleConverter
 from .definitions import (
     AliasDefinition,
     Definition,
@@ -1218,6 +1218,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         if token_type == NAME:
             if token_text == "dimensionless":
                 return 1 * self.dimensionless
+            elif token_text.lower() in ("inf", "infinity"):
+                return float("inf")
+            elif token_text.lower() == "nan":
+                return float("nan")
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:
@@ -1459,10 +1463,10 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         return None
 
-    def _add_ref_of_log_unit(self, offset_unit, all_units):
+    def _add_ref_of_log_or_offset_unit(self, offset_unit, all_units):
 
         slct_unit = self._units[offset_unit]
-        if isinstance(slct_unit.converter, LogarithmicConverter):
+        if slct_unit.is_logarithmic or (not slct_unit.is_multiplicative):
             # Extract reference unit
             slct_ref = slct_unit.reference
             # If reference unit is not dimensionless
@@ -1530,13 +1534,13 @@ class NonMultiplicativeRegistry(BaseRegistry):
             value = self._units[src_offset_unit].converter.to_reference(value, inplace)
             src = src.remove([src_offset_unit])
             # Add reference unit for multiplicative section
-            src = self._add_ref_of_log_unit(src_offset_unit, src)
+            src = self._add_ref_of_log_or_offset_unit(src_offset_unit, src)
 
         # clean dst units from offset units
         if dst_offset_unit:
             dst = dst.remove([dst_offset_unit])
             # Add reference unit for multiplicative section
-            dst = self._add_ref_of_log_unit(dst_offset_unit, dst)
+            dst = self._add_ref_of_log_or_offset_unit(dst_offset_unit, dst)
 
         # Convert non multiplicative units to the dst.
         value = super()._convert(value, src, dst, inplace, False)
@@ -2333,6 +2337,8 @@ class LazyRegistry:
 class ApplicationRegistry:
     """A wrapper class used to distribute changes to the application registry."""
 
+    __slots__ = ["_registry"]
+
     def __init__(self, registry):
         self._registry = registry
 
@@ -2364,6 +2370,12 @@ class ApplicationRegistry:
 
     def __getattr__(self, name):
         return getattr(self._registry, name)
+
+    def __setattr__(self, name, value):
+        if name in self.__slots__:
+            super().__setattr__(name, value)
+        else:
+            setattr(self._registry, name, value)
 
     def __dir__(self):
         return dir(self._registry)
