@@ -1,3 +1,5 @@
+import pathlib
+
 import pint
 
 from . import util
@@ -103,3 +105,50 @@ time_convert_from_uc.params = [
 
 def time_parse_math_expression():
     ureg.parse_expression("3 + 5 * 2 + value", value=10)
+
+
+# This code is duplicated with other benchmarks but simplify comparison
+
+CACHE_FOLDER = pathlib.Path(".cache")
+CACHE_FOLDER.mkdir(exist_ok=True)
+pint.UnitRegistry(cache_folder=CACHE_FOLDER)
+
+
+def time_load_definitions_stage_1(cache_folder):
+    """empty registry creation"""
+    # Change this into a single part benchmark using setup
+    _ = pint.UnitRegistry(None, cache_folder=None)
+
+
+time_load_definitions_stage_1.param_names = [
+    "cache_folder",
+]
+time_load_definitions_stage_1.params = [
+    None,
+    CACHE_FOLDER,
+]
+
+
+def time_load_definitions_stage_2(cache_folder, *args, **kwargs):
+    """empty registry creation + parsing default files + definition object loading"""
+
+    # Change this into a single part benchmark using setup
+    empty_registry = pint.UnitRegistry(None, cache_folder=cache_folder)
+    empty_registry.load_definitions("default_en.txt", True)
+
+
+time_load_definitions_stage_2.param_names = time_load_definitions_stage_1.param_names
+time_load_definitions_stage_2.params = time_load_definitions_stage_1.params
+
+
+def time_load_definitions_stage_3(cache_folder, *args, **kwargs):
+    """empty registry creation + parsing default files + definition object loading + cache building"""
+
+    # Change this into a single part benchmark using setup
+    empty_registry = pint.UnitRegistry(None, cache_folder=cache_folder)
+    loaded_files = empty_registry.load_definitions("default_en.txt", True)
+    empty_registry._build_cache(loaded_files)
+
+
+time_load_definitions_stage_3.param_names = time_load_definitions_stage_1.param_names
+time_load_definitions_stage_3.params = time_load_definitions_stage_1.params
