@@ -83,12 +83,16 @@ class Parser:
 
     handled_classes = (ImportDefinition,)
 
-    def __init__(self, non_int_type=float, raise_on_error=True, use_cache=True):
+    def __init__(self, non_int_type=float, raise_on_error=True, cache_folder=None):
         self._directives = {}
         self._non_int_type = non_int_type
         self._raise_on_error = raise_on_error
         self.register_class("@import", ImportDefinition)
-        self._use_cache = use_cache
+
+        if isinstance(cache_folder, (str, pathlib.Path)):
+            self._diskcache = diskcache.DiskCache(cache_folder)
+        else:
+            self._diskcache = cache_folder
 
     def register_directive(
         self, prefix: str, parserfunc: ParserFuncT, single_line: bool
@@ -146,10 +150,10 @@ class Parser:
             parsed = self.parse_single_resource(file)
         else:
             path = pathlib.Path(file)
-            if self._use_cache:
-                parsed = self.parse_single_cache(path)
-            else:
+            if self._diskcache is None:
                 parsed = self.parse_single(path)
+            else:
+                parsed = self.parse_single_cache(path)
 
         out = [parsed]
         for lineno, content in parsed.filter_by(ImportDefinition):
@@ -181,7 +185,10 @@ class Parser:
         # It will not allow me to cache a resource inside a Zip file
         # (which is logical fine)
         if filepath.exists():
-            return self.parse_single(filepath)
+            if self._diskcache is None:
+                return self.parse_single(filepath)
+            else:
+                return self.parse_single_cache(filepath)
 
         logger.debug("Cannot use_cache resource without a real path")
         return self._parse_single_resource(resource_name)
@@ -222,11 +229,11 @@ class Parser:
         filepath
             definitions or file containing definition.
         """
-        content = diskcache.load(filepath)
+        content = self._diskcache.load(filepath)
         if content:
             return content
         content = self.parse_single(filepath)
-        diskcache.save(content, filepath)
+        self._diskcache.save(content, filepath)
         return content
 
     def parse_lines(self, lines: Iterable[str]) -> DefinitionFile:

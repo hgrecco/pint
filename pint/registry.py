@@ -238,11 +238,15 @@ class BaseRegistry(metaclass=RegistryMeta):
         numerical type used for non integer values. (Default: float)
     case_sensitive : bool, optional
         Control default case sensitivity of unit parsing. (Default: True)
-
+    cache_folder : str or pathlib.Path or None, optional
+        Specify the folder in which cache files are saved and loaded from.
+        If None, the cache is disabled. (default)
     """
 
     #: Babel.Locale instance or None
     fmt_locale: Optional[Locale] = None
+
+    _diskcache = None
 
     def __init__(
         self,
@@ -255,12 +259,19 @@ class BaseRegistry(metaclass=RegistryMeta):
         fmt_locale: Optional[str] = None,
         non_int_type: NON_INT_TYPE = float,
         case_sensitive: bool = True,
+        cache_folder: Union[str, pathlib.Path, None] = None,
     ):
         #: Map context prefix to (loader function, parser function, single_line)
         #: type: Dict[str, Tuple[Callable[[Any], None]], Any]
         self._directives = {}
         self._register_directives()
         self._init_dynamic_classes()
+
+        if cache_folder is True:
+            # This will get a folder automatically from the os.
+            raise ValueError("Not implemented yet")
+        elif cache_folder is not None:
+            self._diskcache = diskcache.DiskCache(cache_folder)
 
         self._filename = filename
         self.force_ndarray = force_ndarray
@@ -330,24 +341,13 @@ class BaseRegistry(metaclass=RegistryMeta):
         """This should be called after all __init__"""
 
         if self._filename == "":
-            pfs = self.load_definitions("default_en.txt", True)
+            loaded_files = self.load_definitions("default_en.txt", True)
         elif self._filename is not None:
-            pfs = self.load_definitions(self._filename)
+            loaded_files = self.load_definitions(self._filename)
         else:
-            pfs = None
+            loaded_files = None
 
-        pfs = None  # This disables de cache.
-        if pfs is None or any((fn is None for fn, _ in pfs.keys())):
-            # TODO: I think this is not necessary.
-            self._build_cache()
-        else:
-            cache = diskcache.load_referred(pfs)
-            if cache is None:
-                self._build_cache()
-                diskcache.save_referred(self._cache, pfs)
-            else:
-                self._build_cache(cache)
-
+        self._build_cache(loaded_files)
         self._initialized = True
 
     def _register_directives(self) -> None:
@@ -615,7 +615,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             PrefixDefinition: self._define,
         }
 
-        p = Parser(self.non_int_type, use_cache=False)
+        p = Parser(self.non_int_type, cache_folder=self._diskcache)
         for prefix, (loaderfunc, definition_class) in self._directives.items():
             loaders[definition_class] = loaderfunc
             p.register_class(prefix, definition_class)
@@ -645,10 +645,18 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         return {(pf.filename, pf.is_resource): pf.mtime for pf in parsed_files}
 
-    def _build_cache(self, cache=None) -> None:
+    def _build_cache(self, loaded_files=None) -> None:
         """Build a cache of dimensionality and base units."""
-        if cache:
-            self._cache = cache
+
+        if (
+            loaded_files
+            and self._diskcache
+            and all((fn for fn, _ in loaded_files.keys()))
+        ):
+            cache = self._diskcache.load_referred(loaded_files)
+            if cache is None:
+                self._build_cache()
+                self._diskcache.save_referred(self._cache, loaded_files)
             return
 
         self._cache = RegistryCache()
@@ -1651,8 +1659,8 @@ class ContextRegistry(BaseRegistry):
 
         return context
 
-    def _build_cache(self, cache=None) -> None:
-        super()._build_cache(cache)
+    def _build_cache(self, loaded_files=None) -> None:
+        super()._build_cache(loaded_files)
         self._caches[()] = self._cache
 
     def _switch_context_cache_and_units(self) -> None:
@@ -2243,6 +2251,9 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         locale identifier string, used in `format_babel`. Default to None
     case_sensitive : bool, optional
         Control default case sensitivity of unit parsing. (Default: True)
+    cache_folder : str or pathlib.Path or None, optional
+        Specify the folder in which cache files are saved and loaded from.
+        If None, the cache is disabled. (default)
     """
 
     def __init__(
@@ -2259,6 +2270,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         fmt_locale=None,
         non_int_type=float,
         case_sensitive: bool = True,
+        cache_folder=None,
     ):
 
         super().__init__(
@@ -2274,6 +2286,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
             fmt_locale=fmt_locale,
             non_int_type=non_int_type,
             case_sensitive=case_sensitive,
+            cache_folder=cache_folder,
         )
 
     def pi_theorem(self, quantities):
