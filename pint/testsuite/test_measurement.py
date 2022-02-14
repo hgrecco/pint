@@ -4,6 +4,7 @@ from pint import DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 
 
+# TODO: do not subclass from QuantityTestCase
 @helpers.requires_not_uncertainties()
 class TestNotMeasurement(QuantityTestCase):
     def test_instantiate(self):
@@ -12,6 +13,7 @@ class TestNotMeasurement(QuantityTestCase):
             M_(4.0, 0.1, "s")
 
 
+# TODO: do not subclass from QuantityTestCase
 @helpers.requires_uncertainties()
 class TestMeasurement(QuantityTestCase):
     def test_simple(self):
