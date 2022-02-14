@@ -18,6 +18,7 @@ class FakeWrapper:
         self.q = q
 
 
+# TODO: do not subclass from QuantityTestCase
 class NonIntTypeQuantityTestCase(QuantityTestCase):
     def assert_quantity_almost_equal(
         self, first, second, rtol="1e-07", atol="0", msg=None
