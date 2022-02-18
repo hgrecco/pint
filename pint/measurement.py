@@ -83,6 +83,9 @@ class Measurement(Quantity):
         return "{}".format(self)
 
     def __format__(self, spec):
+
+        spec = spec or self.default_format
+
         # special cases
         if "Lx" in spec:  # the LaTeX siunitx code
             # the uncertainties module supports formatting

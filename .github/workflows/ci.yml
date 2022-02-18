@@ -7,13 +7,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-        numpy: [null, "numpy>=1.17,<2.0.0"]
-        uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
+        python-version: [3.8, 3.9, "3.10"]
+        numpy: [null, "numpy>=1.19,<2.0.0"]
+        uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - python-version: 3.7 # Minimal versions
-            numpy: numpy==1.17.5
+          - python-version: 3.8 # Minimal versions
+            numpy: numpy==1.19.5
             extras: matplotlib==2.2.5
           - python-version: 3.8
             numpy: "numpy"
@@ -52,7 +52,7 @@ jobs:
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
-      
+
       - name: Install uncertainties
         if: ${{ matrix.uncertainties != null }}
         run: pip install "${{matrix.uncertainties}}"
@@ -96,6 +96,7 @@ jobs:
       with:
         python-version: 3.x
     - name: Coveralls Finished
+      continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github

@@ -336,6 +336,16 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.prod(self.q, axis=axis, where=[True, False]), [3, 1] * self.ureg.m ** 2
         )
 
+    @helpers.requires_array_function_protocol()
+    def test_nanprod_numpy_func(self):
+        helpers.assert_quantity_equal(np.nanprod(self.q_nan), 6 * self.ureg.m ** 3)
+        helpers.assert_quantity_equal(
+            np.nanprod(self.q_nan, axis=0), [3, 2] * self.ureg.m ** 2
+        )
+        helpers.assert_quantity_equal(
+            np.nanprod(self.q_nan, axis=1), [2, 3] * self.ureg.m ** 2
+        )
+
     def test_sum(self):
         assert self.q.sum() == 10 * self.ureg.m
         helpers.assert_quantity_equal(self.q.sum(0), [4, 6] * self.ureg.m)
