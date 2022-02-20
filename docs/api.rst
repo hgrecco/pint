@@ -1,12 +1,8 @@
 ===================
-Developer reference
+API reference
 ===================
 
-All Modules
-===========
-
-.. automodule:: pint
-    :members:
+.. currentmodule:: pint
 
 .. automodule:: pint.babel_names
     :members:

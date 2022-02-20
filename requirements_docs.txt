@@ -15,3 +15,6 @@ dask[complete]
 setuptools>=41.2
 Serialize
 pygments>=2.4
+sphinx-book-theme==0.3.3
+sphinx_copybutton
+sphinx_design

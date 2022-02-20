@@ -16,7 +16,7 @@ By default, pint treats angle quantities as `dimensionless`, so allows conversio
     >>> frequency.to('Hz')
     <Quantity(6.28318531, 'hertz')>
 
-pint follows the convetions of SI. The  SI BIPM Brochure (Bureau International des Poids et Mesures) states:
+pint follows the conventions of SI. The SI BIPM Brochure (Bureau International des Poids et Mesures) states:
 
 .. note::
 

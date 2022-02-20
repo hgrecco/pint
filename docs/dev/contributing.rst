@@ -6,7 +6,7 @@ Contributing to Pint
 Pint uses (and thanks):
 
 - github_ to host the code
-- travis_ to test all commits and PRs.
+- `github actions`_ to test all commits and PRs.
 - coveralls_ to monitor coverage test coverage
 - readthedocs_ to host the documentation.
 - `bors-ng`_ as a merge bot and therefore every PR is tested before merging.
@@ -134,7 +134,7 @@ features that work best as an extension package versus direct inclusion in Pint 
 .. _`issue tracker`: https://github.com/hgrecco/pint/issues
 .. _`bors-ng`: https://github.com/bors-ng/bors-ng
 .. _`github docs`: https://help.github.com/articles/closing-issues-via-commit-messages/
-.. _travis: https://travis-ci.com/
+.. _`github actions`: https://docs.github.com/en/actions
 .. _coveralls: https://coveralls.io/
 .. _readthedocs: https://readthedocs.org/
 .. _pre-commit: https://pre-commit.com/
