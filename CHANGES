@@ -16,6 +16,7 @@ Pint Changelog
 - Use default numpy `np.printoptions` available since numpy 1.15.
 - Implement `numpy.nanprod` (Issue #1369)
 - Fix default_format ignored for measurement (Issue #1456)
+- Fix handling modulo & floordiv operator in pint_eval (Issue #1470)
 
 ### Breaking Changes
 
