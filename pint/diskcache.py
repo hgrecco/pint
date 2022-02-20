@@ -23,8 +23,23 @@ from typing import Union
 
 
 class DiskCache:
-    def __init__(self, cache_folder: Union[str, pathlib.Path]):
+    """
+
+    Parameters
+    ----------
+    cache_folder
+        indicates where the cache files will be saved.
+    extra_hash_info
+        extra information that will be used to create the hashed filename
+        Can be used, for example, to make the filename depend on the
+        Python version.
+    """
+
+    def __init__(
+        self, cache_folder: Union[str, pathlib.Path], extra_hash_info: tuple = ()
+    ):
         self.cache_folder = pathlib.Path(cache_folder)
+        self._extra_hash_info = extra_hash_info
 
     def cachepath_for(self, obj) -> pathlib.Path:
         """Generate a Path representing the location of a memoized file
@@ -34,6 +49,8 @@ class DiskCache:
             hd = hashlib.sha1(bytes(obj.resolve()))
         else:
             hd = hashlib.sha1(pickle.dumps(obj))
+
+        hd.update(pickle.dumps(self._extra_hash_info))
 
         return self.cache_folder.joinpath(hd.hexdigest()).with_suffix(".pickle")
 

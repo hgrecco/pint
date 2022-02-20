@@ -40,6 +40,7 @@ import functools
 import itertools
 import locale
 import pathlib
+import platform
 import re
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
@@ -271,8 +272,18 @@ class BaseRegistry(metaclass=RegistryMeta):
             # This will get a folder automatically from the os.
             raise ValueError("Not implemented yet")
         elif cache_folder is not None:
-            self._diskcache = diskcache.DiskCache(cache_folder)
+            from . import __version__ as pint_version
 
+            self._diskcache = diskcache.DiskCache(
+                cache_folder,
+                extra_hash_info=(
+                    platform.system(),
+                    platform.python_implementation(),
+                    platform.python_version(),
+                    pint_version,
+                    non_int_type.__qualname__,
+                ),
+            )
         self._filename = filename
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
