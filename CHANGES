@@ -17,6 +17,7 @@ Pint Changelog
 - Implement `numpy.nanprod` (Issue #1369)
 - Fix default_format ignored for measurement (Issue #1456)
 - Fix handling modulo & floordiv operator in pint_eval (Issue #1470)
+- Fix `to_compact` and `infer_base_unit` for non-float non_int_type.
 
 ### Breaking Changes
 
