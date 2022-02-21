@@ -447,6 +447,12 @@ class BaseRegistry(metaclass=RegistryMeta):
         self.Quantity.default_format = value
         self.Measurement.default_format = value
 
+    @property
+    def cache_folder(self) -> Optional[pathlib.Path]:
+        if self._diskcache:
+            return self._diskcache.cache_folder
+        return None
+
     def define(self, definition: Union[str, Definition]) -> None:
         """Add unit to the registry.
 

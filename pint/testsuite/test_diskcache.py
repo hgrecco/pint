@@ -26,12 +26,19 @@ def test_must_be_three_files(float_cache_filename):
     assert len(float_cache_filename) == 3
 
 
+def test_no_cache():
+    ureg = pint.UnitRegistry(cache_folder=None)
+    assert ureg._diskcache is None
+    assert ureg.cache_folder is None
+
+
 def test_decimal(tmp_path, float_cache_filename):
     ureg = pint.UnitRegistry(
         cache_folder=tmp_path / "cache_with_decimal", non_int_type=decimal.Decimal
     )
     assert ureg._diskcache
-    assert ureg._diskcache.cache_folder
+    assert ureg._diskcache.cache_folder == tmp_path / "cache_with_decimal"
+    assert ureg.cache_folder == tmp_path / "cache_with_decimal"
 
     files = tuple(ureg._diskcache.cache_folder.glob("*.pickle"))
     assert len(files) == 3
