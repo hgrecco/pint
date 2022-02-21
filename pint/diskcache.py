@@ -39,6 +39,7 @@ class DiskCache:
         self, cache_folder: Union[str, pathlib.Path], extra_hash_info: tuple = ()
     ):
         self.cache_folder = pathlib.Path(cache_folder)
+        self.cache_folder.mkdir(parents=True, exist_ok=True)
         self._extra_hash_info = extra_hash_info
 
     def cachepath_for(self, obj) -> pathlib.Path:
