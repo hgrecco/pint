@@ -67,6 +67,8 @@ from typing import (
     Union,
 )
 
+import appdirs
+
 from . import diskcache, registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
 from .compat import HAS_BABEL, babel_parse, tokenizer
@@ -268,10 +270,10 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._register_directives()
         self._init_dynamic_classes()
 
-        if cache_folder is True:
-            # This will get a folder automatically from the os.
-            raise ValueError("Not implemented yet")
-        elif cache_folder is not None:
+        if cache_folder == ":auto:":
+            cache_folder = appdirs.user_cache_dir(appname="pint")
+
+        if cache_folder is not None:
             from . import __version__ as pint_version
 
             self._diskcache = diskcache.DiskCache(
