@@ -4,6 +4,11 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
+- Better separation between parsing and loading of definitions.
+  Implement a parsed "binary" version of "textual" definition files.
+  Infrastructure to disk cache parsed definition files and RegistryCache
+  resulting in a 10X speed up in registry instantiation when enabled.
+  (Issue #1465)
 - Fix a bug for offset units of higher dimension, e.g. gauge pressure.
   (Issue #1066, thanks dalito)
 - Fix type hints of function wrapper (Issue #1431)
