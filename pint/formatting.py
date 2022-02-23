@@ -468,7 +468,7 @@ def extract_custom_flags(spec):
 
 
 def remove_custom_flags(spec):
-    for flag in sorted(_FORMATTERS.keys(), key=lambda k: -len(k)) + ["~"]:
+    for flag in sorted(_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
         if flag:
             spec = spec.replace(flag, "")
     return spec
