@@ -4,6 +4,7 @@ Pint Changelog
 0.19 (unreleased)
 -----------------
 
+- Deprecate the old format defaulting behavior and prepare for the new one (Issue #1407)
 - Fix a bug for offset units of higher dimension, e.g. gauge pressure.
   (Issue #1066, thanks dalito)
 - Fix type hints of function wrapper (Issue #1431)

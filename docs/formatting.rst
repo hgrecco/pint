@@ -20,16 +20,45 @@ specifications <formatspec>`. The basic format is:
 
 where each part is optional and the order of these is arbitrary.
 
-In case any part (except the modifier) is omitted, the corresponding value in
-:py:attr:`Quantity.default_format` or :py:attr:`Unit.default_format` is filled in. If
-that is not set (it evaluates to ``False``), :py:attr:`UnitRegistry.default_format` is
-used.  If both are not set, the global default of ``"D"`` and the magnitude's default
+In case the format is omitted, the corresponding value in the object's
+``.default_format`` attribute (:py:attr:`Quantity.default_format` or
+:py:attr:`Unit.default_format`) is filled in. For example:
+
+.. ipython::
+
+   In [1]: ureg = pint.UnitRegistry()
+      ...: ureg.default_format = "~P"
+
+   In [2]: u = ureg.Unit("m ** 2 / s ** 2")
+      ...: f"{u}"
+
+   In [3]: u.default_format = "~C"
+      ...: f"{u}"
+
+   In [4]: u.default_format, ureg.default_format
+
+   In [5]: q = ureg.Quantity(1.25, "m ** 2 / s ** 2")
+      ...: f"{q}"
+
+   In [6]: q.default_format = ".3fP"
+      ...: f"{q}"
+
+   In [7]: q.default_format, ureg.default_format
+
+.. note::
+
+   In the future, the magnitude and unit format spec will be evaluated
+   independently, such that with a global default of
+   ``ureg.default_format = ".3f"`` and ``f"{q:P}`` the format that
+   will be used is ``".3fP"``.
+
+If both are not set, the global default of ``"D"`` and the magnitude's default
 format are used instead.
 
 .. note::
 
    Modifiers may be used without specifying any format: ``"~"`` is a valid format
-   specification.
+   specification and is equal to ``"~D"``.
 
 
 Unit Format Specifications
