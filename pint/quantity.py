@@ -635,6 +635,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         -------
         bool
         """
+        from .unit import Unit
+
         if contexts or self._REGISTRY._active_ctx:
             try:
                 self.to(other, *contexts, **ctx_kwargs)
@@ -642,7 +644,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (self._REGISTRY.Quantity, self._REGISTRY.Unit)):
+        if isinstance(other, (Quantity, Unit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
