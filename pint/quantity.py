@@ -635,6 +635,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         -------
         bool
         """
+        from .unit import Unit
+
         if contexts or self._REGISTRY._active_ctx:
             try:
                 self.to(other, *contexts, **ctx_kwargs)
@@ -642,7 +644,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (self._REGISTRY.Quantity, self._REGISTRY.Unit)):
+        if isinstance(other, (Quantity, Unit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
@@ -851,9 +853,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         SI_bases = [item[1] for item in SI_prefixes_list]
 
         if unit is None:
-            unit = infer_base_unit(self)
+            unit = infer_base_unit(self, registry=self._REGISTRY)
         else:
-            unit = infer_base_unit(self.__class__(1, unit))
+            unit = infer_base_unit(self.__class__(1, unit), registry=self._REGISTRY)
 
         q_base = self.to(unit)
 
@@ -868,9 +870,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             unit_str, unit_power = units[0]
 
         if unit_power > 0:
-            power = math.floor(math.log10(abs(magnitude)) / unit_power / 3) * 3
+            power = math.floor(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
         else:
-            power = math.ceil(math.log10(abs(magnitude)) / unit_power / 3) * 3
+            power = math.ceil(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
 
         index = bisect.bisect_left(SI_powers, power)
 
