@@ -459,7 +459,7 @@ def extract_custom_flags(spec):
         return ""
 
     # sort by length, with longer items first
-    known_flags = sorted(_FORMATTERS.keys(), key=lambda k: -len(k))
+    known_flags = sorted(_FORMATTERS.keys(), key=len, reverse=True)
 
     flag_re = re.compile("(" + "|".join(known_flags + ["~"]) + ")")
     custom_flags = flag_re.findall(spec)
