@@ -270,6 +270,15 @@ class TestQuantity(QuantityTestCase):
         with pytest.warns(DeprecationWarning):
             assert f"{x:d}" == "4 meter ** 2"
 
+    def test_formatting_override_default_magnitude(self):
+        ureg = UnitRegistry()
+        ureg.default_format = ".2f"
+        x = ureg.Quantity(4, "m ** 2")
+
+        assert f"{x:dP}" == "4 meter²"
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:D}" == "4 meter ** 2"
+
     def test_exponent_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Quantity(1e20, "meter")

@@ -361,7 +361,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                     ),
                     DeprecationWarning,
                 )
-            if not uspec and default_uspec:
+            if not mspec and default_mspec:
                 warnings.warn(
                     (
                         "The given format spec does not contain a magnitude formatter."
