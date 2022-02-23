@@ -86,18 +86,9 @@ formats:
 
    In [1]: u = ureg.Unit("m ** 3 / (s ** 2 * kg)")
 
-   In [2]: import itertools
-      ...:
-      ...: @pint.register_unit_format("simple")
+   In [2]: @pint.register_unit_format("simple")
       ...: def format_unit_simple(unit, registry, **options):
-      ...:     preformatted = [
-      ...:         ("*" if p >= 0 else "/", n if abs(p) == 1 else f"{n} ** {abs(p)}")
-      ...:         for n, p in unit.items()
-      ...:     ]
-      ...:     return " ".join(itertools.chain.from_iterable(
-      ...:         [o, u] if i != 0 else [u]
-      ...:         for i, (o, u) in enumerate(preformatted)
-      ...:     ))
+      ...:     return " * ".join(f"{u} ** {p}" for u, p in unit.items())
 
    In [3]: f"{u:~simple}"
 
