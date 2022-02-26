@@ -85,9 +85,9 @@ def test_cache_hit(tmp_path):
 
     # Modify the definition file
     # Add some sleep to make sure that the time stamp difference is signficant.
-    time.sleep(1)
+    time.sleep(0.001)
     dfile.write_text("x = 1235")
-    time.sleep(1)
+    time.sleep(0.001)
 
     # Modifiy the time stamp of the old cache files so they are newer
     for p in ureg._diskcache.cache_folder.glob("*.pickle"):
@@ -114,7 +114,7 @@ def test_cache_miss(tmp_path):
 
     # Modify the definition file
     # Add some sleep to make sure that the time stamp difference is signficant.
-    time.sleep(1)
+    time.sleep(0.001)
     dfile.write_text("x = 1235")
 
     # Verify that the definiton file was loaded (the cache was invalidated).
