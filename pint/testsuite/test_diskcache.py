@@ -8,6 +8,8 @@ import pint
 from pint.definitions import UnitDefinition
 from pint.parser import DefinitionFile
 
+FS_SLEEP = 0.010
+
 
 @pytest.fixture
 def float_cache_filename(tmp_path):
@@ -85,9 +87,9 @@ def test_cache_hit(tmp_path):
 
     # Modify the definition file
     # Add some sleep to make sure that the time stamp difference is signficant.
-    time.sleep(0.001)
+    time.sleep(FS_SLEEP)
     dfile.write_text("x = 1235")
-    time.sleep(0.001)
+    time.sleep(FS_SLEEP)
 
     # Modifiy the time stamp of the old cache files so they are newer
     for p in ureg._diskcache.cache_folder.glob("*.pickle"):
@@ -114,7 +116,7 @@ def test_cache_miss(tmp_path):
 
     # Modify the definition file
     # Add some sleep to make sure that the time stamp difference is signficant.
-    time.sleep(0.001)
+    time.sleep(FS_SLEEP)
     dfile.write_text("x = 1235")
 
     # Verify that the definiton file was loaded (the cache was invalidated).
