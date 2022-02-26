@@ -1,8 +1,8 @@
 """
-    pint.diskmemo
-    ~~~~~~~~~~~~~
+    pint.diskcache
+    ~~~~~~~~~~~~~~
 
-    Functions for disk memoization.
+    Functions and classes for persistent caching.
 
     To avoid global objects, a DiskCache folder must be
     created where the cache folder can be specified.
