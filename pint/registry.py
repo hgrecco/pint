@@ -271,7 +271,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         self._init_dynamic_classes()
 
         if cache_folder == ":auto:":
-            cache_folder = appdirs.user_cache_dir(appname="pint")
+            cache_folder = appdirs.user_cache_dir(appname="pint", appauthor=False)
 
         if cache_folder is not None:
             from . import __version__ as pint_version
