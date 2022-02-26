@@ -67,10 +67,9 @@ from typing import (
     Union,
 )
 
-import appdirs
-
 from . import diskcache, registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
+from ._vendor import appdirs
 from .compat import HAS_BABEL, babel_parse, tokenizer
 from .context import Context, ContextChain, ContextDefinition
 from .converters import ScaleConverter
