@@ -255,12 +255,12 @@ class Group(SharedRegistryObject):
         -------
 
         """
-        gd = GroupDefinition.from_lines(lines, non_int_type)
-        return cls.from_definition(gd, define_func)
+        group_definition = GroupDefinition.from_lines(lines, non_int_type)
+        return cls.from_definition(group_definition, define_func)
 
     @classmethod
-    def from_definition(cls, gd: GroupDefinition, define_func) -> Group:
-        for lineno, definition in gd.units:
+    def from_definition(cls, group_definition: GroupDefinition, define_func) -> Group:
+        for lineno, definition in group_definition.units:
             try:
                 define_func(definition)
             except (RedefinitionError, DefinitionSyntaxError) as ex:
@@ -268,12 +268,12 @@ class Group(SharedRegistryObject):
                     ex.lineno = lineno
                 raise ex
 
-        grp = cls(gd.name)
+        grp = cls(group_definition.name)
 
-        grp.add_units(*(unit.name for lineno, unit in gd.units))
+        grp.add_units(*(unit.name for lineno, unit in group_definition.units))
 
-        if gd.using_group_names:
-            grp.add_groups(*gd.using_group_names)
+        if group_definition.using_group_names:
+            grp.add_groups(*group_definition.using_group_names)
 
         return grp
 
@@ -448,14 +448,14 @@ class System(SharedRegistryObject):
 
     @classmethod
     def from_lines(cls, lines, get_root_func, non_int_type=float):
-        sd = SystemDefinition.from_lines(lines, get_root_func)
-        return cls.from_definition(sd, get_root_func)
+        system_definition = SystemDefinition.from_lines(lines, get_root_func)
+        return cls.from_definition(system_definition, get_root_func)
 
     @classmethod
-    def from_definition(cls, sd: SystemDefinition, get_root_func):
+    def from_definition(cls, system_definition: SystemDefinition, get_root_func):
         base_unit_names = {}
         derived_unit_names = []
-        for lineno, new_unit, old_unit in sd.unit_replacements:
+        for lineno, new_unit, old_unit in system_definition.unit_replacements:
             if old_unit is None:
                 old_unit_dict = to_units_container(get_root_func(new_unit)[1])
 
@@ -495,8 +495,8 @@ class System(SharedRegistryObject):
 
                 base_unit_names[old_unit] = new_unit_dict
 
-        system = cls(sd.name)
-        system.add_groups(*sd.using_group_names)
+        system = cls(system_definition.name)
+        system.add_groups(*system_definition.using_group_names)
         system.base_units.update(**base_unit_names)
         system.derived_units |= set(derived_unit_names)
 
