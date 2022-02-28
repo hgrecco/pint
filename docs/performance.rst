@@ -99,8 +99,9 @@ process can be time consuming for a large defintion file such as the default one
 in command line applications that create and drop registries.
 
 Since version 0.19, part of this process can be cached resulting in a 5x to 20x
-performance improvement for registry instantiation. This feature is experimental
-and therefore disabled by default, but might be enable in future versions.
+performance improvement for registry instantiation using an included version
+of flexcache_. This feature is experimental and therefore disabled by default,
+but might be enable in future versions.
 
 To enable this feature just use the `cache_folder` argument to provide
 (as a str or pathlib.Path) the location where the cache will be saved.
@@ -110,12 +111,15 @@ To enable this feature just use the `cache_folder` argument to provide
     >>> import pint
     >>> ureg = pint.UnitRegistry(cache_folder="/my/cache/folder")  # doctest: +SKIP
 
-If you want to use the default
+If you want to use the default cache folder provided by the OS, use **:auto:**
 
 .. code-block:: python
 
     >>> import pint
     >>> ureg = pint.UnitRegistry(cache_folder=":auto:")  # doctest: +SKIP
+
+Pint use an included version of appdirs_ to obtain the correct folder,
+for example in macOS is `/Users/<username>/Library/Caches/pint`
 
 In any case, you can check the location of the cache folder.
 
@@ -132,9 +136,13 @@ In any case, you can check the location of the cache folder.
    If the definition file includes another (using the `@import` directive),
    this latter file will be cached independently. Finally, when a
    definition file is loaded upon registry instantiation the RegistryCache
-   is also cached. The cache is invalidated based on the file modification
-   time. Therefore, if you modify the text definition file the cache file
-   will be regenerated.
+   is also cached. The cache is invalidated based on the content hash.
+   Therefore, if you modify the text definition file a new cache file
+   will be generated. Caching by content hash allows sharing the same cache
+   across multiple environments that use the same python and pint versions.
+   At any moment, you can delete the cache folder without any risk.
 
 
 .. _`brentq method`: http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.brentq.html
+.. _appdirs: https://pypi.org/project/appdirs/
+.. _flexcache: https://github.com/hgrecco/flexcache/
