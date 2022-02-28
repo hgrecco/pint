@@ -12,13 +12,13 @@ from __future__ import annotations
 
 import pathlib
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from importlib import resources
 from io import StringIO
 from typing import Any, Callable, Dict, Generator, Iterable, Optional, Tuple
 
-from . import diskcache
+from ._vendor import flexcache as fc
 from .definitions import Definition
 from .errors import DefinitionSyntaxError
 from .util import SourceIterator, logger
@@ -39,6 +39,9 @@ class DefinitionFile:
     # Modification time of the file or None.
     mtime: Optional[float]
 
+    # SHA-1 hash
+    content_hash: Optional[str]
+
     # collection of line number and corresponding definition.
     parsed_lines: Tuple[Tuple[int, Any], ...]
 
@@ -53,6 +56,42 @@ class DefinitionFile:
 
     def has_errors(self):
         return bool(self.errors)
+
+
+class DefinitionFiles(tuple):
+    """Wrapper class that allows handling a tuple containing DefinitionFile."""
+
+    pass
+
+
+def build_disk_cache_class(non_int_type: type):
+    """Build disk cache class, taking into account the non_int_type."""
+
+    @dataclass(frozen=True)
+    class PintHeader(fc.InvalidateByExist, fc.NameByFields, fc.BasicPythonHeader):
+
+        from . import __version__
+
+        pint_version: str = __version__
+        non_int_type: str = field(default_factory=lambda: non_int_type.__qualname__)
+
+    class PathHeader(fc.NameByFileContent, PintHeader):
+        pass
+
+    class DefinitionFilesHeader(fc.NameByHashIter, PintHeader):
+        @classmethod
+        def from_definition_files(cls, dfs: DefinitionFiles, reader_id):
+            return cls(tuple(df.content_hash for df in dfs), reader_id)
+
+    class PintDiskCache(fc.DiskCache):
+
+        _header_classes = {
+            pathlib.Path: PathHeader,
+            str: PathHeader.from_string,
+            DefinitionFiles: DefinitionFilesHeader.from_definition_files,
+        }
+
+    return PintDiskCache
 
 
 @dataclass(frozen=True)
@@ -81,6 +120,8 @@ class Parser:
     #: Map context prefix to function
     _directives: Dict[str, ParserFuncT]
 
+    _diskcache: fc.DiskCache
+
     handled_classes = (ImportDefinition,)
 
     def __init__(self, non_int_type=float, raise_on_error=True, cache_folder=None):
@@ -90,7 +131,7 @@ class Parser:
         self.register_class("@import", ImportDefinition)
 
         if isinstance(cache_folder, (str, pathlib.Path)):
-            self._diskcache = diskcache.DiskCache(cache_folder)
+            self._diskcache = build_disk_cache_class(non_int_type)(cache_folder)
         else:
             self._diskcache = cache_folder
 
@@ -133,8 +174,9 @@ class Parser:
                 f"While registering {prefix}, {klass} does not have `from_string` or from_lines` method"
             )
 
-    def parse(self, file, is_resource: bool = False) -> Tuple[DefinitionFile, ...]:
-        """Parse a file or resource into a collection of DefinitionFile.
+    def parse(self, file, is_resource: bool = False) -> DefinitionFiles:
+        """Parse a file or resource into a collection of DefinitionFile that will
+        include all other files imported.
 
         Parameters
         ----------
@@ -151,9 +193,11 @@ class Parser:
         else:
             path = pathlib.Path(file)
             if self._diskcache is None:
-                parsed = self.parse_single(path)
+                parsed = self.parse_single(path, None)
             else:
-                parsed = self.parse_single_cache(path)
+                parsed, content_hash = self._diskcache.load(
+                    path, self.parse_single, True
+                )
 
         out = [parsed]
         for lineno, content in parsed.filter_by(ImportDefinition):
@@ -166,10 +210,13 @@ class Parser:
                     basedir = pathlib.Path.cwd()
                 path = basedir.joinpath(content.path)
             out.extend(self.parse(path, parsed.is_resource))
-        return tuple(out)
+        return DefinitionFiles(out)
 
     def parse_single_resource(self, resource_name: str) -> DefinitionFile:
         """Parse a resource in the package into a DefinitionFile.
+
+        Imported files will appear as ImportDefinition objects and
+        will not be followed.
 
         This method will try to load it first as a regular file
         (with a path and mtime) to allow caching.
@@ -180,29 +227,45 @@ class Parser:
         with resources.path(__package__, resource_name) as p:
             filepath = p.resolve()
 
-        # This is the only way I could come up to decide if the
-        # resource is a real file in the filesystem.
-        # It will not allow me to cache a resource inside a Zip file
-        # (which is logical fine)
         if filepath.exists():
             if self._diskcache is None:
-                return self.parse_single(filepath)
+                return self.parse_single(filepath, None)
             else:
-                return self.parse_single_cache(filepath)
+                definition_file, content_hash = self._diskcache.load(
+                    filepath, self.parse_single, True
+                )
+                return definition_file
 
-        logger.debug("Cannot use_cache resource without a real path")
+        logger.debug("Cannot use_cache resource (yet) without a real path")
         return self._parse_single_resource(resource_name)
 
     def _parse_single_resource(self, resource_name: str) -> DefinitionFile:
         rbytes = resources.read_binary(__package__, resource_name)
+        if self._diskcache:
+            hdr = self._diskcache.PathHeader(rbytes)
+            content_hash = self._diskcache.cache_stem_for(hdr)
+        else:
+            content_hash = None
+
         si = SourceIterator(
             StringIO(rbytes.decode("utf-8")), resource_name, is_resource=True
         )
         parsed_lines = tuple(self.yield_from_source_iterator(si))
-        return DefinitionFile(pathlib.Path(resource_name), True, None, parsed_lines)
+        return DefinitionFile(
+            filename=pathlib.Path(resource_name),
+            is_resource=True,
+            mtime=None,
+            content_hash=content_hash,
+            parsed_lines=parsed_lines,
+        )
 
-    def parse_single(self, filepath: pathlib.Path) -> DefinitionFile:
+    def parse_single(
+        self, filepath: pathlib.Path, content_hash: Optional[str]
+    ) -> DefinitionFile:
         """Parse a filepath without nesting into dependent files.
+
+        Imported files will appear as ImportDefinition objects and
+        will not be followed.
 
         Parameters
         ----------
@@ -216,31 +279,19 @@ class Parser:
         filename = filepath.resolve()
         mtime = filepath.stat().st_mtime
 
-        return DefinitionFile(filename, False, mtime, parsed_lines)
-
-    def parse_single_cache(self, filepath: pathlib.Path) -> DefinitionFile:
-        """Parse a filepath into a DefinitionFile object
-        without importing dependent files.
-
-        A cached version is used if available.
-
-        Parameters
-        ----------
-        filepath
-            definitions or file containing definition.
-        """
-        content = self._diskcache.load(filepath)
-        if content:
-            return content
-        content = self.parse_single(filepath)
-        self._diskcache.save(content, filepath)
-        return content
+        return DefinitionFile(
+            filename=filename,
+            is_resource=False,
+            mtime=mtime,
+            content_hash=content_hash,
+            parsed_lines=parsed_lines,
+        )
 
     def parse_lines(self, lines: Iterable[str]) -> DefinitionFile:
         """Parse an iterable of strings into a dependent file"""
         si = SourceIterator(lines, None, False)
         parsed_lines = tuple(self.yield_from_source_iterator(si))
-        df = DefinitionFile(None, False, None, parsed_lines=parsed_lines)
+        df = DefinitionFile(None, False, None, "", parsed_lines=parsed_lines)
         if any(df.filter_by(ImportDefinition)):
             raise ValueError(
                 "Cannot use the @import directive when parsing "

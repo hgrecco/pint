@@ -40,7 +40,6 @@ import functools
 import itertools
 import locale
 import pathlib
-import platform
 import re
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
@@ -67,7 +66,7 @@ from typing import (
     Union,
 )
 
-from . import diskcache, registry_helpers, systems
+from . import parser, registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
 from ._vendor import appdirs
 from .compat import HAS_BABEL, babel_parse, tokenizer
@@ -86,7 +85,6 @@ from .errors import (
     RedefinitionError,
     UndefinedUnitError,
 )
-from .parser import Parser
 from .pint_eval import build_eval_tree
 from .systems import Group, GroupDefinition, System, SystemDefinition
 from .util import (
@@ -273,18 +271,8 @@ class BaseRegistry(metaclass=RegistryMeta):
             cache_folder = appdirs.user_cache_dir(appname="pint", appauthor=False)
 
         if cache_folder is not None:
-            from . import __version__ as pint_version
+            self._diskcache = parser.build_disk_cache_class(non_int_type)(cache_folder)
 
-            self._diskcache = diskcache.DiskCache(
-                cache_folder,
-                extra_hash_info=(
-                    platform.system(),
-                    platform.python_implementation(),
-                    platform.python_version(),
-                    pint_version,
-                    non_int_type.__qualname__,
-                ),
-            )
         self._filename = filename
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
@@ -633,7 +621,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             PrefixDefinition: self._define,
         }
 
-        p = Parser(self.non_int_type, cache_folder=self._diskcache)
+        p = parser.Parser(self.non_int_type, cache_folder=self._diskcache)
         for prefix, (loaderfunc, definition_class) in self._directives.items():
             loaders[definition_class] = loaderfunc
             p.register_class(prefix, definition_class)
@@ -647,7 +635,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 msg = getattr(ex, "message", "") or str(ex)
                 raise ValueError("While opening {}\n{}".format(file, msg))
         else:
-            parsed_files = [p.parse_lines(file)]
+            parsed_files = parser.DefinitionFiles([p.parse_lines(file)])
 
         for definition_file in parsed_files[::-1]:
             for lineno, definition in definition_file.parsed_lines:
@@ -661,20 +649,16 @@ class BaseRegistry(metaclass=RegistryMeta):
                     )
                 loaderfunc(definition)
 
-        return {(pf.filename, pf.is_resource): pf.mtime for pf in parsed_files}
+        return parsed_files
 
     def _build_cache(self, loaded_files=None) -> None:
         """Build a cache of dimensionality and base units."""
 
-        if (
-            loaded_files
-            and self._diskcache
-            and all((fn for fn, _ in loaded_files.keys()))
-        ):
-            cache = self._diskcache.load_referred(loaded_files)
+        if loaded_files and self._diskcache and all(loaded_files):
+            cache, cache_basename = self._diskcache.load(loaded_files, "build_cache")
             if cache is None:
                 self._build_cache()
-                self._diskcache.save_referred(self._cache, loaded_files)
+                self._diskcache.save(self._cache, loaded_files, "build_cache")
             return
 
         self._cache = RegistryCache()
@@ -711,6 +695,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
+        return self._cache
 
     def get_name(
         self, name_or_alias: str, case_sensitive: Optional[bool] = None

@@ -25,7 +25,7 @@ def test_must_be_three_files(float_cache_filename):
     # - cached defaults_en.txt
     # - cached constants_en.txt
     # - cached RegistryCache
-    assert len(float_cache_filename) == 3
+    assert len(float_cache_filename) == 3, float_cache_filename
 
 
 def test_no_cache():
@@ -73,36 +73,7 @@ def test_auto(float_cache_filename):
         assert file in auto_files
 
 
-def test_cache_hit(tmp_path):
-    # Generate a definition file
-    dfile = tmp_path / "definitions.txt"
-    dfile.write_text("x = 1234")
-
-    # Load the definition file
-    # (this will create two cache files, one for the file another for RegistryCache)
-    ureg = pint.UnitRegistry(dfile, cache_folder=tmp_path)
-    assert ureg.x == 1234
-    files = tuple(ureg._diskcache.cache_folder.glob("*.pickle"))
-    assert len(files) == 2
-
-    # Modify the definition file
-    # Add some sleep to make sure that the time stamp difference is signficant.
-    time.sleep(FS_SLEEP)
-    dfile.write_text("x = 1235")
-    time.sleep(FS_SLEEP)
-
-    # Modifiy the time stamp of the old cache files so they are newer
-    for p in ureg._diskcache.cache_folder.glob("*.pickle"):
-        p.touch()
-
-    # Verify that the cached file (not the definition file), was loaded.
-    ureg = pint.UnitRegistry(dfile, cache_folder=tmp_path)
-    assert ureg.x == 1234
-    files = tuple(ureg._diskcache.cache_folder.glob("*.pickle"))
-    assert len(files) == 2
-
-
-def test_cache_miss(tmp_path):
+def test_change_file(tmp_path):
     # Generate a definition file
     dfile = tmp_path / "definitions.txt"
     dfile.write_text("x = 1234")
@@ -123,4 +94,4 @@ def test_cache_miss(tmp_path):
     ureg = pint.UnitRegistry(dfile, cache_folder=tmp_path)
     assert ureg.x == 1235
     files = tuple(ureg._diskcache.cache_folder.glob("*.pickle"))
-    assert len(files) == 2
+    assert len(files) == 4
