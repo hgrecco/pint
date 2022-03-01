@@ -7,12 +7,12 @@ from collections import defaultdict
 import pytest
 
 from pint import (
+    Context,
     DefinitionSyntaxError,
     DimensionalityError,
     UndefinedUnitError,
     UnitRegistry,
 )
-from pint.context import Context
 from pint.testsuite import helpers
 from pint.util import UnitsContainer
 

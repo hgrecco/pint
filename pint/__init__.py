@@ -13,7 +13,6 @@
 
 from importlib.metadata import version
 
-from .context import Context
 from .errors import (  # noqa: F401
     DefinitionSyntaxError,
     DimensionalityError,
@@ -24,6 +23,7 @@ from .errors import (  # noqa: F401
     UndefinedUnitError,
     UnitStrippedWarning,
 )
+from .facets.context import Context
 from .formatting import formatter, register_unit_format
 from .measurement import Measurement
 from .quantity import Quantity
@@ -115,7 +115,6 @@ def get_application_registry():
 # Hint to intersphinx that, when building objects.inv, these objects must be registered
 # under the top-level module and not in their original submodules
 __all__ = (
-    "Context",
     "Measurement",
     "Quantity",
     "Unit",
@@ -134,4 +133,5 @@ __all__ = (
     "register_unit_format",
     "pi_theorem",
     "__version__",
+    "Context",
 )

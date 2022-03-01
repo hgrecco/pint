@@ -24,7 +24,7 @@ from .formatting import extract_custom_flags, format_unit, split_format
 from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
 if TYPE_CHECKING:
-    from .context import Context
+    from . import Context
 
 
 class Unit(PrettyIPython, SharedRegistryObject):
