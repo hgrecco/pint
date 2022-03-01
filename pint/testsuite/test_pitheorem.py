@@ -5,6 +5,7 @@ from pint import pi_theorem
 from pint.testsuite import QuantityTestCase
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestPiTheorem(QuantityTestCase):
     def test_simple(self, caplog):
 

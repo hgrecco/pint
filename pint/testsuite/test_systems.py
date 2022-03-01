@@ -165,6 +165,7 @@ class TestGroup:
         assert c == frozenset([ureg.inch, ureg.yard])
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestSystem(QuantityTestCase):
     def _build_empty_reg_root(self):
         ureg = UnitRegistry(None)

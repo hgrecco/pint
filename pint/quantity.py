@@ -345,18 +345,47 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         if self._REGISTRY.fmt_locale is not None:
             return self.format_babel(spec)
 
-        spec = spec or self.default_format
+        mspec = remove_custom_flags(spec)
+        uspec = extract_custom_flags(spec)
+
+        default_mspec = remove_custom_flags(self.default_format)
+        default_uspec = extract_custom_flags(self.default_format)
+        if spec:
+            if not uspec and default_uspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a unit formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the unit formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+            if not mspec and default_mspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a magnitude formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the magnitude formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+        else:
+            mspec, uspec = default_mspec, default_uspec
 
         # If Compact is selected, do it at the beginning
         if "#" in spec:
-            spec = spec.replace("#", "")
+            # TODO: don't replace '#'
+            mspec = mspec.replace("#", "")
+            uspec = uspec.replace("#", "")
             obj = self.to_compact()
         else:
             obj = self
 
-        if "L" in spec:
+        if "L" in uspec:
             allf = plain_allf = r"{}\ {}"
-        elif "H" in spec:
+        elif "H" in uspec:
             allf = plain_allf = "{} {}"
             if iterable(obj.magnitude):
                 # Use HTML table instead of plain text template for array-likes
@@ -370,20 +399,19 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         else:
             allf = plain_allf = "{} {}"
 
-        if "Lx" in spec:
+        if "Lx" in uspec:
             # the LaTeX siunitx code
-            spec = spec.replace("Lx", "")
             # TODO: add support for extracting options
             opts = ""
             ustr = siunitx_format_unit(obj.units._units, obj._REGISTRY)
             allf = r"\SI[%s]{{{}}}{{{}}}" % opts
         else:
             # Hand off to unit formatting
-            uspec = extract_custom_flags(spec)
-            ustr = format(obj.units, uspec)
+            # TODO: only use `uspec` after completing the deprecation cycle
+            ustr = format(obj.units, mspec + uspec)
 
-        mspec = remove_custom_flags(spec)
-        if "H" in spec:
+        # mspec = remove_custom_flags(spec)
+        if "H" in uspec:
             # HTML formatting
             if hasattr(obj.magnitude, "_repr_html_"):
                 # If magnitude has an HTML repr, nest it within Pint's
@@ -417,7 +445,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                         + "</pre>"
                     )
         elif isinstance(self.magnitude, ndarray):
-            if "L" in spec:
+            if "L" in uspec:
                 # Use ndarray LaTeX special formatting
                 mstr = ndarray_to_latex(obj.magnitude, mspec)
             else:
@@ -432,12 +460,12 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         else:
             mstr = format(obj.magnitude, mspec).replace("\n", "")
 
-        if "L" in spec:
+        if "L" in uspec:
             mstr = self._exp_pattern.sub(r"\1\\times 10^{\2\3}", mstr)
-        elif "H" in spec or "P" in spec:
+        elif "H" in uspec or "P" in uspec:
             m = self._exp_pattern.match(mstr)
             _exp_formatter = (
-                _pretty_fmt_exponent if "P" in spec else lambda s: f"<sup>{s}</sup>"
+                _pretty_fmt_exponent if "P" in uspec else lambda s: f"<sup>{s}</sup>"
             )
             if m:
                 exp = int(m.group(2) + m.group(3))
@@ -635,6 +663,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         -------
         bool
         """
+        from .unit import Unit
+
         if contexts or self._REGISTRY._active_ctx:
             try:
                 self.to(other, *contexts, **ctx_kwargs)
@@ -642,7 +672,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (self._REGISTRY.Quantity, self._REGISTRY.Unit)):
+        if isinstance(other, (Quantity, Unit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
@@ -851,9 +881,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         SI_bases = [item[1] for item in SI_prefixes_list]
 
         if unit is None:
-            unit = infer_base_unit(self)
+            unit = infer_base_unit(self, registry=self._REGISTRY)
         else:
-            unit = infer_base_unit(self.__class__(1, unit))
+            unit = infer_base_unit(self.__class__(1, unit), registry=self._REGISTRY)
 
         q_base = self.to(unit)
 
@@ -868,9 +898,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             unit_str, unit_power = units[0]
 
         if unit_power > 0:
-            power = math.floor(math.log10(abs(magnitude)) / unit_power / 3) * 3
+            power = math.floor(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
         else:
-            power = math.ceil(math.log10(abs(magnitude)) / unit_power / 3) * 3
+            power = math.ceil(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
 
         index = bisect.bisect_left(SI_powers, power)
 

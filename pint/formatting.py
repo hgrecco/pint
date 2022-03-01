@@ -455,14 +455,20 @@ def siunitx_format_unit(units, registry):
 def extract_custom_flags(spec):
     import re
 
-    flag_re = re.compile("(" + "|".join(list(_FORMATTERS.keys()) + ["~"]) + ")")
+    if not spec:
+        return ""
+
+    # sort by length, with longer items first
+    known_flags = sorted(_FORMATTERS.keys(), key=len, reverse=True)
+
+    flag_re = re.compile("(" + "|".join(known_flags + ["~"]) + ")")
     custom_flags = flag_re.findall(spec)
 
     return "".join(custom_flags)
 
 
 def remove_custom_flags(spec):
-    for flag in list(_FORMATTERS.keys()) + ["~"]:
+    for flag in sorted(_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
         if flag:
             spec = spec.replace(flag, "")
     return spec

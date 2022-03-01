@@ -20,7 +20,9 @@ _OP_PRIORITY = {
     "unary": 2,
     "*": 1,
     "": 1,  # operator for implicit ops
+    "//": 1,
     "/": 1,
+    "%": 1,
     "+": 0,
     "-": 0,
 }
@@ -48,6 +50,8 @@ _BINARY_OPERATOR_MAP = {
     "/": operator.truediv,
     "+": operator.add,
     "-": operator.sub,
+    "%": operator.mod,
+    "//": operator.floordiv,
 }
 
 _UNARY_OPERATOR_MAP = {"+": lambda x: x, "-": lambda x: x * -1}

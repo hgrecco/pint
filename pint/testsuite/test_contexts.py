@@ -87,7 +87,7 @@ def add_sharedargdef_ctxs(ureg):
 
 class TestContexts:
     def test_known_context(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
         add_ctxs(ureg)
         with ureg.context("lc"):
             assert ureg._active_ctx
@@ -104,7 +104,7 @@ class TestContexts:
         assert not ureg._active_ctx.graph
 
     def test_known_context_enable(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
         add_ctxs(ureg)
         ureg.enable_contexts("lc")
         assert ureg._active_ctx
@@ -123,7 +123,7 @@ class TestContexts:
         assert not ureg._active_ctx.graph
 
     def test_graph(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
         add_ctxs(ureg)
         l = UnitsContainer({"[length]": 1.0})  # noqa: E741
         t = UnitsContainer({"[time]": -1.0})
@@ -162,7 +162,7 @@ class TestContexts:
             assert ureg._active_ctx.graph == g
 
     def test_graph_enable(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
         add_ctxs(ureg)
         l = UnitsContainer({"[length]": 1.0})  # noqa: E741
         t = UnitsContainer({"[time]": -1.0})
@@ -208,7 +208,7 @@ class TestContexts:
         ureg.disable_contexts(2)
 
     def test_known_nested_context(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
         add_ctxs(ureg)
 
         with ureg.context("lc"):
@@ -239,7 +239,7 @@ class TestContexts:
         assert not ureg._active_ctx.graph
 
     def test_unknown_nested_context(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
         add_ctxs(ureg)
 
         with ureg.context("lc"):
@@ -256,7 +256,7 @@ class TestContexts:
         assert not ureg._active_ctx.graph
 
     def test_one_context(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
 
         add_ctxs(ureg)
 
@@ -276,7 +276,7 @@ class TestContexts:
         assert ureg.get_compatible_units(q) == meter_units
 
     def test_multiple_context(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
 
         add_ctxs(ureg)
 
@@ -299,7 +299,7 @@ class TestContexts:
         assert ureg.get_compatible_units(q) == meter_units
 
     def test_nested_context(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
 
         add_ctxs(ureg)
 
@@ -324,7 +324,7 @@ class TestContexts:
 
     def test_context_with_arg(self, func_registry):
 
-        ureg = UnitRegistry()
+        ureg = func_registry
 
         add_arg_ctxs(ureg)
 
@@ -353,7 +353,7 @@ class TestContexts:
 
     def test_enable_context_with_arg(self, func_registry):
 
-        ureg = UnitRegistry()
+        ureg = func_registry
 
         add_arg_ctxs(ureg)
 
@@ -387,7 +387,7 @@ class TestContexts:
 
     def test_context_with_arg_def(self, func_registry):
 
-        ureg = UnitRegistry()
+        ureg = func_registry
 
         add_argdef_ctxs(ureg)
 
@@ -428,7 +428,7 @@ class TestContexts:
 
     def test_context_with_sharedarg_def(self, func_registry):
 
-        ureg = UnitRegistry()
+        ureg = func_registry
 
         add_sharedargdef_ctxs(ureg)
 
@@ -468,7 +468,7 @@ class TestContexts:
                 assert q.to("Hz") == s / 6
 
     def test_anonymous_context(self, func_registry):
-        ureg = UnitRegistry()
+        ureg = func_registry
         c = Context()
         c.add_transformation("[length]", "[time]", lambda ureg, x: x / ureg("5 cm/s"))
         with pytest.raises(ValueError):
@@ -498,8 +498,8 @@ class TestContexts:
         with ureg.context(c, c2):
             helpers.assert_quantity_equal(x.to("s"), ureg("1 s"))
 
-    def _test_ctx(self, ctx):
-        ureg = UnitRegistry()
+    def _test_ctx(self, ctx, ureg):
+
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to("Hz")
 
@@ -532,7 +532,37 @@ class TestContexts:
         with pytest.raises(DefinitionSyntaxError):
             Context.from_lines(["@context c", badrow])
 
-    def test_parse_simple(self):
+    @pytest.mark.parametrize(
+        "source, name, aliases, defaults",
+        [
+            (
+                [
+                    "@context longcontextname",
+                    "[length] -> 1 / [time]: c / value",
+                    "1 / [time] -> [length]: c / value",
+                ],
+                "longcontextname",
+                (),
+                {},
+            ),
+            (
+                ["@context longcontextname = lc", "[length] <-> 1 / [time]: c / value"],
+                "longcontextname",
+                ("lc",),
+                {},
+            ),
+            (
+                [
+                    "@context longcontextname = lc = lcn",
+                    "[length] <-> 1 / [time]: c / value",
+                ],
+                "longcontextname",
+                ("lc", "lcn"),
+                {},
+            ),
+        ],
+    )
+    def test_parse_simple(self, func_registry, source, name, aliases, defaults):
 
         a = Context.__keytransform__(
             UnitsContainer({"[time]": -1}), UnitsContainer({"[length]": 1})
@@ -541,41 +571,14 @@ class TestContexts:
             UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": -1})
         )
 
-        s = [
-            "@context longcontextname",
-            "[length] -> 1 / [time]: c / value",
-            "1 / [time] -> [length]: c / value",
-        ]
-
-        c = Context.from_lines(s)
-        assert c.name == "longcontextname"
-        assert c.aliases == ()
-        assert c.defaults == {}
+        c = Context.from_lines(source)
+        assert c.name == name
+        assert c.aliases == aliases
+        assert c.defaults == defaults
         assert c.funcs.keys() == {a, b}
-        self._test_ctx(c)
+        self._test_ctx(c, func_registry)
 
-        s = ["@context longcontextname = lc", "[length] <-> 1 / [time]: c / value"]
-
-        c = Context.from_lines(s)
-        assert c.name == "longcontextname"
-        assert c.aliases == ("lc",)
-        assert c.defaults == {}
-        assert c.funcs.keys() == {a, b}
-        self._test_ctx(c)
-
-        s = [
-            "@context longcontextname = lc = lcn",
-            "[length] <-> 1 / [time]: c / value",
-        ]
-
-        c = Context.from_lines(s)
-        assert c.name == "longcontextname"
-        assert c.aliases == ("lc", "lcn")
-        assert c.defaults == {}
-        assert c.funcs.keys() == {a, b}
-        self._test_ctx(c)
-
-    def test_parse_auto_inverse(self):
+    def test_parse_auto_inverse(self, func_registry):
 
         a = Context.__keytransform__(
             UnitsContainer({"[time]": -1.0}), UnitsContainer({"[length]": 1.0})
@@ -589,9 +592,9 @@ class TestContexts:
         c = Context.from_lines(s)
         assert c.defaults == {}
         assert c.funcs.keys() == {a, b}
-        self._test_ctx(c)
+        self._test_ctx(c, func_registry)
 
-    def test_parse_define(self):
+    def test_parse_define(self, func_registry):
         a = Context.__keytransform__(
             UnitsContainer({"[time]": -1}), UnitsContainer({"[length]": 1.0})
         )
@@ -603,9 +606,9 @@ class TestContexts:
         c = Context.from_lines(s)
         assert c.defaults == {}
         assert c.funcs.keys() == {a, b}
-        self._test_ctx(c)
+        self._test_ctx(c, func_registry)
 
-    def test_parse_parameterized(self):
+    def test_parse_parameterized(self, func_registry):
         a = Context.__keytransform__(
             UnitsContainer({"[time]": -1.0}), UnitsContainer({"[length]": 1.0})
         )
@@ -618,7 +621,7 @@ class TestContexts:
         c = Context.from_lines(s)
         assert c.defaults == {"n": 1}
         assert c.funcs.keys() == {a, b}
-        self._test_ctx(c)
+        self._test_ctx(c, func_registry)
 
         s = [
             "@context(n=1, bla=2) longcontextname",
@@ -634,9 +637,9 @@ class TestContexts:
         with pytest.raises(DefinitionSyntaxError):
             Context.from_lines(s)
 
-    def test_warnings(self, caplog):
+    def test_warnings(self, caplog, func_registry):
 
-        ureg = UnitRegistry()
+        ureg = func_registry
 
         with caplog.at_level(logging.DEBUG, "pint"):
             add_ctxs(ureg)
@@ -655,16 +658,8 @@ class TestContexts:
 
 
 class TestDefinedContexts:
-    @classmethod
-    def setup_class(cls):
-        cls.ureg = UnitRegistry()
-
-    @classmethod
-    def teardown_class(cls):
-        cls.ureg = None
-
-    def test_defined(self):
-        ureg = self.ureg
+    def test_defined(self, class_registry):
+        ureg = class_registry
         with ureg.context("sp"):
             pass
 
@@ -680,8 +675,8 @@ class TestDefinedContexts:
             assert a in ureg._active_ctx
             assert b in ureg._active_ctx
 
-    def test_spectroscopy(self):
-        ureg = self.ureg
+    def test_spectroscopy(self, class_registry):
+        ureg = class_registry
         eq = (532.0 * ureg.nm, 563.5 * ureg.terahertz, 2.33053 * ureg.eV)
         with ureg.context("sp"):
             from pint.util import find_shortest_path
@@ -703,8 +698,8 @@ class TestDefinedContexts:
         for a, b in itertools.product(eq, eq):
             helpers.assert_quantity_almost_equal(a.to(b.units, "sp"), b, rtol=0.01)
 
-    def test_textile(self):
-        ureg = self.ureg
+    def test_textile(self, class_registry):
+        ureg = class_registry
         qty_direct = 1.331 * ureg.tex
         with pytest.raises(DimensionalityError):
             qty_indirect = qty_direct.to("Nm")
@@ -736,8 +731,8 @@ class TestDefinedContexts:
                 == 0
             )
 
-    def test_decorator(self):
-        ureg = self.ureg
+    def test_decorator(self, class_registry):
+        ureg = class_registry
 
         a = 532.0 * ureg.nm
         with ureg.context("sp"):
@@ -755,8 +750,8 @@ class TestDefinedContexts:
 
         assert b == g(a)
 
-    def test_decorator_composition(self):
-        ureg = self.ureg
+    def test_decorator_composition(self, class_registry):
+        ureg = class_registry
 
         a = 532.0 * ureg.nm
         with ureg.context("sp"):
