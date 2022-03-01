@@ -102,8 +102,9 @@ class TestQuantity(QuantityTestCase):
 
         # Compare with items to the separate application registry
         assert k >= m  # These should both be from application registry
-        with pytest.raises(ValueError):
-            z > m  # One from local registry, one from application registry
+        if z._REGISTRY != m._REGISTRY:
+            with pytest.raises(ValueError):
+                z > m  # One from local registry, one from application registry
 
         assert z != j
 
@@ -1133,12 +1134,13 @@ class TestDimensions(QuantityTestCase):
         assert not ("[angle]" in dim)
 
 
-class TestQuantityWithDefaultRegistry(TestDimensions):
+class TestQuantityWithDefaultRegistry(TestQuantity):
     @classmethod
     def setup_class(cls):
         from pint import _DEFAULT_REGISTRY
 
         cls.ureg = _DEFAULT_REGISTRY
+        cls.U_ = cls.ureg.Unit
         cls.Q_ = cls.ureg.Quantity
 
 
