@@ -664,6 +664,17 @@ class TestQuantity(QuantityTestCase):
         q = self.Q_(0.5, "g*t/kg")
         helpers.assert_quantity_equal(q.to_reduced_units(), self.Q_(0.5, "kg"))
 
+    @pytest.mark.parametrize(
+        ("unit_str", "expected_unit"),
+        [
+            ("hour/hr", {}),
+            ("cm centimeter cm centimeter", {"centimeter": 4}),
+        ],
+    )
+    def test_unit_canonical_name_parsing(self, unit_str, expected_unit):
+        q = self.Q_(1, unit_str)
+        assert q._units == UnitsContainer(expected_unit)
+
 
 # TODO: do not subclass from QuantityTestCase
 class TestQuantityToCompact(QuantityTestCase):
