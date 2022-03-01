@@ -94,7 +94,7 @@ Speed up registry instantiation
 
 When the registry is instantiated, the definition file is parsed, loaded and
 some pre-calculations are made to speed-up certain common operations. This
-process can be time consuming for a large defintion file such as the default one
+process can be time consuming for a large definition file such as the default one
 (and very comprehensive) provided with pint. This can have a significant impact
 in command line applications that create and drop registries.
 
