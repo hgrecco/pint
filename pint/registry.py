@@ -86,7 +86,7 @@ from .errors import (
     UndefinedUnitError,
 )
 from .pint_eval import build_eval_tree
-from .systems import Group, GroupDefinition, System, SystemDefinition
+from .systems import System, SystemDefinition
 from .util import (
     ParserHelper,
     SourceIterator,
@@ -1973,8 +1973,11 @@ class ContextRegistry(BaseRegistry):
         return ret
 
 
-class SystemRegistry(BaseRegistry):
-    """Handle of Systems and Groups.
+from .facets.group import GroupRegistry
+
+
+class SystemRegistry(GroupRegistry):
+    """Handle of Systems.
 
     Conversion between units with different dimensions according
     to previously established relations (contexts).
@@ -1982,10 +1985,10 @@ class SystemRegistry(BaseRegistry):
 
     Capabilities:
 
-    - Register systems and groups.
+    - Register systems.
     - List systems
     - Get or get the default system.
-    - Parse @system and @group directive.
+    - Parse @group directive.
     """
 
     def __init__(self, system=None, **kwargs):
@@ -1998,15 +2001,10 @@ class SystemRegistry(BaseRegistry):
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self._base_units_cache = dict()
 
-        #: Map group name to group.
-        #: :type: dict[ str | Group]
-        self._groups: Dict[str, Group] = {}
-        self._groups["root"] = self.Group("root")
         self._default_system = system
 
     def _init_dynamic_classes(self) -> None:
         super()._init_dynamic_classes()
-        self.Group = systems.build_group_class(self)
         self.System = systems.build_system_class(self)
 
     def _after_init(self) -> None:
@@ -2016,20 +2014,6 @@ class SystemRegistry(BaseRegistry):
         - Set default system
         """
         super()._after_init()
-
-        #: Copy units not defined in any group to the default group
-        if "group" in self._defaults:
-            grp = self.get_group(self._defaults["group"], True)
-            group_units = frozenset(
-                [
-                    member
-                    for group in self._groups.values()
-                    if group.name != "root"
-                    for member in group.members
-                ]
-            )
-            all_units = self.get_group("root", False).members
-            grp.add_units(*(all_units - group_units))
 
         #: System name to be used by default.
         self._default_system = self._default_system or self._defaults.get(
@@ -2043,35 +2027,6 @@ class SystemRegistry(BaseRegistry):
             lambda gd: self.System.from_definition(gd, self.get_root_units),
             SystemDefinition,
         )
-        self._register_directive(
-            "@group",
-            lambda gd: self.Group.from_definition(gd, self.define),
-            GroupDefinition,
-        )
-
-    def get_group(self, name: str, create_if_needed: bool = True) -> Group:
-        """Return a Group.
-
-        Parameters
-        ----------
-        name : str
-            Name of the group to be
-        create_if_needed : bool
-            If True, create a group if not found. If False, raise an Exception.
-            (Default value = True)
-
-        Returns
-        -------
-        type
-            Group
-        """
-        if name in self._groups:
-            return self._groups[name]
-
-        if not create_if_needed:
-            raise ValueError("Unknown group %s" % name)
-
-        return self.Group(name)
 
     @property
     def sys(self):
@@ -2115,19 +2070,6 @@ class SystemRegistry(BaseRegistry):
             raise ValueError("Unknown system %s" % name)
 
         return self.System(name)
-
-    def _define(self, definition):
-
-        # In addition to the what is done by the BaseRegistry,
-        # this adds all units to the `root` group.
-
-        definition, d, di = super()._define(definition)
-
-        if isinstance(definition, UnitDefinition):
-            # We add all units to the root group
-            self.get_group("root").add_units(definition.name)
-
-        return definition, d, di
 
     def get_base_units(
         self,
@@ -2218,20 +2160,20 @@ class SystemRegistry(BaseRegistry):
         if group_or_system is None:
             group_or_system = self._default_system
 
-        ret = super()._get_compatible_units(input_units, group_or_system)
+        if group_or_system and group_or_system in self._systems:
+            members = self._systems[group_or_system].members
+            # group_or_system has been handled by System
+            return frozenset(members & super()._get_compatible_units(input_units))
 
-        if group_or_system:
-            if group_or_system in self._systems:
-                members = self._systems[group_or_system].members
-            elif group_or_system in self._groups:
-                members = self._groups[group_or_system].members
-            else:
+        try:
+            return super()._get_compatible_units(input_units, group_or_system)
+        except ValueError as ex:
+            # It might be also a system
+            if "Unknown Group" in str(ex):
                 raise ValueError(
                     "Unknown Group o System with name '%s'" % group_or_system
-                )
-            return frozenset(ret & members)
-
-        return ret
+                ) from ex
+            raise ex
 
 
 class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
