@@ -66,7 +66,7 @@ from typing import (
     Union,
 )
 
-from . import parser, registry_helpers, systems
+from . import parser, registry_helpers
 from ._typing import F, QuantityOrUnitLike
 from ._vendor import appdirs
 from .compat import HAS_BABEL, babel_parse, tokenizer
@@ -85,8 +85,8 @@ from .errors import (
     RedefinitionError,
     UndefinedUnitError,
 )
+from .facets.system import SystemRegistry
 from .pint_eval import build_eval_tree
-from .systems import System, SystemDefinition
 from .util import (
     ParserHelper,
     SourceIterator,
@@ -2144,7 +2144,7 @@ class SystemRegistry(GroupRegistry):
             if unit in bu:
                 new_unit = bu[unit]
                 new_unit = to_units_container(new_unit, self)
-                destination_units *= new_unit**value
+                destination_units *= new_unit ** value
             else:
                 destination_units *= self.UnitsContainer({unit: value})
 
