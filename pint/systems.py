@@ -7,8 +7,11 @@
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+from __future__ import annotations
 
 import re
+from dataclasses import dataclass
+from typing import Tuple
 
 from .babel_names import _babel_systems
 from .compat import babel_parse
@@ -23,6 +26,83 @@ from .util import (
 )
 
 
+@dataclass(frozen=True)
+class GroupDefinition:
+    """Definition of a group.
+
+        @group <name> [using <group 1>, ..., <group N>]
+            <definition 1>
+            ...
+            <definition N>
+        @end
+
+    Example::
+
+        @group AvoirdupoisUS using Avoirdupois
+            US_hundredweight = hundredweight = US_cwt
+            US_ton = ton
+            US_force_ton = force_ton = _ = US_ton_force
+        @end
+
+    """
+
+    #: Regex to match the header parts of a definition.
+    _header_re = re.compile(r"@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
+
+    name: str
+    units: Tuple[Tuple[int, UnitDefinition], ...]
+    using_group_names: Tuple[str, ...]
+
+    @property
+    def unit_names(self) -> Tuple[str, ...]:
+        return tuple(u.name for lineno, u in self.units)
+
+    @classmethod
+    def from_lines(cls, lines, non_int_type=float):
+        """Return a Group object parsing an iterable of lines.
+
+        Parameters
+        ----------
+        lines : list[str]
+            iterable
+        define_func : callable
+            Function to define a unit in the registry; it must accept a single string as
+            a parameter.
+
+        Returns
+        -------
+
+        """
+
+        lines = SourceIterator(lines)
+        lineno, header = next(lines)
+
+        r = cls._header_re.search(header)
+
+        if r is None:
+            raise ValueError("Invalid Group header syntax: '%s'" % header)
+
+        name = r.groupdict()["name"].strip()
+        groups = r.groupdict()["used_groups"]
+        if groups:
+            parent_group_names = tuple(a.strip() for a in groups.split(","))
+        else:
+            parent_group_names = ()
+
+        units = []
+        for lineno, line in lines:
+            definition = Definition.from_string(line, non_int_type=non_int_type)
+            if not isinstance(definition, UnitDefinition):
+                raise DefinitionSyntaxError(
+                    "Only UnitDefinition are valid inside _used_groups, not "
+                    + str(definition),
+                    lineno=lineno,
+                )
+            units.append((lineno, definition))
+
+        return cls(name, tuple(units), parent_group_names)
+
+
 class Group(SharedRegistryObject):
     """A group is a set of units.
 
@@ -33,17 +113,8 @@ class Group(SharedRegistryObject):
 
     The group belongs to one Registry.
 
-    It can be specified in the definition file as::
-
-        @group <name> [using <group 1>, ..., <group N>]
-            <definition 1>
-            ...
-            <definition N>
-        @end
+    See GroupDefinition for the definition file syntax.
     """
-
-    #: Regex to match the header parts of a definition.
-    _header_re = re.compile(r"@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
 
     def __init__(self, name):
         """
@@ -169,7 +240,7 @@ class Group(SharedRegistryObject):
         self.invalidate_members()
 
     @classmethod
-    def from_lines(cls, lines, define_func, non_int_type=float):
+    def from_lines(cls, lines, define_func, non_int_type=float) -> Group:
         """Return a Group object parsing an iterable of lines.
 
         Parameters
@@ -184,50 +255,25 @@ class Group(SharedRegistryObject):
         -------
 
         """
-        lines = SourceIterator(lines)
-        lineno, header = next(lines)
+        group_definition = GroupDefinition.from_lines(lines, non_int_type)
+        return cls.from_definition(group_definition, define_func)
 
-        r = cls._header_re.search(header)
+    @classmethod
+    def from_definition(cls, group_definition: GroupDefinition, define_func) -> Group:
+        for lineno, definition in group_definition.units:
+            try:
+                define_func(definition)
+            except (RedefinitionError, DefinitionSyntaxError) as ex:
+                if ex.lineno is None:
+                    ex.lineno = lineno
+                raise ex
 
-        if r is None:
-            raise ValueError("Invalid Group header syntax: '%s'" % header)
+        grp = cls(group_definition.name)
 
-        name = r.groupdict()["name"].strip()
-        groups = r.groupdict()["used_groups"]
-        if groups:
-            group_names = tuple(a.strip() for a in groups.split(","))
-        else:
-            group_names = ()
+        grp.add_units(*(unit.name for lineno, unit in group_definition.units))
 
-        unit_names = []
-        for lineno, line in lines:
-            if "=" in line:
-                # Is a definition
-                definition = Definition.from_string(line, non_int_type=non_int_type)
-                if not isinstance(definition, UnitDefinition):
-                    raise DefinitionSyntaxError(
-                        "Only UnitDefinition are valid inside _used_groups, not "
-                        + str(definition),
-                        lineno=lineno,
-                    )
-
-                try:
-                    define_func(definition)
-                except (RedefinitionError, DefinitionSyntaxError) as ex:
-                    if ex.lineno is None:
-                        ex.lineno = lineno
-                    raise ex
-
-                unit_names.append(definition.name)
-            else:
-                unit_names.append(line.strip())
-
-        grp = cls(name)
-
-        grp.add_units(*unit_names)
-
-        if group_names:
-            grp.add_groups(*group_names)
+        if group_definition.using_group_names:
+            grp.add_groups(*group_definition.using_group_names)
 
         return grp
 
@@ -236,15 +282,9 @@ class Group(SharedRegistryObject):
         return self._REGISTRY
 
 
-class System(SharedRegistryObject):
-    """A system is a Group plus a set of base units.
-
-    Members are computed dynamically, that is if a unit is added to a group X
-    all groups that include X are affected.
-
-    The System belongs to one Registry.
-
-    It can be specified in the definition file as::
+@dataclass(frozen=True)
+class SystemDefinition:
+    """Definition of a System:
 
         @system <name> [using <group 1>, ..., <group N>]
             <rule 1>
@@ -265,6 +305,64 @@ class System(SharedRegistryObject):
 
     #: Regex to match the header parts of a context.
     _header_re = re.compile(r"@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
+
+    name: str
+    unit_replacements: Tuple[Tuple[int, str, str], ...]
+    using_group_names: Tuple[str, ...]
+
+    @classmethod
+    def from_lines(cls, lines, non_int_type=float):
+        lines = SourceIterator(lines)
+
+        lineno, header = next(lines)
+
+        r = cls._header_re.search(header)
+
+        if r is None:
+            raise ValueError("Invalid System header syntax '%s'" % header)
+
+        name = r.groupdict()["name"].strip()
+        groups = r.groupdict()["used_groups"]
+
+        # If the systems has no group, it automatically uses the root group.
+        if groups:
+            group_names = tuple(a.strip() for a in groups.split(","))
+        else:
+            group_names = ("root",)
+
+        unit_replacements = []
+        for lineno, line in lines:
+            line = line.strip()
+
+            # We would identify a
+            #  - old_unit: a root unit part which is going to be removed from the system.
+            #  - new_unit: a non root unit which is going to replace the old_unit.
+
+            if ":" in line:
+                # The syntax is new_unit:old_unit
+
+                new_unit, old_unit = line.split(":")
+                new_unit, old_unit = new_unit.strip(), old_unit.strip()
+
+                unit_replacements.append((lineno, new_unit, old_unit))
+            else:
+                # The syntax is new_unit
+                # old_unit is inferred as the root unit with the same dimensionality.
+                unit_replacements.append((lineno, line, None))
+
+        return cls(name, tuple(unit_replacements), group_names)
+
+
+class System(SharedRegistryObject):
+    """A system is a Group plus a set of base units.
+
+    Members are computed dynamically, that is if a unit is added to a group X
+    all groups that include X are affected.
+
+    The System belongs to one Registry.
+
+    See SystemDefinition for the definition file syntax.
+    """
 
     def __init__(self, name):
         """
@@ -350,44 +448,31 @@ class System(SharedRegistryObject):
 
     @classmethod
     def from_lines(cls, lines, get_root_func, non_int_type=float):
-        lines = SourceIterator(lines)
+        system_definition = SystemDefinition.from_lines(lines, get_root_func)
+        return cls.from_definition(system_definition, get_root_func)
 
-        lineno, header = next(lines)
-
-        r = cls._header_re.search(header)
-
-        if r is None:
-            raise ValueError("Invalid System header syntax '%s'" % header)
-
-        name = r.groupdict()["name"].strip()
-        groups = r.groupdict()["used_groups"]
-
-        # If the systems has no group, it automatically uses the root group.
-        if groups:
-            group_names = tuple(a.strip() for a in groups.split(","))
-        else:
-            group_names = ("root",)
-
+    @classmethod
+    def from_definition(cls, system_definition: SystemDefinition, get_root_func):
         base_unit_names = {}
         derived_unit_names = []
-        for lineno, line in lines:
-            line = line.strip()
+        for lineno, new_unit, old_unit in system_definition.unit_replacements:
+            if old_unit is None:
+                old_unit_dict = to_units_container(get_root_func(new_unit)[1])
 
-            # We would identify a
-            #  - old_unit: a root unit part which is going to be removed from the system.
-            #  - new_unit: a non root unit which is going to replace the old_unit.
+                if len(old_unit_dict) != 1:
+                    raise ValueError(
+                        "The new base must be a root dimension if not discarded unit is specified."
+                    )
 
-            if ":" in line:
-                # The syntax is new_unit:old_unit
+                old_unit, value = dict(old_unit_dict).popitem()
 
-                new_unit, old_unit = line.split(":")
-                new_unit, old_unit = new_unit.strip(), old_unit.strip()
-
+                base_unit_names[old_unit] = {new_unit: 1 / value}
+            else:
                 # The old unit MUST be a root unit, if not raise an error.
                 if old_unit != str(get_root_func(old_unit)[1]):
                     raise ValueError(
-                        "In `%s`, the unit at the right of the `:` must be a root unit."
-                        % line
+                        "In `%s`, the unit at the right of the `:` (%s) must be a root unit."
+                        % (lineno, old_unit)
                     )
 
                 # Here we find new_unit expanded in terms of root_units
@@ -410,26 +495,8 @@ class System(SharedRegistryObject):
 
                 base_unit_names[old_unit] = new_unit_dict
 
-            else:
-                # The syntax is new_unit
-                # old_unit is inferred as the root unit with the same dimensionality.
-
-                new_unit = line
-                old_unit_dict = to_units_container(get_root_func(line)[1])
-
-                if len(old_unit_dict) != 1:
-                    raise ValueError(
-                        "The new base must be a root dimension if not discarded unit is specified."
-                    )
-
-                old_unit, value = dict(old_unit_dict).popitem()
-
-                base_unit_names[old_unit] = {new_unit: 1 / value}
-
-        system = cls(name)
-
-        system.add_groups(*group_names)
-
+        system = cls(system_definition.name)
+        system.add_groups(*system_definition.using_group_names)
         system.base_units.update(**base_unit_names)
         system.derived_units |= set(derived_unit_names)
 

@@ -423,10 +423,11 @@ class UnitsContainer(Mapping):
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
     def __getstate__(self):
-        return self._d, self._hash, self._one, self._non_int_type
+        return self._d, self._one, self._non_int_type
 
     def __setstate__(self, state):
-        self._d, self._hash, self._one, self._non_int_type = state
+        self._d, self._one, self._non_int_type = state
+        self._hash = None
 
     def __eq__(self, other) -> bool:
         if isinstance(other, UnitsContainer):
@@ -992,7 +993,7 @@ class SourceIterator:
 
     """
 
-    def __new__(cls, sequence):
+    def __new__(cls, sequence, filename=None, is_resource=False):
         if isinstance(sequence, SourceIterator):
             return sequence
 
@@ -1001,6 +1002,8 @@ class SourceIterator:
         if sequence is not None:
             obj.internal = enumerate(sequence, 1)
             obj.last = (None, None)
+            obj.filename = filename or getattr(sequence, "name", None)
+            obj.is_resource = is_resource
 
         return obj
 

@@ -10,17 +10,16 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
-from typing import Callable, Iterable, Optional, Union
+from dataclasses import dataclass
+from typing import Callable, Iterable, Optional, Tuple, Union
 
 from .converters import Converter, LogarithmicConverter, OffsetConverter, ScaleConverter
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
 
-class PreprocessedDefinition(
-    namedtuple("PreprocessedDefinition", "name symbol aliases value rhs_parts")
-):
+@dataclass(frozen=True)
+class PreprocessedDefinition:
     """Splits a definition into the constitutive parts.
 
     A definition is given as a string with equalities in a single line::
@@ -34,15 +33,13 @@ class PreprocessedDefinition(
         |   ---------------> value
         |
         -------------------> name
-
-    Attributes
-    ----------
-    name : str
-    value : str
-    symbol : str or None
-    aliases : tuple of str
-    rhs : tuple of str
     """
+
+    name: str
+    symbol: Optional[str]
+    aliases: Tuple[str, ...]
+    value: str
+    rhs_parts: Tuple[str, ...]
 
     @classmethod
     def from_string(cls, definition: str) -> PreprocessedDefinition:
@@ -92,6 +89,7 @@ def numeric_parse(s: str, non_int_type: type = float):
     return ph.scale
 
 
+@dataclass(frozen=True)
 class Definition:
     """Base class for definitions.
 
@@ -99,43 +97,36 @@ class Definition:
     ----------
     name : str
         Canonical name of the unit/prefix/etc.
-    symbol : str or None
+    defined_symbol : str or None
         A short name or symbol for the definition.
     aliases : iterable of str
         Other names for the unit/prefix/etc.
     converter : callable or Converter or None
     """
 
-    def __init__(
-        self,
-        name: str,
-        symbol: Optional[str],
-        aliases: Iterable[str],
-        converter: Optional[Union[Callable, Converter]],
-    ):
+    name: str
+    defined_symbol: Optional[str]
+    aliases: Tuple[str, ...]
+    converter: Optional[Union[Callable, Converter]]
 
-        if isinstance(converter, str):
+    def __post_init__(self):
+        if isinstance(self.converter, str):
             raise TypeError(
                 "The converter parameter cannot be an instance of `str`. Use `from_string` method"
             )
 
-        self._name = name
-        self._symbol = symbol
-        self._aliases = tuple(aliases)
-        self._converter = converter
-
     @property
     def is_multiplicative(self) -> bool:
-        return self._converter.is_multiplicative
+        return self.converter.is_multiplicative
 
     @property
     def is_logarithmic(self) -> bool:
-        return self._converter.is_logarithmic
+        return self.converter.is_logarithmic
 
     @classmethod
     def from_string(
         cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
-    ) -> "Definition":
+    ) -> Definition:
         """Parse a definition.
 
         Parameters
@@ -151,9 +142,7 @@ class Definition:
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
-        if definition.name.startswith("@alias "):
-            return AliasDefinition.from_string(definition, non_int_type)
-        elif definition.name.startswith("["):
+        if definition.name.startswith("["):
             return DimensionDefinition.from_string(definition, non_int_type)
         elif definition.name.endswith("-"):
             return PrefixDefinition.from_string(definition, non_int_type)
@@ -161,33 +150,21 @@ class Definition:
             return UnitDefinition.from_string(definition, non_int_type)
 
     @property
-    def name(self) -> str:
-        return self._name
-
-    @property
     def symbol(self) -> str:
-        return self._symbol or self._name
+        return self.defined_symbol or self.name
 
     @property
     def has_symbol(self) -> bool:
-        return bool(self._symbol)
-
-    @property
-    def aliases(self) -> Iterable[str]:
-        return self._aliases
+        return bool(self.defined_symbol)
 
     def add_aliases(self, *alias: str) -> None:
-        alias = tuple(a for a in alias if a not in self._aliases)
-        self._aliases = self._aliases + alias
-
-    @property
-    def converter(self) -> Converter:
-        return self._converter
+        raise Exception("Cannot add aliases, definitions are inmutable.")
 
     def __str__(self) -> str:
         return self.name
 
 
+@dataclass(frozen=True)
 class PrefixDefinition(Definition):
     """Definition of a prefix::
 
@@ -201,7 +178,7 @@ class PrefixDefinition(Definition):
     @classmethod
     def from_string(
         cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
-    ) -> "PrefixDefinition":
+    ) -> PrefixDefinition:
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
@@ -221,6 +198,7 @@ class PrefixDefinition(Definition):
         return cls(definition.name.rstrip("-"), symbol, aliases, converter)
 
 
+@dataclass(frozen=True)
 class UnitDefinition(Definition):
     """Definition of a unit::
 
@@ -239,19 +217,8 @@ class UnitDefinition(Definition):
 
     """
 
-    def __init__(
-        self,
-        name: str,
-        symbol: Optional[str],
-        aliases: Iterable[str],
-        converter: Converter,
-        reference: Optional[UnitsContainer] = None,
-        is_base: bool = False,
-    ) -> None:
-        self.reference = reference
-        self.is_base = is_base
-
-        super().__init__(name, symbol, aliases, converter)
+    reference: Optional[UnitsContainer] = None
+    is_base: bool = False
 
     @classmethod
     def from_string(
@@ -318,6 +285,7 @@ class UnitDefinition(Definition):
         )
 
 
+@dataclass(frozen=True)
 class DimensionDefinition(Definition):
     """Definition of a dimension::
 
@@ -328,24 +296,13 @@ class DimensionDefinition(Definition):
         [density] = [mass] / [volume]
     """
 
-    def __init__(
-        self,
-        name: str,
-        symbol: Optional[str],
-        aliases: Iterable[str],
-        converter: Optional[Converter],
-        reference: Optional[UnitsContainer] = None,
-        is_base: bool = False,
-    ) -> None:
-        self.reference = reference
-        self.is_base = is_base
-
-        super().__init__(name, symbol, aliases, converter=None)
+    reference: Optional[UnitsContainer] = None
+    is_base: bool = False
 
     @classmethod
     def from_string(
         cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
-    ) -> "DimensionDefinition":
+    ) -> DimensionDefinition:
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
@@ -384,7 +341,9 @@ class AliasDefinition(Definition):
     """
 
     def __init__(self, name: str, aliases: Iterable[str]) -> None:
-        super().__init__(name=name, symbol=None, aliases=aliases, converter=None)
+        super().__init__(
+            name=name, defined_symbol=None, aliases=aliases, converter=None
+        )
 
     @classmethod
     def from_string(

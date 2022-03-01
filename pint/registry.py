@@ -37,16 +37,15 @@ from __future__ import annotations
 
 import copy
 import functools
-import importlib.resources
 import itertools
 import locale
-import os
+import pathlib
 import re
 from collections import ChainMap, defaultdict
 from contextlib import contextmanager
+from dataclasses import dataclass
 from decimal import Decimal
 from fractions import Fraction
-from io import StringIO
 from numbers import Number
 from tokenize import NAME, NUMBER
 from typing import (
@@ -67,10 +66,11 @@ from typing import (
     Union,
 )
 
-from . import registry_helpers, systems
+from . import parser, registry_helpers, systems
 from ._typing import F, QuantityOrUnitLike
+from ._vendor import appdirs
 from .compat import HAS_BABEL, babel_parse, tokenizer
-from .context import Context, ContextChain
+from .context import Context, ContextChain, ContextDefinition
 from .converters import ScaleConverter
 from .definitions import (
     AliasDefinition,
@@ -86,7 +86,7 @@ from .errors import (
     UndefinedUnitError,
 )
 from .pint_eval import build_eval_tree
-from .systems import Group, System
+from .systems import Group, GroupDefinition, System, SystemDefinition
 from .util import (
     ParserHelper,
     SourceIterator,
@@ -118,6 +118,24 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 _BLOCK_RE = re.compile(r"[ (]")
+
+
+@dataclass(frozen=True)
+class DefaultsDefinition:
+    """Definition for the @default directive"""
+
+    content: Tuple[Tuple[str, str], ...]
+
+    @classmethod
+    def from_lines(cls, lines, non_int_type=float) -> DefaultsDefinition:
+        source_iterator = SourceIterator(lines)
+        next(source_iterator)
+        out = []
+        for lineno, part in source_iterator:
+            k, v = part.split("=")
+            out.append((k.strip(), v.strip()))
+
+        return DefaultsDefinition(tuple(out))
 
 
 @functools.lru_cache()
@@ -156,6 +174,17 @@ class RegistryCache:
         self.dimensionality: Dict[UnitsContainer, UnitsContainer] = {}
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit: Dict[str, UnitsContainer] = {}
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        attrs = (
+            "dimensional_equivalents",
+            "root_units",
+            "dimensionality",
+            "parse_unit",
+        )
+        return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
 
 class ContextCacheOverlay:
@@ -209,15 +238,15 @@ class BaseRegistry(metaclass=RegistryMeta):
         numerical type used for non integer values. (Default: float)
     case_sensitive : bool, optional
         Control default case sensitivity of unit parsing. (Default: True)
-
+    cache_folder : str or pathlib.Path or None, optional
+        Specify the folder in which cache files are saved and loaded from.
+        If None, the cache is disabled. (default)
     """
-
-    #: Map context prefix to function
-    #: type: Dict[str, (SourceIterator -> None)]
-    _parsers: Dict[str, Callable[[SourceIterator], None]] = None
 
     #: Babel.Locale instance or None
     fmt_locale: Optional[Locale] = None
+
+    _diskcache = None
 
     def __init__(
         self,
@@ -230,9 +259,19 @@ class BaseRegistry(metaclass=RegistryMeta):
         fmt_locale: Optional[str] = None,
         non_int_type: NON_INT_TYPE = float,
         case_sensitive: bool = True,
+        cache_folder: Union[str, pathlib.Path, None] = None,
     ):
-        self._register_parsers()
+        #: Map context prefix to (loader function, parser function, single_line)
+        #: type: Dict[str, Tuple[Callable[[Any], None]], Any]
+        self._directives = {}
+        self._register_directives()
         self._init_dynamic_classes()
+
+        if cache_folder == ":auto:":
+            cache_folder = appdirs.user_cache_dir(appname="pint", appauthor=False)
+
+        if cache_folder is not None:
+            self._diskcache = parser.build_disk_cache_class(non_int_type)(cache_folder)
 
         self._filename = filename
         self.force_ndarray = force_ndarray
@@ -302,22 +341,28 @@ class BaseRegistry(metaclass=RegistryMeta):
         """This should be called after all __init__"""
 
         if self._filename == "":
-            self.load_definitions("default_en.txt", True)
+            loaded_files = self.load_definitions("default_en.txt", True)
         elif self._filename is not None:
-            self.load_definitions(self._filename)
+            loaded_files = self.load_definitions(self._filename)
+        else:
+            loaded_files = None
 
-        self._build_cache()
+        self._build_cache(loaded_files)
         self._initialized = True
 
-    def _register_parsers(self) -> None:
-        self._register_parser("@defaults", self._parse_defaults)
+    def _register_directives(self) -> None:
+        self._register_directive("@alias", self._load_alias, AliasDefinition)
+        self._register_directive("@defaults", self._load_defaults, DefaultsDefinition)
 
-    def _parse_defaults(self, ifile) -> None:
+    def _load_defaults(self, defaults_definition: DefaultsDefinition) -> None:
         """Loader for a @default section."""
-        next(ifile)
-        for lineno, part in ifile.block_iter():
-            k, v = part.split("=")
-            self._defaults[k.strip()] = v.strip()
+
+        for k, v in defaults_definition.content:
+            self._defaults[k] = v
+
+    def _load_alias(self, alias_definition: AliasDefinition) -> None:
+        """Loader for an @alias directive"""
+        self._define_alias(alias_definition)
 
     def __deepcopy__(self, memo) -> "BaseRegistry":
         new = object.__new__(type(self))
@@ -389,6 +434,12 @@ class BaseRegistry(metaclass=RegistryMeta):
         self.Quantity.default_format = value
         self.Measurement.default_format = value
 
+    @property
+    def cache_folder(self) -> Optional[pathlib.Path]:
+        if self._diskcache:
+            return self._diskcache.cache_folder
+        return None
+
     def define(self, definition: Union[str, Definition]) -> None:
         """Add unit to the registry.
 
@@ -400,7 +451,13 @@ class BaseRegistry(metaclass=RegistryMeta):
 
         if isinstance(definition, str):
             for line in definition.split("\n"):
-                self._define(Definition.from_string(line, self.non_int_type))
+                if line.startswith("@alias"):
+                    # TODO why alias can be defined like this but not other directives?
+                    self._define_alias(
+                        AliasDefinition.from_string(line, self.non_int_type)
+                    )
+                else:
+                    self._define(Definition.from_string(line, self.non_int_type))
         else:
             self._define(definition)
 
@@ -440,16 +497,11 @@ class BaseRegistry(metaclass=RegistryMeta):
                         continue
 
                     self.define(
-                        DimensionDefinition(dimension, "", (), None, is_base=True)
+                        DimensionDefinition(dimension, "", (), None, None, True)
                     )
 
         elif isinstance(definition, PrefixDefinition):
             d, di = self._prefixes, None
-
-        elif isinstance(definition, AliasDefinition):
-            d, di = self._units, self._units_casei
-            self._define_alias(definition, d, di)
-            return d[definition.name], d, di
 
         else:
             raise TypeError("{} is not a valid definition.".format(definition))
@@ -524,36 +576,33 @@ class BaseRegistry(metaclass=RegistryMeta):
         if casei_unit_dict is not None:
             casei_unit_dict[key.lower()].add(key)
 
-    def _define_alias(self, definition, unit_dict, casei_unit_dict):
+    def _define_alias(self, definition):
+        unit_dict, casei_unit_dict = self._units, self._units_casei
         unit = unit_dict[definition.name]
-        unit.add_aliases(*definition.aliases)
-        for alias in unit.aliases:
+        while not isinstance(unit, UnitDefinition):
+            unit = unit_dict[unit.name]
+        for alias in definition.aliases:
             unit_dict[alias] = unit
             casei_unit_dict[alias.lower()].add(alias)
 
-    def _register_parser(self, prefix, parserfunc):
-        """Register a loader for a given @ directive..
+    def _register_directive(self, prefix: str, loaderfunc, definition_class):
+        """Register a loader for a given @ directive.
 
         Parameters
         ----------
-        prefix :
-            string identifying the section (e.g. @context)
-        parserfunc : SourceIterator -> None
-            A function that is able to parse a Definition section.
-
-        Returns
-        -------
-
+        prefix
+            string identifying the section (e.g. @context).
+        loaderfunc
+            function to load the definition into the registry.
+        definition_class
+            a class that represents the directive content.
         """
-        if self._parsers is None:
-            self._parsers = {}
-
         if prefix and prefix[0] == "@":
-            self._parsers[prefix] = parserfunc
+            self._directives[prefix] = (loaderfunc, definition_class)
         else:
             raise ValueError("Prefix directives must start with '@'")
 
-    def load_definitions(self, file, is_resource: bool = False) -> None:
+    def load_definitions(self, file, is_resource: bool = False):
         """Add units and prefixes defined in a definition text file.
 
         Parameters
@@ -563,73 +612,55 @@ class BaseRegistry(metaclass=RegistryMeta):
         is_resource :
             used to indicate that the file is a resource file
             and therefore should be loaded from the package. (Default value = False)
-
-        Returns
-        -------
-
         """
-        # Permit both filenames and line-iterables
-        if isinstance(file, str):
+
+        loaders = {
+            AliasDefinition: self._define,
+            UnitDefinition: self._define,
+            DimensionDefinition: self._define,
+            PrefixDefinition: self._define,
+        }
+
+        p = parser.Parser(self.non_int_type, cache_folder=self._diskcache)
+        for prefix, (loaderfunc, definition_class) in self._directives.items():
+            loaders[definition_class] = loaderfunc
+            p.register_class(prefix, definition_class)
+
+        if isinstance(file, (str, pathlib.Path)):
             try:
-                if is_resource:
-                    rbytes = importlib.resources.read_binary(__package__, file)
-                    return self.load_definitions(
-                        StringIO(rbytes.decode("utf-8")), is_resource
-                    )
-                else:
-                    with open(file, encoding="utf-8") as fp:
-                        return self.load_definitions(fp, is_resource)
-            except (RedefinitionError, DefinitionSyntaxError) as e:
-                if e.filename is None:
-                    e.filename = file
-                raise e
-            except Exception as e:
-                msg = getattr(e, "message", "") or str(e)
+                parsed_files = p.parse(file, is_resource)
+            except Exception as ex:
+                # TODO: Change this is in the future
+                # this is kept for backwards compatibility
+                msg = getattr(ex, "message", "") or str(ex)
                 raise ValueError("While opening {}\n{}".format(file, msg))
+        else:
+            parsed_files = parser.DefinitionFiles([p.parse_lines(file)])
 
-        ifile = SourceIterator(file)
-        for no, line in ifile:
-            if line.startswith("@") and not line.startswith("@alias"):
-                if line.startswith("@import"):
-                    if is_resource:
-                        path = line[7:].strip()
-                    else:
-                        try:
-                            path = os.path.dirname(file.name)
-                        except AttributeError:
-                            path = os.getcwd()
-                        path = os.path.join(path, os.path.normpath(line[7:].strip()))
-                    self.load_definitions(path, is_resource)
-                else:
-                    parts = _BLOCK_RE.split(line)
-
-                    loader = (
-                        self._parsers.get(parts[0], None) if self._parsers else None
+        for definition_file in parsed_files[::-1]:
+            for lineno, definition in definition_file.parsed_lines:
+                if definition.__class__ in p.handled_classes:
+                    continue
+                loaderfunc = loaders.get(definition.__class__, None)
+                if not loaderfunc:
+                    raise ValueError(
+                        f"No loader function defined "
+                        f"for {definition.__class__.__name__}"
                     )
+                loaderfunc(definition)
 
-                    if loader is None:
-                        raise DefinitionSyntaxError(
-                            "Unknown directive %s" % line, lineno=no
-                        )
+        return parsed_files
 
-                    try:
-                        loader(ifile)
-                    except DefinitionSyntaxError as ex:
-                        if ex.lineno is None:
-                            ex.lineno = no
-                        raise ex
-            else:
-                try:
-                    self.define(Definition.from_string(line, self.non_int_type))
-                except DefinitionSyntaxError as ex:
-                    if ex.lineno is None:
-                        ex.lineno = no
-                    raise ex
-                except Exception as ex:
-                    logger.error("In line {}, cannot add '{}' {}".format(no, line, ex))
-
-    def _build_cache(self) -> None:
+    def _build_cache(self, loaded_files=None) -> None:
         """Build a cache of dimensionality and base units."""
+
+        if loaded_files and self._diskcache and all(loaded_files):
+            cache, cache_basename = self._diskcache.load(loaded_files, "build_cache")
+            if cache is None:
+                self._build_cache()
+                self._diskcache.save(self._cache, loaded_files, "build_cache")
+            return
+
         self._cache = RegistryCache()
 
         deps = {
@@ -660,10 +691,11 @@ class BaseRegistry(metaclass=RegistryMeta):
                         dimeq_set = self._cache.dimensional_equivalents.setdefault(
                             di, set()
                         )
-                        dimeq_set.add(self._units[base_name]._name)
+                        dimeq_set.add(self._units[base_name].name)
 
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
+        return self._cache
 
     def get_name(
         self, name_or_alias: str, case_sensitive: Optional[bool] = None
@@ -674,7 +706,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             return ""
 
         try:
-            return self._units[name_or_alias]._name
+            return self._units[name_or_alias].name
         except KeyError:
             pass
 
@@ -916,7 +948,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             if reg.is_base:
                 accumulators[1][key] += exp2
             else:
-                accumulators[0] *= reg._converter.scale ** exp2
+                accumulators[0] *= reg.converter.scale ** exp2
                 if reg.reference is not None:
                     self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
@@ -1583,19 +1615,13 @@ class ContextRegistry(BaseRegistry):
         # Allow contexts to add override layers to the units
         self._units = ChainMap(self._units)
 
-    def _register_parsers(self) -> None:
-        super()._register_parsers()
-        self._register_parser("@context", self._parse_context)
+    def _register_directives(self) -> None:
+        super()._register_directives()
+        self._register_directive("@context", self._load_context, ContextDefinition)
 
-    def _parse_context(self, ifile) -> None:
+    def _load_context(self, cd: ContextDefinition) -> None:
         try:
-            self.add_context(
-                Context.from_lines(
-                    ifile.block_iter(),
-                    self.get_dimensionality,
-                    non_int_type=self.non_int_type,
-                )
-            )
+            self.add_context(Context.from_definition(cd, self.get_dimensionality))
         except KeyError as e:
             raise DefinitionSyntaxError(f"unknown dimension {e} in context")
 
@@ -1636,8 +1662,8 @@ class ContextRegistry(BaseRegistry):
 
         return context
 
-    def _build_cache(self) -> None:
-        super()._build_cache()
+    def _build_cache(self, loaded_files=None) -> None:
+        super()._build_cache(loaded_files)
         self._caches[()] = self._cache
 
     def _switch_context_cache_and_units(self) -> None:
@@ -1709,7 +1735,7 @@ class ContextRegistry(BaseRegistry):
         # be shared by other registries, and (2) it would alter the cache key
         definition = UnitDefinition(
             name=basedef.name,
-            symbol=basedef.symbol,
+            defined_symbol=basedef.symbol,
             aliases=basedef.aliases,
             is_base=False,
             reference=definition.reference,
@@ -1998,17 +2024,17 @@ class SystemRegistry(BaseRegistry):
             "system", None
         )
 
-    def _register_parsers(self) -> None:
-        super()._register_parsers()
-        self._register_parser("@group", self._parse_group)
-        self._register_parser("@system", self._parse_system)
-
-    def _parse_group(self, ifile) -> None:
-        self.Group.from_lines(ifile.block_iter(), self.define, self.non_int_type)
-
-    def _parse_system(self, ifile) -> None:
-        self.System.from_lines(
-            ifile.block_iter(), self.get_root_units, self.non_int_type
+    def _register_directives(self) -> None:
+        super()._register_directives()
+        self._register_directive(
+            "@system",
+            lambda gd: self.System.from_definition(gd, self.get_root_units),
+            SystemDefinition,
+        )
+        self._register_directive(
+            "@group",
+            lambda gd: self.Group.from_definition(gd, self.define),
+            GroupDefinition,
         )
 
     def get_group(self, name: str, create_if_needed: bool = True) -> Group:
@@ -2228,6 +2254,9 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         locale identifier string, used in `format_babel`. Default to None
     case_sensitive : bool, optional
         Control default case sensitivity of unit parsing. (Default: True)
+    cache_folder : str or pathlib.Path or None, optional
+        Specify the folder in which cache files are saved and loaded from.
+        If None, the cache is disabled. (default)
     """
 
     def __init__(
@@ -2244,6 +2273,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
         fmt_locale=None,
         non_int_type=float,
         case_sensitive: bool = True,
+        cache_folder=None,
     ):
 
         super().__init__(
@@ -2259,6 +2289,7 @@ class UnitRegistry(SystemRegistry, ContextRegistry, NonMultiplicativeRegistry):
             fmt_locale=fmt_locale,
             non_int_type=non_int_type,
             case_sensitive=case_sensitive,
+            cache_folder=cache_folder,
         )
 
     def pi_theorem(self, quantities):
