@@ -8,7 +8,8 @@
 
 from typing import Dict, FrozenSet
 
-from ...unit import Unit, UnitDefinition
+from ...unit import Unit
+from ..base.definitions import UnitDefinition
 from .definitions import GroupDefinition
 from .objects import Group, build_group_class
 

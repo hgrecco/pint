@@ -52,13 +52,13 @@ from .compat import (
     visualize,
     zero_or_nan,
 )
-from .definitions import UnitDefinition
 from .errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
     PintTypeError,
     UnitStrippedWarning,
 )
+from .facets.base.definitions import UnitDefinition
 from .formatting import (
     _pretty_fmt_exponent,
     ndarray_to_latex,

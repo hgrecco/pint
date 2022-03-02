@@ -13,10 +13,11 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Tuple
 
-from ...definitions import Definition, UnitDefinition
+from ...definitions import Definition
 from ...errors import DefinitionSyntaxError
 from ...quantity import Quantity
 from ...util import ParserHelper, SourceIterator
+from ..base.definitions import UnitDefinition
 
 _header_re = re.compile(
     r"@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*"

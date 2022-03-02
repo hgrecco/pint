@@ -12,8 +12,8 @@ import weakref
 from collections import ChainMap, defaultdict
 from typing import Optional, Tuple
 
-from ...definitions import UnitDefinition
 from ...errors import DefinitionSyntaxError, RedefinitionError
+from ...facets.base.definitions import UnitDefinition
 from ...util import UnitsContainer, to_units_container
 from .definitions import ContextDefinition
 

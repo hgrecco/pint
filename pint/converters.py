@@ -69,26 +69,3 @@ class Converter:
         if kw is None:
             return new_cls(**kwargs)
         return cls.from_arguments(**kw)
-
-
-@dataclass(frozen=True)
-class ScaleConverter(Converter):
-    """A linear transformation."""
-
-    scale: float
-
-    def to_reference(self, value, inplace=False):
-        if inplace:
-            value *= self.scale
-        else:
-            value = value * self.scale
-
-        return value
-
-    def from_reference(self, value, inplace=False):
-        if inplace:
-            value /= self.scale
-        else:
-            value = value / self.scale
-
-        return value

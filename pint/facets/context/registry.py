@@ -14,8 +14,8 @@ from contextlib import contextmanager
 from typing import Any, Callable, ContextManager, Dict, Union
 
 from ..._typing import F
-from ...definitions import UnitDefinition
 from ...errors import DefinitionSyntaxError, UndefinedUnitError
+from ...facets.base.definitions import UnitDefinition
 from ...util import find_connected_nodes, find_shortest_path, logger
 from .definitions import ContextDefinition
 from .objects import Context, ContextChain

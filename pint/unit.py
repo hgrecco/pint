@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING, Any, Type, Union
 
 from ._typing import UnitLike
 from .compat import NUMERIC_TYPES, babel_parse, is_upcast_type
-from .definitions import UnitDefinition
 from .errors import DimensionalityError
+from .facets.base.definitions import UnitDefinition
 from .formatting import extract_custom_flags, format_unit, split_format
 from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
