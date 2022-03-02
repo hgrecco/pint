@@ -68,19 +68,19 @@ from . import Context, parser, registry_helpers
 from ._typing import QuantityOrUnitLike
 from ._vendor import appdirs
 from .compat import HAS_BABEL, babel_parse, tokenizer
-from .converters import ScaleConverter
-from .definitions import (
-    AliasDefinition,
-    Definition,
-    DimensionDefinition,
-    PrefixDefinition,
-    UnitDefinition,
-)
+from .definitions import Definition
 from .errors import (
     DefinitionSyntaxError,
     DimensionalityError,
     RedefinitionError,
     UndefinedUnitError,
+)
+from .facets.base.definitions import (
+    AliasDefinition,
+    DimensionDefinition,
+    PrefixDefinition,
+    ScaleConverter,
+    UnitDefinition,
 )
 from .facets.context import ContextRegistry
 from .facets.nonmultiplicative import NonMultiplicativeRegistry

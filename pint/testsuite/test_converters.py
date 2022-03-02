@@ -1,7 +1,8 @@
 import itertools
 
 from pint.compat import np
-from pint.converters import Converter, ScaleConverter
+from pint.converters import Converter
+from pint.facets.base.definitions import ScaleConverter
 from pint.facets.nonmultiplicative.definitions import (
     LogarithmicConverter,
     OffsetConverter,

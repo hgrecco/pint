@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from ...compat import HAS_NUMPY, exp, log
-from ...converters import ScaleConverter
+from ..base.definitions import ScaleConverter
 
 
 @dataclass(frozen=True)
