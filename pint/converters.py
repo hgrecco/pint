@@ -45,6 +45,10 @@ class Converter:
         return frozenset((p.name for p in dc_fields(new_cls)))
 
     @classmethod
+    def preprocess_kwargs(cls, **kwargs):
+        return None
+
+    @classmethod
     def from_arguments(cls, **kwargs):
         kwk = frozenset(kwargs.keys())
         try:
@@ -60,7 +64,11 @@ class Converter:
                 raise ValueError(
                     f"There is no class registered for parameters {params}"
                 )
-        return new_cls(**kwargs)
+
+        kw = new_cls.preprocess_kwargs(**kwargs)
+        if kw is None:
+            return new_cls(**kwargs)
+        return cls.from_arguments(**kw)
 
 
 @dataclass(frozen=True)
@@ -113,6 +121,12 @@ class OffsetConverter(ScaleConverter):
             value = (value - self.offset) / self.scale
 
         return value
+
+    @classmethod
+    def preprocess_kwargs(cls, **kwargs):
+        if "offset" in kwargs and kwargs["offset"] == 0:
+            return {"scale": kwargs["scale"]}
+        return None
 
 
 @dataclass(frozen=True)

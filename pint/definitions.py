@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Iterable, Optional, Tuple, Union
 
-from .converters import Converter, LogarithmicConverter, OffsetConverter, ScaleConverter
+from .converters import Converter, ScaleConverter
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
 
@@ -258,22 +258,12 @@ class UnitDefinition(Definition):
             )
         reference = UnitsContainer(converter)
 
-        if not modifiers:
-            converter = ScaleConverter(converter.scale)
-
-        elif "offset" in modifiers:
-            if modifiers.get("offset", 0.0) != 0.0:
-                converter = OffsetConverter(converter.scale, modifiers["offset"])
-            else:
-                converter = ScaleConverter(converter.scale)
-
-        elif "logbase" in modifiers and "logfactor" in modifiers:
-            converter = LogarithmicConverter(
-                converter.scale, modifiers["logbase"], modifiers["logfactor"]
-            )
-
-        else:
-            raise DefinitionSyntaxError("Unable to assign a converter to the unit")
+        try:
+            converter = Converter.from_arguments(scale=converter.scale, **modifiers)
+        except Exception as ex:
+            raise DefinitionSyntaxError(
+                "Unable to assign a converter to the unit"
+            ) from ex
 
         return cls(
             definition.name,
