@@ -109,6 +109,17 @@ class Definition:
     aliases: Tuple[str, ...]
     converter: Optional[Union[Callable, Converter]]
 
+    _subclasses = []
+    _default_subclass = None
+
+    def __init_subclass__(cls, **kwargs):
+        if kwargs.pop("default", False):
+            if cls._default_subclass is not None:
+                raise ValueError("There is already a registered default definition.")
+            Definition._default_subclass = cls
+        super().__init_subclass__(**kwargs)
+        cls._subclasses.append(cls)
+
     def __post_init__(self):
         if isinstance(self.converter, str):
             raise TypeError(
@@ -122,6 +133,10 @@ class Definition:
     @property
     def is_logarithmic(self) -> bool:
         return self.converter.is_logarithmic
+
+    @classmethod
+    def accept_to_parse(cls, preprocessed: PreprocessedDefinition):
+        return False
 
     @classmethod
     def from_string(
@@ -142,12 +157,14 @@ class Definition:
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
-        if definition.name.startswith("["):
-            return DimensionDefinition.from_string(definition, non_int_type)
-        elif definition.name.endswith("-"):
-            return PrefixDefinition.from_string(definition, non_int_type)
-        else:
-            return UnitDefinition.from_string(definition, non_int_type)
+        for subclass in cls._subclasses:
+            if subclass.accept_to_parse(definition):
+                return subclass.from_string(definition, non_int_type)
+
+        if cls._default_subclass is None:
+            raise ValueError("No matching definition (and no default parser).")
+
+        return cls._default_subclass.from_string(definition, non_int_type)
 
     @property
     def symbol(self) -> str:
@@ -176,6 +193,10 @@ class PrefixDefinition(Definition):
     """
 
     @classmethod
+    def accept_to_parse(cls, preprocessed: PreprocessedDefinition):
+        return preprocessed.name.endswith("-")
+
+    @classmethod
     def from_string(
         cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
     ) -> PrefixDefinition:
@@ -199,7 +220,7 @@ class PrefixDefinition(Definition):
 
 
 @dataclass(frozen=True)
-class UnitDefinition(Definition):
+class UnitDefinition(Definition, default=True):
     """Definition of a unit::
 
         <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
@@ -288,6 +309,10 @@ class DimensionDefinition(Definition):
 
     reference: Optional[UnitsContainer] = None
     is_base: bool = False
+
+    @classmethod
+    def accept_to_parse(cls, preprocessed: PreprocessedDefinition):
+        return preprocessed.name.startswith("[")
 
     @classmethod
     def from_string(
