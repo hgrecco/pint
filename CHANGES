@@ -29,6 +29,8 @@ Pint Changelog
 
 ### Breaking Changes
 
+- Update hour default symbol to `h`. (Issue #719)
+- Replace `h` with `ℎ` (U+210E) as default symbol for planck constant.
 - Change minimal Python version support to 3.8+
 - Change minimal Numpy version support to 1.19+
 
