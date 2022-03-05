@@ -100,7 +100,7 @@ points, like positions on a map or absolute temperature scales.
 **Dependency free**: it depends only on Python and its standard library. It interacts with other packages
 like numpy and uncertainties if they are installed
 
-**Pandas integration**: Thanks to `Pandas Extension Types`_ it is now possible to use Pint with Pandas.
+**Pandas integration**: The `pint-pandas`_ package makes it possible to use Pint with Pandas.
 Operations on DataFrames and between columns are units aware, providing even more convenience for users
 of Pandas DataFrames. For full details, see the `pint-pandas Jupyter notebook`_.
 
@@ -134,7 +134,6 @@ User Guide
     performance
     systems
     currencies
-    pint-pandas.ipynb
     pint-convert
 
 More information
@@ -165,6 +164,6 @@ One last thing
 .. _`NumPy`: http://www.numpy.org/
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/
 .. _`Babel`: http://babel.pocoo.org/
-.. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/extending.html#extension-types
+.. _`pint-pandas`: https://github.com/hgrecco/pint-pandas
 .. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb
 .. _`BSD 3-clause style license`: https://github.com/hgrecco/pint/blob/master/LICENSE
