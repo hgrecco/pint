@@ -9,6 +9,7 @@ Pint Changelog
 - Fix setting options of the application registry (Issue #1403).
 - Fix Quantity & Unit `is_compatible_with` with registry active contexts (Issue #1424).
 - Allow Quantity to parse 'NaN' and 'inf(inity)', case insensitive
+- The pint-pandas example notebook has been moved to the pint-pandas package.
 
 0.18 (2021-10-26)
 -----------------
