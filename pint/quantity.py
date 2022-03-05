@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import bisect
-import contextlib
 import copy
 import datetime
 import functools
@@ -166,20 +165,6 @@ def check_dask_array(f):
             raise AttributeError(msg)
 
     return wrapper
-
-
-@contextlib.contextmanager
-def printoptions(*args, **kwargs):
-    """Numpy printoptions context manager released with version 1.15.0
-    https://docs.scipy.org/doc/numpy/reference/generated/numpy.printoptions.html
-    """
-
-    opts = np.get_printoptions()
-    try:
-        np.set_printoptions(*args, **kwargs)
-        yield np.get_printoptions()
-    finally:
-        np.set_printoptions(**opts)
 
 
 # Workaround to bypass dynamically generated Quantity with overload method
@@ -360,18 +345,47 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         if self._REGISTRY.fmt_locale is not None:
             return self.format_babel(spec)
 
-        spec = spec or self.default_format
+        mspec = remove_custom_flags(spec)
+        uspec = extract_custom_flags(spec)
+
+        default_mspec = remove_custom_flags(self.default_format)
+        default_uspec = extract_custom_flags(self.default_format)
+        if spec:
+            if not uspec and default_uspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a unit formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the unit formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+            if not mspec and default_mspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a magnitude formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the magnitude formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+        else:
+            mspec, uspec = default_mspec, default_uspec
 
         # If Compact is selected, do it at the beginning
         if "#" in spec:
-            spec = spec.replace("#", "")
+            # TODO: don't replace '#'
+            mspec = mspec.replace("#", "")
+            uspec = uspec.replace("#", "")
             obj = self.to_compact()
         else:
             obj = self
 
-        if "L" in spec:
+        if "L" in uspec:
             allf = plain_allf = r"{}\ {}"
-        elif "H" in spec:
+        elif "H" in uspec:
             allf = plain_allf = "{} {}"
             if iterable(obj.magnitude):
                 # Use HTML table instead of plain text template for array-likes
@@ -385,20 +399,19 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         else:
             allf = plain_allf = "{} {}"
 
-        if "Lx" in spec:
+        if "Lx" in uspec:
             # the LaTeX siunitx code
-            spec = spec.replace("Lx", "")
             # TODO: add support for extracting options
             opts = ""
             ustr = siunitx_format_unit(obj.units._units, obj._REGISTRY)
             allf = r"\SI[%s]{{{}}}{{{}}}" % opts
         else:
             # Hand off to unit formatting
-            uspec = extract_custom_flags(spec)
-            ustr = format(obj.units, uspec)
+            # TODO: only use `uspec` after completing the deprecation cycle
+            ustr = format(obj.units, mspec + uspec)
 
-        mspec = remove_custom_flags(spec)
-        if "H" in spec:
+        # mspec = remove_custom_flags(spec)
+        if "H" in uspec:
             # HTML formatting
             if hasattr(obj.magnitude, "_repr_html_"):
                 # If magnitude has an HTML repr, nest it within Pint's
@@ -413,7 +426,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                         allf = plain_allf = "{} {}"
                         mstr = formatter.format(obj.magnitude)
                     else:
-                        with printoptions(formatter={"float_kind": formatter.format}):
+                        with np.printoptions(
+                            formatter={"float_kind": formatter.format}
+                        ):
                             mstr = (
                                 "<pre>"
                                 + format(obj.magnitude).replace("\n", "<br>")
@@ -430,7 +445,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                         + "</pre>"
                     )
         elif isinstance(self.magnitude, ndarray):
-            if "L" in spec:
+            if "L" in uspec:
                 # Use ndarray LaTeX special formatting
                 mstr = ndarray_to_latex(obj.magnitude, mspec)
             else:
@@ -440,17 +455,17 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                 if obj.magnitude.ndim == 0:
                     mstr = formatter.format(obj.magnitude)
                 else:
-                    with printoptions(formatter={"float_kind": formatter.format}):
+                    with np.printoptions(formatter={"float_kind": formatter.format}):
                         mstr = format(obj.magnitude).replace("\n", "")
         else:
             mstr = format(obj.magnitude, mspec).replace("\n", "")
 
-        if "L" in spec:
+        if "L" in uspec:
             mstr = self._exp_pattern.sub(r"\1\\times 10^{\2\3}", mstr)
-        elif "H" in spec or "P" in spec:
+        elif "H" in uspec or "P" in uspec:
             m = self._exp_pattern.match(mstr)
             _exp_formatter = (
-                _pretty_fmt_exponent if "P" in spec else lambda s: f"<sup>{s}</sup>"
+                _pretty_fmt_exponent if "P" in uspec else lambda s: f"<sup>{s}</sup>"
             )
             if m:
                 exp = int(m.group(2) + m.group(3))
@@ -648,6 +663,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         -------
         bool
         """
+        from .unit import Unit
+
         if contexts or self._REGISTRY._active_ctx:
             try:
                 self.to(other, *contexts, **ctx_kwargs)
@@ -655,7 +672,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (self._REGISTRY.Quantity, self._REGISTRY.Unit)):
+        if isinstance(other, (Quantity, Unit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
@@ -763,6 +780,23 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return self.__class__(magnitude, other)
 
+    def _get_reduced_units(self, units):
+        # loop through individual units and compare to each other unit
+        # can we do better than a nested loop here?
+        for unit1, exp in units.items():
+            # make sure it wasn't already reduced to zero exponent on prior pass
+            if unit1 not in units:
+                continue
+            for unit2 in units:
+                # get exponent after reduction
+                exp = units[unit1]
+                if unit1 != unit2:
+                    power = self._REGISTRY._get_dimensionality_ratio(unit1, unit2)
+                    if power:
+                        units = units.add(unit2, exp / power).remove([unit1])
+                        break
+        return units
+
     def ito_reduced_units(self) -> None:
         """Return Quantity scaled in place to reduced units, i.e. one unit per
         dimension. This will not reduce compound units (e.g., 'J/kg' will not
@@ -775,21 +809,10 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         if len(self._units) == 1:
             return None
 
-        newunits = self._units.copy()
-        # loop through individual units and compare to each other unit
-        # can we do better than a nested loop here?
-        for unit1, exp in self._units.items():
-            # make sure it wasn't already reduced to zero exponent on prior pass
-            if unit1 not in newunits:
-                continue
-            for unit2 in newunits:
-                if unit1 != unit2:
-                    power = self._REGISTRY._get_dimensionality_ratio(unit1, unit2)
-                    if power:
-                        newunits = newunits.add(unit2, exp / power).remove([unit1])
-                        break
+        units = self._units.copy()
+        new_units = self._get_reduced_units(units)
 
-        return self.ito(newunits)
+        return self.ito(new_units)
 
     def to_reduced_units(self) -> Quantity[_MagnitudeType]:
         """Return Quantity scaled in place to reduced units, i.e. one unit per
@@ -797,10 +820,16 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         can it make use of contexts at this time.
         """
 
-        # can we make this more efficient?
-        newq = copy.copy(self)
-        newq.ito_reduced_units()
-        return newq
+        # shortcuts in case we're dimensionless or only a single unit
+        if self.dimensionless:
+            return self.to({})
+        if len(self._units) == 1:
+            return self
+
+        units = self._units.copy()
+        new_units = self._get_reduced_units(units)
+
+        return self.to(new_units)
 
     def to_compact(self, unit=None) -> Quantity[_MagnitudeType]:
         """ "Return Quantity rescaled to compact, human-readable units.
@@ -852,9 +881,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         SI_bases = [item[1] for item in SI_prefixes_list]
 
         if unit is None:
-            unit = infer_base_unit(self)
+            unit = infer_base_unit(self, registry=self._REGISTRY)
         else:
-            unit = infer_base_unit(self.__class__(1, unit))
+            unit = infer_base_unit(self.__class__(1, unit), registry=self._REGISTRY)
 
         q_base = self.to(unit)
 
@@ -869,9 +898,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             unit_str, unit_power = units[0]
 
         if unit_power > 0:
-            power = math.floor(math.log10(abs(magnitude)) / unit_power / 3) * 3
+            power = math.floor(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
         else:
-            power = math.ceil(math.log10(abs(magnitude)) / unit_power / 3) * 3
+            power = math.ceil(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
 
         index = bisect.bisect_left(SI_powers, power)
 

@@ -27,6 +27,7 @@ class FakeWrapper:
         self.q = q
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestQuantity(QuantityTestCase):
 
     kwargs = dict(autoconvert_offset_to_baseunit=False)
@@ -101,8 +102,9 @@ class TestQuantity(QuantityTestCase):
 
         # Compare with items to the separate application registry
         assert k >= m  # These should both be from application registry
-        with pytest.raises(ValueError):
-            z > m  # One from local registry, one from application registry
+        if z._REGISTRY != m._REGISTRY:
+            with pytest.raises(ValueError):
+                z > m  # One from local registry, one from application registry
 
         assert z != j
 
@@ -260,6 +262,24 @@ class TestQuantity(QuantityTestCase):
             with subtests.test(spec):
                 ureg.default_format = spec
                 assert f"{x}" == result
+
+    def test_formatting_override_default_units(self):
+        ureg = UnitRegistry()
+        ureg.default_format = "~"
+        x = ureg.Quantity(4, "m ** 2")
+
+        assert f"{x:dP}" == "4 meter²"
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:d}" == "4 meter ** 2"
+
+    def test_formatting_override_default_magnitude(self):
+        ureg = UnitRegistry()
+        ureg.default_format = ".2f"
+        x = ureg.Quantity(4, "m ** 2")
+
+        assert f"{x:dP}" == "4 meter²"
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:D}" == "4 meter ** 2"
 
     def test_exponent_formatting(self):
         ureg = UnitRegistry()
@@ -635,7 +655,18 @@ class TestQuantity(QuantityTestCase):
         assert math.isnan(test.magnitude)
         assert ref != test
 
+    @helpers.requires_numpy
+    def test_to_reduced_units(self):
+        q = self.Q_([3, 4], "s * ms")
+        helpers.assert_quantity_equal(
+            q.to_reduced_units(), self.Q_([3000.0, 4000.0], "ms**2")
+        )
 
+        q = self.Q_(0.5, "g*t/kg")
+        helpers.assert_quantity_equal(q.to_reduced_units(), self.Q_(0.5, "kg"))
+
+
+# TODO: do not subclass from QuantityTestCase
 class TestQuantityToCompact(QuantityTestCase):
     def assertQuantityAlmostIdentical(self, q1, q2):
         assert q1.units == q2.units
@@ -706,6 +737,7 @@ class TestQuantityToCompact(QuantityTestCase):
         )
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestQuantityBasicMath(QuantityTestCase):
     def _test_inplace(self, operator, value1, value2, expected_result, unit=None):
         if isinstance(value1, str):
@@ -965,6 +997,7 @@ class TestQuantityBasicMath(QuantityTestCase):
                 fun(z)
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestQuantityNeutralAdd(QuantityTestCase):
     """Addition to zero or NaN is allowed between a Quantity and a non-Quantity"""
 
@@ -1062,6 +1095,7 @@ class TestQuantityNeutralAdd(QuantityTestCase):
         helpers.assert_quantity_equal(z, -e)
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestDimensions(QuantityTestCase):
     def test_get_dimensionality(self):
         get = self.ureg.get_dimensionality
@@ -1100,12 +1134,13 @@ class TestDimensions(QuantityTestCase):
         assert not ("[angle]" in dim)
 
 
-class TestQuantityWithDefaultRegistry(TestDimensions):
+class TestQuantityWithDefaultRegistry(TestQuantity):
     @classmethod
     def setup_class(cls):
         from pint import _DEFAULT_REGISTRY
 
         cls.ureg = _DEFAULT_REGISTRY
+        cls.U_ = cls.ureg.Unit
         cls.Q_ = cls.ureg.Quantity
 
 
@@ -1118,6 +1153,7 @@ class TestDimensionsWithDefaultRegistry(TestDimensions):
         cls.Q_ = cls.ureg.Quantity
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestOffsetUnitMath(QuantityTestCase):
     @classmethod
     def setup_class(cls):
@@ -1712,6 +1748,7 @@ class TestDimensionReduction:
         assert x.units == ureg.foot
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestTimedelta(QuantityTestCase):
     def test_add_sub(self):
         d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
@@ -1740,6 +1777,7 @@ class TestTimedelta(QuantityTestCase):
             after -= d
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestCompareNeutral(QuantityTestCase):
     """Test comparisons against non-Quantity zero or NaN values for for
     non-dimensionless quantities

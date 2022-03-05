@@ -50,6 +50,9 @@ All Modules
 .. automodule:: pint.systems
     :members:
 
+.. automodule:: pint.testing
+    :members:
+
 .. automodule:: pint.unit
     :members:
 

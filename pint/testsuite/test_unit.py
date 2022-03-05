@@ -18,6 +18,7 @@ from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper, UnitsContainer
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestUnit(QuantityTestCase):
     def test_creation(self):
         for arg in ("meter", UnitsContainer(meter=1), self.U_("m")):
@@ -758,6 +759,7 @@ class TestCaseInsensitiveRegistry(QuantityTestCase):
         assert ureg.parse_units("j", case_sensitive=False) == UnitsContainer(joule=1)
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestCompatibleUnits(QuantityTestCase):
     def _test(self, input_units):
         gd = self.ureg.get_dimensionality
@@ -852,6 +854,7 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
             d("myk- = 1000 = kilo-")
 
 
+# TODO: remove QuantityTestCase
 class TestConvertWithOffset(QuantityTestCase):
 
     # The dicts in convert_with_offset are used to create a UnitsContainer.
@@ -947,9 +950,6 @@ class TestConvertWithOffset(QuantityTestCase):
         assert ureg._units["canonical"].aliases == (
             "alias1",
             "alias2",
-            "alias3",
-            "alias4",
-            "alias5",
         )
 
         # Define against unknown name
