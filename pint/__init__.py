@@ -111,18 +111,6 @@ def get_application_registry():
     return application_registry
 
 
-def test():
-    """Run all tests.
-
-    Returns
-    -------
-    unittest.TestResult
-    """
-    from .testsuite import run
-
-    return run()
-
-
 # Enumerate all user-facing objects
 # Hint to intersphinx that, when building objects.inv, these objects must be registered
 # under the top-level module and not in their original submodules
