@@ -487,7 +487,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             op.add(b, a)
 
     def test_power(self):
-        arr = np.array(range(3), dtype=np.float)
+        arr = np.array(range(3), dtype=float)
         q = self.Q_(arr, "meter")
 
         for op_ in [op.pow, op.ipow, np.power]:
@@ -523,7 +523,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     @pytest.mark.xfail
     @helpers.requires_numpy
     def test_exponentiation_array_exp_2(self):
-        arr = np.array(range(3), dtype=np.float)
+        arr = np.array(range(3), dtype=float)
         # q = self.Q_(copy.copy(arr), None)
         q = self.Q_(copy.copy(arr), "meter")
         arr_cp = copy.copy(arr)
@@ -990,8 +990,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
         assert np.shape(self.q) == (2, 2)
 
     @helpers.requires_array_function_protocol()
-    def test_alen_numpy_func(self):
-        assert np.alen(self.q) == 2
+    def test_len_numpy_func(self):
+        assert len(self.q) == 2
 
     @helpers.requires_array_function_protocol()
     def test_ndim_numpy_func(self):

@@ -862,6 +862,7 @@ class TestIssues(QuantityTestCase):
 
 if np is not None:
 
+    @pytest.mark.filterwarnings("ignore::pint.UnitStrippedWarning")
     @pytest.mark.parametrize(
         "callable",
         [

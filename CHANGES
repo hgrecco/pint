@@ -27,9 +27,12 @@ Pint Changelog
 - Fix handling modulo & floordiv operator in pint_eval (Issue #1470)
 - Fix `to_compact` and `infer_base_unit` for non-float non_int_type.
 - Fix `to_reduced_units` to work with dimensionless units. (Issue #919)
+- Fix parsing of units string with same canonalized name (Issue #1441 & #1142)
 
 ### Breaking Changes
 
+- Update hour default symbol to `h`. (Issue #719)
+- Replace `h` with `ℎ` (U+210E) as default symbol for planck constant.
 - Change minimal Python version support to 3.8+
 - Change minimal Numpy version support to 1.19+
 

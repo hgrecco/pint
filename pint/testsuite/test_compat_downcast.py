@@ -52,7 +52,7 @@ def array(request):
     elif request.param == "masked_array":
         # Create sample masked array as an upper triangular matrix.
         return np.ma.masked_array(
-            np.arange(25, dtype=np.float).reshape((5, 5)),
+            np.arange(25, dtype=float).reshape((5, 5)),
             mask=np.logical_not(np.triu(np.ones((5, 5)))),
         )
     elif request.param == "dask_array":
