@@ -28,6 +28,7 @@ Pint Changelog
 - Fix `to_compact` and `infer_base_unit` for non-float non_int_type.
 - Fix `to_reduced_units` to work with dimensionless units. (Issue #919)
 - Fix parsing of units string with same canonalized name (Issue #1441 & #1142)
+- The pint-pandas example notebook has been moved to the pint-pandas package.
 
 ### Breaking Changes
 

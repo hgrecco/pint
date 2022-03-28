@@ -4,8 +4,6 @@ matplotlib
 nbsphinx
 numpy
 pytest
-pandas==1.2.4
-pint-pandas
 jupyter_client
 ipykernel
 ipython
