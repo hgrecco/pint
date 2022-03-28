@@ -1,5 +1,7 @@
 [run]
-omit = pint/testsuite/*
+omit =
+    pint/testsuite/*
+    pint/_vendor/*
 
 [report]
 # Regexes for lines to exclude from consideration
