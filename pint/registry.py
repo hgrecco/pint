@@ -830,7 +830,9 @@ class BaseRegistry(metaclass=RegistryMeta):
             return 1
 
         dim1, dim2 = (self.get_dimensionality(unit) for unit in (unit1, unit2))
-        if not dim1 or not dim2 or dim1.keys() != dim2.keys():  # not comparable
+        if dim1 == dim2:
+            return 1
+        elif not dim1 or not dim2 or dim1.keys() != dim2.keys():  # not comparable
             return None
 
         ratios = (dim2[key] / val for key, val in dim1.items())
@@ -1193,7 +1195,12 @@ class BaseRegistry(metaclass=RegistryMeta):
         units = self._parse_units(input_string, as_delta, case_sensitive)
         return self.Unit(units)
 
-    def _parse_units(self, input_string, as_delta=True, case_sensitive=None):
+    def _parse_units(
+        self,
+        input_string: str,
+        as_delta: bool = True,
+        case_sensitive: Optional[bool] = None,
+    ) -> UnitsContainerT:
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
         """
@@ -1215,7 +1222,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         if units.scale != 1:
             raise ValueError("Unit expression cannot have a scaling factor.")
 
-        ret = {}
+        ret = self.UnitsContainer({})
         many = len(units) > 1
         for name in units:
             cname = self.get_name(name, case_sensitive=case_sensitive)
@@ -1226,9 +1233,7 @@ class BaseRegistry(metaclass=RegistryMeta):
                 definition = self._units[cname]
                 if not definition.is_multiplicative:
                     cname = "delta_" + cname
-            ret[cname] = value
-
-        ret = self.UnitsContainer(ret)
+            ret = ret.add(cname, value)
 
         if as_delta:
             cache[input_string] = ret
