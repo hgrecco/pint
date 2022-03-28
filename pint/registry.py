@@ -830,7 +830,9 @@ class BaseRegistry(metaclass=RegistryMeta):
             return 1
 
         dim1, dim2 = (self.get_dimensionality(unit) for unit in (unit1, unit2))
-        if not dim1 or not dim2 or dim1.keys() != dim2.keys():  # not comparable
+        if dim1 == dim2:
+            return 1
+        elif not dim1 or not dim2 or dim1.keys() != dim2.keys():  # not comparable
             return None
 
         ratios = (dim2[key] / val for key, val in dim1.items())

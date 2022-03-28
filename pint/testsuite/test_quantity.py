@@ -665,6 +665,13 @@ class TestQuantity(QuantityTestCase):
         q = self.Q_(0.5, "g*t/kg")
         helpers.assert_quantity_equal(q.to_reduced_units(), self.Q_(0.5, "kg"))
 
+    def test_to_reduced_units_dimensionless(self):
+        ureg = UnitRegistry(preprocessors=[lambda x: x.replace("%", " percent ")])
+        ureg.define("percent = 0.01 count = %")
+        Q_ = ureg.Quantity
+        reduced_quantity = (Q_("1 s") * Q_("5 %") / Q_("1 count")).to_reduced_units()
+        assert reduced_quantity == ureg.Quantity(0.05, ureg.second)
+
     @pytest.mark.parametrize(
         ("unit_str", "expected_unit"),
         [
