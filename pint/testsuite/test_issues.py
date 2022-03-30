@@ -244,8 +244,8 @@ class TestIssues(QuantityTestCase):
     def test_issue77(self, module_registry):
         acc = (5.0 * module_registry("m/s/s")).plus_minus(0.25)
         tim = (37.0 * module_registry("s")).plus_minus(0.16)
-        dis = acc * tim ** 2 / 2
-        assert dis.value == acc.value * tim.value ** 2 / 2
+        dis = acc * tim**2 / 2
+        assert dis.value == acc.value * tim.value**2 / 2
 
     def test_issue85(self, module_registry):
 
@@ -284,18 +284,18 @@ class TestIssues(QuantityTestCase):
         assert parts(q2 / q3) == (q2m / q3m, q2u / q3u)
         assert parts(q3 * q2) == (q3m * q2m, q3u * q2u)
         assert parts(q3 / q2) == (q3m / q2m, q3u / q2u)
-        assert parts(q2 ** 1) == (q2m ** 1, q2u ** 1)
-        assert parts(q2 ** -1) == (q2m ** -1, q2u ** -1)
-        assert parts(q2 ** 2) == (q2m ** 2, q2u ** 2)
-        assert parts(q2 ** -2) == (q2m ** -2, q2u ** -2)
+        assert parts(q2**1) == (q2m**1, q2u**1)
+        assert parts(q2**-1) == (q2m**-1, q2u**-1)
+        assert parts(q2**2) == (q2m**2, q2u**2)
+        assert parts(q2**-2) == (q2m**-2, q2u**-2)
 
         assert parts(q1 * q3) == (k1m * q3m, k1u * q3u)
         assert parts(q1 / q3) == (k1m / q3m, k1u / q3u)
         assert parts(q3 * q1) == (q3m * k1m, q3u * k1u)
         assert parts(q3 / q1) == (q3m / k1m, q3u / k1u)
-        assert parts(q1 ** -1) == (k1m ** -1, k1u ** -1)
-        assert parts(q1 ** 2) == (k1m ** 2, k1u ** 2)
-        assert parts(q1 ** -2) == (k1m ** -2, k1u ** -2)
+        assert parts(q1**-1) == (k1m**-1, k1u**-1)
+        assert parts(q1**2) == (k1m**2, k1u**2)
+        assert parts(q1**-2) == (k1m**-2, k1u**-2)
 
     def test_issues86b(self, module_registry):
         T1 = module_registry.Quantity(200, module_registry.degC)
@@ -472,8 +472,8 @@ class TestIssues(QuantityTestCase):
 
         a = np.asarray([1, 2, 3])
         q = [1, 2, 3] * module_registry.dimensionless
-        p = (q ** q).m
-        np.testing.assert_array_equal(p, a ** a)
+        p = (q**q).m
+        np.testing.assert_array_equal(p, a**a)
 
     def test_issue507(self, module_registry):
         # leading underscore in unit works with numbers
@@ -514,7 +514,7 @@ class TestIssues(QuantityTestCase):
             module_registry.second,
             (
                 module_registry.meters,
-                module_registry.meters / module_registry.second ** 2,
+                module_registry.meters / module_registry.second**2,
             ),
         )
         def calculate_time_to_fall(height, gravity=Q_(9.8, "m/s^2")):
@@ -585,9 +585,9 @@ class TestIssues(QuantityTestCase):
         def get_product(a=2 * u.m, b=3 * u.m, c=5 * u.m):
             return a * b * c
 
-        assert get_product(a=3 * u.m) == 45 * u.m ** 3
-        assert get_product(b=2 * u.m) == 20 * u.m ** 3
-        assert get_product(c=1 * u.dimensionless) == 6 * u.m ** 2
+        assert get_product(a=3 * u.m) == 45 * u.m**3
+        assert get_product(b=2 * u.m) == 20 * u.m**3
+        assert get_product(c=1 * u.dimensionless) == 6 * u.m**2
 
     def test_issue655a(self, module_registry):
         distance = 1 * module_registry.m
@@ -659,7 +659,7 @@ class TestIssues(QuantityTestCase):
     def test_issue902(self):
         module_registry = UnitRegistry(auto_reduce_dimensions=True)
         velocity = 1 * module_registry.m / module_registry.s
-        cross_section = 1 * module_registry.um ** 2
+        cross_section = 1 * module_registry.um**2
         result = cross_section / velocity
         assert result == 1e-12 * module_registry.m * module_registry.s
 

@@ -52,7 +52,7 @@ def test_quantification(module_registry, ds):
         lambda x, y: x + y,
         lambda x, y: x - (-y),
         lambda x, y: x * y,
-        lambda x, y: x / (y ** -1),
+        lambda x, y: x / (y**-1),
     ],
 )
 @pytest.mark.parametrize(

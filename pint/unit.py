@@ -227,7 +227,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __pow__(self, other) -> "Unit":
         if isinstance(other, NUMERIC_TYPES):
-            return self.__class__(self._units ** other)
+            return self.__class__(self._units**other)
 
         else:
             mess = "Cannot power Unit by {}".format(type(other))

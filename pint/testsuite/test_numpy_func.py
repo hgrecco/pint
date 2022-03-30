@@ -134,7 +134,7 @@ class TestNumPyFuncUtils(TestNumpyMethods):
             get_op_output_unit(
                 "mul", self.ureg.s, (self.Q_(1, "m"), self.Q_(1, "m**2"))
             )
-            == self.ureg.m ** 3
+            == self.ureg.m**3
         )
 
     def test_op_output_unit_delta(self):
@@ -164,25 +164,25 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         )
         assert (
             get_op_output_unit("div", self.ureg.s, (1, self.Q_(1, "s")))
-            == self.ureg.s ** -1
+            == self.ureg.s**-1
         )
 
     def test_op_output_unit_variance(self):
-        assert get_op_output_unit("variance", self.ureg.m) == self.ureg.m ** 2
+        assert get_op_output_unit("variance", self.ureg.m) == self.ureg.m**2
         with pytest.raises(OffsetUnitCalculusError):
             get_op_output_unit("variance", self.ureg.degC)
 
     def test_op_output_unit_square(self):
-        assert get_op_output_unit("square", self.ureg.m) == self.ureg.m ** 2
+        assert get_op_output_unit("square", self.ureg.m) == self.ureg.m**2
 
     def test_op_output_unit_sqrt(self):
-        assert get_op_output_unit("sqrt", self.ureg.m) == self.ureg.m ** 0.5
+        assert get_op_output_unit("sqrt", self.ureg.m) == self.ureg.m**0.5
 
     def test_op_output_unit_reciprocal(self):
-        assert get_op_output_unit("reciprocal", self.ureg.m) == self.ureg.m ** -1
+        assert get_op_output_unit("reciprocal", self.ureg.m) == self.ureg.m**-1
 
     def test_op_output_unit_size(self):
-        assert get_op_output_unit("size", self.ureg.m, size=3) == self.ureg.m ** 3
+        assert get_op_output_unit("size", self.ureg.m, size=3) == self.ureg.m**3
         with pytest.raises(ValueError):
             get_op_output_unit("size", self.ureg.m)
 

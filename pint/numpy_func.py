@@ -195,17 +195,17 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     elif unit_op == "variance":
         result_unit = ((1 * first_input_units + 1 * first_input_units) ** 2).units
     elif unit_op == "square":
-        result_unit = first_input_units ** 2
+        result_unit = first_input_units**2
     elif unit_op == "sqrt":
-        result_unit = first_input_units ** 0.5
+        result_unit = first_input_units**0.5
     elif unit_op == "cbrt":
         result_unit = first_input_units ** (1 / 3)
     elif unit_op == "reciprocal":
-        result_unit = first_input_units ** -1
+        result_unit = first_input_units**-1
     elif unit_op == "size":
         if size is None:
             raise ValueError('size argument must be given when unit_op=="size"')
-        result_unit = first_input_units ** size
+        result_unit = first_input_units**size
     elif unit_op == "invdiv":
         # Start with first arg in numerator, all others in denominator
         product = getattr(
@@ -214,7 +214,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         for x in all_args[1:]:
             if hasattr(x, "units"):
                 product /= x.units
-        result_unit = product ** -1
+        result_unit = product**-1
     else:
         raise ValueError("Output unit method {} not understood".format(unit_op))
 
@@ -493,7 +493,7 @@ def _frexp(x, *args, **kwargs):
 @implements("power", "ufunc")
 def _power(x1, x2):
     if _is_quantity(x1):
-        return x1 ** x2
+        return x1**x2
     else:
         return x2.__rpow__(x1)
 
@@ -708,12 +708,12 @@ def implement_prod_func(name):
             units = a.units ** a.shape[axis]
         elif where is not None:
             exponent = np.sum(where)
-            units = a.units ** exponent
+            units = a.units**exponent
         else:
             exponent = (
                 np.sum(np.logical_not(np.isnan(a))) if name == "nanprod" else a.size
             )
-            units = a.units ** exponent
+            units = a.units**exponent
 
         result = func(a._magnitude, *args, **kwargs)
 
