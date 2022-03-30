@@ -25,7 +25,7 @@ def test_format(sess_registry):
     time = 8.0 * ureg.second
     assert time.format_babel(locale="fr_FR", length="long") == "8.0 secondes"
     assert time.format_babel(locale="ro", length="short") == "8.0 s"
-    acceleration = distance / time ** 2
+    acceleration = distance / time**2
     assert (
         acceleration.format_babel(locale="fr_FR", length="long")
         == "0.375 mètre par seconde²"
@@ -45,7 +45,7 @@ def test_registry_locale():
     time = 8.0 * ureg.second
     assert time.format_babel(length="long") == "8.0 secondes"
     assert time.format_babel(locale="ro", length="short") == "8.0 s"
-    acceleration = distance / time ** 2
+    acceleration = distance / time**2
     assert acceleration.format_babel(length="long") == "0.375 mètre par seconde²"
     mks = ureg.get_system("mks")
     assert mks.format_babel(locale="fr_FR") == "métrique"

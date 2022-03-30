@@ -10,6 +10,7 @@
 import math
 import tokenize
 from decimal import Decimal
+from importlib import import_module
 from io import BytesIO
 from numbers import Number
 
@@ -138,15 +139,6 @@ else:
 if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
 
-def fully_qualified_name(obj):
-    t = type(obj)
-    module = t.__module__
-    name = t.__qualname__
-
-    if module is None or module == "__builtin__":
-        return name
-
-    return f"{module}.{name}"
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
 # types using guarded imports
@@ -170,6 +162,7 @@ upcast_type_names = (
 
 upcast_type_map = {k: None for k in upcast_type_names}
 
+
 def fully_qualified_name(obj):
     t = type(obj)
     module = t.__module__
@@ -187,7 +180,7 @@ def check_upcast_type(obj):
         return False
     else:
         module_name, class_name = fqn.rsplit(".", 1)
-        cls = getattr(import_module(module_name), cls)
+        cls = getattr(import_module(module_name), class_name)
 
     upcast_type_map[fqn] = cls
     # This is to check we are importing the same thing.
@@ -195,9 +188,10 @@ def check_upcast_type(obj):
     # we should raise an error if false.
     return isinstance(obj, cls)
 
+
 def is_upcast_type(other):
     if other in upcast_type_map.values():
-         return True
+        return True
     return check_upcast_type(other)
 
 

@@ -334,7 +334,7 @@ class TestQuantity(QuantityTestCase):
         )
         x = self.Q_("1*inch*inch")
         helpers.assert_quantity_almost_equal(
-            x.to_base_units(), self.Q_(0.0254 ** 2.0, "meter*meter")
+            x.to_base_units(), self.Q_(0.0254**2.0, "meter*meter")
         )
         x = self.Q_("1*inch/minute")
         helpers.assert_quantity_almost_equal(
@@ -700,8 +700,8 @@ class TestQuantityToCompact(QuantityTestCase):
 
     def test_power_units(self):
         ureg = self.ureg
-        self.compare_quantity_compact(900 * ureg.m ** 2, 900 * ureg.m ** 2)
-        self.compare_quantity_compact(1e7 * ureg.m ** 2, 10 * ureg.km ** 2)
+        self.compare_quantity_compact(900 * ureg.m**2, 900 * ureg.m**2)
+        self.compare_quantity_compact(1e7 * ureg.m**2, 10 * ureg.km**2)
 
     def test_inverse_units(self):
         ureg = self.ureg
@@ -710,8 +710,8 @@ class TestQuantityToCompact(QuantityTestCase):
 
     def test_inverse_square_units(self):
         ureg = self.ureg
-        self.compare_quantity_compact(1 / ureg.m ** 2, 1 / ureg.m ** 2)
-        self.compare_quantity_compact(1e11 / ureg.m ** 2, 1e5 / ureg.mm ** 2)
+        self.compare_quantity_compact(1 / ureg.m**2, 1 / ureg.m**2)
+        self.compare_quantity_compact(1e11 / ureg.m**2, 1e5 / ureg.mm**2)
 
     def test_fractional_units(self):
         ureg = self.ureg
@@ -720,8 +720,8 @@ class TestQuantityToCompact(QuantityTestCase):
 
     def test_fractional_exponent_units(self):
         ureg = self.ureg
-        self.compare_quantity_compact(1 * ureg.m ** 0.5, 1 * ureg.m ** 0.5)
-        self.compare_quantity_compact(1e-2 * ureg.m ** 0.5, 10 * ureg.um ** 0.5)
+        self.compare_quantity_compact(1 * ureg.m**0.5, 1 * ureg.m**0.5)
+        self.compare_quantity_compact(1e-2 * ureg.m**0.5, 10 * ureg.um**0.5)
 
     def test_derived_units(self):
         ureg = self.ureg
@@ -751,7 +751,7 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_very_large_to_compact(self):
         # This should not raise an IndexError
         self.compare_quantity_compact(
-            self.Q_(10000, "yottameter"), self.Q_(10 ** 28, "meter").to_compact()
+            self.Q_(10000, "yottameter"), self.Q_(10**28, "meter").to_compact()
         )
 
 
@@ -1623,20 +1623,20 @@ class TestOffsetUnitMath(QuantityTestCase):
 
     exponentiation = [  # results without / with autoconvert
         (((10, "degC"), 1), [(10, "degC"), (10, "degC")]),
-        (((10, "degC"), 0.5), ["error", (283.15 ** 0.5, "kelvin**0.5")]),
+        (((10, "degC"), 0.5), ["error", (283.15**0.5, "kelvin**0.5")]),
         (((10, "degC"), 0), [(1.0, ""), (1.0, "")]),
         (((10, "degC"), -1), ["error", (1 / (10 + 273.15), "kelvin**-1")]),
         (((10, "degC"), -2), ["error", (1 / (10 + 273.15) ** 2.0, "kelvin**-2")]),
-        (((0, "degC"), -2), ["error", (1 / 273.15 ** 2, "kelvin**-2")]),
-        (((10, "degC"), (2, "")), ["error", (283.15 ** 2, "kelvin**2")]),
+        (((0, "degC"), -2), ["error", (1 / 273.15**2, "kelvin**-2")]),
+        (((10, "degC"), (2, "")), ["error", (283.15**2, "kelvin**2")]),
         (((10, "degC"), (10, "degK")), ["error", "error"]),
         (((10, "kelvin"), (2, "")), [(100.0, "kelvin**2"), (100.0, "kelvin**2")]),
         ((2, (2, "kelvin")), ["error", "error"]),
-        ((2, (500.0, "millikelvin/kelvin")), [2 ** 0.5, 2 ** 0.5]),
-        ((2, (0.5, "kelvin/kelvin")), [2 ** 0.5, 2 ** 0.5]),
+        ((2, (500.0, "millikelvin/kelvin")), [2**0.5, 2**0.5]),
+        ((2, (0.5, "kelvin/kelvin")), [2**0.5, 2**0.5]),
         (
             ((10, "degC"), (500.0, "millikelvin/kelvin")),
-            ["error", (283.15 ** 0.5, "kelvin**0.5")],
+            ["error", (283.15**0.5, "kelvin**0.5")],
         ),
     ]
 
@@ -1670,7 +1670,7 @@ class TestOffsetUnitMath(QuantityTestCase):
         ureg = UnitRegistry(force_ndarray_like=True)
         q = ureg.Quantity(1, "1 / hours")
 
-        q1 = q ** 2
+        q1 = q**2
         assert all(isinstance(v, int) for v in q1._units.values())
 
         q2 = q.copy()
@@ -1720,7 +1720,7 @@ class TestOffsetUnitMath(QuantityTestCase):
         B = np.array([[0, -1], [-1, 0]])
         b = [[1], [0]] * self.ureg.m
         helpers.assert_quantity_equal(A @ B, [[-2, -1], [-4, -3]] * self.ureg.m)
-        helpers.assert_quantity_equal(A @ b, [[1], [3]] * self.ureg.m ** 2)
+        helpers.assert_quantity_equal(A @ b, [[1], [3]] * self.ureg.m**2)
         helpers.assert_quantity_equal(B @ b, [[0], [-1]] * self.ureg.m)
 
 
