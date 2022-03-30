@@ -3,6 +3,7 @@ import functools
 import logging
 import math
 import re
+from contextlib import nullcontext as does_not_raise
 
 import pytest
 
@@ -154,9 +155,34 @@ class TestUnit(QuantityTestCase):
         x = self.U_("m")
         assert 1 / x == self.Q_(1, "1/m")
 
-    def test_unit_pow(self):
-        x = self.U_("m")
-        assert x**2 == self.U_("m**2")
+    @pytest.mark.parametrize(
+        ("unit", "power_ratio", "expectation", "expected_unit"),
+        [
+            ("m", 2, does_not_raise(), "m**2"),
+            ("m", dict(), pytest.raises(TypeError), None),
+        ],
+    )
+    def test_unit_pow(self, unit, power_ratio, expectation, expected_unit):
+        with expectation:
+            x = self.U_(unit)
+            assert x**power_ratio == self.U_(expected_unit)
+
+    def test_is_compatible_with(self):
+        unit = self.ureg.Unit("m")
+
+        assert unit.is_compatible_with("m")
+        assert not unit.is_compatible_with("m**2")
+
+        assert unit.is_compatible_with(self.ureg.Unit("m"))
+        assert not unit.is_compatible_with(self.ureg.Unit("m**2"))
+
+        # test other type considered as dimensionless
+        unit = self.ureg.Unit("")
+        assert unit.is_compatible_with(0.5)
+
+    def test_systems(self):
+        unit = self.ureg.Unit("m")
+        assert unit.systems == frozenset({"cgs", "atomic", "Planck", "mks", "SI"})
 
     def test_unit_hash(self):
         x = self.U_("m")
