@@ -30,6 +30,10 @@ Pint Changelog
 - Fix parsing of units string with same canonalized name (Issue #1441 & #1142)
 - The pint-pandas example notebook has been moved to the pint-pandas package.
 
+### New Units
+- `sverdrup` (PR #1404)
+- `cooling_tower_ton` (PR #1484)
+
 ### Breaking Changes
 
 - Update hour default symbol to `h`. (Issue #719)
