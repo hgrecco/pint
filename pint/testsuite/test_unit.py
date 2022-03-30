@@ -156,7 +156,7 @@ class TestUnit(QuantityTestCase):
 
     def test_unit_pow(self):
         x = self.U_("m")
-        assert x ** 2 == self.U_("m**2")
+        assert x**2 == self.U_("m**2")
 
     def test_unit_hash(self):
         x = self.U_("m")
@@ -366,7 +366,7 @@ class TestRegistry(QuantityTestCase):
     def test_parse_with_force_ndarray(self):
         ureg = UnitRegistry(force_ndarray=True)
 
-        assert ureg.parse_expression("m * s ** -2").units == ureg.m / ureg.s ** 2
+        assert ureg.parse_expression("m * s ** -2").units == ureg.m / ureg.s**2
 
     def test_parse_expression_with_preprocessor(self):
         # Add parsing of UDUNITS-style power
@@ -535,10 +535,10 @@ class TestRegistry(QuantityTestCase):
             return x + y
 
         def gfunc2(x, y):
-            return x ** 2 + y
+            return x**2 + y
 
         def gfunc3(x, y):
-            return x ** 2 * y
+            return x**2 * y
 
         rst = 3.0 * ureg.meter + 1.0 * ureg.centimeter
 
@@ -601,7 +601,7 @@ class TestRegistry(QuantityTestCase):
             g1(1 * ureg.km / ureg.hour, 1 * ureg.hour, 3.0)
         assert (
             g1(3.6 * ureg.km / ureg.hour, 1 * ureg.second)
-            == 1 * ureg.meter / ureg.second ** 2
+            == 1 * ureg.meter / ureg.second**2
         )
 
         with pytest.raises(TypeError):

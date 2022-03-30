@@ -950,7 +950,7 @@ class BaseRegistry(metaclass=RegistryMeta):
             if reg.is_base:
                 accumulators[1][key] += exp2
             else:
-                accumulators[0] *= reg.converter.scale ** exp2
+                accumulators[0] *= reg.converter.scale**exp2
                 if reg.reference is not None:
                     self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
@@ -2195,7 +2195,7 @@ class SystemRegistry(BaseRegistry):
             if unit in bu:
                 new_unit = bu[unit]
                 new_unit = to_units_container(new_unit, self)
-                destination_units *= new_unit ** value
+                destination_units *= new_unit**value
             else:
                 destination_units *= self.UnitsContainer({unit: value})
 

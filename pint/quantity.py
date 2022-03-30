@@ -1581,16 +1581,16 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
                 if getattr(other, "dimensionless", False):
                     exponent = other.to_root_units().magnitude
-                    units = new_self._units ** exponent
+                    units = new_self._units**exponent
                 elif not getattr(other, "dimensionless", True):
                     raise DimensionalityError(other._units, "dimensionless")
                 else:
                     exponent = _to_magnitude(
                         other, force_ndarray=False, force_ndarray_like=False
                     )
-                    units = new_self._units ** exponent
+                    units = new_self._units**exponent
 
-            magnitude = new_self._magnitude ** exponent
+            magnitude = new_self._magnitude**exponent
             return self.__class__(magnitude, units)
 
     @check_implemented
@@ -1605,7 +1605,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             if not self.dimensionless:
                 raise DimensionalityError(self._units, "dimensionless")
             new_self = self.to_root_units()
-            return other ** new_self._magnitude
+            return other**new_self._magnitude
 
     def __abs__(self) -> Quantity[_MagnitudeType]:
         return self.__class__(abs(self._magnitude), self._units)

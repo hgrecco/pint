@@ -255,11 +255,11 @@ class TestSystem(QuantityTestCase):
         assert c[1] == {"pint": 1.0 / 3}
 
         c = ureg.get_base_units("inch**2", system=sysname)
-        assert round(abs(c[0] - 0.326 ** 2), 3) == 0
+        assert round(abs(c[0] - 0.326**2), 3) == 0
         assert c[1] == {"pint": 2.0 / 3}
 
         c = ureg.get_base_units("cm**2", system=sysname)
-        assert round(abs(c[0] - 0.1283 ** 2), 3) == 0
+        assert round(abs(c[0] - 0.1283**2), 3) == 0
         assert c[1] == {"pint": 2.0 / 3}
 
     def test_get_base_units_relation(self):

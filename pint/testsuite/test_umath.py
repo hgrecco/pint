@@ -83,7 +83,7 @@ class TestUFuncs:
             if output_units == "same":
                 ou = x1.units
             elif isinstance(output_units, (int, float)):
-                ou = x1.units ** output_units
+                ou = x1.units**output_units
             else:
                 ou = output_units
 
@@ -172,7 +172,7 @@ class TestUFuncs:
                 if ou == "same":
                     ou = x1.units
                 elif isinstance(ou, (int, float)):
-                    ou = x1.units ** ou
+                    ou = x1.units**ou
 
                 if ou is not None:
                     re = self.Q_(re, ou)
@@ -231,7 +231,7 @@ class TestUFuncs:
             elif output_units == "div":
                 ou = x1.units / x2.units
             elif output_units == "second":
-                ou = x1.units ** x2
+                ou = x1.units**x2
             else:
                 ou = output_units
 

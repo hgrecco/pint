@@ -520,7 +520,7 @@ class UnitsContainer(Mapping):
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
 
-        return self ** -1
+        return self**-1
 
 
 class ParserHelper(UnitsContainer):
@@ -720,7 +720,7 @@ class ParserHelper(UnitsContainer):
         d = self._d.copy()
         for key in self._d:
             d[key] *= other
-        return self.__class__(self.scale ** other, d, non_int_type=self._non_int_type)
+        return self.__class__(self.scale**other, d, non_int_type=self._non_int_type)
 
     def __truediv__(self, other):
         if isinstance(other, str):
