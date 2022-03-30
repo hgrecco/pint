@@ -158,16 +158,17 @@ except ImportError:
     compute, persist, visualize = None, None, None
     dask_array = None
 
-upcast_types = {
-    k: None for k in [
-        "pint_pandas.PintArray",
-        "pandas.Series",
-        "xarray.core.dataarray.DataArray",
-        "xarray.core.dataset.Dataset",
-        "xarray.core.variable.Variable",
-        "pandas.core.series.Series",
-    ]
-}
+upcast_type_names = (
+    "pint_pandas.PintArray",
+    "pandas.Series",
+    "xarray.core.dataarray.DataArray",
+    "xarray.core.dataset.Dataset",
+    "xarray.core.variable.Variable",
+    "pandas.core.series.Series",
+    "xarray.core.dataarray.DataArray",
+)
+
+upcast_type_map = {k: None for k in upcast_type_names}
 
 def fully_qualified_name(obj):
     t = type(obj)
@@ -180,28 +181,24 @@ def fully_qualified_name(obj):
     return f"{module}.{name}"
 
 
-def is_upcast_type_by_name(other):
-    fqn = fully_qualified_name(other)
-    try:
-        importer = upcast_types[fqn]
-    except KeyError:
+def check_upcast_type(obj):
+    fqn = fully_qualified_name(obj)
+    if fqn not in upcast_type_map:
         return False
-    if isinstance(importer, callable):
-        cls = importer()
     else:
         module_name, class_name = fqn.rsplit(".", 1)
         cls = getattr(import_module(module_name), cls)
 
-    upcast_types[fqn] = cls
+    upcast_type_map[fqn] = cls
     # This is to check we are importing the same thing.
     # and avoid weird problems. Maybe instead of return
     # we should raise an error if false.
     return isinstance(obj, cls)
 
 def is_upcast_type(other):
-    if other in upcast_types.values():
+    if other in upcast_type_map.values():
          return True
-    return is_upcast_type_by_name(other)
+    return check_upcast_type(other)
 
 
 def is_duck_array_type(cls) -> bool:
