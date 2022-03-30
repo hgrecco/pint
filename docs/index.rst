@@ -165,5 +165,5 @@ One last thing
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/
 .. _`Babel`: http://babel.pocoo.org/
 .. _`pint-pandas`: https://github.com/hgrecco/pint-pandas
-.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb
+.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pint-pandas.ipynb
 .. _`BSD 3-clause style license`: https://github.com/hgrecco/pint/blob/master/LICENSE
