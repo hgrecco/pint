@@ -637,17 +637,16 @@ class BaseRegistry(metaclass=RegistryMeta):
         else:
             parsed_files = parser.DefinitionFiles([p.parse_lines(file)])
 
-        for definition_file in parsed_files[::-1]:
-            for lineno, definition in definition_file.parsed_lines:
-                if definition.__class__ in p.handled_classes:
-                    continue
-                loaderfunc = loaders.get(definition.__class__, None)
-                if not loaderfunc:
-                    raise ValueError(
-                        f"No loader function defined "
-                        f"for {definition.__class__.__name__}"
-                    )
-                loaderfunc(definition)
+        for lineno, definition in parsed_files.iter_definitions():
+            if definition.__class__ in p.handled_classes:
+                continue
+            loaderfunc = loaders.get(definition.__class__, None)
+            if not loaderfunc:
+                raise ValueError(
+                    f"No loader function defined "
+                    f"for {definition.__class__.__name__}"
+                )
+            loaderfunc(definition)
 
         return parsed_files
 

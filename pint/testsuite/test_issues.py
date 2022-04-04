@@ -901,3 +901,43 @@ if np is not None:
         type_before = type(q._magnitude)
         callable(q)
         assert isinstance(q._magnitude, type_before)
+
+    def test_issue1498(tmp_path):
+        def0 = tmp_path / "def0.txt"
+        def1 = tmp_path / "def1.txt"
+        def2 = tmp_path / "def2.txt"
+
+        # A file that defines a new base unit and uses it in a context
+        def0.write_text(
+            """
+        foo = [FOO]
+
+        @context BAR
+            [FOO] -> [mass]: value / foo * 10.0 kg
+        @end
+        """
+        )
+
+        # A file that defines a new base unit, then imports another file…
+        def1.write_text(
+            f"""
+        foo = [FOO]
+
+        @import {str(def2)}
+        """
+        )
+
+        # …that, in turn, uses it in a context
+        def2.write_text(
+            """
+        @context BAR
+            [FOO] -> [mass]: value / foo * 10.0 kg
+        @end
+        """
+        )
+
+        # Succeeds with pint 0.18; fails with pint 0.19
+        ureg1 = UnitRegistry()
+        ureg1.load_definitions(def1)  # ← FAILS
+
+        assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude

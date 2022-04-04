@@ -61,7 +61,33 @@ class DefinitionFile:
 class DefinitionFiles(tuple):
     """Wrapper class that allows handling a tuple containing DefinitionFile."""
 
-    pass
+    def _iter_definitions(self, next_file, *pending_files):
+        for lineno, definition in next_file.parsed_lines:
+            if isinstance(definition, ImportDefinition):
+                if not pending_files:
+                    raise ValueError(
+                        f"No more files while trying to import {definition.path}."
+                    )
+
+                if not str(pending_files[0].filename).endswith(definition.path):
+                    raise ValueError(
+                        "The order of the files do not match. "
+                        f"(expected: {definition.path}, "
+                        f"found {pending_files[0].path})"
+                    )
+
+                yield from self._iter_definitions(*pending_files)
+            else:
+                yield lineno, definition
+
+    def iter_definitions(self):
+        """Iter all definitions in the order they appear,
+        going into the included files.
+
+        Important: This assumes that the order of the imported files
+        is the one that they will appear in the definitions.
+        """
+        yield from self._iter_definitions(*self)
 
 
 def build_disk_cache_class(non_int_type: type):
