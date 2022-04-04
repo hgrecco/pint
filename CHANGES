@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.19 (unreleased)
+0.19 (2022-04-04)
 -----------------
 
 - Better separation between parsing and loading of definitions.
