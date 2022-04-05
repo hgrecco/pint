@@ -941,3 +941,63 @@ if np is not None:
         ureg1.load_definitions(def1)  # ← FAILS
 
         assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude
+
+    def test_issue1498b(tmp_path):
+        def0 = tmp_path / "def0.txt"
+        def1 = tmp_path / "def1.txt"
+        def1_1 = tmp_path / "def1_1.txt"
+        def1_2 = tmp_path / "def1_2.txt"
+        def2 = tmp_path / "def2.txt"
+
+        # A file that defines a new base unit and uses it in a context
+        def0.write_text(
+            """
+        foo = [FOO]
+
+        @context BAR
+            [FOO] -> [mass]: value / foo * 10.0 kg
+        @end
+
+        @import def1.txt
+        @import def2.txt
+        """
+        )
+
+        # A file that defines a new base unit, then imports another file…
+        def1.write_text(
+            """
+        @import def1_1.txt
+        @import def1_2.txt
+        """
+        )
+
+        def1_1.write_text(
+            """
+        @context BAR1_1
+            [FOO] -> [mass]: value / foo * 10.0 kg
+        @end
+        """
+        )
+
+        def1_2.write_text(
+            """
+        @context BAR1_2
+            [FOO] -> [mass]: value / foo * 10.0 kg
+        @end
+        """
+        )
+
+        # …that, in turn, uses it in a context
+        def2.write_text(
+            """
+        @context BAR2
+            [FOO] -> [mass]: value / foo * 10.0 kg
+        @end
+        """
+        )
+
+        # Succeeds with pint 0.18; fails with pint 0.19
+        ureg1 = UnitRegistry()
+        ureg1.load_definitions(def0)  # ← FAILS
+
+        assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude
