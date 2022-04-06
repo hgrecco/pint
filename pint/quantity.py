@@ -350,29 +350,34 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         default_mspec = remove_custom_flags(self.default_format)
         default_uspec = extract_custom_flags(self.default_format)
-        if spec:
-            if not uspec and default_uspec:
-                warnings.warn(
-                    (
-                        "The given format spec does not contain a unit formatter."
-                        " Falling back to the builtin defaults, but in the future"
-                        " the unit formatter specified in the `default_format`"
-                        " attribute will be used instead."
-                    ),
-                    DeprecationWarning,
-                )
-            if not mspec and default_mspec:
-                warnings.warn(
-                    (
-                        "The given format spec does not contain a magnitude formatter."
-                        " Falling back to the builtin defaults, but in the future"
-                        " the magnitude formatter specified in the `default_format`"
-                        " attribute will be used instead."
-                    ),
-                    DeprecationWarning,
-                )
+
+        if self._REGISTRY.separate_format_defaults in (False, None):
+            if spec and self._REGISTRY.separate_format_defaults is None:
+                if not uspec and default_uspec:
+                    warnings.warn(
+                        (
+                            "The given format spec does not contain a unit formatter."
+                            " Falling back to the builtin defaults, but in the future"
+                            " the unit formatter specified in the `default_format`"
+                            " attribute will be used instead."
+                        ),
+                        DeprecationWarning,
+                    )
+                if not mspec and default_mspec:
+                    warnings.warn(
+                        (
+                            "The given format spec does not contain a magnitude formatter."
+                            " Falling back to the builtin defaults, but in the future"
+                            " the magnitude formatter specified in the `default_format`"
+                            " attribute will be used instead."
+                        ),
+                        DeprecationWarning,
+                    )
+            else:
+                mspec, uspec = default_mspec, default_uspec
         else:
-            mspec, uspec = default_mspec, default_uspec
+            uspec = uspec if uspec else default_uspec
+            mspec = mspec if mspec else default_mspec
 
         # If Compact is selected, do it at the beginning
         if "#" in spec:
