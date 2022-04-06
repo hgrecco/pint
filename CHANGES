@@ -4,7 +4,8 @@ Pint Changelog
 0.20 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Provide a method to iter the definitions in the order they appear,
+  recursing the imported files. (Issue #1498)
 
 
 0.19 (2022-04-04)
