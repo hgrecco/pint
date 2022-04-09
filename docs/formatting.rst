@@ -50,7 +50,8 @@ In case the format is omitted, the corresponding value in the object's
    In the future, the magnitude and unit format spec will be evaluated
    independently, such that with a global default of
    ``ureg.default_format = ".3f"`` and ``f"{q:P}`` the format that
-   will be used is ``".3fP"``.
+   will be used is ``".3fP"``. This behavior can be opted into by
+   setting :py:attr:`UnitRegistry.separate_format_defaults` to :py:obj:`True`.
 
 If both are not set, the global default of ``"D"`` and the magnitude's default
 format are used instead.
