@@ -4,7 +4,7 @@ Pint Changelog
 0.20 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Add the ``separate_format_defaults`` registry setting (Issue #1501, PR #1503)
 
 
 0.19.1 (2022-04-06)
