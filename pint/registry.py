@@ -242,7 +242,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         Specify the folder in which cache files are saved and loaded from.
         If None, the cache is disabled. (default)
     separate_format_defaults : bool, optional
-        Separate the default format as soon as possible.
+        Separate the default format into magnitude and unit formats as soon as
+        possible. The deprecated default is not to separate. This will change in a
+        future release.
     """
 
     #: Babel.Locale instance or None
