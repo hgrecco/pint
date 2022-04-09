@@ -506,7 +506,7 @@ def split_format(spec, default, separate_format_defaults=True):
                     ),
                     DeprecationWarning,
                 )
-        else:
+        elif not spec:
             mspec, uspec = default_mspec, default_uspec
     else:
         mspec = mspec if mspec else default_mspec
