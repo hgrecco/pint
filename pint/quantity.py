@@ -61,10 +61,10 @@ from .errors import (
 )
 from .formatting import (
     _pretty_fmt_exponent,
-    extract_custom_flags,
     ndarray_to_latex,
     remove_custom_flags,
     siunitx_format_unit,
+    split_format,
 )
 from .numpy_func import (
     HANDLED_UFUNCS,
@@ -345,39 +345,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         if self._REGISTRY.fmt_locale is not None:
             return self.format_babel(spec)
 
-        mspec = remove_custom_flags(spec)
-        uspec = extract_custom_flags(spec)
-
-        default_mspec = remove_custom_flags(self.default_format)
-        default_uspec = extract_custom_flags(self.default_format)
-
-        if self._REGISTRY.separate_format_defaults in (False, None):
-            if spec and self._REGISTRY.separate_format_defaults is None:
-                if not uspec and default_uspec:
-                    warnings.warn(
-                        (
-                            "The given format spec does not contain a unit formatter."
-                            " Falling back to the builtin defaults, but in the future"
-                            " the unit formatter specified in the `default_format`"
-                            " attribute will be used instead."
-                        ),
-                        DeprecationWarning,
-                    )
-                if not mspec and default_mspec:
-                    warnings.warn(
-                        (
-                            "The given format spec does not contain a magnitude formatter."
-                            " Falling back to the builtin defaults, but in the future"
-                            " the magnitude formatter specified in the `default_format`"
-                            " attribute will be used instead."
-                        ),
-                        DeprecationWarning,
-                    )
-            else:
-                mspec, uspec = default_mspec, default_uspec
-        else:
-            uspec = uspec if uspec else default_uspec
-            mspec = mspec if mspec else default_mspec
+        mspec, uspec = split_format(
+            spec, self.default_format, self._REGISTRY.separate_format_defaults
+        )
 
         # If Compact is selected, do it at the beginning
         if "#" in spec:

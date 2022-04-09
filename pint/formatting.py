@@ -9,6 +9,7 @@
 """
 
 import re
+import warnings
 from typing import Callable, Dict
 
 from .babel_names import _babel_lengths, _babel_units
@@ -472,6 +473,46 @@ def remove_custom_flags(spec):
         if flag:
             spec = spec.replace(flag, "")
     return spec
+
+
+def split_format(spec, default, separate_format_defaults=True):
+    mspec = remove_custom_flags(spec)
+    uspec = extract_custom_flags(spec)
+
+    default_mspec = remove_custom_flags(default)
+    default_uspec = extract_custom_flags(default)
+
+    if separate_format_defaults in (False, None):
+        # should we warn always or only if there was no explicit choice?
+        # Given that we want to eventually remove the flag again, I'd say yes?
+        if spec and separate_format_defaults is None:
+            if not uspec and default_uspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a unit formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the unit formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+            if not mspec and default_mspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a magnitude formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the magnitude formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+        else:
+            mspec, uspec = default_mspec, default_uspec
+    else:
+        mspec = mspec if mspec else default_mspec
+        uspec = uspec if uspec else default_uspec
+
+    return mspec, uspec
 
 
 def vector_to_latex(vec, fmtfun=lambda x: format(x, ".2f")):
