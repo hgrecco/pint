@@ -15,7 +15,7 @@ from pint import (
 )
 from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
-from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 from pint.util import ParserHelper, UnitsContainer
 
 
@@ -79,6 +79,18 @@ class TestUnit(QuantityTestCase):
             with subtests.test(spec):
                 ureg.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
+
+    def test_unit_formatting_defaults_warning(self):
+        ureg = UnitRegistry()
+        ureg.default_format = "~P"
+        x = ureg.Unit("m / s ** 2")
+
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:.2f}" == "meter / second ** 2"
+
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:.2f}" == "m/s²"
 
     def test_unit_formatting_snake_case(self, subtests):
         # Test that snake_case units are escaped where appropriate
