@@ -5,6 +5,7 @@ import math
 import operator as op
 import pickle
 import warnings
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
@@ -19,6 +20,14 @@ from pint import (
 from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 from pint.unit import UnitsContainer
+
+
+@contextmanager
+def assert_no_warnings():
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+
+        yield
 
 
 class FakeWrapper:
@@ -272,6 +281,10 @@ class TestQuantity(QuantityTestCase):
         with pytest.warns(DeprecationWarning):
             assert f"{x:d}" == "4 meter ** 2"
 
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:d}" == "4 m ** 2"
+
     def test_formatting_override_default_magnitude(self):
         ureg = UnitRegistry()
         ureg.default_format = ".2f"
@@ -280,6 +293,10 @@ class TestQuantity(QuantityTestCase):
         assert f"{x:dP}" == "4 meter²"
         with pytest.warns(DeprecationWarning):
             assert f"{x:D}" == "4 meter ** 2"
+
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:D}" == "4.00 meter ** 2"
 
     def test_exponent_formatting(self):
         ureg = UnitRegistry()
