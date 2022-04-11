@@ -80,7 +80,7 @@ class DefinitionFiles(tuple):
                         f"No more files while trying to import {definition.path}."
                     )
 
-                if not pending_files[0].filename.as_posix().endswith(definition.path):
+                if not str(pending_files[0].filename).endswith(str(definition.path)):
                     raise ValueError(
                         "The order of the files do not match. "
                         f"(expected: {definition.path}, "
@@ -135,13 +135,13 @@ def build_disk_cache_class(non_int_type: type):
 class ImportDefinition:
     """Definition for the @import directive"""
 
-    path: str
+    path: pathlib.Path
 
     @classmethod
     def from_string(
         cls, definition: str, non_int_type: type = float
     ) -> ImportDefinition:
-        return ImportDefinition(definition[7:].strip())
+        return ImportDefinition(pathlib.Path(definition[7:].strip()))
 
 
 class Parser:
