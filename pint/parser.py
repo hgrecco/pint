@@ -80,7 +80,7 @@ class DefinitionFiles(tuple):
                         f"No more files while trying to import {definition.path}."
                     )
 
-                if not str(pending_files[0].filename).endswith(definition.path):
+                if not pending_files[0].filename.as_posix().endswith(definition.path):
                     raise ValueError(
                         "The order of the files do not match. "
                         f"(expected: {definition.path}, "
