@@ -1461,11 +1461,10 @@ class NonMultiplicativeRegistry(BaseRegistry):
     def _is_multiplicative(self, u) -> bool:
         if u in self._units:
             # TODO
-            multiplicative_reference_units = not self._units[u].is_base and all(
+            multiplicative_reference_units = all(
                 [
-                    self._units[u].is_multiplicative
-                    for u in self._units[u].reference
-                    if not self._units[u].is_base
+                    converter.is_multiplicative
+                    for converter in converter_iterator(self, self._units[u])
                 ]
             )
             return self._units[u].is_multiplicative and multiplicative_reference_units
