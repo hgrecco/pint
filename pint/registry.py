@@ -78,6 +78,7 @@ from .definitions import (
     DimensionDefinition,
     PrefixDefinition,
     UnitDefinition,
+    converter_iterator
 )
 from .errors import (
     DefinitionSyntaxError,
@@ -1459,7 +1460,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
     def _is_multiplicative(self, u) -> bool:
         if u in self._units:
-            return self._units[u].is_multiplicative
+            #TODO
+            multiplicative_reference_units = not self._units[u].is_base and all([self._units[u].is_multiplicative for u in self._units[u].reference if not self._units[u].is_base])
+            return self._units[u].is_multiplicative and multiplicative_reference_units
 
         # If the unit is not in the registry might be because it is not
         # registered with its prefixed version.
@@ -1568,8 +1571,9 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         # clean src from offset units by converting to reference
         if src_offset_unit:
-            value = self._units[src_offset_unit].converter.to_reference(value, inplace)
             src = src.remove([src_offset_unit])
+            for converter in converter_iterator(self, self._units[src_offset_unit]):
+                 value = converter.to_reference(value, inplace)
             # Add reference unit for multiplicative section
             src = self._add_ref_of_log_or_offset_unit(src_offset_unit, src)
 
@@ -1584,9 +1588,8 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         # Finally convert to offset units specified in destination
         if dst_offset_unit:
-            value = self._units[dst_offset_unit].converter.from_reference(
-                value, inplace
-            )
+            for converter in reversed(list(converter_iterator(self, self._units[dst_offset_unit]))):
+                 value = converter.from_reference(value, inplace)
 
         return value
 

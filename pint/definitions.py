@@ -11,11 +11,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Iterable, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Iterable, Iterator, Optional, Tuple, Union
 
 from .converters import Converter, LogarithmicConverter, OffsetConverter, ScaleConverter
 from .errors import DefinitionSyntaxError
 from .util import ParserHelper, UnitsContainer, _is_dim
+
+if TYPE_CHECKING:
+    from .registry import UnitRegistry
 
 
 @dataclass(frozen=True)
@@ -223,7 +226,7 @@ class UnitDefinition(Definition):
     @classmethod
     def from_string(
         cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
-    ) -> "UnitDefinition":
+    ) -> UnitDefinition:
         if isinstance(definition, str):
             definition = PreprocessedDefinition.from_string(definition)
 
@@ -355,3 +358,21 @@ class AliasDefinition(Definition):
 
         name = definition.name[len("@alias ") :].lstrip()
         return AliasDefinition(name, tuple(definition.rhs_parts))
+
+
+def converter_iterator(
+    unit_registry: UnitRegistry, unit_definition: UnitDefinition
+) -> Iterator[Converter]:
+    """
+    Parameters:
+    -----------
+    unit_definition: UnitDefinition
+
+    Returns:
+    --------
+    converters to be used to convert to base unit.
+    """
+    while not unit_definition.is_base:
+        yield unit_definition.converter
+        unit_definition = unit_registry._units[str(unit_definition.reference)]
+    return
