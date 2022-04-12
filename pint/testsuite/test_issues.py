@@ -859,6 +859,12 @@ class TestIssues(QuantityTestCase):
         m = module_registry.Measurement(1, 0.1, "meter")
         assert m.default_format == "~P"
 
+    def test_issue_1504(self, func_registry):
+
+        ureg = func_registry
+        assert ureg.Quantity(0, "kilodegC").to("degK").m == 273.15
+        assert ureg.Quantity(1, "kilodegC").to("degK").m == 1273.15
+
 
 if np is not None:
 

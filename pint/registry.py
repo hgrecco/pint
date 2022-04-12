@@ -78,7 +78,7 @@ from .definitions import (
     DimensionDefinition,
     PrefixDefinition,
     UnitDefinition,
-    converter_iterator
+    converter_iterator,
 )
 from .errors import (
     DefinitionSyntaxError,
@@ -1460,8 +1460,14 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
     def _is_multiplicative(self, u) -> bool:
         if u in self._units:
-            #TODO
-            multiplicative_reference_units = not self._units[u].is_base and all([self._units[u].is_multiplicative for u in self._units[u].reference if not self._units[u].is_base])
+            # TODO
+            multiplicative_reference_units = not self._units[u].is_base and all(
+                [
+                    self._units[u].is_multiplicative
+                    for u in self._units[u].reference
+                    if not self._units[u].is_base
+                ]
+            )
             return self._units[u].is_multiplicative and multiplicative_reference_units
 
         # If the unit is not in the registry might be because it is not
@@ -1573,7 +1579,7 @@ class NonMultiplicativeRegistry(BaseRegistry):
         if src_offset_unit:
             src = src.remove([src_offset_unit])
             for converter in converter_iterator(self, self._units[src_offset_unit]):
-                 value = converter.to_reference(value, inplace)
+                value = converter.to_reference(value, inplace)
             # Add reference unit for multiplicative section
             src = self._add_ref_of_log_or_offset_unit(src_offset_unit, src)
 
@@ -1588,8 +1594,10 @@ class NonMultiplicativeRegistry(BaseRegistry):
 
         # Finally convert to offset units specified in destination
         if dst_offset_unit:
-            for converter in reversed(list(converter_iterator(self, self._units[dst_offset_unit]))):
-                 value = converter.from_reference(value, inplace)
+            for converter in reversed(
+                list(converter_iterator(self, self._units[dst_offset_unit]))
+            ):
+                value = converter.from_reference(value, inplace)
 
         return value
 
