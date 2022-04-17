@@ -17,7 +17,7 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
-from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 from pint.unit import UnitsContainer
 
 
@@ -272,6 +272,10 @@ class TestQuantity(QuantityTestCase):
         with pytest.warns(DeprecationWarning):
             assert f"{x:d}" == "4 meter ** 2"
 
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:d}" == "4 m ** 2"
+
     def test_formatting_override_default_magnitude(self):
         ureg = UnitRegistry()
         ureg.default_format = ".2f"
@@ -280,6 +284,10 @@ class TestQuantity(QuantityTestCase):
         assert f"{x:dP}" == "4 meter²"
         with pytest.warns(DeprecationWarning):
             assert f"{x:D}" == "4 meter ** 2"
+
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:D}" == "4.00 meter ** 2"
 
     def test_exponent_formatting(self):
         ureg = UnitRegistry()

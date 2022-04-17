@@ -241,6 +241,10 @@ class BaseRegistry(metaclass=RegistryMeta):
     cache_folder : str or pathlib.Path or None, optional
         Specify the folder in which cache files are saved and loaded from.
         If None, the cache is disabled. (default)
+    separate_format_defaults : bool, optional
+        Separate the default format into magnitude and unit formats as soon as
+        possible. The deprecated default is not to separate. This will change in a
+        future release.
     """
 
     #: Babel.Locale instance or None
@@ -260,6 +264,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         non_int_type: NON_INT_TYPE = float,
         case_sensitive: bool = True,
         cache_folder: Union[str, pathlib.Path, None] = None,
+        separate_format_defaults: Optional[bool] = None,
     ):
         #: Map context prefix to (loader function, parser function, single_line)
         #: type: Dict[str, Tuple[Callable[[Any], None]], Any]
@@ -277,6 +282,9 @@ class BaseRegistry(metaclass=RegistryMeta):
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
         self.preprocessors = preprocessors or []
+
+        #: mode used to fill in the format defaults
+        self.separate_format_defaults = separate_format_defaults
 
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
