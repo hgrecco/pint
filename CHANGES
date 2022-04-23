@@ -1,10 +1,12 @@
 Pint Changelog
 ==============
 
-0.20 (unreleased)
------------------
+0.19.2 (2022-04-23)
+-------------------
 
 - Add the ``separate_format_defaults`` registry setting (Issue #1501, PR #1503)
+- Handle definitions @import from relative paths on Windows
+  (Issue #1508, thanks khaeru)
 
 
 0.19.1 (2022-04-06)
