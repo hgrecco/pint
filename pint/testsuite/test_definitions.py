@@ -2,7 +2,7 @@ import pytest
 
 from pint.definitions import Definition
 from pint.errors import DefinitionSyntaxError
-from pint.facets.base.definitions import (
+from pint.facets.base import (
     AliasDefinition,
     DimensionDefinition,
     PrefixDefinition,

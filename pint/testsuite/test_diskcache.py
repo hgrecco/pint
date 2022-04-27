@@ -5,7 +5,7 @@ import time
 import pytest
 
 import pint
-from pint.facets.base.definitions import UnitDefinition
+from pint.facets.base import UnitDefinition
 from pint.parser import DefinitionFile
 
 FS_SLEEP = 0.010

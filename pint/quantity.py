@@ -58,7 +58,7 @@ from .errors import (
     PintTypeError,
     UnitStrippedWarning,
 )
-from .facets.base.definitions import UnitDefinition
+from .facets.base import UnitDefinition
 from .formatting import (
     _pretty_fmt_exponent,
     ndarray_to_latex,
@@ -88,7 +88,7 @@ from .util import (
 
 if TYPE_CHECKING:
     from . import Context, Unit
-    from .registry import BaseRegistry
+    from .facets.base import BaseRegistry
     from .unit import UnitsContainer as UnitsContainerT
 
     if HAS_NUMPY:

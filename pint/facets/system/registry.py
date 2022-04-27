@@ -189,7 +189,7 @@ class SystemRegistry(GroupRegistry):
             if unit in bu:
                 new_unit = bu[unit]
                 new_unit = to_units_container(new_unit, self)
-                destination_units *= new_unit ** value
+                destination_units *= new_unit**value
             else:
                 destination_units *= self.UnitsContainer({unit: value})
 

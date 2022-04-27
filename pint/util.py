@@ -29,9 +29,8 @@ from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
     from ._typing import UnitLike
+    from .facets.base import BaseRegistry
     from .quantity import Quantity
-    from .registry import BaseRegistry
-
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
