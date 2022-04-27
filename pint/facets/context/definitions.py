@@ -11,13 +11,15 @@ from __future__ import annotations
 import numbers
 import re
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
 
 from ...definitions import Definition
 from ...errors import DefinitionSyntaxError
-from ...quantity import Quantity
 from ...util import ParserHelper, SourceIterator
-from ..base.definitions import UnitDefinition
+from ..plain.definitions import UnitDefinition
+
+if TYPE_CHECKING:
+    from ..plain.quantity import Quantity
 
 _header_re = re.compile(
     r"@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*"
@@ -93,7 +95,7 @@ class ContextDefinition:
                 "Can't change a unit's symbol or aliases within a context"
             )
         if definition.is_base:
-            raise DefinitionSyntaxError("Can't define base units within a context")
+            raise DefinitionSyntaxError("Can't define plain units within a context")
         return definition
 
     @classmethod

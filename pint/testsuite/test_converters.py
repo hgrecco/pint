@@ -2,11 +2,11 @@ import itertools
 
 from pint.compat import np
 from pint.converters import Converter
-from pint.facets.base import ScaleConverter
 from pint.facets.nonmultiplicative.definitions import (
     LogarithmicConverter,
     OffsetConverter,
 )
+from pint.facets.plain import ScaleConverter
 from pint.testsuite import helpers
 
 

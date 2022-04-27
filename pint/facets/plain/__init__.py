@@ -1,5 +1,5 @@
 """
-    pint.facets.base
+    pint.facets.plain
     ~~~~~~~~~~~~~~~~
 
     Base implementation for registry, units and quantities.
@@ -16,14 +16,13 @@ from .definitions import (
     ScaleConverter,
     UnitDefinition,
 )
-from .objects import Context, Quantity, Unit
-from .registry import BaseRegistry
+from .objects import Quantity, Unit
+from .registry import PlainRegistry
 
 __all__ = [
-    Context,
     Unit,
     Quantity,
-    BaseRegistry,
+    PlainRegistry,
     AliasDefinition,
     DefaultsDefinition,
     DimensionDefinition,

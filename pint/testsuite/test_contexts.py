@@ -780,7 +780,7 @@ def test_redefine(subtests):
         asd = 4 baz
 
         @context c
-            # Note how we're redefining a symbol, not the base name, as a
+            # Note how we're redefining a symbol, not the plain name, as a
             # function of another name
             b = 5 f
         """.splitlines()
@@ -927,13 +927,13 @@ def test_err_change_base_unit():
         """.splitlines()
     )
 
-    expected = "Can't redefine a base unit to a derived one"
+    expected = "Can't redefine a plain unit to a derived one"
     with pytest.raises(ValueError, match=expected):
         ureg.enable_contexts("c")
 
 
 def test_err_to_base_unit():
-    expected = "Can't define base units within a context"
+    expected = "Can't define plain units within a context"
     with pytest.raises(DefinitionSyntaxError, match=expected):
         Context.from_lines(["@context c", "x = [d]"])
 
@@ -971,7 +971,7 @@ def test_err_cyclic_dependency():
         """.splitlines()
     )
     # TODO align this exception and the one you get when you implement a cyclic
-    #      dependency within the base registry. Ideally this exception should be
+    #      dependency within the plain registry. Ideally this exception should be
     #      raised by enable_contexts.
     ureg.enable_contexts("c")
     q = ureg.Quantity("bar")

@@ -2,8 +2,9 @@ import math
 import warnings
 from numbers import Number
 
+from pint.facets.plain.quantity import Quantity
+
 from .compat import ndarray
-from .quantity import Quantity
 
 try:
     import numpy as np

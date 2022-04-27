@@ -299,7 +299,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
                 *args, pre_calc_units=pre_calc_units, **kwargs
             )
 
-        # Determine result through base numpy function on stripped arguments
+        # Determine result through plain numpy function on stripped arguments
         result_magnitude = func(*stripped_args, **stripped_kwargs)
 
         if output_unit is None:
@@ -447,7 +447,7 @@ for ufunc_str in strip_unit_input_output_ufuncs:
     implement_func("ufunc", ufunc_str, input_units=None, output_unit=None)
 
 for ufunc_str in matching_input_bare_output_ufuncs:
-    # Require all inputs to match units, but output base ndarray/duck array
+    # Require all inputs to match units, but output plain ndarray/duck array
     implement_func("ufunc", ufunc_str, input_units="all_consistent", output_unit=None)
 
 for ufunc_str, out_unit in matching_input_set_units_output_ufuncs.items():

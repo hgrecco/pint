@@ -11,9 +11,10 @@ from __future__ import annotations
 from numbers import Number
 from typing import Dict, FrozenSet, Tuple, Union
 
+from pint.facets.plain.quantity import Quantity
+from pint.facets.plain.unit import Unit
+
 from ..._typing import UnitLike
-from ...quantity import Quantity
-from ...unit import Unit
 from ...util import UnitsContainer as UnitsContainerT
 from ...util import to_units_container
 from ..group import GroupRegistry
@@ -122,12 +123,12 @@ class SystemRegistry(GroupRegistry):
         check_nonmult: bool = True,
         system: Union[str, System, None] = None,
     ) -> Tuple[Number, Unit]:
-        """Convert unit or dict of units to the base units.
+        """Convert unit or dict of units to the plain units.
 
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
 
-        Unlike BaseRegistry, in this registry root_units might be different
+        Unlike PlainRegistry, in this registry root_units might be different
         from base_units
 
         Parameters
@@ -144,7 +145,7 @@ class SystemRegistry(GroupRegistry):
         Returns
         -------
         type
-            multiplicative factor, base units
+            multiplicative factor, plain units
 
         """
 

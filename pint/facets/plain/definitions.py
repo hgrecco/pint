@@ -1,5 +1,5 @@
 """
-    pint.facets.base.definitions
+    pint.facets.plain.definitions
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Base unit converting capabilites.
@@ -104,7 +104,7 @@ class UnitDefinition(Definition, default=True):
     reference : UnitsContainer
         Reference units.
     is_base : bool
-        Indicates if it is a base unit.
+        Indicates if it is a plain unit.
 
     """
 

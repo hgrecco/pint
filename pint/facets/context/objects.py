@@ -13,7 +13,7 @@ from collections import ChainMap, defaultdict
 from typing import Optional, Tuple
 
 from ...errors import DefinitionSyntaxError, RedefinitionError
-from ...facets.base import UnitDefinition
+from ...facets.plain import UnitDefinition
 from ...util import UnitsContainer, to_units_container
 from .definitions import ContextDefinition
 

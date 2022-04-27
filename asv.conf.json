@@ -50,7 +50,7 @@
     // defaults to 10 min
     //"install_timeout": 600,
 
-    // the base URL to show a commit for the project.
+    // the plain URL to show a commit for the project.
     "show_commit_url": "http://github.com/hgrecco/pint/commit/",
 
     // The Pythons you'd like to test against.  If not provided, defaults

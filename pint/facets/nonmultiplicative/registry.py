@@ -6,7 +6,7 @@ from ...definitions import Definition
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer
 
-# TODO: Must sublcass base Registry when base fect is built.
+# TODO: Must sublcass plain Registry when plain fect is built.
 
 
 class NonMultiplicativeRegistry:
@@ -23,7 +23,7 @@ class NonMultiplicativeRegistry:
         their *delta* counterparts in multiplications.
     autoconvert_offset_to_baseunit : bool
         If True, non-multiplicative units are
-        converted to base units in multiplications.
+        converted to plain units in multiplications.
 
     """
 
@@ -40,7 +40,7 @@ class NonMultiplicativeRegistry:
         self.default_as_delta = default_as_delta
 
         # Determines if quantities with offset units are converted to their
-        # base units on multiplication and division.
+        # plain units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
     def _parse_units(
@@ -58,7 +58,7 @@ class NonMultiplicativeRegistry:
     def _define(self, definition: Union[str, Definition]):
         """Add unit to the registry.
 
-        In addition to what is done by the BaseRegistry,
+        In addition to what is done by the PlainRegistry,
         registers also non-multiplicative units.
 
         Parameters
@@ -142,7 +142,7 @@ class NonMultiplicativeRegistry:
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
 
-        In addition to what is done by the BaseRegistry,
+        In addition to what is done by the PlainRegistry,
         converts between non-multiplicative units.
 
         Parameters

@@ -6,13 +6,13 @@ Defines the Registry, a class to contain units and their relations.
 
 The module actually defines 5 registries with different capabilities:
 
-- BaseRegistry: Basic unit definition and querying.
+- PlainRegistry: Basic unit definition and querying.
                 Conversion between multiplicative units.
 
 - NonMultiplicativeRegistry: Conversion between non multiplicative (offset) units.
                              (e.g. Temperature)
 
-  * Inherits from BaseRegistry
+  * Inherits from PlainRegistry
 
 - ContextRegisty: Conversion between units with different dimensions according
                   to previously established relations (contexts) - e.g. in spectroscopy,
@@ -20,12 +20,12 @@ The module actually defines 5 registries with different capabilities:
                   conversions between units on the same dimension - e.g. different
                   rounding conventions.
 
-  * Inherits from BaseRegistry
+  * Inherits from PlainRegistry
 
-- SystemRegistry: Group unit and changing of base units.
-                  (e.g. in MKS, meter, kilogram and second are base units.)
+- SystemRegistry: Group unit and changing of plain units.
+                  (e.g. in MKS, meter, kilogram and second are plain units.)
 
-  * Inherits from BaseRegistry
+  * Inherits from PlainRegistry
 
 - UnitRegistry: Combine all previous capabilities, it is exposed by Pint.
 
@@ -36,15 +36,15 @@ The module actually defines 5 registries with different capabilities:
 from __future__ import annotations
 
 from . import registry_helpers
-from .facets.base import BaseRegistry
 from .facets.context import ContextRegistry
 from .facets.nonmultiplicative import NonMultiplicativeRegistry
+from .facets.plain import PlainRegistry
 from .facets.system import SystemRegistry
 from .util import logger, pi_theorem
 
 
 class UnitRegistry(
-    SystemRegistry, ContextRegistry, NonMultiplicativeRegistry, BaseRegistry
+    SystemRegistry, ContextRegistry, NonMultiplicativeRegistry, PlainRegistry
 ):
     """The unit registry stores the definitions and relationships between units.
 
@@ -63,7 +63,7 @@ class UnitRegistry(
         non-multiplicative units as their *delta* counterparts.
     autoconvert_offset_to_baseunit :
         If True converts offset units in quantities are
-        converted to their base units in multiplicative
+        converted to their plain units in multiplicative
         context. If False no conversion happens.
     on_redefinition : str
         action to take in case a unit is redefined.

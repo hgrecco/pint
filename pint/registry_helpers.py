@@ -13,14 +13,16 @@ from inspect import signature
 from itertools import zip_longest
 from typing import TYPE_CHECKING, Callable, Iterable, TypeVar, Union
 
+from pint.facets.plain.quantity import Quantity
+
 from ._typing import F
 from .errors import DimensionalityError
-from .quantity import Quantity
 from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
+    from pint.facets.plain.unit import Unit
+
     from .registry import UnitRegistry
-    from .unit import Unit
 
 T = TypeVar("T")
 

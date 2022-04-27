@@ -21,7 +21,7 @@ from .definitions import SystemDefinition
 
 
 class System(SharedRegistryObject):
-    """A system is a Group plus a set of base units.
+    """A system is a Group plus a set of plain units.
 
     Members are computed dynamically, that is if a unit is added to a group X
     all groups that include X are affected.
@@ -128,7 +128,7 @@ class System(SharedRegistryObject):
 
                 if len(old_unit_dict) != 1:
                     raise ValueError(
-                        "The new base must be a root dimension if not discarded unit is specified."
+                        "The new plain must be a root dimension if not discarded unit is specified."
                     )
 
                 old_unit, value = dict(old_unit_dict).popitem()
