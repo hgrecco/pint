@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from ...compat import HAS_NUMPY, exp, log
-from ..base.definitions import ScaleConverter
+from ..plain.definitions import ScaleConverter
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ class LogarithmicConverter(ScaleConverter):
     scale : float
         unit of reference at denominator for logarithmic unit conversion
     logbase : float
-        base of logarithm used in the logarithmic unit conversion
+        plain of logarithm used in the logarithmic unit conversion
     logfactor : float
         factor multiplied to logarithm for unit conversion
     inplace : bool

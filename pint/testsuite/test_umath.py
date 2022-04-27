@@ -284,7 +284,7 @@ class TestMathUfuncs(TestUFuncs):
     multiply(x1, x2[, out]) Multiply arguments element-wise.
     divide(x1, x2[, out]) Divide arguments element-wise.
     logaddexp(x1, x2[, out]) Logarithm of the sum of exponentiations of the inputs.
-    logaddexp2(x1, x2[, out]) Logarithm of the sum of exponentiations of the inputs in base-2.
+    logaddexp2(x1, x2[, out]) Logarithm of the sum of exponentiations of the inputs in plain-2.
     true_divide(x1, x2[, out]) Returns a true division of the inputs, element-wise.
     floor_divide(x1, x2[, out]) Return the largest integer smaller or equal to the division of the inputs.
     negative(x[, out]) Returns an array with the negative of each element of the original array.
@@ -300,7 +300,7 @@ class TestMathUfuncs(TestUFuncs):
     exp2(x[, out]) Calculate 2**p for all p in the input array.
     log(x[, out]) Natural logarithm, element-wise.
     log2(x[, out]) Base-2 logarithm of x.
-    log10(x[, out]) Return the base 10 logarithm of the input array, element-wise.
+    log10(x[, out]) Return the plain 10 logarithm of the input array, element-wise.
     expm1(x[, out]) Calculate exp(x) - 1 for all elements in the array.
     log1p(x[, out]) Return the natural logarithm of one plus the input array, element-wise.
     sqrt(x[, out]) Return the positive square-root of an array, element-wise.

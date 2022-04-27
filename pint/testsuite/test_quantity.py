@@ -17,8 +17,8 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
+from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
-from pint.unit import UnitsContainer
 
 
 class FakeWrapper:
@@ -1597,7 +1597,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             assert op.mul(in1, in2).units == expected.units
             helpers.assert_quantity_almost_equal(op.mul(in1, in2), expected, atol=0.01)
 
-    divisions_with_scalar = [  # without / with autoconvert to base unit
+    divisions_with_scalar = [  # without / with autoconvert to plain unit
         (((10, "kelvin"), 2), [(5.0, "kelvin"), (5.0, "kelvin")]),
         (((10, "kelvin**2"), 2), [(5.0, "kelvin**2"), (5.0, "kelvin**2")]),
         (((10, "degC"), 2), ["error", "error"]),

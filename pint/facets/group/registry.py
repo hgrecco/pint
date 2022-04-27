@@ -8,8 +8,9 @@
 
 from typing import Dict, FrozenSet
 
-from ...unit import Unit
-from ..base.definitions import UnitDefinition
+from pint.facets.plain.unit import Unit
+
+from ..plain.definitions import UnitDefinition
 from .definitions import GroupDefinition
 from .objects import Group, build_group_class
 
@@ -91,7 +92,7 @@ class GroupRegistry:
 
     def _define(self, definition):
 
-        # In addition to the what is done by the BaseRegistry,
+        # In addition to the what is done by the PlainRegistry,
         # this adds all units to the `root` group.
 
         definition, d, di = super()._define(definition)

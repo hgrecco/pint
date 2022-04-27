@@ -4,8 +4,8 @@ import math
 import pytest
 
 from pint import OffsetUnitCalculusError, UnitRegistry
+from pint.facets.plain.unit import Unit, UnitsContainer
 from pint.testsuite import QuantityTestCase, helpers
-from pint.unit import Unit, UnitsContainer
 
 
 @pytest.fixture(scope="module")
@@ -74,7 +74,7 @@ class TestLogarithmicQuantity(QuantityTestCase):
         with pytest.raises(OffsetUnitCalculusError):
             (-10.0 * self.ureg.dB) / (1 * self.module_registry.cm)
 
-        # However, if the flag autoconvert_offset_to_baseunit=True is given to UnitRegistry, then pint converts the unit to base.
+        # However, if the flag autoconvert_offset_to_baseunit=True is given to UnitRegistry, then pint converts the unit to plain.
         # With this flag on multiplications and divisions are now possible:
         new_reg = UnitRegistry(autoconvert_offset_to_baseunit=True)
         helpers.assert_quantity_almost_equal(

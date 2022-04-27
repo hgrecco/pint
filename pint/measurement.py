@@ -7,9 +7,10 @@
 """
 import re
 
+from pint.facets.plain.quantity import Quantity
+
 from .compat import ufloat
 from .formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
-from .quantity import Quantity
 
 MISSING = object()
 

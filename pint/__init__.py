@@ -24,11 +24,10 @@ from .errors import (  # noqa: F401
     UnitStrippedWarning,
 )
 from .facets.context import Context
+from .facets.plain import Quantity, Unit
 from .formatting import formatter, register_unit_format
 from .measurement import Measurement
-from .quantity import Quantity
 from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
-from .unit import Unit
 from .util import logger, pi_theorem  # noqa: F401
 
 try:  # pragma: no cover
@@ -60,7 +59,7 @@ def _unpickle(cls, *args):
     object of type cls
 
     """
-    from .unit import UnitsContainer
+    from pint.facets.plain.unit import UnitsContainer
 
     for arg in args:
         # Prefixed units are defined within the registry

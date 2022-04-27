@@ -269,7 +269,7 @@ def user_cache_dir(appname=None, appauthor=None, version=None, opinion=True):
             would typically be "<major>.<minor>".
             Only applied when appname is present.
         "opinion" (boolean) can be False to disable the appending of
-            "Cache" to the base app data dir for Windows. See
+            "Cache" to the plain app data dir for Windows. See
             discussion below.
 
     Typical user cache directories are:
@@ -368,8 +368,8 @@ def user_log_dir(appname=None, appauthor=None, version=None, opinion=True):
             would typically be "<major>.<minor>".
             Only applied when appname is present.
         "opinion" (boolean) can be False to disable the appending of
-            "Logs" to the base app data dir for Windows, and "log" to the
-            base cache dir for Unix. See discussion below.
+            "Logs" to the plain app data dir for Windows, and "log" to the
+            plain cache dir for Unix. See discussion below.
 
     Typical user log directories are:
         Mac OS X:   ~/Library/Logs/<AppName>

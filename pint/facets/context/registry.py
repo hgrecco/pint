@@ -15,7 +15,7 @@ from typing import Any, Callable, ContextManager, Dict, Union
 
 from ..._typing import F
 from ...errors import DefinitionSyntaxError, UndefinedUnitError
-from ...facets.base import UnitDefinition
+from ...facets.plain import UnitDefinition
 from ...util import find_connected_nodes, find_shortest_path, logger
 from .definitions import ContextDefinition
 from .objects import Context, ContextChain
@@ -25,7 +25,7 @@ from .objects import Context, ContextChain
 
 
 class ContextCacheOverlay:
-    """Layer on top of the base UnitRegistry cache, specific to a combination of
+    """Layer on top of the plain UnitRegistry cache, specific to a combination of
     active contexts which contain unit redefinitions.
     """
 
@@ -36,7 +36,7 @@ class ContextCacheOverlay:
         self.parse_unit = registry_cache.parse_unit
 
 
-# TODO: must subclass BaseRegistry when changed into facet.
+# TODO: must subclass PlainRegistry when changed into facet.
 class ContextRegistry:
     """Handle of Contexts.
 
@@ -170,9 +170,9 @@ class ContextRegistry:
         except KeyError:
             raise UndefinedUnitError(name)
 
-        # Rebuild definition as a variant of the base
+        # Rebuild definition as a variant of the plain
         if basedef.is_base:
-            raise ValueError("Can't redefine a base unit to a derived one")
+            raise ValueError("Can't redefine a plain unit to a derived one")
 
         dims_old = self._get_dimensionality(basedef.reference)
         dims_new = self._get_dimensionality(definition.reference)
@@ -224,7 +224,7 @@ class ContextRegistry:
         ]
 
         # Check if the contexts have been checked first, if not we make sure
-        # that dimensions are expressed in terms of base dimensions.
+        # that dimensions are expressed in terms of plain dimensions.
         for ctx in ctxs:
             if ctx.checked:
                 continue
@@ -359,7 +359,7 @@ class ContextRegistry:
     def _convert(self, value, src, dst, inplace=False):
         """Convert value from some source to destination units.
 
-        In addition to what is done by the BaseRegistry,
+        In addition to what is done by the PlainRegistry,
         converts between units with different dimensions by following
         transformation rules defined in the context.
 

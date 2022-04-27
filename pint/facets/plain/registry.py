@@ -29,6 +29,9 @@ from typing import (
     Union,
 )
 
+if TYPE_CHECKING:
+    from ..context import Context
+
 # from pint import parser, Quantity, Unit
 from ... import parser
 from ..._typing import QuantityOrUnitLike, UnitLike
@@ -60,7 +63,7 @@ from .definitions import (
     ScaleConverter,
     UnitDefinition,
 )
-from .objects import Context, Quantity, Unit
+from .objects import Quantity, Unit
 
 if TYPE_CHECKING:
 
@@ -147,7 +150,7 @@ class RegistryMeta(type):
         return obj
 
 
-class BaseRegistry(metaclass=RegistryMeta):
+class PlainRegistry(metaclass=RegistryMeta):
     """Base class for all registries.
 
     Capabilities:
@@ -277,11 +280,11 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
-        from ...unit import build_unit_class
+        from pint.facets.plain.unit import build_unit_class
 
         self.Unit = build_unit_class(self)
 
-        from ...quantity import build_quantity_class
+        from pint.facets.plain.quantity import build_quantity_class
 
         self.Quantity: Type["Quantity"] = build_quantity_class(self)
 
@@ -316,7 +319,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         """Loader for an @alias directive"""
         self._define_alias(alias_definition)
 
-    def __deepcopy__(self, memo) -> "BaseRegistry":
+    def __deepcopy__(self, memo) -> "PlainRegistry":
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
@@ -437,14 +440,14 @@ class BaseRegistry(metaclass=RegistryMeta):
         elif isinstance(definition, UnitDefinition):
             d, di = self._units, self._units_casei
 
-            # For a base units, we need to define the related dimension
+            # For a plain units, we need to define the related dimension
             # (making sure there is only one to define)
             if definition.is_base:
                 for dimension in definition.reference.keys():
                     if dimension in self._dimensions:
                         if dimension != "[]":
                             raise DefinitionSyntaxError(
-                                "Only one unit per dimension can be a base unit"
+                                "Only one unit per dimension can be a plain unit"
                             )
                         continue
 
@@ -603,7 +606,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return parsed_files
 
     def _build_cache(self, loaded_files=None) -> None:
-        """Build a cache of dimensionality and base units."""
+        """Build a cache of dimensionality and plain units."""
 
         if loaded_files and self._diskcache and all(loaded_files):
             cache, cache_basename = self._diskcache.load(loaded_files, "build_cache")
@@ -710,7 +713,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return self._units[name].symbol
 
     def get_dimensionality(self, input_units) -> UnitsContainerT:
-        """Convert unit or dict of units or dimensions to a dict of base dimensions
+        """Convert unit or dict of units or dimensions to a dict of plain dimensions
         dimensions
         """
 
@@ -723,7 +726,7 @@ class BaseRegistry(metaclass=RegistryMeta):
     def _get_dimensionality(
         self, input_units: Optional[UnitsContainerT]
     ) -> UnitsContainerT:
-        """Convert a UnitsContainer to base dimensions."""
+        """Convert a UnitsContainer to plain dimensions."""
         if not input_units:
             return self.UnitsContainer()
 
@@ -812,7 +815,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         Returns
         -------
         Number, pint.Unit
-            multiplicative factor, base units
+            multiplicative factor, plain units
 
         """
         input_units = to_units_container(input_units, self)
@@ -839,7 +842,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         Returns
         -------
         number, Unit
-            multiplicative factor, base units
+            multiplicative factor, plain units
 
         """
         if not input_units:
@@ -868,7 +871,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         return factor, units
 
     def get_base_units(self, input_units, check_nonmult=True, system=None):
-        """Convert unit or dict of units to the base units.
+        """Convert unit or dict of units to the plain units.
 
         If any unit is non multiplicative and check_converter is True,
         then None is returned as the multiplicative factor.
@@ -887,7 +890,7 @@ class BaseRegistry(metaclass=RegistryMeta):
         Returns
         -------
         Number, pint.Unit
-            multiplicative factor, base units
+            multiplicative factor, plain units
 
         """
 
@@ -925,7 +928,7 @@ class BaseRegistry(metaclass=RegistryMeta):
 
     # TODO: remove context from here
     def is_compatible_with(
-        self, obj1: Any, obj2: Any, *contexts: Union[str, "Context"], **ctx_kwargs
+        self, obj1: Any, obj2: Any, *contexts: Union[str, Context], **ctx_kwargs
     ) -> bool:
         """check if the other object is compatible
 
@@ -1335,3 +1338,8 @@ class BaseRegistry(metaclass=RegistryMeta):
         )
 
     __call__ = parse_expression
+
+
+# TODO: Remove in the near future
+# This is kept for easy backward compatibility during refactoring.
+BaseRegistry = PlainRegistry

@@ -276,9 +276,9 @@ class TestRegistry(QuantityTestCase):
     def test_load(self):
         import pkg_resources
 
-        from pint import unit
+        from .. import compat
 
-        data = pkg_resources.resource_filename(unit.__name__, "default_en.txt")
+        data = pkg_resources.resource_filename(compat.__name__, "default_en.txt")
         ureg1 = UnitRegistry()
         ureg2 = UnitRegistry(data)
         assert dir(ureg1) == dir(ureg2)
