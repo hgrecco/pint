@@ -42,8 +42,13 @@
     - plain: basic manipulation and calculation with multiplicative
       dimensions, units and quantities (e.g. length, time, mass, etc).
 
+    - formatting: pretty printing and formatting modifiers.
+
     - nonmultiplicative: manipulation and calculation with offset and
       log units and quantities (e.g. temperature and decibel).
+
+    - measurement: manipulation and calculation of a quantity with
+      an uncertainty.
 
     - numpy: using numpy array as magnitude and properly handling
       numpy functions operating on quantities.
