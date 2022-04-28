@@ -49,7 +49,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             self._units = units._units
         else:
             raise TypeError(
-                "units must be of type str, PlainUnit or "
+                "units must be of type str, Unit or "
                 "UnitsContainer; not {}.".format(type(units))
             )
 
@@ -77,7 +77,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        return "<PlainUnit('{}')>".format(self._units)
+        return "<Unit('{}')>".format(self._units)
 
     @property
     def dimensionless(self) -> bool:
