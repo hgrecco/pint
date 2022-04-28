@@ -50,6 +50,7 @@ from ...util import UnitsContainer
 from ...util import UnitsContainer as UnitsContainerT
 from ...util import (
     _is_dim,
+    build_dependent_class,
     getattr_maybe_raise,
     logger,
     solve_dependencies,
@@ -283,17 +284,11 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
-        from pint.facets.plain.unit import build_unit_class
 
-        self.Unit = build_unit_class(self)
-
-        from pint.facets.plain.quantity import build_quantity_class
-
-        self.Quantity: Type["Quantity"] = build_quantity_class(self)
-
-        from ...measurement import build_measurement_class
-
-        self.Measurement = build_measurement_class(self)
+        self.Unit = build_dependent_class(self, "Unit", "_unit_class")
+        self.Quantity: Type["Quantity"] = build_dependent_class(
+            self, "Quantity", "_quantity_class"
+        )
 
     def _after_init(self) -> None:
         """This should be called after all __init__"""

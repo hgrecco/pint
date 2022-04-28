@@ -1703,18 +1703,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
                 f"Magnitude '{type(self._magnitude).__name__}' does not support tolist."
             )
 
-    # Measurement support
-    def plus_minus(self, error, relative=False):
-        if isinstance(error, self.__class__):
-            if relative:
-                raise ValueError("{} is not a valid relative error.".format(error))
-            error = error.to(self._units).magnitude
-        else:
-            if relative:
-                error = error * abs(self.magnitude)
-
-        return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
-
     def _get_unit_definition(self, unit: str) -> UnitDefinition:
         try:
             return self._REGISTRY._units[unit]

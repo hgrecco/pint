@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 import math
 import operator
@@ -20,7 +21,7 @@ from functools import lru_cache, partial
 from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
-from typing import TYPE_CHECKING, ClassVar, Optional, Union
+from typing import TYPE_CHECKING, ClassVar, Optional, Type, Union
 
 from .compat import NUMERIC_TYPES, tokenizer
 from .errors import DefinitionSyntaxError
@@ -1093,3 +1094,24 @@ def sized(y) -> bool:
     except TypeError:
         return False
     return True
+
+
+def build_dependent_class(
+    registry: SharedRegistryObject, class_name: str, attribute_name: str
+) -> Type:
+    """Creates a class specifically for the given registry that
+    subclass all the classes named by the registry bases in a
+    specific attribute
+
+    1. List the 'attribute_name' attribute for each of the bases of the registry class.
+    2. Use this list as bases for the new class
+    3. Add the provided registry as the class registry.
+
+    """
+    bases = (
+        getattr(base, attribute_name, None)
+        for base in inspect.getmro(registry.__class__)
+    )
+    bases = dict.fromkeys((base for base in bases if base), None)
+
+    return type(class_name, tuple(bases.keys()), dict(_REGISTRY=registry))
