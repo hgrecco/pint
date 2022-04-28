@@ -38,13 +38,18 @@ from __future__ import annotations
 from . import registry_helpers
 from .facets.context import ContextRegistry
 from .facets.nonmultiplicative import NonMultiplicativeRegistry
+from .facets.numpy import NumpyRegistry
 from .facets.plain import PlainRegistry
 from .facets.system import SystemRegistry
 from .util import logger, pi_theorem
 
 
 class UnitRegistry(
-    SystemRegistry, ContextRegistry, NonMultiplicativeRegistry, PlainRegistry
+    SystemRegistry,
+    ContextRegistry,
+    NumpyRegistry,
+    NonMultiplicativeRegistry,
+    PlainRegistry,
 ):
     """The unit registry stores the definitions and relationships between units.
 

@@ -11,13 +11,14 @@
 from __future__ import annotations
 
 import copy
+import inspect
 import locale
 import operator
 from numbers import Number
 from typing import TYPE_CHECKING, Any, Type, Union
 
 from ..._typing import UnitLike
-from ...compat import NUMERIC_TYPES, babel_parse, is_upcast_type
+from ...compat import NUMERIC_TYPES, babel_parse
 from ...errors import DimensionalityError
 from ...formatting import extract_custom_flags, format_unit, split_format
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
@@ -280,35 +281,6 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __complex__(self) -> complex:
         return complex(self._REGISTRY.Quantity(1, self._units))
 
-    __array_priority__ = 17
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        if method != "__call__":
-            # Only handle ufuncs as callables
-            return NotImplemented
-
-        # Check types and return NotImplemented when upcast type encountered
-        types = set(
-            type(arg)
-            for arg in list(inputs) + list(kwargs.values())
-            if hasattr(arg, "__array_ufunc__")
-        )
-        if any(is_upcast_type(other) for other in types):
-            return NotImplemented
-
-        # Act on limited implementations by conversion to multiplicative identity
-        # Quantity
-        if ufunc.__name__ in ("true_divide", "divide", "floor_divide", "multiply"):
-            return ufunc(
-                *tuple(
-                    self._REGISTRY.Quantity(1, self._units) if arg is self else arg
-                    for arg in inputs
-                ),
-                **kwargs,
-            )
-        else:
-            return NotImplemented
-
     @property
     def systems(self):
         out = set()
@@ -374,7 +346,22 @@ Unit = PlainUnit
 
 
 def build_unit_class(registry) -> Type[PlainUnit]:
-    class Unit(_Unit):
+    """Creates a Unit class specifically for the given registry that
+    subclass all the quantity classes defined by the registry bases.
+
+    1. List the '_unit_class' attribute for each of the bases of the registry class.
+    2. Use this list as bases for the new Unit Class
+    3. Add the provided registry as the class registry.
+
+    """
+
+    bases = (
+        getattr(base, "_unit_class", None)
+        for base in inspect.getmro(registry.__class__)
+    )
+    bases = dict.fromkeys((base for base in bases if base), None)
+
+    class Unit(*tuple(bases.keys())):
         _REGISTRY = registry
 
     return Unit
