@@ -10,9 +10,9 @@ import warnings
 from inspect import signature
 from itertools import chain
 
-from .compat import is_upcast_type, np, zero_or_nan
-from .errors import DimensionalityError, UnitStrippedWarning
-from .util import iterable, sized
+from pint.compat import is_upcast_type, np, zero_or_nan
+from pint.errors import DimensionalityError, UnitStrippedWarning
+from pint.util import iterable, sized
 
 HANDLED_UFUNCS = {}
 HANDLED_FUNCTIONS = {}

@@ -63,7 +63,7 @@ from .definitions import (
     ScaleConverter,
     UnitDefinition,
 )
-from .objects import Quantity, Unit
+from .objects import PlainQuantity, PlainUnit, Quantity, Unit
 
 if TYPE_CHECKING:
 
@@ -198,6 +198,9 @@ class PlainRegistry(metaclass=RegistryMeta):
     fmt_locale: Optional[Locale] = None
 
     _diskcache = None
+
+    _quantity_class = PlainQuantity
+    _unit_class = PlainUnit
 
     def __init__(
         self,
