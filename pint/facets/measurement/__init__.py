@@ -1,18 +1,27 @@
-"""
-    pint.measurement
-    ~~~~~~~~~~~~~~~~
-
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
-"""
+import copy
 import re
 
-from pint.facets.plain.quantity import Quantity
-
-from .compat import ufloat
-from .formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
+from ...compat import ufloat
+from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
+from ...util import build_dependent_class
+from ..plain import Quantity
 
 MISSING = object()
+
+
+class MeasurementQuantity:
+
+    # Measurement support
+    def plus_minus(self, error, relative=False):
+        if isinstance(error, self.__class__):
+            if relative:
+                raise ValueError("{} is not a valid relative error.".format(error))
+            error = error.to(self._units).magnitude
+        else:
+            if relative:
+                error = error * abs(self.magnitude)
+
+        return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
 
 
 class Measurement(Quantity):
@@ -71,7 +80,7 @@ class Measurement(Quantity):
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
-        from . import _unpickle_measurement
+        from pint import _unpickle_measurement
 
         return _unpickle_measurement, (Measurement, self.magnitude, self._units)
 
@@ -169,24 +178,28 @@ class Measurement(Quantity):
         return mag + space + ustr
 
 
+# TODO: Remove in the near future
+# This is kept for easy backward compatibility during refactoring.
 _Measurement = Measurement
 
 
-def build_measurement_class(registry):
+class MeasurementRegistry:
 
-    if ufloat is None:
+    _quantity_class = MeasurementQuantity
+    _measurement_class = Measurement
 
-        class Measurement:
-            _REGISTRY = registry
+    def _init_dynamic_classes(self) -> None:
+        super()._init_dynamic_classes()
 
-            def __init__(self, *args):
+        if ufloat is not None:
+            self.Measurement = build_dependent_class(
+                self, "Measurement", "_measurement_class"
+            )
+        else:
+
+            def no_uncertainties(*args, **kwargs):
                 raise RuntimeError(
                     "Pint requires the 'uncertainties' package to create a Measurement object."
                 )
 
-    else:
-
-        class Measurement(_Measurement):
-            _REGISTRY = registry
-
-    return Measurement
+            self.Measurement = no_uncertainties
