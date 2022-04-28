@@ -7,6 +7,6 @@
 """
 
 from .quantity import PlainQuantity, Quantity
-from .unit import PlainUnit, Unit
+from .unit import PlainUnit, Unit, UnitsContainer
 
-__all__ = [Quantity, Unit, PlainUnit, PlainQuantity]
+__all__ = [Quantity, Unit, PlainUnit, PlainQuantity, UnitsContainer]

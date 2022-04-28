@@ -38,6 +38,8 @@ from __future__ import annotations
 from . import registry_helpers
 from .facets.context import ContextRegistry
 from .facets.dask import DaskRegistry
+from .facets.formatting import FormattingRegistry
+from .facets.measurement import MeasurementRegistry
 from .facets.nonmultiplicative import NonMultiplicativeRegistry
 from .facets.numpy import NumpyRegistry
 from .facets.plain import PlainRegistry
@@ -50,7 +52,9 @@ class UnitRegistry(
     ContextRegistry,
     DaskRegistry,
     NumpyRegistry,
+    MeasurementRegistry,
     NonMultiplicativeRegistry,
+    FormattingRegistry,
     PlainRegistry,
 ):
     """The unit registry stores the definitions and relationships between units.

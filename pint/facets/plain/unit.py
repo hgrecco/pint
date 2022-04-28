@@ -18,9 +18,8 @@ from numbers import Number
 from typing import TYPE_CHECKING, Any, Type, Union
 
 from ..._typing import UnitLike
-from ...compat import NUMERIC_TYPES, babel_parse
+from ...compat import NUMERIC_TYPES
 from ...errors import DimensionalityError
-from ...formatting import extract_custom_flags, format_unit, split_format
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 from .definitions import UnitDefinition
 
@@ -72,57 +71,13 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return ret
 
     def __str__(self) -> str:
-        return format(self)
+        return " ".join(k if v == 1 else f"{k} ** {v}" for k, v in self._units.items())
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
         return "<PlainUnit('{}')>".format(self._units)
-
-    def __format__(self, spec) -> str:
-        _, uspec = split_format(
-            spec, self.default_format, self._REGISTRY.separate_format_defaults
-        )
-        if "~" in uspec:
-            if not self._units:
-                return ""
-            units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
-                    for key, value in self._units.items()
-                )
-            )
-            uspec = uspec.replace("~", "")
-        else:
-            units = self._units
-
-        return format_unit(units, uspec, registry=self._REGISTRY)
-
-    def format_babel(self, spec="", locale=None, **kwspec: Any) -> str:
-        spec = spec or extract_custom_flags(self.default_format)
-
-        if "~" in spec:
-            if self.dimensionless:
-                return ""
-            units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
-                    for key, value in self._units.items()
-                )
-            )
-            spec = spec.replace("~", "")
-        else:
-            units = self._units
-
-        locale = self._REGISTRY.fmt_locale if locale is None else locale
-
-        if locale is None:
-            raise ValueError("Provide a `locale` value to localize translation.")
-        else:
-            kwspec["locale"] = babel_parse(locale)
-
-        return units.format_babel(spec, registry=self._REGISTRY, **kwspec)
 
     @property
     def dimensionless(self) -> bool:
