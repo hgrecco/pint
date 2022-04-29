@@ -3,7 +3,7 @@ import re
 
 from ...compat import ufloat
 from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
-from ...util import build_dependent_class
+from ...util import build_dependent_class, create_class_with_registry
 from ..plain import Quantity
 
 MISSING = object()
@@ -188,13 +188,19 @@ class MeasurementRegistry:
     _quantity_class = MeasurementQuantity
     _measurement_class = Measurement
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+
+        cls.Measurement = build_dependent_class(
+            cls, "Measurement", "_measurement_class"
+        )
+
     def _init_dynamic_classes(self) -> None:
+        """Generate subclasses on the fly and attach them to self"""
         super()._init_dynamic_classes()
 
         if ufloat is not None:
-            self.Measurement = build_dependent_class(
-                self, "Measurement", "_measurement_class"
-            )
+            self.Measurement = create_class_with_registry(self, self.Measurement)
         else:
 
             def no_uncertainties(*args, **kwargs):
