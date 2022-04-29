@@ -6,7 +6,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from .quantity import PlainQuantity, Quantity
-from .unit import PlainUnit, Unit, UnitsContainer
+from .quantity import PlainQuantity
+from .unit import PlainUnit, UnitsContainer
 
-__all__ = [Quantity, Unit, PlainUnit, PlainQuantity, UnitsContainer]
+__all__ = [PlainUnit, PlainQuantity, UnitsContainer]

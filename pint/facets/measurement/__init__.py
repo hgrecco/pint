@@ -4,7 +4,7 @@ import re
 from ...compat import ufloat
 from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
 from ...util import build_dependent_class, create_class_with_registry
-from ..plain import Quantity
+from ..plain import PlainQuantity
 
 MISSING = object()
 
@@ -24,7 +24,7 @@ class MeasurementQuantity:
         return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
 
 
-class Measurement(Quantity):
+class Measurement(PlainQuantity):
     """Implements a class to describe a quantity with uncertainty.
 
     Parameters

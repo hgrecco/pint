@@ -31,8 +31,8 @@ from typing import (
 
 if TYPE_CHECKING:
     from ..context import Context
+    from pint import Quantity, Unit
 
-# from pint import parser, Quantity, Unit
 from ... import parser
 from ..._typing import QuantityOrUnitLike, UnitLike
 from ..._vendor import appdirs
@@ -65,7 +65,7 @@ from .definitions import (
     ScaleConverter,
     UnitDefinition,
 )
-from .objects import PlainQuantity, PlainUnit, Quantity, Unit
+from .objects import PlainQuantity, PlainUnit
 
 if TYPE_CHECKING:
 
@@ -799,7 +799,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def get_root_units(
         self, input_units: UnitLike, check_nonmult: bool = True
-    ) -> Tuple[Number, "Unit"]:
+    ) -> Tuple[Number, PlainUnit]:
         """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -912,7 +912,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def get_compatible_units(
         self, input_units, group_or_system=None
-    ) -> FrozenSet["Unit"]:
+    ) -> FrozenSet[Unit]:
         """ """
         input_units = to_units_container(input_units)
 
