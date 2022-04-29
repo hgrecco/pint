@@ -16,12 +16,12 @@ from .definitions import (
     ScaleConverter,
     UnitDefinition,
 )
-from .objects import Quantity, Unit, UnitsContainer
+from .objects import PlainQuantity, PlainUnit, UnitsContainer
 from .registry import PlainRegistry
 
 __all__ = [
-    Unit,
-    Quantity,
+    PlainUnit,
+    PlainQuantity,
     PlainRegistry,
     AliasDefinition,
     DefaultsDefinition,
