@@ -127,6 +127,9 @@ def method_wraps(numpy_func):
 Magnitude = TypeVar("Magnitude")
 
 
+# TODO: remove all nonmultiplicative remnants
+
+
 class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
@@ -1560,15 +1563,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     @property
     def _is_multiplicative(self) -> bool:
         """Check if the PlainQuantity object has only multiplicative units."""
-        return not self._get_non_multiplicative_units()
+        return True
 
     def _get_non_multiplicative_units(self) -> List[str]:
         """Return a list of the of non-multiplicative units of the PlainQuantity object."""
-        return [
-            unit
-            for unit in self._units
-            if not self._get_unit_definition(unit).is_multiplicative
-        ]
+        return []
 
     def _get_delta_units(self) -> List[str]:
         """Return list of delta units ot the PlainQuantity object."""
@@ -1576,34 +1575,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
     def _has_compatible_delta(self, unit: str) -> bool:
         """ "Check if PlainQuantity object has a delta_unit that is compatible with unit"""
-        deltas = self._get_delta_units()
-        if "delta_" + unit in deltas:
-            return True
-        # Look for delta units with same dimension as the offset unit
-        offset_unit_dim = self._get_unit_definition(unit).reference
-        return any(
-            self._get_unit_definition(d).reference == offset_unit_dim for d in deltas
-        )
+        return False
 
     def _ok_for_muldiv(self, no_offset_units=None) -> bool:
-        """Checks if PlainQuantity object can be multiplied or divided"""
-
-        is_ok = True
-        if no_offset_units is None:
-            no_offset_units = len(self._get_non_multiplicative_units())
-        if no_offset_units > 1:
-            is_ok = False
-        if no_offset_units == 1:
-            if len(self._units) > 1:
-                is_ok = False
-            if (
-                len(self._units) == 1
-                and not self._REGISTRY.autoconvert_offset_to_baseunit
-            ):
-                is_ok = False
-            if next(iter(self._units.values())) != 1:
-                is_ok = False
-        return is_ok
+        return True
 
     def to_timedelta(self: PlainQuantity[float]) -> datetime.timedelta:
         return datetime.timedelta(microseconds=self.to("microseconds").magnitude)

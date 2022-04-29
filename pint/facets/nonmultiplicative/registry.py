@@ -5,6 +5,7 @@ from typing import Any, Optional, Union
 from ...definitions import Definition
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer
+from .objects import NonMultiplicativeQuantity
 
 # TODO: Must sublcass plain Registry when plain fect is built.
 
@@ -26,6 +27,8 @@ class NonMultiplicativeRegistry:
         converted to plain units in multiplications.
 
     """
+
+    _quantity_class = NonMultiplicativeQuantity
 
     def __init__(
         self,
