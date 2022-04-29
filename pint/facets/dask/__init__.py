@@ -43,10 +43,10 @@ class DaskQuantity:
     def __dask_tokenize__(self):
         from dask.base import tokenize
 
-        from pint import Quantity
+        from pint import UnitRegistry
 
         # TODO: Check if this is the right class as first argument
-        return (Quantity, tokenize(self._magnitude), self.units)
+        return (UnitRegistry.Quantity, tokenize(self._magnitude), self.units)
 
     @property
     def __dask_optimize__(self):

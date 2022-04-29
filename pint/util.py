@@ -1096,9 +1096,7 @@ def sized(y) -> bool:
     return True
 
 
-def build_dependent_class(
-    registry: SharedRegistryObject, class_name: str, attribute_name: str
-) -> Type:
+def build_dependent_class(registry_class, class_name: str, attribute_name: str) -> Type:
     """Creates a class specifically for the given registry that
     subclass all the classes named by the registry bases in a
     specific attribute
@@ -1109,9 +1107,16 @@ def build_dependent_class(
 
     """
     bases = (
-        getattr(base, attribute_name, None)
-        for base in inspect.getmro(registry.__class__)
+        getattr(base, attribute_name, None) for base in inspect.getmro(registry_class)
     )
     bases = dict.fromkeys((base for base in bases if base), None)
 
-    return type(class_name, tuple(bases.keys()), dict(_REGISTRY=registry))
+    return type(class_name, tuple(bases.keys()), dict())
+
+
+def create_class_with_registry(registry, base_class) -> Type:
+    """Create new class inheriting from base_class and
+    filling _REGISTRY class attribute with an actual instanced registry.
+    """
+
+    return type(base_class.__name__, tuple((base_class,)), dict(_REGISTRY=registry))

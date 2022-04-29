@@ -51,6 +51,7 @@ from ...util import UnitsContainer as UnitsContainerT
 from ...util import (
     _is_dim,
     build_dependent_class,
+    create_class_with_registry,
     getattr_maybe_raise,
     logger,
     solve_dependencies,
@@ -282,13 +283,16 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         self._initialized = False
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+        cls.Unit = build_dependent_class(cls, "Unit", "_unit_class")
+        cls.Quantity = build_dependent_class(cls, "Quantity", "_quantity_class")
+
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
 
-        self.Unit = build_dependent_class(self, "Unit", "_unit_class")
-        self.Quantity: Type["Quantity"] = build_dependent_class(
-            self, "Quantity", "_quantity_class"
-        )
+        self.Unit = create_class_with_registry(self, self.Unit)
+        self.Quantity = create_class_with_registry(self, self.Quantity)
 
     def _after_init(self) -> None:
         """This should be called after all __init__"""

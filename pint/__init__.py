@@ -24,11 +24,15 @@ from .errors import (  # noqa: F401
     UnitStrippedWarning,
 )
 from .facets.context import Context
-from .facets.measurement import Measurement
-from .facets.plain import Quantity, Unit
 from .formatting import formatter, register_unit_format
 from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
 from .util import logger, pi_theorem  # noqa: F401
+
+# Default Quantity, Unit and Measurement are the ones
+# build in the default registry.
+Quantity = UnitRegistry.Quantity
+Unit = UnitRegistry.Unit
+Measurement = UnitRegistry.Measurement
 
 try:  # pragma: no cover
     __version__ = version("pint")
