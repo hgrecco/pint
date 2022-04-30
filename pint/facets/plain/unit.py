@@ -53,21 +53,12 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
                 "UnitsContainer; not {}.".format(type(units))
             )
 
-        self.__used = False
-        self.__handling = None
-
-    @property
-    def debug_used(self) -> Any:
-        return self.__used
-
     def __copy__(self) -> PlainUnit:
         ret = self.__class__(self._units)
-        ret.__used = self.__used
         return ret
 
     def __deepcopy__(self, memo) -> PlainUnit:
         ret = self.__class__(copy.deepcopy(self._units, memo))
-        ret.__used = self.__used
         return ret
 
     def __str__(self) -> str:
