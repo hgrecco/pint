@@ -7,6 +7,8 @@
 """
 
 
+from __future__ import annotations
+
 from .quantity import NumpyQuantity
 from .unit import NumpyUnit
 

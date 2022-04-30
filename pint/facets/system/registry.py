@@ -9,10 +9,10 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Dict, FrozenSet, Tuple, Union
+from typing import TYPE_CHECKING, Dict, FrozenSet, Tuple, Union
 
-from pint.facets.plain.quantity import Quantity
-from pint.facets.plain.unit import Unit
+if TYPE_CHECKING:
+    from pint import Quantity, Unit
 
 from ..._typing import UnitLike
 from ...util import UnitsContainer as UnitsContainerT

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ...compat import is_upcast_type
 
 

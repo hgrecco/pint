@@ -8,6 +8,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from .registry import NumpyRegistry
 
 __all__ = [NumpyRegistry]

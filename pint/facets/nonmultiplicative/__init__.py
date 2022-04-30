@@ -8,6 +8,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 # This import register LogarithmicConverter and OffsetConverter to be usable
 # (via subclassing)
 from .definitions import LogarithmicConverter, OffsetConverter  # noqa: F401

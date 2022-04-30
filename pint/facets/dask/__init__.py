@@ -9,6 +9,8 @@
 """
 
 
+from __future__ import annotations
+
 import functools
 
 from ...compat import compute, dask_array, persist, visualize

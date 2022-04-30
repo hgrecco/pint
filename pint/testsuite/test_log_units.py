@@ -3,8 +3,8 @@ import math
 
 import pytest
 
-from pint import OffsetUnitCalculusError, UnitRegistry
-from pint.facets.plain.unit import Unit, UnitsContainer
+from pint import OffsetUnitCalculusError, Unit, UnitRegistry
+from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, helpers
 
 

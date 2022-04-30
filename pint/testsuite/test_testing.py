@@ -1,6 +1,6 @@
 import pytest
 
-from pint.facets.plain.quantity import Quantity
+from pint import Quantity
 
 from .. import testing
 

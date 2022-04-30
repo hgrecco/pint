@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import math
 import warnings
 from numbers import Number
 
-from pint.facets.plain.quantity import Quantity
-
+from . import Quantity
 from .compat import ndarray
 
 try:

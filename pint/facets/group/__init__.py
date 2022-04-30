@@ -8,6 +8,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from .definitions import GroupDefinition
 from .objects import Group
 from .registry import GroupRegistry

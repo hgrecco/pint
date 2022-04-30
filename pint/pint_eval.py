@@ -31,8 +31,7 @@ _OP_PRIORITY = {
 
 
 def _power(left, right):
-    from pint.facets.plain.quantity import Quantity
-
+    from . import Quantity
     from .compat import is_duck_array
 
     if (
