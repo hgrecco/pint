@@ -243,14 +243,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         inst._magnitude = magnitude
         inst._units = units
 
-        inst.__used = False
-        inst.__handling = None
-
         return inst
-
-    @property
-    def debug_used(self):
-        return self.__used
 
     def __iter__(self: PlainQuantity[Iterable[S]]) -> Iterator[S]:
         # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
@@ -266,14 +259,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
     def __copy__(self) -> PlainQuantity[_MagnitudeType]:
         ret = self.__class__(copy.copy(self._magnitude), self._units)
-        ret.__used = self.__used
         return ret
 
     def __deepcopy__(self, memo) -> PlainQuantity[_MagnitudeType]:
         ret = self.__class__(
             copy.deepcopy(self._magnitude, memo), copy.deepcopy(self._units, memo)
         )
-        ret.__used = self.__used
         return ret
 
     def __str__(self) -> str:
