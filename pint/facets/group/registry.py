@@ -6,9 +6,12 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from typing import Dict, FrozenSet
+from __future__ import annotations
 
-from pint.facets.plain.unit import Unit
+from typing import TYPE_CHECKING, Dict, FrozenSet
+
+if TYPE_CHECKING:
+    from pint import Unit
 
 from ..plain.definitions import UnitDefinition
 from .definitions import GroupDefinition
@@ -103,7 +106,7 @@ class GroupRegistry:
 
         return definition, d, di
 
-    def _get_compatible_units(self, input_units, group) -> FrozenSet[Unit]:
+    def _get_compatible_units(self, input_units, group) -> FrozenSet["Unit"]:
 
         ret = super()._get_compatible_units(input_units, group)
 

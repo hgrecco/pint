@@ -11,11 +11,10 @@
 from __future__ import annotations
 
 import copy
-import inspect
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Type, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from ..._typing import UnitLike
 from ...compat import NUMERIC_TYPES
@@ -117,7 +116,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         -------
         bool
         """
-        from .quantity import Quantity
+        from .quantity import PlainQuantity
 
         if contexts or self._REGISTRY._active_ctx:
             try:
@@ -126,7 +125,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (Quantity, PlainUnit)):
+        if isinstance(other, (PlainQuantity, PlainUnit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
@@ -283,31 +282,3 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         """
         return self.from_(value, strict=strict, name=name).magnitude
-
-
-# TODO: Remove in the near future
-# This is kept for easy backward compatibility during refactoring.
-_Unit = PlainUnit
-Unit = PlainUnit
-
-
-def build_unit_class(registry) -> Type[PlainUnit]:
-    """Creates a Unit class specifically for the given registry that
-    subclass all the quantity classes defined by the registry bases.
-
-    1. List the '_unit_class' attribute for each of the bases of the registry class.
-    2. Use this list as bases for the new Unit Class
-    3. Add the provided registry as the class registry.
-
-    """
-
-    bases = (
-        getattr(base, "_unit_class", None)
-        for base in inspect.getmro(registry.__class__)
-    )
-    bases = dict.fromkeys((base for base in bases if base), None)
-
-    class Unit(*tuple(bases.keys())):
-        _REGISTRY = registry
-
-    return Unit

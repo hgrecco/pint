@@ -6,6 +6,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from .compat import HAS_BABEL
 
 _babel_units = dict(

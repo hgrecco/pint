@@ -8,19 +8,19 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import functools
 from inspect import signature
 from itertools import zip_longest
 from typing import TYPE_CHECKING, Callable, Iterable, TypeVar, Union
-
-from pint.facets.plain.quantity import Quantity
 
 from ._typing import F
 from .errors import DimensionalityError
 from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
-    from pint.facets.plain.unit import Unit
+    from pint import Quantity, Unit
 
     from .registry import UnitRegistry
 

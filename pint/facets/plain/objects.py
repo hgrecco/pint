@@ -6,6 +6,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from .quantity import PlainQuantity
 from .unit import PlainUnit, UnitsContainer
 

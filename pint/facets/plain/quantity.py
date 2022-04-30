@@ -11,7 +11,6 @@ from __future__ import annotations
 import bisect
 import copy
 import datetime
-import inspect
 import locale
 import math
 import numbers
@@ -29,7 +28,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    Type,
     TypeVar,
     Union,
     overload,
@@ -169,7 +167,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         from pint import _unpickle_quantity
 
         # Note: type(self) would be a mistake as subclasses built by
-        # build_quantity_class can't be pickled
+        # dinamically can't be pickled
         return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
     @overload
@@ -445,7 +443,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         -------
         bool
         """
-        from .unit import Unit
+        from .unit import PlainUnit
 
         if contexts or self._REGISTRY._active_ctx:
             try:
@@ -454,7 +452,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (PlainQuantity, Unit)):
+        if isinstance(other, (PlainQuantity, PlainUnit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
@@ -1573,30 +1571,3 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
     def to_timedelta(self: PlainQuantity[float]) -> datetime.timedelta:
         return datetime.timedelta(microseconds=self.to("microseconds").magnitude)
-
-
-# TODO: Remove in the near future
-# This is kept for easy backward compatibility during refactoring.
-_Quantity = PlainQuantity
-Quantity = PlainQuantity
-
-
-def build_quantity_class(registry) -> Type[PlainQuantity]:
-    """Creates a Quantity class specifically for the given registry that
-    subclass all the quantity classes defined by the registry bases.
-
-    1. List the '_quantity_class' attribute for each of the bases of the registry class.
-    2. Use this list as bases for the new Quantity Class
-    3. Add the provided registry as the class registry.
-
-    """
-    bases = (
-        getattr(base, "_quantity_class", None)
-        for base in inspect.getmro(registry.__class__)
-    )
-    bases = dict.fromkeys((base for base in bases if base), None)
-
-    class Quantity(*tuple(bases.keys())):
-        _REGISTRY = registry
-
-    return Quantity

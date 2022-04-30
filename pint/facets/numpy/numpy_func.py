@@ -6,6 +6,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import warnings
 from inspect import signature
 from itertools import chain

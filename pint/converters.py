@@ -8,6 +8,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from dataclasses import fields as dc_fields
 

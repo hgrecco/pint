@@ -70,6 +70,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from . import context, dask, group, measurement, nonmultiplicative, numpy, plain, system
 
 __all__ = [plain, nonmultiplicative, numpy, dask, measurement, context, group, system]

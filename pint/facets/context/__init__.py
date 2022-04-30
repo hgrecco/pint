@@ -8,6 +8,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from .definitions import ContextDefinition
 from .objects import Context
 from .registry import ContextRegistry
