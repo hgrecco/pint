@@ -63,11 +63,6 @@ if TYPE_CHECKING:
         import numpy as np  # noqa
 
 
-class _Exception(Exception):  # pragma: no cover
-    def __init__(self, internal):
-        self.internal = internal
-
-
 def reduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
