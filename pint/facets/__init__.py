@@ -72,6 +72,24 @@
 
 from __future__ import annotations
 
-from . import context, dask, group, measurement, nonmultiplicative, numpy, plain, system
+from .context import ContextRegistry
+from .dask import DaskRegistry
+from .formatting import FormattingRegistry
+from .group import GroupRegistry
+from .measurement import MeasurementRegistry
+from .nonmultiplicative import NonMultiplicativeRegistry
+from .numpy import NumpyRegistry
+from .plain import PlainRegistry
+from .system import SystemRegistry
 
-__all__ = [plain, nonmultiplicative, numpy, dask, measurement, context, group, system]
+__all__ = [
+    ContextRegistry,
+    DaskRegistry,
+    FormattingRegistry,
+    GroupRegistry,
+    MeasurementRegistry,
+    NonMultiplicativeRegistry,
+    NumpyRegistry,
+    PlainRegistry,
+    SystemRegistry,
+]

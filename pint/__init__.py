@@ -25,7 +25,6 @@ from .errors import (  # noqa: F401
     UndefinedUnitError,
     UnitStrippedWarning,
 )
-from .facets.context import Context
 from .formatting import formatter, register_unit_format
 from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
 from .util import logger, pi_theorem  # noqa: F401
@@ -35,6 +34,7 @@ from .util import logger, pi_theorem  # noqa: F401
 Quantity = UnitRegistry.Quantity
 Unit = UnitRegistry.Unit
 Measurement = UnitRegistry.Measurement
+Context = UnitRegistry.Context
 
 try:  # pragma: no cover
     __version__ = version("pint")
