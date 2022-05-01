@@ -2,34 +2,13 @@
     pint.registry
     ~~~~~~~~~~~~~
 
-    Defines the Registry, a class to contain units and their relations.
+    Defines the UnitRegistry, a class to contain units and their relations.
 
-    The facet_module actually defines 5 registries with different capabilities:
+    This registry contains all pint capabilities, but you can build your
+    customized registry by picking only the features that you actually
+    need.
 
-    - PlainRegistry: Basic unit definition and querying.
-                    Conversion between multiplicative units.
-
-    - NonMultiplicativeRegistry: Conversion between non multiplicative (offset) units.
-                                 (e.g. Temperature)
-
-      * Inherits from PlainRegistry
-
-    - ContextRegisty: Conversion between units with different dimensions according
-                      to previously established relations (contexts) - e.g. in spectroscopy,
-                      conversion between frequency and energy is possible. May also override
-                      conversions between units on the same dimension - e.g. different
-                      rounding conventions.
-
-      * Inherits from PlainRegistry
-
-    - SystemRegistry: Group unit and changing of plain units.
-                      (e.g. in MKS, meter, kilogram and second are plain units.)
-
-      * Inherits from PlainRegistry
-
-    - UnitRegistry: Combine all previous capabilities, it is exposed by Pint.
-
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
