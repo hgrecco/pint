@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Callable, Tuple, TypeVar, Union
 
 if TYPE_CHECKING:
-    from .facets.plain import Quantity, Unit
-    from .facets.plain.unit import UnitsContainer
+    from .facets.plain import Quantity, Unit, UnitsContainer
 
 UnitLike = Union[str, "UnitsContainer", "Unit"]
 

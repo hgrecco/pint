@@ -2,7 +2,8 @@
     pint.facets.context
     ~~~~~~~~~~~~~~~~~~~
 
-    Adds pint the capability to contexts.
+    Adds pint the capability to contexts: predefined conversions
+    between incompatible dimensions.
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
