@@ -180,13 +180,3 @@ class Lister:
     def __getattr__(self, item):
         getattr_maybe_raise(self, item)
         return self.d[item]
-
-
-_System = System
-
-
-def build_system_class(registry):
-    class System(_System):
-        _REGISTRY = registry
-
-    return System

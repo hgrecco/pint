@@ -1348,8 +1348,3 @@ class PlainRegistry(metaclass=RegistryMeta):
         )
 
     __call__ = parse_expression
-
-
-# TODO: Remove in the near future
-# This is kept for easy backward compatibility during refactoring.
-BaseRegistry = PlainRegistry

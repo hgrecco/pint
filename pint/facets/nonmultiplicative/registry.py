@@ -15,8 +15,6 @@ from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer
 from .objects import NonMultiplicativeQuantity
 
-# TODO: Must sublcass plain Registry when plain fect is built.
-
 
 class NonMultiplicativeRegistry:
     """Handle of non multiplicative units (e.g. Temperature).

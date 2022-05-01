@@ -190,13 +190,3 @@ class Group(SharedRegistryObject):
     def __getattr__(self, item):
         getattr_maybe_raise(self, item)
         return self._REGISTRY
-
-
-_Group = Group
-
-
-def build_group_class(registry):
-    class Group(_Group):
-        _REGISTRY = registry
-
-    return Group

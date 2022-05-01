@@ -16,10 +16,14 @@ if TYPE_CHECKING:
 
 from ..._typing import UnitLike
 from ...util import UnitsContainer as UnitsContainerT
-from ...util import to_units_container
+from ...util import (
+    build_dependent_class,
+    create_class_with_registry,
+    to_units_container,
+)
 from ..group import GroupRegistry
 from .definitions import SystemDefinition
-from .objects import Lister, System, build_system_class
+from .objects import Lister, System
 
 
 class SystemRegistry(GroupRegistry):
@@ -37,6 +41,8 @@ class SystemRegistry(GroupRegistry):
     - Parse @group directive.
     """
 
+    _system_class = System
+
     def __init__(self, system=None, **kwargs):
         super().__init__(**kwargs)
 
@@ -49,9 +55,14 @@ class SystemRegistry(GroupRegistry):
 
         self._default_system = system
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+        cls.System = build_dependent_class(cls, "System", "_system_class")
+
     def _init_dynamic_classes(self) -> None:
+        """Generate subclasses on the fly and attach them to self"""
         super()._init_dynamic_classes()
-        self.System = build_system_class(self)
+        self.System = create_class_with_registry(self, self.System)
 
     def _after_init(self) -> None:
         """Invoked at the end of ``__init__``.

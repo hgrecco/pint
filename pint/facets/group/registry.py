@@ -13,9 +13,10 @@ from typing import TYPE_CHECKING, Dict, FrozenSet
 if TYPE_CHECKING:
     from pint import Unit
 
+from ...util import build_dependent_class, create_class_with_registry
 from ..plain.definitions import UnitDefinition
 from .definitions import GroupDefinition
-from .objects import Group, build_group_class
+from .objects import Group
 
 
 class GroupRegistry:
@@ -28,6 +29,8 @@ class GroupRegistry:
     - Parse @group directive.
     """
 
+    _group_class = Group
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         #: Map group name to group.
@@ -35,9 +38,14 @@ class GroupRegistry:
         self._groups: Dict[str, Group] = {}
         self._groups["root"] = self.Group("root")
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+        cls.Group = build_dependent_class(cls, "Group", "_group_class")
+
     def _init_dynamic_classes(self) -> None:
+        """Generate subclasses on the fly and attach them to self"""
         super()._init_dynamic_classes()
-        self.Group = build_group_class(self)
+        self.Group = create_class_with_registry(self, self.Group)
 
     def _after_init(self) -> None:
         """Invoked at the end of ``__init__``.
