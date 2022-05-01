@@ -1,49 +1,51 @@
 """
-pint.registry
-~~~~~~~~~~~~~
+    pint.registry
+    ~~~~~~~~~~~~~
 
-Defines the Registry, a class to contain units and their relations.
+    Defines the Registry, a class to contain units and their relations.
 
-The module actually defines 5 registries with different capabilities:
+    The facet_module actually defines 5 registries with different capabilities:
 
-- PlainRegistry: Basic unit definition and querying.
-                Conversion between multiplicative units.
+    - PlainRegistry: Basic unit definition and querying.
+                    Conversion between multiplicative units.
 
-- NonMultiplicativeRegistry: Conversion between non multiplicative (offset) units.
-                             (e.g. Temperature)
+    - NonMultiplicativeRegistry: Conversion between non multiplicative (offset) units.
+                                 (e.g. Temperature)
 
-  * Inherits from PlainRegistry
+      * Inherits from PlainRegistry
 
-- ContextRegisty: Conversion between units with different dimensions according
-                  to previously established relations (contexts) - e.g. in spectroscopy,
-                  conversion between frequency and energy is possible. May also override
-                  conversions between units on the same dimension - e.g. different
-                  rounding conventions.
+    - ContextRegisty: Conversion between units with different dimensions according
+                      to previously established relations (contexts) - e.g. in spectroscopy,
+                      conversion between frequency and energy is possible. May also override
+                      conversions between units on the same dimension - e.g. different
+                      rounding conventions.
 
-  * Inherits from PlainRegistry
+      * Inherits from PlainRegistry
 
-- SystemRegistry: Group unit and changing of plain units.
-                  (e.g. in MKS, meter, kilogram and second are plain units.)
+    - SystemRegistry: Group unit and changing of plain units.
+                      (e.g. in MKS, meter, kilogram and second are plain units.)
 
-  * Inherits from PlainRegistry
+      * Inherits from PlainRegistry
 
-- UnitRegistry: Combine all previous capabilities, it is exposed by Pint.
+    - UnitRegistry: Combine all previous capabilities, it is exposed by Pint.
 
-:copyright: 2016 by Pint Authors, see AUTHORS for more details.
-:license: BSD, see LICENSE for more details.
+    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 from . import registry_helpers
-from .facets.context import ContextRegistry
-from .facets.dask import DaskRegistry
-from .facets.formatting import FormattingRegistry
-from .facets.measurement import MeasurementRegistry
-from .facets.nonmultiplicative import NonMultiplicativeRegistry
-from .facets.numpy import NumpyRegistry
-from .facets.plain import PlainRegistry
-from .facets.system import SystemRegistry
+from .facets import (
+    ContextRegistry,
+    DaskRegistry,
+    FormattingRegistry,
+    MeasurementRegistry,
+    NonMultiplicativeRegistry,
+    NumpyRegistry,
+    PlainRegistry,
+    SystemRegistry,
+)
 from .util import logger, pi_theorem
 
 
