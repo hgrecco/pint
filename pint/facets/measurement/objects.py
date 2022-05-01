@@ -185,8 +185,3 @@ class Measurement(PlainQuantity):
             mag = re.sub(r"\)e-0?(\d+)", r")×10<sup>-\1</sup>", mag)
 
         return mag + space + ustr
-
-
-# TODO: Remove in the near future
-# This is kept for easy backward compatibility during refactoring.
-_Measurement = Measurement
