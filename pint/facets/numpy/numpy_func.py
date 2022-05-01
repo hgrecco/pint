@@ -1,8 +1,8 @@
 """
-    pint.numpy_func
-    ~~~~~~~~~~~~~~~
+    pint.facets.numpy.numpy_func
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2019 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 

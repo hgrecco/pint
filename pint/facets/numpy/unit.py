@@ -1,3 +1,11 @@
+"""
+    pint.facets.numpy.unit
+    ~~~~~~~~~~~~~~~~~~~~~~
+
+    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
+"""
+
 from __future__ import annotations
 
 from ...compat import is_upcast_type

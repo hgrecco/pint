@@ -29,10 +29,9 @@ from .formatting import format_unit
 from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
-    from pint.facets.plain.quantity import Quantity
+    from pint import Quantity, UnitRegistry
 
     from ._typing import UnitLike
-    from .facets.plain import PlainRegistry
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -810,7 +809,7 @@ class SharedRegistryObject:
 
     """
 
-    _REGISTRY: ClassVar[PlainRegistry]
+    _REGISTRY: ClassVar[UnitRegistry]
     _units: UnitsContainer
 
     def __new__(cls, *args, **kwargs):
@@ -876,7 +875,7 @@ class PrettyIPython:
 
 
 def to_units_container(
-    unit_like: Union[UnitLike, Quantity], registry: Optional[PlainRegistry] = None
+    unit_like: Union[UnitLike, Quantity], registry: Optional[UnitRegistry] = None
 ) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 
@@ -909,7 +908,7 @@ def to_units_container(
 
 
 def infer_base_unit(
-    unit_like: Union[UnitLike, Quantity], registry: Optional[PlainRegistry] = None
+    unit_like: Union[UnitLike, Quantity], registry: Optional[UnitRegistry] = None
 ) -> UnitsContainer:
     """
     Given a Quantity or UnitLike, give the UnitsContainer for it's plain units.
@@ -919,7 +918,7 @@ def infer_base_unit(
     unit_like : Union[UnitLike, Quantity]
         Quantity or Unit to infer the plain units from.
 
-    registry: Optional[PlainRegistry]
+    registry: Optional[UnitRegistry]
         If provided, uses the registry's UnitsContainer and parse_unit_name.  If None,
         uses the registry attached to unit_like.
 

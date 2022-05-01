@@ -1,8 +1,10 @@
 """
-    pint.facets.group
-    ~~~~~~~~~~~~~~~~~
+    pint.facets.nonmultiplicative
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Adds pint the capability to group units.
+    Adds pint the capability to handle nonmultiplicative units:
+    - offset
+    - logarithmic
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.

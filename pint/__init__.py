@@ -11,6 +11,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from importlib.metadata import version
 
 from .errors import (  # noqa: F401
@@ -63,7 +65,7 @@ def _unpickle(cls, *args):
     object of type cls
 
     """
-    from pint.facets.plain.unit import UnitsContainer
+    from pint.facets.plain import UnitsContainer
 
     for arg in args:
         # Prefixed units are defined within the registry

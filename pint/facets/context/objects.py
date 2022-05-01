@@ -1,5 +1,5 @@
 """
-    pint.facets.systems.objects
+    pint.facets.context.objects
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.

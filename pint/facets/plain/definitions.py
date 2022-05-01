@@ -2,8 +2,6 @@
     pint.facets.plain.definitions
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Base unit converting capabilites.
-
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """

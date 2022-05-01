@@ -2,8 +2,6 @@
     pint.facets.plain.unit
     ~~~~~~~~~~~~~~~~~~~~~
 
-    Functions and classes related to unit definitions and conversions.
-
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """

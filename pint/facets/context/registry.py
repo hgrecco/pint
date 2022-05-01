@@ -1,5 +1,5 @@
 """
-    pint.facets.systems.registry
+    pint.facets.context.registry
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
