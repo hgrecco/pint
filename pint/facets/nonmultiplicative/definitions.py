@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...compat import HAS_NUMPY, exp, log
-from ..plain.definitions import ScaleConverter
+from ..plain import ScaleConverter
 
 
 @dataclass(frozen=True)

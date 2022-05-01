@@ -51,6 +51,8 @@ class ContextRegistry:
     - Parse @context directive.
     """
 
+    Context = Context
+
     def __init__(self, **kwargs: Any) -> None:
         # Map context name (string) or abbreviation to context.
         self._contexts: Dict[str, Context] = {}

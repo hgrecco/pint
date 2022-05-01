@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from pint import Unit
 
 from ...util import build_dependent_class, create_class_with_registry
-from ..plain.definitions import UnitDefinition
+from ..plain import UnitDefinition
 from .definitions import GroupDefinition
 from .objects import Group
 

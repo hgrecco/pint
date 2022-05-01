@@ -15,7 +15,7 @@ from typing import Tuple
 from ...definitions import Definition
 from ...errors import DefinitionSyntaxError
 from ...util import SourceIterator
-from ..plain.definitions import UnitDefinition
+from ..plain import UnitDefinition
 
 
 @dataclass(frozen=True)

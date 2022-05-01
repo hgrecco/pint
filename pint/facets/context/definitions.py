@@ -16,10 +16,10 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
 from ...definitions import Definition
 from ...errors import DefinitionSyntaxError
 from ...util import ParserHelper, SourceIterator
-from ..plain.definitions import UnitDefinition
+from ..plain import UnitDefinition
 
 if TYPE_CHECKING:
-    from ..plain.quantity import Quantity
+    from pint import Quantity
 
 _header_re = re.compile(
     r"@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*"
