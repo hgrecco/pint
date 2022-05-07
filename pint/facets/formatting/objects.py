@@ -123,7 +123,7 @@ class FormattingQuantity:
         else:
             mstr = format(obj.magnitude, mspec).replace("\n", "")
 
-        if "L" in uspec:
+        if "L" in uspec and "Lx" not in uspec:
             mstr = self._exp_pattern.sub(r"\1\\times 10^{\2\3}", mstr)
         elif "H" in uspec or "P" in uspec:
             m = self._exp_pattern.match(mstr)
