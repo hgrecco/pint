@@ -1049,7 +1049,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                     _to_magnitude(other, self.force_ndarray, self.force_ndarray_like),
                 )
             else:
-                raise DimensionalityError(self._units, "dimensionless")
+                return NotImplemented
             return self.__class__(magnitude, units)
 
         if not self.dimensionality == other.dimensionality:
