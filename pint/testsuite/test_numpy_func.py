@@ -2,10 +2,10 @@ from unittest.mock import patch
 
 import pytest
 
-import pint.numpy_func
+import pint.facets.numpy.numpy_func
 from pint import DimensionalityError, OffsetUnitCalculusError
 from pint.compat import np
-from pint.numpy_func import (
+from pint.facets.numpy.numpy_func import (
     _is_quantity,
     _is_sequence_with_quantity_elements,
     convert_to_consistent_units,
@@ -19,22 +19,22 @@ from pint.testsuite.test_numpy import TestNumpyMethods
 
 
 class TestNumPyFuncUtils(TestNumpyMethods):
-    @patch("pint.numpy_func.HANDLED_FUNCTIONS", {})
-    @patch("pint.numpy_func.HANDLED_UFUNCS", {})
+    @patch("pint.facets.numpy.numpy_func.HANDLED_FUNCTIONS", {})
+    @patch("pint.facets.numpy.numpy_func.HANDLED_UFUNCS", {})
     def test_implements(self):
         # Test for functions
         @implements("test", "function")
         def test_function():
             pass
 
-        assert pint.numpy_func.HANDLED_FUNCTIONS["test"] == test_function
+        assert pint.facets.numpy.numpy_func.HANDLED_FUNCTIONS["test"] == test_function
 
         # Test for ufuncs
         @implements("test", "ufunc")
         def test_ufunc():
             pass
 
-        assert pint.numpy_func.HANDLED_UFUNCS["test"] == test_ufunc
+        assert pint.facets.numpy.numpy_func.HANDLED_UFUNCS["test"] == test_ufunc
 
         # Test for invalid func type
         with pytest.raises(ValueError):

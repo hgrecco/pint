@@ -1,20 +1,39 @@
 """
-    pint.measurement
-    ~~~~~~~~~~~~~~~~
+    pint.facets.measurement.objects
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+
+from __future__ import annotations
+
+import copy
 import re
 
-from .compat import ufloat
-from .formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
-from .quantity import Quantity
+from ...compat import ufloat
+from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
+from ..plain import PlainQuantity
 
 MISSING = object()
 
 
-class Measurement(Quantity):
+class MeasurementQuantity:
+
+    # Measurement support
+    def plus_minus(self, error, relative=False):
+        if isinstance(error, self.__class__):
+            if relative:
+                raise ValueError("{} is not a valid relative error.".format(error))
+            error = error.to(self._units).magnitude
+        else:
+            if relative:
+                error = error * abs(self.magnitude)
+
+        return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
+
+
+class Measurement(PlainQuantity):
     """Implements a class to describe a quantity with uncertainty.
 
     Parameters
@@ -70,7 +89,7 @@ class Measurement(Quantity):
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
-        from . import _unpickle_measurement
+        from pint import _unpickle_measurement
 
         return _unpickle_measurement, (Measurement, self.magnitude, self._units)
 
@@ -166,26 +185,3 @@ class Measurement(Quantity):
             mag = re.sub(r"\)e-0?(\d+)", r")×10<sup>-\1</sup>", mag)
 
         return mag + space + ustr
-
-
-_Measurement = Measurement
-
-
-def build_measurement_class(registry):
-
-    if ufloat is None:
-
-        class Measurement:
-            _REGISTRY = registry
-
-            def __init__(self, *args):
-                raise RuntimeError(
-                    "Pint requires the 'uncertainties' package to create a Measurement object."
-                )
-
-    else:
-
-        class Measurement(_Measurement):
-            _REGISTRY = registry
-
-    return Measurement

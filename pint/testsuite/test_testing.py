@@ -1,7 +1,8 @@
 import pytest
 
+from pint import Quantity
+
 from .. import testing
-from ..quantity import Quantity
 
 np = pytest.importorskip("numpy")
 

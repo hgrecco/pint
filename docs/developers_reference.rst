@@ -14,9 +14,6 @@ All Modules
 .. automodule:: pint.compat
     :members:
 
-.. automodule:: pint.context
-    :members:
-
 .. automodule:: pint.converters
     :members:
 
@@ -32,13 +29,7 @@ All Modules
 .. automodule:: pint.matplotlib
     :members:
 
-.. automodule:: pint.measurement
-    :members:
-
 .. automodule:: pint.pint_eval
-    :members:
-
-.. automodule:: pint.quantity
     :members:
 
 .. automodule:: pint.registry
@@ -47,14 +38,38 @@ All Modules
 .. automodule:: pint.registry_helpers
     :members:
 
-.. automodule:: pint.systems
-    :members:
-
 .. automodule:: pint.testing
     :members:
 
-.. automodule:: pint.unit
+.. automodule:: pint.util
     :members:
 
-.. automodule:: pint.util
+Facets
+------
+
+.. automodule:: pint.facets.plain
+    :members:
+
+.. automodule:: pint.facets.nonmultiplicative
+    :members:
+
+.. automodule:: pint.facets.formatting
+    :members:
+
+.. automodule:: pint.facets.numpy
+    :members:
+
+.. automodule:: pint.facets.dask
+    :members:
+
+.. automodule:: pint.facets.measurement
+    :members:
+
+.. automodule:: pint.facets.group
+    :members:
+
+.. automodule:: pint.facets.system
+    :members:
+
+.. automodule:: pint.facets.context
     :members:

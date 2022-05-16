@@ -1,9 +1,12 @@
 Pint Changelog
 ==============
 
--0.20 (unreleased)
+0.20 (unreleased)
 ------------------
 
+- Reorganized code into facets.
+  Each facet encapsulate a Pint functionality.
+  (See #1466, #1479)
 
 
 0.19.2 (2022-04-23)

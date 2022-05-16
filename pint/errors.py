@@ -8,6 +8,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 OFFSET_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/latest/nonmult.html"
 LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/latest/nonmult.html"
 

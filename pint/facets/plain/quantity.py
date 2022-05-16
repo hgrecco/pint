@@ -1,8 +1,8 @@
 """
-    pint.quantity
-    ~~~~~~~~~~~~~
+    pint.facets.plain.quantity
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -11,12 +11,10 @@ from __future__ import annotations
 import bisect
 import copy
 import datetime
-import functools
 import locale
 import math
 import numbers
 import operator
-import re
 import warnings
 from typing import (
     TYPE_CHECKING,
@@ -30,74 +28,39 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    Type,
     TypeVar,
     Union,
     overload,
 )
 
-from ._typing import S, Shape, UnitLike, _MagnitudeType
-from .compat import (
+from ..._typing import S, UnitLike, _MagnitudeType
+from ...compat import (
     HAS_NUMPY,
     _to_magnitude,
-    babel_parse,
-    compute,
-    dask_array,
     eq,
     is_duck_array_type,
     is_upcast_type,
-    ndarray,
     np,
-    persist,
-    visualize,
     zero_or_nan,
 )
-from .definitions import UnitDefinition
-from .errors import (
-    DimensionalityError,
-    OffsetUnitCalculusError,
-    PintTypeError,
-    UnitStrippedWarning,
-)
-from .formatting import (
-    _pretty_fmt_exponent,
-    ndarray_to_latex,
-    remove_custom_flags,
-    siunitx_format_unit,
-    split_format,
-)
-from .numpy_func import (
-    HANDLED_UFUNCS,
-    copy_units_output_ufuncs,
-    get_op_output_unit,
-    matching_input_copy_units_output_ufuncs,
-    matching_input_set_units_output_ufuncs,
-    numpy_wrap,
-    op_units_output_ufuncs,
-    set_units_ufuncs,
-)
-from .util import (
+from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
+from ...util import (
     PrettyIPython,
     SharedRegistryObject,
     UnitsContainer,
     infer_base_unit,
-    iterable,
     logger,
     to_units_container,
 )
+from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
-    from . import Context, Unit
-    from .registry import BaseRegistry
+    from ..context import Context
+    from .unit import Unit
     from .unit import UnitsContainer as UnitsContainerT
 
     if HAS_NUMPY:
         import numpy as np  # noqa
-
-
-class _Exception(Exception):  # pragma: no cover
-    def __init__(self, internal):
-        self.internal = internal
 
 
 def reduce_dimensions(f):
@@ -133,7 +96,7 @@ def check_implemented(f):
         if is_upcast_type(type(other)):
             return NotImplemented
         # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
-        # and expects Quantity * array[Quantity] should return NotImplemented
+        # and expects PlainQuantity * array[PlainQuantity] should return NotImplemented
         elif isinstance(other, list) and other and isinstance(other[0], type(self)):
             return NotImplemented
         return f(self, *args, **kwargs)
@@ -153,33 +116,22 @@ def method_wraps(numpy_func):
     return wrapper
 
 
-def check_dask_array(f):
-    @functools.wraps(f)
-    def wrapper(self, *args, **kwargs):
-        if isinstance(self._magnitude, dask_array.Array):
-            return f(self, *args, **kwargs)
-        else:
-            msg = "Method {} only implemented for objects of {}, not {}".format(
-                f.__name__, dask_array.Array, self._magnitude.__class__
-            )
-            raise AttributeError(msg)
-
-    return wrapper
-
-
-# Workaround to bypass dynamically generated Quantity with overload method
+# Workaround to bypass dynamically generated PlainQuantity with overload method
 Magnitude = TypeVar("Magnitude")
 
 
-class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
+# TODO: remove all nonmultiplicative remnants
+
+
+class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
     Parameters
     ----------
-    value : str, pint.Quantity or any numeric type
+    value : str, pint.PlainQuantity or any numeric type
         Value of the physical quantity to be created.
-    units : UnitsContainer, str or pint.Quantity
+    units : UnitsContainer, str or pint.PlainQuantity
         Units of the physical quantity to be created.
 
     Returns
@@ -207,43 +159,43 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         """Allow pickling quantities. Since UnitRegistries are not pickled, upon
         unpickling the new object is always attached to the application registry.
         """
-        from . import _unpickle_quantity
+        from pint import _unpickle_quantity
 
         # Note: type(self) would be a mistake as subclasses built by
-        # build_quantity_class can't be pickled
-        return _unpickle_quantity, (Quantity, self.magnitude, self._units)
+        # dinamically can't be pickled
+        return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
     @overload
     def __new__(
         cls, value: str, units: Optional[UnitLike] = None
-    ) -> Quantity[Magnitude]:
+    ) -> PlainQuantity[Magnitude]:
         ...
 
     @overload
     def __new__(  # type: ignore[misc]
         cls, value: Sequence, units: Optional[UnitLike] = None
-    ) -> Quantity[np.ndarray]:
+    ) -> PlainQuantity[np.ndarray]:
         ...
 
     @overload
     def __new__(
-        cls, value: Quantity[Magnitude], units: Optional[UnitLike] = None
-    ) -> Quantity[Magnitude]:
+        cls, value: PlainQuantity[Magnitude], units: Optional[UnitLike] = None
+    ) -> PlainQuantity[Magnitude]:
         ...
 
     @overload
     def __new__(
         cls, value: Magnitude, units: Optional[UnitLike] = None
-    ) -> Quantity[Magnitude]:
+    ) -> PlainQuantity[Magnitude]:
         ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
-            raise TypeError(f"Quantity cannot wrap upcast type {type(value)}")
+            raise TypeError(f"PlainQuantity cannot wrap upcast type {type(value)}")
 
         if units is None and isinstance(value, str) and value == "":
             raise ValueError(
-                "Expression to parse as Quantity cannot be an empty string."
+                "Expression to parse as PlainQuantity cannot be an empty string."
             )
 
         if units is None and isinstance(value, str):
@@ -263,16 +215,16 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             elif isinstance(units, str):
                 units = inst._REGISTRY.parse_units(units)._units
             elif isinstance(units, SharedRegistryObject):
-                if isinstance(units, Quantity) and units.magnitude != 1:
+                if isinstance(units, PlainQuantity) and units.magnitude != 1:
                     units = copy.copy(units)._units
                     logger.warning(
-                        "Creating new Quantity using a non unity Quantity as units."
+                        "Creating new PlainQuantity using a non unity PlainQuantity as units."
                     )
                 else:
                     units = units._units
             else:
                 raise TypeError(
-                    "units must be of type str, Quantity or "
+                    "units must be of type str, PlainQuantity or "
                     "UnitsContainer; not {}.".format(type(units))
                 )
         if isinstance(value, cls):
@@ -284,16 +236,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         inst._magnitude = magnitude
         inst._units = units
 
-        inst.__used = False
-        inst.__handling = None
-
         return inst
 
-    @property
-    def debug_used(self):
-        return self.__used
-
-    def __iter__(self: Quantity[Iterable[S]]) -> Iterator[S]:
+    def __iter__(self: PlainQuantity[Iterable[S]]) -> Iterator[S]:
         # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
         # as one calls iter(self) without waiting for the first element to be drawn from
         # the iterator
@@ -305,23 +250,18 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return it_outer()
 
-    def __copy__(self) -> Quantity[_MagnitudeType]:
+    def __copy__(self) -> PlainQuantity[_MagnitudeType]:
         ret = self.__class__(copy.copy(self._magnitude), self._units)
-        ret.__used = self.__used
         return ret
 
-    def __deepcopy__(self, memo) -> Quantity[_MagnitudeType]:
+    def __deepcopy__(self, memo) -> PlainQuantity[_MagnitudeType]:
         ret = self.__class__(
             copy.deepcopy(self._magnitude, memo), copy.deepcopy(self._units, memo)
         )
-        ret.__used = self.__used
         return ret
 
     def __str__(self) -> str:
-        if self._REGISTRY.fmt_locale is not None:
-            return self.format_babel()
-
-        return format(self)
+        return str(self.magnitude) + " " + str(self.units)
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())
@@ -339,166 +279,22 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         else:
             return hash((self_base.__class__, self_base.magnitude, self_base.units))
 
-    _exp_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
-
-    def __format__(self, spec: str) -> str:
-        if self._REGISTRY.fmt_locale is not None:
-            return self.format_babel(spec)
-
-        mspec, uspec = split_format(
-            spec, self.default_format, self._REGISTRY.separate_format_defaults
-        )
-
-        # If Compact is selected, do it at the beginning
-        if "#" in spec:
-            # TODO: don't replace '#'
-            mspec = mspec.replace("#", "")
-            uspec = uspec.replace("#", "")
-            obj = self.to_compact()
-        else:
-            obj = self
-
-        if "L" in uspec:
-            allf = plain_allf = r"{}\ {}"
-        elif "H" in uspec:
-            allf = plain_allf = "{} {}"
-            if iterable(obj.magnitude):
-                # Use HTML table instead of plain text template for array-likes
-                allf = (
-                    "<table><tbody>"
-                    "<tr><th>Magnitude</th>"
-                    "<td style='text-align:left;'>{}</td></tr>"
-                    "<tr><th>Units</th><td style='text-align:left;'>{}</td></tr>"
-                    "</tbody></table>"
-                )
-        else:
-            allf = plain_allf = "{} {}"
-
-        if "Lx" in uspec:
-            # the LaTeX siunitx code
-            # TODO: add support for extracting options
-            opts = ""
-            ustr = siunitx_format_unit(obj.units._units, obj._REGISTRY)
-            allf = r"\SI[%s]{{{}}}{{{}}}" % opts
-        else:
-            # Hand off to unit formatting
-            # TODO: only use `uspec` after completing the deprecation cycle
-            ustr = format(obj.units, mspec + uspec)
-
-        # mspec = remove_custom_flags(spec)
-        if "H" in uspec:
-            # HTML formatting
-            if hasattr(obj.magnitude, "_repr_html_"):
-                # If magnitude has an HTML repr, nest it within Pint's
-                mstr = obj.magnitude._repr_html_()
-            else:
-                if isinstance(self.magnitude, ndarray):
-                    # Use custom ndarray text formatting with monospace font
-                    formatter = "{{:{}}}".format(mspec)
-                    # Need to override for scalars, which are detected as iterable,
-                    # and don't respond to printoptions.
-                    if self.magnitude.ndim == 0:
-                        allf = plain_allf = "{} {}"
-                        mstr = formatter.format(obj.magnitude)
-                    else:
-                        with np.printoptions(
-                            formatter={"float_kind": formatter.format}
-                        ):
-                            mstr = (
-                                "<pre>"
-                                + format(obj.magnitude).replace("\n", "<br>")
-                                + "</pre>"
-                            )
-                elif not iterable(obj.magnitude):
-                    # Use plain text for scalars
-                    mstr = format(obj.magnitude, mspec)
-                else:
-                    # Use monospace font for other array-likes
-                    mstr = (
-                        "<pre>"
-                        + format(obj.magnitude, mspec).replace("\n", "<br>")
-                        + "</pre>"
-                    )
-        elif isinstance(self.magnitude, ndarray):
-            if "L" in uspec:
-                # Use ndarray LaTeX special formatting
-                mstr = ndarray_to_latex(obj.magnitude, mspec)
-            else:
-                # Use custom ndarray text formatting--need to handle scalars differently
-                # since they don't respond to printoptions
-                formatter = "{{:{}}}".format(mspec)
-                if obj.magnitude.ndim == 0:
-                    mstr = formatter.format(obj.magnitude)
-                else:
-                    with np.printoptions(formatter={"float_kind": formatter.format}):
-                        mstr = format(obj.magnitude).replace("\n", "")
-        else:
-            mstr = format(obj.magnitude, mspec).replace("\n", "")
-
-        if "L" in uspec and "Lx" not in uspec:
-            mstr = self._exp_pattern.sub(r"\1\\times 10^{\2\3}", mstr)
-        elif "H" in uspec or "P" in uspec:
-            m = self._exp_pattern.match(mstr)
-            _exp_formatter = (
-                _pretty_fmt_exponent if "P" in uspec else lambda s: f"<sup>{s}</sup>"
-            )
-            if m:
-                exp = int(m.group(2) + m.group(3))
-                mstr = self._exp_pattern.sub(r"\1×10" + _exp_formatter(exp), mstr)
-
-        if allf == plain_allf and ustr.startswith("1 /"):
-            # Write e.g. "3 / s" instead of "3 1 / s"
-            ustr = ustr[2:]
-        return allf.format(mstr, ustr).strip()
-
-    def _repr_pretty_(self, p, cycle):
-        if cycle:
-            super()._repr_pretty_(p, cycle)
-        else:
-            p.pretty(self.magnitude)
-            p.text(" ")
-            p.pretty(self.units)
-
-    def format_babel(self, spec: str = "", **kwspec: Any) -> str:
-        spec = spec or self.default_format
-
-        # standard cases
-        if "#" in spec:
-            spec = spec.replace("#", "")
-            obj = self.to_compact()
-        else:
-            obj = self
-        kwspec = dict(kwspec)
-        if "length" in kwspec:
-            kwspec["babel_length"] = kwspec.pop("length")
-
-        loc = kwspec.get("locale", self._REGISTRY.fmt_locale)
-        if loc is None:
-            raise ValueError("Provide a `locale` value to localize translation.")
-
-        kwspec["locale"] = babel_parse(loc)
-        kwspec["babel_plural_form"] = kwspec["locale"].plural_form(obj.magnitude)
-        return "{} {}".format(
-            format(obj.magnitude, remove_custom_flags(spec)),
-            obj.units.format_babel(spec, **kwspec),
-        ).replace("\n", "")
-
     @property
     def magnitude(self) -> _MagnitudeType:
-        """Quantity's magnitude. Long form for `m`"""
+        """PlainQuantity's magnitude. Long form for `m`"""
         return self._magnitude
 
     @property
     def m(self) -> _MagnitudeType:
-        """Quantity's magnitude. Short form for `magnitude`"""
+        """PlainQuantity's magnitude. Short form for `magnitude`"""
         return self._magnitude
 
     def m_as(self, units) -> _MagnitudeType:
-        """Quantity's magnitude expressed in particular units.
+        """PlainQuantity's magnitude expressed in particular units.
 
         Parameters
         ----------
-        units : pint.Quantity, str or dict
+        units : pint.PlainQuantity, str or dict
             destination units
 
         Returns
@@ -509,12 +305,12 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
     @property
     def units(self) -> "Unit":
-        """Quantity's units. Long form for `u`"""
+        """PlainQuantity's units. Long form for `u`"""
         return self._REGISTRY.Unit(self._units)
 
     @property
     def u(self) -> "Unit":
-        """Quantity's units. Short form for `units`"""
+        """PlainQuantity's units. Short form for `units`"""
         return self._REGISTRY.Unit(self._units)
 
     @property
@@ -537,7 +333,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         Returns
         -------
         dict
-            Dimensionality of the Quantity, e.g. ``{length: 1, time: -1}``
+            Dimensionality of the PlainQuantity, e.g. ``{length: 1, time: -1}``
         """
         if self._dimensionality is None:
             self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
@@ -549,7 +345,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
 
     @classmethod
-    def from_list(cls, quant_list: List[Quantity], units=None) -> Quantity[np.ndarray]:
+    def from_list(
+        cls, quant_list: List[PlainQuantity], units=None
+    ) -> PlainQuantity[np.ndarray]:
         """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
@@ -559,19 +357,21 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         Parameters
         ----------
-        quant_list : list of pint.Quantity
-            list of pint.Quantity
-        units : UnitsContainer, str or pint.Quantity
+        quant_list : list of pint.PlainQuantity
+            list of pint.PlainQuantity
+        units : UnitsContainer, str or pint.PlainQuantity
             units of the physical quantity to be created (Default value = None)
 
         Returns
         -------
-        pint.Quantity
+        pint.PlainQuantity
         """
         return cls.from_sequence(quant_list, units=units)
 
     @classmethod
-    def from_sequence(cls, seq: Sequence[Quantity], units=None) -> Quantity[np.ndarray]:
+    def from_sequence(
+        cls, seq: Sequence[PlainQuantity], units=None
+    ) -> PlainQuantity[np.ndarray]:
         """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
 
@@ -580,14 +380,14 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         Parameters
         ----------
-        seq : sequence of pint.Quantity
-            sequence of pint.Quantity
-        units : UnitsContainer, str or pint.Quantity
+        seq : sequence of pint.PlainQuantity
+            sequence of pint.PlainQuantity
+        units : UnitsContainer, str or pint.PlainQuantity
             units of the physical quantity to be created (Default value = None)
 
         Returns
         -------
-        pint.Quantity
+        pint.PlainQuantity
         """
 
         len_seq = len(seq)
@@ -628,7 +428,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         ----------
         other
             The object to check. Treated as dimensionless if not a
-            Quantity, Unit or str.
+            PlainQuantity, Unit or str.
         *contexts : str or pint.Context
             Contexts to use in the transformation.
         **ctx_kwargs :
@@ -638,7 +438,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         -------
         bool
         """
-        from .unit import Unit
+        from .unit import PlainUnit
 
         if contexts or self._REGISTRY._active_ctx:
             try:
@@ -647,7 +447,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (Quantity, Unit)):
+        if isinstance(other, (PlainQuantity, PlainUnit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
@@ -681,7 +481,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         Parameters
         ----------
-        other : pint.Quantity, str or dict
+        other : pint.PlainQuantity, str or dict
             Destination units. (Default value = None)
         *contexts : str or pint.Context
             Contexts to use in the transformation.
@@ -695,12 +495,12 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return None
 
-    def to(self, other=None, *contexts, **ctx_kwargs) -> Quantity[_MagnitudeType]:
-        """Return Quantity rescaled to different units.
+    def to(self, other=None, *contexts, **ctx_kwargs) -> PlainQuantity[_MagnitudeType]:
+        """Return PlainQuantity rescaled to different units.
 
         Parameters
         ----------
-        other : pint.Quantity, str or dict
+        other : pint.PlainQuantity, str or dict
             destination units. (Default value = None)
         *contexts : str or pint.Context
             Contexts to use in the transformation.
@@ -709,7 +509,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         Returns
         -------
-        pint.Quantity
+        pint.PlainQuantity
         """
         other = to_units_container(other, self._REGISTRY)
 
@@ -718,7 +518,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         return self.__class__(magnitude, other)
 
     def ito_root_units(self) -> None:
-        """Return Quantity rescaled to root units."""
+        """Return PlainQuantity rescaled to root units."""
 
         _, other = self._REGISTRY._get_root_units(self._units)
 
@@ -727,8 +527,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return None
 
-    def to_root_units(self) -> Quantity[_MagnitudeType]:
-        """Return Quantity rescaled to root units."""
+    def to_root_units(self) -> PlainQuantity[_MagnitudeType]:
+        """Return PlainQuantity rescaled to root units."""
 
         _, other = self._REGISTRY._get_root_units(self._units)
 
@@ -737,7 +537,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         return self.__class__(magnitude, other)
 
     def ito_base_units(self) -> None:
-        """Return Quantity rescaled to base units."""
+        """Return PlainQuantity rescaled to plain units."""
 
         _, other = self._REGISTRY._get_base_units(self._units)
 
@@ -746,8 +546,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return None
 
-    def to_base_units(self) -> Quantity[_MagnitudeType]:
-        """Return Quantity rescaled to base units."""
+    def to_base_units(self) -> PlainQuantity[_MagnitudeType]:
+        """Return PlainQuantity rescaled to plain units."""
 
         _, other = self._REGISTRY._get_base_units(self._units)
 
@@ -773,7 +573,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         return units
 
     def ito_reduced_units(self) -> None:
-        """Return Quantity scaled in place to reduced units, i.e. one unit per
+        """Return PlainQuantity scaled in place to reduced units, i.e. one unit per
         dimension. This will not reduce compound units (e.g., 'J/kg' will not
         be reduced to m**2/s**2), nor can it make use of contexts at this time.
         """
@@ -789,8 +589,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return self.ito(new_units)
 
-    def to_reduced_units(self) -> Quantity[_MagnitudeType]:
-        """Return Quantity scaled in place to reduced units, i.e. one unit per
+    def to_reduced_units(self) -> PlainQuantity[_MagnitudeType]:
+        """Return PlainQuantity scaled in place to reduced units, i.e. one unit per
         dimension. This will not reduce compound units (intentionally), nor
         can it make use of contexts at this time.
         """
@@ -806,8 +606,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         return self.to(new_units)
 
-    def to_compact(self, unit=None) -> Quantity[_MagnitudeType]:
-        """ "Return Quantity rescaled to compact, human-readable units.
+    def to_compact(self, unit=None) -> PlainQuantity[_MagnitudeType]:
+        """ "Return PlainQuantity rescaled to compact, human-readable units.
 
         To get output in terms of a different unit, use the unit parameter.
 
@@ -818,9 +618,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         >>> import pint
         >>> ureg = pint.UnitRegistry()
         >>> (200e-9*ureg.s).to_compact()
-        <Quantity(200.0, 'nanosecond')>
+        <PlainQuantity(200.0, 'nanosecond')>
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
-        <Quantity(10.0, 'millinewton')>
+        <PlainQuantity(10.0, 'millinewton')>
         """
 
         if not isinstance(self.magnitude, numbers.Number):
@@ -911,14 +711,14 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         Parameters
         ----------
-        other : pint.Quantity or any type accepted by :func:`_to_magnitude`
+        other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
             object to be added to / subtracted from self
         op : function
             operator function (e.g. operator.add, operator.isub)
 
         """
         if not self._check(other):
-            # other not from same Registry or not a Quantity
+            # other not from same Registry or not a PlainQuantity
             try:
                 other_magnitude = _to_magnitude(
                     other, self.force_ndarray, self.force_ndarray_like
@@ -928,7 +728,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             except TypeError:
                 return NotImplemented
             if zero_or_nan(other, True):
-                # If the other value is 0 (but not Quantity 0)
+                # If the other value is 0 (but not PlainQuantity 0)
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same
                 # value to enforce any shape checking and type casting due to
@@ -1024,15 +824,15 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         Parameters
         ----------
-        other : pint.Quantity or any type accepted by :func:`_to_magnitude`
+        other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
             object to be added to / subtracted from self
         op : function
             operator function (e.g. operator.add, operator.isub)
         """
         if not self._check(other):
-            # other not from same Registry or not a Quantity
+            # other not from same Registry or not a PlainQuantity
             if zero_or_nan(other, True):
-                # If the other value is 0 or NaN (but not a Quantity)
+                # If the other value is 0 or NaN (but not a PlainQuantity)
                 # do the operation without checking units.
                 # We do the calculation instead of just returning the same
                 # value to enforce any shape checking and type casting due to
@@ -1136,7 +936,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         ...
 
     @overload
-    def __iadd__(self, other) -> Quantity[_MagnitudeType]:
+    def __iadd__(self, other) -> PlainQuantity[_MagnitudeType]:
         ...
 
     def __iadd__(self, other):
@@ -1178,7 +978,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         Parameters
         ----------
-        other : pint.Quantity or any type accepted by :func:`_to_magnitude`
+        other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
             object to be multiplied/divided with self
         magnitude_op : function
             operator function to perform on the magnitudes
@@ -1248,7 +1048,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
         Parameters
         ----------
-        other : pint.Quantity or any type accepted by :func:`_to_magnitude`
+        other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
             object to be multiplied/divided with self
         magnitude_op : function
             operator function to perform on the magnitudes
@@ -1457,9 +1257,9 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             if is_duck_array_type(type(getattr(other, "_magnitude", other))):
                 # arrays are refused as exponent, because they would create
                 # len(array) quantities of len(set(array)) different units
-                # unless the base is dimensionless. Ensure dimensionless
+                # unless the plain is dimensionless. Ensure dimensionless
                 # units are reduced to "dimensionless".
-                # Note: this will strip Units of degrees or radians from Quantity
+                # Note: this will strip Units of degrees or radians from PlainQuantity
                 if self.dimensionless:
                     if getattr(other, "dimensionless", False):
                         self._magnitude = self.m_as("") ** other.m_as("")
@@ -1475,8 +1275,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                     raise DimensionalityError(
                         self._units,
                         "dimensionless",
-                        extra_msg=". Quantity array exponents are only allowed if the "
-                        "base is dimensionless",
+                        extra_msg=". PlainQuantity array exponents are only allowed if the "
+                        "plain is dimensionless",
                     )
 
             if other == 1:
@@ -1504,7 +1304,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             return self
 
     @check_implemented
-    def __pow__(self, other) -> Quantity[_MagnitudeType]:
+    def __pow__(self, other) -> PlainQuantity[_MagnitudeType]:
         try:
             _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
@@ -1518,8 +1318,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             if is_duck_array_type(type(getattr(other, "_magnitude", other))):
                 # arrays are refused as exponent, because they would create
                 # len(array) quantities of len(set(array)) different units
-                # unless the base is dimensionless.
-                # Note: this will strip Units of degrees or radians from Quantity
+                # unless the plain is dimensionless.
+                # Note: this will strip Units of degrees or radians from PlainQuantity
                 if self.dimensionless:
                     if getattr(other, "dimensionless", False):
                         return self.__class__(
@@ -1537,8 +1337,8 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                     raise DimensionalityError(
                         self._units,
                         "dimensionless",
-                        extra_msg=". Quantity array exponents are only allowed if the "
-                        "base is dimensionless",
+                        extra_msg=". PlainQuantity array exponents are only allowed if the "
+                        "plain is dimensionless",
                     )
 
             new_self = self
@@ -1569,7 +1369,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             return self.__class__(magnitude, units)
 
     @check_implemented
-    def __rpow__(self, other) -> Quantity[_MagnitudeType]:
+    def __rpow__(self, other) -> PlainQuantity[_MagnitudeType]:
         try:
             _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
@@ -1582,16 +1382,16 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             new_self = self.to_root_units()
             return other**new_self._magnitude
 
-    def __abs__(self) -> Quantity[_MagnitudeType]:
+    def __abs__(self) -> PlainQuantity[_MagnitudeType]:
         return self.__class__(abs(self._magnitude), self._units)
 
-    def __round__(self, ndigits: Optional[int] = 0) -> Quantity[int]:
+    def __round__(self, ndigits: Optional[int] = 0) -> PlainQuantity[int]:
         return self.__class__(round(self._magnitude, ndigits=ndigits), self._units)
 
-    def __pos__(self) -> Quantity[_MagnitudeType]:
+    def __pos__(self) -> PlainQuantity[_MagnitudeType]:
         return self.__class__(operator.pos(self._magnitude), self._units)
 
-    def __neg__(self) -> Quantity[_MagnitudeType]:
+    def __neg__(self) -> PlainQuantity[_MagnitudeType]:
         return self.__class__(operator.neg(self._magnitude), self._units)
 
     @check_implemented
@@ -1602,15 +1402,15 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
             if not is_duck_array_type(type(self._magnitude)):
                 return value
 
-            if isinstance(other, Quantity):
+            if isinstance(other, PlainQuantity):
                 other = other._magnitude
 
             template, _ = np.broadcast_arrays(self._magnitude, other)
             return np.full_like(template, fill_value=value, dtype=np.bool_)
 
-        # We compare to the base class of Quantity because
-        # each Quantity class is unique.
-        if not isinstance(other, Quantity):
+        # We compare to the plain class of PlainQuantity because
+        # each PlainQuantity class is unique.
+        if not isinstance(other, PlainQuantity):
             if zero_or_nan(other, True):
                 # Handle the special case in which we compare to zero or NaN
                 # (or an array of zeros or NaNs)
@@ -1619,7 +1419,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                     return eq(self._magnitude, other, False)
                 else:
                     # compare the magnitude after converting the
-                    # non-multiplicative quantity to base units
+                    # non-multiplicative quantity to plain units
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
                         return eq(self.to_base_units()._magnitude, other, False)
                     else:
@@ -1659,7 +1459,7 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
 
     @check_implemented
     def compare(self, other, op):
-        if not isinstance(other, Quantity):
+        if not isinstance(other, PlainQuantity):
             if self.dimensionless:
                 return op(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()), other
@@ -1672,13 +1472,15 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                     return op(self._magnitude, other)
                 else:
                     # compare the magnitude after converting the
-                    # non-multiplicative quantity to base units
+                    # non-multiplicative quantity to plain units
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
                         return op(self.to_base_units()._magnitude, other)
                     else:
                         raise OffsetUnitCalculusError(self._units)
             else:
-                raise ValueError("Cannot compare Quantity and {}".format(type(other)))
+                raise ValueError(
+                    "Cannot compare PlainQuantity and {}".format(type(other))
+                )
 
         # Registry equality check based on util.SharedRegistryObject
         if self._REGISTRY is not other._REGISTRY:
@@ -1705,246 +1507,11 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
         if self._is_multiplicative:
             return bool(self._magnitude)
         else:
-            raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+            raise ValueError(
+                "Boolean value of PlainQuantity with offset unit is ambiguous."
+            )
 
     __nonzero__ = __bool__
-
-    # NumPy function/ufunc support
-    __array_priority__ = 17
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        if method != "__call__":
-            # Only handle ufuncs as callables
-            return NotImplemented
-
-        # Replicate types from __array_function__
-        types = set(
-            type(arg)
-            for arg in list(inputs) + list(kwargs.values())
-            if hasattr(arg, "__array_ufunc__")
-        )
-
-        return numpy_wrap("ufunc", ufunc, inputs, kwargs, types)
-
-    def __array_function__(self, func, types, args, kwargs):
-        return numpy_wrap("function", func, args, kwargs, types)
-
-    _wrapped_numpy_methods = ["flatten", "astype", "item"]
-
-    def _numpy_method_wrap(self, func, *args, **kwargs):
-        """Convenience method to wrap on the fly NumPy ndarray methods taking
-        care of the units.
-        """
-
-        # Set input units if needed
-        if func.__name__ in set_units_ufuncs:
-            self.__ito_if_needed(set_units_ufuncs[func.__name__][0])
-
-        value = func(*args, **kwargs)
-
-        # Set output units as needed
-        if func.__name__ in (
-            matching_input_copy_units_output_ufuncs
-            + copy_units_output_ufuncs
-            + self._wrapped_numpy_methods
-        ):
-            output_unit = self._units
-        elif func.__name__ in set_units_ufuncs:
-            output_unit = set_units_ufuncs[func.__name__][1]
-        elif func.__name__ in matching_input_set_units_output_ufuncs:
-            output_unit = matching_input_set_units_output_ufuncs[func.__name__]
-        elif func.__name__ in op_units_output_ufuncs:
-            output_unit = get_op_output_unit(
-                op_units_output_ufuncs[func.__name__],
-                self.units,
-                list(args) + list(kwargs.values()),
-                self._magnitude.size,
-            )
-        else:
-            output_unit = None
-
-        if output_unit is not None:
-            return self.__class__(value, output_unit)
-        else:
-            return value
-
-    def __array__(self, t=None) -> np.ndarray:
-        warnings.warn(
-            "The unit of the quantity is stripped when downcasting to ndarray.",
-            UnitStrippedWarning,
-            stacklevel=2,
-        )
-        return _to_magnitude(self._magnitude, force_ndarray=True)
-
-    def clip(self, min=None, max=None, out=None, **kwargs):
-
-        if min is not None:
-            if isinstance(min, self.__class__):
-                min = min.to(self).magnitude
-            elif self.dimensionless:
-                pass
-            else:
-                raise DimensionalityError("dimensionless", self._units)
-
-        if max is not None:
-            if isinstance(max, self.__class__):
-                max = max.to(self).magnitude
-            elif self.dimensionless:
-                pass
-            else:
-                raise DimensionalityError("dimensionless", self._units)
-        return self.__class__(self.magnitude.clip(min, max, out, **kwargs), self._units)
-
-    def fill(self: Quantity[np.ndarray], value) -> None:
-        self._units = value._units
-        return self.magnitude.fill(value.magnitude)
-
-    def put(self: Quantity[np.ndarray], indices, values, mode="raise") -> None:
-        if isinstance(values, self.__class__):
-            values = values.to(self).magnitude
-        elif self.dimensionless:
-            values = self.__class__(values, "").to(self)
-        else:
-            raise DimensionalityError("dimensionless", self._units)
-        self.magnitude.put(indices, values, mode)
-
-    @property
-    def real(self) -> Quantity[_MagnitudeType]:
-        return self.__class__(self._magnitude.real, self._units)
-
-    @property
-    def imag(self) -> Quantity[_MagnitudeType]:
-        return self.__class__(self._magnitude.imag, self._units)
-
-    @property
-    def T(self):
-        return self.__class__(self._magnitude.T, self._units)
-
-    @property
-    def flat(self):
-        for v in self._magnitude.flat:
-            yield self.__class__(v, self._units)
-
-    @property
-    def shape(self) -> Shape:
-        return self._magnitude.shape
-
-    @shape.setter
-    def shape(self, value):
-        self._magnitude.shape = value
-
-    def searchsorted(self, v, side="left", sorter=None):
-        if isinstance(v, self.__class__):
-            v = v.to(self).magnitude
-        elif self.dimensionless:
-            v = self.__class__(v, "").to(self)
-        else:
-            raise DimensionalityError("dimensionless", self._units)
-        return self.magnitude.searchsorted(v, side)
-
-    def dot(self, b):
-        """Dot product of two arrays.
-
-        Wraps np.dot().
-        """
-
-        return np.dot(self, b)
-
-    @method_wraps("prod")
-    def prod(self, *args, **kwargs):
-        """Return the product of quantity elements over a given axis
-
-        Wraps np.prod().
-        """
-        return np.prod(self, *args, **kwargs)
-
-    def __ito_if_needed(self, to_units):
-        if self.unitless and to_units == "radian":
-            return
-
-        self.ito(to_units)
-
-    def __len__(self) -> int:
-        return len(self._magnitude)
-
-    def __getattr__(self, item) -> Any:
-        if item.startswith("__array_"):
-            # Handle array protocol attributes other than `__array__`
-            raise AttributeError(f"Array protocol attribute {item} not available.")
-        elif item in HANDLED_UFUNCS or item in self._wrapped_numpy_methods:
-            magnitude_as_duck_array = _to_magnitude(
-                self._magnitude, force_ndarray_like=True
-            )
-            try:
-                attr = getattr(magnitude_as_duck_array, item)
-                return functools.partial(self._numpy_method_wrap, attr)
-            except AttributeError:
-                raise AttributeError(
-                    f"NumPy method {item} not available on {type(magnitude_as_duck_array)}"
-                )
-            except TypeError as exc:
-                if "not callable" in str(exc):
-                    raise AttributeError(
-                        f"NumPy method {item} not callable on {type(magnitude_as_duck_array)}"
-                    )
-                else:
-                    raise exc
-
-        try:
-            return getattr(self._magnitude, item)
-        except AttributeError:
-            raise AttributeError(
-                "Neither Quantity object nor its magnitude ({}) "
-                "has attribute '{}'".format(self._magnitude, item)
-            )
-
-    def __getitem__(self, key):
-        try:
-            return type(self)(self._magnitude[key], self._units)
-        except PintTypeError:
-            raise
-        except TypeError:
-            raise TypeError(
-                "Neither Quantity object nor its magnitude ({})"
-                "supports indexing".format(self._magnitude)
-            )
-
-    def __setitem__(self, key, value):
-        try:
-            if np.ma.is_masked(value) or math.isnan(value):
-                self._magnitude[key] = value
-                return
-        except TypeError:
-            pass
-
-        try:
-            if isinstance(value, self.__class__):
-                factor = self.__class__(
-                    value.magnitude, value._units / self._units
-                ).to_root_units()
-            else:
-                factor = self.__class__(value, self._units ** (-1)).to_root_units()
-
-            if isinstance(factor, self.__class__):
-                if not factor.dimensionless:
-                    raise DimensionalityError(
-                        value,
-                        self.units,
-                        extra_msg=". Assign a quantity with the same dimensionality "
-                        "or access the magnitude directly as "
-                        f"`obj.magnitude[{key}] = {value}`.",
-                    )
-                self._magnitude[key] = factor.magnitude
-            else:
-                self._magnitude[key] = factor
-
-        except PintTypeError:
-            raise
-        except TypeError as exc:
-            raise TypeError(
-                f"Neither Quantity object nor its magnitude ({self._magnitude}) "
-                "supports indexing"
-            ) from exc
 
     def tolist(self):
         units = self._units
@@ -1965,18 +1532,6 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
                 f"Magnitude '{type(self._magnitude).__name__}' does not support tolist."
             )
 
-    # Measurement support
-    def plus_minus(self, error, relative=False):
-        if isinstance(error, self.__class__):
-            if relative:
-                raise ValueError("{} is not a valid relative error.".format(error))
-            error = error.to(self._units).magnitude
-        else:
-            if relative:
-                error = error * abs(self.magnitude)
-
-        return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
-
     def _get_unit_definition(self, unit: str) -> UnitDefinition:
         try:
             return self._REGISTRY._units[unit]
@@ -1991,148 +1546,23 @@ class Quantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]):
     # methods/properties that help for math operations with offset units
     @property
     def _is_multiplicative(self) -> bool:
-        """Check if the Quantity object has only multiplicative units."""
-        return not self._get_non_multiplicative_units()
+        """Check if the PlainQuantity object has only multiplicative units."""
+        return True
 
     def _get_non_multiplicative_units(self) -> List[str]:
-        """Return a list of the of non-multiplicative units of the Quantity object."""
-        return [
-            unit
-            for unit in self._units
-            if not self._get_unit_definition(unit).is_multiplicative
-        ]
+        """Return a list of the of non-multiplicative units of the PlainQuantity object."""
+        return []
 
     def _get_delta_units(self) -> List[str]:
-        """Return list of delta units ot the Quantity object."""
+        """Return list of delta units ot the PlainQuantity object."""
         return [u for u in self._units if u.startswith("delta_")]
 
     def _has_compatible_delta(self, unit: str) -> bool:
-        """ "Check if Quantity object has a delta_unit that is compatible with unit"""
-        deltas = self._get_delta_units()
-        if "delta_" + unit in deltas:
-            return True
-        # Look for delta units with same dimension as the offset unit
-        offset_unit_dim = self._get_unit_definition(unit).reference
-        return any(
-            self._get_unit_definition(d).reference == offset_unit_dim for d in deltas
-        )
+        """ "Check if PlainQuantity object has a delta_unit that is compatible with unit"""
+        return False
 
     def _ok_for_muldiv(self, no_offset_units=None) -> bool:
-        """Checks if Quantity object can be multiplied or divided"""
+        return True
 
-        is_ok = True
-        if no_offset_units is None:
-            no_offset_units = len(self._get_non_multiplicative_units())
-        if no_offset_units > 1:
-            is_ok = False
-        if no_offset_units == 1:
-            if len(self._units) > 1:
-                is_ok = False
-            if (
-                len(self._units) == 1
-                and not self._REGISTRY.autoconvert_offset_to_baseunit
-            ):
-                is_ok = False
-            if next(iter(self._units.values())) != 1:
-                is_ok = False
-        return is_ok
-
-    def to_timedelta(self: Quantity[float]) -> datetime.timedelta:
+    def to_timedelta(self: PlainQuantity[float]) -> datetime.timedelta:
         return datetime.timedelta(microseconds=self.to("microseconds").magnitude)
-
-    # Dask.array.Array ducking
-    def __dask_graph__(self):
-        if isinstance(self._magnitude, dask_array.Array):
-            return self._magnitude.__dask_graph__()
-        else:
-            return None
-
-    def __dask_keys__(self):
-        return self._magnitude.__dask_keys__()
-
-    def __dask_tokenize__(self):
-        from dask.base import tokenize
-
-        return (Quantity, tokenize(self._magnitude), self.units)
-
-    @property
-    def __dask_optimize__(self):
-        return dask_array.Array.__dask_optimize__
-
-    @property
-    def __dask_scheduler__(self):
-        return dask_array.Array.__dask_scheduler__
-
-    def __dask_postcompute__(self):
-        func, args = self._magnitude.__dask_postcompute__()
-        return self._dask_finalize, (func, args, self.units)
-
-    def __dask_postpersist__(self):
-        func, args = self._magnitude.__dask_postpersist__()
-        return self._dask_finalize, (func, args, self.units)
-
-    @staticmethod
-    def _dask_finalize(results, func, args, units):
-        values = func(results, *args)
-        return Quantity(values, units)
-
-    @check_dask_array
-    def compute(self, **kwargs):
-        """Compute the Dask array wrapped by pint.Quantity.
-
-        Parameters
-        ----------
-        **kwargs : dict
-            Any keyword arguments to pass to ``dask.compute``.
-
-        Returns
-        -------
-        pint.Quantity
-            A pint.Quantity wrapped numpy array.
-        """
-        (result,) = compute(self, **kwargs)
-        return result
-
-    @check_dask_array
-    def persist(self, **kwargs):
-        """Persist the Dask Array wrapped by pint.Quantity.
-
-        Parameters
-        ----------
-        **kwargs : dict
-            Any keyword arguments to pass to ``dask.persist``.
-
-        Returns
-        -------
-        pint.Quantity
-            A pint.Quantity wrapped Dask array.
-        """
-        (result,) = persist(self, **kwargs)
-        return result
-
-    @check_dask_array
-    def visualize(self, **kwargs):
-        """Produce a visual representation of the Dask graph.
-
-        The graphviz library is required.
-
-        Parameters
-        ----------
-        **kwargs : dict
-            Any keyword arguments to pass to ``dask.visualize``.
-
-        Returns
-        -------
-
-        """
-        visualize(self, **kwargs)
-
-
-_Quantity = Quantity
-
-
-def build_quantity_class(registry: BaseRegistry) -> Type[Quantity]:
-    class Quantity(_Quantity):
-        _REGISTRY = registry
-
-    return Quantity

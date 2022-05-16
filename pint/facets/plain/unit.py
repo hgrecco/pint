@@ -1,8 +1,6 @@
 """
-    pint.unit
-    ~~~~~~~~~
-
-    Functions and classes related to unit definitions and conversions.
+    pint.facets.plain.unit
+    ~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
@@ -14,20 +12,19 @@ import copy
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Type, Union
+from typing import TYPE_CHECKING, Any, Union
 
-from ._typing import UnitLike
-from .compat import NUMERIC_TYPES, babel_parse, is_upcast_type
+from ..._typing import UnitLike
+from ...compat import NUMERIC_TYPES
+from ...errors import DimensionalityError
+from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 from .definitions import UnitDefinition
-from .errors import DimensionalityError
-from .formatting import extract_custom_flags, format_unit, split_format
-from .util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
 if TYPE_CHECKING:
-    from .context import Context
+    from pint import Context
 
 
-class Unit(PrettyIPython, SharedRegistryObject):
+class PlainUnit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations."""
 
     #: Default formatting string.
@@ -35,9 +32,9 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
-        from . import _unpickle_unit
+        from pint import _unpickle_unit
 
-        return _unpickle_unit, (Unit, self._units)
+        return _unpickle_unit, (PlainUnit, self._units)
 
     def __init__(self, units: UnitLike) -> None:
         super().__init__()
@@ -45,7 +42,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
             self._units = units
         elif isinstance(units, str):
             self._units = self._REGISTRY.parse_units(units)._units
-        elif isinstance(units, Unit):
+        elif isinstance(units, PlainUnit):
             self._units = units._units
         else:
             raise TypeError(
@@ -53,25 +50,16 @@ class Unit(PrettyIPython, SharedRegistryObject):
                 "UnitsContainer; not {}.".format(type(units))
             )
 
-        self.__used = False
-        self.__handling = None
-
-    @property
-    def debug_used(self) -> Any:
-        return self.__used
-
-    def __copy__(self) -> Unit:
+    def __copy__(self) -> PlainUnit:
         ret = self.__class__(self._units)
-        ret.__used = self.__used
         return ret
 
-    def __deepcopy__(self, memo) -> Unit:
+    def __deepcopy__(self, memo) -> PlainUnit:
         ret = self.__class__(copy.deepcopy(self._units, memo))
-        ret.__used = self.__used
         return ret
 
     def __str__(self) -> str:
-        return format(self)
+        return " ".join(k if v == 1 else f"{k} ** {v}" for k, v in self._units.items())
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())
@@ -79,53 +67,9 @@ class Unit(PrettyIPython, SharedRegistryObject):
     def __repr__(self) -> str:
         return "<Unit('{}')>".format(self._units)
 
-    def __format__(self, spec) -> str:
-        _, uspec = split_format(
-            spec, self.default_format, self._REGISTRY.separate_format_defaults
-        )
-        if "~" in uspec:
-            if not self._units:
-                return ""
-            units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
-                    for key, value in self._units.items()
-                )
-            )
-            uspec = uspec.replace("~", "")
-        else:
-            units = self._units
-
-        return format_unit(units, uspec, registry=self._REGISTRY)
-
-    def format_babel(self, spec="", locale=None, **kwspec: Any) -> str:
-        spec = spec or extract_custom_flags(self.default_format)
-
-        if "~" in spec:
-            if self.dimensionless:
-                return ""
-            units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
-                    for key, value in self._units.items()
-                )
-            )
-            spec = spec.replace("~", "")
-        else:
-            units = self._units
-
-        locale = self._REGISTRY.fmt_locale if locale is None else locale
-
-        if locale is None:
-            raise ValueError("Provide a `locale` value to localize translation.")
-        else:
-            kwspec["locale"] = babel_parse(locale)
-
-        return units.format_babel(spec, registry=self._REGISTRY, **kwspec)
-
     @property
     def dimensionless(self) -> bool:
-        """Return True if the Unit is dimensionless; False otherwise."""
+        """Return True if the PlainUnit is dimensionless; False otherwise."""
         return not bool(self.dimensionality)
 
     @property
@@ -134,7 +78,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         Returns
         -------
         dict
-            Dimensionality of the Unit, e.g. ``{length: 1, time: -1}``
+            Dimensionality of the PlainUnit, e.g. ``{length: 1, time: -1}``
         """
         try:
             return self._dimensionality
@@ -160,7 +104,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         ----------
         other
             The object to check. Treated as dimensionless if not a
-            Quantity, Unit or str.
+            Quantity, PlainUnit or str.
         *contexts : str or pint.Context
             Contexts to use in the transformation.
         **ctx_kwargs :
@@ -170,7 +114,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         -------
         bool
         """
-        from .quantity import Quantity
+        from .quantity import PlainQuantity
 
         if contexts or self._REGISTRY._active_ctx:
             try:
@@ -179,7 +123,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (Quantity, Unit)):
+        if isinstance(other, (PlainQuantity, PlainUnit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
@@ -215,7 +159,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.Quantity(1 / other, self._units)
 
     def __rtruediv__(self, other):
-        # As Unit and Quantity both handle truediv with each other rtruediv can
+        # As PlainUnit and Quantity both handle truediv with each other rtruediv can
         # only be called for something different.
         if isinstance(other, NUMERIC_TYPES):
             return self._REGISTRY.Quantity(other, 1 / self._units)
@@ -227,19 +171,19 @@ class Unit(PrettyIPython, SharedRegistryObject):
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
-    def __pow__(self, other) -> "Unit":
+    def __pow__(self, other) -> "PlainUnit":
         if isinstance(other, NUMERIC_TYPES):
             return self.__class__(self._units**other)
 
         else:
-            mess = "Cannot power Unit by {}".format(type(other))
+            mess = "Cannot power PlainUnit by {}".format(type(other))
             raise TypeError(mess)
 
     def __hash__(self) -> int:
         return self._units.__hash__()
 
     def __eq__(self, other) -> bool:
-        # We compare to the base class of Unit because each Unit class is
+        # We compare to the plain class of PlainUnit because each PlainUnit class is
         # unique.
         if self._check(other):
             if isinstance(other, self.__class__):
@@ -261,7 +205,7 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
         if isinstance(other, NUMERIC_TYPES):
             return self_q.compare(other, op)
-        elif isinstance(other, (Unit, UnitsContainer, dict)):
+        elif isinstance(other, (PlainUnit, UnitsContainer, dict)):
             return self_q.compare(self._REGISTRY.Quantity(1, other), op)
         else:
             return NotImplemented
@@ -279,35 +223,6 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
     def __complex__(self) -> complex:
         return complex(self._REGISTRY.Quantity(1, self._units))
-
-    __array_priority__ = 17
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        if method != "__call__":
-            # Only handle ufuncs as callables
-            return NotImplemented
-
-        # Check types and return NotImplemented when upcast type encountered
-        types = set(
-            type(arg)
-            for arg in list(inputs) + list(kwargs.values())
-            if hasattr(arg, "__array_ufunc__")
-        )
-        if any(is_upcast_type(other) for other in types):
-            return NotImplemented
-
-        # Act on limited implementations by conversion to multiplicative identity
-        # Quantity
-        if ufunc.__name__ in ("true_divide", "divide", "floor_divide", "multiply"):
-            return ufunc(
-                *tuple(
-                    self._REGISTRY.Quantity(1, self._units) if arg is self else arg
-                    for arg in inputs
-                ),
-                **kwargs,
-            )
-        else:
-            return NotImplemented
 
     @property
     def systems(self):
@@ -365,13 +280,3 @@ class Unit(PrettyIPython, SharedRegistryObject):
 
         """
         return self.from_(value, strict=strict, name=name).magnitude
-
-
-_Unit = Unit
-
-
-def build_unit_class(registry) -> Type[Unit]:
-    class Unit(_Unit):
-        _REGISTRY = registry
-
-    return Unit
