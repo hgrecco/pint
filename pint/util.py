@@ -1106,11 +1106,13 @@ def build_dependent_class(registry_class, class_name: str, attribute_name: str) 
 
     """
     bases = (
-        getattr(base, attribute_name, None) for base in inspect.getmro(registry_class)
+        getattr(base, attribute_name)
+        for base in inspect.getmro(registry_class)
+        if attribute_name in base.__dict__
     )
-    bases = dict.fromkeys((base for base in bases if base), None)
-
-    return type(class_name, tuple(bases.keys()), dict())
+    bases = dict.fromkeys(bases, None)
+    newcls = type(class_name, tuple(bases.keys()), dict())
+    return newcls
 
 
 def create_class_with_registry(registry, base_class) -> Type:

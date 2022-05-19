@@ -13,10 +13,11 @@ from typing import Any, Optional, Union
 from ...definitions import Definition
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer
+from ..plain import PlainRegistry
 from .objects import NonMultiplicativeQuantity
 
 
-class NonMultiplicativeRegistry:
+class NonMultiplicativeRegistry(PlainRegistry):
     """Handle of non multiplicative units (e.g. Temperature).
 
     Capabilities:

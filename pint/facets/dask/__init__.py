@@ -14,6 +14,7 @@ from __future__ import annotations
 import functools
 
 from ...compat import compute, dask_array, persist, visualize
+from ..plain import PlainRegistry
 
 
 def check_dask_array(f):
@@ -127,6 +128,6 @@ class DaskQuantity:
         visualize(self, **kwargs)
 
 
-class DaskRegistry:
+class DaskRegistry(PlainRegistry):
 
     _quantity_class = DaskQuantity

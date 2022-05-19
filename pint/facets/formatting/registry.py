@@ -8,10 +8,11 @@
 
 from __future__ import annotations
 
+from ..plain import PlainRegistry
 from .objects import FormattingQuantity, FormattingUnit
 
 
-class FormattingRegistry:
+class FormattingRegistry(PlainRegistry):
 
     _quantity_class = FormattingQuantity
     _unit_class = FormattingUnit

@@ -9,11 +9,12 @@
 
 from __future__ import annotations
 
+from ..plain import PlainRegistry
 from .quantity import NumpyQuantity
 from .unit import NumpyUnit
 
 
-class NumpyRegistry:
+class NumpyRegistry(PlainRegistry):
 
     _quantity_class = NumpyQuantity
     _unit_class = NumpyUnit

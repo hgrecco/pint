@@ -15,8 +15,8 @@ from typing import Any, Callable, ContextManager, Dict, Union
 
 from ..._typing import F
 from ...errors import DefinitionSyntaxError, UndefinedUnitError
-from ...facets.plain import UnitDefinition
 from ...util import find_connected_nodes, find_shortest_path, logger
+from ..plain import PlainRegistry, UnitDefinition
 from .definitions import ContextDefinition
 from .objects import Context, ContextChain
 
@@ -36,8 +36,7 @@ class ContextCacheOverlay:
         self.parse_unit = registry_cache.parse_unit
 
 
-# TODO: must subclass PlainRegistry when changed into facet.
-class ContextRegistry:
+class ContextRegistry(PlainRegistry):
     """Handle of Contexts.
 
     Conversion between units with different dimensions according
