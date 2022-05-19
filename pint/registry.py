@@ -22,7 +22,6 @@ from .facets import (
     MeasurementRegistry,
     NonMultiplicativeRegistry,
     NumpyRegistry,
-    PlainRegistry,
     SystemRegistry,
 )
 from .util import logger, pi_theorem
@@ -34,9 +33,8 @@ class UnitRegistry(
     DaskRegistry,
     NumpyRegistry,
     MeasurementRegistry,
-    NonMultiplicativeRegistry,
     FormattingRegistry,
-    PlainRegistry,
+    NonMultiplicativeRegistry,
 ):
     """The unit registry stores the definitions and relationships between units.
 

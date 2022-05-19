@@ -11,10 +11,11 @@ from __future__ import annotations
 
 from ...compat import ufloat
 from ...util import build_dependent_class, create_class_with_registry
+from ..plain import PlainRegistry
 from .objects import Measurement, MeasurementQuantity
 
 
-class MeasurementRegistry:
+class MeasurementRegistry(PlainRegistry):
 
     _quantity_class = MeasurementQuantity
     _measurement_class = Measurement
