@@ -130,6 +130,13 @@ try:
 except ImportError:
     HAS_BABEL = False
 
+try:
+    import mip
+
+    HAS_MIP = True
+except ImportError:
+    HAS_MIP = False
+
 # Defines Logarithm and Exponential for Logarithmic Converter
 if HAS_NUMPY:
     from numpy import exp  # noqa: F401
@@ -140,6 +147,13 @@ else:
 
 if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
+
+if not HAS_MIP:
+    class MissingDependency:
+        def __getattribute__(self, name: str):
+            missing_dependency("mip")()
+
+    mip = MissingDependency()
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
 # types using guarded imports
