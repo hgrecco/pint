@@ -1585,6 +1585,7 @@ class TestOffsetUnitMath(QuantityTestCase):
     @pytest.mark.parametrize(("input_tuple", "expected"), multiplications_with_scalar)
     def test_multiplication_with_scalar(self, input_tuple, expected):
         self.ureg.default_as_delta = False
+        self.ureg.autoconvert_offset_to_baseunit = False
         in1, in2 = input_tuple
         if type(in1) is tuple:
             in1, in2 = self.Q_(*in1), in2
