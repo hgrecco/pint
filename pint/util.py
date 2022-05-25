@@ -626,10 +626,10 @@ class ParserHelper(UnitsContainer):
         )
 
         if isinstance(ret, Number):
-            return ParserHelper(ret, non_int_type=non_int_type)
+            return cls(ret, non_int_type=non_int_type)
 
         if reps:
-            ret = ParserHelper(
+            ret = cls(
                 ret.scale,
                 {
                     key.replace("__obra__", "[").replace("__cbra__", "]"): value
