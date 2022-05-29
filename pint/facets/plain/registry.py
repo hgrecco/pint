@@ -542,13 +542,18 @@ class PlainRegistry(metaclass=RegistryMeta):
             casei_unit_dict[key.lower()].add(key)
 
     def _define_alias(self, definition):
-        unit_dict, casei_unit_dict = self._units, self._units_casei
+        if not isinstance(definition, AliasDefinition):
+            raise TypeError(
+                "Not a valid input type for _define_alias. "
+                f"(expected: AliasDefinition, found: {type(definition)}"
+            )
+
+        unit_dict = self._units
         unit = unit_dict[definition.name]
         while not isinstance(unit, UnitDefinition):
             unit = unit_dict[unit.name]
         for alias in definition.aliases:
-            unit_dict[alias] = unit
-            casei_unit_dict[alias.lower()].add(alias)
+            self._define_single_adder(alias, unit, self._units, self._units_casei)
 
     def _register_directive(self, prefix: str, loaderfunc, definition_class):
         """Register a loader for a given @ directive.
