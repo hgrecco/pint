@@ -1047,6 +1047,10 @@ class PlainRegistry(metaclass=RegistryMeta):
         # must first convert to Decimal before we can '*' the values
         if isinstance(value, Decimal):
             factor = Decimal(str(factor))
+
+            # we need to remove trailing zeros that would affect the number
+            # of significant places returned
+            factor = factor.normalize()
         elif isinstance(value, Fraction):
             factor = Fraction(str(factor))
 
