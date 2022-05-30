@@ -1,5 +1,9 @@
 import itertools
+from decimal import Decimal
 
+import pytest
+
+from pint import UnitRegistry
 from pint.compat import np
 from pint.converters import Converter
 from pint.facets.nonmultiplicative.definitions import (
@@ -97,3 +101,51 @@ class TestConverter:
         assert Converter.from_arguments(
             scale=4, logbase=5, logfactor=6
         ) == LogarithmicConverter(4, 5, 6)
+
+
+def count_trailing_zeros(value):
+
+    value_string = str(value)
+
+    if len(value_string.split(".")) == 1:
+        return 0
+
+    else:
+        right_of_decimal_point = value_string.split(".")[1]
+        return len(right_of_decimal_point) - len(right_of_decimal_point.rstrip("0"))
+
+
+@pytest.mark.parametrize(
+    "value,trailing_zeros",
+    [
+        (Decimal("10"), 0),
+        (Decimal("10.0"), 1),
+        (Decimal("10.00"), 2),
+        (Decimal("10.002"), 0),
+    ],
+)
+def test_count_trailing_zeros(value, trailing_zeros):
+
+    assert count_trailing_zeros(value) == trailing_zeros
+
+
+@pytest.fixture
+def decimal_registry():
+    """returns a registry that uses Decimal for non-int"""
+    return UnitRegistry(non_int_type=Decimal)
+
+
+@pytest.mark.parametrize("expression", [("2 microliter milligram/liter")])
+def test_significance_after_conversion(decimal_registry, expression):
+
+    value = decimal_registry.parse_expression(expression)
+
+    value_trailing_zeros = count_trailing_zeros(value.m)
+    value_compact_trailing_zeros = count_trailing_zeros(value.to_compact())
+    value_converted_trailing_zeros = count_trailing_zeros(value.to("ng").m)
+
+    assert (
+        value_trailing_zeros
+        == value_compact_trailing_zeros
+        == value_converted_trailing_zeros
+    )
