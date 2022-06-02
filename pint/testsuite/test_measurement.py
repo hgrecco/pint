@@ -4,6 +4,7 @@ from pint import DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 
 
+# TODO: do not subclass from QuantityTestCase
 @helpers.requires_not_uncertainties()
 class TestNotMeasurement(QuantityTestCase):
     def test_instantiate(self):
@@ -12,6 +13,7 @@ class TestNotMeasurement(QuantityTestCase):
             M_(4.0, 0.1, "s")
 
 
+# TODO: do not subclass from QuantityTestCase
 @helpers.requires_uncertainties()
 class TestMeasurement(QuantityTestCase):
     def test_simple(self):
@@ -156,6 +158,28 @@ class TestMeasurement(QuantityTestCase):
             with subtests.test(spec):
                 assert spec.format(m) == result
 
+    def test_format_default(self, subtests):
+        v, u = self.Q_(4.0, "s ** 2"), self.Q_(0.1, "s ** 2")
+        m = self.ureg.Measurement(v, u)
+
+        for spec, result in (
+            ("", "(4.00 +/- 0.10) second ** 2"),
+            ("P", "(4.00 ± 0.10) second²"),
+            ("L", r"\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}"),
+            ("H", "(4.00 &plusmn; 0.10) second<sup>2</sup>"),
+            ("C", "(4.00+/-0.10) second**2"),
+            ("Lx", r"\SI{4.00 +- 0.10}{\second\squared}"),
+            (".1f", "(4.0 +/- 0.1) second ** 2"),
+            (".1fP", "(4.0 ± 0.1) second²"),
+            (".1fL", r"\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}"),
+            (".1fH", "(4.0 &plusmn; 0.1) second<sup>2</sup>"),
+            (".1fC", "(4.0+/-0.1) second**2"),
+            (".1fLx", r"\SI{4.0 +- 0.1}{\second\squared}"),
+        ):
+            with subtests.test(spec):
+                self.ureg.default_format = spec
+                assert "{}".format(m) == result
+
     def test_raise_build(self):
         v, u = self.Q_(1.0, "s"), self.Q_(0.1, "s")
         o = self.Q_(0.1, "m")
@@ -198,7 +222,7 @@ class TestMeasurement(QuantityTestCase):
                 (
                     ml.error.magnitude + mr.error.magnitude
                     if ml is mr
-                    else (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** 0.5
+                    else (ml.error.magnitude**2 + mr.error.magnitude**2) ** 0.5
                 ),
             )
             assert r.value.units == ml.value.units
@@ -212,7 +236,7 @@ class TestMeasurement(QuantityTestCase):
                 r.error.magnitude,
                 0
                 if ml is mr
-                else (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** 0.5,
+                else (ml.error.magnitude**2 + mr.error.magnitude**2) ** 0.5,
             )
             assert r.value.units == ml.value.units
 

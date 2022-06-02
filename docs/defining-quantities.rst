@@ -124,7 +124,7 @@ their appropriate objects:
    >>> Q_('2.54')
    <Quantity(2.54, 'dimensionless')>
    >>> type(Q_('2.54'))
-   <class 'pint.quantity.build_quantity_class.<locals>.Quantity'>
+   <class 'pint.util.Quantity'>
 
 .. note:: Pint's rule for parsing strings with a mixture of numbers and
    units is that **units are treated with the same precedence as numbers**.
@@ -143,6 +143,20 @@ brackets to get the expected result:
 
    >>> Q_('3 l / (100 km)')
    <Quantity(0.03, 'liter / kilometer')>
+
+Special strings for NaN (Not a Number) and inf(inity) are also handled in a case-insensitive fashion.
+Note that, as usual, NaN != NaN.
+
+.. doctest::
+
+   >>> Q_('inf m')
+   <Quantity(inf, 'meter')>
+   >>> Q_('-INFINITY m')
+   <Quantity(-inf, 'meter')>
+   >>> Q_('nan m')
+   <Quantity(nan, 'meter')>
+   >>> Q_('NaN m')
+   <Quantity(nan, 'meter')>
 
 .. note:: Since version 0.7, Pint **does not** use eval_ under the hood.
    This change removes the `serious security problems`_ that the system is

@@ -8,8 +8,11 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import re
-from typing import Dict
+import warnings
+from typing import Callable, Dict
 
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse
@@ -116,6 +119,137 @@ _FORMATS: Dict[str, dict] = {
         "parentheses_fmt": r"({})",
     },
 }
+
+#: _FORMATTERS maps format names to callables doing the formatting
+_FORMATTERS: Dict[str, Callable] = {}
+
+
+def register_unit_format(name):
+    """register a function as a new format for units
+
+    The registered function must have a signature of:
+
+    .. code:: python
+
+        def new_format(unit, registry, **options):
+            pass
+
+    Parameters
+    ----------
+    name : str
+        The name of the new format (to be used in the format mini-language). A error is
+        raised if the new format would overwrite a existing format.
+
+    Examples
+    --------
+    .. code:: python
+
+        @pint.register_unit_format("custom")
+        def format_custom(unit, registry, **options):
+            result = "<formatted unit>"  # do the formatting
+            return result
+
+
+        ureg = pint.UnitRegistry()
+        u = ureg.m / ureg.s ** 2
+        f"{u:custom}"
+    """
+
+    def wrapper(func):
+        if name in _FORMATTERS:
+            raise ValueError(f"format {name:!r} already exists")  # or warn instead
+        _FORMATTERS[name] = func
+
+    return wrapper
+
+
+@register_unit_format("P")
+def format_pretty(unit, registry, **options):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=False,
+        product_fmt="·",
+        division_fmt="/",
+        power_fmt="{}{}",
+        parentheses_fmt="({})",
+        exp_call=_pretty_fmt_exponent,
+        **options,
+    )
+
+
+@register_unit_format("L")
+def format_latex(unit, registry, **options):
+    preprocessed = {
+        r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in unit.items()
+    }
+    formatted = formatter(
+        preprocessed.items(),
+        as_ratio=True,
+        single_denominator=True,
+        product_fmt=r" \cdot ",
+        division_fmt=r"\frac[{}][{}]",
+        power_fmt="{}^[{}]",
+        parentheses_fmt=r"\left({}\right)",
+        **options,
+    )
+    return formatted.replace("[", "{").replace("]", "}")
+
+
+@register_unit_format("Lx")
+def format_latex_siunitx(unit, registry, **options):
+    if registry is None:
+        raise ValueError(
+            "Can't format as siunitx without a registry."
+            " This is usually triggered when formatting a instance"
+            ' of the internal `UnitsContainer` with a spec of `"Lx"`'
+            " and might indicate a bug in `pint`."
+        )
+
+    formatted = siunitx_format_unit(unit, registry)
+    return rf"\si[]{{{formatted}}}"
+
+
+@register_unit_format("H")
+def format_html(unit, registry, **options):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=True,
+        product_fmt=r" ",
+        division_fmt=r"{}/{}",
+        power_fmt=r"{}<sup>{}</sup>",
+        parentheses_fmt=r"({})",
+        **options,
+    )
+
+
+@register_unit_format("D")
+def format_default(unit, registry, **options):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=False,
+        product_fmt=" * ",
+        division_fmt=" / ",
+        power_fmt="{} ** {}",
+        parentheses_fmt=r"({})",
+        **options,
+    )
+
+
+@register_unit_format("C")
+def format_compact(unit, registry, **options):
+    return formatter(
+        unit.items(),
+        as_ratio=True,
+        single_denominator=False,
+        product_fmt="*",  # TODO: Should this just be ''?
+        division_fmt="/",
+        power_fmt="{}**{}",
+        parentheses_fmt=r"({})",
+        **options,
+    )
 
 
 def formatter(
@@ -247,7 +381,7 @@ def _parse_spec(spec):
     for ch in reversed(spec):
         if ch == "~" or ch in _BASIC_TYPES:
             continue
-        elif ch in list(_FORMATS.keys()) + ["~"]:
+        elif ch in list(_FORMATTERS.keys()) + ["~"]:
             if result:
                 raise ValueError("expected ':' after format specifier")
             else:
@@ -259,33 +393,28 @@ def _parse_spec(spec):
     return result
 
 
-def format_unit(unit, spec, **kwspec):
+def format_unit(unit, spec, registry=None, **options):
+    # registry may be None to allow formatting `UnitsContainer` objects
+    # in that case, the spec may not be "Lx"
+
     if not unit:
         if spec.endswith("%"):
             return ""
         else:
             return "dimensionless"
 
-    spec = _parse_spec(spec)
-    fmt = dict(_FORMATS[spec])
-    fmt.update(kwspec)
+    if not spec:
+        spec = "D"
 
-    if spec == "L":
-        # Latex
-        rm = [
-            (r"\mathrm{{{}}}".format(u.replace("_", r"\_")), p) for u, p in unit.items()
-        ]
-        return formatter(rm, **fmt).replace("[", "{").replace("]", "}")
-    else:
-        # HTML and Text
-        return formatter(unit.items(), **fmt)
+    fmt = _FORMATTERS.get(spec)
+    if fmt is None:
+        raise ValueError(f"Unknown conversion specified: {spec}")
+
+    return fmt(unit, registry=registry, **options)
 
 
-def siunitx_format_unit(units):
+def siunitx_format_unit(units, registry):
     """Returns LaTeX code for the unit that can be put into an siunitx command."""
-
-    # NOTE: unit registry is required to identify unit prefixes.
-    registry = units._REGISTRY
 
     def _tothe(power):
         if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
@@ -304,7 +433,7 @@ def siunitx_format_unit(units):
     lpos = []
     lneg = []
     # loop through all units in the container
-    for unit, power in sorted(units._units.items()):
+    for unit, power in sorted(units.items()):
         # remove unit prefix if it exists
         # siunitx supports \prefix commands
 
@@ -326,11 +455,66 @@ def siunitx_format_unit(units):
     return "".join(lpos) + "".join(lneg)
 
 
+def extract_custom_flags(spec):
+    import re
+
+    if not spec:
+        return ""
+
+    # sort by length, with longer items first
+    known_flags = sorted(_FORMATTERS.keys(), key=len, reverse=True)
+
+    flag_re = re.compile("(" + "|".join(known_flags + ["~"]) + ")")
+    custom_flags = flag_re.findall(spec)
+
+    return "".join(custom_flags)
+
+
 def remove_custom_flags(spec):
-    for flag in list(_FORMATS.keys()) + ["~"]:
+    for flag in sorted(_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
         if flag:
             spec = spec.replace(flag, "")
     return spec
+
+
+def split_format(spec, default, separate_format_defaults=True):
+    mspec = remove_custom_flags(spec)
+    uspec = extract_custom_flags(spec)
+
+    default_mspec = remove_custom_flags(default)
+    default_uspec = extract_custom_flags(default)
+
+    if separate_format_defaults in (False, None):
+        # should we warn always or only if there was no explicit choice?
+        # Given that we want to eventually remove the flag again, I'd say yes?
+        if spec and separate_format_defaults is None:
+            if not uspec and default_uspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a unit formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the unit formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+            if not mspec and default_mspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a magnitude formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the magnitude formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+        elif not spec:
+            mspec, uspec = default_mspec, default_uspec
+    else:
+        mspec = mspec if mspec else default_mspec
+        uspec = uspec if uspec else default_uspec
+
+    return mspec, uspec
 
 
 def vector_to_latex(vec, fmtfun=lambda x: format(x, ".2f")):

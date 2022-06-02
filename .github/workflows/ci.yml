@@ -7,13 +7,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-        numpy: [null, "numpy>=1.17,<2.0.0"]
-        uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
+        python-version: [3.8, 3.9, "3.10"]
+        numpy: [null, "numpy>=1.19,<2.0.0"]
+        uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - python-version: 3.7 # Minimal versions
-            numpy: numpy==1.17.5
+          - python-version: 3.8 # Minimal versions
+            numpy: numpy==1.19.5
             extras: matplotlib==2.2.5
           - python-version: 3.8
             numpy: "numpy"
@@ -52,7 +52,7 @@ jobs:
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
-      
+
       - name: Install uncertainties
         if: ${{ matrix.uncertainties != null }}
         run: pip install "${{matrix.uncertainties}}"
@@ -88,6 +88,77 @@ jobs:
           pip install coveralls
           coveralls
 
+  test-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8, 3.9, "3.10"]
+        numpy: [ "numpy>=1.19,<2.0.0" ]
+        # uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
+        # extras: [null]
+        # include:
+        #   - python-version: 3.8 # Minimal versions
+        #     numpy: numpy==1.19.5
+        #     extras: matplotlib==2.2.5
+        #   - python-version: 3.8
+        #     numpy: "numpy"
+        #     uncertainties: "uncertainties"
+        #     extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
+    runs-on: windows-latest
+
+    env:
+      TEST_OPTS: "-rfsxEX -s -k issue1498b"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 100
+
+      - name: Get tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Setup caching
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: pip-windows-${{ matrix.python-version }}
+          restore-keys: |
+            pip-windows-${{ matrix.python-version }}
+
+      - name: Install numpy
+        if: ${{ matrix.numpy != null }}
+        run: pip install "${{matrix.numpy}}"
+
+      # - name: Install uncertainties
+      #   if: ${{ matrix.uncertainties != null }}
+      #   run: pip install "${{matrix.uncertainties}}"
+      #
+      # - name: Install extras
+      #   if: ${{ matrix.extras != null }}
+      #   run: pip install ${{matrix.extras}}
+
+      - name: Install dependencies
+        run: |
+          # sudo apt install -y graphviz
+          pip install pytest pytest-cov pytest-subtests
+          pip install .
+
+      # - name: Install pytest-mpl
+      #   if: contains(matrix.extras, 'matplotlib')
+      #   run: pip install pytest-mpl
+
+      - name: Run tests
+        run: pytest ${env:TEST_OPTS}
+
   coveralls:
     needs: test-linux
     runs-on: ubuntu-latest
@@ -96,6 +167,7 @@ jobs:
       with:
         python-version: 3.x
     - name: Coveralls Finished
+      continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github

@@ -42,6 +42,8 @@ extensions = [
     "sphinx.ext.mathjax",
     "matplotlib.sphinxext.plot_directive",
     "nbsphinx",
+    "IPython.sphinxext.ipython_directive",
+    "IPython.sphinxext.ipython_console_highlighting",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -108,6 +110,10 @@ pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
+
+# -- Options for extensions ----------------------------------------------------
+# napoleon
+napoleon_preprocess_types = True
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -192,13 +198,13 @@ html_sidebars = {
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
-# base URL from which the finished HTML is served.
+# plain URL from which the finished HTML is served.
 # html_use_opensearch = ''
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
-# Output file base name for HTML help builder.
+# Output file plain name for HTML help builder.
 htmlhelp_basename = "pintdoc"
 
 
@@ -321,7 +327,13 @@ epub_copyright = copyright
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {"http://docs.python.org/": None}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "dask": ("https://docs.dask.org/en/latest", None),
+    "sparse": ("https://sparse.pydata.org/en/latest/", None),
+}
 
 # -- Doctest configuration -----------------------------------------------------
 
