@@ -68,7 +68,9 @@ atto- =  1e-18 = a-
 femto- = 1e-15 = f-
 pico- =  1e-12 = p-
 nano- =  1e-9  = n-
-micro- = 1e-6  = µ- = u-
+# The micro (U+00B5) and Greek mu (U+03BC) are both valid prefixes,
+# and they often use the same glyph.
+micro- = 1e-6  = µ- = μ- = u-
 milli- = 1e-3  = m-
 centi- = 1e-2  = c-
 deci- =  1e-1  = d-
@@ -144,7 +146,7 @@ byte = 8 * bit = B = octet
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
-micron = micrometer = µ
+micron = micrometer = µ = μ
 fermi = femtometer = fm
 light_year = speed_of_light * julian_year = ly = lightyear
 astronomical_unit = 149597870700 * meter = au  # since Aug 2012

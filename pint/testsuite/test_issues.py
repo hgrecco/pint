@@ -395,7 +395,10 @@ class TestIssues(QuantityTestCase):
     def test_alternative_angstrom_definition(self, module_registry):
         module_registry.Quantity(2, "\u212B")
 
-    def test_micro_creation(self, module_registry):
+    def test_micro_creation_U03bc(self, module_registry):
+        module_registry.Quantity(2, "μm")
+
+    def test_micro_creation_U00b5(self, module_registry):
         module_registry.Quantity(2, "µm")
 
     @helpers.requires_numpy
