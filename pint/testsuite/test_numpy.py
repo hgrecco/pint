@@ -1103,6 +1103,11 @@ class TestNumpyUnclassified(TestNumpyMethods):
                 0 * self.ureg.J,
             )
 
+        helpers.assert_quantity_equal(
+            np.where([-1, 0, 1] * self.ureg.m, [1, 2, 1] * self.ureg.s, np.nan),
+            [1, np.nan, 1] * self.ureg.s,
+        )
+
     @helpers.requires_array_function_protocol()
     def test_fabs(self):
         helpers.assert_quantity_equal(
