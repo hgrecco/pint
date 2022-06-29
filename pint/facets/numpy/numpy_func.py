@@ -552,6 +552,7 @@ def _interp(x, xp, fp, left=None, right=None, period=None):
 
 @implements("where", "function")
 def _where(condition, *args):
+    condition = getattr(condition, "magnitude", condition)
     args, output_wrap = unwrap_and_wrap_consistent_units(*args)
     return output_wrap(np.where(condition, *args))
 
