@@ -10,9 +10,9 @@ np = pytest.importorskip("numpy", reason="NumPy is not available")
 dask = pytest.importorskip("dask", reason="Dask is not available")
 distributed = pytest.importorskip("distributed", reason="Distributed is not available")
 
-from dask.distributed import Client  # isort:skip
-from distributed.client import futures_of  # isort:skip
-from distributed.utils_test import cluster, gen_cluster, loop  # isort:skip
+from dask.distributed import Client
+from distributed.client import futures_of
+from distributed.utils_test import cleanup, cluster, gen_cluster, loop  # noqa: F401
 
 loop = loop  # flake8
 
