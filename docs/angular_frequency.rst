@@ -4,9 +4,9 @@
 Angular Frequency
 =================
 
-'Hertz' is a unit for frequency, that is often also used for angular frequency. For example, a shaft spinning at 60 revolutions per minute will often incorerectly be said to spin at 1 Hz, rather than 1 revolution per second.
+`Hertz` is a unit for frequency, that is often also used for angular frequency. For example, a shaft spinning at `60 revolutions per minute` will often be said to spin at `1 Hz`, rather than `1 revolution per second`.
 
-By default, pint treats angle quantities as dimensionless, so allows conversions between frequencies and angular frequencies. The base unit for angle is the radian. yThis leads to some unintuitive behaviour, as pint will convert angular frequencies into frequencies by converting angles into radians, rather than revolutions per second. This leads to converted values '2 * pi' larger than expected:
+By default, pint treats angle quantities as `dimensionless`, so allows conversions between frequencies and angular frequencies. The base unit for angle is the `radian`. This leads to some unintuitive behaviour, as pint will convert angular frequencies into frequencies by converting angles into `radians`, rather than `revolutions`. This leads to converted values `2 * pi` larger than expected:
 
 .. code-block:: python
 
