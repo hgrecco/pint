@@ -9,6 +9,7 @@ Pint Changelog
   (See #1466, #1479)
 - Parse both Greek mu and micro Unicode points without error.
   (Issue #1030, #574)
+- Added angular frequency documentation page.
 
 0.19.2 (2022-04-23)
 -------------------

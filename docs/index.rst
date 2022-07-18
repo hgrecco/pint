@@ -124,6 +124,7 @@ User Guide
     numpy
     nonmult
     log_units
+    angular_frequency
     wrapping
     plotting
     serialization
