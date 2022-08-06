@@ -12,7 +12,13 @@ distributed = pytest.importorskip("distributed", reason="Distributed is not avai
 
 from dask.distributed import Client
 from distributed.client import futures_of
-from distributed.utils_test import cleanup, cluster, gen_cluster, loop  # noqa: F401
+from distributed.utils_test import (  # noqa: F401
+    cleanup,
+    cluster,
+    gen_cluster,
+    loop,
+    loop_in_thread,
+)
 
 loop = loop  # flake8
 
