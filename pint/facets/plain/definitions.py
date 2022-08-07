@@ -8,259 +8,269 @@
 
 from __future__ import annotations
 
+import itertools
+import numbers
+import typing as ty
 from dataclasses import dataclass
-from typing import Iterable, Optional, Tuple, Union
+from functools import cached_property
+from typing import Callable, Optional
 
+from ... import errors
 from ...converters import Converter
-from ...definitions import Definition, PreprocessedDefinition
-from ...errors import DefinitionSyntaxError
-from ...util import ParserHelper, SourceIterator, UnitsContainer, _is_dim
+from ...util import UnitsContainer
 
 
-class _NotNumeric(Exception):
+class NotNumeric(Exception):
     """Internal exception. Do not expose outside Pint"""
 
     def __init__(self, value):
         self.value = value
 
 
-def numeric_parse(s: str, non_int_type: type = float):
-    """Try parse a string into a number (without using eval).
-
-    Parameters
-    ----------
-    s : str
-    non_int_type : type
-
-    Returns
-    -------
-    Number
-
-    Raises
-    ------
-    _NotNumeric
-        If the string cannot be parsed as a number.
-    """
-    ph = ParserHelper.from_string(s, non_int_type)
-
-    if len(ph):
-        raise _NotNumeric(s)
-
-    return ph.scale
+########################
+# Convenience functions
+########################
 
 
 @dataclass(frozen=True)
-class PrefixDefinition(Definition):
-    """Definition of a prefix::
+class Equality:
+    """An equality statement contains a left and right hand separated
+    by and equal (=) sign.
 
-        <prefix>- = <amount> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+        lhs = rhs
 
-    Example::
-
-        deca- =  1e+1  = da- = deka-
+    lhs and rhs are space stripped.
     """
 
-    @classmethod
-    def accept_to_parse(cls, preprocessed: PreprocessedDefinition):
-        return preprocessed.name.endswith("-")
-
-    @classmethod
-    def from_string(
-        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
-    ) -> PrefixDefinition:
-        if isinstance(definition, str):
-            definition = PreprocessedDefinition.from_string(definition)
-
-        aliases = tuple(alias.strip("-") for alias in definition.aliases)
-        if definition.symbol:
-            symbol = definition.symbol.strip("-")
-        else:
-            symbol = definition.symbol
-
-        try:
-            converter = ScaleConverter(numeric_parse(definition.value, non_int_type))
-        except _NotNumeric as ex:
-            raise ValueError(
-                f"Prefix definition ('{definition.name}') must contain only numbers, not {ex.value}"
-            )
-
-        return cls(definition.name.rstrip("-"), symbol, aliases, converter)
+    lhs: str
+    rhs: str
 
 
 @dataclass(frozen=True)
-class UnitDefinition(Definition, default=True):
-    """Definition of a unit::
+class CommentDefinition:
+    """A comment"""
 
-        <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
-
-    Example::
-
-        millennium = 1e3 * year = _ = millennia
-
-    Parameters
-    ----------
-    reference : UnitsContainer
-        Reference units.
-    is_base : bool
-        Indicates if it is a plain unit.
-
-    """
-
-    reference: Optional[UnitsContainer] = None
-    is_base: bool = False
-
-    @classmethod
-    def from_string(
-        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
-    ) -> "UnitDefinition":
-        if isinstance(definition, str):
-            definition = PreprocessedDefinition.from_string(definition)
-
-        if ";" in definition.value:
-            [converter, modifiers] = definition.value.split(";", 1)
-
-            try:
-                modifiers = dict(
-                    (key.strip(), numeric_parse(value, non_int_type))
-                    for key, value in (part.split(":") for part in modifiers.split(";"))
-                )
-            except _NotNumeric as ex:
-                raise ValueError(
-                    f"Unit definition ('{definition.name}') must contain only numbers in modifier, not {ex.value}"
-                )
-
-        else:
-            converter = definition.value
-            modifiers = {}
-
-        converter = ParserHelper.from_string(converter, non_int_type)
-
-        if not any(_is_dim(key) for key in converter.keys()):
-            is_base = False
-        elif all(_is_dim(key) for key in converter.keys()):
-            is_base = True
-        else:
-            raise DefinitionSyntaxError(
-                "Cannot mix dimensions and units in the same definition. "
-                "Base units must be referenced only to dimensions. "
-                "Derived units must be referenced only to units."
-            )
-        reference = UnitsContainer(converter)
-
-        try:
-            converter = Converter.from_arguments(scale=converter.scale, **modifiers)
-        except Exception as ex:
-            raise DefinitionSyntaxError(
-                "Unable to assign a converter to the unit"
-            ) from ex
-
-        return cls(
-            definition.name,
-            definition.symbol,
-            definition.aliases,
-            converter,
-            reference,
-            is_base,
-        )
-
-
-@dataclass(frozen=True)
-class DimensionDefinition(Definition):
-    """Definition of a dimension::
-
-        [dimension name] = <relation to other dimensions>
-
-    Example::
-
-        [density] = [mass] / [volume]
-    """
-
-    reference: Optional[UnitsContainer] = None
-    is_base: bool = False
-
-    @classmethod
-    def accept_to_parse(cls, preprocessed: PreprocessedDefinition):
-        return preprocessed.name.startswith("[")
-
-    @classmethod
-    def from_string(
-        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
-    ) -> DimensionDefinition:
-        if isinstance(definition, str):
-            definition = PreprocessedDefinition.from_string(definition)
-
-        converter = ParserHelper.from_string(definition.value, non_int_type)
-
-        if not converter:
-            is_base = True
-        elif all(_is_dim(key) for key in converter.keys()):
-            is_base = False
-        else:
-            raise DefinitionSyntaxError(
-                "Base dimensions must be referenced to None. "
-                "Derived dimensions must only be referenced "
-                "to dimensions."
-            )
-        reference = UnitsContainer(converter, non_int_type=non_int_type)
-
-        return cls(
-            definition.name,
-            definition.symbol,
-            definition.aliases,
-            converter,
-            reference,
-            is_base,
-        )
-
-
-class AliasDefinition(Definition):
-    """Additional alias(es) for an already existing unit::
-
-        @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
-
-    Example::
-
-        @alias meter = my_meter
-    """
-
-    def __init__(self, name: str, aliases: Iterable[str]) -> None:
-        super().__init__(
-            name=name, defined_symbol=None, aliases=aliases, converter=None
-        )
-
-    @classmethod
-    def from_string(
-        cls, definition: Union[str, PreprocessedDefinition], non_int_type: type = float
-    ) -> AliasDefinition:
-
-        if isinstance(definition, str):
-            definition = PreprocessedDefinition.from_string(definition)
-
-        name = definition.name[len("@alias ") :].lstrip()
-        return AliasDefinition(name, tuple(definition.rhs_parts))
+    comment: str
 
 
 @dataclass(frozen=True)
 class DefaultsDefinition:
-    """Definition for the @default directive"""
+    """Directive to store default values."""
 
-    content: Tuple[Tuple[str, str], ...]
+    group: ty.Optional[str]
+    system: ty.Optional[str]
 
-    @classmethod
-    def from_lines(cls, lines, non_int_type=float) -> DefaultsDefinition:
-        source_iterator = SourceIterator(lines)
-        next(source_iterator)
-        out = []
-        for lineno, part in source_iterator:
-            k, v = part.split("=")
-            out.append((k.strip(), v.strip()))
+    def items(self):
+        if self.group is not None:
+            yield "group", self.group
+        if self.system is not None:
+            yield "system", self.system
 
-        return DefaultsDefinition(tuple(out))
+
+@dataclass(frozen=True)
+class PrefixDefinition(errors.WithDefErr):
+    """Definition of a prefix."""
+
+    #: name of the prefix
+    name: str
+    #: scaling value for this prefix
+    value: numbers.Number
+    #: canonical symbol
+    defined_symbol: Optional[str] = ""
+    #: additional names for the same prefix
+    aliases: ty.Tuple[str, ...] = ()
+
+    @property
+    def symbol(self) -> str:
+        return self.defined_symbol or self.name
+
+    @property
+    def has_symbol(self) -> bool:
+        return bool(self.defined_symbol)
+
+    @cached_property
+    def converter(self):
+        return Converter.from_arguments(scale=self.value)
+
+    def __post_init__(self):
+        if not errors.is_valid_prefix_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_PREFIX_NAME)
+
+        if self.defined_symbol and not errors.is_valid_prefix_symbol(self.name):
+            raise self.def_err(
+                f"the symbol {self.defined_symbol} " + errors.MSG_INVALID_PREFIX_SYMBOL
+            )
+
+        for alias in self.aliases:
+            if not errors.is_valid_prefix_alias(alias):
+                raise self.def_err(
+                    f"the alias {alias} " + errors.MSG_INVALID_PREFIX_ALIAS
+                )
+
+
+@dataclass(frozen=True)
+class UnitDefinition(errors.WithDefErr):
+    """Definition of a unit."""
+
+    #: canonical name of the unit
+    name: str
+    #: canonical symbol
+    defined_symbol: ty.Optional[str]
+    #: additional names for the same unit
+    aliases: ty.Tuple[str, ...]
+    #: A functiont that converts a value in these units into the reference units
+    converter: ty.Optional[ty.Union[Callable, Converter]]
+    #: Reference units.
+    reference: ty.Optional[UnitsContainer]
+
+    def __post_init__(self):
+        if not errors.is_valid_unit_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_UNIT_NAME)
+
+        if not any(map(errors.is_dim, self.reference.keys())):
+            invalid = tuple(
+                itertools.filterfalse(errors.is_valid_unit_name, self.reference.keys())
+            )
+            if invalid:
+                raise self.def_err(
+                    f"refers to {', '.join(invalid)} that "
+                    + errors.MSG_INVALID_UNIT_NAME
+                )
+            is_base = False
+
+        elif all(map(errors.is_dim, self.reference.keys())):
+            invalid = tuple(
+                itertools.filterfalse(
+                    errors.is_valid_dimension_name, self.reference.keys()
+                )
+            )
+            if invalid:
+                raise self.def_err(
+                    f"refers to {', '.join(invalid)} that "
+                    + errors.MSG_INVALID_DIMENSION_NAME
+                )
+
+            is_base = True
+            scale = getattr(self.converter, "scale", 1)
+            if scale != 1:
+                return self.def_err(
+                    "Base unit definitions cannot have a scale different to 1. "
+                    f"(`{scale}` found)"
+                )
+        else:
+            raise self.def_err(
+                "Cannot mix dimensions and units in the same definition. "
+                "Base units must be referenced only to dimensions. "
+                "Derived units must be referenced only to units."
+            )
+
+        super.__setattr__(self, "_is_base", is_base)
+
+        if self.defined_symbol and not errors.is_valid_unit_symbol(self.name):
+            raise self.def_err(
+                f"the symbol {self.defined_symbol} " + errors.MSG_INVALID_UNIT_SYMBOL
+            )
+
+        for alias in self.aliases:
+            if not errors.is_valid_unit_alias(alias):
+                raise self.def_err(
+                    f"the alias {alias} " + errors.MSG_INVALID_UNIT_ALIAS
+                )
+
+    @property
+    def is_base(self) -> bool:
+        """Indicates if it is a base unit."""
+        return self._is_base
+
+    @property
+    def is_multiplicative(self) -> bool:
+        return self.converter.is_multiplicative
+
+    @property
+    def is_logarithmic(self) -> bool:
+        return self.converter.is_logarithmic
+
+    @property
+    def symbol(self) -> str:
+        return self.defined_symbol or self.name
+
+    @property
+    def has_symbol(self) -> bool:
+        return bool(self.defined_symbol)
+
+
+@dataclass(frozen=True)
+class DimensionDefinition(errors.WithDefErr):
+    """Definition of a root dimension"""
+
+    #: name of the dimension
+    name: str
+
+    @property
+    def is_base(self):
+        return True
+
+    def __post_init__(self):
+        if not errors.is_valid_dimension_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_DIMENSION_NAME)
+
+
+@dataclass(frozen=True)
+class DerivedDimensionDefinition(DimensionDefinition):
+    """Definition of a derived dimension."""
+
+    #: name of the dimension
+    name: str
+    #: reference dimensions.
+    reference: UnitsContainer
+
+    @property
+    def is_base(self):
+        return False
+
+    def __post_init__(self):
+        if not errors.is_valid_dimension_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_DIMENSION_NAME)
+
+        if not all(map(errors.is_dim, self.reference.keys())):
+            return self.def_err(
+                "derived dimensions must only reference other dimensions"
+            )
+
+        invalid = tuple(
+            itertools.filterfalse(errors.is_valid_dimension_name, self.reference.keys())
+        )
+
+        if invalid:
+            raise self.def_err(
+                f"refers to {', '.join(invalid)} that "
+                + errors.MSG_INVALID_DIMENSION_NAME
+            )
+
+
+@dataclass(frozen=True)
+class AliasDefinition(errors.WithDefErr):
+    """Additional alias(es) for an already existing unit."""
+
+    #: name of the already existing unit
+    name: str
+    #: aditional names for the same unit
+    aliases: ty.Tuple[str, ...]
+
+    def __post_init__(self):
+        if not errors.is_valid_unit_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_UNIT_NAME)
+
+        for alias in self.aliases:
+            if not errors.is_valid_unit_alias(alias):
+                raise self.def_err(
+                    f"the alias {alias} " + errors.MSG_INVALID_UNIT_ALIAS
+                )
 
 
 @dataclass(frozen=True)
 class ScaleConverter(Converter):
-    """A linear transformation."""
+    """A linear transformation without offset."""
 
     scale: float
 

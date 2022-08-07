@@ -439,8 +439,9 @@ def siunitx_format_unit(units, registry):
 
         lpick = lpos if power >= 0 else lneg
         prefix = None
+        # TODO: fix this to be fore efficient and detect also aliases.
         for p in registry._prefixes.values():
-            p = str(p)
+            p = str(p.name)
             if len(p) > 0 and unit.find(p) == 0:
                 prefix = p
                 unit = unit.replace(prefix, "", 1)

@@ -8,182 +8,149 @@
 
 from __future__ import annotations
 
+import itertools
 import numbers
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Set, Tuple
 
-from ...definitions import Definition
-from ...errors import DefinitionSyntaxError
-from ...util import ParserHelper, SourceIterator
+from ... import errors
 from ..plain import UnitDefinition
 
 if TYPE_CHECKING:
-    from pint import Quantity
-
-_header_re = re.compile(
-    r"@context\s*(?P<defaults>\(.*\))?\s+(?P<name>\w+)\s*(=(?P<aliases>.*))*"
-)
-_varname_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
-
-# TODO: Put back annotation when possible
-# registry_cache: "UnitRegistry"
-
-
-class Expression:
-    def __init__(self, eq):
-        self._eq = eq
-
-    def __call__(self, ureg, value: Any, **kwargs: Any):
-        return ureg.parse_expression(self._eq, value=value, **kwargs)
+    from pint import Quantity, UnitsContainer
 
 
 @dataclass(frozen=True)
 class Relation:
+    """Base class for a relation between different dimensionalities."""
 
-    bidirectional: True
-    src: ParserHelper
-    dst: ParserHelper
-    tranformation: Callable[..., Quantity[Any]]
+    _varname_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+    #: Source dimensionality
+    src: UnitsContainer
+    #: Destination dimensionality
+    dst: UnitsContainer
+    #: Equation connecting both dimensionalities from which the tranformation
+    #: will be built.
+    equation: str
+
+    # Instead of defining __post_init__ here,
+    # it will be added to the container class
+    # so that the name and a meaningfull class
+    # could be used.
+
+    @property
+    def variables(self) -> Set[str, ...]:
+        """Find all variables names in the equation."""
+        return set(self._varname_re.findall(self.equation))
+
+    @property
+    def transformation(self) -> Callable[..., Quantity[Any]]:
+        """Return a transformation callable that uses the registry
+        to parse the transformation equation.
+        """
+        return lambda ureg, value, **kwargs: ureg.parse_expression(
+            self.equation, value=value, **kwargs
+        )
+
+    @property
+    def bidirectional(self):
+        raise NotImplementedError
 
 
 @dataclass(frozen=True)
-class ContextDefinition:
-    """Definition of a Context
+class ForwardRelation(Relation):
+    """A relation connecting a dimension to another via a transformation function.
 
-        @context[(defaults)] <canonical name> [= <alias>] [= <alias>]
-            # units can be redefined within the context
-            <redefined unit> = <relation to another unit>
-
-            # can establish unidirectional relationships between dimensions
-            <dimension 1> -> <dimension 2>: <transformation function>
-
-            # can establish bidirectionl relationships between dimensions
-            <dimension 3> <-> <dimension 4>: <transformation function>
-        @end
-
-    Example::
-
-        @context(n=1) spectroscopy = sp
-            # n index of refraction of the medium.
-            [length] <-> [frequency]: speed_of_light / n / value
-            [frequency] -> [energy]: planck_constant * value
-            [energy] -> [frequency]: value / planck_constant
-            # allow wavenumber / kayser
-            [wavenumber] <-> [length]: 1 / value
-        @end
+    <source dimension> -> <target dimension>: <transformation function>
     """
 
+    @property
+    def bidirectional(self):
+        return False
+
+
+@dataclass(frozen=True)
+class BidirectionalRelation(Relation):
+    """A bidirectional relation connecting a dimension to another
+    via a simple transformation function.
+
+        <source dimension> <-> <target dimension>: <transformation function>
+
+    """
+
+    @property
+    def bidirectional(self):
+        return True
+
+
+@dataclass(frozen=True)
+class ContextDefinition(errors.WithDefErr):
+    """Definition of a Context"""
+
+    #: name of the context
     name: str
+    #: other na
     aliases: Tuple[str, ...]
-    variables: Tuple[str, ...]
     defaults: Dict[str, numbers.Number]
+    relations: Tuple[Relation, ...]
+    redefinitions: Tuple[UnitDefinition, ...]
 
-    # Each element indicates: line number, is_bidirectional, src, dst, transformation func
-    relations: Tuple[Tuple[int, Relation], ...]
-    redefinitions: Tuple[Tuple[int, UnitDefinition], ...]
-
-    @staticmethod
-    def parse_definition(line, non_int_type) -> UnitDefinition:
-        definition = Definition.from_string(line, non_int_type)
-        if not isinstance(definition, UnitDefinition):
-            raise DefinitionSyntaxError(
-                "Expected <unit> = <converter>; got %s" % line.strip()
-            )
-        if definition.symbol != definition.name or definition.aliases:
-            raise DefinitionSyntaxError(
-                "Can't change a unit's symbol or aliases within a context"
-            )
-        if definition.is_base:
-            raise DefinitionSyntaxError("Can't define plain units within a context")
-        return definition
+    @property
+    def variables(self) -> Set[str, ...]:
+        """Return all variable names in all transformations."""
+        return set().union(*(r.variables for r in self.relations))
 
     @classmethod
-    def from_lines(cls, lines, non_int_type=float) -> ContextDefinition:
-        lines = SourceIterator(lines)
+    def from_lines(cls, lines, non_int_type):
+        # TODO: this is to keep it backwards compatible
+        from ...delegates import ParserConfig, txt_parser
 
-        lineno, header = next(lines)
-        try:
-            r = _header_re.search(header)
-            name = r.groupdict()["name"].strip()
-            aliases = r.groupdict()["aliases"]
-            if aliases:
-                aliases = tuple(a.strip() for a in r.groupdict()["aliases"].split("="))
-            else:
-                aliases = ()
-            defaults = r.groupdict()["defaults"]
-        except Exception as exc:
-            raise DefinitionSyntaxError(
-                "Could not parse the Context header '%s'" % header, lineno=lineno
-            ) from exc
+        cfg = ParserConfig(non_int_type)
+        parser = txt_parser.Parser(cfg, None)
+        pp = parser.parse_string("\n".join(lines) + "\n@end")
+        for definition in parser.iter_parsed_project(pp):
+            if isinstance(definition, cls):
+                return definition
 
-        if defaults:
+    def __post_init__(self):
+        if not errors.is_valid_context_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_GROUP_NAME)
 
-            def to_num(val):
-                val = complex(val)
-                if not val.imag:
-                    return val.real
-                return val
-
-            txt = defaults
-            try:
-                defaults = (part.split("=") for part in defaults.strip("()").split(","))
-                defaults = {str(k).strip(): to_num(v) for k, v in defaults}
-            except (ValueError, TypeError) as exc:
-                raise DefinitionSyntaxError(
-                    f"Could not parse Context definition defaults: '{txt}'",
-                    lineno=lineno,
-                ) from exc
-        else:
-            defaults = {}
-
-        variables = set()
-        redefitions = []
-        relations = []
-        for lineno, line in lines:
-            try:
-                if "=" in line:
-                    definition = cls.parse_definition(line, non_int_type)
-                    redefitions.append((lineno, definition))
-                elif ":" in line:
-                    rel, eq = line.split(":")
-                    variables.update(_varname_re.findall(eq))
-
-                    func = Expression(eq)
-
-                    bidir = True
-                    parts = rel.split("<->")
-                    if len(parts) != 2:
-                        bidir = False
-                        parts = rel.split("->")
-                        if len(parts) != 2:
-                            raise Exception
-
-                    src, dst = (
-                        ParserHelper.from_string(s, non_int_type) for s in parts
-                    )
-                    relation = Relation(bidir, src, dst, func)
-                    relations.append((lineno, relation))
-                else:
-                    raise Exception
-            except Exception as exc:
-                raise DefinitionSyntaxError(
-                    "Could not parse Context %s relation '%s': %s" % (name, line, exc),
-                    lineno=lineno,
-                ) from exc
-
-        if defaults:
-            missing_pars = defaults.keys() - set(variables)
-            if missing_pars:
-                raise DefinitionSyntaxError(
-                    f"Context parameters {missing_pars} not found in any equation"
+        for k in self.aliases:
+            if not errors.is_valid_context_name(k):
+                raise self.def_err(
+                    f"refers to '{k}' that " + errors.MSG_INVALID_CONTEXT_NAME
                 )
 
-        return cls(
-            name,
-            aliases,
-            tuple(variables),
-            defaults,
-            tuple(relations),
-            tuple(redefitions),
-        )
+        for relation in self.relations:
+            invalid = tuple(
+                itertools.filterfalse(
+                    errors.is_valid_dimension_name, relation.src.keys()
+                )
+            ) + tuple(
+                itertools.filterfalse(
+                    errors.is_valid_dimension_name, relation.dst.keys()
+                )
+            )
+
+            if invalid:
+                raise self.def_err(
+                    f"relation refers to {', '.join(invalid)} that "
+                    + errors.MSG_INVALID_DIMENSION_NAME
+                )
+
+        for definition in self.redefinitions:
+            if definition.symbol != definition.name or definition.aliases:
+                raise self.def_err(
+                    "can't change a unit's symbol or aliases within a context"
+                )
+            if definition.is_base:
+                raise self.def_err("can't define plain units within a context")
+
+        missing_pars = set(self.defaults.keys()) - self.variables
+        if missing_pars:
+            raise self.def_err(
+                f"Context parameters {missing_pars} not found in any equation"
+            )

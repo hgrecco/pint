@@ -928,7 +928,7 @@ def test_issue1498(tmp_path):
         f"""
     foo = [FOO]
 
-    @import {str(def2)}
+    @import {def2.name}
     """
     )
 
@@ -941,9 +941,8 @@ def test_issue1498(tmp_path):
     """
     )
 
-    # Succeeds with pint 0.18; fails with pint 0.19
     ureg1 = UnitRegistry()
-    ureg1.load_definitions(def1)  # ← FAILS
+    ureg1.load_definitions(def1)
 
     assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude
 

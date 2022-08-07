@@ -6,82 +6,76 @@
     :license: BSD, see LICENSE for more details.
 """
 
-
 from __future__ import annotations
 
-import re
+import typing as ty
 from dataclasses import dataclass
-from typing import Tuple
 
-from ...util import SourceIterator
+from ... import errors
 
 
 @dataclass(frozen=True)
-class SystemDefinition:
-    """Definition of a System:
+class BaseUnitRule:
+    """A rule to define a base unit within a system."""
 
-        @system <name> [using <group 1>, ..., <group N>]
-            <rule 1>
-            ...
-            <rule N>
-        @end
+    #: name of the unit to become base unit
+    #: (must exist in the registry)
+    new_unit_name: str
+    #: name of the unit to be kicked out to make room for the new base uni
+    #: If None, the current base unit with the same dimensionality will be used
+    old_unit_name: ty.Optional[str] = None
 
-    The syntax for the rule is:
+    # Instead of defining __post_init__ here,
+    # it will be added to the container class
+    # so that the name and a meaningfull class
+    # could be used.
 
-        new_unit_name : old_unit_name
 
-    where:
-        - old_unit_name: a root unit part which is going to be removed from the system.
-        - new_unit_name: a non root unit which is going to replace the old_unit.
+@dataclass(frozen=True)
+class SystemDefinition(errors.WithDefErr):
+    """Definition of a System."""
 
-    If the new_unit_name and the old_unit_name, the later and the colon can be omitted.
-    """
-
-    #: Regex to match the header parts of a context.
-    _header_re = re.compile(r"@system\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
-
+    #: name of the system
     name: str
-    unit_replacements: Tuple[Tuple[int, str, str], ...]
-    using_group_names: Tuple[str, ...]
+    #: unit groups that will be included within the system
+    using_group_names: ty.Tuple[str, ...]
+    #: rules to define new base unit within the system.
+    rules: ty.Tuple[BaseUnitRule, ...]
 
     @classmethod
-    def from_lines(cls, lines, non_int_type=float):
-        lines = SourceIterator(lines)
+    def from_lines(cls, lines, non_int_type):
+        # TODO: this is to keep it backwards compatible
+        from ...delegates import ParserConfig, txt_parser
 
-        lineno, header = next(lines)
+        cfg = ParserConfig(non_int_type)
+        parser = txt_parser.Parser(cfg, None)
+        pp = parser.parse_string("\n".join(lines) + "\n@end")
+        for definition in parser.iter_parsed_project(pp):
+            if isinstance(definition, cls):
+                return definition
 
-        r = cls._header_re.search(header)
+    @property
+    def unit_replacements(self) -> ty.Tuple[ty.Tuple[str, str], ...]:
+        return tuple((el.new_unit_name, el.old_unit_name) for el in self.rules)
 
-        if r is None:
-            raise ValueError("Invalid System header syntax '%s'" % header)
+    def __post_init__(self):
+        if not errors.is_valid_system_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_SYSTEM_NAME)
 
-        name = r.groupdict()["name"].strip()
-        groups = r.groupdict()["used_groups"]
+        for k in self.using_group_names:
+            if not errors.is_valid_group_name(k):
+                raise self.def_err(
+                    f"refers to '{k}' that " + errors.MSG_INVALID_GROUP_NAME
+                )
 
-        # If the systems has no group, it automatically uses the root group.
-        if groups:
-            group_names = tuple(a.strip() for a in groups.split(","))
-        else:
-            group_names = ("root",)
-
-        unit_replacements = []
-        for lineno, line in lines:
-            line = line.strip()
-
-            # We would identify a
-            #  - old_unit: a root unit part which is going to be removed from the system.
-            #  - new_unit: a non root unit which is going to replace the old_unit.
-
-            if ":" in line:
-                # The syntax is new_unit:old_unit
-
-                new_unit, old_unit = line.split(":")
-                new_unit, old_unit = new_unit.strip(), old_unit.strip()
-
-                unit_replacements.append((lineno, new_unit, old_unit))
-            else:
-                # The syntax is new_unit
-                # old_unit is inferred as the root unit with the same dimensionality.
-                unit_replacements.append((lineno, line, None))
-
-        return cls(name, tuple(unit_replacements), group_names)
+        for ndx, rule in enumerate(self.rules, 1):
+            if not errors.is_valid_unit_name(rule.new_unit_name):
+                raise self.def_err(
+                    f"rule #{ndx} refers to '{rule.new_unit_name}' that "
+                    + errors.MSG_INVALID_UNIT_NAME
+                )
+            if rule.old_unit_name and not errors.is_valid_unit_name(rule.old_unit_name):
+                raise self.def_err(
+                    f"rule #{ndx} refers to '{rule.old_unit_name}' that "
+                    + errors.MSG_INVALID_UNIT_NAME
+                )

@@ -119,16 +119,19 @@ class System(SharedRegistryObject):
         return cls.from_definition(system_definition, get_root_func)
 
     @classmethod
-    def from_definition(cls, system_definition: SystemDefinition, get_root_func):
+    def from_definition(cls, system_definition: SystemDefinition, get_root_func=None):
+        if get_root_func is None:
+            # TODO: kept for backwards compatibility
+            get_root_func = cls._REGISTRY.get_root_units
         base_unit_names = {}
         derived_unit_names = []
-        for lineno, new_unit, old_unit in system_definition.unit_replacements:
+        for new_unit, old_unit in system_definition.unit_replacements:
             if old_unit is None:
                 old_unit_dict = to_units_container(get_root_func(new_unit)[1])
 
                 if len(old_unit_dict) != 1:
                     raise ValueError(
-                        "The new plain must be a root dimension if not discarded unit is specified."
+                        "The new unit must be a root dimension if not discarded unit is specified."
                     )
 
                 old_unit, value = dict(old_unit_dict).popitem()
@@ -138,8 +141,8 @@ class System(SharedRegistryObject):
                 # The old unit MUST be a root unit, if not raise an error.
                 if old_unit != str(get_root_func(old_unit)[1]):
                     raise ValueError(
-                        "In `%s`, the unit at the right of the `:` (%s) must be a root unit."
-                        % (lineno, old_unit)
+                        f"The old unit {old_unit} must be a root unit "
+                        f"in order to be replaced by new unit {new_unit}"
                     )
 
                 # Here we find new_unit expanded in terms of root_units

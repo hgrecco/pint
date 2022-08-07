@@ -1,6 +1,6 @@
 """
-    pint.facets.group.defintions
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.facets.group.definitions
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
@@ -8,88 +8,46 @@
 
 from __future__ import annotations
 
-import re
+import typing as ty
 from dataclasses import dataclass
-from typing import Tuple
 
-from ...definitions import Definition
-from ...errors import DefinitionSyntaxError
-from ...util import SourceIterator
-from ..plain import UnitDefinition
+from ... import errors
+from .. import plain
 
 
 @dataclass(frozen=True)
-class GroupDefinition:
-    """Definition of a group.
+class GroupDefinition(errors.WithDefErr):
+    """Definition of a group."""
 
-        @group <name> [using <group 1>, ..., <group N>]
-            <definition 1>
-            ...
-            <definition N>
-        @end
-
-    Example::
-
-        @group AvoirdupoisUS using Avoirdupois
-            US_hundredweight = hundredweight = US_cwt
-            US_ton = ton
-            US_force_ton = force_ton = _ = US_ton_force
-        @end
-
-    """
-
-    #: Regex to match the header parts of a definition.
-    _header_re = re.compile(r"@group\s+(?P<name>\w+)\s*(using\s(?P<used_groups>.*))*")
-
+    #: name of the group
     name: str
-    units: Tuple[Tuple[int, UnitDefinition], ...]
-    using_group_names: Tuple[str, ...]
-
-    @property
-    def unit_names(self) -> Tuple[str, ...]:
-        return tuple(u.name for lineno, u in self.units)
+    #: unit groups that will be included within the group
+    using_group_names: ty.Tuple[str, ...]
+    #: definitions for the units existing within the group
+    definitions: ty.Tuple[plain.UnitDefinition, ...]
 
     @classmethod
-    def from_lines(cls, lines, non_int_type=float):
-        """Return a Group object parsing an iterable of lines.
+    def from_lines(cls, lines, non_int_type):
+        # TODO: this is to keep it backwards compatible
+        from ...delegates import ParserConfig, txt_parser
 
-        Parameters
-        ----------
-        lines : list[str]
-            iterable
-        define_func : callable
-            Function to define a unit in the registry; it must accept a single string as
-            a parameter.
+        cfg = ParserConfig(non_int_type)
+        parser = txt_parser.Parser(cfg, None)
+        pp = parser.parse_string("\n".join(lines) + "\n@end")
+        for definition in parser.iter_parsed_project(pp):
+            if isinstance(definition, cls):
+                return definition
 
-        Returns
-        -------
+    @property
+    def unit_names(self) -> ty.Tuple[str, ...]:
+        return tuple(el.name for el in self.definitions)
 
-        """
+    def __post_init__(self):
+        if not errors.is_valid_group_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_GROUP_NAME)
 
-        lines = SourceIterator(lines)
-        lineno, header = next(lines)
-
-        r = cls._header_re.search(header)
-
-        if r is None:
-            raise ValueError("Invalid Group header syntax: '%s'" % header)
-
-        name = r.groupdict()["name"].strip()
-        groups = r.groupdict()["used_groups"]
-        if groups:
-            parent_group_names = tuple(a.strip() for a in groups.split(","))
-        else:
-            parent_group_names = ()
-
-        units = []
-        for lineno, line in lines:
-            definition = Definition.from_string(line, non_int_type=non_int_type)
-            if not isinstance(definition, UnitDefinition):
-                raise DefinitionSyntaxError(
-                    "Only UnitDefinition are valid inside _used_groups, not "
-                    + str(definition),
-                    lineno=lineno,
+        for k in self.using_group_names:
+            if not errors.is_valid_group_name(k):
+                raise self.def_err(
+                    f"refers to '{k}' that " + errors.MSG_INVALID_GROUP_NAME
                 )
-            units.append((lineno, definition))
-
-        return cls(name, tuple(units), parent_group_names)
