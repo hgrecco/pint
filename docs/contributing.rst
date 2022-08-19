@@ -57,7 +57,7 @@ environment on Linux or OSX with the following commands::
     $ cd pint
     $ python -m virtualenv venv
     $ source venv/bin/activate
-    $ pip install -e .
+    $ pip install -e '.[test]'
     $ pip install -r requirements_docs.txt
     $ pip install pre-commit # This step and the next are optional but recommended.
     $ pre-commit install
