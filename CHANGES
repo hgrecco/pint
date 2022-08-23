@@ -10,6 +10,7 @@ Pint Changelog
 - Parse both Greek mu and micro Unicode points without error.
   (Issue #1030, #574)
 - Added angular frequency documentation page.
+- Move ASV benchmarks to dedicated folder. (Issue #1542)
 
 0.19.2 (2022-04-23)
 -------------------
