@@ -379,14 +379,14 @@ class TestQuantity(QuantityTestCase):
         ureg.define("pound_mass = 0.45359237 kg = lbm")
 
         preferred_units = [
-            ureg.ft,                    # distance      L
-            ureg.slug,                  # mass          M
-            ureg.s,                     # duration      T
-            ureg.rankine,               # temperature   Θ
-            ureg.lbf,                   # force         L M T^-2
-            ureg.psf,                   # pressure      M L^−1 T^−2
-            ureg.lbm * ureg.ft**-3,     # density       M L^-3
-            ureg.W                      # power         L^2 M T^-3
+            ureg.ft,  # distance      L
+            ureg.slug,  # mass          M
+            ureg.s,  # duration      T
+            ureg.rankine,  # temperature   Θ
+            ureg.lbf,  # force         L M T^-2
+            ureg.psf,  # pressure      M L^−1 T^−2
+            ureg.lbm * ureg.ft**-3,  # density       M L^-3
+            ureg.W,  # power         L^2 M T^-3
         ]
 
         temp = (Q_("1 lbf") * Q_("1 m/s")).to_preferred(preferred_units)

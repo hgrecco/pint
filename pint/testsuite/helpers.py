@@ -140,9 +140,7 @@ requires_uncertainties = pytest.mark.skipif(
 requires_not_uncertainties = pytest.mark.skipif(
     HAS_UNCERTAINTIES, reason="Requires Uncertainties not to be installed."
 )
-requires_mip = pytest.mark.skipif(
-    not HAS_MIP, reason="Requires MIP"
-)
+requires_mip = pytest.mark.skipif(not HAS_MIP, reason="Requires MIP")
 
 # Parametrization
 

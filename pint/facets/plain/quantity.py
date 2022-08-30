@@ -40,7 +40,12 @@ from ...compat import (
     eq,
     is_duck_array_type,
     is_upcast_type,
-    mip,
+    mip_INF,
+    mip_INTEGER,
+    mip_model,
+    mip_Model,
+    mip_OptimizationStatus,
+    mip_xsum,
     np,
     zero_or_nan,
 )
@@ -690,7 +695,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
         return self.to(new_unit_container)
 
-    def to_preferred(self, preferred_units: List[UnitLike]) -> PlainQuantity[_MagnitudeType]:
+    def to_preferred(
+        self, preferred_units: List[UnitLike]
+    ) -> PlainQuantity[_MagnitudeType]:
         """Return Quantity converted to a unit composed of the preferred units.
 
         Examples
@@ -719,7 +726,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             for preferred_unit in preferred_units:
                 dims = sorted(preferred_unit.dimensionality)
                 if dims == self_dims:
-                    p_exps_head, *p_exps_tail = [preferred_unit.dimensionality[d] for d in dims]
+                    p_exps_head, *p_exps_tail = [
+                        preferred_unit.dimensionality[d] for d in dims
+                    ]
                     if all(
                         s_exps_tail[i] * p_exps_head == p_exps_tail[i] ** s_exps_head
                         for i in range(n)
@@ -744,10 +753,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         }
 
         # Override the default unit of each dimension with the 1D-units used in this Quantity
-        unit_selections.update({
-            unit.dimensionality: unit
-            for unit in map(self._REGISTRY.Unit, self._units.keys())
-        })
+        unit_selections.update(
+            {
+                unit.dimensionality: unit
+                for unit in map(self._REGISTRY.Unit, self._units.keys())
+            }
+        )
 
         # Determine the preferred unit for each dimensionality from the preferred_units
         # (A prefered unit doesn't have to be only one dimensional, e.g. Watts)
@@ -762,15 +773,15 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         # This algorithm has poor asymptotic time complexity, so first reduce the considered
         # dimensions and units to only those that are useful to the problem
 
-        ## The dimensions (without powers) of this Quantity
+        # The dimensions (without powers) of this Quantity
         dimension_set = set(self.dimensionality)
 
-        ## Getting zero exponents in dimensions not in dimension_set can be facilitated
-        ## by units that interact with that dimension and one or more dimension_set members.
-        ## For example MT^1 * LT^-1 lets you get MLT^0 when T is not in dimension_set.
-        ## For each candidate unit that interacts with a dimension_set member, add the
-        ## candidate unit's other dimensions to dimension_set, and repeat until no more
-        ## dimensions are selected.
+        # Getting zero exponents in dimensions not in dimension_set can be facilitated
+        # by units that interact with that dimension and one or more dimension_set members.
+        # For example MT^1 * LT^-1 lets you get MLT^0 when T is not in dimension_set.
+        # For each candidate unit that interacts with a dimension_set member, add the
+        # candidate unit's other dimensions to dimension_set, and repeat until no more
+        # dimensions are selected.
 
         discovery_done = False
         while not discovery_done:
@@ -779,27 +790,30 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
                 unit_dimensions = set(d)
                 intersection = unit_dimensions.intersection(dimension_set)
                 if 0 < len(intersection) < len(unit_dimensions):
-                # there are dimensions in this unit that are in dimension set
-                # and others that are not in dimension set
+                    # there are dimensions in this unit that are in dimension set
+                    # and others that are not in dimension set
                     dimension_set = dimension_set.union(unit_dimensions)
                     discovery_done = False
                     break
 
-        ## filter out dimensions and their unit selections that don't interact with any
-        ## dimension_set members
+        # filter out dimensions and their unit selections that don't interact with any
+        # dimension_set members
         unit_selections = {
             dimensionality: unit
             for dimensionality, unit in unit_selections.items()
             if set(dimensionality).intersection(dimension_set)
         }
 
-        ## update preferred_units with the selected units that were originally preferred
-        preferred_units = list(set(u for d, u in unit_selections.items() if d in preferred_dims))
+        # update preferred_units with the selected units that were originally preferred
+        preferred_units = list(
+            set(u for d, u in unit_selections.items() if d in preferred_dims)
+        )
         preferred_units.sort(key=lambda unit: str(unit))  # for determinism
 
-        ## and unpreferred_units are the selected units that weren't originally preferred
-        unpreferred_units = list(set(
-            u for d, u in unit_selections.items() if d not in preferred_dims))
+        # and unpreferred_units are the selected units that weren't originally preferred
+        unpreferred_units = list(
+            set(u for d, u in unit_selections.items() if d not in preferred_dims)
+        )
         unpreferred_units.sort(key=lambda unit: str(unit))  # for determinism
 
         # for indexability
@@ -811,67 +825,72 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
         # Now that the input data is minimized, setup the optimization problem
 
-        ## use mip to select units from preferred units
+        # use mip to select units from preferred units
 
-        model = mip.Model()
+        model = mip_Model()
 
-        ## Make one variable for each candidate unit
+        # Make one variable for each candidate unit
 
         vars = [
-            model.add_var(str(unit), lb=-mip.INF, ub=mip.INF, var_type=mip.INTEGER)
+            model.add_var(str(unit), lb=-mip_INF, ub=mip_INF, var_type=mip_INTEGER)
             for unit in (preferred_units + unpreferred_units)
         ]
 
-        ## where [u1 ... uN] are powers of N candidate units (vars)
-        ## and [d1(uI) ... dK(uI)] are the K dimensional exponents of candidate unit I
-        ## and [t1 ... tK] are the dimensional exponents of the quantity (self)
-        ## create the following constraints
-        ##
-        ##                ⎡ d1(u1) ⋯ dK(u1) ⎤
-        ## [ u1 ⋯ uN ] * ⎢    ⋮    ⋱         ⎢ = [ t1 ⋯ tK ]
-        ##                ⎣ d1(uN)    dK(uN) ⎦
-        ##
-        ## in English, the units we choose, and their exponents, when combined, must have the
-        ## target dimensionality
+        # where [u1 ... uN] are powers of N candidate units (vars)
+        # and [d1(uI) ... dK(uI)] are the K dimensional exponents of candidate unit I
+        # and [t1 ... tK] are the dimensional exponents of the quantity (self)
+        # create the following constraints
+        #
+        #                ⎡ d1(u1) ⋯ dK(u1) ⎤
+        # [ u1 ⋯ uN ] * ⎢    ⋮    ⋱         ⎢ = [ t1 ⋯ tK ]
+        #                ⎣ d1(uN)    dK(uN) ⎦
+        #
+        # in English, the units we choose, and their exponents, when combined, must have the
+        # target dimensionality
 
         matrix = [
             [preferred_unit.dimensionality[dimension] for dimension in dimensions]
             for preferred_unit in (preferred_units + unpreferred_units)
         ]
 
-        ## Do the matrix multiplication with mip.model.xsum for performance and create constraints
+        # Do the matrix multiplication with mip_model.xsum for performance and create constraints
         for i in range(len(dimensions)):
-            dot = mip.model.xsum([var * vector[i] for var, vector in zip(vars, matrix)])
+            dot = mip_model.xsum([var * vector[i] for var, vector in zip(vars, matrix)])
             # add constraint to the model
             model += dot == dimensionality[i]
 
-        ## where [c1 ... cN] are costs, 1 when a preferred variable, and a large value when not
-        ## minimize sum(abs(u1) * c1 ... abs(uN) * cN)
+        # where [c1 ... cN] are costs, 1 when a preferred variable, and a large value when not
+        # minimize sum(abs(u1) * c1 ... abs(uN) * cN)
 
-        ## linearize the optimization variable via a proxy
-        objective = model.add_var("objective", lb=0, ub=mip.INF, var_type=mip.INTEGER)
+        # linearize the optimization variable via a proxy
+        objective = model.add_var("objective", lb=0, ub=mip_INF, var_type=mip_INTEGER)
 
-        ## Constrain the objective to be equal to the sums of the absolute values of the preferred
-        ## unit powers. Do this by making a separate constraint for each permutation of signedness.
-        ## Also apply the cost coefficient, which causes the output to prefer the preferred units
+        # Constrain the objective to be equal to the sums of the absolute values of the preferred
+        # unit powers. Do this by making a separate constraint for each permutation of signedness.
+        # Also apply the cost coefficient, which causes the output to prefer the preferred units
 
-        ### prefer units that interact with fewer dimensions
+        # prefer units that interact with fewer dimensions
         cost = [len(p.dimensionality) for p in preferred_units]
 
-        ### set the cost for non preferred units to a higher number
-        bias = max(map(abs, dimensionality)) * max((1, *cost)) * 10  # arbitrary, just needs to be larger
+        # set the cost for non preferred units to a higher number
+        bias = (
+            max(map(abs, dimensionality)) * max((1, *cost)) * 10
+        )  # arbitrary, just needs to be larger
         cost.extend([bias] * len(unpreferred_units))
 
         for i in range(1 << len(vars)):
-            sum = mip.xsum(
-                [(-1 if i & 1 << (len(vars) - j - 1) else 1) * cost[j] * var for j, var in enumerate(vars)]
+            sum = mip_xsum(
+                [
+                    (-1 if i & 1 << (len(vars) - j - 1) else 1) * cost[j] * var
+                    for j, var in enumerate(vars)
+                ]
             )
             model += objective >= sum
 
         model.objective = objective
 
         # run the mips minimizer and extract the result if successful
-        if model.optimize() == mip.OptimizationStatus.OPTIMAL:
+        if model.optimize() == mip_OptimizationStatus.OPTIMAL:
             optimal_units = []
             min_objective = float("inf")
             for i in range(model.num_solutions):
