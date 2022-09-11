@@ -9,6 +9,8 @@ Pint Changelog
   (See #1466, #1479)
 - Parse both Greek mu and micro Unicode points without error.
   (Issue #1030, #574)
+- Added angular frequency documentation page.
+- Move ASV benchmarks to dedicated folder. (Issue #1542)
 - Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
   (Issue #1510, #1530)
 
