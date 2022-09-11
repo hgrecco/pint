@@ -1107,6 +1107,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.where([-1, 0, 1] * self.ureg.m, [1, 2, 1] * self.ureg.s, np.nan),
             [1, np.nan, 1] * self.ureg.s,
         )
+        with pytest.raises(DimensionalityError):
+            np.where(
+                self.ureg.Quantity([-1, 0, 1], "degC"), [1, 2, 1] * self.ureg.s, np.nan
+            )
 
     @helpers.requires_array_function_protocol()
     def test_fabs(self):
