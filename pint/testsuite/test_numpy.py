@@ -1107,7 +1107,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.where([-1, 0, 1] * self.ureg.m, [1, 2, 1] * self.ureg.s, np.nan),
             [1, np.nan, 1] * self.ureg.s,
         )
-        with pytest.raises(DimensionalityError):
+        with pytest.raises(
+            ValueError,
+            match=".*Boolean value of Quantity with offset unit is ambiguous",
+        ):
             np.where(
                 self.ureg.Quantity([-1, 0, 1], "degC"), [1, 2, 1] * self.ureg.s, np.nan
             )
