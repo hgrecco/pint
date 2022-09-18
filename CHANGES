@@ -215,6 +215,8 @@ Pint Changelog
 - Fix masked arrays (with multiple values) incorrectly being passed through
   setitem (Issue #1584)
 - Add Quantity.to_preferred
+- Change Quantity repr to include magnitude repr & units.
+
 
 0.19.2 (2022-04-23)
 -------------------
