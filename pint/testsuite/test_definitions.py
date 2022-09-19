@@ -1,14 +1,18 @@
 import pytest
 
-from pint.converters import LogarithmicConverter, OffsetConverter, ScaleConverter
-from pint.definitions import (
+from pint.definitions import Definition
+from pint.errors import DefinitionSyntaxError
+from pint.facets.nonmultiplicative.definitions import (
+    LogarithmicConverter,
+    OffsetConverter,
+)
+from pint.facets.plain import (
     AliasDefinition,
-    Definition,
     DimensionDefinition,
     PrefixDefinition,
+    ScaleConverter,
     UnitDefinition,
 )
-from pint.errors import DefinitionSyntaxError
 from pint.util import UnitsContainer
 
 
@@ -166,7 +170,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer({"[length]": 1, "[time]": -1})
 
     def test_alias_definition(self):
-        x = Definition.from_string("@alias meter = metro = metr")
+        x = AliasDefinition.from_string("@alias meter = metro = metr")
         assert isinstance(x, AliasDefinition)
         assert x.name == "meter"
         assert x.aliases == ("metro", "metr")

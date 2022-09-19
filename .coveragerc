@@ -1,5 +1,7 @@
 [run]
-omit = pint/testsuite/*
+omit =
+    pint/testsuite/*
+    pint/_vendor/*
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -17,3 +19,5 @@ exclude_lines =
 
     # Don't complain if non-runnable code isn't run:
     if TYPE_CHECKING:
+
+    return NotImplemented

@@ -1,18 +1,20 @@
 """
-    pint.numpy_func
-    ~~~~~~~~~~~~~~~
+    pint.facets.numpy.numpy_func
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2019 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+
+from __future__ import annotations
 
 import warnings
 from inspect import signature
 from itertools import chain
 
-from .compat import is_upcast_type, np, zero_or_nan
-from .errors import DimensionalityError, UnitStrippedWarning
-from .util import iterable, sized
+from ...compat import is_upcast_type, np, zero_or_nan
+from ...errors import DimensionalityError, UnitStrippedWarning
+from ...util import iterable, sized
 
 HANDLED_UFUNCS = {}
 HANDLED_FUNCTIONS = {}
@@ -195,17 +197,17 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     elif unit_op == "variance":
         result_unit = ((1 * first_input_units + 1 * first_input_units) ** 2).units
     elif unit_op == "square":
-        result_unit = first_input_units ** 2
+        result_unit = first_input_units**2
     elif unit_op == "sqrt":
-        result_unit = first_input_units ** 0.5
+        result_unit = first_input_units**0.5
     elif unit_op == "cbrt":
         result_unit = first_input_units ** (1 / 3)
     elif unit_op == "reciprocal":
-        result_unit = first_input_units ** -1
+        result_unit = first_input_units**-1
     elif unit_op == "size":
         if size is None:
             raise ValueError('size argument must be given when unit_op=="size"')
-        result_unit = first_input_units ** size
+        result_unit = first_input_units**size
     elif unit_op == "invdiv":
         # Start with first arg in numerator, all others in denominator
         product = getattr(
@@ -214,7 +216,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         for x in all_args[1:]:
             if hasattr(x, "units"):
                 product /= x.units
-        result_unit = product ** -1
+        result_unit = product**-1
     else:
         raise ValueError("Output unit method {} not understood".format(unit_op))
 
@@ -299,7 +301,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
                 *args, pre_calc_units=pre_calc_units, **kwargs
             )
 
-        # Determine result through base numpy function on stripped arguments
+        # Determine result through plain numpy function on stripped arguments
         result_magnitude = func(*stripped_args, **stripped_kwargs)
 
         if output_unit is None:
@@ -447,7 +449,7 @@ for ufunc_str in strip_unit_input_output_ufuncs:
     implement_func("ufunc", ufunc_str, input_units=None, output_unit=None)
 
 for ufunc_str in matching_input_bare_output_ufuncs:
-    # Require all inputs to match units, but output base ndarray/duck array
+    # Require all inputs to match units, but output plain ndarray/duck array
     implement_func("ufunc", ufunc_str, input_units="all_consistent", output_unit=None)
 
 for ufunc_str, out_unit in matching_input_set_units_output_ufuncs.items():
@@ -493,7 +495,7 @@ def _frexp(x, *args, **kwargs):
 @implements("power", "ufunc")
 def _power(x1, x2):
     if _is_quantity(x1):
-        return x1 ** x2
+        return x1**x2
     else:
         return x2.__rpow__(x1)
 
@@ -708,12 +710,12 @@ def implement_prod_func(name):
             units = a.units ** a.shape[axis]
         elif where is not None:
             exponent = np.sum(where)
-            units = a.units ** exponent
+            units = a.units**exponent
         else:
             exponent = (
                 np.sum(np.logical_not(np.isnan(a))) if name == "nanprod" else a.size
             )
-            units = a.units ** exponent
+            units = a.units**exponent
 
         result = func(a._magnitude, *args, **kwargs)
 

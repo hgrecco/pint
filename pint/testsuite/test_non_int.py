@@ -8,8 +8,8 @@ from fractions import Fraction
 import pytest
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
+from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, helpers
-from pint.unit import UnitsContainer
 
 
 class FakeWrapper:
@@ -18,6 +18,7 @@ class FakeWrapper:
         self.q = q
 
 
+# TODO: do not subclass from QuantityTestCase
 class NonIntTypeQuantityTestCase(QuantityTestCase):
     def assert_quantity_almost_equal(
         self, first, second, rtol="1e-07", atol="0", msg=None
@@ -969,7 +970,7 @@ class _TestOffsetUnitMath:
                 op.mul(in1, in2), expected, atol="0.01"
             )
 
-    divisions_with_scalar = [  # without / with autoconvert to base unit
+    divisions_with_scalar = [  # without / with autoconvert to plain unit
         ((("10", "kelvin"), "2"), [("5.0", "kelvin"), ("5.0", "kelvin")]),
         ((("10", "kelvin**2"), "2"), [("5.0", "kelvin**2"), ("5.0", "kelvin**2")]),
         ((("10", "degC"), "2"), ["error", "error"]),

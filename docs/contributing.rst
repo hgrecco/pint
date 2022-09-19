@@ -57,7 +57,7 @@ environment on Linux or OSX with the following commands::
     $ cd pint
     $ python -m virtualenv venv
     $ source venv/bin/activate
-    $ pip install -e .
+    $ pip install -e '.[test]'
     $ pip install -r requirements_docs.txt
     $ pip install pre-commit # This step and the next are optional but recommended.
     $ pre-commit install
@@ -77,8 +77,12 @@ We use pytest_ for testing. If you contribute code you need to add tests:
 - When using classes, derive from `QuantityTestCase`.
 - Use `parametrize` as much as possible.
 - Use `fixtures` (see conftest.py) instead of instantiating the registry yourself.
-- Checkout `helpers.py` for some convenience functions before reinventing the wheel.
+  Check out the existing fixtures before creating your own.
 - When your test does not modify the registry, use `sess_registry` fixture.
+- **Do not** create a unit registry outside a test or fixture setup.
+- If you need a specific registry, and you need to reuse it create a
+  fixture in your test module called `local_registry` or similar.
+- Checkout `helpers.py` for some convenience functions before reinventing the wheel.
 
 
 Running tests and building documentation

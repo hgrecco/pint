@@ -8,7 +8,10 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import re
+import warnings
 from typing import Callable, Dict
 
 from .babel_names import _babel_lengths, _babel_units
@@ -496,26 +499,64 @@ def siunitx_format_unit(units, registry):
 def split_unit_format(uspec):
     modifiers_re = re.compile(rf"[{''.join(_UNIT_MODIFIERS)}]")
     modifiers = "".join(modifiers_re.findall(uspec))
-
     uspec = modifiers_re.sub("", uspec)
 
     return uspec, modifiers
 
 
 def extract_custom_flags(spec):
-    flag_re = re.compile(
-        "(" + "|".join(list(_FORMATTERS.keys()) + list(_UNIT_MODIFIERS)) + ")"
-    )
+    flags = sorted(_FORMATTERS, key=len, reverse=True) + list(_UNIT_MODIFIERS)
+    flag_re = re.compile("|".join(flags))
+
     custom_flags = flag_re.findall(spec)
 
     return "".join(custom_flags)
 
 
 def remove_custom_flags(spec):
-    flag_re = re.compile(
-        "(" + "|".join(list(_FORMATTERS.keys()) + list(_UNIT_MODIFIERS)) + ")"
-    )
+    flags = sorted(_FORMATTERS, key=len, reverse=True) + list(_UNIT_MODIFIERS)
+    flag_re = re.compile("|".join(flags))
     return flag_re.sub("", spec)
+
+
+def split_format(spec, default, separate_format_defaults=True):
+    mspec = remove_custom_flags(spec)
+    uspec = extract_custom_flags(spec)
+
+    default_mspec = remove_custom_flags(default)
+    default_uspec = extract_custom_flags(default)
+
+    if separate_format_defaults in (False, None):
+        # should we warn always or only if there was no explicit choice?
+        # Given that we want to eventually remove the flag again, I'd say yes?
+        if spec and separate_format_defaults is None:
+            if not uspec and default_uspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a unit formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the unit formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+            if not mspec and default_mspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a magnitude formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the magnitude formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+        elif not spec:
+            mspec, uspec = default_mspec, default_uspec
+    else:
+        mspec = mspec if mspec else default_mspec
+        uspec = uspec if uspec else default_uspec
+
+    return mspec, uspec
 
 
 def vector_to_latex(vec, fmtfun=lambda x: format(x, ".2f")):
