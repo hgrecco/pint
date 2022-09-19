@@ -1,14 +1,18 @@
 import pytest
 
-from pint.converters import LogarithmicConverter, OffsetConverter, ScaleConverter
-from pint.definitions import (
+from pint.definitions import Definition
+from pint.errors import DefinitionSyntaxError
+from pint.facets.nonmultiplicative.definitions import (
+    LogarithmicConverter,
+    OffsetConverter,
+)
+from pint.facets.plain import (
     AliasDefinition,
-    Definition,
     DimensionDefinition,
     PrefixDefinition,
+    ScaleConverter,
     UnitDefinition,
 )
-from pint.errors import DefinitionSyntaxError
 from pint.util import UnitsContainer
 
 

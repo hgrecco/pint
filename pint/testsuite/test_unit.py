@@ -3,6 +3,7 @@ import functools
 import logging
 import math
 import re
+from contextlib import nullcontext as does_not_raise
 
 import pytest
 
@@ -14,7 +15,7 @@ from pint import (
 )
 from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
-from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 from pint.util import ParserHelper, UnitsContainer
 
 
@@ -78,6 +79,18 @@ class TestUnit(QuantityTestCase):
             with subtests.test(spec):
                 ureg.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
+
+    def test_unit_formatting_defaults_warning(self):
+        ureg = UnitRegistry()
+        ureg.default_format = "~P"
+        x = ureg.Unit("m / s ** 2")
+
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:.2f}" == "meter / second ** 2"
+
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:.2f}" == "m/s²"
 
     def test_unit_formatting_snake_case(self, subtests):
         # Test that snake_case units are escaped where appropriate
@@ -154,9 +167,34 @@ class TestUnit(QuantityTestCase):
         x = self.U_("m")
         assert 1 / x == self.Q_(1, "1/m")
 
-    def test_unit_pow(self):
-        x = self.U_("m")
-        assert x**2 == self.U_("m**2")
+    @pytest.mark.parametrize(
+        ("unit", "power_ratio", "expectation", "expected_unit"),
+        [
+            ("m", 2, does_not_raise(), "m**2"),
+            ("m", dict(), pytest.raises(TypeError), None),
+        ],
+    )
+    def test_unit_pow(self, unit, power_ratio, expectation, expected_unit):
+        with expectation:
+            x = self.U_(unit)
+            assert x**power_ratio == self.U_(expected_unit)
+
+    def test_is_compatible_with(self):
+        unit = self.ureg.Unit("m")
+
+        assert unit.is_compatible_with("m")
+        assert not unit.is_compatible_with("m**2")
+
+        assert unit.is_compatible_with(self.ureg.Unit("m"))
+        assert not unit.is_compatible_with(self.ureg.Unit("m**2"))
+
+        # test other type considered as dimensionless
+        unit = self.ureg.Unit("")
+        assert unit.is_compatible_with(0.5)
+
+    def test_systems(self):
+        unit = self.ureg.Unit("m")
+        assert unit.systems == frozenset({"cgs", "atomic", "Planck", "mks", "SI"})
 
     def test_unit_hash(self):
         x = self.U_("m")
@@ -238,9 +276,9 @@ class TestRegistry(QuantityTestCase):
     def test_load(self):
         import pkg_resources
 
-        from pint import unit
+        from .. import compat
 
-        data = pkg_resources.resource_filename(unit.__name__, "default_en.txt")
+        data = pkg_resources.resource_filename(compat.__name__, "default_en.txt")
         ureg1 = UnitRegistry()
         ureg2 = UnitRegistry(data)
         assert dir(ureg1) == dir(ureg2)

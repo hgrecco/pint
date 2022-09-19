@@ -124,7 +124,7 @@ their appropriate objects:
    >>> Q_('2.54')
    <Quantity(2.54, 'dimensionless')>
    >>> type(Q_('2.54'))
-   <class 'pint.quantity.build_quantity_class.<locals>.Quantity'>
+   <class 'pint.util.Quantity'>
 
 .. note:: Pint's rule for parsing strings with a mixture of numbers and
    units is that **units are treated with the same precedence as numbers**.

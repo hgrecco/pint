@@ -198,13 +198,13 @@ html_sidebars = {
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
-# base URL from which the finished HTML is served.
+# plain URL from which the finished HTML is served.
 # html_use_opensearch = ''
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
-# Output file base name for HTML help builder.
+# Output file plain name for HTML help builder.
 htmlhelp_basename = "pintdoc"
 
 

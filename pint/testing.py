@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import math
 import warnings
 from numbers import Number
 
+from . import Quantity
 from .compat import ndarray
-from .quantity import Quantity
 
 try:
     import numpy as np

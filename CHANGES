@@ -1,7 +1,33 @@
 Pint Changelog
 ==============
 
-0.19 (unreleased)
+0.20 (unreleased)
+------------------
+
+- Reorganized code into facets.
+  Each facet encapsulate a Pint functionality.
+  (See #1466, #1479)
+- Parse both Greek mu and micro Unicode points without error.
+  (Issue #1030, #574)
+- Added angular frequency documentation page.
+- Move ASV benchmarks to dedicated folder. (Issue #1542)
+
+0.19.2 (2022-04-23)
+-------------------
+
+- Add the ``separate_format_defaults`` registry setting (Issue #1501, PR #1503)
+- Handle definitions @import from relative paths on Windows
+  (Issue #1508, thanks khaeru)
+
+
+0.19.1 (2022-04-06)
+-------------------
+
+- Provide a method to iter the definitions in the order they appear,
+  recursing the imported files. (Issue #1498)
+
+
+0.19 (2022-04-04)
 -----------------
 
 - Better separation between parsing and loading of definitions.
@@ -29,6 +55,10 @@ Pint Changelog
 - Fix `to_reduced_units` to work with dimensionless units. (Issue #919)
 - Fix parsing of units string with same canonalized name (Issue #1441 & #1142)
 - The pint-pandas example notebook has been moved to the pint-pandas package.
+
+### New Units
+- `sverdrup` (PR #1404)
+- `cooling_tower_ton` (PR #1484)
 
 ### Breaking Changes
 

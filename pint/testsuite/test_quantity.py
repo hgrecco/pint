@@ -17,8 +17,8 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
-from pint.testsuite import QuantityTestCase, helpers
-from pint.unit import UnitsContainer
+from pint.facets.plain.unit import UnitsContainer
+from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
 
 class FakeWrapper:
@@ -272,6 +272,10 @@ class TestQuantity(QuantityTestCase):
         with pytest.warns(DeprecationWarning):
             assert f"{x:d}" == "4 meter ** 2"
 
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:d}" == "4 m ** 2"
+
     def test_formatting_override_default_magnitude(self):
         ureg = UnitRegistry()
         ureg.default_format = ".2f"
@@ -281,16 +285,22 @@ class TestQuantity(QuantityTestCase):
         with pytest.warns(DeprecationWarning):
             assert f"{x:D}" == "4 meter ** 2"
 
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:D}" == "4.00 meter ** 2"
+
     def test_exponent_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Quantity(1e20, "meter")
         assert f"{x:~H}" == r"1×10<sup>20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{20}\ \mathrm{m}"
+        assert f"{x:~Lx}" == r"\SI[]{1e+20}{\meter}"
         assert f"{x:~P}" == r"1×10²⁰ m"
 
         x /= 1e40
         assert f"{x:~H}" == r"1×10<sup>-20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{-20}\ \mathrm{m}"
+        assert f"{x:~Lx}" == r"\SI[]{1e-20}{\meter}"
         assert f"{x:~P}" == r"1×10⁻²⁰ m"
 
     def test_ipython(self):
@@ -1589,7 +1599,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             assert op.mul(in1, in2).units == expected.units
             helpers.assert_quantity_almost_equal(op.mul(in1, in2), expected, atol=0.01)
 
-    divisions_with_scalar = [  # without / with autoconvert to base unit
+    divisions_with_scalar = [  # without / with autoconvert to plain unit
         (((10, "kelvin"), 2), [(5.0, "kelvin"), (5.0, "kelvin")]),
         (((10, "kelvin**2"), 2), [(5.0, "kelvin**2"), (5.0, "kelvin**2")]),
         (((10, "degC"), 2), ["error", "error"]),

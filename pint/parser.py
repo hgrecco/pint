@@ -61,7 +61,44 @@ class DefinitionFile:
 class DefinitionFiles(tuple):
     """Wrapper class that allows handling a tuple containing DefinitionFile."""
 
-    pass
+    @staticmethod
+    def _iter_definitions(
+        pending_files: list[DefinitionFile],
+    ) -> Generator[Tuple[int, Definition]]:
+        """Internal method to iterate definitions.
+
+        pending_files is a mutable list of definitions files
+        and elements are being removed as they are yielded.
+        """
+        if not pending_files:
+            return
+        current_file = pending_files.pop(0)
+        for lineno, definition in current_file.parsed_lines:
+            if isinstance(definition, ImportDefinition):
+                if not pending_files:
+                    raise ValueError(
+                        f"No more files while trying to import {definition.path}."
+                    )
+
+                if not str(pending_files[0].filename).endswith(str(definition.path)):
+                    raise ValueError(
+                        "The order of the files do not match. "
+                        f"(expected: {definition.path}, "
+                        f"found {pending_files[0].filename})"
+                    )
+
+                yield from DefinitionFiles._iter_definitions(pending_files)
+            else:
+                yield lineno, definition
+
+    def iter_definitions(self):
+        """Iter all definitions in the order they appear,
+        going into the included files.
+
+        Important: This assumes that the order of the imported files
+        is the one that they will appear in the definitions.
+        """
+        yield from self._iter_definitions(list(self))
 
 
 def build_disk_cache_class(non_int_type: type):
@@ -98,13 +135,13 @@ def build_disk_cache_class(non_int_type: type):
 class ImportDefinition:
     """Definition for the @import directive"""
 
-    path: str
+    path: pathlib.Path
 
     @classmethod
     def from_string(
         cls, definition: str, non_int_type: type = float
     ) -> ImportDefinition:
-        return ImportDefinition(definition[7:].strip())
+        return ImportDefinition(pathlib.Path(definition[7:].strip()))
 
 
 class Parser:

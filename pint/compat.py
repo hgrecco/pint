@@ -7,6 +7,9 @@
     :copyright: 2013 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+
+from __future__ import annotations
+
 import math
 import tokenize
 from decimal import Decimal

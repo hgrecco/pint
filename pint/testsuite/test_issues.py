@@ -6,8 +6,8 @@ import pytest
 
 from pint import Context, DimensionalityError, UnitRegistry, get_application_registry
 from pint.compat import np
+from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, helpers
-from pint.unit import UnitsContainer
 from pint.util import ParserHelper
 
 
@@ -395,7 +395,10 @@ class TestIssues(QuantityTestCase):
     def test_alternative_angstrom_definition(self, module_registry):
         module_registry.Quantity(2, "\u212B")
 
-    def test_micro_creation(self, module_registry):
+    def test_micro_creation_U03bc(self, module_registry):
+        module_registry.Quantity(2, "μm")
+
+    def test_micro_creation_U00b5(self, module_registry):
         module_registry.Quantity(2, "µm")
 
     @helpers.requires_numpy
@@ -720,7 +723,7 @@ class TestIssues(QuantityTestCase):
 
     def test_issue1058(self, module_registry):
         """verify that auto-reducing quantities with three or more units
-        of same base type succeeds"""
+        of same plain type succeeds"""
         q = 1 * module_registry.mg / module_registry.g / module_registry.kg
         q.ito_reduced_units()
         assert isinstance(q, module_registry.Quantity)
@@ -901,3 +904,108 @@ if np is not None:
         type_before = type(q._magnitude)
         callable(q)
         assert isinstance(q._magnitude, type_before)
+
+
+@helpers.requires_numpy
+def test_issue1498(tmp_path):
+    def0 = tmp_path / "def0.txt"
+    def1 = tmp_path / "def1.txt"
+    def2 = tmp_path / "def2.txt"
+
+    # A file that defines a new plain unit and uses it in a context
+    def0.write_text(
+        """
+    foo = [FOO]
+
+    @context BAR
+        [FOO] -> [mass]: value / foo * 10.0 kg
+    @end
+    """
+    )
+
+    # A file that defines a new plain unit, then imports another file…
+    def1.write_text(
+        f"""
+    foo = [FOO]
+
+    @import {str(def2)}
+    """
+    )
+
+    # …that, in turn, uses it in a context
+    def2.write_text(
+        """
+    @context BAR
+        [FOO] -> [mass]: value / foo * 10.0 kg
+    @end
+    """
+    )
+
+    # Succeeds with pint 0.18; fails with pint 0.19
+    ureg1 = UnitRegistry()
+    ureg1.load_definitions(def1)  # ← FAILS
+
+    assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude
+
+
+@helpers.requires_numpy
+def test_issue1498b(tmp_path):
+    def0 = tmp_path / "def0.txt"
+    def1 = tmp_path / "dir_a" / "def1.txt"
+    def1_1 = tmp_path / "dir_a" / "def1_1.txt"
+    def1_2 = tmp_path / "dir_a" / "def1_2.txt"
+    def2 = tmp_path / "def2.txt"
+
+    # A file that defines a new plain unit and uses it in a context
+    def0.write_text(
+        """
+    foo = [FOO]
+
+    @context BAR
+        [FOO] -> [mass]: value / foo * 10.0 kg
+    @end
+
+    @import dir_a/def1.txt
+    @import def2.txt
+    """
+    )
+
+    # A file that defines a new plain unit, then imports another file…
+    def1.parent.mkdir()
+    def1.write_text(
+        """
+    @import def1_1.txt
+    @import def1_2.txt
+    """
+    )
+
+    def1_1.write_text(
+        """
+    @context BAR1_1
+        [FOO] -> [mass]: value / foo * 10.0 kg
+    @end
+    """
+    )
+
+    def1_2.write_text(
+        """
+    @context BAR1_2
+        [FOO] -> [mass]: value / foo * 10.0 kg
+    @end
+    """
+    )
+
+    # …that, in turn, uses it in a context
+    def2.write_text(
+        """
+    @context BAR2
+        [FOO] -> [mass]: value / foo * 10.0 kg
+    @end
+    """
+    )
+
+    # Succeeds with pint 0.18; fails with pint 0.19
+    ureg1 = UnitRegistry()
+    ureg1.load_definitions(def0)  # ← FAILS
+
+    assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude
