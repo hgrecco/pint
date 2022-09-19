@@ -186,7 +186,7 @@ class FormattingUnit:
             spec, self.default_format, self._REGISTRY.separate_format_defaults
         )
 
-        return format_unit(self._units, uspec, registry=self._REGISTRY)
+        return format_unit(self, uspec, registry=self._REGISTRY)
 
     def format_babel(self, spec="", locale=None, **kwspec: Any) -> str:
         spec = spec or extract_custom_flags(self.default_format)
