@@ -828,6 +828,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         # use mip to select units from preferred units
 
         model = mip_Model()
+        model.verbose = 0
 
         # Make one variable for each candidate unit
 
