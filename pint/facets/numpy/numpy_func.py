@@ -13,7 +13,7 @@ from inspect import signature
 from itertools import chain
 
 from ...compat import is_upcast_type, np, zero_or_nan
-from ...errors import DimensionalityError, UnitStrippedWarning
+from ...errors import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from ...util import iterable, sized
 
 HANDLED_UFUNCS = {}
@@ -729,6 +729,36 @@ for name in ["prod", "nanprod"]:
     implement_prod_func(name)
 
 
+def _base_unit_if_needed(a):
+    if a._is_multiplicative:
+        return a
+    else:
+        if a.units._REGISTRY.autoconvert_offset_to_baseunit:
+            return a.to_base_units()
+        else:
+            raise OffsetUnitCalculusError(a.units)
+
+
+@implements("trapz", "function")
+def _trapz(a, x=None, dx=1.0, **kwargs):
+    a = _base_unit_if_needed(a)
+    units = a.units
+    if x is not None:
+        if hasattr(x, "units"):
+            x = _base_unit_if_needed(x)
+            units *= x.units
+            x = x._magnitude
+        ret = np.trapz(a._magnitude, x, **kwargs)
+    else:
+        if hasattr(dx, "units"):
+            dx = _base_unit_if_needed(dx)
+            units *= dx.units
+            dx = dx._magnitude
+        ret = np.trapz(a._magnitude, dx=dx, **kwargs)
+
+    return a.units._REGISTRY.Quantity(ret, units)
+
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
@@ -920,7 +950,7 @@ for func_str in [
 # Handle functions with output unit defined by operation
 for func_str in ["std", "nanstd", "sum", "nansum", "cumsum", "nancumsum"]:
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ["cross", "trapz", "dot"]:
+for func_str in ["cross", "dot"]:
     implement_func("function", func_str, input_units=None, output_unit="mul")
 for func_str in ["diff", "ediff1d"]:
     implement_func("function", func_str, input_units=None, output_unit="delta")
