@@ -552,6 +552,12 @@ def _interp(x, xp, fp, left=None, right=None, period=None):
 
 @implements("where", "function")
 def _where(condition, *args):
+    if not getattr(condition, "_is_multiplicative", True):
+        raise ValueError(
+            "Invalid units of the condition: Boolean value of Quantity with offset unit is ambiguous."
+        )
+
+    condition = getattr(condition, "magnitude", condition)
     args, output_wrap = unwrap_and_wrap_consistent_units(*args)
     return output_wrap(np.where(condition, *args))
 
