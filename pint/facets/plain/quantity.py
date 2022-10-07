@@ -143,11 +143,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     default_format: str = ""
     _magnitude: _MagnitudeType
 
-    @property
-    def ndim(self) -> int:
-        if isinstance(self.magnitude, numbers.Number):
-            return 0
-        return self.magnitude.ndim
+    # @property
+    # def ndim(self) -> int:
+    #     if isinstance(self.magnitude, numbers.Number):
+    #         return 0
+    #     return self.magnitude.ndim
 
     @property
     def force_ndarray(self) -> bool:

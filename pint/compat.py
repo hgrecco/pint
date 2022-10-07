@@ -155,9 +155,9 @@ except ImportError:
 
 # Pandas (Series)
 try:
-    from pandas import Series
+    from pandas import DataFrame, Series
 
-    upcast_types.append(Series)
+    upcast_types += [DataFrame, Series]
 except ImportError:
     pass
 
