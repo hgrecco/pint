@@ -641,7 +641,7 @@ class ParserHelper(UnitsContainer):
         for k in list(ret):
             if k.lower() == "nan":
                 del ret._d[k]
-                ret.scale = math.nan
+                ret.scale = non_int_type(math.nan)
 
         return ret
 
