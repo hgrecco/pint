@@ -15,4 +15,4 @@ from .definitions import ContextDefinition
 from .objects import Context
 from .registry import ContextRegistry
 
-__all__ = [ContextDefinition, Context, ContextRegistry]
+__all__ = ["ContextDefinition", "Context", "ContextRegistry"]

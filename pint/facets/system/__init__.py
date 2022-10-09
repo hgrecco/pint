@@ -14,4 +14,4 @@ from .definitions import SystemDefinition
 from .objects import System
 from .registry import SystemRegistry
 
-__all__ = [SystemDefinition, System, SystemRegistry]
+__all__ = ["SystemDefinition", "System", "SystemRegistry"]
