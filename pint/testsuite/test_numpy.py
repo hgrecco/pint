@@ -912,7 +912,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         q[:] = 1 * self.ureg.m
         helpers.assert_quantity_equal(q, [[1, 1], [1, 1]] * self.ureg.m)
 
-        # check and see that dimensionless num  bers work correctly
+        # check and see that dimensionless numbers work correctly
         q = [0, 1, 2, 3] * self.ureg.dimensionless
         q[0] = 1
         helpers.assert_quantity_equal(q, np.asarray([1, 1, 2, 3]))
@@ -932,6 +932,22 @@ class TestNumpyUnclassified(TestNumpyMethods):
             # Check for no warnings
             assert not w
             assert q.mask[0]
+
+    def test_setitem_mixed_masked(self):
+        masked = np.ma.array(
+            [
+                1,
+                2,
+            ],
+            mask=[True, False],
+        )
+        q = self.Q_(np.ones(shape=(2,)), "m")
+        with pytest.raises(DimensionalityError):
+            q[:] = masked
+
+        masked_q = self.Q_(masked, "mm")
+        q[:] = masked_q
+        helpers.assert_quantity_equal(q, [1.0, 0.002] * self.ureg.m)
 
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
