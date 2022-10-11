@@ -8,43 +8,42 @@ from fractions import Fraction
 import pytest
 
 from pint import DimensionalityError, OffsetUnitCalculusError, UnitRegistry
+from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, helpers
-from pint.unit import UnitsContainer
 
 
-class FakeWrapper:
-    # Used in test_upcast_type_rejection_on_creation
-    def __init__(self, q):
-        self.q = q
-
-
-class NonIntTypeQuantityTestCase(QuantityTestCase):
+# TODO: do not subclass from QuantityTestCase
+class NonIntTypeTestCase(QuantityTestCase):
     def assert_quantity_almost_equal(
         self, first, second, rtol="1e-07", atol="0", msg=None
     ):
 
         if isinstance(first, self.Q_):
-            assert isinstance(first.m, (self.NON_INT_TYPE, int))
+            assert isinstance(first.m, (self.kwargs["non_int_type"], int))
         else:
-            assert isinstance(first, (self.NON_INT_TYPE, int))
+            assert isinstance(first, (self.kwargs["non_int_type"], int))
 
         if isinstance(second, self.Q_):
-            assert isinstance(second.m, (self.NON_INT_TYPE, int))
+            assert isinstance(second.m, (self.kwargs["non_int_type"], int))
         else:
-            assert isinstance(second, (self.NON_INT_TYPE, int))
-        super().assert_quantity_almost_equal(
-            first, second, self.NON_INT_TYPE(rtol), self.NON_INT_TYPE(atol), msg
+            assert isinstance(second, (self.kwargs["non_int_type"], int))
+        helpers.assert_quantity_almost_equal(
+            first,
+            second,
+            self.kwargs["non_int_type"](rtol),
+            self.kwargs["non_int_type"](atol),
+            msg,
         )
 
     def QP_(self, value, units):
         assert isinstance(value, str)
-        return self.Q_(self.NON_INT_TYPE(value), units)
+        return self.Q_(self.kwargs["non_int_type"](value), units)
 
 
-class _TestBasic:
-    def test_quantity_creation(self):
+class _TestBasic(NonIntTypeTestCase):
+    def test_quantity_creation(self, caplog):
 
-        value = self.NON_INT_TYPE("4.2")
+        value = self.kwargs["non_int_type"]("4.2")
 
         for args in (
             (value, "meter"),
@@ -68,11 +67,15 @@ class _TestBasic:
         assert x.magnitude == value
         assert x.units == UnitsContainer()
 
-        with self.capture_log() as buffer:
-            assert value * self.ureg.meter == self.Q_(
-                value, self.NON_INT_TYPE("2") * self.ureg.meter
-            )
-            assert len(buffer) == 1
+        caplog.clear()
+        assert value * self.ureg.meter == self.Q_(
+            value, self.kwargs["non_int_type"]("2") * self.ureg.meter
+        )
+        assert len(caplog.records) == 1
+        assert (
+            caplog.records[0].message
+            == "Creating new PlainQuantity using a non unity PlainQuantity as units."
+        )
 
     def test_quantity_comparison(self):
         x = self.QP_("4.2", "meter")
@@ -108,7 +111,8 @@ class _TestBasic:
     def test_quantity_comparison_convert(self):
         assert self.QP_("1000", "millimeter") == self.QP_("1", "meter")
         assert self.QP_("1000", "millimeter/min") == self.Q_(
-            self.NON_INT_TYPE("1000") / self.NON_INT_TYPE("60"), "millimeter/s"
+            self.kwargs["non_int_type"]("1000") / self.kwargs["non_int_type"]("60"),
+            "millimeter/s",
         )
 
     def test_quantity_hash(self):
@@ -122,44 +126,56 @@ class _TestBasic:
         assert hash(y * z) == hash(1.0)
 
         # Dimensionless equality from a different unit registry
-        ureg2 = UnitRegistry(force_ndarray=self.FORCE_NDARRAY)
-        y2 = ureg2.Quantity(self.NON_INT_TYPE("2"), "second")
-        z2 = ureg2.Quantity(self.NON_INT_TYPE("0.5"), "hertz")
+        ureg2 = UnitRegistry()
+        y2 = ureg2.Quantity(self.kwargs["non_int_type"]("2"), "second")
+        z2 = ureg2.Quantity(self.kwargs["non_int_type"]("0.5"), "hertz")
         assert hash(y * z) == hash(y2 * z2)
 
     def test_to_base_units(self):
         x = self.Q_("1*inch")
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             x.to_base_units(), self.QP_("0.0254", "meter")
         )
         x = self.Q_("1*inch*inch")
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             x.to_base_units(),
             self.Q_(
-                self.NON_INT_TYPE("0.0254") ** self.NON_INT_TYPE("2.0"), "meter*meter"
+                self.kwargs["non_int_type"]("0.0254")
+                ** self.kwargs["non_int_type"]("2.0"),
+                "meter*meter",
             ),
         )
         x = self.Q_("1*inch/minute")
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             x.to_base_units(),
             self.Q_(
-                self.NON_INT_TYPE("0.0254") / self.NON_INT_TYPE("60"), "meter/second"
+                self.kwargs["non_int_type"]("0.0254")
+                / self.kwargs["non_int_type"]("60"),
+                "meter/second",
             ),
         )
 
     def test_convert(self):
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.Q_("2 inch").to("meter"),
-            self.Q_(self.NON_INT_TYPE("2") * self.NON_INT_TYPE("0.0254"), "meter"),
+            self.Q_(
+                self.kwargs["non_int_type"]("2")
+                * self.kwargs["non_int_type"]("0.0254"),
+                "meter",
+            ),
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.Q_("2 meter").to("inch"),
-            self.Q_(self.NON_INT_TYPE("2") / self.NON_INT_TYPE("0.0254"), "inch"),
+            self.Q_(
+                self.kwargs["non_int_type"]("2")
+                / self.kwargs["non_int_type"]("0.0254"),
+                "inch",
+            ),
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.Q_("2 sidereal_year").to("second"), self.QP_("63116297.5325", "second")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.Q_("2.54 centimeter/second").to("inch/second"),
             self.Q_("1 inch/second"),
         )
@@ -173,35 +189,41 @@ class _TestBasic:
         meter = self.ureg.meter
 
         # from quantity
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             meter.from_(x),
-            self.Q_(self.NON_INT_TYPE("2") * self.NON_INT_TYPE("0.0254"), "meter"),
+            self.Q_(
+                self.kwargs["non_int_type"]("2")
+                * self.kwargs["non_int_type"]("0.0254"),
+                "meter",
+            ),
         )
-        helpers.assert_quantity_almost_equal(
-            meter.m_from(x), self.NON_INT_TYPE("2") * self.NON_INT_TYPE("0.0254")
+        self.assert_quantity_almost_equal(
+            meter.m_from(x),
+            self.kwargs["non_int_type"]("2") * self.kwargs["non_int_type"]("0.0254"),
         )
 
         # from unit
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             meter.from_(self.ureg.inch), self.QP_("0.0254", "meter")
         )
-        helpers.assert_quantity_almost_equal(
-            meter.m_from(self.ureg.inch), self.NON_INT_TYPE("0.0254")
+        self.assert_quantity_almost_equal(
+            meter.m_from(self.ureg.inch), self.kwargs["non_int_type"]("0.0254")
         )
 
         # from number
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             meter.from_(2, strict=False), self.QP_("2", "meter")
         )
-        helpers.assert_quantity_almost_equal(
-            meter.m_from(self.NON_INT_TYPE("2"), strict=False), self.NON_INT_TYPE("2")
+        self.assert_quantity_almost_equal(
+            meter.m_from(self.kwargs["non_int_type"]("2"), strict=False),
+            self.kwargs["non_int_type"]("2"),
         )
 
         # from number (strict mode)
         with pytest.raises(ValueError):
-            meter.from_(self.NON_INT_TYPE("2"))
+            meter.from_(self.kwargs["non_int_type"]("2"))
         with pytest.raises(ValueError):
-            meter.m_from(self.NON_INT_TYPE("2"))
+            meter.m_from(self.kwargs["non_int_type"]("2"))
 
     def test_context_attr(self):
         assert self.ureg.meter == self.QP_("1", "meter")
@@ -211,7 +233,7 @@ class _TestBasic:
         assert self.QP_("2", "cm") == self.QP_("2", "centimeter")
 
     def test_dimensionless_units(self):
-        twopi = self.NON_INT_TYPE("2") * self.ureg.pi
+        twopi = self.kwargs["non_int_type"]("2") * self.ureg.pi
         assert (
             round(abs(self.QP_("360", "degree").to("radian").magnitude - twopi), 7) == 0
         )
@@ -229,121 +251,121 @@ class _TestBasic:
         assert 7 // self.QP_("360", "degree") == 1
 
     def test_offset(self):
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("0", "kelvin").to("kelvin"), self.QP_("0", "kelvin")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("0", "degC").to("kelvin"), self.QP_("273.15", "kelvin")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("0", "degF").to("kelvin"),
             self.QP_("255.372222", "kelvin"),
             rtol=0.01,
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "kelvin").to("kelvin"), self.QP_("100", "kelvin")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "degC").to("kelvin"), self.QP_("373.15", "kelvin")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "degF").to("kelvin"),
             self.QP_("310.92777777", "kelvin"),
             rtol=0.01,
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("0", "kelvin").to("degC"), self.QP_("-273.15", "degC")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "kelvin").to("degC"), self.QP_("-173.15", "degC")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("0", "kelvin").to("degF"), self.QP_("-459.67", "degF"), rtol=0.01
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "kelvin").to("degF"), self.QP_("-279.67", "degF"), rtol=0.01
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("32", "degF").to("degC"), self.QP_("0", "degC"), atol=0.01
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "degC").to("degF"), self.QP_("212", "degF"), atol=0.01
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("54", "degF").to("degC"), self.QP_("12.2222", "degC"), atol=0.01
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("12", "degC").to("degF"), self.QP_("53.6", "degF"), atol=0.01
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("12", "kelvin").to("degC"), self.QP_("-261.15", "degC"), atol=0.01
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("12", "degC").to("kelvin"), self.QP_("285.15", "kelvin"), atol=0.01
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("12", "kelvin").to("degR"), self.QP_("21.6", "degR"), atol=0.01
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("12", "degR").to("kelvin"),
             self.QP_("6.66666667", "kelvin"),
             atol=0.01,
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("12", "degC").to("degR"), self.QP_("513.27", "degR"), atol=0.01
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("12", "degR").to("degC"),
             self.QP_("-266.483333", "degC"),
             atol=0.01,
         )
 
     def test_offset_delta(self):
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("0", "delta_degC").to("kelvin"), self.QP_("0", "kelvin")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("0", "delta_degF").to("kelvin"), self.QP_("0", "kelvin"), rtol=0.01
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "kelvin").to("delta_degC"), self.QP_("100", "delta_degC")
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "kelvin").to("delta_degF"),
             self.QP_("180", "delta_degF"),
             rtol=0.01,
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "delta_degF").to("kelvin"),
             self.QP_("55.55555556", "kelvin"),
             rtol=0.01,
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "delta_degC").to("delta_degF"),
             self.QP_("180", "delta_degF"),
             rtol=0.01,
         )
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("100", "delta_degF").to("delta_degC"),
             self.QP_("55.55555556", "delta_degC"),
             rtol=0.01,
         )
 
-        helpers.assert_quantity_almost_equal(
+        self.assert_quantity_almost_equal(
             self.QP_("12.3", "delta_degC").to("delta_degF"),
             self.QP_("22.14", "delta_degF"),
             rtol=0.01,
         )
 
-    def test_pickle(self):
+    def test_pickle(self, subtests):
         for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
             for magnitude, unit in (
                 ("32", ""),
@@ -351,7 +373,7 @@ class _TestBasic:
                 ("32", "m/s"),
                 ("2.4", "m/s"),
             ):
-                with self.subTest(protocol=protocol, magnitude=magnitude, unit=unit):
+                with subtests.test(protocol=protocol, magnitude=magnitude, unit=unit):
                     q1 = self.QP_(magnitude, unit)
                     q2 = pickle.loads(pickle.dumps(q1, protocol))
                     assert q1 == q2
@@ -364,10 +386,7 @@ class _TestBasic:
             iter(x)
 
 
-class _TestQuantityBasicMath:
-
-    FORCE_NDARRAY = False
-
+class _TestQuantityBasicMath(NonIntTypeTestCase):
     def _test_inplace(self, operator, value1, value2, expected_result, unit=None):
         if isinstance(value1, str):
             value1 = self.Q_(value1)
@@ -387,9 +406,9 @@ class _TestQuantityBasicMath:
         id2 = id(value2)
         value1 = operator(value1, value2)
         value2_cpy = copy.copy(value2)
-        helpers.assert_quantity_almost_equal(value1, expected_result)
+        self.assert_quantity_almost_equal(value1, expected_result)
         assert id1 == id(value1)
-        helpers.assert_quantity_almost_equal(value2, value2_cpy)
+        self.assert_quantity_almost_equal(value2, value2_cpy)
         assert id2 == id(value2)
 
     def _test_not_inplace(self, operator, value1, value2, expected_result, unit=None):
@@ -413,9 +432,9 @@ class _TestQuantityBasicMath:
 
         result = operator(value1, value2)
 
-        helpers.assert_quantity_almost_equal(expected_result, result)
-        helpers.assert_quantity_almost_equal(value1, value1_cpy)
-        helpers.assert_quantity_almost_equal(value2, value2_cpy)
+        self.assert_quantity_almost_equal(expected_result, result)
+        self.assert_quantity_almost_equal(value1, value1_cpy)
+        self.assert_quantity_almost_equal(value2, value2_cpy)
         assert id(result) != id1
         assert id(result) != id2
 
@@ -427,37 +446,43 @@ class _TestQuantityBasicMath:
 
         func(op.add, x, x, self.Q_(unit + unit, "centimeter"))
         func(
-            op.add, x, y, self.Q_(unit + self.NON_INT_TYPE("2.54") * unit, "centimeter")
+            op.add,
+            x,
+            y,
+            self.Q_(unit + self.kwargs["non_int_type"]("2.54") * unit, "centimeter"),
         )
         func(
             op.add,
             y,
             x,
-            self.Q_(unit + unit / (self.NON_INT_TYPE("2.54") * unit), "inch"),
+            self.Q_(unit + unit / (self.kwargs["non_int_type"]("2.54") * unit), "inch"),
         )
         func(op.add, a, unit, self.Q_(unit + unit, None))
         with pytest.raises(DimensionalityError):
-            op.add(self.NON_INT_TYPE("10"), x)
+            op.add(self.kwargs["non_int_type"]("10"), x)
         with pytest.raises(DimensionalityError):
-            op.add(x, self.NON_INT_TYPE("10"))
+            op.add(x, self.kwargs["non_int_type"]("10"))
         with pytest.raises(DimensionalityError):
             op.add(x, z)
 
         func(op.sub, x, x, self.Q_(unit - unit, "centimeter"))
         func(
-            op.sub, x, y, self.Q_(unit - self.NON_INT_TYPE("2.54") * unit, "centimeter")
+            op.sub,
+            x,
+            y,
+            self.Q_(unit - self.kwargs["non_int_type"]("2.54") * unit, "centimeter"),
         )
         func(
             op.sub,
             y,
             x,
-            self.Q_(unit - unit / (self.NON_INT_TYPE("2.54") * unit), "inch"),
+            self.Q_(unit - unit / (self.kwargs["non_int_type"]("2.54") * unit), "inch"),
         )
         func(op.sub, a, unit, self.Q_(unit - unit, None))
         with pytest.raises(DimensionalityError):
-            op.sub(self.NON_INT_TYPE("10"), x)
+            op.sub(self.kwargs["non_int_type"]("10"), x)
         with pytest.raises(DimensionalityError):
-            op.sub(x, self.NON_INT_TYPE("10"))
+            op.sub(x, self.kwargs["non_int_type"]("10"))
         with pytest.raises(DimensionalityError):
             op.sub(x, z)
 
@@ -472,45 +497,86 @@ class _TestQuantityBasicMath:
             op.iadd,
             x,
             y,
-            self.Q_(unit + self.NON_INT_TYPE("2.54") * unit, "centimeter"),
+            self.Q_(unit + self.kwargs["non_int_type"]("2.54") * unit, "centimeter"),
         )
-        func(op.iadd, y, x, self.Q_(unit + unit / self.NON_INT_TYPE("2.54"), "inch"))
+        func(
+            op.iadd,
+            y,
+            x,
+            self.Q_(unit + unit / self.kwargs["non_int_type"]("2.54"), "inch"),
+        )
         func(op.iadd, a, unit, self.Q_(unit + unit, None))
         with pytest.raises(DimensionalityError):
-            op.iadd(self.NON_INT_TYPE("10"), x)
+            op.iadd(self.kwargs["non_int_type"]("10"), x)
         with pytest.raises(DimensionalityError):
-            op.iadd(x, self.NON_INT_TYPE("10"))
+            op.iadd(x, self.kwargs["non_int_type"]("10"))
         with pytest.raises(DimensionalityError):
             op.iadd(x, z)
 
         func(op.isub, x, x, self.Q_(unit - unit, "centimeter"))
-        func(op.isub, x, y, self.Q_(unit - self.NON_INT_TYPE("2.54"), "centimeter"))
-        func(op.isub, y, x, self.Q_(unit - unit / self.NON_INT_TYPE("2.54"), "inch"))
+        func(
+            op.isub,
+            x,
+            y,
+            self.Q_(unit - self.kwargs["non_int_type"]("2.54"), "centimeter"),
+        )
+        func(
+            op.isub,
+            y,
+            x,
+            self.Q_(unit - unit / self.kwargs["non_int_type"]("2.54"), "inch"),
+        )
         func(op.isub, a, unit, self.Q_(unit - unit, None))
         with pytest.raises(DimensionalityError):
-            op.sub(self.NON_INT_TYPE("10"), x)
+            op.sub(self.kwargs["non_int_type"]("10"), x)
         with pytest.raises(DimensionalityError):
-            op.sub(x, self.NON_INT_TYPE("10"))
+            op.sub(x, self.kwargs["non_int_type"]("10"))
         with pytest.raises(DimensionalityError):
             op.sub(x, z)
 
     def _test_quantity_mul_div(self, unit, func):
-        func(op.mul, unit * self.NON_INT_TYPE("10"), "4.2*meter", "42*meter", unit)
-        func(op.mul, "4.2*meter", unit * self.NON_INT_TYPE("10"), "42*meter", unit)
-        func(op.mul, "4.2*meter", "10*inch", "42*meter*inch", unit)
-        func(op.truediv, unit * self.NON_INT_TYPE("42"), "4.2*meter", "10/meter", unit)
         func(
-            op.truediv, "4.2*meter", unit * self.NON_INT_TYPE("10"), "0.42*meter", unit
+            op.mul,
+            unit * self.kwargs["non_int_type"]("10"),
+            "4.2*meter",
+            "42*meter",
+            unit,
+        )
+        func(
+            op.mul,
+            "4.2*meter",
+            unit * self.kwargs["non_int_type"]("10"),
+            "42*meter",
+            unit,
+        )
+        func(op.mul, "4.2*meter", "10*inch", "42*meter*inch", unit)
+        func(
+            op.truediv,
+            unit * self.kwargs["non_int_type"]("42"),
+            "4.2*meter",
+            "10/meter",
+            unit,
+        )
+        func(
+            op.truediv,
+            "4.2*meter",
+            unit * self.kwargs["non_int_type"]("10"),
+            "0.42*meter",
+            unit,
         )
         func(op.truediv, "4.2*meter", "10*inch", "0.42*meter/inch", unit)
 
     def _test_quantity_imul_idiv(self, unit, func):
         # func(op.imul, 10.0, '4.2*meter', '42*meter')
-        func(op.imul, "4.2*meter", self.NON_INT_TYPE("10"), "42*meter", unit)
+        func(op.imul, "4.2*meter", self.kwargs["non_int_type"]("10"), "42*meter", unit)
         func(op.imul, "4.2*meter", "10*inch", "42*meter*inch", unit)
         # func(op.truediv, 42, '4.2*meter', '10/meter')
         func(
-            op.itruediv, "4.2*meter", unit * self.NON_INT_TYPE("10"), "0.42*meter", unit
+            op.itruediv,
+            "4.2*meter",
+            unit * self.kwargs["non_int_type"]("10"),
+            "0.42*meter",
+            unit,
         )
         func(op.itruediv, "4.2*meter", "10*inch", "0.42*meter/inch", unit)
 
@@ -520,23 +586,25 @@ class _TestQuantityBasicMath:
         with pytest.raises(DimensionalityError):
             op.floordiv(a, b)
         with pytest.raises(DimensionalityError):
-            op.floordiv(self.NON_INT_TYPE("3"), b)
+            op.floordiv(self.kwargs["non_int_type"]("3"), b)
         with pytest.raises(DimensionalityError):
-            op.floordiv(a, self.NON_INT_TYPE("3"))
+            op.floordiv(a, self.kwargs["non_int_type"]("3"))
         with pytest.raises(DimensionalityError):
             op.ifloordiv(a, b)
         with pytest.raises(DimensionalityError):
-            op.ifloordiv(self.NON_INT_TYPE("3"), b)
+            op.ifloordiv(self.kwargs["non_int_type"]("3"), b)
         with pytest.raises(DimensionalityError):
-            op.ifloordiv(a, self.NON_INT_TYPE("3"))
+            op.ifloordiv(a, self.kwargs["non_int_type"]("3"))
         func(
             op.floordiv,
-            unit * self.NON_INT_TYPE("10"),
+            unit * self.kwargs["non_int_type"]("10"),
             "4.2*meter/meter",
-            self.NON_INT_TYPE("2"),
+            self.kwargs["non_int_type"]("2"),
             unit,
         )
-        func(op.floordiv, "10*meter", "4.2*inch", self.NON_INT_TYPE("93"), unit)
+        func(
+            op.floordiv, "10*meter", "4.2*inch", self.kwargs["non_int_type"]("93"), unit
+        )
 
     def _test_quantity_mod(self, unit, func):
         a = self.Q_("10*meter")
@@ -555,21 +623,27 @@ class _TestQuantityBasicMath:
             op.imod(a, 3)
         func(
             op.mod,
-            unit * self.NON_INT_TYPE("10"),
+            unit * self.kwargs["non_int_type"]("10"),
             "4.2*meter/meter",
-            self.NON_INT_TYPE("1.6"),
+            self.kwargs["non_int_type"]("1.6"),
             unit,
         )
 
     def _test_quantity_ifloordiv(self, unit, func):
         func(
             op.ifloordiv,
-            self.NON_INT_TYPE("10"),
+            self.kwargs["non_int_type"]("10"),
             "4.2*meter/meter",
-            self.NON_INT_TYPE("2"),
+            self.kwargs["non_int_type"]("2"),
             unit,
         )
-        func(op.ifloordiv, "10*meter", "4.2*inch", self.NON_INT_TYPE("93"), unit)
+        func(
+            op.ifloordiv,
+            "10*meter",
+            "4.2*inch",
+            self.kwargs["non_int_type"]("93"),
+            unit,
+        )
 
     def _test_quantity_divmod_one(self, a, b):
         if isinstance(a, str):
@@ -639,7 +713,7 @@ class _TestQuantityBasicMath:
 
     def test_quantity_abs_round(self):
 
-        value = self.NON_INT_TYPE("4.2")
+        value = self.kwargs["non_int_type"]("4.2")
         x = self.Q_(-value, "meter")
         y = self.Q_(value, "meter")
 
@@ -664,12 +738,13 @@ class _TestQuantityBasicMath:
                 fun(z)
 
     def test_not_inplace(self):
-        self._test_numeric(self.NON_INT_TYPE("1.0"), self._test_not_inplace)
+        self._test_numeric(self.kwargs["non_int_type"]("1.0"), self._test_not_inplace)
 
 
-class _TestOffsetUnitMath:
+class _TestOffsetUnitMath(NonIntTypeTestCase):
     @classmethod
     def setup_class(cls):
+        super().setup_class()
         cls.ureg.autoconvert_offset_to_baseunit = False
         cls.ureg.default_as_delta = True
 
@@ -713,20 +788,22 @@ class _TestOffsetUnitMath:
         ((("100", "delta_degF"), ("10", "delta_degF")), ("110", "delta_degF")),
     ]
 
-    @pytest.mark.parametrize(("input", "expected_output"), additions)
-    def test_addition(self, input_tuple, expected):
+    @pytest.mark.parametrize(("input_tuple", "expected_output"), additions)
+    def test_addition(self, input_tuple, expected_output):
         self.ureg.autoconvert_offset_to_baseunit = False
         qin1, qin2 = input_tuple
         q1, q2 = self.QP_(*qin1), self.QP_(*qin2)
         # update input tuple with new values to have correct values on failure
         input_tuple = q1, q2
-        if expected == "error":
+        if expected_output == "error":
             with pytest.raises(OffsetUnitCalculusError):
                 op.add(q1, q2)
         else:
-            expected = self.QP_(*expected)
-            assert op.add(q1, q2).units == expected.units
-            helpers.assert_quantity_almost_equal(op.add(q1, q2), expected, atol="0.01")
+            expected_output = self.QP_(*expected_output)
+            assert op.add(q1, q2).units == expected_output.units
+            self.assert_quantity_almost_equal(
+                op.add(q1, q2), expected_output, atol="0.01"
+            )
 
     subtractions = [
         ((("100", "kelvin"), ("10", "kelvin")), ("90", "kelvin")),
@@ -767,19 +844,21 @@ class _TestOffsetUnitMath:
         ((("100", "delta_degF"), ("10", "delta_degF")), ("90", "delta_degF")),
     ]
 
-    @pytest.mark.parametrize(("input", "expected_output"), subtractions)
-    def test_subtraction(self, input_tuple, expected):
+    @pytest.mark.parametrize(("input_tuple", "expected_output"), subtractions)
+    def test_subtraction(self, input_tuple, expected_output):
         self.ureg.autoconvert_offset_to_baseunit = False
         qin1, qin2 = input_tuple
         q1, q2 = self.QP_(*qin1), self.QP_(*qin2)
         input_tuple = q1, q2
-        if expected == "error":
+        if expected_output == "error":
             with pytest.raises(OffsetUnitCalculusError):
                 op.sub(q1, q2)
         else:
-            expected = self.QP_(*expected)
-            assert op.sub(q1, q2).units == expected.units
-            helpers.assert_quantity_almost_equal(op.sub(q1, q2), expected, atol=0.01)
+            expected_output = self.QP_(*expected_output)
+            assert op.sub(q1, q2).units == expected_output.units
+            self.assert_quantity_almost_equal(
+                op.sub(q1, q2), expected_output, atol=0.01
+            )
 
     multiplications = [
         ((("100", "kelvin"), ("10", "kelvin")), ("1000", "kelvin**2")),
@@ -826,19 +905,21 @@ class _TestOffsetUnitMath:
         ((("100", "delta_degF"), ("10", "delta_degF")), ("1000", "delta_degF**2")),
     ]
 
-    @pytest.mark.parametrize(("input", "expected_output"), multiplications)
-    def test_multiplication(self, input_tuple, expected):
+    @pytest.mark.parametrize(("input_tuple", "expected_output"), multiplications)
+    def test_multiplication(self, input_tuple, expected_output):
         self.ureg.autoconvert_offset_to_baseunit = False
         qin1, qin2 = input_tuple
         q1, q2 = self.QP_(*qin1), self.QP_(*qin2)
         input_tuple = q1, q2
-        if expected == "error":
+        if expected_output == "error":
             with pytest.raises(OffsetUnitCalculusError):
                 op.mul(q1, q2)
         else:
-            expected = self.QP_(*expected)
-            assert op.mul(q1, q2).units == expected.units
-            helpers.assert_quantity_almost_equal(op.mul(q1, q2), expected, atol=0.01)
+            expected_output = self.QP_(*expected_output)
+            assert op.mul(q1, q2).units == expected_output.units
+            self.assert_quantity_almost_equal(
+                op.mul(q1, q2), expected_output, atol=0.01
+            )
 
     divisions = [
         ((("100", "kelvin"), ("10", "kelvin")), ("10", "")),
@@ -885,20 +966,20 @@ class _TestOffsetUnitMath:
         ((("100", "delta_degF"), ("10", "delta_degF")), ("10", "")),
     ]
 
-    @pytest.mark.parametrize(("input", "expected_output"), divisions)
-    def test_truedivision(self, input_tuple, expected):
+    @pytest.mark.parametrize(("input_tuple", "expected_output"), divisions)
+    def test_truedivision(self, input_tuple, expected_output):
         self.ureg.autoconvert_offset_to_baseunit = False
         qin1, qin2 = input_tuple
         q1, q2 = self.QP_(*qin1), self.QP_(*qin2)
         input_tuple = q1, q2
-        if expected == "error":
+        if expected_output == "error":
             with pytest.raises(OffsetUnitCalculusError):
                 op.truediv(q1, q2)
         else:
-            expected = self.QP_(*expected)
-            assert op.truediv(q1, q2).units == expected.units
-            helpers.assert_quantity_almost_equal(
-                op.truediv(q1, q2), expected, atol=0.01
+            expected_output = self.QP_(*expected_output)
+            assert op.truediv(q1, q2).units == expected_output.units
+            self.assert_quantity_almost_equal(
+                op.truediv(q1, q2), expected_output, atol=0.01
             )
 
     multiplications_with_autoconvert_to_baseunit = [
@@ -925,20 +1006,22 @@ class _TestOffsetUnitMath:
     ]
 
     @pytest.mark.parametrize(
-        ("input", "expected_output"), multiplications_with_autoconvert_to_baseunit
+        ("input_tuple", "expected_output"), multiplications_with_autoconvert_to_baseunit
     )
-    def test_multiplication_with_autoconvert(self, input_tuple, expected):
+    def test_multiplication_with_autoconvert(self, input_tuple, expected_output):
         self.ureg.autoconvert_offset_to_baseunit = True
         qin1, qin2 = input_tuple
         q1, q2 = self.QP_(*qin1), self.QP_(*qin2)
         input_tuple = q1, q2
-        if expected == "error":
+        if expected_output == "error":
             with pytest.raises(OffsetUnitCalculusError):
                 op.mul(q1, q2)
         else:
-            expected = self.QP_(*expected)
-            assert op.mul(q1, q2).units == expected.units
-            helpers.assert_quantity_almost_equal(op.mul(q1, q2), expected, atol=0.01)
+            expected_output = self.QP_(*expected_output)
+            assert op.mul(q1, q2).units == expected_output.units
+            self.assert_quantity_almost_equal(
+                op.mul(q1, q2), expected_output, atol=0.01
+            )
 
     multiplications_with_scalar = [
         ((("10", "kelvin"), "2"), ("20.0", "kelvin")),
@@ -950,26 +1033,28 @@ class _TestOffsetUnitMath:
         ((("10", "degC**-2"), "2"), "error"),
     ]
 
-    @pytest.mark.parametrize(("input", "expected_output"), multiplications_with_scalar)
-    def test_multiplication_with_scalar(self, input_tuple, expected):
+    @pytest.mark.parametrize(
+        ("input_tuple", "expected_output"), multiplications_with_scalar
+    )
+    def test_multiplication_with_scalar(self, input_tuple, expected_output):
         self.ureg.default_as_delta = False
         in1, in2 = input_tuple
         if type(in1) is tuple:
-            in1, in2 = self.QP_(*in1), self.NON_INT_TYPE(in2)
+            in1, in2 = self.QP_(*in1), self.kwargs["non_int_type"](in2)
         else:
             in1, in2 = in1, self.QP_(*in2)
         input_tuple = in1, in2  # update input_tuple for better tracebacks
-        if expected == "error":
+        if expected_output == "error":
             with pytest.raises(OffsetUnitCalculusError):
                 op.mul(in1, in2)
         else:
-            expected = self.QP_(*expected)
-            assert op.mul(in1, in2).units == expected.units
-            helpers.assert_quantity_almost_equal(
-                op.mul(in1, in2), expected, atol="0.01"
+            expected_output = self.QP_(*expected_output)
+            assert op.mul(in1, in2).units == expected_output.units
+            self.assert_quantity_almost_equal(
+                op.mul(in1, in2), expected_output, atol="0.01"
             )
 
-    divisions_with_scalar = [  # without / with autoconvert to base unit
+    divisions_with_scalar = [  # without / with autoconvert to plain unit
         ((("10", "kelvin"), "2"), [("5.0", "kelvin"), ("5.0", "kelvin")]),
         ((("10", "kelvin**2"), "2"), [("5.0", "kelvin**2"), ("5.0", "kelvin**2")]),
         ((("10", "degC"), "2"), ["error", "error"]),
@@ -981,25 +1066,25 @@ class _TestOffsetUnitMath:
         (("2", ("10", "degC**-2")), ["error", "error"]),
     ]
 
-    @pytest.mark.parametrize(("input", "expected_output"), divisions_with_scalar)
-    def test_division_with_scalar(self, input_tuple, expected):
+    @pytest.mark.parametrize(("input_tuple", "expected_output"), divisions_with_scalar)
+    def test_division_with_scalar(self, input_tuple, expected_output):
         self.ureg.default_as_delta = False
         in1, in2 = input_tuple
         if type(in1) is tuple:
-            in1, in2 = self.QP_(*in1), self.NON_INT_TYPE(in2)
+            in1, in2 = self.QP_(*in1), self.kwargs["non_int_type"](in2)
         else:
-            in1, in2 = self.NON_INT_TYPE(in1), self.QP_(*in2)
+            in1, in2 = self.kwargs["non_int_type"](in1), self.QP_(*in2)
         input_tuple = in1, in2  # update input_tuple for better tracebacks
-        expected_copy = expected[:]
+        expected_copy = expected_output[:]
         for i, mode in enumerate([False, True]):
             self.ureg.autoconvert_offset_to_baseunit = mode
             if expected_copy[i] == "error":
                 with pytest.raises(OffsetUnitCalculusError):
                     op.truediv(in1, in2)
             else:
-                expected = self.QP_(*expected_copy[i])
-                assert op.truediv(in1, in2).units == expected.units
-                helpers.assert_quantity_almost_equal(op.truediv(in1, in2), expected)
+                expected_output = self.QP_(*expected_copy[i])
+                assert op.truediv(in1, in2).units == expected_output.units
+                self.assert_quantity_almost_equal(op.truediv(in1, in2), expected_output)
 
     exponentiation = [  # results without / with autoconvert
         ((("10", "degC"), "1"), [("10", "degC"), ("10", "degC")]),
@@ -1023,18 +1108,18 @@ class _TestOffsetUnitMath:
         # ),
     ]
 
-    @pytest.mark.parametrize(("input", "expected_output"), exponentiation)
-    def test_exponentiation(self, input_tuple, expected):
+    @pytest.mark.parametrize(("input_tuple", "expected_output"), exponentiation)
+    def test_exponentiation(self, input_tuple, expected_output):
         self.ureg.default_as_delta = False
         in1, in2 = input_tuple
         if type(in1) is tuple and type(in2) is tuple:
             in1, in2 = self.QP_(*in1), self.QP_(*in2)
         elif not type(in1) is tuple and type(in2) is tuple:
-            in1, in2 = self.NON_INT_TYPE(in1), self.QP_(*in2)
+            in1, in2 = self.kwargs["non_int_type"](in1), self.QP_(*in2)
         else:
-            in1, in2 = self.QP_(*in1), self.NON_INT_TYPE(in2)
+            in1, in2 = self.QP_(*in1), self.kwargs["non_int_type"](in2)
         input_tuple = in1, in2
-        expected_copy = expected[:]
+        expected_copy = expected_output[:]
         for i, mode in enumerate([False, True]):
             self.ureg.autoconvert_offset_to_baseunit = mode
             if expected_copy[i] == "error":
@@ -1042,65 +1127,53 @@ class _TestOffsetUnitMath:
                     op.pow(in1, in2)
             else:
                 if type(expected_copy[i]) is tuple:
-                    expected = self.QP_(*expected_copy[i])
-                    assert op.pow(in1, in2).units == expected.units
+                    expected_output = self.QP_(*expected_copy[i])
+                    assert op.pow(in1, in2).units == expected_output.units
                 else:
-                    expected = expected_copy[i]
-                helpers.assert_quantity_almost_equal(op.pow(in1, in2), expected)
+                    expected_output = expected_copy[i]
+                self.assert_quantity_almost_equal(op.pow(in1, in2), expected_output)
 
 
-class NonIntTypeQuantityTestQuantityFloat(_TestBasic, NonIntTypeQuantityTestCase):
-
-    kwargs = dict(non_int_type=float)
-
-
-class NonIntTypeQuantityTestQuantityBasicMathFloat(
-    _TestQuantityBasicMath, NonIntTypeQuantityTestCase
-):
+class TestNonIntTypeQuantityFloat(_TestBasic):
 
     kwargs = dict(non_int_type=float)
 
 
-class NonIntTypeQuantityTestOffsetUnitMathFloat(
-    _TestOffsetUnitMath, NonIntTypeQuantityTestCase
-):
+class TestNonIntTypeQuantityBasicMathFloat(_TestQuantityBasicMath):
 
     kwargs = dict(non_int_type=float)
 
 
-class NonIntTypeQuantityTestQuantityDecimal(_TestBasic, NonIntTypeQuantityTestCase):
+class TestNonIntTypeOffsetUnitMathFloat(_TestOffsetUnitMath):
+
+    kwargs = dict(non_int_type=float)
+
+
+class TestNonIntTypeQuantityDecimal(_TestBasic):
 
     kwargs = dict(non_int_type=Decimal)
 
 
-class NonIntTypeQuantityTestQuantityBasicMathDecimal(
-    _TestQuantityBasicMath, NonIntTypeQuantityTestCase
-):
+class TestNonIntTypeQuantityBasicMathDecimal(_TestQuantityBasicMath):
 
     kwargs = dict(non_int_type=Decimal)
 
 
-class NonIntTypeQuantityTestOffsetUnitMathDecimal(
-    _TestOffsetUnitMath, NonIntTypeQuantityTestCase
-):
+class TestNonIntTypeOffsetUnitMathDecimal(_TestOffsetUnitMath):
 
     kwargs = dict(non_int_type=Decimal)
 
 
-class NonIntTypeQuantityTestQuantityFraction(_TestBasic, NonIntTypeQuantityTestCase):
+class TestNonIntTypeQuantityFraction(_TestBasic):
 
     kwargs = dict(non_int_type=Fraction)
 
 
-class NonIntTypeQuantityTestQuantityBasicMathFraction(
-    _TestQuantityBasicMath, NonIntTypeQuantityTestCase
-):
+class TestNonIntTypeQuantityBasicMathFraction(_TestQuantityBasicMath):
 
     kwargs = dict(non_int_type=Fraction)
 
 
-class NonIntTypeQuantityTestOffsetUnitMathFraction(
-    _TestOffsetUnitMath, NonIntTypeQuantityTestCase
-):
+class TestNonIntTypeOffsetUnitMathFraction(_TestOffsetUnitMath):
 
     kwargs = dict(non_int_type=Fraction)

@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 import math
 import operator
@@ -20,7 +21,7 @@ from functools import lru_cache, partial
 from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
-from typing import TYPE_CHECKING, ClassVar, Optional, Union
+from typing import TYPE_CHECKING, ClassVar, Optional, Type, Union
 
 from .compat import NUMERIC_TYPES, tokenizer
 from .errors import DefinitionSyntaxError
@@ -28,10 +29,9 @@ from .formatting import format_unit
 from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
-    from ._typing import UnitLike
-    from .quantity import Quantity
-    from .registry import BaseRegistry
+    from pint import Quantity, UnitRegistry
 
+    from ._typing import UnitLike
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -423,10 +423,11 @@ class UnitsContainer(Mapping):
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
     def __getstate__(self):
-        return self._d, self._hash, self._one, self._non_int_type
+        return self._d, self._one, self._non_int_type
 
     def __setstate__(self, state):
-        self._d, self._hash, self._one, self._non_int_type = state
+        self._d, self._one, self._non_int_type = state
+        self._hash = None
 
     def __eq__(self, other) -> bool:
         if isinstance(other, UnitsContainer):
@@ -519,7 +520,7 @@ class UnitsContainer(Mapping):
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
 
-        return self ** -1
+        return self**-1
 
 
 class ParserHelper(UnitsContainer):
@@ -625,10 +626,10 @@ class ParserHelper(UnitsContainer):
         )
 
         if isinstance(ret, Number):
-            return ParserHelper(ret, non_int_type=non_int_type)
+            return cls(ret, non_int_type=non_int_type)
 
         if reps:
-            ret = ParserHelper(
+            ret = cls(
                 ret.scale,
                 {
                     key.replace("__obra__", "[").replace("__cbra__", "]"): value
@@ -719,7 +720,7 @@ class ParserHelper(UnitsContainer):
         d = self._d.copy()
         for key in self._d:
             d[key] *= other
-        return self.__class__(self.scale ** other, d, non_int_type=self._non_int_type)
+        return self.__class__(self.scale**other, d, non_int_type=self._non_int_type)
 
     def __truediv__(self, other):
         if isinstance(other, str):
@@ -808,7 +809,7 @@ class SharedRegistryObject:
 
     """
 
-    _REGISTRY: ClassVar[BaseRegistry]
+    _REGISTRY: ClassVar[UnitRegistry]
     _units: UnitsContainer
 
     def __new__(cls, *args, **kwargs):
@@ -874,7 +875,7 @@ class PrettyIPython:
 
 
 def to_units_container(
-    unit_like: Union[UnitLike, Quantity], registry: Optional[BaseRegistry] = None
+    unit_like: Union[UnitLike, Quantity], registry: Optional[UnitRegistry] = None
 ) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 
@@ -906,29 +907,50 @@ def to_units_container(
             return UnitsContainer(unit_like)
 
 
-def infer_base_unit(q):
+def infer_base_unit(
+    unit_like: Union[UnitLike, Quantity], registry: Optional[UnitRegistry] = None
+) -> UnitsContainer:
     """
+    Given a Quantity or UnitLike, give the UnitsContainer for it's plain units.
 
     Parameters
     ----------
-    q :
+    unit_like : Union[UnitLike, Quantity]
+        Quantity or Unit to infer the plain units from.
 
+    registry: Optional[UnitRegistry]
+        If provided, uses the registry's UnitsContainer and parse_unit_name.  If None,
+        uses the registry attached to unit_like.
 
     Returns
     -------
-    type
+    UnitsContainer
 
+    Raises
+    ------
+    ValueError
+        The unit_like did not reference a registry, and no registry was provided.
 
     """
     d = udict()
-    for unit_name, power in q._units.items():
-        candidates = q._REGISTRY.parse_unit_name(unit_name)
+
+    original_units = to_units_container(unit_like, registry)
+
+    if registry is None and hasattr(unit_like, "_REGISTRY"):
+        registry = unit_like._REGISTRY
+    if registry is None:
+        raise ValueError("No registry provided.")
+
+    for unit_name, power in original_units.items():
+        candidates = registry.parse_unit_name(unit_name)
         assert len(candidates) == 1
         _, base_unit, _ = candidates[0]
         d[base_unit] += power
 
     # remove values that resulted in a power of 0
-    return UnitsContainer({k: v for k, v in d.items() if v != 0})
+    nonzero_dict = {k: v for k, v in d.items() if v != 0}
+
+    return registry.UnitsContainer(nonzero_dict)
 
 
 def getattr_maybe_raise(self, item):
@@ -971,7 +993,7 @@ class SourceIterator:
 
     """
 
-    def __new__(cls, sequence):
+    def __new__(cls, sequence, filename=None, is_resource=False):
         if isinstance(sequence, SourceIterator):
             return sequence
 
@@ -980,6 +1002,8 @@ class SourceIterator:
         if sequence is not None:
             obj.internal = enumerate(sequence, 1)
             obj.last = (None, None)
+            obj.filename = filename or getattr(sequence, "name", None)
+            obj.is_resource = is_resource
 
         return obj
 
@@ -1069,3 +1093,31 @@ def sized(y) -> bool:
     except TypeError:
         return False
     return True
+
+
+def build_dependent_class(registry_class, class_name: str, attribute_name: str) -> Type:
+    """Creates a class specifically for the given registry that
+    subclass all the classes named by the registry bases in a
+    specific attribute
+
+    1. List the 'attribute_name' attribute for each of the bases of the registry class.
+    2. Use this list as bases for the new class
+    3. Add the provided registry as the class registry.
+
+    """
+    bases = (
+        getattr(base, attribute_name)
+        for base in inspect.getmro(registry_class)
+        if attribute_name in base.__dict__
+    )
+    bases = dict.fromkeys(bases, None)
+    newcls = type(class_name, tuple(bases.keys()), dict())
+    return newcls
+
+
+def create_class_with_registry(registry, base_class) -> Type:
+    """Create new class inheriting from base_class and
+    filling _REGISTRY class attribute with an actual instanced registry.
+    """
+
+    return type(base_class.__name__, tuple((base_class,)), dict(_REGISTRY=registry))

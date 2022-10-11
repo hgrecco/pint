@@ -2,6 +2,8 @@ import doctest
 import math
 import os
 import unittest
+import warnings
+from contextlib import contextmanager
 
 from pint import UnitRegistry
 from pint.testsuite.helpers import PintOutputChecker
@@ -21,6 +23,14 @@ class QuantityTestCase:
         cls.ureg = None
         cls.Q_ = None
         cls.U_ = None
+
+
+@contextmanager
+def assert_no_warnings():
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+
+        yield
 
 
 def testsuite():

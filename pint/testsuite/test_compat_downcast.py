@@ -7,13 +7,37 @@ np = pytest.importorskip("numpy", reason="NumPy is not available")
 sparse = pytest.importorskip("sparse", reason="sparse is not available")
 da = pytest.importorskip("dask.array", reason="Dask is not available")
 
-# Set up unit registry and sample
-ureg = UnitRegistry(force_ndarray_like=True)
-q_base = (np.arange(25).reshape(5, 5).T + 1) * ureg.kg
+
+def WR(func):
+    """Function to wrap another containing 1 argument.
+    Used to parametrize tests in which some cases depend
+    on the registry while avoiding to create it at the module level
+    """
+    return lambda ureg, x: func(x)
+
+
+def WR2(func):
+    """Function to wrap another containing 2 argument.
+    Used to parametrize tests in which some cases depend
+    on the registry while avoiding to create it at the module level
+    """
+    return lambda ureg, x, y: func(x, y)
+
+
+@pytest.fixture(scope="module")
+def local_registry():
+    # Set up unit registry and sample
+    return UnitRegistry(force_ndarray_like=True)
+
+
+@pytest.fixture(scope="module")
+def q_base(local_registry):
+    # Set up unit registry and sample
+    return (np.arange(25).reshape(5, 5).T + 1) * local_registry.kg
 
 
 # Define identity function for use in tests
-def identity(x):
+def identity(ureg, x):
     return x
 
 
@@ -28,7 +52,7 @@ def array(request):
     elif request.param == "masked_array":
         # Create sample masked array as an upper triangular matrix.
         return np.ma.masked_array(
-            np.arange(25, dtype=np.float).reshape((5, 5)),
+            np.arange(25, dtype=float).reshape((5, 5)),
             mask=np.logical_not(np.triu(np.ones((5, 5)))),
         )
     elif request.param == "dask_array":
@@ -40,52 +64,77 @@ def array(request):
     [
         pytest.param(identity, identity, identity, id="identity"),
         pytest.param(
-            lambda x: x + 1 * ureg.m, lambda x: x + 1, identity, id="addition"
+            lambda ureg, x: x + 1 * ureg.m,
+            lambda ureg, x: x + 1,
+            identity,
+            id="addition",
         ),
         pytest.param(
-            lambda x: x - 20 * ureg.cm, lambda x: x - 0.2, identity, id="subtraction"
+            lambda ureg, x: x - 20 * ureg.cm,
+            lambda ureg, x: x - 0.2,
+            identity,
+            id="subtraction",
         ),
         pytest.param(
-            lambda x: x * (2 * ureg.s),
-            lambda x: 2 * x,
-            lambda u: u * ureg.s,
+            lambda ureg, x: x * (2 * ureg.s),
+            lambda ureg, x: 2 * x,
+            lambda ureg, u: u * ureg.s,
             id="multiplication",
         ),
         pytest.param(
-            lambda x: x / (1 * ureg.s), identity, lambda u: u / ureg.s, id="division"
+            lambda ureg, x: x / (1 * ureg.s),
+            identity,
+            lambda ureg, u: u / ureg.s,
+            id="division",
         ),
-        pytest.param(lambda x: x ** 2, lambda x: x ** 2, lambda u: u ** 2, id="square"),
-        pytest.param(lambda x: x.T, lambda x: x.T, identity, id="transpose"),
-        pytest.param(np.mean, np.mean, identity, id="mean ufunc"),
-        pytest.param(np.sum, np.sum, identity, id="sum ufunc"),
-        pytest.param(np.sqrt, np.sqrt, lambda u: u ** 0.5, id="sqrt ufunc"),
         pytest.param(
-            lambda x: np.reshape(x, (25,)),
-            lambda x: np.reshape(x, (25,)),
+            WR(lambda x: x**2),
+            WR(lambda x: x**2),
+            WR(lambda u: u**2),
+            id="square",
+        ),
+        pytest.param(WR(lambda x: x.T), WR(lambda x: x.T), identity, id="transpose"),
+        pytest.param(WR(np.mean), WR(np.mean), identity, id="mean ufunc"),
+        pytest.param(WR(np.sum), WR(np.sum), identity, id="sum ufunc"),
+        pytest.param(WR(np.sqrt), WR(np.sqrt), WR(lambda u: u**0.5), id="sqrt ufunc"),
+        pytest.param(
+            WR(lambda x: np.reshape(x, (25,))),
+            WR(lambda x: np.reshape(x, (25,))),
             identity,
             id="reshape function",
         ),
-        pytest.param(np.amax, np.amax, identity, id="amax function"),
+        pytest.param(WR(np.amax), WR(np.amax), identity, id="amax function"),
     ],
 )
-def test_univariate_op_consistency(op, magnitude_op, unit_op, array):
-    q = ureg.Quantity(array, "meter")
-    res = op(q)
-    assert np.all(res.magnitude == magnitude_op(array))  # Magnitude check
-    assert res.units == unit_op(q.units)  # Unit check
+def test_univariate_op_consistency(
+    local_registry, q_base, op, magnitude_op, unit_op, array
+):
+
+    q = local_registry.Quantity(array, "meter")
+    res = op(local_registry, q)
+    assert np.all(
+        res.magnitude == magnitude_op(local_registry, array)
+    )  # Magnitude check
+    assert res.units == unit_op(local_registry, q.units)  # Unit check
     assert q.magnitude is array  # Immutability check
 
 
 @pytest.mark.parametrize(
     "op, unit",
     [
-        pytest.param(lambda x, y: x * y, ureg("kg m"), id="multiplication"),
-        pytest.param(lambda x, y: x / y, ureg("m / kg"), id="division"),
-        pytest.param(np.multiply, ureg("kg m"), id="multiply ufunc"),
+        pytest.param(
+            lambda x, y: x * y, lambda ureg: ureg("kg m"), id="multiplication"
+        ),
+        pytest.param(lambda x, y: x / y, lambda ureg: ureg("m / kg"), id="division"),
+        pytest.param(np.multiply, lambda ureg: ureg("kg m"), id="multiply ufunc"),
     ],
 )
-def test_bivariate_op_consistency(op, unit, array):
-    q = ureg.Quantity(array, "meter")
+def test_bivariate_op_consistency(local_registry, q_base, op, unit, array):
+
+    # This is to avoid having a ureg built at the module level.
+    unit = unit(local_registry)
+
+    q = local_registry.Quantity(array, "meter")
     res = op(q, q_base)
     assert np.all(res.magnitude == op(array, q_base.magnitude))  # Magnitude check
     assert res.units == unit  # Unit check
@@ -96,16 +145,24 @@ def test_bivariate_op_consistency(op, unit, array):
     "op",
     [
         pytest.param(
-            lambda a, u: a * u,
+            WR2(lambda a, u: a * u),
             id="array-first",
             marks=pytest.mark.xfail(reason="upstream issue numpy/numpy#15200"),
         ),
-        pytest.param(lambda a, u: u * a, id="unit-first"),
+        pytest.param(WR2(lambda a, u: u * a), id="unit-first"),
     ],
 )
 @pytest.mark.parametrize(
     "unit",
-    [pytest.param(ureg.m, id="Unit"), pytest.param(ureg("meter"), id="Quantity")],
+    [
+        pytest.param(lambda ureg: ureg.m, id="Unit"),
+        pytest.param(lambda ureg: ureg("meter"), id="Quantity"),
+    ],
 )
-def test_array_quantity_creation_by_multiplication(op, unit, array):
-    assert type(op(array, unit)) == ureg.Quantity
+def test_array_quantity_creation_by_multiplication(
+    local_registry, q_base, op, unit, array
+):
+    # This is to avoid having a ureg built at the module level.
+    unit = unit(local_registry)
+
+    assert type(op(local_registry, array, unit)) == local_registry.Quantity
