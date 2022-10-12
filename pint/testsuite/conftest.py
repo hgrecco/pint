@@ -65,6 +65,12 @@ def module_registry():
     return pint.UnitRegistry()
 
 
+@pytest.fixture(scope="module")
+def log_module_registry():
+    """Only use for those test that do not modify the registry."""
+    return pint.UnitRegistry(logarithmic_math=True, autoconvert_offset_to_baseunit=True)
+
+
 @pytest.fixture(scope="session")
 def sess_registry():
     """Only use for those test that do not modify the registry."""
