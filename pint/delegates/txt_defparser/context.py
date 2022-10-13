@@ -1,6 +1,6 @@
 """
-    pint.delegates.txt_parser.context
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.txt_defparser.context
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Definitions for parsing Context and their related objects
 
@@ -24,7 +24,7 @@ from typing import Dict, Tuple
 
 from ..._vendor import flexparser as fp
 from ...facets.context import definitions
-from ..base_parser import ParserConfig
+from ..base_defparser import ParserConfig
 from . import block, common, plain
 
 

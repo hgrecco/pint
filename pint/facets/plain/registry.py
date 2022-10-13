@@ -189,7 +189,7 @@ class PlainRegistry(metaclass=RegistryMeta):
     _quantity_class = PlainQuantity
     _unit_class = PlainUnit
 
-    _parser = None
+    _def_parser = None
 
     def __init__(
         self,
@@ -221,7 +221,7 @@ class PlainRegistry(metaclass=RegistryMeta):
                 cache_folder
             )
 
-        self._parser = delegates.txt_parser.Parser(
+        self._def_parser = delegates.txt_defparser.DefParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
 
@@ -406,9 +406,9 @@ class PlainRegistry(metaclass=RegistryMeta):
         """
 
         if isinstance(definition, str):
-            parsed_project = self._parser.parse_string(definition)
+            parsed_project = self._def_parser.parse_string(definition)
 
-            for definition in self._parser.iter_parsed_project(parsed_project):
+            for definition in self._def_parser.iter_parsed_project(parsed_project):
                 self._helper_dispatch_adder(definition)
         else:
             self._helper_dispatch_adder(definition)
@@ -514,11 +514,11 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         if isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
-            parsed_project = self._parser.parse_string("\n".join(file))
+            parsed_project = self._def_parser.parse_string("\n".join(file))
         else:
-            parsed_project = self._parser.parse_file(file)
+            parsed_project = self._def_parser.parse_file(file)
 
-        for definition in self._parser.iter_parsed_project(parsed_project):
+        for definition in self._def_parser.iter_parsed_project(parsed_project):
             self._helper_dispatch_adder(definition)
 
         return parsed_project

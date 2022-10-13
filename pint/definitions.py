@@ -10,7 +10,7 @@
 
 from . import errors
 from ._vendor import flexparser as fp
-from .delegates import ParserConfig, txt_parser
+from .delegates import ParserConfig, txt_defparser
 
 
 class Definition:
@@ -19,7 +19,7 @@ class Definition:
     @classmethod
     def from_string(cls, s: str, non_int_type=float):
         cfg = ParserConfig(non_int_type)
-        parser = txt_parser.Parser(cfg, None)
+        parser = txt_defparser.DefParser(cfg, None)
         pp = parser.parse_string(s)
         for definition in parser.iter_parsed_project(pp):
             if isinstance(definition, Exception):

@@ -1,6 +1,6 @@
 """
-    pint.delegates.txt_parser.defaults
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.txt_defparser.defaults
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Definitions for parsing Default sections.
 

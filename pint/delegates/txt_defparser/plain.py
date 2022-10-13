@@ -1,6 +1,6 @@
 """
-    pint.delegates.txt_parser.plain
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.txt_defparser.plain
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Definitions for parsing:
     - Equality
@@ -29,7 +29,7 @@ from ..._vendor import flexparser as fp
 from ...converters import Converter
 from ...facets.plain import definitions
 from ...util import UnitsContainer
-from ..base_parser import ParserConfig
+from ..base_defparser import ParserConfig
 from . import common
 
 

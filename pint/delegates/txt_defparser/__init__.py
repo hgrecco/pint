@@ -1,6 +1,6 @@
 """
-    pint.delegates.txt_parser
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.txt_defparser
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Parser for the original textual Pint Definition file.
 
@@ -9,6 +9,6 @@
 """
 
 
-from .parser import Parser
+from .defparser import DefParser
 
-__all__ = [Parser]
+__all__ = [DefParser]

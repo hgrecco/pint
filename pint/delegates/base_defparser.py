@@ -1,6 +1,6 @@
 """
-    pint.delegates.base_parser
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.base_defparser
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Common class and function for all parsers.
 

@@ -1,6 +1,6 @@
 """
-    pint.delegates.txt_parser.block
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.txt_defparser.block
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Classes for Pint Blocks, which are defined by:
 

@@ -5,7 +5,7 @@ import typing as ty
 
 from ..._vendor import flexcache as fc
 from ..._vendor import flexparser as fp
-from .. import base_parser
+from .. import base_defparser
 from . import block, common, context, defaults, group, plain, system
 
 
@@ -47,7 +47,7 @@ class _PintParser(fp.Parser):
 
     _diskcache: fc.DiskCache
 
-    def __init__(self, config: base_parser.ParserConfig, *args, **kwargs):
+    def __init__(self, config: base_defparser.ParserConfig, *args, **kwargs):
         self._diskcache = kwargs.pop("diskcache", None)
         super().__init__(config, *args, **kwargs)
 
@@ -58,7 +58,7 @@ class _PintParser(fp.Parser):
         return content
 
 
-class Parser:
+class DefParser:
 
     skip_classes = (fp.BOF, fp.BOR, fp.BOS, fp.EOS, plain.CommentDefinition)
 

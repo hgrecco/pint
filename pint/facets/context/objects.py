@@ -184,12 +184,12 @@ class Context:
         definition : str
             <unit> = <new definition>``, e.g. ``pound = 0.5 kg``
         """
-        from ...delegates import ParserConfig, txt_parser
+        from ...delegates import ParserConfig, txt_defparser
 
         # TODO: kept for backwards compatibility.
         #       this is not a good idea as we have no way of known the correct non_int_type
         cfg = ParserConfig(float)
-        parser = txt_parser.Parser(cfg, None)
+        parser = txt_defparser.DefParser(cfg, None)
         pp = parser.parse_string(definition)
         for definition in parser.iter_parsed_project(pp):
             if isinstance(definition, UnitDefinition):

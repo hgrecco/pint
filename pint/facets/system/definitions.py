@@ -45,10 +45,10 @@ class SystemDefinition(errors.WithDefErr):
     @classmethod
     def from_lines(cls, lines, non_int_type):
         # TODO: this is to keep it backwards compatible
-        from ...delegates import ParserConfig, txt_parser
+        from ...delegates import ParserConfig, txt_defparser
 
         cfg = ParserConfig(non_int_type)
-        parser = txt_parser.Parser(cfg, None)
+        parser = txt_defparser.DefParser(cfg, None)
         pp = parser.parse_string("\n".join(lines) + "\n@end")
         for definition in parser.iter_parsed_project(pp):
             if isinstance(definition, cls):

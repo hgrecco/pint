@@ -1,6 +1,6 @@
 """
-    pint.delegates.txt_parser.common
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.txt_defparser.common
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Definitions for parsing an Import Statement
 

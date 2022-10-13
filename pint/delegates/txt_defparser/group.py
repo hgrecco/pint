@@ -1,6 +1,6 @@
 """
-    pint.delegates.txt_parser.group
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.txt_defparser.group
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Definitions for parsing Group and their related objects
 

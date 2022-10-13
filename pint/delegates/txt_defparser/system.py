@@ -1,6 +1,6 @@
 """
-    pint.facets.systems.definitions
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.delegates.txt_defparser.system
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
