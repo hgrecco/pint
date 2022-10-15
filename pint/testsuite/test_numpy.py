@@ -284,6 +284,9 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         )
         helpers.assert_quantity_equal(result, expected)
 
+        result = np.broadcast_arrays(x, y, subok=True)
+        helpers.assert_quantity_equal(result, expected)
+
 
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # https://www.numpy.org/devdocs/reference/routines.math.html
