@@ -11,6 +11,7 @@ Pint Changelog
   (Issue #1030, #574)
 - Added angular frequency documentation page.
 - Move ASV benchmarks to dedicated folder. (Issue #1542)
+- Implement `numpy.broadcast_arrays` (#1607)
 
 0.19.2 (2022-04-23)
 -------------------
