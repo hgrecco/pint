@@ -12,6 +12,7 @@ from __future__ import annotations
 import operator
 import token as tokenlib
 import tokenize
+
 from uncertainties import ufloat
 
 from .errors import DefinitionSyntaxError
@@ -171,10 +172,11 @@ def build_eval_tree(
         tokens = list(tokens)
 
     result = None
-    
+
     def _number_or_nan(token):
-        if (token.type==tokenlib.NUMBER
-            or (token.type==tokenlib.NAME and token.string=='nan')):
+        if token.type == tokenlib.NUMBER or (
+            token.type == tokenlib.NAME and token.string == "nan"
+        ):
             return True
         return False
 
@@ -199,50 +201,100 @@ def build_eval_tree(
                 # a ufloat is of the form `( nominal_value + / - std ) possible_e_notation` and parses as a NUMBER
                 # alas, we cannot simply consume the nominal_value and then see the +/- operator, because naive
                 # parsing on the nominal_value thinks it needs to eval the + as part of the nominal_value.
-                if (index+6 < len(tokens)
-                    and _number_or_nan(tokens[index+1])
-                    and tokens[index+2].string=='+'
-                    and tokens[index+3].string=='/'
-                    and tokens[index+4].string=='-'
-                    and _number_or_nan(tokens[index+5])):
+                if (
+                    index + 6 < len(tokens)
+                    and _number_or_nan(tokens[index + 1])
+                    and tokens[index + 2].string == "+"
+                    and tokens[index + 3].string == "/"
+                    and tokens[index + 4].string == "-"
+                    and _number_or_nan(tokens[index + 5])
+                ):
                     # breakpoint()
                     # get nominal_value
                     left, _ = build_eval_tree(
                         # This should feed the parser only a single token--the number representing the nominal_value
-                        [tokens[index+1], tokens[-1]], op_priority, 0, 0, tokens[index+1].string
+                        [tokens[index + 1], tokens[-1]],
+                        op_priority,
+                        0,
+                        0,
+                        tokens[index + 1].string,
                     )
-                    plus_minus_line = tokens[index].line[tokens[index].start[1]:tokens[index+6].end[1]]
-                    plus_minus_start = tokens[index+2].start
-                    plus_minus_end = tokens[index+4].end
-                    plus_minus_operator = tokenize.TokenInfo(type=tokenlib.OP, string='+/-', start=plus_minus_start, end=plus_minus_end, line=plus_minus_line)
-                    remaining_line = tokens[index].line[tokens[index+6].end[1]:]
+                    plus_minus_line = tokens[index].line[
+                        tokens[index].start[1] : tokens[index + 6].end[1]
+                    ]
+                    plus_minus_start = tokens[index + 2].start
+                    plus_minus_end = tokens[index + 4].end
+                    plus_minus_operator = tokenize.TokenInfo(
+                        type=tokenlib.OP,
+                        string="+/-",
+                        start=plus_minus_start,
+                        end=plus_minus_end,
+                        line=plus_minus_line,
+                    )
+                    # remaining_line = tokens[index].line[tokens[index + 6].end[1] :]
 
                     right, _ = build_eval_tree(
-                        [tokens[index+5], tokens[-1]], op_priority, 0, 0, tokens[index+5].string
+                        [tokens[index + 5], tokens[-1]],
+                        op_priority,
+                        0,
+                        0,
+                        tokens[index + 5].string,
                     )
-                    if tokens[index+6].string==')':
+                    if tokens[index + 6].string == ")":
                         # consume the uncertainty number seen thus far
                         index += 6
                     else:
-                        raise DefinitionSyntaxError("weird exit from ufloat construction")
+                        raise DefinitionSyntaxError(
+                            "weird exit from ufloat construction"
+                        )
                     # now look for possible scientific e-notation
-                    if (index+4 < len(tokens)
-                        and tokens[index+1].string=='e'
-                        and tokens[index+2].string in ['+', '-']
-                        and tokens[index+3].type==tokenlib.NUMBER):
+                    if (
+                        index + 4 < len(tokens)
+                        and tokens[index + 1].string == "e"
+                        and tokens[index + 2].string in ["+", "-"]
+                        and tokens[index + 3].type == tokenlib.NUMBER
+                    ):
                         # There may be more NUMBERS that follow because the tokenizer is lost.
                         # So pick them all up
-                        for exp_number_end in range(index+4, len(tokens)):
+                        for exp_number_end in range(index + 4, len(tokens)):
                             if tokens[exp_number_end].type != tokenlib.NUMBER:
                                 break
-                        e_notation_line = remaining_line[:tokens[exp_number_end].start[1]-tokens[index+1].start[1]]
-                        exp_number = '1.0e' + ''.join([digit.string for digit in tokens[index+3:exp_number_end]])
-                        exp_number_token = tokenize.TokenInfo(type=tokenlib.NUMBER, string=exp_number, start=(1, 0), end=(1, len(exp_number)), line=exp_number)
-                        e_notation_operator = tokenize.TokenInfo(type=tokenlib.OP, string='*', start=(1, 0), end=(1, 1), line='*')
-                        e_notation_scale, _ = build_eval_tree([exp_number_token, tokens[-1]], op_priority, 0, 0, tokens[exp_number_end].string)
-                        scaled_left = EvalTreeNode(left, e_notation_operator, e_notation_scale)
-                        scaled_right = EvalTreeNode(right, e_notation_operator, e_notation_scale)
-                        result = EvalTreeNode(scaled_left, plus_minus_operator, scaled_right)
+                        exp_number = "1.0e" + "".join(
+                            [
+                                digit.string
+                                for digit in tokens[index + 3 : exp_number_end]
+                            ]
+                        )
+                        exp_number_token = tokenize.TokenInfo(
+                            type=tokenlib.NUMBER,
+                            string=exp_number,
+                            start=(1, 0),
+                            end=(1, len(exp_number)),
+                            line=exp_number,
+                        )
+                        e_notation_operator = tokenize.TokenInfo(
+                            type=tokenlib.OP,
+                            string="*",
+                            start=(1, 0),
+                            end=(1, 1),
+                            line="*",
+                        )
+                        e_notation_scale, _ = build_eval_tree(
+                            [exp_number_token, tokens[-1]],
+                            op_priority,
+                            0,
+                            0,
+                            tokens[exp_number_end].string,
+                        )
+                        scaled_left = EvalTreeNode(
+                            left, e_notation_operator, e_notation_scale
+                        )
+                        scaled_right = EvalTreeNode(
+                            right, e_notation_operator, e_notation_scale
+                        )
+                        result = EvalTreeNode(
+                            scaled_left, plus_minus_operator, scaled_right
+                        )
                         index = exp_number_end
                         # We know we are not at an ENDMARKER here
                         continue
@@ -292,25 +344,39 @@ def build_eval_tree(
             # a ufloat could be naked, meaning  `nominal_value + / - std` and parses as a NUMBER
             # alas, we cannot simply consume the nominal_value and then see the +/- operator, because naive
             # parsing on the nominal_value thinks it needs to eval the + as part of the nominal_value.
-            if (index+4 < len(tokens)
+            if (
+                index + 4 < len(tokens)
                 and _number_or_nan(tokens[index])
-                and tokens[index+1].string=='+'
-                and tokens[index+2].string=='/'
-                and tokens[index+3].string=='-'
-                and _number_or_nan(tokens[index+4])):
+                and tokens[index + 1].string == "+"
+                and tokens[index + 2].string == "/"
+                and tokens[index + 3].string == "-"
+                and _number_or_nan(tokens[index + 4])
+            ):
                 # The +/- operator binds tightest, so we don't need to end a previous binop
-                if tokens[index+5].type==tokenlib.NUMBER:
+                if tokens[index + 5].type == tokenlib.NUMBER:
                     breakpoint()
                 # get nominal_value
                 left = EvalTreeNode(left=current_token)
-                plus_minus_line = tokens[index].line[tokens[index].start[1]:tokens[index+4].end[1]]
-                plus_minus_start = tokens[index+1].start
-                plus_minus_end = tokens[index+3].end
-                plus_minus_operator = tokenize.TokenInfo(type=tokenlib.OP, string='+/-', start=plus_minus_start, end=plus_minus_end, line=plus_minus_line)
-                remaining_line = tokens[index].line[tokens[index+4].end[1]:]
+                plus_minus_line = tokens[index].line[
+                    tokens[index].start[1] : tokens[index + 4].end[1]
+                ]
+                plus_minus_start = tokens[index + 1].start
+                plus_minus_end = tokens[index + 3].end
+                plus_minus_operator = tokenize.TokenInfo(
+                    type=tokenlib.OP,
+                    string="+/-",
+                    start=plus_minus_start,
+                    end=plus_minus_end,
+                    line=plus_minus_line,
+                )
+                # remaining_line = tokens[index].line[tokens[index + 4].end[1] :]
 
                 right, _ = build_eval_tree(
-                    [tokens[index+4], tokens[-1]], op_priority, 0, 0, tokens[index+4].string
+                    [tokens[index + 4], tokens[-1]],
+                    op_priority,
+                    0,
+                    0,
+                    tokens[index + 4].string,
                 )
                 result = EvalTreeNode(left, plus_minus_operator, right)
                 index += 4
