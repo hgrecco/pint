@@ -618,9 +618,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         >>> import pint
         >>> ureg = pint.UnitRegistry()
         >>> (200e-9*ureg.s).to_compact()
-        <PlainQuantity(200.0, 'nanosecond')>
+        <Quantity(200.0, 'nanosecond')>
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
-        <PlainQuantity(10.0, 'millinewton')>
+        <Quantity(10.0, 'millinewton')>
         """
 
         if not isinstance(self.magnitude, numbers.Number):

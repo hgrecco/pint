@@ -1,7 +1,7 @@
 .. _systems:
 
-Different Unit Systems (and default units)
-==========================================
+Dealing with unit systems
+=========================
 
 Pint Unit Registry has the concept of system, which is a group of units
 

@@ -145,7 +145,7 @@ the extra outputs. For example, given the NREL SOLPOS calculator that outputs
 solar zenith, azimuth and air mass, the following wrapper assumes no units for
 airmass
 
-.. doctest::
+.. code-block:: python
 
     @ureg.wraps(('deg', 'deg'), ('deg', 'deg', 'millibar', 'degC'))
     def solar_position(lat, lon, press, tamb, timestamp):
@@ -232,7 +232,7 @@ To avoid the conversion of an argument or return value, use None
 
 
 Checking dimensionality
-=======================
+-----------------------
 
 When you want pint quantities to be used as inputs to your functions, pint provides a wrapper to ensure units are of
 correct type - or more precisely, they match the expected dimensionality of the physical quantity.

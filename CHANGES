@@ -12,6 +12,9 @@ Pint Changelog
 - Added angular frequency documentation page.
 - Move ASV benchmarks to dedicated folder. (Issue #1542)
 - Implement `numpy.broadcast_arrays` (#1607)
+- Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
+  (Issue #1510, #1530)
+- Update test_non_int tests for pytest.
 
 0.19.2 (2022-04-23)
 -------------------

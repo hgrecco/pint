@@ -14,4 +14,4 @@ from .definitions import GroupDefinition
 from .objects import Group
 from .registry import GroupRegistry
 
-__all__ = [GroupDefinition, Group, GroupRegistry]
+__all__ = ["GroupDefinition", "Group", "GroupRegistry"]

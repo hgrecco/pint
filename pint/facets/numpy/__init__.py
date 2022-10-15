@@ -12,4 +12,4 @@ from __future__ import annotations
 
 from .registry import NumpyRegistry
 
-__all__ = [NumpyRegistry]
+__all__ = ["NumpyRegistry"]
