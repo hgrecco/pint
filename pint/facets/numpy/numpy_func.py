@@ -877,7 +877,14 @@ for func_str in ["cumprod", "cumproduct", "nancumprod"]:
     implement_single_dimensionless_argument_func(func_str)
 
 # Handle single-argument consistent unit functions
-for func_str in ["block", "hstack", "vstack", "dstack", "column_stack"]:
+for func_str in [
+    "block",
+    "hstack",
+    "vstack",
+    "dstack",
+    "column_stack",
+    "broadcast_arrays",
+]:
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
     )

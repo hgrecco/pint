@@ -82,7 +82,7 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     # TODO
     # https://www.numpy.org/devdocs/reference/routines.array-manipulation.html
     # copyto
-    # broadcast , broadcast_arrays
+    # broadcast
     # asarray	asanyarray	asmatrix	asfarray	asfortranarray	ascontiguousarray	asarray_chkfinite	asscalar	require
 
     # Changing array shape
@@ -270,6 +270,19 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
 
     def test_item(self):
         helpers.assert_quantity_equal(self.Q_([[0]], "m").item(), 0 * self.ureg.m)
+
+    def test_broadcast_arrays(self):
+        x = self.Q_(np.array([[1, 2, 3]]), "m")
+        y = self.Q_(np.array([[4], [5]]), "nm")
+        result = np.broadcast_arrays(x, y)
+        expected = self.Q_(
+            [
+                [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]],
+                [[4e-09, 4e-09, 4e-09], [5e-09, 5e-09, 5e-09]],
+            ],
+            "m",
+        )
+        helpers.assert_quantity_equal(result, expected)
 
 
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
