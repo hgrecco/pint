@@ -48,7 +48,7 @@ class Measurement(PlainQuantity):
 
     """
 
-    def __new__(cls, value, error, units=MISSING):
+    def __new__(cls, value, error=MISSING, units=MISSING):
         if units is MISSING:
             try:
                 value, units = value.magnitude, value.units
@@ -60,17 +60,18 @@ class Measurement(PlainQuantity):
                     error = MISSING  # used for check below
                 else:
                     units = ""
-        try:
-            error = error.to(units).magnitude
-        except AttributeError:
-            pass
-
         if error is MISSING:
+            # We've already extracted the units from the Quantity above
             mag = value
-        elif error < 0:
-            raise ValueError("The magnitude of the error cannot be negative")
         else:
-            mag = ufloat(value, error)
+            try:
+                error = error.to(units).magnitude
+            except AttributeError:
+                pass
+            if error < 0:
+                raise ValueError("The magnitude of the error cannot be negative")
+            else:
+                mag = ufloat(value, error)
 
         inst = super().__new__(cls, mag, units)
         return inst

@@ -19,6 +19,7 @@ from .errors import DefinitionSyntaxError
 
 # For controlling order of operations
 _OP_PRIORITY = {
+    "±": 4,
     "+/-": 4,
     "**": 3,
     "^": 3,
@@ -53,6 +54,7 @@ def _power(left, right):
 
 
 _BINARY_OPERATOR_MAP = {
+    "±": _ufloat,
     "+/-": _ufloat,
     "**": _power,
     "*": operator.mul,
@@ -125,7 +127,6 @@ class EvalTreeNode:
             # unary operator
             op_text = self.operator[1]
             if op_text not in un_op:
-                breakpoint()
                 raise DefinitionSyntaxError('missing unary operator "%s"' % op_text)
             return un_op[op_text](self.left.evaluate(define_op, bin_op, un_op))
         else:
@@ -134,6 +135,89 @@ class EvalTreeNode:
 
 
 from typing import Iterable
+
+
+def peek_exp_number(tokens, index):
+    exp_number = None
+    exp_number_end = index
+    exp_is_negative = False
+    if (
+        index + 2 < len(tokens)
+        and tokens[index + 1].string == "10"
+        and tokens[index + 2].string in "⁻⁰¹²³⁴⁵⁶⁷⁸⁹"
+    ):
+        if tokens[index + 2].string == "⁻":
+            exp_is_negative = True
+        for exp_number_end in range(index + 3, len(tokens)):
+            if tokens[exp_number_end].string not in "⁰¹²³⁴⁵⁶⁷⁸⁹":
+                break
+        exp_number = "".join(
+            [
+                digit.string[0] - "⁰"
+                for digit in tokens[index + exp_is_negative + 2 : exp_number_end]
+            ]
+        )
+    else:
+        if (
+            index + 2 < len(tokens)
+            and tokens[index + 1].string == "e"
+            # No sign on the exponent, treat as +
+            and tokens[index + 2].type == tokenlib.NUMBER
+        ):
+            # Don't know why tokenizer doesn't bundle all these numbers together
+            for exp_number_end in range(index + 3, len(tokens)):
+                if tokens[exp_number_end].type != tokenlib.NUMBER:
+                    break
+        elif (
+            index + 3 < len(tokens)
+            and tokens[index + 1].string == "e"
+            and tokens[index + 2].string in ["+", "-"]
+            and tokens[index + 3].type == tokenlib.NUMBER
+        ):
+            if tokens[index + 2].string == "-":
+                exp_is_negative = True
+            # Don't know why tokenizer doesn't bundle all these numbers together
+            for exp_number_end in range(index + 4, len(tokens)):
+                if tokens[exp_number_end].type != tokenlib.NUMBER:
+                    break
+        if exp_number_end > index:
+            exp_number = "".join(
+                [digit.string for digit in tokens[index + 3 : exp_number_end]]
+            )
+        else:
+            return None, index
+    exp_number = "1.0e" + ("-" if exp_is_negative else "") + exp_number
+    assert exp_number_end != index
+    return exp_number, exp_number_end
+
+
+def finish_exp_number(tokens, exp_number, exp_number_end, plus_minus_op, left, right):
+    exp_number_token = tokenize.TokenInfo(
+        type=tokenlib.NUMBER,
+        string=exp_number,
+        start=(1, 0),
+        end=(1, len(exp_number)),
+        line=exp_number,
+    )
+    e_notation_operator = tokenize.TokenInfo(
+        type=tokenlib.OP,
+        string="*",
+        start=(1, 0),
+        end=(1, 1),
+        line="*",
+    )
+    e_notation_scale, _ = build_eval_tree(
+        [exp_number_token, tokens[-1]],
+        None,
+        0,
+        0,
+        tokens[exp_number_end].string,
+    )
+    scaled_left = EvalTreeNode(left, e_notation_operator, e_notation_scale)
+    scaled_right = EvalTreeNode(right, e_notation_operator, e_notation_scale)
+    result = EvalTreeNode(scaled_left, plus_minus_op, scaled_right)
+    index = exp_number_end
+    return result, index
 
 
 def build_eval_tree(
@@ -173,13 +257,6 @@ def build_eval_tree(
 
     result = None
 
-    def _number_or_nan(token):
-        if token.type == tokenlib.NUMBER or (
-            token.type == tokenlib.NAME and token.string == "nan"
-        ):
-            return True
-        return False
-
     while True:
         current_token = tokens[index]
         token_type = current_token.type
@@ -198,122 +275,18 @@ def build_eval_tree(
                     # parenthetical group ending, but we need to close sub-operations within group
                     return result, index - 1
             elif token_text == "(":
-                # a ufloat is of the form `( nominal_value + / - std ) possible_e_notation` and parses as a NUMBER
-                # alas, we cannot simply consume the nominal_value and then see the +/- operator, because naive
-                # parsing on the nominal_value thinks it needs to eval the + as part of the nominal_value.
-                if (
-                    index + 6 < len(tokens)
-                    and _number_or_nan(tokens[index + 1])
-                    and tokens[index + 2].string == "+"
-                    and tokens[index + 3].string == "/"
-                    and tokens[index + 4].string == "-"
-                    and _number_or_nan(tokens[index + 5])
-                ):
-                    # breakpoint()
-                    # get nominal_value
-                    left, _ = build_eval_tree(
-                        # This should feed the parser only a single token--the number representing the nominal_value
-                        [tokens[index + 1], tokens[-1]],
-                        op_priority,
-                        0,
-                        0,
-                        tokens[index + 1].string,
-                    )
-                    plus_minus_line = tokens[index].line[
-                        tokens[index].start[1] : tokens[index + 6].end[1]
-                    ]
-                    plus_minus_start = tokens[index + 2].start
-                    plus_minus_end = tokens[index + 4].end
-                    plus_minus_operator = tokenize.TokenInfo(
-                        type=tokenlib.OP,
-                        string="+/-",
-                        start=plus_minus_start,
-                        end=plus_minus_end,
-                        line=plus_minus_line,
-                    )
-                    # remaining_line = tokens[index].line[tokens[index + 6].end[1] :]
-
-                    right, _ = build_eval_tree(
-                        [tokens[index + 5], tokens[-1]],
-                        op_priority,
-                        0,
-                        0,
-                        tokens[index + 5].string,
-                    )
-                    if tokens[index + 6].string == ")":
-                        # consume the uncertainty number seen thus far
-                        index += 6
-                    else:
-                        raise DefinitionSyntaxError(
-                            "weird exit from ufloat construction"
-                        )
-                    # now look for possible scientific e-notation
-                    if (
-                        index + 4 < len(tokens)
-                        and tokens[index + 1].string == "e"
-                        and tokens[index + 2].string in ["+", "-"]
-                        and tokens[index + 3].type == tokenlib.NUMBER
-                    ):
-                        # There may be more NUMBERS that follow because the tokenizer is lost.
-                        # So pick them all up
-                        for exp_number_end in range(index + 4, len(tokens)):
-                            if tokens[exp_number_end].type != tokenlib.NUMBER:
-                                break
-                        exp_number = "1.0e" + "".join(
-                            [
-                                digit.string
-                                for digit in tokens[index + 3 : exp_number_end]
-                            ]
-                        )
-                        exp_number_token = tokenize.TokenInfo(
-                            type=tokenlib.NUMBER,
-                            string=exp_number,
-                            start=(1, 0),
-                            end=(1, len(exp_number)),
-                            line=exp_number,
-                        )
-                        e_notation_operator = tokenize.TokenInfo(
-                            type=tokenlib.OP,
-                            string="*",
-                            start=(1, 0),
-                            end=(1, 1),
-                            line="*",
-                        )
-                        e_notation_scale, _ = build_eval_tree(
-                            [exp_number_token, tokens[-1]],
-                            op_priority,
-                            0,
-                            0,
-                            tokens[exp_number_end].string,
-                        )
-                        scaled_left = EvalTreeNode(
-                            left, e_notation_operator, e_notation_scale
-                        )
-                        scaled_right = EvalTreeNode(
-                            right, e_notation_operator, e_notation_scale
-                        )
-                        result = EvalTreeNode(
-                            scaled_left, plus_minus_operator, scaled_right
-                        )
-                        index = exp_number_end
-                        # We know we are not at an ENDMARKER here
-                        continue
-                    else:
-                        result = EvalTreeNode(left, plus_minus_operator, right)
-                        # We can fall through...index+=1 operation will consume ')'
+                # gather parenthetical group
+                right, index = build_eval_tree(
+                    tokens, op_priority, index + 1, 0, token_text
+                )
+                if not tokens[index][1] == ")":
+                    raise DefinitionSyntaxError("weird exit from parentheses")
+                if result:
+                    # implicit op with a parenthetical group, i.e. "3 (kg ** 2)"
+                    result = EvalTreeNode(left=result, right=right)
                 else:
-                    # gather parenthetical group
-                    right, index = build_eval_tree(
-                        tokens, op_priority, index + 1, 0, token_text
-                    )
-                    if not tokens[index][1] == ")":
-                        raise DefinitionSyntaxError("weird exit from parentheses")
-                    if result:
-                        # implicit op with a parenthetical group, i.e. "3 (kg ** 2)"
-                        result = EvalTreeNode(left=result, right=right)
-                    else:
-                        # get first token
-                        result = right
+                    # get first token
+                    result = right
             elif token_text in op_priority:
                 if result:
                     # equal-priority operators are grouped in a left-to-right order,
@@ -331,6 +304,20 @@ def build_eval_tree(
                     right, index = build_eval_tree(
                         tokens, op_priority, index + 1, depth + 1, token_text
                     )
+                    if token_text in ["±", "+/-"]:
+                        # See if we need to scale the nominal_value and std_dev terms by an eponent
+                        exp_number, exp_number_end = peek_exp_number(tokens, index)
+                        if exp_number:
+                            result, index = finish_exp_number(
+                                tokens,
+                                exp_number,
+                                exp_number_end,
+                                current_token,
+                                result,
+                                right,
+                            )
+                            # We know we are not at an ENDMARKER here
+                            continue
                     result = EvalTreeNode(
                         left=result, operator=current_token, right=right
                     )
@@ -341,47 +328,7 @@ def build_eval_tree(
                     )
                     result = EvalTreeNode(left=right, operator=current_token)
         elif token_type == tokenlib.NUMBER or token_type == tokenlib.NAME:
-            # a ufloat could be naked, meaning  `nominal_value + / - std` and parses as a NUMBER
-            # alas, we cannot simply consume the nominal_value and then see the +/- operator, because naive
-            # parsing on the nominal_value thinks it needs to eval the + as part of the nominal_value.
-            if (
-                index + 4 < len(tokens)
-                and _number_or_nan(tokens[index])
-                and tokens[index + 1].string == "+"
-                and tokens[index + 2].string == "/"
-                and tokens[index + 3].string == "-"
-                and _number_or_nan(tokens[index + 4])
-            ):
-                # The +/- operator binds tightest, so we don't need to end a previous binop
-                if tokens[index + 5].type == tokenlib.NUMBER:
-                    breakpoint()
-                # get nominal_value
-                left = EvalTreeNode(left=current_token)
-                plus_minus_line = tokens[index].line[
-                    tokens[index].start[1] : tokens[index + 4].end[1]
-                ]
-                plus_minus_start = tokens[index + 1].start
-                plus_minus_end = tokens[index + 3].end
-                plus_minus_operator = tokenize.TokenInfo(
-                    type=tokenlib.OP,
-                    string="+/-",
-                    start=plus_minus_start,
-                    end=plus_minus_end,
-                    line=plus_minus_line,
-                )
-                # remaining_line = tokens[index].line[tokens[index + 4].end[1] :]
-
-                right, _ = build_eval_tree(
-                    [tokens[index + 4], tokens[-1]],
-                    op_priority,
-                    0,
-                    0,
-                    tokens[index + 4].string,
-                )
-                result = EvalTreeNode(left, plus_minus_operator, right)
-                index += 4
-                continue
-            elif result:
+            if result:
                 # tokens with an implicit operation i.e. "1 kg"
                 if op_priority[""] <= op_priority.get(prev_op, -1):
                     # previous operator is higher priority than implicit, so end
