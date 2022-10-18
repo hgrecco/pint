@@ -1226,9 +1226,9 @@ class PlainRegistry(metaclass=RegistryMeta):
             if token_text == "dimensionless":
                 return 1 * self.dimensionless
             elif token_text.lower() in ("inf", "infinity"):
-                return float("inf")
+                return self.non_int_type("inf")
             elif token_text.lower() == "nan":
-                return float("nan")
+                return self.non_int_type("nan")
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:

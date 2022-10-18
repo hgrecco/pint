@@ -77,6 +77,27 @@ class _TestBasic(NonIntTypeTestCase):
             == "Creating new PlainQuantity using a non unity PlainQuantity as units."
         )
 
+    def test_nan_creation(self):
+        if self.SUPPORTS_NAN:
+            value = self.kwargs["non_int_type"]("nan")
+
+            for args in (
+                (value, "meter"),
+                (value, UnitsContainer(meter=1)),
+                (value, self.ureg.meter),
+                ("NaN*meter",),
+                ("nan/meter**(-1)",),
+                (self.Q_(value, "meter"),),
+            ):
+                x = self.Q_(*args)
+                assert math.isnan(x.magnitude)
+                assert type(x.magnitude) == self.kwargs["non_int_type"]
+                assert x.units == self.ureg.UnitsContainer(meter=1)
+
+        else:
+            with pytest.raises(ValueError):
+                self.Q_("NaN meters")
+
     def test_quantity_comparison(self):
         x = self.QP_("4.2", "meter")
         y = self.QP_("4.2", "meter")
@@ -1137,6 +1158,7 @@ class _TestOffsetUnitMath(NonIntTypeTestCase):
 class TestNonIntTypeQuantityFloat(_TestBasic):
 
     kwargs = dict(non_int_type=float)
+    SUPPORTS_NAN = True
 
 
 class TestNonIntTypeQuantityBasicMathFloat(_TestQuantityBasicMath):
@@ -1152,6 +1174,7 @@ class TestNonIntTypeOffsetUnitMathFloat(_TestOffsetUnitMath):
 class TestNonIntTypeQuantityDecimal(_TestBasic):
 
     kwargs = dict(non_int_type=Decimal)
+    SUPPORTS_NAN = True
 
 
 class TestNonIntTypeQuantityBasicMathDecimal(_TestQuantityBasicMath):
@@ -1167,6 +1190,7 @@ class TestNonIntTypeOffsetUnitMathDecimal(_TestOffsetUnitMath):
 class TestNonIntTypeQuantityFraction(_TestBasic):
 
     kwargs = dict(non_int_type=Fraction)
+    SUPPORTS_NAN = False
 
 
 class TestNonIntTypeQuantityBasicMathFraction(_TestQuantityBasicMath):
