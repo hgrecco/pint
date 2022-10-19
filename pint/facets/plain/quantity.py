@@ -62,6 +62,15 @@ if TYPE_CHECKING:
     if HAS_NUMPY:
         import numpy as np  # noqa
 
+try:
+    import uncertainties.unumpy as unp
+    from uncertainties import ufloat, UFloat
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    unp = np
+    ufloat = Ufloat = None
+    HAS_UNCERTAINTIES = False
+
 
 def reduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
@@ -267,7 +276,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        if isinstance(self._magnitude, float):
+        if HAS_UNCERTAINTIES:
+            if isinstance(self._magnitude, UFloat):
+                return f"<Quantity({self._magnitude:.6}, '{self._units}')>"
+            else:
+                return f"<Quantity({self._magnitude}, '{self._units}')>"
+        elif isinstance(self._magnitude, float):
             return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
         else:
             return f"<Quantity({self._magnitude}, '{self._units}')>"

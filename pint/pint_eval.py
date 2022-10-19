@@ -13,7 +13,12 @@ import operator
 import token as tokenlib
 import tokenize
 
-from uncertainties import ufloat
+try:
+    from uncertainties import ufloat
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    HAS_UNCERTAINTIES = False
+    ufloat = None
 
 from .errors import DefinitionSyntaxError
 
@@ -35,7 +40,9 @@ _OP_PRIORITY = {
 
 
 def _ufloat(left, right):
-    return ufloat(left, right)
+    if HAS_UNCERTAINTIES:
+        return ufloat(left, right)
+    raise TypeError ('Could not import support for uncertainties')
 
 
 def _power(left, right):
