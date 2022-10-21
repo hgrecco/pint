@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+import sys
 from dataclasses import dataclass, field
 from functools import cached_property
 from importlib import resources
@@ -261,8 +262,12 @@ class Parser:
         it will use python importlib.resources.read_binary
         """
 
-        with resources.path(__package__, resource_name) as p:
-            filepath = p.resolve()
+        if sys.version_info[1] == 8:  # Remove if dropping 3.8
+            with resources.path(__package__, resource_name) as p:
+                filepath = p.resolve()
+        else:  # 3.9 and above
+            with resources.as_file(resources.files(__package__)) as p:
+                filepath = (p / resource_name).resolve()
 
         if filepath.exists():
             if self._diskcache is None:
@@ -277,7 +282,11 @@ class Parser:
         return self._parse_single_resource(resource_name)
 
     def _parse_single_resource(self, resource_name: str) -> DefinitionFile:
-        rbytes = resources.read_binary(__package__, resource_name)
+        if sys.version_info[1] == 8:  # Remove if dropping 3.8
+            rbytes = resources.read_binary(__package__, resource_name)
+        else:  # 3.9 and above
+            rbytes = (resources.files(__package__) / resource_name).read_bytes()
+
         if self._diskcache:
             hdr = self._diskcache.PathHeader(rbytes)
             content_hash = self._diskcache.cache_stem_for(hdr)
