@@ -1,6 +1,12 @@
 Pint Changelog
 ==============
 
+0.20.1 (unreleased)
+------------------
+
+- Added Polynomial class that inherits from numpy's polynomial
+  class and incorporates unit for the x and y variables.
+
 0.20 (unreleased)
 ------------------
 
