@@ -5,8 +5,8 @@ import time
 import pytest
 
 import pint
+from pint._vendor import flexparser as fp
 from pint.facets.plain import UnitDefinition
-from pint.parser import DefinitionFile
 
 FS_SLEEP = 0.010
 
@@ -53,11 +53,11 @@ def test_decimal(tmp_path, float_cache_filename):
     for p in files:
         with p.open(mode="rb") as fi:
             obj = pickle.load(fi)
-            if not isinstance(obj, DefinitionFile):
+            if not isinstance(obj, fp.ParsedSource):
                 continue
-            for lineno, adef in obj.filter_by(UnitDefinition):
-                if adef.name == "pi":
-                    assert isinstance(adef.converter.scale, decimal.Decimal)
+            for definition in obj.parsed_source.filter_by(UnitDefinition):
+                if definition.name == "pi":
+                    assert isinstance(definition.converter.scale, decimal.Decimal)
                     return
     assert False
 

@@ -783,6 +783,7 @@ def test_redefine(subtests):
             # Note how we're redefining a symbol, not the plain name, as a
             # function of another name
             b = 5 f
+        @end
         """.splitlines()
     )
     # Units that are somehow directly or indirectly defined as a function of the
@@ -933,7 +934,7 @@ def test_err_change_base_unit():
 
 
 def test_err_to_base_unit():
-    expected = "Can't define plain units within a context"
+    expected = ".*can't define plain units within a context"
     with pytest.raises(DefinitionSyntaxError, match=expected):
         Context.from_lines(["@context c", "x = [d]"])
 
@@ -980,19 +981,17 @@ def test_err_cyclic_dependency():
 
 
 def test_err_dimension_redefinition():
-    expected = re.escape("Expected <unit> = <converter>; got [d1] = [d2] * [d3]")
-    with pytest.raises(DefinitionSyntaxError, match=expected):
+    with pytest.raises(DefinitionSyntaxError):
         Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
 
 
 def test_err_prefix_redefinition():
-    expected = re.escape("Expected <unit> = <converter>; got [d1] = [d2] * [d3]")
-    with pytest.raises(DefinitionSyntaxError, match=expected):
+    with pytest.raises(DefinitionSyntaxError):
         Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
 
 
 def test_err_redefine_alias(subtests):
-    expected = "Can't change a unit's symbol or aliases within a context"
+    expected = ".*can't change a unit's symbol or aliases within a context"
     for s in ("foo = bar = f", "foo = bar = _ = baz"):
         with subtests.test(s):
             with pytest.raises(DefinitionSyntaxError, match=expected):
