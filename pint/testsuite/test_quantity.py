@@ -1131,7 +1131,7 @@ class TestDimensions(QuantityTestCase):
         assert get(UnitsContainer({"[time]": 1})) == UnitsContainer({"[time]": 1})
         assert get("seconds") == UnitsContainer({"[time]": 1})
         assert get(UnitsContainer({"seconds": 1})) == UnitsContainer({"[time]": 1})
-        assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
+        assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
         assert get("[acceleration]") == UnitsContainer({"[length]": 1, "[time]": -2})
 
     def test_dimensionality(self):

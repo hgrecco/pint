@@ -230,7 +230,8 @@ counts_per_second = count / second = cps
 reciprocal_centimeter = 1 / cm = cm_1 = kayser
 
 # Velocity
-[velocity] = [length] / [time] = [speed]
+[velocity] = [length] / [time]
+[speed] = [velocity]
 knot = nautical_mile / hour = kt = knot_international = international_knot
 mile_per_hour = mile / hour = mph = MPH
 kilometer_per_hour = kilometer / hour = kph = KPH
@@ -443,16 +444,16 @@ farad = coulomb / volt = F
 abfarad = 1e9 * farad = abF
 conventional_farad_90 = R_K90 / R_K * farad = F_90
 
+# Magnetic flux
+[magnetic_flux] = [electric_potential] * [time]
+weber = volt * second = Wb
+unit_pole = µ_0 * biot * centimeter
+
 # Inductance
 [inductance] = [magnetic_flux] / [current]
 henry = weber / ampere = H
 abhenry = 1e-9 * henry = abH
 conventional_henry_90 = R_K / R_K90 * henry = H_90
-
-# Magnetic flux
-[magnetic_flux] = [electric_potential] * [time]
-weber = volt * second = Wb
-unit_pole = µ_0 * biot * centimeter
 
 # Magnetic field
 [magnetic_field] = [magnetic_flux] / [area]

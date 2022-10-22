@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-from ...errors import DefinitionSyntaxError, RedefinitionError
 from ...util import SharedRegistryObject, getattr_maybe_raise
 from .definitions import GroupDefinition
 
@@ -169,19 +168,24 @@ class Group(SharedRegistryObject):
         return cls.from_definition(group_definition, define_func)
 
     @classmethod
-    def from_definition(cls, group_definition: GroupDefinition, define_func) -> Group:
-        for lineno, definition in group_definition.units:
-            try:
-                define_func(definition)
-            except (RedefinitionError, DefinitionSyntaxError) as ex:
-                if ex.lineno is None:
-                    ex.lineno = lineno
-                raise ex
-
+    def from_definition(
+        cls, group_definition: GroupDefinition, add_unit_func=None
+    ) -> Group:
         grp = cls(group_definition.name)
 
-        grp.add_units(*(unit.name for lineno, unit in group_definition.units))
+        add_unit_func = add_unit_func or grp._REGISTRY._add_unit
 
+        # We first add all units defined within the group
+        # to the registry.
+        for definition in group_definition.definitions:
+            add_unit_func(definition)
+
+        # Then we add all units defined within the group
+        # to this group (by name)
+        grp.add_units(*group_definition.unit_names)
+
+        # Finally, we add all grou0ps used by this group
+        # tho this group (by name)
         if group_definition.using_group_names:
             grp.add_groups(*group_definition.using_group_names)
 

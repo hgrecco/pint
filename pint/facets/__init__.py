@@ -7,8 +7,8 @@
     keeping each part small enough to be hackable.
 
     Each facet contains one or more of the following modules:
-    - definitions: classes and functions to parse a string into an specific object.
-      These objects must be immutable and pickable. (e.g. ContextDefinition)
+    - definitions: classes describing an specific unit related definiton.
+      These objects must be immutable, pickable and not reference the registry (e.g. ContextDefinition)
     - objects: classes and functions that encapsulate behavior (e.g. Context)
     - registry: implements a subclass of PlainRegistry or class that can be
       mixed with it (e.g. ContextRegistry)
@@ -16,8 +16,7 @@
     In certain cases, some of these modules might be collapsed into a single one
     as the code is very short (like in dask) or expanded as the code is too long
     (like in plain, where quantity and unit object are in their own module).
-    Additionally, certain facets might not have one of them (e.g. dask adds no
-    feature in relation to parsing).
+    Additionally, certain facets might not have one of them.
 
     An important part of this scheme is that each facet should export only a few
     classes in the __init__.py and everything else should not be accessed by any

@@ -641,7 +641,7 @@ class ParserHelper(UnitsContainer):
         for k in list(ret):
             if k.lower() == "nan":
                 del ret._d[k]
-                ret.scale = math.nan
+                ret.scale = non_int_type(math.nan)
 
         return ret
 
@@ -978,80 +978,6 @@ def getattr_maybe_raise(self, item):
         or (item.startswith("_") and not item.lstrip("_")[0].isdigit())
     ):
         raise AttributeError("%r object has no attribute %r" % (self, item))
-
-
-class SourceIterator:
-    """Iterator to facilitate reading the definition files.
-
-    Accepts any sequence (like a list of lines, a file or another SourceIterator)
-
-    The iterator yields the line number and line (skipping comments and empty lines)
-    and stripping white spaces.
-
-    for lineno, line in SourceIterator(sequence):
-        # do something here
-
-    """
-
-    def __new__(cls, sequence, filename=None, is_resource=False):
-        if isinstance(sequence, SourceIterator):
-            return sequence
-
-        obj = object.__new__(cls)
-
-        if sequence is not None:
-            obj.internal = enumerate(sequence, 1)
-            obj.last = (None, None)
-            obj.filename = filename or getattr(sequence, "name", None)
-            obj.is_resource = is_resource
-
-        return obj
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        line = ""
-        while not line or line.startswith("#"):
-            lineno, line = next(self.internal)
-            line = line.split("#", 1)[0].strip()
-
-        self.last = lineno, line
-        return lineno, line
-
-    next = __next__
-
-    def block_iter(self):
-        """Iterate block including header."""
-        return BlockIterator(self)
-
-
-class BlockIterator(SourceIterator):
-    """Like SourceIterator but stops when it finds '@end'
-    It also raises an error if another '@' directive is found inside.
-    """
-
-    def __new__(cls, line_iterator):
-        obj = SourceIterator.__new__(cls, None)
-        obj.internal = line_iterator.internal
-        obj.last = line_iterator.last
-        obj.done_last = False
-        return obj
-
-    def __next__(self):
-        if not self.done_last:
-            self.done_last = True
-            return self.last
-
-        lineno, line = SourceIterator.__next__(self)
-        if line.startswith("@end"):
-            raise StopIteration
-        elif line.startswith("@"):
-            raise DefinitionSyntaxError("cannot nest @ directives", lineno=lineno)
-
-        return lineno, line
-
-    next = __next__
 
 
 def iterable(y) -> bool:
