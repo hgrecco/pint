@@ -1008,3 +1008,9 @@ def test_issue1498b(tmp_path):
     ureg1.load_definitions(def0)  # ← FAILS
 
     assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude
+
+
+def test_backcompat_speed_velocity(func_registry):
+    get = func_registry.get_dimensionality
+    assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
+    assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})

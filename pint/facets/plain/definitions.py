@@ -219,8 +219,6 @@ class DimensionDefinition(errors.WithDefErr):
 class DerivedDimensionDefinition(DimensionDefinition):
     """Definition of a derived dimension."""
 
-    #: name of the dimension
-    name: str
     #: reference dimensions.
     reference: UnitsContainer
 

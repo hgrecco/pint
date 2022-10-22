@@ -43,7 +43,7 @@ you can use derived dimensions such as speed:
 
     >>> from pint import UnitRegistry
     >>> ureg = UnitRegistry()
-    >>> ureg.pi_theorem({'V': '[velocity]', 'T': '[time]', 'L': '[length]'})
+    >>> ureg.pi_theorem({'V': '[speed]', 'T': '[time]', 'L': '[length]'})
     [{'V': 1.0, 'T': 1.0, 'L': -1.0}]
 
 or unit names:
@@ -102,7 +102,7 @@ What is the pressure loss `p` in a pipe with length `L` and diameter `D` for a f
     ...                  'D': '[length]',
     ...                  'd': '[mass]/[volume]',
     ...                  'm': '[viscosity]',
-    ...                  'v': '[velocity]'
+    ...                  'v': '[speed]'
     ...                  })                             # doctest: +SKIP
     [{'p': 1.0, 'm': -2.0, 'd': 1.0, 'L': 2.0}, {'v': 1.0, 'm': -1.0, 'd': 1.0, 'L': 1.0}, {'L': -1.0, 'D': 1.0}]
 
