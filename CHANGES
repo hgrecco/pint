@@ -11,6 +11,7 @@ Pint Changelog
   (Issue #1030, #574)
 - Added angular frequency documentation page.
 - Move ASV benchmarks to dedicated folder. (Issue #1542)
+- Implement `numpy.broadcast_arrays` (#1607)
 - An ndim attribute has been added to Quantity and DataFrame has been added to upcast
 types for pint-pandas compatibility. (#1596)
 - Fix a recursion error that would be raised when passing quantities to `cond` and `x`.

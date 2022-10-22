@@ -77,6 +77,8 @@ def convert_arg(arg, pre_calc_units):
     Helper function for convert_to_consistent_units. pre_calc_units must be given as a
     pint Unit or None.
     """
+    if isinstance(arg, bool):
+        return arg
     if pre_calc_units is not None:
         if _is_quantity(arg):
             return arg.m_as(pre_calc_units)
@@ -101,7 +103,7 @@ def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
 
     If pre_calc_units is not None, takes the args and kwargs for a NumPy function and
     converts any Quantity or Sequence of Quantities into the units of the first
-    Quantity/Sequence of Quantities and returns the magnitudes. Other args/kwargs are
+    Quantity/Sequence of Quantities and returns the magnitudes. Other args/kwargs (except booleans) are
     treated as dimensionless Quantities. If pre_calc_units is None, units are simply
     stripped.
     """
@@ -883,7 +885,14 @@ for func_str in ["cumprod", "cumproduct", "nancumprod"]:
     implement_single_dimensionless_argument_func(func_str)
 
 # Handle single-argument consistent unit functions
-for func_str in ["block", "hstack", "vstack", "dstack", "column_stack"]:
+for func_str in [
+    "block",
+    "hstack",
+    "vstack",
+    "dstack",
+    "column_stack",
+    "broadcast_arrays",
+]:
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
     )
