@@ -18,6 +18,9 @@ types for pint-pandas compatibility. (#1596)
   (Issue #1510, #1530)
 - Update test_non_int tests for pytest.
 - Create NaN-value quantities of appropriate non-int-type (Issue #1570).
+- Avoid addition of spurious trailing zeros when converting units and non-int-type is
+  Decimal (Issue #1621).
+
 
 0.19.2 (2022-04-23)
 -------------------

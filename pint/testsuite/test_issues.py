@@ -1,4 +1,5 @@
 import copy
+import decimal
 import math
 import pprint
 
@@ -1014,3 +1015,10 @@ def test_backcompat_speed_velocity(func_registry):
     get = func_registry.get_dimensionality
     assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
     assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
+
+
+@pytest.mark.func_registry_args(non_int_type=decimal.Decimal)
+def test_issue1621(func_registry):
+    print(func_registry.non_int_type)
+    digits = func_registry.Quantity("5.0 mV/m").to_base_units().magnitude.as_tuple()[1]
+    assert digits == (5, 0)
