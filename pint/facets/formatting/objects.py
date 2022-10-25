@@ -22,7 +22,6 @@ from ...formatting import (
     split_format,
 )
 from ...util import iterable
-from ..plain import UnitsContainer
 
 
 class FormattingQuantity:
@@ -186,36 +185,11 @@ class FormattingUnit:
         _, uspec = split_format(
             spec, self.default_format, self._REGISTRY.separate_format_defaults
         )
-        if "~" in uspec:
-            if not self._units:
-                return ""
-            units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
-                    for key, value in self._units.items()
-                )
-            )
-            uspec = uspec.replace("~", "")
-        else:
-            units = self._units
 
-        return format_unit(units, uspec, registry=self._REGISTRY)
+        return format_unit(self, uspec, registry=self._REGISTRY)
 
     def format_babel(self, spec="", locale=None, **kwspec: Any) -> str:
         spec = spec or extract_custom_flags(self.default_format)
-
-        if "~" in spec:
-            if self.dimensionless:
-                return ""
-            units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
-                    for key, value in self._units.items()
-                )
-            )
-            spec = spec.replace("~", "")
-        else:
-            units = self._units
 
         locale = self._REGISTRY.fmt_locale if locale is None else locale
 
@@ -224,4 +198,4 @@ class FormattingUnit:
         else:
             kwspec["locale"] = babel_parse(locale)
 
-        return units.format_babel(spec, registry=self._REGISTRY, **kwspec)
+        return self._units.format_babel(spec, registry=self._REGISTRY, **kwspec)

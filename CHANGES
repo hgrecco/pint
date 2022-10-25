@@ -63,6 +63,7 @@ types for pint-pandas compatibility. (#1596)
 - Fix setting options of the application registry (Issue #1403).
 - Fix Quantity & Unit `is_compatible_with` with registry active contexts (Issue #1424).
 - Allow Quantity to parse 'NaN' and 'inf(inity)', case insensitive
+- Pass unit modifiers to custom formatters (Issue #1448)
 - Fix casting error when using to_reduced_units with array of int.
   (Issue #1184)
 - Use default numpy `np.printoptions` available since numpy 1.15.

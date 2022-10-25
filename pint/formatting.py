@@ -163,10 +163,44 @@ def register_unit_format(name):
     return wrapper
 
 
+def apply_unit_modifiers(unit, modifiers, registry):
+    """apply modifiers to a unit
+
+    Parameters
+    ----------
+    unit : Unit or UnitsContainer
+        The input unit.
+    modifiers : str
+        The modifiers to apply.
+    registry : UnitRegistry
+        The unit registry associated with `unit`.
+
+    Returns
+    -------
+    UnitsContainer
+        A dict-like container with the preprocessed unit components.
+    """
+    from .util import UnitsContainer
+
+    raw = unit if isinstance(unit, UnitsContainer) else unit._units
+    if not raw:
+        return UnitsContainer({})
+
+    if "~" in modifiers:
+        applied = UnitsContainer(
+            {registry._get_symbol(key): value for key, value in raw.items()}
+        )
+    else:
+        applied = raw
+
+    return applied
+
+
 @register_unit_format("P")
-def format_pretty(unit, registry, **options):
+def format_pretty(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     return formatter(
-        unit.items(),
+        modified.items(),
         as_ratio=True,
         single_denominator=False,
         product_fmt="·",
@@ -179,9 +213,10 @@ def format_pretty(unit, registry, **options):
 
 
 @register_unit_format("L")
-def format_latex(unit, registry, **options):
+def format_latex(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     preprocessed = {
-        r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in unit.items()
+        r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in modified.items()
     }
     formatted = formatter(
         preprocessed.items(),
@@ -197,7 +232,7 @@ def format_latex(unit, registry, **options):
 
 
 @register_unit_format("Lx")
-def format_latex_siunitx(unit, registry, **options):
+def format_latex_siunitx(unit, registry, modifiers, **options):
     if registry is None:
         raise ValueError(
             "Can't format as siunitx without a registry."
@@ -206,14 +241,16 @@ def format_latex_siunitx(unit, registry, **options):
             " and might indicate a bug in `pint`."
         )
 
-    formatted = siunitx_format_unit(unit, registry)
+    modified = apply_unit_modifiers(unit, modifiers, registry)
+    formatted = siunitx_format_unit(modified, registry)
     return rf"\si[]{{{formatted}}}"
 
 
 @register_unit_format("H")
-def format_html(unit, registry, **options):
+def format_html(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     return formatter(
-        unit.items(),
+        modified.items(),
         as_ratio=True,
         single_denominator=True,
         product_fmt=r" ",
@@ -225,9 +262,10 @@ def format_html(unit, registry, **options):
 
 
 @register_unit_format("D")
-def format_default(unit, registry, **options):
+def format_default(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     return formatter(
-        unit.items(),
+        modified.items(),
         as_ratio=True,
         single_denominator=False,
         product_fmt=" * ",
@@ -239,9 +277,10 @@ def format_default(unit, registry, **options):
 
 
 @register_unit_format("C")
-def format_compact(unit, registry, **options):
+def format_compact(unit, registry, modifiers, **options):
+    modified = apply_unit_modifiers(unit, modifiers, registry)
     return formatter(
-        unit.items(),
+        modified.items(),
         as_ratio=True,
         single_denominator=False,
         product_fmt="*",  # TODO: Should this just be ''?
@@ -374,6 +413,7 @@ def formatter(
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
 # We also add uS for uncertainties.
 _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
+_UNIT_MODIFIERS = frozenset("~")
 
 
 def _parse_spec(spec):
@@ -381,7 +421,7 @@ def _parse_spec(spec):
     for ch in reversed(spec):
         if ch == "~" or ch in _BASIC_TYPES:
             continue
-        elif ch in list(_FORMATTERS.keys()) + ["~"]:
+        elif ch in list(_FORMATTERS.keys()) + list(_UNIT_MODIFIERS):
             if result:
                 raise ValueError("expected ':' after format specifier")
             else:
@@ -403,14 +443,15 @@ def format_unit(unit, spec, registry=None, **options):
         else:
             return "dimensionless"
 
-    if not spec:
-        spec = "D"
+    uspec, modifiers = split_unit_format(spec)
+    if not uspec:
+        uspec = "D"
 
-    fmt = _FORMATTERS.get(spec)
+    fmt = _FORMATTERS.get(uspec)
     if fmt is None:
         raise ValueError(f"Unknown conversion specified: {spec}")
 
-    return fmt(unit, registry=registry, **options)
+    return fmt(unit, registry=registry, modifiers=modifiers, **options)
 
 
 def siunitx_format_unit(units, registry):
@@ -456,26 +497,27 @@ def siunitx_format_unit(units, registry):
     return "".join(lpos) + "".join(lneg)
 
 
+def split_unit_format(uspec):
+    modifiers_re = re.compile(rf"[{''.join(_UNIT_MODIFIERS)}]")
+    modifiers = "".join(modifiers_re.findall(uspec))
+    uspec = modifiers_re.sub("", uspec)
+
+    return uspec, modifiers
+
+
 def extract_custom_flags(spec):
-    import re
+    flags = sorted(_FORMATTERS, key=len, reverse=True) + list(_UNIT_MODIFIERS)
+    flag_re = re.compile("|".join(flags))
 
-    if not spec:
-        return ""
-
-    # sort by length, with longer items first
-    known_flags = sorted(_FORMATTERS.keys(), key=len, reverse=True)
-
-    flag_re = re.compile("(" + "|".join(known_flags + ["~"]) + ")")
     custom_flags = flag_re.findall(spec)
 
     return "".join(custom_flags)
 
 
 def remove_custom_flags(spec):
-    for flag in sorted(_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
-        if flag:
-            spec = spec.replace(flag, "")
-    return spec
+    flags = sorted(_FORMATTERS, key=len, reverse=True) + list(_UNIT_MODIFIERS)
+    flag_re = re.compile("|".join(flags))
+    return flag_re.sub("", spec)
 
 
 def split_format(spec, default, separate_format_defaults=True):
