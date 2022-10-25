@@ -27,6 +27,7 @@ import inspect
 import logging
 import pathlib
 import re
+import sys
 import typing as ty
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -1058,8 +1059,15 @@ class Parser(ty.Generic[RBT, CT]):
         resource_name
             name of the resource
         """
-        with resources.path(package, resource_name) as p:
-            path = p.resolve()
+        if sys.version_info < (3, 9):
+            # Remove when Python 3.8 is dropped
+            with resources.path(package, resource_name) as p:
+                path = p.resolve()
+        else:
+            with resources.as_file(
+                resources.files(package).joinpath(resource_name)
+            ) as p:
+                path = p.resolve()
 
         if path.exists():
             return self.parse_file(path)
@@ -1076,8 +1084,13 @@ class Parser(ty.Generic[RBT, CT]):
         resource_name
             name of the resource
         """
-        with resources.open_binary(package, resource_name) as fi:
-            content = fi.read()
+        if sys.version_info < (3, 9):
+            # Remove when Python 3.8 is dropped
+            with resources.open_binary(package, resource_name) as fi:
+                content = fi.read()
+        else:
+            with resources.files(package).joinpath(resource_name).open("rb") as fi:
+                content = fi.read()
 
         bos = BOR(
             Hash.from_bytes(self._hasher, content), package, resource_name
