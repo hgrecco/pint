@@ -21,7 +21,7 @@ and create your own.
 - ContextRegistry: the capability to contexts: predefined conversions
   between incompatible dimensions.
 - NonMultiplicativeRegistry: adds the capability to handle nonmultiplicative units (offset, logarithmic).
-- PlainRegistry: bas implementation for registry, units and quantities.
+- PlainRegistry: base implementation for registry, units and quantities.
 
 The only required one is `PlainRegistry`, the rest are completely
 optional.
