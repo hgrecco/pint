@@ -65,11 +65,11 @@ Pint: makes units easy
     :hidden:
     :caption: For users
 
-    Getting started <getting_started>
+    Getting started <getting/index>
     User Guide <user/index>
-    Advanced topics <advanced_guides>
-    user/ecosystem
-    api
+    Advanced topics <advanced/index>
+    ecosystem
+    API Reference <api/index>
 
 .. toctree::
     :maxdepth: 1
