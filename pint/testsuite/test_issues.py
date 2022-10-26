@@ -1014,3 +1014,24 @@ def test_backcompat_speed_velocity(func_registry):
     get = func_registry.get_dimensionality
     assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
     assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
+
+
+def test_issue1631():
+    import pint
+
+    # Test registry subclassing
+    class MyRegistry(pint.UnitRegistry):
+        pass
+
+    assert MyRegistry.Quantity is pint.UnitRegistry.Quantity
+    assert MyRegistry.Unit is pint.UnitRegistry.Unit
+
+    ureg = MyRegistry()
+
+    u = ureg.meter
+    assert isinstance(u, ureg.Unit)
+    assert isinstance(u, pint.Unit)
+
+    q = 2 * ureg.meter
+    assert isinstance(q, ureg.Quantity)
+    assert isinstance(q, pint.Quantity)
