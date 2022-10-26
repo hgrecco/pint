@@ -12,3 +12,4 @@ Advanced Guides
     user/measurement
     user/pitheorem
     user/currencies
+    user/custom-registry-class
