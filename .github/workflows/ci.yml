@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9, "3.10", "3.11-dev"]
+        python-version: [3.8, 3.9, "3.10", "3.11"]
         numpy: [null, "numpy>=1.19,<2.0.0"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]

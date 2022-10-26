@@ -1,12 +1,23 @@
 Pint Changelog
 ==============
 
-0.20 (unreleased)
-------------------
+0.21 (unreleased)
+-----------------
+
+- Avoid addition of spurious trailing zeros when converting units and non-int-type is
+  Decimal (Issue #1621).
+
+
+0.20 (2022-10-25)
+-----------------
 
 - Reorganized code into facets.
   Each facet encapsulate a Pint functionality.
   (See #1466, #1479)
+- The definition parser is now completely appart, making it easy to try other formats.
+  (See #1595)
+- Extra requires for optional packages are now explicit in setup.cfg
+  (See #1627)
 - Parse both Greek mu and micro Unicode points without error.
   (Issue #1030, #574)
 - Added angular frequency documentation page.
@@ -18,8 +29,8 @@ types for pint-pandas compatibility. (#1596)
   (Issue #1510, #1530)
 - Update test_non_int tests for pytest.
 - Create NaN-value quantities of appropriate non-int-type (Issue #1570).
-- Avoid addition of spurious trailing zeros when converting units and non-int-type is
-  Decimal (Issue #1621).
+- New documentation format and organization!
+- Better support for pandas and dask.
 
 
 0.19.2 (2022-04-23)
