@@ -92,7 +92,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9, "3.10"]
+        platform: [windows-latest, macos-latest]
+        python-version: [3.8, 3.9, "3.10", "3.11"]
         numpy: [ "numpy>=1.19,<2.0.0" ]
         # uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         # extras: [null]
@@ -104,7 +105,7 @@ jobs:
         #     numpy: "numpy"
         #     uncertainties: "uncertainties"
         #     extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
-    runs-on: windows-latest
+    runs-on: ${{ matrix.platform }}
 
     env:
       TEST_OPTS: "-rfsxEX -s -k issue1498b"
