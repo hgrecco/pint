@@ -17,13 +17,15 @@ Most important classes
 
 .. autoclass:: Quantity
     :members:
+    :inherited-members:
 
 .. autoclass:: Unit
     :members:
+    :inherited-members:
 
 .. autoclass:: Measurement
     :members:
-
+    :inherited-members:
 
 Exceptions and warnings
 -----------------------
@@ -55,7 +57,7 @@ Exceptions and warnings
 
 Sharing registry among packages
 -------------------------------
-,
+
 .. autofunction:: get_application_registry
 .. autofunction:: set_application_registry
 

@@ -85,7 +85,7 @@ Pint will complain if you try to use a unit which is not in the registry:
 You can add your own units to the existing registry, or build your own list.
 See the page on :ref:`defining` for more information on that.
 
-See `String parsing`_ and :ref:`Defining Quantities`_ for more ways of defining
+See `String parsing`_ and :ref:`Defining Quantities` for more ways of defining
 a ``Quantity()`` object.
 
 ``Quantity()`` objects also work well with NumPy arrays, which you can
