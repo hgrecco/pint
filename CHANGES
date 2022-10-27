@@ -4,6 +4,12 @@ Pint Changelog
 0.21 (unreleased)
 -----------------
 
+- Nothing changed yet.
+
+
+0.20.1 (2022-10-27)
+-------------------
+
 - Simplify registry subclassing.
   (Issue #1631)
 - Restore intersphinx cross reference functionality.
