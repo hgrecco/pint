@@ -4,7 +4,13 @@ Pint Changelog
 0.21 (unreleased)
 -----------------
 
-- Simplify registry subclassing and document it.
+- Simplify registry subclassing.
+  (Issue #1631)
+- Restore intersphinx cross reference functionality.
+  (Issue #1637)
+- Use a newer version of flexparser that can deal with
+  imports in linked/temporary folders.
+  (Issue #1634)
 
 
 0.20 (2022-10-25)
