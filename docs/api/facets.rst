@@ -1,6 +1,12 @@
 API facets reference
 ====================
 
+Registry functionality is divided into facet. Each provides classes and functions
+specific to a particular purpose. They expose at least a Registry, and in certain
+cases also a Quantity, Unit and other objects.
+
+The default UnitRegistry inherits from all of them.
+
 
 .. automodule:: pint.facets.plain
     :members:

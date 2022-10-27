@@ -6,5 +6,5 @@ API reference
     :hidden:
 
     base
-    common
+    specific
     facets

@@ -5,6 +5,9 @@ Base API
 .. currentmodule:: pint
 
 
+These are the classes, exceptions and functions that you will most likely use.
+
+
 Most important classes
 ----------------------
 

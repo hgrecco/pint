@@ -1,5 +1,9 @@
-Common API
-==========
+Specific API
+============
+
+These are the classes, exceptions and functions that you will use if you need
+to dig deeper into Pint or develop Pint.
+
 
 .. automodule:: pint.babel_names
     :members:
