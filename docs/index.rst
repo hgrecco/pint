@@ -15,7 +15,7 @@ Pint: makes units easy
 
     .. grid-item-card::
         :img-top: _static/index_getting_started.svg
-        :link: getting_started
+        :link: getting/index
         :link-type: doc
 
         Getting Started
@@ -37,7 +37,7 @@ Pint: makes units easy
 
     .. grid-item-card::
         :img-top: _static/index_api.svg
-        :link: api
+        :link: api/base
         :link-type: doc
 
         API reference
