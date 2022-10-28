@@ -3,6 +3,3 @@ requires = ["setuptools>=41", "wheel", "setuptools_scm[toml]>=3.4.3"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-
-[tool.pytest.ini_options]
-markers = ["func_registry_args"]

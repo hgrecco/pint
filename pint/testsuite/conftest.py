@@ -49,7 +49,7 @@ minute = 60 * second = min
 
 
 @pytest.fixture
-def func_registry(request):
+def func_registry():
     return pint.UnitRegistry()
 
 
