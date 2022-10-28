@@ -50,15 +50,7 @@ minute = 60 * second = min
 
 @pytest.fixture
 def func_registry(request):
-    marker = request.node.get_closest_marker("func_registry_args")
-    print(marker)
-    if marker is None:
-        args = ()
-        kwargs = {}
-    else:
-        args = marker.args
-        kwargs = marker.kwargs
-    return pint.UnitRegistry(*args, **kwargs)
+    return pint.UnitRegistry()
 
 
 @pytest.fixture(scope="class")
