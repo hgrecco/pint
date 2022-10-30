@@ -1200,9 +1200,9 @@ def default_locator(source_location: StrictLocationT, target: str) -> StrictLoca
         current_location = pathlib.Path(source_location).resolve()
 
         if current_location.is_file():
-            current_path = source_location.parent
+            current_path = current_location.parent
         else:
-            current_path = source_location
+            current_path = current_location
 
         target_path = pathlib.Path(target)
         if target_path.is_absolute():

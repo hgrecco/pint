@@ -1021,3 +1021,24 @@ def test_issue1621():
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     digits = ureg.Quantity("5.0 mV/m").to_base_units().magnitude.as_tuple()[1]
     assert digits == (5, 0)
+
+
+def test_issue1631():
+    import pint
+
+    # Test registry subclassing
+    class MyRegistry(pint.UnitRegistry):
+        pass
+
+    assert MyRegistry.Quantity is pint.UnitRegistry.Quantity
+    assert MyRegistry.Unit is pint.UnitRegistry.Unit
+
+    ureg = MyRegistry()
+
+    u = ureg.meter
+    assert isinstance(u, ureg.Unit)
+    assert isinstance(u, pint.Unit)
+
+    q = 2 * ureg.meter
+    assert isinstance(q, ureg.Quantity)
+    assert isinstance(q, pint.Quantity)

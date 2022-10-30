@@ -8,6 +8,18 @@ Pint Changelog
   Decimal (Issue #1621).
 
 
+0.20.1 (2022-10-27)
+-------------------
+
+- Simplify registry subclassing.
+  (Issue #1631)
+- Restore intersphinx cross reference functionality.
+  (Issue #1637)
+- Use a newer version of flexparser that can deal with
+  imports in linked/temporary folders.
+  (Issue #1634)
+
+
 0.20 (2022-10-25)
 -----------------
 

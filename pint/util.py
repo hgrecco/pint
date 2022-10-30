@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import functools
 import inspect
 import logging
 import math
@@ -1021,6 +1022,13 @@ def sized(y) -> bool:
     return True
 
 
+@functools.lru_cache(
+    maxsize=None
+)  # TODO: replace with cache when Python 3.8 is dropped.
+def _build_type(class_name: str, bases):
+    return type(class_name, bases, dict())
+
+
 def build_dependent_class(registry_class, class_name: str, attribute_name: str) -> Type:
     """Creates a class specifically for the given registry that
     subclass all the classes named by the registry bases in a
@@ -1036,9 +1044,10 @@ def build_dependent_class(registry_class, class_name: str, attribute_name: str) 
         for base in inspect.getmro(registry_class)
         if attribute_name in base.__dict__
     )
-    bases = dict.fromkeys(bases, None)
-    newcls = type(class_name, tuple(bases.keys()), dict())
-    return newcls
+    bases = tuple(dict.fromkeys(bases, None).keys())
+    if len(bases) == 1 and bases[0].__name__ == class_name:
+        return bases[0]
+    return _build_type(class_name, bases)
 
 
 def create_class_with_registry(registry, base_class) -> Type:

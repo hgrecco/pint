@@ -107,15 +107,16 @@ Extension Packages
 ------------------
 
 Pint naturally integrates with other libraries in the scientific Python ecosystem, and
-a small number of
-`extension/compatibility packages<numpy.html#Compatibility-Packages>`_ have arisen to
-aid in compatibility between certain packages. Pint's rule of thumb for integration
+a small _`ecosystem` have arisen to aid in compatibility between certain packages
+allowing to build an
+
+Pint's rule of thumb for integration
 features that work best as an extension package versus direct inclusion in Pint is:
 
 * Extension (separate packages)
 
-  * Duck array types that wrap Pint (come above Pint in
-    `the type casting hierarchy<numpy.html#Technical-Commentary>`_)
+  * Duck array types that wrap Pint (come above Pint
+    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`
 
   * Uses features independent/on top of the libraries
 
@@ -143,3 +144,4 @@ features that work best as an extension package versus direct inclusion in Pint 
 .. _flake8: https://flake8.pycqa.org/en/latest/
 .. _pytest: https://docs.pytest.org/en/stable/
 .. _sphinx: https://www.sphinx-doc.org/en/master/
+.. _`extension/compatibility packages`:

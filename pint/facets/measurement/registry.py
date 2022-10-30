@@ -1,6 +1,6 @@
 """
-    pint.facets.measurement.objects
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.facets.measurement.registry
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.

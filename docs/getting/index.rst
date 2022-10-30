@@ -45,6 +45,7 @@ That's all! You can check that Pint is correctly installed by starting up python
     :maxdepth: 2
     :hidden:
 
-    user/overview
-    user/tutorial
-    user/faq
+    overview
+    tutorial
+    pint-in-your-projects
+    faq

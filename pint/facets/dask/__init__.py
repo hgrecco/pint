@@ -1,6 +1,6 @@
 """
-    pint.facets.numpy
-    ~~~~~~~~~~~~~~~~~
+    pint.facets.dask
+    ~~~~~~~~~~~~~~~~
 
     Adds pint the capability to interoperate with Dask
 
