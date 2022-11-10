@@ -4,7 +4,8 @@ Pint Changelog
 0.21 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Add PEP621/631 support.
+  (Issue #1647)
 
 
 0.20.1 (2022-10-27)
