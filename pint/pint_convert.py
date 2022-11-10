@@ -169,8 +169,10 @@ def use_unc(num, fmt, prec_unc):
         pass
     return max(0, min(prec_unc, unc))
 
+
 def main():
     convert(args.fr, args.to)
+
 
 if __name__ == "__main__":
     main()

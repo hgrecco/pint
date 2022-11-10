@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Pint"
-authors = [ 
+authors = [
   {name="Hernan E. Grecco", email="hernan.grecco@gmail.com"}
 ]
 license = {text = "BSD"}
@@ -16,7 +16,7 @@ maintainers = [
   {name="Hernan E. Grecco", email="hernan.grecco@gmail.com"},
   {name="Jules Chéron", email="julescheron@gmail.com"}
 ]
-keywords = ["physical", "quantities", "unit", "conversion", "science"] 
+keywords = ["physical", "quantities", "unit", "conversion", "science"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
