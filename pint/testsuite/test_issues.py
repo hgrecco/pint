@@ -867,6 +867,9 @@ class TestIssues(QuantityTestCase):
         from numpy.testing import assert_almost_equal
         from uncertainties import ufloat
 
+        from pint import pint_eval
+        pint_eval.tokenizer = pint_eval.uncertainty_tokenizer
+
         u1 = ufloat(1.2, 0.34)
         u2 = ufloat(5.6, 0.78)
         q1_u = module_registry.Quantity(u2 - u1, "m")

@@ -11,10 +11,7 @@
 from __future__ import annotations
 
 import math
-import token as tokenlib
-import tokenize
 from decimal import Decimal
-from io import BytesIO
 from numbers import Number
 
 try:
@@ -37,123 +34,6 @@ def missing_dependency(package, display_name=None):
         )
 
     return _inner
-
-
-# https://stackoverflow.com/a/1517965/1291237
-class tokens_with_lookahead:
-    def __init__(self, iter):
-        self.iter = iter
-        self.buffer = []
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.buffer:
-            return self.buffer.pop(0)
-        else:
-            return self.iter.__next__()
-
-    def lookahead(self, n):
-        """Return an item n entries ahead in the iteration."""
-        while n >= len(self.buffer):
-            try:
-                self.buffer.append(self.iter.__next__())
-            except StopIteration:
-                return None
-        return self.buffer[n]
-
-
-def tokenizer(input_string):
-    def _number_or_nan(token):
-        if token.type == tokenlib.NUMBER or (
-            token.type == tokenlib.NAME and token.string == "nan"
-        ):
-            return True
-        return False
-
-    gen = tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline)
-    toklist = tokens_with_lookahead(gen)
-    for tokinfo in toklist:
-        if tokinfo.type != tokenize.ENCODING:
-            if (
-                tokinfo.string == "+"
-                and toklist.lookahead(0).string == "/"
-                and toklist.lookahead(1).string == "-"
-            ):
-                line = tokinfo.line
-                start = tokinfo.start
-                for i in range(-1, 1):
-                    next(toklist)
-                end = tokinfo.end
-                tokinfo = tokenize.TokenInfo(
-                    type=tokenlib.OP,
-                    string="+/-",
-                    start=start,
-                    end=end,
-                    line=line,
-                )
-                yield tokinfo
-            elif (
-                tokinfo.string == "("
-                and _number_or_nan(toklist.lookahead(0))
-                and toklist.lookahead(1).string == "+"
-                and toklist.lookahead(2).string == "/"
-                and toklist.lookahead(3).string == "-"
-                and _number_or_nan(toklist.lookahead(4))
-                and toklist.lookahead(5).string == ")"
-            ):
-                # ( NUM_OR_NAN +/- NUM_OR_NAN )
-                start = tokinfo.start
-                end = toklist.lookahead(5).end
-                line = tokinfo.line[start[1] : end[1]]
-                nominal_value = toklist.lookahead(0)
-                std_dev = toklist.lookahead(4)
-                plus_minus_op = tokenize.TokenInfo(
-                    type=tokenlib.OP,
-                    string="+/-",
-                    start=toklist.lookahead(1).start,
-                    end=toklist.lookahead(3).end,
-                    line=line,
-                )
-                # Strip parentheses and let tight binding of +/- do its work
-                for i in range(-1, 5):
-                    next(toklist)
-                yield nominal_value
-                yield plus_minus_op
-                yield std_dev
-            elif (
-                tokinfo.type == tokenlib.NUMBER
-                and toklist.lookahead(0).string == "("
-                and toklist.lookahead(1).type == tokenlib.NUMBER
-                and toklist.lookahead(2).string == ")"
-            ):
-                line = tokinfo.line
-                start = tokinfo.start
-                nominal_value = tokinfo
-                std_dev = toklist.lookahead(1)
-                plus_minus_op = tokenize.TokenInfo(
-                    type=tokenlib.OP,
-                    string="+/-",
-                    start=toklist.lookahead(0).start,
-                    end=toklist.lookahead(2).end,
-                    line=line,
-                )
-                for i in range(-1, 2):
-                    next(toklist)
-                yield nominal_value
-                yield plus_minus_op
-                if "." not in std_dev.string:
-                    std_dev = tokenize.TokenInfo(
-                        type=std_dev.type,
-                        string="0." + std_dev.string,
-                        start=std_dev.start,
-                        end=std_dev.end,
-                        line=line,
-                    )
-                yield std_dev
-            else:
-                yield tokinfo
 
 
 # TODO: remove this warning after v0.10

@@ -2,7 +2,7 @@ import pytest
 
 from pint import DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
-
+from pint import pint_eval
 
 # TODO: do not subclass from QuantityTestCase
 @helpers.requires_not_uncertainties()
@@ -272,3 +272,11 @@ class TestMeasurement(QuantityTestCase):
         y = self.Q_(5.0, "meter").plus_minus(0.1)
         assert x <= y
         assert not (x >= y)
+
+    def test_tokenization(self):
+        from pint import pint_eval
+
+        pint_eval.tokenizer = pint_eval.uncertainty_tokenizer
+        for p in pint_eval.tokenizer("8 + / - 4"):
+            print(p)
+        assert True

@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+from io import BytesIO
 import operator
 import token as tokenlib
 import tokenize
@@ -59,6 +60,200 @@ def _power(left, right):
 
     return operator.pow(left, right)
 
+
+# https://stackoverflow.com/a/1517965/1291237
+class tokens_with_lookahead:
+    def __init__(self, iter):
+        self.iter = iter
+        self.buffer = []
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.buffer:
+            return self.buffer.pop(0)
+        else:
+            return self.iter.__next__()
+
+    def lookahead(self, n):
+        """Return an item n entries ahead in the iteration."""
+        while n >= len(self.buffer):
+            try:
+                self.buffer.append(self.iter.__next__())
+            except StopIteration:
+                return None
+        return self.buffer[n]
+
+
+def _plain_tokenizer(input_string):
+    for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
+        if tokinfo.type != tokenlib.ENCODING:
+            yield tokinfo
+
+def uncertainty_tokenizer(input_string):
+    def _number_or_nan(token):
+        if token.type == tokenlib.NUMBER or (
+            token.type == tokenlib.NAME and token.string == "nan"
+        ):
+            return True
+        return False
+
+    def _get_possible_e(toklist, e_index):
+        possible_e_token = toklist.lookahead(e_index)
+        if (possible_e_token.string[0]=="e"
+            and len(possible_e_token.string)>1
+            and possible_e_token.string[1].isdigit()):
+            end = possible_e_token.end
+            possible_e = tokenize.TokenInfo(
+                type=tokenlib.STRING,
+                string=possible_e_token.string,
+                start=possible_e_token.start,
+                end=end,
+                line=possible_e_token.line)
+        elif (possible_e_token.string[0] in ["e", "E"]
+              and toklist.lookahead(e_index+1).string in ["+", "-"]
+              and toklist.lookahead(e_index+2).type==tokenlib.NUMBER):
+            # Special case: Python allows a leading zero for exponents (i.e., 042) but not for numbers
+            if toklist.lookahead(e_index+2).string == "0" and toklist.lookahead(e_index+3).type==tokenlib.NUMBER:
+                exp_number = toklist.lookahead(e_index+3).string
+                end = toklist.lookahead(e_index+3).end
+            else:
+                exp_number = toklist.lookahead(e_index+2).string
+                end = toklist.lookahead(e_index+2).end
+            possible_e = tokenize.TokenInfo(
+                type=tokenlib.STRING,
+                string=f"e{toklist.lookahead(e_index+1).string}{exp_number}",
+                start=possible_e_token.start,
+                end=end,
+                line=possible_e_token.line)
+        else:
+            possible_e = None
+        return possible_e
+
+    def _apply_e_notation(mantissa, exponent):
+        if mantissa.string == 'nan':
+            return mantissa
+        if float(mantissa.string)==0.0:
+            return mantissa
+        return tokenize.TokenInfo(
+            type=tokenlib.NUMBER,
+            string=f"{mantissa.string}{exponent.string}",
+            start=mantissa.start,
+            end=exponent.end,
+            line=exponent.line
+        )
+
+    def _finalize_e(nominal_value, std_dev, toklist, possible_e):
+        nominal_value = _apply_e_notation(nominal_value, possible_e)
+        std_dev = _apply_e_notation(std_dev, possible_e)
+        next(toklist) # consume 'e' and positive exponent value
+        if possible_e.string[1]=='-':
+            next(toklist) # consume '+' or '-' in exponent
+            exp_number = next(toklist) # consume exponent value
+            if exp_number.end < end:
+                exp_number = next(toklist)
+                assert(exp_number.end==end)
+        return nominal_value, std_dev
+
+    # when tokenize encounters whitespace followed by an unknown character,
+    # (such as ±) it proceeds to mark every character of the whitespace as ERRORTOKEN,
+    # in addition to marking the unknown character as ERRORTOKEN.  Rather than
+    # wading through all that vomit, just eliminate the problem
+    # in the input by rewriting ± as +/-.
+    input_string = input_string.replace('±', '+/-')
+    toklist = tokens_with_lookahead(_plain_tokenizer(input_string))
+    for tokinfo in toklist:
+        line = tokinfo.line
+        start = tokinfo.start
+        if (
+            tokinfo.string == "+"
+            and toklist.lookahead(0).string == "/"
+            and toklist.lookahead(1).string == "-"
+        ):
+            plus_minus_op = tokenize.TokenInfo(
+                type=tokenlib.OP,
+                string="+/-",
+                start=start,
+                end=toklist.lookahead(1).end,
+                line=line,
+            )
+            for i in range(-1, 1):
+                next(toklist)
+            yield plus_minus_op
+        elif (
+            tokinfo.string == "("
+            and _number_or_nan(toklist.lookahead(0))
+            and toklist.lookahead(1).string == "+"
+            and toklist.lookahead(2).string == "/"
+            and toklist.lookahead(3).string == "-"
+            and _number_or_nan(toklist.lookahead(4))
+            and toklist.lookahead(5).string == ")"
+        ):
+            # ( NUM_OR_NAN +/- NUM_OR_NAN ) POSSIBLE_E_NOTATION
+            possible_e = _get_possible_e (toklist, 6)
+            if possible_e:
+                end = possible_e.end
+            else:
+                end = toklist.lookahead(5).end
+            nominal_value = next(toklist)
+            tokinfo = next(toklist) # consume '+'
+            next(toklist) # consume '/'
+            plus_minus_op = tokenize.TokenInfo(
+                type=tokenlib.OP,
+                string="+/-",
+                start=tokinfo.start,
+                end=next(toklist).end, # consume '-'
+                line=line,
+            )
+            std_dev = next(toklist)
+            next(toklist) # consume final ')'
+            if possible_e:
+                nominal_value, std_dev = _finalize_e(nominal_value, std_dev, toklist, possible_e)
+            yield nominal_value
+            yield plus_minus_op
+            yield std_dev
+        elif (
+            tokinfo.type == tokenlib.NUMBER
+            and toklist.lookahead(0).string == "("
+            and toklist.lookahead(1).type == tokenlib.NUMBER
+            and toklist.lookahead(2).string == ")"
+        ):
+            # NUM_OR_NAN ( NUM_OR_NAN ) POSSIBLE_E_NOTATION
+            possible_e = _get_possible_e (toklist, 3)
+            if possible_e:
+                end = possible_e.end
+            else:
+                end = toklist.lookahead(2).end
+            nominal_value = tokinfo
+            tokinfo = next(toklist) # consume '('
+            plus_minus_op = tokenize.TokenInfo(
+                type=tokenlib.OP,
+                string="+/-",
+                start=tokinfo.start,
+                end=tokinfo.end, # this is funky because there's no "+/-" in nominal(std_dev) notation
+                line=line,
+            )
+            std_dev = next(toklist)
+            if "." not in std_dev.string:
+                std_dev = tokenize.TokenInfo(
+                    type=std_dev.type,
+                    string="0." + std_dev.string,
+                    start=std_dev.start,
+                    end=std_dev.end,
+                    line=line,
+                )
+            next(toklist) # consume final ')'
+            if possible_e:
+                nominal_value, std_dev = _finalize_e(nominal_value, std_dev, toklist, possible_e)
+            yield nominal_value
+            yield plus_minus_op
+            yield std_dev
+        else:
+            yield tokinfo
+
+
+tokenizer = _plain_tokenizer
 
 _BINARY_OPERATOR_MAP = {
     "±": _ufloat,
@@ -142,89 +337,6 @@ class EvalTreeNode:
 
 
 from typing import Iterable
-
-
-def peek_exp_number(tokens, index):
-    exp_number = None
-    exp_number_end = index
-    exp_is_negative = False
-    if (
-        index + 2 < len(tokens)
-        and tokens[index + 1].string == "10"
-        and tokens[index + 2].string in "⁻⁰¹²³⁴⁵⁶⁷⁸⁹"
-    ):
-        if tokens[index + 2].string == "⁻":
-            exp_is_negative = True
-        for exp_number_end in range(index + 3, len(tokens)):
-            if tokens[exp_number_end].string not in "⁰¹²³⁴⁵⁶⁷⁸⁹":
-                break
-        exp_number = "".join(
-            [
-                digit.string[0] - "⁰"
-                for digit in tokens[index + exp_is_negative + 2 : exp_number_end]
-            ]
-        )
-    else:
-        if (
-            index + 2 < len(tokens)
-            and tokens[index + 1].string == "e"
-            # No sign on the exponent, treat as +
-            and tokens[index + 2].type == tokenlib.NUMBER
-        ):
-            # Don't know why tokenizer doesn't bundle all these numbers together
-            for exp_number_end in range(index + 3, len(tokens)):
-                if tokens[exp_number_end].type != tokenlib.NUMBER:
-                    break
-        elif (
-            index + 3 < len(tokens)
-            and tokens[index + 1].string == "e"
-            and tokens[index + 2].string in ["+", "-"]
-            and tokens[index + 3].type == tokenlib.NUMBER
-        ):
-            if tokens[index + 2].string == "-":
-                exp_is_negative = True
-            # Don't know why tokenizer doesn't bundle all these numbers together
-            for exp_number_end in range(index + 4, len(tokens)):
-                if tokens[exp_number_end].type != tokenlib.NUMBER:
-                    break
-        if exp_number_end > index:
-            exp_number = "".join(
-                [digit.string for digit in tokens[index + 3 : exp_number_end]]
-            )
-        else:
-            return None, index
-    exp_number = "1.0e" + ("-" if exp_is_negative else "") + exp_number
-    assert exp_number_end != index
-    return exp_number, exp_number_end
-
-
-def finish_exp_number(tokens, exp_number, exp_number_end, plus_minus_op, left, right):
-    exp_number_token = tokenize.TokenInfo(
-        type=tokenlib.NUMBER,
-        string=exp_number,
-        start=(1, 0),
-        end=(1, len(exp_number)),
-        line=exp_number,
-    )
-    e_notation_operator = tokenize.TokenInfo(
-        type=tokenlib.OP,
-        string="*",
-        start=(1, 0),
-        end=(1, 1),
-        line="*",
-    )
-    e_notation_scale, _ = build_eval_tree(
-        [exp_number_token, tokens[-1]],
-        None,
-        0,
-        0,
-        tokens[exp_number_end].string,
-    )
-    scaled_left = EvalTreeNode(left, e_notation_operator, e_notation_scale)
-    scaled_right = EvalTreeNode(right, e_notation_operator, e_notation_scale)
-    result = EvalTreeNode(scaled_left, plus_minus_op, scaled_right)
-    index = exp_number_end
-    return result, index
 
 
 def build_eval_tree(
@@ -311,20 +423,6 @@ def build_eval_tree(
                     right, index = build_eval_tree(
                         tokens, op_priority, index + 1, depth + 1, token_text
                     )
-                    if token_text in ["±", "+/-"]:
-                        # See if we need to scale the nominal_value and std_dev terms by an eponent
-                        exp_number, exp_number_end = peek_exp_number(tokens, index)
-                        if exp_number:
-                            result, index = finish_exp_number(
-                                tokens,
-                                exp_number,
-                                exp_number_end,
-                                current_token,
-                                result,
-                                right,
-                            )
-                            # We know we are not at an ENDMARKER here
-                            continue
                     result = EvalTreeNode(
                         left=result, operator=current_token, right=right
                     )

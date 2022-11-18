@@ -1,12 +1,14 @@
 import pytest
 
-from pint.compat import tokenizer
+from pint import pint_eval
 from pint.pint_eval import build_eval_tree
 
+# This is how we enable the parsing of uncertainties
+# pint_eval.tokenizer = pint_eval.uncertainty_tokenizer
 
 class TestPintEval:
     def _test_one(self, input_text, parsed):
-        assert build_eval_tree(tokenizer(input_text)).to_string() == parsed
+        assert build_eval_tree(pint_eval.tokenizer(input_text)).to_string() == parsed
 
     @pytest.mark.parametrize(
         ("input_text", "parsed"),

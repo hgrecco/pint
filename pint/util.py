@@ -23,10 +23,11 @@ from numbers import Number
 from token import NAME, NUMBER
 from typing import TYPE_CHECKING, ClassVar, Optional, Type, Union
 
-from .compat import NUMERIC_TYPES, tokenizer
+from .compat import NUMERIC_TYPES
 from .errors import DefinitionSyntaxError
 from .formatting import format_unit
 from .pint_eval import build_eval_tree
+from . import pint_eval
 
 if TYPE_CHECKING:
     from pint import Quantity, UnitRegistry
@@ -620,7 +621,7 @@ class ParserHelper(UnitsContainer):
         else:
             reps = False
 
-        gen = tokenizer(input_string)
+        gen = pint_eval.tokenizer(input_string)
         ret = build_eval_tree(gen).evaluate(
             partial(cls.eval_token, non_int_type=non_int_type)
         )

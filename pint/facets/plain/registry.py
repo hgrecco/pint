@@ -42,9 +42,10 @@ if TYPE_CHECKING:
     from pint import Quantity, Unit
 
 from ... import parser
+from ... import pint_eval
 from ..._typing import QuantityOrUnitLike, UnitLike
 from ..._vendor import appdirs
-from ...compat import HAS_BABEL, babel_parse, tokenizer
+from ...compat import HAS_BABEL, babel_parse
 from ...definitions import Definition
 from ...errors import (
     DefinitionSyntaxError,
@@ -1346,7 +1347,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         for p in self.preprocessors:
             input_string = p(input_string)
         input_string = string_preprocessor(input_string)
-        gen = tokenizer(input_string)
+        gen = pint_eval.tokenizer(input_string)
 
         return build_eval_tree(gen).evaluate(
             lambda x: self._eval_token(x, case_sensitive=case_sensitive, **values)
