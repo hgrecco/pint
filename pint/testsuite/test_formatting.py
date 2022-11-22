@@ -65,5 +65,5 @@ def test_register_unit_format(func_registry):
     with pytest.raises(ValueError, match="format 'custom' already exists"):
 
         @fmt.register_unit_format("custom")
-        def format_custom(unit, registry, **options):
+        def format_custom_redefined(unit, registry, **options):
             return "<overwritten>"
