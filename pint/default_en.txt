@@ -62,6 +62,8 @@
 #### PREFIXES ####
 
 # decimal prefixes
+quecto- = 1e-30 = q-
+ronto- = 1e-27 = r-
 yocto- = 1e-24 = y-
 zepto- = 1e-21 = z-
 atto- =  1e-18 = a-
@@ -84,6 +86,8 @@ peta- =  1e15  = P-
 exa- =   1e18  = E-
 zetta- = 1e21  = Z-
 yotta- = 1e24  = Y-
+ronna- = 1e27 = R-
+quetta- = 1e30 = Q-
 
 # binary_prefixes
 kibi- = 2**10 = Ki-
