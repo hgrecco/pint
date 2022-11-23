@@ -6,6 +6,8 @@ Pint Changelog
 
 - Add new SI prefixes: ronna-, ronto-, quetta-, quecto-.
   (PR #1652)
+- Fix unit check with `atol` using `np.allclose` & `np.isclose`.
+  (Issue #1658)
 
 
 0.20.1 (2022-10-27)

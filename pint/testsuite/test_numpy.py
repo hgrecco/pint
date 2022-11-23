@@ -1050,7 +1050,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.isclose(self.q, q2), np.array([[False, True], [True, False]])
         )
         self.assertNDArrayEqual(
-            np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
+            np.isclose(self.q, q2, atol=1e-5 * self.ureg.mm, rtol=1e-7),
             np.array([[False, True], [True, False]]),
         )
 
@@ -1355,6 +1355,16 @@ class TestNumpyUnclassified(TestNumpyMethods):
         assert not np.allclose(
             [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.mm
         )
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m,
+            [1.00001e10, 1e-9] * self.ureg.m,
+            atol=1e-8 * self.ureg.m,
+        )
+
+        with pytest.raises(DimensionalityError):
+            assert np.allclose(
+                [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+            )
 
     @helpers.requires_array_function_protocol()
     def test_intersect1d(self):
