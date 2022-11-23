@@ -934,6 +934,30 @@ for func_str in ["var", "nanvar"]:
     implement_func("function", func_str, input_units=None, output_unit="variance")
 
 
+def implement_nep35_func(func_str):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(*args, like, **kwargs):
+        result = func(*args, **kwargs)
+        return like._REGISTRY.Quantity(result, like.units)
+
+
+nep35_function_names = {
+    "array",
+    "asarray",
+    "arange",
+    "linspace",
+    "identity",
+}
+for func_str in nep35_function_names:
+    implement_nep35_func(func_str)
+
+
 def numpy_wrap(func_type, func, args, kwargs, types):
     """Return the result from a NumPy function/ufunc as wrapped by Pint."""
 
