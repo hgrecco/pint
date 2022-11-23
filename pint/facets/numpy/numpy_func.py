@@ -950,9 +950,11 @@ def implement_nep35_func(func_str):
 nep35_function_names = {
     "array",
     "asarray",
+    "asanyarray",
     "arange",
     "linspace",
     "identity",
+    "eye",
 }
 for func_str in nep35_function_names:
     implement_nep35_func(func_str)
