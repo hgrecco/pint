@@ -374,7 +374,7 @@ class TestMathUfuncs(TestUFuncs):
         self._test1(np.negative, (self.qless, self.q1), ())
 
     def test_positive(self):
-        self._test1(np.negative, (self.qless, self.q1), ())
+        self._test1(np.positive, (self.qless, self.q1), ())
 
     def test_remainder(self):
         self._test2(
