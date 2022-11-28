@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import copy
 import functools
+import inspect
 import itertools
 import locale
 import pathlib
 import re
 from collections import defaultdict
-from dataclasses import dataclass
 from decimal import Decimal
 from fractions import Fraction
 from numbers import Number
@@ -41,19 +41,12 @@ if TYPE_CHECKING:
     from ..context import Context
     from pint import Quantity, Unit
 
-from ... import parser
 from ..._typing import QuantityOrUnitLike, UnitLike
 from ..._vendor import appdirs
 from ...compat import HAS_BABEL, babel_parse, tokenizer
-from ...definitions import Definition
-from ...errors import (
-    DefinitionSyntaxError,
-    DimensionalityError,
-    RedefinitionError,
-    UndefinedUnitError,
-)
+from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
-from ...util import ParserHelper, SourceIterator
+from ...util import ParserHelper
 from ...util import UnitsContainer
 from ...util import UnitsContainer as UnitsContainerT
 from ...util import (
@@ -68,9 +61,11 @@ from ...util import (
 )
 from .definitions import (
     AliasDefinition,
+    CommentDefinition,
+    DefaultsDefinition,
+    DerivedDimensionDefinition,
     DimensionDefinition,
     PrefixDefinition,
-    ScaleConverter,
     UnitDefinition,
 )
 from .objects import PlainQuantity, PlainUnit
@@ -87,24 +82,6 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 _BLOCK_RE = re.compile(r"[ (]")
-
-
-@dataclass(frozen=True)
-class DefaultsDefinition:
-    """Definition for the @default directive"""
-
-    content: Tuple[Tuple[str, str], ...]
-
-    @classmethod
-    def from_lines(cls, lines, non_int_type=float) -> DefaultsDefinition:
-        source_iterator = SourceIterator(lines)
-        next(source_iterator)
-        out = []
-        for lineno, part in source_iterator:
-            k, v = part.split("=")
-            out.append((k.strip(), v.strip()))
-
-        return DefaultsDefinition(tuple(out))
 
 
 @functools.lru_cache()
@@ -212,6 +189,8 @@ class PlainRegistry(metaclass=RegistryMeta):
     _quantity_class = PlainQuantity
     _unit_class = PlainUnit
 
+    _def_parser = None
+
     def __init__(
         self,
         filename="",
@@ -226,17 +205,25 @@ class PlainRegistry(metaclass=RegistryMeta):
         cache_folder: Union[str, pathlib.Path, None] = None,
         separate_format_defaults: Optional[bool] = None,
     ):
-        #: Map context prefix to (loader function, parser function, single_line)
-        #: type: Dict[str, Tuple[Callable[[Any], None]], Any]
-        self._directives = {}
-        self._register_directives()
+        #: Map a definition class to a adder methods.
+        self._adders = dict()
+        self._register_definition_adders()
         self._init_dynamic_classes()
 
         if cache_folder == ":auto:":
             cache_folder = appdirs.user_cache_dir(appname="pint", appauthor=False)
+            cache_folder = pathlib.Path(cache_folder)
+
+        from ... import delegates  # TODO: change thiss
 
         if cache_folder is not None:
-            self._diskcache = parser.build_disk_cache_class(non_int_type)(cache_folder)
+            self._diskcache = delegates.build_disk_cache_class(non_int_type)(
+                cache_folder
+            )
+
+        self._def_parser = delegates.txt_defparser.DefParser(
+            delegates.ParserConfig(non_int_type), diskcache=self._diskcache
+        )
 
         self._filename = filename
         self.force_ndarray = force_ndarray
@@ -256,7 +243,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         self.set_fmt_locale(fmt_locale)
 
         #: Numerical type used for non integer values.
-        self.non_int_type = non_int_type
+        self._non_int_type = non_int_type
 
         #: Default unit case sensitivity
         self.case_sensitive = case_sensitive
@@ -266,7 +253,9 @@ class PlainRegistry(metaclass=RegistryMeta):
         self._defaults: Dict[str, str] = {}
 
         #: Map dimension name (string) to its definition (DimensionDefinition).
-        self._dimensions: Dict[str, DimensionDefinition] = {}
+        self._dimensions: Dict[
+            str, Union[DimensionDefinition, DerivedDimensionDefinition]
+        ] = {}
 
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
@@ -279,9 +268,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         self._units_casei: Dict[str, Set[str]] = defaultdict(set)
 
         #: Map prefix name (string) to its definition (PrefixDefinition).
-        self._prefixes: Dict[str, PrefixDefinition] = {
-            "": PrefixDefinition("", "", (), 1)
-        }
+        self._prefixes: Dict[str, PrefixDefinition] = {"": PrefixDefinition("", 1)}
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes: Dict[str, str] = {"": "", "s": ""}
@@ -306,7 +293,8 @@ class PlainRegistry(metaclass=RegistryMeta):
         """This should be called after all __init__"""
 
         if self._filename == "":
-            loaded_files = self.load_definitions("default_en.txt", True)
+            path = pathlib.Path(__file__).parent.parent.parent / "default_en.txt"
+            loaded_files = self.load_definitions(path, True)
         elif self._filename is not None:
             loaded_files = self.load_definitions(self._filename)
         else:
@@ -315,19 +303,18 @@ class PlainRegistry(metaclass=RegistryMeta):
         self._build_cache(loaded_files)
         self._initialized = True
 
-    def _register_directives(self) -> None:
-        self._register_directive("@alias", self._load_alias, AliasDefinition)
-        self._register_directive("@defaults", self._load_defaults, DefaultsDefinition)
+    def _register_adder(self, definition_class, adder_func):
+        """Register a block definition."""
+        self._adders[definition_class] = adder_func
 
-    def _load_defaults(self, defaults_definition: DefaultsDefinition) -> None:
-        """Loader for a @default section."""
-
-        for k, v in defaults_definition.content:
-            self._defaults[k] = v
-
-    def _load_alias(self, alias_definition: AliasDefinition) -> None:
-        """Loader for an @alias directive"""
-        self._define_alias(alias_definition)
+    def _register_definition_adders(self) -> None:
+        self._register_adder(AliasDefinition, self._add_alias)
+        self._register_adder(DefaultsDefinition, self._add_defaults)
+        self._register_adder(CommentDefinition, lambda o: o)
+        self._register_adder(PrefixDefinition, self._add_prefix)
+        self._register_adder(UnitDefinition, self._add_unit)
+        self._register_adder(DimensionDefinition, self._add_dimension)
+        self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
     def __deepcopy__(self, memo) -> "PlainRegistry":
         new = object.__new__(type(self))
@@ -405,7 +392,11 @@ class PlainRegistry(metaclass=RegistryMeta):
             return self._diskcache.cache_folder
         return None
 
-    def define(self, definition: Union[str, Definition]) -> None:
+    @property
+    def non_int_type(self):
+        return self._non_int_type
+
+    def define(self, definition):
         """Add unit to the registry.
 
         Parameters
@@ -415,162 +406,99 @@ class PlainRegistry(metaclass=RegistryMeta):
         """
 
         if isinstance(definition, str):
-            for line in definition.split("\n"):
-                if line.startswith("@alias"):
-                    # TODO why alias can be defined like this but not other directives?
-                    self._define_alias(
-                        AliasDefinition.from_string(line, self.non_int_type)
-                    )
-                else:
-                    self._define(Definition.from_string(line, self.non_int_type))
+            parsed_project = self._def_parser.parse_string(definition)
+
+            for definition in self._def_parser.iter_parsed_project(parsed_project):
+                self._helper_dispatch_adder(definition)
         else:
-            self._define(definition)
+            self._helper_dispatch_adder(definition)
 
-    def _define(self, definition: Definition) -> Tuple[Definition, dict, dict]:
-        """Add unit to the registry.
+    ############
+    # Adders
+    # - we first provide some helpers that deal with repetitive task.
+    # - then we define specific adder for each definition class. :-D
+    ############
 
-        This method defines only multiplicative units, converting any other type
-        to `delta_` units.
-
-        Parameters
-        ----------
-        definition : Definition
-            a dimension, unit or prefix definition.
-
-        Returns
-        -------
-        Definition, dict, dict
-            Definition instance, case sensitive unit dict, case insensitive unit dict.
-
+    def _helper_dispatch_adder(self, definition):
+        """Helper function to add a single definition,
+        choosing the appropiate method by class.
         """
-
-        if isinstance(definition, DimensionDefinition):
-            d, di = self._dimensions, None
-
-        elif isinstance(definition, UnitDefinition):
-            d, di = self._units, self._units_casei
-
-            # For a plain units, we need to define the related dimension
-            # (making sure there is only one to define)
-            if definition.is_base:
-                for dimension in definition.reference.keys():
-                    if dimension in self._dimensions:
-                        if dimension != "[]":
-                            raise DefinitionSyntaxError(
-                                "Only one unit per dimension can be a plain unit"
-                            )
-                        continue
-
-                    self.define(
-                        DimensionDefinition(dimension, "", (), None, None, True)
-                    )
-
-        elif isinstance(definition, PrefixDefinition):
-            d, di = self._prefixes, None
-
+        for cls in inspect.getmro(definition.__class__):
+            if cls in self._adders:
+                adder_func = self._adders[cls]
+                break
         else:
-            raise TypeError("{} is not a valid definition.".format(definition))
-
-        # define "delta_" units for units with an offset
-        if getattr(definition.converter, "offset", 0) != 0:
-
-            if definition.name.startswith("["):
-                d_name = "[delta_" + definition.name[1:]
-            else:
-                d_name = "delta_" + definition.name
-
-            if definition.symbol:
-                d_symbol = "Δ" + definition.symbol
-            else:
-                d_symbol = None
-
-            d_aliases = tuple("Δ" + alias for alias in definition.aliases) + tuple(
-                "delta_" + alias for alias in definition.aliases
+            raise TypeError(
+                f"No loader function defined " f"for {definition.__class__.__name__}"
             )
 
-            d_reference = self.UnitsContainer(
-                {ref: value for ref, value in definition.reference.items()}
-            )
+        adder_func(definition)
 
-            d_def = UnitDefinition(
-                d_name,
-                d_symbol,
-                d_aliases,
-                ScaleConverter(definition.converter.scale),
-                d_reference,
-                definition.is_base,
-            )
-        else:
-            d_def = definition
-
-        self._define_adder(d_def, d, di)
-
-        return definition, d, di
-
-    def _define_adder(self, definition, unit_dict, casei_unit_dict):
+    def _helper_adder(self, definition, target_dict, casei_target_dict):
         """Helper function to store a definition in the internal dictionaries.
         It stores the definition under its name, symbol and aliases.
         """
-        self._define_single_adder(
-            definition.name, definition, unit_dict, casei_unit_dict
+        self._helper_single_adder(
+            definition.name, definition, target_dict, casei_target_dict
         )
 
-        if definition.has_symbol:
-            self._define_single_adder(
-                definition.symbol, definition, unit_dict, casei_unit_dict
+        if getattr(definition, "has_symbol", ""):
+            self._helper_single_adder(
+                definition.symbol, definition, target_dict, casei_target_dict
             )
 
-        for alias in definition.aliases:
+        for alias in getattr(definition, "aliases", ()):
             if " " in alias:
                 logger.warn("Alias cannot contain a space: " + alias)
 
-            self._define_single_adder(alias, definition, unit_dict, casei_unit_dict)
+            self._helper_single_adder(alias, definition, target_dict, casei_target_dict)
 
-    def _define_single_adder(self, key, value, unit_dict, casei_unit_dict):
+    def _helper_single_adder(self, key, value, target_dict, casei_target_dict):
         """Helper function to store a definition in the internal dictionaries.
 
         It warns or raise error on redefinition.
         """
-        if key in unit_dict:
+        if key in target_dict:
             if self._on_redefinition == "raise":
                 raise RedefinitionError(key, type(value))
             elif self._on_redefinition == "warn":
                 logger.warning("Redefining '%s' (%s)" % (key, type(value)))
 
-        unit_dict[key] = value
-        if casei_unit_dict is not None:
-            casei_unit_dict[key.lower()].add(key)
+        target_dict[key] = value
+        if casei_target_dict is not None:
+            casei_target_dict[key.lower()].add(key)
 
-    def _define_alias(self, definition):
-        if not isinstance(definition, AliasDefinition):
-            raise TypeError(
-                "Not a valid input type for _define_alias. "
-                f"(expected: AliasDefinition, found: {type(definition)}"
-            )
+    def _add_defaults(self, defaults_definition: DefaultsDefinition):
+        for k, v in defaults_definition.items():
+            self._defaults[k] = v
 
+    def _add_alias(self, definition: AliasDefinition):
         unit_dict = self._units
         unit = unit_dict[definition.name]
         while not isinstance(unit, UnitDefinition):
             unit = unit_dict[unit.name]
         for alias in definition.aliases:
-            self._define_single_adder(alias, unit, self._units, self._units_casei)
+            self._helper_single_adder(alias, unit, self._units, self._units_casei)
 
-    def _register_directive(self, prefix: str, loaderfunc, definition_class):
-        """Register a loader for a given @ directive.
+    def _add_dimension(self, definition: DimensionDefinition):
+        self._helper_adder(definition, self._dimensions, None)
 
-        Parameters
-        ----------
-        prefix
-            string identifying the section (e.g. @context).
-        loaderfunc
-            function to load the definition into the registry.
-        definition_class
-            a class that represents the directive content.
-        """
-        if prefix and prefix[0] == "@":
-            self._directives[prefix] = (loaderfunc, definition_class)
-        else:
-            raise ValueError("Prefix directives must start with '@'")
+    def _add_derived_dimension(self, definition: DerivedDimensionDefinition):
+        for dim_name in definition.reference.keys():
+            if dim_name not in self._dimensions:
+                self._add_dimension(DimensionDefinition(dim_name))
+        self._helper_adder(definition, self._dimensions, None)
+
+    def _add_prefix(self, definition: PrefixDefinition):
+        self._helper_adder(definition, self._prefixes, None)
+
+    def _add_unit(self, definition: UnitDefinition):
+        if definition.is_base:
+            for dim_name in definition.reference.keys():
+                if dim_name not in self._dimensions:
+                    self._add_dimension(DimensionDefinition(dim_name))
+
+        self._helper_adder(definition, self._units, self._units_casei)
 
     def load_definitions(self, file, is_resource: bool = False):
         """Add units and prefixes defined in a definition text file.
@@ -584,50 +512,26 @@ class PlainRegistry(metaclass=RegistryMeta):
             and therefore should be loaded from the package. (Default value = False)
         """
 
-        loaders = {
-            AliasDefinition: self._define,
-            UnitDefinition: self._define,
-            DimensionDefinition: self._define,
-            PrefixDefinition: self._define,
-        }
-
-        p = parser.Parser(self.non_int_type, cache_folder=self._diskcache)
-        for prefix, (loaderfunc, definition_class) in self._directives.items():
-            loaders[definition_class] = loaderfunc
-            p.register_class(prefix, definition_class)
-
-        if isinstance(file, (str, pathlib.Path)):
-            try:
-                parsed_files = p.parse(file, is_resource)
-            except Exception as ex:
-                # TODO: Change this is in the future
-                # this is kept for backwards compatibility
-                msg = getattr(ex, "message", "") or str(ex)
-                raise ValueError("While opening {}\n{}".format(file, msg))
+        if isinstance(file, (list, tuple)):
+            # TODO: this hack was to keep it backwards compatible.
+            parsed_project = self._def_parser.parse_string("\n".join(file))
         else:
-            parsed_files = parser.DefinitionFiles([p.parse_lines(file)])
+            parsed_project = self._def_parser.parse_file(file)
 
-        for lineno, definition in parsed_files.iter_definitions():
-            if definition.__class__ in p.handled_classes:
-                continue
-            loaderfunc = loaders.get(definition.__class__, None)
-            if not loaderfunc:
-                raise ValueError(
-                    f"No loader function defined "
-                    f"for {definition.__class__.__name__}"
-                )
-            loaderfunc(definition)
+        for definition in self._def_parser.iter_parsed_project(parsed_project):
+            self._helper_dispatch_adder(definition)
 
-        return parsed_files
+        return parsed_project
 
     def _build_cache(self, loaded_files=None) -> None:
         """Build a cache of dimensionality and plain units."""
 
-        if loaded_files and self._diskcache and all(loaded_files):
-            cache, cache_basename = self._diskcache.load(loaded_files, "build_cache")
+        diskcache = self._diskcache
+        if loaded_files and diskcache:
+            cache, cache_basename = diskcache.load(loaded_files, "build_cache")
             if cache is None:
                 self._build_cache()
-                self._diskcache.save(self._cache, loaded_files, "build_cache")
+                diskcache.save(self._cache, loaded_files, "build_cache")
             return
 
         self._cache = RegistryCache()
@@ -1226,9 +1130,9 @@ class PlainRegistry(metaclass=RegistryMeta):
             if token_text == "dimensionless":
                 return 1 * self.dimensionless
             elif token_text.lower() in ("inf", "infinity"):
-                return float("inf")
+                return self.non_int_type("inf")
             elif token_text.lower() == "nan":
-                return float("nan")
+                return self.non_int_type("nan")
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:

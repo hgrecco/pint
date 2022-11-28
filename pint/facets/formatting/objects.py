@@ -21,8 +21,7 @@ from ...formatting import (
     siunitx_format_unit,
     split_format,
 )
-from ...util import iterable
-from ..plain import UnitsContainer
+from ...util import UnitsContainer, iterable
 
 
 class FormattingQuantity:
