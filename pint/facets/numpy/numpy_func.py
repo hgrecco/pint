@@ -964,6 +964,27 @@ for func_str in nep35_function_names:
     implement_nep35_func(func_str)
 
 
+@implements("full", "function")
+def _full(shape, fill_value, dtype=None, order="C", *, like):
+    # Make full_like by multiplying with array from ones_like in a
+    # non-multiplicative-unit-safe way
+    if hasattr(fill_value, "_REGISTRY"):
+        units = fill_value.units
+        fill_value_ = fill_value.m
+    else:
+        units = None
+        fill_value_ = fill_value
+
+    magnitude = np.full(shape=shape, fill_value=fill_value_, dtype=dtype, order=order)
+    if units is not None:
+        return fill_value._REGISTRY.Quantity(magnitude, units)
+    else:
+        return like._REGISTRY.Quantity(magnitude, units)
+
+
+nep35_function_names.add("full")
+
+
 def numpy_wrap(func_type, func, args, kwargs, types):
     """Return the result from a NumPy function/ufunc as wrapped by Pint."""
 
