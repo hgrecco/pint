@@ -530,18 +530,19 @@ def _full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
     # Make full_like by multiplying with array from ones_like in a
     # non-multiplicative-unit-safe way
     if hasattr(fill_value, "_REGISTRY"):
-        return fill_value._REGISTRY.Quantity(
-            (
-                np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-                * fill_value.m
-            ),
-            fill_value.units,
-        )
+        units = fill_value.units
+        fill_value_ = fill_value.m
     else:
-        return (
-            np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-            * fill_value
-        )
+        units = None
+        fill_value_ = fill_value
+
+    magnitude = np.full_like(
+        a.m, dtype=dtype, order=order, subok=subok, shape=shape, fill_value=fill_value_
+    )
+    if units is not None:
+        return fill_value._REGISTRY.Quantity(magnitude, units)
+    else:
+        return magnitude
 
 
 @implements("interp", "function")
