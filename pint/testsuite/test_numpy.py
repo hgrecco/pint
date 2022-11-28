@@ -82,6 +82,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
         )
         self.assertNDArrayEqual(np.full_like(self.q, 2), np.array([[2, 2], [2, 2]]))
 
+    @helpers.requires_numpy_nep35()
     def test_array(self):
         x = [0, 1, 2, 3]
         actual = np.array(x, like=self.q)
@@ -89,6 +90,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    @helpers.requires_numpy_nep35()
     def test_asarray(self):
         x = [0, 1, 2, 3]
         actual = np.asarray(x, like=self.q)
@@ -96,6 +98,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    @helpers.requires_numpy_nep35()
     def test_asanyarray(self):
         x = [0, 1, 2, 3]
         actual = np.asanyarray(x, like=self.q)
@@ -103,6 +106,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    @helpers.requires_numpy_nep35()
     def test_arange(self):
         actual = np.arange(10, like=self.q)
         expected = self.Q_(np.arange(10), self.q.units)
@@ -111,6 +115,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
     # before 1.23.0, ones seems to be a pure python function with changing address
     @helpers.requires_numpy_at_least("1.23.0")
+    @helpers.requires_numpy_nep35()
     def test_ones(self):
         shape = (2, 3)
         actual = np.ones(shape=shape, like=self.q)
@@ -118,6 +123,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    @helpers.requires_numpy_nep35()
     def test_zeros(self):
         shape = (2, 3)
         actual = np.zeros(shape=shape, like=self.q)
@@ -125,6 +131,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    @helpers.requires_numpy_nep35()
     def test_empty(self):
         shape = (2, 3)
         actual = np.empty(shape=shape, like=self.q)
@@ -132,6 +139,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    @helpers.requires_numpy_nep35()
     def test_full(self):
         shape = (2, 2)
 
@@ -147,6 +155,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
     # before 1.23.0, identity seems to be a pure python function with changing address
     @helpers.requires_numpy_at_least("1.23.0")
+    @helpers.requires_numpy_nep35()
     def test_identity(self):
         actual = np.identity(10, like=self.q)
         expected = self.Q_(np.identity(10), self.q.units)
@@ -155,6 +164,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
     # before 1.23.0, eye seems to be a pure python function with changing address
     @helpers.requires_numpy_at_least("1.23.0")
+    @helpers.requires_numpy_nep35()
     def test_eye(self):
         actual = np.eye(10, like=self.q)
         expected = self.Q_(np.eye(10), self.q.units)
