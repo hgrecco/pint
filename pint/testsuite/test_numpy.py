@@ -82,6 +82,47 @@ class TestNumpyArrayCreation(TestNumpyMethods):
         )
         self.assertNDArrayEqual(np.full_like(self.q, 2), np.array([[2, 2], [2, 2]]))
 
+    def test_array(self):
+        x = [0, 1, 2, 3]
+        actual = np.array(x, like=self.q)
+        expected = self.Q_(x, self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    def test_asarray(self):
+        x = [0, 1, 2, 3]
+        actual = np.asarray(x, like=self.q)
+        expected = self.Q_(x, self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    def test_asanyarray(self):
+        x = [0, 1, 2, 3]
+        actual = np.asanyarray(x, like=self.q)
+        expected = self.Q_(x, self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    def test_arange(self):
+        actual = np.arange(10, like=self.q)
+        expected = self.Q_(np.arange(10), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_at_least("1.23.0")
+    def test_identity(self):
+        actual = np.identity(10, like=self.q)
+        expected = self.Q_(np.identity(10), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_at_least("1.23.0")
+    def test_eye(self):
+        actual = np.eye(10, like=self.q)
+        expected = self.Q_(np.eye(10), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
 
 class TestNumpyArrayManipulation(TestNumpyMethods):
     # TODO

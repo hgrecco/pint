@@ -954,7 +954,6 @@ nep35_function_names = {
     "asarray",
     "asanyarray",
     "arange",
-    "linspace",
     "identity",
     "eye",
 }
