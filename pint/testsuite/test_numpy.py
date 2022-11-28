@@ -109,6 +109,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    # before 1.23.0, ones seems to be a pure python function with changing address
     @helpers.requires_numpy_at_least("1.23.0")
     def test_ones(self):
         shape = (2, 3)
@@ -131,6 +132,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    # before 1.23.0, identity seems to be a pure python function with changing address
     @helpers.requires_numpy_at_least("1.23.0")
     def test_identity(self):
         actual = np.identity(10, like=self.q)
@@ -138,6 +140,7 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    # before 1.23.0, eye seems to be a pure python function with changing address
     @helpers.requires_numpy_at_least("1.23.0")
     def test_eye(self):
         actual = np.eye(10, like=self.q)
