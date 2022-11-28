@@ -110,6 +110,28 @@ class TestNumpyArrayCreation(TestNumpyMethods):
         helpers.assert_quantity_equal(actual, expected)
 
     @helpers.requires_numpy_at_least("1.23.0")
+    def test_ones(self):
+        shape = (2, 3)
+        actual = np.ones(shape=shape, like=self.q)
+        expected = self.Q_(np.ones(shape=shape), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    def test_zeros(self):
+        shape = (2, 3)
+        actual = np.zeros(shape=shape, like=self.q)
+        expected = self.Q_(np.zeros(shape=shape), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    def test_empty(self):
+        shape = (2, 3)
+        actual = np.empty(shape=shape, like=self.q)
+        expected = self.Q_(np.empty(shape=shape), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_at_least("1.23.0")
     def test_identity(self):
         actual = np.identity(10, like=self.q)
         expected = self.Q_(np.identity(10), self.q.units)
