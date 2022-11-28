@@ -57,17 +57,22 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_ones_like(self):
-        self.assertNDArrayEqual(np.ones_like(self.q), np.array([[1, 1], [1, 1]]))
+        helpers.assert_quantity_equal(
+            np.ones_like(self.q), self.Q_([[1, 1], [1, 1]], self.q.units)
+        )
 
     @helpers.requires_array_function_protocol()
     def test_zeros_like(self):
-        self.assertNDArrayEqual(np.zeros_like(self.q), np.array([[0, 0], [0, 0]]))
+        helpers.assert_quantity_equal(
+            np.zeros_like(self.q), self.Q_([[0, 0], [0, 0]], self.q.units)
+        )
 
     @helpers.requires_array_function_protocol()
     def test_empty_like(self):
         ret = np.empty_like(self.q)
-        assert ret.shape == (2, 2)
-        assert isinstance(ret, np.ndarray)
+        expected = self.Q_(np.empty_like(self.q.magnitude), self.q.units)
+
+        helpers.assert_quantity_equal(ret, expected)
 
     @helpers.requires_array_function_protocol()
     def test_full_like(self):
