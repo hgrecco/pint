@@ -13,6 +13,10 @@ Pint Changelog
 - Changed frequency to angular frequency in the docs.
   (PR #1668)
 
+### Breaking Changes
+
+- Support percent and ppm units. Support the `%` symbol.
+  (Issue #1277)
 
 0.20.1 (2022-10-27)
 -------------------
