@@ -964,6 +964,8 @@ nep35_function_names = {
 for func_str in nep35_function_names:
     implement_nep35_func(func_str)
 
+nep35_function_names.union({"full", "arange"})
+
 
 @implements("full", "function")
 def _full(shape, fill_value, dtype=None, order="C", *, like):
@@ -989,7 +991,21 @@ def _full(shape, fill_value, dtype=None, order="C", *, like):
         return like._REGISTRY.Quantity(magnitude, units)
 
 
-nep35_function_names.add("full")
+@implements("arange", "function")
+def _arange(start, stop=None, step=None, dtype=None, *, like):
+    args = [start, stop, step]
+    if any(_is_quantity(arg) for arg in args):
+        args, kwargs = convert_to_consistent_units(
+            start,
+            stop,
+            step,
+            pre_calc_units=like.units,
+            like=like,
+        )
+    else:
+        kwargs = {"like": like.magnitude}
+
+    return like._REGISTRY.Quantity(np.arange(*args, dtype=dtype, **kwargs), like.units)
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):
