@@ -945,6 +945,7 @@ def implement_nep35_func(func_str):
 
     @implements(func_str, "function")
     def implementation(*args, like, **kwargs):
+        args, kwargs = convert_to_consistent_units(*args, **kwargs)
         result = func(*args, like=like.magnitude, **kwargs)
         return like._REGISTRY.Quantity(result, like.units)
 
