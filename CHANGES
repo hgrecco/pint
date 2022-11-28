@@ -8,6 +8,8 @@ Pint Changelog
   (PR #1629)
 - Add new SI prefixes: ronna-, ronto-, quetta-, quecto-.
   (PR #1652)
+- Implementation for numpy.positive added for Quantity.
+  (PR #1663)
 - Changed frequency to angular frequency in the docs.
   (PR #1668)
 
