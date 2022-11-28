@@ -10,6 +10,8 @@ Pint Changelog
   (PR #1652)
 - Implementation for numpy.positive added for Quantity.
   (PR #1663)
+- Changed frequency to angular frequency in the docs.
+  (PR #1668)
 
 
 0.20.1 (2022-10-27)
