@@ -964,7 +964,7 @@ nep35_function_names = {
 for func_str in nep35_function_names:
     implement_nep35_func(func_str)
 
-nep35_function_names.union({"full", "arange"})
+nep35_function_names.update({"full", "arange"})
 
 
 @implements("full", "function")
