@@ -110,7 +110,15 @@ class TestNumpyArrayCreation(TestNumpyMethods):
     def test_arange(self):
         actual = np.arange(10, like=self.q)
         expected = self.Q_(np.arange(10), self.q.units)
+        helpers.assert_quantity_equal(actual, expected)
 
+        actual = np.arange(
+            self.Q_(1, "kg"),
+            self.Q_(5, "kg"),
+            self.Q_(100, "g"),
+            like=self.Q_([0], "kg"),
+        )
+        expected = self.Q_(np.arange(1, 5, 0.1), "kg")
         helpers.assert_quantity_equal(actual, expected)
 
     # before 1.23.0, ones seems to be a pure python function with changing address
