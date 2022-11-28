@@ -945,7 +945,7 @@ def implement_nep35_func(func_str):
 
     @implements(func_str, "function")
     def implementation(*args, like, **kwargs):
-        result = func(*args, **kwargs)
+        result = func(*args, like=like.magnitude, **kwargs)
         return like._REGISTRY.Quantity(result, like.units)
 
 
@@ -975,7 +975,13 @@ def _full(shape, fill_value, dtype=None, order="C", *, like):
         units = None
         fill_value_ = fill_value
 
-    magnitude = np.full(shape=shape, fill_value=fill_value_, dtype=dtype, order=order)
+    magnitude = np.full(
+        shape=shape,
+        fill_value=fill_value_,
+        dtype=dtype,
+        order=order,
+        like=like.magnitude,
+    )
     if units is not None:
         return fill_value._REGISTRY.Quantity(magnitude, units)
     else:
