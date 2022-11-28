@@ -903,9 +903,6 @@ for func_str in [
     "isreal",
     "iscomplex",
     "shape",
-    "ones_like",
-    "zeros_like",
-    "empty_like",
     "argsort",
     "argmin",
     "argmax",
@@ -932,6 +929,10 @@ for func_str in ["linalg.solve"]:
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ["var", "nanvar"]:
     implement_func("function", func_str, input_units=None, output_unit="variance")
+
+
+for func_str in ["ones_like", "zeros_like", "empty_like"]:
+    implement_func("function", func_str, input_units=None, output_unit="match_input")
 
 
 def implement_nep35_func(func_str):
