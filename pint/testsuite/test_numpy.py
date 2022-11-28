@@ -132,6 +132,19 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
         helpers.assert_quantity_equal(actual, expected)
 
+    def test_full(self):
+        shape = (2, 2)
+
+        actual = np.full(
+            shape=shape, fill_value=self.Q_(0, self.ureg.degC), like=self.q
+        )
+        expected = self.Q_([[0, 0], [0, 0]], self.ureg.degC)
+        helpers.assert_quantity_equal(actual, expected)
+
+        actual = np.full(shape=shape, fill_value=2, like=self.q)
+        expected = self.Q_([[2, 2], [2, 2]], "dimensionless")
+        helpers.assert_quantity_equal(actual, expected)
+
     # before 1.23.0, identity seems to be a pure python function with changing address
     @helpers.requires_numpy_at_least("1.23.0")
     def test_identity(self):
