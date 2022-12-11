@@ -8,6 +8,9 @@ Pint Changelog
   (PR #1629)
 - Add new SI prefixes: ronna-, ronto-, quetta-, quecto-.
   (PR #1652)
+- Fixed bug causing operations between arrays of quantity scalars and quantity holding
+  array resulting in incorrect units.
+  (PR #1677)
 
 
 0.20.1 (2022-10-27)
