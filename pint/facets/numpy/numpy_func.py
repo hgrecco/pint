@@ -173,7 +173,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
 
     def multiply_units(args):
         product = first_input_units._REGISTRY.parse_units("")
-        for x in all_args:
+        for x in args:
             if hasattr(x, "units"):
                 product *= x.units
             elif _is_sequence_with_quantity_elements(x):
@@ -193,7 +193,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     if unit_op == "sum":
         result_unit = (1 * first_input_units + 1 * first_input_units).units
     elif unit_op == "mul":
-        result_unit = multiply_units(all_args)         
+        result_unit = multiply_units(all_args)        
     elif unit_op == "delta":
         result_unit = (1 * first_input_units - 1 * first_input_units).units
     elif unit_op == "delta,div":
