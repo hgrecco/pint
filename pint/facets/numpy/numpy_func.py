@@ -182,29 +182,25 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
 
     def get_numerator_unit(arg):
         if _is_sequence_with_quantity_elements(arg):
-            return getattr(
-                arg[0], "units", first_input_units._REGISTRY.parse_units("")
-            )
+            return getattr(arg[0], "units", first_input_units._REGISTRY.parse_units(""))
         else:
-            return getattr(
-            arg, "units", first_input_units._REGISTRY.parse_units("")
-        )
+            return getattr(arg, "units", first_input_units._REGISTRY.parse_units(""))
 
     if unit_op == "sum":
         result_unit = (1 * first_input_units + 1 * first_input_units).units
     elif unit_op == "mul":
-        result_unit = multiply_units(all_args)        
+        result_unit = multiply_units(all_args)
     elif unit_op == "delta":
         result_unit = (1 * first_input_units - 1 * first_input_units).units
     elif unit_op == "delta,div":
         numerator_unit = (1 * first_input_units - 1 * first_input_units).units
         denominator_unit = multiply_units(all_args[1:])
-        result_unit = numerator_unit/denominator_unit
+        result_unit = numerator_unit / denominator_unit
     elif unit_op == "div":
         # Start with first arg in numerator, all others in denominator
         numerator_unit = get_numerator_unit(all_args[0])
         denominator_unit = multiply_units(all_args[1:])
-        result_unit = numerator_unit/denominator_unit
+        result_unit = numerator_unit / denominator_unit
     elif unit_op == "variance":
         result_unit = ((1 * first_input_units + 1 * first_input_units) ** 2).units
     elif unit_op == "square":
@@ -223,7 +219,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         # Start with first arg in numerator, all others in denominator
         numerator_unit = get_numerator_unit(all_args[0])
         denominator_unit = multiply_units(all_args[1:])
-        result_unit = (numerator_unit/denominator_unit)**-1
+        result_unit = (numerator_unit / denominator_unit) ** -1
     else:
         raise ValueError("Output unit method {} not understood".format(unit_op))
 

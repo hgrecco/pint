@@ -862,6 +862,15 @@ class TestIssues(QuantityTestCase):
         m = module_registry.Measurement(1, 0.1, "meter")
         assert m.default_format == "~P"
 
+    @helpers.requires_numpy()
+    def test_issue1674(self, module_registry):
+        Q_ = module_registry.Quantity
+        arr_of_q = np.array([Q_(2, "m"), Q_(4, "m")], dtype="object")
+        q_arr = Q_(np.array([1, 2]), "m")
+
+        helpers.assert_quantity_almost_equal(arr_of_q * q_arr, Q_([2, 8], "m^2"))
+        helpers.assert_quantity_almost_equal(arr_of_q / q_arr, Q_([2, 2], ""))
+
 
 if np is not None:
 
