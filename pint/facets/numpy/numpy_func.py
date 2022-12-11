@@ -178,6 +178,8 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         for x in all_args:
             if hasattr(x, "units"):
                 product *= x.units
+            elif _is_sequence_with_quantity_elements(x):
+                product *= x[0].units
         result_unit = product
     elif unit_op == "delta":
         result_unit = (1 * first_input_units - 1 * first_input_units).units
@@ -186,6 +188,8 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         for x in all_args[1:]:
             if hasattr(x, "units"):
                 product /= x.units
+            elif _is_sequence_with_quantity_elements(x):
+                product /= x[0].units
         result_unit = product
     elif unit_op == "div":
         # Start with first arg in numerator, all others in denominator
@@ -195,6 +199,8 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         for x in all_args[1:]:
             if hasattr(x, "units"):
                 product /= x.units
+            elif _is_sequence_with_quantity_elements(x):
+                product /= x[0].units
         result_unit = product
     elif unit_op == "variance":
         result_unit = ((1 * first_input_units + 1 * first_input_units) ** 2).units
@@ -218,6 +224,8 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         for x in all_args[1:]:
             if hasattr(x, "units"):
                 product /= x.units
+            elif _is_sequence_with_quantity_elements(x):
+                product /= x[0].units
         result_unit = product**-1
     else:
         raise ValueError("Output unit method {} not understood".format(unit_op))
@@ -421,6 +429,7 @@ matching_input_copy_units_output_ufuncs = [
     "nextafter",
     "trunc",
     "absolute",
+    "positive",
     "negative",
     "maximum",
     "minimum",
