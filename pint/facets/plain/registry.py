@@ -229,6 +229,8 @@ class PlainRegistry(metaclass=RegistryMeta):
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
         self.preprocessors = preprocessors or []
+        # use a default preprocessor to support "%"
+        self.preprocessors.insert(0, lambda string: string.replace("%", " percent "))
 
         #: mode used to fill in the format defaults
         self.separate_format_defaults = separate_format_defaults

@@ -148,6 +148,10 @@ byte = 8 * bit = B = octet
 # byte = 8 * bit = _ = octet
 ## NOTE: B (byte) symbol can conflict with Bell
 
+# Ratios
+percent = 0.01 = %
+ppm = 1e-6
+
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
 micron = micrometer = µ = μ
