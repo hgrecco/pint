@@ -910,7 +910,6 @@ for func_str in [
     "argsort",
     "argmin",
     "argmax",
-    "alen",
     "ndim",
     "nanargmax",
     "nanargmin",
