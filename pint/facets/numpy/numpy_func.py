@@ -936,6 +936,18 @@ for func_str in ["ones_like", "zeros_like", "empty_like"]:
     implement_func("function", func_str, input_units=None, output_unit="match_input")
 
 
+nep35_function_names = set()
+
+
+def register_nep35_function(func_str):
+    nep35_function_names.add(func_str)
+
+    def wrapper(f):
+        return f
+
+    return wrapper
+
+
 def implement_nep35_func(func_str):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
@@ -943,6 +955,7 @@ def implement_nep35_func(func_str):
 
     func = getattr(np, func_str)
 
+    @register_nep35_function(func_str)
     @implements(func_str, "function")
     def implementation(*args, like, **kwargs):
         args, kwargs = convert_to_consistent_units(*args, **kwargs)
@@ -950,7 +963,8 @@ def implement_nep35_func(func_str):
         return like._REGISTRY.Quantity(result, like.units)
 
 
-nep35_function_names = {
+# generic implementations
+for func_str in {
     "array",
     "asarray",
     "asanyarray",
@@ -960,13 +974,11 @@ nep35_function_names = {
     "empty",
     "identity",
     "eye",
-}
-for func_str in nep35_function_names:
+}:
     implement_nep35_func(func_str)
 
-nep35_function_names.update({"full", "arange"})
 
-
+@register_nep35_function("full")
 @implements("full", "function")
 def _full(shape, fill_value, dtype=None, order="C", *, like):
     # Make full_like by multiplying with array from ones_like in a
@@ -991,6 +1003,7 @@ def _full(shape, fill_value, dtype=None, order="C", *, like):
         return like._REGISTRY.Quantity(magnitude, units)
 
 
+@register_nep35_function("arange")
 @implements("arange", "function")
 def _arange(start, stop=None, step=None, dtype=None, *, like):
     args = [start, stop, step]
