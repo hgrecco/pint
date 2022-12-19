@@ -527,8 +527,6 @@ def _meshgrid(*xi, **kwargs):
 
 @implements("full_like", "function")
 def _full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
-    # Make full_like by multiplying with array from ones_like in a
-    # non-multiplicative-unit-safe way
     if hasattr(fill_value, "_REGISTRY"):
         units = fill_value.units
         fill_value_ = fill_value.m
@@ -981,8 +979,6 @@ for func_str in {
 @register_nep35_function("full")
 @implements("full", "function")
 def _full(shape, fill_value, dtype=None, order="C", *, like):
-    # Make full_like by multiplying with array from ones_like in a
-    # non-multiplicative-unit-safe way
     if hasattr(fill_value, "_REGISTRY"):
         units = fill_value.units
         fill_value_ = fill_value.m
