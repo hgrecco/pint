@@ -1,9 +1,9 @@
 import doctest
 import pickle
 import re
-from distutils.version import LooseVersion
 
 import pytest
+from packaging.version import parse as version_parse
 
 from pint.testing import assert_allclose as assert_quantity_almost_equal  # noqa: F401
 from pint.testing import assert_equal as assert_quantity_equal  # noqa: F401
@@ -111,7 +111,7 @@ def requires_not_array_function_protocol():
 
 def requires_numpy_nep35():
     return pytest.mark.skipif(
-        not LooseVersion(NUMPY_VER) >= LooseVersion("1.20.0"),
+        not version_parse(NUMPY_VER) >= version_parse("1.20.0"),
         reason="Needs NEP 35, which is supported from numpy=1.20.0",
     )
 
@@ -120,7 +120,7 @@ def requires_numpy_previous_than(version):
     if not HAS_NUMPY:
         return pytest.mark.skip("Requires NumPy")
     return pytest.mark.skipif(
-        not LooseVersion(NUMPY_VER) < LooseVersion(version),
+        not version_parse(NUMPY_VER) < version_parse(version),
         reason="Requires NumPy < %s" % version,
     )
 
@@ -129,7 +129,7 @@ def requires_numpy_at_least(version):
     if not HAS_NUMPY:
         return pytest.mark.skip("Requires NumPy")
     return pytest.mark.skipif(
-        not LooseVersion(NUMPY_VER) >= LooseVersion(version),
+        not version_parse(NUMPY_VER) >= version_parse(version),
         reason="Requires NumPy >= %s" % version,
     )
 

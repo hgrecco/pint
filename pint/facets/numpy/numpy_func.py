@@ -421,6 +421,7 @@ matching_input_copy_units_output_ufuncs = [
     "nextafter",
     "trunc",
     "absolute",
+    "positive",
     "negative",
     "maximum",
     "minimum",
