@@ -20,7 +20,7 @@ from .errors import DimensionalityError
 from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
-    from pint import Quantity, Unit
+    from ._typing import Quantity, Unit
 
     from .registry import UnitRegistry
 

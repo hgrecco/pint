@@ -56,8 +56,7 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
-    from .unit import Unit
-    from .unit import UnitsContainer as UnitsContainerT
+    from .unit import UnitsContainer as UnitsContainerT, PlainUnit as Unit
 
     if HAS_NUMPY:
         import numpy as np  # noqa

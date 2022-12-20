@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Dict, FrozenSet
 from ... import errors
 
 if TYPE_CHECKING:
-    from pint import Unit
+    from ..._typing import Unit
 
 from ...util import build_dependent_class, create_class_with_registry
 from ..plain import PlainRegistry, UnitDefinition

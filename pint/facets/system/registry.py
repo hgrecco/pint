@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Dict, FrozenSet, Tuple, Union
 from ... import errors
 
 if TYPE_CHECKING:
-    from pint import Quantity, Unit
+    from ..._typing import Quantity, Unit
 
 from ..._typing import UnitLike
 from ...util import UnitsContainer as UnitsContainerT

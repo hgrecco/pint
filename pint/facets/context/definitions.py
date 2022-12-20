@@ -18,7 +18,7 @@ from ... import errors
 from ..plain import UnitDefinition
 
 if TYPE_CHECKING:
-    from pint import Quantity, UnitsContainer
+    from ..._typing import Quantity, UnitsContainer
 
 
 @dataclass(frozen=True)
