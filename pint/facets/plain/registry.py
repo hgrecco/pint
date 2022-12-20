@@ -283,7 +283,9 @@ class PlainRegistry(metaclass=RegistryMeta):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
         cls.Unit: Unit = build_dependent_class(cls, "Unit", "_unit_class")
-        cls.Quantity: Quantity = build_dependent_class(cls, "Quantity", "_quantity_class")
+        cls.Quantity: Quantity = build_dependent_class(
+            cls, "Quantity", "_quantity_class"
+        )
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""

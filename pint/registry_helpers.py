@@ -21,7 +21,6 @@ from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
     from ._typing import Quantity, Unit
-
     from .registry import UnitRegistry
 
 T = TypeVar("T")

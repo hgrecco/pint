@@ -30,9 +30,8 @@ from .formatting import format_unit
 from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
+    from ._typing import Quantity, UnitLike
     from .registry import UnitRegistry
-
-    from ._typing import UnitLike, Quantity
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
