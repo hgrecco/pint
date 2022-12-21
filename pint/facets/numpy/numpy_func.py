@@ -527,7 +527,7 @@ def _meshgrid(*xi, **kwargs):
 
 
 @implements("full_like", "function")
-def _full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
+def _full_like(a, fill_value, **kwargs):
     if hasattr(fill_value, "_REGISTRY"):
         units = fill_value.units
         fill_value_ = fill_value.m
@@ -535,9 +535,7 @@ def _full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
         units = None
         fill_value_ = fill_value
 
-    magnitude = np.full_like(
-        a.m, dtype=dtype, order=order, subok=subok, shape=shape, fill_value=fill_value_
-    )
+    magnitude = np.full_like(a.m, fill_value=fill_value_, **kwargs)
     if units is not None:
         return fill_value._REGISTRY.Quantity(magnitude, units)
     else:
