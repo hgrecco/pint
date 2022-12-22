@@ -7,6 +7,7 @@ import pytest
 from pint import Context, DimensionalityError, UnitRegistry, get_application_registry
 from pint.compat import np
 from pint.facets.plain.unit import UnitsContainer
+from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
 
@@ -855,6 +856,29 @@ class TestIssues(QuantityTestCase):
             np.array((0.04, 0.09)),
         )
 
+    def test_issue1277(self, module_registry):
+        ureg = module_registry
+        assert ureg("%") == ureg("percent")
+        assert ureg("%") == ureg.percent
+        assert ureg("ppm") == ureg.ppm
+
+        a = ureg.Quantity("10 %")
+        b = ureg.Quantity("100 ppm")
+        c = ureg.Quantity("0.5")
+
+        assert f"{a}" == "10 percent"
+        assert f"{a:~}" == "10 %"
+        assert f"{b}" == "100 ppm"
+        assert f"{b:~}" == "100 ppm"
+
+        assert_equal(a, 0.1)
+        assert_equal(1000 * b, a)
+        assert_equal(c, 5 * a)
+
+        assert_equal((1 * ureg.meter) / (1 * ureg.kilometer), 0.1 * ureg.percent)
+        assert c.to("percent").m == 50
+        # assert c.to("%").m == 50  # TODO: fails.
+
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
         module_registry = UnitRegistry()
@@ -928,7 +952,7 @@ def test_issue1498(tmp_path):
         f"""
     foo = [FOO]
 
-    @import {str(def2)}
+    @import {def2.name}
     """
     )
 
@@ -941,9 +965,8 @@ def test_issue1498(tmp_path):
     """
     )
 
-    # Succeeds with pint 0.18; fails with pint 0.19
     ureg1 = UnitRegistry()
-    ureg1.load_definitions(def1)  # ← FAILS
+    ureg1.load_definitions(def1)
 
     assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude
 
@@ -1009,3 +1032,30 @@ def test_issue1498b(tmp_path):
     ureg1.load_definitions(def0)  # ← FAILS
 
     assert 12.0 == ureg1("1.2 foo").to("kg", "BAR").magnitude
+
+
+def test_backcompat_speed_velocity(func_registry):
+    get = func_registry.get_dimensionality
+    assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
+    assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
+
+
+def test_issue1631():
+    import pint
+
+    # Test registry subclassing
+    class MyRegistry(pint.UnitRegistry):
+        pass
+
+    assert MyRegistry.Quantity is pint.UnitRegistry.Quantity
+    assert MyRegistry.Unit is pint.UnitRegistry.Unit
+
+    ureg = MyRegistry()
+
+    u = ureg.meter
+    assert isinstance(u, ureg.Unit)
+    assert isinstance(u, pint.Unit)
+
+    q = 2 * ureg.meter
+    assert isinstance(q, ureg.Quantity)
+    assert isinstance(q, pint.Quantity)

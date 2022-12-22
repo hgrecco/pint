@@ -65,7 +65,7 @@ def _unpickle(cls, *args):
     object of type cls
 
     """
-    from pint.facets.plain import UnitsContainer
+    from pint.util import UnitsContainer
 
     for arg in args:
         # Prefixed units are defined within the registry
