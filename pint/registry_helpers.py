@@ -8,6 +8,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import functools
 from inspect import signature
 from itertools import zip_longest
@@ -15,12 +17,12 @@ from typing import TYPE_CHECKING, Callable, Iterable, TypeVar, Union
 
 from ._typing import F
 from .errors import DimensionalityError
-from .quantity import Quantity
 from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
+    from pint import Quantity, Unit
+
     from .registry import UnitRegistry
-    from .unit import Unit
 
 T = TypeVar("T")
 

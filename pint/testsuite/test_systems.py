@@ -50,7 +50,7 @@ class TestGroup:
         assert g2._used_by == {"root"}
 
     def test_simple(self):
-        lines = ["@group mygroup", "meter", "second"]
+        lines = ["@group mygroup", "meter = 3", "second = 2"]
 
         ureg, root = self._build_empty_reg_root()
         d = ureg._groups
@@ -66,7 +66,7 @@ class TestGroup:
         assert grp.members == frozenset(["meter", "second"])
 
     def test_using1(self):
-        lines = ["@group mygroup using group1", "meter", "second"]
+        lines = ["@group mygroup using group1", "meter = 2", "second = 3"]
 
         ureg, root = self._build_empty_reg_root()
         ureg.Group("group1")
@@ -77,7 +77,7 @@ class TestGroup:
         assert grp.members == frozenset(["meter", "second"])
 
     def test_using2(self):
-        lines = ["@group mygroup using group1,group2", "meter", "second"]
+        lines = ["@group mygroup using group1,group2", "meter = 2", "second = 3"]
 
         ureg, root = self._build_empty_reg_root()
         ureg.Group("group1")
@@ -89,7 +89,11 @@ class TestGroup:
         assert grp.members == frozenset(["meter", "second"])
 
     def test_spaces(self):
-        lines = ["@group   mygroup   using   group1 , group2", " meter ", " second  "]
+        lines = [
+            "@group   mygroup   using   group1 , group2",
+            " meter = 2",
+            " second  = 3",
+        ]
 
         ureg, root = self._build_empty_reg_root()
         ureg.Group("group1")
@@ -101,7 +105,7 @@ class TestGroup:
         assert grp.members == frozenset(["meter", "second"])
 
     def test_invalidate_members(self):
-        lines = ["@group mygroup using group1", "meter", "second"]
+        lines = ["@group mygroup using group1", "meter = 2 ", "second = 3"]
 
         ureg, root = self._build_empty_reg_root()
         ureg.Group("group1")
@@ -121,10 +125,8 @@ class TestGroup:
     def test_with_defintions(self):
         lines = [
             "@group imperial",
-            "inch",
-            "yard",
             "kings_leg = 2 * meter",
-            "kings_head = 52 * inch" "pint",
+            "kings_head = 52 * inch",
         ]
         defs = []
 
@@ -163,6 +165,7 @@ class TestGroup:
         assert c == frozenset([ureg.inch, ureg.yard])
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestSystem(QuantityTestCase):
     def _build_empty_reg_root(self):
         ureg = UnitRegistry(None)
@@ -252,11 +255,11 @@ class TestSystem(QuantityTestCase):
         assert c[1] == {"pint": 1.0 / 3}
 
         c = ureg.get_base_units("inch**2", system=sysname)
-        assert round(abs(c[0] - 0.326 ** 2), 3) == 0
+        assert round(abs(c[0] - 0.326**2), 3) == 0
         assert c[1] == {"pint": 2.0 / 3}
 
         c = ureg.get_base_units("cm**2", system=sysname)
-        assert round(abs(c[0] - 0.1283 ** 2), 3) == 0
+        assert round(abs(c[0] - 0.1283**2), 3) == 0
         assert c[1] == {"pint": 2.0 / 3}
 
     def test_get_base_units_relation(self):

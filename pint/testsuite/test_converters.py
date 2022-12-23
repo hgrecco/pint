@@ -1,12 +1,12 @@
 import itertools
 
 from pint.compat import np
-from pint.converters import (
-    Converter,
+from pint.converters import Converter
+from pint.facets.nonmultiplicative.definitions import (
     LogarithmicConverter,
     OffsetConverter,
-    ScaleConverter,
 )
+from pint.facets.plain import ScaleConverter
 from pint.testsuite import helpers
 
 
@@ -90,3 +90,10 @@ class TestConverter:
                 assert arb_array is result
             else:
                 assert arb_array is not result
+
+    def test_from_arguments(self):
+        assert Converter.from_arguments(scale=1) == ScaleConverter(1)
+        assert Converter.from_arguments(scale=2, offset=3) == OffsetConverter(2, 3)
+        assert Converter.from_arguments(
+            scale=4, logbase=5, logfactor=6
+        ) == LogarithmicConverter(4, 5, 6)

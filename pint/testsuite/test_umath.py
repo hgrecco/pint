@@ -83,7 +83,7 @@ class TestUFuncs:
             if output_units == "same":
                 ou = x1.units
             elif isinstance(output_units, (int, float)):
-                ou = x1.units ** output_units
+                ou = x1.units**output_units
             else:
                 ou = output_units
 
@@ -172,7 +172,7 @@ class TestUFuncs:
                 if ou == "same":
                     ou = x1.units
                 elif isinstance(ou, (int, float)):
-                    ou = x1.units ** ou
+                    ou = x1.units**ou
 
                 if ou is not None:
                     re = self.Q_(re, ou)
@@ -231,7 +231,7 @@ class TestUFuncs:
             elif output_units == "div":
                 ou = x1.units / x2.units
             elif output_units == "second":
-                ou = x1.units ** x2
+                ou = x1.units**x2
             else:
                 ou = output_units
 
@@ -279,34 +279,43 @@ class TestMathUfuncs(TestUFuncs):
 
     http://docs.scipy.org/doc/numpy/reference/ufuncs.html#math-operations
 
-    add(x1, x2[, out]) Add arguments element-wise.
-    subtract(x1, x2[, out]) Subtract arguments, element-wise.
-    multiply(x1, x2[, out]) Multiply arguments element-wise.
-    divide(x1, x2[, out]) Divide arguments element-wise.
-    logaddexp(x1, x2[, out]) Logarithm of the sum of exponentiations of the inputs.
-    logaddexp2(x1, x2[, out]) Logarithm of the sum of exponentiations of the inputs in base-2.
-    true_divide(x1, x2[, out]) Returns a true division of the inputs, element-wise.
-    floor_divide(x1, x2[, out]) Return the largest integer smaller or equal to the division of the inputs.
-    negative(x[, out]) Returns an array with the negative of each element of the original array.
-    power(x1, x2[, out]) First array elements raised to powers from second array, element-wise. NOT IMPLEMENTED
-    remainder(x1, x2[, out]) Return element-wise remainder of division.
-    mod(x1, x2[, out]) Return element-wise remainder of division.
-    fmod(x1, x2[, out]) Return the element-wise remainder of division.
-    absolute(x[, out]) Calculate the absolute value element-wise.
-    rint(x[, out]) Round elements of the array to the nearest integer.
-    sign(x[, out]) Returns an element-wise indication of the sign of a number.
-    conj(x[, out]) Return the complex conjugate, element-wise.
-    exp(x[, out]) Calculate the exponential of all elements in the input array.
-    exp2(x[, out]) Calculate 2**p for all p in the input array.
-    log(x[, out]) Natural logarithm, element-wise.
-    log2(x[, out]) Base-2 logarithm of x.
-    log10(x[, out]) Return the base 10 logarithm of the input array, element-wise.
-    expm1(x[, out]) Calculate exp(x) - 1 for all elements in the array.
-    log1p(x[, out]) Return the natural logarithm of one plus the input array, element-wise.
-    sqrt(x[, out]) Return the positive square-root of an array, element-wise.
-    square(x[, out]) Return the element-wise square of the input.
-    reciprocal(x[, out]) Return the reciprocal of the argument, element-wise.
-    ones_like(x[, out]) Returns an array of ones with the same shape and type as a given array.
+    add(x1, x2, /[, out, where, casting, order, ...] Add arguments element-wise.
+    subtract(x1, x2, /[, out, where, casting, ...] Subtract arguments, element-wise.
+    multiply(x1, x2, /[, out, where, casting, ...] Multiply arguments element-wise.
+    matmul(x1, x2, /[, out, casting, order, ...] Matrix product of two arrays.
+    divide(x1, x2, /[, out, where, casting, ...] Divide arguments element-wise.
+    logaddexp(x1, x2, /[, out, where, casting, ...] Logarithm of the sum of exponentiations of the inputs.
+    logaddexp2(x1, x2, /[, out, where, casting, ...] Logarithm of the sum of exponentiations of the inputs in base-2.
+    true_divide(x1, x2, /[, out, where, ...] Divide arguments element-wise.
+    floor_divide(x1, x2, /[, out, where, ...] Return the largest integer smaller or equal to the division of the inputs.
+    negative(x, /[, out, where, casting, order, ...] Numerical negative, element-wise.
+    positive(x, /[, out, where, casting, order, ...] Numerical positive, element-wise.
+    power(x1, x2, /[, out, where, casting, ...] First array elements raised to powers from second array, element-wise.
+    float_power(x1, x2, /[, out, where, ...] First array elements raised to powers from second array, element-wise.
+    remainder(x1, x2, /[, out, where, casting, ...] Returns the element-wise remainder of division.
+    mod(x1, x2, /[, out, where, casting, order, ...] Returns the element-wise remainder of division.
+    fmod(x1, x2, /[, out, where, casting, ...] Returns the element-wise remainder of division.
+    divmod(x1, x2[, out1, out2], / [[, out, ...] Return element-wise quotient and remainder simultaneously.
+    absolute(x, /[, out, where, casting, order, ...] Calculate the absolute value element-wise.
+    fabs(x, /[, out, where, casting, order, ...] Compute the absolute values element-wise.
+    rint(x, /[, out, where, casting, order, ...] Round elements of the array to the nearest integer.
+    sign(x, /[, out, where, casting, order, ...] Returns an element-wise indication of the sign of a number.
+    heaviside(x1, x2, /[, out, where, casting, ...] Compute the Heaviside step function.
+    conj(x, /[, out, where, casting, order, ...] Return the complex conjugate, element-wise.
+    conjugate(x, /[, out, where, casting, ...] Return the complex conjugate, element-wise.
+    exp(x, /[, out, where, casting, order, ...] Calculate the exponential of all elements in the input array.
+    exp2(x, /[, out, where, casting, order, ...] Calculate 2**p for all p in the input array.
+    log(x, /[, out, where, casting, order, ...] Natural logarithm, element-wise.
+    log2(x, /[, out, where, casting, order, ...] Base-2 logarithm of x.
+    log10(x, /[, out, where, casting, order, ...] Return the base 10 logarithm of the input array, element-wise.
+    expm1(x, /[, out, where, casting, order, ...] Calculate exp(x) - 1 for all elements in the array.
+    log1p(x, /[, out, where, casting, order, ...] Return the natural logarithm of one plus the input array, element-wise.
+    sqrt(x, /[, out, where, casting, order, ...] Return the non-negative square-root of an array, element-wise.
+    square(x, /[, out, where, casting, order, ...] Return the element-wise square of the input.
+    cbrt(x, /[, out, where, casting, order, ...] Return the cube-root of an array, element-wise.
+    reciprocal(x, /[, out, where, casting, ...] Return the reciprocal of the argument, element-wise.
+    gcd(x1, x2, /[, out, where, casting, order, ...] Returns the greatest common divisor of |x1| and |x2|
+    lcm(x1, x2, /[, out, where, casting, order, ...] Returns the lowest common multiple of |x1| and |x2|
 
     Parameters
     ----------
@@ -363,6 +372,9 @@ class TestMathUfuncs(TestUFuncs):
 
     def test_negative(self):
         self._test1(np.negative, (self.qless, self.q1), ())
+
+    def test_positive(self):
+        self._test1(np.positive, (self.qless, self.q1), ())
 
     def test_remainder(self):
         self._test2(

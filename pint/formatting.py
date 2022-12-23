@@ -8,7 +8,10 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import re
+import warnings
 from typing import Callable, Dict
 
 from .babel_names import _babel_lengths, _babel_units
@@ -154,7 +157,7 @@ def register_unit_format(name):
 
     def wrapper(func):
         if name in _FORMATTERS:
-            raise ValueError(f"format {name:!r} already exists")  # or warn instead
+            raise ValueError(f"format {name!r} already exists")  # or warn instead
         _FORMATTERS[name] = func
 
     return wrapper
@@ -333,14 +336,9 @@ def formatter(
                     # Don't remove this positional! This is the format used in Babel
                     key = pat.replace("{0}", "").strip()
                     break
-
-            tmp = compound_unit_patterns.get("per", {}).get(babel_length, division_fmt)
-
-            try:
-                division_fmt = tmp.get("compound", division_fmt)
-            except AttributeError:
-                division_fmt = tmp
-
+            division_fmt = compound_unit_patterns.get("per", {}).get(
+                babel_length, division_fmt
+            )
             power_fmt = "{}{}"
             exp_call = _pretty_fmt_exponent
         if value == 1:
@@ -441,8 +439,9 @@ def siunitx_format_unit(units, registry):
 
         lpick = lpos if power >= 0 else lneg
         prefix = None
+        # TODO: fix this to be fore efficient and detect also aliases.
         for p in registry._prefixes.values():
-            p = str(p)
+            p = str(p.name)
             if len(p) > 0 and unit.find(p) == 0:
                 prefix = p
                 unit = unit.replace(prefix, "", 1)
@@ -460,17 +459,63 @@ def siunitx_format_unit(units, registry):
 def extract_custom_flags(spec):
     import re
 
-    flag_re = re.compile("(" + "|".join(list(_FORMATTERS.keys()) + ["~"]) + ")")
+    if not spec:
+        return ""
+
+    # sort by length, with longer items first
+    known_flags = sorted(_FORMATTERS.keys(), key=len, reverse=True)
+
+    flag_re = re.compile("(" + "|".join(known_flags + ["~"]) + ")")
     custom_flags = flag_re.findall(spec)
 
     return "".join(custom_flags)
 
 
 def remove_custom_flags(spec):
-    for flag in list(_FORMATTERS.keys()) + ["~"]:
+    for flag in sorted(_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
         if flag:
             spec = spec.replace(flag, "")
     return spec
+
+
+def split_format(spec, default, separate_format_defaults=True):
+    mspec = remove_custom_flags(spec)
+    uspec = extract_custom_flags(spec)
+
+    default_mspec = remove_custom_flags(default)
+    default_uspec = extract_custom_flags(default)
+
+    if separate_format_defaults in (False, None):
+        # should we warn always or only if there was no explicit choice?
+        # Given that we want to eventually remove the flag again, I'd say yes?
+        if spec and separate_format_defaults is None:
+            if not uspec and default_uspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a unit formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the unit formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+            if not mspec and default_mspec:
+                warnings.warn(
+                    (
+                        "The given format spec does not contain a magnitude formatter."
+                        " Falling back to the builtin defaults, but in the future"
+                        " the magnitude formatter specified in the `default_format`"
+                        " attribute will be used instead."
+                    ),
+                    DeprecationWarning,
+                )
+        elif not spec:
+            mspec, uspec = default_mspec, default_uspec
+    else:
+        mspec = mspec if mspec else default_mspec
+        uspec = uspec if uspec else default_uspec
+
+    return mspec, uspec
 
 
 def vector_to_latex(vec, fmtfun=lambda x: format(x, ".2f")):

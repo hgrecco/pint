@@ -9,6 +9,8 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import matplotlib.units
 
 from .util import iterable, sized
