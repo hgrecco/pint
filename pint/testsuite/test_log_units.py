@@ -90,6 +90,12 @@ class TestLogarithmicQuantity(QuantityTestCase):
             self.Q_(0.0, "dBW"), self.Q_(29.999999999999996, "dBm"), atol=1e-7
         )
 
+        # ## Test dB to dB units dBm - dBW
+        # 0 dBW = 1W = 1e3 mW = 30 dBm
+        helpers.assert_quantity_almost_equal(
+            self.Q_(0.0, "dBW"), self.Q_(29.999999999999996, "dBm"), atol=1e-7
+        )
+
     def test_mix_regular_log_units(self):
         # Test regular-logarithmic mixed definition, such as dB/km or dB/cm
 
@@ -162,36 +168,36 @@ log_delta_unit_names = ["delta_" + name for name in log_unit_names if name != "d
 
 
 @pytest.mark.parametrize("unit_name", log_delta_unit_names)
-def test_deltaunit_by_attribute(ureg, unit_name):
+def test_deltaunit_by_attribute(module_registry, unit_name):
     """Can the logarithmic units be accessed by attribute lookups?"""
-    unit = getattr(ureg, unit_name)
+    unit = getattr(module_registry, unit_name)
     assert isinstance(unit, Unit)
 
 
 @pytest.mark.parametrize("unit_name", log_delta_unit_names)
-def test_deltaunit_parsing(ureg, unit_name):
+def test_deltaunit_parsing(module_registry, unit_name):
     """Can the logarithmic units be understood by the parser?"""
-    unit = ureg.parse_units(unit_name)
+    unit = getattr(module_registry, unit_name)
     assert isinstance(unit, Unit)
 
 
 @pytest.mark.parametrize("mag", [1.0, 4.2])
 @pytest.mark.parametrize("unit_name", log_delta_unit_names)
-def test_deltaquantity_by_constructor(ureg, unit_name, mag):
+def test_deltaquantity_by_constructor(module_registry, unit_name, mag):
     """Can Quantity() objects be constructed using logarithmic units?"""
-    q = ureg.Quantity(mag, unit_name)
+    q = module_registry.Quantity(mag, unit_name)
     assert q.magnitude == pytest.approx(mag)
-    assert q.units == getattr(ureg, unit_name)
+    assert q.units == getattr(module_registry, unit_name)
 
 
 @pytest.mark.parametrize("mag", [1.0, 4.2])
 @pytest.mark.parametrize("unit_name", log_delta_unit_names)
-def test_deltaquantity_by_multiplication(auto_ureg, unit_name, mag):
+def test_deltaquantity_by_multiplication(module_registry, unit_name, mag):
     """Test that logarithmic units can be defined with multiplication
 
     Requires setting `autoconvert_offset_to_baseunit` to True
     """
-    unit = getattr(auto_ureg, unit_name)
+    unit = getattr(module_registry, unit_name)
     q = mag * unit
     assert q.magnitude == pytest.approx(mag)
     assert q.units == unit
@@ -340,15 +346,14 @@ def test_frequency_octave_addition(module_registry_auto_offset, freq1, octaves, 
     assert new_freq.magnitude == pytest.approx(freq2)
 
 
-def test_db_db_addition(auto_ureg):
+def test_db_db_addition(log_module_registry):
     """Test a dB value can be added to a dB and the answer is correct."""
     # adding two dB units
-    auto_ureg.logarithmic_math = True
-    power = (5 * auto_ureg.dB) + (10 * auto_ureg.dB)
+    power = (5 * log_module_registry.dB) + (10 * log_module_registry.dB)
     assert power.magnitude == pytest.approx(11.19331048066)
-    assert power.units == auto_ureg.dB
+    assert power.units == log_module_registry.dB
 
     # Adding two absolute dB units
-    power = (5 * auto_ureg.dBW) + (10 * auto_ureg.dBW)
+    power = (5 * log_module_registry.dBW) + (10 * log_module_registry.dBW)
     assert power.magnitude == pytest.approx(11.19331048066)
-    assert power.units == auto_ureg.dBW
+    assert power.units == log_module_registry.dBW
