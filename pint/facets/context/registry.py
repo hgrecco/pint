@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from typing import Any, Callable, ContextManager, Dict, Union
 
 from ..._typing import F
-from ...errors import DefinitionSyntaxError, UndefinedUnitError
+from ...errors import UndefinedUnitError
 from ...util import find_connected_nodes, find_shortest_path, logger
 from ..plain import PlainRegistry, UnitDefinition
 from .definitions import ContextDefinition
@@ -67,17 +67,11 @@ class ContextRegistry(PlainRegistry):
         # Allow contexts to add override layers to the units
         self._units = ChainMap(self._units)
 
-    def _register_directives(self) -> None:
-        super()._register_directives()
-        self._register_directive("@context", self._load_context, ContextDefinition)
+    def _register_definition_adders(self) -> None:
+        super()._register_definition_adders()
+        self._register_adder(ContextDefinition, self.add_context)
 
-    def _load_context(self, cd: ContextDefinition) -> None:
-        try:
-            self.add_context(Context.from_definition(cd, self.get_dimensionality))
-        except KeyError as e:
-            raise DefinitionSyntaxError(f"unknown dimension {e} in context")
-
-    def add_context(self, context: Context) -> None:
+    def add_context(self, context: Union[Context, ContextDefinition]) -> None:
         """Add a context object to the registry.
 
         The context will be accessible by its name and aliases.
@@ -85,6 +79,9 @@ class ContextRegistry(PlainRegistry):
         Notice that this method will NOT enable the context;
         see :meth:`enable_contexts`.
         """
+        if isinstance(context, ContextDefinition):
+            context = Context.from_definition(context, self.get_dimensionality)
+
         if not context.name:
             raise ValueError("Can't add unnamed context to registry")
         if context.name in self._contexts:
@@ -189,7 +186,6 @@ class ContextRegistry(PlainRegistry):
             name=basedef.name,
             defined_symbol=basedef.symbol,
             aliases=basedef.aliases,
-            is_base=False,
             reference=definition.reference,
             converter=definition.converter,
         )

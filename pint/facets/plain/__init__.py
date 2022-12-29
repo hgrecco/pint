@@ -18,7 +18,7 @@ from .definitions import (
     ScaleConverter,
     UnitDefinition,
 )
-from .objects import PlainQuantity, PlainUnit, UnitsContainer
+from .objects import PlainQuantity, PlainUnit
 from .registry import PlainRegistry
 
 __all__ = [
@@ -31,5 +31,4 @@ __all__ = [
     "PrefixDefinition",
     "ScaleConverter",
     "UnitDefinition",
-    "UnitsContainer",
 ]

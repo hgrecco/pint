@@ -11,6 +11,8 @@ from __future__ import annotations
 from numbers import Number
 from typing import TYPE_CHECKING, Dict, FrozenSet, Tuple, Union
 
+from ... import errors
+
 if TYPE_CHECKING:
     from pint import Quantity, Unit
 
@@ -41,6 +43,9 @@ class SystemRegistry(GroupRegistry):
     - Parse @group directive.
     """
 
+    # TODO: Change this to System: System to specify class
+    # and use introspection to get system class as a way
+    # to enjoy typing goodies
     _system_class = System
 
     def __init__(self, system=None, **kwargs):
@@ -77,13 +82,22 @@ class SystemRegistry(GroupRegistry):
             "system", None
         )
 
-    def _register_directives(self) -> None:
-        super()._register_directives()
-        self._register_directive(
-            "@system",
-            lambda gd: self.System.from_definition(gd, self.get_root_units),
-            SystemDefinition,
-        )
+    def _register_definition_adders(self) -> None:
+        super()._register_definition_adders()
+        self._register_adder(SystemDefinition, self._add_system)
+
+    def _add_system(self, sd: SystemDefinition):
+
+        if sd.name in self._systems:
+            raise ValueError(f"System {sd.name} already present in registry")
+
+        try:
+            # As a System is a SharedRegistryObject
+            # it adds itself to the registry.
+            self.System.from_definition(sd)
+        except KeyError as e:
+            # TODO: fix this error message
+            raise errors.DefinitionError(f"unknown dimension {e} in context")
 
     @property
     def sys(self):

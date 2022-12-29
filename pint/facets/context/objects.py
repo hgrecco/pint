@@ -12,7 +12,6 @@ import weakref
 from collections import ChainMap, defaultdict
 from typing import Optional, Tuple
 
-from ...errors import DefinitionSyntaxError, RedefinitionError
 from ...facets.plain import UnitDefinition
 from ...util import UnitsContainer, to_units_container
 from .definitions import ContextDefinition
@@ -133,29 +132,22 @@ class Context:
     def from_definition(cls, cd: ContextDefinition, to_base_func=None) -> Context:
         ctx = cls(cd.name, cd.aliases, cd.defaults)
 
-        for lineno, definition in cd.redefinitions:
-            try:
-                ctx._redefine(definition)
-            except (RedefinitionError, DefinitionSyntaxError) as ex:
-                if ex.lineno is None:
-                    ex.lineno = lineno
-                raise ex
+        for definition in cd.redefinitions:
+            ctx._redefine(definition)
 
-        for lineno, relation in cd.relations:
+        for relation in cd.relations:
             try:
                 if to_base_func:
                     src = to_base_func(relation.src)
                     dst = to_base_func(relation.dst)
                 else:
                     src, dst = relation.src, relation.dst
-                ctx.add_transformation(src, dst, relation.tranformation)
+                ctx.add_transformation(src, dst, relation.transformation)
                 if relation.bidirectional:
-                    ctx.add_transformation(dst, src, relation.tranformation)
+                    ctx.add_transformation(dst, src, relation.transformation)
             except Exception as exc:
-                raise DefinitionSyntaxError(
-                    "Could not add Context %s relation on line '%s'"
-                    % (cd.name, lineno),
-                    lineno=lineno,
+                raise ValueError(
+                    f"Could not add Context {cd.name} relation {relation}"
                 ) from exc
 
         return ctx
@@ -192,11 +184,16 @@ class Context:
         definition : str
             <unit> = <new definition>``, e.g. ``pound = 0.5 kg``
         """
+        from ...delegates import ParserConfig, txt_defparser
 
-        for line in definition.splitlines():
-            # TODO: What is the right non_int_type value.
-            definition = ContextDefinition.parse_definition(line, float)
-            self._redefine(definition)
+        # TODO: kept for backwards compatibility.
+        #       this is not a good idea as we have no way of known the correct non_int_type
+        cfg = ParserConfig(float)
+        parser = txt_defparser.DefParser(cfg, None)
+        pp = parser.parse_string(definition)
+        for definition in parser.iter_parsed_project(pp):
+            if isinstance(definition, UnitDefinition):
+                self._redefine(definition)
 
     def _redefine(self, definition: UnitDefinition):
         self.redefinitions.append(definition)

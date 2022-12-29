@@ -1,12 +1,45 @@
 Pint Changelog
 ==============
 
-0.20 (unreleased)
-------------------
+0.21 (unreleased)
+-----------------
+
+- Fix error when when re-registering a formatter.
+  (PR #1629)
+- Add new SI prefixes: ronna-, ronto-, quetta-, quecto-.
+  (PR #1652)
+- Implementation for numpy.positive added for Quantity.
+  (PR #1663)
+- Changed frequency to angular frequency in the docs.
+  (PR #1668)
+
+### Breaking Changes
+
+- Support percent and ppm units. Support the `%` symbol.
+  (Issue #1277)
+
+0.20.1 (2022-10-27)
+-------------------
+
+- Simplify registry subclassing.
+  (Issue #1631)
+- Restore intersphinx cross reference functionality.
+  (Issue #1637)
+- Use a newer version of flexparser that can deal with
+  imports in linked/temporary folders.
+  (Issue #1634)
+
+
+0.20 (2022-10-25)
+-----------------
 
 - Reorganized code into facets.
   Each facet encapsulate a Pint functionality.
   (See #1466, #1479)
+- The definition parser is now completely appart, making it easy to try other formats.
+  (See #1595)
+- Extra requires for optional packages are now explicit in setup.cfg
+  (See #1627)
 - Parse both Greek mu and micro Unicode points without error.
   (Issue #1030, #574)
 - Added angular frequency documentation page.
@@ -17,6 +50,15 @@ Pint Changelog
   (Issue #1510, #1530)
 - Update test_non_int tests for pytest.
 - Better support for uncertainties (See #1611, #1614)
+- Implement `numpy.broadcast_arrays` (#1607)
+- An ndim attribute has been added to Quantity and DataFrame has been added to upcast
+types for pint-pandas compatibility. (#1596)
+- Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
+  (Issue #1510, #1530)
+- Update test_non_int tests for pytest.
+- Create NaN-value quantities of appropriate non-int-type (Issue #1570).
+- New documentation format and organization!
+- Better support for pandas and dask.
 
 0.19.2 (2022-04-23)
 -------------------

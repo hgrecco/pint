@@ -25,7 +25,6 @@ from .errors import DefinitionSyntaxError
 
 # For controlling order of operations
 _OP_PRIORITY = {
-    "±": 4,
     "+/-": 4,
     "**": 3,
     "^": 3,
@@ -256,7 +255,6 @@ def uncertainty_tokenizer(input_string):
 tokenizer = _plain_tokenizer
 
 _BINARY_OPERATOR_MAP = {
-    "±": _ufloat,
     "+/-": _ufloat,
     "**": _power,
     "*": operator.mul,
