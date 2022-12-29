@@ -41,18 +41,11 @@ if TYPE_CHECKING:
     from ..context import Context
     from pint import Quantity, Unit
 
-from ... import parser
 from ... import pint_eval
 from ..._typing import QuantityOrUnitLike, UnitLike
 from ..._vendor import appdirs
 from ...compat import HAS_BABEL, babel_parse
-from ...definitions import Definition
-from ...errors import (
-    DefinitionSyntaxError,
-    DimensionalityError,
-    RedefinitionError,
-    UndefinedUnitError,
-)
+from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
 from ...util import ParserHelper
 from ...util import UnitsContainer
