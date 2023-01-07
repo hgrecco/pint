@@ -153,7 +153,7 @@ see CHANGES_
 .. _`NumPy`: http://www.numpy.org/
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/
 .. _`Babel`: http://babel.pocoo.org/
-.. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/extending.html#extension-types
-.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb
+.. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/development/extending.html#extension-types
+.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pint-pandas.ipynb
 .. _`AUTHORS`: https://github.com/hgrecco/pint/blob/master/AUTHORS
 .. _`CHANGES`: https://github.com/hgrecco/pint/blob/master/CHANGES
