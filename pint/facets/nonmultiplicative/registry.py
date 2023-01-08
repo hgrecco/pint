@@ -13,7 +13,7 @@ from typing import Any, Optional
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer, logger
 from ..plain import PlainRegistry, UnitDefinition
-from .definitions import OffsetConverter, ScaleConverter
+from .definitions import LogarithmicConverter, OffsetConverter, ScaleConverter
 from .objects import NonMultiplicativeQuantity
 
 
@@ -79,25 +79,39 @@ class NonMultiplicativeRegistry(PlainRegistry):
         if definition.is_multiplicative:
             return
 
-        if definition.is_logarithmic:
+        # Issue #2 (valispace fork): delta versions are added for logarithmic units
+        #                            if logarithmic math is activated.
+        if definition.is_logarithmic and not self.logarithmic_math:
             return
 
-        if not isinstance(definition.converter, OffsetConverter):
+        if not isinstance(definition.converter, OffsetConverter) and not isinstance(
+            definition.converter, LogarithmicConverter
+        ):
             logger.debug(
                 "Cannot autogenerate delta version for a unit in "
-                "which the converter is not an OffsetConverter"
+                "which the converter is not an OffsetConverter "
+                "or a LogarithmicConverter"
             )
             return
 
         delta_name = "delta_" + definition.name
         if definition.symbol:
             delta_symbol = "Δ" + definition.symbol
+            # Issue #2 (valispace fork): delta versions need an additional symbol alias for logaritmic units, also useful for offset units
+            symbol_alias = (
+                "delta_" + definition.symbol
+                if definition.symbol != definition.name
+                else ""
+            )
         else:
             delta_symbol = None
+            symbol_alias = ""
 
         delta_aliases = tuple("Δ" + alias for alias in definition.aliases) + tuple(
             "delta_" + alias for alias in definition.aliases
         )
+        if symbol_alias:
+            delta_aliases += (symbol_alias,)
 
         delta_reference = self.UnitsContainer(
             {ref: value for ref, value in definition.reference.items()}
