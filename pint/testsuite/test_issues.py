@@ -8,6 +8,7 @@ import pytest
 from pint import Context, DimensionalityError, UnitRegistry, get_application_registry
 from pint.compat import np
 from pint.facets.plain.unit import UnitsContainer
+from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
 
@@ -855,6 +856,29 @@ class TestIssues(QuantityTestCase):
             ),
             np.array((0.04, 0.09)),
         )
+
+    def test_issue1277(self, module_registry):
+        ureg = module_registry
+        assert ureg("%") == ureg("percent")
+        assert ureg("%") == ureg.percent
+        assert ureg("ppm") == ureg.ppm
+
+        a = ureg.Quantity("10 %")
+        b = ureg.Quantity("100 ppm")
+        c = ureg.Quantity("0.5")
+
+        assert f"{a}" == "10 percent"
+        assert f"{a:~}" == "10 %"
+        assert f"{b}" == "100 ppm"
+        assert f"{b:~}" == "100 ppm"
+
+        assert_equal(a, 0.1)
+        assert_equal(1000 * b, a)
+        assert_equal(c, 5 * a)
+
+        assert_equal((1 * ureg.meter) / (1 * ureg.kilometer), 0.1 * ureg.percent)
+        assert c.to("percent").m == 50
+        # assert c.to("%").m == 50  # TODO: fails.
 
     @helpers.requires_uncertainties()
     def test_issue_1300(self):

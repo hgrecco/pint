@@ -62,6 +62,8 @@
 #### PREFIXES ####
 
 # decimal prefixes
+quecto- = 1e-30 = q-
+ronto- = 1e-27 = r-
 yocto- = 1e-24 = y-
 zepto- = 1e-21 = z-
 atto- =  1e-18 = a-
@@ -84,6 +86,8 @@ peta- =  1e15  = P-
 exa- =   1e18  = E-
 zetta- = 1e21  = Z-
 yotta- = 1e24  = Y-
+ronna- = 1e27 = R-
+quetta- = 1e30 = Q-
 
 # binary_prefixes
 kibi- = 2**10 = Ki-
@@ -143,6 +147,10 @@ baud = bit / second = Bd = bps
 byte = 8 * bit = B = octet
 # byte = 8 * bit = _ = octet
 ## NOTE: B (byte) symbol can conflict with Bell
+
+# Ratios
+percent = 0.01 = %
+ppm = 1e-6
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å

@@ -4,9 +4,21 @@ Pint Changelog
 0.21 (unreleased)
 -----------------
 
+- Fix error when when re-registering a formatter.
+  (PR #1629)
+- Add new SI prefixes: ronna-, ronto-, quetta-, quecto-.
+  (PR #1652)
+- Implementation for numpy.positive added for Quantity.
+  (PR #1663)
+- Changed frequency to angular frequency in the docs.
+  (PR #1668)
 - Avoid addition of spurious trailing zeros when converting units and non-int-type is
-  Decimal (Issue #1621).
+  Decimal (PR #1625).
 
+### Breaking Changes
+
+- Support percent and ppm units. Support the `%` symbol.
+  (Issue #1277)
 
 0.20.1 (2022-10-27)
 -------------------
