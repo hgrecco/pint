@@ -1,6 +1,11 @@
 Pint Changelog
 ==============
 
+0.21.01 (Valispace released)
+----------------------------
+
+- Support Δ° symbol for offset units Celsius and Fahrenheit.
+
 0.21 (unreleased)
 -----------------
 

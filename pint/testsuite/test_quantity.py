@@ -1308,6 +1308,8 @@ class TestOffsetUnitMath(QuantityTestCase):
         (((100, "delta_degF"), (10, "degR")), (90, "degR")),
         (((100, "delta_degF"), (10, "delta_degC")), (82, "delta_degF")),
         (((100, "delta_degF"), (10, "delta_degF")), (90, "delta_degF")),
+        pytest.param(((100, "delta_degC"), (10, "Δ°C")), (90, "delta_degC"), id="Δ°C"),
+        pytest.param(((100, "Δ°F"), (10, "Δ°C")), (82, "delta_degF"), id="Δ°F"),
     ]
 
     @pytest.mark.parametrize(("input_tuple", "expected"), subtractions)
@@ -1387,6 +1389,12 @@ class TestOffsetUnitMath(QuantityTestCase):
         (((100, "delta_degF"), (10, "degR")), (1000, "delta_degF*degR")),
         (((100, "delta_degF"), (10, "delta_degC")), (1000, "delta_degF*delta_degC")),
         (((100, "delta_degF"), (10, "delta_degF")), (1000, "delta_degF**2")),
+        pytest.param(
+            ((100, "delta_degC"), (10, "Δ°C")), (1000, "delta_degC**2"), id="Δ°C**2"
+        ),
+        pytest.param(
+            ((100, "Δ°F"), (10, "Δ°C")), (1000, "delta_degF*delta_degC"), id="Δ°F*Δ°C"
+        ),
     ]
 
     @pytest.mark.parametrize(("input_tuple", "expected"), multiplications)
@@ -1465,6 +1473,10 @@ class TestOffsetUnitMath(QuantityTestCase):
         (((100, "delta_degF"), (10, "degR")), (10, "delta_degF/degR")),
         (((100, "delta_degF"), (10, "delta_degC")), (10, "delta_degF/delta_degC")),
         (((100, "delta_degF"), (10, "delta_degF")), (10, "")),
+        pytest.param(((100, "delta_degC"), (10, "Δ°C")), (10, ""), id="Δ°C/Δ°C"),
+        pytest.param(
+            ((100, "Δ°F"), (10, "Δ°C")), (10, "delta_degF/delta_degC"), id="Δ°F/Δ°C"
+        ),
     ]
 
     @pytest.mark.parametrize(("input_tuple", "expected"), divisions)
