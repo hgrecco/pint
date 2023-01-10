@@ -1227,6 +1227,8 @@ class TestOffsetUnitMath(QuantityTestCase):
         (((100, "delta_degF"), (10, "degR")), (110, "degR")),
         (((100, "delta_degF"), (10, "delta_degC")), (118, "delta_degF")),
         (((100, "delta_degF"), (10, "delta_degF")), (110, "delta_degF")),
+        pytest.param(((100, "delta_degC"), (10, "Δ°C")), (110, "delta_degC"), id="Δ°C"),
+        pytest.param(((100, "Δ°F"), (10, "Δ°C")), (118, "delta_degF"), id="Δ°F"),
     ]
 
     @pytest.mark.parametrize(("input_tuple", "expected"), additions)
