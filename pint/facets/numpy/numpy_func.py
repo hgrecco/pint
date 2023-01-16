@@ -827,6 +827,7 @@ for func_str, unit_arguments, wrap_output in [
     ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
     ("insert", ["arr", "values"], True),
+    ("delete", ["arr"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
     ("allclose", ["a", "b"], False),
