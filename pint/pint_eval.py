@@ -182,7 +182,7 @@ def uncertainty_tokenizer(input_string):
             yield plus_minus_op
         elif (
             tokinfo.string == "("
-            and (seen_minus := 1 if toklist.lookahead(0).string == "-" else 0)
+            and ((seen_minus := 1 if toklist.lookahead(0).string == "-" else 0) or True)
             and _number_or_nan(toklist.lookahead(seen_minus))
             and toklist.lookahead(seen_minus + 1).string == "+"
             and toklist.lookahead(seen_minus + 2).string == "/"
