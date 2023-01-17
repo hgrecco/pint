@@ -374,6 +374,12 @@ class TestLogarithmicUnitMath(QuantityTestCase):
         cls.kwargs["logarithmic_math"] = True
         super().setup_class()
 
+    @classmethod
+    def teardown_class(cls):
+        cls.kwargs["autoconvert_offset_to_baseunit"] = False
+        cls.kwargs["logarithmic_math"] = False
+        super().teardown_class()
+
     additions = [
         # --- input tuple --| -- expected result --| -- expected result (conversion to base units) --
         pytest.param(

@@ -890,6 +890,8 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
 # TODO: remove QuantityTestCase
 class TestConvertWithOffset(QuantityTestCase):
 
+    kwargs = dict(autoconvert_offset_to_baseunit=False)
+
     # The dicts in convert_with_offset are used to create a UnitsContainer.
     # We create UnitsContainer to avoid any auto-conversion of units.
     convert_with_offset = [
