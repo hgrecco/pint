@@ -182,19 +182,23 @@ def uncertainty_tokenizer(input_string):
             yield plus_minus_op
         elif (
             tokinfo.string == "("
-            and _number_or_nan(toklist.lookahead(0))
-            and toklist.lookahead(1).string == "+"
-            and toklist.lookahead(2).string == "/"
-            and toklist.lookahead(3).string == "-"
-            and _number_or_nan(toklist.lookahead(4))
-            and toklist.lookahead(5).string == ")"
+            and (seen_minus := 1 if toklist.lookahead(0).string == "-" else 0)
+            and _number_or_nan(toklist.lookahead(seen_minus))
+            and toklist.lookahead(seen_minus + 1).string == "+"
+            and toklist.lookahead(seen_minus + 2).string == "/"
+            and toklist.lookahead(seen_minus + 3).string == "-"
+            and _number_or_nan(toklist.lookahead(seen_minus + 4))
+            and toklist.lookahead(seen_minus + 5).string == ")"
         ):
             # ( NUM_OR_NAN +/- NUM_OR_NAN ) POSSIBLE_E_NOTATION
-            possible_e = _get_possible_e (toklist, 6)
+            possible_e = _get_possible_e (toklist, seen_minus + 6)
             if possible_e:
                 end = possible_e.end
             else:
-                end = toklist.lookahead(5).end
+                end = toklist.lookahead(seen_minus + 5).end
+            if seen_minus:
+                minus_op = next(toklist)
+                yield minus_op
             nominal_value = next(toklist)
             tokinfo = next(toklist) # consume '+'
             next(toklist) # consume '/'
