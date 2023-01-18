@@ -17,6 +17,8 @@ Pint Changelog
 
 - Support percent and ppm units. Support the `%` symbol.
   (Issue #1277)
+- Fix error when parsing subtraction operator followed by white space.
+  (PR #1701)
 
 0.20.1 (2022-10-27)
 -------------------
