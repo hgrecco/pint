@@ -1,13 +1,11 @@
 Pint Changelog
 ==============
 
-0.21.01 (Valispace released)
-----------------------------
-
-- Support Δ° symbol for offset units Celsius and Fahrenheit.
-
 0.21 (unreleased)
 -----------------
+
+0.21.dev0+valispace (2023-01-18)
+--------------------------------
 
 - Fix error when when re-registering a formatter.
   (PR #1629)
@@ -17,6 +15,8 @@ Pint Changelog
   (PR #1663)
 - Changed frequency to angular frequency in the docs.
   (PR #1668)
+- Support Δ° symbol for offset units Celsius and Fahrenheit.
+  (PR #11-valispace)
 
 ### Breaking Changes
 
