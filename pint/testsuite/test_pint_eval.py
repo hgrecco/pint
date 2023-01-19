@@ -106,9 +106,9 @@ class TestPintEval:
             # implicit op
             ("3 4", "(3 * 4)"),
             # implicit op, then parentheses
-            ("3 (2 + 4)", "(3 (2 + 4))"),
+            ("3 (2 + 4)", "(3 * (2 + 4))"),
             # parentheses, then implicit
-            ("(3 ** 4 ) 5", "((3 ** 4) 5)"),
+            ("(3 ** 4 ) 5", "((3 ** 4) * 5)"),
             # implicit op, then exponentiation
             ("3 4 ** 5", "(3 * (4 ** 5))"),
             # implicit op, then addition
@@ -116,7 +116,7 @@ class TestPintEval:
             # power followed by implicit
             ("3 ** 4 5", "((3 ** 4) * 5)"),
             # implicit with parentheses
-            ("3 (4 ** 5)", "(3 (4 ** 5))"),
+            ("3 (4 ** 5)", "(3 * (4 ** 5))"),
             # exponent with e
             ("3e-1", "3e-1"),
             # multiple units with exponents
@@ -136,8 +136,8 @@ class TestPintEval:
             # units should behave like numbers, so we don't need a bunch of extra tests for them
             # implicit op, then addition
             ("3 kg + 5", "((3 * kg) + 5)"),
-            ("(5 % 2) m", "((5 % 2) m)"),  # mod operator
-            ("(5 // 2) m", "((5 // 2) m)"),  # floordiv operator
+            ("(5 % 2) m", "((5 % 2) * m)"),  # mod operator
+            ("(5 // 2) m", "((5 // 2) * m)"),  # floordiv operator
         ),
     )
     def test_preprocessed_eval_tree(self, input_text, parsed):
