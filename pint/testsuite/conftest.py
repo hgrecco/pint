@@ -23,7 +23,7 @@ atto- =  1e-18 = a-
 femto- = 1e-15 = f-
 pico- =  1e-12 = p-
 nano- =  1e-9  = n-
-micro- = 1e-6  = µ- = u-
+micro- = 1e-6  = µ- = μ- = u-
 milli- = 1e-3  = m-
 centi- = 1e-2  = c-
 deci- =  1e-1  = d-
@@ -57,6 +57,18 @@ def func_registry():
 def class_registry():
     """Only use for those test that do not modify the registry."""
     return pint.UnitRegistry()
+
+
+@pytest.fixture(scope="module")
+def module_registry():
+    """Only use for those test that do not modify the registry."""
+    return pint.UnitRegistry()
+
+
+@pytest.fixture(scope="module")
+def log_module_registry():
+    """Only use for those test that do not modify the registry."""
+    return pint.UnitRegistry(logarithmic_math=True, autoconvert_offset_to_baseunit=True)
 
 
 @pytest.fixture(scope="session")

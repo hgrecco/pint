@@ -7,9 +7,11 @@
     :copyright: 2016 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+from __future__ import annotations
 
 import operator
 import token as tokenlib
+import tokenize
 
 from .errors import DefinitionSyntaxError
 
@@ -20,15 +22,17 @@ _OP_PRIORITY = {
     "unary": 2,
     "*": 1,
     "": 1,  # operator for implicit ops
+    "//": 1,
     "/": 1,
+    "%": 1,
     "+": 0,
     "-": 0,
 }
 
 
 def _power(left, right):
+    from . import Quantity
     from .compat import is_duck_array
-    from .quantity import Quantity
 
     if (
         isinstance(left, Quantity)
@@ -48,6 +52,8 @@ _BINARY_OPERATOR_MAP = {
     "/": operator.truediv,
     "+": operator.add,
     "-": operator.sub,
+    "%": operator.mod,
+    "//": operator.floordiv,
 }
 
 _UNARY_OPERATOR_MAP = {"+": lambda x: x, "-": lambda x: x * -1}
@@ -118,7 +124,16 @@ class EvalTreeNode:
             return define_op(self.left)
 
 
-def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=None):
+from typing import Iterable
+
+
+def build_eval_tree(
+    tokens: Iterable[tokenize.TokenInfo],
+    op_priority=None,
+    index=0,
+    depth=0,
+    prev_op=None,
+) -> tuple[EvalTreeNode | None, int] | EvalTreeNode:
     """Build an evaluation tree from a set of tokens.
 
     Params:
@@ -140,6 +155,9 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
 
     """
 
+    if op_priority is None:
+        op_priority = _OP_PRIORITY
+
     if depth == 0 and prev_op is None:
         # ensure tokens is list so we can access by index
         tokens = list(tokens)
@@ -148,8 +166,8 @@ def build_eval_tree(tokens, op_priority=_OP_PRIORITY, index=0, depth=0, prev_op=
 
     while True:
         current_token = tokens[index]
-        token_type = current_token[0]
-        token_text = current_token[1]
+        token_type = current_token.type
+        token_text = current_token.string
 
         if token_type == tokenlib.OP:
             if token_text == ")":

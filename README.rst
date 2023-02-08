@@ -2,6 +2,9 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Latest Version
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/python/black
+
 .. image:: https://readthedocs.org/projects/pint/badge/
     :target: https://pint.readthedocs.org/
     :alt: Documentation
@@ -40,8 +43,7 @@ and constants. Due to its modular design, you can extend (or even rewrite!)
 the complete list without changing the source code. It supports a lot of
 numpy mathematical operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 3.7+ with no other dependency.
-If you need Python 3.6 compatibility, use Pint 0.17.
+It has a complete test coverage. It runs in Python 3.8+ with no other dependency.
 It is licensed under BSD.
 
 It is extremely easy and natural to use:

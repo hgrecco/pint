@@ -3,21 +3,18 @@ import functools
 import logging
 import math
 import re
+from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from pint import (
-    DefinitionSyntaxError,
-    DimensionalityError,
-    RedefinitionError,
-    UndefinedUnitError,
-)
+from pint import DimensionalityError, RedefinitionError, UndefinedUnitError, errors
 from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
-from pint.testsuite import QuantityTestCase, helpers
+from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 from pint.util import ParserHelper, UnitsContainer
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestUnit(QuantityTestCase):
     def test_creation(self):
         for arg in ("meter", UnitsContainer(meter=1), self.U_("m")):
@@ -77,6 +74,18 @@ class TestUnit(QuantityTestCase):
             with subtests.test(spec):
                 ureg.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
+
+    def test_unit_formatting_defaults_warning(self):
+        ureg = UnitRegistry()
+        ureg.default_format = "~P"
+        x = ureg.Unit("m / s ** 2")
+
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:.2f}" == "meter / second ** 2"
+
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:.2f}" == "m/s²"
 
     def test_unit_formatting_snake_case(self, subtests):
         # Test that snake_case units are escaped where appropriate
@@ -153,9 +162,34 @@ class TestUnit(QuantityTestCase):
         x = self.U_("m")
         assert 1 / x == self.Q_(1, "1/m")
 
-    def test_unit_pow(self):
-        x = self.U_("m")
-        assert x ** 2 == self.U_("m**2")
+    @pytest.mark.parametrize(
+        ("unit", "power_ratio", "expectation", "expected_unit"),
+        [
+            ("m", 2, does_not_raise(), "m**2"),
+            ("m", dict(), pytest.raises(TypeError), None),
+        ],
+    )
+    def test_unit_pow(self, unit, power_ratio, expectation, expected_unit):
+        with expectation:
+            x = self.U_(unit)
+            assert x**power_ratio == self.U_(expected_unit)
+
+    def test_is_compatible_with(self):
+        unit = self.ureg.Unit("m")
+
+        assert unit.is_compatible_with("m")
+        assert not unit.is_compatible_with("m**2")
+
+        assert unit.is_compatible_with(self.ureg.Unit("m"))
+        assert not unit.is_compatible_with(self.ureg.Unit("m**2"))
+
+        # test other type considered as dimensionless
+        unit = self.ureg.Unit("")
+        assert unit.is_compatible_with(0.5)
+
+    def test_systems(self):
+        unit = self.ureg.Unit("m")
+        assert unit.systems == frozenset({"cgs", "atomic", "Planck", "mks", "SI"})
 
     def test_unit_hash(self):
         x = self.U_("m")
@@ -221,9 +255,9 @@ class TestRegistry(QuantityTestCase):
         cls.ureg.autoconvert_offset_to_baseunit = False
 
     def test_base(self):
-        ureg = UnitRegistry(None)
+        ureg = UnitRegistry(None, on_redefinition="raise")
         ureg.define("meter = [length]")
-        with pytest.raises(DefinitionSyntaxError):
+        with pytest.raises(errors.RedefinitionError):
             ureg.define("meter = [length]")
         with pytest.raises(TypeError):
             ureg.define(list())
@@ -237,13 +271,13 @@ class TestRegistry(QuantityTestCase):
     def test_load(self):
         import pkg_resources
 
-        from pint import unit
+        from .. import compat
 
-        data = pkg_resources.resource_filename(unit.__name__, "default_en.txt")
+        data = pkg_resources.resource_filename(compat.__name__, "default_en.txt")
         ureg1 = UnitRegistry()
         ureg2 = UnitRegistry(data)
         assert dir(ureg1) == dir(ureg2)
-        with pytest.raises(ValueError):
+        with pytest.raises(FileNotFoundError):
             UnitRegistry(None).load_definitions("notexisting")
 
     def test_default_format(self):
@@ -365,7 +399,7 @@ class TestRegistry(QuantityTestCase):
     def test_parse_with_force_ndarray(self):
         ureg = UnitRegistry(force_ndarray=True)
 
-        assert ureg.parse_expression("m * s ** -2").units == ureg.m / ureg.s ** 2
+        assert ureg.parse_expression("m * s ** -2").units == ureg.m / ureg.s**2
 
     def test_parse_expression_with_preprocessor(self):
         # Add parsing of UDUNITS-style power
@@ -534,10 +568,10 @@ class TestRegistry(QuantityTestCase):
             return x + y
 
         def gfunc2(x, y):
-            return x ** 2 + y
+            return x**2 + y
 
         def gfunc3(x, y):
-            return x ** 2 * y
+            return x**2 * y
 
         rst = 3.0 * ureg.meter + 1.0 * ureg.centimeter
 
@@ -591,7 +625,7 @@ class TestRegistry(QuantityTestCase):
         assert g0(6, 2) == 3
         assert g0(6 * ureg.parsec, 2) == 3 * ureg.parsec
 
-        g1 = ureg.check("[speed]", "[time]")(gfunc)
+        g1 = ureg.check("[velocity]", "[time]")(gfunc)
         with pytest.raises(DimensionalityError):
             g1(3.0, 1)
         with pytest.raises(DimensionalityError):
@@ -600,13 +634,13 @@ class TestRegistry(QuantityTestCase):
             g1(1 * ureg.km / ureg.hour, 1 * ureg.hour, 3.0)
         assert (
             g1(3.6 * ureg.km / ureg.hour, 1 * ureg.second)
-            == 1 * ureg.meter / ureg.second ** 2
+            == 1 * ureg.meter / ureg.second**2
         )
 
         with pytest.raises(TypeError):
-            ureg.check("[speed]")(gfunc)
+            ureg.check("[velocity]")(gfunc)
         with pytest.raises(TypeError):
-            ureg.check("[speed]", "[time]", "[mass]")(gfunc)
+            ureg.check("[velocity]", "[time]", "[mass]")(gfunc)
 
     def test_to_ref_vs_to(self):
         self.ureg.autoconvert_offset_to_baseunit = True
@@ -629,7 +663,7 @@ class TestRegistry(QuantityTestCase):
         with caplog.at_level(logging.DEBUG):
             d("meter = [fruits]")
             d("kilo- = 1000")
-            d("[speed] = [vegetables]")
+            d("[velocity] = [vegetables]")
 
             # aliases
             d("bla = 3.2 meter = inch")
@@ -758,6 +792,7 @@ class TestCaseInsensitiveRegistry(QuantityTestCase):
         assert ureg.parse_units("j", case_sensitive=False) == UnitsContainer(joule=1)
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestCompatibleUnits(QuantityTestCase):
     def _test(self, input_units):
         gd = self.ureg.get_dimensionality
@@ -835,14 +870,14 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
 
     def test_redefinition(self):
         d = self.ureg.define
-        with pytest.raises(DefinitionSyntaxError):
+        with pytest.raises(RedefinitionError):
             d("meter = [time]")
         with pytest.raises(RedefinitionError):
             d("meter = [newdim]")
         with pytest.raises(RedefinitionError):
             d("kilo- = 1000")
         with pytest.raises(RedefinitionError):
-            d("[speed] = [length]")
+            d("[velocity] = [length]")
 
         # aliases
         assert "inch" in self.ureg._units
@@ -852,7 +887,10 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
             d("myk- = 1000 = kilo-")
 
 
+# TODO: remove QuantityTestCase
 class TestConvertWithOffset(QuantityTestCase):
+
+    kwargs = dict(autoconvert_offset_to_baseunit=False)
 
     # The dicts in convert_with_offset are used to create a UnitsContainer.
     # We create UnitsContainer to avoid any auto-conversion of units.
@@ -947,9 +985,6 @@ class TestConvertWithOffset(QuantityTestCase):
         assert ureg._units["canonical"].aliases == (
             "alias1",
             "alias2",
-            "alias3",
-            "alias4",
-            "alias5",
         )
 
         # Define against unknown name
