@@ -10,8 +10,8 @@
 
 from __future__ import annotations
 
-import re
 import functools
+import re
 import warnings
 from typing import Callable, Dict
 
@@ -193,6 +193,7 @@ def latex_escape(string):
         ),
         str(string),
     )
+
 
 @register_unit_format("L")
 def format_latex(unit, registry, **options):
