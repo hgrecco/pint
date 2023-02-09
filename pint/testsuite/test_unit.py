@@ -58,7 +58,12 @@ class TestUnit(QuantityTestCase):
         ureg = UnitRegistry()
         ureg.define(r"percent = 1e-2 = %")
         x = ureg.Unit(UnitsContainer(percent=1))
-        for spec, result in {"L": r"\mathrm{percent}", "L~": r"\mathrm{\%}"}.items():
+        for spec, result in {
+            "L": r"\mathrm{percent}",
+            "L~": r"\mathrm{\%}",
+            "Lx": r"\si[]{\percent}",
+            "Lx~": r"\si[]{\%}",
+        }.items():
             with subtests.test(spec):
                 ureg.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
@@ -68,6 +73,9 @@ class TestUnit(QuantityTestCase):
         for spec, result in {
             "L": r"\mathrm{weirdunit}",
             "L~": r"\mathrm{\textbackslash \textasciitilde \_\textasciicircum \&\%\$\_\{\}}",
+            "Lx": r"\si[]{\weirdunit}",
+            # TODO: Currently makes \si[]{\\~_^&%$_{}} (broken). What do we even want this to be?
+            # "Lx~": r"\si[]{\textbackslash \textasciitilde \_\textasciicircum \&\%\$\_\{\}}",
         }.items():
             with subtests.test(spec):
                 ureg.default_format = spec
