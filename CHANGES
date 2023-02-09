@@ -12,6 +12,8 @@ Pint Changelog
   (PR #1663)
 - Changed frequency to angular frequency in the docs.
   (PR #1668)
+- Improved escaping of special characters for LaTeX format
+  (PR #1712)
 
 ### Breaking Changes
 
