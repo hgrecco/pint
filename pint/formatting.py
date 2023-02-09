@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import re
+import functools
 import warnings
 from typing import Callable, Dict
 
@@ -178,10 +179,25 @@ def format_pretty(unit, registry, **options):
     )
 
 
+def latex_escape(string):
+    """
+    Prepend characters that have a special meaning in LaTeX with a backslash.
+    """
+    return functools.reduce(
+        lambda s, m: re.sub(m[0], m[1], s),
+        (
+            (r"[\\]", r"\\textbackslash "),
+            (r"[~]", r"\\textasciitilde "),
+            (r"[\^]", r"\\textasciicircum "),
+            (r"([&%$#_{}])", r"\\\1"),
+        ),
+        str(string),
+    )
+
 @register_unit_format("L")
 def format_latex(unit, registry, **options):
     preprocessed = {
-        r"\mathrm{{{}}}".format(u.replace("_", r"\_")): p for u, p in unit.items()
+        r"\mathrm{{{}}}".format(latex_escape(u)): p for u, p in unit.items()
     }
     formatted = formatter(
         preprocessed.items(),
