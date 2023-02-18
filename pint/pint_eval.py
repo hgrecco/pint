@@ -147,12 +147,13 @@ def uncertainty_tokenizer(input_string):
         nominal_value = _apply_e_notation(nominal_value, possible_e)
         std_dev = _apply_e_notation(std_dev, possible_e)
         next(toklist) # consume 'e' and positive exponent value
-        if possible_e.string[1]=='-':
-            next(toklist) # consume '+' or '-' in exponent
+        if possible_e.string[1] in ["+", "-"]:
+            next(toklist) # consume "+" or "-" in exponent
             exp_number = next(toklist) # consume exponent value
-            if exp_number.end < end:
+            if exp_number.string == "0" and toklist.lookahead(0).type==tokenlib.NUMBER:
                 exp_number = next(toklist)
                 assert(exp_number.end==end)
+                # We've already applied the number, we're just consuming all the tokens
         return nominal_value, std_dev
 
     # when tokenize encounters whitespace followed by an unknown character,
