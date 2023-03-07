@@ -816,6 +816,8 @@ for func_str, unit_arguments, wrap_output in [
     ("broadcast_to", ["array"], True),
     ("amax", ["a", "initial"], True),
     ("amin", ["a", "initial"], True),
+    ("max", ["a", "initial"], True),
+    ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
     ("isclose", ["a", "b"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
