@@ -796,6 +796,7 @@ for func_str, unit_arguments, wrap_output in [
     ("ptp", "a", True),
     ("ravel", "a", True),
     ("round_", "a", True),
+    ("round", "a", True),
     ("sort", "a", True),
     ("median", "a", True),
     ("nanmedian", "a", True),
