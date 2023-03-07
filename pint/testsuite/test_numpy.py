@@ -806,7 +806,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.around(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
         )
         helpers.assert_quantity_equal(
-            np.round_(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
+            np.round(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
         )
 
     def test_trace(self):
