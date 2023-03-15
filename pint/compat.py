@@ -7,6 +7,9 @@
     :copyright: 2013 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+
+from __future__ import annotations
+
 import math
 import tokenize
 from decimal import Decimal
@@ -152,9 +155,9 @@ except ImportError:
 
 # Pandas (Series)
 try:
-    from pandas import Series
+    from pandas import DataFrame, Series
 
-    upcast_types.append(Series)
+    upcast_types += [DataFrame, Series]
 except ImportError:
     pass
 

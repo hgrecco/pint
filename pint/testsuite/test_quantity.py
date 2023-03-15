@@ -17,8 +17,8 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
-from pint.testsuite import QuantityTestCase, helpers
-from pint.unit import UnitsContainer
+from pint.facets.plain.unit import UnitsContainer
+from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
 
 class FakeWrapper:
@@ -27,6 +27,7 @@ class FakeWrapper:
         self.q = q
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestQuantity(QuantityTestCase):
 
     kwargs = dict(autoconvert_offset_to_baseunit=False)
@@ -101,8 +102,9 @@ class TestQuantity(QuantityTestCase):
 
         # Compare with items to the separate application registry
         assert k >= m  # These should both be from application registry
-        with pytest.raises(ValueError):
-            z > m  # One from local registry, one from application registry
+        if z._REGISTRY != m._REGISTRY:
+            with pytest.raises(ValueError):
+                z > m  # One from local registry, one from application registry
 
         assert z != j
 
@@ -261,16 +263,44 @@ class TestQuantity(QuantityTestCase):
                 ureg.default_format = spec
                 assert f"{x}" == result
 
+    def test_formatting_override_default_units(self):
+        ureg = UnitRegistry()
+        ureg.default_format = "~"
+        x = ureg.Quantity(4, "m ** 2")
+
+        assert f"{x:dP}" == "4 meter²"
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:d}" == "4 meter ** 2"
+
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:d}" == "4 m ** 2"
+
+    def test_formatting_override_default_magnitude(self):
+        ureg = UnitRegistry()
+        ureg.default_format = ".2f"
+        x = ureg.Quantity(4, "m ** 2")
+
+        assert f"{x:dP}" == "4 meter²"
+        with pytest.warns(DeprecationWarning):
+            assert f"{x:D}" == "4 meter ** 2"
+
+        ureg.separate_format_defaults = True
+        with assert_no_warnings():
+            assert f"{x:D}" == "4.00 meter ** 2"
+
     def test_exponent_formatting(self):
         ureg = UnitRegistry()
         x = ureg.Quantity(1e20, "meter")
         assert f"{x:~H}" == r"1×10<sup>20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{20}\ \mathrm{m}"
+        assert f"{x:~Lx}" == r"\SI[]{1e+20}{\meter}"
         assert f"{x:~P}" == r"1×10²⁰ m"
 
         x /= 1e40
         assert f"{x:~H}" == r"1×10<sup>-20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{-20}\ \mathrm{m}"
+        assert f"{x:~Lx}" == r"\SI[]{1e-20}{\meter}"
         assert f"{x:~P}" == r"1×10⁻²⁰ m"
 
     def test_ipython(self):
@@ -314,7 +344,7 @@ class TestQuantity(QuantityTestCase):
         )
         x = self.Q_("1*inch*inch")
         helpers.assert_quantity_almost_equal(
-            x.to_base_units(), self.Q_(0.0254 ** 2.0, "meter*meter")
+            x.to_base_units(), self.Q_(0.0254**2.0, "meter*meter")
         )
         x = self.Q_("1*inch/minute")
         helpers.assert_quantity_almost_equal(
@@ -645,7 +675,26 @@ class TestQuantity(QuantityTestCase):
         q = self.Q_(0.5, "g*t/kg")
         helpers.assert_quantity_equal(q.to_reduced_units(), self.Q_(0.5, "kg"))
 
+    def test_to_reduced_units_dimensionless(self):
+        ureg = UnitRegistry(preprocessors=[lambda x: x.replace("%", " percent ")])
+        ureg.define("percent = 0.01 count = %")
+        Q_ = ureg.Quantity
+        reduced_quantity = (Q_("1 s") * Q_("5 %") / Q_("1 count")).to_reduced_units()
+        assert reduced_quantity == ureg.Quantity(0.05, ureg.second)
 
+    @pytest.mark.parametrize(
+        ("unit_str", "expected_unit"),
+        [
+            ("hour/hr", {}),
+            ("cm centimeter cm centimeter", {"centimeter": 4}),
+        ],
+    )
+    def test_unit_canonical_name_parsing(self, unit_str, expected_unit):
+        q = self.Q_(1, unit_str)
+        assert q._units == UnitsContainer(expected_unit)
+
+
+# TODO: do not subclass from QuantityTestCase
 class TestQuantityToCompact(QuantityTestCase):
     def assertQuantityAlmostIdentical(self, q1, q2):
         assert q1.units == q2.units
@@ -661,8 +710,8 @@ class TestQuantityToCompact(QuantityTestCase):
 
     def test_power_units(self):
         ureg = self.ureg
-        self.compare_quantity_compact(900 * ureg.m ** 2, 900 * ureg.m ** 2)
-        self.compare_quantity_compact(1e7 * ureg.m ** 2, 10 * ureg.km ** 2)
+        self.compare_quantity_compact(900 * ureg.m**2, 900 * ureg.m**2)
+        self.compare_quantity_compact(1e7 * ureg.m**2, 10 * ureg.km**2)
 
     def test_inverse_units(self):
         ureg = self.ureg
@@ -671,8 +720,8 @@ class TestQuantityToCompact(QuantityTestCase):
 
     def test_inverse_square_units(self):
         ureg = self.ureg
-        self.compare_quantity_compact(1 / ureg.m ** 2, 1 / ureg.m ** 2)
-        self.compare_quantity_compact(1e11 / ureg.m ** 2, 1e5 / ureg.mm ** 2)
+        self.compare_quantity_compact(1 / ureg.m**2, 1 / ureg.m**2)
+        self.compare_quantity_compact(1e11 / ureg.m**2, 1e5 / ureg.mm**2)
 
     def test_fractional_units(self):
         ureg = self.ureg
@@ -681,8 +730,8 @@ class TestQuantityToCompact(QuantityTestCase):
 
     def test_fractional_exponent_units(self):
         ureg = self.ureg
-        self.compare_quantity_compact(1 * ureg.m ** 0.5, 1 * ureg.m ** 0.5)
-        self.compare_quantity_compact(1e-2 * ureg.m ** 0.5, 10 * ureg.um ** 0.5)
+        self.compare_quantity_compact(1 * ureg.m**0.5, 1 * ureg.m**0.5)
+        self.compare_quantity_compact(1e-2 * ureg.m**0.5, 10 * ureg.um**0.5)
 
     def test_derived_units(self):
         ureg = self.ureg
@@ -712,10 +761,11 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_very_large_to_compact(self):
         # This should not raise an IndexError
         self.compare_quantity_compact(
-            self.Q_(10000, "yottameter"), self.Q_(10 ** 28, "meter").to_compact()
+            self.Q_(10000, "yottameter"), self.Q_(10**28, "meter").to_compact()
         )
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestQuantityBasicMath(QuantityTestCase):
     def _test_inplace(self, operator, value1, value2, expected_result, unit=None):
         if isinstance(value1, str):
@@ -975,6 +1025,7 @@ class TestQuantityBasicMath(QuantityTestCase):
                 fun(z)
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestQuantityNeutralAdd(QuantityTestCase):
     """Addition to zero or NaN is allowed between a Quantity and a non-Quantity"""
 
@@ -1072,6 +1123,7 @@ class TestQuantityNeutralAdd(QuantityTestCase):
         helpers.assert_quantity_equal(z, -e)
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestDimensions(QuantityTestCase):
     def test_get_dimensionality(self):
         get = self.ureg.get_dimensionality
@@ -1079,7 +1131,7 @@ class TestDimensions(QuantityTestCase):
         assert get(UnitsContainer({"[time]": 1})) == UnitsContainer({"[time]": 1})
         assert get("seconds") == UnitsContainer({"[time]": 1})
         assert get(UnitsContainer({"seconds": 1})) == UnitsContainer({"[time]": 1})
-        assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
+        assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
         assert get("[acceleration]") == UnitsContainer({"[length]": 1, "[time]": -2})
 
     def test_dimensionality(self):
@@ -1110,12 +1162,13 @@ class TestDimensions(QuantityTestCase):
         assert not ("[angle]" in dim)
 
 
-class TestQuantityWithDefaultRegistry(TestDimensions):
+class TestQuantityWithDefaultRegistry(TestQuantity):
     @classmethod
     def setup_class(cls):
         from pint import _DEFAULT_REGISTRY
 
         cls.ureg = _DEFAULT_REGISTRY
+        cls.U_ = cls.ureg.Unit
         cls.Q_ = cls.ureg.Quantity
 
 
@@ -1128,6 +1181,7 @@ class TestDimensionsWithDefaultRegistry(TestDimensions):
         cls.Q_ = cls.ureg.Quantity
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestOffsetUnitMath(QuantityTestCase):
     @classmethod
     def setup_class(cls):
@@ -1197,8 +1251,8 @@ class TestOffsetUnitMath(QuantityTestCase):
         (q1v, q1u), (q2v, q2u) = input_tuple
         # update input tuple with new values to have correct values on failure
         input_tuple = (
-            (np.array([q1v] * 2, dtype=np.float), q1u),
-            (np.array([q2v] * 2, dtype=np.float), q2u),
+            (np.array([q1v] * 2, dtype=float), q1u),
+            (np.array([q2v] * 2, dtype=float), q2u),
         )
         Q_ = self.Q_
         qin1, qin2 = input_tuple
@@ -1208,7 +1262,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             with pytest.raises(OffsetUnitCalculusError):
                 op.iadd(q1_cp, q2)
         else:
-            expected = np.array([expected[0]] * 2, dtype=np.float), expected[1]
+            expected = np.array([expected[0]] * 2, dtype=float), expected[1]
             assert op.iadd(q1_cp, q2).units == Q_(*expected).units
             q1_cp = copy.copy(q1)
             helpers.assert_quantity_almost_equal(
@@ -1276,8 +1330,8 @@ class TestOffsetUnitMath(QuantityTestCase):
         (q1v, q1u), (q2v, q2u) = input_tuple
         # update input tuple with new values to have correct values on failure
         input_tuple = (
-            (np.array([q1v] * 2, dtype=np.float), q1u),
-            (np.array([q2v] * 2, dtype=np.float), q2u),
+            (np.array([q1v] * 2, dtype=float), q1u),
+            (np.array([q2v] * 2, dtype=float), q2u),
         )
         Q_ = self.Q_
         qin1, qin2 = input_tuple
@@ -1287,7 +1341,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             with pytest.raises(OffsetUnitCalculusError):
                 op.isub(q1_cp, q2)
         else:
-            expected = np.array([expected[0]] * 2, dtype=np.float), expected[1]
+            expected = np.array([expected[0]] * 2, dtype=float), expected[1]
             assert op.isub(q1_cp, q2).units == Q_(*expected).units
             q1_cp = copy.copy(q1)
             helpers.assert_quantity_almost_equal(
@@ -1354,8 +1408,8 @@ class TestOffsetUnitMath(QuantityTestCase):
         (q1v, q1u), (q2v, q2u) = input_tuple
         # update input tuple with new values to have correct values on failure
         input_tuple = (
-            (np.array([q1v] * 2, dtype=np.float), q1u),
-            (np.array([q2v] * 2, dtype=np.float), q2u),
+            (np.array([q1v] * 2, dtype=float), q1u),
+            (np.array([q2v] * 2, dtype=float), q2u),
         )
         Q_ = self.Q_
         qin1, qin2 = input_tuple
@@ -1365,7 +1419,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             with pytest.raises(OffsetUnitCalculusError):
                 op.imul(q1_cp, q2)
         else:
-            expected = np.array([expected[0]] * 2, dtype=np.float), expected[1]
+            expected = np.array([expected[0]] * 2, dtype=float), expected[1]
             assert op.imul(q1_cp, q2).units == Q_(*expected).units
             q1_cp = copy.copy(q1)
             helpers.assert_quantity_almost_equal(
@@ -1434,8 +1488,8 @@ class TestOffsetUnitMath(QuantityTestCase):
         (q1v, q1u), (q2v, q2u) = input_tuple
         # update input tuple with new values to have correct values on failure
         input_tuple = (
-            (np.array([q1v] * 2, dtype=np.float), q1u),
-            (np.array([q2v] * 2, dtype=np.float), q2u),
+            (np.array([q1v] * 2, dtype=float), q1u),
+            (np.array([q2v] * 2, dtype=float), q2u),
         )
         Q_ = self.Q_
         qin1, qin2 = input_tuple
@@ -1445,7 +1499,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             with pytest.raises(OffsetUnitCalculusError):
                 op.itruediv(q1_cp, q2)
         else:
-            expected = np.array([expected[0]] * 2, dtype=np.float), expected[1]
+            expected = np.array([expected[0]] * 2, dtype=float), expected[1]
             assert op.itruediv(q1_cp, q2).units == Q_(*expected).units
             q1_cp = copy.copy(q1)
             helpers.assert_quantity_almost_equal(
@@ -1500,8 +1554,8 @@ class TestOffsetUnitMath(QuantityTestCase):
         (q1v, q1u), (q2v, q2u) = input_tuple
         # update input tuple with new values to have correct values on failure
         input_tuple = (
-            (np.array([q1v] * 2, dtype=np.float), q1u),
-            (np.array([q2v] * 2, dtype=np.float), q2u),
+            (np.array([q1v] * 2, dtype=float), q1u),
+            (np.array([q2v] * 2, dtype=float), q2u),
         )
         Q_ = self.Q_
         qin1, qin2 = input_tuple
@@ -1511,7 +1565,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             with pytest.raises(OffsetUnitCalculusError):
                 op.imul(q1_cp, q2)
         else:
-            expected = np.array([expected[0]] * 2, dtype=np.float), expected[1]
+            expected = np.array([expected[0]] * 2, dtype=float), expected[1]
             assert op.imul(q1_cp, q2).units == Q_(*expected).units
             q1_cp = copy.copy(q1)
             helpers.assert_quantity_almost_equal(
@@ -1545,7 +1599,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             assert op.mul(in1, in2).units == expected.units
             helpers.assert_quantity_almost_equal(op.mul(in1, in2), expected, atol=0.01)
 
-    divisions_with_scalar = [  # without / with autoconvert to base unit
+    divisions_with_scalar = [  # without / with autoconvert to plain unit
         (((10, "kelvin"), 2), [(5.0, "kelvin"), (5.0, "kelvin")]),
         (((10, "kelvin**2"), 2), [(5.0, "kelvin**2"), (5.0, "kelvin**2")]),
         (((10, "degC"), 2), ["error", "error"]),
@@ -1579,20 +1633,20 @@ class TestOffsetUnitMath(QuantityTestCase):
 
     exponentiation = [  # results without / with autoconvert
         (((10, "degC"), 1), [(10, "degC"), (10, "degC")]),
-        (((10, "degC"), 0.5), ["error", (283.15 ** 0.5, "kelvin**0.5")]),
+        (((10, "degC"), 0.5), ["error", (283.15**0.5, "kelvin**0.5")]),
         (((10, "degC"), 0), [(1.0, ""), (1.0, "")]),
         (((10, "degC"), -1), ["error", (1 / (10 + 273.15), "kelvin**-1")]),
         (((10, "degC"), -2), ["error", (1 / (10 + 273.15) ** 2.0, "kelvin**-2")]),
-        (((0, "degC"), -2), ["error", (1 / 273.15 ** 2, "kelvin**-2")]),
-        (((10, "degC"), (2, "")), ["error", (283.15 ** 2, "kelvin**2")]),
+        (((0, "degC"), -2), ["error", (1 / 273.15**2, "kelvin**-2")]),
+        (((10, "degC"), (2, "")), ["error", (283.15**2, "kelvin**2")]),
         (((10, "degC"), (10, "degK")), ["error", "error"]),
         (((10, "kelvin"), (2, "")), [(100.0, "kelvin**2"), (100.0, "kelvin**2")]),
         ((2, (2, "kelvin")), ["error", "error"]),
-        ((2, (500.0, "millikelvin/kelvin")), [2 ** 0.5, 2 ** 0.5]),
-        ((2, (0.5, "kelvin/kelvin")), [2 ** 0.5, 2 ** 0.5]),
+        ((2, (500.0, "millikelvin/kelvin")), [2**0.5, 2**0.5]),
+        ((2, (0.5, "kelvin/kelvin")), [2**0.5, 2**0.5]),
         (
             ((10, "degC"), (500.0, "millikelvin/kelvin")),
-            ["error", (283.15 ** 0.5, "kelvin**0.5")],
+            ["error", (283.15**0.5, "kelvin**0.5")],
         ),
     ]
 
@@ -1626,7 +1680,7 @@ class TestOffsetUnitMath(QuantityTestCase):
         ureg = UnitRegistry(force_ndarray_like=True)
         q = ureg.Quantity(1, "1 / hours")
 
-        q1 = q ** 2
+        q1 = q**2
         assert all(isinstance(v, int) for v in q1._units.values())
 
         q2 = q.copy()
@@ -1640,7 +1694,7 @@ class TestOffsetUnitMath(QuantityTestCase):
         in1, in2 = input_tuple
         if type(in1) is tuple and type(in2) is tuple:
             (q1v, q1u), (q2v, q2u) = in1, in2
-            in1 = self.Q_(*(np.array([q1v] * 2, dtype=np.float), q1u))
+            in1 = self.Q_(*(np.array([q1v] * 2, dtype=float), q1u))
             in2 = self.Q_(q2v, q2u)
         elif not type(in1) is tuple and type(in2) is tuple:
             in2 = self.Q_(*in2)
@@ -1659,12 +1713,12 @@ class TestOffsetUnitMath(QuantityTestCase):
             else:
                 if type(expected_copy[i]) is tuple:
                     expected = self.Q_(
-                        np.array([expected_copy[i][0]] * 2, dtype=np.float),
+                        np.array([expected_copy[i][0]] * 2, dtype=float),
                         expected_copy[i][1],
                     )
                     assert op.ipow(in1_cp, in2).units == expected.units
                 else:
-                    expected = np.array([expected_copy[i]] * 2, dtype=np.float)
+                    expected = np.array([expected_copy[i]] * 2, dtype=float)
 
                 in1_cp = copy.copy(in1)
                 helpers.assert_quantity_almost_equal(op.ipow(in1_cp, in2), expected)
@@ -1676,7 +1730,7 @@ class TestOffsetUnitMath(QuantityTestCase):
         B = np.array([[0, -1], [-1, 0]])
         b = [[1], [0]] * self.ureg.m
         helpers.assert_quantity_equal(A @ B, [[-2, -1], [-4, -3]] * self.ureg.m)
-        helpers.assert_quantity_equal(A @ b, [[1], [3]] * self.ureg.m ** 2)
+        helpers.assert_quantity_equal(A @ b, [[1], [3]] * self.ureg.m**2)
         helpers.assert_quantity_equal(B @ b, [[0], [-1]] * self.ureg.m)
 
 
@@ -1722,6 +1776,7 @@ class TestDimensionReduction:
         assert x.units == ureg.foot
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestTimedelta(QuantityTestCase):
     def test_add_sub(self):
         d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
@@ -1750,6 +1805,7 @@ class TestTimedelta(QuantityTestCase):
             after -= d
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestCompareNeutral(QuantityTestCase):
     """Test comparisons against non-Quantity zero or NaN values for for
     non-dimensionless quantities

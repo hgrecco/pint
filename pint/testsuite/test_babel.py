@@ -7,16 +7,16 @@ from pint.testsuite import helpers
 
 
 @helpers.requires_not_babel()
-def test_no_babel(sess_registry):
-    ureg = sess_registry
+def test_no_babel(func_registry):
+    ureg = func_registry
     distance = 24.0 * ureg.meter
     with pytest.raises(Exception):
         distance.format_babel(locale="fr_FR", length="long")
 
 
 @helpers.requires_babel()
-def test_format(sess_registry):
-    ureg = sess_registry
+def test_format(func_registry):
+    ureg = func_registry
     dirname = os.path.dirname(__file__)
     ureg.load_definitions(os.path.join(dirname, "../xtranslated.txt"))
 
@@ -25,7 +25,7 @@ def test_format(sess_registry):
     time = 8.0 * ureg.second
     assert time.format_babel(locale="fr_FR", length="long") == "8.0 secondes"
     assert time.format_babel(locale="ro", length="short") == "8.0 s"
-    acceleration = distance / time ** 2
+    acceleration = distance / time**2
     assert (
         acceleration.format_babel(locale="fr_FR", length="long")
         == "0.375 mètre par seconde²"
@@ -45,7 +45,7 @@ def test_registry_locale():
     time = 8.0 * ureg.second
     assert time.format_babel(length="long") == "8.0 secondes"
     assert time.format_babel(locale="ro", length="short") == "8.0 s"
-    acceleration = distance / time ** 2
+    acceleration = distance / time**2
     assert acceleration.format_babel(length="long") == "0.375 mètre par seconde²"
     mks = ureg.get_system("mks")
     assert mks.format_babel(locale="fr_FR") == "métrique"
@@ -57,10 +57,20 @@ def test_unit_format_babel():
     volume = ureg.Unit("ml")
     assert volume.format_babel() == "millilitre"
 
+    ureg.default_format = "~"
+    assert volume.format_babel() == "ml"
+
+    dimensionless_unit = ureg.Unit("")
+    assert dimensionless_unit.format_babel() == ""
+
+    ureg.fmt_locale = None
+    with pytest.raises(ValueError):
+        volume.format_babel()
+
 
 @helpers.requires_babel()
-def test_no_registry_locale(sess_registry):
-    ureg = sess_registry
+def test_no_registry_locale(func_registry):
+    ureg = func_registry
     distance = 24.0 * ureg.meter
     with pytest.raises(Exception):
         distance.format_babel()

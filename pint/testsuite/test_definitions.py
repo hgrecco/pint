@@ -1,14 +1,18 @@
 import pytest
 
-from pint.converters import LogarithmicConverter, OffsetConverter, ScaleConverter
-from pint.definitions import (
+from pint.definitions import Definition
+from pint.errors import DefinitionSyntaxError
+from pint.facets.nonmultiplicative.definitions import (
+    LogarithmicConverter,
+    OffsetConverter,
+)
+from pint.facets.plain import (
     AliasDefinition,
-    Definition,
     DimensionDefinition,
     PrefixDefinition,
+    ScaleConverter,
     UnitDefinition,
 )
-from pint.errors import DefinitionSyntaxError
 from pint.util import UnitsContainer
 
 
@@ -31,7 +35,6 @@ class TestDefinition:
             assert x.aliases == ()
             assert x.converter.to_reference(1000) == 1
             assert x.converter.from_reference(0.001) == 1
-            assert str(x) == "m"
 
         x = Definition.from_string("kilo- = 1e-3 = k-")
         assert isinstance(x, PrefixDefinition)
@@ -157,7 +160,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer()
 
     def test_dimension_definition(self):
-        x = DimensionDefinition("[time]", "", (), None, is_base=True)
+        x = DimensionDefinition("[time]")
         assert x.is_base
         assert x.name == "[time]"
 

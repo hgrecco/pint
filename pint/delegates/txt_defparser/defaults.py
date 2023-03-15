@@ -1,0 +1,77 @@
+"""
+    pint.delegates.txt_defparser.defaults
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Definitions for parsing Default sections.
+
+    See each one for a slighly longer description of the
+    syntax.
+
+    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
+"""
+
+from __future__ import annotations
+
+import typing as ty
+from dataclasses import dataclass, fields
+
+from ..._vendor import flexparser as fp
+from ...facets.plain import definitions
+from . import block, plain
+
+
+@dataclass(frozen=True)
+class BeginDefaults(fp.ParsedStatement):
+    """Being of a defaults directive.
+
+    @defaults
+    """
+
+    @classmethod
+    def from_string(cls, s: str) -> fp.FromString[BeginDefaults]:
+        if s.strip() == "@defaults":
+            return cls()
+        return None
+
+
+@dataclass(frozen=True)
+class DefaultsDefinition(block.DirectiveBlock):
+    """Directive to store values.
+
+        @defaults
+            system = mks
+        @end
+
+    See Equality and Comment for more parsing related information.
+    """
+
+    opening: fp.Single[BeginDefaults]
+    body: fp.Multi[
+        ty.Union[
+            plain.CommentDefinition,
+            plain.Equality,
+        ]
+    ]
+
+    @property
+    def _valid_fields(self):
+        return tuple(f.name for f in fields(definitions.DefaultsDefinition))
+
+    def derive_definition(self):
+        for definition in self.filter_by(plain.Equality):
+            if definition.lhs not in self._valid_fields:
+                raise ValueError(
+                    f"`{definition.lhs}` is not a valid key "
+                    f"for the default section. {self._valid_fields}"
+                )
+
+        return definitions.DefaultsDefinition(
+            *tuple(self.get_key(key) for key in self._valid_fields)
+        )
+
+    def get_key(self, key):
+        for stmt in self.body:
+            if isinstance(stmt, plain.Equality) and stmt.lhs == key:
+                return stmt.rhs
+        raise KeyError(key)
