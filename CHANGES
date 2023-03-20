@@ -14,7 +14,7 @@ Pint Changelog
   (PR #1668)
 - Parse '°' along with previous text, rather than adding a space,
   allowing, eg 'Δ°C' as a unit.
-  (PR #????)
+  (PR #1729)
 
 ### Breaking Changes
 
