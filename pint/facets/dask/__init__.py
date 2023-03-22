@@ -46,10 +46,7 @@ class DaskQuantity:
     def __dask_tokenize__(self):
         from dask.base import tokenize
 
-        from pint import UnitRegistry
-
-        # TODO: Check if this is the right class as first argument
-        return (UnitRegistry.Quantity, tokenize(self._magnitude), self.units)
+        return (type(self), tokenize(self._magnitude), self.units)
 
     @property
     def __dask_optimize__(self):
@@ -67,14 +64,9 @@ class DaskQuantity:
         func, args = self._magnitude.__dask_postpersist__()
         return self._dask_finalize, (func, args, self.units)
 
-    @staticmethod
-    def _dask_finalize(results, func, args, units):
+    def _dask_finalize(self, results, func, args, units):
         values = func(results, *args)
-
-        from pint import Quantity
-
-        # TODO: Check if this is the right class as first argument
-        return Quantity(values, units)
+        return type(self)(values, units)
 
     @check_dask_array
     def compute(self, **kwargs):
