@@ -1222,6 +1222,24 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.array([[1, 0, 2], [3, 0, 4]]) * self.ureg.m,
         )
 
+    @helpers.requires_array_function_protocol()
+    def test_delete(self):
+        q = self.Q_(np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]), "m")
+        helpers.assert_quantity_equal(
+            np.delete(q, 1, axis=0),
+            np.array([[1, 2, 3, 4], [9, 10, 11, 12]]) * self.ureg.m,
+        )
+
+        helpers.assert_quantity_equal(
+            np.delete(q, np.s_[::2], 1),
+            np.array([[2, 4], [6, 8], [10, 12]]) * self.ureg.m,
+        )
+
+        helpers.assert_quantity_equal(
+            np.delete(q, [1, 3, 5], None),
+            np.array([1, 3, 5, 7, 8, 9, 10, 11, 12]) * self.ureg.m,
+        )
+
     def test_ndarray_downcast(self):
         with pytest.warns(UnitStrippedWarning):
             np.asarray(self.q)
