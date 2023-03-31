@@ -57,17 +57,22 @@ class TestNumpyArrayCreation(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_ones_like(self):
-        self.assertNDArrayEqual(np.ones_like(self.q), np.array([[1, 1], [1, 1]]))
+        helpers.assert_quantity_equal(
+            np.ones_like(self.q), self.Q_([[1, 1], [1, 1]], self.q.units)
+        )
 
     @helpers.requires_array_function_protocol()
     def test_zeros_like(self):
-        self.assertNDArrayEqual(np.zeros_like(self.q), np.array([[0, 0], [0, 0]]))
+        helpers.assert_quantity_equal(
+            np.zeros_like(self.q), self.Q_([[0, 0], [0, 0]], self.q.units)
+        )
 
     @helpers.requires_array_function_protocol()
     def test_empty_like(self):
         ret = np.empty_like(self.q)
-        assert ret.shape == (2, 2)
-        assert isinstance(ret, np.ndarray)
+        expected = self.Q_(np.empty_like(self.q.magnitude), self.q.units)
+
+        helpers.assert_quantity_equal(ret, expected)
 
     @helpers.requires_array_function_protocol()
     def test_full_like(self):
@@ -76,6 +81,103 @@ class TestNumpyArrayCreation(TestNumpyMethods):
             self.Q_([[0, 0], [0, 0]], self.ureg.degC),
         )
         self.assertNDArrayEqual(np.full_like(self.q, 2), np.array([[2, 2], [2, 2]]))
+
+    @helpers.requires_numpy_nep35()
+    def test_array(self):
+        x = [0, 1, 2, 3]
+        actual = np.array(x, like=self.q)
+        expected = self.Q_(x, self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_nep35()
+    def test_asarray(self):
+        x = [0, 1, 2, 3]
+        actual = np.asarray(x, like=self.q)
+        expected = self.Q_(x, self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_nep35()
+    def test_asanyarray(self):
+        x = [0, 1, 2, 3]
+        actual = np.asanyarray(x, like=self.q)
+        expected = self.Q_(x, self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_nep35()
+    def test_arange(self):
+        actual = np.arange(10, like=self.q)
+        expected = self.Q_(np.arange(10), self.q.units)
+        helpers.assert_quantity_equal(actual, expected)
+
+        actual = np.arange(
+            self.Q_(1, "kg"),
+            self.Q_(5, "kg"),
+            self.Q_(100, "g"),
+            like=self.Q_([0], "kg"),
+        )
+        expected = self.Q_(np.arange(1, 5, 0.1), "kg")
+        helpers.assert_quantity_equal(actual, expected)
+
+    # before 1.23.0, ones seems to be a pure python function with changing address
+    @helpers.requires_numpy_at_least("1.23.0")
+    @helpers.requires_numpy_nep35()
+    def test_ones(self):
+        shape = (2, 3)
+        actual = np.ones(shape=shape, like=self.q)
+        expected = self.Q_(np.ones(shape=shape), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_nep35()
+    def test_zeros(self):
+        shape = (2, 3)
+        actual = np.zeros(shape=shape, like=self.q)
+        expected = self.Q_(np.zeros(shape=shape), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_nep35()
+    def test_empty(self):
+        shape = (2, 3)
+        actual = np.empty(shape=shape, like=self.q)
+        expected = self.Q_(np.empty(shape=shape), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    @helpers.requires_numpy_nep35()
+    def test_full(self):
+        shape = (2, 2)
+
+        actual = np.full(
+            shape=shape, fill_value=self.Q_(0, self.ureg.degC), like=self.q
+        )
+        expected = self.Q_([[0, 0], [0, 0]], self.ureg.degC)
+        helpers.assert_quantity_equal(actual, expected)
+
+        actual = np.full(shape=shape, fill_value=2, like=self.q)
+        expected = self.Q_([[2, 2], [2, 2]], "dimensionless")
+        helpers.assert_quantity_equal(actual, expected)
+
+    # before 1.23.0, identity seems to be a pure python function with changing address
+    @helpers.requires_numpy_at_least("1.23.0")
+    @helpers.requires_numpy_nep35()
+    def test_identity(self):
+        actual = np.identity(10, like=self.q)
+        expected = self.Q_(np.identity(10), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
+
+    # before 1.23.0, eye seems to be a pure python function with changing address
+    @helpers.requires_numpy_at_least("1.23.0")
+    @helpers.requires_numpy_nep35()
+    def test_eye(self):
+        actual = np.eye(10, like=self.q)
+        expected = self.Q_(np.eye(10), self.q.units)
+
+        helpers.assert_quantity_equal(actual, expected)
 
 
 class TestNumpyArrayManipulation(TestNumpyMethods):

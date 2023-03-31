@@ -527,22 +527,19 @@ def _meshgrid(*xi, **kwargs):
 
 
 @implements("full_like", "function")
-def _full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
-    # Make full_like by multiplying with array from ones_like in a
-    # non-multiplicative-unit-safe way
+def _full_like(a, fill_value, **kwargs):
     if hasattr(fill_value, "_REGISTRY"):
-        return fill_value._REGISTRY.Quantity(
-            (
-                np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-                * fill_value.m
-            ),
-            fill_value.units,
-        )
+        units = fill_value.units
+        fill_value_ = fill_value.m
     else:
-        return (
-            np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-            * fill_value
-        )
+        units = None
+        fill_value_ = fill_value
+
+    magnitude = np.full_like(a.m, fill_value=fill_value_, **kwargs)
+    if units is not None:
+        return fill_value._REGISTRY.Quantity(magnitude, units)
+    else:
+        return magnitude
 
 
 @implements("interp", "function")
@@ -908,9 +905,6 @@ for func_str in [
     "isreal",
     "iscomplex",
     "shape",
-    "ones_like",
-    "zeros_like",
-    "empty_like",
     "argsort",
     "argmin",
     "argmax",
@@ -937,6 +931,93 @@ for func_str in ["linalg.solve"]:
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ["var", "nanvar"]:
     implement_func("function", func_str, input_units=None, output_unit="variance")
+
+
+for func_str in ["ones_like", "zeros_like", "empty_like"]:
+    implement_func("function", func_str, input_units=None, output_unit="match_input")
+
+
+nep35_function_names = set()
+
+
+def register_nep35_function(func_str):
+    nep35_function_names.add(func_str)
+
+    def wrapper(f):
+        return f
+
+    return wrapper
+
+
+def implement_nep35_func(func_str):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @register_nep35_function(func_str)
+    @implements(func_str, "function")
+    def implementation(*args, like, **kwargs):
+        args, kwargs = convert_to_consistent_units(*args, **kwargs)
+        result = func(*args, like=like.magnitude, **kwargs)
+        return like._REGISTRY.Quantity(result, like.units)
+
+
+# generic implementations
+for func_str in {
+    "array",
+    "asarray",
+    "asanyarray",
+    "arange",
+    "ones",
+    "zeros",
+    "empty",
+    "identity",
+    "eye",
+}:
+    implement_nep35_func(func_str)
+
+
+@register_nep35_function("full")
+@implements("full", "function")
+def _full(shape, fill_value, dtype=None, order="C", *, like):
+    if hasattr(fill_value, "_REGISTRY"):
+        units = fill_value.units
+        fill_value_ = fill_value.m
+    else:
+        units = None
+        fill_value_ = fill_value
+
+    magnitude = np.full(
+        shape=shape,
+        fill_value=fill_value_,
+        dtype=dtype,
+        order=order,
+        like=like.magnitude,
+    )
+    if units is not None:
+        return fill_value._REGISTRY.Quantity(magnitude, units)
+    else:
+        return like._REGISTRY.Quantity(magnitude, units)
+
+
+@register_nep35_function("arange")
+@implements("arange", "function")
+def _arange(start, stop=None, step=None, dtype=None, *, like):
+    args = [start, stop, step]
+    if any(_is_quantity(arg) for arg in args):
+        args, kwargs = convert_to_consistent_units(
+            start,
+            stop,
+            step,
+            pre_calc_units=like.units,
+            like=like,
+        )
+    else:
+        kwargs = {"like": like.magnitude}
+
+    return like._REGISTRY.Quantity(np.arange(*args, dtype=dtype, **kwargs), like.units)
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):

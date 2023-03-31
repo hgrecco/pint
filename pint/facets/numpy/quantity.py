@@ -22,6 +22,7 @@ from .numpy_func import (
     get_op_output_unit,
     matching_input_copy_units_output_ufuncs,
     matching_input_set_units_output_ufuncs,
+    nep35_function_names,
     numpy_wrap,
     op_units_output_ufuncs,
     set_units_ufuncs,
@@ -61,6 +62,10 @@ class NumpyQuantity:
         return numpy_wrap("ufunc", ufunc, inputs, kwargs, types)
 
     def __array_function__(self, func, types, args, kwargs):
+        nep35_functions = {getattr(np, name) for name in nep35_function_names}
+        if func in nep35_functions:
+            kwargs["like"] = self
+
         return numpy_wrap("function", func, args, kwargs, types)
 
     _wrapped_numpy_methods = ["flatten", "astype", "item"]

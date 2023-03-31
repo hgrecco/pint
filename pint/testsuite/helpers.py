@@ -109,6 +109,13 @@ def requires_not_array_function_protocol():
     )
 
 
+def requires_numpy_nep35():
+    return pytest.mark.skipif(
+        not version_parse(NUMPY_VER) >= version_parse("1.20.0"),
+        reason="Needs NEP 35, which is supported from numpy=1.20.0",
+    )
+
+
 def requires_numpy_previous_than(version):
     if not HAS_NUMPY:
         return pytest.mark.skip("Requires NumPy")
