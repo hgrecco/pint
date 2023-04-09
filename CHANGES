@@ -16,6 +16,8 @@ Pint Changelog
   (PR #1669)
 - Fixed Quantity type returned from `__dask_postcompute__`.
   (PR #1722)
+- Added Townsend unit
+  (PR #1738)
 
 ### Breaking Changes
 
