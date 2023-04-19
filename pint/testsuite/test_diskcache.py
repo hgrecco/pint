@@ -95,3 +95,13 @@ def test_change_file(tmp_path):
     assert ureg.x == 1235
     files = tuple(ureg._diskcache.cache_folder.glob("*.pickle"))
     assert len(files) == 4
+
+
+def test_dimensional_equivalent_are_cached(tmp_path):
+    ureg = pint.UnitRegistry(cache_folder=tmp_path)
+    t = ureg.get_compatible_units("L")
+    assert len(t) > 0
+
+    ureg = pint.UnitRegistry(cache_folder=tmp_path)
+    t = ureg.get_compatible_units("L")
+    assert len(t) > 0
