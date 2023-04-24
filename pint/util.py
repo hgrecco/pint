@@ -566,7 +566,7 @@ class ParserHelper(UnitsContainer):
         if non_int_type is float:
             return cls(1, [(input_word, 1)], non_int_type=non_int_type)
         else:
-            ONE = non_int_type("1.0")
+            ONE = non_int_type("1")
             return cls(ONE, [(input_word, ONE)], non_int_type=non_int_type)
 
     @classmethod
