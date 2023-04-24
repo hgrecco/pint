@@ -204,6 +204,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         case_sensitive: bool = True,
         cache_folder: Union[str, pathlib.Path, None] = None,
         separate_format_defaults: Optional[bool] = None,
+        mpl_formatter: str = "{:P}",
     ):
         #: Map a definition class to a adder methods.
         self._adders = dict()
@@ -243,6 +244,9 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
         self.set_fmt_locale(fmt_locale)
+
+        #: sets the formatter used when plotting with matplotlib
+        self.mpl_formatter = mpl_formatter
 
         #: Numerical type used for non integer values.
         self._non_int_type = non_int_type
