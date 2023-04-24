@@ -814,7 +814,7 @@ for func_str, unit_arguments, wrap_output in [
     ("max", ["a", "initial"], True),
     ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
-    ("isclose", ["a", "b"], False),
+    ("isclose", ["a", "b", "atol"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
     ("clip", ["a", "a_min", "a_max"], True),
     ("append", ["arr", "values"], True),
@@ -827,7 +827,7 @@ for func_str, unit_arguments, wrap_output in [
     ("delete", ["arr"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
-    ("allclose", ["a", "b"], False),
+    ("allclose", ["a", "b", "atol"], False),
     ("intersect1d", ["ar1", "ar2"], True),
 ]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
