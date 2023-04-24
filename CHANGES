@@ -4,21 +4,34 @@ Pint Changelog
 0.21 (unreleased)
 -----------------
 
+- Exposed matplotlib unit formatter (PR #1703)
 - Fix error when when re-registering a formatter.
   (PR #1629)
 - Add new SI prefixes: ronna-, ronto-, quetta-, quecto-.
   (PR #1652)
+- Fix unit check with `atol` using `np.allclose` & `np.isclose`.
+  (Issue #1658)
 - Implementation for numpy.positive added for Quantity.
   (PR #1663)
 - Changed frequency to angular frequency in the docs.
   (PR #1668)
 - Improved escaping of special characters for LaTeX format
   (PR #1712)
+- Avoid addition of spurious trailing zeros when converting units and non-int-type is
+  Decimal (PR #1625).
+- Implementation for numpy.delete added for Quantity.
+  (PR #1669)
+- Fixed Quantity type returned from `__dask_postcompute__`.
+  (PR #1722)
+  
 
 ### Breaking Changes
 
 - Support percent and ppm units. Support the `%` symbol.
   (Issue #1277)
+- Fix error when parsing subtraction operator followed by white space.
+  (PR #1701)
+
 
 0.20.1 (2022-10-27)
 -------------------
@@ -55,6 +68,7 @@ types for pint-pandas compatibility. (#1596)
 - Create NaN-value quantities of appropriate non-int-type (Issue #1570).
 - New documentation format and organization!
 - Better support for pandas and dask.
+
 
 0.19.2 (2022-04-23)
 -------------------

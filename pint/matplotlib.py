@@ -21,7 +21,8 @@ class PintAxisInfo(matplotlib.units.AxisInfo):
 
     def __init__(self, units):
         """Set the default label to the pretty-print of the unit."""
-        super().__init__(label="{:P}".format(units))
+        formatter = units._REGISTRY.mpl_formatter
+        super().__init__(label=formatter.format(units))
 
 
 class PintConverter(matplotlib.units.ConversionInterface):
