@@ -4,6 +4,8 @@ Pint Changelog
 0.21 (unreleased)
 -----------------
 
+- Add PEP621/631 support.
+  (Issue #1647)
 - Exposed matplotlib unit formatter (PR #1703)
 - Fix error when when re-registering a formatter.
   (PR #1629)
