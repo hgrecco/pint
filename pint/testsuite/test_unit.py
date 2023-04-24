@@ -370,6 +370,16 @@ class TestRegistry(QuantityTestCase):
             1, UnitsContainer(meter=37, second=-4.321)
         )
 
+    def test_parse_pretty_degrees(self):
+        for exp in ["1Δ°C", "1 Δ°C", "ΔdegC", "delta_°C"]:
+            assert self.ureg.parse_expression(exp) == self.Q_(
+                1, UnitsContainer(delta_degree_Celsius=1)
+            )
+        assert self.ureg.parse_expression("")
+        assert self.ureg.parse_expression("mol °K") == self.Q_(
+            1, UnitsContainer(mol=1, kelvin=1)
+        )
+
     def test_parse_factor(self):
         assert self.ureg.parse_expression("42*meter") == self.Q_(
             42, UnitsContainer(meter=1.0)

@@ -17,6 +17,9 @@ Pint Changelog
   (PR #1663)
 - Changed frequency to angular frequency in the docs.
   (PR #1668)
+- Parse '°' along with previous text, rather than adding a space,
+  allowing, eg 'Δ°C' as a unit.
+  (PR #1729)
 - Avoid addition of spurious trailing zeros when converting units and non-int-type is
   Decimal (PR #1625).
 - Implementation for numpy.delete added for Quantity.
