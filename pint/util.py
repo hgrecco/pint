@@ -566,7 +566,7 @@ class ParserHelper(UnitsContainer):
         if non_int_type is float:
             return cls(1, [(input_word, 1)], non_int_type=non_int_type)
         else:
-            ONE = non_int_type("1.0")
+            ONE = non_int_type("1")
             return cls(ONE, [(input_word, ONE)], non_int_type=non_int_type)
 
     @classmethod
@@ -765,7 +765,7 @@ _subs_re_list = [
         r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])",
         r"\1*",
     ),  # Handle numberLetter for multiplication
-    (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
+    (r"([\w\.\)])\s+(?=[\w\(])", r"\1*"),  # Handle space for multiplication
 ]
 
 #: Compiles the regex and replace {} by a regex that matches an identifier.

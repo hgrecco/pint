@@ -64,7 +64,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests
+          pip install pytest pytest-cov pytest-subtests packaging
           pip install .
 
       - name: Install pytest-mpl
@@ -139,7 +139,7 @@ jobs:
       - name: Install dependencies
         run: |
           # sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests
+          pip install pytest pytest-cov pytest-subtests packaging
           pip install .
 
       # - name: Install pytest-mpl
@@ -191,7 +191,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest pytest-cov pytest-subtests
+          pip install pytest pytest-cov pytest-subtests packaging
           pip install .
 
       - name: Run Tests

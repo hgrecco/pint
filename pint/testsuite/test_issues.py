@@ -1,4 +1,5 @@
 import copy
+import decimal
 import math
 import pprint
 
@@ -7,6 +8,7 @@ import pytest
 from pint import Context, DimensionalityError, UnitRegistry, get_application_registry
 from pint.compat import np
 from pint.facets.plain.unit import UnitsContainer
+from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
 
@@ -855,6 +857,29 @@ class TestIssues(QuantityTestCase):
             np.array((0.04, 0.09)),
         )
 
+    def test_issue1277(self, module_registry):
+        ureg = module_registry
+        assert ureg("%") == ureg("percent")
+        assert ureg("%") == ureg.percent
+        assert ureg("ppm") == ureg.ppm
+
+        a = ureg.Quantity("10 %")
+        b = ureg.Quantity("100 ppm")
+        c = ureg.Quantity("0.5")
+
+        assert f"{a}" == "10 percent"
+        assert f"{a:~}" == "10 %"
+        assert f"{b}" == "100 ppm"
+        assert f"{b:~}" == "100 ppm"
+
+        assert_equal(a, 0.1)
+        assert_equal(1000 * b, a)
+        assert_equal(c, 5 * a)
+
+        assert_equal((1 * ureg.meter) / (1 * ureg.kilometer), 0.1 * ureg.percent)
+        assert c.to("percent").m == 50
+        # assert c.to("%").m == 50  # TODO: fails.
+
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
         module_registry = UnitRegistry()
@@ -1014,6 +1039,21 @@ def test_backcompat_speed_velocity(func_registry):
     get = func_registry.get_dimensionality
     assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
     assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
+
+
+def test_issue1527():
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    x = ureg.parse_expression("2 microliter milligram/liter")
+    assert x.magnitude.as_tuple()[1] == (2,)
+    assert x.to_compact().as_tuple()[1] == (2,)
+    assert x.to_base_units().as_tuple()[1] == (2,)
+    assert x.to("ng").as_tuple()[1] == (2,)
+
+
+def test_issue1621():
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    digits = ureg.Quantity("5.0 mV/m").to_base_units().magnitude.as_tuple()[1]
+    assert digits == (5, 0)
 
 
 def test_issue1631():
