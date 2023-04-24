@@ -15,6 +15,10 @@ Pint Changelog
 - Parse '°' along with previous text, rather than adding a space,
   allowing, eg 'Δ°C' as a unit.
   (PR #1729)
+- Implementation for numpy.delete added for Quantity.
+  (PR #1669)
+- Fixed Quantity type returned from `__dask_postcompute__`.
+  (PR #1722)
 
 ### Breaking Changes
 
