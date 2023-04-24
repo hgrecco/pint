@@ -4,6 +4,7 @@ Pint Changelog
 0.21 (unreleased)
 -----------------
 
+- Exposed matplotlib unit formatter (PR #1703)
 - Fix error when when re-registering a formatter.
   (PR #1629)
 - Add new SI prefixes: ronna-, ronto-, quetta-, quecto-.
