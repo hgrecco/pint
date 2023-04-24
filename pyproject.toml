@@ -67,12 +67,22 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 
-[tool.isort]
-profile = "black"
-default_section="THIRDPARTY"
-known_first_party="pint"
-multi_line_output=3
-include_trailing_comma=true
-force_grid_wrap=0
-use_parentheses=true
-line_length=88
+[tool.ruff.isort]
+required-imports = ["from __future__ import annotations"]
+known-first-party= ["pint"]
+
+
+[tool.ruff]
+ignore = [
+  # whitespace before ':' - doesn't work well with black
+  # "E203",
+  "E402",
+  # line too long - let black worry about that
+  "E501",
+  # do not assign a lambda expression, use a def
+  "E731",
+  # line break before binary operator
+  # "W503"
+]
+extend-exclude = ["build"]
+line-length=88
