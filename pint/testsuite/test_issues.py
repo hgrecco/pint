@@ -1,4 +1,5 @@
 import copy
+import decimal
 import math
 import pprint
 
@@ -1038,6 +1039,21 @@ def test_backcompat_speed_velocity(func_registry):
     get = func_registry.get_dimensionality
     assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
     assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
+
+
+def test_issue1527():
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    x = ureg.parse_expression("2 microliter milligram/liter")
+    assert x.magnitude.as_tuple()[1] == (2,)
+    assert x.to_compact().as_tuple()[1] == (2,)
+    assert x.to_base_units().as_tuple()[1] == (2,)
+    assert x.to("ng").as_tuple()[1] == (2,)
+
+
+def test_issue1621():
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    digits = ureg.Quantity("5.0 mV/m").to_base_units().magnitude.as_tuple()[1]
+    assert digits == (5, 0)
 
 
 def test_issue1631():
