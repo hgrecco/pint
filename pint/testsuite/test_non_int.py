@@ -17,7 +17,6 @@ class NonIntTypeTestCase(QuantityTestCase):
     def assert_quantity_almost_equal(
         self, first, second, rtol="1e-07", atol="0", msg=None
     ):
-
         if isinstance(first, self.Q_):
             assert isinstance(first.m, (self.kwargs["non_int_type"], int))
         else:
@@ -42,7 +41,6 @@ class NonIntTypeTestCase(QuantityTestCase):
 
 class _TestBasic(NonIntTypeTestCase):
     def test_quantity_creation(self, caplog):
-
         value = self.kwargs["non_int_type"]("4.2")
 
         for args in (
@@ -733,7 +731,6 @@ class _TestQuantityBasicMath(NonIntTypeTestCase):
         # self._test_quantity_ifloordiv(unit, ifunc)
 
     def test_quantity_abs_round(self):
-
         value = self.kwargs["non_int_type"]("4.2")
         x = self.Q_(-value, "meter")
         y = self.Q_(value, "meter")
@@ -1135,7 +1132,7 @@ class _TestOffsetUnitMath(NonIntTypeTestCase):
         in1, in2 = input_tuple
         if type(in1) is tuple and type(in2) is tuple:
             in1, in2 = self.QP_(*in1), self.QP_(*in2)
-        elif not type(in1) is tuple and type(in2) is tuple:
+        elif type(in1) is not tuple and type(in2) is tuple:
             in1, in2 = self.kwargs["non_int_type"](in1), self.QP_(*in2)
         else:
             in1, in2 = self.QP_(*in1), self.kwargs["non_int_type"](in2)
@@ -1156,48 +1153,39 @@ class _TestOffsetUnitMath(NonIntTypeTestCase):
 
 
 class TestNonIntTypeQuantityFloat(_TestBasic):
-
     kwargs = dict(non_int_type=float)
     SUPPORTS_NAN = True
 
 
 class TestNonIntTypeQuantityBasicMathFloat(_TestQuantityBasicMath):
-
     kwargs = dict(non_int_type=float)
 
 
 class TestNonIntTypeOffsetUnitMathFloat(_TestOffsetUnitMath):
-
     kwargs = dict(non_int_type=float)
 
 
 class TestNonIntTypeQuantityDecimal(_TestBasic):
-
     kwargs = dict(non_int_type=Decimal)
     SUPPORTS_NAN = True
 
 
 class TestNonIntTypeQuantityBasicMathDecimal(_TestQuantityBasicMath):
-
     kwargs = dict(non_int_type=Decimal)
 
 
 class TestNonIntTypeOffsetUnitMathDecimal(_TestOffsetUnitMath):
-
     kwargs = dict(non_int_type=Decimal)
 
 
 class TestNonIntTypeQuantityFraction(_TestBasic):
-
     kwargs = dict(non_int_type=Fraction)
     SUPPORTS_NAN = False
 
 
 class TestNonIntTypeQuantityBasicMathFraction(_TestQuantityBasicMath):
-
     kwargs = dict(non_int_type=Fraction)
 
 
 class TestNonIntTypeOffsetUnitMathFraction(_TestOffsetUnitMath):
-
     kwargs = dict(non_int_type=Fraction)

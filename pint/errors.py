@@ -225,7 +225,6 @@ class LogarithmicUnitCalculusError(PintTypeError):
 
 @dataclass(frozen=False)
 class UnitStrippedWarning(UserWarning, PintError):
-
     msg: str
 
     def __reduce__(self):

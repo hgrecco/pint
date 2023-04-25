@@ -170,4 +170,9 @@ def use_unc(num, fmt, prec_unc):
     return max(0, min(prec_unc, unc))
 
 
-convert(args.fr, args.to)
+def main():
+    convert(args.fr, args.to)
+
+
+if __name__ == "__main__":
+    main()

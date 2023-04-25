@@ -44,7 +44,6 @@ class DefinitionSyntaxError(errors.DefinitionSyntaxError, fp.ParsingError):
 
 @dataclass(frozen=True)
 class ImportDefinition(fp.IncludeStatement):
-
     value: str
 
     @property

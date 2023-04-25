@@ -20,8 +20,7 @@ from .errors import DimensionalityError
 from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
-    from pint import Quantity, Unit
-
+    from ._typing import Quantity, Unit
     from .registry import UnitRegistry
 
 T = TypeVar("T")
@@ -72,7 +71,6 @@ def _to_units_container(a, registry=None):
 
 
 def _parse_wrap_args(args, registry=None):
-
     # Arguments which contain definitions
     # (i.e. names that appear alone and for the first time)
     defs_args = set()
@@ -143,7 +141,6 @@ def _parse_wrap_args(args, registry=None):
 
         # third pass: convert other arguments
         for ndx in unit_args_ndx:
-
             if isinstance(values[ndx], ureg.Quantity):
                 new_values[ndx] = ureg._convert(
                     values[ndx]._magnitude, values[ndx]._units, args_as_uc[ndx][0]
@@ -256,7 +253,6 @@ def wraps(
         ret = _to_units_container(ret, ureg)
 
     def decorator(func: Callable[..., T]) -> Callable[..., Quantity[T]]:
-
         count_params = len(signature(func).parameters)
         if len(args) != count_params:
             raise TypeError(
@@ -273,7 +269,6 @@ def wraps(
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kw) -> Quantity[T]:
-
             values, kw = _apply_defaults(func, values, kw)
 
             # In principle, the values are used as is
@@ -339,7 +334,6 @@ def check(
     ]
 
     def decorator(func):
-
         count_params = len(signature(func).parameters)
         if len(dimensions) != count_params:
             raise TypeError(
@@ -359,7 +353,6 @@ def check(
             list_args, empty = _apply_defaults(func, args, kwargs)
 
             for dim, value in zip(dimensions, list_args):
-
                 if dim is None:
                     continue
 

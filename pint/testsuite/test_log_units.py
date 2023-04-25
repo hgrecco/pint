@@ -16,7 +16,6 @@ def module_registry_auto_offset():
 # TODO: do not subclass from QuantityTestCase
 class TestLogarithmicQuantity(QuantityTestCase):
     def test_log_quantity_creation(self, caplog):
-
         # Following Quantity Creation Pattern
         for args in (
             (4.2, "dBm"),

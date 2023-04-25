@@ -323,7 +323,6 @@ class TestContexts:
                 q.to("Hz")
 
     def test_context_with_arg(self, func_registry):
-
         ureg = func_registry
 
         add_arg_ctxs(ureg)
@@ -352,7 +351,6 @@ class TestContexts:
                 q.to("Hz")
 
     def test_enable_context_with_arg(self, func_registry):
-
         ureg = func_registry
 
         add_arg_ctxs(ureg)
@@ -386,7 +384,6 @@ class TestContexts:
         ureg.disable_contexts(1)
 
     def test_context_with_arg_def(self, func_registry):
-
         ureg = func_registry
 
         add_argdef_ctxs(ureg)
@@ -427,7 +424,6 @@ class TestContexts:
                 q.to("Hz")
 
     def test_context_with_sharedarg_def(self, func_registry):
-
         ureg = func_registry
 
         add_sharedargdef_ctxs(ureg)
@@ -499,7 +495,6 @@ class TestContexts:
             helpers.assert_quantity_equal(x.to("s"), ureg("1 s"))
 
     def _test_ctx(self, ctx, ureg):
-
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to("Hz")
 
@@ -563,7 +558,6 @@ class TestContexts:
         ],
     )
     def test_parse_simple(self, func_registry, source, name, aliases, defaults):
-
         a = Context.__keytransform__(
             UnitsContainer({"[time]": -1}), UnitsContainer({"[length]": 1})
         )
@@ -579,7 +573,6 @@ class TestContexts:
         self._test_ctx(c, func_registry)
 
     def test_parse_auto_inverse(self, func_registry):
-
         a = Context.__keytransform__(
             UnitsContainer({"[time]": -1.0}), UnitsContainer({"[length]": 1.0})
         )
@@ -638,7 +631,6 @@ class TestContexts:
             Context.from_lines(s)
 
     def test_warnings(self, caplog, func_registry):
-
         ureg = func_registry
 
         with caplog.at_level(logging.DEBUG, "pint"):

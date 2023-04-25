@@ -56,7 +56,7 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
-    from .unit import Unit
+    from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
     if HAS_NUMPY:
@@ -1004,7 +1004,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         no_offset_units_self = len(offset_units_self)
 
         if not self._check(other):
-
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units, getattr(other, "units", ""))
             if len(offset_units_self) == 1:
@@ -1074,7 +1073,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         no_offset_units_self = len(offset_units_self)
 
         if not self._check(other):
-
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units, getattr(other, "units", ""))
             if len(offset_units_self) == 1:
