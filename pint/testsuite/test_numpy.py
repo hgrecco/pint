@@ -222,7 +222,6 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     def test_block_column_stack(self, subtests):
         for func in (np.block, np.column_stack):
             with subtests.test(func=func):
-
                 helpers.assert_quantity_equal(
                     func([self.q[:, 0], self.q[:, 1]]),
                     self.Q_(func([self.q[:, 0].m, self.q[:, 1].m]), self.ureg.m),

@@ -87,7 +87,6 @@ class SystemRegistry(GroupRegistry):
         self._register_adder(SystemDefinition, self._add_system)
 
     def _add_system(self, sd: SystemDefinition):
-
         if sd.name in self._systems:
             raise ValueError(f"System {sd.name} already present in registry")
 
@@ -186,7 +185,6 @@ class SystemRegistry(GroupRegistry):
         check_nonmult: bool = True,
         system: Union[str, System, None] = None,
     ):
-
         if system is None:
             system = self._default_system
 
@@ -227,7 +225,6 @@ class SystemRegistry(GroupRegistry):
         return base_factor, destination_units
 
     def _get_compatible_units(self, input_units, group_or_system) -> FrozenSet[Unit]:
-
         if group_or_system is None:
             group_or_system = self._default_system
 

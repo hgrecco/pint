@@ -84,7 +84,6 @@ class GroupRegistry(PlainRegistry):
         self.get_group("root").add_units(definition.name)
 
     def _add_group(self, gd: GroupDefinition):
-
         if gd.name in self._groups:
             raise ValueError(f"Group {gd.name} already present in registry")
         try:
@@ -119,7 +118,6 @@ class GroupRegistry(PlainRegistry):
         return self.Group(name)
 
     def _get_compatible_units(self, input_units, group) -> FrozenSet["Unit"]:
-
         ret = super()._get_compatible_units(input_units, group)
 
         if not group:

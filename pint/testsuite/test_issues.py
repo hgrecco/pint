@@ -15,7 +15,6 @@ from pint.util import ParserHelper
 
 # TODO: do not subclass from QuantityTestCase
 class TestIssues(QuantityTestCase):
-
     kwargs = dict(autoconvert_offset_to_baseunit=False)
 
     @pytest.mark.xfail
@@ -250,7 +249,6 @@ class TestIssues(QuantityTestCase):
         assert dis.value == acc.value * tim.value**2 / 2
 
     def test_issue85(self, module_registry):
-
         T = 4.0 * module_registry.kelvin
         m = 1.0 * module_registry.amu
         va = 2.0 * module_registry.k * T / m
@@ -263,7 +261,6 @@ class TestIssues(QuantityTestCase):
         helpers.assert_quantity_almost_equal(va.to_base_units(), vb.to_base_units())
 
     def test_issue86(self, module_registry):
-
         module_registry.autoconvert_offset_to_baseunit = True
 
         def parts(q):
@@ -335,7 +332,6 @@ class TestIssues(QuantityTestCase):
         helpers.assert_quantity_almost_equal(z, 5.1 * module_registry.meter)
 
     def test_issue104(self, module_registry):
-
         x = [
             module_registry("1 meter"),
             module_registry("1 meter"),
@@ -362,7 +358,6 @@ class TestIssues(QuantityTestCase):
         helpers.assert_quantity_almost_equal(y[0], module_registry.Quantity(1, "meter"))
 
     def test_issue105(self, module_registry):
-
         func = module_registry.parse_unit_name
         val = list(func("meter"))
         assert list(func("METER")) == []
@@ -474,7 +469,6 @@ class TestIssues(QuantityTestCase):
 
     @helpers.requires_numpy
     def test_issue483(self, module_registry):
-
         a = np.asarray([1, 2, 3])
         q = [1, 2, 3] * module_registry.dimensionless
         p = (q**q).m

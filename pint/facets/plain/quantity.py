@@ -1004,7 +1004,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         no_offset_units_self = len(offset_units_self)
 
         if not self._check(other):
-
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units, getattr(other, "units", ""))
             if len(offset_units_self) == 1:
@@ -1074,7 +1073,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         no_offset_units_self = len(offset_units_self)
 
         if not self._check(other):
-
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units, getattr(other, "units", ""))
             if len(offset_units_self) == 1:

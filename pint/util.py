@@ -571,7 +571,6 @@ class ParserHelper(UnitsContainer):
 
     @classmethod
     def eval_token(cls, token, use_decimal=False, non_int_type=float):
-
         # TODO: remove this code when use_decimal is deprecated
         if use_decimal:
             raise DeprecationWarning(

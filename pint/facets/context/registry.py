@@ -378,7 +378,6 @@ class ContextRegistry(PlainRegistry):
         # destination dimensionality. If it exists, we transform the source value
         # by applying sequentially each transformation of the path.
         if self._active_ctx:
-
             src_dim = self._get_dimensionality(src)
             dst_dim = self._get_dimensionality(dst)
 

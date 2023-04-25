@@ -32,7 +32,6 @@ def check_dask_array(f):
 
 
 class DaskQuantity:
-
     # Dask.array.Array ducking
     def __dask_graph__(self):
         if isinstance(self._magnitude, dask_array.Array):
@@ -121,5 +120,4 @@ class DaskQuantity:
 
 
 class DaskRegistry(PlainRegistry):
-
     _quantity_class = DaskQuantity

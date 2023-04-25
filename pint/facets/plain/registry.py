@@ -71,7 +71,6 @@ from .definitions import (
 from .objects import PlainQuantity, PlainUnit
 
 if TYPE_CHECKING:
-
     if HAS_BABEL:
         import babel
 
@@ -940,7 +939,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         """
 
         if check_dimensionality:
-
             src_dim = self._get_dimensionality(src)
             dst_dim = self._get_dimensionality(dst)
 
@@ -1121,7 +1119,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         return ret
 
     def _eval_token(self, token, case_sensitive=None, use_decimal=False, **values):
-
         # TODO: remove this code when use_decimal is deprecated
         if use_decimal:
             raise DeprecationWarning(

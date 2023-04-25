@@ -19,7 +19,6 @@ MISSING = object()
 
 
 class MeasurementQuantity:
-
     # Measurement support
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):
@@ -102,7 +101,6 @@ class Measurement(PlainQuantity):
         return "{}".format(self)
 
     def __format__(self, spec):
-
         spec = spec or self.default_format
 
         # special cases
