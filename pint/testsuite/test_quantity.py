@@ -369,6 +369,44 @@ class TestQuantity(QuantityTestCase):
             round(abs(self.Q_("2 second").to("millisecond").magnitude - 2000), 7) == 0
         )
 
+    @helpers.requires_mip
+    def test_to_preferred(self):
+        ureg = UnitRegistry()
+        Q_ = ureg.Quantity
+
+        ureg.define("pound_force_per_square_foot = 47.8803 pascals = psf")
+        ureg.define("pound_mass = 0.45359237 kg = lbm")
+
+        preferred_units = [
+            ureg.ft,  # distance      L
+            ureg.slug,  # mass          M
+            ureg.s,  # duration      T
+            ureg.rankine,  # temperature   Θ
+            ureg.lbf,  # force         L M T^-2
+            ureg.psf,  # pressure      M L^−1 T^−2
+            ureg.lbm * ureg.ft**-3,  # density       M L^-3
+            ureg.W,  # power         L^2 M T^-3
+        ]
+
+        temp = (Q_("1 lbf") * Q_("1 m/s")).to_preferred(preferred_units)
+        assert temp.units == ureg.W
+
+        temp = (Q_(" 1 lbf*m")).to_preferred(preferred_units)
+        # would prefer this to be repeatable, but mip doesn't guarantee that currently
+        assert temp.units in [ureg.W * ureg.s, ureg.ft * ureg.lbf]
+
+        temp = Q_("1 kg").to_preferred(preferred_units)
+        assert temp.units == ureg.slug
+
+        result = Q_("1 slug/m**3").to_preferred(preferred_units)
+        assert result.units == ureg.lbm * ureg.ft**-3
+
+        result = Q_("1 amp").to_preferred(preferred_units)
+        assert result.units == ureg.amp
+
+        result = Q_("1 volt").to_preferred(preferred_units)
+        assert result.units == ureg.volts
+
     @helpers.requires_numpy
     def test_convert_numpy(self):
         # Conversions with single units take a different codepath than

@@ -266,6 +266,9 @@ class PlainRegistry(metaclass=RegistryMeta):
         #: Might contain prefixed units.
         self._units: Dict[str, UnitDefinition] = {}
 
+        #: List base unit names
+        self._base_units: List[str] = []
+
         #: Map unit name in lower case (string) to a set of unit names with the right
         #: case.
         #: Does not contain prefixed units.
@@ -501,6 +504,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def _add_unit(self, definition: UnitDefinition):
         if definition.is_base:
+            self._base_units.append(definition.name)
             for dim_name in definition.reference.keys():
                 if dim_name not in self._dimensions:
                     self._add_dimension(DimensionDefinition(dim_name))

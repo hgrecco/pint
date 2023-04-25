@@ -36,7 +36,7 @@ Pint Changelog
   (PR #1722)
 - Added Townsend unit
   (PR #1738)
-  
+
 
 ### Breaking Changes
 
@@ -82,6 +82,7 @@ types for pint-pandas compatibility. (#1596)
 - New documentation format and organization!
 - Better support for pandas and dask.
 
+- Add Quantity.to_preferred
 
 0.19.2 (2022-04-23)
 -------------------

@@ -50,6 +50,7 @@ babel = ["babel <= 2.8"]
 pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
 dask = ["dask"]
+mip = ["mip >= 1.13"]
 
 [project.urls]
 Homepage = "https://github.com/hgrecco/pint"
