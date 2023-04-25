@@ -39,7 +39,7 @@ from typing import (
 
 if TYPE_CHECKING:
     from ..context import Context
-    from pint import Quantity, Unit
+    from ..._typing import Quantity, Unit
 
 from ..._typing import QuantityOrUnitLike, UnitLike
 from ..._vendor import appdirs
@@ -285,14 +285,16 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
-        cls.Unit = build_dependent_class(cls, "Unit", "_unit_class")
-        cls.Quantity = build_dependent_class(cls, "Quantity", "_quantity_class")
+        cls.Unit: Unit = build_dependent_class(cls, "Unit", "_unit_class")
+        cls.Quantity: Quantity = build_dependent_class(
+            cls, "Quantity", "_quantity_class"
+        )
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
 
-        self.Unit = create_class_with_registry(self, self.Unit)
-        self.Quantity = create_class_with_registry(self, self.Quantity)
+        self.Unit: Unit = create_class_with_registry(self, self.Unit)
+        self.Quantity: Quantity = create_class_with_registry(self, self.Quantity)
 
     def _after_init(self) -> None:
         """This should be called after all __init__"""
