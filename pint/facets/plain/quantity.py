@@ -56,7 +56,7 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
-    from .unit import Unit
+    from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
     if HAS_NUMPY:
@@ -142,6 +142,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     #: Default formatting string.
     default_format: str = ""
     _magnitude: _MagnitudeType
+
+    @property
+    def ndim(self) -> int:
+        if isinstance(self.magnitude, numbers.Number):
+            return 0
+        return self.magnitude.ndim
 
     @property
     def force_ndarray(self) -> bool:
@@ -618,9 +624,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         >>> import pint
         >>> ureg = pint.UnitRegistry()
         >>> (200e-9*ureg.s).to_compact()
-        <PlainQuantity(200.0, 'nanosecond')>
+        <Quantity(200.0, 'nanosecond')>
         >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
-        <PlainQuantity(10.0, 'millinewton')>
+        <Quantity(10.0, 'millinewton')>
         """
 
         if not isinstance(self.magnitude, numbers.Number):
@@ -998,7 +1004,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         no_offset_units_self = len(offset_units_self)
 
         if not self._check(other):
-
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units, getattr(other, "units", ""))
             if len(offset_units_self) == 1:
@@ -1068,7 +1073,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         no_offset_units_self = len(offset_units_self)
 
         if not self._check(other):
-
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units, getattr(other, "units", ""))
             if len(offset_units_self) == 1:

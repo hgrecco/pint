@@ -77,6 +77,8 @@ def convert_arg(arg, pre_calc_units):
     Helper function for convert_to_consistent_units. pre_calc_units must be given as a
     pint Unit or None.
     """
+    if isinstance(arg, bool):
+        return arg
     if pre_calc_units is not None:
         if _is_quantity(arg):
             return arg.m_as(pre_calc_units)
@@ -101,7 +103,7 @@ def convert_to_consistent_units(*args, pre_calc_units=None, **kwargs):
 
     If pre_calc_units is not None, takes the args and kwargs for a NumPy function and
     converts any Quantity or Sequence of Quantities into the units of the first
-    Quantity/Sequence of Quantities and returns the magnitudes. Other args/kwargs are
+    Quantity/Sequence of Quantities and returns the magnitudes. Other args/kwargs (except booleans) are
     treated as dimensionless Quantities. If pre_calc_units is None, units are simply
     stripped.
     """
@@ -419,6 +421,7 @@ matching_input_copy_units_output_ufuncs = [
     "nextafter",
     "trunc",
     "absolute",
+    "positive",
     "negative",
     "maximum",
     "minimum",
@@ -524,22 +527,16 @@ def _meshgrid(*xi, **kwargs):
 
 
 @implements("full_like", "function")
-def _full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
+def _full_like(a, fill_value, **kwargs):
     # Make full_like by multiplying with array from ones_like in a
     # non-multiplicative-unit-safe way
     if hasattr(fill_value, "_REGISTRY"):
         return fill_value._REGISTRY.Quantity(
-            (
-                np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-                * fill_value.m
-            ),
+            np.ones_like(a, **kwargs) * fill_value.m,
             fill_value.units,
         )
     else:
-        return (
-            np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-            * fill_value
-        )
+        return np.ones_like(a, **kwargs) * fill_value
 
 
 @implements("interp", "function")
@@ -552,6 +549,12 @@ def _interp(x, xp, fp, left=None, right=None, period=None):
 
 @implements("where", "function")
 def _where(condition, *args):
+    if not getattr(condition, "_is_multiplicative", True):
+        raise ValueError(
+            "Invalid units of the condition: Boolean value of Quantity with offset unit is ambiguous."
+        )
+
+    condition = getattr(condition, "magnitude", condition)
     args, output_wrap = unwrap_and_wrap_consistent_units(*args)
     return output_wrap(np.where(condition, *args))
 
@@ -787,6 +790,7 @@ for func_str, unit_arguments, wrap_output in [
     ("ptp", "a", True),
     ("ravel", "a", True),
     ("round_", "a", True),
+    ("round", "a", True),
     ("sort", "a", True),
     ("median", "a", True),
     ("nanmedian", "a", True),
@@ -807,8 +811,10 @@ for func_str, unit_arguments, wrap_output in [
     ("broadcast_to", ["array"], True),
     ("amax", ["a", "initial"], True),
     ("amin", ["a", "initial"], True),
+    ("max", ["a", "initial"], True),
+    ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
-    ("isclose", ["a", "b"], False),
+    ("isclose", ["a", "b", "atol"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
     ("clip", ["a", "a_min", "a_max"], True),
     ("append", ["arr", "values"], True),
@@ -818,9 +824,10 @@ for func_str, unit_arguments, wrap_output in [
     ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
     ("insert", ["arr", "values"], True),
+    ("delete", ["arr"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
-    ("allclose", ["a", "b"], False),
+    ("allclose", ["a", "b", "atol"], False),
     ("intersect1d", ["ar1", "ar2"], True),
 ]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
@@ -877,7 +884,14 @@ for func_str in ["cumprod", "cumproduct", "nancumprod"]:
     implement_single_dimensionless_argument_func(func_str)
 
 # Handle single-argument consistent unit functions
-for func_str in ["block", "hstack", "vstack", "dstack", "column_stack"]:
+for func_str in [
+    "block",
+    "hstack",
+    "vstack",
+    "dstack",
+    "column_stack",
+    "broadcast_arrays",
+]:
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
     )

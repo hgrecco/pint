@@ -24,7 +24,6 @@ class TestDefinition:
             Definition.from_string("[x] = [time] * meter")
 
     def test_prefix_definition(self):
-
         with pytest.raises(ValueError):
             Definition.from_string("m- = 1e-3 k")
 
@@ -35,7 +34,6 @@ class TestDefinition:
             assert x.aliases == ()
             assert x.converter.to_reference(1000) == 1
             assert x.converter.from_reference(0.001) == 1
-            assert str(x) == "m"
 
         x = Definition.from_string("kilo- = 1e-3 = k-")
         assert isinstance(x, PrefixDefinition)
@@ -100,7 +98,6 @@ class TestDefinition:
             )
 
     def test_log_unit_definition(self):
-
         x = Definition.from_string(
             "decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm"
         )
@@ -161,7 +158,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer()
 
     def test_dimension_definition(self):
-        x = DimensionDefinition("[time]", "", (), None, is_base=True)
+        x = DimensionDefinition("[time]")
         assert x.is_base
         assert x.name == "[time]"
 
@@ -170,7 +167,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer({"[length]": 1, "[time]": -1})
 
     def test_alias_definition(self):
-        x = AliasDefinition.from_string("@alias meter = metro = metr")
+        x = Definition.from_string("@alias meter = metro = metr")
         assert isinstance(x, AliasDefinition)
         assert x.name == "meter"
         assert x.aliases == ("metro", "metr")

@@ -29,7 +29,6 @@ class FakeWrapper:
 
 # TODO: do not subclass from QuantityTestCase
 class TestQuantity(QuantityTestCase):
-
     kwargs = dict(autoconvert_offset_to_baseunit=False)
 
     def test_quantity_creation(self, caplog):
@@ -372,7 +371,6 @@ class TestQuantity(QuantityTestCase):
 
     @helpers.requires_numpy
     def test_convert_numpy(self):
-
         # Conversions with single units take a different codepath than
         # Conversions with more than one unit.
         src_dst1 = UnitsContainer(meter=1), UnitsContainer(inch=1)
@@ -1000,7 +998,6 @@ class TestQuantityBasicMath(QuantityTestCase):
         self._test_numeric(np.ones((1, 3)), self._test_inplace)
 
     def test_quantity_abs_round(self):
-
         x = self.Q_(-4.2, "meter")
         y = self.Q_(4.2, "meter")
 
@@ -1131,7 +1128,7 @@ class TestDimensions(QuantityTestCase):
         assert get(UnitsContainer({"[time]": 1})) == UnitsContainer({"[time]": 1})
         assert get("seconds") == UnitsContainer({"[time]": 1})
         assert get(UnitsContainer({"seconds": 1})) == UnitsContainer({"[time]": 1})
-        assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
+        assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
         assert get("[acceleration]") == UnitsContainer({"[length]": 1, "[time]": -2})
 
     def test_dimensionality(self):
@@ -1152,14 +1149,14 @@ class TestDimensions(QuantityTestCase):
     def test_inclusion(self):
         dim = self.Q_(42, "meter").dimensionality
         assert "[length]" in dim
-        assert not ("[time]" in dim)
+        assert "[time]" not in dim
         dim = (self.Q_(42, "meter") / self.Q_(11, "second")).dimensionality
         assert "[length]" in dim
         assert "[time]" in dim
         dim = self.Q_(20.785, "J/(mol)").dimensionality
         for dimension in ("[length]", "[mass]", "[substance]", "[time]"):
             assert dimension in dim
-        assert not ("[angle]" in dim)
+        assert "[angle]" not in dim
 
 
 class TestQuantityWithDefaultRegistry(TestQuantity):
@@ -1656,7 +1653,7 @@ class TestOffsetUnitMath(QuantityTestCase):
         in1, in2 = input_tuple
         if type(in1) is tuple and type(in2) is tuple:
             in1, in2 = self.Q_(*in1), self.Q_(*in2)
-        elif not type(in1) is tuple and type(in2) is tuple:
+        elif type(in1) is not tuple and type(in2) is tuple:
             in2 = self.Q_(*in2)
         else:
             in1 = self.Q_(*in1)
@@ -1696,7 +1693,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             (q1v, q1u), (q2v, q2u) = in1, in2
             in1 = self.Q_(*(np.array([q1v] * 2, dtype=float), q1u))
             in2 = self.Q_(q2v, q2u)
-        elif not type(in1) is tuple and type(in2) is tuple:
+        elif type(in1) is not tuple and type(in2) is tuple:
             in2 = self.Q_(*in2)
         else:
             in1 = self.Q_(*in1)

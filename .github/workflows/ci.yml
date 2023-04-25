@@ -7,13 +7,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9, "3.10"]
+        python-version: [3.8, 3.9, "3.10", "3.11"]
         numpy: [null, "numpy>=1.19,<2.0.0"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
           - python-version: 3.8 # Minimal versions
-            numpy: numpy==1.19.5
+            numpy: "numpy"
             extras: matplotlib==2.2.5
           - python-version: 3.8
             numpy: "numpy"
@@ -64,7 +64,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests
+          pip install pytest pytest-cov pytest-subtests packaging
           pip install .
 
       - name: Install pytest-mpl
@@ -92,18 +92,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9, "3.10"]
+        python-version: [3.8, 3.9, "3.10", "3.11"]
         numpy: [ "numpy>=1.19,<2.0.0" ]
-        # uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
-        # extras: [null]
-        # include:
-        #   - python-version: 3.8 # Minimal versions
-        #     numpy: numpy==1.19.5
-        #     extras: matplotlib==2.2.5
-        #   - python-version: 3.8
-        #     numpy: "numpy"
-        #     uncertainties: "uncertainties"
-        #     extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
     runs-on: windows-latest
 
     env:
@@ -149,7 +139,7 @@ jobs:
       - name: Install dependencies
         run: |
           # sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests
+          pip install pytest pytest-cov pytest-subtests packaging
           pip install .
 
       # - name: Install pytest-mpl
@@ -158,6 +148,68 @@ jobs:
 
       - name: Run tests
         run: pytest ${env:TEST_OPTS}
+
+  test-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+        numpy: [null, "numpy>=1.19,<2.0.0" ]
+    runs-on: macos-latest
+
+    env:
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 100
+
+      - name: Get tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Setup caching
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: pip-${{ matrix.python-version }}
+          restore-keys: |
+            pip-${{ matrix.python-version }}
+
+      - name: Install numpy
+        if: ${{ matrix.numpy != null }}
+        run: pip install "${{matrix.numpy}}"
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov pytest-subtests packaging
+          pip install .
+
+      - name: Run Tests
+        run: |
+          pytest $TEST_OPTS
+
+      - name: Coverage report
+        run: coverage report -m
+
+      - name: Coveralls Parallel
+        env:
+          COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
+          COVERALLS_PARALLEL: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_SERVICE_NAME: github
+        run: |
+          pip install coveralls
+          coveralls
 
   coveralls:
     needs: test-linux

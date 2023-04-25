@@ -323,7 +323,6 @@ class TestContexts:
                 q.to("Hz")
 
     def test_context_with_arg(self, func_registry):
-
         ureg = func_registry
 
         add_arg_ctxs(ureg)
@@ -352,7 +351,6 @@ class TestContexts:
                 q.to("Hz")
 
     def test_enable_context_with_arg(self, func_registry):
-
         ureg = func_registry
 
         add_arg_ctxs(ureg)
@@ -386,7 +384,6 @@ class TestContexts:
         ureg.disable_contexts(1)
 
     def test_context_with_arg_def(self, func_registry):
-
         ureg = func_registry
 
         add_argdef_ctxs(ureg)
@@ -427,7 +424,6 @@ class TestContexts:
                 q.to("Hz")
 
     def test_context_with_sharedarg_def(self, func_registry):
-
         ureg = func_registry
 
         add_sharedargdef_ctxs(ureg)
@@ -499,7 +495,6 @@ class TestContexts:
             helpers.assert_quantity_equal(x.to("s"), ureg("1 s"))
 
     def _test_ctx(self, ctx, ureg):
-
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to("Hz")
 
@@ -563,7 +558,6 @@ class TestContexts:
         ],
     )
     def test_parse_simple(self, func_registry, source, name, aliases, defaults):
-
         a = Context.__keytransform__(
             UnitsContainer({"[time]": -1}), UnitsContainer({"[length]": 1})
         )
@@ -579,7 +573,6 @@ class TestContexts:
         self._test_ctx(c, func_registry)
 
     def test_parse_auto_inverse(self, func_registry):
-
         a = Context.__keytransform__(
             UnitsContainer({"[time]": -1.0}), UnitsContainer({"[length]": 1.0})
         )
@@ -638,7 +631,6 @@ class TestContexts:
             Context.from_lines(s)
 
     def test_warnings(self, caplog, func_registry):
-
         ureg = func_registry
 
         with caplog.at_level(logging.DEBUG, "pint"):
@@ -783,6 +775,7 @@ def test_redefine(subtests):
             # Note how we're redefining a symbol, not the plain name, as a
             # function of another name
             b = 5 f
+        @end
         """.splitlines()
     )
     # Units that are somehow directly or indirectly defined as a function of the
@@ -933,7 +926,7 @@ def test_err_change_base_unit():
 
 
 def test_err_to_base_unit():
-    expected = "Can't define plain units within a context"
+    expected = ".*can't define plain units within a context"
     with pytest.raises(DefinitionSyntaxError, match=expected):
         Context.from_lines(["@context c", "x = [d]"])
 
@@ -980,19 +973,17 @@ def test_err_cyclic_dependency():
 
 
 def test_err_dimension_redefinition():
-    expected = re.escape("Expected <unit> = <converter>; got [d1] = [d2] * [d3]")
-    with pytest.raises(DefinitionSyntaxError, match=expected):
+    with pytest.raises(DefinitionSyntaxError):
         Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
 
 
 def test_err_prefix_redefinition():
-    expected = re.escape("Expected <unit> = <converter>; got [d1] = [d2] * [d3]")
-    with pytest.raises(DefinitionSyntaxError, match=expected):
+    with pytest.raises(DefinitionSyntaxError):
         Context.from_lines(["@context c", "[d1] = [d2] * [d3]"])
 
 
 def test_err_redefine_alias(subtests):
-    expected = "Can't change a unit's symbol or aliases within a context"
+    expected = ".*can't change a unit's symbol or aliases within a context"
     for s in ("foo = bar = f", "foo = bar = _ = baz"):
         with subtests.test(s):
             with pytest.raises(DefinitionSyntaxError, match=expected):

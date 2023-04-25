@@ -88,7 +88,6 @@ class UnitRegistry(
         case_sensitive: bool = True,
         cache_folder=None,
     ):
-
         super().__init__(
             filename=filename,
             force_ndarray=force_ndarray,

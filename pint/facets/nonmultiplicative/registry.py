@@ -8,12 +8,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-from ...definitions import Definition
 from ...errors import DimensionalityError, UndefinedUnitError
-from ...util import UnitsContainer
-from ..plain import PlainRegistry
+from ...util import UnitsContainer, logger
+from ..plain import PlainRegistry, UnitDefinition
+from .definitions import OffsetConverter, ScaleConverter
 from .objects import NonMultiplicativeQuantity
 
 
@@ -65,31 +65,44 @@ class NonMultiplicativeRegistry(PlainRegistry):
 
         return super()._parse_units(input_string, as_delta, case_sensitive)
 
-    def _define(self, definition: Union[str, Definition]):
-        """Add unit to the registry.
+    def _add_unit(self, definition: UnitDefinition):
+        super()._add_unit(definition)
 
-        In addition to what is done by the PlainRegistry,
-        registers also non-multiplicative units.
+        if definition.is_multiplicative:
+            return
 
-        Parameters
-        ----------
-        definition : str or Definition
-            A dimension, unit or prefix definition.
+        if definition.is_logarithmic:
+            return
 
-        Returns
-        -------
-        Definition, dict, dict
-            Definition instance, case sensitive unit dict, case insensitive unit dict.
+        if not isinstance(definition.converter, OffsetConverter):
+            logger.debug(
+                "Cannot autogenerate delta version for a unit in "
+                "which the converter is not an OffsetConverter"
+            )
+            return
 
-        """
+        delta_name = "delta_" + definition.name
+        if definition.symbol:
+            delta_symbol = "Δ" + definition.symbol
+        else:
+            delta_symbol = None
 
-        definition, d, di = super()._define(definition)
+        delta_aliases = tuple("Δ" + alias for alias in definition.aliases) + tuple(
+            "delta_" + alias for alias in definition.aliases
+        )
 
-        # define additional units for units with an offset
-        if getattr(definition.converter, "offset", 0) != 0:
-            self._define_adder(definition, d, di)
+        delta_reference = self.UnitsContainer(
+            {ref: value for ref, value in definition.reference.items()}
+        )
 
-        return definition, d, di
+        delta_def = UnitDefinition(
+            delta_name,
+            delta_symbol,
+            delta_aliases,
+            ScaleConverter(definition.converter.scale),
+            delta_reference,
+        )
+        super()._add_unit(delta_def)
 
     def _is_multiplicative(self, u) -> bool:
         if u in self._units:
@@ -135,7 +148,6 @@ class NonMultiplicativeRegistry(PlainRegistry):
         return None
 
     def _add_ref_of_log_or_offset_unit(self, offset_unit, all_units):
-
         slct_unit = self._units[offset_unit]
         if slct_unit.is_logarithmic or (not slct_unit.is_multiplicative):
             # Extract reference unit

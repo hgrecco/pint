@@ -10,8 +10,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, FrozenSet
 
+from ... import errors
+
 if TYPE_CHECKING:
-    from pint import Unit
+    from ..._typing import Unit
 
 from ...util import build_dependent_class, create_class_with_registry
 from ..plain import PlainRegistry, UnitDefinition
@@ -29,6 +31,9 @@ class GroupRegistry(PlainRegistry):
     - Parse @group directive.
     """
 
+    # TODO: Change this to Group: Group to specify class
+    # and use introspection to get system class as a way
+    # to enjoy typing goodies
     _group_class = Group
 
     def __init__(self, **kwargs):
@@ -69,13 +74,24 @@ class GroupRegistry(PlainRegistry):
             all_units = self.get_group("root", False).members
             grp.add_units(*(all_units - group_units))
 
-    def _register_directives(self) -> None:
-        super()._register_directives()
-        self._register_directive(
-            "@group",
-            lambda gd: self.Group.from_definition(gd, self.define),
-            GroupDefinition,
-        )
+    def _register_definition_adders(self) -> None:
+        super()._register_definition_adders()
+        self._register_adder(GroupDefinition, self._add_group)
+
+    def _add_unit(self, definition: UnitDefinition):
+        super()._add_unit(definition)
+        # TODO: delta units are missing
+        self.get_group("root").add_units(definition.name)
+
+    def _add_group(self, gd: GroupDefinition):
+        if gd.name in self._groups:
+            raise ValueError(f"Group {gd.name} already present in registry")
+        try:
+            # As a Group is a SharedRegistryObject
+            # it adds itself to the registry.
+            self.Group.from_definition(gd)
+        except KeyError as e:
+            raise errors.DefinitionSyntaxError(f"unknown dimension {e} in context")
 
     def get_group(self, name: str, create_if_needed: bool = True) -> Group:
         """Return a Group.
@@ -101,21 +117,7 @@ class GroupRegistry(PlainRegistry):
 
         return self.Group(name)
 
-    def _define(self, definition):
-
-        # In addition to the what is done by the PlainRegistry,
-        # this adds all units to the `root` group.
-
-        definition, d, di = super()._define(definition)
-
-        if isinstance(definition, UnitDefinition):
-            # We add all units to the root group
-            self.get_group("root").add_units(definition.name)
-
-        return definition, d, di
-
     def _get_compatible_units(self, input_units, group) -> FrozenSet["Unit"]:
-
         ret = super()._get_compatible_units(input_units, group)
 
         if not group:

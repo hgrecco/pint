@@ -18,5 +18,5 @@ from .definitions import LogarithmicConverter, OffsetConverter  # noqa: F401
 from .registry import NonMultiplicativeRegistry
 
 __all__ = [
-    NonMultiplicativeRegistry,
+    "NonMultiplicativeRegistry",
 ]

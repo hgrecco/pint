@@ -15,6 +15,5 @@ from .unit import NumpyUnit
 
 
 class NumpyRegistry(PlainRegistry):
-
     _quantity_class = NumpyQuantity
     _unit_class = NumpyUnit

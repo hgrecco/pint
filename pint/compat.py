@@ -81,7 +81,6 @@ try:
     NP_NO_VALUE = np._NoValue
 
 except ImportError:
-
     np = None
 
     class ndarray:
@@ -153,6 +152,7 @@ except ImportError:
     compute, persist, visualize = None, None, None
     dask_array = None
 
+
 upcast_type_names = (
     "pint_pandas.PintArray",
     "pandas.Series",
@@ -164,7 +164,6 @@ upcast_type_names = (
 )
 
 upcast_type_map = {k: None for k in upcast_type_names}
-
 
 def fully_qualified_name(obj):
     t = type(obj)

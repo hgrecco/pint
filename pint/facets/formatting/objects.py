@@ -21,12 +21,10 @@ from ...formatting import (
     siunitx_format_unit,
     split_format,
 )
-from ...util import iterable
-from ..plain import UnitsContainer
+from ...util import UnitsContainer, iterable
 
 
 class FormattingQuantity:
-
     _exp_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
     def __format__(self, spec: str) -> str:

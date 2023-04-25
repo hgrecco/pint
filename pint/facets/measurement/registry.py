@@ -1,6 +1,6 @@
 """
-    pint.facets.measurement.objects
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pint.facets.measurement.registry
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
@@ -16,7 +16,6 @@ from .objects import Measurement, MeasurementQuantity
 
 
 class MeasurementRegistry(PlainRegistry):
-
     _quantity_class = MeasurementQuantity
     _measurement_class = Measurement
 
