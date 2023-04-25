@@ -165,6 +165,7 @@ upcast_type_names = (
 
 upcast_type_map = {k: None for k in upcast_type_names}
 
+
 def fully_qualified_name(obj):
     t = type(obj)
     module = t.__module__
