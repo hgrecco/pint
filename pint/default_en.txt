@@ -430,6 +430,10 @@ atomic_unit_of_electric_field = e * k_C / a_0 ** 2 = a_u_electric_field
 # Electric displacement field
 [electric_displacement_field] = [charge] / [area]
 
+# Reduced electric field
+[reduced_electric_field] = [electric_field] * [area]
+townsend =  1e-21 * V * m^2 = Td
+
 # Resistance
 [resistance] = [electric_potential] / [current]
 ohm = volt / ampere = Ω
