@@ -54,6 +54,33 @@ class TestUnit(QuantityTestCase):
             with subtests.test(spec):
                 assert spec.format(x) == result
 
+    def test_latex_escaping(self, subtests):
+        ureg = UnitRegistry()
+        ureg.define(r"percent = 1e-2 = %")
+        x = ureg.Unit(UnitsContainer(percent=1))
+        for spec, result in {
+            "L": r"\mathrm{percent}",
+            "L~": r"\mathrm{\%}",
+            "Lx": r"\si[]{\percent}",
+            "Lx~": r"\si[]{\%}",
+        }.items():
+            with subtests.test(spec):
+                ureg.default_format = spec
+                assert f"{x}" == result, f"Failed for {spec}, {result}"
+        # no '#' here as it's a comment char when define()ing new units
+        ureg.define(r"weirdunit = 1 = \~_^&%$_{}")
+        x = ureg.Unit(UnitsContainer(weirdunit=1))
+        for spec, result in {
+            "L": r"\mathrm{weirdunit}",
+            "L~": r"\mathrm{\textbackslash \textasciitilde \_\textasciicircum \&\%\$\_\{\}}",
+            "Lx": r"\si[]{\weirdunit}",
+            # TODO: Currently makes \si[]{\\~_^&%$_{}} (broken). What do we even want this to be?
+            # "Lx~": r"\si[]{\textbackslash \textasciitilde \_\textasciicircum \&\%\$\_\{\}}",
+        }.items():
+            with subtests.test(spec):
+                ureg.default_format = spec
+                assert f"{x}" == result, f"Failed for {spec}, {result}"
+
     def test_unit_default_formatting(self, subtests):
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))

@@ -26,6 +26,8 @@ Pint Changelog
 - Parse '°' along with previous text, rather than adding a space,
   allowing, eg 'Δ°C' as a unit.
   (PR #1729)
+- Improved escaping of special characters for LaTeX format
+  (PR #1712)
 - Avoid addition of spurious trailing zeros when converting units and non-int-type is
   Decimal (PR #1625).
 - Implementation for numpy.delete added for Quantity.
@@ -34,6 +36,7 @@ Pint Changelog
   (PR #1722)
 - Added Townsend unit
   (PR #1738)
+  
 
 ### Breaking Changes
 
