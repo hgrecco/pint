@@ -29,7 +29,6 @@ def float_range(n):
 
 
 def setup(*args):
-
     global ureg, data
     short = list(float_range(3))
     mid = list(float_range(1_000))

@@ -12,7 +12,6 @@ from ...compat import is_upcast_type
 
 
 class NumpyUnit:
-
     __array_priority__ = 17
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):

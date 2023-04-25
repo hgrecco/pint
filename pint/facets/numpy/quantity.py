@@ -111,7 +111,6 @@ class NumpyQuantity:
         return _to_magnitude(self._magnitude, force_ndarray=True)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
-
         if min is not None:
             if isinstance(min, self.__class__):
                 min = min.to(self).magnitude

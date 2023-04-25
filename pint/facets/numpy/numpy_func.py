@@ -527,22 +527,16 @@ def _meshgrid(*xi, **kwargs):
 
 
 @implements("full_like", "function")
-def _full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
+def _full_like(a, fill_value, **kwargs):
     # Make full_like by multiplying with array from ones_like in a
     # non-multiplicative-unit-safe way
     if hasattr(fill_value, "_REGISTRY"):
         return fill_value._REGISTRY.Quantity(
-            (
-                np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-                * fill_value.m
-            ),
+            np.ones_like(a, **kwargs) * fill_value.m,
             fill_value.units,
         )
     else:
-        return (
-            np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-            * fill_value
-        )
+        return np.ones_like(a, **kwargs) * fill_value
 
 
 @implements("interp", "function")
@@ -796,6 +790,7 @@ for func_str, unit_arguments, wrap_output in [
     ("ptp", "a", True),
     ("ravel", "a", True),
     ("round_", "a", True),
+    ("round", "a", True),
     ("sort", "a", True),
     ("median", "a", True),
     ("nanmedian", "a", True),
@@ -816,8 +811,10 @@ for func_str, unit_arguments, wrap_output in [
     ("broadcast_to", ["array"], True),
     ("amax", ["a", "initial"], True),
     ("amin", ["a", "initial"], True),
+    ("max", ["a", "initial"], True),
+    ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
-    ("isclose", ["a", "b"], False),
+    ("isclose", ["a", "b", "atol"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
     ("clip", ["a", "a_min", "a_max"], True),
     ("append", ["arr", "values"], True),
@@ -827,9 +824,10 @@ for func_str, unit_arguments, wrap_output in [
     ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
     ("insert", ["arr", "values"], True),
+    ("delete", ["arr"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
-    ("allclose", ["a", "b"], False),
+    ("allclose", ["a", "b", "atol"], False),
     ("intersect1d", ["ar1", "ar2"], True),
 ]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)

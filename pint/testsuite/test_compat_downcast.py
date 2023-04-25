@@ -109,7 +109,6 @@ def array(request):
 def test_univariate_op_consistency(
     local_registry, q_base, op, magnitude_op, unit_op, array
 ):
-
     q = local_registry.Quantity(array, "meter")
     res = op(local_registry, q)
     assert np.all(
@@ -130,7 +129,6 @@ def test_univariate_op_consistency(
     ],
 )
 def test_bivariate_op_consistency(local_registry, q_base, op, unit, array):
-
     # This is to avoid having a ureg built at the module level.
     unit = unit(local_registry)
 
