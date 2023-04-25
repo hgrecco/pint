@@ -17,6 +17,8 @@ Pint Changelog
   (PR #1663)
 - Changed frequency to angular frequency in the docs.
   (PR #1668)
+- Updated URLs for log and offset unit errors.
+  (PR #1727)
 - Patched TYPE_CHECKING import regression.
   (PR #1686)
 - Parse '°' along with previous text, rather than adding a space,
@@ -28,7 +30,6 @@ Pint Changelog
   (PR #1669)
 - Fixed Quantity type returned from `__dask_postcompute__`.
   (PR #1722)
-
 
 ### Breaking Changes
 
