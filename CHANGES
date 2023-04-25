@@ -41,7 +41,7 @@ Pint Changelog
   (Issue #1277)
 - Fix error when parsing subtraction operator followed by white space.
   (PR #1701)
-
+- Removed Td as an alias for denier (within the Textile group)
 
 0.20.1 (2022-10-27)
 -------------------

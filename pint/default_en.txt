@@ -672,7 +672,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 @group Textile
     tex = gram / kilometer = Tt
     dtex = decitex
-    denier = gram / (9 * kilometer) = den = Td
+    denier = gram / (9 * kilometer) = den
     jute = pound / (14400 * yard) = Tj
     aberdeen = jute = Ta
     RKM  = gf / tex
