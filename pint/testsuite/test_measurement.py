@@ -193,7 +193,6 @@ class TestMeasurement(QuantityTestCase):
             v.plus_minus(u, relative=True)
 
     def test_propagate_linear(self):
-
         v1, u1 = self.Q_(8.0, "s"), self.Q_(0.7, "s")
         v2, u2 = self.Q_(5.0, "s"), self.Q_(0.6, "s")
         v2, u3 = self.Q_(-5.0, "s"), self.Q_(0.6, "s")
@@ -241,7 +240,6 @@ class TestMeasurement(QuantityTestCase):
             assert r.value.units == ml.value.units
 
     def test_propagate_product(self):
-
         v1, u1 = self.Q_(8.0, "s"), self.Q_(0.7, "s")
         v2, u2 = self.Q_(5.0, "s"), self.Q_(0.6, "s")
         v2, u3 = self.Q_(-5.0, "s"), self.Q_(0.6, "s")

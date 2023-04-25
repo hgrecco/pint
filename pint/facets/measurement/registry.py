@@ -16,7 +16,6 @@ from .objects import Measurement, MeasurementQuantity
 
 
 class MeasurementRegistry(PlainRegistry):
-
     _quantity_class = MeasurementQuantity
     _measurement_class = Measurement
 

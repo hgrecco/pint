@@ -80,7 +80,6 @@ try:
     NP_NO_VALUE = np._NoValue
 
 except ImportError:
-
     np = None
 
     class ndarray:

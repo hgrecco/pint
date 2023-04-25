@@ -305,7 +305,6 @@ class TestGraph:
 
 class TestMatrix:
     def test_matrix_to_string(self):
-
         assert (
             matrix_to_string([[1, 2], [3, 4]], row_headers=None, col_headers=None)
             == "1\t2\n"
@@ -346,13 +345,11 @@ class TestMatrix:
         )
 
     def test_transpose(self):
-
         assert transpose([[1, 2], [3, 4]]) == [[1, 3], [2, 4]]
 
 
 class TestOtherUtils:
     def test_iterable(self):
-
         # Test with list, string, generator, and scalar
         assert iterable([0, 1, 2, 3])
         assert iterable("test")
@@ -360,7 +357,6 @@ class TestOtherUtils:
         assert not iterable(0)
 
     def test_sized(self):
-
         # Test with list, string, generator, and scalar
         assert sized([0, 1, 2, 3])
         assert sized("test")

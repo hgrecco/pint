@@ -212,7 +212,6 @@ class TestUnit(QuantityTestCase):
         assert not (self.U_("byte") != self.U_("byte"))
 
     def test_unit_cmp(self):
-
         x = self.U_("m")
         assert x < self.U_("km")
         assert x > self.U_("mm")
@@ -222,17 +221,14 @@ class TestUnit(QuantityTestCase):
         assert y < 1e6
 
     def test_dimensionality(self):
-
         x = self.U_("m")
         assert x.dimensionality == UnitsContainer({"[length]": 1})
 
     def test_dimensionless(self):
-
         assert self.U_("m/mm").dimensionless
         assert not self.U_("m").dimensionless
 
     def test_unit_casting(self):
-
         assert int(self.U_("m/mm")) == 1000
         assert float(self.U_("mm/m")) == 1e-3
         assert complex(self.U_("mm/mm")) == 1 + 0j
@@ -368,6 +364,16 @@ class TestRegistry(QuantityTestCase):
         )
         assert self.ureg.parse_expression("meter³⁷/second⁴.³²¹") == self.Q_(
             1, UnitsContainer(meter=37, second=-4.321)
+        )
+
+    def test_parse_pretty_degrees(self):
+        for exp in ["1Δ°C", "1 Δ°C", "ΔdegC", "delta_°C"]:
+            assert self.ureg.parse_expression(exp) == self.Q_(
+                1, UnitsContainer(delta_degree_Celsius=1)
+            )
+        assert self.ureg.parse_expression("")
+        assert self.ureg.parse_expression("mol °K") == self.Q_(
+            1, UnitsContainer(mol=1, kelvin=1)
         )
 
     def test_parse_factor(self):
@@ -561,7 +567,6 @@ class TestRegistry(QuantityTestCase):
         assert h3(3, 1) == (3, 1)
 
     def test_wrap_referencing(self):
-
         ureg = self.ureg
 
         def gfunc(x, y):
@@ -772,7 +777,6 @@ class TestRegistry(QuantityTestCase):
 
 
 class TestCaseInsensitiveRegistry(QuantityTestCase):
-
     kwargs = dict(case_sensitive=False)
 
     def test_case_sensitivity(self):
@@ -814,7 +818,6 @@ class TestCompatibleUnits(QuantityTestCase):
         self._test(self.ureg.kelvin)
 
     def test_context_sp(self):
-
         gd = self.ureg.get_dimensionality
 
         # length, frequency, energy
@@ -889,7 +892,6 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
 
 # TODO: remove QuantityTestCase
 class TestConvertWithOffset(QuantityTestCase):
-
     # The dicts in convert_with_offset are used to create a UnitsContainer.
     # We create UnitsContainer to avoid any auto-conversion of units.
     convert_with_offset = [
