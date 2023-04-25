@@ -1035,6 +1035,10 @@ def test_backcompat_speed_velocity(func_registry):
     assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
 
 
+def test_issue1433(func_registry):
+    assert func_registry.Quantity("1 micron") == func_registry.Quantity("1 micrometer")
+
+
 def test_issue1527():
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     x = ureg.parse_expression("2 microliter milligram/liter")
