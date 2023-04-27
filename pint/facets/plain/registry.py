@@ -854,7 +854,7 @@ class PlainRegistry(metaclass=RegistryMeta):
             return frozenset()
 
         src_dim = self._get_dimensionality(input_units)
-        return self._cache.dimensional_equivalents[src_dim]
+        return self._cache.dimensional_equivalents.setdefault(src_dim, set())
 
     # TODO: remove context from here
     def is_compatible_with(

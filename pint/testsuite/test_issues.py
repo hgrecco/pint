@@ -1073,3 +1073,8 @@ def test_issue1631():
     q = 2 * ureg.meter
     assert isinstance(q, ureg.Quantity)
     assert isinstance(q, pint.Quantity)
+
+
+def test_issue1725(registry_empty):
+    registry_empty.define("dollar = [currency]")
+    assert registry_empty.get_compatible_units("dollar") == set()
