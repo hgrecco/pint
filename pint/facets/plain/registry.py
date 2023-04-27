@@ -1137,7 +1137,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         token_text = token[1]
         if token_type == NAME:
             if token_text == "dimensionless":
-                return 1 * self.dimensionless
+                return self.non_int_type("1") * self.dimensionless
             elif token_text.lower() in ("inf", "infinity"):
                 return self.non_int_type("inf")
             elif token_text.lower() == "nan":
@@ -1146,7 +1146,7 @@ class PlainRegistry(metaclass=RegistryMeta):
                 return self.Quantity(values[token_text])
             else:
                 return self.Quantity(
-                    1,
+                    self.non_int_type("1"),
                     self.UnitsContainer(
                         {self.get_name(token_text, case_sensitive=case_sensitive): 1}
                     ),
@@ -1254,7 +1254,7 @@ class PlainRegistry(metaclass=RegistryMeta):
             )
 
         if not input_string:
-            return self.Quantity(1)
+            return self.Quantity(self.non_int_type("1"))
 
         for p in self.preprocessors:
             input_string = p(input_string)

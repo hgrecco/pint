@@ -40,6 +40,8 @@ Pint Changelog
   (Issue #1725)
 - Fix pint-convert script
   (Issue #1646)
+- Honor non_int_type when a unit without a magnitude is given as string.
+  (Issue #1505)
 
 ### Breaking Changes
 

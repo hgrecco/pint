@@ -1078,3 +1078,15 @@ def test_issue1631():
 def test_issue1725(registry_empty):
     registry_empty.define("dollar = [currency]")
     assert registry_empty.get_compatible_units("dollar") == set()
+
+
+def test_issues_1505():
+    ur = UnitRegistry(non_int_type=decimal.Decimal)
+
+    assert isinstance(ur.Quantity("1m/s").magnitude, decimal.Decimal)
+    assert not isinstance(
+        ur.Quantity("m/s").magnitude, float
+    )  # unexpected success (magnitude should not be a float)
+    assert isinstance(
+        ur.Quantity("m/s").magnitude, decimal.Decimal
+    )  # unexpected fail (magnitude should be a decimal)
