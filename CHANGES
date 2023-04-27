@@ -42,6 +42,8 @@ Pint Changelog
   (Issue #1646)
 - Honor non_int_type when a unit without a magnitude is given as string.
   (Issue #1505)
+- Fix `trapz`, `dot`, and `cross` to work properly with non-multiplicative units
+  (Issue #1593)
 
 ### Breaking Changes
 
