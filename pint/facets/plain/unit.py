@@ -21,7 +21,7 @@ from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
-    from pint import Context
+    from ..context import Context
 
 
 class PlainUnit(PrettyIPython, SharedRegistryObject):

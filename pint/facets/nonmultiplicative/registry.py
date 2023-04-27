@@ -148,7 +148,6 @@ class NonMultiplicativeRegistry(PlainRegistry):
         return None
 
     def _add_ref_of_log_or_offset_unit(self, offset_unit, all_units):
-
         slct_unit = self._units[offset_unit]
         if slct_unit.is_logarithmic or (not slct_unit.is_multiplicative):
             # Extract reference unit

@@ -229,7 +229,6 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     def test_block_column_stack(self, subtests):
         for func in (np.block, np.column_stack):
             with subtests.test(func=func):
-
                 helpers.assert_quantity_equal(
                     func([self.q[:, 0], self.q[:, 1]]),
                     self.Q_(func([self.q[:, 0].m, self.q[:, 1].m]), self.ureg.m),
@@ -813,7 +812,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.around(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
         )
         helpers.assert_quantity_equal(
-            np.round_(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
+            np.round(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
         )
 
     def test_trace(self):
@@ -1057,7 +1056,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.isclose(self.q, q2), np.array([[False, True], [True, False]])
         )
         self.assertNDArrayEqual(
-            np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
+            np.isclose(self.q, q2, atol=1e-5 * self.ureg.mm, rtol=1e-7),
             np.array([[False, True], [True, False]]),
         )
 
@@ -1229,6 +1228,24 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.array([[1, 0, 2], [3, 0, 4]]) * self.ureg.m,
         )
 
+    @helpers.requires_array_function_protocol()
+    def test_delete(self):
+        q = self.Q_(np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]), "m")
+        helpers.assert_quantity_equal(
+            np.delete(q, 1, axis=0),
+            np.array([[1, 2, 3, 4], [9, 10, 11, 12]]) * self.ureg.m,
+        )
+
+        helpers.assert_quantity_equal(
+            np.delete(q, np.s_[::2], 1),
+            np.array([[2, 4], [6, 8], [10, 12]]) * self.ureg.m,
+        )
+
+        helpers.assert_quantity_equal(
+            np.delete(q, [1, 3, 5], None),
+            np.array([1, 3, 5, 7, 8, 9, 10, 11, 12]) * self.ureg.m,
+        )
+
     def test_ndarray_downcast(self):
         with pytest.warns(UnitStrippedWarning):
             np.asarray(self.q)
@@ -1362,6 +1379,16 @@ class TestNumpyUnclassified(TestNumpyMethods):
         assert not np.allclose(
             [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.mm
         )
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m,
+            [1.00001e10, 1e-9] * self.ureg.m,
+            atol=1e-8 * self.ureg.m,
+        )
+
+        with pytest.raises(DimensionalityError):
+            assert np.allclose(
+                [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+            )
 
     @helpers.requires_array_function_protocol()
     def test_intersect1d(self):

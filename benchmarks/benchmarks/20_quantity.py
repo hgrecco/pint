@@ -20,7 +20,6 @@ data = {}
 
 
 def setup(*args):
-
     global ureg, data
 
     data["int"] = 1

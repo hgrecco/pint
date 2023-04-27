@@ -10,7 +10,6 @@ from . import block, common, context, defaults, group, plain, system
 
 
 class PintRootBlock(fp.RootBlock):
-
     body: fp.Multi[
         ty.Union[
             plain.CommentDefinition,
@@ -59,7 +58,6 @@ class _PintParser(fp.Parser):
 
 
 class DefParser:
-
     skip_classes = (fp.BOF, fp.BOR, fp.BOS, fp.EOS, plain.CommentDefinition)
 
     def __init__(self, default_config, diskcache):

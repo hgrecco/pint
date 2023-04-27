@@ -74,7 +74,6 @@ class Context:
         aliases: Tuple[str, ...] = (),
         defaults: Optional[dict] = None,
     ) -> None:
-
         self.name = name
         self.aliases = aliases
 

@@ -1,4 +1,5 @@
 import copy
+import decimal
 import math
 import pprint
 
@@ -14,7 +15,6 @@ from pint.util import ParserHelper
 
 # TODO: do not subclass from QuantityTestCase
 class TestIssues(QuantityTestCase):
-
     kwargs = dict(autoconvert_offset_to_baseunit=False)
 
     @pytest.mark.xfail
@@ -249,7 +249,6 @@ class TestIssues(QuantityTestCase):
         assert dis.value == acc.value * tim.value**2 / 2
 
     def test_issue85(self, module_registry):
-
         T = 4.0 * module_registry.kelvin
         m = 1.0 * module_registry.amu
         va = 2.0 * module_registry.k * T / m
@@ -262,7 +261,6 @@ class TestIssues(QuantityTestCase):
         helpers.assert_quantity_almost_equal(va.to_base_units(), vb.to_base_units())
 
     def test_issue86(self, module_registry):
-
         module_registry.autoconvert_offset_to_baseunit = True
 
         def parts(q):
@@ -334,7 +332,6 @@ class TestIssues(QuantityTestCase):
         helpers.assert_quantity_almost_equal(z, 5.1 * module_registry.meter)
 
     def test_issue104(self, module_registry):
-
         x = [
             module_registry("1 meter"),
             module_registry("1 meter"),
@@ -361,7 +358,6 @@ class TestIssues(QuantityTestCase):
         helpers.assert_quantity_almost_equal(y[0], module_registry.Quantity(1, "meter"))
 
     def test_issue105(self, module_registry):
-
         func = module_registry.parse_unit_name
         val = list(func("meter"))
         assert list(func("METER")) == []
@@ -473,7 +469,6 @@ class TestIssues(QuantityTestCase):
 
     @helpers.requires_numpy
     def test_issue483(self, module_registry):
-
         a = np.asarray([1, 2, 3])
         q = [1, 2, 3] * module_registry.dimensionless
         p = (q**q).m
@@ -1040,6 +1035,25 @@ def test_backcompat_speed_velocity(func_registry):
     assert get("[speed]") == UnitsContainer({"[length]": 1, "[time]": -1})
 
 
+def test_issue1433(func_registry):
+    assert func_registry.Quantity("1 micron") == func_registry.Quantity("1 micrometer")
+
+
+def test_issue1527():
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    x = ureg.parse_expression("2 microliter milligram/liter")
+    assert x.magnitude.as_tuple()[1] == (2,)
+    assert x.to_compact().as_tuple()[1] == (2,)
+    assert x.to_base_units().as_tuple()[1] == (2,)
+    assert x.to("ng").as_tuple()[1] == (2,)
+
+
+def test_issue1621():
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    digits = ureg.Quantity("5.0 mV/m").to_base_units().magnitude.as_tuple()[1]
+    assert digits == (5, 0)
+
+
 def test_issue1631():
     import pint
 
@@ -1059,3 +1073,20 @@ def test_issue1631():
     q = 2 * ureg.meter
     assert isinstance(q, ureg.Quantity)
     assert isinstance(q, pint.Quantity)
+
+
+def test_issue1725(registry_empty):
+    registry_empty.define("dollar = [currency]")
+    assert registry_empty.get_compatible_units("dollar") == set()
+
+
+def test_issues_1505():
+    ur = UnitRegistry(non_int_type=decimal.Decimal)
+
+    assert isinstance(ur.Quantity("1m/s").magnitude, decimal.Decimal)
+    assert not isinstance(
+        ur.Quantity("m/s").magnitude, float
+    )  # unexpected success (magnitude should not be a float)
+    assert isinstance(
+        ur.Quantity("m/s").magnitude, decimal.Decimal
+    )  # unexpected fail (magnitude should be a decimal)
