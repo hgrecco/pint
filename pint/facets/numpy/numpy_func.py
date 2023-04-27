@@ -729,6 +729,7 @@ for name in ["prod", "nanprod"]:
     implement_prod_func(name)
 
 
+# Handle mutliplicative functions separately to deal with non-multiplicative units
 def _base_unit_if_needed(a):
     if a._is_multiplicative:
         return a
@@ -757,6 +758,30 @@ def _trapz(a, x=None, dx=1.0, **kwargs):
         ret = np.trapz(a._magnitude, dx=dx, **kwargs)
 
     return a.units._REGISTRY.Quantity(ret, units)
+
+
+def implement_mul_func(func):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(a, b, **kwargs):
+        a = _base_unit_if_needed(a)
+        units = a.units
+        if hasattr(b, "units"):
+            b = _base_unit_if_needed(b)
+            units *= b.units
+            b = b._magnitude
+
+        mag = func(a._magnitude, b, **kwargs)
+        return a.units._REGISTRY.Quantity(mag, units)
+
+
+for func_str in ["cross", "dot"]:
+    implement_mul_func(func_str)
 
 
 # Implement simple matching-unit or stripped-unit functions based on signature
@@ -950,8 +975,6 @@ for func_str in [
 # Handle functions with output unit defined by operation
 for func_str in ["std", "nanstd", "sum", "nansum", "cumsum", "nancumsum"]:
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ["cross", "dot"]:
-    implement_func("function", func_str, input_units=None, output_unit="mul")
 for func_str in ["diff", "ediff1d"]:
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ["gradient"]:

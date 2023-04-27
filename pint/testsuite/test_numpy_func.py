@@ -213,3 +213,45 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         z = self.Q_(np.array([0.0, 2.0, 4.0]), "m")
         with pytest.raises(OffsetUnitCalculusError):
             np.trapz(t, x=z)
+
+    def test_dot(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+            z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+            helpers.assert_quantity_almost_equal(
+                np.dot(t, z), self.Q_(1678.9, "kelvin meter")
+            )
+
+    def test_dot_no_autoconvert(self):
+        t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+        z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+        with pytest.raises(OffsetUnitCalculusError):
+            np.dot(t, z)
+
+    def test_cross(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+            z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+            helpers.assert_quantity_almost_equal(
+                np.cross(t, z), self.Q_([268.15, -536.3, 268.15], "kelvin meter")
+            )
+
+    def test_cross_no_autoconvert(self):
+        t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+        z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+        with pytest.raises(OffsetUnitCalculusError):
+            np.cross(t, z)
