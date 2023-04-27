@@ -36,7 +36,8 @@ Pint Changelog
   (PR #1722)
 - Added Townsend unit
   (PR #1738)
-
+- Fix get_compatible_units() in dynamically added units.
+  (Fix #1725)
 
 ### Breaking Changes
 
