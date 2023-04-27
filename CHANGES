@@ -37,7 +37,9 @@ Pint Changelog
 - Added Townsend unit
   (PR #1738)
 - Fix get_compatible_units() in dynamically added units.
-  (Fix #1725)
+  (Issue #1725)
+- Fix pint-convert script
+  (Issue #1646)
 
 ### Breaking Changes
 
