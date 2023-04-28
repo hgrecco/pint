@@ -224,7 +224,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
       run: |
-        pip install coveralls
+        pip install coveralls "requests<2.29"
         coveralls --finish
 
   # Dummy task to summarize all. See https://github.com/bors-ng/bors-ng/issues/1300
