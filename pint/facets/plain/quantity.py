@@ -1363,6 +1363,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
     __rmatmul__ = __matmul__
 
+    def _truedivide_cast_int(self, a, b):
+        t = self._REGISTRY.non_int_type
+        if isinstance(a, int):
+            a = t(a)
+        if isinstance(b, int):
+            b = t(a)
+        return operator.truediv(a, b)
+
     def __itruediv__(self, other):
         if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.itruediv)
@@ -1370,6 +1378,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             return self._mul_div(other, operator.truediv)
 
     def __truediv__(self, other):
+        if isinstance(self.m, int) or isinstance(getattr(other, "m", None), int):
+            return self._mul_div(other, self._truedivide_cast_int)
         return self._mul_div(other, operator.truediv)
 
     def __rtruediv__(self, other):
