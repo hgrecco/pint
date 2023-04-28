@@ -1369,6 +1369,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
     @helpers.requires_array_function_protocol()
     def test_allclose(self):
         assert np.allclose([1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m)
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m, [1.00001e13, 1e-6] * self.ureg.mm
+        )
         assert not np.allclose(
             [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.mm
         )
@@ -1376,6 +1379,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
             [1e10, 1e-8] * self.ureg.m,
             [1.00001e10, 1e-9] * self.ureg.m,
             atol=1e-8 * self.ureg.m,
+        )
+
+        assert not np.allclose([1.0, np.nan] * self.ureg.m, [1.0, np.nan] * self.ureg.m)
+
+        assert np.allclose(
+            [1.0, np.nan] * self.ureg.m, [1.0, np.nan] * self.ureg.m, equal_nan=True
         )
 
         with pytest.raises(DimensionalityError):
