@@ -1368,7 +1368,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         if isinstance(a, int):
             a = t(a)
         if isinstance(b, int):
-            b = t(a)
+            b = t(b)
         return operator.truediv(a, b)
 
     def __itruediv__(self, other):
@@ -1379,7 +1379,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
     def __truediv__(self, other):
         if isinstance(self.m, int) or isinstance(getattr(other, "m", None), int):
-            return self._mul_div(other, self._truedivide_cast_int)
+            return self._mul_div(other, self._truedivide_cast_int, operator.truediv)
         return self._mul_div(other, operator.truediv)
 
     def __rtruediv__(self, other):
