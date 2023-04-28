@@ -85,7 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_SERVICE_NAME: github
         run: |
-          pip install coveralls
+          pip install coveralls "requests<2.29"
           coveralls
 
   test-windows:
@@ -208,7 +208,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_SERVICE_NAME: github
         run: |
-          pip install coveralls
+          pip install coveralls "requests<2.29"
           coveralls
 
   coveralls:
