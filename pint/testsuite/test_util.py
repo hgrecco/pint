@@ -193,9 +193,9 @@ class TestParseHelper:
         assert "seconds" / z() == ParserHelper(0.5, seconds=1, meter=-2)
         assert dict(seconds=1) / z() == ParserHelper(0.5, seconds=1, meter=-2)
 
-    def _test_eval_token(self, expected, expression, use_decimal=False):
+    def _test_eval_token(self, expected, expression):
         token = next(tokenizer(expression))
-        actual = ParserHelper.eval_token(token, use_decimal=use_decimal)
+        actual = ParserHelper.eval_token(token)
         assert expected == actual
         assert type(expected) == type(actual)
 

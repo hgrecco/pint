@@ -569,15 +569,7 @@ class ParserHelper(UnitsContainer):
             return cls(ONE, [(input_word, ONE)], non_int_type=non_int_type)
 
     @classmethod
-    def eval_token(cls, token, use_decimal=False, non_int_type=float):
-        # TODO: remove this code when use_decimal is deprecated
-        if use_decimal:
-            raise DeprecationWarning(
-                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
-                ">>> from decimal import Decimal\n"
-                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
-            )
-
+    def eval_token(cls, token, non_int_type=float):
         token_type = token.type
         token_text = token.string
         if token_type == NUMBER:

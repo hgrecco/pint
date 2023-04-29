@@ -1124,15 +1124,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         return ret
 
-    def _eval_token(self, token, case_sensitive=None, use_decimal=False, **values):
-        # TODO: remove this code when use_decimal is deprecated
-        if use_decimal:
-            raise DeprecationWarning(
-                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
-                ">>> from decimal import Decimal\n"
-                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
-            )
-
+    def _eval_token(self, token, case_sensitive=None, **values):
         token_type = token[0]
         token_text = token[1]
         if token_type == NAME:
@@ -1161,7 +1153,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         input_string: str,
         pattern: str,
         case_sensitive: Optional[bool] = None,
-        use_decimal: bool = False,
         many: bool = False,
     ) -> Union[List[str], str, None]:
         """Parse a string with a given regex pattern and returns result.
@@ -1174,8 +1165,6 @@ class PlainRegistry(metaclass=RegistryMeta):
              The regex parse string
         case_sensitive :
              (Default value = None, which uses registry setting)
-        use_decimal :
-             (Default value = False)
         many :
              Match many results
              (Default value = False)
@@ -1203,10 +1192,7 @@ class PlainRegistry(metaclass=RegistryMeta):
             units = []
             for unit, value in match.items():
                 # Construct measure by multiplying value by unit
-                units.append(
-                    float(value)
-                    * self.parse_expression(unit, case_sensitive, use_decimal)
-                )
+                units.append(float(value) * self.parse_expression(unit, case_sensitive))
 
             # Add to results
             results.append(units)
@@ -1221,7 +1207,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         self,
         input_string: str,
         case_sensitive: Optional[bool] = None,
-        use_decimal: bool = False,
         **values,
     ) -> Quantity:
         """Parse a mathematical expression including units and return a quantity object.
@@ -1235,8 +1220,6 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         case_sensitive :
              (Default value = None, which uses registry setting)
-        use_decimal :
-             (Default value = False)
         **values :
 
 
@@ -1244,15 +1227,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         -------
 
         """
-
-        # TODO: remove this code when use_decimal is deprecated
-        if use_decimal:
-            raise DeprecationWarning(
-                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
-                ">>> from decimal import Decimal\n"
-                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
-            )
-
         if not input_string:
             return self.Quantity(1)
 
