@@ -16,6 +16,7 @@ from decimal import Decimal
 from importlib import import_module
 from io import BytesIO
 from numbers import Number
+from typing import Mapping, Optional
 
 
 def missing_dependency(package, display_name=None):
@@ -185,21 +186,20 @@ upcast_type_names = (
     "xarray.core.dataarray.DataArray",
 )
 
-upcast_type_map = {k: None for k in upcast_type_names}
+upcast_type_map: Mapping[str : Optional[type]] = {k: None for k in upcast_type_names}
 
 
-def fully_qualified_name(obj):
-    t = type(obj)
+def fully_qualified_name(t: type) -> str:
     module = t.__module__
     name = t.__qualname__
 
-    if module is None or module == "__builtin__":
+    if module is None or module == "builtins":
         return name
 
     return f"{module}.{name}"
 
 
-def check_upcast_type(obj):
+def check_upcast_type(obj: type) -> bool:
     fqn = fully_qualified_name(obj)
     if fqn not in upcast_type_map:
         return False
@@ -211,10 +211,10 @@ def check_upcast_type(obj):
     # This is to check we are importing the same thing.
     # and avoid weird problems. Maybe instead of return
     # we should raise an error if false.
-    return isinstance(obj, cls)
+    return obj in upcast_type_map.values()
 
 
-def is_upcast_type(other):
+def is_upcast_type(other: type) -> bool:
     if other in upcast_type_map.values():
         return True
     return check_upcast_type(other)
