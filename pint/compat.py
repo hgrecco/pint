@@ -16,7 +16,7 @@ from decimal import Decimal
 from importlib import import_module
 from io import BytesIO
 from numbers import Number
-from typing import Mapping, Optional
+from collections.abc import Mapping
 
 
 def missing_dependency(package, display_name=None):
@@ -53,7 +53,7 @@ try:
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
         if isinstance(value, (dict, bool)) or value is None:
-            raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
+            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
         elif isinstance(value, str) and value == "":
             raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
@@ -102,7 +102,7 @@ except ImportError:
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."
             )
         elif isinstance(value, (dict, bool)) or value is None:
-            raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
+            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
         elif isinstance(value, str) and value == "":
             raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
@@ -186,7 +186,7 @@ upcast_type_names = (
     "xarray.core.dataarray.DataArray",
 )
 
-upcast_type_map: Mapping[str : Optional[type]] = {k: None for k in upcast_type_names}
+upcast_type_map: Mapping[str : type | None] = {k: None for k in upcast_type_names}
 
 
 def fully_qualified_name(t: type) -> str:

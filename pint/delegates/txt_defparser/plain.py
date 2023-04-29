@@ -159,10 +159,10 @@ class UnitDefinition(fp.ParsedStatement, definitions.UnitDefinition):
             [converter, modifiers] = value.split(";", 1)
 
             try:
-                modifiers = dict(
-                    (key.strip(), config.to_number(value))
+                modifiers = {
+                    key.strip(): config.to_number(value)
                     for key, value in (part.split(":") for part in modifiers.split(";"))
-                )
+                }
             except definitions.NotNumeric as ex:
                 return common.DefinitionSyntaxError(
                     f"Unit definition ('{name}') must contain only numbers in modifier, not {ex.value}"

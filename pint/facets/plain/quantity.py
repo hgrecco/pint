@@ -20,18 +20,11 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Generic,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
     TypeVar,
-    Union,
     overload,
 )
+from collections.abc import Iterable, Iterator, Sequence
 
 from ..._typing import S, UnitLike, _MagnitudeType
 from ...compat import (
@@ -179,25 +172,25 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
     @overload
     def __new__(
-        cls, value: str, units: Optional[UnitLike] = None
+        cls, value: str, units: UnitLike | None = None
     ) -> PlainQuantity[Magnitude]:
         ...
 
     @overload
     def __new__(  # type: ignore[misc]
-        cls, value: Sequence, units: Optional[UnitLike] = None
+        cls, value: Sequence, units: UnitLike | None = None
     ) -> PlainQuantity[np.ndarray]:
         ...
 
     @overload
     def __new__(
-        cls, value: PlainQuantity[Magnitude], units: Optional[UnitLike] = None
+        cls, value: PlainQuantity[Magnitude], units: UnitLike | None = None
     ) -> PlainQuantity[Magnitude]:
         ...
 
     @overload
     def __new__(
-        cls, value: Magnitude, units: Optional[UnitLike] = None
+        cls, value: Magnitude, units: UnitLike | None = None
     ) -> PlainQuantity[Magnitude]:
         ...
 
@@ -316,12 +309,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         return self.to(units).magnitude
 
     @property
-    def units(self) -> "Unit":
+    def units(self) -> Unit:
         """PlainQuantity's units. Long form for `u`"""
         return self._REGISTRY.Unit(self._units)
 
     @property
-    def u(self) -> "Unit":
+    def u(self) -> Unit:
         """PlainQuantity's units. Short form for `units`"""
         return self._REGISTRY.Unit(self._units)
 
@@ -337,7 +330,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
         return not bool(tmp.dimensionality)
 
-    _dimensionality: Optional[UnitsContainerT] = None
+    _dimensionality: UnitsContainerT | None = None
 
     @property
     def dimensionality(self) -> UnitsContainerT:
@@ -358,7 +351,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
     @classmethod
     def from_list(
-        cls, quant_list: List[PlainQuantity], units=None
+        cls, quant_list: list[PlainQuantity], units=None
     ) -> PlainQuantity[np.ndarray]:
         """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
@@ -421,7 +414,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     def from_tuple(cls, tup):
         return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
 
-    def to_tuple(self) -> Tuple[_MagnitudeType, Tuple[Tuple[str]]]:
+    def to_tuple(self) -> tuple[_MagnitudeType, tuple[tuple[str]]]:
         return self.m, tuple(self._units.items())
 
     def compatible_units(self, *contexts):
@@ -432,7 +425,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         return self._REGISTRY.get_compatible_units(self._units)
 
     def is_compatible_with(
-        self, other: Any, *contexts: Union[str, Context], **ctx_kwargs: Any
+        self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
     ) -> bool:
         """check if the other object is compatible
 
@@ -652,7 +645,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         ):
             return self
 
-        SI_prefixes: Dict[int, str] = {}
+        SI_prefixes: dict[int, str] = {}
         for prefix in self._REGISTRY._prefixes.values():
             try:
                 scale = prefix.converter.scale
@@ -702,7 +695,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         return self.to(new_unit_container)
 
     def to_preferred(
-        self, preferred_units: List[UnitLike]
+        self, preferred_units: list[UnitLike]
     ) -> PlainQuantity[_MagnitudeType]:
         """Return Quantity converted to a unit composed of the preferred units.
 
@@ -732,9 +725,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             for preferred_unit in preferred_units:
                 dims = sorted(preferred_unit.dimensionality)
                 if dims == self_dims:
-                    p_exps_head, *p_exps_tail = [
+                    p_exps_head, *p_exps_tail = (
                         preferred_unit.dimensionality[d] for d in dims
-                    ]
+                    )
                     if all(
                         s_exps_tail[i] * p_exps_head == p_exps_tail[i] ** s_exps_head
                         for i in range(n)
@@ -812,13 +805,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
         # update preferred_units with the selected units that were originally preferred
         preferred_units = list(
-            set(u for d, u in unit_selections.items() if d in preferred_dims)
+            {u for d, u in unit_selections.items() if d in preferred_dims}
         )
         preferred_units.sort(key=lambda unit: str(unit))  # for determinism
 
         # and unpreferred_units are the selected units that weren't originally preferred
         unpreferred_units = list(
-            set(u for d, u in unit_selections.items() if d not in preferred_dims)
+            {u for d, u in unit_selections.items() if d not in preferred_dims}
         )
         unpreferred_units.sort(key=lambda unit: str(unit))  # for determinism
 
@@ -1627,7 +1620,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     def __abs__(self) -> PlainQuantity[_MagnitudeType]:
         return self.__class__(abs(self._magnitude), self._units)
 
-    def __round__(self, ndigits: Optional[int] = 0) -> PlainQuantity[int]:
+    def __round__(self, ndigits: int | None = 0) -> PlainQuantity[int]:
         return self.__class__(round(self._magnitude, ndigits=ndigits), self._units)
 
     def __pos__(self) -> PlainQuantity[_MagnitudeType]:
@@ -1720,9 +1713,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
                     else:
                         raise OffsetUnitCalculusError(self._units)
             else:
-                raise ValueError(
-                    "Cannot compare PlainQuantity and {}".format(type(other))
-                )
+                raise ValueError(f"Cannot compare PlainQuantity and {type(other)}")
 
         # Registry equality check based on util.SharedRegistryObject
         if self._REGISTRY is not other._REGISTRY:
@@ -1791,11 +1782,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         """Check if the PlainQuantity object has only multiplicative units."""
         return True
 
-    def _get_non_multiplicative_units(self) -> List[str]:
+    def _get_non_multiplicative_units(self) -> list[str]:
         """Return a list of the of non-multiplicative units of the PlainQuantity object."""
         return []
 
-    def _get_delta_units(self) -> List[str]:
+    def _get_delta_units(self) -> list[str]:
         """Return list of delta units ot the PlainQuantity object."""
         return [u for u in self._units if u.startswith("delta_")]
 

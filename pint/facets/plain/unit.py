@@ -12,7 +12,7 @@ import copy
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import UnitLike
 from ...compat import NUMERIC_TYPES
@@ -65,7 +65,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        return "<Unit('{}')>".format(self._units)
+        return f"<Unit('{self._units}')>"
 
     @property
     def dimensionless(self) -> bool:
@@ -96,7 +96,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self)
 
     def is_compatible_with(
-        self, other: Any, *contexts: Union[str, Context], **ctx_kwargs: Any
+        self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
     ) -> bool:
         """check if the other object is compatible
 
@@ -171,12 +171,12 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
-    def __pow__(self, other) -> "PlainUnit":
+    def __pow__(self, other) -> PlainUnit:
         if isinstance(other, NUMERIC_TYPES):
             return self.__class__(self._units**other)
 
         else:
-            mess = "Cannot power PlainUnit by {}".format(type(other))
+            mess = f"Cannot power PlainUnit by {type(other)}"
             raise TypeError(mess)
 
     def __hash__(self) -> int:

@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, FrozenSet
+from typing import TYPE_CHECKING
 
 from ... import errors
 
@@ -40,7 +40,7 @@ class GroupRegistry(PlainRegistry):
         super().__init__(**kwargs)
         #: Map group name to group.
         #: :type: dict[ str | Group]
-        self._groups: Dict[str, Group] = {}
+        self._groups: dict[str, Group] = {}
         self._groups["root"] = self.Group("root")
 
     def __init_subclass__(cls, **kwargs):
@@ -117,7 +117,7 @@ class GroupRegistry(PlainRegistry):
 
         return self.Group(name)
 
-    def _get_compatible_units(self, input_units, group) -> FrozenSet["Unit"]:
+    def _get_compatible_units(self, input_units, group) -> frozenset[Unit]:
         ret = super()._get_compatible_units(input_units, group)
 
         if not group:

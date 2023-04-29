@@ -20,7 +20,6 @@ import numbers
 import re
 import typing as ty
 from dataclasses import dataclass
-from typing import Dict, Tuple
 
 from ..._vendor import flexparser as fp
 from ...facets.context import definitions
@@ -92,8 +91,8 @@ class BeginContext(fp.ParsedStatement):
     )
 
     name: str
-    aliases: Tuple[str, ...]
-    defaults: Dict[str, numbers.Number]
+    aliases: tuple[str, ...]
+    defaults: dict[str, numbers.Number]
 
     @classmethod
     def from_string_and_config(

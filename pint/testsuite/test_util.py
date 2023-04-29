@@ -353,12 +353,12 @@ class TestOtherUtils:
         # Test with list, string, generator, and scalar
         assert iterable([0, 1, 2, 3])
         assert iterable("test")
-        assert iterable((i for i in range(5)))
+        assert iterable(i for i in range(5))
         assert not iterable(0)
 
     def test_sized(self):
         # Test with list, string, generator, and scalar
         assert sized([0, 1, 2, 3])
         assert sized("test")
-        assert not sized((i for i in range(5)))
+        assert not sized(i for i in range(5))
         assert not sized(0)

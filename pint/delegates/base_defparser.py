@@ -67,7 +67,7 @@ class ParserConfig:
         return val.scale
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def build_disk_cache_class(non_int_type: type):
     """Build disk cache class, taking into account the non_int_type."""
 

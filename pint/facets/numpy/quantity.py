@@ -52,11 +52,11 @@ class NumpyQuantity:
             return NotImplemented
 
         # Replicate types from __array_function__
-        types = set(
+        types = {
             type(arg)
             for arg in list(inputs) + list(kwargs.values())
             if hasattr(arg, "__array_ufunc__")
-        )
+        }
 
         return numpy_wrap("ufunc", ufunc, inputs, kwargs, types)
 

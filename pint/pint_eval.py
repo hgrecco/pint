@@ -124,7 +124,7 @@ class EvalTreeNode:
             return define_op(self.left)
 
 
-from typing import Iterable
+from collections.abc import Iterable
 
 
 def build_eval_tree(

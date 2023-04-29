@@ -13,7 +13,7 @@ import numbers
 import typing as ty
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Callable, Optional
+from typing import Callable
 
 from ... import errors
 from ...converters import Converter
@@ -76,7 +76,7 @@ class PrefixDefinition(errors.WithDefErr):
     #: scaling value for this prefix
     value: numbers.Number
     #: canonical symbol
-    defined_symbol: Optional[str] = ""
+    defined_symbol: str | None = ""
     #: additional names for the same prefix
     aliases: ty.Tuple[str, ...] = ()
 

@@ -44,7 +44,7 @@ class Converter:
 
     @classmethod
     def get_field_names(cls, new_cls):
-        return frozenset((p.name for p in dc_fields(new_cls)))
+        return frozenset(p.name for p in dc_fields(new_cls))
 
     @classmethod
     def preprocess_kwargs(cls, **kwargs):
@@ -57,7 +57,7 @@ class Converter:
             new_cls = cls._param_names_to_subclass[kwk]
         except KeyError:
             for new_cls in cls._subclasses:
-                p_names = frozenset((p.name for p in dc_fields(new_cls)))
+                p_names = frozenset(p.name for p in dc_fields(new_cls))
                 if p_names == kwk:
                     cls._param_names_to_subclass[kwk] = new_cls
                     break

@@ -11,7 +11,7 @@ from __future__ import annotations
 import functools
 from collections import ChainMap
 from contextlib import contextmanager
-from typing import Any, Callable, ContextManager, Dict, Union
+from typing import Any, Callable, ContextManager
 
 from ..._typing import F
 from ...errors import UndefinedUnitError
@@ -54,7 +54,7 @@ class ContextRegistry(PlainRegistry):
 
     def __init__(self, **kwargs: Any) -> None:
         # Map context name (string) or abbreviation to context.
-        self._contexts: Dict[str, Context] = {}
+        self._contexts: dict[str, Context] = {}
         # Stores active contexts.
         self._active_ctx = ContextChain()
         # Map context chain to cache
@@ -71,7 +71,7 @@ class ContextRegistry(PlainRegistry):
         super()._register_definition_adders()
         self._register_adder(ContextDefinition, self.add_context)
 
-    def add_context(self, context: Union[Context, ContextDefinition]) -> None:
+    def add_context(self, context: Context | ContextDefinition) -> None:
         """Add a context object to the registry.
 
         The context will be accessible by its name and aliases.
@@ -193,9 +193,7 @@ class ContextRegistry(PlainRegistry):
         # Write into the context-specific self._units.maps[0] and self._cache.root_units
         self.define(definition)
 
-    def enable_contexts(
-        self, *names_or_contexts: Union[str, Context], **kwargs
-    ) -> None:
+    def enable_contexts(self, *names_or_contexts: str | Context, **kwargs) -> None:
         """Enable contexts provided by name or by object.
 
         Parameters

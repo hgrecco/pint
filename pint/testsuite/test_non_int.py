@@ -740,10 +740,10 @@ class _TestQuantityBasicMath(NonIntTypeTestCase):
             zy = self.Q_(fun(y.magnitude), "meter")
             rx = fun(x)
             ry = fun(y)
-            assert rx == zx, "while testing {0}".format(fun)
-            assert ry == zy, "while testing {0}".format(fun)
-            assert rx is not zx, "while testing {0}".format(fun)
-            assert ry is not zy, "while testing {0}".format(fun)
+            assert rx == zx, f"while testing {fun}"
+            assert ry == zy, f"while testing {fun}"
+            assert rx is not zx, f"while testing {fun}"
+            assert ry is not zy, f"while testing {fun}"
 
     def test_quantity_float_complex(self):
         x = self.QP_("-4.2", None)

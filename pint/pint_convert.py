@@ -160,7 +160,7 @@ if args.unc:
 
 def convert(u_from, u_to=None, unc=None, factor=None):
     q = ureg.Quantity(u_from)
-    fmt = ".{}g".format(args.prec)
+    fmt = f".{args.prec}g"
     if unc:
         q = q.plus_minus(unc)
     if u_to:
@@ -172,7 +172,7 @@ def convert(u_from, u_to=None, unc=None, factor=None):
         nq *= ureg.Quantity(factor).to_base_units()
     prec_unc = use_unc(nq.magnitude, fmt, args.prec_unc)
     if prec_unc > 0:
-        fmt = ".{}uS".format(prec_unc)
+        fmt = f".{prec_unc}uS"
     else:
         try:
             nq = nq.magnitude.n * nq.units

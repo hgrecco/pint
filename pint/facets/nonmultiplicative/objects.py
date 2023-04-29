@@ -8,8 +8,6 @@
 
 from __future__ import annotations
 
-from typing import List
-
 
 class NonMultiplicativeQuantity:
     @property
@@ -17,7 +15,7 @@ class NonMultiplicativeQuantity:
         """Check if the PlainQuantity object has only multiplicative units."""
         return not self._get_non_multiplicative_units()
 
-    def _get_non_multiplicative_units(self) -> List[str]:
+    def _get_non_multiplicative_units(self) -> list[str]:
         """Return a list of the of non-multiplicative units of the PlainQuantity object."""
         return [
             unit
@@ -25,7 +23,7 @@ class NonMultiplicativeQuantity:
             if not self._get_unit_definition(unit).is_multiplicative
         ]
 
-    def _get_delta_units(self) -> List[str]:
+    def _get_delta_units(self) -> list[str]:
         """Return list of delta units ot the PlainQuantity object."""
         return [u for u in self._units if u.startswith("delta_")]
 

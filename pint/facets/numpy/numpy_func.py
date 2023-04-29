@@ -220,7 +220,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
                 product /= x.units
         result_unit = product**-1
     else:
-        raise ValueError("Output unit method {} not understood".format(unit_op))
+        raise ValueError(f"Output unit method {unit_op} not understood")
 
     return result_unit
 
@@ -237,7 +237,7 @@ def implements(numpy_func_string, func_type):
         elif func_type == "ufunc":
             HANDLED_UFUNCS[numpy_func_string] = func
         else:
-            raise ValueError("Invalid func_type {}".format(func_type))
+            raise ValueError(f"Invalid func_type {func_type}")
         return func
 
     return decorator
@@ -997,7 +997,7 @@ def numpy_wrap(func_type, func, args, kwargs, types):
         # ufuncs do not have func.__module__
         name = func.__name__
     else:
-        raise ValueError("Invalid func_type {}".format(func_type))
+        raise ValueError(f"Invalid func_type {func_type}")
 
     if name not in handled or any(is_upcast_type(t) for t in types):
         return NotImplemented

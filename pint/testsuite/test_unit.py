@@ -144,7 +144,7 @@ class TestUnit(QuantityTestCase):
 
         ureg = UnitRegistry()
 
-        assert "{:new}".format(ureg.m) == "new format"
+        assert f"{ureg.m:new}" == "new format"
 
     def test_ipython(self):
         alltext = []

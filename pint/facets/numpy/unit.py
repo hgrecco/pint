@@ -20,11 +20,11 @@ class NumpyUnit:
             return NotImplemented
 
         # Check types and return NotImplemented when upcast type encountered
-        types = set(
+        types = {
             type(arg)
             for arg in list(inputs) + list(kwargs.values())
             if hasattr(arg, "__array_ufunc__")
-        )
+        }
         if any(is_upcast_type(other) for other in types):
             return NotImplemented
 

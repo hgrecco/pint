@@ -12,7 +12,7 @@ import itertools
 import numbers
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Dict, Set, Tuple
+from typing import TYPE_CHECKING, Any, Callable
 
 from ... import errors
 from ..plain import UnitDefinition
@@ -41,7 +41,7 @@ class Relation:
     # could be used.
 
     @property
-    def variables(self) -> Set[str, ...]:
+    def variables(self) -> set[str, ...]:
         """Find all variables names in the equation."""
         return set(self._varname_re.findall(self.equation))
 
@@ -92,13 +92,13 @@ class ContextDefinition(errors.WithDefErr):
     #: name of the context
     name: str
     #: other na
-    aliases: Tuple[str, ...]
-    defaults: Dict[str, numbers.Number]
-    relations: Tuple[Relation, ...]
-    redefinitions: Tuple[UnitDefinition, ...]
+    aliases: tuple[str, ...]
+    defaults: dict[str, numbers.Number]
+    relations: tuple[Relation, ...]
+    redefinitions: tuple[UnitDefinition, ...]
 
     @property
-    def variables(self) -> Set[str, ...]:
+    def variables(self) -> set[str, ...]:
         """Return all variable names in all transformations."""
         return set().union(*(r.variables for r in self.relations))
 

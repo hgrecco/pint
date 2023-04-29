@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Dict, FrozenSet, Tuple, Union
+from typing import TYPE_CHECKING
 
 from ... import errors
 
@@ -53,7 +53,7 @@ class SystemRegistry(GroupRegistry):
 
         #: Map system name to system.
         #: :type: dict[ str | System]
-        self._systems: Dict[str, System] = {}
+        self._systems: dict[str, System] = {}
 
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self._base_units_cache = dict()
@@ -143,10 +143,10 @@ class SystemRegistry(GroupRegistry):
 
     def get_base_units(
         self,
-        input_units: Union[UnitLike, Quantity],
+        input_units: UnitLike | Quantity,
         check_nonmult: bool = True,
-        system: Union[str, System, None] = None,
-    ) -> Tuple[Number, Unit]:
+        system: str | System | None = None,
+    ) -> tuple[Number, Unit]:
         """Convert unit or dict of units to the plain units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -183,7 +183,7 @@ class SystemRegistry(GroupRegistry):
         self,
         input_units: UnitsContainerT,
         check_nonmult: bool = True,
-        system: Union[str, System, None] = None,
+        system: str | System | None = None,
     ):
         if system is None:
             system = self._default_system
@@ -224,7 +224,7 @@ class SystemRegistry(GroupRegistry):
 
         return base_factor, destination_units
 
-    def _get_compatible_units(self, input_units, group_or_system) -> FrozenSet[Unit]:
+    def _get_compatible_units(self, input_units, group_or_system) -> frozenset[Unit]:
         if group_or_system is None:
             group_or_system = self._default_system
 

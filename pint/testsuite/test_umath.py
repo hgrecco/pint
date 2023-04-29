@@ -79,7 +79,7 @@ class TestUFuncs:
         if results is None:
             results = [None] * len(ok_with)
         for x1, res in zip(ok_with, results):
-            err_msg = "At {} with {}".format(func.__name__, x1)
+            err_msg = f"At {func.__name__} with {x1}"
             if output_units == "same":
                 ou = x1.units
             elif isinstance(output_units, (int, float)):
@@ -163,7 +163,7 @@ class TestUFuncs:
         if results is None:
             results = [None] * len(ok_with)
         for x1, res in zip(ok_with, results):
-            err_msg = "At {} with {}".format(func.__name__, x1)
+            err_msg = f"At {func.__name__} with {x1}"
             qms = func(x1)
             if res is None:
                 res = func(x1.magnitude)
@@ -223,7 +223,7 @@ class TestUFuncs:
 
         """
         for x2 in ok_with:
-            err_msg = "At {} with {} and {}".format(func.__name__, x1, x2)
+            err_msg = f"At {func.__name__} with {x1} and {x2}"
             if output_units == "same":
                 ou = x1.units
             elif output_units == "prod":

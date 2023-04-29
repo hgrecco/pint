@@ -126,9 +126,7 @@ def test_array_function_deferral(da, module_registry):
     upper = 3 * module_registry.m
     args = (da, lower, upper)
     assert (
-        lower.__array_function__(
-            np.clip, tuple(set(type(arg) for arg in args)), args, {}
-        )
+        lower.__array_function__(np.clip, tuple({type(arg) for arg in args}), args, {})
         is NotImplemented
     )
 

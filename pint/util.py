@@ -22,7 +22,7 @@ from functools import lru_cache, partial
 from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
-from typing import TYPE_CHECKING, ClassVar, Optional, Type, Union
+from typing import TYPE_CHECKING, ClassVar
 
 from .compat import NUMERIC_TYPES, tokenizer
 from .errors import DefinitionSyntaxError
@@ -230,11 +230,11 @@ def pi_theorem(quantities, registry=None):
         max_den = max(f.denominator for f in rowi)
         neg = -1 if sum(f < 0 for f in rowi) > sum(f > 0 for f in rowi) else 1
         results.append(
-            dict(
-                (q[0], neg * f.numerator * max_den / f.denominator)
+            {
+                q[0]: neg * f.numerator * max_den / f.denominator
                 for q, f in zip(quant, rowi)
                 if f.numerator != 0
-            )
+            }
         )
     return results
 
@@ -347,9 +347,9 @@ class UnitsContainer(Mapping):
         self._d = d
         for key, value in d.items():
             if not isinstance(key, str):
-                raise TypeError("key must be a str, not {}".format(type(key)))
+                raise TypeError(f"key must be a str, not {type(key)}")
             if not isinstance(value, Number):
-                raise TypeError("value must be a number, not {}".format(type(value)))
+                raise TypeError(f"value must be a number, not {type(value)}")
             if not isinstance(value, int) and not isinstance(value, self._non_int_type):
                 d[key] = self._non_int_type(value)
         self._hash = None
@@ -455,9 +455,9 @@ class UnitsContainer(Mapping):
 
     def __repr__(self) -> str:
         tmp = "{%s}" % ", ".join(
-            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
-        return "<UnitsContainer({})>".format(tmp)
+        return f"<UnitsContainer({tmp})>"
 
     def __format__(self, spec: str) -> str:
         return format_unit(self, spec)
@@ -586,7 +586,7 @@ class ParserHelper(UnitsContainer):
             raise Exception("unknown token type")
 
     @classmethod
-    @lru_cache()
+    @lru_cache
     def from_string(cls, input_string, non_int_type=float):
         """Parse linear expression mathematical units and return a quantity object.
 
@@ -682,15 +682,15 @@ class ParserHelper(UnitsContainer):
 
     def __str__(self):
         tmp = "{%s}" % ", ".join(
-            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
-        return "{} {}".format(self.scale, tmp)
+        return f"{self.scale} {tmp}"
 
     def __repr__(self):
         tmp = "{%s}" % ", ".join(
-            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
-        return "<ParserHelper({}, {})>".format(self.scale, tmp)
+        return f"<ParserHelper({self.scale}, {tmp})>"
 
     def __mul__(self, other):
         if isinstance(other, str):
@@ -848,25 +848,25 @@ class PrettyIPython:
 
     def _repr_html_(self):
         if "~" in self.default_format:
-            return "{:~H}".format(self)
+            return f"{self:~H}"
         else:
-            return "{:H}".format(self)
+            return f"{self:H}"
 
     def _repr_latex_(self):
         if "~" in self.default_format:
-            return "${:~L}$".format(self)
+            return f"${self:~L}$"
         else:
-            return "${:L}$".format(self)
+            return f"${self:L}$"
 
     def _repr_pretty_(self, p, cycle):
         if "~" in self.default_format:
-            p.text("{:~P}".format(self))
+            p.text(f"{self:~P}")
         else:
-            p.text("{:P}".format(self))
+            p.text(f"{self:P}")
 
 
 def to_units_container(
-    unit_like: Union[UnitLike, Quantity], registry: Optional[UnitRegistry] = None
+    unit_like: UnitLike | Quantity, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 
@@ -899,7 +899,7 @@ def to_units_container(
 
 
 def infer_base_unit(
-    unit_like: Union[UnitLike, Quantity], registry: Optional[UnitRegistry] = None
+    unit_like: UnitLike | Quantity, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """
     Given a Quantity or UnitLike, give the UnitsContainer for it's plain units.
@@ -968,7 +968,7 @@ def getattr_maybe_raise(self, item):
         or len(item.lstrip("_")) == 0
         or (item.startswith("_") and not item.lstrip("_")[0].isdigit())
     ):
-        raise AttributeError("%r object has no attribute %r" % (self, item))
+        raise AttributeError("{!r} object has no attribute {!r}".format(self, item))
 
 
 def iterable(y) -> bool:
@@ -1017,7 +1017,7 @@ def _build_type(class_name: str, bases):
     return type(class_name, bases, dict())
 
 
-def build_dependent_class(registry_class, class_name: str, attribute_name: str) -> Type:
+def build_dependent_class(registry_class, class_name: str, attribute_name: str) -> type:
     """Creates a class specifically for the given registry that
     subclass all the classes named by the registry bases in a
     specific attribute
@@ -1038,7 +1038,7 @@ def build_dependent_class(registry_class, class_name: str, attribute_name: str) 
     return _build_type(class_name, bases)
 
 
-def create_class_with_registry(registry, base_class) -> Type:
+def create_class_with_registry(registry, base_class) -> type:
     """Create new class inheriting from base_class and
     filling _REGISTRY class attribute with an actual instanced registry.
     """

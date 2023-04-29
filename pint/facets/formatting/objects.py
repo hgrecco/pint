@@ -80,7 +80,7 @@ class FormattingQuantity:
             else:
                 if isinstance(self.magnitude, ndarray):
                     # Use custom ndarray text formatting with monospace font
-                    formatter = "{{:{}}}".format(mspec)
+                    formatter = f"{{:{mspec}}}"
                     # Need to override for scalars, which are detected as iterable,
                     # and don't respond to printoptions.
                     if self.magnitude.ndim == 0:
@@ -112,7 +112,7 @@ class FormattingQuantity:
             else:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                formatter = "{{:{}}}".format(mspec)
+                formatter = f"{{:{mspec}}}"
                 if obj.magnitude.ndim == 0:
                     mstr = formatter.format(obj.magnitude)
                 else:
@@ -188,10 +188,10 @@ class FormattingUnit:
             if not self._units:
                 return ""
             units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
+                {
+                    self._REGISTRY._get_symbol(key): value
                     for key, value in self._units.items()
-                )
+                }
             )
             uspec = uspec.replace("~", "")
         else:
@@ -206,10 +206,10 @@ class FormattingUnit:
             if self.dimensionless:
                 return ""
             units = UnitsContainer(
-                dict(
-                    (self._REGISTRY._get_symbol(key), value)
+                {
+                    self._REGISTRY._get_symbol(key): value
                     for key, value in self._units.items()
-                )
+                }
             )
             spec = spec.replace("~", "")
         else:

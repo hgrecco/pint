@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import weakref
 from collections import ChainMap, defaultdict
-from typing import Optional, Tuple
 
 from ...facets.plain import UnitDefinition
 from ...util import UnitsContainer, to_units_container
@@ -70,9 +69,9 @@ class Context:
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        aliases: Tuple[str, ...] = (),
-        defaults: Optional[dict] = None,
+        name: str | None = None,
+        aliases: tuple[str, ...] = (),
+        defaults: dict | None = None,
     ) -> None:
         self.name = name
         self.aliases = aliases
@@ -166,7 +165,7 @@ class Context:
         del self.relation_to_context[_key]
 
     @staticmethod
-    def __keytransform__(src, dst) -> Tuple[UnitsContainer, UnitsContainer]:
+    def __keytransform__(src, dst) -> tuple[UnitsContainer, UnitsContainer]:
         return to_units_container(src), to_units_container(dst)
 
     def transform(self, src, dst, registry, value):
@@ -199,7 +198,7 @@ class Context:
 
     def hashable(
         self,
-    ) -> Tuple[Optional[str], Tuple[str, ...], frozenset, frozenset, tuple]:
+    ) -> tuple[str | None, tuple[str, ...], frozenset, frozenset, tuple]:
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
         mutable, and the Python interpreter does cache the output of ``__hash__``.
