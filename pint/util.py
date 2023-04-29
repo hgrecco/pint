@@ -1020,9 +1020,7 @@ def sized(y) -> bool:
     return True
 
 
-@functools.lru_cache(
-    maxsize=None
-)  # TODO: replace with cache when Python 3.8 is dropped.
+@functools.cache
 def _build_type(class_name: str, bases):
     return type(class_name, bases, dict())
 

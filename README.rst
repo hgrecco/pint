@@ -43,7 +43,7 @@ and constants. Due to its modular design, you can extend (or even rewrite!)
 the complete list without changing the source code. It supports a lot of
 numpy mathematical operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 3.8+ with no other dependency.
+It has a complete test coverage. It runs in Python 3.9+ with no other dependency.
 It is licensed under BSD.
 
 It is extremely easy and natural to use:
