@@ -86,6 +86,8 @@ types for pint-pandas compatibility. (#1596)
 - Create NaN-value quantities of appropriate non-int-type (Issue #1570).
 - New documentation format and organization!
 - Better support for pandas and dask.
+- Fix masked arrays (with multiple values) incorrectly being passed through
+  setitem (Issue #1584)
 
 - Add Quantity.to_preferred
 
