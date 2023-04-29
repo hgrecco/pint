@@ -69,7 +69,7 @@ class TestConverter:
 
     @helpers.requires_numpy
     def test_log_converter_inplace(self):
-        arb_value = 3.14
+        arb_value = 3.13
         c = LogarithmicConverter(scale=1, logbase=10, logfactor=1)
 
         from_to = lambda value, inplace: c.from_reference(

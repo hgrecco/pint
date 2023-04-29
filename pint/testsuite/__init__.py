@@ -3,7 +3,8 @@ import math
 import os
 import unittest
 import warnings
-from contextlib import contextmanager
+import contextlib
+import pathlib
 
 from pint import UnitRegistry
 from pint.testsuite.helpers import PintOutputChecker
@@ -25,7 +26,7 @@ class QuantityTestCase:
         cls.U_ = None
 
 
-@contextmanager
+@contextlib.contextmanager
 def assert_no_warnings():
     with warnings.catch_warnings():
         warnings.simplefilter("error")
@@ -40,13 +41,12 @@ def testsuite():
 
     # TESTING THE DOCUMENTATION requires pyyaml, serialize, numpy and uncertainties
     if HAS_NUMPY and HAS_UNCERTAINTIES:
-        try:
+        with contextlib.suppress(ImportError):
             import serialize  # noqa: F401
             import yaml  # noqa: F401
 
             add_docs(suite)
-        except ImportError:
-            pass
+
     return suite
 
 
@@ -98,7 +98,7 @@ def add_docs(suite):
     """
     docpath = os.path.join(os.path.dirname(__file__), "..", "..", "docs")
     docpath = os.path.abspath(docpath)
-    if os.path.exists(docpath):
+    if pathlib.Path(docpath).exists():
         checker = PintOutputChecker()
         for name in (name for name in os.listdir(docpath) if name.endswith(".rst")):
             file = os.path.join(docpath, name)

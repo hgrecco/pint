@@ -1,3 +1,4 @@
+import operator
 import pytest
 
 from pint import UnitRegistry
@@ -121,10 +122,8 @@ def test_univariate_op_consistency(
 @pytest.mark.parametrize(
     "op, unit",
     [
-        pytest.param(
-            lambda x, y: x * y, lambda ureg: ureg("kg m"), id="multiplication"
-        ),
-        pytest.param(lambda x, y: x / y, lambda ureg: ureg("m / kg"), id="division"),
+        pytest.param(operator.mul, lambda ureg: ureg("kg m"), id="multiplication"),
+        pytest.param(operator.truediv, lambda ureg: ureg("m / kg"), id="division"),
         pytest.param(np.multiply, lambda ureg: ureg("kg m"), id="multiply ufunc"),
     ],
 )
@@ -143,11 +142,11 @@ def test_bivariate_op_consistency(local_registry, q_base, op, unit, array):
     "op",
     [
         pytest.param(
-            WR2(lambda a, u: a * u),
+            WR2(operator.mul),
             id="array-first",
             marks=pytest.mark.xfail(reason="upstream issue numpy/numpy#15200"),
         ),
-        pytest.param(WR2(lambda a, u: u * a), id="unit-first"),
+        pytest.param(WR2(operator.mul), id="unit-first"),
     ],
 )
 @pytest.mark.parametrize(

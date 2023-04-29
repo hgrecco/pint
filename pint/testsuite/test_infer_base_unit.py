@@ -34,9 +34,9 @@ class TestInferBaseUnit:
         ureg = UnitRegistry(non_int_type=Decimal)
         QD = ureg.Quantity
 
-        ibu_d = infer_base_unit(QD(Decimal("1"), "millimeter * nanometer"))
+        ibu_d = infer_base_unit(QD(Decimal(1), "millimeter * nanometer"))
 
-        assert ibu_d == QD(Decimal("1"), "meter**2").units
+        assert ibu_d == QD(Decimal(1), "meter**2").units
 
         assert all(isinstance(v, Decimal) for v in ibu_d.values())
 
@@ -69,9 +69,9 @@ class TestInferBaseUnit:
         Q = ureg.Quantity
         r = (
             Q(Decimal("1000000000.0"), "m")
-            * Q(Decimal("1"), "mm")
-            / Q(Decimal("1"), "s")
-            / Q(Decimal("1"), "ms")
+            * Q(Decimal(1), "mm")
+            / Q(Decimal(1), "s")
+            / Q(Decimal(1), "ms")
         )
         compact_r = r.to_compact()
         expected = Q(Decimal("1000.0"), "kilometer**2 / second**2")

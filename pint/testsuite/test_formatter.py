@@ -5,13 +5,13 @@ from pint import formatting as fmt
 
 class TestFormatter:
     def test_join(self):
-        for empty in (tuple(), []):
+        for empty in ((), []):
             assert fmt._join("s", empty) == ""
         assert fmt._join("*", "1 2 3".split()) == "1*2*3"
         assert fmt._join("{0}*{1}", "1 2 3".split()) == "1*2*3"
 
     def test_formatter(self):
-        assert fmt.formatter(dict().items()) == ""
+        assert fmt.formatter({}.items()) == ""
         assert fmt.formatter(dict(meter=1).items()) == "meter"
         assert fmt.formatter(dict(meter=-1).items()) == "1 / meter"
         assert fmt.formatter(dict(meter=-1).items(), as_ratio=False) == "meter ** -1"

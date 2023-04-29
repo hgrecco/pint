@@ -120,13 +120,13 @@ class TestUnitsContainer:
             UnitsContainer({"1": "2"})
         d = UnitsContainer()
         with pytest.raises(TypeError):
-            d.__mul__(list())
+            d.__mul__([])
         with pytest.raises(TypeError):
-            d.__pow__(list())
+            d.__pow__([])
         with pytest.raises(TypeError):
-            d.__truediv__(list())
+            d.__truediv__([])
         with pytest.raises(TypeError):
-            d.__rtruediv__(list())
+            d.__rtruediv__([])
 
 
 class TestToUnitsContainer:

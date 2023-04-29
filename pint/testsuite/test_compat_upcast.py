@@ -1,3 +1,4 @@
+import operator
 import pytest
 
 # Conditionally import NumPy and any upcast type libraries
@@ -49,9 +50,9 @@ def test_quantification(module_registry, ds):
 @pytest.mark.parametrize(
     "op",
     [
-        lambda x, y: x + y,
+        operator.add,
         lambda x, y: x - (-y),
-        lambda x, y: x * y,
+        operator.mul,
         lambda x, y: x / (y**-1),
     ],
 )
