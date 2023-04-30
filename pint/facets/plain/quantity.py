@@ -274,15 +274,15 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     def __repr__(self) -> str:
         if isinstance(self._magnitude, float):
             return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
-        else:
-            return f"<Quantity({self._magnitude}, '{self._units}')>"
+
+        return f"<Quantity({self._magnitude}, '{self._units}')>"
 
     def __hash__(self) -> int:
         self_base = self.to_base_units()
         if self_base.dimensionless:
             return hash(self_base.magnitude)
-        else:
-            return hash((self_base.__class__, self_base.magnitude, self_base.units))
+
+        return hash((self_base.__class__, self_base.magnitude, self_base.units))
 
     @property
     def magnitude(self) -> _MagnitudeType:
@@ -807,13 +807,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         preferred_units = list(
             {u for d, u in unit_selections.items() if d in preferred_dims}
         )
-        preferred_units.sort(key=lambda unit: str(unit))  # for determinism
+        preferred_units.sort(key=str)  # for determinism
 
         # and unpreferred_units are the selected units that weren't originally preferred
         unpreferred_units = list(
             {u for d, u in unit_selections.items() if d not in preferred_dims}
         )
-        unpreferred_units.sort(key=lambda unit: str(unit))  # for determinism
+        unpreferred_units.sort(key=str)  # for determinism
 
         # for indexability
         dimensions = list(dimension_set)
@@ -911,10 +911,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             result_unit = sorting_keys[min_key]
 
             return self.to(result_unit)
-        else:
-            # for whatever reason, a solution wasn't found
-            # return the original quantity
-            return self
+
+        # for whatever reason, a solution wasn't found
+        # return the original quantity
+        return self
 
     # Mathematical operations
     def __int__(self) -> int:
@@ -1171,22 +1171,22 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             return self.to_timedelta() + other
         elif is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.iadd)
-        else:
-            return self._add_sub(other, operator.add)
+
+        return self._add_sub(other, operator.add)
 
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
             return self.to_timedelta() + other
-        else:
-            return self._add_sub(other, operator.add)
+
+        return self._add_sub(other, operator.add)
 
     __radd__ = __add__
 
     def __isub__(self, other):
         if is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.isub)
-        else:
-            return self._add_sub(other, operator.sub)
+
+        return self._add_sub(other, operator.sub)
 
     def __sub__(self, other):
         return self._add_sub(other, operator.sub)
@@ -1194,8 +1194,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     def __rsub__(self, other):
         if isinstance(other, datetime.datetime):
             return other - self.to_timedelta()
-        else:
-            return -self._add_sub(other, operator.sub)
+
+        return -self._add_sub(other, operator.sub)
 
     @check_implemented
     @ireduce_dimensions
@@ -1228,10 +1228,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units, getattr(other, "units", ""))
             if len(offset_units_self) == 1:
-                if self._units[offset_units_self[0]] != 1 or magnitude_op not in [
+                if self._units[offset_units_self[0]] != 1 or magnitude_op not in (
                     operator.mul,
                     operator.imul,
-                ]:
+                ):
                     raise OffsetUnitCalculusError(
                         self._units, getattr(other, "units", "")
                     )
@@ -1252,14 +1252,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, other._units)
-        elif no_offset_units_self == 1 and len(self._units) == 1:
+        elif no_offset_units_self == len(self._units) == 1:
             self.ito_root_units()
 
         no_offset_units_other = len(other._get_non_multiplicative_units())
 
         if not other._ok_for_muldiv(no_offset_units_other):
             raise OffsetUnitCalculusError(self._units, other._units)
-        elif no_offset_units_other == 1 and len(other._units) == 1:
+        elif no_offset_units_other == len(other._units) == 1:
             other.ito_root_units()
 
         self._magnitude = magnitude_op(self._magnitude, other._magnitude)
@@ -1297,10 +1297,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
             if not self._ok_for_muldiv(no_offset_units_self):
                 raise OffsetUnitCalculusError(self._units, getattr(other, "units", ""))
             if len(offset_units_self) == 1:
-                if self._units[offset_units_self[0]] != 1 or magnitude_op not in [
+                if self._units[offset_units_self[0]] != 1 or magnitude_op not in (
                     operator.mul,
                     operator.imul,
-                ]:
+                ):
                     raise OffsetUnitCalculusError(
                         self._units, getattr(other, "units", "")
                     )
@@ -1325,14 +1325,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
 
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, other._units)
-        elif no_offset_units_self == 1 and len(self._units) == 1:
+        elif no_offset_units_self == len(self._units) == 1:
             new_self = self.to_root_units()
 
         no_offset_units_other = len(other._get_non_multiplicative_units())
 
         if not other._ok_for_muldiv(no_offset_units_other):
             raise OffsetUnitCalculusError(self._units, other._units)
-        elif no_offset_units_other == 1 and len(other._units) == 1:
+        elif no_offset_units_other == len(other._units) == 1:
             other = other.to_root_units()
 
         magnitude = magnitude_op(new_self._magnitude, other._magnitude)
@@ -1343,8 +1343,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     def __imul__(self, other):
         if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.imul)
-        else:
-            return self._mul_div(other, operator.mul)
+
+        return self._mul_div(other, operator.mul)
 
     def __mul__(self, other):
         return self._mul_div(other, operator.mul)
@@ -1367,8 +1367,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
     def __itruediv__(self, other):
         if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.itruediv)
-        else:
-            return self._mul_div(other, operator.truediv)
+
+        return self._mul_div(other, operator.truediv)
 
     def __truediv__(self, other):
         if isinstance(self.m, int) or isinstance(getattr(other, "m", None), int):
@@ -1388,7 +1388,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[_MagnitudeType]
         no_offset_units_self = len(self._get_non_multiplicative_units())
         if not self._ok_for_muldiv(no_offset_units_self):
             raise OffsetUnitCalculusError(self._units, "")
-        elif no_offset_units_self == 1 and len(self._units) == 1:
+        elif no_offset_units_self == len(self._units) == 1:
             self = self.to_root_units()
 
         return self.__class__(other_magnitude / self._magnitude, 1 / self._units)

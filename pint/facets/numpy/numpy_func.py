@@ -311,7 +311,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             return result_magnitude
         elif output_unit == "match_input":
             result_unit = first_input_units
-        elif output_unit in [
+        elif output_unit in (
             "sum",
             "mul",
             "delta",
@@ -324,7 +324,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             "cbrt",
             "reciprocal",
             "size",
-        ]:
+        ):
             result_unit = get_op_output_unit(
                 output_unit, first_input_units, tuple(chain(args, kwargs.values()))
             )
@@ -499,8 +499,8 @@ def _frexp(x, *args, **kwargs):
 def _power(x1, x2):
     if _is_quantity(x1):
         return x1**x2
-    else:
-        return x2.__rpow__(x1)
+
+    return x2.__rpow__(x1)
 
 
 @implements("add", "ufunc")
@@ -535,8 +535,8 @@ def _full_like(a, fill_value, **kwargs):
             np.ones_like(a, **kwargs) * fill_value.m,
             fill_value.units,
         )
-    else:
-        return np.ones_like(a, **kwargs) * fill_value
+
+    return np.ones_like(a, **kwargs) * fill_value
 
 
 @implements("interp", "function")
@@ -671,8 +671,8 @@ def _any(a, *args, **kwargs):
     # Only valid when multiplicative unit/no offset
     if a._is_multiplicative:
         return np.any(a._magnitude, *args, **kwargs)
-    else:
-        raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+
+    raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
 
 @implements("all", "function")
@@ -725,7 +725,7 @@ def implement_prod_func(name):
         return registry.Quantity(result, units)
 
 
-for name in ["prod", "nanprod"]:
+for name in ("prod", "nanprod"):
     implement_prod_func(name)
 
 
@@ -780,7 +780,7 @@ def implement_mul_func(func):
         return a.units._REGISTRY.Quantity(mag, units)
 
 
-for func_str in ["cross", "dot"]:
+for func_str in ("cross", "dot"):
     implement_mul_func(func_str)
 
 
@@ -830,11 +830,11 @@ def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output
         # Conditionally wrap output
         if wrap_output:
             return output_wrap(ret)
-        else:
-            return ret
+
+        return ret
 
 
-for func_str, unit_arguments, wrap_output in [
+for func_str, unit_arguments, wrap_output in (
     ("expand_dims", "a", True),
     ("squeeze", "a", True),
     ("rollaxis", "a", True),
@@ -884,7 +884,7 @@ for func_str, unit_arguments, wrap_output in [
     ("reshape", "a", True),
     ("allclose", ["a", "b", "atol"], False),
     ("intersect1d", ["ar1", "ar2"], True),
-]:
+):
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
 
@@ -914,7 +914,7 @@ def implement_atleast_nd(func_str):
             return output_unit._REGISTRY.Quantity(arrays_magnitude, output_unit)
 
 
-for func_str in ["atleast_1d", "atleast_2d", "atleast_3d"]:
+for func_str in ("atleast_1d", "atleast_2d", "atleast_3d"):
     implement_atleast_nd(func_str)
 
 
@@ -935,24 +935,24 @@ def implement_single_dimensionless_argument_func(func_str):
         return a._REGISTRY.Quantity(func(a_stripped, *args, **kwargs))
 
 
-for func_str in ["cumprod", "cumproduct", "nancumprod"]:
+for func_str in ("cumprod", "cumproduct", "nancumprod"):
     implement_single_dimensionless_argument_func(func_str)
 
 # Handle single-argument consistent unit functions
-for func_str in [
+for func_str in (
     "block",
     "hstack",
     "vstack",
     "dstack",
     "column_stack",
     "broadcast_arrays",
-]:
+):
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
     )
 
 # Handle functions that ignore units on input and output
-for func_str in [
+for func_str in (
     "size",
     "isreal",
     "iscomplex",
@@ -969,19 +969,19 @@ for func_str in [
     "count_nonzero",
     "nonzero",
     "result_type",
-]:
+):
     implement_func("function", func_str, input_units=None, output_unit=None)
 
 # Handle functions with output unit defined by operation
-for func_str in ["std", "nanstd", "sum", "nansum", "cumsum", "nancumsum"]:
+for func_str in ("std", "nanstd", "sum", "nansum", "cumsum", "nancumsum"):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ["diff", "ediff1d"]:
+for func_str in ("diff", "ediff1d"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
-for func_str in ["gradient"]:
+for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ["linalg.solve"]:
+for func_str in ("linalg.solve",):
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
-for func_str in ["var", "nanvar"]:
+for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
 
 

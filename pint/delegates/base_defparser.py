@@ -84,14 +84,11 @@ def build_disk_cache_class(non_int_type: type):
     class ParsedProjecHeader(fc.NameByHashIter, PintHeader):
         @classmethod
         def from_parsed_project(cls, pp: fp.ParsedProject, reader_id):
-            tmp = []
-            for stmt in pp.iter_statements():
-                if isinstance(stmt, fp.BOS):
-                    tmp.append(
-                        stmt.content_hash.algorithm_name
-                        + ":"
-                        + stmt.content_hash.hexdigest
-                    )
+            tmp = (
+                f"{stmt.content_hash.algorithm_name}:{stmt.content_hash.hexdigest}"
+                for stmt in pp.iter_statements()
+                if isinstance(stmt, fp.BOS)
+            )
 
             return cls(tuple(tmp), reader_id)
 

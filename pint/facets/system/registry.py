@@ -56,7 +56,7 @@ class SystemRegistry(GroupRegistry):
         self._systems: dict[str, System] = {}
 
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
-        self._base_units_cache = dict()
+        self._base_units_cache = {}
 
         self._default_system = system
 

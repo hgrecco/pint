@@ -165,8 +165,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             return self._REGISTRY.Quantity(other, 1 / self._units)
         elif isinstance(other, UnitsContainer):
             return self.__class__(other / self._units)
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
@@ -207,8 +207,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             return self_q.compare(other, op)
         elif isinstance(other, (PlainUnit, UnitsContainer, dict)):
             return self_q.compare(self._REGISTRY.Quantity(1, other), op)
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     __lt__ = lambda self, other: self.compare(other, op=operator.lt)
     __le__ = lambda self, other: self.compare(other, op=operator.le)

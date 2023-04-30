@@ -119,9 +119,9 @@ class EvalTreeNode:
             if op_text not in un_op:
                 raise DefinitionSyntaxError('missing unary operator "%s"' % op_text)
             return un_op[op_text](self.left.evaluate(define_op, bin_op, un_op))
-        else:
-            # single value
-            return define_op(self.left)
+
+        # single value
+        return define_op(self.left)
 
 
 from collections.abc import Iterable
@@ -204,7 +204,7 @@ def build_eval_tree(
                     #     (2 * 3 / 4) --> ((2 * 3) / 4)
                     if op_priority[token_text] <= op_priority.get(
                         prev_op, -1
-                    ) and token_text not in ["**", "^"]:
+                    ) and token_text not in ("**", "^"):
                         # previous operator is higher priority, so end previous binary op
                         return result, index - 1
                     # get right side of binary op
@@ -220,7 +220,7 @@ def build_eval_tree(
                         tokens, op_priority, index + 1, depth + 1, "unary"
                     )
                     result = EvalTreeNode(left=right, operator=current_token)
-        elif token_type == tokenlib.NUMBER or token_type == tokenlib.NAME:
+        elif token_type in (tokenlib.NUMBER, tokenlib.NAME):
             if result:
                 # tokens with an implicit operation i.e. "1 kg"
                 if op_priority[""] <= op_priority.get(prev_op, -1):

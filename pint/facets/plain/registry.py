@@ -198,7 +198,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         mpl_formatter: str = "{:P}",
     ):
         #: Map a definition class to a adder methods.
-        self._adders = dict()
+        self._adders = {}
         self._register_definition_adders()
         self._init_dynamic_classes()
 
@@ -1177,10 +1177,10 @@ class PlainRegistry(metaclass=RegistryMeta):
             match = match.groupdict()
 
             # Parse units
-            units = []
-            for unit, value in match.items():
-                # Construct measure by multiplying value by unit
-                units.append(float(value) * self.parse_expression(unit, case_sensitive))
+            units = [
+                float(value) * self.parse_expression(unit, case_sensitive)
+                for unit, value in match.items()
+            ]
 
             # Add to results
             results.append(units)

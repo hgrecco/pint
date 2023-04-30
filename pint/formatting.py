@@ -527,8 +527,8 @@ def split_format(spec, default, separate_format_defaults=True):
         elif not spec:
             mspec, uspec = default_mspec, default_uspec
     else:
-        mspec = mspec if mspec else default_mspec
-        uspec = uspec if uspec else default_uspec
+        mspec = mspec or default_mspec
+        uspec = uspec or default_uspec
 
     return mspec, uspec
 

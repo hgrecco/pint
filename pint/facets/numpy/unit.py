@@ -38,5 +38,5 @@ class NumpyUnit:
                 ),
                 **kwargs,
             )
-        else:
-            return NotImplemented
+
+        return NotImplemented

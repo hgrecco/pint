@@ -154,7 +154,7 @@ class FormattingQuantity:
             obj = self.to_compact()
         else:
             obj = self
-        kwspec = dict(kwspec)
+        kwspec = kwspec.copy()
         if "length" in kwspec:
             kwspec["babel_length"] = kwspec.pop("length")
 

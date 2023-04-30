@@ -665,8 +665,8 @@ class ParserHelper(UnitsContainer):
             return self == ParserHelper.from_string(other, self._non_int_type)
         elif isinstance(other, Number):
             return self.scale == other and not len(self._d)
-        else:
-            return self.scale == 1 and super().__eq__(other)
+
+        return self.scale == 1 and super().__eq__(other)
 
     def operate(self, items, op=operator.iadd, cleanup=True):
         d = udict(self._d)
@@ -849,14 +849,12 @@ class PrettyIPython:
     def _repr_html_(self):
         if "~" in self.default_format:
             return f"{self:~H}"
-        else:
-            return f"{self:H}"
+        return f"{self:H}"
 
     def _repr_latex_(self):
         if "~" in self.default_format:
             return f"${self:~L}$"
-        else:
-            return f"${self:L}$"
+        return f"${self:L}$"
 
     def _repr_pretty_(self, p, cycle):
         if "~" in self.default_format:
@@ -1014,7 +1012,7 @@ def sized(y) -> bool:
 
 @functools.cache
 def _build_type(class_name: str, bases):
-    return type(class_name, bases, dict())
+    return type(class_name, bases, {})
 
 
 def build_dependent_class(registry_class, class_name: str, attribute_name: str) -> type:
@@ -1043,4 +1041,4 @@ def create_class_with_registry(registry, base_class) -> type:
     filling _REGISTRY class attribute with an actual instanced registry.
     """
 
-    return type(base_class.__name__, tuple((base_class,)), dict(_REGISTRY=registry))
+    return type(base_class.__name__, (base_class,), dict(_REGISTRY=registry))

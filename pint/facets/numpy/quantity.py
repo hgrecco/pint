@@ -99,8 +99,8 @@ class NumpyQuantity:
 
         if output_unit is not None:
             return self.__class__(value, output_unit)
-        else:
-            return value
+
+        return value
 
     def __array__(self, t=None) -> np.ndarray:
         warnings.warn(

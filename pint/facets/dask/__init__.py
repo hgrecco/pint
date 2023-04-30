@@ -36,8 +36,8 @@ class DaskQuantity:
     def __dask_graph__(self):
         if isinstance(self._magnitude, dask_array.Array):
             return self._magnitude.__dask_graph__()
-        else:
-            return None
+
+        return None
 
     def __dask_keys__(self):
         return self._magnitude.__dask_keys__()
