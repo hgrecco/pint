@@ -8,7 +8,7 @@ from . import util
 units = ("meter", "kilometer", "second", "minute", "angstrom")
 all_values = ("int", "float", "complex")
 all_values_q = tuple(
-    "{}_{}".format(a, b) for a, b in it.product(all_values, ("meter", "kilometer"))
+    f"{a}_{b}" for a, b in it.product(all_values, ("meter", "kilometer"))
 )
 
 op1 = (operator.neg, operator.truth)

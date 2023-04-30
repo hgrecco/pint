@@ -133,7 +133,7 @@ class Measurement(PlainQuantity):
             # scientific notation ('e' or 'E' and sometimes 'g' or 'G').
             mstr = mstr.replace("(", "").replace(")", " ")
             ustr = siunitx_format_unit(self.units._units, self._REGISTRY)
-            return r"\SI{}{{{}}}{{{}}}".format(opts, mstr, ustr)
+            return rf"\SI{opts}{{{mstr}}}{{{ustr}}}"
 
         # standard cases
         if "L" in spec:

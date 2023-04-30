@@ -464,7 +464,7 @@ class PlainRegistry(metaclass=RegistryMeta):
             if self._on_redefinition == "raise":
                 raise RedefinitionError(key, type(value))
             elif self._on_redefinition == "warn":
-                logger.warning("Redefining '{}' ({})".format(key, type(value)))
+                logger.warning(f"Redefining '{key}' ({type(value)})")
 
         target_dict[key] = value
         if casei_target_dict is not None:

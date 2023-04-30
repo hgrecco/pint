@@ -36,10 +36,10 @@ def _get_comparable_magnitudes(first, second, msg):
 
 def assert_equal(first, second, msg=None):
     if msg is None:
-        msg = "Comparing {!r} and {!r}. ".format(first, second)
+        msg = f"Comparing {first!r} and {second!r}. "
 
     m1, m2 = _get_comparable_magnitudes(first, second, msg)
-    msg += " (Converted to {!r} and {!r}): Magnitudes are not equal".format(m1, m2)
+    msg += f" (Converted to {m1!r} and {m2!r}): Magnitudes are not equal"
 
     if isinstance(m1, ndarray) or isinstance(m2, ndarray):
         np.testing.assert_array_equal(m1, m2, err_msg=msg)
@@ -60,15 +60,15 @@ def assert_equal(first, second, msg=None):
 def assert_allclose(first, second, rtol=1e-07, atol=0, msg=None):
     if msg is None:
         try:
-            msg = "Comparing {!r} and {!r}. ".format(first, second)
+            msg = f"Comparing {first!r} and {second!r}. "
         except TypeError:
             try:
-                msg = "Comparing {} and {}. ".format(first, second)
+                msg = f"Comparing {first} and {second}. "
             except Exception:
                 msg = "Comparing"
 
     m1, m2 = _get_comparable_magnitudes(first, second, msg)
-    msg += " (Converted to {!r} and {!r})".format(m1, m2)
+    msg += f" (Converted to {m1!r} and {m2!r})"
 
     if isinstance(m1, ndarray) or isinstance(m2, ndarray):
         np.testing.assert_allclose(m1, m2, rtol=rtol, atol=atol, err_msg=msg)

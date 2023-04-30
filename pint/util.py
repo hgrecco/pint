@@ -966,7 +966,7 @@ def getattr_maybe_raise(self, item):
         or len(item.lstrip("_")) == 0
         or (item.startswith("_") and not item.lstrip("_")[0].isdigit())
     ):
-        raise AttributeError("{!r} object has no attribute {!r}".format(self, item))
+        raise AttributeError(f"{self!r} object has no attribute {item!r}")
 
 
 def iterable(y) -> bool:
