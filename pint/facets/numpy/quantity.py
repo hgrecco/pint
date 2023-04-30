@@ -13,6 +13,8 @@ import math
 import warnings
 from typing import Any
 
+from ..plain import PlainQuantity
+
 from ..._typing import Shape, _MagnitudeType
 from ...compat import _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
@@ -40,7 +42,7 @@ def method_wraps(numpy_func):
     return wrapper
 
 
-class NumpyQuantity:
+class NumpyQuantity(PlainQuantity):
     """ """
 
     # NumPy function/ufunc support

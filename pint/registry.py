@@ -27,6 +27,35 @@ from .facets import (
 from .util import logger, pi_theorem
 
 
+# To build the Quantity and Unit classes
+# we follow the UnitRegistry bases
+# but
+
+
+class Quantity(
+    # SystemRegistry.Quantity,
+    # ContextRegistry.Quantity,
+    DaskRegistry.Quantity,
+    NumpyRegistry.Quantity,
+    MeasurementRegistry.Quantity,
+    FormattingRegistry.Quantity,
+    NonMultiplicativeRegistry.Quantity,
+):
+    pass
+
+
+class Unit(
+    # SystemRegistry.Unit,
+    # ContextRegistry.Unit,
+    # DaskRegistry.Unit,
+    NumpyRegistry.Unit,
+    # MeasurementRegistry.Unit,
+    FormattingRegistry.Unit,
+    NonMultiplicativeRegistry.Unit,
+):
+    pass
+
+
 class UnitRegistry(
     SystemRegistry,
     ContextRegistry,
@@ -71,6 +100,9 @@ class UnitRegistry(
         Specify the folder in which cache files are saved and loaded from.
         If None, the cache is disabled. (default)
     """
+
+    Quantity = Quantity
+    Unit = Unit
 
     def __init__(
         self,

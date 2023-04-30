@@ -13,5 +13,5 @@ from .objects import FormattingQuantity, FormattingUnit
 
 
 class FormattingRegistry(PlainRegistry):
-    _quantity_class = FormattingQuantity
-    _unit_class = FormattingUnit
+    Quantity = FormattingQuantity
+    Unit = FormattingUnit

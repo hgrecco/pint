@@ -10,21 +10,15 @@
 from __future__ import annotations
 
 from ...compat import ufloat
-from ...util import build_dependent_class, create_class_with_registry
+from ...util import create_class_with_registry
 from ..plain import PlainRegistry
-from .objects import Measurement, MeasurementQuantity
+from .objects import MeasurementQuantity
+from . import objects
 
 
 class MeasurementRegistry(PlainRegistry):
-    _quantity_class = MeasurementQuantity
-    _measurement_class = Measurement
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-
-        cls.Measurement = build_dependent_class(
-            cls, "Measurement", "_measurement_class"
-        )
+    Quantity = MeasurementQuantity
+    Measurement = objects.Measurement
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""

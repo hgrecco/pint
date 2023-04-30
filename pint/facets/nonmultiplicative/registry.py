@@ -35,7 +35,7 @@ class NonMultiplicativeRegistry(PlainRegistry):
 
     """
 
-    _quantity_class = NonMultiplicativeQuantity
+    Quantity = NonMultiplicativeQuantity
 
     def __init__(
         self,

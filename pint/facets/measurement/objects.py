@@ -18,7 +18,7 @@ from ..plain import PlainQuantity
 MISSING = object()
 
 
-class MeasurementQuantity:
+class MeasurementQuantity(PlainQuantity):
     # Measurement support
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):

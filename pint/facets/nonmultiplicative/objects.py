@@ -8,8 +8,10 @@
 
 from __future__ import annotations
 
+from ..plain import PlainQuantity
 
-class NonMultiplicativeQuantity:
+
+class NonMultiplicativeQuantity(PlainQuantity):
     @property
     def _is_multiplicative(self) -> bool:
         """Check if the PlainQuantity object has only multiplicative units."""

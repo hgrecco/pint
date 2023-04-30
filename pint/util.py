@@ -10,8 +10,6 @@
 
 from __future__ import annotations
 
-import functools
-import inspect
 import logging
 import math
 import operator
@@ -1008,32 +1006,6 @@ def sized(y) -> bool:
     except TypeError:
         return False
     return True
-
-
-@functools.cache
-def _build_type(class_name: str, bases):
-    return type(class_name, bases, {})
-
-
-def build_dependent_class(registry_class, class_name: str, attribute_name: str) -> type:
-    """Creates a class specifically for the given registry that
-    subclass all the classes named by the registry bases in a
-    specific attribute
-
-    1. List the 'attribute_name' attribute for each of the bases of the registry class.
-    2. Use this list as bases for the new class
-    3. Add the provided registry as the class registry.
-
-    """
-    bases = (
-        getattr(base, attribute_name)
-        for base in inspect.getmro(registry_class)
-        if attribute_name in base.__dict__
-    )
-    bases = tuple(dict.fromkeys(bases, None).keys())
-    if len(bases) == 1 and bases[0].__name__ == class_name:
-        return bases[0]
-    return _build_type(class_name, bases)
 
 
 def create_class_with_registry(registry, base_class) -> type:

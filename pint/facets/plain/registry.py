@@ -43,7 +43,6 @@ from ...util import UnitsContainer
 from ...util import UnitsContainer as UnitsContainerT
 from ...util import (
     _is_dim,
-    build_dependent_class,
     create_class_with_registry,
     getattr_maybe_raise,
     logger,
@@ -177,8 +176,8 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     _diskcache = None
 
-    _quantity_class = PlainQuantity
-    _unit_class = PlainUnit
+    Quantity = PlainQuantity
+    Unit = PlainUnit
 
     _def_parser = None
 
@@ -277,13 +276,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         self._cache = RegistryCache()
 
         self._initialized = False
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-        cls.Unit: Unit = build_dependent_class(cls, "Unit", "_unit_class")
-        cls.Quantity: Quantity = build_dependent_class(
-            cls, "Quantity", "_quantity_class"
-        )
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""

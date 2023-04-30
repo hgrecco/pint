@@ -23,8 +23,10 @@ from ...formatting import (
 )
 from ...util import UnitsContainer, iterable
 
+from ..plain import PlainQuantity, PlainUnit
 
-class FormattingQuantity:
+
+class FormattingQuantity(PlainQuantity):
     _exp_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
     def __format__(self, spec: str) -> str:
@@ -176,7 +178,7 @@ class FormattingQuantity:
         return format(self)
 
 
-class FormattingUnit:
+class FormattingUnit(PlainUnit):
     def __str__(self):
         return format(self)
 
