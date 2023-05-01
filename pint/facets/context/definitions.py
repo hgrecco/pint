@@ -12,7 +12,8 @@ import itertools
 import numbers
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Iterable
 
 from ... import errors
 from ..plain import UnitDefinition

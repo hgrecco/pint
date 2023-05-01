@@ -13,7 +13,8 @@ from __future__ import annotations
 import functools
 import re
 import warnings
-from typing import Callable, Iterable, Any
+from typing import Callable, Any
+from collections.abc import Iterable
 from numbers import Number
 
 from .babel_names import _babel_lengths, _babel_units

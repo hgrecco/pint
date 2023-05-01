@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import weakref
 from collections import ChainMap, defaultdict
-from typing import Any, Iterable
+from typing import Any
+from collections.abc import Iterable
 
 from ...facets.plain import UnitDefinition
 from ...util import UnitsContainer, to_units_container

@@ -17,7 +17,8 @@ from importlib import import_module
 from io import BytesIO
 from numbers import Number
 from collections.abc import Mapping
-from typing import Any, NoReturn, Callable, Generator, Iterable
+from typing import Any, NoReturn, Callable
+from collections.abc import Generator, Iterable
 
 
 def missing_dependency(

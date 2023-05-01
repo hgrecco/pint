@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import numbers
 
-from typing import Any, Iterable
+from typing import Any
+from collections.abc import Iterable
 
 from ..._typing import Self
 

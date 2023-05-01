@@ -27,10 +27,9 @@ from typing import (
     TypeAlias,
     Callable,
     TypeVar,
-    Hashable,
-    Generator,
     Any,
 )
+from collections.abc import Hashable, Generator
 
 from .compat import NUMERIC_TYPES, tokenizer
 from .errors import DefinitionSyntaxError

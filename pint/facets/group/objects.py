@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import Generator, Iterable
+from collections.abc import Generator, Iterable
 from ...util import SharedRegistryObject, getattr_maybe_raise
 from .definitions import GroupDefinition
 
