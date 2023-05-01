@@ -226,13 +226,3 @@ jobs:
   #     run: |
   #       pip install coveralls "requests<2.29"
   #       coveralls --finish
-
-  # Dummy task to summarize all. See https://github.com/bors-ng/bors-ng/issues/1300
-  # ci-success:
-  #   name: ci
-  #   if: ${{ success() }}
-  #   needs: test-linux
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: CI succeeded
-  #       run: exit 0
