@@ -36,18 +36,21 @@ MSG_INVALID_SYSTEM_NAME = (
 )
 
 
-def is_dim(name):
+def is_dim(name: str) -> bool:
+    """Return True if the name is flanked by square brackets `[` and `]`."""
     return name[0] == "[" and name[-1] == "]"
 
 
-def is_valid_prefix_name(name):
+def is_valid_prefix_name(name: str) -> bool:
+    """Return True if the name is a valid python identifier or empty."""
     return str.isidentifier(name) or name == ""
 
 
 is_valid_unit_name = is_valid_system_name = is_valid_context_name = str.isidentifier
 
 
-def _no_space(name):
+def _no_space(name: str) -> bool:
+    """Return False if the name contains a space in any position."""
     return name.strip() == name and " " not in name
 
 
@@ -58,7 +61,14 @@ is_valid_unit_alias = (
 ) = is_valid_unit_symbol = is_valid_prefix_symbol = _no_space
 
 
-def is_valid_dimension_name(name):
+def is_valid_dimension_name(name: str) -> bool:
+    """Return True if the name is consistent with a dimension name.
+
+    - flanked by square brackets.
+    - empty dimension name or identifier.
+    """
+
+    # TODO: shall we check also fro spaces?
     return name == "[]" or (
         len(name) > 1 and is_dim(name) and str.isidentifier(name[1:-1])
     )
@@ -67,8 +77,8 @@ def is_valid_dimension_name(name):
 class WithDefErr:
     """Mixing class to make some classes more readable."""
 
-    def def_err(self, msg):
-        return DefinitionError(self.name, self.__class__.__name__, msg)
+    def def_err(self, msg: str):
+        return DefinitionError(self.name, self.__class__, msg)
 
 
 @dataclass(frozen=False)
@@ -81,7 +91,7 @@ class DefinitionError(ValueError, PintError):
     """Raised when a definition is not properly constructed."""
 
     name: str
-    definition_type: ty.Type
+    definition_type: type
     msg: str
 
     def __str__(self):
@@ -110,7 +120,7 @@ class RedefinitionError(ValueError, PintError):
     """Raised when a unit or prefix is redefined."""
 
     name: str
-    definition_type: ty.Type
+    definition_type: type
 
     def __str__(self):
         msg = f"Cannot redefine '{self.name}' ({self.definition_type})"
@@ -124,7 +134,7 @@ class RedefinitionError(ValueError, PintError):
 class UndefinedUnitError(AttributeError, PintError):
     """Raised when the units are not defined in the unit registry."""
 
-    unit_names: ty.Union[str, ty.Tuple[str, ...]]
+    unit_names: str | tuple[str]
 
     def __str__(self):
         if isinstance(self.unit_names, str):

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import weakref
 from collections import ChainMap, defaultdict
+from typing import Any, Iterable
 
 from ...facets.plain import UnitDefinition
 from ...util import UnitsContainer, to_units_container
@@ -70,8 +71,8 @@ class Context:
     def __init__(
         self,
         name: str | None = None,
-        aliases: tuple[str, ...] = (),
-        defaults: dict | None = None,
+        aliases: tuple[str] = tuple(),
+        defaults: dict[str, Any] | None = None,
     ) -> None:
         self.name = name
         self.aliases = aliases
@@ -93,7 +94,7 @@ class Context:
         self.relation_to_context = weakref.WeakValueDictionary()
 
     @classmethod
-    def from_context(cls, context: Context, **defaults) -> Context:
+    def from_context(cls, context: Context, **defaults: Any) -> Context:
         """Creates a new context that shares the funcs dictionary with the
         original context. The default values are copied from the original
         context and updated with the new defaults.
@@ -122,7 +123,9 @@ class Context:
         return context
 
     @classmethod
-    def from_lines(cls, lines, to_base_func=None, non_int_type=float) -> Context:
+    def from_lines(
+        cls, lines: Iterable[str], to_base_func=None, non_int_type: type = float
+    ) -> Context:
         cd = ContextDefinition.from_lines(lines, non_int_type)
         return cls.from_definition(cd, to_base_func)
 
@@ -273,7 +276,7 @@ class ContextChain(ChainMap):
         """
         return self[(src, dst)].transform(src, dst, registry, value)
 
-    def hashable(self):
+    def hashable(self) -> tuple[Any]:
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
         mutable, and the Python interpreter does cache the output of ``__hash__``.

@@ -23,32 +23,32 @@ from dataclasses import dataclass
 
 from ..._vendor import flexparser as fp
 from ...facets.context import definitions
-from ..base_defparser import ParserConfig
+from ..base_defparser import ParserConfig, PintParsedStatement
 from . import block, common, plain
 
+# TODO check syntax
+T = ty.TypeVar("T", bound="ForwardRelation | BidirectionalRelation")
+
+
+def _from_string_and_context_sep(
+    cls: type[T], s: str, config: ParserConfig, separator: str
+) -> T | None:
+    if separator not in s:
+        return None
+    if ":" not in s:
+        return None
+
+    rel, eq = s.split(":")
+
+    parts = rel.split(separator)
+
+    src, dst = (config.to_dimension_container(s) for s in parts)
+
+    return cls(src, dst, eq.strip())
+
 
 @dataclass(frozen=True)
-class Relation(definitions.Relation):
-    @classmethod
-    def _from_string_and_context_sep(
-        cls, s: str, config: ParserConfig, separator: str
-    ) -> fp.FromString[Relation]:
-        if separator not in s:
-            return None
-        if ":" not in s:
-            return None
-
-        rel, eq = s.split(":")
-
-        parts = rel.split(separator)
-
-        src, dst = (config.to_dimension_container(s) for s in parts)
-
-        return cls(src, dst, eq.strip())
-
-
-@dataclass(frozen=True)
-class ForwardRelation(fp.ParsedStatement, definitions.ForwardRelation, Relation):
+class ForwardRelation(PintParsedStatement, definitions.ForwardRelation):
     """A relation connecting a dimension to another via a transformation function.
 
     <source dimension> -> <target dimension>: <transformation function>
@@ -58,13 +58,11 @@ class ForwardRelation(fp.ParsedStatement, definitions.ForwardRelation, Relation)
     def from_string_and_config(
         cls, s: str, config: ParserConfig
     ) -> fp.FromString[ForwardRelation]:
-        return super()._from_string_and_context_sep(s, config, "->")
+        return _from_string_and_context_sep(cls, s, config, "->")
 
 
 @dataclass(frozen=True)
-class BidirectionalRelation(
-    fp.ParsedStatement, definitions.BidirectionalRelation, Relation
-):
+class BidirectionalRelation(PintParsedStatement, definitions.BidirectionalRelation):
     """A bidirectional relation connecting a dimension to another
     via a simple transformation function.
 
@@ -76,11 +74,11 @@ class BidirectionalRelation(
     def from_string_and_config(
         cls, s: str, config: ParserConfig
     ) -> fp.FromString[BidirectionalRelation]:
-        return super()._from_string_and_context_sep(s, config, "<->")
+        return _from_string_and_context_sep(cls, s, config, "<->")
 
 
 @dataclass(frozen=True)
-class BeginContext(fp.ParsedStatement):
+class BeginContext(PintParsedStatement):
     """Being of a context directive.
 
     @context[(defaults)] <canonical name> [= <alias>] [= <alias>]
@@ -91,7 +89,7 @@ class BeginContext(fp.ParsedStatement):
     )
 
     name: str
-    aliases: tuple[str, ...]
+    aliases: tuple[str]
     defaults: dict[str, numbers.Number]
 
     @classmethod
@@ -130,7 +128,18 @@ class BeginContext(fp.ParsedStatement):
 
 
 @dataclass(frozen=True)
-class ContextDefinition(block.DirectiveBlock):
+class ContextDefinition(
+    block.DirectiveBlock[
+        definitions.ContextDefinition,
+        BeginContext,
+        ty.Union[
+            plain.CommentDefinition,
+            BidirectionalRelation,
+            ForwardRelation,
+            plain.UnitDefinition,
+        ],
+    ]
+):
     """Definition of a Context
 
         @context[(defaults)] <canonical name> [= <alias>] [= <alias>]
@@ -169,27 +178,34 @@ class ContextDefinition(block.DirectiveBlock):
         ]
     ]
 
-    def derive_definition(self):
+    def derive_definition(self) -> definitions.ContextDefinition:
         return definitions.ContextDefinition(
             self.name, self.aliases, self.defaults, self.relations, self.redefinitions
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
+        assert isinstance(self.opening, BeginContext)
         return self.opening.name
 
     @property
-    def aliases(self):
+    def aliases(self) -> tuple[str]:
+        assert isinstance(self.opening, BeginContext)
         return self.opening.aliases
 
     @property
-    def defaults(self):
+    def defaults(self) -> dict[str, numbers.Number]:
+        assert isinstance(self.opening, BeginContext)
         return self.opening.defaults
 
     @property
-    def relations(self):
-        return tuple(r for r in self.body if isinstance(r, Relation))
+    def relations(self) -> tuple[BidirectionalRelation | ForwardRelation]:
+        return tuple(
+            r
+            for r in self.body
+            if isinstance(r, (ForwardRelation, BidirectionalRelation))
+        )
 
     @property
-    def redefinitions(self):
+    def redefinitions(self) -> tuple[plain.UnitDefinition]:
         return tuple(r for r in self.body if isinstance(r, plain.UnitDefinition))

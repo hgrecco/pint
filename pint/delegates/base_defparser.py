@@ -14,7 +14,6 @@ import functools
 import itertools
 import numbers
 import pathlib
-import typing as ty
 from dataclasses import dataclass, field
 
 from pint import errors
@@ -27,10 +26,10 @@ from .._vendor import flexparser as fp
 
 @dataclass(frozen=True)
 class ParserConfig:
-    """Configuration used by the parser."""
+    """Configuration used by the parser in Pint."""
 
     #: Indicates the output type of non integer numbers.
-    non_int_type: ty.Type[numbers.Number] = float
+    non_int_type: type[numbers.Number] = float
 
     def to_scaled_units_container(self, s: str):
         return ParserHelper.from_string(s, self.non_int_type)
@@ -65,6 +64,11 @@ class ParserConfig:
         if len(val):
             raise NotNumeric(s)
         return val.scale
+
+
+@dataclass(frozen=True)
+class PintParsedStatement(fp.ParsedStatement[ParserConfig]):
+    """A parsed statement for pint, specialized in the actual config."""
 
 
 @functools.lru_cache

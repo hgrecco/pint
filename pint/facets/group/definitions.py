@@ -8,9 +8,10 @@
 
 from __future__ import annotations
 
-import typing as ty
+from typing import Iterable
 from dataclasses import dataclass
 
+from ..._typing import Self
 from ... import errors
 from .. import plain
 
@@ -22,12 +23,14 @@ class GroupDefinition(errors.WithDefErr):
     #: name of the group
     name: str
     #: unit groups that will be included within the group
-    using_group_names: ty.Tuple[str, ...]
+    using_group_names: tuple[str]
     #: definitions for the units existing within the group
-    definitions: ty.Tuple[plain.UnitDefinition, ...]
+    definitions: tuple[plain.UnitDefinition]
 
     @classmethod
-    def from_lines(cls, lines, non_int_type):
+    def from_lines(
+        cls: type[Self], lines: Iterable[str], non_int_type: type
+    ) -> Self | None:
         # TODO: this is to keep it backwards compatible
         from ...delegates import ParserConfig, txt_defparser
 
@@ -39,10 +42,10 @@ class GroupDefinition(errors.WithDefErr):
                 return definition
 
     @property
-    def unit_names(self) -> ty.Tuple[str, ...]:
+    def unit_names(self) -> tuple[str]:
         return tuple(el.name for el in self.definitions)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not errors.is_valid_group_name(self.name):
             raise self.def_err(errors.MSG_INVALID_GROUP_NAME)
 

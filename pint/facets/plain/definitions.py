@@ -13,8 +13,9 @@ import numbers
 import typing as ty
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Callable
+from typing import Callable, Any
 
+from ..._typing import Magnitude
 from ... import errors
 from ...converters import Converter
 from ...util import UnitsContainer
@@ -23,7 +24,7 @@ from ...util import UnitsContainer
 class NotNumeric(Exception):
     """Internal exception. Do not expose outside Pint"""
 
-    def __init__(self, value):
+    def __init__(self, value: Any):
         self.value = value
 
 
@@ -115,17 +116,25 @@ class UnitDefinition(errors.WithDefErr):
     #: canonical name of the unit
     name: str
     #: canonical symbol
-    defined_symbol: ty.Optional[str]
+    defined_symbol: str | None
     #: additional names for the same unit
-    aliases: ty.Tuple[str, ...]
+    aliases: tuple[str]
     #: A functiont that converts a value in these units into the reference units
-    converter: ty.Optional[ty.Union[Callable, Converter]]
+    converter: Callable[
+        [
+            Magnitude,
+        ],
+        Magnitude,
+    ] | Converter | None
     #: Reference units.
-    reference: ty.Optional[UnitsContainer]
+    reference: UnitsContainer | None
 
     def __post_init__(self):
         if not errors.is_valid_unit_name(self.name):
             raise self.def_err(errors.MSG_INVALID_UNIT_NAME)
+
+        # TODO: check why  reference: UnitsContainer | None
+        assert isinstance(self.reference, UnitsContainer)
 
         if not any(map(errors.is_dim, self.reference.keys())):
             invalid = tuple(
@@ -180,14 +189,20 @@ class UnitDefinition(errors.WithDefErr):
     @property
     def is_base(self) -> bool:
         """Indicates if it is a base unit."""
+
+        # TODO: why is this here
         return self._is_base
 
     @property
     def is_multiplicative(self) -> bool:
+        # TODO: Check how to avoid this check
+        assert isinstance(self.converter, Converter)
         return self.converter.is_multiplicative
 
     @property
     def is_logarithmic(self) -> bool:
+        # TODO: Check how to avoid this check
+        assert isinstance(self.converter, Converter)
         return self.converter.is_logarithmic
 
     @property
@@ -272,7 +287,7 @@ class ScaleConverter(Converter):
 
     scale: float
 
-    def to_reference(self, value, inplace=False):
+    def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         if inplace:
             value *= self.scale
         else:
@@ -280,7 +295,7 @@ class ScaleConverter(Converter):
 
         return value
 
-    def from_reference(self, value, inplace=False):
+    def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         if inplace:
             value /= self.scale
         else:

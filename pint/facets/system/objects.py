@@ -9,6 +9,12 @@
 
 from __future__ import annotations
 
+import numbers
+
+from typing import Any, Iterable
+
+from ..._typing import Self
+
 from ...babel_names import _babel_systems
 from ...compat import babel_parse
 from ...util import (
@@ -29,32 +35,28 @@ class System(SharedRegistryObject):
     The System belongs to one Registry.
 
     See SystemDefinition for the definition file syntax.
+
+    Parameters
+    ----------
+    name
+        Name of the group.
     """
 
-    def __init__(self, name):
-        """
-        :param name: Name of the group
-        :type name: str
-        """
-
+    def __init__(self, name: str):
         #: Name of the system
         #: :type: str
         self.name = name
 
         #: Maps root unit names to a dict indicating the new unit and its exponent.
-        #: :type: dict[str, dict[str, number]]]
-        self.base_units = {}
+        self.base_units: dict[str, dict[str, numbers.Number]] = {}
 
         #: Derived unit names.
-        #: :type: set(str)
-        self.derived_units = set()
+        self.derived_units: set[str] = set()
 
         #: Names of the _used_groups in used by this system.
-        #: :type: set(str)
-        self._used_groups = set()
+        self._used_groups: set[str] = set()
 
-        #: :type: frozenset | None
-        self._computed_members = None
+        self._computed_members: frozenset[str] | None = None
 
         # Add this system to the system dictionary
         self._REGISTRY._systems[self.name] = self
@@ -62,7 +64,7 @@ class System(SharedRegistryObject):
     def __dir__(self):
         return list(self.members)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
         getattr_maybe_raise(self, item)
         u = getattr(self._REGISTRY, self.name + "_" + item, None)
         if u is not None:
@@ -93,19 +95,19 @@ class System(SharedRegistryObject):
         """Invalidate computed members in this Group and all parent nodes."""
         self._computed_members = None
 
-    def add_groups(self, *group_names):
+    def add_groups(self, *group_names: str) -> None:
         """Add groups to group."""
         self._used_groups |= set(group_names)
 
         self.invalidate_members()
 
-    def remove_groups(self, *group_names):
+    def remove_groups(self, *group_names: str) -> None:
         """Remove groups from group."""
         self._used_groups -= set(group_names)
 
         self.invalidate_members()
 
-    def format_babel(self, locale):
+    def format_babel(self, locale: str) -> str:
         """translate the name of the system."""
         if locale and self.name in _babel_systems:
             name = _babel_systems[self.name]
@@ -114,8 +116,12 @@ class System(SharedRegistryObject):
         return self.name
 
     @classmethod
-    def from_lines(cls, lines, get_root_func, non_int_type=float):
-        system_definition = SystemDefinition.from_lines(lines, get_root_func)
+    def from_lines(
+        cls: type[Self], lines: Iterable[str], get_root_func, non_int_type: type = float
+    ) -> Self:
+        # TODO: we changed something here it used to be
+        # system_definition = SystemDefinition.from_lines(lines, get_root_func)
+        system_definition = SystemDefinition.from_lines(lines, non_int_type)
         return cls.from_definition(system_definition, get_root_func)
 
     @classmethod
@@ -174,12 +180,12 @@ class System(SharedRegistryObject):
 
 
 class Lister:
-    def __init__(self, d):
+    def __init__(self, d: dict[str, Any]):
         self.d = d
 
-    def __dir__(self):
+    def __dir__(self) -> list[str]:
         return list(self.d.keys())
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
         getattr_maybe_raise(self, item)
         return self.d[item]

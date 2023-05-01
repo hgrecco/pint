@@ -12,7 +12,7 @@ import itertools
 import numbers
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Iterable
 
 from ... import errors
 from ..plain import UnitDefinition
@@ -41,7 +41,7 @@ class Relation:
     # could be used.
 
     @property
-    def variables(self) -> set[str, ...]:
+    def variables(self) -> set[str]:
         """Find all variables names in the equation."""
         return set(self._varname_re.findall(self.equation))
 
@@ -55,7 +55,7 @@ class Relation:
         )
 
     @property
-    def bidirectional(self):
+    def bidirectional(self) -> bool:
         raise NotImplementedError
 
 
@@ -92,18 +92,18 @@ class ContextDefinition(errors.WithDefErr):
     #: name of the context
     name: str
     #: other na
-    aliases: tuple[str, ...]
+    aliases: tuple[str]
     defaults: dict[str, numbers.Number]
-    relations: tuple[Relation, ...]
-    redefinitions: tuple[UnitDefinition, ...]
+    relations: tuple[Relation]
+    redefinitions: tuple[UnitDefinition]
 
     @property
-    def variables(self) -> set[str, ...]:
+    def variables(self) -> set[str]:
         """Return all variable names in all transformations."""
         return set().union(*(r.variables for r in self.relations))
 
     @classmethod
-    def from_lines(cls, lines, non_int_type):
+    def from_lines(cls, lines: Iterable[str], non_int_type: type):
         # TODO: this is to keep it backwards compatible
         from ...delegates import ParserConfig, txt_defparser
 

@@ -13,6 +13,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from dataclasses import fields as dc_fields
 
+from typing import Any
+
+from ._typing import Self, Magnitude
+
 from .compat import HAS_NUMPY, exp, log  # noqa: F401
 
 
@@ -24,17 +28,17 @@ class Converter:
     _param_names_to_subclass = {}
 
     @property
-    def is_multiplicative(self):
+    def is_multiplicative(self) -> bool:
         return True
 
     @property
-    def is_logarithmic(self):
+    def is_logarithmic(self) -> bool:
         return False
 
-    def to_reference(self, value, inplace=False):
+    def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         return value
 
-    def from_reference(self, value, inplace=False):
+    def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         return value
 
     def __init_subclass__(cls, **kwargs):
@@ -43,7 +47,7 @@ class Converter:
         cls._subclasses.append(cls)
 
     @classmethod
-    def get_field_names(cls, new_cls):
+    def get_field_names(cls, new_cls) -> frozenset[str]:
         return frozenset(p.name for p in dc_fields(new_cls))
 
     @classmethod
@@ -51,7 +55,7 @@ class Converter:
         return None
 
     @classmethod
-    def from_arguments(cls, **kwargs):
+    def from_arguments(cls: type[Self], **kwargs: Any) -> Self:
         kwk = frozenset(kwargs.keys())
         try:
             new_cls = cls._param_names_to_subclass[kwk]

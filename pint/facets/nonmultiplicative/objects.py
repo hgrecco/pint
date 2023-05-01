@@ -40,7 +40,7 @@ class NonMultiplicativeQuantity(PlainQuantity):
             self._get_unit_definition(d).reference == offset_unit_dim for d in deltas
         )
 
-    def _ok_for_muldiv(self, no_offset_units=None) -> bool:
+    def _ok_for_muldiv(self, no_offset_units: int | None = None) -> bool:
         """Checks if PlainQuantity object can be multiplied or divided"""
 
         is_ok = True

@@ -13,7 +13,8 @@ from __future__ import annotations
 import functools
 import re
 import warnings
-from typing import Callable
+from typing import Callable, Iterable, Any
+from numbers import Number
 
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse
@@ -21,7 +22,7 @@ from .compat import babel_parse
 __JOIN_REG_EXP = re.compile(r"{\d*}")
 
 
-def _join(fmt, iterable):
+def _join(fmt: str, iterable: Iterable[Any]):
     """Join an iterable with the format specified in fmt.
 
     The format can be specified in two ways:
@@ -55,7 +56,7 @@ def _join(fmt, iterable):
 _PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 
 
-def _pretty_fmt_exponent(num):
+def _pretty_fmt_exponent(num: Number) -> str:
     """Format an number into a pretty printed exponent.
 
     Parameters
@@ -76,7 +77,7 @@ def _pretty_fmt_exponent(num):
 
 #: _FORMATS maps format specifications to the corresponding argument set to
 #: formatter().
-_FORMATS: dict[str, dict] = {
+_FORMATS: dict[str, dict[str, Any]] = {
     "P": {  # Pretty format.
         "as_ratio": True,
         "single_denominator": False,
@@ -125,7 +126,7 @@ _FORMATS: dict[str, dict] = {
 _FORMATTERS: dict[str, Callable] = {}
 
 
-def register_unit_format(name):
+def register_unit_format(name: str):
     """register a function as a new format for units
 
     The registered function must have a signature of:
@@ -268,18 +269,18 @@ def format_compact(unit, registry, **options):
 
 
 def formatter(
-    items,
-    as_ratio=True,
-    single_denominator=False,
-    product_fmt=" * ",
-    division_fmt=" / ",
-    power_fmt="{} ** {}",
-    parentheses_fmt="({0})",
+    items: list[tuple[str, Number]],
+    as_ratio: bool = True,
+    single_denominator: bool = False,
+    product_fmt: str = " * ",
+    division_fmt: str = " / ",
+    power_fmt: str = "{} ** {}",
+    parentheses_fmt: str = "({0})",
     exp_call=lambda x: f"{x:n}",
-    locale=None,
-    babel_length="long",
-    babel_plural_form="one",
-    sort=True,
+    locale: str | None = None,
+    babel_length: str = "long",
+    babel_plural_form: str = "one",
+    sort: bool = True,
 ):
     """Format a list of (name, exponent) pairs.
 

@@ -38,7 +38,7 @@ def q_base(local_registry):
 
 
 # Define identity function for use in tests
-def identity(ureg, x):
+def id_matrix(ureg, x):
     return x
 
 
@@ -63,17 +63,17 @@ def array(request):
 @pytest.mark.parametrize(
     "op, magnitude_op, unit_op",
     [
-        pytest.param(identity, identity, identity, id="identity"),
+        pytest.param(id_matrix, id_matrix, id_matrix, id="identity"),
         pytest.param(
             lambda ureg, x: x + 1 * ureg.m,
             lambda ureg, x: x + 1,
-            identity,
+            id_matrix,
             id="addition",
         ),
         pytest.param(
             lambda ureg, x: x - 20 * ureg.cm,
             lambda ureg, x: x - 0.2,
-            identity,
+            id_matrix,
             id="subtraction",
         ),
         pytest.param(
@@ -84,7 +84,7 @@ def array(request):
         ),
         pytest.param(
             lambda ureg, x: x / (1 * ureg.s),
-            identity,
+            id_matrix,
             lambda ureg, u: u / ureg.s,
             id="division",
         ),
@@ -94,17 +94,17 @@ def array(request):
             WR(lambda u: u**2),
             id="square",
         ),
-        pytest.param(WR(lambda x: x.T), WR(lambda x: x.T), identity, id="transpose"),
-        pytest.param(WR(np.mean), WR(np.mean), identity, id="mean ufunc"),
-        pytest.param(WR(np.sum), WR(np.sum), identity, id="sum ufunc"),
+        pytest.param(WR(lambda x: x.T), WR(lambda x: x.T), id_matrix, id="transpose"),
+        pytest.param(WR(np.mean), WR(np.mean), id_matrix, id="mean ufunc"),
+        pytest.param(WR(np.sum), WR(np.sum), id_matrix, id="sum ufunc"),
         pytest.param(WR(np.sqrt), WR(np.sqrt), WR(lambda u: u**0.5), id="sqrt ufunc"),
         pytest.param(
             WR(lambda x: np.reshape(x, (25,))),
             WR(lambda x: np.reshape(x, (25,))),
-            identity,
+            id_matrix,
             id="reshape function",
         ),
-        pytest.param(WR(np.amax), WR(np.amax), identity, id="amax function"),
+        pytest.param(WR(np.amax), WR(np.amax), id_matrix, id="amax function"),
     ],
 )
 def test_univariate_op_consistency(

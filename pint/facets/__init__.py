@@ -82,13 +82,13 @@ from .plain import PlainRegistry
 from .system import SystemRegistry
 
 __all__ = [
-    ContextRegistry,
-    DaskRegistry,
-    FormattingRegistry,
-    GroupRegistry,
-    MeasurementRegistry,
-    NonMultiplicativeRegistry,
-    NumpyRegistry,
-    PlainRegistry,
-    SystemRegistry,
+    "ContextRegistry",
+    "DaskRegistry",
+    "FormattingRegistry",
+    "GroupRegistry",
+    "MeasurementRegistry",
+    "NonMultiplicativeRegistry",
+    "NumpyRegistry",
+    "PlainRegistry",
+    "SystemRegistry",
 ]

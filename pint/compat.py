@@ -17,12 +17,19 @@ from importlib import import_module
 from io import BytesIO
 from numbers import Number
 from collections.abc import Mapping
+from typing import Any, NoReturn, Callable, Generator, Iterable
 
 
-def missing_dependency(package, display_name=None):
+def missing_dependency(
+    package: str, display_name: str | None = None
+) -> Callable[..., NoReturn]:
+    """Return a helper function that raises an exception when used.
+
+    It provides a way delay a missing dependency exception until it is used.
+    """
     display_name = display_name or package
 
-    def _inner(*args, **kwargs):
+    def _inner(*args: Any, **kwargs: Any) -> NoReturn:
         raise Exception(
             "This feature requires %s. Please install it by running:\n"
             "pip install %s" % (display_name, package)
@@ -31,7 +38,14 @@ def missing_dependency(package, display_name=None):
     return _inner
 
 
-def tokenizer(input_string):
+def tokenizer(input_string: str) -> Generator[tokenize.TokenInfo, None, None]:
+    """Tokenize an input string, encoded as UTF-8
+    and skipping the ENCODING token.
+
+    See Also
+    --------
+    tokenize.tokenize
+    """
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
         if tokinfo.type != tokenize.ENCODING:
             yield tokinfo
@@ -154,7 +168,8 @@ else:
     from math import log  # noqa: F401
 
 if not HAS_BABEL:
-    babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
+    babel_parse = missing_dependency("Babel")  # noqa: F811
+    babel_units = babel_parse
 
 if not HAS_MIP:
     mip_missing = missing_dependency("mip")
@@ -176,6 +191,9 @@ except ImportError:
     dask_array = None
 
 
+# TODO: merge with upcast_type_map
+
+#: List upcast type names
 upcast_type_names = (
     "pint_pandas.PintArray",
     "pandas.Series",
@@ -186,10 +204,12 @@ upcast_type_names = (
     "xarray.core.dataarray.DataArray",
 )
 
-upcast_type_map: Mapping[str : type | None] = {k: None for k in upcast_type_names}
+#: Map type name to the actual type (for upcast types).
+upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
 
 
 def fully_qualified_name(t: type) -> str:
+    """Return the fully qualified name of a type."""
     module = t.__module__
     name = t.__qualname__
 
@@ -200,6 +220,10 @@ def fully_qualified_name(t: type) -> str:
 
 
 def check_upcast_type(obj: type) -> bool:
+    """Check if the type object is an upcast type."""
+
+    # TODO: merge or unify name with is_upcast_type
+
     fqn = fully_qualified_name(obj)
     if fqn not in upcast_type_map:
         return False
@@ -215,22 +239,17 @@ def check_upcast_type(obj: type) -> bool:
 
 
 def is_upcast_type(other: type) -> bool:
+    """Check if the type object is an upcast type."""
+
+    # TODO: merge or unify name with check_upcast_type
+
     if other in upcast_type_map.values():
         return True
     return check_upcast_type(other)
 
 
-def is_duck_array_type(cls) -> bool:
-    """Check if the type object represents a (non-Quantity) duck array type.
-
-    Parameters
-    ----------
-    cls : class
-
-    Returns
-    -------
-    bool
-    """
+def is_duck_array_type(cls: type) -> bool:
+    """Check if the type object represents a (non-Quantity) duck array type."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
     return issubclass(cls, ndarray) or (
         not hasattr(cls, "_magnitude")
@@ -242,20 +261,21 @@ def is_duck_array_type(cls) -> bool:
     )
 
 
-def is_duck_array(obj):
+def is_duck_array(obj: type) -> bool:
+    """Check if an object represents a (non-Quantity) duck array type."""
     return is_duck_array_type(type(obj))
 
 
-def eq(lhs, rhs, check_all: bool):
+def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
     """Comparison of scalars and arrays.
 
     Parameters
     ----------
-    lhs : object
+    lhs
         left-hand side
-    rhs : object
+    rhs
         right-hand side
-    check_all : bool
+    check_all
         if True, reduce sequence to single bool;
         return True if all the elements are equal.
 
@@ -269,21 +289,21 @@ def eq(lhs, rhs, check_all: bool):
     return out
 
 
-def isnan(obj, check_all: bool):
-    """Test for NaN or NaT
+def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+    """Test for NaN or NaT.
 
     Parameters
     ----------
-    obj : object
+    obj
         scalar or vector
-    check_all : bool
+    check_all
         if True, reduce sequence to single bool;
         return True if any of the elements are NaN.
 
     Returns
     -------
     bool or array_like of bool.
-    Always return False for non-numeric types.
+        Always return False for non-numeric types.
     """
     if is_duck_array_type(type(obj)):
         if obj.dtype.kind in "if":
@@ -302,21 +322,21 @@ def isnan(obj, check_all: bool):
         return False
 
 
-def zero_or_nan(obj, check_all: bool):
-    """Test if obj is zero, NaN, or NaT
+def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+    """Test if obj is zero, NaN, or NaT.
 
     Parameters
     ----------
-    obj : object
+    obj
         scalar or vector
-    check_all : bool
+    check_all
         if True, reduce sequence to single bool;
         return True if all the elements are zero, NaN, or NaT.
 
     Returns
     -------
     bool or array_like of bool.
-    Always return False for non-numeric types.
+        Always return False for non-numeric types.
     """
     out = eq(obj, 0, False) + isnan(obj, False)
     if check_all and is_duck_array_type(type(out)):
