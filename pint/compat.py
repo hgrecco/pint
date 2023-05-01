@@ -14,7 +14,7 @@ import math
 from decimal import Decimal
 from importlib import import_module
 from numbers import Number
-from typing import Mapping, Option
+from typing import Mapping, Optional
 
 try:
     from uncertainties import UFloat, ufloat

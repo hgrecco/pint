@@ -881,6 +881,14 @@ class TestIssues(QuantityTestCase):
         m = module_registry.Measurement(1, 0.1, "meter")
         assert m.default_format == "~P"
 
+    def test_issue_1400(self, sess_registry):
+        q1 = 3 * sess_registry.W
+        q2 = 3 * sess_registry.W / sess_registry.cm
+        assert q1.format_babel("~", locale="es_Ar") == "3 W"
+        assert q1.format_babel("", locale="es_Ar") == "3 vatios"
+        assert q2.format_babel("~", locale="es_Ar") == "3.0 W / cm"
+        assert q2.format_babel("", locale="es_Ar") == "3.0 vatios por centímetros"
+
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):
         from numpy.testing import assert_almost_equal
