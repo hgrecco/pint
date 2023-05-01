@@ -48,8 +48,9 @@ class PintArray(Protocol):
         ...
 
 
-Magnitude = PintScalar | PintScalar
-
+# TODO: Change when Python 3.10 becomes minimal version.
+# Magnitude = PintScalar | PintArray
+Magnitude = Union[PintScalar, PintArray]
 
 UnitLike = Union[str, "UnitsContainer", "Unit"]
 
