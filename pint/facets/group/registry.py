@@ -8,17 +8,17 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, FrozenSet
+from typing import TYPE_CHECKING
 
 from ... import errors
 
 if TYPE_CHECKING:
     from ..._typing import Unit
 
-from ...util import build_dependent_class, create_class_with_registry
+from ...util import create_class_with_registry
 from ..plain import PlainRegistry, UnitDefinition
 from .definitions import GroupDefinition
-from .objects import Group
+from . import objects
 
 
 class GroupRegistry(PlainRegistry):
@@ -34,18 +34,14 @@ class GroupRegistry(PlainRegistry):
     # TODO: Change this to Group: Group to specify class
     # and use introspection to get system class as a way
     # to enjoy typing goodies
-    _group_class = Group
+    Group = objects.Group
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         #: Map group name to group.
         #: :type: dict[ str | Group]
-        self._groups: Dict[str, Group] = {}
+        self._groups: dict[str, objects.Group] = {}
         self._groups["root"] = self.Group("root")
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-        cls.Group = build_dependent_class(cls, "Group", "_group_class")
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -93,7 +89,7 @@ class GroupRegistry(PlainRegistry):
         except KeyError as e:
             raise errors.DefinitionSyntaxError(f"unknown dimension {e} in context")
 
-    def get_group(self, name: str, create_if_needed: bool = True) -> Group:
+    def get_group(self, name: str, create_if_needed: bool = True) -> objects.Group:
         """Return a Group.
 
         Parameters
@@ -117,7 +113,7 @@ class GroupRegistry(PlainRegistry):
 
         return self.Group(name)
 
-    def _get_compatible_units(self, input_units, group) -> FrozenSet["Unit"]:
+    def _get_compatible_units(self, input_units, group) -> frozenset[Unit]:
         ret = super()._get_compatible_units(input_units, group)
 
         if not group:

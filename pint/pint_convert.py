@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import re
 
 from pint import UnitRegistry
@@ -154,13 +155,13 @@ if args.unc:
         ),
     )
 
-    ureg._root_units_cache = dict()
+    ureg._root_units_cache = {}
     ureg._build_cache()
 
 
 def convert(u_from, u_to=None, unc=None, factor=None):
     q = ureg.Quantity(u_from)
-    fmt = ".{}g".format(args.prec)
+    fmt = f".{args.prec}g"
     if unc:
         q = q.plus_minus(unc)
     if u_to:
@@ -172,25 +173,23 @@ def convert(u_from, u_to=None, unc=None, factor=None):
         nq *= ureg.Quantity(factor).to_base_units()
     prec_unc = use_unc(nq.magnitude, fmt, args.prec_unc)
     if prec_unc > 0:
-        fmt = ".{}uS".format(prec_unc)
+        fmt = f".{prec_unc}uS"
     else:
-        try:
+        with contextlib.suppress(Exception):
             nq = nq.magnitude.n * nq.units
-        except Exception:
-            pass
+
     fmt = "{:" + fmt + "} {:~P}"
     print(("{:} = " + fmt).format(q, nq.magnitude, nq.units))
 
 
 def use_unc(num, fmt, prec_unc):
     unc = 0
-    try:
+    with contextlib.suppress(Exception):
         if isinstance(num, uncertainties.UFloat):
             full = ("{:" + fmt + "}").format(num)
             unc = re.search(r"\+/-[0.]*([\d.]*)", full).group(1)
             unc = len(unc.replace(".", ""))
-    except Exception:
-        pass
+
     return max(0, min(prec_unc, unc))
 
 

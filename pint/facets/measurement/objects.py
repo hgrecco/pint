@@ -18,12 +18,12 @@ from ..plain import PlainQuantity
 MISSING = object()
 
 
-class MeasurementQuantity:
+class MeasurementQuantity(PlainQuantity):
     # Measurement support
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):
             if relative:
-                raise ValueError("{} is not a valid relative error.".format(error))
+                raise ValueError(f"{error} is not a valid relative error.")
             error = error.to(self._units).magnitude
         else:
             if relative:
@@ -98,7 +98,7 @@ class Measurement(PlainQuantity):
         )
 
     def __str__(self):
-        return "{}".format(self)
+        return f"{self}"
 
     def __format__(self, spec):
         spec = spec or self.default_format
@@ -133,7 +133,7 @@ class Measurement(PlainQuantity):
             # scientific notation ('e' or 'E' and sometimes 'g' or 'G').
             mstr = mstr.replace("(", "").replace(")", " ")
             ustr = siunitx_format_unit(self.units._units, self._REGISTRY)
-            return r"\SI%s{%s}{%s}" % (opts, mstr, ustr)
+            return rf"\SI{opts}{{{mstr}}}{{{ustr}}}"
 
         # standard cases
         if "L" in spec:

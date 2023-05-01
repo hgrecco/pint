@@ -393,7 +393,7 @@ class TestQuantity(QuantityTestCase):
 
         temp = (Q_(" 1 lbf*m")).to_preferred(preferred_units)
         # would prefer this to be repeatable, but mip doesn't guarantee that currently
-        assert temp.units in [ureg.W * ureg.s, ureg.ft * ureg.lbf]
+        assert temp.units in (ureg.W * ureg.s, ureg.ft * ureg.lbf)
 
         temp = Q_("1 kg").to_preferred(preferred_units)
         assert temp.units == ureg.slug
@@ -1050,10 +1050,10 @@ class TestQuantityBasicMath(QuantityTestCase):
             zy = self.Q_(fun(y.magnitude), "meter")
             rx = fun(x)
             ry = fun(y)
-            assert rx == zx, "while testing {0}".format(fun)
-            assert ry == zy, "while testing {0}".format(fun)
-            assert rx is not zx, "while testing {0}".format(fun)
-            assert ry is not zy, "while testing {0}".format(fun)
+            assert rx == zx, f"while testing {fun}"
+            assert ry == zy, f"while testing {fun}"
+            assert rx is not zx, f"while testing {fun}"
+            assert ry is not zy, f"while testing {fun}"
 
     def test_quantity_float_complex(self):
         x = self.Q_(-4.2, None)
@@ -1661,7 +1661,7 @@ class TestOffsetUnitMath(QuantityTestCase):
         else:
             in1, in2 = in1, self.Q_(*in2)
         input_tuple = in1, in2  # update input_tuple for better tracebacks
-        expected_copy = expected[:]
+        expected_copy = expected.copy()
         for i, mode in enumerate([False, True]):
             self.ureg.autoconvert_offset_to_baseunit = mode
             if expected_copy[i] == "error":
@@ -1695,14 +1695,14 @@ class TestOffsetUnitMath(QuantityTestCase):
     def test_exponentiation(self, input_tuple, expected):
         self.ureg.default_as_delta = False
         in1, in2 = input_tuple
-        if type(in1) is tuple and type(in2) is tuple:
+        if type(in1) is type(in2) is tuple:
             in1, in2 = self.Q_(*in1), self.Q_(*in2)
         elif type(in1) is not tuple and type(in2) is tuple:
             in2 = self.Q_(*in2)
         else:
             in1 = self.Q_(*in1)
         input_tuple = in1, in2
-        expected_copy = expected[:]
+        expected_copy = expected.copy()
         for i, mode in enumerate([False, True]):
             self.ureg.autoconvert_offset_to_baseunit = mode
             if expected_copy[i] == "error":
@@ -1733,7 +1733,7 @@ class TestOffsetUnitMath(QuantityTestCase):
     def test_inplace_exponentiation(self, input_tuple, expected):
         self.ureg.default_as_delta = False
         in1, in2 = input_tuple
-        if type(in1) is tuple and type(in2) is tuple:
+        if type(in1) is type(in2) is tuple:
             (q1v, q1u), (q2v, q2u) = in1, in2
             in1 = self.Q_(*(np.array([q1v] * 2, dtype=float), q1u))
             in2 = self.Q_(q2v, q2u)
@@ -1744,7 +1744,7 @@ class TestOffsetUnitMath(QuantityTestCase):
 
         input_tuple = in1, in2
 
-        expected_copy = expected[:]
+        expected_copy = expected.copy()
         for i, mode in enumerate([False, True]):
             self.ureg.autoconvert_offset_to_baseunit = mode
             in1_cp = copy.copy(in1)

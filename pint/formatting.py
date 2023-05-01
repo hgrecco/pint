@@ -13,7 +13,9 @@ from __future__ import annotations
 import functools
 import re
 import warnings
-from typing import Callable, Dict
+from typing import Callable, Any
+from collections.abc import Iterable
+from numbers import Number
 
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse
@@ -21,7 +23,7 @@ from .compat import babel_parse
 __JOIN_REG_EXP = re.compile(r"{\d*}")
 
 
-def _join(fmt, iterable):
+def _join(fmt: str, iterable: Iterable[Any]):
     """Join an iterable with the format specified in fmt.
 
     The format can be specified in two ways:
@@ -55,7 +57,7 @@ def _join(fmt, iterable):
 _PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 
 
-def _pretty_fmt_exponent(num):
+def _pretty_fmt_exponent(num: Number) -> str:
     """Format an number into a pretty printed exponent.
 
     Parameters
@@ -76,7 +78,7 @@ def _pretty_fmt_exponent(num):
 
 #: _FORMATS maps format specifications to the corresponding argument set to
 #: formatter().
-_FORMATS: Dict[str, dict] = {
+_FORMATS: dict[str, dict[str, Any]] = {
     "P": {  # Pretty format.
         "as_ratio": True,
         "single_denominator": False,
@@ -122,10 +124,10 @@ _FORMATS: Dict[str, dict] = {
 }
 
 #: _FORMATTERS maps format names to callables doing the formatting
-_FORMATTERS: Dict[str, Callable] = {}
+_FORMATTERS: dict[str, Callable] = {}
 
 
-def register_unit_format(name):
+def register_unit_format(name: str):
     """register a function as a new format for units
 
     The registered function must have a signature of:
@@ -197,9 +199,7 @@ def latex_escape(string):
 
 @register_unit_format("L")
 def format_latex(unit, registry, **options):
-    preprocessed = {
-        r"\mathrm{{{}}}".format(latex_escape(u)): p for u, p in unit.items()
-    }
+    preprocessed = {rf"\mathrm{{{latex_escape(u)}}}": p for u, p in unit.items()}
     formatted = formatter(
         preprocessed.items(),
         as_ratio=True,
@@ -270,18 +270,18 @@ def format_compact(unit, registry, **options):
 
 
 def formatter(
-    items,
-    as_ratio=True,
-    single_denominator=False,
-    product_fmt=" * ",
-    division_fmt=" / ",
-    power_fmt="{} ** {}",
-    parentheses_fmt="({0})",
+    items: list[tuple[str, Number]],
+    as_ratio: bool = True,
+    single_denominator: bool = False,
+    product_fmt: str = " * ",
+    division_fmt: str = " / ",
+    power_fmt: str = "{} ** {}",
+    parentheses_fmt: str = "({0})",
     exp_call=lambda x: f"{x:n}",
-    locale=None,
-    babel_length="long",
-    babel_plural_form="one",
-    sort=True,
+    locale: str | None = None,
+    babel_length: str = "long",
+    babel_plural_form: str = "one",
+    sort: bool = True,
 ):
     """Format a list of (name, exponent) pairs.
 
@@ -442,10 +442,10 @@ def siunitx_format_unit(units, registry):
             elif power == 3:
                 return r"\cubed"
             else:
-                return r"\tothe{{{:d}}}".format(int(power))
+                return rf"\tothe{{{int(power):d}}}"
         else:
             # limit float powers to 3 decimal places
-            return r"\tothe{{{:.3f}}}".format(power).rstrip("0")
+            return rf"\tothe{{{power:.3f}}}".rstrip("0")
 
     lpos = []
     lneg = []
@@ -466,9 +466,9 @@ def siunitx_format_unit(units, registry):
         if power < 0:
             lpick.append(r"\per")
         if prefix is not None:
-            lpick.append(r"\{}".format(prefix))
-        lpick.append(r"\{}".format(unit))
-        lpick.append(r"{}".format(_tothe(abs(power))))
+            lpick.append(rf"\{prefix}")
+        lpick.append(rf"\{unit}")
+        lpick.append(rf"{_tothe(abs(power))}")
 
     return "".join(lpos) + "".join(lneg)
 
@@ -529,8 +529,8 @@ def split_format(spec, default, separate_format_defaults=True):
         elif not spec:
             mspec, uspec = default_mspec, default_uspec
     else:
-        mspec = mspec if mspec else default_mspec
-        uspec = uspec if uspec else default_uspec
+        mspec = mspec or default_mspec
+        uspec = uspec or default_uspec
 
     return mspec, uspec
 

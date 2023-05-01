@@ -13,6 +13,8 @@ import math
 import warnings
 from typing import Any
 
+from ..plain import PlainQuantity
+
 from ..._typing import Shape, _MagnitudeType
 from ...compat import _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
@@ -40,7 +42,7 @@ def method_wraps(numpy_func):
     return wrapper
 
 
-class NumpyQuantity:
+class NumpyQuantity(PlainQuantity):
     """ """
 
     # NumPy function/ufunc support
@@ -52,11 +54,11 @@ class NumpyQuantity:
             return NotImplemented
 
         # Replicate types from __array_function__
-        types = set(
+        types = {
             type(arg)
             for arg in list(inputs) + list(kwargs.values())
             if hasattr(arg, "__array_ufunc__")
-        )
+        }
 
         return numpy_wrap("ufunc", ufunc, inputs, kwargs, types)
 
@@ -99,8 +101,8 @@ class NumpyQuantity:
 
         if output_unit is not None:
             return self.__class__(value, output_unit)
-        else:
-            return value
+
+        return value
 
     def __array__(self, t=None) -> np.ndarray:
         warnings.warn(

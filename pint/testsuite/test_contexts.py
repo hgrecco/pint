@@ -683,7 +683,7 @@ class TestDefinedContexts:
                     )
                     p = find_shortest_path(ureg._active_ctx.graph, da, db)
                     assert p
-                    msg = "{} <-> {}".format(a, b)
+                    msg = f"{a} <-> {b}"
                     # assertAlmostEqualRelError converts second to first
                     helpers.assert_quantity_almost_equal(b, a, rtol=0.01, msg=msg)
 
@@ -705,7 +705,7 @@ class TestDefinedContexts:
             da, db = Context.__keytransform__(a.dimensionality, b.dimensionality)
             p = find_shortest_path(ureg._active_ctx.graph, da, db)
             assert p
-            msg = "{} <-> {}".format(a, b)
+            msg = f"{a} <-> {b}"
             helpers.assert_quantity_almost_equal(b, a, rtol=0.01, msg=msg)
 
             # Check RKM <-> cN/tex conversion

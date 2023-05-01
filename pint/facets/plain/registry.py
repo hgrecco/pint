@@ -24,18 +24,10 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
-    FrozenSet,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
     TypeVar,
     Union,
 )
+from collections.abc import Iterable, Iterator
 
 if TYPE_CHECKING:
     from ..context import Context
@@ -51,7 +43,6 @@ from ...util import UnitsContainer
 from ...util import UnitsContainer as UnitsContainerT
 from ...util import (
     _is_dim,
-    build_dependent_class,
     create_class_with_registry,
     getattr_maybe_raise,
     logger,
@@ -83,7 +74,7 @@ T = TypeVar("T")
 _BLOCK_RE = re.compile(r"[ (]")
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def pattern_to_regex(pattern):
     if hasattr(pattern, "finditer"):
         pattern = pattern.pattern
@@ -96,7 +87,7 @@ def pattern_to_regex(pattern):
     return re.compile(pattern)
 
 
-NON_INT_TYPE = Type[Union[float, Decimal, Fraction]]
+NON_INT_TYPE = type[Union[float, Decimal, Fraction]]
 PreprocessorType = Callable[[str], str]
 
 
@@ -105,13 +96,13 @@ class RegistryCache:
 
     def __init__(self) -> None:
         #: Maps dimensionality (UnitsContainer) to Units (str)
-        self.dimensional_equivalents: Dict[UnitsContainer, Set[str]] = {}
+        self.dimensional_equivalents: dict[UnitsContainer, set[str]] = {}
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self.root_units = {}
         #: Maps dimensionality (UnitsContainer) to Units (UnitsContainer)
-        self.dimensionality: Dict[UnitsContainer, UnitsContainer] = {}
+        self.dimensionality: dict[UnitsContainer, UnitsContainer] = {}
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit: Dict[str, UnitsContainer] = {}
+        self.parse_unit: dict[str, UnitsContainer] = {}
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -181,12 +172,12 @@ class PlainRegistry(metaclass=RegistryMeta):
     """
 
     #: Babel.Locale instance or None
-    fmt_locale: Optional[Locale] = None
+    fmt_locale: Locale | None = None
 
     _diskcache = None
 
-    _quantity_class = PlainQuantity
-    _unit_class = PlainUnit
+    Quantity = PlainQuantity
+    Unit = PlainUnit
 
     _def_parser = None
 
@@ -197,16 +188,16 @@ class PlainRegistry(metaclass=RegistryMeta):
         force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
         auto_reduce_dimensions: bool = False,
-        preprocessors: Optional[List[PreprocessorType]] = None,
-        fmt_locale: Optional[str] = None,
+        preprocessors: list[PreprocessorType] | None = None,
+        fmt_locale: str | None = None,
         non_int_type: NON_INT_TYPE = float,
         case_sensitive: bool = True,
-        cache_folder: Union[str, pathlib.Path, None] = None,
-        separate_format_defaults: Optional[bool] = None,
+        cache_folder: str | pathlib.Path | None = None,
+        separate_format_defaults: bool | None = None,
         mpl_formatter: str = "{:P}",
     ):
         #: Map a definition class to a adder methods.
-        self._adders = dict()
+        self._adders = {}
         self._register_definition_adders()
         self._init_dynamic_classes()
 
@@ -255,43 +246,36 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         #: Map between name (string) and value (string) of defaults stored in the
         #: definitions file.
-        self._defaults: Dict[str, str] = {}
+        self._defaults: dict[str, str] = {}
 
         #: Map dimension name (string) to its definition (DimensionDefinition).
-        self._dimensions: Dict[
-            str, Union[DimensionDefinition, DerivedDimensionDefinition]
+        self._dimensions: dict[
+            str, DimensionDefinition | DerivedDimensionDefinition
         ] = {}
 
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
-        self._units: Dict[str, UnitDefinition] = {}
+        self._units: dict[str, UnitDefinition] = {}
 
         #: List base unit names
-        self._base_units: List[str] = []
+        self._base_units: list[str] = []
 
         #: Map unit name in lower case (string) to a set of unit names with the right
         #: case.
         #: Does not contain prefixed units.
         #: e.g: 'hz' - > set('Hz', )
-        self._units_casei: Dict[str, Set[str]] = defaultdict(set)
+        self._units_casei: dict[str, set[str]] = defaultdict(set)
 
         #: Map prefix name (string) to its definition (PrefixDefinition).
-        self._prefixes: Dict[str, PrefixDefinition] = {"": PrefixDefinition("", 1)}
+        self._prefixes: dict[str, PrefixDefinition] = {"": PrefixDefinition("", 1)}
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
-        self._suffixes: Dict[str, str] = {"": "", "s": ""}
+        self._suffixes: dict[str, str] = {"": "", "s": ""}
 
         #: Map contexts to RegistryCache
         self._cache = RegistryCache()
 
         self._initialized = False
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-        cls.Unit: Unit = build_dependent_class(cls, "Unit", "_unit_class")
-        cls.Quantity: Quantity = build_dependent_class(
-            cls, "Quantity", "_quantity_class"
-        )
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -326,7 +310,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
-    def __deepcopy__(self, memo) -> "PlainRegistry":
+    def __deepcopy__(self, memo) -> PlainRegistry:
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
@@ -351,7 +335,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         except UndefinedUnitError:
             return False
 
-    def __dir__(self) -> List[str]:
+    def __dir__(self) -> list[str]:
         #: Calling dir(registry) gives all units, methods, and attributes.
         #: Also used for autocompletion in IPython.
         return list(self._units.keys()) + list(object.__dir__(self))
@@ -365,7 +349,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         """
         return iter(sorted(self._units.keys()))
 
-    def set_fmt_locale(self, loc: Optional[str]) -> None:
+    def set_fmt_locale(self, loc: str | None) -> None:
         """Change the locale used by default by `format_babel`.
 
         Parameters
@@ -397,7 +381,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         self.Measurement.default_format = value
 
     @property
-    def cache_folder(self) -> Optional[pathlib.Path]:
+    def cache_folder(self) -> pathlib.Path | None:
         if self._diskcache:
             return self._diskcache.cache_folder
         return None
@@ -472,7 +456,7 @@ class PlainRegistry(metaclass=RegistryMeta):
             if self._on_redefinition == "raise":
                 raise RedefinitionError(key, type(value))
             elif self._on_redefinition == "warn":
-                logger.warning("Redefining '%s' (%s)" % (key, type(value)))
+                logger.warning(f"Redefining '{key}' ({type(value)})")
 
         target_dict[key] = value
         if casei_target_dict is not None:
@@ -581,9 +565,7 @@ class PlainRegistry(metaclass=RegistryMeta):
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
         return self._cache
 
-    def get_name(
-        self, name_or_alias: str, case_sensitive: Optional[bool] = None
-    ) -> str:
+    def get_name(self, name_or_alias: str, case_sensitive: bool | None = None) -> str:
         """Return the canonical name of a unit."""
 
         if name_or_alias == "dimensionless":
@@ -621,9 +603,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         return unit_name
 
-    def get_symbol(
-        self, name_or_alias: str, case_sensitive: Optional[bool] = None
-    ) -> str:
+    def get_symbol(self, name_or_alias: str, case_sensitive: bool | None = None) -> str:
         """Return the preferred alias for a unit."""
         candidates = self.parse_unit_name(name_or_alias, case_sensitive)
         if not candidates:
@@ -632,8 +612,8 @@ class PlainRegistry(metaclass=RegistryMeta):
             prefix, unit_name, _ = candidates[0]
         else:
             logger.warning(
-                "Parsing {0} yield multiple results. "
-                "Options are: {1!r}".format(name_or_alias, candidates)
+                "Parsing {} yield multiple results. "
+                "Options are: {!r}".format(name_or_alias, candidates)
             )
             prefix, unit_name, _ = candidates[0]
 
@@ -654,7 +634,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         return self._get_dimensionality(input_units)
 
     def _get_dimensionality(
-        self, input_units: Optional[UnitsContainerT]
+        self, input_units: UnitsContainerT | None
     ) -> UnitsContainerT:
         """Convert a UnitsContainer to plain dimensions."""
         if not input_units:
@@ -727,7 +707,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def get_root_units(
         self, input_units: UnitLike, check_nonmult: bool = True
-    ) -> Tuple[Number, PlainUnit]:
+    ) -> tuple[Number, PlainUnit]:
         """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -840,7 +820,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def get_compatible_units(
         self, input_units, group_or_system=None
-    ) -> FrozenSet[Unit]:
+    ) -> frozenset[Unit]:
         """ """
         input_units = to_units_container(input_units)
 
@@ -858,7 +838,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     # TODO: remove context from here
     def is_compatible_with(
-        self, obj1: Any, obj2: Any, *contexts: Union[str, Context], **ctx_kwargs
+        self, obj1: Any, obj2: Any, *contexts: str | Context, **ctx_kwargs
     ) -> bool:
         """check if the other object is compatible
 
@@ -972,8 +952,8 @@ class PlainRegistry(metaclass=RegistryMeta):
         return value
 
     def parse_unit_name(
-        self, unit_name: str, case_sensitive: Optional[bool] = None
-    ) -> Tuple[Tuple[str, str, str], ...]:
+        self, unit_name: str, case_sensitive: bool | None = None
+    ) -> tuple[tuple[str, str, str], ...]:
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
         In case of equivalent combinations (e.g. ('kilo', 'gram', '') and
@@ -997,8 +977,8 @@ class PlainRegistry(metaclass=RegistryMeta):
         )
 
     def _parse_unit_name(
-        self, unit_name: str, case_sensitive: Optional[bool] = None
-    ) -> Iterator[Tuple[str, str, str]]:
+        self, unit_name: str, case_sensitive: bool | None = None
+    ) -> Iterator[tuple[str, str, str]]:
         """Helper of parse_unit_name."""
         case_sensitive = (
             self.case_sensitive if case_sensitive is None else case_sensitive
@@ -1029,8 +1009,8 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     @staticmethod
     def _dedup_candidates(
-        candidates: Iterable[Tuple[str, str, str]]
-    ) -> Tuple[Tuple[str, str, str], ...]:
+        candidates: Iterable[tuple[str, str, str]]
+    ) -> tuple[tuple[str, str, str], ...]:
         """Helper of parse_unit_name.
 
         Given an iterable of unit triplets (prefix, name, suffix), remove those with
@@ -1051,8 +1031,8 @@ class PlainRegistry(metaclass=RegistryMeta):
     def parse_units(
         self,
         input_string: str,
-        as_delta: Optional[bool] = None,
-        case_sensitive: Optional[bool] = None,
+        as_delta: bool | None = None,
+        case_sensitive: bool | None = None,
     ) -> Unit:
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
@@ -1083,7 +1063,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         self,
         input_string: str,
         as_delta: bool = True,
-        case_sensitive: Optional[bool] = None,
+        case_sensitive: bool | None = None,
     ) -> UnitsContainerT:
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
@@ -1124,15 +1104,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         return ret
 
-    def _eval_token(self, token, case_sensitive=None, use_decimal=False, **values):
-        # TODO: remove this code when use_decimal is deprecated
-        if use_decimal:
-            raise DeprecationWarning(
-                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
-                ">>> from decimal import Decimal\n"
-                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
-            )
-
+    def _eval_token(self, token, case_sensitive=None, **values):
         token_type = token[0]
         token_text = token[1]
         if token_type == NAME:
@@ -1160,10 +1132,9 @@ class PlainRegistry(metaclass=RegistryMeta):
         self,
         input_string: str,
         pattern: str,
-        case_sensitive: Optional[bool] = None,
-        use_decimal: bool = False,
+        case_sensitive: bool | None = None,
         many: bool = False,
-    ) -> Union[List[str], str, None]:
+    ) -> list[str] | str | None:
         """Parse a string with a given regex pattern and returns result.
 
         Parameters
@@ -1174,8 +1145,6 @@ class PlainRegistry(metaclass=RegistryMeta):
              The regex parse string
         case_sensitive :
              (Default value = None, which uses registry setting)
-        use_decimal :
-             (Default value = False)
         many :
              Match many results
              (Default value = False)
@@ -1200,13 +1169,10 @@ class PlainRegistry(metaclass=RegistryMeta):
             match = match.groupdict()
 
             # Parse units
-            units = []
-            for unit, value in match.items():
-                # Construct measure by multiplying value by unit
-                units.append(
-                    float(value)
-                    * self.parse_expression(unit, case_sensitive, use_decimal)
-                )
+            units = [
+                float(value) * self.parse_expression(unit, case_sensitive)
+                for unit, value in match.items()
+            ]
 
             # Add to results
             results.append(units)
@@ -1220,8 +1186,7 @@ class PlainRegistry(metaclass=RegistryMeta):
     def parse_expression(
         self,
         input_string: str,
-        case_sensitive: Optional[bool] = None,
-        use_decimal: bool = False,
+        case_sensitive: bool | None = None,
         **values,
     ) -> Quantity:
         """Parse a mathematical expression including units and return a quantity object.
@@ -1235,8 +1200,6 @@ class PlainRegistry(metaclass=RegistryMeta):
 
         case_sensitive :
              (Default value = None, which uses registry setting)
-        use_decimal :
-             (Default value = False)
         **values :
 
 
@@ -1244,15 +1207,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         -------
 
         """
-
-        # TODO: remove this code when use_decimal is deprecated
-        if use_decimal:
-            raise DeprecationWarning(
-                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
-                ">>> from decimal import Decimal\n"
-                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
-            )
-
         if not input_string:
             return self.Quantity(1)
 

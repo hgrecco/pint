@@ -8,16 +8,16 @@
 
 from __future__ import annotations
 
-from typing import List
+from ..plain import PlainQuantity
 
 
-class NonMultiplicativeQuantity:
+class NonMultiplicativeQuantity(PlainQuantity):
     @property
     def _is_multiplicative(self) -> bool:
         """Check if the PlainQuantity object has only multiplicative units."""
         return not self._get_non_multiplicative_units()
 
-    def _get_non_multiplicative_units(self) -> List[str]:
+    def _get_non_multiplicative_units(self) -> list[str]:
         """Return a list of the of non-multiplicative units of the PlainQuantity object."""
         return [
             unit
@@ -25,7 +25,7 @@ class NonMultiplicativeQuantity:
             if not self._get_unit_definition(unit).is_multiplicative
         ]
 
-    def _get_delta_units(self) -> List[str]:
+    def _get_delta_units(self) -> list[str]:
         """Return list of delta units ot the PlainQuantity object."""
         return [u for u in self._units if u.startswith("delta_")]
 
@@ -40,7 +40,7 @@ class NonMultiplicativeQuantity:
             self._get_unit_definition(d).reference == offset_unit_dim for d in deltas
         )
 
-    def _ok_for_muldiv(self, no_offset_units=None) -> bool:
+    def _ok_for_muldiv(self, no_offset_units: int | None = None) -> bool:
         """Checks if PlainQuantity object can be multiplied or divided"""
 
         is_ok = True

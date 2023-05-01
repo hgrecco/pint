@@ -2,6 +2,7 @@ import copy
 import functools
 import logging
 import math
+import operator
 import re
 from contextlib import nullcontext as does_not_raise
 
@@ -144,7 +145,7 @@ class TestUnit(QuantityTestCase):
 
         ureg = UnitRegistry()
 
-        assert "{:new}".format(ureg.m) == "new format"
+        assert f"{ureg.m:new}" == "new format"
 
     def test_ipython(self):
         alltext = []
@@ -193,7 +194,7 @@ class TestUnit(QuantityTestCase):
         ("unit", "power_ratio", "expectation", "expected_unit"),
         [
             ("m", 2, does_not_raise(), "m**2"),
-            ("m", dict(), pytest.raises(TypeError), None),
+            ("m", {}, pytest.raises(TypeError), None),
         ],
     )
     def test_unit_pow(self, unit, power_ratio, expectation, expected_unit):
@@ -283,7 +284,7 @@ class TestRegistry(QuantityTestCase):
         with pytest.raises(errors.RedefinitionError):
             ureg.define("meter = [length]")
         with pytest.raises(TypeError):
-            ureg.define(list())
+            ureg.define([])
         ureg.define("degC = kelvin; offset: 273.15")
 
     def test_define(self):
@@ -394,7 +395,7 @@ class TestRegistry(QuantityTestCase):
         )
 
     def test_parse_pretty_degrees(self):
-        for exp in ["1Δ°C", "1 Δ°C", "ΔdegC", "delta_°C"]:
+        for exp in ("1Δ°C", "1 Δ°C", "ΔdegC", "delta_°C"):
             assert self.ureg.parse_expression(exp) == self.Q_(
                 1, UnitsContainer(delta_degree_Celsius=1)
             )
@@ -566,8 +567,7 @@ class TestRegistry(QuantityTestCase):
         assert f3(3.0 * ureg.centimeter) == 0.03 * ureg.centimeter
         assert f3(3.0 * ureg.meter) == 3.0 * ureg.centimeter
 
-        def gfunc(x, y):
-            return x + y
+        gfunc = operator.add
 
         g0 = ureg.wraps(None, [None, None])(gfunc)
         assert g0(3, 1) == 4
@@ -596,8 +596,7 @@ class TestRegistry(QuantityTestCase):
     def test_wrap_referencing(self):
         ureg = self.ureg
 
-        def gfunc(x, y):
-            return x + y
+        gfunc = operator.add
 
         def gfunc2(x, y):
             return x**2 + y
@@ -650,8 +649,7 @@ class TestRegistry(QuantityTestCase):
         with pytest.raises(DimensionalityError):
             f0b(3.0 * ureg.kilogram)
 
-        def gfunc(x, y):
-            return x / y
+        gfunc = operator.truediv
 
         g0 = ureg.check(None, None)(gfunc)
         assert g0(6, 2) == 3

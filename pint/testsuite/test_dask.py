@@ -1,5 +1,6 @@
 import importlib
-import os
+
+import pathlib
 
 import pytest
 
@@ -135,8 +136,8 @@ def test_visualize(local_registry, dask_array):
 
     assert res is None
     # These commands only work on Unix and Windows
-    assert os.path.exists("mydask.png")
-    os.remove("mydask.png")
+    assert pathlib.Path("mydask.png").exists()
+    pathlib.Path("mydask.png").unlink()
 
 
 def test_compute_persist_equivalent(local_registry, dask_array, numpy_array):

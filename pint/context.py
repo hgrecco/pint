@@ -18,3 +18,5 @@ if TYPE_CHECKING:
 #: Regex to match the header parts of a context.
 
 #: Regex to match variable names in an equation.
+
+# TODO: delete this file

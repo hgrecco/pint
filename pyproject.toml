@@ -22,13 +22,12 @@ classifiers = [
     "Programming Language :: Python",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11"
 ]
-requires-python = ">=3.8"
-dynamic = ["version"]
+requires-python = ">=3.9"
+dynamic = ["version"] # Version is taken from git tags using setuptools_scm
 
 [tool.setuptools.package-data]
 pint = [

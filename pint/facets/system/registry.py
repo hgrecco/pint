@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Dict, FrozenSet, Tuple, Union
+from typing import TYPE_CHECKING
 
 from ... import errors
 
@@ -19,13 +19,13 @@ if TYPE_CHECKING:
 from ..._typing import UnitLike
 from ...util import UnitsContainer as UnitsContainerT
 from ...util import (
-    build_dependent_class,
     create_class_with_registry,
     to_units_container,
 )
 from ..group import GroupRegistry
 from .definitions import SystemDefinition
 from .objects import Lister, System
+from . import objects
 
 
 class SystemRegistry(GroupRegistry):
@@ -46,23 +46,19 @@ class SystemRegistry(GroupRegistry):
     # TODO: Change this to System: System to specify class
     # and use introspection to get system class as a way
     # to enjoy typing goodies
-    _system_class = System
+    System = objects.System
 
     def __init__(self, system=None, **kwargs):
         super().__init__(**kwargs)
 
         #: Map system name to system.
         #: :type: dict[ str | System]
-        self._systems: Dict[str, System] = {}
+        self._systems: dict[str, System] = {}
 
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
-        self._base_units_cache = dict()
+        self._base_units_cache = {}
 
         self._default_system = system
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-        cls.System = build_dependent_class(cls, "System", "_system_class")
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -143,10 +139,10 @@ class SystemRegistry(GroupRegistry):
 
     def get_base_units(
         self,
-        input_units: Union[UnitLike, Quantity],
+        input_units: UnitLike | Quantity,
         check_nonmult: bool = True,
-        system: Union[str, System, None] = None,
-    ) -> Tuple[Number, Unit]:
+        system: str | System | None = None,
+    ) -> tuple[Number, Unit]:
         """Convert unit or dict of units to the plain units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -183,7 +179,7 @@ class SystemRegistry(GroupRegistry):
         self,
         input_units: UnitsContainerT,
         check_nonmult: bool = True,
-        system: Union[str, System, None] = None,
+        system: str | System | None = None,
     ):
         if system is None:
             system = self._default_system
@@ -224,7 +220,7 @@ class SystemRegistry(GroupRegistry):
 
         return base_factor, destination_units
 
-    def _get_compatible_units(self, input_units, group_or_system) -> FrozenSet[Unit]:
+    def _get_compatible_units(self, input_units, group_or_system) -> frozenset[Unit]:
         if group_or_system is None:
             group_or_system = self._default_system
 

@@ -1,6 +1,7 @@
 import doctest
 import pickle
 import re
+import contextlib
 
 import pytest
 from packaging.version import parse as version_parse
@@ -41,14 +42,12 @@ class PintOutputChecker(doctest.OutputChecker):
         if check:
             return check
 
-        try:
+        with contextlib.suppress(Exception):
             if eval(want) == eval(got):
                 return True
-        except Exception:
-            pass
 
         for regex in (_q_re, _sq_re):
-            try:
+            with contextlib.suppress(Exception):
                 parsed_got = regex.match(got.replace(r"\\", "")).groupdict()
                 parsed_want = regex.match(want.replace(r"\\", "")).groupdict()
 
@@ -62,12 +61,10 @@ class PintOutputChecker(doctest.OutputChecker):
                     return False
 
                 return True
-            except Exception:
-                pass
 
         cnt = 0
         for regex in (_unit_re,):
-            try:
+            with contextlib.suppress(Exception):
                 parsed_got, tmp = regex.subn("\1", got)
                 cnt += tmp
                 parsed_want, temp = regex.subn("\1", want)
@@ -75,9 +72,6 @@ class PintOutputChecker(doctest.OutputChecker):
 
                 if parsed_got == parsed_want:
                     return True
-
-            except Exception:
-                pass
 
         if cnt:
             # If there was any replacement, we try again the previous methods.

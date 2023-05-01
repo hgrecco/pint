@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer, logger
@@ -35,7 +35,7 @@ class NonMultiplicativeRegistry(PlainRegistry):
 
     """
 
-    _quantity_class = NonMultiplicativeQuantity
+    Quantity = NonMultiplicativeQuantity
 
     def __init__(
         self,
@@ -56,8 +56,8 @@ class NonMultiplicativeRegistry(PlainRegistry):
     def _parse_units(
         self,
         input_string: str,
-        as_delta: Optional[bool] = None,
-        case_sensitive: Optional[bool] = None,
+        as_delta: bool | None = None,
+        case_sensitive: bool | None = None,
     ):
         """ """
         if as_delta is None:

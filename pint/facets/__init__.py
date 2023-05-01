@@ -30,8 +30,8 @@
 
     class NumpyRegistry:
 
-        _quantity_class = NumpyQuantity
-        _unit_class = NumpyUnit
+        Quantity = NumpyQuantity
+        Unit = NumpyUnit
 
     This tells pint that it should use NumpyQuantity as base class for a quantity
     class that belongs to a registry that has NumpyRegistry as one of its bases.
@@ -82,13 +82,13 @@ from .plain import PlainRegistry
 from .system import SystemRegistry
 
 __all__ = [
-    ContextRegistry,
-    DaskRegistry,
-    FormattingRegistry,
-    GroupRegistry,
-    MeasurementRegistry,
-    NonMultiplicativeRegistry,
-    NumpyRegistry,
-    PlainRegistry,
-    SystemRegistry,
+    "ContextRegistry",
+    "DaskRegistry",
+    "FormattingRegistry",
+    "GroupRegistry",
+    "MeasurementRegistry",
+    "NonMultiplicativeRegistry",
+    "NumpyRegistry",
+    "PlainRegistry",
+    "SystemRegistry",
 ]

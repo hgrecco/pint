@@ -11,14 +11,14 @@ from __future__ import annotations
 import functools
 from collections import ChainMap
 from contextlib import contextmanager
-from typing import Any, Callable, ContextManager, Dict, Union
+from typing import Any, Callable, ContextManager
 
 from ..._typing import F
 from ...errors import UndefinedUnitError
 from ...util import find_connected_nodes, find_shortest_path, logger
 from ..plain import PlainRegistry, UnitDefinition
 from .definitions import ContextDefinition
-from .objects import Context, ContextChain
+from . import objects
 
 # TODO: Put back annotation when possible
 # registry_cache: "RegistryCache"
@@ -50,13 +50,13 @@ class ContextRegistry(PlainRegistry):
     - Parse @context directive.
     """
 
-    Context = Context
+    Context = objects.Context
 
     def __init__(self, **kwargs: Any) -> None:
         # Map context name (string) or abbreviation to context.
-        self._contexts: Dict[str, Context] = {}
+        self._contexts: dict[str, objects.Context] = {}
         # Stores active contexts.
-        self._active_ctx = ContextChain()
+        self._active_ctx = objects.ContextChain()
         # Map context chain to cache
         self._caches = {}
         # Map context chain to units override
@@ -71,7 +71,7 @@ class ContextRegistry(PlainRegistry):
         super()._register_definition_adders()
         self._register_adder(ContextDefinition, self.add_context)
 
-    def add_context(self, context: Union[Context, ContextDefinition]) -> None:
+    def add_context(self, context: Context | ContextDefinition) -> None:
         """Add a context object to the registry.
 
         The context will be accessible by its name and aliases.
@@ -80,7 +80,7 @@ class ContextRegistry(PlainRegistry):
         see :meth:`enable_contexts`.
         """
         if isinstance(context, ContextDefinition):
-            context = Context.from_definition(context, self.get_dimensionality)
+            context = objects.Context.from_definition(context, self.get_dimensionality)
 
         if not context.name:
             raise ValueError("Can't add unnamed context to registry")
@@ -97,7 +97,7 @@ class ContextRegistry(PlainRegistry):
                 )
             self._contexts[alias] = context
 
-    def remove_context(self, name_or_alias: str) -> Context:
+    def remove_context(self, name_or_alias: str) -> objects.Context:
         """Remove a context from the registry and return it.
 
         Notice that this methods will not disable the context;
@@ -194,7 +194,7 @@ class ContextRegistry(PlainRegistry):
         self.define(definition)
 
     def enable_contexts(
-        self, *names_or_contexts: Union[str, Context], **kwargs
+        self, *names_or_contexts: str | objects.Context, **kwargs
     ) -> None:
         """Enable contexts provided by name or by object.
 
@@ -235,7 +235,7 @@ class ContextRegistry(PlainRegistry):
             ctx.checked = True
 
         # and create a new one with the new defaults.
-        contexts = tuple(Context.from_context(ctx, **kwargs) for ctx in ctxs)
+        contexts = tuple(objects.Context.from_context(ctx, **kwargs) for ctx in ctxs)
 
         # Finally we add them to the active context.
         self._active_ctx.insert_contexts(*contexts)
@@ -253,7 +253,7 @@ class ContextRegistry(PlainRegistry):
         self._switch_context_cache_and_units()
 
     @contextmanager
-    def context(self, *names, **kwargs) -> ContextManager[Context]:
+    def context(self, *names, **kwargs) -> ContextManager[objects.Context]:
         """Used as a context manager, this function enables to activate a context
         which is removed after usage.
 
