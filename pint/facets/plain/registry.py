@@ -39,7 +39,7 @@ from typing import (
 
 if TYPE_CHECKING:
     from ..context import Context
-    from pint import Quantity, Unit
+    from ..._typing import Quantity, Unit
 
 from ... import pint_eval
 from ..._typing import QuantityOrUnitLike, UnitLike
@@ -72,7 +72,6 @@ from .definitions import (
 from .objects import PlainQuantity, PlainUnit
 
 if TYPE_CHECKING:
-
     if HAS_BABEL:
         import babel
 
@@ -205,6 +204,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         case_sensitive: bool = True,
         cache_folder: Union[str, pathlib.Path, None] = None,
         separate_format_defaults: Optional[bool] = None,
+        mpl_formatter: str = "{:P}",
     ):
         #: Map a definition class to a adder methods.
         self._adders = dict()
@@ -245,6 +245,9 @@ class PlainRegistry(metaclass=RegistryMeta):
         #: Default locale identifier string, used when calling format_babel without explicit locale.
         self.set_fmt_locale(fmt_locale)
 
+        #: sets the formatter used when plotting with matplotlib
+        self.mpl_formatter = mpl_formatter
+
         #: Numerical type used for non integer values.
         self._non_int_type = non_int_type
 
@@ -263,6 +266,9 @@ class PlainRegistry(metaclass=RegistryMeta):
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
         self._units: Dict[str, UnitDefinition] = {}
+
+        #: List base unit names
+        self._base_units: List[str] = []
 
         #: Map unit name in lower case (string) to a set of unit names with the right
         #: case.
@@ -283,14 +289,16 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
-        cls.Unit = build_dependent_class(cls, "Unit", "_unit_class")
-        cls.Quantity = build_dependent_class(cls, "Quantity", "_quantity_class")
+        cls.Unit: Unit = build_dependent_class(cls, "Unit", "_unit_class")
+        cls.Quantity: Quantity = build_dependent_class(
+            cls, "Quantity", "_quantity_class"
+        )
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
 
-        self.Unit = create_class_with_registry(self, self.Unit)
-        self.Quantity = create_class_with_registry(self, self.Quantity)
+        self.Unit: Unit = create_class_with_registry(self, self.Unit)
+        self.Quantity: Quantity = create_class_with_registry(self, self.Quantity)
 
     def _after_init(self) -> None:
         """This should be called after all __init__"""
@@ -497,6 +505,7 @@ class PlainRegistry(metaclass=RegistryMeta):
 
     def _add_unit(self, definition: UnitDefinition):
         if definition.is_base:
+            self._base_units.append(definition.name)
             for dim_name in definition.reference.keys():
                 if dim_name not in self._dimensions:
                     self._add_dimension(DimensionDefinition(dim_name))
@@ -846,7 +855,7 @@ class PlainRegistry(metaclass=RegistryMeta):
             return frozenset()
 
         src_dim = self._get_dimensionality(input_units)
-        return self._cache.dimensional_equivalents[src_dim]
+        return self._cache.dimensional_equivalents.setdefault(src_dim, set())
 
     # TODO: remove context from here
     def is_compatible_with(
@@ -937,7 +946,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         """
 
         if check_dimensionality:
-
             src_dim = self._get_dimensionality(src)
             dst_dim = self._get_dimensionality(dst)
 
@@ -1118,7 +1126,6 @@ class PlainRegistry(metaclass=RegistryMeta):
         return ret
 
     def _eval_token(self, token, case_sensitive=None, use_decimal=False, **values):
-
         # TODO: remove this code when use_decimal is deprecated
         if use_decimal:
             raise DeprecationWarning(
@@ -1131,7 +1138,7 @@ class PlainRegistry(metaclass=RegistryMeta):
         token_text = token[1]
         if token_type == NAME:
             if token_text == "dimensionless":
-                return 1 * self.dimensionless
+                return self.Quantity(1, self.dimensionless)
             elif token_text.lower() in ("inf", "infinity"):
                 return self.non_int_type("inf")
             elif token_text.lower() == "nan":

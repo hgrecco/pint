@@ -1,5 +1,89 @@
+[project]
+name = "Pint"
+authors = [
+  {name="Hernan E. Grecco", email="hernan.grecco@gmail.com"}
+]
+license = {text = "BSD"}
+description = "Physical quantities module"
+readme = "README.rst"
+maintainers = [
+  {name="Hernan E. Grecco", email="hernan.grecco@gmail.com"},
+  {name="Jules Chéron", email="julescheron@gmail.com"}
+]
+keywords = ["physical", "quantities", "unit", "conversion", "science"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11"
+]
+requires-python = ">=3.8"
+dynamic = ["version"]
+
+[tool.setuptools.package-data]
+pint = [
+      "default_en.txt",
+      "constants_en.txt",
+      "py.typed"]
+
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-mpl",
+    "pytest-cov",
+    "pytest-subtests"
+]
+numpy = ["numpy >= 1.19.5"]
+uncertainties = ["uncertainties >= 3.1.6"]
+babel = ["babel <= 2.8"]
+pandas = ["pint-pandas >= 0.3"]
+xarray = ["xarray"]
+dask = ["dask"]
+mip = ["mip >= 1.13"]
+
+[project.urls]
+Homepage = "https://github.com/hgrecco/pint"
+Documentation = "https://pint.readthedocs.io/"
+
+[project.scripts]
+pint-convert = "pint.pint_convert:main"
+
+[tool.setuptools]
+packages = ["pint"]
+
 [build-system]
-requires = ["setuptools>=41", "wheel", "setuptools_scm[toml]>=3.4.3"]
+requires = ["setuptools>=61", "wheel", "setuptools_scm[toml]>=3.4.3"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+
+[tool.ruff.isort]
+required-imports = ["from __future__ import annotations"]
+known-first-party= ["pint"]
+
+
+[tool.ruff]
+ignore = [
+  # whitespace before ':' - doesn't work well with black
+  # "E203",
+  "E402",
+  # line too long - let black worry about that
+  "E501",
+  # do not assign a lambda expression, use a def
+  "E731",
+  # line break before binary operator
+  # "W503"
+]
+extend-exclude = ["build"]
+line-length=88

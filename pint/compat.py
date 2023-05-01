@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import math
 from decimal import Decimal
+from importlib import import_module
 from numbers import Number
+from typing import Mapping, Option
 
 try:
     from uncertainties import UFloat, ufloat
@@ -89,7 +91,6 @@ try:
     NP_NO_VALUE = np._NoValue
 
 except ImportError:
-
     np = None
 
     class ndarray:
@@ -136,6 +137,20 @@ try:
 except ImportError:
     HAS_BABEL = False
 
+try:
+    import mip
+
+    mip_model = mip.model
+    mip_Model = mip.Model
+    mip_INF = mip.INF
+    mip_INTEGER = mip.INTEGER
+    mip_xsum = mip.xsum
+    mip_OptimizationStatus = mip.OptimizationStatus
+
+    HAS_MIP = True
+except ImportError:
+    HAS_MIP = False
+
 # Defines Logarithm and Exponential for Logarithmic Converter
 if HAS_NUMPY:
     from numpy import exp  # noqa: F401
@@ -147,55 +162,68 @@ else:
 if not HAS_BABEL:
     babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
 
+if not HAS_MIP:
+    mip_missing = missing_dependency("mip")
+    mip_model = mip_missing
+    mip_Model = mip_missing
+    mip_INF = mip_missing
+    mip_INTEGER = mip_missing
+    mip_xsum = mip_missing
+    mip_OptimizationStatus = mip_missing
+
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
 # types using guarded imports
-upcast_types = []
-
-# pint-pandas (PintArray)
-try:
-    from pint_pandas import PintArray
-
-    upcast_types.append(PintArray)
-except ImportError:
-    pass
-
-# Pandas (Series)
-try:
-    from pandas import DataFrame, Series
-
-    upcast_types += [DataFrame, Series]
-except ImportError:
-    pass
-
-# xarray (DataArray, Dataset, Variable)
-try:
-    from xarray import DataArray, Dataset, Variable
-
-    upcast_types += [DataArray, Dataset, Variable]
-except ImportError:
-    pass
 
 try:
     from dask import array as dask_array
     from dask.base import compute, persist, visualize
-
 except ImportError:
     compute, persist, visualize = None, None, None
     dask_array = None
 
 
-def is_upcast_type(other) -> bool:
-    """Check if the type object is a upcast type using preset list.
+upcast_type_names = (
+    "pint_pandas.PintArray",
+    "pandas.Series",
+    "xarray.core.dataarray.DataArray",
+    "xarray.core.dataset.Dataset",
+    "xarray.core.variable.Variable",
+    "pandas.core.series.Series",
+    "xarray.core.dataarray.DataArray",
+)
 
-    Parameters
-    ----------
-    other : object
+upcast_type_map: Mapping[str : Optional[type]] = {k: None for k in upcast_type_names}
 
-    Returns
-    -------
-    bool
-    """
-    return other in upcast_types
+
+def fully_qualified_name(t: type) -> str:
+    module = t.__module__
+    name = t.__qualname__
+
+    if module is None or module == "builtins":
+        return name
+
+    return f"{module}.{name}"
+
+
+def check_upcast_type(obj: type) -> bool:
+    fqn = fully_qualified_name(obj)
+    if fqn not in upcast_type_map:
+        return False
+    else:
+        module_name, class_name = fqn.rsplit(".", 1)
+        cls = getattr(import_module(module_name), class_name)
+
+    upcast_type_map[fqn] = cls
+    # This is to check we are importing the same thing.
+    # and avoid weird problems. Maybe instead of return
+    # we should raise an error if false.
+    return obj in upcast_type_map.values()
+
+
+def is_upcast_type(other: type) -> bool:
+    if other in upcast_type_map.values():
+        return True
+    return check_upcast_type(other)
 
 
 def is_duck_array_type(cls) -> bool:

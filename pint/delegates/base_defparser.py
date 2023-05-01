@@ -73,7 +73,6 @@ def build_disk_cache_class(non_int_type: type):
 
     @dataclass(frozen=True)
     class PintHeader(fc.InvalidateByExist, fc.NameByFields, fc.BasicPythonHeader):
-
         from .. import __version__
 
         pint_version: str = __version__
@@ -97,7 +96,6 @@ def build_disk_cache_class(non_int_type: type):
             return cls(tuple(tmp), reader_id)
 
     class PintDiskCache(fc.DiskCache):
-
         _header_classes = {
             pathlib.Path: PathHeader,
             str: PathHeader.from_string,

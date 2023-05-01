@@ -31,9 +31,8 @@ from .pint_eval import build_eval_tree
 from . import pint_eval
 
 if TYPE_CHECKING:
-    from pint import Quantity, UnitRegistry
-
-    from ._typing import UnitLike
+    from ._typing import Quantity, UnitLike
+    from .registry import UnitRegistry
 
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -567,12 +566,11 @@ class ParserHelper(UnitsContainer):
         if non_int_type is float:
             return cls(1, [(input_word, 1)], non_int_type=non_int_type)
         else:
-            ONE = non_int_type("1.0")
+            ONE = non_int_type("1")
             return cls(ONE, [(input_word, ONE)], non_int_type=non_int_type)
 
     @classmethod
     def eval_token(cls, token, use_decimal=False, non_int_type=float):
-
         # TODO: remove this code when use_decimal is deprecated
         if use_decimal:
             raise DeprecationWarning(
@@ -755,7 +753,7 @@ class ParserHelper(UnitsContainer):
 
 #: List of regex substitution pairs.
 _subs_re_list = [
-    ("\N{DEGREE SIGN}", " degree"),
+    ("\N{DEGREE SIGN}", "degree"),
     (r"([\w\.\-\+\*\\\^])\s+", r"\1 "),  # merge multiple spaces
     (r"({}) squared", r"\1**2"),  # Handle square and cube
     (r"({}) cubed", r"\1**3"),
@@ -766,7 +764,7 @@ _subs_re_list = [
         r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])",
         r"\1*",
     ),  # Handle numberLetter for multiplication
-    (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
+    (r"([\w\.\)])\s+(?=[\w\(])", r"\1*"),  # Handle space for multiplication
 ]
 
 #: Compiles the regex and replace {} by a regex that matches an identifier.

@@ -13,8 +13,8 @@ from __future__ import annotations
 import typing as ty
 from dataclasses import dataclass, fields
 
-OFFSET_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/latest/nonmult.html"
-LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/latest/nonmult.html"
+OFFSET_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/nonmult.html"
+LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/log_units.html"
 
 MSG_INVALID_UNIT_NAME = "is not a valid unit name (must follow Python identifier rules)"
 MSG_INVALID_UNIT_SYMBOL = "is not a valid unit symbol (must not contain spaces)"
@@ -225,7 +225,6 @@ class LogarithmicUnitCalculusError(PintTypeError):
 
 @dataclass(frozen=False)
 class UnitStrippedWarning(UserWarning, PintError):
-
     msg: str
 
     def __reduce__(self):

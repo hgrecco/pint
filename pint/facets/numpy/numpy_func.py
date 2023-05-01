@@ -13,7 +13,7 @@ from inspect import signature
 from itertools import chain
 
 from ...compat import is_upcast_type, np, zero_or_nan
-from ...errors import DimensionalityError, UnitStrippedWarning
+from ...errors import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from ...util import iterable, sized
 
 HANDLED_UFUNCS = {}
@@ -527,22 +527,16 @@ def _meshgrid(*xi, **kwargs):
 
 
 @implements("full_like", "function")
-def _full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
+def _full_like(a, fill_value, **kwargs):
     # Make full_like by multiplying with array from ones_like in a
     # non-multiplicative-unit-safe way
     if hasattr(fill_value, "_REGISTRY"):
         return fill_value._REGISTRY.Quantity(
-            (
-                np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-                * fill_value.m
-            ),
+            np.ones_like(a, **kwargs) * fill_value.m,
             fill_value.units,
         )
     else:
-        return (
-            np.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
-            * fill_value
-        )
+        return np.ones_like(a, **kwargs) * fill_value
 
 
 @implements("interp", "function")
@@ -735,6 +729,61 @@ for name in ["prod", "nanprod"]:
     implement_prod_func(name)
 
 
+# Handle mutliplicative functions separately to deal with non-multiplicative units
+def _base_unit_if_needed(a):
+    if a._is_multiplicative:
+        return a
+    else:
+        if a.units._REGISTRY.autoconvert_offset_to_baseunit:
+            return a.to_base_units()
+        else:
+            raise OffsetUnitCalculusError(a.units)
+
+
+@implements("trapz", "function")
+def _trapz(a, x=None, dx=1.0, **kwargs):
+    a = _base_unit_if_needed(a)
+    units = a.units
+    if x is not None:
+        if hasattr(x, "units"):
+            x = _base_unit_if_needed(x)
+            units *= x.units
+            x = x._magnitude
+        ret = np.trapz(a._magnitude, x, **kwargs)
+    else:
+        if hasattr(dx, "units"):
+            dx = _base_unit_if_needed(dx)
+            units *= dx.units
+            dx = dx._magnitude
+        ret = np.trapz(a._magnitude, dx=dx, **kwargs)
+
+    return a.units._REGISTRY.Quantity(ret, units)
+
+
+def implement_mul_func(func):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(a, b, **kwargs):
+        a = _base_unit_if_needed(a)
+        units = a.units
+        if hasattr(b, "units"):
+            b = _base_unit_if_needed(b)
+            units *= b.units
+            b = b._magnitude
+
+        mag = func(a._magnitude, b, **kwargs)
+        return a.units._REGISTRY.Quantity(mag, units)
+
+
+for func_str in ["cross", "dot"]:
+    implement_mul_func(func_str)
+
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
@@ -796,6 +845,7 @@ for func_str, unit_arguments, wrap_output in [
     ("ptp", "a", True),
     ("ravel", "a", True),
     ("round_", "a", True),
+    ("round", "a", True),
     ("sort", "a", True),
     ("median", "a", True),
     ("nanmedian", "a", True),
@@ -816,8 +866,10 @@ for func_str, unit_arguments, wrap_output in [
     ("broadcast_to", ["array"], True),
     ("amax", ["a", "initial"], True),
     ("amin", ["a", "initial"], True),
+    ("max", ["a", "initial"], True),
+    ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
-    ("isclose", ["a", "b"], False),
+    ("isclose", ["a", "b", "atol"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
     ("clip", ["a", "a_min", "a_max"], True),
     ("append", ["arr", "values"], True),
@@ -827,9 +879,10 @@ for func_str, unit_arguments, wrap_output in [
     ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
     ("insert", ["arr", "values"], True),
+    ("delete", ["arr"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
-    ("allclose", ["a", "b"], False),
+    ("allclose", ["a", "b", "atol"], False),
     ("intersect1d", ["ar1", "ar2"], True),
 ]:
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
@@ -910,7 +963,6 @@ for func_str in [
     "argsort",
     "argmin",
     "argmax",
-    "alen",
     "ndim",
     "nanargmax",
     "nanargmin",
@@ -923,8 +975,6 @@ for func_str in [
 # Handle functions with output unit defined by operation
 for func_str in ["std", "nanstd", "sum", "nansum", "cumsum", "nancumsum"]:
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ["cross", "trapz", "dot"]:
-    implement_func("function", func_str, input_units=None, output_unit="mul")
 for func_str in ["diff", "ediff1d"]:
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ["gradient"]:

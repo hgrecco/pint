@@ -25,7 +25,6 @@ from ...util import UnitsContainer, iterable
 
 
 class FormattingQuantity:
-
     _exp_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
     def __format__(self, spec: str) -> str:

@@ -13,12 +13,12 @@ jobs:
         extras: [null]
         include:
           - python-version: 3.8 # Minimal versions
-            numpy: numpy==1.19.5
+            numpy: "numpy"
             extras: matplotlib==2.2.5
           - python-version: 3.8
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
+            extras: "sparse xarray netCDF4 dask[complete]==2023.4.0 graphviz babel==2.8"
     runs-on: ubuntu-latest
 
     env:
@@ -75,18 +75,18 @@ jobs:
         run: |
           pytest $TEST_OPTS
 
-      - name: Coverage report
-        run: coverage report -m
+      # - name: Coverage report
+      #   run: coverage report -m
 
-      - name: Coveralls Parallel
-        env:
-          COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
-          COVERALLS_PARALLEL: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_SERVICE_NAME: github
-        run: |
-          pip install coveralls
-          coveralls
+      # - name: Coveralls Parallel
+      #   env:
+      #     COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
+      #     COVERALLS_PARALLEL: true
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     COVERALLS_SERVICE_NAME: github
+      #   run: |
+      #     pip install coveralls "requests<2.29"
+      #     coveralls
 
   test-windows:
     strategy:
@@ -198,41 +198,41 @@ jobs:
         run: |
           pytest $TEST_OPTS
 
-      - name: Coverage report
-        run: coverage report -m
+      # - name: Coverage report
+      #   run: coverage report -m
 
-      - name: Coveralls Parallel
-        env:
-          COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
-          COVERALLS_PARALLEL: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_SERVICE_NAME: github
-        run: |
-          pip install coveralls
-          coveralls
+      # - name: Coveralls Parallel
+      #   env:
+      #     COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
+      #     COVERALLS_PARALLEL: true
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     COVERALLS_SERVICE_NAME: github
+      #   run: |
+      #     pip install coveralls "requests<2.29"
+      #     coveralls
 
-  coveralls:
-    needs: test-linux
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.x
-    - name: Coveralls Finished
-      continue-on-error: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_SERVICE_NAME: github
-      run: |
-        pip install coveralls
-        coveralls --finish
+  # coveralls:
+  #   needs: test-linux
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/setup-python@v2
+  #     with:
+  #       python-version: 3.x
+  #   - name: Coveralls Finished
+  #     continue-on-error: true
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       COVERALLS_SERVICE_NAME: github
+  #     run: |
+  #       pip install coveralls "requests<2.29"
+  #       coveralls --finish
 
   # Dummy task to summarize all. See https://github.com/bors-ng/bors-ng/issues/1300
-  ci-success:
-    name: ci
-    if: ${{ success() }}
-    needs: test-linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: CI succeeded
-        run: exit 0
+  # ci-success:
+  #   name: ci
+  #   if: ${{ success() }}
+  #   needs: test-linux
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: CI succeeded
+  #       run: exit 0

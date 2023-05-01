@@ -1,6 +1,7 @@
 sphinx>4
-ipython
+ipython<=8.12
 matplotlib
+mip>=1.13
 nbsphinx
 numpy
 pytest

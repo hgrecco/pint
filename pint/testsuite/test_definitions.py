@@ -24,7 +24,6 @@ class TestDefinition:
             Definition.from_string("[x] = [time] * meter")
 
     def test_prefix_definition(self):
-
         with pytest.raises(ValueError):
             Definition.from_string("m- = 1e-3 k")
 
@@ -99,7 +98,6 @@ class TestDefinition:
             )
 
     def test_log_unit_definition(self):
-
         x = Definition.from_string(
             "decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm"
         )

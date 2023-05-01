@@ -120,7 +120,6 @@ class NumpyQuantity:
         return _to_magnitude(self._magnitude, force_ndarray=True)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
-
         if min is not None:
             if isinstance(min, self.__class__):
                 min = min.to(self).magnitude
@@ -257,7 +256,12 @@ class NumpyQuantity:
 
     def __setitem__(self, key, value):
         try:
-            if np.ma.is_masked(value) or math.isnan(value):
+            # If we're dealing with a masked single value or a nan, set it
+            if (
+                isinstance(self._magnitude, np.ma.MaskedArray)
+                and np.ma.is_masked(value)
+                and getattr(value, "size", 0) == 1
+            ) or math.isnan(value):
                 self._magnitude[key] = value
                 return
         except TypeError:

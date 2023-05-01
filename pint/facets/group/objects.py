@@ -123,7 +123,6 @@ class Group(SharedRegistryObject):
         """Add groups to group."""
         d = self._REGISTRY._groups
         for group_name in group_names:
-
             grp = d[group_name]
 
             if grp.is_used_group(self.name):
