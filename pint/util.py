@@ -24,7 +24,6 @@ import tokenize
 from typing import (
     TYPE_CHECKING,
     ClassVar,
-    TypeAlias,
     Callable,
     TypeVar,
     Any,
@@ -48,8 +47,12 @@ logger.addHandler(NullHandler())
 
 T = TypeVar("T")
 TH = TypeVar("TH", bound=Hashable)
-ItMatrix: TypeAlias = Iterable[Iterable[PintScalar]]
-Matrix: TypeAlias = list[list[PintScalar]]
+
+# TODO: Change when Python 3.10 becomes minimal version.
+# ItMatrix: TypeAlias = Iterable[Iterable[PintScalar]]
+# Matrix: TypeAlias = list[list[PintScalar]]
+ItMatrix = Iterable[Iterable[PintScalar]]
+Matrix = list[list[PintScalar]]
 
 
 def _noop(x: T) -> T:
