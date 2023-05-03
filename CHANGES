@@ -4,7 +4,7 @@ Pint Changelog
 0.22 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Support registry preprocessors in `to_units_container` (#1402)
 
 
 0.21 (2023-05-01)
