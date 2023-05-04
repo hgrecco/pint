@@ -20,6 +20,16 @@ from collections.abc import Mapping
 from typing import Any, NoReturn, Callable
 from collections.abc import Generator, Iterable
 
+try:
+    from typing import TypeAlias  # noqa
+except ImportError:
+    from typing_extensions import TypeAlias  # noqa
+
+try:
+    from typing import Self  # noqa
+except ImportError:
+    from typing_extensions import Self  # noqa
+
 
 def missing_dependency(
     package: str, display_name: str | None = None
@@ -137,10 +147,10 @@ except ImportError:
     HAS_UNCERTAINTIES = False
 
 try:
-    from babel import Locale as Loc
+    from babel import Locale
     from babel import units as babel_units
 
-    babel_parse = Loc.parse
+    babel_parse = Locale.parse
 
     HAS_BABEL = hasattr(babel_units, "format_unit")
 except ImportError:

@@ -8,10 +8,21 @@
 
 from __future__ import annotations
 
-from ..plain import PlainRegistry
-from .objects import FormattingQuantity, FormattingUnit
+from typing import Generic, Any
+
+from ...compat import TypeAlias
+from ..plain import GenericPlainRegistry, QuantityT, UnitT
+from . import objects
 
 
-class FormattingRegistry(PlainRegistry):
-    Quantity = FormattingQuantity
-    Unit = FormattingUnit
+class GenericFormattingRegistry(
+    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+):
+    pass
+
+
+class FormattingRegistry(
+    GenericFormattingRegistry[objects.FormattingQuantity[Any], objects.FormattingUnit]
+):
+    Quantity: TypeAlias = objects.FormattingQuantity[Any]
+    Unit: TypeAlias = objects.FormattingUnit

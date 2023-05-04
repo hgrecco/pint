@@ -11,11 +11,11 @@ from __future__ import annotations
 import functools
 import math
 import warnings
-from typing import Any
+from typing import Any, Generic
 
-from ..plain import PlainQuantity
+from ..plain import PlainQuantity, MagnitudeT
 
-from ..._typing import Shape, _MagnitudeType
+from ..._typing import Shape
 from ...compat import _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
 from .numpy_func import (
@@ -42,7 +42,7 @@ def method_wraps(numpy_func):
     return wrapper
 
 
-class NumpyQuantity(PlainQuantity):
+class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     """ """
 
     # NumPy function/ufunc support
@@ -130,11 +130,11 @@ class NumpyQuantity(PlainQuantity):
                 raise DimensionalityError("dimensionless", self._units)
         return self.__class__(self.magnitude.clip(min, max, out, **kwargs), self._units)
 
-    def fill(self: NumpyQuantity[np.ndarray], value) -> None:
+    def fill(self: NumpyQuantity, value) -> None:
         self._units = value._units
         return self.magnitude.fill(value.magnitude)
 
-    def put(self: NumpyQuantity[np.ndarray], indices, values, mode="raise") -> None:
+    def put(self: NumpyQuantity, indices, values, mode="raise") -> None:
         if isinstance(values, self.__class__):
             values = values.to(self).magnitude
         elif self.dimensionless:
@@ -144,11 +144,11 @@ class NumpyQuantity(PlainQuantity):
         self.magnitude.put(indices, values, mode)
 
     @property
-    def real(self) -> NumpyQuantity[_MagnitudeType]:
+    def real(self) -> NumpyQuantity:
         return self.__class__(self._magnitude.real, self._units)
 
     @property
-    def imag(self) -> NumpyQuantity[_MagnitudeType]:
+    def imag(self) -> NumpyQuantity:
         return self.__class__(self._magnitude.imag, self._units)
 
     @property

@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, Generic
 
 from ...compat import babel_parse, ndarray, np
 from ...formatting import (
@@ -23,10 +23,10 @@ from ...formatting import (
 )
 from ...util import UnitsContainer, iterable
 
-from ..plain import PlainQuantity, PlainUnit
+from ..plain import PlainQuantity, PlainUnit, MagnitudeT
 
 
-class FormattingQuantity(PlainQuantity):
+class FormattingQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     _exp_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
     def __format__(self, spec: str) -> str:

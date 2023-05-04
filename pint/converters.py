@@ -15,16 +15,18 @@ from dataclasses import fields as dc_fields
 
 from typing import Any
 
-from ._typing import Self, Magnitude
+from ._typing import Magnitude
 
-from .compat import HAS_NUMPY, exp, log  # noqa: F401
+from .compat import HAS_NUMPY, exp, log, Self  # noqa: F401
 
 
 @dataclass(frozen=True)
 class Converter:
     """Base class for value converters."""
 
+    # list[type[Converter]]
     _subclasses = []
+    # dict[frozenset[str], type[Converter]]
     _param_names_to_subclass = {}
 
     @property
@@ -41,21 +43,21 @@ class Converter:
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         return value
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any):
         # Get constructor parameters
         super().__init_subclass__(**kwargs)
         cls._subclasses.append(cls)
 
     @classmethod
-    def get_field_names(cls, new_cls) -> frozenset[str]:
+    def get_field_names(cls, new_cls: type) -> frozenset[str]:
         return frozenset(p.name for p in dc_fields(new_cls))
 
     @classmethod
-    def preprocess_kwargs(cls, **kwargs):
+    def preprocess_kwargs(cls, **kwargs: Any) -> dict[str, Any] | None:
         return None
 
     @classmethod
-    def from_arguments(cls: type[Self], **kwargs: Any) -> Self:
+    def from_arguments(cls, **kwargs: Any) -> Converter:
         kwk = frozenset(kwargs.keys())
         try:
             new_cls = cls._param_names_to_subclass[kwk]

@@ -13,7 +13,7 @@ from __future__ import annotations
 import functools
 from inspect import signature
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Callable, TypeVar
+from typing import TYPE_CHECKING, Callable, TypeVar, Any
 from collections.abc import Iterable
 
 from ._typing import F
@@ -189,7 +189,7 @@ def wraps(
     ret: str | Unit | Iterable[str | Unit | None] | None,
     args: str | Unit | Iterable[str | Unit | None] | None,
     strict: bool = True,
-) -> Callable[[Callable[..., T]], Callable[..., Quantity[T]]]:
+) -> Callable[[Callable[..., Any]], Callable[..., Quantity]]:
     """Wraps a function to become pint-aware.
 
     Use it when a function requires a numerical value but in some specific
@@ -253,7 +253,7 @@ def wraps(
             )
         ret = _to_units_container(ret, ureg)
 
-    def decorator(func: Callable[..., T]) -> Callable[..., Quantity[T]]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Quantity]:
         count_params = len(signature(func).parameters)
         if len(args) != count_params:
             raise TypeError(
@@ -269,7 +269,7 @@ def wraps(
         )
 
         @functools.wraps(func, assigned=assigned, updated=updated)
-        def wrapper(*values, **kw) -> Quantity[T]:
+        def wrapper(*values, **kw) -> Quantity:
             values, kw = _apply_defaults(func, values, kw)
 
             # In principle, the values are used as is

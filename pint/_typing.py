@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union, Protocol
+from decimal import Decimal
+from fractions import Fraction
 
-# TODO: Remove when 3.11 becomes minimal version.
-Self = TypeVar("Self")
 
 if TYPE_CHECKING:
     from .facets.plain import PlainQuantity as Quantity
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .util import UnitsContainer
 
 
-class PintScalar(Protocol):
+class ScalarProtocol(Protocol):
     def __add__(self, other: Any) -> Any:
         ...
 
@@ -36,8 +36,20 @@ class PintScalar(Protocol):
     def __pow__(self, other: Any, modulo: Any) -> Any:
         ...
 
+    def __gt__(self, other: Any) -> bool:
+        ...
 
-class PintArray(Protocol):
+    def __lt__(self, other: Any) -> bool:
+        ...
+
+    def __ge__(self, other: Any) -> bool:
+        ...
+
+    def __le__(self, other: Any) -> bool:
+        ...
+
+
+class ArrayProtocol(Protocol):
     def __len__(self) -> int:
         ...
 
@@ -48,18 +60,41 @@ class PintArray(Protocol):
         ...
 
 
-# TODO: Change when Python 3.10 becomes minimal version.
-# Magnitude = PintScalar | PintArray
-Magnitude = Union[PintScalar, PintArray]
+HAS_NUMPY = False
+if TYPE_CHECKING:
+    from .compat import HAS_NUMPY
 
-UnitLike = Union[str, "UnitsContainer", "Unit"]
+if HAS_NUMPY:
+    from .compat import np
+
+    Scalar = Union[ScalarProtocol, float, int, Decimal, Fraction, np.number[Any]]
+    Array = Union[np.ndarray[Any, Any]]
+else:
+    Scalar = Union[ScalarProtocol, float, int, Decimal, Fraction]
+    Array = ArrayProtocol
+
+
+# TODO: Change when Python 3.10 becomes minimal version.
+Magnitude = Union[ScalarProtocol, ArrayProtocol]
+
+UnitLike = Union[str, dict[str, Scalar], "UnitsContainer", "Unit"]
 
 QuantityOrUnitLike = Union["Quantity", UnitLike]
 
-Shape = tuple[int, ...]
+Shape = tuple[int]
 
-_MagnitudeType = TypeVar("_MagnitudeType")
 S = TypeVar("S")
 
 FuncType = Callable[..., Any]
 F = TypeVar("F", bound=FuncType)
+
+
+# TODO: Improve or delete types
+QuantityArgument = Any
+
+T = TypeVar("T")
+
+
+class Handler(Protocol):
+    def __getitem__(self, item: type[T]) -> Callable[[T], None]:
+        ...

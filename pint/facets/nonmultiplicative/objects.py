@@ -8,10 +8,12 @@
 
 from __future__ import annotations
 
-from ..plain import PlainQuantity
+from typing import Generic
+
+from ..plain import PlainQuantity, PlainUnit, MagnitudeT
 
 
-class NonMultiplicativeQuantity(PlainQuantity):
+class NonMultiplicativeQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     @property
     def _is_multiplicative(self) -> bool:
         """Check if the PlainQuantity object has only multiplicative units."""
@@ -59,3 +61,7 @@ class NonMultiplicativeQuantity(PlainQuantity):
             if next(iter(self._units.values())) != 1:
                 is_ok = False
         return is_ok
+
+
+class NonMultiplicativeUnit(PlainUnit):
+    pass

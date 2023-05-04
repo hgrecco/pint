@@ -130,7 +130,7 @@ class DefParser:
             else:
                 yield stmt
 
-    def parse_file(self, filename: pathlib.Path, cfg: ParserConfig | None = None):
+    def parse_file(self, filename: pathlib.Path | str, cfg: ParserConfig | None = None):
         return fp.parse(
             filename,
             _PintParser,

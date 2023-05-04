@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from ..._typing import Self
+from ...compat import Self
 from ... import errors
 
 

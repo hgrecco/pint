@@ -10,15 +10,16 @@ from __future__ import annotations
 
 import copy
 import re
+from typing import Generic
 
 from ...compat import ufloat
 from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
-from ..plain import PlainQuantity
+from ..plain import PlainQuantity, PlainUnit, MagnitudeT
 
 MISSING = object()
 
 
-class MeasurementQuantity(PlainQuantity):
+class MeasurementQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     # Measurement support
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):
@@ -30,6 +31,10 @@ class MeasurementQuantity(PlainQuantity):
                 error = error * abs(self.magnitude)
 
         return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
+
+
+class MeasurementUnit(PlainUnit):
+    pass
 
 
 class Measurement(PlainQuantity):

@@ -14,16 +14,10 @@
 
 from __future__ import annotations
 
+from typing import Generic
+
 from . import registry_helpers
-from .facets import (
-    ContextRegistry,
-    DaskRegistry,
-    FormattingRegistry,
-    MeasurementRegistry,
-    NonMultiplicativeRegistry,
-    NumpyRegistry,
-    SystemRegistry,
-)
+from . import facets
 from .util import logger, pi_theorem
 
 
@@ -33,37 +27,40 @@ from .util import logger, pi_theorem
 
 
 class Quantity(
-    # SystemRegistry.Quantity,
-    # ContextRegistry.Quantity,
-    DaskRegistry.Quantity,
-    NumpyRegistry.Quantity,
-    MeasurementRegistry.Quantity,
-    FormattingRegistry.Quantity,
-    NonMultiplicativeRegistry.Quantity,
+    facets.SystemRegistry.Quantity,
+    facets.ContextRegistry.Quantity,
+    facets.DaskRegistry.Quantity,
+    facets.NumpyRegistry.Quantity,
+    facets.MeasurementRegistry.Quantity,
+    facets.FormattingRegistry.Quantity,
+    facets.NonMultiplicativeRegistry.Quantity,
+    facets.PlainRegistry.Quantity,
 ):
     pass
 
 
 class Unit(
-    # SystemRegistry.Unit,
-    # ContextRegistry.Unit,
-    # DaskRegistry.Unit,
-    NumpyRegistry.Unit,
-    # MeasurementRegistry.Unit,
-    FormattingRegistry.Unit,
-    NonMultiplicativeRegistry.Unit,
+    facets.SystemRegistry.Unit,
+    facets.ContextRegistry.Unit,
+    facets.DaskRegistry.Unit,
+    facets.NumpyRegistry.Unit,
+    facets.MeasurementRegistry.Unit,
+    facets.FormattingRegistry.Unit,
+    facets.NonMultiplicativeRegistry.Unit,
+    facets.PlainRegistry.Unit,
 ):
     pass
 
 
 class UnitRegistry(
-    SystemRegistry,
-    ContextRegistry,
-    DaskRegistry,
-    NumpyRegistry,
-    MeasurementRegistry,
-    FormattingRegistry,
-    NonMultiplicativeRegistry,
+    facets.GenericSystemRegistry[Quantity, Unit],
+    facets.GenericContextRegistry[Quantity, Unit],
+    facets.GenericDaskRegistry[Quantity, Unit],
+    facets.GenericNumpyRegistry[Quantity, Unit],
+    facets.GenericMeasurementRegistry[Quantity, Unit],
+    facets.GenericFormattingRegistry[Quantity, Unit],
+    facets.GenericNonMultiplicativeRegistry[Quantity, Unit],
+    facets.GenericPlainRegistry[Quantity, Unit],
 ):
     """The unit registry stores the definitions and relationships between units.
 
@@ -171,7 +168,7 @@ class UnitRegistry(
     check = registry_helpers.check
 
 
-class LazyRegistry:
+class LazyRegistry(Generic[facets.QuantityT, facets.UnitT]):
     def __init__(self, args=None, kwargs=None):
         self.__dict__["params"] = args or (), kwargs or {}
 

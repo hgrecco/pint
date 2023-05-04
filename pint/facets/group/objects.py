@@ -8,9 +8,36 @@
 
 from __future__ import annotations
 
+from typing import Callable, Any, TYPE_CHECKING, Generic
+
 from collections.abc import Generator, Iterable
 from ...util import SharedRegistryObject, getattr_maybe_raise
 from .definitions import GroupDefinition
+from ..plain import PlainQuantity, PlainUnit, MagnitudeT
+
+if TYPE_CHECKING:
+    from ..plain import UnitDefinition
+
+    DefineFunc = Callable[
+        [
+            Any,
+        ],
+        None,
+    ]
+    AddUnitFunc = Callable[
+        [
+            UnitDefinition,
+        ],
+        None,
+    ]
+
+
+class GroupQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+    pass
+
+
+class GroupUnit(PlainUnit):
+    pass
 
 
 class Group(SharedRegistryObject):
@@ -57,7 +84,7 @@ class Group(SharedRegistryObject):
         self._computed_members: frozenset[str] | None = None
 
     @property
-    def members(self):
+    def members(self) -> frozenset[str]:
         """Names of the units that are members of the group.
 
         Calculated to include to all units in all included _used_groups.
@@ -143,7 +170,7 @@ class Group(SharedRegistryObject):
 
     @classmethod
     def from_lines(
-        cls, lines: Iterable[str], define_func, non_int_type: type = float
+        cls, lines: Iterable[str], define_func: DefineFunc, non_int_type: type = float
     ) -> Group:
         """Return a Group object parsing an iterable of lines.
 
@@ -160,11 +187,15 @@ class Group(SharedRegistryObject):
 
         """
         group_definition = GroupDefinition.from_lines(lines, non_int_type)
+
+        if group_definition is None:
+            raise ValueError(f"Could not define group from {lines}")
+
         return cls.from_definition(group_definition, define_func)
 
     @classmethod
     def from_definition(
-        cls, group_definition: GroupDefinition, add_unit_func=None
+        cls, group_definition: GroupDefinition, add_unit_func: AddUnitFunc | None = None
     ) -> Group:
         grp = cls(group_definition.name)
 

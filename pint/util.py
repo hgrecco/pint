@@ -30,15 +30,15 @@ from typing import (
 )
 from collections.abc import Hashable, Generator
 
-from .compat import NUMERIC_TYPES, tokenizer
+from .compat import NUMERIC_TYPES, tokenizer, Self
 from .errors import DefinitionSyntaxError
 from .formatting import format_unit
 from .pint_eval import build_eval_tree
 
-from ._typing import PintScalar
+from ._typing import Scalar
 
 if TYPE_CHECKING:
-    from ._typing import Quantity, UnitLike, Self
+    from ._typing import Quantity, UnitLike, QuantityOrUnitLike
     from .registry import UnitRegistry
 
 
@@ -47,12 +47,13 @@ logger.addHandler(NullHandler())
 
 T = TypeVar("T")
 TH = TypeVar("TH", bound=Hashable)
+TT = TypeVar("TT", bound=type)
 
 # TODO: Change when Python 3.10 becomes minimal version.
 # ItMatrix: TypeAlias = Iterable[Iterable[PintScalar]]
 # Matrix: TypeAlias = list[list[PintScalar]]
-ItMatrix = Iterable[Iterable[PintScalar]]
-Matrix = list[list[PintScalar]]
+ItMatrix = Iterable[Iterable[Scalar]]
+Matrix = list[list[Scalar]]
 
 
 def _noop(x: T) -> T:
@@ -65,7 +66,7 @@ def matrix_to_string(
     col_headers: Iterable[str] | None = None,
     fmtfun: Callable[
         [
-            PintScalar,
+            Scalar,
         ],
         str,
     ] = "{:0.0f}".format,
@@ -125,9 +126,9 @@ def matrix_apply(
     matrix: ItMatrix,
     func: Callable[
         [
-            PintScalar,
+            Scalar,
         ],
-        PintScalar,
+        Scalar,
     ],
 ) -> Matrix:
     """Apply a function to individual elements within a matrix.
@@ -172,7 +173,14 @@ def column_echelon_form(
         Swapped rows.
     """
 
-    _transpose = transpose if transpose_result else _noop
+    _transpose: Callable[
+        [
+            ItMatrix,
+        ],
+        Matrix,
+    ] = (
+        transpose if transpose_result else _noop
+    )
 
     ech_matrix = matrix_apply(
         transpose(matrix),
@@ -181,7 +189,7 @@ def column_echelon_form(
 
     rows, cols = len(ech_matrix), len(ech_matrix[0])
     # M = [[ntype(x) for x in row] for row in M]
-    id_matrix: list[list[PintScalar]] = [  # noqa: E741
+    id_matrix: list[list[Scalar]] = [  # noqa: E741
         [ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)
     ]
 
@@ -415,7 +423,7 @@ def find_connected_nodes(
     return visited
 
 
-class udict(dict[str, PintScalar]):
+class udict(dict[str, Scalar]):
     """Custom dict implementing __missing__."""
 
     def __missing__(self, key: str):
@@ -425,7 +433,7 @@ class udict(dict[str, PintScalar]):
         return udict(self)
 
 
-class UnitsContainer(Mapping[str, PintScalar]):
+class UnitsContainer(Mapping[str, Scalar]):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations.
 
@@ -441,10 +449,12 @@ class UnitsContainer(Mapping[str, PintScalar]):
 
     _d: udict
     _hash: int | None
-    _one: PintScalar
+    _one: Scalar
     _non_int_type: type
 
-    def __init__(self, *args, non_int_type: type | None = None, **kwargs) -> None:
+    def __init__(
+        self, *args: Any, non_int_type: type | None = None, **kwargs: Any
+    ) -> None:
         if args and isinstance(args[0], UnitsContainer):
             default_non_int_type = args[0]._non_int_type
         else:
@@ -542,7 +552,7 @@ class UnitsContainer(Mapping[str, PintScalar]):
     def __len__(self) -> int:
         return len(self._d)
 
-    def __getitem__(self, key: str) -> PintScalar:
+    def __getitem__(self, key: str) -> Scalar:
         return self._d[key]
 
     def __contains__(self, key: str) -> bool:
@@ -554,10 +564,10 @@ class UnitsContainer(Mapping[str, PintScalar]):
         return self._hash
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
-    def __getstate__(self) -> tuple[udict, PintScalar, type]:
+    def __getstate__(self) -> tuple[udict, Scalar, type]:
         return self._d, self._one, self._non_int_type
 
-    def __setstate__(self, state: tuple[udict, PintScalar, type]):
+    def __setstate__(self, state: tuple[udict, Scalar, type]):
         self._d, self._one, self._non_int_type = state
         self._hash = None
 
@@ -682,9 +692,9 @@ class ParserHelper(UnitsContainer):
 
     __slots__ = ("scale",)
 
-    scale: PintScalar
+    scale: Scalar
 
-    def __init__(self, scale: PintScalar = 1, *args, **kwargs):
+    def __init__(self, scale: Scalar = 1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.scale = scale
 
@@ -1002,7 +1012,7 @@ class PrettyIPython:
 
 
 def to_units_container(
-    unit_like: UnitLike | Quantity, registry: UnitRegistry | None = None
+    unit_like: QuantityOrUnitLike, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 
@@ -1025,6 +1035,7 @@ def to_units_container(
         return unit_like._units
     elif str in mro:
         if registry:
+            # TODO: Why not parse.units here?
             return registry._parse_units(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
@@ -1124,7 +1135,9 @@ def sized(y: Any) -> bool:
     return True
 
 
-def create_class_with_registry(registry: UnitRegistry, base_class: type) -> type:
+def create_class_with_registry(
+    registry: UnitRegistry, base_class: type[TT]
+) -> type[TT]:
     """Create new class inheriting from base_class and
     filling _REGISTRY class attribute with an actual instanced registry.
     """

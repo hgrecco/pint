@@ -9,15 +9,17 @@
 
 from __future__ import annotations
 
-from ...compat import ufloat
+from typing import Generic, Any
+
+from ...compat import ufloat, TypeAlias
 from ...util import create_class_with_registry
-from ..plain import PlainRegistry
-from .objects import MeasurementQuantity
+from ..plain import GenericPlainRegistry, QuantityT, UnitT
 from . import objects
 
 
-class MeasurementRegistry(PlainRegistry):
-    Quantity = MeasurementQuantity
+class GenericMeasurementRegistry(
+    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+):
     Measurement = objects.Measurement
 
     def _init_dynamic_classes(self) -> None:
@@ -34,3 +36,12 @@ class MeasurementRegistry(PlainRegistry):
                 )
 
             self.Measurement = no_uncertainties
+
+
+class MeasurementRegistry(
+    GenericMeasurementRegistry[
+        objects.MeasurementQuantity[Any], objects.MeasurementUnit
+    ]
+):
+    Quantity: TypeAlias = objects.MeasurementQuantity[Any]
+    Unit: TypeAlias = objects.MeasurementUnit

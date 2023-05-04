@@ -12,7 +12,7 @@ import itertools
 import numbers
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Callable
 from collections.abc import Iterable
 
 from ... import errors
@@ -47,7 +47,7 @@ class Relation:
         return set(self._varname_re.findall(self.equation))
 
     @property
-    def transformation(self) -> Callable[..., Quantity[Any]]:
+    def transformation(self) -> Callable[..., Quantity]:
         """Return a transformation callable that uses the registry
         to parse the transformation equation.
         """
@@ -68,7 +68,7 @@ class ForwardRelation(Relation):
     """
 
     @property
-    def bidirectional(self):
+    def bidirectional(self) -> bool:
         return False
 
 
@@ -82,7 +82,7 @@ class BidirectionalRelation(Relation):
     """
 
     @property
-    def bidirectional(self):
+    def bidirectional(self) -> bool:
         return True
 
 

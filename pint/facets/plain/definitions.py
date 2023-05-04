@@ -13,7 +13,7 @@ import numbers
 import typing as ty
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Callable, Any
+from typing import Any
 
 from ..._typing import Magnitude
 from ... import errors
@@ -69,11 +69,15 @@ class DefaultsDefinition:
 
 
 @dataclass(frozen=True)
-class PrefixDefinition(errors.WithDefErr):
-    """Definition of a prefix."""
-
+class NamedDefinition:
     #: name of the prefix
     name: str
+
+
+@dataclass(frozen=True)
+class PrefixDefinition(NamedDefinition, errors.WithDefErr):
+    """Definition of a prefix."""
+
     #: scaling value for this prefix
     value: numbers.Number
     #: canonical symbol
@@ -90,8 +94,8 @@ class PrefixDefinition(errors.WithDefErr):
         return bool(self.defined_symbol)
 
     @cached_property
-    def converter(self):
-        return Converter.from_arguments(scale=self.value)
+    def converter(self) -> ScaleConverter:
+        return ScaleConverter(self.value)
 
     def __post_init__(self):
         if not errors.is_valid_prefix_name(self.name):
@@ -110,22 +114,19 @@ class PrefixDefinition(errors.WithDefErr):
 
 
 @dataclass(frozen=True)
-class UnitDefinition(errors.WithDefErr):
+class UnitDefinition(NamedDefinition, errors.WithDefErr):
     """Definition of a unit."""
 
-    #: canonical name of the unit
-    name: str
     #: canonical symbol
     defined_symbol: str | None
     #: additional names for the same unit
     aliases: tuple[str]
     #: A functiont that converts a value in these units into the reference units
-    converter: Callable[
-        [
-            Magnitude,
-        ],
-        Magnitude,
-    ] | Converter | None
+    # TODO: this has changed as converter is now annotated as converter.
+    # Briefly, in several places converter attributes like as_multiplicative were
+    # accesed. So having a generic function is a no go.
+    # I guess this was never used as errors where not raised.
+    converter: Converter | None
     #: Reference units.
     reference: UnitsContainer | None
 
@@ -190,7 +191,7 @@ class UnitDefinition(errors.WithDefErr):
     def is_base(self) -> bool:
         """Indicates if it is a base unit."""
 
-        # TODO: why is this here
+        # TODO: This is set in __post_init__
         return self._is_base
 
     @property
@@ -215,17 +216,14 @@ class UnitDefinition(errors.WithDefErr):
 
 
 @dataclass(frozen=True)
-class DimensionDefinition(errors.WithDefErr):
+class DimensionDefinition(NamedDefinition, errors.WithDefErr):
     """Definition of a root dimension"""
 
-    #: name of the dimension
-    name: str
-
     @property
-    def is_base(self):
+    def is_base(self) -> bool:
         return True
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not errors.is_valid_dimension_name(self.name):
             raise self.def_err(errors.MSG_INVALID_DIMENSION_NAME)
 
@@ -238,7 +236,7 @@ class DerivedDimensionDefinition(DimensionDefinition):
     reference: UnitsContainer
 
     @property
-    def is_base(self):
+    def is_base(self) -> bool:
         return False
 
     def __post_init__(self):

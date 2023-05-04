@@ -14,7 +14,9 @@ import numbers
 from typing import Any
 from collections.abc import Iterable
 
-from ..._typing import Self
+
+from typing import Callable, Generic
+from numbers import Number
 
 from ...babel_names import _babel_systems
 from ...compat import babel_parse
@@ -25,6 +27,20 @@ from ...util import (
     to_units_container,
 )
 from .definitions import SystemDefinition
+from .. import group
+from ..plain import MagnitudeT
+
+from ..._typing import UnitLike
+
+GetRootUnits = Callable[[UnitLike, bool], tuple[Number, UnitLike]]
+
+
+class SystemQuantity(Generic[MagnitudeT], group.GroupQuantity[MagnitudeT]):
+    pass
+
+
+class SystemUnit(group.GroupUnit):
+    pass
 
 
 class System(SharedRegistryObject):
@@ -76,11 +92,11 @@ class System(SharedRegistryObject):
     def members(self):
         d = self._REGISTRY._groups
         if self._computed_members is None:
-            self._computed_members = set()
+            tmp: set[str] = set()
 
             for group_name in self._used_groups:
                 try:
-                    self._computed_members |= d[group_name].members
+                    tmp |= d[group_name].members
                 except KeyError:
                     logger.warning(
                         "Could not resolve {} in System {}".format(
@@ -88,7 +104,7 @@ class System(SharedRegistryObject):
                         )
                     )
 
-            self._computed_members = frozenset(self._computed_members)
+            self._computed_members = frozenset(tmp)
 
         return self._computed_members
 
@@ -116,17 +132,30 @@ class System(SharedRegistryObject):
             return locale.measurement_systems[name]
         return self.name
 
+    # TODO: When 3.11 is minimal version, use Self
+
     @classmethod
     def from_lines(
-        cls: type[Self], lines: Iterable[str], get_root_func, non_int_type: type = float
-    ) -> Self:
+        cls: type[System],
+        lines: Iterable[str],
+        get_root_func: GetRootUnits,
+        non_int_type: type = float,
+    ) -> System:
         # TODO: we changed something here it used to be
         # system_definition = SystemDefinition.from_lines(lines, get_root_func)
         system_definition = SystemDefinition.from_lines(lines, non_int_type)
+
+        if system_definition is None:
+            raise ValueError(f"Could not define System from from {lines}")
+
         return cls.from_definition(system_definition, get_root_func)
 
     @classmethod
-    def from_definition(cls, system_definition: SystemDefinition, get_root_func=None):
+    def from_definition(
+        cls: type[System],
+        system_definition: SystemDefinition,
+        get_root_func: GetRootUnits | None = None,
+    ) -> System:
         if get_root_func is None:
             # TODO: kept for backwards compatibility
             get_root_func = cls._REGISTRY.get_root_units

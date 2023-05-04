@@ -13,17 +13,27 @@ from __future__ import annotations
 import functools
 import re
 import warnings
-from typing import Callable, Any
+from typing import Callable, Any, TYPE_CHECKING, TypeVar
 from collections.abc import Iterable
 from numbers import Number
 
 from .babel_names import _babel_lengths, _babel_units
-from .compat import babel_parse
+from .compat import babel_parse, HAS_BABEL
+
+if TYPE_CHECKING:
+    from .util import ItMatrix, UnitsContainer
+
+    if HAS_BABEL:
+        import babel
+
+        Locale = babel.Locale
+    else:
+        Locale = TypeVar("Locale")
 
 __JOIN_REG_EXP = re.compile(r"{\d*}")
 
 
-def _join(fmt: str, iterable: Iterable[Any]):
+def _join(fmt: str, iterable: Iterable[Any]) -> str:
     """Join an iterable with the format specified in fmt.
 
     The format can be specified in two ways:
@@ -124,6 +134,7 @@ _FORMATS: dict[str, dict[str, Any]] = {
 }
 
 #: _FORMATTERS maps format names to callables doing the formatting
+# TODO fix Callable typing
 _FORMATTERS: dict[str, Callable] = {}
 
 
@@ -167,7 +178,7 @@ def register_unit_format(name: str):
 
 
 @register_unit_format("P")
-def format_pretty(unit, registry, **options):
+def format_pretty(unit: UnitsContainer, registry, **options) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -181,7 +192,7 @@ def format_pretty(unit, registry, **options):
     )
 
 
-def latex_escape(string):
+def latex_escape(string: str) -> str:
     """
     Prepend characters that have a special meaning in LaTeX with a backslash.
     """
@@ -198,7 +209,7 @@ def latex_escape(string):
 
 
 @register_unit_format("L")
-def format_latex(unit, registry, **options):
+def format_latex(unit: UnitsContainer, registry, **options) -> str:
     preprocessed = {rf"\mathrm{{{latex_escape(u)}}}": p for u, p in unit.items()}
     formatted = formatter(
         preprocessed.items(),
@@ -214,7 +225,7 @@ def format_latex(unit, registry, **options):
 
 
 @register_unit_format("Lx")
-def format_latex_siunitx(unit, registry, **options):
+def format_latex_siunitx(unit: UnitsContainer, registry, **options) -> str:
     if registry is None:
         raise ValueError(
             "Can't format as siunitx without a registry."
@@ -228,7 +239,7 @@ def format_latex_siunitx(unit, registry, **options):
 
 
 @register_unit_format("H")
-def format_html(unit, registry, **options):
+def format_html(unit: UnitsContainer, registry, **options) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -242,7 +253,7 @@ def format_html(unit, registry, **options):
 
 
 @register_unit_format("D")
-def format_default(unit, registry, **options):
+def format_default(unit: UnitsContainer, registry, **options) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -256,7 +267,7 @@ def format_default(unit, registry, **options):
 
 
 @register_unit_format("C")
-def format_compact(unit, registry, **options):
+def format_compact(unit: UnitsContainer, registry, **options) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -270,7 +281,7 @@ def format_compact(unit, registry, **options):
 
 
 def formatter(
-    items: list[tuple[str, Number]],
+    items: Iterable[tuple[str, Number]],
     as_ratio: bool = True,
     single_denominator: bool = False,
     product_fmt: str = " * ",
@@ -282,7 +293,7 @@ def formatter(
     babel_length: str = "long",
     babel_plural_form: str = "one",
     sort: bool = True,
-):
+) -> str:
     """Format a list of (name, exponent) pairs.
 
     Parameters
@@ -393,7 +404,7 @@ def formatter(
 _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
 
 
-def _parse_spec(spec):
+def _parse_spec(spec: str) -> str:
     result = ""
     for ch in reversed(spec):
         if ch == "~" or ch in _BASIC_TYPES:
@@ -410,7 +421,7 @@ def _parse_spec(spec):
     return result
 
 
-def format_unit(unit, spec, registry=None, **options):
+def format_unit(unit, spec: str, registry=None, **options):
     # registry may be None to allow formatting `UnitsContainer` objects
     # in that case, the spec may not be "Lx"
 
@@ -430,10 +441,10 @@ def format_unit(unit, spec, registry=None, **options):
     return fmt(unit, registry=registry, **options)
 
 
-def siunitx_format_unit(units, registry):
+def siunitx_format_unit(units: UnitsContainer, registry) -> str:
     """Returns LaTeX code for the unit that can be put into an siunitx command."""
 
-    def _tothe(power):
+    def _tothe(power: int | float) -> str:
         if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
             if power == 1:
                 return ""
@@ -473,7 +484,7 @@ def siunitx_format_unit(units, registry):
     return "".join(lpos) + "".join(lneg)
 
 
-def extract_custom_flags(spec):
+def extract_custom_flags(spec: str) -> str:
     import re
 
     if not spec:
@@ -488,14 +499,16 @@ def extract_custom_flags(spec):
     return "".join(custom_flags)
 
 
-def remove_custom_flags(spec):
+def remove_custom_flags(spec: str) -> str:
     for flag in sorted(_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
         if flag:
             spec = spec.replace(flag, "")
     return spec
 
 
-def split_format(spec, default, separate_format_defaults=True):
+def split_format(
+    spec: str, default: str, separate_format_defaults: bool = True
+) -> tuple[str, str]:
     mspec = remove_custom_flags(spec)
     uspec = extract_custom_flags(spec)
 
@@ -535,11 +548,11 @@ def split_format(spec, default, separate_format_defaults=True):
     return mspec, uspec
 
 
-def vector_to_latex(vec, fmtfun=lambda x: format(x, ".2f")):
+def vector_to_latex(vec: Iterable[Any], fmtfun=lambda x: format(x, ".2f")) -> str:
     return matrix_to_latex([vec], fmtfun)
 
 
-def matrix_to_latex(matrix, fmtfun=lambda x: format(x, ".2f")):
+def matrix_to_latex(matrix: ItMatrix, fmtfun=lambda x: format(x, ".2f")) -> str:
     ret = []
 
     for row in matrix:
@@ -548,7 +561,9 @@ def matrix_to_latex(matrix, fmtfun=lambda x: format(x, ".2f")):
     return r"\begin{pmatrix}%s\end{pmatrix}" % "\\\\ \n".join(ret)
 
 
-def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, ".2f"), dim=()):
+def ndarray_to_latex_parts(
+    ndarr, fmtfun=lambda x: format(x, ".2f"), dim: tuple[int] = tuple()
+):
     if isinstance(fmtfun, str):
         fmt = fmtfun
         fmtfun = lambda x: format(x, fmt)
@@ -573,5 +588,7 @@ def ndarray_to_latex_parts(ndarr, fmtfun=lambda x: format(x, ".2f"), dim=()):
         return ret
 
 
-def ndarray_to_latex(ndarr, fmtfun=lambda x: format(x, ".2f"), dim=()):
+def ndarray_to_latex(
+    ndarr, fmtfun=lambda x: format(x, ".2f"), dim: tuple[int] = tuple()
+) -> str:
     return "\n".join(ndarray_to_latex_parts(ndarr, fmtfun, dim))

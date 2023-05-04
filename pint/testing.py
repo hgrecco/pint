@@ -34,7 +34,7 @@ def _get_comparable_magnitudes(first, second, msg):
     return m1, m2
 
 
-def assert_equal(first, second, msg=None):
+def assert_equal(first, second, msg: str | None = None) -> None:
     if msg is None:
         msg = f"Comparing {first!r} and {second!r}. "
 
@@ -57,7 +57,9 @@ def assert_equal(first, second, msg=None):
         assert m1 == m2, msg
 
 
-def assert_allclose(first, second, rtol=1e-07, atol=0, msg=None):
+def assert_allclose(
+    first, second, rtol: float = 1e-07, atol: float = 0, msg: str | None = None
+) -> None:
     if msg is None:
         try:
             msg = f"Comparing {first!r} and {second!r}. "
