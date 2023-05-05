@@ -987,7 +987,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             # If the source and destination dimensionality are different,
             # then the conversion cannot be performed.
             if src_dim != dst_dim:
-                raise DimensionalityError(src, dst, str(src_dim), str(dst_dim))
+                raise DimensionalityError(src, dst, src_dim, dst_dim)
 
         # Here src and dst have only multiplicative units left. Thus we can
         # convert with a factor.
