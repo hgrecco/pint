@@ -348,8 +348,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             "Calling the getitem method from a UnitRegistry is deprecated. "
             "use `parse_expression` method or use the registry as a callable."
         )
-        return self.Quantity()
-        # return self.parse_expression(item)
+        return self.parse_expression(item)
 
     def __contains__(self, item: str) -> bool:
         """Support checking prefixed units with the `in` operator"""

@@ -281,7 +281,7 @@ Pint's physical quantities can be easily printed:
 
 .. doctest::
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> # The standard string formatting code
    >>> print('The str is {!s}'.format(accel))
    The str is 1.3 meter / second ** 2
@@ -297,7 +297,7 @@ Pint supports float formatting for numpy arrays as well:
 .. doctest::
 
    >>> import numpy as np
-   >>> accel = np.array([-1.1, 1e-6, 1.2505, 1.3]) * ureg['meter/second**2']
+   >>> accel = np.array([-1.1, 1e-6, 1.2505, 1.3]) * ureg.parse_units('meter/second**2')
    >>> # float formatting numpy arrays
    >>> print('The array is {:.2f}'.format(accel))
    The array is [-1.10 0.00 1.25 1.30] meter / second ** 2
@@ -309,7 +309,7 @@ Pint also supports `f-strings`_ from python>=3.6 :
 
 .. doctest::
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> print(f'The str is {accel}')
    The str is 1.3 meter / second ** 2
    >>> print(f'The str is {accel:.3e}')
@@ -368,7 +368,7 @@ Pint also supports the LaTeX `siunitx` package:
 .. doctest::
    :skipif: not_installed['uncertainties']
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> # siunitx Latex print
    >>> print('The siunitx representation is {:Lx}'.format(accel))
    The siunitx representation is \SI[]{1.3}{\meter\per\second\squared}
@@ -380,7 +380,7 @@ Additionally, you can specify a default format specification:
 
 .. doctest::
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> 'The acceleration is {}'.format(accel)
    'The acceleration is 1.3 meter / second ** 2'
    >>> ureg.default_format = 'P'
@@ -414,7 +414,7 @@ and by doing that, string formatting is now localized:
 
 .. doctest::
 
-    >>> accel = 1.3 * ureg['meter/second**2']
+    >>> accel = 1.3 * ureg.parse_units('meter/second**2')
     >>> str(accel)
     '1.3 mètre par seconde²'
     >>> "%s" % accel
