@@ -28,6 +28,9 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dynamic = ["version"] # Version is taken from git tags using setuptools_scm
+dependencies = [
+  "typing_extensions"
+]
 
 [tool.setuptools.package-data]
 pint = [
