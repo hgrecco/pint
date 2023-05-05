@@ -432,7 +432,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             except DimensionalityError:
                 return False
 
-        if isinstance(other, (PlainQuantity[MagnitudeT], PlainUnit)):
+        if isinstance(other, (PlainQuantity, PlainUnit)):
             return self.dimensionality == other.dimensionality
 
         if isinstance(other, str):
