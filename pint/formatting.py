@@ -21,6 +21,7 @@ from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse, HAS_BABEL
 
 if TYPE_CHECKING:
+    from .registry import UnitRegistry
     from .util import ItMatrix, UnitsContainer
 
     if HAS_BABEL:
@@ -30,7 +31,15 @@ if TYPE_CHECKING:
     else:
         Locale = TypeVar("Locale")
 
+
 __JOIN_REG_EXP = re.compile(r"{\d*}")
+
+FORMATTER = Callable[
+    [
+        Any,
+    ],
+    str,
+]
 
 
 def _join(fmt: str, iterable: Iterable[Any]) -> str:
@@ -178,7 +187,7 @@ def register_unit_format(name: str):
 
 
 @register_unit_format("P")
-def format_pretty(unit: UnitsContainer, registry, **options) -> str:
+def format_pretty(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -209,7 +218,7 @@ def latex_escape(string: str) -> str:
 
 
 @register_unit_format("L")
-def format_latex(unit: UnitsContainer, registry, **options) -> str:
+def format_latex(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
     preprocessed = {rf"\mathrm{{{latex_escape(u)}}}": p for u, p in unit.items()}
     formatted = formatter(
         preprocessed.items(),
@@ -225,7 +234,9 @@ def format_latex(unit: UnitsContainer, registry, **options) -> str:
 
 
 @register_unit_format("Lx")
-def format_latex_siunitx(unit: UnitsContainer, registry, **options) -> str:
+def format_latex_siunitx(
+    unit: UnitsContainer, registry: UnitRegistry, **options
+) -> str:
     if registry is None:
         raise ValueError(
             "Can't format as siunitx without a registry."
@@ -239,7 +250,7 @@ def format_latex_siunitx(unit: UnitsContainer, registry, **options) -> str:
 
 
 @register_unit_format("H")
-def format_html(unit: UnitsContainer, registry, **options) -> str:
+def format_html(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -253,7 +264,7 @@ def format_html(unit: UnitsContainer, registry, **options) -> str:
 
 
 @register_unit_format("D")
-def format_default(unit: UnitsContainer, registry, **options) -> str:
+def format_default(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -267,7 +278,7 @@ def format_default(unit: UnitsContainer, registry, **options) -> str:
 
 
 @register_unit_format("C")
-def format_compact(unit: UnitsContainer, registry, **options) -> str:
+def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -288,7 +299,7 @@ def formatter(
     division_fmt: str = " / ",
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
-    exp_call=lambda x: f"{x:n}",
+    exp_call: FORMATTER = "{:n}".format,
     locale: str | None = None,
     babel_length: str = "long",
     babel_plural_form: str = "one",
@@ -548,12 +559,12 @@ def split_format(
     return mspec, uspec
 
 
-def vector_to_latex(vec: Iterable[Any], fmtfun=lambda x: format(x, ".2f")) -> str:
+def vector_to_latex(vec: Iterable[Any], fmtfun: FORMATTER = ".2f".format) -> str:
     return matrix_to_latex([vec], fmtfun)
 
 
-def matrix_to_latex(matrix: ItMatrix, fmtfun=lambda x: format(x, ".2f")) -> str:
-    ret = []
+def matrix_to_latex(matrix: ItMatrix, fmtfun: FORMATTER = ".2f".format) -> str:
+    ret: list[str] = []
 
     for row in matrix:
         ret += [" & ".join(fmtfun(f) for f in row)]
@@ -562,11 +573,10 @@ def matrix_to_latex(matrix: ItMatrix, fmtfun=lambda x: format(x, ".2f")) -> str:
 
 
 def ndarray_to_latex_parts(
-    ndarr, fmtfun=lambda x: format(x, ".2f"), dim: tuple[int] = tuple()
+    ndarr, fmtfun: FORMATTER = ".2f".format, dim: tuple[int, ...] = tuple()
 ):
     if isinstance(fmtfun, str):
-        fmt = fmtfun
-        fmtfun = lambda x: format(x, fmt)
+        fmtfun = fmtfun.format
 
     if ndarr.ndim == 0:
         _ndarr = ndarr.reshape(1)
@@ -589,6 +599,6 @@ def ndarray_to_latex_parts(
 
 
 def ndarray_to_latex(
-    ndarr, fmtfun=lambda x: format(x, ".2f"), dim: tuple[int] = tuple()
+    ndarr, fmtfun: FORMATTER = ".2f".format, dim: tuple[int, ...] = tuple()
 ) -> str:
     return "\n".join(ndarray_to_latex_parts(ndarr, fmtfun, dim))

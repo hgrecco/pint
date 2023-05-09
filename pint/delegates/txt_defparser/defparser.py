@@ -79,7 +79,7 @@ class _PintParser(fp.Parser[PintRootBlock, ParserConfig]):
 
 
 class DefParser:
-    skip_classes: tuple[type] = (
+    skip_classes: tuple[type, ...] = (
         fp.BOF,
         fp.BOR,
         fp.BOS,

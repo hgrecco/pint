@@ -394,7 +394,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def from_tuple(cls, tup):
         return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
 
-    def to_tuple(self) -> tuple[MagnitudeT, tuple[tuple[str]]]:
+    def to_tuple(self) -> tuple[MagnitudeT, tuple[tuple[str, ...]]]:
         return self.m, tuple(self._units.items())
 
     def compatible_units(self, *contexts):

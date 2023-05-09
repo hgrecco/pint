@@ -93,10 +93,10 @@ class ContextDefinition(errors.WithDefErr):
     #: name of the context
     name: str
     #: other na
-    aliases: tuple[str]
+    aliases: tuple[str, ...]
     defaults: dict[str, numbers.Number]
-    relations: tuple[Relation]
-    redefinitions: tuple[UnitDefinition]
+    relations: tuple[Relation, ...]
+    redefinitions: tuple[UnitDefinition, ...]
 
     @property
     def variables(self) -> set[str]:

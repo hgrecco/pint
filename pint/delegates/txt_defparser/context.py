@@ -89,7 +89,7 @@ class BeginContext(PintParsedStatement):
     )
 
     name: str
-    aliases: tuple[str]
+    aliases: tuple[str, ...]
     defaults: dict[str, numbers.Number]
 
     @classmethod
@@ -189,7 +189,7 @@ class ContextDefinition(
         return self.opening.name
 
     @property
-    def aliases(self) -> tuple[str]:
+    def aliases(self) -> tuple[str, ...]:
         assert isinstance(self.opening, BeginContext)
         return self.opening.aliases
 
@@ -199,7 +199,7 @@ class ContextDefinition(
         return self.opening.defaults
 
     @property
-    def relations(self) -> tuple[BidirectionalRelation | ForwardRelation]:
+    def relations(self) -> tuple[BidirectionalRelation | ForwardRelation, ...]:
         return tuple(
             r
             for r in self.body
@@ -207,5 +207,5 @@ class ContextDefinition(
         )
 
     @property
-    def redefinitions(self) -> tuple[plain.UnitDefinition]:
+    def redefinitions(self) -> tuple[plain.UnitDefinition, ...]:
         return tuple(r for r in self.body if isinstance(r, plain.UnitDefinition))

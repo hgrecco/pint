@@ -110,10 +110,10 @@ class SystemDefinition(
         return self.opening.name
 
     @property
-    def using_group_names(self) -> tuple[str]:
+    def using_group_names(self) -> tuple[str, ...]:
         assert isinstance(self.opening, BeginSystem)
         return self.opening.using_group_names
 
     @property
-    def rules(self) -> tuple[BaseUnitRule]:
+    def rules(self) -> tuple[BaseUnitRule, ...]:
         return tuple(el for el in self.body if isinstance(el, BaseUnitRule))

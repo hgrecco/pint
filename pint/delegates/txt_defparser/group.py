@@ -109,10 +109,10 @@ class GroupDefinition(
         return self.opening.name
 
     @property
-    def using_group_names(self) -> tuple[str]:
+    def using_group_names(self) -> tuple[str, ...]:
         assert isinstance(self.opening, BeginGroup)
         return self.opening.using_group_names
 
     @property
-    def definitions(self) -> tuple[plain.UnitDefinition]:
+    def definitions(self) -> tuple[plain.UnitDefinition, ...]:
         return tuple(el for el in self.body if isinstance(el, plain.UnitDefinition))

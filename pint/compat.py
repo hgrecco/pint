@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import sys
 import math
 import tokenize
 from decimal import Decimal
@@ -20,15 +21,22 @@ from collections.abc import Mapping
 from typing import Any, NoReturn, Callable
 from collections.abc import Generator, Iterable
 
-try:
-    from typing import TypeAlias  # noqa
-except ImportError:
-    from typing_extensions import TypeAlias  # noqa
+if sys.version_info >= (3, 10):
+    pass
+else:
+    pass
 
-try:
-    from typing import Self  # noqa
-except ImportError:
-    from typing_extensions import Self  # noqa
+
+if sys.version_info >= (3, 11):
+    pass
+else:
+    pass
+
+
+if sys.version_info >= (3, 11):
+    pass
+else:
+    pass
 
 
 def missing_dependency(

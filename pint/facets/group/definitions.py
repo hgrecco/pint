@@ -23,9 +23,9 @@ class GroupDefinition(errors.WithDefErr):
     #: name of the group
     name: str
     #: unit groups that will be included within the group
-    using_group_names: tuple[str]
+    using_group_names: tuple[str, ...]
     #: definitions for the units existing within the group
-    definitions: tuple[plain.UnitDefinition]
+    definitions: tuple[plain.UnitDefinition, ...]
 
     @classmethod
     def from_lines(
@@ -42,7 +42,7 @@ class GroupDefinition(errors.WithDefErr):
                 return definition
 
     @property
-    def unit_names(self) -> tuple[str]:
+    def unit_names(self) -> tuple[str, ...]:
         return tuple(el.name for el in self.definitions)
 
     def __post_init__(self) -> None:

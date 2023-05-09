@@ -65,7 +65,7 @@ class DefaultsDefinition(
     ]
 
     @property
-    def _valid_fields(self) -> tuple[str]:
+    def _valid_fields(self) -> tuple[str, ...]:
         return tuple(f.name for f in fields(definitions.DefaultsDefinition))
 
     def derive_definition(self) -> definitions.DefaultsDefinition:

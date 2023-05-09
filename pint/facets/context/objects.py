@@ -92,11 +92,11 @@ class Context:
     def __init__(
         self,
         name: str | None = None,
-        aliases: tuple[str] = tuple(),
+        aliases: tuple[str, ...] = tuple(),
         defaults: dict[str, Any] | None = None,
     ) -> None:
         self.name: str | None = name
-        self.aliases: tuple[str] = aliases
+        self.aliases: tuple[str, ...] = aliases
 
         #: Maps (src, dst) -> transformation function
         self.funcs: dict[SrcDst, Transformation] = {}
@@ -242,10 +242,10 @@ class Context:
         self,
     ) -> tuple[
         str | None,
-        tuple[str],
+        tuple[str, ...],
         frozenset[tuple[SrcDst, int]],
         frozenset[tuple[str, Any]],
-        tuple[Any],
+        tuple[Any, ...],
     ]:
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
@@ -324,7 +324,7 @@ class ContextChain(ChainMap[SrcDst, Context]):
         """
         return self[(src, dst)].transform(src, dst, registry, value)
 
-    def hashable(self) -> tuple[Any]:
+    def hashable(self) -> tuple[Any, ...]:
         """Generate a unique hashable and comparable representation of self, which can
         be used as a key in a dict. This class cannot define ``__hash__`` because it is
         mutable, and the Python interpreter does cache the output of ``__hash__``.

@@ -29,6 +29,7 @@ from typing import (
     TypeVar,
     Union,
     Generic,
+    Generator,
 )
 from collections.abc import Iterable, Iterator
 
@@ -1008,7 +1009,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def parse_unit_name(
         self, unit_name: str, case_sensitive: bool | None = None
-    ) -> tuple[tuple[str, str, str]]:
+    ) -> tuple[tuple[str, str, str], ...]:
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
         In case of equivalent combinations (e.g. ('kilo', 'gram', '') and
@@ -1033,7 +1034,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def _parse_unit_name(
         self, unit_name: str, case_sensitive: bool | None = None
-    ) -> Iterator[tuple[str, str, str]]:
+    ) -> Generator[tuple[str, str, str], None, None]:
         """Helper of parse_unit_name."""
         case_sensitive = (
             self.case_sensitive if case_sensitive is None else case_sensitive

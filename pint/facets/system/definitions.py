@@ -39,9 +39,9 @@ class SystemDefinition(errors.WithDefErr):
     #: name of the system
     name: str
     #: unit groups that will be included within the system
-    using_group_names: tuple[str]
+    using_group_names: tuple[str, ...]
     #: rules to define new base unit within the system.
-    rules: tuple[BaseUnitRule]
+    rules: tuple[BaseUnitRule, ...]
 
     @classmethod
     def from_lines(
@@ -59,7 +59,7 @@ class SystemDefinition(errors.WithDefErr):
                 return definition
 
     @property
-    def unit_replacements(self) -> tuple[tuple[str, str | None]]:
+    def unit_replacements(self) -> tuple[tuple[str, str | None], ...]:
         # TODO: check if None can be dropped.
         return tuple((el.new_unit_name, el.old_unit_name) for el in self.rules)
 

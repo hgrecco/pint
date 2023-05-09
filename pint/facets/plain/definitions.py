@@ -120,7 +120,7 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
     #: canonical symbol
     defined_symbol: str | None
     #: additional names for the same unit
-    aliases: tuple[str]
+    aliases: tuple[str, ...]
     #: A functiont that converts a value in these units into the reference units
     # TODO: this has changed as converter is now annotated as converter.
     # Briefly, in several places converter attributes like as_multiplicative were
