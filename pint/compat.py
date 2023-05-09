@@ -21,22 +21,23 @@ from collections.abc import Mapping
 from typing import Any, NoReturn, Callable
 from collections.abc import Generator, Iterable
 
+
 if sys.version_info >= (3, 10):
-    pass
+    from typing import TypeAlias  # noqa
 else:
-    pass
+    from typing_extensions import TypeAlias  # noqa
 
 
 if sys.version_info >= (3, 11):
-    pass
+    from typing import Self  # noqa
 else:
-    pass
+    from typing_extensions import Self  # noqa
 
 
 if sys.version_info >= (3, 11):
-    pass
+    from typing import Never  # noqa
 else:
-    pass
+    from typing_extensions import Never  # noqa
 
 
 def missing_dependency(
