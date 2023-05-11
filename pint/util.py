@@ -21,6 +21,7 @@ from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
 import tokenize
+import types
 from typing import (
     TYPE_CHECKING,
     ClassVar,
@@ -1142,4 +1143,13 @@ def create_class_with_registry(
     filling _REGISTRY class attribute with an actual instanced registry.
     """
 
-    return type(base_class.__name__, (base_class,), dict(_REGISTRY=registry))
+    class_body = {
+        "__module__": f"pint.{base_class.__name__}",
+        "_REGISTRY": registry,
+    }
+
+    return types.new_class(
+        base_class.__name__,
+        bases=(base_class,),
+        exec_body=lambda ns: ns.update(class_body),
+    )

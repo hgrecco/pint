@@ -36,6 +36,7 @@ Quantity = UnitRegistry.Quantity
 Unit = UnitRegistry.Unit
 Measurement = UnitRegistry.Measurement
 Context = UnitRegistry.Context
+Group = UnitRegistry.Group
 
 try:  # pragma: no cover
     __version__ = version("pint")

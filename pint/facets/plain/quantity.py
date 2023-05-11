@@ -169,11 +169,11 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     ) -> PlainQuantity[Any]:
         ...
 
-    # @overload
-    # def __new__(
-    #     cls, value: PlainQuantity[Any], units: UnitLike | None = None
-    # ) -> PlainQuantity[Any]:
-    #     ...
+    @overload
+    def __new__(
+        cls, value: PlainQuantity[Any], units: UnitLike | None = None
+    ) -> PlainQuantity[Any]:
+        ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):

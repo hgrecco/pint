@@ -72,7 +72,7 @@ Using string parsing
 
 Pint includes a powerful parser for detecting magnitudes and units (with or
 without prefixes) in strings. Calling the ``UnitRegistry()`` directly
-invokes the parsing function:
+invokes the parsing function ``UnitRegistry.parse_expression``:
 
 .. doctest::
 
