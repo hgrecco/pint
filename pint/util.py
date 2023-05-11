@@ -38,7 +38,7 @@ from .pint_eval import build_eval_tree
 from ._typing import Scalar
 
 if TYPE_CHECKING:
-    from ._typing import Quantity, UnitLike, QuantityOrUnitLike
+    from ._typing import QuantityOrUnitLike
     from .registry import UnitRegistry
 
 
@@ -1047,7 +1047,7 @@ def to_units_container(
 
 
 def infer_base_unit(
-    unit_like: UnitLike | Quantity, registry: UnitRegistry | None = None
+    unit_like: QuantityOrUnitLike, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """
     Given a Quantity or UnitLike, give the UnitsContainer for it's plain units.
