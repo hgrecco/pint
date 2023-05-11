@@ -14,11 +14,12 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeAlias
+from typing import Generic
 
 from . import registry_helpers
 from . import facets
 from .util import logger, pi_theorem
+from .compat import TypeAlias
 
 
 # To build the Quantity and Unit classes

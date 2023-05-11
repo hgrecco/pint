@@ -17,7 +17,7 @@ import operator
 from typing import TYPE_CHECKING, Any, Callable, overload, Generic, TypeVar
 from collections.abc import Iterator, Sequence
 
-from ..._typing import UnitLike, QuantityOrUnitLike, Magnitude
+from ..._typing import UnitLike, QuantityOrUnitLike, Magnitude, Scalar
 from ...compat import (
     HAS_NUMPY,
     _to_magnitude,
@@ -47,6 +47,7 @@ if TYPE_CHECKING:
         import numpy as np  # noqa
 
 MagnitudeT = TypeVar("MagnitudeT", bound=Magnitude)
+ScalarT = TypeVar("ScalarT", bound=Scalar)
 
 T = TypeVar("T", bound=Magnitude)
 
@@ -159,13 +160,13 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         ...
 
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[int]:
+    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
         ...
 
     @overload
     def __new__(  # type: ignore[misc]
-        cls, value: Sequence, units: UnitLike | None = None
-    ) -> PlainQuantity[np.ndarray]:
+        cls, value: Sequence[ScalarT], units: UnitLike | None = None
+    ) -> PlainQuantity[Any]:
         ...
 
     # @overload
