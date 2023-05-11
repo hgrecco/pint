@@ -152,11 +152,11 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         # TODO: Check if this is still the case.
         return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
-    # @overload
-    # def __new__(
-    #     cls, value: T, units: UnitLike | None = None
-    # ) -> PlainQuantity[T]:
-    #     ...
+    @overload
+    def __new__(
+        cls, value: MagnitudeT, units: UnitLike | None = None
+    ) -> PlainQuantity[MagnitudeT]:
+        ...
 
     @overload
     def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[int]:

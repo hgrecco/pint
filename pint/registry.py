@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Generic
+from typing import Generic, TypeAlias
 
 from . import registry_helpers
 from . import facets
@@ -98,8 +98,8 @@ class UnitRegistry(
         If None, the cache is disabled. (default)
     """
 
-    Quantity = Quantity
-    Unit = Unit
+    Quantity: TypeAlias = Quantity
+    Unit: TypeAlias = Unit
 
     def __init__(
         self,
