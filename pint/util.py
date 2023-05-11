@@ -1144,7 +1144,7 @@ def create_class_with_registry(
     """
 
     class_body = {
-        "__module__": f"pint.{base_class.__name__}",
+        "__module__": "pint",
         "_REGISTRY": registry,
     }
 
