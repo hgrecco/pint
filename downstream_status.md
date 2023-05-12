@@ -14,4 +14,4 @@ Then, add your project badges to this file so it can be used as a Dashboard (alw
 [Pint Downstream Demo](https://github.com/hgrecco/pint-downstream-demo)
 [![CI](https://github.com/hgrecco/pint-downstream-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/hgrecco/pint-downstream-demo/actions/workflows/ci.yml)
 [![CI-pint-pre](https://github.com/hgrecco/pint-downstream-demo/actions/workflows/ci-pint-pre.yml/badge.svg)](https://github.com/hgrecco/pint-downstream-demo/actions/workflows/ci-pint-pre.yml)
-[![CI-master](https://github.com/hgrecco/pint-downstream-demo/actions/workflows/ci-master.yml/badge.svg)](https://github.com/hgrecco/pint-downstream-demo/actions/workflows/ci-master.yml)
+[![CI-pint-master](https://github.com/hgrecco/pint-downstream-demo/actions/workflows/ci-pint-master.yml/badge.svg)](https://github.com/hgrecco/pint-downstream-demo/actions/workflows/ci-pint-master.yml)
