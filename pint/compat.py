@@ -215,12 +215,12 @@ except ImportError:
 
 #: List upcast type names
 upcast_type_names = (
-    "pint_pandas.PintArray",
-    "pandas.Series",
+    "pint_pandas.pint_array.PintArray",
     "xarray.core.dataarray.DataArray",
     "xarray.core.dataset.Dataset",
     "xarray.core.variable.Variable",
     "pandas.core.series.Series",
+    "pandas.core.frame.DataFrame",
     "xarray.core.dataarray.DataArray",
 )
 
