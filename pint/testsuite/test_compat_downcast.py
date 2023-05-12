@@ -146,7 +146,11 @@ def test_bivariate_op_consistency(local_registry, q_base, op, unit, array):
             id="array-first",
             marks=pytest.mark.xfail(reason="upstream issue numpy/numpy#15200"),
         ),
-        pytest.param(WR2(operator.mul), id="unit-first"),
+        pytest.param(
+            WR2(operator.mul),
+            id="unit-first",
+            marks=pytest.mark.xfail(reason="upstream issue numpy/numpy#15200"),
+        ),
     ],
 )
 @pytest.mark.parametrize(
