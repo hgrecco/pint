@@ -129,10 +129,10 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         if isinstance(values, self.__class__):
             values = values.to(self).magnitude
         elif self.dimensionless:
-            values = self.__class__(values, "").to(self)
+            values = self.__class__(values, "").to(self).magnitude
         else:
             raise DimensionalityError("dimensionless", self._units)
-        self.magnitude.put(indices, values, mode)
+        self._magnitude.put(indices, values, mode)
 
     @property
     def real(self) -> NumpyQuantity:
