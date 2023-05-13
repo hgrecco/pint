@@ -653,7 +653,7 @@ class TestQuantity(QuantityTestCase):
 
     @helpers.requires_not_numpy()
     def test_no_ndarray_coercion_without_numpy(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(AttributeError):
             self.Q_(1, "m").__array__()
 
     @patch(
