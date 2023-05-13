@@ -1255,17 +1255,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.array([1, 3, 5, 7, 8, 9, 10, 11, 12]) * self.ureg.m,
         )
 
-    def test_ndarray_downcast(self):
-        with pytest.warns(UnitStrippedWarning):
-            np.asarray(self.q)
-
-    def test_ndarray_downcast_with_dtype(self):
-        with pytest.warns(UnitStrippedWarning):
-            qarr = np.asarray(self.q, dtype=np.float64)
-            assert qarr.dtype == np.float64
-
     def test_array_protocol_unavailable(self):
-        for attr in ("__array_struct__", "__array_interface__"):
+        for attr in ("__array__", "__array_struct__", "__array_interface__"):
             with pytest.raises(AttributeError):
                 getattr(self.q, attr)
 
