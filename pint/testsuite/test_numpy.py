@@ -5,7 +5,7 @@ import warnings
 
 import pytest
 
-from pint import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
+from pint import DimensionalityError, OffsetUnitCalculusError
 from pint.compat import np
 from pint.testsuite import helpers
 from pint.testsuite.test_umath import TestUFuncs
