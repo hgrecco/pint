@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, Any
+from typing import TYPE_CHECKING, Generic, Any, Optional
 
 from ...compat import TypeAlias
 from ... import errors
@@ -47,7 +47,6 @@ class GenericGroupRegistry(
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         #: Map group name to group.
-        #: :type: dict[ str | Group]
         self._groups: dict[str, objects.Group] = {}
         self._groups["root"] = self.Group("root")
 
@@ -122,7 +121,7 @@ class GenericGroupRegistry(
         return self.Group(name)
 
     def get_compatible_units(
-        self, input_units: UnitsContainer, group: str | None = None
+        self, input_units: UnitsContainer, group: Optional[str] = None
     ) -> frozenset[Unit]:
         """ """
         if group is None:
@@ -135,7 +134,7 @@ class GenericGroupRegistry(
         return frozenset(self.Unit(eq) for eq in equiv)
 
     def _get_compatible_units(
-        self, input_units: UnitsContainer, group: str | None = None
+        self, input_units: UnitsContainer, group: Optional[str] = None
     ) -> frozenset[str]:
         ret = super()._get_compatible_units(input_units)
 

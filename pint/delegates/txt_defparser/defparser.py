@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pathlib
 import typing as ty
+from typing import Optional, Union
 
 from ..._vendor import flexcache as fc
 from ..._vendor import flexparser as fp
@@ -130,7 +131,9 @@ class DefParser:
             else:
                 yield stmt
 
-    def parse_file(self, filename: pathlib.Path | str, cfg: ParserConfig | None = None):
+    def parse_file(
+        self, filename: Union[pathlib.Path, str], cfg: Optional[ParserConfig] = None
+    ):
         return fp.parse(
             filename,
             _PintParser,
@@ -138,7 +141,7 @@ class DefParser:
             diskcache=self._diskcache,
         )
 
-    def parse_string(self, content: str, cfg: ParserConfig | None = None):
+    def parse_string(self, content: str, cfg: Optional[ParserConfig] = None):
         return fp.parse_bytes(
             content.encode("utf-8"),
             _PintParser,

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import numbers
 
-from typing import Any
+from typing import Any, Optional
 from collections.abc import Iterable
 
 
@@ -73,7 +73,7 @@ class System(SharedRegistryObject):
         #: Names of the _used_groups in used by this system.
         self._used_groups: set[str] = set()
 
-        self._computed_members: frozenset[str] | None = None
+        self._computed_members: Optional[frozenset[str]] = None
 
         # Add this system to the system dictionary
         self._REGISTRY._systems[self.name] = self
@@ -154,7 +154,7 @@ class System(SharedRegistryObject):
     def from_definition(
         cls: type[System],
         system_definition: SystemDefinition,
-        get_root_func: GetRootUnits | None = None,
+        get_root_func: Optional[GetRootUnits] = None,
     ) -> System:
         if get_root_func is None:
             # TODO: kept for backwards compatibility

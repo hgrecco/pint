@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Optional
 
 from ...compat import Self
 from ... import errors
@@ -24,7 +25,7 @@ class BaseUnitRule:
     new_unit_name: str
     #: name of the unit to be kicked out to make room for the new base uni
     #: If None, the current base unit with the same dimensionality will be used
-    old_unit_name: str | None = None
+    old_unit_name: Optional[str] = None
 
     # Instead of defining __post_init__ here,
     # it will be added to the container class
@@ -46,7 +47,7 @@ class SystemDefinition(errors.WithDefErr):
     @classmethod
     def from_lines(
         cls: type[Self], lines: Iterable[str], non_int_type: type
-    ) -> Self | None:
+    ) -> Optional[Self]:
         # TODO: this is to keep it backwards compatible
         # TODO: check when is None returned.
         from ...delegates import ParserConfig, txt_defparser
@@ -59,7 +60,7 @@ class SystemDefinition(errors.WithDefErr):
                 return definition
 
     @property
-    def unit_replacements(self) -> tuple[tuple[str, str | None], ...]:
+    def unit_replacements(self) -> tuple[tuple[str, Optional[str]], ...]:
         # TODO: check if None can be dropped.
         return tuple((el.new_unit_name, el.old_unit_name) for el in self.rules)
 

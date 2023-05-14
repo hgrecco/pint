@@ -14,7 +14,16 @@ import datetime
 import locale
 import numbers
 import operator
-from typing import TYPE_CHECKING, Any, Callable, overload, Generic, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    overload,
+    Generic,
+    TypeVar,
+    Optional,
+    Union,
+)
 from collections.abc import Iterator, Sequence
 
 from ..._typing import UnitLike, QuantityOrUnitLike, Magnitude, Scalar
@@ -155,23 +164,25 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     @overload
     def __new__(
-        cls, value: MagnitudeT, units: UnitLike | None = None
+        cls, value: MagnitudeT, units: Optional[UnitLike] = None
     ) -> PlainQuantity[MagnitudeT]:
         ...
 
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
+    def __new__(
+        cls, value: str, units: Optional[UnitLike] = None
+    ) -> PlainQuantity[Any]:
         ...
 
     @overload
     def __new__(  # type: ignore[misc]
-        cls, value: Sequence[ScalarT], units: UnitLike | None = None
+        cls, value: Sequence[ScalarT], units: Optional[UnitLike] = None
     ) -> PlainQuantity[Any]:
         ...
 
     @overload
     def __new__(
-        cls, value: PlainQuantity[Any], units: UnitLike | None = None
+        cls, value: PlainQuantity[Any], units: Optional[UnitLike] = None
     ) -> PlainQuantity[Any]:
         ...
 
@@ -311,7 +322,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         return not bool(tmp.dimensionality)
 
-    _dimensionality: UnitsContainerT | None = None
+    _dimensionality: Optional[UnitsContainerT] = None
 
     @property
     def dimensionality(self) -> UnitsContainerT:
@@ -406,7 +417,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self._units)
 
     def is_compatible_with(
-        self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
+        self, other: Any, *contexts: Union[str, Context], **ctx_kwargs: Any
     ) -> bool:
         """check if the other object is compatible
 
@@ -463,7 +474,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         )
 
     def ito(
-        self, other: QuantityOrUnitLike | None = None, *contexts, **ctx_kwargs
+        self, other: Optional[QuantityOrUnitLike] = None, *contexts, **ctx_kwargs
     ) -> None:
         """Inplace rescale to different units.
 
@@ -484,7 +495,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return None
 
     def to(
-        self, other: QuantityOrUnitLike | None = None, *contexts, **ctx_kwargs
+        self, other: Optional[QuantityOrUnitLike] = None, *contexts, **ctx_kwargs
     ) -> PlainQuantity:
         """Return PlainQuantity rescaled to different units.
 
@@ -1257,7 +1268,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def __abs__(self) -> PlainQuantity[MagnitudeT]:
         return self.__class__(abs(self._magnitude), self._units)
 
-    def __round__(self, ndigits: int | None = 0) -> PlainQuantity[MagnitudeT]:
+    def __round__(self, ndigits: Optional[int] = 0) -> PlainQuantity[MagnitudeT]:
         return self.__class__(round(self._magnitude, ndigits=ndigits), self._units)
 
     def __pos__(self) -> PlainQuantity[MagnitudeT]:

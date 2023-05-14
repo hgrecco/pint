@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from dataclasses import fields as dc_fields
 
-from typing import Any
+from typing import Any, Optional
 
 from ._typing import Magnitude
 
@@ -53,7 +53,7 @@ class Converter:
         return frozenset(p.name for p in dc_fields(new_cls))
 
     @classmethod
-    def preprocess_kwargs(cls, **kwargs: Any) -> dict[str, Any] | None:
+    def preprocess_kwargs(cls, **kwargs: Any) -> Optional[dict[str, Any]]:
         return None
 
     @classmethod

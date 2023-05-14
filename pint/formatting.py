@@ -13,7 +13,7 @@ from __future__ import annotations
 import functools
 import re
 import warnings
-from typing import Callable, Any, TYPE_CHECKING, TypeVar
+from typing import Callable, Any, TYPE_CHECKING, TypeVar, Optional, Union
 from collections.abc import Iterable
 from numbers import Number
 
@@ -300,7 +300,7 @@ def formatter(
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
     exp_call: FORMATTER = "{:n}".format,
-    locale: str | None = None,
+    locale: Optional[str] = None,
     babel_length: str = "long",
     babel_plural_form: str = "one",
     sort: bool = True,
@@ -455,7 +455,7 @@ def format_unit(unit, spec: str, registry=None, **options):
 def siunitx_format_unit(units: UnitsContainer, registry) -> str:
     """Returns LaTeX code for the unit that can be put into an siunitx command."""
 
-    def _tothe(power: int | float) -> str:
+    def _tothe(power: Union[int, float]) -> str:
         if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
             if power == 1:
                 return ""

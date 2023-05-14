@@ -18,7 +18,7 @@ from importlib import import_module
 from io import BytesIO
 from numbers import Number
 from collections.abc import Mapping
-from typing import Any, NoReturn, Callable
+from typing import Any, NoReturn, Callable, Optional, Union
 from collections.abc import Generator, Iterable
 
 
@@ -41,7 +41,7 @@ else:
 
 
 def missing_dependency(
-    package: str, display_name: str | None = None
+    package: str, display_name: Optional[str] = None
 ) -> Callable[..., NoReturn]:
     """Return a helper function that raises an exception when used.
 
@@ -225,7 +225,7 @@ upcast_type_names = (
 )
 
 #: Map type name to the actual type (for upcast types).
-upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
+upcast_type_map: Mapping[str, Optional[type]] = {k: None for k in upcast_type_names}
 
 
 def fully_qualified_name(t: type) -> str:
@@ -286,7 +286,7 @@ def is_duck_array(obj: type) -> bool:
     return is_duck_array_type(type(obj))
 
 
-def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
+def eq(lhs: Any, rhs: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
     """Comparison of scalars and arrays.
 
     Parameters
@@ -309,7 +309,7 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
     return out
 
 
-def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+def isnan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
     """Test for NaN or NaT.
 
     Parameters
@@ -342,7 +342,7 @@ def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
         return False
 
 
-def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+def zero_or_nan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
     """Test if obj is zero, NaN, or NaT.
 
     Parameters

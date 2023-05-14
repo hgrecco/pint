@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import bisect
 import math
 import numbers
-from ...util import infer_base_unit
 import warnings
+
+from ...util import infer_base_unit
 from ...compat import (
     mip_INF,
     mip_INTEGER,
@@ -81,7 +82,7 @@ def to_reduced_units(
 
 
 def to_compact(
-    quantity: PlainQuantity, unit: UnitsContainer | None = None
+    quantity: PlainQuantity, unit: Optional[UnitsContainer] = None
 ) -> PlainQuantity:
     """ "Return PlainQuantity rescaled to compact, human-readable units.
 

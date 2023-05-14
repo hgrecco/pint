@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import weakref
 from collections import ChainMap, defaultdict
-from typing import Any, Callable, Protocol, Generic
+from typing import Any, Callable, Protocol, Generic, Optional
 from collections.abc import Iterable
 
 from ...facets.plain import UnitDefinition, PlainQuantity, PlainUnit, MagnitudeT
@@ -91,11 +91,11 @@ class Context:
 
     def __init__(
         self,
-        name: str | None = None,
+        name: Optional[str] = None,
         aliases: tuple[str, ...] = tuple(),
-        defaults: dict[str, Any] | None = None,
+        defaults: Optional[dict[str, Any]] = None,
     ) -> None:
-        self.name: str | None = name
+        self.name: Optional[str] = name
         self.aliases: tuple[str, ...] = aliases
 
         #: Maps (src, dst) -> transformation function
@@ -150,7 +150,7 @@ class Context:
     def from_lines(
         cls,
         lines: Iterable[str],
-        to_base_func: ToBaseFunc | None = None,
+        to_base_func: Optional[ToBaseFunc] = None,
         non_int_type: type = float,
     ) -> Context:
         context_definition = ContextDefinition.from_lines(lines, non_int_type)
@@ -162,7 +162,7 @@ class Context:
 
     @classmethod
     def from_definition(
-        cls, cd: ContextDefinition, to_base_func: ToBaseFunc | None = None
+        cls, cd: ContextDefinition, to_base_func: Optional[ToBaseFunc] = None
     ) -> Context:
         ctx = cls(cd.name, cd.aliases, cd.defaults)
 
@@ -241,7 +241,7 @@ class Context:
     def hashable(
         self,
     ) -> tuple[
-        str | None,
+        Optional[str],
         tuple[str, ...],
         frozenset[tuple[SrcDst, int]],
         frozenset[tuple[str, Any]],
@@ -273,7 +273,7 @@ class ContextChain(ChainMap[SrcDst, Context]):
         super().__init__()
         self.contexts: list[Context] = []
         self.maps.clear()  # Remove default empty map
-        self._graph: dict[SrcDst, set[UnitsContainer]] | None = None
+        self._graph: Optional[dict[SrcDst, set[UnitsContainer]]] = None
 
     def insert_contexts(self, *contexts: Context):
         """Insert one or more contexts in reversed order the chained map.
@@ -287,7 +287,7 @@ class ContextChain(ChainMap[SrcDst, Context]):
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
-    def remove_contexts(self, n: int | None = None):
+    def remove_contexts(self, n: Optional[int] = None):
         """Remove the last n inserted contexts from the chain.
 
         Parameters

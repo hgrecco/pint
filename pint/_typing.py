@@ -19,10 +19,10 @@ if TYPE_CHECKING:
 if HAS_NUMPY:
     from .compat import np
 
-    Scalar = Union[float, int, Decimal, Fraction, np.number[Any]]
+    Scalar: TypeAlias = Union[float, int, Decimal, Fraction, np.number[Any]]
     Array = np.ndarray[Any, Any]
 else:
-    Scalar = Union[float, int, Decimal, Fraction]
+    Scalar: TypeAlias = Union[float, int, Decimal, Fraction]
     Array: TypeAlias = Never
 
 # TODO: Change when Python 3.10 becomes minimal version.

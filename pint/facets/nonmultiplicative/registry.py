@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar, Generic
+from typing import Any, TypeVar, Generic, Optional
 
 from ...compat import TypeAlias
 from ...errors import DimensionalityError, UndefinedUnitError
@@ -60,8 +60,8 @@ class GenericNonMultiplicativeRegistry(
     def _parse_units(
         self,
         input_string: str,
-        as_delta: bool | None = None,
-        case_sensitive: bool | None = None,
+        as_delta: Optional[bool] = None,
+        case_sensitive: Optional[bool] = None,
     ) -> UnitsContainer:
         """ """
         if as_delta is None:
@@ -136,7 +136,7 @@ class GenericNonMultiplicativeRegistry(
         except KeyError:
             raise UndefinedUnitError(unit_name)
 
-    def _validate_and_extract(self, units: UnitsContainer) -> str | None:
+    def _validate_and_extract(self, units: UnitsContainer) -> Optional[str]:
         """Used to check if a given units is suitable for a simple
         conversion.
 

@@ -13,7 +13,7 @@ import numbers
 import typing as ty
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Any
+from typing import Any, Optional
 
 from ..._typing import Magnitude
 from ... import errors
@@ -81,7 +81,7 @@ class PrefixDefinition(NamedDefinition, errors.WithDefErr):
     #: scaling value for this prefix
     value: numbers.Number
     #: canonical symbol
-    defined_symbol: str | None = ""
+    defined_symbol: Optional[str] = ""
     #: additional names for the same prefix
     aliases: ty.Tuple[str, ...] = ()
 
@@ -118,7 +118,7 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
     """Definition of a unit."""
 
     #: canonical symbol
-    defined_symbol: str | None
+    defined_symbol: Optional[str]
     #: additional names for the same unit
     aliases: tuple[str, ...]
     #: A functiont that converts a value in these units into the reference units
@@ -126,15 +126,15 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
     # Briefly, in several places converter attributes like as_multiplicative were
     # accesed. So having a generic function is a no go.
     # I guess this was never used as errors where not raised.
-    converter: Converter | None
+    converter: Optional[Converter]
     #: Reference units.
-    reference: UnitsContainer | None
+    reference: Optional[UnitsContainer]
 
     def __post_init__(self):
         if not errors.is_valid_unit_name(self.name):
             raise self.def_err(errors.MSG_INVALID_UNIT_NAME)
 
-        # TODO: check why  reference: UnitsContainer | None
+        # TODO: check why  reference: Optional[UnitsContainer]
         assert isinstance(self.reference, UnitsContainer)
 
         if not any(map(errors.is_dim, self.reference.keys())):

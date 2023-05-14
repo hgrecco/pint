@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Any, TYPE_CHECKING, Generic
+from typing import Callable, Any, TYPE_CHECKING, Generic, Optional
 
 from collections.abc import Generator, Iterable
 from ...util import SharedRegistryObject, getattr_maybe_raise
@@ -81,7 +81,7 @@ class Group(SharedRegistryObject):
 
         #: A cache of the included units.
         #: None indicates that the cache has been invalidated.
-        self._computed_members: frozenset[str] | None = None
+        self._computed_members: Optional[frozenset[str]] = None
 
     @property
     def members(self) -> frozenset[str]:
@@ -195,7 +195,9 @@ class Group(SharedRegistryObject):
 
     @classmethod
     def from_definition(
-        cls, group_definition: GroupDefinition, add_unit_func: AddUnitFunc | None = None
+        cls,
+        group_definition: GroupDefinition,
+        add_unit_func: Optional[AddUnitFunc] = None,
     ) -> Group:
         grp = cls(group_definition.name)
 

@@ -19,6 +19,7 @@ from __future__ import annotations
 import numbers
 import re
 import typing as ty
+from typing import Optional, Union
 from dataclasses import dataclass
 
 from ..._vendor import flexparser as fp
@@ -27,12 +28,12 @@ from ..base_defparser import ParserConfig, PintParsedStatement
 from . import block, common, plain
 
 # TODO check syntax
-T = ty.TypeVar("T", bound="ForwardRelation | BidirectionalRelation")
+T = ty.TypeVar("T", bound="Union[ForwardRelation, BidirectionalRelation]")
 
 
 def _from_string_and_context_sep(
     cls: type[T], s: str, config: ParserConfig, separator: str
-) -> T | None:
+) -> Optional[T]:
     if separator not in s:
         return None
     if ":" not in s:
@@ -199,7 +200,7 @@ class ContextDefinition(
         return self.opening.defaults
 
     @property
-    def relations(self) -> tuple[BidirectionalRelation | ForwardRelation, ...]:
+    def relations(self) -> tuple[Union[BidirectionalRelation, ForwardRelation], ...]:
         return tuple(
             r
             for r in self.body
