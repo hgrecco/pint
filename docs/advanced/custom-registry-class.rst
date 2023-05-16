@@ -94,6 +94,7 @@ Then, you need to create a custom registry but deriving from `GenericUnitRegistr
 can specify the types of
 
 .. doctest::
+
     >>> # from typing_extensions import TypeAlias # Python 3.9
     >>> from typing import TypeAlias # Python 3.10+
     >>> class MyRegistry(pint.GenericUnitRegistry[MyQuantity, pint.Unit]):
