@@ -20,3 +20,7 @@ Then, add your project badges to this file so it can be used as a Dashboard (alw
 [![CI](https://github.com/hgrecco/pint-pandas/actions/workflows/ci.yml/badge.svg)](https://github.com/hgrecco/pint-pandas/actions/workflows/ci.yml)
 [![CI-pint-pre](https://github.com/hgrecco/pint-pandas/actions/workflows/ci-pint-pre.yml/badge.svg)](https://github.com/hgrecco/pint-pandas/actions/workflows/ci-pint-pre.yml)
 [![CI-pint-master](https://github.com/hgrecco/pint-pandas/actions/workflows/ci-pint-master.yml/badge.svg)](https://github.com/hgrecco/pint-pandas/actions/workflows/ci-pint-master.yml)
+
+[MetPy](https://github.com/Unidata/MetPy)
+[![CI](https://github.com/Unidata/MetPy/actions/workflows/tests-pypi.yml/badge.svg)](https://github.com/Unidata/MetPy/actions/workflows/tests-pypi.yml)
+[![CI-pint-master](https://github.com/Unidata/MetPy/actions/workflows/nightly-builds.yml/badge.svg)](https://github.com/Unidata/MetPy/actions/workflows/nightly-builds.yml)
