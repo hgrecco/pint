@@ -9,6 +9,9 @@ Pint Changelog
 - Improved typing experience.
 - Migrated fully to pyproject.toml.
 - Migrated to ruff.
+- In order to make static typing possible as required by mypy
+  and similar tools, the way to subclass the registry has been
+  changed.
 
 
 0.21 (2023-05-01)

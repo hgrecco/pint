@@ -53,16 +53,21 @@ class Unit(
     pass
 
 
-class UnitRegistry(
-    facets.GenericSystemRegistry[Quantity, Unit],
-    facets.GenericContextRegistry[Quantity, Unit],
-    facets.GenericDaskRegistry[Quantity, Unit],
-    facets.GenericNumpyRegistry[Quantity, Unit],
-    facets.GenericMeasurementRegistry[Quantity, Unit],
-    facets.GenericFormattingRegistry[Quantity, Unit],
-    facets.GenericNonMultiplicativeRegistry[Quantity, Unit],
-    facets.GenericPlainRegistry[Quantity, Unit],
+class GenericUnitRegistry(
+    Generic[facets.QuantityT, facets.UnitT],
+    facets.GenericSystemRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericContextRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericFormattingRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericNonMultiplicativeRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT],
 ):
+    pass
+
+
+class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
     """The unit registry stores the definitions and relationships between units.
 
     Parameters
