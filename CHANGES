@@ -4,7 +4,10 @@ Pint Changelog
 0.22 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Drop Python 3.8 compatability following NEP-29.
+- Improved typing experience.
+- Migrated fully to pyproject.toml.
+- Migrated to ruff.
 
 
 0.21 (2023-05-01)
