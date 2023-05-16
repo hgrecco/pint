@@ -97,7 +97,7 @@ can specify the types of
 
     >>> # from typing_extensions import TypeAlias # Python 3.9
     >>> from typing import TypeAlias # Python 3.10+
-    >>> class MyRegistry(pint.GenericUnitRegistry[MyQuantity, pint.Unit]):
+    >>> class MyRegistry(pint.registry.GenericUnitRegistry[MyQuantity, pint.Unit]):
     ...
     ...     Quantity: TypeAlias = MyQuantity
     ...     Unit: TypeAlias = MyUnit
