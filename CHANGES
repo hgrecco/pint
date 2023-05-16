@@ -5,6 +5,7 @@ Pint Changelog
 -----------------
 
 - Drop Python 3.8 compatability following NEP-29.
+- Drop NumPy < 1.21 following NEP-29.
 - Improved typing experience.
 - Migrated fully to pyproject.toml.
 - Migrated to ruff.
