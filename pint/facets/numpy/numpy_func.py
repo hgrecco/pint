@@ -869,7 +869,6 @@ for func_str, unit_arguments, wrap_output in (
     ("max", ["a", "initial"], True),
     ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
-    ("isclose", ["a", "b", "atol"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
     ("clip", ["a", "a_min", "a_max"], True),
     ("append", ["arr", "values"], True),
@@ -882,11 +881,42 @@ for func_str, unit_arguments, wrap_output in (
     ("delete", ["arr"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
-    ("allclose", ["a", "b", "atol"], False),
     ("intersect1d", ["ar1", "ar2"], True),
 ):
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
+
+# implement isclose and allclose
+def implement_close(func_str):
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(*args, **kwargs):
+        bound_args = signature(func).bind(*args, **kwargs)
+        labels = ["a", "b"]
+        arrays = {label: bound_args.arguments[label] for label in labels}
+        if "atol" in bound_args.arguments:
+            atol = bound_args.arguments["atol"]
+            a = arrays["a"]
+            if not hasattr(atol, "_REGISTRY") and hasattr(a, "_REGISTRY"):
+                # always use the units of `a`
+                atol_ = a._REGISTRY.Quantity(atol, a.units)
+            else:
+                atol_ = atol
+            arrays["atol"] = atol_
+
+        args, _ = unwrap_and_wrap_consistent_units(*arrays.values())
+        for label, value in zip(arrays.keys(), args):
+            bound_args.arguments[label] = value
+
+        return func(*bound_args.args, **bound_args.kwargs)
+
+
+for func_str in ("isclose", "allclose"):
+    implement_close(func_str)
 
 # Handle atleast_nd functions
 

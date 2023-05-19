@@ -1068,6 +1068,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.isclose(self.q, q2, atol=1e-5 * self.ureg.mm, rtol=1e-7),
             np.array([[False, True], [True, False]]),
         )
+        self.assertNDArrayEqual(
+            np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
+            np.array([[False, True], [True, False]]),
+        )
 
     @helpers.requires_array_function_protocol()
     def test_interp_numpy_func(self):
@@ -1403,9 +1407,15 @@ class TestNumpyUnclassified(TestNumpyMethods):
             [1.0, np.nan] * self.ureg.m, [1.0, np.nan] * self.ureg.m, equal_nan=True
         )
 
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+        )
+
         with pytest.raises(DimensionalityError):
             assert np.allclose(
-                [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+                [1e10, 1e-8] * self.ureg.m,
+                [1.00001e10, 1e-9] * self.ureg.m,
+                atol=1e-8 * self.ureg.s,
             )
 
     @helpers.requires_array_function_protocol()
