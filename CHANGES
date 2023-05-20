@@ -1,8 +1,8 @@
 Pint Changelog
 ==============
 
-0.21.1 (unreleased)
--------------------
+0.21.1rc1 (2023-05-19)
+----------------------
 
 - Allow non-quantity atol parameters for isclose and allclose.
   (PR #1783)
