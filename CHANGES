@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.22 (unreleased)
+0.22 (2023-05-25)
 -----------------
 
 - Drop Python 3.8 compatability following NEP-29.
