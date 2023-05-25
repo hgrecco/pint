@@ -2,6 +2,11 @@ In Pint, we work hard to avoid breaking projects that depend on us.
 If you are the maintainer of one of such projects, you can
 help us get ahead of problems in simple way.
 
+Pint will publish a release candidate (rc) at least a week before each new
+version. By default, `pip` does not install these versions unless a
+[pre](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-pre) option
+is used so this will not affect your users.
+
 In addition to your standard CI routines, create a CI that install Pint's
 release candidates. You can also (or alternatively) create CI that install
 Pint's master branch in GitHub.
