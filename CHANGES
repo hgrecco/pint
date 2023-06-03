@@ -4,7 +4,7 @@ Pint Changelog
 0.23 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Defer import of `dask.array` to speed up import time of pint (PR #1795)
 
 
 0.22 (2023-05-25)
