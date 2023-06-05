@@ -155,6 +155,15 @@ except ImportError:
     ufloat = None
     HAS_UNCERTAINTIES = False
 
+
+try:
+    from auto_uncertainties import Uncertainty
+
+    HAS_AUTOUNCERTAINTIES = True
+except ImportError:
+    Uncertainty = None
+    HAS_AUTOUNCERTAINTIES = False
+
 try:
     from babel import Locale
     from babel import units as babel_units
