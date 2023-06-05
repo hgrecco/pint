@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Generic, Any
 
-from ...compat import Uncertainty, TypeAlias
+from ...compat import TypeAlias, HAS_AUTOUNCERTAINTIES
 from ..plain import (
     GenericPlainRegistry,
     PlainQuantity,
@@ -22,6 +22,11 @@ from ..plain import (
     PlainUnit,
     MagnitudeT,
 )
+
+if HAS_AUTOUNCERTAINTIES:
+    from auto_uncertainties import Uncertainty
+else:
+    Uncertainty = None
 
 
 class UncertaintyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
