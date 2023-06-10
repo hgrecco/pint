@@ -928,6 +928,10 @@ def string_preprocessor(input_string: str) -> str:
 
     # Handle caret exponentiation
     input_string = input_string.replace("^", "**")
+
+    # Handle uncertainties
+    input_string = input_string.replace("+/-", "±")
+    input_string = input_string.replace("+-", "±")
     return input_string
 
 

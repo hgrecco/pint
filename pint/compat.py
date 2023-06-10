@@ -158,11 +158,14 @@ except ImportError:
 
 try:
     from auto_uncertainties import Uncertainty
-
-    HAS_AUTOUNCERTAINTIES = True
 except ImportError:
-    Uncertainty = None
     HAS_AUTOUNCERTAINTIES = False
+
+    class Uncertainty(object):
+        ...
+
+else:
+    HAS_AUTOUNCERTAINTIES = True
 
 try:
     from babel import Locale

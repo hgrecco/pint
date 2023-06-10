@@ -17,8 +17,13 @@ from typing import Any, Optional, Union
 
 from .errors import DefinitionSyntaxError
 
+try:
+    from auto_uncertainties import Uncertainty
+except ImportError:
+    Uncertainty = None
 # For controlling order of operations
 _OP_PRIORITY = {
+    "±": 4,
     "**": 3,
     "^": 3,
     "unary": 2,
@@ -30,6 +35,12 @@ _OP_PRIORITY = {
     "+": 0,
     "-": 0,
 }
+
+
+def _uncertainty(left: float, right: float) -> Uncertainty:
+    if Uncertainty is None:
+        raise ImportError("auto_uncertainties is required for uncertainty calculations")
+    return Uncertainty.from_quantities(left, right)
 
 
 def _power(left: Any, right: Any) -> Any:
@@ -60,6 +71,7 @@ BinaryOpT = typing.Callable[[Any, Any], Any]
 _UNARY_OPERATOR_MAP: dict[str, UnaryOpT] = {"+": lambda x: x, "-": lambda x: x * -1}
 
 _BINARY_OPERATOR_MAP: dict[str, BinaryOpT] = {
+    "±": _uncertainty,
     "**": _power,
     "*": operator.mul,
     "": operator.mul,  # operator for implicit ops
@@ -202,7 +214,7 @@ def _build_eval_tree(
         token_type = current_token.type
         token_text = current_token.string
 
-        if token_type == tokenlib.OP:
+        if token_type == tokenlib.OP or token_text == "±":
             if token_text == ")":
                 if prev_op == "<none>":
                     raise DefinitionSyntaxError(
@@ -229,6 +241,7 @@ def _build_eval_tree(
                 else:
                     # get first token
                     result = right
+            # This means it's an operator in op_priority
             elif token_text in op_priority:
                 if result:
                     # equal-priority operators are grouped in a left-to-right order,
