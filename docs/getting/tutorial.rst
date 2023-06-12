@@ -222,13 +222,6 @@ The list of preferred units can also be specified in the unit registry to preven
 The ``UnitRegistry`` class accepts a parameter ``autoconvert_to_preferred``. If set to ``True``, pint will automatically convert to
 preferred units when producing new quantities. This is disabled by default.
 
-.. doctest::
-
-   >>> ureg.autoconvert_to_preferred = True
-   >>> power = (1 *ureg.lbf)* (1* ureg.m/ureg.s)
-   >>> print(power)
-   4.4482216152605005 watt
-
 Note when there are multiple good combinations of units to reduce to, to_preferred is not guaranteed to be repeatable.
 For example, ``(1 * ureg.lbf * ureg.m).to_preferred(preferred_units)`` may return ``W s`` or ``ft lbf``.
 
