@@ -199,13 +199,13 @@ reduction by specifying a list of units to combine to get the required dimension
 .. doctest::
 
    >>> preferred_units = [
-         ureg.ft,  # distance      L
-         ureg.slug,  # mass          M
-         ureg.s,  # duration      T
-         ureg.rankine,  # temperature   Θ
-         ureg.lbf,  # force         L M T^-2
-         ureg.W,  # power         L^2 M T^-3
-       ]
+   ...    ureg.ft,  # distance      L
+   ...    ureg.slug,  # mass          M
+   ...    ureg.s,  # duration      T
+   ...    ureg.rankine,  # temperature   Θ
+   ...    ureg.lbf,  # force         L M T^-2
+   ...    ureg.W,  # power         L^2 M T^-3
+   ... ]
    >>> power = (Q_("1 lbf") * Q_("1 m/s")).to_preferred(preferred_units)
    >>> print(power)
    4.4482216152605005 watt
