@@ -198,37 +198,36 @@ reduction by specifying a list of units to combine to get the required dimension
 
 .. doctest::
 
-      preferred_units = [
-         ureg.ft,  # distance      L
-         ureg.slug,  # mass          M
-         ureg.s,  # duration      T
-         ureg.rankine,  # temperature   Θ
-         ureg.lbf,  # force         L M T^-2
-         ureg.W,  # power         L^2 M T^-3
-      ]
-
-      power = (Q_("1 lbf") * Q_("1 m/s")).to_preferred(preferred_units)
-      print(power)
-      >>> 4.4482216152605005 watt
+   >>> preferred_units = [
+   >>>    ureg.ft,  # distance      L
+   >>>    ureg.slug,  # mass          M
+   >>>    ureg.s,  # duration      T
+   >>>    ureg.rankine,  # temperature   Θ
+   >>>    ureg.lbf,  # force         L M T^-2
+   >>>    ureg.W,  # power         L^2 M T^-3
+   >>> ]
+   >>> power = (Q_("1 lbf") * Q_("1 m/s")).to_preferred(preferred_units)
+   >>> print(power)
+   4.4482216152605005 watt
 
 The list of preferred units can also be specified in the unit registry to prevent having to pass it to every call to ``to_preferred()``.
 
 .. doctest::
 
-      ureg.default_preferred_units = preferred_units
-      power = (Q_("1 lbf") * Q_("1 m/s")).to_preferred()
-      print(power)
-      >>> 4.4482216152605005 watt
+   >>> ureg.default_preferred_units = preferred_units
+   >>> power = (Q_("1 lbf") * Q_("1 m/s")).to_preferred()
+   >>> print(power)
+   4.4482216152605005 watt
 
 The ``UnitRegistry`` class accepts a parameter ``autoconvert_to_preferred``. If set to ``True``, pint will automatically convert to
 preferred units when producing new quantities. This is disabled by default.
 
 .. doctest::
 
-      ureg.autoconvert_to_preferred = True
-      power = Q_("1 lbf") * Q_("1 m/s")
-      print(power)
-      >>> 4.4482216152605005 watt
+   >>> ureg.autoconvert_to_preferred = True
+   >>> power = Q_("1 lbf") * Q_("1 m/s")
+   >>> print(power)
+   4.4482216152605005 watt
 
 Note when there are multiple good combinations of units to reduce to, to_preferred is not guaranteed to be repeatable.
 For example, ``Q_(" 1 lbf*m")).to_preferred(preferred_units)`` may return ``W s`` or ``ft lbf``.
