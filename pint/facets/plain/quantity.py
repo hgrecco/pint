@@ -69,7 +69,7 @@ def reduce_dimensions(f):
                 result = result.to_preferred()
         except AttributeError:
             pass
-        
+
         try:
             if result._REGISTRY.auto_reduce_dimensions:
                 return result.to_reduced_units()

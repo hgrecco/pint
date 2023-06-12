@@ -164,7 +164,6 @@ def to_compact(
     return quantity.to(new_unit_container)
 
 
-
 def to_preferred(
     quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
 ) -> PlainQuantity:
@@ -180,9 +179,10 @@ def to_preferred(
     >>> (1*(ureg.force_pound*ureg.m)).to_preferred([ureg.W])
     <Quantity(4.44822162, 'second * watt')>
     """
-    
+
     units = _get_preferred(quantity, preferred_units)
     return quantity.to(units)
+
 
 def ito_preferred(
     quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
@@ -207,13 +207,12 @@ def ito_preferred(
 def _get_preferred(
     quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
 ) -> PlainQuantity:
-
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.preferred_units
 
     if not quantity.dimensionality:
         return quantity._units.copy()
-    
+
     # The optimizer isn't perfect, and will sometimes miss obvious solutions.
     # This sub-algorithm is less powerful, but always finds the very simple solutions.
     def find_simple():
