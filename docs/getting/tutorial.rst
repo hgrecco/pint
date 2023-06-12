@@ -206,7 +206,7 @@ reduction by specifying a list of units to combine to get the required dimension
    ...    ureg.lbf,  # force         L M T^-2
    ...    ureg.W,  # power         L^2 M T^-3
    ... ]
-   >>> power = (1 * ureg.lbf) * (1 * ureg.m / ureg.s).to_preferred(preferred_units)
+   >>> power = ((1 * ureg.lbf) * (1 * ureg.m / ureg.s)).to_preferred(preferred_units)
    >>> print(power)
    4.4482216152605005 watt
 
@@ -215,7 +215,7 @@ The list of preferred units can also be specified in the unit registry to preven
 .. doctest::
 
    >>> ureg.default_preferred_units = preferred_units
-   >>> power = (1 * ureg.lbf) * (1 * ureg.m / ureg.s).to_preferred()
+   >>> power = ((1 * ureg.lbf) * (1 * ureg.m / ureg.s)).to_preferred()
    >>> print(power)
    4.4482216152605005 watt
 
