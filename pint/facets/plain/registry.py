@@ -170,6 +170,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         action to take in case a unit is redefined: 'warn', 'raise', 'ignore'
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
+    autoconvert_to_preferred :
+        If True, converts preferred units on appropriate operations.
     preprocessors :
         list of callables which are iteratively ran on any input expression or unit
         string
@@ -204,6 +206,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
         auto_reduce_dimensions: bool = False,
+        autoconvert_to_preferred: bool = False,
         preprocessors: Optional[list[PreprocessorType]] = None,
         fmt_locale: Optional[str] = None,
         non_int_type: NON_INT_TYPE = float,
@@ -247,6 +250,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         #: Determines if dimensionality should be reduced on appropriate operations.
         self.auto_reduce_dimensions = auto_reduce_dimensions
+
+        #: Determines if units will be converted to preffered on appropriate operations.
+        self.autoconvert_to_preferred = autoconvert_to_preferred
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
         self.set_fmt_locale(fmt_locale)

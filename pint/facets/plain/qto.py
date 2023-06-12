@@ -164,8 +164,28 @@ def to_compact(
     return quantity.to(new_unit_container)
 
 
+
 def to_preferred(
-    quantity: PlainQuantity, preferred_units: list[UnitLike]
+    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
+) -> PlainQuantity:
+    """Return Quantity converted to a unit composed of the preferred units.
+
+    Examples
+    --------
+
+    >>> import pint
+    >>> ureg = pint.UnitRegistry()
+    >>> (1*ureg.acre).to_preferred([ureg.meters])
+    <Quantity(4046.87261, 'meter ** 2')>
+    >>> (1*(ureg.force_pound*ureg.m)).to_preferred([ureg.W])
+    <Quantity(4.44822162, 'second * watt')>
+    """
+    
+    units = _get_preferred(quantity, preferred_units)
+    return quantity.to(units)
+
+def ito_preferred(
+    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
@@ -180,9 +200,20 @@ def to_preferred(
     <Quantity(4.44822162, 'second * watt')>
     """
 
-    if not quantity.dimensionality:
-        return quantity
+    units = _get_preferred(quantity, preferred_units)
+    return quantity.ito(units)
 
+
+def _get_preferred(
+    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
+) -> PlainQuantity:
+
+    if preferred_units is None:
+        preferred_units = quantity._REGISTRY.preferred_units
+
+    if not quantity.dimensionality:
+        return quantity._units.copy()
+    
     # The optimizer isn't perfect, and will sometimes miss obvious solutions.
     # This sub-algorithm is less powerful, but always finds the very simple solutions.
     def find_simple():
@@ -211,7 +242,7 @@ def to_preferred(
 
     simple = find_simple()
     if simple is not None:
-        return quantity.to(simple)
+        return simple
 
     # For each dimension (e.g. T(ime), L(ength), M(ass)), assign a default base unit from
     # the collection of base units
@@ -380,8 +411,8 @@ def to_preferred(
         min_key = sorted(sorting_keys)[0]
         result_unit = sorting_keys[min_key]
 
-        return quantity.to(result_unit)
+        return result_unit
 
     # for whatever reason, a solution wasn't found
     # return the original quantity
-    return quantity
+    return quantity._units.copy()
