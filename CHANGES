@@ -4,7 +4,8 @@ Pint Changelog
 0.23 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
+  (PR #1803)
 
 
 0.22 (2023-05-25)
