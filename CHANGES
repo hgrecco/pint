@@ -4,7 +4,7 @@ Pint Changelog
 0.23 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fixed Transformation type protocol.
 
 
 0.22 (2023-05-25)
