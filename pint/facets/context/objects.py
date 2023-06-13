@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import weakref
 from collections import ChainMap, defaultdict
-from typing import Any, Callable, Protocol, Generic, Optional
+from typing import Any, Callable, Protocol, Generic, Optional, TYPE_CHECKING
 from collections.abc import Iterable
 
 from ...facets.plain import UnitDefinition, PlainQuantity, PlainUnit, MagnitudeT
@@ -21,8 +21,11 @@ from ..._typing import Magnitude
 if TYPE_CHECKING:
     from ...registry import UnitRegistry
 
+
 class Transformation(Protocol):
-    def __call__(self, ureg: UnitRegistry, value: Magnitude, **kwargs: Any) -> Magnitude:
+    def __call__(
+        self, ureg: UnitRegistry, value: Magnitude, **kwargs: Any
+    ) -> Magnitude:
         ...
 
 
