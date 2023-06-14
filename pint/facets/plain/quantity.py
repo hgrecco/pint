@@ -61,26 +61,6 @@ ScalarT = TypeVar("ScalarT", bound=Scalar)
 T = TypeVar("T", bound=Magnitude)
 
 
-def reduce_dimensions(f):
-    def wrapped(self, *args, **kwargs):
-        result = f(self, *args, **kwargs)
-        try:
-            if result._REGISTRY.autoconvert_to_preferred:
-                result = result.to_preferred()
-        except AttributeError:
-            pass
-
-        try:
-            if result._REGISTRY.auto_reduce_dimensions:
-                return result.to_reduced_units()
-            else:
-                return result
-        except AttributeError:
-            return result
-
-    return wrapped
-
-
 def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
