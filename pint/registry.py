@@ -92,6 +92,8 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
         'warn', 'raise', 'ignore'
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
+    autoconvert_to_preferred :
+        If True, converts preferred units on appropriate operations.
     preprocessors :
         list of callables which are iteratively ran on any input expression
         or unit string
@@ -117,6 +119,7 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
         on_redefinition: str = "warn",
         system=None,
         auto_reduce_dimensions=False,
+        autoconvert_to_preferred=False,
         preprocessors=None,
         fmt_locale=None,
         non_int_type=float,
@@ -132,6 +135,7 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
             autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
             system=system,
             auto_reduce_dimensions=auto_reduce_dimensions,
+            autoconvert_to_preferred=autoconvert_to_preferred,
             preprocessors=preprocessors,
             fmt_locale=fmt_locale,
             non_int_type=non_int_type,

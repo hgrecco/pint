@@ -65,6 +65,12 @@ def reduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
         try:
+            if result._REGISTRY.autoconvert_to_preferred:
+                result = result.to_preferred()
+        except AttributeError:
+            pass
+
+        try:
             if result._REGISTRY.auto_reduce_dimensions:
                 return result.to_reduced_units()
             else:
@@ -78,6 +84,12 @@ def reduce_dimensions(f):
 def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
+        try:
+            if result._REGISTRY.autoconvert_to_preferred:
+                result.ito_preferred()
+        except AttributeError:
+            pass
+
         try:
             if result._REGISTRY.auto_reduce_dimensions:
                 result.ito_reduced_units()
@@ -487,6 +499,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         **ctx_kwargs :
             Values for the Context/s
         """
+
         other = to_units_container(other, self._REGISTRY)
 
         self._magnitude = self._convert_magnitude(other, *contexts, **ctx_kwargs)
@@ -561,6 +574,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     # They are implemented elsewhere to keep Quantity class clean.
     to_compact = qto.to_compact
     to_preferred = qto.to_preferred
+    ito_preferred = qto.ito_preferred
     to_reduced_units = qto.to_reduced_units
     ito_reduced_units = qto.ito_reduced_units
 
