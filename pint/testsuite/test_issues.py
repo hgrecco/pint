@@ -887,18 +887,19 @@ class TestIssues(QuantityTestCase):
         arr_of_q = np.array([Q_(2, "m"), Q_(4, "m")], dtype="object")
         q_arr = Q_(np.array([1, 2]), "m")
 
-        helpers.assert_quantity_equal(arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m^2")], dtype="object"))
-        helpers.assert_quantity_equal(arr_of_q / q_arr, np.array([Q_(2, ""), Q_(2, "")], dtype="object"))
+        helpers.assert_quantity_equal(
+            arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m^2")], dtype="object")
+        )
+        helpers.assert_quantity_equal(
+            arr_of_q / q_arr, np.array([Q_(2, ""), Q_(2, "")], dtype="object")
+        )
 
-        
         arr_of_q = np.array([Q_(2, "m"), Q_(4, "s")], dtype="object")
         q_arr = Q_(np.array([1, 2]), "m")
 
         helpers.assert_quantity_equal(
-                arr_of_q * q_arr,
-                np.array([Q_(2, "m^2"), Q_(8, "m s")], dtype="object")
-                )
-
+            arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m s")], dtype="object")
+        )
 
 
 if np is not None:

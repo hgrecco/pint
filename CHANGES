@@ -5,7 +5,7 @@ Pint Changelog
 -----------------
 
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
-  (PR #1803)  
+  (PR #1803)
 - Fixed bug causing operations between arrays of quantity scalars and quantity holding
   array resulting in incorrect units.
   (PR #1677)

@@ -284,11 +284,17 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 
     @implements(func_str, func_type)
     def implementation(*args, **kwargs):
-        if (func_str in ["multiply", "true_divide", "divide", "floor_divide"] and 
-            any([_is_sequence_with_quantity_elements(arg) and not _is_quantity(arg) for arg in args])):
+        if func_str in ["multiply", "true_divide", "divide", "floor_divide"] and any(
+            [
+                _is_sequence_with_quantity_elements(arg) and not _is_quantity(arg)
+                for arg in args
+            ]
+        ):
             # the sequence may contain different units, so fall back to element-wise
-                print(func_str,args, kwargs)
-                return np.array([func(args[0][i],args[1][i]) for i in range(len(args[0]))],dtype=object)
+            return np.array(
+                [func(args[0][i], args[1][i]) for i in range(len(args[0]))],
+                dtype=object,
+            )
 
         first_input_units = _get_first_input_units(args, kwargs)
         if input_units == "all_consistent":
@@ -427,6 +433,7 @@ matching_input_copy_units_output_ufuncs = [
     "nextafter",
     "trunc",
     "absolute",
+    "positive",
     "negative",
     "maximum",
     "minimum",
