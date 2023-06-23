@@ -303,7 +303,10 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
     -------
     bool or array_like of bool
     """
-    out = lhs == rhs
+    try:
+        out = lhs == rhs
+    except ValueError:
+        return False
     if check_all and is_duck_array_type(type(out)):
         return out.all()
     return out
