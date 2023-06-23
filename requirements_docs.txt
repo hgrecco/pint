@@ -1,6 +1,7 @@
 sphinx>4
-ipython
+ipython<=8.12
 matplotlib
+mip>=1.13
 nbsphinx
 numpy
 pytest
@@ -18,3 +19,4 @@ pygments>=2.4
 sphinx-book-theme==0.3.3
 sphinx_copybutton
 sphinx_design
+typing_extensions

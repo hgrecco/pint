@@ -17,11 +17,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from typing import Generic, TypeVar
+
+from ..base_defparser import PintParsedStatement, ParserConfig
 from ..._vendor import flexparser as fp
 
 
 @dataclass(frozen=True)
-class EndDirectiveBlock(fp.ParsedStatement):
+class EndDirectiveBlock(PintParsedStatement):
     """An EndDirectiveBlock is simply an "@end" statement."""
 
     @classmethod
@@ -31,8 +34,16 @@ class EndDirectiveBlock(fp.ParsedStatement):
         return None
 
 
+OPST = TypeVar("OPST", bound="PintParsedStatement")
+IPST = TypeVar("IPST", bound="PintParsedStatement")
+
+DefT = TypeVar("DefT")
+
+
 @dataclass(frozen=True)
-class DirectiveBlock(fp.Block):
+class DirectiveBlock(
+    Generic[DefT, OPST, IPST], fp.Block[OPST, IPST, EndDirectiveBlock, ParserConfig]
+):
     """Directive blocks have beginning statement starting with a @ character.
     and ending with a "@end" (captured using a EndDirectiveBlock).
 
@@ -41,5 +52,5 @@ class DirectiveBlock(fp.Block):
 
     closing: EndDirectiveBlock
 
-    def derive_definition(self):
-        pass
+    def derive_definition(self) -> DefT:
+        ...

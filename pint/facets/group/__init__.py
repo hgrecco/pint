@@ -11,7 +11,14 @@
 from __future__ import annotations
 
 from .definitions import GroupDefinition
-from .objects import Group
-from .registry import GroupRegistry
+from .objects import Group, GroupQuantity, GroupUnit
+from .registry import GroupRegistry, GenericGroupRegistry
 
-__all__ = ["GroupDefinition", "Group", "GroupRegistry"]
+__all__ = [
+    "GroupDefinition",
+    "Group",
+    "GroupRegistry",
+    "GenericGroupRegistry",
+    "GroupQuantity",
+    "GroupUnit",
+]

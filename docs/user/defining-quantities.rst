@@ -72,7 +72,7 @@ Using string parsing
 
 Pint includes a powerful parser for detecting magnitudes and units (with or
 without prefixes) in strings. Calling the ``UnitRegistry()`` directly
-invokes the parsing function:
+invokes the parsing function ``UnitRegistry.parse_expression``:
 
 .. doctest::
 
@@ -124,7 +124,7 @@ their appropriate objects:
    >>> Q_('2.54')
    <Quantity(2.54, 'dimensionless')>
    >>> type(Q_('2.54'))
-   <class 'pint.util.Quantity'>
+   <class 'pint.Quantity'>
 
 .. note:: Pint's rule for parsing strings with a mixture of numbers and
    units is that **units are treated with the same precedence as numbers**.

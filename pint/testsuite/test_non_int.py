@@ -17,7 +17,6 @@ class NonIntTypeTestCase(QuantityTestCase):
     def assert_quantity_almost_equal(
         self, first, second, rtol="1e-07", atol="0", msg=None
     ):
-
         if isinstance(first, self.Q_):
             assert isinstance(first.m, (self.kwargs["non_int_type"], int))
         else:
@@ -42,7 +41,6 @@ class NonIntTypeTestCase(QuantityTestCase):
 
 class _TestBasic(NonIntTypeTestCase):
     def test_quantity_creation(self, caplog):
-
         value = self.kwargs["non_int_type"]("4.2")
 
         for args in (
@@ -733,7 +731,6 @@ class _TestQuantityBasicMath(NonIntTypeTestCase):
         # self._test_quantity_ifloordiv(unit, ifunc)
 
     def test_quantity_abs_round(self):
-
         value = self.kwargs["non_int_type"]("4.2")
         x = self.Q_(-value, "meter")
         y = self.Q_(value, "meter")
@@ -743,10 +740,10 @@ class _TestQuantityBasicMath(NonIntTypeTestCase):
             zy = self.Q_(fun(y.magnitude), "meter")
             rx = fun(x)
             ry = fun(y)
-            assert rx == zx, "while testing {0}".format(fun)
-            assert ry == zy, "while testing {0}".format(fun)
-            assert rx is not zx, "while testing {0}".format(fun)
-            assert ry is not zy, "while testing {0}".format(fun)
+            assert rx == zx, f"while testing {fun}"
+            assert ry == zy, f"while testing {fun}"
+            assert rx is not zx, f"while testing {fun}"
+            assert ry is not zy, f"while testing {fun}"
 
     def test_quantity_float_complex(self):
         x = self.QP_("-4.2", None)
@@ -1096,7 +1093,7 @@ class _TestOffsetUnitMath(NonIntTypeTestCase):
         else:
             in1, in2 = self.kwargs["non_int_type"](in1), self.QP_(*in2)
         input_tuple = in1, in2  # update input_tuple for better tracebacks
-        expected_copy = expected_output[:]
+        expected_copy = expected_output.copy()
         for i, mode in enumerate([False, True]):
             self.ureg.autoconvert_offset_to_baseunit = mode
             if expected_copy[i] == "error":
@@ -1133,14 +1130,14 @@ class _TestOffsetUnitMath(NonIntTypeTestCase):
     def test_exponentiation(self, input_tuple, expected_output):
         self.ureg.default_as_delta = False
         in1, in2 = input_tuple
-        if type(in1) is tuple and type(in2) is tuple:
+        if type(in1) is type(in2) is tuple:
             in1, in2 = self.QP_(*in1), self.QP_(*in2)
-        elif not type(in1) is tuple and type(in2) is tuple:
+        elif type(in1) is not tuple and type(in2) is tuple:
             in1, in2 = self.kwargs["non_int_type"](in1), self.QP_(*in2)
         else:
             in1, in2 = self.QP_(*in1), self.kwargs["non_int_type"](in2)
         input_tuple = in1, in2
-        expected_copy = expected_output[:]
+        expected_copy = expected_output.copy()
         for i, mode in enumerate([False, True]):
             self.ureg.autoconvert_offset_to_baseunit = mode
             if expected_copy[i] == "error":
@@ -1156,48 +1153,39 @@ class _TestOffsetUnitMath(NonIntTypeTestCase):
 
 
 class TestNonIntTypeQuantityFloat(_TestBasic):
-
     kwargs = dict(non_int_type=float)
     SUPPORTS_NAN = True
 
 
 class TestNonIntTypeQuantityBasicMathFloat(_TestQuantityBasicMath):
-
     kwargs = dict(non_int_type=float)
 
 
 class TestNonIntTypeOffsetUnitMathFloat(_TestOffsetUnitMath):
-
     kwargs = dict(non_int_type=float)
 
 
 class TestNonIntTypeQuantityDecimal(_TestBasic):
-
     kwargs = dict(non_int_type=Decimal)
     SUPPORTS_NAN = True
 
 
 class TestNonIntTypeQuantityBasicMathDecimal(_TestQuantityBasicMath):
-
     kwargs = dict(non_int_type=Decimal)
 
 
 class TestNonIntTypeOffsetUnitMathDecimal(_TestOffsetUnitMath):
-
     kwargs = dict(non_int_type=Decimal)
 
 
 class TestNonIntTypeQuantityFraction(_TestBasic):
-
     kwargs = dict(non_int_type=Fraction)
     SUPPORTS_NAN = False
 
 
 class TestNonIntTypeQuantityBasicMathFraction(_TestQuantityBasicMath):
-
     kwargs = dict(non_int_type=Fraction)
 
 
 class TestNonIntTypeOffsetUnitMathFraction(_TestOffsetUnitMath):
-
     kwargs = dict(non_int_type=Fraction)

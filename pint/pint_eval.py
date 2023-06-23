@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import operator
 import token as tokenlib
-import tokenize
+from tokenize import TokenInfo
+
+from typing import Any, Optional, Union
 
 from .errors import DefinitionSyntaxError
 
@@ -30,7 +32,7 @@ _OP_PRIORITY = {
 }
 
 
-def _power(left, right):
+def _power(left: Any, right: Any) -> Any:
     from . import Quantity
     from .compat import is_duck_array
 
@@ -45,7 +47,19 @@ def _power(left, right):
     return operator.pow(left, right)
 
 
-_BINARY_OPERATOR_MAP = {
+import typing
+
+UnaryOpT = typing.Callable[
+    [
+        Any,
+    ],
+    Any,
+]
+BinaryOpT = typing.Callable[[Any, Any], Any]
+
+_UNARY_OPERATOR_MAP: dict[str, UnaryOpT] = {"+": lambda x: x, "-": lambda x: x * -1}
+
+_BINARY_OPERATOR_MAP: dict[str, BinaryOpT] = {
     "**": _power,
     "*": operator.mul,
     "": operator.mul,  # operator for implicit ops
@@ -55,8 +69,6 @@ _BINARY_OPERATOR_MAP = {
     "%": operator.mod,
     "//": operator.floordiv,
 }
-
-_UNARY_OPERATOR_MAP = {"+": lambda x: x, "-": lambda x: x * -1}
 
 
 class EvalTreeNode:
@@ -68,25 +80,43 @@ class EvalTreeNode:
     left --> single value
     """
 
-    def __init__(self, left, operator=None, right=None):
+    def __init__(
+        self,
+        left: Union[EvalTreeNode, TokenInfo],
+        operator: Optional[TokenInfo] = None,
+        right: Optional[EvalTreeNode] = None,
+    ):
         self.left = left
         self.operator = operator
         self.right = right
 
-    def to_string(self):
+    def to_string(self) -> str:
         # For debugging purposes
         if self.right:
+            assert isinstance(self.left, EvalTreeNode), "self.left not EvalTreeNode (1)"
             comps = [self.left.to_string()]
             if self.operator:
-                comps.append(self.operator[1])
+                comps.append(self.operator.string)
             comps.append(self.right.to_string())
         elif self.operator:
-            comps = [self.operator[1], self.left.to_string()]
+            assert isinstance(self.left, EvalTreeNode), "self.left not EvalTreeNode (2)"
+            comps = [self.operator.string, self.left.to_string()]
         else:
-            return self.left[1]
+            assert isinstance(self.left, TokenInfo), "self.left not TokenInfo (1)"
+            return self.left.string
         return "(%s)" % " ".join(comps)
 
-    def evaluate(self, define_op, bin_op=None, un_op=None):
+    def evaluate(
+        self,
+        define_op: typing.Callable[
+            [
+                Any,
+            ],
+            Any,
+        ],
+        bin_op: Optional[dict[str, BinaryOpT]] = None,
+        un_op: Optional[dict[str, UnaryOpT]] = None,
+    ):
         """Evaluate node.
 
         Parameters
@@ -107,33 +137,38 @@ class EvalTreeNode:
         un_op = un_op or _UNARY_OPERATOR_MAP
 
         if self.right:
+            assert isinstance(self.left, EvalTreeNode), "self.left not EvalTreeNode (3)"
             # binary or implicit operator
-            op_text = self.operator[1] if self.operator else ""
+            op_text = self.operator.string if self.operator else ""
             if op_text not in bin_op:
-                raise DefinitionSyntaxError('missing binary operator "%s"' % op_text)
-            left = self.left.evaluate(define_op, bin_op, un_op)
-            return bin_op[op_text](left, self.right.evaluate(define_op, bin_op, un_op))
+                raise DefinitionSyntaxError(f"missing binary operator '{op_text}'")
+
+            return bin_op[op_text](
+                self.left.evaluate(define_op, bin_op, un_op),
+                self.right.evaluate(define_op, bin_op, un_op),
+            )
         elif self.operator:
+            assert isinstance(self.left, EvalTreeNode), "self.left not EvalTreeNode (4)"
             # unary operator
-            op_text = self.operator[1]
+            op_text = self.operator.string
             if op_text not in un_op:
-                raise DefinitionSyntaxError('missing unary operator "%s"' % op_text)
+                raise DefinitionSyntaxError(f"missing unary operator '{op_text}'")
             return un_op[op_text](self.left.evaluate(define_op, bin_op, un_op))
-        else:
-            # single value
-            return define_op(self.left)
+
+        # single value
+        return define_op(self.left)
 
 
-from typing import Iterable
+from collections.abc import Iterable
 
 
-def build_eval_tree(
-    tokens: Iterable[tokenize.TokenInfo],
-    op_priority=None,
-    index=0,
-    depth=0,
-    prev_op=None,
-) -> tuple[EvalTreeNode | None, int] | EvalTreeNode:
+def _build_eval_tree(
+    tokens: list[TokenInfo],
+    op_priority: dict[str, int],
+    index: int = 0,
+    depth: int = 0,
+    prev_op: str = "<none>",
+) -> tuple[EvalTreeNode, int]:
     """Build an evaluation tree from a set of tokens.
 
     Params:
@@ -153,14 +188,12 @@ def build_eval_tree(
     5) Combine left side, operator, and right side into a new left side
     6) Go back to step #2
 
+    Raises
+    ------
+    DefinitionSyntaxError
+        If there is a syntax error.
+
     """
-
-    if op_priority is None:
-        op_priority = _OP_PRIORITY
-
-    if depth == 0 and prev_op is None:
-        # ensure tokens is list so we can access by index
-        tokens = list(tokens)
 
     result = None
 
@@ -171,19 +204,21 @@ def build_eval_tree(
 
         if token_type == tokenlib.OP:
             if token_text == ")":
-                if prev_op is None:
+                if prev_op == "<none>":
                     raise DefinitionSyntaxError(
-                        "unopened parentheses in tokens: %s" % current_token
+                        f"unopened parentheses in tokens: {current_token}"
                     )
                 elif prev_op == "(":
                     # close parenthetical group
+                    assert result is not None
                     return result, index
                 else:
                     # parenthetical group ending, but we need to close sub-operations within group
+                    assert result is not None
                     return result, index - 1
             elif token_text == "(":
                 # gather parenthetical group
-                right, index = build_eval_tree(
+                right, index = _build_eval_tree(
                     tokens, op_priority, index + 1, 0, token_text
                 )
                 if not tokens[index][1] == ")":
@@ -204,11 +239,11 @@ def build_eval_tree(
                     #     (2 * 3 / 4) --> ((2 * 3) / 4)
                     if op_priority[token_text] <= op_priority.get(
                         prev_op, -1
-                    ) and token_text not in ["**", "^"]:
+                    ) and token_text not in ("**", "^"):
                         # previous operator is higher priority, so end previous binary op
                         return result, index - 1
                     # get right side of binary op
-                    right, index = build_eval_tree(
+                    right, index = _build_eval_tree(
                         tokens, op_priority, index + 1, depth + 1, token_text
                     )
                     result = EvalTreeNode(
@@ -216,18 +251,18 @@ def build_eval_tree(
                     )
                 else:
                     # unary operator
-                    right, index = build_eval_tree(
+                    right, index = _build_eval_tree(
                         tokens, op_priority, index + 1, depth + 1, "unary"
                     )
                     result = EvalTreeNode(left=right, operator=current_token)
-        elif token_type == tokenlib.NUMBER or token_type == tokenlib.NAME:
+        elif token_type in (tokenlib.NUMBER, tokenlib.NAME):
             if result:
                 # tokens with an implicit operation i.e. "1 kg"
                 if op_priority[""] <= op_priority.get(prev_op, -1):
                     # previous operator is higher priority than implicit, so end
                     # previous binary op
                     return result, index - 1
-                right, index = build_eval_tree(
+                right, index = _build_eval_tree(
                     tokens, op_priority, index, depth + 1, ""
                 )
                 result = EvalTreeNode(left=result, right=right)
@@ -240,13 +275,57 @@ def build_eval_tree(
                 raise DefinitionSyntaxError("unclosed parentheses in tokens")
             if depth > 0 or prev_op:
                 # have to close recursion
+                assert result is not None
                 return result, index
             else:
                 # recursion all closed, so just return the final result
-                return result
+                assert result is not None
+                return result, -1
 
         if index + 1 >= len(tokens):
             # should hit ENDMARKER before this ever happens
             raise DefinitionSyntaxError("unexpected end to tokens")
 
         index += 1
+
+
+def build_eval_tree(
+    tokens: Iterable[TokenInfo],
+    op_priority: Optional[dict[str, int]] = None,
+) -> EvalTreeNode:
+    """Build an evaluation tree from a set of tokens.
+
+    Params:
+    Index, depth, and prev_op used recursively, so don't touch.
+    Tokens is an iterable of tokens from an expression to be evaluated.
+
+    Transform the tokens from an expression into a recursive parse tree, following order
+    of operations. Operations can include binary ops (3 + 4), implicit ops (3 kg), or
+    unary ops (-1).
+
+    General Strategy:
+    1) Get left side of operator
+    2) If no tokens left, return final result
+    3) Get operator
+    4) Use recursion to create tree starting at token on right side of operator (start at step #1)
+    4.1) If recursive call encounters an operator with lower or equal priority to step #2, exit recursion
+    5) Combine left side, operator, and right side into a new left side
+    6) Go back to step #2
+
+    Raises
+    ------
+    DefinitionSyntaxError
+        If there is a syntax error.
+
+    """
+
+    if op_priority is None:
+        op_priority = _OP_PRIORITY
+
+    if not isinstance(tokens, list):
+        # ensure tokens is list so we can access by index
+        tokens = list(tokens)
+
+    result, _ = _build_eval_tree(tokens, op_priority, 0, 0)
+
+    return result

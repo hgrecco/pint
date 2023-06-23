@@ -21,7 +21,8 @@ class PintAxisInfo(matplotlib.units.AxisInfo):
 
     def __init__(self, units):
         """Set the default label to the pretty-print of the unit."""
-        super().__init__(label="{:P}".format(units))
+        formatter = units._REGISTRY.mpl_formatter
+        super().__init__(label=formatter.format(units))
 
 
 class PintConverter(matplotlib.units.ConversionInterface):
@@ -35,15 +36,15 @@ class PintConverter(matplotlib.units.ConversionInterface):
         """Convert :`Quantity` instances for matplotlib to use."""
         if iterable(value):
             return [self._convert_value(v, unit, axis) for v in value]
-        else:
-            return self._convert_value(value, unit, axis)
+
+        return self._convert_value(value, unit, axis)
 
     def _convert_value(self, value, unit, axis):
         """Handle converting using attached unit or falling back to axis units."""
         if hasattr(value, "units"):
             return value.to(unit).magnitude
-        else:
-            return self._reg.Quantity(value, axis.get_units()).to(unit).magnitude
+
+        return self._reg.Quantity(value, axis.get_units()).to(unit).magnitude
 
     @staticmethod
     def axisinfo(unit, axis):

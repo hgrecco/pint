@@ -14,11 +14,12 @@ from dataclasses import dataclass
 
 from ..._vendor import flexparser as fp
 from ...facets.system import definitions
+from ..base_defparser import PintParsedStatement
 from . import block, common, plain
 
 
 @dataclass(frozen=True)
-class BaseUnitRule(fp.ParsedStatement, definitions.BaseUnitRule):
+class BaseUnitRule(PintParsedStatement, definitions.BaseUnitRule):
     @classmethod
     def from_string(cls, s: str) -> fp.FromString[BaseUnitRule]:
         if ":" not in s:
@@ -32,7 +33,7 @@ class BaseUnitRule(fp.ParsedStatement, definitions.BaseUnitRule):
 
 
 @dataclass(frozen=True)
-class BeginSystem(fp.ParsedStatement):
+class BeginSystem(PintParsedStatement):
     """Being of a system directive.
 
     @system <name> [using <group 1>, ..., <group N>]
@@ -67,7 +68,13 @@ class BeginSystem(fp.ParsedStatement):
 
 
 @dataclass(frozen=True)
-class SystemDefinition(block.DirectiveBlock):
+class SystemDefinition(
+    block.DirectiveBlock[
+        definitions.SystemDefinition,
+        BeginSystem,
+        ty.Union[plain.CommentDefinition, BaseUnitRule],
+    ]
+):
     """Definition of a System:
 
         @system <name> [using <group 1>, ..., <group N>]
@@ -92,19 +99,21 @@ class SystemDefinition(block.DirectiveBlock):
     opening: fp.Single[BeginSystem]
     body: fp.Multi[ty.Union[plain.CommentDefinition, BaseUnitRule]]
 
-    def derive_definition(self):
+    def derive_definition(self) -> definitions.SystemDefinition:
         return definitions.SystemDefinition(
             self.name, self.using_group_names, self.rules
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
+        assert isinstance(self.opening, BeginSystem)
         return self.opening.name
 
     @property
-    def using_group_names(self):
+    def using_group_names(self) -> tuple[str, ...]:
+        assert isinstance(self.opening, BeginSystem)
         return self.opening.using_group_names
 
     @property
-    def rules(self):
+    def rules(self) -> tuple[BaseUnitRule, ...]:
         return tuple(el for el in self.body if isinstance(el, BaseUnitRule))

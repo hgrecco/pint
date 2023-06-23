@@ -12,13 +12,14 @@ import itertools
 import numbers
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Dict, Set, Tuple
+from typing import TYPE_CHECKING, Callable
+from collections.abc import Iterable
 
 from ... import errors
 from ..plain import UnitDefinition
 
 if TYPE_CHECKING:
-    from pint import Quantity, UnitsContainer
+    from ..._typing import Quantity, UnitsContainer
 
 
 @dataclass(frozen=True)
@@ -41,12 +42,12 @@ class Relation:
     # could be used.
 
     @property
-    def variables(self) -> Set[str, ...]:
+    def variables(self) -> set[str]:
         """Find all variables names in the equation."""
         return set(self._varname_re.findall(self.equation))
 
     @property
-    def transformation(self) -> Callable[..., Quantity[Any]]:
+    def transformation(self) -> Callable[..., Quantity]:
         """Return a transformation callable that uses the registry
         to parse the transformation equation.
         """
@@ -55,7 +56,7 @@ class Relation:
         )
 
     @property
-    def bidirectional(self):
+    def bidirectional(self) -> bool:
         raise NotImplementedError
 
 
@@ -67,7 +68,7 @@ class ForwardRelation(Relation):
     """
 
     @property
-    def bidirectional(self):
+    def bidirectional(self) -> bool:
         return False
 
 
@@ -81,7 +82,7 @@ class BidirectionalRelation(Relation):
     """
 
     @property
-    def bidirectional(self):
+    def bidirectional(self) -> bool:
         return True
 
 
@@ -92,18 +93,18 @@ class ContextDefinition(errors.WithDefErr):
     #: name of the context
     name: str
     #: other na
-    aliases: Tuple[str, ...]
-    defaults: Dict[str, numbers.Number]
-    relations: Tuple[Relation, ...]
-    redefinitions: Tuple[UnitDefinition, ...]
+    aliases: tuple[str, ...]
+    defaults: dict[str, numbers.Number]
+    relations: tuple[Relation, ...]
+    redefinitions: tuple[UnitDefinition, ...]
 
     @property
-    def variables(self) -> Set[str, ...]:
+    def variables(self) -> set[str]:
         """Return all variable names in all transformations."""
         return set().union(*(r.variables for r in self.relations))
 
     @classmethod
-    def from_lines(cls, lines, non_int_type):
+    def from_lines(cls, lines: Iterable[str], non_int_type: type):
         # TODO: this is to keep it backwards compatible
         from ...delegates import ParserConfig, txt_defparser
 

@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import re
 
 from pint import UnitRegistry
@@ -69,6 +70,12 @@ ureg.autoconvert_offset_to_baseunit = True
 ureg.enable_contexts("Gau", "ESU", "sp", "energy", "boltzmann")
 ureg.default_system = args.system
 
+
+def _set(key: str, value):
+    obj = ureg._units[key].converter
+    object.__setattr__(obj, "scale", value)
+
+
 if args.unc:
     import uncertainties
 
@@ -106,37 +113,55 @@ if args.unc:
         m_e = uncertainties.ufloat(*m_e)
         m_p = uncertainties.ufloat(*m_p)
         m_n = uncertainties.ufloat(*m_n)
-    ureg._units["R_inf"].converter.scale = R_i
-    ureg._units["g_e"].converter.scale = g_e
-    ureg._units["m_u"].converter.scale = m_u
-    ureg._units["m_e"].converter.scale = m_e
-    ureg._units["m_p"].converter.scale = m_p
-    ureg._units["m_n"].converter.scale = m_n
+
+    _set("R_inf", R_i)
+    _set("g_e", g_e)
+    _set("m_u", m_u)
+    _set("m_e", m_e)
+    _set("m_p", m_p)
+    _set("m_n", m_n)
 
     # Measured constants with zero correlation
-    ureg._units["gravitational_constant"].converter.scale = uncertainties.ufloat(
-        ureg._units["gravitational_constant"].converter.scale, 0.00015e-11
-    )
-    ureg._units["d_220"].converter.scale = uncertainties.ufloat(
-        ureg._units["d_220"].converter.scale, 0.000000032e-10
-    )
-    ureg._units["K_alpha_Cu_d_220"].converter.scale = uncertainties.ufloat(
-        ureg._units["K_alpha_Cu_d_220"].converter.scale, 0.00000022
-    )
-    ureg._units["K_alpha_Mo_d_220"].converter.scale = uncertainties.ufloat(
-        ureg._units["K_alpha_Mo_d_220"].converter.scale, 0.00000019
-    )
-    ureg._units["K_alpha_W_d_220"].converter.scale = uncertainties.ufloat(
-        ureg._units["K_alpha_W_d_220"].converter.scale, 0.000000098
+    _set(
+        "gravitational_constant",
+        uncertainties.ufloat(
+            ureg._units["gravitational_constant"].converter.scale, 0.00015e-11
+        ),
     )
 
-    ureg._root_units_cache = dict()
+    _set(
+        "d_220",
+        uncertainties.ufloat(ureg._units["d_220"].converter.scale, 0.000000032e-10),
+    )
+
+    _set(
+        "K_alpha_Cu_d_220",
+        uncertainties.ufloat(
+            ureg._units["K_alpha_Cu_d_220"].converter.scale, 0.00000022
+        ),
+    )
+
+    _set(
+        "K_alpha_Mo_d_220",
+        uncertainties.ufloat(
+            ureg._units["K_alpha_Mo_d_220"].converter.scale, 0.00000019
+        ),
+    )
+
+    _set(
+        "K_alpha_W_d_220",
+        uncertainties.ufloat(
+            ureg._units["K_alpha_W_d_220"].converter.scale, 0.000000098
+        ),
+    )
+
+    ureg._root_units_cache = {}
     ureg._build_cache()
 
 
 def convert(u_from, u_to=None, unc=None, factor=None):
     q = ureg.Quantity(u_from)
-    fmt = ".{}g".format(args.prec)
+    fmt = f".{args.prec}g"
     if unc:
         q = q.plus_minus(unc)
     if u_to:
@@ -148,26 +173,29 @@ def convert(u_from, u_to=None, unc=None, factor=None):
         nq *= ureg.Quantity(factor).to_base_units()
     prec_unc = use_unc(nq.magnitude, fmt, args.prec_unc)
     if prec_unc > 0:
-        fmt = ".{}uS".format(prec_unc)
+        fmt = f".{prec_unc}uS"
     else:
-        try:
+        with contextlib.suppress(Exception):
             nq = nq.magnitude.n * nq.units
-        except Exception:
-            pass
+
     fmt = "{:" + fmt + "} {:~P}"
     print(("{:} = " + fmt).format(q, nq.magnitude, nq.units))
 
 
 def use_unc(num, fmt, prec_unc):
     unc = 0
-    try:
+    with contextlib.suppress(Exception):
         if isinstance(num, uncertainties.UFloat):
             full = ("{:" + fmt + "}").format(num)
             unc = re.search(r"\+/-[0.]*([\d.]*)", full).group(1)
             unc = len(unc.replace(".", ""))
-    except Exception:
-        pass
+
     return max(0, min(prec_unc, unc))
 
 
-convert(args.fr, args.to)
+def main():
+    convert(args.fr, args.to)
+
+
+if __name__ == "__main__":
+    main()

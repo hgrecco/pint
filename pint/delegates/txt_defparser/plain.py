@@ -29,12 +29,12 @@ from ..._vendor import flexparser as fp
 from ...converters import Converter
 from ...facets.plain import definitions
 from ...util import UnitsContainer
-from ..base_defparser import ParserConfig
+from ..base_defparser import ParserConfig, PintParsedStatement
 from . import common
 
 
 @dataclass(frozen=True)
-class Equality(fp.ParsedStatement, definitions.Equality):
+class Equality(PintParsedStatement, definitions.Equality):
     """An equality statement contains a left and right hand separated
 
     lhs and rhs should be space stripped.
@@ -53,7 +53,7 @@ class Equality(fp.ParsedStatement, definitions.Equality):
 
 
 @dataclass(frozen=True)
-class CommentDefinition(fp.ParsedStatement, definitions.CommentDefinition):
+class CommentDefinition(PintParsedStatement, definitions.CommentDefinition):
     """Comments start with a # character.
 
         # This is a comment.
@@ -63,14 +63,14 @@ class CommentDefinition(fp.ParsedStatement, definitions.CommentDefinition):
     """
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[fp.ParsedStatement]:
+    def from_string(cls, s: str) -> fp.FromString[CommentDefinition]:
         if not s.startswith("#"):
             return None
         return cls(s[1:].strip())
 
 
 @dataclass(frozen=True)
-class PrefixDefinition(fp.ParsedStatement, definitions.PrefixDefinition):
+class PrefixDefinition(PintParsedStatement, definitions.PrefixDefinition):
     """Definition of a prefix::
 
         <prefix>- = <value> [= <symbol>] [= <alias>] [ = <alias> ] [...]
@@ -119,7 +119,7 @@ class PrefixDefinition(fp.ParsedStatement, definitions.PrefixDefinition):
 
 
 @dataclass(frozen=True)
-class UnitDefinition(fp.ParsedStatement, definitions.UnitDefinition):
+class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
     """Definition of a unit::
 
         <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
@@ -159,10 +159,10 @@ class UnitDefinition(fp.ParsedStatement, definitions.UnitDefinition):
             [converter, modifiers] = value.split(";", 1)
 
             try:
-                modifiers = dict(
-                    (key.strip(), config.to_number(value))
+                modifiers = {
+                    key.strip(): config.to_number(value)
                     for key, value in (part.split(":") for part in modifiers.split(";"))
-                )
+                }
             except definitions.NotNumeric as ex:
                 return common.DefinitionSyntaxError(
                     f"Unit definition ('{name}') must contain only numbers in modifier, not {ex.value}"
@@ -194,7 +194,7 @@ class UnitDefinition(fp.ParsedStatement, definitions.UnitDefinition):
 
 
 @dataclass(frozen=True)
-class DimensionDefinition(fp.ParsedStatement, definitions.DimensionDefinition):
+class DimensionDefinition(PintParsedStatement, definitions.DimensionDefinition):
     """Definition of a root dimension::
 
         [dimension name]
@@ -221,7 +221,7 @@ class DimensionDefinition(fp.ParsedStatement, definitions.DimensionDefinition):
 
 @dataclass(frozen=True)
 class DerivedDimensionDefinition(
-    fp.ParsedStatement, definitions.DerivedDimensionDefinition
+    PintParsedStatement, definitions.DerivedDimensionDefinition
 ):
     """Definition of a derived dimension::
 
@@ -261,7 +261,7 @@ class DerivedDimensionDefinition(
 
 
 @dataclass(frozen=True)
-class AliasDefinition(fp.ParsedStatement, definitions.AliasDefinition):
+class AliasDefinition(PintParsedStatement, definitions.AliasDefinition):
     """Additional alias(es) for an already existing unit::
 
         @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]

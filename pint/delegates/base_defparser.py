@@ -14,7 +14,6 @@ import functools
 import itertools
 import numbers
 import pathlib
-import typing as ty
 from dataclasses import dataclass, field
 
 from pint import errors
@@ -27,10 +26,10 @@ from .._vendor import flexparser as fp
 
 @dataclass(frozen=True)
 class ParserConfig:
-    """Configuration used by the parser."""
+    """Configuration used by the parser in Pint."""
 
     #: Indicates the output type of non integer numbers.
-    non_int_type: ty.Type[numbers.Number] = float
+    non_int_type: type[numbers.Number] = float
 
     def to_scaled_units_container(self, s: str):
         return ParserHelper.from_string(s, self.non_int_type)
@@ -67,13 +66,17 @@ class ParserConfig:
         return val.scale
 
 
-@functools.lru_cache()
+@dataclass(frozen=True)
+class PintParsedStatement(fp.ParsedStatement[ParserConfig]):
+    """A parsed statement for pint, specialized in the actual config."""
+
+
+@functools.lru_cache
 def build_disk_cache_class(non_int_type: type):
     """Build disk cache class, taking into account the non_int_type."""
 
     @dataclass(frozen=True)
     class PintHeader(fc.InvalidateByExist, fc.NameByFields, fc.BasicPythonHeader):
-
         from .. import __version__
 
         pint_version: str = __version__
@@ -85,19 +88,15 @@ def build_disk_cache_class(non_int_type: type):
     class ParsedProjecHeader(fc.NameByHashIter, PintHeader):
         @classmethod
         def from_parsed_project(cls, pp: fp.ParsedProject, reader_id):
-            tmp = []
-            for stmt in pp.iter_statements():
-                if isinstance(stmt, fp.BOS):
-                    tmp.append(
-                        stmt.content_hash.algorithm_name
-                        + ":"
-                        + stmt.content_hash.hexdigest
-                    )
+            tmp = (
+                f"{stmt.content_hash.algorithm_name}:{stmt.content_hash.hexdigest}"
+                for stmt in pp.iter_statements()
+                if isinstance(stmt, fp.BOS)
+            )
 
             return cls(tuple(tmp), reader_id)
 
     class PintDiskCache(fc.DiskCache):
-
         _header_classes = {
             pathlib.Path: PathHeader,
             str: PathHeader.from_string,

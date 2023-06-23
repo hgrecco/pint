@@ -11,10 +11,18 @@
 
 from __future__ import annotations
 
+from typing import Generic, Any
 import functools
 
-from ...compat import compute, dask_array, persist, visualize
-from ..plain import PlainRegistry
+from ...compat import compute, dask_array, persist, visualize, TypeAlias
+from ..plain import (
+    GenericPlainRegistry,
+    PlainQuantity,
+    QuantityT,
+    UnitT,
+    PlainUnit,
+    MagnitudeT,
+)
 
 
 def check_dask_array(f):
@@ -31,14 +39,13 @@ def check_dask_array(f):
     return wrapper
 
 
-class DaskQuantity:
-
+class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     # Dask.array.Array ducking
     def __dask_graph__(self):
         if isinstance(self._magnitude, dask_array.Array):
             return self._magnitude.__dask_graph__()
-        else:
-            return None
+
+        return None
 
     def __dask_keys__(self):
         return self._magnitude.__dask_keys__()
@@ -46,10 +53,7 @@ class DaskQuantity:
     def __dask_tokenize__(self):
         from dask.base import tokenize
 
-        from pint import UnitRegistry
-
-        # TODO: Check if this is the right class as first argument
-        return (UnitRegistry.Quantity, tokenize(self._magnitude), self.units)
+        return (type(self), tokenize(self._magnitude), self.units)
 
     @property
     def __dask_optimize__(self):
@@ -67,14 +71,9 @@ class DaskQuantity:
         func, args = self._magnitude.__dask_postpersist__()
         return self._dask_finalize, (func, args, self.units)
 
-    @staticmethod
-    def _dask_finalize(results, func, args, units):
+    def _dask_finalize(self, results, func, args, units):
         values = func(results, *args)
-
-        from pint import Quantity
-
-        # TODO: Check if this is the right class as first argument
-        return Quantity(values, units)
+        return type(self)(values, units)
 
     @check_dask_array
     def compute(self, **kwargs):
@@ -128,6 +127,16 @@ class DaskQuantity:
         visualize(self, **kwargs)
 
 
-class DaskRegistry(PlainRegistry):
+class DaskUnit(PlainUnit):
+    pass
 
-    _quantity_class = DaskQuantity
+
+class GenericDaskRegistry(
+    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+):
+    pass
+
+
+class DaskRegistry(GenericDaskRegistry[DaskQuantity[Any], DaskUnit]):
+    Quantity: TypeAlias = DaskQuantity[Any]
+    Unit: TypeAlias = DaskUnit

@@ -9,11 +9,11 @@ from . import util
 
 lengths = ("short", "mid")
 all_values = tuple(
-    "%s_%s" % (a, b) for a, b in it.product(lengths, ("list", "tuple", "array"))
+    f"{a}_{b}" for a, b in it.product(lengths, ("list", "tuple", "array"))
 )
 all_arrays = ("short_array", "mid_array")
 units = ("meter", "kilometer")
-all_arrays_q = tuple("%s_%s" % (a, b) for a, b in it.product(all_arrays, units))
+all_arrays_q = tuple(f"{a}_{b}" for a, b in it.product(all_arrays, units))
 
 ureg = None
 data = {}
@@ -29,7 +29,6 @@ def float_range(n):
 
 
 def setup(*args):
-
     global ureg, data
     short = list(float_range(3))
     mid = list(float_range(1_000))
