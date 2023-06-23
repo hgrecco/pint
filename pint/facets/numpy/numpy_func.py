@@ -171,36 +171,31 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     """
     all_args = all_args or []
 
-    def multiply_units(args):
-        product = first_input_units._REGISTRY.parse_units("")
-        for x in args:
-            if hasattr(x, "units"):
-                product *= x.units
-            elif _is_sequence_with_quantity_elements(x):
-                product *= x[0].units
-        return product
-
-    def get_numerator_unit(arg):
-        if _is_sequence_with_quantity_elements(arg):
-            return getattr(arg[0], "units", first_input_units._REGISTRY.parse_units(""))
-        else:
-            return getattr(arg, "units", first_input_units._REGISTRY.parse_units(""))
-
     if unit_op == "sum":
         result_unit = (1 * first_input_units + 1 * first_input_units).units
     elif unit_op == "mul":
-        result_unit = multiply_units(all_args)
+        product = first_input_units._REGISTRY.parse_units("")
+        for x in all_args:
+            if hasattr(x, "units"):
+                product *= x.units
+        result_unit = product
     elif unit_op == "delta":
         result_unit = (1 * first_input_units - 1 * first_input_units).units
     elif unit_op == "delta,div":
-        numerator_unit = (1 * first_input_units - 1 * first_input_units).units
-        denominator_unit = multiply_units(all_args[1:])
-        result_unit = numerator_unit / denominator_unit
+        product = (1 * first_input_units - 1 * first_input_units).units
+        for x in all_args[1:]:
+            if hasattr(x, "units"):
+                product /= x.units
+        result_unit = product
     elif unit_op == "div":
         # Start with first arg in numerator, all others in denominator
-        numerator_unit = get_numerator_unit(all_args[0])
-        denominator_unit = multiply_units(all_args[1:])
-        result_unit = numerator_unit / denominator_unit
+        product = getattr(
+            all_args[0], "units", first_input_units._REGISTRY.parse_units("")
+        )
+        for x in all_args[1:]:
+            if hasattr(x, "units"):
+                product /= x.units
+        result_unit = product
     elif unit_op == "variance":
         result_unit = ((1 * first_input_units + 1 * first_input_units) ** 2).units
     elif unit_op == "square":
@@ -217,9 +212,13 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         result_unit = first_input_units**size
     elif unit_op == "invdiv":
         # Start with first arg in numerator, all others in denominator
-        numerator_unit = get_numerator_unit(all_args[0])
-        denominator_unit = multiply_units(all_args[1:])
-        result_unit = (numerator_unit / denominator_unit) ** -1
+        product = getattr(
+            all_args[0], "units", first_input_units._REGISTRY.parse_units("")
+        )
+        for x in all_args[1:]:
+            if hasattr(x, "units"):
+                product /= x.units
+        result_unit = product**-1
     else:
         raise ValueError("Output unit method {} not understood".format(unit_op))
 
@@ -285,6 +284,12 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 
     @implements(func_str, func_type)
     def implementation(*args, **kwargs):
+        if (func_str in ["multiply", "true_divide", "divide", "floor_divide"] and 
+            any([_is_sequence_with_quantity_elements(arg) and not _is_quantity(arg) for arg in args])):
+            # the sequence may contain different units, so fall back to element-wise
+                print(func_str,args, kwargs)
+                return np.array([func(args[0][i],args[1][i]) for i in range(len(args[0]))],dtype=object)
+
         first_input_units = _get_first_input_units(args, kwargs)
         if input_units == "all_consistent":
             # Match all input args/kwargs to same units
@@ -422,7 +427,6 @@ matching_input_copy_units_output_ufuncs = [
     "nextafter",
     "trunc",
     "absolute",
-    "positive",
     "negative",
     "maximum",
     "minimum",
