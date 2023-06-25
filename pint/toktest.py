@@ -6,7 +6,7 @@ import tokenize
 from tokenize import NUMBER, STRING, NAME, OP
 import token as tokenlib
 from io import BytesIO
-from pint.pint_eval import _plain_tokenizer, tokenizer, uncertainty_tokenizer
+from pint.pint_eval import _plain_tokenizer, uncertainty_tokenizer
 from pint.pint_eval import tokens_with_lookahead
 
 tokenizer = _plain_tokenizer

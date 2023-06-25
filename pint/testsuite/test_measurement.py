@@ -2,7 +2,6 @@ import pytest
 
 from pint import DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
-from pint import pint_eval
 
 
 # TODO: do not subclass from QuantityTestCase
