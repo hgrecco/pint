@@ -445,10 +445,10 @@ class TestIssues(QuantityTestCase):
 
     def test_issue354_356_370(self, module_registry):
         assert (
-            "{:~}".format(1 * module_registry.second / module_registry.millisecond)
+            f"{1 * module_registry.second / module_registry.millisecond:~}"
             == "1.0 s / ms"
         )
-        assert "{:~}".format(1 * module_registry.count) == "1 count"
+        assert f"{1 * module_registry.count:~}" == "1 count"
         assert "{:~}".format(1 * module_registry("MiB")) == "1 MiB"
 
     def test_issue468(self, module_registry):

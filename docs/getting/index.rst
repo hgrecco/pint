@@ -8,7 +8,7 @@ The getting started guide aims to get you using pint productively as quickly as 
 Installation
 ------------
 
-Pint has no dependencies except Python itself. In runs on Python 3.8+.
+Pint has no dependencies except Python itself. In runs on Python 3.9+.
 
 .. grid:: 2
 

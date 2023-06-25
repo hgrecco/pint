@@ -9,9 +9,10 @@
 from __future__ import annotations
 
 from ...compat import is_upcast_type
+from ..plain import PlainUnit
 
 
-class NumpyUnit:
+class NumpyUnit(PlainUnit):
     __array_priority__ = 17
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
@@ -20,11 +21,11 @@ class NumpyUnit:
             return NotImplemented
 
         # Check types and return NotImplemented when upcast type encountered
-        types = set(
+        types = {
             type(arg)
             for arg in list(inputs) + list(kwargs.values())
             if hasattr(arg, "__array_ufunc__")
-        )
+        }
         if any(is_upcast_type(other) for other in types):
             return NotImplemented
 
@@ -38,5 +39,5 @@ class NumpyUnit:
                 ),
                 **kwargs,
             )
-        else:
-            return NotImplemented
+
+        return NotImplemented

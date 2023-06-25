@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..._typing import Magnitude
 from ...compat import HAS_NUMPY, exp, log
 from ..plain import ScaleConverter
 
@@ -24,7 +25,7 @@ class OffsetConverter(ScaleConverter):
     def is_multiplicative(self):
         return self.offset == 0
 
-    def to_reference(self, value, inplace=False):
+    def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         if inplace:
             value *= self.scale
             value += self.offset
@@ -33,7 +34,7 @@ class OffsetConverter(ScaleConverter):
 
         return value
 
-    def from_reference(self, value, inplace=False):
+    def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         if inplace:
             value -= self.offset
             value /= self.scale
@@ -66,6 +67,7 @@ class LogarithmicConverter(ScaleConverter):
         controls if computation is done in place
     """
 
+    # TODO: Can I use PintScalar here?
     logbase: float
     logfactor: float
 
@@ -77,7 +79,7 @@ class LogarithmicConverter(ScaleConverter):
     def is_logarithmic(self):
         return True
 
-    def from_reference(self, value, inplace=False):
+    def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         """Converts value from the reference unit to the logarithmic unit
 
         dBm   <------   mW
@@ -95,7 +97,7 @@ class LogarithmicConverter(ScaleConverter):
 
         return value
 
-    def to_reference(self, value, inplace=False):
+    def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         """Converts value to the reference unit from the logarithmic unit
 
         dBm   ------>   mW

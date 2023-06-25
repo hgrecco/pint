@@ -10,11 +10,14 @@
 
 from __future__ import annotations
 
+import sys
 import math
 from decimal import Decimal
 from importlib import import_module
 from numbers import Number
-from typing import Mapping, Optional
+from collections.abc import Mapping
+from typing import Any, NoReturn, Callable, Optional, Union
+from collections.abc import Generator, Iterable
 
 try:
     from uncertainties import UFloat, ufloat
@@ -26,10 +29,34 @@ except ImportError:
     HAS_UNCERTAINTIES = False
 
 
-def missing_dependency(package, display_name=None):
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias  # noqa
+else:
+    from typing_extensions import TypeAlias  # noqa
+
+
+if sys.version_info >= (3, 11):
+    from typing import Self  # noqa
+else:
+    from typing_extensions import Self  # noqa
+
+
+if sys.version_info >= (3, 11):
+    from typing import Never  # noqa
+else:
+    from typing_extensions import Never  # noqa
+
+
+def missing_dependency(
+    package: str, display_name: Optional[str] = None
+) -> Callable[..., NoReturn]:
+    """Return a helper function that raises an exception when used.
+
+    It provides a way delay a missing dependency exception until it is used.
+    """
     display_name = display_name or package
 
-    def _inner(*args, **kwargs):
+    def _inner(*args: Any, **kwargs: Any) -> NoReturn:
         raise Exception(
             "This feature requires %s. Please install it by running:\n"
             "pip install %s" % (display_name, package)
@@ -57,7 +84,7 @@ try:
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
         if isinstance(value, (dict, bool)) or value is None:
-            raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
+            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
         elif isinstance(value, str) and value == "":
             raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
@@ -111,7 +138,7 @@ except ImportError:
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."
             )
         elif isinstance(value, (dict, bool)) or value is None:
-            raise TypeError("Invalid magnitude for Quantity: {0!r}".format(value))
+            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
         elif isinstance(value, str) and value == "":
             raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
@@ -128,10 +155,10 @@ except ImportError:
 
 
 try:
-    from babel import Locale as Loc
+    from babel import Locale
     from babel import units as babel_units
 
-    babel_parse = Loc.parse
+    babel_parse = Locale.parse
 
     HAS_BABEL = hasattr(babel_units, "format_unit")
 except ImportError:
@@ -160,7 +187,8 @@ else:
     from math import log  # noqa: F401
 
 if not HAS_BABEL:
-    babel_parse = babel_units = missing_dependency("Babel")  # noqa: F811
+    babel_parse = missing_dependency("Babel")  # noqa: F811
+    babel_units = babel_parse
 
 if not HAS_MIP:
     mip_missing = missing_dependency("mip")
@@ -182,20 +210,25 @@ except ImportError:
     dask_array = None
 
 
+# TODO: merge with upcast_type_map
+
+#: List upcast type names
 upcast_type_names = (
-    "pint_pandas.PintArray",
-    "pandas.Series",
+    "pint_pandas.pint_array.PintArray",
     "xarray.core.dataarray.DataArray",
     "xarray.core.dataset.Dataset",
     "xarray.core.variable.Variable",
     "pandas.core.series.Series",
+    "pandas.core.frame.DataFrame",
     "xarray.core.dataarray.DataArray",
 )
 
-upcast_type_map: Mapping[str : Optional[type]] = {k: None for k in upcast_type_names}
+#: Map type name to the actual type (for upcast types).
+upcast_type_map: Mapping[str, Optional[type]] = {k: None for k in upcast_type_names}
 
 
 def fully_qualified_name(t: type) -> str:
+    """Return the fully qualified name of a type."""
     module = t.__module__
     name = t.__qualname__
 
@@ -206,6 +239,10 @@ def fully_qualified_name(t: type) -> str:
 
 
 def check_upcast_type(obj: type) -> bool:
+    """Check if the type object is an upcast type."""
+
+    # TODO: merge or unify name with is_upcast_type
+
     fqn = fully_qualified_name(obj)
     if fqn not in upcast_type_map:
         return False
@@ -221,22 +258,17 @@ def check_upcast_type(obj: type) -> bool:
 
 
 def is_upcast_type(other: type) -> bool:
+    """Check if the type object is an upcast type."""
+
+    # TODO: merge or unify name with check_upcast_type
+
     if other in upcast_type_map.values():
         return True
     return check_upcast_type(other)
 
 
-def is_duck_array_type(cls) -> bool:
-    """Check if the type object represents a (non-Quantity) duck array type.
-
-    Parameters
-    ----------
-    cls : class
-
-    Returns
-    -------
-    bool
-    """
+def is_duck_array_type(cls: type) -> bool:
+    """Check if the type object represents a (non-Quantity) duck array type."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
     return issubclass(cls, ndarray) or (
         not hasattr(cls, "_magnitude")
@@ -248,20 +280,21 @@ def is_duck_array_type(cls) -> bool:
     )
 
 
-def is_duck_array(obj):
+def is_duck_array(obj: type) -> bool:
+    """Check if an object represents a (non-Quantity) duck array type."""
     return is_duck_array_type(type(obj))
 
 
-def eq(lhs, rhs, check_all: bool):
+def eq(lhs: Any, rhs: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
     """Comparison of scalars and arrays.
 
     Parameters
     ----------
-    lhs : object
+    lhs
         left-hand side
-    rhs : object
+    rhs
         right-hand side
-    check_all : bool
+    check_all
         if True, reduce sequence to single bool;
         return True if all the elements are equal.
 
@@ -275,21 +308,21 @@ def eq(lhs, rhs, check_all: bool):
     return out
 
 
-def isnan(obj, check_all: bool):
-    """Test for NaN or NaT
+def isnan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
+    """Test for NaN or NaT.
 
     Parameters
     ----------
-    obj : object
+    obj
         scalar or vector
-    check_all : bool
+    check_all
         if True, reduce sequence to single bool;
         return True if any of the elements are NaN.
 
     Returns
     -------
     bool or array_like of bool.
-    Always return False for non-numeric types.
+        Always return False for non-numeric types.
     """
     if is_duck_array_type(type(obj)):
         if obj.dtype.kind in "if":
@@ -310,21 +343,21 @@ def isnan(obj, check_all: bool):
         return False
 
 
-def zero_or_nan(obj, check_all: bool):
-    """Test if obj is zero, NaN, or NaT
+def zero_or_nan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
+    """Test if obj is zero, NaN, or NaT.
 
     Parameters
     ----------
-    obj : object
+    obj
         scalar or vector
-    check_all : bool
+    check_all
         if True, reduce sequence to single bool;
         return True if all the elements are zero, NaN, or NaT.
 
     Returns
     -------
     bool or array_like of bool.
-    Always return False for non-numeric types.
+        Always return False for non-numeric types.
     """
     out = eq(obj, 0, False) + isnan(obj, False)
     if check_all and is_duck_array_type(type(out)):

@@ -9,7 +9,7 @@ Pay as you go
 Pint registry functionality is divided into facets. The default
 UnitRegistry inherits from all of them, providing a full fledged
 and feature rich registry. However, in certain cases you might want
-to have a simpler and light registry. Just pick what you need
+to have a simpler and lighter registry. Just pick what you need
 and create your own.
 
 - FormattingRegistry: adds the capability to format quantities and units into string.
@@ -31,15 +31,16 @@ For example:
 .. doctest::
 
     >>> import pint
-    >>> class MyRegistry(pint.facets.NonMultiplicativeRegistry, pint.facets.PlainRegistry):
+    >>> class MyRegistry(pint.facets.NonMultiplicativeRegistry):
     ...     pass
 
 
-Subclassing
------------
+.. note::
+   `NonMultiplicativeRegistry` is a subclass from `PlainRegistry`, and therefore
+   it is not required to add it explicitly to `MyRegistry` bases.
 
-If you want to add the default registry class some specific functionality,
-you can subclass it:
+
+You can add some specific functionality to your new registry.
 
 .. doctest::
 
@@ -51,13 +52,20 @@ you can subclass it:
     ...         """
 
 
-If you want to create your own Quantity class, you must tell
-your registry about it:
+
+Custom Quantity and Unit class
+------------------------------
+
+You can also create your own Quantity and Unit class, you must derive
+from Quantity (or Unit) and tell your registry about it.
+
+For example, if you want to create a new `UnitRegistry` subclass you
+need to  derive the Quantity and Unit classes from it.
 
 .. doctest::
 
     >>> import pint
-    >>> class MyQuantity:
+    >>> class MyQuantity(pint.UnitRegistry.Quantity):
     ...
     ...     # Notice that subclassing pint.Quantity
     ...     # is not necessary.
@@ -68,16 +76,33 @@ your registry about it:
     ...     def to_my_desired_format(self):
     ...         """Do something else
     ...         """
-    >>>
-    >>> class MyRegistry(pint.UnitRegistry):
     ...
-    ...     _quantity_class = MyQuantity
+    >>> class MyUnit(pint.UnitRegistry.Unit):
     ...
-    ...     # The same you can be done with
-    ...     # _unit_class
-    ...     # _measurement_class
+    ...     # Notice that subclassing pint.Quantity
+    ...     # is not necessary.
+    ...     # Pint will inspect the Registry class and create
+    ...     # a Quantity class that contains all the
+    ...     # required parents.
+    ...
+    ...     def to_my_desired_format(self):
+    ...         """Do something else
+    ...         """
 
+
+Then, you need to create a custom registry but deriving from `GenericUnitRegistry` so you
+can specify the types of
+
+.. doctest::
+
+    >>> from typing_extensions import TypeAlias # Python 3.9
+    >>> # from typing import TypeAlias # Python 3.10+
+    >>> class MyRegistry(pint.registry.GenericUnitRegistry[MyQuantity, pint.Unit]):
+    ...
+    ...     Quantity: TypeAlias = MyQuantity
+    ...     Unit: TypeAlias = MyUnit
+    ...
 
 While these examples demonstrate how to add functionality to the default
-registry class, you can actually subclass just the PlainRegistry or any
-combination of facets.
+registry class, you can actually subclass just the `PlainRegistry`, and
+`GenericPlainRegistry`.

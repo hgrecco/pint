@@ -14,28 +14,60 @@
 
 from __future__ import annotations
 
+from typing import Generic
+
 from . import registry_helpers
-from .facets import (
-    ContextRegistry,
-    DaskRegistry,
-    FormattingRegistry,
-    MeasurementRegistry,
-    NonMultiplicativeRegistry,
-    NumpyRegistry,
-    SystemRegistry,
-)
+from . import facets
 from .util import logger, pi_theorem
+from .compat import TypeAlias
 
 
-class UnitRegistry(
-    SystemRegistry,
-    ContextRegistry,
-    DaskRegistry,
-    NumpyRegistry,
-    MeasurementRegistry,
-    FormattingRegistry,
-    NonMultiplicativeRegistry,
+# To build the Quantity and Unit classes
+# we follow the UnitRegistry bases
+# but
+
+
+class Quantity(
+    facets.SystemRegistry.Quantity,
+    facets.ContextRegistry.Quantity,
+    facets.DaskRegistry.Quantity,
+    facets.NumpyRegistry.Quantity,
+    facets.MeasurementRegistry.Quantity,
+    facets.FormattingRegistry.Quantity,
+    facets.NonMultiplicativeRegistry.Quantity,
+    facets.PlainRegistry.Quantity,
 ):
+    pass
+
+
+class Unit(
+    facets.SystemRegistry.Unit,
+    facets.ContextRegistry.Unit,
+    facets.DaskRegistry.Unit,
+    facets.NumpyRegistry.Unit,
+    facets.MeasurementRegistry.Unit,
+    facets.FormattingRegistry.Unit,
+    facets.NonMultiplicativeRegistry.Unit,
+    facets.PlainRegistry.Unit,
+):
+    pass
+
+
+class GenericUnitRegistry(
+    Generic[facets.QuantityT, facets.UnitT],
+    facets.GenericSystemRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericContextRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericFormattingRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericNonMultiplicativeRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT],
+):
+    pass
+
+
+class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
     """The unit registry stores the definitions and relationships between units.
 
     Parameters
@@ -60,6 +92,8 @@ class UnitRegistry(
         'warn', 'raise', 'ignore'
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
+    autoconvert_to_preferred :
+        If True, converts preferred units on appropriate operations.
     preprocessors :
         list of callables which are iteratively ran on any input expression
         or unit string
@@ -72,6 +106,9 @@ class UnitRegistry(
         If None, the cache is disabled. (default)
     """
 
+    Quantity: TypeAlias = Quantity
+    Unit: TypeAlias = Unit
+
     def __init__(
         self,
         filename="",
@@ -82,6 +119,7 @@ class UnitRegistry(
         on_redefinition: str = "warn",
         system=None,
         auto_reduce_dimensions=False,
+        autoconvert_to_preferred=False,
         preprocessors=None,
         fmt_locale=None,
         non_int_type=float,
@@ -97,6 +135,7 @@ class UnitRegistry(
             autoconvert_offset_to_baseunit=autoconvert_offset_to_baseunit,
             system=system,
             auto_reduce_dimensions=auto_reduce_dimensions,
+            autoconvert_to_preferred=autoconvert_to_preferred,
             preprocessors=preprocessors,
             fmt_locale=fmt_locale,
             non_int_type=non_int_type,
@@ -139,7 +178,7 @@ class UnitRegistry(
     check = registry_helpers.check
 
 
-class LazyRegistry:
+class LazyRegistry(Generic[facets.QuantityT, facets.UnitT]):
     def __init__(self, args=None, kwargs=None):
         self.__dict__["params"] = args or (), kwargs or {}
 

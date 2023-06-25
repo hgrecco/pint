@@ -8,8 +8,36 @@
 
 from __future__ import annotations
 
+from typing import Callable, Any, TYPE_CHECKING, Generic, Optional
+
+from collections.abc import Generator, Iterable
 from ...util import SharedRegistryObject, getattr_maybe_raise
 from .definitions import GroupDefinition
+from ..plain import PlainQuantity, PlainUnit, MagnitudeT
+
+if TYPE_CHECKING:
+    from ..plain import UnitDefinition
+
+    DefineFunc = Callable[
+        [
+            Any,
+        ],
+        None,
+    ]
+    AddUnitFunc = Callable[
+        [
+            UnitDefinition,
+        ],
+        None,
+    ]
+
+
+class GroupQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+    pass
+
+
+class GroupUnit(PlainUnit):
+    pass
 
 
 class Group(SharedRegistryObject):
@@ -23,32 +51,26 @@ class Group(SharedRegistryObject):
     The group belongs to one Registry.
 
     See GroupDefinition for the definition file syntax.
+
+    Parameters
+    ----------
+    name
+        If not given, a root Group will be created.
     """
 
-    def __init__(self, name):
-        """
-        :param name: Name of the group. If not given, a root Group will be created.
-        :type name: str
-        :param groups: dictionary like object groups and system.
-                        The newly created group will be added after creation.
-        :type groups: dict[str | Group]
-        """
-
+    def __init__(self, name: str):
         # The name of the group.
-        #: type: str
         self.name = name
 
         #: Names of the units in this group.
         #: :type: set[str]
-        self._unit_names = set()
+        self._unit_names: set[str] = set()
 
         #: Names of the groups in this group.
-        #: :type: set[str]
-        self._used_groups = set()
+        self._used_groups: set[str] = set()
 
         #: Names of the groups in which this group is contained.
-        #: :type: set[str]
-        self._used_by = set()
+        self._used_by: set[str] = set()
 
         # Add this group to the group dictionary
         self._REGISTRY._groups[self.name] = self
@@ -59,34 +81,33 @@ class Group(SharedRegistryObject):
 
         #: A cache of the included units.
         #: None indicates that the cache has been invalidated.
-        #: :type: frozenset[str] | None
-        self._computed_members = None
+        self._computed_members: Optional[frozenset[str]] = None
 
     @property
-    def members(self):
+    def members(self) -> frozenset[str]:
         """Names of the units that are members of the group.
 
         Calculated to include to all units in all included _used_groups.
 
         """
         if self._computed_members is None:
-            self._computed_members = set(self._unit_names)
+            tmp = set(self._unit_names)
 
             for _, group in self.iter_used_groups():
-                self._computed_members |= group.members
+                tmp |= group.members
 
-            self._computed_members = frozenset(self._computed_members)
+            self._computed_members = frozenset(tmp)
 
         return self._computed_members
 
-    def invalidate_members(self):
+    def invalidate_members(self) -> None:
         """Invalidate computed members in this Group and all parent nodes."""
         self._computed_members = None
         d = self._REGISTRY._groups
         for name in self._used_by:
             d[name].invalidate_members()
 
-    def iter_used_groups(self):
+    def iter_used_groups(self) -> Generator[tuple[str, Group], None, None]:
         pending = set(self._used_groups)
         d = self._REGISTRY._groups
         while pending:
@@ -95,13 +116,13 @@ class Group(SharedRegistryObject):
             pending |= group._used_groups
             yield name, d[name]
 
-    def is_used_group(self, group_name):
+    def is_used_group(self, group_name: str) -> bool:
         for name, _ in self.iter_used_groups():
             if name == group_name:
                 return True
         return False
 
-    def add_units(self, *unit_names):
+    def add_units(self, *unit_names: str) -> None:
         """Add units to group."""
         for unit_name in unit_names:
             self._unit_names.add(unit_name)
@@ -109,17 +130,17 @@ class Group(SharedRegistryObject):
         self.invalidate_members()
 
     @property
-    def non_inherited_unit_names(self):
+    def non_inherited_unit_names(self) -> frozenset[str]:
         return frozenset(self._unit_names)
 
-    def remove_units(self, *unit_names):
+    def remove_units(self, *unit_names: str) -> None:
         """Remove units from group."""
         for unit_name in unit_names:
             self._unit_names.remove(unit_name)
 
         self.invalidate_members()
 
-    def add_groups(self, *group_names):
+    def add_groups(self, *group_names: str) -> None:
         """Add groups to group."""
         d = self._REGISTRY._groups
         for group_name in group_names:
@@ -136,7 +157,7 @@ class Group(SharedRegistryObject):
 
         self.invalidate_members()
 
-    def remove_groups(self, *group_names):
+    def remove_groups(self, *group_names: str) -> None:
         """Remove groups from group."""
         d = self._REGISTRY._groups
         for group_name in group_names:
@@ -148,7 +169,9 @@ class Group(SharedRegistryObject):
         self.invalidate_members()
 
     @classmethod
-    def from_lines(cls, lines, define_func, non_int_type=float) -> Group:
+    def from_lines(
+        cls, lines: Iterable[str], define_func: DefineFunc, non_int_type: type = float
+    ) -> Group:
         """Return a Group object parsing an iterable of lines.
 
         Parameters
@@ -164,11 +187,17 @@ class Group(SharedRegistryObject):
 
         """
         group_definition = GroupDefinition.from_lines(lines, non_int_type)
+
+        if group_definition is None:
+            raise ValueError(f"Could not define group from {lines}")
+
         return cls.from_definition(group_definition, define_func)
 
     @classmethod
     def from_definition(
-        cls, group_definition: GroupDefinition, add_unit_func=None
+        cls,
+        group_definition: GroupDefinition,
+        add_unit_func: Optional[AddUnitFunc] = None,
     ) -> Group:
         grp = cls(group_definition.name)
 
@@ -190,6 +219,6 @@ class Group(SharedRegistryObject):
 
         return grp
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str):
         getattr_maybe_raise(self, item)
         return self._REGISTRY

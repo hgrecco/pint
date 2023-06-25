@@ -30,8 +30,8 @@
 
     class NumpyRegistry:
 
-        _quantity_class = NumpyQuantity
-        _unit_class = NumpyUnit
+        Quantity = NumpyQuantity
+        Unit = NumpyUnit
 
     This tells pint that it should use NumpyQuantity as base class for a quantity
     class that belongs to a registry that has NumpyRegistry as one of its bases.
@@ -71,24 +71,39 @@
 
 from __future__ import annotations
 
-from .context import ContextRegistry
-from .dask import DaskRegistry
-from .formatting import FormattingRegistry
-from .group import GroupRegistry
-from .measurement import MeasurementRegistry
-from .nonmultiplicative import NonMultiplicativeRegistry
-from .numpy import NumpyRegistry
-from .plain import PlainRegistry
-from .system import SystemRegistry
+from .context import ContextRegistry, GenericContextRegistry
+from .dask import DaskRegistry, GenericDaskRegistry
+from .formatting import FormattingRegistry, GenericFormattingRegistry
+from .group import GroupRegistry, GenericGroupRegistry
+from .measurement import MeasurementRegistry, GenericMeasurementRegistry
+from .nonmultiplicative import (
+    NonMultiplicativeRegistry,
+    GenericNonMultiplicativeRegistry,
+)
+from .numpy import NumpyRegistry, GenericNumpyRegistry
+from .plain import PlainRegistry, GenericPlainRegistry, QuantityT, UnitT, MagnitudeT
+from .system import SystemRegistry, GenericSystemRegistry
 
 __all__ = [
-    ContextRegistry,
-    DaskRegistry,
-    FormattingRegistry,
-    GroupRegistry,
-    MeasurementRegistry,
-    NonMultiplicativeRegistry,
-    NumpyRegistry,
-    PlainRegistry,
-    SystemRegistry,
+    "ContextRegistry",
+    "DaskRegistry",
+    "FormattingRegistry",
+    "GroupRegistry",
+    "MeasurementRegistry",
+    "NonMultiplicativeRegistry",
+    "NumpyRegistry",
+    "PlainRegistry",
+    "SystemRegistry",
+    "GenericContextRegistry",
+    "GenericDaskRegistry",
+    "GenericFormattingRegistry",
+    "GenericGroupRegistry",
+    "GenericMeasurementRegistry",
+    "GenericNonMultiplicativeRegistry",
+    "GenericNumpyRegistry",
+    "GenericPlainRegistry",
+    "GenericSystemRegistry",
+    "QuantityT",
+    "UnitT",
+    "MagnitudeT",
 ]

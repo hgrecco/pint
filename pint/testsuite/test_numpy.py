@@ -303,7 +303,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_fix(self):
-        helpers.assert_quantity_equal(np.fix(3.14 * self.ureg.m), 3.0 * self.ureg.m)
+        helpers.assert_quantity_equal(np.fix(3.13 * self.ureg.m), 3.0 * self.ureg.m)
         helpers.assert_quantity_equal(np.fix(3.0 * self.ureg.m), 3.0 * self.ureg.m)
         helpers.assert_quantity_equal(
             np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.m),
@@ -505,7 +505,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         arr = np.array(range(3), dtype=float)
         q = self.Q_(arr, "meter")
 
-        for op_ in [op.pow, op.ipow, np.power]:
+        for op_ in (op.pow, op.ipow, np.power):
             q_cp = copy.copy(q)
             with pytest.raises(DimensionalityError):
                 op_(2.0, q_cp)
@@ -1068,6 +1068,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.isclose(self.q, q2, atol=1e-5 * self.ureg.mm, rtol=1e-7),
             np.array([[False, True], [True, False]]),
         )
+        self.assertNDArrayEqual(
+            np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
+            np.array([[False, True], [True, False]]),
+        )
 
     @helpers.requires_array_function_protocol()
     def test_interp_numpy_func(self):
@@ -1403,9 +1407,15 @@ class TestNumpyUnclassified(TestNumpyMethods):
             [1.0, np.nan] * self.ureg.m, [1.0, np.nan] * self.ureg.m, equal_nan=True
         )
 
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+        )
+
         with pytest.raises(DimensionalityError):
             assert np.allclose(
-                [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+                [1e10, 1e-8] * self.ureg.m,
+                [1.00001e10, 1e-9] * self.ureg.m,
+                atol=1e-8 * self.ureg.s,
             )
 
     @helpers.requires_array_function_protocol()

@@ -2,14 +2,32 @@ from __future__ import annotations
 
 import pathlib
 import typing as ty
+from typing import Optional, Union
 
 from ..._vendor import flexcache as fc
 from ..._vendor import flexparser as fp
-from .. import base_defparser
+from ..base_defparser import ParserConfig
 from . import block, common, context, defaults, group, plain, system
 
 
-class PintRootBlock(fp.RootBlock):
+class PintRootBlock(
+    fp.RootBlock[
+        ty.Union[
+            plain.CommentDefinition,
+            common.ImportDefinition,
+            context.ContextDefinition,
+            defaults.DefaultsDefinition,
+            system.SystemDefinition,
+            group.GroupDefinition,
+            plain.AliasDefinition,
+            plain.DerivedDimensionDefinition,
+            plain.DimensionDefinition,
+            plain.PrefixDefinition,
+            plain.UnitDefinition,
+        ],
+        ParserConfig,
+    ]
+):
     body: fp.Multi[
         ty.Union[
             plain.CommentDefinition,
@@ -27,11 +45,15 @@ class PintRootBlock(fp.RootBlock):
     ]
 
 
+class PintSource(fp.ParsedSource[PintRootBlock, ParserConfig]):
+    """Source code in Pint."""
+
+
 class HashTuple(tuple):
     pass
 
 
-class _PintParser(fp.Parser):
+class _PintParser(fp.Parser[PintRootBlock, ParserConfig]):
     """Parser for the original Pint definition file, with cache."""
 
     _delimiters = {
@@ -46,11 +68,11 @@ class _PintParser(fp.Parser):
 
     _diskcache: fc.DiskCache
 
-    def __init__(self, config: base_defparser.ParserConfig, *args, **kwargs):
+    def __init__(self, config: ParserConfig, *args, **kwargs):
         self._diskcache = kwargs.pop("diskcache", None)
         super().__init__(config, *args, **kwargs)
 
-    def parse_file(self, path: pathlib.Path) -> fp.ParsedSource:
+    def parse_file(self, path: pathlib.Path) -> PintSource:
         if self._diskcache is None:
             return super().parse_file(path)
         content, basename = self._diskcache.load(path, super().parse_file)
@@ -58,7 +80,13 @@ class _PintParser(fp.Parser):
 
 
 class DefParser:
-    skip_classes = (fp.BOF, fp.BOR, fp.BOS, fp.EOS, plain.CommentDefinition)
+    skip_classes: tuple[type, ...] = (
+        fp.BOF,
+        fp.BOR,
+        fp.BOS,
+        fp.EOS,
+        plain.CommentDefinition,
+    )
 
     def __init__(self, default_config, diskcache):
         self._default_config = default_config
@@ -78,6 +106,8 @@ class DefParser:
                 continue
 
             if isinstance(stmt, common.DefinitionSyntaxError):
+                # TODO: check why this assert fails
+                # assert isinstance(last_location, str)
                 stmt.set_location(last_location)
                 raise stmt
             elif isinstance(stmt, block.DirectiveBlock):
@@ -101,7 +131,9 @@ class DefParser:
             else:
                 yield stmt
 
-    def parse_file(self, filename: pathlib.Path, cfg=None):
+    def parse_file(
+        self, filename: Union[pathlib.Path, str], cfg: Optional[ParserConfig] = None
+    ):
         return fp.parse(
             filename,
             _PintParser,
@@ -109,7 +141,7 @@ class DefParser:
             diskcache=self._diskcache,
         )
 
-    def parse_string(self, content: str, cfg=None):
+    def parse_string(self, content: str, cfg: Optional[ParserConfig] = None):
         return fp.parse_bytes(
             content.encode("utf-8"),
             _PintParser,

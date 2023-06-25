@@ -178,7 +178,7 @@ class TestMeasurement(QuantityTestCase):
         ):
             with subtests.test(spec):
                 self.ureg.default_format = spec
-                assert "{}".format(m) == result
+                assert f"{m}" == result
 
     def test_raise_build(self):
         v, u = self.Q_(1.0, "s"), self.Q_(0.1, "s")

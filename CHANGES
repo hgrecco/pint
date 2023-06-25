@@ -1,10 +1,26 @@
 Pint Changelog
 ==============
 
-0.22 (unreleased)
+0.23 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
+  (PR #1803)
+
+
+0.22 (2023-05-25)
+-----------------
+
+- Drop Python 3.8 compatability following NEP-29.
+- Drop NumPy < 1.21 following NEP-29.
+- Improved typing experience.
+- Migrated fully to pyproject.toml.
+- Migrated to ruff.
+- In order to make static typing possible as required by mypy
+  and similar tools, the way to subclass the registry has been
+  changed.
+- Allow non-quantity atol parameters for isclose and allclose.
+  (PR #1783)
 
 
 0.21 (2023-05-01)

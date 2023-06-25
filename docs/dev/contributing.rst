@@ -9,7 +9,6 @@ Pint uses (and thanks):
 - `github actions`_ to test all commits and PRs.
 - coveralls_ to monitor coverage test coverage
 - readthedocs_ to host the documentation.
-- `bors-ng`_ as a merge bot and therefore every PR is tested before merging.
 - black_, isort_ and flake8_ as code linters and pre-commit_ to enforce them.
 - pytest_ to write tests
 - sphinx_ to write docs.
@@ -133,7 +132,6 @@ features that work best as an extension package versus direct inclusion in Pint 
 
 .. _github: http://github.com/hgrecco/pint
 .. _`issue tracker`: https://github.com/hgrecco/pint/issues
-.. _`bors-ng`: https://github.com/bors-ng/bors-ng
 .. _`github docs`: https://help.github.com/articles/closing-issues-via-commit-messages/
 .. _`github actions`: https://docs.github.com/en/actions
 .. _coveralls: https://coveralls.io/
