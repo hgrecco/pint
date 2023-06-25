@@ -58,6 +58,7 @@ if TYPE_CHECKING:
 try:
     import uncertainties.unumpy as unp
     from uncertainties import ufloat, UFloat
+
     HAS_UNCERTAINTIES = True
 except ImportError:
     unp = np

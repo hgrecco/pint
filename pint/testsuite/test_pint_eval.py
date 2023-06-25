@@ -6,6 +6,7 @@ from pint.util import string_preprocessor
 # This is how we enable the parsing of uncertainties
 # tokenizer = pint.pint_eval.uncertainty_tokenizer
 
+
 class TestPintEval:
     def _test_one(self, input_text, parsed, preprocess=False):
         if preprocess:

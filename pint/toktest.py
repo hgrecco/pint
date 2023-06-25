@@ -21,8 +21,8 @@ input_lines = [
     "8.0 ± 4.0 m",
     "8.0(4)m",
     "8.0(.4)m",
-    "8.0(-4)m", # error!
-    "pint == wonderfulness ^ N + - + / - * ± m J s"
+    "8.0(-4)m",  # error!
+    "pint == wonderfulness ^ N + - + / - * ± m J s",
 ]
 
 for line in input_lines:

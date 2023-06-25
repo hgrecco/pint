@@ -32,6 +32,7 @@ from .numpy_func import (
 try:
     import uncertainties.unumpy as unp
     from uncertainties import ufloat, UFloat
+
     HAS_UNCERTAINTIES = True
 except ImportError:
     unp = np
@@ -233,7 +234,9 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
                     )
                 else:
                     raise exc
-        elif HAS_UNCERTAINTIES and item=="ndim" and isinstance(self._magnitude, UFloat):
+        elif (
+            HAS_UNCERTAINTIES and item == "ndim" and isinstance(self._magnitude, UFloat)
+        ):
             # Dimensionality of a single UFloat is 0, like any other scalar
             return 0
 

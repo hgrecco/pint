@@ -895,6 +895,7 @@ class TestIssues(QuantityTestCase):
         from uncertainties import ufloat
 
         from pint import pint_eval
+
         pint_eval.tokenizer = pint_eval.uncertainty_tokenizer
 
         u1 = ufloat(1.2, 0.34)

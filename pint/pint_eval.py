@@ -19,6 +19,7 @@ from typing import Any, Optional, Union
 
 try:
     from uncertainties import ufloat
+
     HAS_UNCERTAINTIES = True
 except ImportError:
     HAS_UNCERTAINTIES = False
@@ -45,7 +46,7 @@ _OP_PRIORITY = {
 def _ufloat(left, right):
     if HAS_UNCERTAINTIES:
         return ufloat(left, right)
-    raise TypeError ('Could not import support for uncertainties')
+    raise TypeError("Could not import support for uncertainties")
 
 
 def _power(left: Any, right: Any) -> Any:
@@ -93,6 +94,7 @@ def _plain_tokenizer(input_string):
         if tokinfo.type != tokenlib.ENCODING:
             yield tokinfo
 
+
 def uncertainty_tokenizer(input_string):
     def _number_or_nan(token):
         if token.type == tokenlib.NUMBER or (
@@ -103,59 +105,71 @@ def uncertainty_tokenizer(input_string):
 
     def _get_possible_e(toklist, e_index):
         possible_e_token = toklist.lookahead(e_index)
-        if (possible_e_token.string[0]=="e"
-            and len(possible_e_token.string)>1
-            and possible_e_token.string[1].isdigit()):
+        if (
+            possible_e_token.string[0] == "e"
+            and len(possible_e_token.string) > 1
+            and possible_e_token.string[1].isdigit()
+        ):
             end = possible_e_token.end
             possible_e = tokenize.TokenInfo(
                 type=tokenlib.STRING,
                 string=possible_e_token.string,
                 start=possible_e_token.start,
                 end=end,
-                line=possible_e_token.line)
-        elif (possible_e_token.string[0] in ["e", "E"]
-              and toklist.lookahead(e_index+1).string in ["+", "-"]
-              and toklist.lookahead(e_index+2).type==tokenlib.NUMBER):
+                line=possible_e_token.line,
+            )
+        elif (
+            possible_e_token.string[0] in ["e", "E"]
+            and toklist.lookahead(e_index + 1).string in ["+", "-"]
+            and toklist.lookahead(e_index + 2).type == tokenlib.NUMBER
+        ):
             # Special case: Python allows a leading zero for exponents (i.e., 042) but not for numbers
-            if toklist.lookahead(e_index+2).string == "0" and toklist.lookahead(e_index+3).type==tokenlib.NUMBER:
-                exp_number = toklist.lookahead(e_index+3).string
-                end = toklist.lookahead(e_index+3).end
+            if (
+                toklist.lookahead(e_index + 2).string == "0"
+                and toklist.lookahead(e_index + 3).type == tokenlib.NUMBER
+            ):
+                exp_number = toklist.lookahead(e_index + 3).string
+                end = toklist.lookahead(e_index + 3).end
             else:
-                exp_number = toklist.lookahead(e_index+2).string
-                end = toklist.lookahead(e_index+2).end
+                exp_number = toklist.lookahead(e_index + 2).string
+                end = toklist.lookahead(e_index + 2).end
             possible_e = tokenize.TokenInfo(
                 type=tokenlib.STRING,
                 string=f"e{toklist.lookahead(e_index+1).string}{exp_number}",
                 start=possible_e_token.start,
                 end=end,
-                line=possible_e_token.line)
+                line=possible_e_token.line,
+            )
         else:
             possible_e = None
         return possible_e
 
     def _apply_e_notation(mantissa, exponent):
-        if mantissa.string == 'nan':
+        if mantissa.string == "nan":
             return mantissa
-        if float(mantissa.string)==0.0:
+        if float(mantissa.string) == 0.0:
             return mantissa
         return tokenize.TokenInfo(
             type=tokenlib.NUMBER,
             string=f"{mantissa.string}{exponent.string}",
             start=mantissa.start,
             end=exponent.end,
-            line=exponent.line
+            line=exponent.line,
         )
 
     def _finalize_e(nominal_value, std_dev, toklist, possible_e):
         nominal_value = _apply_e_notation(nominal_value, possible_e)
         std_dev = _apply_e_notation(std_dev, possible_e)
-        next(toklist) # consume 'e' and positive exponent value
+        next(toklist)  # consume 'e' and positive exponent value
         if possible_e.string[1] in ["+", "-"]:
-            next(toklist) # consume "+" or "-" in exponent
-            exp_number = next(toklist) # consume exponent value
-            if exp_number.string == "0" and toklist.lookahead(0).type==tokenlib.NUMBER:
+            next(toklist)  # consume "+" or "-" in exponent
+            exp_number = next(toklist)  # consume exponent value
+            if (
+                exp_number.string == "0"
+                and toklist.lookahead(0).type == tokenlib.NUMBER
+            ):
                 exp_number = next(toklist)
-                assert(exp_number.end==end)
+                assert exp_number.end == end
                 # We've already applied the number, we're just consuming all the tokens
         return nominal_value, std_dev
 
@@ -164,7 +178,7 @@ def uncertainty_tokenizer(input_string):
     # in addition to marking the unknown character as ERRORTOKEN.  Rather than
     # wading through all that vomit, just eliminate the problem
     # in the input by rewriting ± as +/-.
-    input_string = input_string.replace('±', '+/-')
+    input_string = input_string.replace("±", "+/-")
     toklist = tokens_with_lookahead(_plain_tokenizer(input_string))
     for tokinfo in toklist:
         line = tokinfo.line
@@ -195,7 +209,7 @@ def uncertainty_tokenizer(input_string):
             and toklist.lookahead(seen_minus + 5).string == ")"
         ):
             # ( NUM_OR_NAN +/- NUM_OR_NAN ) POSSIBLE_E_NOTATION
-            possible_e = _get_possible_e (toklist, seen_minus + 6)
+            possible_e = _get_possible_e(toklist, seen_minus + 6)
             if possible_e:
                 end = possible_e.end
             else:
@@ -204,19 +218,21 @@ def uncertainty_tokenizer(input_string):
                 minus_op = next(toklist)
                 yield minus_op
             nominal_value = next(toklist)
-            tokinfo = next(toklist) # consume '+'
-            next(toklist) # consume '/'
+            tokinfo = next(toklist)  # consume '+'
+            next(toklist)  # consume '/'
             plus_minus_op = tokenize.TokenInfo(
                 type=tokenlib.OP,
                 string="+/-",
                 start=tokinfo.start,
-                end=next(toklist).end, # consume '-'
+                end=next(toklist).end,  # consume '-'
                 line=line,
             )
             std_dev = next(toklist)
-            next(toklist) # consume final ')'
+            next(toklist)  # consume final ')'
             if possible_e:
-                nominal_value, std_dev = _finalize_e(nominal_value, std_dev, toklist, possible_e)
+                nominal_value, std_dev = _finalize_e(
+                    nominal_value, std_dev, toklist, possible_e
+                )
             yield nominal_value
             yield plus_minus_op
             yield std_dev
@@ -227,18 +243,18 @@ def uncertainty_tokenizer(input_string):
             and toklist.lookahead(2).string == ")"
         ):
             # NUM_OR_NAN ( NUM_OR_NAN ) POSSIBLE_E_NOTATION
-            possible_e = _get_possible_e (toklist, 3)
+            possible_e = _get_possible_e(toklist, 3)
             if possible_e:
                 end = possible_e.end
             else:
                 end = toklist.lookahead(2).end
             nominal_value = tokinfo
-            tokinfo = next(toklist) # consume '('
+            tokinfo = next(toklist)  # consume '('
             plus_minus_op = tokenize.TokenInfo(
                 type=tokenlib.OP,
                 string="+/-",
                 start=tokinfo.start,
-                end=tokinfo.end, # this is funky because there's no "+/-" in nominal(std_dev) notation
+                end=tokinfo.end,  # this is funky because there's no "+/-" in nominal(std_dev) notation
                 line=line,
             )
             std_dev = next(toklist)
@@ -250,9 +266,11 @@ def uncertainty_tokenizer(input_string):
                     end=std_dev.end,
                     line=line,
                 )
-            next(toklist) # consume final ')'
+            next(toklist)  # consume final ')'
             if possible_e:
-                nominal_value, std_dev = _finalize_e(nominal_value, std_dev, toklist, possible_e)
+                nominal_value, std_dev = _finalize_e(
+                    nominal_value, std_dev, toklist, possible_e
+                )
             yield nominal_value
             yield plus_minus_op
             yield std_dev
