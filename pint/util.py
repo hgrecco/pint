@@ -32,7 +32,7 @@ from typing import (
 )
 from collections.abc import Hashable, Generator
 
-from .compat import NUMERIC_TYPES, tokenizer, Self
+from .compat import NUMERIC_TYPES, Self
 from .errors import DefinitionSyntaxError
 from .formatting import format_unit
 from .pint_eval import build_eval_tree
