@@ -17,7 +17,7 @@ from importlib import import_module
 from numbers import Number
 from collections.abc import Mapping
 from typing import Any, NoReturn, Callable, Optional, Union
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
 
 try:
     from uncertainties import UFloat, ufloat
