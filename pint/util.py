@@ -440,6 +440,7 @@ class UnitsContainer(Mapping[str, Scalar]):
     exponent and implements the corresponding operations.
 
     UnitsContainer is a read-only mapping. All operations (even in place ones)
+    return new instances.
 
     Parameters
     ----------
@@ -678,6 +679,7 @@ class ParserHelper(UnitsContainer):
     Briefly is a UnitsContainer with a scaling factor.
 
     ParserHelper is a read-only mapping. All operations (even in place ones)
+    return new instances.
 
     WARNING : The hash value used does not take into account the scale
     attribute so be careful if you use it as a dict key and then two unequal
