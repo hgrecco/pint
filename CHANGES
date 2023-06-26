@@ -4,6 +4,8 @@ Pint Changelog
 0.23 (unreleased)
 -----------------
 
+- Fixed Transformation type protocol.
+  (PR #1805)
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
   (PR #1803)
 
