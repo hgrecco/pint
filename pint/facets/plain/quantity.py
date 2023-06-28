@@ -1324,6 +1324,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         # We compare to the plain class of PlainQuantity because
         # each PlainQuantity class is unique.
         if not isinstance(other, PlainQuantity):
+            if other is None:
+                # A loop in pandas-dev/pandas/core/common.py(86)consensus_name_attr() can result in OTHER being None
+                return bool_result(False)
             if zero_or_nan(other, True):
                 # Handle the special case in which we compare to zero or NaN
                 # (or an array of zeros or NaNs)

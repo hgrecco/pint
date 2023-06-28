@@ -278,7 +278,10 @@ def uncertainty_tokenizer(input_string):
             yield tokinfo
 
 
-tokenizer = _plain_tokenizer
+if HAS_UNCERTAINTIES:
+    tokenizer = uncertainty_tokenizer
+else:
+    tokenizer = _plain_tokenizer
 
 import typing
 
