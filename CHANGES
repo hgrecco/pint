@@ -11,7 +11,7 @@ Pint Changelog
 - Optimize matplotlib unit conversion for Quantity arrays
   (PR #1819)
 - Added refractory index units.
-  (PR #xxxx)
+  (PR #1816)
 
 
 0.22 (2023-05-25)
