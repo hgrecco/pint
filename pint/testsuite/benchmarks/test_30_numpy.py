@@ -7,6 +7,7 @@ import pytest
 import pint
 from pint.compat import np
 
+from ..helpers import requires_numpy
 
 SMALL_VEC_LEN = 3
 MID_VEC_LEN = 1_000
@@ -23,8 +24,10 @@ ALL_ARRAYS_Q = tuple(f"{a}_{b}" for a, b in it.product(ALL_ARRAYS, UNITS))
 OP1 = (operator.neg,)  # operator.truth,
 OP2_CMP = (operator.eq, operator.lt)
 OP2_MATH = (operator.add, operator.sub, operator.mul, operator.truediv)
-NUMPY_OP2_CMP = (np.equal, np.less)
-NUMPY_OP2_MATH = (np.add, np.subtract, np.multiply, np.true_divide)
+
+if np is not None:
+    NUMPY_OP2_CMP = (np.equal, np.less)
+    NUMPY_OP2_MATH = (np.add, np.subtract, np.multiply, np.true_divide)
 
 
 def float_range(n: int) -> Generator[float, None, None]:
@@ -53,16 +56,19 @@ def setup(registry_tiny) -> tuple[pint.UnitRegistry, dict[str, Any]]:
     return ureg, data
 
 
+@requires_numpy
 def test_finding_meter_getattr(benchmark, setup):
     ureg, _ = setup
     benchmark(getattr, ureg, "meter")
 
 
+@requires_numpy
 def test_finding_meter_getitem(benchmark, setup):
     ureg, _ = setup
     benchmark(operator.getitem, ureg, "meter")
 
 
+@requires_numpy
 @pytest.mark.parametrize(
     "unit", ["meter", "angstrom", "meter/second", "angstrom/minute"]
 )
@@ -71,12 +77,14 @@ def test_base_units(benchmark, setup, unit):
     benchmark(ureg.get_base_units, unit)
 
 
+@requires_numpy
 @pytest.mark.parametrize("key", ALL_ARRAYS)
 def test_build_by_mul(benchmark, setup, key):
     ureg, data = setup
     benchmark(operator.mul, data[key], ureg.meter)
 
 
+@requires_numpy
 @pytest.mark.parametrize("key", ALL_ARRAYS_Q)
 @pytest.mark.parametrize("op", OP1 + (np.sqrt, np.square))
 def test_op1(benchmark, setup, key, op):
@@ -84,6 +92,7 @@ def test_op1(benchmark, setup, key, op):
     benchmark(op, data[key])
 
 
+@requires_numpy
 @pytest.mark.parametrize(
     "keys",
     (
