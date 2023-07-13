@@ -3,9 +3,10 @@ import itertools as it
 import operator
 
 import pytest
-import numpy as np
 
 import pint
+from pint.compat import np
+
 
 SMALL_VEC_LEN = 3
 MID_VEC_LEN = 1_000
