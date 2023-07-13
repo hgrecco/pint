@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc"
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
 
     steps:
       - uses: actions/checkout@v2

@@ -44,7 +44,12 @@ test = [
     "pytest",
     "pytest-mpl",
     "pytest-cov",
-    "pytest-subtests"
+    "pytest-subtests",
+    "pytest-benchmark"
+]
+bench = [
+    "pytest",
+    "pytest-benchmark"
 ]
 numpy = ["numpy >= 1.19.5"]
 uncertainties = ["uncertainties >= 3.1.6"]

@@ -1,22 +1,13 @@
 # pytest fixtures
 
-import io
+import pathlib
 
 import pytest
 
 import pint
 
 
-@pytest.fixture
-def registry_empty():
-    return pint.UnitRegistry(None)
-
-
-@pytest.fixture
-def registry_tiny():
-    return pint.UnitRegistry(
-        io.StringIO(
-            """
+_TINY = """
 yocto- = 1e-24 = y-
 zepto- = 1e-21 = z-
 atto- =  1e-18 = a-
@@ -44,8 +35,32 @@ second = [time] = s = sec
 angstrom = 1e-10 * meter = Å = ångström = Å
 minute = 60 * second = min
 """
-        )
-    )
+
+
+@pytest.fixture(scope="session")
+def tmppath_factory(tmpdir_factory) -> pathlib.Path:
+    tmp = tmpdir_factory.mktemp("pint")
+    return pathlib.Path(tmp)
+
+
+@pytest.fixture(scope="session")
+def tiny_definition_file(tmppath_factory: pathlib.Path) -> pathlib.Path:
+    folder = tmppath_factory / "definitions"
+    folder.mkdir(exist_ok=True, parents=True)
+    path = folder / "tiny.txt"
+    if not path.exists():
+        path.write_text(_TINY)
+    return path
+
+
+@pytest.fixture
+def registry_empty():
+    return pint.UnitRegistry(None)
+
+
+@pytest.fixture
+def registry_tiny(tiny_definition_file: pathlib.Path):
+    return pint.UnitRegistry(tiny_definition_file)
 
 
 @pytest.fixture
