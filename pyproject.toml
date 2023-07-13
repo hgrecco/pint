@@ -40,6 +40,12 @@ pint = [
 
 
 [project.optional-dependencies]
+testbase = [
+    "pytest",
+    "pytest-cov",
+    "pytest-subtests",
+    "pytest-benchmark"
+]
 test = [
     "pytest",
     "pytest-mpl",
@@ -49,7 +55,7 @@ test = [
 ]
 bench = [
     "pytest",
-    "pytest-benchmark"
+    "pytest-codspeed"
 ]
 numpy = ["numpy >= 1.19.5"]
 uncertainties = ["uncertainties >= 3.1.6"]

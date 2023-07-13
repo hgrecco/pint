@@ -64,8 +64,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests packaging
-          pip install .
+          pip install packaging
+          pip install .[testbase]
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
@@ -139,8 +139,8 @@ jobs:
       - name: Install dependencies
         run: |
           # sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests packaging
-          pip install .
+          pip install packaging
+          pip install .[testbase]
 
       # - name: Install pytest-mpl
       #   if: contains(matrix.extras, 'matplotlib')
@@ -191,8 +191,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest pytest-cov pytest-subtests packaging
-          pip install .
+          pip install packaging
+          pip install .[testbase]
 
       - name: Run Tests
         run: |
