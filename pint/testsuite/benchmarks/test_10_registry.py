@@ -94,7 +94,7 @@ def test_convert_from_uc(benchmark, my_setup, key):
     benchmark(ureg._convert, 1.0, data[src], data[dst])
 
 
-def test_parse_math_expression(benchmark):
+def test_parse_math_expression(benchmark, my_setup):
     ureg, _ = my_setup
     benchmark(ureg.parse_expression, "3 + 5 * 2 + value", value=10)
 

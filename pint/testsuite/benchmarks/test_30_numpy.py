@@ -25,7 +25,10 @@ OP1 = (operator.neg,)  # operator.truth,
 OP2_CMP = (operator.eq, operator.lt)
 OP2_MATH = (operator.add, operator.sub, operator.mul, operator.truediv)
 
-if np is not None:
+if np is None:
+    NUMPY_OP1_MATH = NUMPY_OP2_CMP = NUMPY_OP2_MATH = ()
+else:
+    NUMPY_OP1_MATH = (np.sqrt, np.square)
     NUMPY_OP2_CMP = (np.equal, np.less)
     NUMPY_OP2_MATH = (np.add, np.subtract, np.multiply, np.true_divide)
 
@@ -86,7 +89,7 @@ def test_build_by_mul(benchmark, setup, key):
 
 @requires_numpy
 @pytest.mark.parametrize("key", ALL_ARRAYS_Q)
-@pytest.mark.parametrize("op", OP1 + (np.sqrt, np.square))
+@pytest.mark.parametrize("op", OP1 + NUMPY_OP1_MATH)
 def test_op1(benchmark, setup, key, op):
     _, data = setup
     benchmark(op, data[key])

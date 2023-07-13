@@ -6,7 +6,7 @@ import pint
 @pytest.mark.parametrize("args", [[(None,), tuple(), ("tiny",), ("", None)]])
 def test_create_registry(benchmark, tiny_definition_file, args):
     if args[0] == "tiny":
-        args = (tiny_definition_file, args[1])
+        args = (tiny_definition_file, args[1:])
 
     @benchmark
     def _():
