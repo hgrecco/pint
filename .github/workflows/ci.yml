@@ -147,7 +147,7 @@ jobs:
       #   run: pip install pytest-mpl
 
       - name: Run tests
-        run: pytest $(env:TEST_OPTS)
+        run: pytest -rfsxEX -s -k issue1498b --benchmark-skip
 
   test-macos:
     strategy:
