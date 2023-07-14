@@ -97,7 +97,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      TEST_OPTS: "-rfsxEX -s -k issue1498b"
+      TEST_OPTS: "-rfsxEX -s -k issue1498b --benchmark-skip"
 
     steps:
       - uses: actions/checkout@v2
@@ -158,7 +158,7 @@ jobs:
     runs-on: macos-latest
 
     env:
-      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc"
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
 
     steps:
       - uses: actions/checkout@v2
