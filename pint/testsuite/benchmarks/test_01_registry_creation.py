@@ -1,16 +1,21 @@
-import pytest
-
 import pint
 
 
-@pytest.mark.parametrize("args", [[(None,), tuple(), ("tiny",), ("", None)]])
-def test_create_registry(benchmark, tiny_definition_file, args):
-    if args[0] == "tiny":
-        args = (tiny_definition_file, args[1:])
+def test_create_empty_registry(benchmark):
+    benchmark(
+        pint.UnitRegistry,
+    )
 
-    @benchmark
-    def _():
-        if len(args) == 2:
-            pint.UnitRegistry(args[0], cache_folder=args[1])
-        else:
-            pint.UnitRegistry(*args)
+
+def test_create_tiny_registry(benchmark, tiny_definition_file):
+    benchmark(pint.UnitRegistry, tiny_definition_file)
+
+
+def test_create_default_registry(benchmark):
+    benchmark(
+        pint.UnitRegistry,
+    )
+
+
+def test_create_default_registry_no_cache(benchmark):
+    benchmark(pint.UnitRegistry, cache_folder=None)
