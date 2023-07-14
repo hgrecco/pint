@@ -49,7 +49,7 @@ def tiny_definition_file(tmppath_factory: pathlib.Path) -> pathlib.Path:
     folder.mkdir(exist_ok=True, parents=True)
     path = folder / "tiny.txt"
     if not path.exists():
-        path.write_text(_TINY)
+        path.write_text(_TINY, encoding="utf-8")
     return path
 
 
