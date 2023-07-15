@@ -18,6 +18,9 @@ pint/testsuite/dask-worker-space
 # WebDAV file system cache files
 .DAV/
 
+# pytest benchmarks folder
+.benchmarks
+
 # tags files (from ctags)
 tags
 
