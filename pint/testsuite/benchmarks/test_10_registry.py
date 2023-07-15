@@ -71,8 +71,8 @@ def test_getitem(benchmark, setup: SetupType, key: str, pre_run: bool):
 def test_parse_unit_name(benchmark, setup: SetupType, key: str, pre_run: bool):
     ureg, _ = setup
     if pre_run:
-        no_benchmark(ureg.parse_unit_name, key)
-    benchmark(ureg.parse_unit_name, key)
+        no_benchmark(ureg.parse_single_unit, key)
+    benchmark(ureg.parse_single_unit, key)
 
 
 @pytest.mark.parametrize("key", UNITS)
