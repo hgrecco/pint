@@ -4,6 +4,15 @@
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+
+    The registry contains the following important methods:
+
+    - parse_units: Parse a units expression and returns a UnitContainer with
+      the canonical names.
+      The expression can only contain products, ratios and powers of units;
+      prefixed units and pluralized units.
+    -
+
 """
 
 from __future__ import annotations
@@ -349,6 +358,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def __getattr__(self, item: str) -> QuantityT:
         getattr_maybe_raise(self, item)
+
+        # self.Unit will call parse_units
         return self.Unit(item)
 
     def __getitem__(self, item: str) -> UnitT:
@@ -1127,9 +1138,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         """
 
-        # TODO: deal or remove with as_delta = None
-        for p in self.preprocessors:
-            input_string = p(input_string)
         units = self._parse_units(input_string, as_delta, case_sensitive)
         return self.Unit(units)
 
@@ -1149,6 +1157,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # If this is the case, force self._units to be repopulated.
         if as_delta and input_string in cache and input_string in self._units:
             return cache[input_string]
+
+        for p in self.preprocessors:
+            input_string = p(input_string)
 
         if not input_string:
             return self.UnitsContainer()
