@@ -1,22 +1,31 @@
 import pytest
 
 import pathlib
-from typing import Any
+from typing import Any, TypeVar, Callable, TypeAlias
 
 import pint
 
 from operator import getitem
 
-UNITS = ("meter", "kilometer", "second", "minute", "angstrom")
+UNITS = ("meter", "kilometer", "second", "minute", "angstrom", "millisecond", "ms")
 
 OTHER_UNITS = ("meter", "angstrom", "kilometer/second", "angstrom/minute")
 
 ALL_VALUES = ("int", "float", "complex")
 
 
+T = TypeVar("T")
+
+SetupType: TypeAlias = tuple[pint.UnitRegistry, dict[str, Any]]
+
+
+def no_benchmark(fun: Callable[..., T], *args: Any, **kwargs: Any) -> T:
+    return fun(*args, **kwargs)
+
+
 @pytest.fixture
-def setup(registry_tiny) -> tuple[pint.UnitRegistry, dict[str, Any]]:
-    data = {}
+def setup(registry_tiny: pint.UnitRegistry) -> SetupType:
+    data: dict[str, Any] = {}
     data["int"] = 1
     data["float"] = 1.0
     data["complex"] = complex(1, 2)
@@ -25,72 +34,98 @@ def setup(registry_tiny) -> tuple[pint.UnitRegistry, dict[str, Any]]:
 
 
 @pytest.fixture
-def my_setup(setup) -> tuple[pint.UnitRegistry, dict[str, Any]]:
+def my_setup(setup: SetupType) -> SetupType:
     ureg, data = setup
     for unit in UNITS + OTHER_UNITS:
         data["uc_%s" % unit] = pint.util.to_units_container(unit, ureg)
     return ureg, data
 
 
-def test_build_cache(setup, benchmark):
+def test_build_cache(setup: SetupType, benchmark):
     ureg, _ = setup
     benchmark(ureg._build_cache)
 
 
 @pytest.mark.parametrize("key", UNITS)
-def test_getattr(benchmark, setup, key):
+@pytest.mark.parametrize("pre_run", (True, False))
+def test_getattr(benchmark, setup: SetupType, key, pre_run):
     ureg, _ = setup
+    if pre_run:
+        no_benchmark(getattr, ureg, key)
     benchmark(getattr, ureg, key)
 
 
 @pytest.mark.parametrize("key", UNITS)
-def test_getitem(benchmark, setup, key):
+@pytest.mark.parametrize("pre_run", (True, False))
+def test_getitem(benchmark, setup: SetupType, key, pre_run):
     ureg, _ = setup
+    if pre_run:
+        no_benchmark(getitem, ureg, key)
     benchmark(getitem, ureg, key)
 
 
 @pytest.mark.parametrize("key", UNITS)
-def test_parse_unit_name(benchmark, setup, key):
+@pytest.mark.parametrize("pre_run", (True, False))
+def test_parse_unit_name(benchmark, setup: SetupType, key, pre_run):
     ureg, _ = setup
+    if pre_run:
+        no_benchmark(ureg.parse_unit_name, key)
     benchmark(ureg.parse_unit_name, key)
 
 
 @pytest.mark.parametrize("key", UNITS)
-def test_parse_units(benchmark, setup, key):
+@pytest.mark.parametrize("pre_run", (True, False))
+def test_parse_units(benchmark, setup: SetupType, key, pre_run):
     ureg, _ = setup
+    if pre_run:
+        no_benchmark(ureg.parse_units, key)
     benchmark(ureg.parse_units, key)
 
 
 @pytest.mark.parametrize("key", UNITS)
-def test_parse_expression(benchmark, setup, key):
+def test_parse_expression(benchmark, setup: SetupType, key, pre_run):
     ureg, _ = setup
+    if pre_run:
+        no_benchmark(ureg.parse_expression, "1.0 " + key)
     benchmark(ureg.parse_expression, "1.0 " + key)
 
 
 @pytest.mark.parametrize("unit", OTHER_UNITS)
-def test_base_units(benchmark, setup, unit):
+@pytest.mark.parametrize("pre_run", (True, False))
+def test_base_units(benchmark, setup: SetupType, unit, pre_run):
     ureg, _ = setup
+    if pre_run:
+        no_benchmark(ureg.get_base_units, unit)
     benchmark(ureg.get_base_units, unit)
 
 
 @pytest.mark.parametrize("unit", OTHER_UNITS)
-def test_to_units_container_registry(benchmark, setup, unit):
+@pytest.mark.parametrize("pre_run", (True, False))
+def test_to_units_container_registry(benchmark, setup: SetupType, unit, pre_run):
     ureg, _ = setup
+    if pre_run:
+        no_benchmark(pint.util.to_units_container, unit, ureg)
     benchmark(pint.util.to_units_container, unit, ureg)
 
 
 @pytest.mark.parametrize("unit", OTHER_UNITS)
-def test_to_units_container_detached(benchmark, setup, unit):
+@pytest.mark.parametrize("pre_run", (True, False))
+def test_to_units_container_detached(benchmark, setup: SetupType, unit, pre_run):
     ureg, _ = setup
+    if pre_run:
+        no_benchmark(pint.util.to_units_container, unit, ureg)
     benchmark(pint.util.to_units_container, unit, ureg)
 
 
 @pytest.mark.parametrize(
     "key", (("uc_meter", "uc_kilometer"), ("uc_kilometer/second", "uc_angstrom/minute"))
 )
-def test_convert_from_uc(benchmark, my_setup, key):
+@pytest.mark.parametrize("pre_run", (True, False))
+def test_convert_from_uc(benchmark, my_setup: SetupType, key, pre_run):
     src, dst = key
     ureg, data = my_setup
+    if pre_run:
+        no_benchmark(ureg._convert, 1.0, data[src], data[dst])
     benchmark(ureg._convert, 1.0, data[src], data[dst])
 
 
