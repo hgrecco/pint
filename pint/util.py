@@ -1039,8 +1039,7 @@ def to_units_container(
         return unit_like._units
     elif str in mro:
         if registry:
-            # TODO: Why not parse.units here?
-            return registry._parse_units(unit_like)
+            return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
     elif dict in mro:

@@ -1161,14 +1161,58 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         """
 
+        case_sensitive = (
+            self.case_sensitive if case_sensitive is None else case_sensitive
+        )
+
+        as_delta = (
+            getattr(self, "default_as_delta", True) if as_delta is None else as_delta
+        )
+
         units = self._parse_units(input_string, as_delta, case_sensitive)
         return self.Unit(units)
+
+    def parse_units_as_container(
+        self,
+        input_string: str,
+        as_delta: Optional[bool] = None,
+        case_sensitive: Optional[bool] = None,
+    ) -> UnitsContainer:
+        """Parse a units expression and returns a UnitContainer with
+        the canonical names.
+
+        The expression can only contain products, ratios and powers of units.
+
+        Parameters
+        ----------
+        input_string : str
+        as_delta : bool or None
+            if the expression has multiple units, the parser will
+            interpret non multiplicative units as their `delta_` counterparts. (Default value = None)
+        case_sensitive : bool or None
+            Control if unit parsing is case sensitive. Defaults to None, which uses the
+            registry's setting.
+
+        Returns
+        -------
+            pint.Unit
+
+        """
+        case_sensitive = (
+            self.case_sensitive if case_sensitive is None else case_sensitive
+        )
+
+        as_delta = (
+            getattr(self, "default_as_delta", True) if as_delta is None else as_delta
+        )
+
+        return self._parse_units(input_string, as_delta, case_sensitive)
 
     def _parse_units(
         self,
         input_string: str,
-        as_delta: bool = True,
-        case_sensitive: Optional[bool] = None,
+        as_delta: bool,
+        case_sensitive: bool,
     ) -> UnitsContainer:
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
