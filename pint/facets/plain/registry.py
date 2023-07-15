@@ -131,11 +131,6 @@ class RegistryCache:
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit: dict[str, UnitsContainer] = {}
 
-        #: Maps (string and case insensitive) to (prefix, unit name, suffix)
-        self.parse_unit_name: dict[
-            tuple[str, bool], tuple[tuple[str, str, str], ...]
-        ] = {}
-
     def __eq__(self, other: Any):
         if not isinstance(other, self.__class__):
             return False
@@ -144,7 +139,6 @@ class RegistryCache:
             "root_units",
             "dimensionality",
             "parse_unit",
-            "parse_unit_name",
         )
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
@@ -1080,20 +1074,15 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._parse_single_unit(unit_name, case_sensitive)
 
+    @functools.cache
     def _parse_single_unit(
         self, unit_name: str, case_sensitive: bool
     ) -> tuple[tuple[str, str, str], ...]:
         """Helper of parse_unit_name."""
 
-        key = (unit_name, case_sensitive)
-        this_cache = self._cache.parse_unit_name
-        if key in this_cache:
-            return this_cache[key]
-
-        out = this_cache[key] = self._dedup_candidates(
+        return self._dedup_candidates(
             self._yield_potential_units(unit_name, case_sensitive=case_sensitive)
         )
-        return out
 
     def _yield_potential_units(
         self, unit_name: str, case_sensitive: bool
