@@ -7,11 +7,17 @@
 
     The registry contains the following important methods:
 
+    - parse_unit_name: Parse a unit to identify prefix, unit name and suffix
+      by walking the list of prefix and suffix.
+      Result is cached: NO
     - parse_units: Parse a units expression and returns a UnitContainer with
       the canonical names.
       The expression can only contain products, ratios and powers of units;
       prefixed units and pluralized units.
-    -
+      Result is cached: YES
+    - parse_expression: Parse a mathematical expression including units and
+      return a quantity object.
+      Result is cached: NO
 
 """
 
