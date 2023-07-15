@@ -14,12 +14,14 @@ import sys
 import math
 import tokenize
 from decimal import Decimal
+import functools
 from importlib import import_module
 from io import BytesIO
 from numbers import Number
 from collections.abc import Mapping
 from typing import Any, NoReturn, Callable, Optional, Union
 from collections.abc import Generator, Iterable
+import warnings
 
 
 if sys.version_info >= (3, 10):
@@ -362,3 +364,25 @@ def zero_or_nan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
     if check_all and is_duck_array_type(type(out)):
         return out.all()
     return out
+
+
+def deprecated(msg: str):
+    def _inner(func: Callable[..., Any]):
+        """This is a decorator which can be used to mark functions
+        as deprecated. It will result in a warning being emitted
+        when the function is used."""
+
+        @functools.wraps(func)
+        def _new_func(*args: Any, **kwargs: Any):
+            warnings.simplefilter("always", DeprecationWarning)  # turn off filter
+            warnings.warn(
+                f"Call to deprecated function {func.__name__}.\n{msg}",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+            warnings.simplefilter("default", DeprecationWarning)  # reset filter
+            return func(*args, **kwargs)
+
+        return _new_func
+
+    return _inner

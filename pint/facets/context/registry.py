@@ -17,7 +17,13 @@ from ...compat import TypeAlias
 from ..._typing import F, Magnitude
 from ...errors import UndefinedUnitError
 from ...util import find_connected_nodes, find_shortest_path, logger, UnitsContainer
-from ..plain import GenericPlainRegistry, UnitDefinition, QuantityT, UnitT
+from ..plain import (
+    GenericPlainRegistry,
+    UnitDefinition,
+    QuantityT,
+    UnitT,
+    RegistryCache,
+)
 from .definitions import ContextDefinition
 from . import objects
 
@@ -30,11 +36,12 @@ class ContextCacheOverlay:
     active contexts which contain unit redefinitions.
     """
 
-    def __init__(self, registry_cache) -> None:
+    def __init__(self, registry_cache: RegistryCache) -> None:
         self.dimensional_equivalents = registry_cache.dimensional_equivalents
         self.root_units = {}
         self.dimensionality = registry_cache.dimensionality
         self.parse_unit = registry_cache.parse_unit
+        self.parse_unit_name = registry_cache.parse_unit_name
 
 
 class GenericContextRegistry(

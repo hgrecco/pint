@@ -19,7 +19,13 @@ from .definitions import (
     UnitDefinition,
 )
 from .objects import PlainQuantity, PlainUnit
-from .registry import PlainRegistry, GenericPlainRegistry, QuantityT, UnitT
+from .registry import (
+    PlainRegistry,
+    GenericPlainRegistry,
+    QuantityT,
+    UnitT,
+    RegistryCache,
+)
 from .quantity import MagnitudeT
 
 __all__ = [
@@ -27,6 +33,7 @@ __all__ = [
     "PlainUnit",
     "PlainQuantity",
     "PlainRegistry",
+    "RegistryCache",
     "AliasDefinition",
     "DefaultsDefinition",
     "DimensionDefinition",

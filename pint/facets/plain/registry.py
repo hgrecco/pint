@@ -9,7 +9,7 @@
 
     - parse_unit_name: Parse a unit to identify prefix, unit name and suffix
       by walking the list of prefix and suffix.
-      Result is cached: NO
+      Result is cached: YES
     - parse_units: Parse a units expression and returns a UnitContainer with
       the canonical names.
       The expression can only contain products, ratios and powers of units;
@@ -131,6 +131,11 @@ class RegistryCache:
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit: dict[str, UnitsContainer] = {}
 
+        #: Maps (string and case insensitive) to (prefix, unit name, suffix)
+        self.parse_unit_name: dict[
+            tuple[str, bool], tuple[tuple[str, str, str], ...]
+        ] = {}
+
     def __eq__(self, other: Any):
         if not isinstance(other, self.__class__):
             return False
@@ -139,6 +144,7 @@ class RegistryCache:
             "root_units",
             "dimensionality",
             "parse_unit",
+            "parse_unit_name",
         )
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
@@ -1040,7 +1046,13 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return value
 
+    # @deprecated("Use parse_single_unit")
     def parse_unit_name(
+        self, unit_name: str, case_sensitive: Optional[bool] = None
+    ) -> tuple[tuple[str, str, str], ...]:
+        return self.parse_single_unit(unit_name, case_sensitive)
+
+    def parse_single_unit(
         self, unit_name: str, case_sensitive: Optional[bool] = None
     ) -> tuple[tuple[str, str, str], ...]:
         """Parse a unit to identify prefix, unit name and suffix
@@ -1061,17 +1073,33 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         tuple of tuples (str, str, str)
             all non-equivalent combinations of (prefix, unit name, suffix)
         """
-        return self._dedup_candidates(
-            self._parse_unit_name(unit_name, case_sensitive=case_sensitive)
-        )
 
-    def _parse_unit_name(
-        self, unit_name: str, case_sensitive: Optional[bool] = None
-    ) -> Generator[tuple[str, str, str], None, None]:
-        """Helper of parse_unit_name."""
         case_sensitive = (
             self.case_sensitive if case_sensitive is None else case_sensitive
         )
+
+        return self._parse_single_unit(unit_name, case_sensitive)
+
+    def _parse_single_unit(
+        self, unit_name: str, case_sensitive: bool
+    ) -> tuple[tuple[str, str, str], ...]:
+        """Helper of parse_unit_name."""
+
+        key = (unit_name, case_sensitive)
+        this_cache = self._cache.parse_unit_name
+        if key in this_cache:
+            return this_cache[key]
+
+        out = this_cache[key] = self._dedup_candidates(
+            self._yield_potential_units(unit_name, case_sensitive=case_sensitive)
+        )
+        return out
+
+    def _yield_potential_units(
+        self, unit_name: str, case_sensitive: bool
+    ) -> Generator[tuple[str, str, str], None, None]:
+        """Helper of parse_unit_name."""
+
         stw = unit_name.startswith
         edw = unit_name.endswith
         for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
