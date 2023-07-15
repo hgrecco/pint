@@ -981,15 +981,15 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if src == dst:
             return value
 
-        return self._convert(value, src, dst, inplace)
+        return self._convert(value, src, dst, inplace, True)
 
     def _convert(
         self,
         value: T,
         src: UnitsContainer,
         dst: UnitsContainer,
-        inplace: bool = False,
-        check_dimensionality: bool = True,
+        inplace: bool,
+        check_dimensionality: bool,
     ) -> T:
         """Convert value from some source to destination units.
 

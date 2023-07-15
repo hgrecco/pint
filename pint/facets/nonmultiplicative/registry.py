@@ -209,7 +209,12 @@ class GenericNonMultiplicativeRegistry(
         return all_units
 
     def _convert(
-        self, value: T, src: UnitsContainer, dst: UnitsContainer, inplace: bool = False
+        self,
+        value: T,
+        src: UnitsContainer,
+        dst: UnitsContainer,
+        inplace: bool,
+        check_dimensionality: bool,
     ) -> T:
         """Convert value from some source to destination units.
 
@@ -251,7 +256,7 @@ class GenericNonMultiplicativeRegistry(
             )
 
         if not (src_offset_unit or dst_offset_unit):
-            return super()._convert(value, src, dst, inplace)
+            return super()._convert(value, src, dst, inplace, check_dimensionality)
 
         src_dim = self._get_dimensionality(src)
         dst_dim = self._get_dimensionality(dst)

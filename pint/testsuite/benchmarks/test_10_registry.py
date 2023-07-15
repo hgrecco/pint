@@ -132,8 +132,8 @@ def test_convert_from_uc(benchmark, my_setup: SetupType, key: str, pre_run: bool
     src, dst = key
     ureg, data = my_setup
     if pre_run:
-        no_benchmark(ureg._convert, 1.0, data[src], data[dst])
-    benchmark(ureg._convert, 1.0, data[src], data[dst])
+        no_benchmark(ureg._convert, 1.0, data[src], data[dst], False, True)
+    benchmark(ureg._convert, 1.0, data[src], data[dst], False, True)
 
 
 def test_parse_math_expression(benchmark, my_setup):

@@ -367,7 +367,8 @@ class GenericContextRegistry(
         value: Magnitude,
         src: UnitsContainer,
         dst: UnitsContainer,
-        inplace: bool = False,
+        inplace: bool,
+        check_dimensionality: bool,
     ) -> Magnitude:
         """Convert value from some source to destination units.
 
@@ -406,7 +407,7 @@ class GenericContextRegistry(
 
                 value, src = src._magnitude, src._units
 
-        return super()._convert(value, src, dst, inplace)
+        return super()._convert(value, src, dst, inplace, check_dimensionality)
 
     def _get_compatible_units(
         self, input_units: UnitsContainer, group_or_system: Optional[str] = None
