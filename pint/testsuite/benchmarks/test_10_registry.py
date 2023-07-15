@@ -85,6 +85,7 @@ def test_parse_units(benchmark, setup: SetupType, key: str, pre_run: bool):
 
 
 @pytest.mark.parametrize("key", UNITS)
+@pytest.mark.parametrize("pre_run", (True, False))
 def test_parse_expression(benchmark, setup: SetupType, key: str, pre_run: bool):
     ureg, _ = setup
     if pre_run:
@@ -94,7 +95,7 @@ def test_parse_expression(benchmark, setup: SetupType, key: str, pre_run: bool):
 
 @pytest.mark.parametrize("unit", OTHER_UNITS)
 @pytest.mark.parametrize("pre_run", (True, False))
-def test_base_units(benchmark, setup: SetupType, unit, pre_run):
+def test_base_units(benchmark, setup: SetupType, unit: str, pre_run: bool):
     ureg, _ = setup
     if pre_run:
         no_benchmark(ureg.get_base_units, unit)
@@ -103,7 +104,9 @@ def test_base_units(benchmark, setup: SetupType, unit, pre_run):
 
 @pytest.mark.parametrize("unit", OTHER_UNITS)
 @pytest.mark.parametrize("pre_run", (True, False))
-def test_to_units_container_registry(benchmark, setup: SetupType, unit, pre_run):
+def test_to_units_container_registry(
+    benchmark, setup: SetupType, unit: str, pre_run: bool
+):
     ureg, _ = setup
     if pre_run:
         no_benchmark(pint.util.to_units_container, unit, ureg)
@@ -112,7 +115,9 @@ def test_to_units_container_registry(benchmark, setup: SetupType, unit, pre_run)
 
 @pytest.mark.parametrize("unit", OTHER_UNITS)
 @pytest.mark.parametrize("pre_run", (True, False))
-def test_to_units_container_detached(benchmark, setup: SetupType, unit, pre_run):
+def test_to_units_container_detached(
+    benchmark, setup: SetupType, unit: str, pre_run: bool
+):
     ureg, _ = setup
     if pre_run:
         no_benchmark(pint.util.to_units_container, unit, ureg)
