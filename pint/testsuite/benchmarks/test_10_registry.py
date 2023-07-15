@@ -1,7 +1,9 @@
 import pytest
 
 import pathlib
-from typing import Any, TypeVar, Callable, TypeAlias
+from typing import Any, TypeVar, Callable
+
+from ...compat import TypeAlias
 
 import pint
 
@@ -48,7 +50,7 @@ def test_build_cache(setup: SetupType, benchmark):
 
 @pytest.mark.parametrize("key", UNITS)
 @pytest.mark.parametrize("pre_run", (True, False))
-def test_getattr(benchmark, setup: SetupType, key, pre_run):
+def test_getattr(benchmark, setup: SetupType, key: str, pre_run: bool):
     ureg, _ = setup
     if pre_run:
         no_benchmark(getattr, ureg, key)
@@ -57,7 +59,7 @@ def test_getattr(benchmark, setup: SetupType, key, pre_run):
 
 @pytest.mark.parametrize("key", UNITS)
 @pytest.mark.parametrize("pre_run", (True, False))
-def test_getitem(benchmark, setup: SetupType, key, pre_run):
+def test_getitem(benchmark, setup: SetupType, key: str, pre_run: bool):
     ureg, _ = setup
     if pre_run:
         no_benchmark(getitem, ureg, key)
@@ -66,7 +68,7 @@ def test_getitem(benchmark, setup: SetupType, key, pre_run):
 
 @pytest.mark.parametrize("key", UNITS)
 @pytest.mark.parametrize("pre_run", (True, False))
-def test_parse_unit_name(benchmark, setup: SetupType, key, pre_run):
+def test_parse_unit_name(benchmark, setup: SetupType, key: str, pre_run: bool):
     ureg, _ = setup
     if pre_run:
         no_benchmark(ureg.parse_unit_name, key)
@@ -75,7 +77,7 @@ def test_parse_unit_name(benchmark, setup: SetupType, key, pre_run):
 
 @pytest.mark.parametrize("key", UNITS)
 @pytest.mark.parametrize("pre_run", (True, False))
-def test_parse_units(benchmark, setup: SetupType, key, pre_run):
+def test_parse_units(benchmark, setup: SetupType, key: str, pre_run: bool):
     ureg, _ = setup
     if pre_run:
         no_benchmark(ureg.parse_units, key)
@@ -83,7 +85,7 @@ def test_parse_units(benchmark, setup: SetupType, key, pre_run):
 
 
 @pytest.mark.parametrize("key", UNITS)
-def test_parse_expression(benchmark, setup: SetupType, key, pre_run):
+def test_parse_expression(benchmark, setup: SetupType, key: str, pre_run: bool):
     ureg, _ = setup
     if pre_run:
         no_benchmark(ureg.parse_expression, "1.0 " + key)
@@ -121,7 +123,7 @@ def test_to_units_container_detached(benchmark, setup: SetupType, unit, pre_run)
     "key", (("uc_meter", "uc_kilometer"), ("uc_kilometer/second", "uc_angstrom/minute"))
 )
 @pytest.mark.parametrize("pre_run", (True, False))
-def test_convert_from_uc(benchmark, my_setup: SetupType, key, pre_run):
+def test_convert_from_uc(benchmark, my_setup: SetupType, key: str, pre_run: bool):
     src, dst = key
     ureg, data = my_setup
     if pre_run:
