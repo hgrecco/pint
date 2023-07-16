@@ -63,6 +63,9 @@ from ..._typing import (
     Handler,
 )
 
+
+from ...cache import cache as methodcache
+
 from ..._vendor import appdirs
 from ...compat import babel_parse, tokenizer, TypeAlias, Self
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
@@ -1084,7 +1087,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._parse_single_unit(unit_name, case_sensitive)
 
-    @functools.cache
+    @methodcache
     def _parse_single_unit(
         self, unit_name: str, case_sensitive: bool
     ) -> tuple[tuple[str, str, str], ...]:
