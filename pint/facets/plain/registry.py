@@ -795,12 +795,16 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         """
         input_units = to_units_container(input_units, self)
 
-        f, units = self._get_root_units(input_units, check_nonmult)
+        f, units = self._get_root_units(input_units, check_nonmult=check_nonmult)
 
         return f, self.Unit(units)
 
     def _get_root_units(
-        self, input_units: UnitsContainer, check_nonmult: bool = True
+        self,
+        numerator: UnitsContainer,
+        denominator: UnitsContainer | None = None,
+        *,
+        check_nonmult: bool = True,
     ) -> tuple[Scalar, UnitsContainer]:
         """Convert unit or dict of units to the root units.
 
@@ -809,7 +813,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         Parameters
         ----------
-        input_units : UnitsContainer or dict
+        numerator : UnitsContainer or dict
+            units
+        denominator : UnitsContainer or dict
             units
         check_nonmult : bool
             if True, None will be returned as the
@@ -822,18 +828,22 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             multiplicative factor, plain units
 
         """
-        if not input_units:
+
+        if denominator is not None:
+            numerator = numerator / denominator
+
+        if not numerator:
             return 1, self.UnitsContainer()
 
         cache = self._cache.root_units
         try:
-            return cache[input_units]
+            return cache[numerator]
         except KeyError:
             pass
 
         accumulators: dict[Optional[str], int] = defaultdict(int)
         accumulators[None] = 1
-        self._get_root_units_recurse(input_units, 1, accumulators)
+        self._get_root_units_recurse(numerator, 1, accumulators)
 
         factor = accumulators[None]
         units = self.UnitsContainer(
@@ -845,7 +855,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             if any(not self._units[unit].converter.is_multiplicative for unit in units):
                 factor = None
 
-        cache[input_units] = factor, units
+        cache[numerator] = factor, units
         return factor, units
 
     def get_base_units(
@@ -1024,7 +1034,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         # Here src and dst have only multiplicative units left. Thus we can
         # convert with a factor.
-        factor, _ = self._get_root_units(src / dst)
+        factor, _ = self._get_root_units(src, dst)
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
