@@ -15,6 +15,8 @@ __all__ = [
     "cache",
     "lru_cache",
 ]
+
+import warnings
 from weakref import WeakKeyDictionary
 
 from functools import update_wrapper
@@ -127,6 +129,8 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
 
     cache: WeakKeyDictionary[object, dict[Any, T]] = WeakKeyDictionary()
 
+    stack: WeakKeyDictionary[object, list[dict[Any, T]]] = WeakKeyDictionary()
+
     def wrapper(self: UnitRegistry, *args: Any, **kwds: Any) -> T:
         # Simple caching without ordering or size limit
 
@@ -149,7 +153,37 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
         if self in cache:
             cache[self].clear()
 
+    def cache_stack_push(self: UnitRegistry, obj: dict[Any, T] | None = None) -> None:
+        substack = stack.get(self, None)
+        if substack is None:
+            stack[self] = substack = []
+
+        subcache = cache.get(self, None)
+        if subcache is None:
+            cache[self] = subcache = {}
+
+        substack.append(subcache)
+        cache[self] = obj or {}
+
+    def cache_stack_pop(self: UnitRegistry) -> dict[Any, T]:
+        substack = stack.get(self, None)
+        if substack is None:
+            stack[self] = substack = []
+
+        subcache = cache.get(self, None)
+        if subcache is None:
+            cache[self] = subcache = {}
+
+        if substack:
+            cache[self] = substack.pop()
+        else:
+            warnings.warn("Cannot pop cache from stack: stack is empty.")
+
+        return subcache
+
     wrapper.cache_clear = cache_clear
+    wrapper.cache_stack_push = cache_stack_push
+    wrapper.cache_stack_pop = cache_stack_pop
     return wrapper
 
 

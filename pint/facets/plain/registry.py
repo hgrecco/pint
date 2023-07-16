@@ -802,6 +802,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return f, self.Unit(units)
 
+    @methodcache
     def _get_root_units(
         self,
         numerator: UnitsContainer,

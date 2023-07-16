@@ -804,7 +804,8 @@ def test_redefine(subtests):
             assert asd.to("bar").magnitude == 4 * 3
             assert asd.to("baz").magnitude == 4
 
-        ureg.disable_contexts()
+            if enable_ctx:
+                ureg.disable_contexts(1)
 
 
 def test_define_nan():

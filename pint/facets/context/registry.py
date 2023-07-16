@@ -248,6 +248,7 @@ class GenericContextRegistry(
 
         # Finally we add them to the active context.
         self._active_ctx.insert_contexts(*contexts)
+        self._get_root_units.cache_stack_push(self)
         self._switch_context_cache_and_units()
 
     def disable_contexts(self, n: Optional[int] = None) -> None:
@@ -259,6 +260,7 @@ class GenericContextRegistry(
             Number of contexts to disable. Default: disable all contexts.
         """
         self._active_ctx.remove_contexts(n)
+        self._get_root_units.cache_stack_pop(self)
         self._switch_context_cache_and_units()
 
     @contextmanager
