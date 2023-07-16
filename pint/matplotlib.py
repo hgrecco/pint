@@ -34,6 +34,9 @@ class PintConverter(matplotlib.units.ConversionInterface):
 
     def convert(self, value, unit, axis):
         """Convert :`Quantity` instances for matplotlib to use."""
+        # Short circuit for arrays
+        if hasattr(value, "units"):
+            return value.to(unit).magnitude
         if iterable(value):
             return [self._convert_value(v, unit, axis) for v in value]
 
