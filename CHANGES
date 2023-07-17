@@ -8,6 +8,8 @@ Pint Changelog
   (PR #1805)
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
   (PR #1803)
+- Optimize matplotlib unit conversion for Quantity arrays
+  (PR #1819)
 
 
 0.22 (2023-05-25)
