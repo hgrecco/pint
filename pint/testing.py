@@ -64,7 +64,7 @@ def assert_allclose(
     if msg is None:
         try:
             msg = f"Comparing {first!r} and {second!r}. "
-        except TypeError:
+        except (TypeError, ValueError):
             try:
                 msg = f"Comparing {first} and {second}. "
             except Exception:
