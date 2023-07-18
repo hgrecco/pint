@@ -80,6 +80,11 @@ class GenericContextRegistry(
         super()._register_definition_adders()
         self._register_adder(ContextDefinition, self.add_context)
 
+    def _clear_cache(self):
+        super()._clear_cache()
+        for func in self._cache_methods:
+            func.cache_clear(self)
+
     def add_context(self, context: Union[objects.Context, ContextDefinition]) -> None:
         """Add a context object to the registry.
 

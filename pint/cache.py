@@ -89,7 +89,7 @@ def _make_key(
     return _HashedSeq(key)
 
 
-def lru_cache():
+class lru_cache:
     """Least-recently-used cache decorator.
 
     If *maxsize* is set to None, the LRU features are disabled and the cache
@@ -115,15 +115,23 @@ def lru_cache():
     # The internals of the lru_cache are encapsulated for thread safety and
     # to allow the implementation to change (including a possible C version).
 
-    def decorating_function(user_function: Callable[..., T]) -> Callable[..., T]:
+    def __init__(self, user_function):
         wrapper = _lru_cache_wrapper(user_function)
-        return update_wrapper(wrapper, user_function)
+        self.wrapped_fun = update_wrapper(wrapper, user_function)
 
-    return decorating_function
+    def __set_name__(self, owner, name):
+        cache_methods = getattr(owner, "cache_methods", None)
+        if cache_methods is None:
+            owner._cache_methods = cache_methods = []
+
+        cache_methods.append(self.wrapped_fun)
+
+        setattr(owner, name, self.wrapped_fun)
 
 
 def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
     # Constants shared by all lru cache instances:
+
     sentinel = object()  # unique object used to signal cache misses
     make_key = _make_key  # build a key from the function arguments
 
@@ -184,6 +192,7 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
     wrapper.cache_clear = cache_clear
     wrapper.cache_stack_push = cache_stack_push
     wrapper.cache_stack_pop = cache_stack_pop
+
     return wrapper
 
 
@@ -194,4 +203,4 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
 
 def cache(user_function: Callable[..., Any], /):
     'Simple lightweight unbounded cache.  Sometimes called "memoize".'
-    return lru_cache()(user_function)
+    return lru_cache(user_function)

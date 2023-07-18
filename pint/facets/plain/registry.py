@@ -580,6 +580,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return parsed_project
 
+    def _clear_cache(self):
+        self._cache = RegistryCache()
+        for func in self._cache_methods:
+            func.cache_clear(self)
+
     def _build_cache(self, loaded_files=None) -> None:
         """Build a cache of dimensionality and plain units."""
 
@@ -591,7 +596,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 diskcache.save(self._cache, loaded_files, "build_cache")
             return
 
-        self._cache = RegistryCache()
+        self._clear_cache()
 
         deps: dict[str, set[str]] = {
             name: set(definition.reference.keys()) if definition.reference else set()

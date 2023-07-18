@@ -22,6 +22,34 @@ class DerivedDemo(Demo):
         return self.value * value + 0.5
 
 
+def test_cache_methods():
+    assert hasattr(Demo, "_cache_methods")
+    assert isinstance(Demo._cache_methods, list)
+    assert Demo._cache_methods == [
+        Demo.calculated_value,
+    ]
+
+    assert hasattr(DerivedDemo, "_cache_methods")
+    assert isinstance(DerivedDemo._cache_methods, list)
+    assert DerivedDemo._cache_methods == [
+        DerivedDemo.calculated_value,
+    ]
+
+    d = Demo(1)
+    assert hasattr(d, "_cache_methods")
+    assert isinstance(d._cache_methods, list)
+    assert d._cache_methods == [
+        Demo.calculated_value,
+    ]
+
+    d = DerivedDemo(2)
+    assert hasattr(d, "_cache_methods")
+    assert isinstance(d._cache_methods, list)
+    assert d._cache_methods == [
+        DerivedDemo.calculated_value,
+    ]
+
+
 def test_cache_clear():
     demo = Demo(2)
 
