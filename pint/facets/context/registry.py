@@ -39,7 +39,6 @@ class ContextCacheOverlay:
     def __init__(self, registry_cache: RegistryCache) -> None:
         self.dimensional_equivalents = registry_cache.dimensional_equivalents
         self.root_units = {}
-        self.parse_unit = registry_cache.parse_unit
 
 
 class GenericContextRegistry(

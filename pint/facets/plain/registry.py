@@ -128,16 +128,12 @@ class RegistryCache:
         # TODO: this description is not right.
         self.root_units: dict[UnitsContainer, tuple[Scalar, UnitsContainer]] = {}
 
-        #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit: dict[str, UnitsContainer] = {}
-
     def __eq__(self, other: Any):
         if not isinstance(other, self.__class__):
             return False
         attrs = (
             "dimensional_equivalents",
             "root_units",
-            "parse_unit",
         )
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
@@ -1212,6 +1208,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._parse_units(input_string, as_delta, case_sensitive)
 
+    @methodcache
     def _parse_units(
         self,
         input_string: str,
@@ -1222,12 +1219,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         the canonical names.
         """
 
-        cache = self._cache.parse_unit
+        # TODO: check if this is actual.
         # Issue #1097: it is possible, when a unit was defined while a different context
         # was active, that the unit is in self._cache.parse_unit but not in self._units.
         # If this is the case, force self._units to be repopulated.
-        if as_delta and input_string in cache and input_string in self._units:
-            return cache[input_string]
 
         for p in self.preprocessors:
             input_string = p(input_string)
@@ -1254,9 +1249,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 if not definition.is_multiplicative:
                     cname = "delta_" + cname
             ret = ret.add(cname, value)
-
-        if as_delta:
-            cache[input_string] = ret
 
         return ret
 
