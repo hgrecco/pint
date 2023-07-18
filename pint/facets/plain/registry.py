@@ -128,9 +128,6 @@ class RegistryCache:
         # TODO: this description is not right.
         self.root_units: dict[UnitsContainer, tuple[Scalar, UnitsContainer]] = {}
 
-        #: Maps dimensionality (UnitsContainer) to Units (UnitsContainer)
-        self.dimensionality: dict[UnitsContainer, UnitsContainer] = {}
-
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit: dict[str, UnitsContainer] = {}
 
@@ -140,7 +137,6 @@ class RegistryCache:
         attrs = (
             "dimensional_equivalents",
             "root_units",
-            "dimensionality",
             "parse_unit",
         )
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
@@ -620,7 +616,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                     di = self._get_dimensionality(uc)
 
                     self._cache.root_units[uc] = bu
-                    self._cache.dimensionality[uc] = di
 
                     if not prefix:
                         dimeq_set = self._cache.dimensional_equivalents.setdefault(
@@ -702,19 +697,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._get_dimensionality(input_units)
 
-    def _get_dimensionality(
-        self, input_units: Optional[UnitsContainer]
-    ) -> UnitsContainer:
+    @methodcache
+    def _get_dimensionality(self, input_units: UnitsContainer) -> UnitsContainer:
         """Convert a UnitsContainer to plain dimensions."""
         if not input_units:
             return self.UnitsContainer()
-
-        cache = self._cache.dimensionality
-
-        try:
-            return cache[input_units]
-        except KeyError:
-            pass
 
         accumulator: dict[str, int] = defaultdict(int)
         self._get_dimensionality_recurse(input_units, 1, accumulator)
@@ -723,8 +710,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             del accumulator["[]"]
 
         dims = self.UnitsContainer({k: v for k, v in accumulator.items() if v != 0})
-
-        cache[input_units] = dims
 
         return dims
 

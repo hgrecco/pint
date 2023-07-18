@@ -201,6 +201,6 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
 ################################################################################
 
 
-def cache(user_function: Callable[..., Any], /):
+def cache(user_function: T, /) -> T:
     'Simple lightweight unbounded cache.  Sometimes called "memoize".'
     return lru_cache(user_function)
