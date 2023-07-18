@@ -4,6 +4,21 @@
 
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+
+    The registry contains the following important methods:
+
+    - parse_unit_name: Parse a unit to identify prefix, unit name and suffix
+      by walking the list of prefix and suffix.
+      Result is cached: NO
+    - parse_units: Parse a units expression and returns a UnitContainer with
+      the canonical names.
+      The expression can only contain products, ratios and powers of units;
+      prefixed units and pluralized units.
+      Result is cached: YES
+    - parse_expression: Parse a mathematical expression including units and
+      return a quantity object.
+      Result is cached: NO
+
 """
 
 from __future__ import annotations
@@ -170,6 +185,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         action to take in case a unit is redefined: 'warn', 'raise', 'ignore'
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
+    autoconvert_to_preferred :
+        If True, converts preferred units on appropriate operations.
     preprocessors :
         list of callables which are iteratively ran on any input expression or unit
         string
@@ -204,6 +221,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
         auto_reduce_dimensions: bool = False,
+        autoconvert_to_preferred: bool = False,
         preprocessors: Optional[list[PreprocessorType]] = None,
         fmt_locale: Optional[str] = None,
         non_int_type: NON_INT_TYPE = float,
@@ -247,6 +265,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         #: Determines if dimensionality should be reduced on appropriate operations.
         self.auto_reduce_dimensions = auto_reduce_dimensions
+
+        #: Determines if units will be converted to preffered on appropriate operations.
+        self.autoconvert_to_preferred = autoconvert_to_preferred
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
         self.set_fmt_locale(fmt_locale)
@@ -343,6 +364,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def __getattr__(self, item: str) -> QuantityT:
         getattr_maybe_raise(self, item)
+
+        # self.Unit will call parse_units
         return self.Unit(item)
 
     def __getitem__(self, item: str) -> UnitT:
@@ -1121,9 +1144,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         """
 
-        # TODO: deal or remove with as_delta = None
-        for p in self.preprocessors:
-            input_string = p(input_string)
         units = self._parse_units(input_string, as_delta, case_sensitive)
         return self.Unit(units)
 
@@ -1143,6 +1163,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # If this is the case, force self._units to be repopulated.
         if as_delta and input_string in cache and input_string in self._units:
             return cache[input_string]
+
+        for p in self.preprocessors:
+            input_string = p(input_string)
 
         if not input_string:
             return self.UnitsContainer()

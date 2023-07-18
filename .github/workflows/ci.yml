@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc"
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
 
     steps:
       - uses: actions/checkout@v2
@@ -64,8 +64,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests packaging
-          pip install .
+          pip install packaging
+          pip install .[testbase]
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
@@ -97,7 +97,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      TEST_OPTS: "-rfsxEX -s -k issue1498b"
+      TEST_OPTS: "-rfsxEX -s -k issue1498b --benchmark-skip"
 
     steps:
       - uses: actions/checkout@v2
@@ -139,15 +139,15 @@ jobs:
       - name: Install dependencies
         run: |
           # sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests packaging
-          pip install .
+          pip install packaging
+          pip install .[testbase]
 
       # - name: Install pytest-mpl
       #   if: contains(matrix.extras, 'matplotlib')
       #   run: pip install pytest-mpl
 
       - name: Run tests
-        run: pytest ${env:TEST_OPTS}
+        run: pytest -rfsxEX -s -k issue1498b --benchmark-skip
 
   test-macos:
     strategy:
@@ -158,7 +158,7 @@ jobs:
     runs-on: macos-latest
 
     env:
-      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc"
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
 
     steps:
       - uses: actions/checkout@v2
@@ -191,8 +191,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest pytest-cov pytest-subtests packaging
-          pip install .
+          pip install packaging
+          pip install .[testbase]
 
       - name: Run Tests
         run: |
