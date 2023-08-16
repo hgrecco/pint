@@ -4,11 +4,15 @@ Pint Changelog
 0.23 (unreleased)
 -----------------
 
+- Fixed Transformation type protocol.
+  (PR #1805)
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
   (PR #1803)
 - Fixed bug causing operations between arrays of quantity scalars and quantity holding
   array resulting in incorrect units.
   (PR #1677)
+- Optimize matplotlib unit conversion for Quantity arrays
+  (PR #1819)
 
 
 0.22 (2023-05-25)
