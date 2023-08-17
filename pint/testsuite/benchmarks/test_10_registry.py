@@ -174,8 +174,14 @@ def test_load_definitions_stage_2(benchmark, cache_folder, use_cache_folder):
     from pint import errors
 
     defpath = pathlib.Path(errors.__file__).parent / "default_en.txt"
-    empty_registry = pint.UnitRegistry(None, cache_folder=use_cache_folder)
-    benchmark(empty_registry.load_definitions, defpath, True)
+
+    def stage_2_functions():
+        # We cannot benchmark `load_definitions` by itself because timer calibration
+        # injects definitions into the registry, which raises when we measure
+        empty_registry = pint.UnitRegistry(None, cache_folder=use_cache_folder)
+        empty_registry.load_definitions(defpath, True)
+
+    benchmark(stage_2_functions)
 
 
 @pytest.mark.parametrize("use_cache_folder", (None, True))
