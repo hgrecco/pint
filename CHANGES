@@ -5,7 +5,7 @@ Pint Changelog
 -----------------
 
 - Fixed Transformation type protocol.
-  (PR #1805)
+  (PR #1805, PR #1832)
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
   (PR #1803)
 - Optimize matplotlib unit conversion for Quantity arrays

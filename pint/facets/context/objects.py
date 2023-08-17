@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 class Transformation(Protocol):
     def __call__(
-        self, ureg: UnitRegistry, value: Magnitude, **kwargs: Any
-    ) -> Magnitude:
+        self, ureg: UnitRegistry, value: PlainQuantity, **kwargs: Any
+    ) -> PlainQuantity:
         ...
 
 
