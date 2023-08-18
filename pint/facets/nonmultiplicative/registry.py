@@ -57,18 +57,6 @@ class GenericNonMultiplicativeRegistry(
         # plain units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
-    def _parse_units(
-        self,
-        input_string: str,
-        as_delta: Optional[bool] = None,
-        case_sensitive: Optional[bool] = None,
-    ) -> UnitsContainer:
-        """ """
-        if as_delta is None:
-            as_delta = self.default_as_delta
-
-        return super()._parse_units(input_string, as_delta, case_sensitive)
-
     def _add_unit(self, definition: UnitDefinition) -> None:
         super()._add_unit(definition)
 

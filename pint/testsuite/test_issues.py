@@ -727,12 +727,19 @@ class TestIssues(QuantityTestCase):
     def test_issue1062_issue1097(self):
         # Must not be used by any other tests
         ureg = UnitRegistry()
-        assert "nanometer" not in ureg._units
-        for i in range(5):
+        for ndx in range(5):
+            # 4.184 * joule = cal
             ctx = Context.from_lines(["@context _", "cal = 4 J"])
+            assert "nanometer" not in ureg._units
+            assert len(ureg._units.maps) == 1
             with ureg.context("sp", ctx):
+                assert len(ureg._units.maps) == 2
+                # assert "nanometer" not in ureg._units, ndx
                 q = ureg.Quantity(1, "nm")
                 q.to("J")
+                # assert "nanometer" in ureg._units, ndx
+
+            assert len(ureg._units.maps) == 1
 
     def test_issue1066(self):
         """Verify calculations for offset units of higher dimension"""

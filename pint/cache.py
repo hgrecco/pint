@@ -192,6 +192,7 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
     wrapper.cache_clear = cache_clear
     wrapper.cache_stack_push = cache_stack_push
     wrapper.cache_stack_pop = cache_stack_pop
+    wrapper.cache_get = lambda: cache
 
     return wrapper
 

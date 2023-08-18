@@ -24,7 +24,6 @@ from .registry import (
     GenericPlainRegistry,
     QuantityT,
     UnitT,
-    RegistryCache,
 )
 from .quantity import MagnitudeT
 
@@ -33,7 +32,6 @@ __all__ = [
     "PlainUnit",
     "PlainQuantity",
     "PlainRegistry",
-    "RegistryCache",
     "AliasDefinition",
     "DefaultsDefinition",
     "DimensionDefinition",

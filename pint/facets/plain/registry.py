@@ -117,27 +117,6 @@ NON_INT_TYPE = type[Union[float, Decimal, Fraction]]
 PreprocessorType = Callable[[str], str]
 
 
-class RegistryCache:
-    """Cache to speed up unit registries"""
-
-    def __init__(self) -> None:
-        #: Maps dimensionality (UnitsContainer) to Units (str)
-        self.dimensional_equivalents: dict[UnitsContainer, frozenset[str]] = {}
-
-        #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
-        # TODO: this description is not right.
-        self.root_units: dict[UnitsContainer, tuple[Scalar, UnitsContainer]] = {}
-
-    def __eq__(self, other: Any):
-        if not isinstance(other, self.__class__):
-            return False
-        attrs = (
-            "dimensional_equivalents",
-            "root_units",
-        )
-        return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
-
-
 class RegistryMeta(type):
     """This is just to call after_init at the right time
     instead of asking the developer to do it when subclassing.
@@ -303,9 +282,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes: dict[str, str] = {"": "", "s": ""}
-
-        #: Map contexts to RegistryCache
-        self._cache = RegistryCache()
 
         self._initialized = False
 
@@ -573,9 +549,19 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         return parsed_project
 
     def _clear_cache(self):
-        self._cache = RegistryCache()
         for func in self._cache_methods:
             func.cache_clear(self)
+
+    def _get_cache(self) -> dict[dict[Any, Any]]:
+        return {func.__name__: func.cache_clear(self) for func in self._cache_methods}
+
+    def _set_cache(self, cache: dict[dict[Any, Any]]):
+        for func in self._cache_methods:
+            try:
+                d = cache[func.__name__]
+                func.cache_get().update(d)
+            except KeyError:
+                pass
 
     def _build_cache(self, loaded_files=None) -> None:
         """Build a cache of dimensionality and plain units."""
@@ -585,8 +571,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             cache, cache_basename = diskcache.load(loaded_files, "build_cache")
             if cache is None:
                 self._build_cache()
-                diskcache.save(self._cache, loaded_files, "build_cache")
-            return
+                diskcache.save(self._get_cache(), loaded_files, "build_cache")
+            else:
+                self._set_cache(cache)
 
         self._clear_cache()
 
@@ -608,20 +595,15 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 try:
                     uc = ParserHelper.from_word(base_name, self.non_int_type)
 
-                    bu = self._get_root_units(uc)
+                    self._get_root_units(uc)
                     di = self._get_dimensionality(uc)
 
-                    self._cache.root_units[uc] = bu
-
                     if not prefix:
-                        dimeq_set = self._cache.dimensional_equivalents.setdefault(
-                            di, set()
-                        )
+                        dimeq_set = self._get_compatible_units_for_dimension(di)
                         dimeq_set.add(self._units[base_name].name)
 
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
-        return self._cache
 
     def get_name(
         self, name_or_alias: str, case_sensitive: Optional[bool] = None
@@ -825,12 +807,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if not numerator:
             return 1, self.UnitsContainer()
 
-        cache = self._cache.root_units
-        try:
-            return cache[numerator]
-        except KeyError:
-            pass
-
         accumulators: dict[Optional[str], int] = defaultdict(int)
         accumulators[None] = 1
         self._get_root_units_recurse(numerator, 1, accumulators)
@@ -845,7 +821,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             if any(not self._units[unit].converter.is_multiplicative for unit in units):
                 factor = None
 
-        cache[numerator] = factor, units
         return factor, units
 
     def get_base_units(
@@ -916,7 +891,13 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             return frozenset()
 
         src_dim = self._get_dimensionality(input_units)
-        return self._cache.dimensional_equivalents.setdefault(src_dim, frozenset())
+        return frozenset(self._get_compatible_units_for_dimension(src_dim))
+
+    @methodcache
+    def _get_compatible_units_for_dimension(
+        self, input_units: UnitsContainer
+    ) -> set[str]:
+        return set()
 
     # TODO: remove context from here
     def is_compatible_with(
@@ -1168,7 +1149,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         as_delta = (
             getattr(self, "default_as_delta", True) if as_delta is None else as_delta
         )
-
+        assert as_delta is not None
         units = self._parse_units(input_string, as_delta, case_sensitive)
         return self.Unit(units)
 
@@ -1206,6 +1187,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             getattr(self, "default_as_delta", True) if as_delta is None else as_delta
         )
 
+        assert as_delta is not None
         return self._parse_units(input_string, as_delta, case_sensitive)
 
     @methodcache

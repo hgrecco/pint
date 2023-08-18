@@ -22,23 +22,12 @@ from ..plain import (
     UnitDefinition,
     QuantityT,
     UnitT,
-    RegistryCache,
 )
 from .definitions import ContextDefinition
 from . import objects
 
 # TODO: Put back annotation when possible
 # registry_cache: "RegistryCache"
-
-
-class ContextCacheOverlay:
-    """Layer on top of the plain UnitRegistry cache, specific to a combination of
-    active contexts which contain unit redefinitions.
-    """
-
-    def __init__(self, registry_cache: RegistryCache) -> None:
-        self.dimensional_equivalents = registry_cache.dimensional_equivalents
-        self.root_units = {}
 
 
 class GenericContextRegistry(
@@ -64,8 +53,6 @@ class GenericContextRegistry(
         self._contexts: dict[str, objects.Context] = {}
         # Stores active contexts.
         self._active_ctx = objects.ContextChain()
-        # Map context chain to cache
-        self._caches = {}
         # Map context chain to units override
         self._context_units = {}
 
@@ -123,34 +110,24 @@ class GenericContextRegistry(
 
         return context
 
-    def _build_cache(self, loaded_files=None) -> None:
-        super()._build_cache(loaded_files)
-        self._caches[()] = self._cache
-
     def _switch_context_cache_and_units(self) -> None:
         """If any of the active contexts redefine units, create variant self._cache
         and self._units specific to the combination of active contexts.
         The next time this method is invoked with the same combination of contexts,
-        reuse the same variant self._cache and self._units as in the previous time.
+        reuse the same variant self._units as in the previous time.
         """
         del self._units.maps[:-1]
         units_overlay = any(ctx.redefinitions for ctx in self._active_ctx.contexts)
         if not units_overlay:
-            # Use the default _cache and _units
-            self._cache = self._caches[()]
             return
 
         key = self._active_ctx.hashable()
         try:
-            self._cache = self._caches[key]
-            self._units.maps.insert(0, self._context_units[key])
+            units_overlay = self._context_units[key]
+            self._units.maps.insert(0, units_overlay)
+            return
         except KeyError:
             pass
-
-        # First time using this specific combination of contexts and it contains
-        # unit redefinitions
-        base_cache = self._caches[()]
-        self._caches[key] = self._cache = ContextCacheOverlay(base_cache)
 
         self._context_units[key] = units_overlay = {}
         self._units.maps.insert(0, units_overlay)
@@ -426,7 +403,7 @@ class GenericContextRegistry(
             nodes = find_connected_nodes(self._active_ctx.graph, src_dim)
             if nodes:
                 for node in nodes:
-                    ret |= self._cache.dimensional_equivalents[node]
+                    ret |= self._get_compatible_units_for_dimension(node)
 
         return ret
 
