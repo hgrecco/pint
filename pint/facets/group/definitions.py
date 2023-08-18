@@ -29,9 +29,7 @@ class GroupDefinition(errors.WithDefErr):
     definitions: tuple[plain.UnitDefinition, ...]
 
     @classmethod
-    def from_lines(
-        cls: type[Self], lines: Iterable[str], non_int_type: type
-    ) -> Optional[Self]:
+    def from_lines(cls, lines: Iterable[str], non_int_type: type) -> Optional[Self]:
         # TODO: this is to keep it backwards compatible
         from ...delegates import ParserConfig, txt_defparser
 

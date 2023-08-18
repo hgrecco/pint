@@ -552,10 +552,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for func in self._cache_methods:
             func.cache_clear(self)
 
-    def _get_cache(self) -> dict[dict[Any, Any]]:
+    def _get_cache(self) -> dict[str, dict[Any, Any]]:
         return {func.__name__: func.cache_clear(self) for func in self._cache_methods}
 
-    def _set_cache(self, cache: dict[dict[Any, Any]]):
+    def _set_cache(self, cache: dict[str, dict[Any, Any]]):
         for func in self._cache_methods:
             try:
                 d = cache[func.__name__]

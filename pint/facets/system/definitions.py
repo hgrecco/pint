@@ -45,9 +45,7 @@ class SystemDefinition(errors.WithDefErr):
     rules: tuple[BaseUnitRule, ...]
 
     @classmethod
-    def from_lines(
-        cls: type[Self], lines: Iterable[str], non_int_type: type
-    ) -> Optional[Self]:
+    def from_lines(cls, lines: Iterable[str], non_int_type: type) -> Optional[Self]:
         # TODO: this is to keep it backwards compatible
         # TODO: check when is None returned.
         from ...delegates import ParserConfig, txt_defparser
@@ -58,6 +56,8 @@ class SystemDefinition(errors.WithDefErr):
         for definition in parser.iter_parsed_project(pp):
             if isinstance(definition, cls):
                 return definition
+
+        return None
 
     @property
     def unit_replacements(self) -> tuple[tuple[str, Optional[str]], ...]:

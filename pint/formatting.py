@@ -15,7 +15,6 @@ import re
 import warnings
 from typing import Callable, Any, TYPE_CHECKING, TypeVar, Optional, Union
 from collections.abc import Iterable
-from numbers import Number
 
 from .babel_names import _babel_lengths, _babel_units
 from .compat import babel_parse, HAS_BABEL
@@ -23,6 +22,7 @@ from .compat import babel_parse, HAS_BABEL
 if TYPE_CHECKING:
     from .registry import UnitRegistry
     from .util import ItMatrix, UnitsContainer
+    from ._typing import Scalar
 
     if HAS_BABEL:
         import babel
@@ -76,7 +76,7 @@ def _join(fmt: str, iterable: Iterable[Any]) -> str:
 _PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 
 
-def _pretty_fmt_exponent(num: Number) -> str:
+def _pretty_fmt_exponent(num: int) -> str:
     """Format an number into a pretty printed exponent.
 
     Parameters
@@ -187,7 +187,7 @@ def register_unit_format(name: str):
 
 
 @register_unit_format("P")
-def format_pretty(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
+def format_pretty(unit: UnitsContainer, registry: UnitRegistry, **options: Any) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -264,7 +264,7 @@ def format_html(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
 
 
 @register_unit_format("D")
-def format_default(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
+def format_default(unit: UnitsContainer, registry: UnitRegistry, **options: Any) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -278,7 +278,7 @@ def format_default(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
 
 
 @register_unit_format("C")
-def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
+def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options: Any) -> str:
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -292,7 +292,7 @@ def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
 
 
 def formatter(
-    items: Iterable[tuple[str, Number]],
+    items: Iterable[tuple[str, Scalar]],
     as_ratio: bool = True,
     single_denominator: bool = False,
     product_fmt: str = " * ",
@@ -452,7 +452,7 @@ def format_unit(unit, spec: str, registry=None, **options):
     return fmt(unit, registry=registry, **options)
 
 
-def siunitx_format_unit(units: UnitsContainer, registry) -> str:
+def siunitx_format_unit(units: UnitsContainer, registry: UnitRegistry) -> str:
     """Returns LaTeX code for the unit that can be put into an siunitx command."""
 
     def _tothe(power: Union[int, float]) -> str:
@@ -469,8 +469,8 @@ def siunitx_format_unit(units: UnitsContainer, registry) -> str:
             # limit float powers to 3 decimal places
             return rf"\tothe{{{power:.3f}}}".rstrip("0")
 
-    lpos = []
-    lneg = []
+    lpos: list[str] = []
+    lneg: list[str] = []
     # loop through all units in the container
     for unit, power in sorted(units.items()):
         # remove unit prefix if it exists
@@ -479,8 +479,8 @@ def siunitx_format_unit(units: UnitsContainer, registry) -> str:
         lpick = lpos if power >= 0 else lneg
         prefix = None
         # TODO: fix this to be fore efficient and detect also aliases.
-        for p in registry._prefixes.values():
-            p = str(p.name)
+        for prefix_definition in registry._prefixes.values():
+            p = str(prefix_definition.name)
             if len(p) > 0 and unit.find(p) == 0:
                 prefix = p
                 unit = unit.replace(prefix, "", 1)

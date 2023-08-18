@@ -115,14 +115,14 @@ class lru_cache:
     # The internals of the lru_cache are encapsulated for thread safety and
     # to allow the implementation to change (including a possible C version).
 
-    def __init__(self, user_function):
+    def __init__(self, user_function: Any):
         wrapper = _lru_cache_wrapper(user_function)
         self.wrapped_fun = update_wrapper(wrapper, user_function)
 
-    def __set_name__(self, owner, name):
-        cache_methods = getattr(owner, "cache_methods", None)
+    def __set_name__(self, owner: object, name: str):
+        cache_methods: list[Any] | None = getattr(owner, "cache_methods", None)
         if cache_methods is None:
-            owner._cache_methods = cache_methods = []
+            owner._cache_methods = cache_methods = []  # type: ignore
 
         cache_methods.append(self.wrapped_fun)
 
@@ -148,7 +148,7 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
         if subcache is None:
             cache[self] = subcache = {}
 
-        result = subcache.get(key, sentinel)
+        result: T = subcache.get(key, sentinel)
 
         if result is not sentinel:
             return result
@@ -189,10 +189,10 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
 
         return subcache
 
-    wrapper.cache_clear = cache_clear
-    wrapper.cache_stack_push = cache_stack_push
-    wrapper.cache_stack_pop = cache_stack_pop
-    wrapper.cache_get = lambda: cache
+    wrapper.cache_clear = cache_clear  # type: ignore
+    wrapper.cache_stack_push = cache_stack_push  # type: ignore
+    wrapper.cache_stack_pop = cache_stack_pop  # type: ignore
+    wrapper.cache_get = lambda: cache  # type: ignore
 
     return wrapper
 
@@ -204,4 +204,4 @@ def _lru_cache_wrapper(user_function: Callable[..., T]) -> Callable[..., T]:
 
 def cache(user_function: T, /) -> T:
     'Simple lightweight unbounded cache.  Sometimes called "memoize".'
-    return lru_cache(user_function)
+    return lru_cache(user_function)  # type: ignore
