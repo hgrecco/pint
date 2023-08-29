@@ -64,6 +64,7 @@ pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
 dask = ["dask"]
 mip = ["mip >= 1.13"]
+auto_uncertainties = ["auto-uncertainties @ git+https://github.com/varchasgopalaswamy/AutoUncertainties.git"]
 
 [project.urls]
 Homepage = "https://github.com/hgrecco/pint"

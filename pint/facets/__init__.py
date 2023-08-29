@@ -83,6 +83,7 @@ from .nonmultiplicative import (
 from .numpy import NumpyRegistry, GenericNumpyRegistry
 from .plain import PlainRegistry, GenericPlainRegistry, QuantityT, UnitT, MagnitudeT
 from .system import SystemRegistry, GenericSystemRegistry
+from .uncertainties import UncertaintyRegistry, GenericUncertaintyRegistry
 
 __all__ = [
     "ContextRegistry",
@@ -106,4 +107,6 @@ __all__ = [
     "QuantityT",
     "UnitT",
     "MagnitudeT",
+    "UncertaintyRegistry",
+    "GenericUncertaintyRegistry",
 ]

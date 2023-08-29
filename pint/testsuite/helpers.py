@@ -15,6 +15,7 @@ from ..compat import (
     HAS_NUMPY,
     HAS_NUMPY_ARRAY_FUNCTION,
     HAS_UNCERTAINTIES,
+    HAS_AUTOUNCERTAINTIES,
     NUMPY_VER,
 )
 
@@ -128,6 +129,10 @@ requires_babel = pytest.mark.skipif(
 requires_not_babel = pytest.mark.skipif(
     HAS_BABEL, reason="Requires Babel not to be installed"
 )
+requires_autouncertainties = pytest.mark.skipif(
+    not HAS_AUTOUNCERTAINTIES, reason="Requires Auto-Uncertainties"
+)
+
 requires_uncertainties = pytest.mark.skipif(
     not HAS_UNCERTAINTIES, reason="Requires Uncertainties"
 )
