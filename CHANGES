@@ -218,15 +218,10 @@ types for pint-pandas compatibility. (#1596)
 - Fix issue with reducable dimensionless units when using power (Quantity**ndarray)
   (Issue #1185)
 - Fix comparisons between Quantities and Measurements.
-   (Issue #1134, thanks lewisamarshall)
-- Implemented benchmarks based on airspeed velocity.
-- Fix tolist function with scalar ndarray.
-  (Issue #1195, thanks jules-ch)
   (Issue #1134, thanks lewisamarshall)
 - UnitsContainer returns false if other is str and cannnot be parsed
   (Issue #1179, thanks rfrowe)
 - Fix numpy.linalg.solve unit output. (Issue #1246)
-
 - Support numpy.lib.stride_tricks.sliding_window_view. (Issue #1255)
 - NEP29 Support docs.
 - Move all tests to pytest.
