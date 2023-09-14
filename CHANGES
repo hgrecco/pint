@@ -10,7 +10,8 @@ Pint Changelog
   (PR #1803)
 - Optimize matplotlib unit conversion for Quantity arrays
   (PR #1819)
-
+- Add numpy.linalg.norm implementation.
+  (PR #1251)
 
 0.22 (2023-05-25)
 -----------------
@@ -225,7 +226,6 @@ types for pint-pandas compatibility. (#1596)
 - UnitsContainer returns false if other is str and cannnot be parsed
   (Issue #1179, thanks rfrowe)
 - Fix numpy.linalg.solve unit output. (Issue #1246)
-- Add numpy.linalg.norm implementation. (Issue #1250)
 
 - Support numpy.lib.stride_tricks.sliding_window_view. (Issue #1255)
 - NEP29 Support docs.
