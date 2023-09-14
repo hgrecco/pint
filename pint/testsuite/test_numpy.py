@@ -82,7 +82,7 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     # TODO
     # https://www.numpy.org/devdocs/reference/routines.array-manipulation.html
     # copyto
-    # broadcast , broadcast_arrays
+    # broadcast
     # asarray	asanyarray	asmatrix	asfarray	asfortranarray	ascontiguousarray	asarray_chkfinite	asscalar	require
 
     # Changing array shape
@@ -222,7 +222,6 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     def test_block_column_stack(self, subtests):
         for func in (np.block, np.column_stack):
             with subtests.test(func=func):
-
                 helpers.assert_quantity_equal(
                     func([self.q[:, 0], self.q[:, 1]]),
                     self.Q_(func([self.q[:, 0].m, self.q[:, 1].m]), self.ureg.m),
@@ -271,6 +270,22 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
     def test_item(self):
         helpers.assert_quantity_equal(self.Q_([[0]], "m").item(), 0 * self.ureg.m)
 
+    def test_broadcast_arrays(self):
+        x = self.Q_(np.array([[1, 2, 3]]), "m")
+        y = self.Q_(np.array([[4], [5]]), "nm")
+        result = np.broadcast_arrays(x, y)
+        expected = self.Q_(
+            [
+                [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]],
+                [[4e-09, 4e-09, 4e-09], [5e-09, 5e-09, 5e-09]],
+            ],
+            "m",
+        )
+        helpers.assert_quantity_equal(result, expected)
+
+        result = np.broadcast_arrays(x, y, subok=True)
+        helpers.assert_quantity_equal(result, expected)
+
 
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # https://www.numpy.org/devdocs/reference/routines.math.html
@@ -288,7 +303,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_fix(self):
-        helpers.assert_quantity_equal(np.fix(3.14 * self.ureg.m), 3.0 * self.ureg.m)
+        helpers.assert_quantity_equal(np.fix(3.13 * self.ureg.m), 3.0 * self.ureg.m)
         helpers.assert_quantity_equal(np.fix(3.0 * self.ureg.m), 3.0 * self.ureg.m)
         helpers.assert_quantity_equal(
             np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.m),
@@ -302,21 +317,21 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         axis = 0
         where = [[True, False], [True, True]]
 
-        helpers.assert_quantity_equal(self.q.prod(), 24 * self.ureg.m ** 4)
-        helpers.assert_quantity_equal(self.q.prod(axis=axis), [3, 8] * self.ureg.m ** 2)
-        helpers.assert_quantity_equal(self.q.prod(where=where), 12 * self.ureg.m ** 3)
+        helpers.assert_quantity_equal(self.q.prod(), 24 * self.ureg.m**4)
+        helpers.assert_quantity_equal(self.q.prod(axis=axis), [3, 8] * self.ureg.m**2)
+        helpers.assert_quantity_equal(self.q.prod(where=where), 12 * self.ureg.m**3)
 
     @helpers.requires_array_function_protocol()
     def test_prod_numpy_func(self):
         axis = 0
         where = [[True, False], [True, True]]
 
-        helpers.assert_quantity_equal(np.prod(self.q), 24 * self.ureg.m ** 4)
+        helpers.assert_quantity_equal(np.prod(self.q), 24 * self.ureg.m**4)
         helpers.assert_quantity_equal(
-            np.prod(self.q, axis=axis), [3, 8] * self.ureg.m ** 2
+            np.prod(self.q, axis=axis), [3, 8] * self.ureg.m**2
         )
         helpers.assert_quantity_equal(
-            np.prod(self.q, where=where), 12 * self.ureg.m ** 3
+            np.prod(self.q, where=where), 12 * self.ureg.m**3
         )
 
         with pytest.raises(DimensionalityError):
@@ -326,7 +341,17 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             [1, 4] * self.ureg.m,
         )
         helpers.assert_quantity_equal(
-            np.prod(self.q, axis=axis, where=[True, False]), [3, 1] * self.ureg.m ** 2
+            np.prod(self.q, axis=axis, where=[True, False]), [3, 1] * self.ureg.m**2
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_nanprod_numpy_func(self):
+        helpers.assert_quantity_equal(np.nanprod(self.q_nan), 6 * self.ureg.m**3)
+        helpers.assert_quantity_equal(
+            np.nanprod(self.q_nan, axis=0), [3, 2] * self.ureg.m**2
+        )
+        helpers.assert_quantity_equal(
+            np.nanprod(self.q_nan, axis=1), [2, 3] * self.ureg.m**2
         )
 
     def test_sum(self):
@@ -408,9 +433,9 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     @helpers.requires_array_function_protocol()
     def test_cross(self):
         a = [[3, -3, 1]] * self.ureg.kPa
-        b = [[4, 9, 2]] * self.ureg.m ** 2
+        b = [[4, 9, 2]] * self.ureg.m**2
         helpers.assert_quantity_equal(
-            np.cross(a, b), [[-15, -2, 39]] * self.ureg.kPa * self.ureg.m ** 2
+            np.cross(a, b), [[-15, -2, 39]] * self.ureg.kPa * self.ureg.m**2
         )
 
     @helpers.requires_array_function_protocol()
@@ -441,10 +466,10 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         helpers.assert_quantity_equal(
             np.einsum("ii->i", a), np.array([0, 6, 12, 18, 24]) * self.ureg.m
         )
-        helpers.assert_quantity_equal(np.einsum("i,i", b, b), 30 * self.ureg.m ** 2)
+        helpers.assert_quantity_equal(np.einsum("i,i", b, b), 30 * self.ureg.m**2)
         helpers.assert_quantity_equal(
             np.einsum("ij,j", a, b),
-            np.array([30, 80, 130, 180, 230]) * self.ureg.m ** 2,
+            np.array([30, 80, 130, 180, 230]) * self.ureg.m**2,
         )
 
     @helpers.requires_array_function_protocol()
@@ -477,10 +502,10 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             op.add(b, a)
 
     def test_power(self):
-        arr = np.array(range(3), dtype=np.float)
+        arr = np.array(range(3), dtype=float)
         q = self.Q_(arr, "meter")
 
-        for op_ in [op.pow, op.ipow, np.power]:
+        for op_ in (op.pow, op.ipow, np.power):
             q_cp = copy.copy(q)
             with pytest.raises(DimensionalityError):
                 op_(2.0, q_cp)
@@ -513,7 +538,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     @pytest.mark.xfail
     @helpers.requires_numpy
     def test_exponentiation_array_exp_2(self):
-        arr = np.array(range(3), dtype=np.float)
+        arr = np.array(range(3), dtype=float)
         # q = self.Q_(copy.copy(arr), None)
         q = self.Q_(copy.copy(arr), "meter")
         arr_cp = copy.copy(arr)
@@ -751,6 +776,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
             self.q.clip(min=2 * self.ureg.m, max=3 * self.ureg.m),
             [[2, 2], [3, 3]] * self.ureg.m,
         )
+        helpers.assert_quantity_equal(
+            self.q.clip(3 * self.ureg.m, None), [[3, 3], [3, 4]] * self.ureg.m
+        )
+        helpers.assert_quantity_equal(
+            self.q.clip(3 * self.ureg.m), [[3, 3], [3, 4]] * self.ureg.m
+        )
         with pytest.raises(DimensionalityError):
             self.q.clip(self.ureg.J)
         with pytest.raises(DimensionalityError):
@@ -774,7 +805,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.around(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
         )
         helpers.assert_quantity_equal(
-            np.round_(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
+            np.round(1.0275 * self.ureg.m, decimals=2), 1.03 * self.ureg.m
         )
 
     def test_trace(self):
@@ -824,16 +855,16 @@ class TestNumpyUnclassified(TestNumpyMethods):
         assert np.nanmedian(self.q_nan) == 2 * self.ureg.m
 
     def test_var(self):
-        assert self.q.var() == 1.25 * self.ureg.m ** 2
+        assert self.q.var() == 1.25 * self.ureg.m**2
 
     @helpers.requires_array_function_protocol()
     def test_var_numpy_func(self):
-        assert np.var(self.q) == 1.25 * self.ureg.m ** 2
+        assert np.var(self.q) == 1.25 * self.ureg.m**2
 
     @helpers.requires_array_function_protocol()
     def test_nanvar_numpy_func(self):
         helpers.assert_quantity_almost_equal(
-            np.nanvar(self.q_nan), 0.66667 * self.ureg.m ** 2, rtol=1e-5
+            np.nanvar(self.q_nan), 0.66667 * self.ureg.m**2, rtol=1e-5
         )
 
     def test_std(self):
@@ -896,7 +927,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         q[:] = 1 * self.ureg.m
         helpers.assert_quantity_equal(q, [[1, 1], [1, 1]] * self.ureg.m)
 
-        # check and see that dimensionless num  bers work correctly
+        # check and see that dimensionless numbers work correctly
         q = [0, 1, 2, 3] * self.ureg.dimensionless
         q[0] = 1
         helpers.assert_quantity_equal(q, np.asarray([1, 1, 2, 3]))
@@ -916,6 +947,22 @@ class TestNumpyUnclassified(TestNumpyMethods):
             # Check for no warnings
             assert not w
             assert q.mask[0]
+
+    def test_setitem_mixed_masked(self):
+        masked = np.ma.array(
+            [
+                1,
+                2,
+            ],
+            mask=[True, False],
+        )
+        q = self.Q_(np.ones(shape=(2,)), "m")
+        with pytest.raises(DimensionalityError):
+            q[:] = masked
+
+        masked_q = self.Q_(masked, "mm")
+        q[:] = masked_q
+        helpers.assert_quantity_equal(q, [1.0, 0.002] * self.ureg.m)
 
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
@@ -974,8 +1021,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
         assert np.shape(self.q) == (2, 2)
 
     @helpers.requires_array_function_protocol()
-    def test_alen_numpy_func(self):
-        assert np.alen(self.q) == 2
+    def test_len_numpy_func(self):
+        assert len(self.q) == 2
 
     @helpers.requires_array_function_protocol()
     def test_ndim_numpy_func(self):
@@ -1016,6 +1063,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
         q2 = [[1000.05, 2000], [3000.00007, 4001]] * self.ureg.mm
         self.assertNDArrayEqual(
             np.isclose(self.q, q2), np.array([[False, True], [True, False]])
+        )
+        self.assertNDArrayEqual(
+            np.isclose(self.q, q2, atol=1e-5 * self.ureg.mm, rtol=1e-7),
+            np.array([[False, True], [True, False]]),
         )
         self.assertNDArrayEqual(
             np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
@@ -1087,6 +1138,18 @@ class TestNumpyUnclassified(TestNumpyMethods):
                 0 * self.ureg.J,
             )
 
+        helpers.assert_quantity_equal(
+            np.where([-1, 0, 1] * self.ureg.m, [1, 2, 1] * self.ureg.s, np.nan),
+            [1, np.nan, 1] * self.ureg.s,
+        )
+        with pytest.raises(
+            ValueError,
+            match=".*Boolean value of Quantity with offset unit is ambiguous",
+        ):
+            np.where(
+                self.ureg.Quantity([-1, 0, 1], "degC"), [1, 2, 1] * self.ureg.s, np.nan
+            )
+
     @helpers.requires_array_function_protocol()
     def test_fabs(self):
         helpers.assert_quantity_equal(
@@ -1154,6 +1217,17 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.tile(self.q, 2), np.array([[1, 2, 1, 2], [3, 4, 3, 4]]) * self.ureg.m
         )
 
+    @helpers.requires_numpy_at_least("1.20")
+    @helpers.requires_array_function_protocol()
+    def test_sliding_window_view(self):
+        q = self.Q_([[1, 2, 2, 1], [2, 1, 1, 2], [1, 2, 2, 1]], "m")
+        actual = np.lib.stride_tricks.sliding_window_view(q, window_shape=(3, 3))
+        expected = self.Q_(
+            [[[[1, 2, 2], [2, 1, 1], [1, 2, 2]], [[2, 2, 1], [1, 1, 2], [2, 2, 1]]]],
+            "m",
+        )
+        helpers.assert_quantity_equal(actual, expected)
+
     @helpers.requires_array_function_protocol()
     def test_rot90(self):
         helpers.assert_quantity_equal(
@@ -1165,6 +1239,24 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_equal(
             np.insert(self.q, 1, 0 * self.ureg.m, axis=1),
             np.array([[1, 0, 2], [3, 0, 4]]) * self.ureg.m,
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_delete(self):
+        q = self.Q_(np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]), "m")
+        helpers.assert_quantity_equal(
+            np.delete(q, 1, axis=0),
+            np.array([[1, 2, 3, 4], [9, 10, 11, 12]]) * self.ureg.m,
+        )
+
+        helpers.assert_quantity_equal(
+            np.delete(q, np.s_[::2], 1),
+            np.array([[2, 4], [6, 8], [10, 12]]) * self.ureg.m,
+        )
+
+        helpers.assert_quantity_equal(
+            np.delete(q, [1, 3, 5], None),
+            np.array([1, 3, 5, 7, 8, 9, 10, 11, 12]) * self.ureg.m,
         )
 
     def test_ndarray_downcast(self):
@@ -1297,9 +1389,34 @@ class TestNumpyUnclassified(TestNumpyMethods):
     @helpers.requires_array_function_protocol()
     def test_allclose(self):
         assert np.allclose([1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m)
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m, [1.00001e13, 1e-6] * self.ureg.mm
+        )
         assert not np.allclose(
             [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.mm
         )
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m,
+            [1.00001e10, 1e-9] * self.ureg.m,
+            atol=1e-8 * self.ureg.m,
+        )
+
+        assert not np.allclose([1.0, np.nan] * self.ureg.m, [1.0, np.nan] * self.ureg.m)
+
+        assert np.allclose(
+            [1.0, np.nan] * self.ureg.m, [1.0, np.nan] * self.ureg.m, equal_nan=True
+        )
+
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+        )
+
+        with pytest.raises(DimensionalityError):
+            assert np.allclose(
+                [1e10, 1e-8] * self.ureg.m,
+                [1.00001e10, 1e-9] * self.ureg.m,
+                atol=1e-8 * self.ureg.s,
+            )
 
     @helpers.requires_array_function_protocol()
     def test_intersect1d(self):

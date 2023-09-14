@@ -6,9 +6,11 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 from .compat import HAS_BABEL
 
-_babel_units = dict(
+_babel_units: dict[str, str] = dict(
     standard_gravity="acceleration-g-force",
     millibar="pressure-millibar",
     metric_ton="mass-metric-ton",
@@ -139,6 +141,6 @@ _babel_units = dict(
 if not HAS_BABEL:
     _babel_units = {}
 
-_babel_systems = dict(mks="metric", imperial="uksystem", US="ussystem")
+_babel_systems: dict[str, str] = dict(mks="metric", imperial="uksystem", US="ussystem")
 
-_babel_lengths = ["narrow", "short", "long"]
+_babel_lengths: list[str] = ["narrow", "short", "long"]

@@ -8,47 +8,93 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import logging
 import math
 import operator
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable, Iterator
 from fractions import Fraction
 from functools import lru_cache, partial
 from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
+import tokenize
+import types
+from typing import (
+    TYPE_CHECKING,
+    ClassVar,
+    Callable,
+    TypeVar,
+    Any,
+    Optional,
+)
+from collections.abc import Hashable, Generator
 
-from .compat import NUMERIC_TYPES, tokenizer
+from .compat import NUMERIC_TYPES, tokenizer, Self
 from .errors import DefinitionSyntaxError
 from .formatting import format_unit
 from .pint_eval import build_eval_tree
 
+from ._typing import Scalar
+
+if TYPE_CHECKING:
+    from ._typing import QuantityOrUnitLike
+    from .registry import UnitRegistry
+
+
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
 
+T = TypeVar("T")
+TH = TypeVar("TH", bound=Hashable)
+TT = TypeVar("TT", bound=type)
+
+# TODO: Change when Python 3.10 becomes minimal version.
+# ItMatrix: TypeAlias = Iterable[Iterable[PintScalar]]
+# Matrix: TypeAlias = list[list[PintScalar]]
+ItMatrix = Iterable[Iterable[Scalar]]
+Matrix = list[list[Scalar]]
+
+
+def _noop(x: T) -> T:
+    return x
+
 
 def matrix_to_string(
-    matrix, row_headers=None, col_headers=None, fmtfun=lambda x: str(int(x))
-):
-    """Takes a 2D matrix (as nested list) and returns a string.
+    matrix: ItMatrix,
+    row_headers: Optional[Iterable[str]] = None,
+    col_headers: Optional[Iterable[str]] = None,
+    fmtfun: Callable[
+        [
+            Scalar,
+        ],
+        str,
+    ] = "{:0.0f}".format,
+) -> str:
+    """Return a string representation of a matrix.
 
     Parameters
     ----------
-    matrix :
-
-    row_headers :
-         (Default value = None)
-    col_headers :
-         (Default value = None)
-    fmtfun :
-         (Default value = lambda x: str(int(x)))
+    matrix
+        A matrix given as an iterable of an iterable of numbers.
+    row_headers
+        An iterable of strings to serve as row headers.
+        (default = None, meaning no row headers are printed.)
+    col_headers
+        An iterable of strings to serve as column headers.
+        (default = None, meaning no col headers are printed.)
+    fmtfun
+        A callable to convert a number into string.
+        (default = `"{:0.0f}".format`)
 
     Returns
     -------
-
+    str
+        String representation of the matrix.
     """
-    ret = []
+    ret: list[str] = []
     if col_headers:
         ret.append(("\t" if row_headers else "") + "\t".join(col_headers))
     if row_headers:
@@ -62,99 +108,131 @@ def matrix_to_string(
     return "\n".join(ret)
 
 
-def transpose(matrix):
-    """Takes a 2D matrix (as nested list) and returns the transposed version.
+def transpose(matrix: ItMatrix) -> Matrix:
+    """Return the transposed version of a matrix.
 
     Parameters
     ----------
-    matrix :
-
+    matrix
+        A matrix given as an iterable of an iterable of numbers.
 
     Returns
     -------
-
+    Matrix
+        The transposed version of the matrix.
     """
     return [list(val) for val in zip(*matrix)]
 
 
-def column_echelon_form(matrix, ntype=Fraction, transpose_result=False):
-    """Calculates the column echelon form using Gaussian elimination.
+def matrix_apply(
+    matrix: ItMatrix,
+    func: Callable[
+        [
+            Scalar,
+        ],
+        Scalar,
+    ],
+) -> Matrix:
+    """Apply a function to individual elements within a matrix.
 
     Parameters
     ----------
-    matrix :
-        a 2D matrix as nested list.
-    ntype :
-        the numerical type to use in the calculation. (Default value = Fraction)
-    transpose_result :
-        indicates if the returned matrix should be transposed. (Default value = False)
+    matrix
+        A matrix given as an iterable of an iterable of numbers.
+    func
+        A callable that converts a number to another.
 
     Returns
     -------
-    type
-        column echelon form, transformed identity matrix, swapped rows
-
+    A new matrix in which each element has been replaced by new one.
     """
-    lead = 0
+    return [[func(x) for x in row] for row in matrix]
 
-    M = transpose(matrix)
 
-    _transpose = transpose if transpose_result else lambda x: x
+def column_echelon_form(
+    matrix: ItMatrix, ntype: type = Fraction, transpose_result: bool = False
+) -> tuple[Matrix, Matrix, list[int]]:
+    """Calculate the column echelon form using Gaussian elimination.
 
-    rows, cols = len(M), len(M[0])
+    Parameters
+    ----------
+    matrix
+        A 2D matrix as nested list.
+    ntype
+        The numerical type to use in the calculation.
+        (default = Fraction)
+    transpose_result
+        Indicates if the returned matrix should be transposed.
+        (default = False)
 
-    new_M = []
-    for row in M:
-        r = []
-        for x in row:
-            if isinstance(x, float):
-                x = ntype.from_float(x)
-            else:
-                x = ntype(x)
-            r.append(x)
-        new_M.append(r)
-    M = new_M
+    Returns
+    -------
+    ech_matrix
+        Column echelon form.
+    id_matrix
+        Transformed identity matrix.
+    swapped
+        Swapped rows.
+    """
 
+    _transpose: Callable[
+        [
+            ItMatrix,
+        ],
+        Matrix,
+    ] = (
+        transpose if transpose_result else _noop
+    )
+
+    ech_matrix = matrix_apply(
+        transpose(matrix),
+        lambda x: ntype.from_float(x) if isinstance(x, float) else ntype(x),  # type: ignore
+    )
+
+    rows, cols = len(ech_matrix), len(ech_matrix[0])
     # M = [[ntype(x) for x in row] for row in M]
-    I = [  # noqa: E741
+    id_matrix: list[list[Scalar]] = [  # noqa: E741
         [ntype(1) if n == nc else ntype(0) for nc in range(rows)] for n in range(rows)
     ]
-    swapped = []
 
+    swapped: list[int] = []
+    lead = 0
     for r in range(rows):
         if lead >= cols:
-            return _transpose(M), _transpose(I), swapped
-        i = r
-        while M[i][lead] == 0:
-            i += 1
-            if i != rows:
+            return _transpose(ech_matrix), _transpose(id_matrix), swapped
+        s = r
+        while ech_matrix[s][lead] == 0:  # type: ignore
+            s += 1
+            if s != rows:
                 continue
-            i = r
+            s = r
             lead += 1
             if cols == lead:
-                return _transpose(M), _transpose(I), swapped
+                return _transpose(ech_matrix), _transpose(id_matrix), swapped
 
-        M[i], M[r] = M[r], M[i]
-        I[i], I[r] = I[r], I[i]
+        ech_matrix[s], ech_matrix[r] = ech_matrix[r], ech_matrix[s]
+        id_matrix[s], id_matrix[r] = id_matrix[r], id_matrix[s]
 
-        swapped.append(i)
-        lv = M[r][lead]
-        M[r] = [mrx / lv for mrx in M[r]]
-        I[r] = [mrx / lv for mrx in I[r]]
+        swapped.append(s)
+        lv = ech_matrix[r][lead]
+        ech_matrix[r] = [mrx / lv for mrx in ech_matrix[r]]
+        id_matrix[r] = [mrx / lv for mrx in id_matrix[r]]
 
-        for i in range(rows):
-            if i == r:
+        for s in range(rows):
+            if s == r:
                 continue
-            lv = M[i][lead]
-            M[i] = [iv - lv * rv for rv, iv in zip(M[r], M[i])]
-            I[i] = [iv - lv * rv for rv, iv in zip(I[r], I[i])]
+            lv = ech_matrix[s][lead]
+            ech_matrix[s] = [
+                iv - lv * rv for rv, iv in zip(ech_matrix[r], ech_matrix[s])
+            ]
+            id_matrix[s] = [iv - lv * rv for rv, iv in zip(id_matrix[r], id_matrix[s])]
 
         lead += 1
 
-    return _transpose(M), _transpose(I), swapped
+    return _transpose(ech_matrix), _transpose(id_matrix), swapped
 
 
-def pi_theorem(quantities, registry=None):
+def pi_theorem(quantities: dict[str, Any], registry: Optional[UnitRegistry] = None):
     """Builds dimensionless quantities using the Buckingham π theorem
 
     Parameters
@@ -162,7 +240,7 @@ def pi_theorem(quantities, registry=None):
     quantities : dict
         mapping between variable name and units
     registry :
-         (Default value = None)
+         (default value = None)
 
     Returns
     -------
@@ -176,7 +254,7 @@ def pi_theorem(quantities, registry=None):
     dimensions = set()
 
     if registry is None:
-        getdim = lambda x: x
+        getdim = _noop
         non_int_type = float
     else:
         getdim = registry.get_dimensionality
@@ -204,33 +282,35 @@ def pi_theorem(quantities, registry=None):
     dimensions = list(dimensions)
 
     # Calculate dimensionless  quantities
-    M = [
+    matrix = [
         [dimensionality[dimension] for name, dimensionality in quant]
         for dimension in dimensions
     ]
 
-    M, identity, pivot = column_echelon_form(M, transpose_result=False)
+    ech_matrix, id_matrix, pivot = column_echelon_form(matrix, transpose_result=False)
 
     # Collect results
     # Make all numbers integers and minimize the number of negative exponents.
     # Remove zeros
     results = []
-    for rowm, rowi in zip(M, identity):
+    for rowm, rowi in zip(ech_matrix, id_matrix):
         if any(el != 0 for el in rowm):
             continue
         max_den = max(f.denominator for f in rowi)
         neg = -1 if sum(f < 0 for f in rowi) > sum(f > 0 for f in rowi) else 1
         results.append(
-            dict(
-                (q[0], neg * f.numerator * max_den / f.denominator)
+            {
+                q[0]: neg * f.numerator * max_den / f.denominator
                 for q, f in zip(quant, rowi)
                 if f.numerator != 0
-            )
+            }
         )
     return results
 
 
-def solve_dependencies(dependencies):
+def solve_dependencies(
+    dependencies: dict[TH, set[TH]]
+) -> Generator[set[TH], None, None]:
     """Solve a dependency graph.
 
     Parameters
@@ -239,12 +319,16 @@ def solve_dependencies(dependencies):
         dependency dictionary. For each key, the value is an iterable indicating its
         dependencies.
 
-    Returns
-    -------
-    type
+    Yields
+    ------
+    set
         iterator of sets, each containing keys of independents tasks dependent only of
         the previous tasks in the list.
 
+    Raises
+    ------
+    ValueError
+        if a cyclic dependency is found.
     """
     while dependencies:
         # values not in keys (items without dep)
@@ -263,12 +347,37 @@ def solve_dependencies(dependencies):
         yield t
 
 
-def find_shortest_path(graph, start, end, path=None):
+def find_shortest_path(
+    graph: dict[TH, set[TH]], start: TH, end: TH, path: Optional[list[TH]] = None
+):
+    """Find shortest path between two nodes within a graph.
+
+    Parameters
+    ----------
+    graph
+        A graph given as a mapping of nodes
+        to a set of all connected nodes to it.
+    start
+        Starting node.
+    end
+        End node.
+    path
+        Path to prepend to the one found.
+        (default = None, empty path.)
+
+    Returns
+    -------
+    list[TH]
+        The shortest path between two nodes.
+    """
     path = (path or []) + [start]
     if start == end:
         return path
+
+    # TODO: raise ValueError when start not in graph
     if start not in graph:
         return None
+
     shortest = None
     for node in graph[start]:
         if node not in path:
@@ -276,10 +385,33 @@ def find_shortest_path(graph, start, end, path=None):
             if newpath:
                 if not shortest or len(newpath) < len(shortest):
                     shortest = newpath
+
     return shortest
 
 
-def find_connected_nodes(graph, start, visited=None):
+def find_connected_nodes(
+    graph: dict[TH, set[TH]], start: TH, visited: Optional[set[TH]] = None
+) -> Optional[set[TH]]:
+    """Find all nodes connected to a start node within a graph.
+
+    Parameters
+    ----------
+    graph
+        A graph given as a mapping of nodes
+        to a set of all connected nodes to it.
+    start
+        Starting node.
+    visited
+        Mutable set to collect visited nodes.
+        (default = None, empty set)
+
+    Returns
+    -------
+    set[TH]
+        The shortest path between two nodes.
+    """
+
+    # TODO: raise ValueError when start not in graph
     if start not in graph:
         return None
 
@@ -293,41 +425,45 @@ def find_connected_nodes(graph, start, visited=None):
     return visited
 
 
-class udict(dict):
+class udict(dict[str, Scalar]):
     """Custom dict implementing __missing__."""
 
-    def __missing__(self, key):
+    def __missing__(self, key: str):
         return 0
 
-    def copy(self):
+    def copy(self: Self) -> Self:
         return udict(self)
 
 
-class UnitsContainer(Mapping):
+class UnitsContainer(Mapping[str, Scalar]):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations.
 
     UnitsContainer is a read-only mapping. All operations (even in place ones)
+    return new instances.
 
     Parameters
     ----------
-
-    Returns
-    -------
-    type
-
-
+    non_int_type
+        Numerical type used for non integer values.
     """
 
     __slots__ = ("_d", "_hash", "_one", "_non_int_type")
 
-    def __init__(self, *args, **kwargs):
+    _d: udict
+    _hash: Optional[int]
+    _one: Scalar
+    _non_int_type: type
+
+    def __init__(
+        self, *args: Any, non_int_type: Optional[type] = None, **kwargs: Any
+    ) -> None:
         if args and isinstance(args[0], UnitsContainer):
             default_non_int_type = args[0]._non_int_type
         else:
             default_non_int_type = float
 
-        self._non_int_type = kwargs.pop("non_int_type", default_non_int_type)
+        self._non_int_type = non_int_type or default_non_int_type
 
         if self._non_int_type is float:
             self._one = 1
@@ -338,17 +474,33 @@ class UnitsContainer(Mapping):
         self._d = d
         for key, value in d.items():
             if not isinstance(key, str):
-                raise TypeError("key must be a str, not {}".format(type(key)))
+                raise TypeError(f"key must be a str, not {type(key)}")
             if not isinstance(value, Number):
-                raise TypeError("value must be a number, not {}".format(type(value)))
+                raise TypeError(f"value must be a number, not {type(value)}")
             if not isinstance(value, int) and not isinstance(value, self._non_int_type):
                 d[key] = self._non_int_type(value)
         self._hash = None
 
-    def copy(self):
+    def copy(self: Self) -> Self:
+        """Create a copy of this UnitsContainer."""
         return self.__copy__()
 
-    def add(self, key, value):
+    def add(self: Self, key: str, value: Number) -> Self:
+        """Create a new UnitsContainer adding value to
+        the value existing for a given key.
+
+        Parameters
+        ----------
+        key
+            unit to which the value will be added.
+        value
+            value to be added.
+
+        Returns
+        -------
+        UnitsContainer
+            A copy of this container.
+        """
         newval = self._d[key] + value
         new = self.copy()
         if newval:
@@ -358,17 +510,18 @@ class UnitsContainer(Mapping):
         new._hash = None
         return new
 
-    def remove(self, keys):
-        """Create a new UnitsContainer purged from given keys.
+    def remove(self: Self, keys: Iterable[str]) -> Self:
+        """Create a new UnitsContainer purged from given entries.
 
         Parameters
         ----------
-        keys :
-
+        keys
+            Iterable of keys (units) to remove.
 
         Returns
         -------
-
+        UnitsContainer
+            A copy of this container.
         """
         new = self.copy()
         for k in keys:
@@ -376,50 +529,52 @@ class UnitsContainer(Mapping):
         new._hash = None
         return new
 
-    def rename(self, oldkey, newkey):
+    def rename(self: Self, oldkey: str, newkey: str) -> Self:
         """Create a new UnitsContainer in which an entry has been renamed.
 
         Parameters
         ----------
-        oldkey :
-
-        newkey :
-
+        oldkey
+            Existing key (unit).
+        newkey
+            New key (unit).
 
         Returns
         -------
-
+        UnitsContainer
+            A copy of this container.
         """
         new = self.copy()
         new._d[newkey] = new._d.pop(oldkey)
         new._hash = None
         return new
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._d)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._d)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Scalar:
         return self._d[key]
 
-    def __contains__(self, key):
+    def __contains__(self, key: str) -> bool:
         return key in self._d
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         if self._hash is None:
             self._hash = hash(frozenset(self._d.items()))
         return self._hash
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
-    def __getstate__(self):
-        return self._d, self._hash, self._one, self._non_int_type
+    def __getstate__(self) -> tuple[udict, Scalar, type]:
+        return self._d, self._one, self._non_int_type
 
-    def __setstate__(self, state):
-        self._d, self._hash, self._one, self._non_int_type = state
+    def __setstate__(self, state: tuple[udict, Scalar, type]):
+        self._d, self._one, self._non_int_type = state
+        self._hash = None
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, UnitsContainer):
             # UnitsContainer.__hash__(self) is not the same as hash(self); see
             # ParserHelper.__hash__ and __eq__.
@@ -440,20 +595,20 @@ class UnitsContainer(Mapping):
 
         return dict.__eq__(self._d, other)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__format__("")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         tmp = "{%s}" % ", ".join(
-            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
-        return "<UnitsContainer({})>".format(tmp)
+        return f"<UnitsContainer({tmp})>"
 
-    def __format__(self, spec):
+    def __format__(self, spec: str) -> str:
         return format_unit(self, spec)
 
-    def format_babel(self, spec, **kwspec):
-        return format_unit(self, spec, **kwspec)
+    def format_babel(self, spec: str, registry=None, **kwspec) -> str:
+        return format_unit(self, spec, registry=registry, **kwspec)
 
     def __copy__(self):
         # Skip expensive health checks performed by __init__
@@ -464,7 +619,7 @@ class UnitsContainer(Mapping):
         out._one = self._one
         return out
 
-    def __mul__(self, other):
+    def __mul__(self, other: Any):
         if not isinstance(other, self.__class__):
             err = "Cannot multiply UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
@@ -480,7 +635,7 @@ class UnitsContainer(Mapping):
 
     __rmul__ = __mul__
 
-    def __pow__(self, other):
+    def __pow__(self, other: Any):
         if not isinstance(other, NUMERIC_TYPES):
             err = "Cannot power UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
@@ -491,7 +646,7 @@ class UnitsContainer(Mapping):
         new._hash = None
         return new
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Any):
         if not isinstance(other, self.__class__):
             err = "Cannot divide UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
@@ -505,70 +660,69 @@ class UnitsContainer(Mapping):
         new._hash = None
         return new
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: Any):
         if not isinstance(other, self.__class__) and other != 1:
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
 
-        return self ** -1
+        return self**-1
 
 
 class ParserHelper(UnitsContainer):
     """The ParserHelper stores in place the product of variables and
     their respective exponent and implements the corresponding operations.
+    It also provides a scaling factor.
+
+    For example:
+        `3 * m ** 2` becomes ParserHelper(3, m=2)
+
+    Briefly is a UnitsContainer with a scaling factor.
 
     ParserHelper is a read-only mapping. All operations (even in place ones)
+    return new instances.
+
+    WARNING : The hash value used does not take into account the scale
+    attribute so be careful if you use it as a dict key and then two unequal
+    object can have the same hash.
 
     Parameters
     ----------
-
-    Returns
-    -------
-    type
-        WARNING : The hash value used does not take into account the scale
-        attribute so be careful if you use it as a dict key and then two unequal
-        object can have the same hash.
-
+    scale
+        Scaling factor.
+        (default = 1)
+    **kwargs
+        Used to populate the dict of units and exponents.
     """
 
     __slots__ = ("scale",)
 
-    def __init__(self, scale=1, *args, **kwargs):
+    scale: Scalar
+
+    def __init__(self, scale: Scalar = 1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.scale = scale
 
     @classmethod
-    def from_word(cls, input_word, non_int_type=float):
+    def from_word(cls, input_word: str, non_int_type: type = float) -> ParserHelper:
         """Creates a ParserHelper object with a single variable with exponent one.
 
-        Equivalent to: ParserHelper({'word': 1})
+        Equivalent to: ParserHelper(1, {input_word: 1})
 
         Parameters
         ----------
-        input_word :
+        input_word
 
-
-        Returns
-        -------
-
+        non_int_type
+            Numerical type used for non integer values.
         """
         if non_int_type is float:
             return cls(1, [(input_word, 1)], non_int_type=non_int_type)
         else:
-            ONE = non_int_type("1.0")
+            ONE = non_int_type("1")
             return cls(ONE, [(input_word, ONE)], non_int_type=non_int_type)
 
     @classmethod
-    def eval_token(cls, token, use_decimal=False, non_int_type=float):
-
-        # TODO: remove this code when use_decimal is deprecated
-        if use_decimal:
-            raise DeprecationWarning(
-                "`use_decimal` is deprecated, use `non_int_type` keyword argument when instantiating the registry.\n"
-                ">>> from decimal import Decimal\n"
-                ">>> ureg = UnitRegistry(non_int_type=Decimal)"
-            )
-
+    def eval_token(cls, token: tokenize.TokenInfo, non_int_type: type = float):
         token_type = token.type
         token_text = token.string
         if token_type == NUMBER:
@@ -585,18 +739,16 @@ class ParserHelper(UnitsContainer):
             raise Exception("unknown token type")
 
     @classmethod
-    @lru_cache()
-    def from_string(cls, input_string, non_int_type=float):
+    @lru_cache
+    def from_string(cls, input_string: str, non_int_type: type = float) -> ParserHelper:
         """Parse linear expression mathematical units and return a quantity object.
 
         Parameters
         ----------
-        input_string :
+        input_string
 
-
-        Returns
-        -------
-
+        non_int_type
+            Numerical type used for non integer values.
         """
         if not input_string:
             return cls(non_int_type=non_int_type)
@@ -616,10 +768,10 @@ class ParserHelper(UnitsContainer):
         )
 
         if isinstance(ret, Number):
-            return ParserHelper(ret, non_int_type=non_int_type)
+            return cls(ret, non_int_type=non_int_type)
 
         if reps:
-            ret = ParserHelper(
+            ret = cls(
                 ret.scale,
                 {
                     key.replace("__obra__", "[").replace("__cbra__", "]"): value
@@ -631,7 +783,7 @@ class ParserHelper(UnitsContainer):
         for k in list(ret):
             if k.lower() == "nan":
                 del ret._d[k]
-                ret.scale = math.nan
+                ret.scale = non_int_type(math.nan)
 
         return ret
 
@@ -657,17 +809,17 @@ class ParserHelper(UnitsContainer):
         super().__setstate__(state[:-1])
         self.scale = state[-1]
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, ParserHelper):
             return self.scale == other.scale and super().__eq__(other)
         elif isinstance(other, str):
             return self == ParserHelper.from_string(other, self._non_int_type)
         elif isinstance(other, Number):
             return self.scale == other and not len(self._d)
-        else:
-            return self.scale == 1 and super().__eq__(other)
 
-    def operate(self, items, op=operator.iadd, cleanup=True):
+        return self.scale == 1 and super().__eq__(other)
+
+    def operate(self, items, op=operator.iadd, cleanup: bool = True):
         d = udict(self._d)
         for key, value in items:
             d[key] = op(d[key], value)
@@ -681,15 +833,15 @@ class ParserHelper(UnitsContainer):
 
     def __str__(self):
         tmp = "{%s}" % ", ".join(
-            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
-        return "{} {}".format(self.scale, tmp)
+        return f"{self.scale} {tmp}"
 
     def __repr__(self):
         tmp = "{%s}" % ", ".join(
-            ["'{}': {}".format(key, value) for key, value in sorted(self._d.items())]
+            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
-        return "<ParserHelper({}, {})>".format(self.scale, tmp)
+        return f"<ParserHelper({self.scale}, {tmp})>"
 
     def __mul__(self, other):
         if isinstance(other, str):
@@ -710,7 +862,7 @@ class ParserHelper(UnitsContainer):
         d = self._d.copy()
         for key in self._d:
             d[key] *= other
-        return self.__class__(self.scale ** other, d, non_int_type=self._non_int_type)
+        return self.__class__(self.scale**other, d, non_int_type=self._non_int_type)
 
     def __truediv__(self, other):
         if isinstance(other, str):
@@ -742,8 +894,8 @@ class ParserHelper(UnitsContainer):
 
 
 #: List of regex substitution pairs.
-_subs_re = [
-    ("\N{DEGREE SIGN}", " degree"),
+_subs_re_list = [
+    ("\N{DEGREE SIGN}", "degree"),
     (r"([\w\.\-\+\*\\\^])\s+", r"\1 "),  # merge multiple spaces
     (r"({}) squared", r"\1**2"),  # Handle square and cube
     (r"({}) cubed", r"\1**3"),
@@ -754,26 +906,26 @@ _subs_re = [
         r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])",
         r"\1*",
     ),  # Handle numberLetter for multiplication
-    (r"([\w\.\-])\s+(?=\w)", r"\1*"),  # Handle space for multiplication
+    (r"([\w\.\)])\s+(?=[\w\(])", r"\1*"),  # Handle space for multiplication
 ]
 
 #: Compiles the regex and replace {} by a regex that matches an identifier.
-_subs_re = [(re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re]
+_subs_re = [
+    (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re_list
+]
 _pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⁻", "0123456789*-")
-_pretty_exp_re = re.compile(r"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?")
+_pretty_exp_re = re.compile(r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?)")
 
 
-def string_preprocessor(input_string):
+def string_preprocessor(input_string: str) -> str:
     input_string = input_string.replace(",", "")
     input_string = input_string.replace(" per ", "/")
 
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)
 
+    input_string = _pretty_exp_re.sub(r"**(\1)", input_string)
     # Replace pretty format characters
-    for pretty_exp in _pretty_exp_re.findall(input_string):
-        exp = "**" + pretty_exp.translate(_pretty_table)
-        input_string = input_string.replace(pretty_exp, exp)
     input_string = input_string.translate(_pretty_table)
 
     # Handle caret exponentiation
@@ -781,7 +933,7 @@ def string_preprocessor(input_string):
     return input_string
 
 
-def _is_dim(name):
+def _is_dim(name: str) -> bool:
     return name[0] == "[" and name[-1] == "]"
 
 
@@ -799,31 +951,35 @@ class SharedRegistryObject:
 
     """
 
+    _REGISTRY: ClassVar[UnitRegistry]
+    _units: UnitsContainer
+
     def __new__(cls, *args, **kwargs):
         inst = object.__new__(cls)
         if not hasattr(cls, "_REGISTRY"):
             # Base class, not subclasses dynamically by
             # UnitRegistry._init_dynamic_classes
-            from . import _APP_REGISTRY
+            from . import application_registry
 
-            inst._REGISTRY = _APP_REGISTRY
+            inst._REGISTRY = application_registry.get()
         return inst
 
-    def _check(self, other):
+    def _check(self, other: Any) -> bool:
         """Check if the other object use a registry and if so that it is the
         same registry.
 
         Parameters
         ----------
-        other :
-
+        other
 
         Returns
         -------
-        type
-            other don't use a registry and raise ValueError if other don't use the
-            same unit registry.
+        bool
 
+        Raises
+        ------
+        ValueError
+            if other don't use the same unit registry.
         """
         if self._REGISTRY is getattr(other, "_REGISTRY", None):
             return True
@@ -840,38 +996,41 @@ class SharedRegistryObject:
 class PrettyIPython:
     """Mixin to add pretty-printers for IPython"""
 
-    def _repr_html_(self):
+    default_format: str
+
+    def _repr_html_(self) -> str:
         if "~" in self.default_format:
-            return "{:~H}".format(self)
-        else:
-            return "{:H}".format(self)
+            return f"{self:~H}"
+        return f"{self:H}"
 
-    def _repr_latex_(self):
+    def _repr_latex_(self) -> str:
         if "~" in self.default_format:
-            return "${:~L}$".format(self)
-        else:
-            return "${:L}$".format(self)
+            return f"${self:~L}$"
+        return f"${self:L}$"
 
-    def _repr_pretty_(self, p, cycle):
+    def _repr_pretty_(self, p, cycle: bool):
         if "~" in self.default_format:
-            p.text("{:~P}".format(self))
+            p.text(f"{self:~P}")
         else:
-            p.text("{:P}".format(self))
+            p.text(f"{self:P}")
 
 
-def to_units_container(unit_like, registry=None):
+def to_units_container(
+    unit_like: QuantityOrUnitLike, registry: Optional[UnitRegistry] = None
+) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 
     Parameters
     ----------
-    unit_like :
-
-    registry :
-         (Default value = None)
+    unit_like
+        Quantity or Unit to infer the plain units from.
+    registry
+        If provided, uses the registry's UnitsContainer and parse_unit_name.  If None,
+        uses the registry attached to unit_like.
 
     Returns
     -------
-
+    UnitsContainer
     """
     mro = type(unit_like).mro()
     if UnitsContainer in mro:
@@ -880,6 +1039,7 @@ def to_units_container(unit_like, registry=None):
         return unit_like._units
     elif str in mro:
         if registry:
+            # TODO: Why not parse.units here?
             return registry._parse_units(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
@@ -890,32 +1050,52 @@ def to_units_container(unit_like, registry=None):
             return UnitsContainer(unit_like)
 
 
-def infer_base_unit(q):
+def infer_base_unit(
+    unit_like: QuantityOrUnitLike, registry: Optional[UnitRegistry] = None
+) -> UnitsContainer:
     """
+    Given a Quantity or UnitLike, give the UnitsContainer for it's plain units.
 
     Parameters
     ----------
-    q :
-
+    unit_like
+        Quantity or Unit to infer the plain units from.
+    registry
+        If provided, uses the registry's UnitsContainer and parse_unit_name.  If None,
+        uses the registry attached to unit_like.
 
     Returns
     -------
-    type
+    UnitsContainer
 
+    Raises
+    ------
+    ValueError
+        The unit_like did not reference a registry, and no registry was provided.
 
     """
     d = udict()
-    for unit_name, power in q._units.items():
-        candidates = q._REGISTRY.parse_unit_name(unit_name)
+
+    original_units = to_units_container(unit_like, registry)
+
+    if registry is None and hasattr(unit_like, "_REGISTRY"):
+        registry = unit_like._REGISTRY
+    if registry is None:
+        raise ValueError("No registry provided.")
+
+    for unit_name, power in original_units.items():
+        candidates = registry.parse_unit_name(unit_name)
         assert len(candidates) == 1
         _, base_unit, _ = candidates[0]
         d[base_unit] += power
 
     # remove values that resulted in a power of 0
-    return UnitsContainer({k: v for k, v in d.items() if v != 0})
+    nonzero_dict = {k: v for k, v in d.items() if v != 0}
+
+    return registry.UnitsContainer(nonzero_dict)
 
 
-def getattr_maybe_raise(self, item):
+def getattr_maybe_raise(obj: Any, item: str):
     """Helper function invoked at start of all overridden ``__getattr__``.
 
     Raise AttributeError if the user tries to ask for a _ or __ attribute,
@@ -924,111 +1104,25 @@ def getattr_maybe_raise(self, item):
 
     Parameters
     ----------
-    item : string
-        Item to be found.
+    item
+        attribute to be found.
 
-
-    Returns
-    -------
-
+    Raises
+    ------
+    AttributeError
     """
     # Double-underscore attributes are tricky to detect because they are
-    # automatically prefixed with the class name - which may be a subclass of self
+    # automatically prefixed with the class name - which may be a subclass of obj
     if (
         item.endswith("__")
         or len(item.lstrip("_")) == 0
         or (item.startswith("_") and not item.lstrip("_")[0].isdigit())
     ):
-        raise AttributeError("%r object has no attribute %r" % (self, item))
+        raise AttributeError(f"{obj!r} object has no attribute {item!r}")
 
 
-class SourceIterator:
-    """Iterator to facilitate reading the definition files.
-
-    Accepts any sequence (like a list of lines, a file or another SourceIterator)
-
-    The iterator yields the line number and line (skipping comments and empty lines)
-    and stripping white spaces.
-
-    for lineno, line in SourceIterator(sequence):
-        # do something here
-
-    """
-
-    def __new__(cls, sequence):
-        if isinstance(sequence, SourceIterator):
-            return sequence
-
-        obj = object.__new__(cls)
-
-        if sequence is not None:
-            obj.internal = enumerate(sequence, 1)
-            obj.last = (None, None)
-
-        return obj
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        line = ""
-        while not line or line.startswith("#"):
-            lineno, line = next(self.internal)
-            line = line.split("#", 1)[0].strip()
-
-        self.last = lineno, line
-        return lineno, line
-
-    next = __next__
-
-    def block_iter(self):
-        """Iterate block including header."""
-        return BlockIterator(self)
-
-
-class BlockIterator(SourceIterator):
-    """Like SourceIterator but stops when it finds '@end'
-    It also raises an error if another '@' directive is found inside.
-    """
-
-    def __new__(cls, line_iterator):
-        obj = SourceIterator.__new__(cls, None)
-        obj.internal = line_iterator.internal
-        obj.last = line_iterator.last
-        obj.done_last = False
-        return obj
-
-    def __next__(self):
-        if not self.done_last:
-            self.done_last = True
-            return self.last
-
-        lineno, line = SourceIterator.__next__(self)
-        if line.startswith("@end"):
-            raise StopIteration
-        elif line.startswith("@"):
-            raise DefinitionSyntaxError("cannot nest @ directives", lineno=lineno)
-
-        return lineno, line
-
-    next = __next__
-
-
-def iterable(y):
-    """Check whether or not an object can be iterated over.
-
-    Vendored from numpy under the terms of the BSD 3-Clause License. (Copyright
-    (c) 2005-2019, NumPy Developers.)
-
-    Parameters
-    ----------
-    value :
-        Input object.
-    type :
-        object
-    y :
-
-    """
+def iterable(y: Any) -> bool:
+    """Check whether or not an object can be iterated over."""
     try:
         iter(y)
     except TypeError:
@@ -1036,20 +1130,29 @@ def iterable(y):
     return True
 
 
-def sized(y):
-    """Check whether or not an object has a defined length.
-
-    Parameters
-    ----------
-    value :
-        Input object.
-    type :
-        object
-    y :
-
-    """
+def sized(y: Any) -> bool:
+    """Check whether or not an object has a defined length."""
     try:
         len(y)
     except TypeError:
         return False
     return True
+
+
+def create_class_with_registry(
+    registry: UnitRegistry, base_class: type[TT]
+) -> type[TT]:
+    """Create new class inheriting from base_class and
+    filling _REGISTRY class attribute with an actual instanced registry.
+    """
+
+    class_body = {
+        "__module__": "pint",
+        "_REGISTRY": registry,
+    }
+
+    return types.new_class(
+        base_class.__name__,
+        bases=(base_class,),
+        exec_body=lambda ns: ns.update(class_body),
+    )

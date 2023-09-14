@@ -62,13 +62,17 @@
 #### PREFIXES ####
 
 # decimal prefixes
+quecto- = 1e-30 = q-
+ronto- = 1e-27 = r-
 yocto- = 1e-24 = y-
 zepto- = 1e-21 = z-
 atto- =  1e-18 = a-
 femto- = 1e-15 = f-
 pico- =  1e-12 = p-
 nano- =  1e-9  = n-
-micro- = 1e-6  = µ- = u-
+# The micro (U+00B5) and Greek mu (U+03BC) are both valid prefixes,
+# and they often use the same glyph.
+micro- = 1e-6  = µ- = μ- = u-
 milli- = 1e-3  = m-
 centi- = 1e-2  = c-
 deci- =  1e-1  = d-
@@ -82,6 +86,8 @@ peta- =  1e15  = P-
 exa- =   1e18  = E-
 zetta- = 1e21  = Z-
 yotta- = 1e24  = Y-
+ronna- = 1e27 = R-
+quetta- = 1e30 = Q-
 
 # binary_prefixes
 kibi- = 2**10 = Ki-
@@ -142,9 +148,13 @@ byte = 8 * bit = B = octet
 # byte = 8 * bit = _ = octet
 ## NOTE: B (byte) symbol can conflict with Bell
 
+# Ratios
+percent = 0.01 = %
+ppm = 1e-6
+
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
-micron = micrometer = µ
+micron = micrometer = µ = μ
 fermi = femtometer = fm
 light_year = speed_of_light * julian_year = ly = lightyear
 astronomical_unit = 149597870700 * meter = au  # since Aug 2012
@@ -167,7 +177,7 @@ planck_mass = (hbar * c / gravitational_constant) ** 0.5
 
 # Time
 minute = 60 * second = min
-hour = 60 * minute = hr
+hour = 60 * minute = h = hr
 day = 24 * hour = d
 week = 7 * day
 fortnight = 2 * week
@@ -228,13 +238,18 @@ counts_per_second = count / second = cps
 reciprocal_centimeter = 1 / cm = cm_1 = kayser
 
 # Velocity
-[velocity] = [length] / [time] = [speed]
+[velocity] = [length] / [time]
+[speed] = [velocity]
 knot = nautical_mile / hour = kt = knot_international = international_knot
 mile_per_hour = mile / hour = mph = MPH
 kilometer_per_hour = kilometer / hour = kph = KPH
 kilometer_per_second = kilometer / second = kps
 meter_per_second = meter / second = mps
 foot_per_second = foot / second = fps
+
+# Volumetric Flow Rate
+[volumetric_flow_rate] = [volume] / [time]
+sverdrup = 1e6 * meter ** 3 / second = sv
 
 # Acceleration
 [acceleration] = [velocity] / [time]
@@ -255,7 +270,7 @@ joule = newton * meter = J
 erg = dyne * centimeter
 watt_hour = watt * hour = Wh = watthour
 electron_volt = e * volt = eV
-rydberg = h * c * R_inf = Ry
+rydberg = ℎ * c * R_inf = Ry
 hartree = 2 * rydberg = E_h = Eh = hartree_energy = atomic_unit_of_energy = a_u_energy
 calorie = 4.184 * joule = cal = thermochemical_calorie = cal_th
 international_calorie = 4.1868 * joule = cal_it = international_steam_table_calorie
@@ -279,6 +294,7 @@ boiler_horsepower = 33475 * Btu / hour                            # unclear whic
 metric_horsepower = 75 * force_kilogram * meter / second
 electrical_horsepower = 746 * watt
 refrigeration_ton = 12e3 * Btu / hour = _ = ton_of_refrigeration  # approximate, no exact definition
+cooling_tower_ton = 1.25 * refrigeration_ton # approximate, no exact definition
 standard_liter_per_minute = atmosphere * liter / minute = slpm = slm
 conventional_watt_90 = K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt = W_90
 
@@ -397,6 +413,7 @@ coulomb = ampere * second = C
 abcoulomb = 10 * C = abC
 faraday = e * N_A * mole
 conventional_coulomb_90 = K_J90 * R_K90 / (K_J * R_K) * coulomb = C_90
+ampere_hour = ampere * hour = Ah
 
 # Electric potential
 [electric_potential] = [energy] / [charge]
@@ -412,6 +429,10 @@ atomic_unit_of_electric_field = e * k_C / a_0 ** 2 = a_u_electric_field
 
 # Electric displacement field
 [electric_displacement_field] = [charge] / [area]
+
+# Reduced electric field
+[reduced_electric_field] = [electric_field] * [area]
+townsend =  1e-21 * V * m^2 = Td
 
 # Resistance
 [resistance] = [electric_potential] / [current]
@@ -435,16 +456,16 @@ farad = coulomb / volt = F
 abfarad = 1e9 * farad = abF
 conventional_farad_90 = R_K90 / R_K * farad = F_90
 
+# Magnetic flux
+[magnetic_flux] = [electric_potential] * [time]
+weber = volt * second = Wb
+unit_pole = µ_0 * biot * centimeter
+
 # Inductance
 [inductance] = [magnetic_flux] / [current]
 henry = weber / ampere = H
 abhenry = 1e-9 * henry = abH
 conventional_henry_90 = R_K / R_K90 * henry = H_90
-
-# Magnetic flux
-[magnetic_flux] = [electric_potential] * [time]
-weber = volt * second = Wb
-unit_pole = µ_0 * biot * centimeter
 
 # Magnetic field
 [magnetic_field] = [magnetic_flux] / [area]
@@ -474,9 +495,9 @@ bohr_magneton = e * hbar / (2 * m_e) = µ_B = mu_B
 nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 
 # Logaritmic Unit Definition
-#  Unit = scale; logbase; logfactor 
+#  Unit = scale; logbase; logfactor
 #  x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )
- 
+
 # Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
 
 decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm
@@ -651,7 +672,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 @group Textile
     tex = gram / kilometer = Tt
     dtex = decitex
-    denier = gram / (9 * kilometer) = den = Td
+    denier = gram / (9 * kilometer) = den
     jute = pound / (14400 * yard) = Tj
     aberdeen = jute = Ta
     RKM  = gf / tex

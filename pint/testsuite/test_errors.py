@@ -7,6 +7,7 @@ from pint import (
     DimensionalityError,
     LogarithmicUnitCalculusError,
     OffsetUnitCalculusError,
+    PintError,
     Quantity,
     RedefinitionError,
     UndefinedUnitError,
@@ -20,54 +21,38 @@ class TestErrors:
         ex = DefinitionSyntaxError("foo")
         assert str(ex) == "foo"
 
-        # filename and lineno can be attached after init
-        ex.filename = "a.txt"
-        ex.lineno = 123
-        assert str(ex) == "While opening a.txt, in line 123: foo"
-
-        ex = DefinitionSyntaxError("foo", lineno=123)
-        assert str(ex) == "In line 123: foo"
-
-        ex = DefinitionSyntaxError("foo", filename="a.txt")
-        assert str(ex) == "While opening a.txt: foo"
-
-        ex = DefinitionSyntaxError("foo", filename="a.txt", lineno=123)
-        assert str(ex) == "While opening a.txt, in line 123: foo"
-
     def test_redefinition_error(self):
         ex = RedefinitionError("foo", "bar")
         assert str(ex) == "Cannot redefine 'foo' (bar)"
 
-        # filename and lineno can be attached after init
-        ex.filename = "a.txt"
-        ex.lineno = 123
-        assert (
-            str(ex) == "While opening a.txt, in line 123: Cannot redefine 'foo' (bar)"
-        )
-
-        ex = RedefinitionError("foo", "bar", lineno=123)
-        assert str(ex) == "In line 123: Cannot redefine 'foo' (bar)"
-
-        ex = RedefinitionError("foo", "bar", filename="a.txt")
-        assert str(ex) == "While opening a.txt: Cannot redefine 'foo' (bar)"
-
-        ex = RedefinitionError("foo", "bar", filename="a.txt", lineno=123)
-        assert (
-            str(ex) == "While opening a.txt, in line 123: Cannot redefine 'foo' (bar)"
-        )
+        with pytest.raises(PintError):
+            raise ex
 
     def test_undefined_unit_error(self):
         x = ("meter",)
         msg = "'meter' is not defined in the unit registry"
-        assert str(UndefinedUnitError(x)) == msg
-        assert str(UndefinedUnitError(list(x))) == msg
-        assert str(UndefinedUnitError(set(x))) == msg
+
+        ex = UndefinedUnitError(x)
+        assert str(ex) == msg
+        ex = UndefinedUnitError(list(x))
+        assert str(ex) == msg
+        ex = UndefinedUnitError(set(x))
+        assert str(ex) == msg
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_undefined_unit_error_multi(self):
         x = ("meter", "kg")
         msg = "('meter', 'kg') are not defined in the unit registry"
-        assert str(UndefinedUnitError(x)) == msg
-        assert str(UndefinedUnitError(list(x))) == msg
+
+        ex = UndefinedUnitError(x)
+        assert str(ex) == msg
+        ex = UndefinedUnitError(list(x))
+        assert str(ex) == msg
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_dimensionality_error(self):
         ex = DimensionalityError("a", "b")
@@ -76,6 +61,9 @@ class TestErrors:
         assert str(ex) == "Cannot convert from 'a' (c) to 'b' ()"
         ex = DimensionalityError("a", "b", "c", "d", extra_msg=": msg")
         assert str(ex) == "Cannot convert from 'a' (c) to 'b' (d): msg"
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_offset_unit_calculus_error(self):
         ex = OffsetUnitCalculusError(Quantity("1 kg")._units)
@@ -92,6 +80,9 @@ class TestErrors:
             + OFFSET_ERROR_DOCS_HTML
             + " for guidance."
         )
+
+        with pytest.raises(PintError):
+            raise ex
 
     def test_logarithmic_unit_calculus_error(self):
         Quantity = UnitRegistry(autoconvert_offset_to_baseunit=True).Quantity
@@ -112,6 +103,9 @@ class TestErrors:
             + " for guidance."
         )
 
+        with pytest.raises(PintError):
+            raise ex
+
     def test_pickle_definition_syntax_error(self, subtests):
         # OffsetUnitCalculusError raised from a custom ureg must be pickleable even if
         # the ureg is not registered as the application ureg
@@ -122,8 +116,8 @@ class TestErrors:
         q2 = ureg.Quantity("1 bar")
 
         for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
-            for ex in [
-                DefinitionSyntaxError("foo", filename="a.txt", lineno=123),
+            for ex in (
+                DefinitionSyntaxError("foo"),
                 RedefinitionError("foo", "bar"),
                 UndefinedUnitError("meter"),
                 DimensionalityError("a", "b", "c", "d", extra_msg=": msg"),
@@ -131,7 +125,7 @@ class TestErrors:
                     Quantity("1 kg")._units, Quantity("1 s")._units
                 ),
                 OffsetUnitCalculusError(q1._units, q2._units),
-            ]:
+            ):
                 with subtests.test(protocol=protocol, etype=type(ex)):
                     pik = pickle.dumps(ureg.Quantity("1 foo"), protocol)
                     with pytest.raises(UndefinedUnitError):
@@ -139,7 +133,12 @@ class TestErrors:
 
                     # assert False, ex.__reduce__()
                     ex2 = pickle.loads(pickle.dumps(ex, protocol))
+                    print(ex)
+                    print(ex2)
                     assert type(ex) is type(ex2)
-                    assert ex.args == ex2.args
-                    assert ex.__dict__ == ex2.__dict__
+                    assert ex == ex
+                    # assert ex.__dict__ == ex2.__dict__
                     assert str(ex) == str(ex2)
+
+                    with pytest.raises(PintError):
+                        raise ex

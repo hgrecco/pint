@@ -1,14 +1,30 @@
+exclude: '^pint/_vendor'
 repos:
--   repo: https://github.com/ambv/black
-    rev: 20.8b1
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/psf/black
+    rev: 23.1.0
     hooks:
     - id: black
--   repo: https://github.com/pre-commit/mirrors-isort
-    rev: 'v5.6.4'
+    - id: black-jupyter
+-   repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.240'
     hooks:
-    -   id: isort
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+    - id: ruff
+      args: ["--fix"]
+-   repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.16
     hooks:
-    - id: flake8
-
+    - id: mdformat
+      additional_dependencies:
+      - mdformat-gfm  # GitHub-flavored Markdown
+      - mdformat-black
+-   repo: https://github.com/kynan/nbstripout
+    rev: 0.6.1
+    hooks:
+      - id: nbstripout
+        args: [--extra-keys=metadata.kernelspec metadata.language_info.version]

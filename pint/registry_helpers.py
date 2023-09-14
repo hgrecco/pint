@@ -2,18 +2,29 @@
     pint.registry_helpers
     ~~~~~~~~~~~~~~~~~~~~~
 
-    Miscellaneous methods of the registry writen as separate functions.
+    Miscellaneous methods of the registry written as separate functions.
 
     :copyright: 2016 by Pint Authors, see AUTHORS for more details..
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import annotations
+
 import functools
 from inspect import signature
 from itertools import zip_longest
+from typing import TYPE_CHECKING, Callable, TypeVar, Any, Union, Optional
+from collections.abc import Iterable
 
+from ._typing import F
 from .errors import DimensionalityError
 from .util import UnitsContainer, to_units_container
+
+if TYPE_CHECKING:
+    from ._typing import Quantity, Unit
+    from .registry import UnitRegistry
+
+T = TypeVar("T")
 
 
 def _replace_units(original_units, values_by_name):
@@ -61,7 +72,6 @@ def _to_units_container(a, registry=None):
 
 
 def _parse_wrap_args(args, registry=None):
-
     # Arguments which contain definitions
     # (i.e. names that appear alone and for the first time)
     defs_args = set()
@@ -132,7 +142,6 @@ def _parse_wrap_args(args, registry=None):
 
         # third pass: convert other arguments
         for ndx in unit_args_ndx:
-
             if isinstance(values[ndx], ureg.Quantity):
                 new_values[ndx] = ureg._convert(
                     values[ndx]._magnitude, values[ndx]._units, args_as_uc[ndx][0]
@@ -175,7 +184,12 @@ def _apply_defaults(func, args, kwargs):
     return args, {}
 
 
-def wraps(ureg, ret, args, strict=True):
+def wraps(
+    ureg: UnitRegistry,
+    ret: Optional[Union[str, Unit, Iterable[Optional[Union[str, Unit]]]]],
+    args: Optional[Union[str, Unit, Iterable[Optional[Union[str, Unit]]]]],
+    strict: bool = True,
+) -> Callable[[Callable[..., Any]], Callable[..., Quantity]]:
     """Wraps a function to become pint-aware.
 
     Use it when a function requires a numerical value but in some specific
@@ -190,9 +204,9 @@ def wraps(ureg, ret, args, strict=True):
     ----------
     ureg : pint.UnitRegistry
         a UnitRegistry instance.
-    ret : str, pint.Unit, iterable of str, or iterable of pint.Unit
+    ret : str, pint.Unit, or iterable of str or pint.Unit
         Units of each of the return values. Use `None` to skip argument conversion.
-    args : str, pint.Unit, iterable of str, or iterable of pint.Unit
+    args : str, pint.Unit, or iterable of str or pint.Unit
         Units of each of the input arguments. Use `None` to skip argument conversion.
     strict : bool
         Indicates that only quantities are accepted. (Default value = True)
@@ -206,7 +220,7 @@ def wraps(ureg, ret, args, strict=True):
     ------
     TypeError
         if the number of given arguments does not match the number of function parameters.
-        if the any of the provided arguments is not a unit a string or Quantity
+        if any of the provided arguments is not a unit a string or Quantity
 
     """
 
@@ -239,8 +253,7 @@ def wraps(ureg, ret, args, strict=True):
             )
         ret = _to_units_container(ret, ureg)
 
-    def decorator(func):
-
+    def decorator(func: Callable[..., Any]) -> Callable[..., Quantity]:
         count_params = len(signature(func).parameters)
         if len(args) != count_params:
             raise TypeError(
@@ -256,8 +269,7 @@ def wraps(ureg, ret, args, strict=True):
         )
 
         @functools.wraps(func, assigned=assigned, updated=updated)
-        def wrapper(*values, **kw):
-
+        def wrapper(*values, **kw) -> Quantity:
             values, kw = _apply_defaults(func, values, kw)
 
             # In principle, the values are used as is
@@ -288,7 +300,9 @@ def wraps(ureg, ret, args, strict=True):
     return decorator
 
 
-def check(ureg, *args):
+def check(
+    ureg: UnitRegistry, *args: Optional[Union[str, UnitsContainer, Unit]]
+) -> Callable[[F], F]:
     """Decorator to for quantity type checking for function inputs.
 
     Use it to ensure that the decorated function input parameters match
@@ -321,7 +335,6 @@ def check(ureg, *args):
     ]
 
     def decorator(func):
-
         count_params = len(signature(func).parameters)
         if len(dimensions) != count_params:
             raise TypeError(
@@ -341,7 +354,6 @@ def check(ureg, *args):
             list_args, empty = _apply_defaults(func, args, kwargs)
 
             for dim, value in zip(dimensions, list_args):
-
                 if dim is None:
                     continue
 
