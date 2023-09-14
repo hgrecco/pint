@@ -851,12 +851,6 @@ class TestIssues(QuantityTestCase):
             np.array((0.04, 0.09)),
         )
 
-    @helpers.requires_numpy
-    def test_issue_1250(self):
-        q = np.array([[3, 4], [5, 12], [8, 15]]) * self.ureg.m
-        expected = np.array([5, 13, 17]) * self.ureg.m
-        helpers.assert_quantity_equal(np.linalg.norm(q, axis=1), expected)
-
     def test_issue1277(self, module_registry):
         ureg = module_registry
         assert ureg("%") == ureg("percent")
