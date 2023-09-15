@@ -12,14 +12,21 @@ from __future__ import annotations
 
 import sys
 import math
-import tokenize
 from decimal import Decimal
 from importlib import import_module
-from io import BytesIO
 from numbers import Number
 from collections.abc import Mapping
 from typing import Any, NoReturn, Callable, Optional, Union
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
+
+try:
+    from uncertainties import UFloat, ufloat
+    from uncertainties import unumpy as unp
+
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    UFloat = ufloat = unp = None
+    HAS_UNCERTAINTIES = False
 
 
 if sys.version_info >= (3, 10):
@@ -58,19 +65,6 @@ def missing_dependency(
     return _inner
 
 
-def tokenizer(input_string: str) -> Generator[tokenize.TokenInfo, None, None]:
-    """Tokenize an input string, encoded as UTF-8
-    and skipping the ENCODING token.
-
-    See Also
-    --------
-    tokenize.tokenize
-    """
-    for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
-        if tokinfo.type != tokenize.ENCODING:
-            yield tokinfo
-
-
 # TODO: remove this warning after v0.10
 class BehaviorChangeWarning(UserWarning):
     pass
@@ -83,7 +77,10 @@ try:
 
     HAS_NUMPY = True
     NUMPY_VER = np.__version__
-    NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
+    if HAS_UNCERTAINTIES:
+        NUMERIC_TYPES = (Number, Decimal, ndarray, np.number, UFloat)
+    else:
+        NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
         if isinstance(value, (dict, bool)) or value is None:
@@ -92,6 +89,11 @@ try:
             raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
+        elif HAS_UNCERTAINTIES:
+            from pint.facets.measurement.objects import Measurement
+
+            if isinstance(value, Measurement):
+                return ufloat(value.value, value.error)
         if force_ndarray or (
             force_ndarray_like and not is_duck_array_type(type(value))
         ):
@@ -144,16 +146,13 @@ except ImportError:
                 "lists and tuples are valid magnitudes for "
                 "Quantity only when NumPy is present."
             )
+        elif HAS_UNCERTAINTIES:
+            from pint.facets.measurement.objects import Measurement
+
+            if isinstance(value, Measurement):
+                return ufloat(value.value, value.error)
         return value
 
-
-try:
-    from uncertainties import ufloat
-
-    HAS_UNCERTAINTIES = True
-except ImportError:
-    ufloat = None
-    HAS_UNCERTAINTIES = False
 
 try:
     from babel import Locale
@@ -326,16 +325,25 @@ def isnan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
         Always return False for non-numeric types.
     """
     if is_duck_array_type(type(obj)):
-        if obj.dtype.kind in "if":
+        if obj.dtype.kind in "ifc":
             out = np.isnan(obj)
         elif obj.dtype.kind in "Mm":
             out = np.isnat(obj)
         else:
-            # Not a numeric or datetime type
-            out = np.full(obj.shape, False)
+            if HAS_UNCERTAINTIES:
+                try:
+                    out = unp.isnan(obj)
+                except TypeError:
+                    # Not a numeric or UFloat type
+                    out = np.full(obj.shape, False)
+            else:
+                # Not a numeric or datetime type
+                out = np.full(obj.shape, False)
         return out.any() if check_all else out
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
+    elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
+        return unp.isnan(obj)
     try:
         return math.isnan(obj)
     except TypeError:

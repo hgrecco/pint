@@ -5,6 +5,7 @@ import operator as op
 
 import pytest
 
+from pint import pint_eval
 from pint.util import (
     ParserHelper,
     UnitsContainer,
@@ -15,7 +16,6 @@ from pint.util import (
     sized,
     string_preprocessor,
     to_units_container,
-    tokenizer,
     transpose,
 )
 
@@ -194,7 +194,7 @@ class TestParseHelper:
         assert dict(seconds=1) / z() == ParserHelper(0.5, seconds=1, meter=-2)
 
     def _test_eval_token(self, expected, expression):
-        token = next(tokenizer(expression))
+        token = next(pint_eval.tokenizer(expression))
         actual = ParserHelper.eval_token(token)
         assert expected == actual
         assert type(expected) == type(actual)
