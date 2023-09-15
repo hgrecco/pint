@@ -881,6 +881,7 @@ class TestIssues(QuantityTestCase):
         m = module_registry.Measurement(1, 0.1, "meter")
         assert m.default_format == "~P"
 
+    @helpers.requires_babel()
     def test_issue_1400(self, sess_registry):
         q1 = 3 * sess_registry.W
         q2 = 3 * sess_registry.W / sess_registry.cm

@@ -325,21 +325,28 @@ def isnan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
         Always return False for non-numeric types.
     """
     if is_duck_array_type(type(obj)):
-        if obj.dtype.kind in "if":
+        if obj.dtype.kind in "ifc":
             out = np.isnan(obj)
         elif obj.dtype.kind in "Mm":
             out = np.isnat(obj)
         else:
-            # Not a numeric or datetime type
-            out = np.full(obj.shape, False)
+            if HAS_UNCERTAINTIES:
+                try:
+                    out = unp.isnan(obj)
+                except TypeError:
+                    # Not a numeric or UFloat type
+                    out = np.full(obj.shape, False)
+            else:
+                # Not a numeric or datetime type
+                out = np.full(obj.shape, False)
         return out.any() if check_all else out
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
+    elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
+        return unp.isnan(obj)
     try:
         return math.isnan(obj)
     except TypeError:
-        if HAS_UNCERTAINTIES:
-            return unp.isnan(obj)
         return False
 
 

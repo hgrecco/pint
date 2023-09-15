@@ -7,7 +7,7 @@
     keeping each part small enough to be hackable.
 
     Each facet contains one or more of the following modules:
-    - definitions: classes describing an specific unit related definiton.
+    - definitions: classes describing specific unit-related definitons.
       These objects must be immutable, pickable and not reference the registry (e.g. ContextDefinition)
     - objects: classes and functions that encapsulate behavior (e.g. Context)
     - registry: implements a subclass of PlainRegistry or class that can be
