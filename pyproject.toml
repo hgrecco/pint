@@ -44,7 +44,8 @@ testbase = [
     "pytest",
     "pytest-cov",
     "pytest-subtests",
-    "pytest-benchmark"
+    "pytest-benchmark",
+    "babel"
 ]
 test = [
     "pytest",
