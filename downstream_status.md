@@ -29,3 +29,7 @@ Then, add your project badges to this file so it can be used as a Dashboard (alw
 [MetPy](https://github.com/Unidata/MetPy)
 [![CI](https://github.com/Unidata/MetPy/actions/workflows/tests-pypi.yml/badge.svg)](https://github.com/Unidata/MetPy/actions/workflows/tests-pypi.yml)
 [![CI-pint-master](https://github.com/Unidata/MetPy/actions/workflows/nightly-builds.yml/badge.svg)](https://github.com/Unidata/MetPy/actions/workflows/nightly-builds.yml)
+
+[pint-xarray](https://github.com/xarray-contrib/pint-xarray)
+[![CI](https://github.com/xarray-contrib/pint-xarray/actions/workflows/ci.yml/badge.svg)](https://github.com/xarray-contrib/pint-xarray/actions/workflows/ci.yml)
+[![CI-pint-master](https://github.com/xarray-contrib/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarray-contrib/pint-xarray/actions/workflows/nightly.yml)
