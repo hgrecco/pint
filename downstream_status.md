@@ -32,4 +32,4 @@ Then, add your project badges to this file so it can be used as a Dashboard (alw
 
 [pint-xarray](https://github.com/xarray-contrib/pint-xarray)
 [![CI](https://github.com/xarray-contrib/pint-xarray/actions/workflows/ci.yml/badge.svg)](https://github.com/xarray-contrib/pint-xarray/actions/workflows/ci.yml)
-[![CI-pint-master](https://github.com/xarray-contrib/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarray-contrib/pint-xarray/actions/workflows/nightly.yml)
+[![CI-pint-master](https://github.com/xarray-contrib/pint-xarray/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarray-contrib/pint-xarray/actions/workflows/nightly.yml)
