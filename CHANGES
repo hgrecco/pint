@@ -10,7 +10,8 @@ Pint Changelog
   (PR #1803)
 - Optimize matplotlib unit conversion for Quantity arrays
   (PR #1819)
-
+- Add numpy.linalg.norm implementation.
+  (PR #1251)
 
 0.22 (2023-05-25)
 -----------------

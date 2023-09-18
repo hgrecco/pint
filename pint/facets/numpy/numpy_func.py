@@ -1003,7 +1003,15 @@ for func_str in (
     implement_func("function", func_str, input_units=None, output_unit=None)
 
 # Handle functions with output unit defined by operation
-for func_str in ("std", "nanstd", "sum", "nansum", "cumsum", "nancumsum"):
+for func_str in (
+    "std",
+    "nanstd",
+    "sum",
+    "nansum",
+    "cumsum",
+    "nancumsum",
+    "linalg.norm",
+):
     implement_func("function", func_str, input_units=None, output_unit="sum")
 for func_str in ("diff", "ediff1d"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
