@@ -1150,3 +1150,10 @@ def test_issues_1505():
     assert isinstance(
         ur.Quantity("m/s").magnitude, decimal.Decimal
     )  # unexpected fail (magnitude should be a decimal)
+
+
+def test_issue_1845():
+    ur = UnitRegistry(auto_reduce_dimensions=True, non_int_type=decimal.Decimal)
+    # before issue 1845 these inputs would have resulted in a TypeError
+    assert ur("km / h * m").units == ur.Quantity("meter ** 2 / hour")
+    assert ur("kW / min * W").units == ur.Quantity("watts ** 2 / minute")
