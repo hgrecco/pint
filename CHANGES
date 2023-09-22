@@ -1,8 +1,6 @@
-Pint Changelog
-==============
+# Pint Changelog
 
-0.23 (unreleased)
------------------
+## 0.23 (unreleased)
 
 - Fixed Transformation type protocol.
   (PR #1805, PR #1832)
@@ -12,9 +10,12 @@ Pint Changelog
   (PR #1819)
 - Add numpy.linalg.norm implementation.
   (PR #1251)
+- Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
+  (PR #1853)
 
-0.22 (2023-05-25)
------------------
+  0.22 (2023-05-25)
+
+---
 
 - Drop Python 3.8 compatability following NEP-29.
 - Drop NumPy < 1.21 following NEP-29.
@@ -27,9 +28,9 @@ Pint Changelog
 - Allow non-quantity atol parameters for isclose and allclose.
   (PR #1783)
 
+  0.21 (2023-05-01)
 
-0.21 (2023-05-01)
------------------
+---
 
 - Add PEP621/631 support.
   (Issue #1647)
@@ -80,8 +81,9 @@ Pint Changelog
   (PR #1701)
 - Removed Td as an alias for denier (within the Textile group)
 
-0.20.1 (2022-10-27)
--------------------
+  0.20.1 (2022-10-27)
+
+---
 
 - Simplify registry subclassing.
   (Issue #1631)
@@ -91,9 +93,9 @@ Pint Changelog
   imports in linked/temporary folders.
   (Issue #1634)
 
+  0.20 (2022-10-25)
 
-0.20 (2022-10-25)
------------------
+---
 
 - Reorganized code into facets.
   Each facet encapsulate a Pint functionality.
@@ -114,7 +116,7 @@ Pint Changelog
 - Better support for uncertainties (See #1611, #1614)
 - Implement `numpy.broadcast_arrays` (#1607)
 - An ndim attribute has been added to Quantity and DataFrame has been added to upcast
-types for pint-pandas compatibility. (#1596)
+  types for pint-pandas compatibility. (#1596)
 - Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
   (Issue #1510, #1530)
 - Update test_non_int tests for pytest.
@@ -126,23 +128,24 @@ types for pint-pandas compatibility. (#1596)
 
 - Add Quantity.to_preferred
 
-0.19.2 (2022-04-23)
--------------------
+  0.19.2 (2022-04-23)
 
-- Add the ``separate_format_defaults`` registry setting (Issue #1501, PR #1503)
+---
+
+- Add the `separate_format_defaults` registry setting (Issue #1501, PR #1503)
 - Handle definitions @import from relative paths on Windows
   (Issue #1508, thanks khaeru)
 
+  0.19.1 (2022-04-06)
 
-0.19.1 (2022-04-06)
--------------------
+---
 
 - Provide a method to iter the definitions in the order they appear,
   recursing the imported files. (Issue #1498)
 
+  0.19 (2022-04-04)
 
-0.19 (2022-04-04)
------------------
+---
 
 - Better separation between parsing and loading of definitions.
   Implement a parsed "binary" version of "textual" definition files.
@@ -171,6 +174,7 @@ types for pint-pandas compatibility. (#1596)
 - The pint-pandas example notebook has been moved to the pint-pandas package.
 
 ### New Units
+
 - `sverdrup` (PR #1404)
 - `cooling_tower_ton` (PR #1484)
 
@@ -181,8 +185,9 @@ types for pint-pandas compatibility. (#1596)
 - Change minimal Python version support to 3.8+
 - Change minimal Numpy version support to 1.19+
 
-0.18 (2021-10-26)
------------------
+  0.18 (2021-10-26)
+
+---
 
 ### Release Manager: jules-cheron
 
@@ -200,7 +205,7 @@ types for pint-pandas compatibility. (#1596)
 - Fix parsing of pretty units with same exponents but different sign. (Issue #1360)
 - Convert the application registry to a wrapper object (Issue #1365)
 - Add documentation for the string format options.
-   (Issue #1357, #1375, thanks keewis)
+  (Issue #1357, #1375, thanks keewis)
 - Support custom units formats.
   (Issue #1371, thanks keewis)
 - Autoupdate pre-commit hooks.
@@ -215,13 +220,13 @@ types for pint-pandas compatibility. (#1596)
 - Add supports for type hints for Quantity class. Quantity is now a Generic (PEP560).
 - Add support for [PEP561](https://www.python.org/dev/peps/pep-0561/) (Package Type information)
 
+  0.17 (2021-03-22)
 
-0.17 (2021-03-22)
------------------
+---
 
 - Add the Wh unit for battery capacity measurements
   (PR #1260, thanks Maciej Grela)
-- Fix issue with reducable dimensionless units when using power (Quantity**ndarray)
+- Fix issue with reducable dimensionless units when using power (Quantity\*\*ndarray)
   (Issue #1185)
 - Fix comparisons between Quantities and Measurements.
   (Issue #1134, thanks lewisamarshall)
@@ -231,7 +236,7 @@ types for pint-pandas compatibility. (#1596)
 - Support numpy.lib.stride_tricks.sliding_window_view. (Issue #1255)
 - NEP29 Support docs.
 - Move all tests to pytest.
-- Fix to __pow__ and __ipow__
+- Fix to **pow** and **ipow**
 - Migrate to Github Actions.
   (Issue #1236)
 - Update linter to use pre-commit.
@@ -246,14 +251,16 @@ types for pint-pandas compatibility. (#1596)
 - Power for pseudo-dimensionless units.
   (Issue #1185, thanks Kevin Fuhr)
 
-0.16.1 (2020-09-22)
--------------------
+  0.16.1 (2020-09-22)
+
+---
 
 - Fix unpickling, now it is using the APP_REGISTRY as expected.
   (Issue #1175)
 
-0.16 (2020-09-13)
------------------
+  0.16 (2020-09-13)
+
+---
 
 - Fixed issue where performing an operation of a Quantity with certain units would perform an in-place
   unit conversion that modified the operand in addition to the returned value (Issues #1102 & #1144)
@@ -262,9 +269,9 @@ types for pint-pandas compatibility. (#1596)
 - Drop dependency on setuptools pkg_resources to read package resources, using std lib importlib.resources instead.
   (Issue #1080)
 
+  0.15 (2020-08-22)
 
-0.15 (2020-08-22)
------------------
+---
 
 - Change `Quantity` and `Unit` HTML (i.e., Jupyter notebook) repr away from LaTeX to a
   simpler, more performant pretty-text and table based repr inspired by Sparse and Dask.
@@ -281,15 +288,16 @@ types for pint-pandas compatibility. (#1596)
 - Implements Logarithmic Units like dBm, dB or decade
   (Issue #71, Thanks Dima Pustakhod, Giorgio Signorello, Jonathan Wheeler)
 
+  0.14 (2020-07-01)
 
-0.14 (2020-07-01)
------------------
+---
 
 - Changes required to support Pint-Pandas 0.1.
 
+  0.13 (2020-06-17)
 
-0.13 (2020-06-17)
------------------
+---
+
 - Reinstated support for pickle protocol 0 and 1, which is required by pytables
   (Issue #1036, Thanks Guido Imperiale)
 - Fixed bug with multiplication of Quantity by dict (Issue #1032)
@@ -325,9 +333,9 @@ types for pint-pandas compatibility. (#1596)
 - Added support for checking prefixed units using `in` keyword (Issue #1086)
 - Updated many examples in the documentation to reflect Pint's current behavior
 
+  0.12 (2020-05-29)
 
-0.12 (2020-05-29)
------------------
+---
 
 - Add full support for Decimal and Fraction at the registry level.
   **BREAKING CHANGE**:
@@ -336,9 +344,9 @@ types for pint-pandas compatibility. (#1596)
 - Fixed bug where numpy.pad didn't work without specifying constant_values or
   end_values (Issue #1026)
 
+  0.11 (2020-02-19)
 
-0.11 (2020-02-19)
------------------
+---
 
 - Added pint-convert script.
 - Remove `default_en_0.6.txt`.
@@ -366,20 +374,20 @@ types for pint-pandas compatibility. (#1596)
   Juan Nunez-Iglesias)
 - Fixed bug where to_compact handled prefix units incorrectly (Issue #960)
 
+  0.10.1 (2020-01-07)
 
-0.10.1 (2020-01-07)
--------------------
+---
 
 - Fixed bug introduced in 0.10 that prevented creation of size-zero Quantities
   from NumPy arrays by multiplication.
   (Issue #977, Thanks Jon Thielen)
 - Fixed several Sphinx issues. Fixed intersphinx hooks to all classes missing.
   (Issue #881, Thanks Guido Imperiale)
-- Fixed __array__ signature to match numpy docs (Issue #974, Thanks Ryan May)
+- Fixed **array** signature to match numpy docs (Issue #974, Thanks Ryan May)
 
+  0.10 (2020-01-05)
 
-0.10 (2020-01-05)
------------------
+---
 
 - **BREAKING CHANGE**:
   Boolean value of Quantities with offsets units is ambiguous, and so, now a ValueError
@@ -441,6 +449,7 @@ types for pint-pandas compatibility. (#1596)
   - https://pint.readthedocs.io/en/latest/currencies.html
 
   (Issue #938, Thanks Guido Imperiale)
+
 - NaN (any capitalization) in a definitions file is now treated as a number
   (Issue #938, Thanks Guido Imperiale)
 - Added slinch to Avoirdupois group
@@ -494,10 +503,10 @@ types for pint-pandas compatibility. (#1596)
   (Issues #908 and #910, Thanks Guido Imperiale)
 - Show proper code location of UnitStrippedWarning exception.
   (Issue #907, thanks Martin K. Scherer)
-- Reimplement _Quantity.__iter__ to return an iterator.
+- Reimplement \_Quantity.**iter** to return an iterator.
   (Issues #751 and #760, Thanks Jon Thielen)
 - Add http://www.dimensionalanalysis.org/ to README
-  (Thanks  Shiri Avni)
+  (Thanks Shiri Avni)
 - Allow for user defined units formatting.
   (Issue #873, Thanks Ryan Clary)
 - Quantity, Unit, and Measurement are now accessible as top-level classes
@@ -514,7 +523,7 @@ types for pint-pandas compatibility. (#1596)
   (Issues #864 and #877, Thanks Guido Imperiale)
 - Enabled many tests in test_issues when numpy is not available
   (Issue #863, Thanks Guido Imperiale)
-- Document the '_' symbols found in the definitions files
+- Document the '\_' symbols found in the definitions files
   (Issue #862, Thanks Guido Imperiale)
 - Improve OffsetUnitCalculusError message.
   (Issue #839, Thanks Christoph Buchner)
@@ -532,7 +541,7 @@ types for pint-pandas compatibility. (#1596)
   (Issue #805, Thanks Jellby)
 - Added RKM unit (used in textile industry).
   (Issue #802, Thanks Giuseppe Corbelli)
-- Remove __name__ method definition in BaseRegistry.
+- Remove **name** method definition in BaseRegistry.
   (Issue #787, Thanks Carlos Pascual)
 - Added t_force, short_ton_force and long_ton_force.
   (Issue #796, Thanks Jan Hein de Jong)
@@ -553,9 +562,9 @@ types for pint-pandas compatibility. (#1596)
 - Use µ as default abbreviation for micro.
   (Issue #666, Thanks Eric Prestat)
 
+  0.9 (2019-01-12)
 
-0.9 (2019-01-12)
-----------------
+---
 
 - Add support for registering with matplotlib's unit handling
   (Issue #317, thanks dopplershift)
@@ -587,9 +596,9 @@ types for pint-pandas compatibility. (#1596)
 - wraps and checks now supports kwargs and defaults.
   (Issue #660, thanks jondoesntgit)
 
+  0.8.1 (2017-06-05)
 
-0.8.1 (2017-06-05)
-------------------
+---
 
 - Add support for datetime math.
   (Issue #510, thanks robertd)
@@ -600,9 +609,9 @@ types for pint-pandas compatibility. (#1596)
 - Fixed dimension compatibility bug introduced on Registry refactoring
   (Issue #523, thanks dalito)
 
+  0.8 (2017-04-16)
 
-0.8 (2017-04-16)
-----------------
+---
 
 - Refactored the Registry in multiple classes for better separation of concerns and clarity.
 - Implemented support for defining multiple units per `define` call (one definition per line).
@@ -650,27 +659,28 @@ types for pint-pandas compatibility. (#1596)
   (thanks endolith and others)
 - Add support for inline comments in definitions file.
   (Issue #366)
-- Implement Unit.__deepcopy__.
+- Implement Unit.**deepcopy**.
   (Issue #357, thanks noahl)
 - Allow changing shape for Quantities with numpy arrays.
   (Issue #344, thanks tecki)
 
+  0.7.2 (2016-03-02)
 
-0.7.2 (2016-03-02)
-------------------
+---
+
 - Fixed backward incompatibility problem when parsing dimensionless units.
 
+  0.7.1 (2016-02-23)
 
-0.7.1 (2016-02-23)
-------------------
+---
 
 - Use NIST as source for most of the unit information.
 - Added message to assertQuantityEqual.
 - Added detection of circular dependencies in definitions.
 
+  0.7 (2016-02-20)
 
-0.7 (2016-02-20)
-----------------
+---
 
 - Added Systems and groups.
   (Issue #215, #315)
@@ -707,7 +717,7 @@ types for pint-pandas compatibility. (#1596)
   (Issue #262, thanks takowl)
 - Fixed troy ounce to 480 'grains'.
   (thanks elifab)
-- Added 'quad' as a unit of energy (= 10**15 Btu).
+- Added 'quad' as a unit of energy (= 10\*\*15 Btu).
   (thanks Ed Schofield)
 - Added "hectare" as a supported unit of area and 'ha' as the symbol for hectare.
   (thanks Ed Schofield)
@@ -725,15 +735,15 @@ types for pint-pandas compatibility. (#1596)
 - Infrastructure: Added doctesting.
 - Infrastructure: Better way to specify exclude matrix in travis.
 
+  0.6 (2014-11-07)
 
-0.6 (2014-11-07)
-----------------
+---
 
 - Fix operations with measurments and user defined units.
   (Issue #204)
 - Faster conversions through caching and other performance improvements.
   (Issue #193, thanks MatthieuDartiailh)
-- Better error messages on Quantity.__setitem__.
+- Better error messages on Quantity.**setitem**.
   (Issue #191)
 - Fixed abbreviation of fluid_ounce.
   (Issue #187, thanks hsoft)
@@ -758,9 +768,9 @@ types for pint-pandas compatibility. (#1596)
 - Full support for Offset units (e.g. temperature)
   (Issue #88, #143, #147 and #161, thanks dalito)
 
+  0.5.2 (2014-07-31)
 
-0.5.2 (2014-07-31)
-------------------
+---
 
 - Changed travis config to use miniconda for faster testing.
 - Added wheel configuration to setup.cfg.
@@ -769,16 +779,16 @@ types for pint-pandas compatibility. (#1596)
   (Issue #169)
 - Implemented real, imag and T Quantity properties.
   (Issue #171)
-- Implemented __int__ and __long__ for Quantity
+- Implemented **int** and **long** for Quantity
   (Issue #170)
 - Fixed SI prefix error on ureg.convert.
   (Issue #156, thanks jdreaver)
 - Fixed parsing of multiparemeter contexts.
   (Issue #174)
 
+  0.5.1 (2014-06-03)
 
-0.5.1 (2014-06-03)
-------------------
+---
 
 - Implemented a standard way to change the registry used in unpickling operations.
   (Issue #148)
@@ -791,9 +801,9 @@ types for pint-pandas compatibility. (#1596)
 - Improved testing infrastructure to check for unwanted warnings.
 - Added test function at the package level to run all tests.
 
+  0.5 (2014-05-07)
 
-0.5 (2014-05-07)
-----------------
+---
 
 - Improved test suite helper functions.
 - Print honors default format w/o format().
@@ -826,9 +836,9 @@ types for pint-pandas compatibility. (#1596)
 - Rewrote the Measurement class to use uncertainties.
   (Issue #24)
 
+  0.4.2 (2014-02-14)
 
-0.4.2 (2014-02-14)
-------------------
+---
 
 - Python 2.6 support
   (Issue #96, thanks tiagocoutinho)
@@ -843,9 +853,9 @@ types for pint-pandas compatibility. (#1596)
 - Fixed garbage collection related problem.
   (Issue #92, thanks jturner314)
 
+  0.4.1 (2014-01-12)
 
-0.4.1 (2014-01-12)
-------------------
+---
 
 - Integer Division with Arrays.
   (Issue #80, thanks jdreaver)
@@ -862,10 +872,9 @@ types for pint-pandas compatibility. (#1596)
 - Improved naming of temperature units and multiplication of non-multiplicative units.
   (Issue #86, tahsnk exxus)
 
+  0.4 (2013-12-17)
 
-
-0.4 (2013-12-17)
-----------------
+---
 
 - Introduced Contexts: relation between incompatible dimensions.
   (Issue #65)
@@ -877,9 +886,9 @@ types for pint-pandas compatibility. (#1596)
 - Fixes for NumPy 1.8 due to changes in handling binary ops.
   (Issue #73)
 
+  0.3.3 (2013-11-29)
 
-0.3.3 (2013-11-29)
-------------------
+---
 
 - ParseHelper can now parse units named like python keywords.
   (Issue #69)
@@ -890,18 +899,18 @@ types for pint-pandas compatibility. (#1596)
 - Improved travis configuration.
   (thanks muggenhor)
 
+  0.3.2 (2013-10-22)
 
-0.3.2 (2013-10-22)
-------------------
+---
 
 - Fix get_dimensionality for non multiplicative units.
   (Issue #66)
 - Proper handling of @import directive inside a file read using pkg_resources.
   (Issue #68)
 
+  0.3.1 (2013-09-15)
 
-0.3.1 (2013-09-15)
-------------------
+---
 
 - fix right division on python 2.7
   (Issue #58, thanks natezb)
@@ -914,9 +923,9 @@ types for pint-pandas compatibility. (#1596)
 - math operations between quantities of different registries now raise a ValueError.
   (Issue #52)
 
+  0.3 (2013-09-02)
 
-0.3 (2013-09-02)
-----------------
+---
 
 - support for IPython autocomplete and rich display.
   (Issues #30 and #31)
@@ -946,17 +955,17 @@ types for pint-pandas compatibility. (#1596)
 - Support for iter in Quantity.
   (Issue #55, thanks natezb)
 
+  0.2.1 (2013-07-02)
 
-0.2.1 (2013-07-02)
-------------------
+---
 
 - fix error raised while converting from a single unit to one expressed as
   the relation between many.
   (Issue #29)
 
+  0.2 (2013-05-13)
 
-0.2 (2013-05-13)
-----------------
+---
 
 - support for Measurement (Quantity +/- error).
 - implemented buckingham pi theorem for dimensional analysis.
@@ -983,9 +992,7 @@ types for pint-pandas compatibility. (#1596)
 - pint is now zip-safe
   (Issue #23, thanks muggenhor)
 
-
-Version 0.1.3 (2013-01-07)
---------------------------
+## Version 0.1.3 (2013-01-07)
 
 - abbreviated quantity string formating.
 - complete Python 2.7 compatibility.
@@ -993,9 +1000,7 @@ Version 0.1.3 (2013-01-07)
 - extended NumPy support.
 - various bugfixes.
 
-
-Version 0.1.2 (2012-08-12)
---------------------------
+## Version 0.1.2 (2012-08-12)
 
 - experimenal NumPy support.
 - included default unit definitions file.
@@ -1005,14 +1010,10 @@ Version 0.1.2 (2012-08-12)
 - fixed some units definitions.
   (Issue #4, thanks craigholm)
 
-
-Version 0.1.1 (2012-07-31)
---------------------------
+## Version 0.1.1 (2012-07-31)
 
 - better packaging and installation.
 
-
-Version 0.1   (2012-07-26)
---------------------------
+## Version 0.1 (2012-07-26)
 
 - first public release.
