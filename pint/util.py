@@ -502,7 +502,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         UnitsContainer
             A copy of this container.
         """
-        newval = self._d[key] + value
+        newval = self._d[key] + self._normalize_nonfloat_value(value)
         new = self.copy()
         if newval:
             new._d[key] = newval
@@ -654,7 +654,7 @@ class UnitsContainer(Mapping[str, Scalar]):
 
         new = self.copy()
         for key, value in other.items():
-            new._d[key] -= value
+            new._d[key] -= self._normalize_nonfloat_value(value)
             if new._d[key] == 0:
                 del new._d[key]
 
@@ -667,6 +667,11 @@ class UnitsContainer(Mapping[str, Scalar]):
             raise TypeError(err.format(type(other)))
 
         return self**-1
+
+    def _normalize_nonfloat_value(self, value: Scalar) -> Scalar:
+        if not isinstance(value, int) and not isinstance(value, self._non_int_type):
+            return self._non_int_type(value)  # type: ignore[no-any-return]
+        return value
 
 
 class ParserHelper(UnitsContainer):
