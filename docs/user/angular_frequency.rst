@@ -25,7 +25,7 @@ pint follows the conventions of SI. The SI BIPM Brochure (Bureau International d
     Although it is formally correct to write all three of these units as the reciprocal second, the
     use of the different names emphasizes the different nature of the quantities concerned. It is
     especially important to carefully distinguish frequencies from angular frequencies, because
-    by definition their numerical values differ by a factor1 of 2π. Ignoring this fact may cause
+    by definition their numerical values differ by a factor of 2π. Ignoring this fact may cause
     an error of 2π. Note that in some countries, frequency values are conventionally expressed
     using “cycle/s” or “cps” instead of the SI unit Hz, although “cycle” and “cps” are not units
     in the SI. Note also that it is common, although not recommended, to use the term
