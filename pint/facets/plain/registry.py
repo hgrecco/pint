@@ -63,11 +63,10 @@ from ..._typing import (
     Handler,
 )
 
-
 from ...cache import cache as methodcache
-
+from ... import pint_eval
 from ..._vendor import appdirs
-from ...compat import babel_parse, tokenizer, TypeAlias, Self
+from ...compat import babel_parse, TypeAlias, Self
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
 from ...util import ParserHelper
@@ -1363,7 +1362,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for p in self.preprocessors:
             input_string = p(input_string)
         input_string = string_preprocessor(input_string)
-        gen = tokenizer(input_string)
+        gen = pint_eval.tokenizer(input_string)
 
         def _define_op(s: str):
             return self._eval_token(s, case_sensitive=case_sensitive, **values)

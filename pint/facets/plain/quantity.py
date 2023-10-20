@@ -55,6 +55,17 @@ if TYPE_CHECKING:
     if HAS_NUMPY:
         import numpy as np  # noqa
 
+try:
+    import uncertainties.unumpy as unp
+    from uncertainties import ufloat, UFloat
+
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    unp = np
+    ufloat = Ufloat = None
+    HAS_UNCERTAINTIES = False
+
+
 MagnitudeT = TypeVar("MagnitudeT", bound=Magnitude)
 ScalarT = TypeVar("ScalarT", bound=Scalar)
 
@@ -132,6 +143,8 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @property
     def ndim(self) -> int:
         if isinstance(self.magnitude, numbers.Number):
+            return 0
+        if str(self.magnitude) == "<NA>":
             return 0
         return self.magnitude.ndim
 
@@ -256,7 +269,12 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        if isinstance(self._magnitude, float):
+        if HAS_UNCERTAINTIES:
+            if isinstance(self._magnitude, UFloat):
+                return f"<Quantity({self._magnitude:.6}, '{self._units}')>"
+            else:
+                return f"<Quantity({self._magnitude}, '{self._units}')>"
+        elif isinstance(self._magnitude, float):
             return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
 
         return f"<Quantity({self._magnitude}, '{self._units}')>"
@@ -1288,6 +1306,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         # We compare to the plain class of PlainQuantity because
         # each PlainQuantity class is unique.
         if not isinstance(other, PlainQuantity):
+            if other is None:
+                # A loop in pandas-dev/pandas/core/common.py(86)consensus_name_attr() can result in OTHER being None
+                return bool_result(False)
             if zero_or_nan(other, True):
                 # Handle the special case in which we compare to zero or NaN
                 # (or an array of zeros or NaNs)

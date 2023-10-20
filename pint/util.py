@@ -32,10 +32,11 @@ from typing import (
 )
 from collections.abc import Hashable, Generator
 
-from .compat import NUMERIC_TYPES, tokenizer, Self
+from .compat import NUMERIC_TYPES, Self
 from .errors import DefinitionSyntaxError
 from .formatting import format_unit
 from .pint_eval import build_eval_tree
+from . import pint_eval
 
 from ._typing import Scalar
 
@@ -762,7 +763,7 @@ class ParserHelper(UnitsContainer):
         else:
             reps = False
 
-        gen = tokenizer(input_string)
+        gen = pint_eval.tokenizer(input_string)
         ret = build_eval_tree(gen).evaluate(
             partial(cls.eval_token, non_int_type=non_int_type)
         )
@@ -1039,6 +1040,9 @@ def to_units_container(
         return unit_like._units
     elif str in mro:
         if registry:
+            # TODO: document how or whether to lift preprocessing loop out to caller
+            for p in registry.preprocessors:
+                unit_like = p(unit_like)
             return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
