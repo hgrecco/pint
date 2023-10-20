@@ -16,9 +16,8 @@ from decimal import Decimal
 import functools
 from importlib import import_module
 from numbers import Number
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any, NoReturn, Callable, Optional, Union
-from collections.abc import Generator, Iterable
 import warnings
 
 
