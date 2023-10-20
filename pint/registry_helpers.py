@@ -134,7 +134,7 @@ def _parse_wrap_args(args, registry=None):
         for ndx in dependent_args_ndx:
             value = values[ndx]
             assert _replace_units(args_as_uc[ndx][0], values_by_name) is not None
-            new_values[ndx] = ureg._convert(
+            new_values[ndx] = ureg.convert(
                 getattr(value, "_magnitude", value),
                 getattr(value, "_units", UnitsContainer({})),
                 _replace_units(args_as_uc[ndx][0], values_by_name),
@@ -143,7 +143,7 @@ def _parse_wrap_args(args, registry=None):
         # third pass: convert other arguments
         for ndx in unit_args_ndx:
             if isinstance(values[ndx], ureg.Quantity):
-                new_values[ndx] = ureg._convert(
+                new_values[ndx] = ureg.convert(
                     values[ndx]._magnitude, values[ndx]._units, args_as_uc[ndx][0]
                 )
             else:
@@ -151,7 +151,7 @@ def _parse_wrap_args(args, registry=None):
                     if isinstance(values[ndx], str):
                         # if the value is a string, we try to parse it
                         tmp_value = ureg.parse_expression(values[ndx])
-                        new_values[ndx] = ureg._convert(
+                        new_values[ndx] = ureg.convert(
                             tmp_value._magnitude, tmp_value._units, args_as_uc[ndx][0]
                         )
                     else:
@@ -168,14 +168,13 @@ def _parse_wrap_args(args, registry=None):
     return _converter
 
 
-def _apply_defaults(func, args, kwargs):
+def _apply_defaults(sig, args, kwargs):
     """Apply default keyword arguments.
 
     Named keywords may have been left blank. This function applies the default
     values so that every argument is defined.
     """
 
-    sig = signature(func)
     bound_arguments = sig.bind(*args, **kwargs)
     for param in sig.parameters.values():
         if param.name not in bound_arguments.arguments:
@@ -254,7 +253,8 @@ def wraps(
         ret = _to_units_container(ret, ureg)
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Quantity]:
-        count_params = len(signature(func).parameters)
+        sig = signature(func)
+        count_params = len(sig.parameters)
         if len(args) != count_params:
             raise TypeError(
                 "%s takes %i parameters, but %i units were passed"
@@ -270,7 +270,7 @@ def wraps(
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*values, **kw) -> Quantity:
-            values, kw = _apply_defaults(func, values, kw)
+            values, kw = _apply_defaults(sig, values, kw)
 
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.
@@ -335,7 +335,8 @@ def check(
     ]
 
     def decorator(func):
-        count_params = len(signature(func).parameters)
+        sig = signature(func)
+        count_params = len(sig.parameters)
         if len(dimensions) != count_params:
             raise TypeError(
                 "%s takes %i parameters, but %i dimensions were passed"
@@ -351,7 +352,7 @@ def check(
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*args, **kwargs):
-            list_args, empty = _apply_defaults(func, args, kwargs)
+            list_args, empty = _apply_defaults(sig, args, kwargs)
 
             for dim, value in zip(dimensions, list_args):
                 if dim is None:
