@@ -197,6 +197,7 @@ def format_pretty(unit: UnitsContainer, registry: UnitRegistry, **options) -> st
         power_fmt="{}{}",
         parentheses_fmt="({})",
         exp_call=_pretty_fmt_exponent,
+        registry=registry,
         **options,
     )
 
@@ -228,6 +229,7 @@ def format_latex(unit: UnitsContainer, registry: UnitRegistry, **options) -> str
         division_fmt=r"\frac[{}][{}]",
         power_fmt="{}^[{}]",
         parentheses_fmt=r"\left({}\right)",
+        registry=registry,
         **options,
     )
     return formatted.replace("[", "{").replace("]", "}")
@@ -259,6 +261,7 @@ def format_html(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
         division_fmt=r"{}/{}",
         power_fmt=r"{}<sup>{}</sup>",
         parentheses_fmt=r"({})",
+        registry=registry,
         **options,
     )
 
@@ -273,6 +276,7 @@ def format_default(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
         division_fmt=" / ",
         power_fmt="{} ** {}",
         parentheses_fmt=r"({})",
+        registry=registry,
         **options,
     )
 
@@ -287,9 +291,52 @@ def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
         division_fmt="/",
         power_fmt="{}**{}",
         parentheses_fmt=r"({})",
+        registry=registry,
         **options,
     )
 
+
+dim_order = [ '[substance]', '[mass]', '[current]', '[luminosity]', '[length]', '[time]', '[temperature]' ]
+def dim_sort(units: Iterable[list[str]], registry: UnitRegistry):
+    """Sort a list of units by dimensional order.
+
+    Parameters
+    ----------
+    units : list
+        a list of unit names (without values).
+    registry : UnitRegistry
+        the registry to use for looking up the dimensions of each unit.
+
+    Returns
+    -------
+    list
+        the list of units sorted by most significant dimension first.
+
+    Raises
+    ------
+    KeyError
+        If unit cannot be found in the registry.
+    """
+    ret_dict = dict()
+    many = len(units) > 1
+    for name in units:
+        cname = registry.get_name(name)
+        if not cname:
+            continue
+        dim_types = iter(dim_order)
+        while True:
+            try:
+                dim = next(dim_types)
+                if dim in registry.get_dimensionality(cname):
+                    if dim not in ret_dict:
+                        ret_dict[dim] = list()
+                    ret_dict[dim].append(cname)
+                    break
+            except StopIteration:
+                raise KeyError(f"Unit {cname} has no recognized dimensions")
+
+    ret = sum([ret_dict[dim] for dim in dim_order if dim in ret_dict], [])
+    return ret
 
 def formatter(
     items: Iterable[tuple[str, Number]],
@@ -304,6 +351,8 @@ def formatter(
     babel_length: str = "long",
     babel_plural_form: str = "one",
     sort: bool = True,
+    sort_dims: bool = False,
+    registry: Optional[UnitRegistry] = None,
 ) -> str:
     """Format a list of (name, exponent) pairs.
 
@@ -334,6 +383,12 @@ def formatter(
          (Default value = lambda x: f"{x:n}")
     sort : bool, optional
         True to sort the formatted units alphabetically (Default value = True)
+    sort_dims : bool, optional
+        True to sort the units dimentionally (Default value = False).
+        When dimensions have multiple units, sort by "most significant dimension" the unit contains
+        When both `sort` and `sort_dims` are True, sort alphabetically within sorted dimensions
+    registry : UnitRegistry, optional
+        The registry to use if `sort_dims` is True
 
     Returns
     -------
@@ -392,6 +447,12 @@ def formatter(
             neg_terms.append(key)
         else:
             neg_terms.append(power_fmt.format(key, fun(value)))
+
+    if sort_dims:
+        if len(pos_terms)>1:
+            pos_terms = dim_sort(pos_terms, registry)
+        if len(neg_terms)>1:
+            neg_terms = dim_sort(neg_terms, registry)
 
     if not as_ratio:
         # Show as Product: positive * negative terms ** -1

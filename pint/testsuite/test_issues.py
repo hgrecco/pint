@@ -1150,3 +1150,20 @@ def test_issues_1505():
     assert isinstance(
         ur.Quantity("m/s").magnitude, decimal.Decimal
     )  # unexpected fail (magnitude should be a decimal)
+
+
+def test_issues_1841():
+    import pint
+
+    # sets compact display mode
+    ur = UnitRegistry()
+    ur.default_format = '~P'
+
+    # creates quantity
+    q = ur.Quantity("1 kW * 1 h")
+
+    assert pint.formatting.format_unit(q.u._units, spec='', registry=ur, sort_dims=True) == 'kilowatt * hour'
+    assert pint.formatting.format_unit(q.u._units, spec='', registry=ur, sort_dims=False) == 'hour * kilowatt'
+
+    # this prints "1 h·kW", not "1 kW·h" unless sort_dims is True
+    # print(q)
