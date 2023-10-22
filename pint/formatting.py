@@ -14,7 +14,6 @@ import functools
 import re
 import warnings
 from typing import Callable, Any, TYPE_CHECKING, TypeVar, List, Optional, Tuple, Union
-from collections import OrderedDict
 from collections.abc import Iterable
 from numbers import Number
 
@@ -189,6 +188,7 @@ def register_unit_format(name: str):
 
 @register_unit_format("P")
 def format_pretty(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
+    breakpoint()
     return formatter(
         unit.items(),
         as_ratio=True,
@@ -223,18 +223,15 @@ def latex_escape(string: str) -> str:
 def format_latex(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
     # Lift the sorting by dimensions b/c the preprocessed units are unrecognizeable
     sorted_units = dim_sort(unit.items(), registry)
-    preprocessed_list = [
+    preprocessed = [
         (
             rf"\mathrm{{{latex_escape(u)}}}",
             p,
         )
         for u, p in sorted_units
     ]
-    preprocessed = OrderedDict()
-    for k, v in preprocessed_list:
-        preprocessed[k] = v
     formatted = formatter(
-        preprocessed.items(),
+        preprocessed,
         as_ratio=True,
         single_denominator=True,
         product_fmt=r" \cdot ",
@@ -311,7 +308,7 @@ def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
 
 
 def dim_sort(items: Iterable[Tuple[str, Number]], registry: UnitRegistry):
-    """Sort a list of units by dimensional order.
+    """Sort a list of units by dimensional order (from `registry._defaults['dim_order']`).
 
     Parameters
     ----------
@@ -332,17 +329,16 @@ def dim_sort(items: Iterable[Tuple[str, Number]], registry: UnitRegistry):
     """
     if registry is None or len(items) <= 1:
         return items
-    # if len(items) == 2 and items[0][1] * items[1][1] < 0:
-    #     return items
     ret_dict = dict()
-    for name, value in items:
-        cname = registry.get_name(name)
+    dim_order = registry._defaults["dim_order"]
+    for unit_name, unit_exponent in items:
+        cname = registry.get_name(unit_name)
         if not cname:
             continue
         cname_dims = registry.get_dimensionality(cname)
         if len(cname_dims) == 0:
             cname_dims = {"[]": None}
-        dim_types = iter(registry._defaults["dim_order"])
+        dim_types = iter(dim_order)
         while True:
             try:
                 dim = next(dim_types)
@@ -351,20 +347,17 @@ def dim_sort(items: Iterable[Tuple[str, Number]], registry: UnitRegistry):
                         ret_dict[dim] = list()
                     ret_dict[dim].append(
                         (
-                            name,
-                            value,
+                            unit_name,
+                            unit_exponent,
                         )
                     )
                     break
             except StopIteration:
                 raise KeyError(
-                    f"Unit {name} (aka {cname}) has no recognized dimensions"
+                    f"Unit {unit_name} (aka {cname}) has no recognized dimensions"
                 )
 
-    ret = sum(
-        [ret_dict[dim] for dim in registry._defaults["dim_order"] if dim in ret_dict],
-        [],
-    )
+    ret = sum([ret_dict[dim] for dim in dim_order if dim in ret_dict], [])
     return ret
 
 
@@ -417,6 +410,8 @@ def formatter(
         True to sort the units dimentionally (Default value = False).
         When dimensions have multiple units, sort by "most significant dimension" the unit contains
         When both `sort` and `sort_dims` are True, sort alphabetically within sorted dimensions
+        ISO 80000 and other sources guide on how dimensions shoule be ordered; the user
+        can set their preference in the registry.
     registry : UnitRegistry, optional
         The registry to use if `sort_dims` is True
 

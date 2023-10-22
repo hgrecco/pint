@@ -56,6 +56,7 @@
 @defaults
     group = international
     system = mks
+    # This default order for sorting dimensions was described in the proposed ISO 80000 specification.
     dim_order = [ "[substance]", "[mass]", "[current]", "[luminosity]", "[length]", "[]", "[time]", "[temperature]", ]
 @end
 
