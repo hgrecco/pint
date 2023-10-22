@@ -95,19 +95,23 @@ Some units are compound, such as [energy], which is stated in terms of
 [mass] * [length]**2 / [time]**2.  Earlier versions of Pint would sort unit names
 alphabetically by default, leading to different orderings of units (old behavior):
 
-    >>> "{:P}".format(pint.Quantity('1 pound * ft**2 * second**-2'))
-    '1.0 foot²·pound/second²'
-    >>> "{:P}".format(pint.Quantity('1 kg * cm**2 * second**-2'))
-    '1.0 centimeter²·kilogram/second²'
+.. doctest::
+
+    >>> "{:P}".format(ureg.parse_units('pound * ft**2 * second**-2'))
+    'foot²·pound/second²'
+    >>> "{:P}".format(ureg.parse_units('kg * cm**2 * second**-2'))
+    'centimeter²·kilogram/second²'
 
 Now by default it sorts by dimensions as proposed by ISO 80000, with [mass]
 coming before [length], which also comes before [time].  The dimension order
 can be changed in the registry (`dim_order` in `defaults`):
 
-    >>> "{:P}".format(pint.Quantity('1 pound * ft**2 * second**-2'))
-    '1.0 pound·foot²/second²'
-    >>> "{:P}".format(pint.Quantity('1 kg * cm**2 * second**-2'))
-    '1.0 kilogram·centimeter²/second²'
+.. doctest::
+
+    >>> "{:P}".format(ureg.parse_units('pound * ft**2 * second**-2'))
+    'pound·foot²/second²'
+    >>> "{:P}".format(ureg.parse_units('kg * cm**2 * second**-2'))
+    'kilogram·centimeter²/second²'
 
 
 
