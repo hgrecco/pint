@@ -188,7 +188,6 @@ def register_unit_format(name: str):
 
 @register_unit_format("P")
 def format_pretty(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
-    breakpoint()
     return formatter(
         unit.items(),
         as_ratio=True,
