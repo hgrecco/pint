@@ -296,7 +296,17 @@ def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
     )
 
 
-dim_order = [ '[substance]', '[mass]', '[current]', '[luminosity]', '[length]', '[time]', '[temperature]' ]
+dim_order = [
+    "[substance]",
+    "[mass]",
+    "[current]",
+    "[luminosity]",
+    "[length]",
+    "[time]",
+    "[temperature]",
+]
+
+
 def dim_sort(units: Iterable[list[str]], registry: UnitRegistry):
     """Sort a list of units by dimensional order.
 
@@ -318,7 +328,7 @@ def dim_sort(units: Iterable[list[str]], registry: UnitRegistry):
         If unit cannot be found in the registry.
     """
     ret_dict = dict()
-    many = len(units) > 1
+    len(units) > 1
     for name in units:
         cname = registry.get_name(name)
         if not cname:
@@ -337,6 +347,7 @@ def dim_sort(units: Iterable[list[str]], registry: UnitRegistry):
 
     ret = sum([ret_dict[dim] for dim in dim_order if dim in ret_dict], [])
     return ret
+
 
 def formatter(
     items: Iterable[tuple[str, Number]],
@@ -449,9 +460,9 @@ def formatter(
             neg_terms.append(power_fmt.format(key, fun(value)))
 
     if sort_dims:
-        if len(pos_terms)>1:
+        if len(pos_terms) > 1:
             pos_terms = dim_sort(pos_terms, registry)
-        if len(neg_terms)>1:
+        if len(neg_terms) > 1:
             neg_terms = dim_sort(neg_terms, registry)
 
     if not as_ratio:
