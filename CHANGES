@@ -4,6 +4,8 @@ Pint Changelog
 0.23 (unreleased)
 -----------------
 
+- Add `dim_sort` parameter to formatter.
+  (PR #1864, fixes Issue #1841)
 - Fixed Transformation type protocol.
   (PR #1805, PR #1832)
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
