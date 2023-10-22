@@ -95,10 +95,10 @@ Some units are compound, such as [energy], which is stated in terms of
 [mass] * [length]**2 / [time]**2.  Earlier versions of Pint would sort unit names
 alphabetically by default, leading to different orderings of units (old behavior):
 
-```ignore
-    >>> "{:P}".format(ureg.parse_units('pound * ft**2 * second**-2'))
+```
+    "{:P}".format(ureg.parse_units('pound * ft**2 * second**-2')) would yield:
     'foot²·pound/second²'
-    >>> "{:P}".format(ureg.parse_units('kg * cm**2 * second**-2'))
+    "{:P}".format(ureg.parse_units('kg * cm**2 * second**-2')) would yield:
     'centimeter²·kilogram/second²'
 ```
 
