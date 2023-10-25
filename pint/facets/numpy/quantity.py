@@ -29,6 +29,16 @@ from .numpy_func import (
     set_units_ufuncs,
 )
 
+try:
+    import uncertainties.unumpy as unp
+    from uncertainties import ufloat, UFloat
+
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    unp = np
+    ufloat = Ufloat = None
+    HAS_UNCERTAINTIES = False
+
 
 def method_wraps(numpy_func):
     if isinstance(numpy_func, str):
@@ -224,6 +234,11 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
                     )
                 else:
                     raise exc
+        elif (
+            HAS_UNCERTAINTIES and item == "ndim" and isinstance(self._magnitude, UFloat)
+        ):
+            # Dimensionality of a single UFloat is 0, like any other scalar
+            return 0
 
         try:
             return getattr(self._magnitude, item)
