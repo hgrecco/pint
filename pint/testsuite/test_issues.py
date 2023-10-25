@@ -900,7 +900,7 @@ class TestIssues(QuantityTestCase):
         helpers.assert_quantity_equal(
             arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m s")], dtype="object")
         )
-        
+
     @helpers.requires_babel()
     def test_issue_1400(self, sess_registry):
         q1 = 3 * sess_registry.W
@@ -960,6 +960,7 @@ class TestIssues(QuantityTestCase):
         assert q2_u.magnitude.nominal_value == u2.nominal_value
         assert q2_u.magnitude.std_dev == m2.error
         assert q2_u.magnitude.std_dev == u2.std_dev
+
 
 if np is not None:
 

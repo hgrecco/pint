@@ -286,7 +286,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
     def implementation(*args, **kwargs):
         if func_str in ["multiply", "true_divide", "divide", "floor_divide"] and any(
             [
-                _is_sequence_with_quantity_elements(arg) and not _is_quantity(arg)
+                not _is_quantity(arg) and _is_sequence_with_quantity_elements(arg)
                 for arg in args
             ]
         ):
