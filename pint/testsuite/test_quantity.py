@@ -411,7 +411,7 @@ class TestQuantity(QuantityTestCase):
     def test_to_preferred_registry(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
-        ureg.preferred_units = [
+        ureg.default_preferred_units = [
             ureg.m,  # distance      L
             ureg.kg,  # mass          M
             ureg.s,  # duration      T
@@ -426,7 +426,8 @@ class TestQuantity(QuantityTestCase):
     def test_autoconvert_to_preferred(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
-        ureg.preferred_units = [
+        ureg.autoconvert_to_preferred = True
+        ureg.default_preferred_units = [
             ureg.m,  # distance      L
             ureg.kg,  # mass          M
             ureg.s,  # duration      T
