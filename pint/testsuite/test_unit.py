@@ -293,11 +293,11 @@ class TestRegistry(QuantityTestCase):
         assert len(dir(ureg)) > 0
 
     def test_load(self):
-        import pkg_resources
+        from importlib.resources import files
 
         from .. import compat
 
-        data = pkg_resources.resource_filename(compat.__name__, "default_en.txt")
+        data = files(compat.__package__).joinpath("default_en.txt")
         ureg1 = UnitRegistry()
         ureg2 = UnitRegistry(data)
         assert dir(ureg1) == dir(ureg2)
