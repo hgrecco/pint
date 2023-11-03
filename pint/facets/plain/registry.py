@@ -65,6 +65,7 @@ from ..._typing import (
 
 from ... import pint_eval
 from ..._vendor import appdirs
+from ...cache import cache as methodcache
 from ...compat import babel_parse, TypeAlias, Self
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
@@ -695,19 +696,13 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._get_dimensionality(input_units)
 
+    @methodcache
     def _get_dimensionality(
         self, input_units: Optional[UnitsContainer]
     ) -> UnitsContainer:
         """Convert a UnitsContainer to plain dimensions."""
         if not input_units:
             return self.UnitsContainer()
-
-        cache = self._cache.dimensionality
-
-        try:
-            return cache[input_units]
-        except KeyError:
-            pass
 
         accumulator: dict[str, int] = defaultdict(int)
         self._get_dimensionality_recurse(input_units, 1, accumulator)
@@ -716,8 +711,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             del accumulator["[]"]
 
         dims = self.UnitsContainer({k: v for k, v in accumulator.items() if v != 0})
-
-        cache[input_units] = dims
 
         return dims
 
