@@ -52,6 +52,7 @@ from collections.abc import Iterable, Iterator
 if TYPE_CHECKING:
     from ..context import Context
     from ...compat import Locale
+    from ... import protocols
 
     # from ..._typing import Quantity, Unit
 
@@ -215,6 +216,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     _diskcache = None
     _def_parser = None
 
+    formatter: protocols.Formatter
+
     def __init__(
         self,
         filename="",
@@ -250,6 +253,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._def_parser = delegates.txt_defparser.DefParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
+
+        self.formatter = delegates.Formatter()
 
         self._filename = filename
         self.force_ndarray = force_ndarray
