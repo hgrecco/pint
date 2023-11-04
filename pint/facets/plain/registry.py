@@ -1039,7 +1039,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return value
 
-    def parse_unit_name(
+    def parse_single_unit(
         self, unit_name: str, case_sensitive: Optional[bool] = None
     ) -> tuple[tuple[str, str, str], ...]:
         """Parse a unit to identify prefix, unit name and suffix
@@ -1060,11 +1060,21 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         tuple of tuples (str, str, str)
             all non-equivalent combinations of (prefix, unit name, suffix)
         """
-        return self._dedup_candidates(
-            self._parse_unit_name(unit_name, case_sensitive=case_sensitive)
+        case_sensitive = (
+            self.case_sensitive if case_sensitive is None else case_sensitive
         )
 
-    def _parse_unit_name(
+        return self._parse_single_unit(unit_name, case_sensitive)
+
+    def _parse_single_unit(
+        self, unit_name: str, case_sensitive: Optional[bool] = None
+    ) -> tuple[tuple[str, str, str], ...]:
+        """Helper of parse_single_unit"""
+        return self._dedup_candidates(
+            self._yield_potential_units(unit_name, case_sensitive=case_sensitive)
+        )
+
+    def _yield_potential_units(
         self, unit_name: str, case_sensitive: Optional[bool] = None
     ) -> Generator[tuple[str, str, str], None, None]:
         """Helper of parse_unit_name."""
@@ -1094,6 +1104,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                             self._units[real_name].name,
                             self._suffixes[suffix],
                         )
+
+    # TODO: Deprecate
+    _parse_unit_name = _yield_potential_units
+    parse_unit_name = parse_single_unit
 
     @staticmethod
     def _dedup_candidates(
