@@ -312,9 +312,14 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._suffixes: dict[str, str] = {"": "", "s": ""}
 
         #: Map contexts to RegistryCache
-        self._cache = RegistryCache()
+        self._clear_cache()
 
         self._initialized = False
+
+    def _clear_cache(self):
+        self._cache = RegistryCache()
+        for func in self._cache_methods:
+            func.cache_clear(self)
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -590,7 +595,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 diskcache.save(self._cache, loaded_files, "build_cache")
             return
 
-        self._cache = RegistryCache()
+        self._clear_cache()
 
         deps: dict[str, set[str]] = {
             name: set(definition.reference.keys()) if definition.reference else set()
