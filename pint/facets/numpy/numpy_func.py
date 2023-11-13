@@ -291,7 +291,9 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             ]
         ):
             # the sequence may contain different units, so fall back to element-wise
-            return np.array([func(*func_args) for func_args in zip(*args)], dtype=object)
+            return np.array(
+                [func(*func_args) for func_args in zip(*args)], dtype=object
+            )
 
         first_input_units = _get_first_input_units(args, kwargs)
         if input_units == "all_consistent":
