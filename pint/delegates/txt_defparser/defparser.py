@@ -139,6 +139,8 @@ class DefParser:
             _PintParser,
             cfg or self._default_config,
             diskcache=self._diskcache,
+            strip_spaces=True,
+            delimiters=_PintParser._delimiters,
         )
 
     def parse_string(self, content: str, cfg: Optional[ParserConfig] = None):
@@ -147,4 +149,6 @@ class DefParser:
             _PintParser,
             cfg or self._default_config,
             diskcache=self._diskcache,
+            strip_spaces=True,
+            delimiters=_PintParser._delimiters,
         )
