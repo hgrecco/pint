@@ -819,7 +819,7 @@ class Block(ty.Generic[OPST, BPST, CPST, CT], GenericInfo):
     def iter_blocks(
         self,
     ) -> ty.Generator[ParsedResult[Union[OPST, BPST, CPST]], None, None]:
-        raise RuntimeError("Is this used?")
+        # raise RuntimeError("Is this used?")
         yield self.opening
         yield from self.body
         yield self.closing
