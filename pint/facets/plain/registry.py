@@ -1062,17 +1062,19 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         tuple of tuples (str, str, str)
             all non-equivalent combinations of (prefix, unit name, suffix)
         """
-        return self._dedup_candidates(
-            self._yield_unit_triplets(unit_name, case_sensitive=case_sensitive)
-        )
 
-    def _yield_unit_triplets(
-        self, unit_name: str, case_sensitive: Optional[bool] = None
-    ) -> Generator[tuple[str, str, str], None, None]:
-        """Helper of parse_unit_name."""
         case_sensitive = (
             self.case_sensitive if case_sensitive is None else case_sensitive
         )
+        return self._dedup_candidates(
+            self._yield_unit_triplets(unit_name, case_sensitive)
+        )
+
+    def _yield_unit_triplets(
+        self, unit_name: str, case_sensitive: bool
+    ) -> Generator[tuple[str, str, str], None, None]:
+        """Helper of parse_unit_name."""
+
         stw = unit_name.startswith
         edw = unit_name.endswith
         for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
