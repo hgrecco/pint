@@ -33,7 +33,6 @@ import re
 from collections import defaultdict
 from decimal import Decimal
 from fractions import Fraction
-from numbers import Number
 from token import NAME, NUMBER
 from tokenize import TokenInfo
 
@@ -149,14 +148,14 @@ class RegistryMeta(type):
     instead of asking the developer to do it when subclassing.
     """
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any):
         obj = super().__call__(*args, **kwargs)
         obj._after_init()
         return obj
 
 
 # Generic types used to mark types associated to Registries.
-QuantityT = TypeVar("QuantityT", bound=PlainQuantity)
+QuantityT = TypeVar("QuantityT", bound=PlainQuantity[Any])
 UnitT = TypeVar("UnitT", bound=PlainUnit)
 
 
@@ -739,7 +738,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
-    def _get_dimensionality_ratio(self, unit1: UnitLike, unit2: UnitLike):
+    def _get_dimensionality_ratio(
+        self, unit1: UnitLike, unit2: UnitLike
+    ) -> Scalar | None:
         """Get the exponential ratio between two units, i.e. solve unit2 = unit1**x for x.
 
         Parameters
@@ -773,7 +774,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def get_root_units(
         self, input_units: UnitLike, check_nonmult: bool = True
-    ) -> tuple[Number, UnitT]:
+    ) -> tuple[Scalar, UnitT]:
         """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -854,7 +855,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         input_units: Union[UnitsContainer, str],
         check_nonmult: bool = True,
         system=None,
-    ) -> tuple[Number, UnitT]:
+    ) -> tuple[Scalar, UnitT]:
         """Convert unit or dict of units to the plain units.
 
         If any unit is non multiplicative and check_converter is True,
