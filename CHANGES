@@ -8,6 +8,9 @@ Pint Changelog
   (PR #1805, PR #1832)
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
   (PR #1803)
+- Fixed bug causing operations between arrays of quantity scalars and quantity holding
+  array resulting in incorrect units.
+  (PR #1677)
 - Optimize matplotlib unit conversion for Quantity arrays
   (PR #1819)
 - Add numpy.linalg.norm implementation.
