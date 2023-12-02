@@ -13,6 +13,9 @@ from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
 
 
+from .helpers import internal
+
+
 # TODO: do not subclass from QuantityTestCase
 class TestIssues(QuantityTestCase):
     kwargs = dict(autoconvert_offset_to_baseunit=False)
@@ -727,7 +730,7 @@ class TestIssues(QuantityTestCase):
     def test_issue1062_issue1097(self):
         # Must not be used by any other tests
         ureg = UnitRegistry()
-        assert "nanometer" not in ureg._units
+        assert "nanometer" not in internal(ureg)._units
         for i in range(5):
             ctx = Context.from_lines(["@context _", "cal = 4 J"])
             with ureg.context("sp", ctx):

@@ -14,6 +14,8 @@ from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 from pint.util import ParserHelper, UnitsContainer
 
+from .helpers import internal
+
 
 # TODO: do not subclass from QuantityTestCase
 class TestUnit(QuantityTestCase):
@@ -677,13 +679,13 @@ class TestRegistry(QuantityTestCase):
         q = 8.0 * self.ureg.inch
         t = 8.0 * self.ureg.degF
         dt = 8.0 * self.ureg.delta_degF
-        assert q.to("yard").magnitude == self.ureg._units[
+        assert q.to("yard").magnitude == internal(self.ureg)._units[
             "inch"
         ].converter.to_reference(8.0)
-        assert t.to("kelvin").magnitude == self.ureg._units[
+        assert t.to("kelvin").magnitude == internal(self.ureg)._units[
             "degF"
         ].converter.to_reference(8.0)
-        assert dt.to("kelvin").magnitude == self.ureg._units[
+        assert dt.to("kelvin").magnitude == internal(self.ureg)._units[
             "delta_degF"
         ].converter.to_reference(8.0)
 
@@ -881,13 +883,6 @@ class TestCompatibleUnits(QuantityTestCase):
 
 
 class TestRegistryWithDefaultRegistry(TestRegistry):
-    @classmethod
-    def setup_class(cls):
-        from pint import _DEFAULT_REGISTRY
-
-        cls.ureg = _DEFAULT_REGISTRY
-        cls.Q_ = cls.ureg.Quantity
-
     def test_lazy(self):
         x = LazyRegistry()
         x.test = "test"
@@ -896,8 +891,10 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         y("meter")
         assert isinstance(y, UnitRegistry)
 
-    def test_redefinition(self):
-        d = self.ureg.define
+    def test_redefinition(self, func_registry):
+        ureg = UnitRegistry(on_redefinition="raise")
+        d = ureg.define
+        assert "meter" in internal(self.ureg)._units
         with pytest.raises(RedefinitionError):
             d("meter = [time]")
         with pytest.raises(RedefinitionError):
@@ -908,7 +905,7 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
             d("[velocity] = [length]")
 
         # aliases
-        assert "inch" in self.ureg._units
+        assert "inch" in internal(self.ureg)._units
         with pytest.raises(RedefinitionError):
             d("bla = 3.2 meter = inch")
         with pytest.raises(RedefinitionError):
@@ -1007,7 +1004,7 @@ class TestConvertWithOffset(QuantityTestCase):
             assert ureg.Unit(a) == ureg.Unit("canonical")
 
         # Test that aliases defined multiple times are not duplicated
-        assert ureg._units["canonical"].aliases == (
+        assert internal(ureg)._units["canonical"].aliases == (
             "alias1",
             "alias2",
         )
