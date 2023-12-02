@@ -45,7 +45,7 @@ def my_setup(setup: SetupType) -> SetupType:
 
 def test_build_cache(setup: SetupType, benchmark):
     ureg, _ = setup
-    benchmark(ureg._build_cache)
+    benchmark(ureg._subregistry._build_cache)
 
 
 @pytest.mark.parametrize("key", UNITS)
@@ -132,8 +132,8 @@ def test_convert_from_uc(benchmark, my_setup: SetupType, key: str, pre_run: bool
     src, dst = key
     ureg, data = my_setup
     if pre_run:
-        no_benchmark(ureg._convert, 1.0, data[src], data[dst])
-    benchmark(ureg._convert, 1.0, data[src], data[dst])
+        no_benchmark(ureg._subregistry._convert, 1.0, data[src], data[dst])
+    benchmark(ureg._subregistry._convert, 1.0, data[src], data[dst])
 
 
 def test_parse_math_expression(benchmark, my_setup):
@@ -174,8 +174,12 @@ def test_load_definitions_stage_2(benchmark, cache_folder, use_cache_folder):
     from pint import errors
 
     defpath = pathlib.Path(errors.__file__).parent / "default_en.txt"
-    empty_registry = pint.UnitRegistry(None, cache_folder=use_cache_folder)
-    benchmark(empty_registry.load_definitions, defpath, True)
+
+    def f():
+        empty_registry = pint.UnitRegistry(None, cache_folder=use_cache_folder)
+        empty_registry.load_definitions(defpath, True)
+
+    benchmark(f)
 
 
 @pytest.mark.parametrize("use_cache_folder", (None, True))
@@ -192,4 +196,4 @@ def test_load_definitions_stage_3(benchmark, cache_folder, use_cache_folder):
     defpath = pathlib.Path(errors.__file__).parent / "default_en.txt"
     empty_registry = pint.UnitRegistry(None, cache_folder=use_cache_folder)
     loaded_files = empty_registry.load_definitions(defpath, True)
-    benchmark(empty_registry._build_cache, loaded_files)
+    benchmark(empty_registry._subregistry._build_cache, loaded_files)
