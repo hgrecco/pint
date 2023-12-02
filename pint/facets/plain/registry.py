@@ -1150,11 +1150,25 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             pint.Unit
 
         """
+        return self.Unit(
+            self.parse_units_as_container(input_string, as_delta, case_sensitive)
+        )
 
-        units = self._parse_units(input_string, as_delta, case_sensitive)
-        return self.Unit(units)
+    def parse_units_as_container(
+        self,
+        input_string: str,
+        as_delta: Optional[bool] = None,
+        case_sensitive: Optional[bool] = None,
+    ) -> UnitT:
+        as_delta = (
+            as_delta if as_delta is not None else self.default_as_delta
+        )  # TODO This only exists in nonmultiplicative
+        case_sensitive = (
+            case_sensitive if case_sensitive is not None else self.case_sensitive
+        )
+        return self._parse_units_as_container(input_string, as_delta, case_sensitive)
 
-    def _parse_units(
+    def _parse_units_as_container(
         self,
         input_string: str,
         as_delta: bool = True,

@@ -343,7 +343,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             Dimensionality of the PlainQuantity, e.g. ``{length: 1, time: -1}``
         """
         if self._dimensionality is None:
-            self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
+            self._dimensionality = self._REGISTRY.get_dimensionality(self._units)
 
         return self._dimensionality
 

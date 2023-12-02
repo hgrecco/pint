@@ -83,7 +83,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         try:
             return self._dimensionality
         except AttributeError:
-            dim = self._REGISTRY._get_dimensionality(self._units)
+            dim = self._REGISTRY.get_dimensionality(self._units)
             self._dimensionality = dim
 
         return self._dimensionality
