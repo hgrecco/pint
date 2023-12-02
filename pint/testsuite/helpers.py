@@ -37,7 +37,7 @@ _unit_re = re.compile(r"<Unit\((.*)\)>")
 
 
 def internal(ureg):
-    return ureg
+    return ureg._subregistry
 
 
 class PintOutputChecker(doctest.OutputChecker):
