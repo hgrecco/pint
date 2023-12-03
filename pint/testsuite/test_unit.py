@@ -595,6 +595,23 @@ class TestRegistry(QuantityTestCase):
         h3 = ureg.wraps((None,), (None, None))(hfunc)
         assert h3(3, 1) == (3, 1)
 
+        def kfunc(a, /, b, c=5, *, d=6):
+            return a, b, c, d
+
+        k1 = ureg.wraps((None,), (None, None, None, None))(kfunc)
+        assert k1(1, 2, 3, d=4) == (1, 2, 3, 4)
+        assert k1(1, 2, c=3, d=4) == (1, 2, 3, 4)
+        assert k1(1, b=2, c=3, d=4) == (1, 2, 3, 4)
+        assert k1(1, d=4, b=2, c=3) == (1, 2, 3, 4)
+        assert k1(1, 2, c=3) == (1, 2, 3, 6)
+        assert k1(1, 2, d=4) == (1, 2, 5, 4)
+        assert k1(1, 2) == (1, 2, 5, 6)
+
+        k2 = ureg.wraps((None,), ("meter", "centimeter", "meter", "centimeter"))(kfunc)
+        assert k2(
+            1 * ureg.meter, 2 * ureg.centimeter, 3 * ureg.meter, d=4 * ureg.centimeter
+        ) == (1, 2, 3, 4)
+
     def test_wrap_referencing(self):
         ureg = self.ureg
 
@@ -643,6 +660,7 @@ class TestRegistry(QuantityTestCase):
         assert f0(3.0 * ureg.centimeter) == 0.03 * ureg.meter
         with pytest.raises(DimensionalityError):
             f0(3.0 * ureg.kilogram)
+        assert f0(x=3.0 * ureg.centimeter) == 0.03 * ureg.meter
 
         f0b = ureg.check(ureg.meter)(func)
         with pytest.raises(DimensionalityError):
