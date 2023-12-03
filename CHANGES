@@ -4,10 +4,26 @@ Pint Changelog
 0.23 (unreleased)
 -----------------
 
+- Add _get_conversion_factor to registry with cache.
+- Homogenize input and ouput of internal regitry functions to
+  facility typing, subclassing and wrapping.
+  (_yield_unit_triplets, )
+- Generated downstream_status page to track the
+  state of downstream projects.
+- Improve typing annotation.
+- Updated to flexparser 0.2.
+- Faster wraps
+  (PR #1862)
+- Add codspeed github action.
+- Move benchmarks to pytest-benchmarks.
+- Support pytest on python 3.12 wrt Fraction formatting change
+  (#1818)
 - Fixed Transformation type protocol.
   (PR #1805, PR #1832)
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
   (PR #1803)
+- Enable Pint to parse uncertainty numbers.
+  (See #1611, #1614)
 - Optimize matplotlib unit conversion for Quantity arrays
   (PR #1819)
 - Add numpy.linalg.norm implementation.
