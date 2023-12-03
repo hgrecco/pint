@@ -741,23 +741,23 @@ def _base_unit_if_needed(a):
 
 
 @implements("trapz", "function")
-def _trapz(a, x=None, dx=1.0, **kwargs):
-    a = _base_unit_if_needed(a)
-    units = a.units
+def _trapz(y, x=None, dx=1.0, **kwargs):
+    y = _base_unit_if_needed(y)
+    units = y.units
     if x is not None:
         if hasattr(x, "units"):
             x = _base_unit_if_needed(x)
             units *= x.units
             x = x._magnitude
-        ret = np.trapz(a._magnitude, x, **kwargs)
+        ret = np.trapz(y._magnitude, x, **kwargs)
     else:
         if hasattr(dx, "units"):
             dx = _base_unit_if_needed(dx)
             units *= dx.units
             dx = dx._magnitude
-        ret = np.trapz(a._magnitude, dx=dx, **kwargs)
+        ret = np.trapz(y._magnitude, dx=dx, **kwargs)
 
-    return a.units._REGISTRY.Quantity(ret, units)
+    return y.units._REGISTRY.Quantity(ret, units)
 
 
 def implement_mul_func(func):

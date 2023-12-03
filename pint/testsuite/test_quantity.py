@@ -374,8 +374,8 @@ class TestQuantity(QuantityTestCase):
 
     @helpers.requires_mip
     def test_to_preferred(self):
-        ureg = UnitRegistry()
-        Q_ = ureg.Quantity
+        ureg = self.ureg
+        Q_ = self.Q_
 
         ureg.define("pound_force_per_square_foot = 47.8803 pascals = psf")
         ureg.define("pound_mass = 0.45359237 kg = lbm")
@@ -412,9 +412,9 @@ class TestQuantity(QuantityTestCase):
 
     @helpers.requires_mip
     def test_to_preferred_registry(self):
-        ureg = UnitRegistry()
-        Q_ = ureg.Quantity
-        ureg.preferred_units = [
+        ureg = self.ureg
+        Q_ = self.Q_
+        ureg.default_preferred_units = [
             ureg.m,  # distance      L
             ureg.kg,  # mass          M
             ureg.s,  # duration      T
@@ -427,9 +427,10 @@ class TestQuantity(QuantityTestCase):
 
     @helpers.requires_mip
     def test_autoconvert_to_preferred(self):
-        ureg = UnitRegistry()
-        Q_ = ureg.Quantity
-        ureg.preferred_units = [
+        ureg = self.ureg
+        Q_ = self.Q_
+        ureg.autoconvert_to_preferred = True
+        ureg.default_preferred_units = [
             ureg.m,  # distance      L
             ureg.kg,  # mass          M
             ureg.s,  # duration      T

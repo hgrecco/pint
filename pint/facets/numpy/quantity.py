@@ -266,7 +266,7 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
                 isinstance(self._magnitude, np.ma.MaskedArray)
                 and np.ma.is_masked(value)
                 and getattr(value, "size", 0) == 1
-            ) or math.isnan(value):
+            ) or (getattr(value, "ndim", 0) == 0 and math.isnan(value)):
                 self._magnitude[key] = value
                 return
         except TypeError:
