@@ -131,6 +131,10 @@ class RegistryCache:
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit: dict[str, UnitsContainer] = {}
 
+        self.conversion_factor: dict[
+            tuple[UnitsContainer, UnitsContainer], Scalar | DimensionalityError
+        ] = {}
+
     def __eq__(self, other: Any):
         if not isinstance(other, self.__class__):
             return False
@@ -139,6 +143,7 @@ class RegistryCache:
             "root_units",
             "dimensionality",
             "parse_unit",
+            "conversion_factor",
         )
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
@@ -801,6 +806,43 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return f, self.Unit(units)
 
+    def _get_conversion_factor(
+        self, src: UnitsContainer, dst: UnitsContainer
+    ) -> Scalar | DimensionalityError:
+        """Get conversion factor in non-multiplicative units.
+
+        Parameters
+        ----------
+        src
+            Source units
+        dst
+            Target units
+
+        Returns
+        -------
+            Conversion factor or DimensionalityError
+        """
+        cache = self._cache.conversion_factor
+        try:
+            return cache[(src, dst)]
+        except KeyError:
+            pass
+
+        src_dim = self._get_dimensionality(src)
+        dst_dim = self._get_dimensionality(dst)
+
+        # If the source and destination dimensionality are different,
+        # then the conversion cannot be performed.
+        if src_dim != dst_dim:
+            return DimensionalityError(src, dst, src_dim, dst_dim)
+
+        # Here src and dst have only multiplicative units left. Thus we can
+        # convert with a factor.
+        factor, _ = self._get_root_units(src / dst)
+
+        cache[(src, dst)] = factor
+        return factor
+
     def _get_root_units(
         self, input_units: UnitsContainer, check_nonmult: bool = True
     ) -> tuple[Scalar, UnitsContainer]:
@@ -1015,18 +1057,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         """
 
-        if check_dimensionality:
-            src_dim = self._get_dimensionality(src)
-            dst_dim = self._get_dimensionality(dst)
+        factor = self._get_conversion_factor(src, dst)
 
-            # If the source and destination dimensionality are different,
-            # then the conversion cannot be performed.
-            if src_dim != dst_dim:
-                raise DimensionalityError(src, dst, src_dim, dst_dim)
-
-        # Here src and dst have only multiplicative units left. Thus we can
-        # convert with a factor.
-        factor, _ = self._get_root_units(src / dst)
+        if isinstance(factor, DimensionalityError):
+            raise factor
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
