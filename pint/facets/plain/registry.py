@@ -1185,14 +1185,29 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         """
 
-        units = self._parse_units(input_string, as_delta, case_sensitive)
-        return self.Unit(units)
+        return self.Unit(
+            self.parse_units_as_container(input_string, as_delta, case_sensitive)
+        )
 
-    def _parse_units(
+    def parse_units_as_container(
+        self,
+        input_string: str,
+        as_delta: Optional[bool] = None,
+        case_sensitive: Optional[bool] = None,
+    ) -> UnitsContainer:
+        as_delta = (
+            as_delta if as_delta is not None else True
+        )  # TODO This only exists in nonmultiplicative
+        case_sensitive = (
+            case_sensitive if case_sensitive is not None else self.case_sensitive
+        )
+        return self._parse_units_as_container(input_string, as_delta, case_sensitive)
+
+    def _parse_units_as_container(
         self,
         input_string: str,
         as_delta: bool = True,
-        case_sensitive: Optional[bool] = None,
+        case_sensitive: bool = True,
     ) -> UnitsContainer:
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
