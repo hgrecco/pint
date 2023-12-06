@@ -4,6 +4,7 @@ Pint Changelog
 0.23 (unreleased)
 -----------------
 
+- Add [+-]portion.inf to upcast types.
 - Add _get_conversion_factor to registry with cache.
 - Homogenize input and ouput of internal regitry functions to
   facility typing, subclassing and wrapping.
