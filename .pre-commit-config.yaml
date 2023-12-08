@@ -6,16 +6,14 @@ repos:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
--   repo: https://github.com/psf/black
-    rev: 23.11.0
-    hooks:
-    - id: black
-    - id: black-jupyter
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.7
     hooks:
     - id: ruff
-      args: ["--fix"]
+      args: ["--fix", "--show-fixes"]
+      types_or: [ python, pyi, jupyter ]
+    - id: ruff-format
+      types_or: [ python, pyi, jupyter ]
 -   repo: https://github.com/executablebooks/mdformat
     rev: 0.7.17
     hooks:
