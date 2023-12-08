@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.23 (unreleased)
+0.23 (2023-12-08)
 -----------------
 
 - Add _get_conversion_factor to registry with cache.
