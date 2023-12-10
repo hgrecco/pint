@@ -12,7 +12,7 @@ repos:
     - id: black
     - id: black-jupyter
 -   repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.1.6'
+    rev: 'v0.1.7'
     hooks:
     - id: ruff
       args: ["--fix"]
