@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import functools
 import math
-import warnings
 from typing import Any, Generic
 
 from ..plain import PlainQuantity, MagnitudeT
 
 from ..._typing import Shape
 from ...compat import _to_magnitude, np
-from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ...errors import DimensionalityError, PintTypeError
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
@@ -114,14 +113,6 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
         return value
 
-    def __array__(self, t=None) -> np.ndarray:
-        warnings.warn(
-            "The unit of the quantity is stripped when downcasting to ndarray.",
-            UnitStrippedWarning,
-            stacklevel=2,
-        )
-        return _to_magnitude(self._magnitude, force_ndarray=True)
-
     def clip(self, min=None, max=None, out=None, **kwargs):
         if min is not None:
             if isinstance(min, self.__class__):
@@ -148,10 +139,10 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         if isinstance(values, self.__class__):
             values = values.to(self).magnitude
         elif self.dimensionless:
-            values = self.__class__(values, "").to(self)
+            values = self.__class__(values, "").to(self).magnitude
         else:
             raise DimensionalityError("dimensionless", self._units)
-        self.magnitude.put(indices, values, mode)
+        self._magnitude.put(indices, values, mode)
 
     @property
     def real(self) -> NumpyQuantity:
