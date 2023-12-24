@@ -115,11 +115,12 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         return value
 
     def __array__(self, t=None) -> np.ndarray:
-        warnings.warn(
-            "The unit of the quantity is stripped when downcasting to ndarray.",
-            UnitStrippedWarning,
-            stacklevel=2,
-        )
+        if isinstance(self._magnitude, np.ndarray):
+            warnings.warn(
+                "The unit of the quantity is stripped when downcasting to ndarray.",
+                UnitStrippedWarning,
+                stacklevel=2,
+            )
         return _to_magnitude(self._magnitude, force_ndarray=True)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
