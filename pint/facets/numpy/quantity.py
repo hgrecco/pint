@@ -16,7 +16,7 @@ from typing import Any, Generic
 from ..plain import PlainQuantity, MagnitudeT
 
 from ..._typing import Shape
-from ...compat import _to_magnitude, np
+from ...compat import _to_magnitude, np, HAS_NUMPY
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
 from .numpy_func import (
     HANDLED_UFUNCS,
@@ -115,7 +115,7 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         return value
 
     def __array__(self, t=None) -> np.ndarray:
-        if isinstance(self._magnitude, np.ndarray):
+        if HAS_NUMPY and isinstance(self._magnitude, np.ndarray):
             warnings.warn(
                 "The unit of the quantity is stripped when downcasting to ndarray.",
                 UnitStrippedWarning,
