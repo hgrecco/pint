@@ -1,3 +1,4 @@
+import operator
 import pytest
 
 # Conditionally import NumPy and any upcast type libraries
@@ -49,9 +50,9 @@ def test_quantification(module_registry, ds):
 @pytest.mark.parametrize(
     "op",
     [
-        lambda x, y: x + y,
+        operator.add,
         lambda x, y: x - (-y),
-        lambda x, y: x * y,
+        operator.mul,
         lambda x, y: x / (y**-1),
     ],
 )
@@ -126,9 +127,7 @@ def test_array_function_deferral(da, module_registry):
     upper = 3 * module_registry.m
     args = (da, lower, upper)
     assert (
-        lower.__array_function__(
-            np.clip, tuple(set(type(arg) for arg in args)), args, {}
-        )
+        lower.__array_function__(np.clip, tuple({type(arg) for arg in args}), args, {})
         is NotImplemented
     )
 

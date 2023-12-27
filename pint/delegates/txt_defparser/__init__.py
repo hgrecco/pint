@@ -11,4 +11,6 @@
 
 from .defparser import DefParser
 
-__all__ = [DefParser]
+__all__ = [
+    "DefParser",
+]

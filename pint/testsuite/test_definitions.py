@@ -1,5 +1,7 @@
 import pytest
 
+import math
+
 from pint.definitions import Definition
 from pint.errors import DefinitionSyntaxError
 from pint.facets.nonmultiplicative.definitions import (
@@ -81,7 +83,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer(kelvin=1)
 
         x = Definition.from_string(
-            "turn = 6.28 * radian = _ = revolution = = cycle = _"
+            f"turn = {math.tau} * radian = _ = revolution = = cycle = _"
         )
         assert isinstance(x, UnitDefinition)
         assert x.name == "turn"
@@ -89,7 +91,7 @@ class TestDefinition:
         assert x.symbol == "turn"
         assert not x.is_base
         assert isinstance(x.converter, ScaleConverter)
-        assert x.converter.scale == 6.28
+        assert x.converter.scale == math.tau
         assert x.reference == UnitsContainer(radian=1)
 
         with pytest.raises(ValueError):
@@ -136,7 +138,7 @@ class TestDefinition:
         assert x.converter.logfactor == 1
         assert x.reference == UnitsContainer()
 
-        eulersnumber = 2.71828182845904523536028747135266249775724709369995
+        eulersnumber = math.e
         x = Definition.from_string(
             "neper = 1 ; logbase: %1.50f; logfactor: 0.5 = Np" % eulersnumber
         )

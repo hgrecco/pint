@@ -1,7 +1,56 @@
 Pint Changelog
 ==============
 
-0.21 (unreleased)
+0.24 (unreleased)
+-----------------
+
+- Nothing changed yet.
+
+
+0.23 (2023-12-08)
+-----------------
+
+- Add _get_conversion_factor to registry with cache.
+- Homogenize input and ouput of internal regitry functions to
+  facility typing, subclassing and wrapping.
+  (_yield_unit_triplets, )
+- Generated downstream_status page to track the
+  state of downstream projects.
+- Improve typing annotation.
+- Updated to flexparser 0.2.
+- Faster wraps
+  (PR #1862)
+- Add codspeed github action.
+- Move benchmarks to pytest-benchmarks.
+- Support pytest on python 3.12 wrt Fraction formatting change
+  (#1818)
+- Fixed Transformation type protocol.
+  (PR #1805, PR #1832)
+- Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
+  (PR #1803)
+- Enable Pint to parse uncertainty numbers.
+  (See #1611, #1614)
+- Optimize matplotlib unit conversion for Quantity arrays
+  (PR #1819)
+- Add numpy.linalg.norm implementation.
+  (PR #1251)
+
+0.22 (2023-05-25)
+-----------------
+
+- Drop Python 3.8 compatability following NEP-29.
+- Drop NumPy < 1.21 following NEP-29.
+- Improved typing experience.
+- Migrated fully to pyproject.toml.
+- Migrated to ruff.
+- In order to make static typing possible as required by mypy
+  and similar tools, the way to subclass the registry has been
+  changed.
+- Allow non-quantity atol parameters for isclose and allclose.
+  (PR #1783)
+
+
+0.21 (2023-05-01)
 -----------------
 
 - Implement numpy broadcast_array (Related to issue #981)
@@ -41,8 +90,10 @@ Pint Changelog
   (Issue #1725)
 - Fix pint-convert script
   (Issue #1646)
-- Honor non_int_type when a unit without a magnitude is given as string.
+- Honor non_int_type when dividing.
   (Issue #1505)
+- Fix `trapz`, `dot`, and `cross` to work properly with non-multiplicative units
+  (Issue #1593)
 
 ### Breaking Changes
 
@@ -78,6 +129,12 @@ Pint Changelog
   (Issue #1030, #574)
 - Added angular frequency documentation page.
 - Move ASV benchmarks to dedicated folder. (Issue #1542)
+- An ndim attribute has been added to Quantity and DataFrame has been added to upcast
+  types for pint-pandas compatibility. (#1596)
+- Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
+  (Issue #1510, #1530)
+- Update test_non_int tests for pytest.
+- Better support for uncertainties (See #1611, #1614)
 - Implement `numpy.broadcast_arrays` (#1607)
 - An ndim attribute has been added to Quantity and DataFrame has been added to upcast
 types for pint-pandas compatibility. (#1596)
@@ -87,6 +144,8 @@ types for pint-pandas compatibility. (#1596)
 - Create NaN-value quantities of appropriate non-int-type (Issue #1570).
 - New documentation format and organization!
 - Better support for pandas and dask.
+- Fix masked arrays (with multiple values) incorrectly being passed through
+  setitem (Issue #1584)
 
 - Add Quantity.to_preferred
 

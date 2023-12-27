@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import warnings
 from numbers import Number
+from typing import Optional
 
 from . import Quantity
 from .compat import ndarray
@@ -34,12 +35,12 @@ def _get_comparable_magnitudes(first, second, msg):
     return m1, m2
 
 
-def assert_equal(first, second, msg=None):
+def assert_equal(first, second, msg: Optional[str] = None) -> None:
     if msg is None:
-        msg = "Comparing %r and %r. " % (first, second)
+        msg = f"Comparing {first!r} and {second!r}. "
 
     m1, m2 = _get_comparable_magnitudes(first, second, msg)
-    msg += " (Converted to %r and %r): Magnitudes are not equal" % (m1, m2)
+    msg += f" (Converted to {m1!r} and {m2!r}): Magnitudes are not equal"
 
     if isinstance(m1, ndarray) or isinstance(m2, ndarray):
         np.testing.assert_array_equal(m1, m2, err_msg=msg)
@@ -57,18 +58,20 @@ def assert_equal(first, second, msg=None):
         assert m1 == m2, msg
 
 
-def assert_allclose(first, second, rtol=1e-07, atol=0, msg=None):
+def assert_allclose(
+    first, second, rtol: float = 1e-07, atol: float = 0, msg: Optional[str] = None
+) -> None:
     if msg is None:
         try:
-            msg = "Comparing %r and %r. " % (first, second)
-        except TypeError:
+            msg = f"Comparing {first!r} and {second!r}. "
+        except (TypeError, ValueError):
             try:
-                msg = "Comparing %s and %s. " % (first, second)
+                msg = f"Comparing {first} and {second}. "
             except Exception:
                 msg = "Comparing"
 
     m1, m2 = _get_comparable_magnitudes(first, second, msg)
-    msg += " (Converted to %r and %r)" % (m1, m2)
+    msg += f" (Converted to {m1!r} and {m2!r})"
 
     if isinstance(m1, ndarray) or isinstance(m2, ndarray):
         np.testing.assert_allclose(m1, m2, rtol=rtol, atol=atol, err_msg=msg)

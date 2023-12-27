@@ -11,6 +11,11 @@
 from __future__ import annotations
 
 from .objects import FormattingQuantity, FormattingUnit
-from .registry import FormattingRegistry
+from .registry import FormattingRegistry, GenericFormattingRegistry
 
-__all__ = ["FormattingQuantity", "FormattingUnit", "FormattingRegistry"]
+__all__ = [
+    "FormattingQuantity",
+    "FormattingUnit",
+    "FormattingRegistry",
+    "GenericFormattingRegistry",
+]

@@ -11,10 +11,18 @@
 
 from __future__ import annotations
 
+from typing import Generic, Any
 import functools
 
-from ...compat import compute, dask_array, persist, visualize
-from ..plain import PlainRegistry
+from ...compat import compute, dask_array, persist, visualize, TypeAlias
+from ..plain import (
+    GenericPlainRegistry,
+    PlainQuantity,
+    QuantityT,
+    UnitT,
+    PlainUnit,
+    MagnitudeT,
+)
 
 
 def check_dask_array(f):
@@ -31,13 +39,13 @@ def check_dask_array(f):
     return wrapper
 
 
-class DaskQuantity:
+class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     # Dask.array.Array ducking
     def __dask_graph__(self):
         if isinstance(self._magnitude, dask_array.Array):
             return self._magnitude.__dask_graph__()
-        else:
-            return None
+
+        return None
 
     def __dask_keys__(self):
         return self._magnitude.__dask_keys__()
@@ -119,5 +127,16 @@ class DaskQuantity:
         visualize(self, **kwargs)
 
 
-class DaskRegistry(PlainRegistry):
-    _quantity_class = DaskQuantity
+class DaskUnit(PlainUnit):
+    pass
+
+
+class GenericDaskRegistry(
+    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+):
+    pass
+
+
+class DaskRegistry(GenericDaskRegistry[DaskQuantity[Any], DaskUnit]):
+    Quantity: TypeAlias = DaskQuantity[Any]
+    Unit: TypeAlias = DaskUnit

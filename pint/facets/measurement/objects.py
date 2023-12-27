@@ -10,26 +10,31 @@ from __future__ import annotations
 
 import copy
 import re
+from typing import Generic
 
 from ...compat import ufloat
 from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
-from ..plain import PlainQuantity
+from ..plain import PlainQuantity, PlainUnit, MagnitudeT
 
 MISSING = object()
 
 
-class MeasurementQuantity:
+class MeasurementQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     # Measurement support
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):
             if relative:
-                raise ValueError("{} is not a valid relative error.".format(error))
+                raise ValueError(f"{error} is not a valid relative error.")
             error = error.to(self._units).magnitude
         else:
             if relative:
                 error = error * abs(self.magnitude)
 
         return self._REGISTRY.Measurement(copy.copy(self.magnitude), error, self._units)
+
+
+class MeasurementUnit(PlainUnit):
+    pass
 
 
 class Measurement(PlainQuantity):
@@ -47,7 +52,7 @@ class Measurement(PlainQuantity):
 
     """
 
-    def __new__(cls, value, error, units=MISSING):
+    def __new__(cls, value, error=MISSING, units=MISSING):
         if units is MISSING:
             try:
                 value, units = value.magnitude, value.units
@@ -59,17 +64,18 @@ class Measurement(PlainQuantity):
                     error = MISSING  # used for check below
                 else:
                     units = ""
-        try:
-            error = error.to(units).magnitude
-        except AttributeError:
-            pass
-
         if error is MISSING:
+            # We've already extracted the units from the Quantity above
             mag = value
-        elif error < 0:
-            raise ValueError("The magnitude of the error cannot be negative")
         else:
-            mag = ufloat(value, error)
+            try:
+                error = error.to(units).magnitude
+            except AttributeError:
+                pass
+            if error < 0:
+                raise ValueError("The magnitude of the error cannot be negative")
+            else:
+                mag = ufloat(value, error)
 
         inst = super().__new__(cls, mag, units)
         return inst
@@ -98,7 +104,7 @@ class Measurement(PlainQuantity):
         )
 
     def __str__(self):
-        return "{}".format(self)
+        return f"{self}"
 
     def __format__(self, spec):
         spec = spec or self.default_format
@@ -133,7 +139,7 @@ class Measurement(PlainQuantity):
             # scientific notation ('e' or 'E' and sometimes 'g' or 'G').
             mstr = mstr.replace("(", "").replace(")", " ")
             ustr = siunitx_format_unit(self.units._units, self._REGISTRY)
-            return r"\SI%s{%s}{%s}" % (opts, mstr, ustr)
+            return rf"\SI{opts}{{{mstr}}}{{{ustr}}}"
 
         # standard cases
         if "L" in spec:

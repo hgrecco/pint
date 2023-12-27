@@ -13,6 +13,9 @@ from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
 
 
+from .helpers import internal
+
+
 # TODO: do not subclass from QuantityTestCase
 class TestIssues(QuantityTestCase):
     kwargs = dict(autoconvert_offset_to_baseunit=False)
@@ -445,10 +448,10 @@ class TestIssues(QuantityTestCase):
 
     def test_issue354_356_370(self, module_registry):
         assert (
-            "{:~}".format(1 * module_registry.second / module_registry.millisecond)
+            f"{1 * module_registry.second / module_registry.millisecond:~}"
             == "1.0 s / ms"
         )
-        assert "{:~}".format(1 * module_registry.count) == "1 count"
+        assert f"{1 * module_registry.count:~}" == "1 count"
         assert "{:~}".format(1 * module_registry("MiB")) == "1 MiB"
 
     def test_issue468(self, module_registry):
@@ -727,7 +730,7 @@ class TestIssues(QuantityTestCase):
     def test_issue1062_issue1097(self):
         # Must not be used by any other tests
         ureg = UnitRegistry()
-        assert "nanometer" not in ureg._units
+        assert "nanometer" not in internal(ureg)._units
         for i in range(5):
             ctx = Context.from_lines(["@context _", "cal = 4 J"])
             with ureg.context("sp", ctx):
@@ -880,6 +883,66 @@ class TestIssues(QuantityTestCase):
         module_registry.default_format = "~P"
         m = module_registry.Measurement(1, 0.1, "meter")
         assert m.default_format == "~P"
+
+    @helpers.requires_babel()
+    def test_issue_1400(self, sess_registry):
+        q1 = 3 * sess_registry.W
+        q2 = 3 * sess_registry.W / sess_registry.cm
+        assert q1.format_babel("~", locale="es_Ar") == "3 W"
+        assert q1.format_babel("", locale="es_Ar") == "3 vatios"
+        assert q2.format_babel("~", locale="es_Ar") == "3.0 W / cm"
+        assert q2.format_babel("", locale="es_Ar") == "3.0 vatios por centímetros"
+
+    @helpers.requires_uncertainties()
+    def test_issue1611(self, module_registry):
+        from numpy.testing import assert_almost_equal
+        from uncertainties import ufloat
+
+        from pint import pint_eval
+
+        pint_eval.tokenizer = pint_eval.uncertainty_tokenizer
+
+        u1 = ufloat(1.2, 0.34)
+        u2 = ufloat(5.6, 0.78)
+        q1_u = module_registry.Quantity(u2 - u1, "m")
+        q1_str = str(q1_u)
+        q1_str = "{:.4uS}".format(q1_u)
+        q1_m = q1_u.magnitude
+        q2_u = module_registry.Quantity(q1_str)
+        # Not equal because the uncertainties are differently random!
+        assert q1_u != q2_u
+        q2_m = q2_u.magnitude
+
+        assert_almost_equal(q2_m.nominal_value, q1_m.nominal_value, decimal=9)
+        assert_almost_equal(q2_m.std_dev, q1_m.std_dev, decimal=4)
+
+        q3_str = "12.34(5678)e-066 m"
+        q3_u = module_registry.Quantity(q3_str)
+        q3_m = q3_u.magnitude
+        assert q3_m < 1
+
+    @helpers.requires_uncertainties
+    def test_issue1614(self, module_registry):
+        from uncertainties import UFloat, ufloat
+
+        q = module_registry.Quantity(1.0, "m")
+        assert isinstance(q, module_registry.Quantity)
+        m = module_registry.Measurement(2.0, 0.3, "m")
+        assert isinstance(m, module_registry.Measurement)
+
+        u1 = ufloat(1.2, 3.4)
+        u2 = ufloat(5.6, 7.8)
+        q1_u = module_registry.Quantity(u1, "m")
+        m1 = module_registry.Measurement(q1_u)
+        assert m1.value.magnitude == u1.nominal_value
+        assert m1.error.magnitude == u1.std_dev
+        m2 = module_registry.Measurement(5.6, 7.8)  # dimensionless
+        q2_u = module_registry.Quantity(m2)
+        assert isinstance(q2_u.magnitude, UFloat)
+        assert q2_u.magnitude.nominal_value == m2.value
+        assert q2_u.magnitude.nominal_value == u2.nominal_value
+        assert q2_u.magnitude.std_dev == m2.error
+        assert q2_u.magnitude.std_dev == u2.std_dev
 
 
 if np is not None:

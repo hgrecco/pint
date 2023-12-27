@@ -12,6 +12,6 @@ from __future__ import annotations
 
 from .definitions import SystemDefinition
 from .objects import System
-from .registry import SystemRegistry
+from .registry import SystemRegistry, GenericSystemRegistry
 
-__all__ = ["SystemDefinition", "System", "SystemRegistry"]
+__all__ = ["SystemDefinition", "System", "SystemRegistry", "GenericSystemRegistry"]

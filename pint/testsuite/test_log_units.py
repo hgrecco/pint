@@ -56,7 +56,7 @@ class TestLogarithmicQuantity(QuantityTestCase):
         # ## Test dB to dB units octave - decade
         # 1 decade = log2(10) octave
         helpers.assert_quantity_almost_equal(
-            self.Q_(1.0, "decade"), self.Q_(math.log(10, 2), "octave")
+            self.Q_(1.0, "decade"), self.Q_(math.log2(10), "octave")
         )
         # ## Test dB to dB units dBm - dBu
         # 0 dBm = 1mW = 1e3 uW = 30 dBu

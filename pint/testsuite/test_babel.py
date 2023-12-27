@@ -84,16 +84,16 @@ def test_str(func_registry):
     s = "24.0 meter"
     assert str(d) == s
     assert "%s" % d == s
-    assert "{}".format(d) == s
+    assert f"{d}" == s
 
     ureg.set_fmt_locale("fr_FR")
     s = "24.0 mètres"
     assert str(d) == s
     assert "%s" % d == s
-    assert "{}".format(d) == s
+    assert f"{d}" == s
 
     ureg.set_fmt_locale(None)
     s = "24.0 meter"
     assert str(d) == s
     assert "%s" % d == s
-    assert "{}".format(d) == s
+    assert f"{d}" == s

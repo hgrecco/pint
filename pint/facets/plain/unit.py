@@ -65,7 +65,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        return "<Unit('{}')>".format(self._units)
+        return f"<Unit('{self._units}')>"
 
     @property
     def dimensionless(self) -> bool:
@@ -165,18 +165,18 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             return self._REGISTRY.Quantity(other, 1 / self._units)
         elif isinstance(other, UnitsContainer):
             return self.__class__(other / self._units)
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
-    def __pow__(self, other) -> "PlainUnit":
+    def __pow__(self, other) -> PlainUnit:
         if isinstance(other, NUMERIC_TYPES):
             return self.__class__(self._units**other)
 
         else:
-            mess = "Cannot power PlainUnit by {}".format(type(other))
+            mess = f"Cannot power PlainUnit by {type(other)}"
             raise TypeError(mess)
 
     def __hash__(self) -> int:
@@ -207,8 +207,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             return self_q.compare(other, op)
         elif isinstance(other, (PlainUnit, UnitsContainer, dict)):
             return self_q.compare(self._REGISTRY.Quantity(1, other), op)
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     __lt__ = lambda self, other: self.compare(other, op=operator.lt)
     __le__ = lambda self, other: self.compare(other, op=operator.le)

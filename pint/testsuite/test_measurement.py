@@ -178,7 +178,7 @@ class TestMeasurement(QuantityTestCase):
         ):
             with subtests.test(spec):
                 self.ureg.default_format = spec
-                assert "{}".format(m) == result
+                assert f"{m}" == result
 
     def test_raise_build(self):
         v, u = self.Q_(1.0, "s"), self.Q_(0.1, "s")
@@ -270,3 +270,11 @@ class TestMeasurement(QuantityTestCase):
         y = self.Q_(5.0, "meter").plus_minus(0.1)
         assert x <= y
         assert not (x >= y)
+
+    def test_tokenization(self):
+        from pint import pint_eval
+
+        pint_eval.tokenizer = pint_eval.uncertainty_tokenizer
+        for p in pint_eval.tokenizer("8 + / - 4"):
+            print(p)
+        assert True

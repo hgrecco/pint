@@ -116,7 +116,7 @@ class TestErrors:
         q2 = ureg.Quantity("1 bar")
 
         for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
-            for ex in [
+            for ex in (
                 DefinitionSyntaxError("foo"),
                 RedefinitionError("foo", "bar"),
                 UndefinedUnitError("meter"),
@@ -125,7 +125,7 @@ class TestErrors:
                     Quantity("1 kg")._units, Quantity("1 s")._units
                 ),
                 OffsetUnitCalculusError(q1._units, q2._units),
-            ]:
+            ):
                 with subtests.test(protocol=protocol, etype=type(ex)):
                     pik = pickle.dumps(ureg.Quantity("1 foo"), protocol)
                     with pytest.raises(UndefinedUnitError):

@@ -310,7 +310,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_fix(self):
-        helpers.assert_quantity_equal(np.fix(3.14 * self.ureg.m), 3.0 * self.ureg.m)
+        helpers.assert_quantity_equal(np.fix(3.13 * self.ureg.m), 3.0 * self.ureg.m)
         helpers.assert_quantity_equal(np.fix(3.0 * self.ureg.m), 3.0 * self.ureg.m)
         helpers.assert_quantity_equal(
             np.fix([2.1, 2.9, -2.1, -2.9] * self.ureg.m),
@@ -512,7 +512,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         arr = np.array(range(3), dtype=float)
         q = self.Q_(arr, "meter")
 
-        for op_ in [op.pow, op.ipow, np.power]:
+        for op_ in (op.pow, op.ipow, np.power):
             q_cp = copy.copy(q)
             with pytest.raises(DimensionalityError):
                 op_(2.0, q_cp)
@@ -934,7 +934,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         q[:] = 1 * self.ureg.m
         helpers.assert_quantity_equal(q, [[1, 1], [1, 1]] * self.ureg.m)
 
-        # check and see that dimensionless num  bers work correctly
+        # check and see that dimensionless numbers work correctly
         q = [0, 1, 2, 3] * self.ureg.dimensionless
         q[0] = 1
         helpers.assert_quantity_equal(q, np.asarray([1, 1, 2, 3]))
@@ -954,6 +954,22 @@ class TestNumpyUnclassified(TestNumpyMethods):
             # Check for no warnings
             assert not w
             assert q.mask[0]
+
+    def test_setitem_mixed_masked(self):
+        masked = np.ma.array(
+            [
+                1,
+                2,
+            ],
+            mask=[True, False],
+        )
+        q = self.Q_(np.ones(shape=(2,)), "m")
+        with pytest.raises(DimensionalityError):
+            q[:] = masked
+
+        masked_q = self.Q_(masked, "mm")
+        q[:] = masked_q
+        helpers.assert_quantity_equal(q, [1.0, 0.002] * self.ureg.m)
 
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
@@ -1057,6 +1073,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
         )
         self.assertNDArrayEqual(
             np.isclose(self.q, q2, atol=1e-5 * self.ureg.mm, rtol=1e-7),
+            np.array([[False, True], [True, False]]),
+        )
+        self.assertNDArrayEqual(
+            np.isclose(self.q, q2, atol=1e-5, rtol=1e-7),
             np.array([[False, True], [True, False]]),
         )
 
@@ -1376,6 +1396,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
     @helpers.requires_array_function_protocol()
     def test_allclose(self):
         assert np.allclose([1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m)
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m, [1.00001e13, 1e-6] * self.ureg.mm
+        )
         assert not np.allclose(
             [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.mm
         )
@@ -1385,9 +1408,21 @@ class TestNumpyUnclassified(TestNumpyMethods):
             atol=1e-8 * self.ureg.m,
         )
 
+        assert not np.allclose([1.0, np.nan] * self.ureg.m, [1.0, np.nan] * self.ureg.m)
+
+        assert np.allclose(
+            [1.0, np.nan] * self.ureg.m, [1.0, np.nan] * self.ureg.m, equal_nan=True
+        )
+
+        assert np.allclose(
+            [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+        )
+
         with pytest.raises(DimensionalityError):
             assert np.allclose(
-                [1e10, 1e-8] * self.ureg.m, [1.00001e10, 1e-9] * self.ureg.m, atol=1e-8
+                [1e10, 1e-8] * self.ureg.m,
+                [1.00001e10, 1e-9] * self.ureg.m,
+                atol=1e-8 * self.ureg.s,
             )
 
     @helpers.requires_array_function_protocol()
@@ -1396,6 +1431,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.intersect1d([1, 3, 4, 3] * self.ureg.m, [3, 1, 2, 1] * self.ureg.m),
             [1, 3] * self.ureg.m,
         )
+
+    @helpers.requires_array_function_protocol()
+    def test_linalg_norm(self):
+        q = np.array([[3, 5, 8], [4, 12, 15]]) * self.ureg.m
+        expected = [5, 13, 17] * self.ureg.m
+        helpers.assert_quantity_equal(np.linalg.norm(q, axis=0), expected)
 
 
 @pytest.mark.skip

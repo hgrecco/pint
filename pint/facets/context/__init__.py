@@ -13,6 +13,6 @@ from __future__ import annotations
 
 from .definitions import ContextDefinition
 from .objects import Context
-from .registry import ContextRegistry
+from .registry import ContextRegistry, GenericContextRegistry
 
-__all__ = ["ContextDefinition", "Context", "ContextRegistry"]
+__all__ = ["ContextDefinition", "Context", "ContextRegistry", "GenericContextRegistry"]

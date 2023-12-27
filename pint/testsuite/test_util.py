@@ -5,6 +5,7 @@ import operator as op
 
 import pytest
 
+from pint import pint_eval
 from pint.util import (
     ParserHelper,
     UnitsContainer,
@@ -15,7 +16,6 @@ from pint.util import (
     sized,
     string_preprocessor,
     to_units_container,
-    tokenizer,
     transpose,
 )
 
@@ -120,13 +120,13 @@ class TestUnitsContainer:
             UnitsContainer({"1": "2"})
         d = UnitsContainer()
         with pytest.raises(TypeError):
-            d.__mul__(list())
+            d.__mul__([])
         with pytest.raises(TypeError):
-            d.__pow__(list())
+            d.__pow__([])
         with pytest.raises(TypeError):
-            d.__truediv__(list())
+            d.__truediv__([])
         with pytest.raises(TypeError):
-            d.__rtruediv__(list())
+            d.__rtruediv__([])
 
 
 class TestToUnitsContainer:
@@ -193,9 +193,9 @@ class TestParseHelper:
         assert "seconds" / z() == ParserHelper(0.5, seconds=1, meter=-2)
         assert dict(seconds=1) / z() == ParserHelper(0.5, seconds=1, meter=-2)
 
-    def _test_eval_token(self, expected, expression, use_decimal=False):
-        token = next(tokenizer(expression))
-        actual = ParserHelper.eval_token(token, use_decimal=use_decimal)
+    def _test_eval_token(self, expected, expression):
+        token = next(pint_eval.tokenizer(expression))
+        actual = ParserHelper.eval_token(token)
         assert expected == actual
         assert type(expected) == type(actual)
 
@@ -353,12 +353,12 @@ class TestOtherUtils:
         # Test with list, string, generator, and scalar
         assert iterable([0, 1, 2, 3])
         assert iterable("test")
-        assert iterable((i for i in range(5)))
+        assert iterable(i for i in range(5))
         assert not iterable(0)
 
     def test_sized(self):
         # Test with list, string, generator, and scalar
         assert sized([0, 1, 2, 3])
         assert sized("test")
-        assert not sized((i for i in range(5)))
+        assert not sized(i for i in range(5))
         assert not sized(0)

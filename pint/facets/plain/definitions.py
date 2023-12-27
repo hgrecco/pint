@@ -13,8 +13,9 @@ import numbers
 import typing as ty
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Callable, Optional
+from typing import Any, Optional
 
+from ..._typing import Magnitude
 from ... import errors
 from ...converters import Converter
 from ...util import UnitsContainer
@@ -23,7 +24,7 @@ from ...util import UnitsContainer
 class NotNumeric(Exception):
     """Internal exception. Do not expose outside Pint"""
 
-    def __init__(self, value):
+    def __init__(self, value: Any):
         self.value = value
 
 
@@ -68,11 +69,15 @@ class DefaultsDefinition:
 
 
 @dataclass(frozen=True)
-class PrefixDefinition(errors.WithDefErr):
-    """Definition of a prefix."""
-
+class NamedDefinition:
     #: name of the prefix
     name: str
+
+
+@dataclass(frozen=True)
+class PrefixDefinition(NamedDefinition, errors.WithDefErr):
+    """Definition of a prefix."""
+
     #: scaling value for this prefix
     value: numbers.Number
     #: canonical symbol
@@ -89,8 +94,8 @@ class PrefixDefinition(errors.WithDefErr):
         return bool(self.defined_symbol)
 
     @cached_property
-    def converter(self):
-        return Converter.from_arguments(scale=self.value)
+    def converter(self) -> ScaleConverter:
+        return ScaleConverter(self.value)
 
     def __post_init__(self):
         if not errors.is_valid_prefix_name(self.name):
@@ -109,23 +114,28 @@ class PrefixDefinition(errors.WithDefErr):
 
 
 @dataclass(frozen=True)
-class UnitDefinition(errors.WithDefErr):
+class UnitDefinition(NamedDefinition, errors.WithDefErr):
     """Definition of a unit."""
 
-    #: canonical name of the unit
-    name: str
     #: canonical symbol
-    defined_symbol: ty.Optional[str]
+    defined_symbol: Optional[str]
     #: additional names for the same unit
-    aliases: ty.Tuple[str, ...]
+    aliases: tuple[str, ...]
     #: A functiont that converts a value in these units into the reference units
-    converter: ty.Optional[ty.Union[Callable, Converter]]
+    # TODO: this has changed as converter is now annotated as converter.
+    # Briefly, in several places converter attributes like as_multiplicative were
+    # accesed. So having a generic function is a no go.
+    # I guess this was never used as errors where not raised.
+    converter: Optional[Converter]
     #: Reference units.
-    reference: ty.Optional[UnitsContainer]
+    reference: Optional[UnitsContainer]
 
     def __post_init__(self):
         if not errors.is_valid_unit_name(self.name):
             raise self.def_err(errors.MSG_INVALID_UNIT_NAME)
+
+        # TODO: check why  reference: Optional[UnitsContainer]
+        assert isinstance(self.reference, UnitsContainer)
 
         if not any(map(errors.is_dim, self.reference.keys())):
             invalid = tuple(
@@ -180,14 +190,20 @@ class UnitDefinition(errors.WithDefErr):
     @property
     def is_base(self) -> bool:
         """Indicates if it is a base unit."""
+
+        # TODO: This is set in __post_init__
         return self._is_base
 
     @property
     def is_multiplicative(self) -> bool:
+        # TODO: Check how to avoid this check
+        assert isinstance(self.converter, Converter)
         return self.converter.is_multiplicative
 
     @property
     def is_logarithmic(self) -> bool:
+        # TODO: Check how to avoid this check
+        assert isinstance(self.converter, Converter)
         return self.converter.is_logarithmic
 
     @property
@@ -200,17 +216,14 @@ class UnitDefinition(errors.WithDefErr):
 
 
 @dataclass(frozen=True)
-class DimensionDefinition(errors.WithDefErr):
+class DimensionDefinition(NamedDefinition, errors.WithDefErr):
     """Definition of a root dimension"""
 
-    #: name of the dimension
-    name: str
-
     @property
-    def is_base(self):
+    def is_base(self) -> bool:
         return True
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not errors.is_valid_dimension_name(self.name):
             raise self.def_err(errors.MSG_INVALID_DIMENSION_NAME)
 
@@ -223,7 +236,7 @@ class DerivedDimensionDefinition(DimensionDefinition):
     reference: UnitsContainer
 
     @property
-    def is_base(self):
+    def is_base(self) -> bool:
         return False
 
     def __post_init__(self):
@@ -272,7 +285,7 @@ class ScaleConverter(Converter):
 
     scale: float
 
-    def to_reference(self, value, inplace=False):
+    def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         if inplace:
             value *= self.scale
         else:
@@ -280,7 +293,7 @@ class ScaleConverter(Converter):
 
         return value
 
-    def from_reference(self, value, inplace=False):
+    def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         if inplace:
             value /= self.scale
         else:

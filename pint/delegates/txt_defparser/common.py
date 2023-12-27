@@ -30,7 +30,7 @@ class DefinitionSyntaxError(errors.DefinitionSyntaxError, fp.ParsingError):
 
     location: str = field(init=False, default="")
 
-    def __str__(self):
+    def __str__(self) -> str:
         msg = (
             self.msg + "\n    " + (self.format_position or "") + " " + (self.raw or "")
         )
@@ -38,7 +38,7 @@ class DefinitionSyntaxError(errors.DefinitionSyntaxError, fp.ParsingError):
             msg += "\n    " + self.location
         return msg
 
-    def set_location(self, value):
+    def set_location(self, value: str) -> None:
         super().__setattr__("location", value)
 
 
@@ -47,7 +47,7 @@ class ImportDefinition(fp.IncludeStatement):
     value: str
 
     @property
-    def target(self):
+    def target(self) -> str:
         return self.value
 
     @classmethod

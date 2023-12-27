@@ -193,6 +193,38 @@ If you want pint to automatically perform dimensional reduction when producing
 new quantities, the ``UnitRegistry`` class accepts a parameter ``auto_reduce_dimensions``.
 Dimensional reduction can be slow, so auto-reducing is disabled by default.
 
+The methods  ``to_preferred()`` and ``ito_preferred()`` provide more control over dimensional
+reduction by specifying a list of units to combine to get the required dimensionality.
+
+.. doctest::
+
+   >>> preferred_units = [
+   ...    ureg.ft,  # distance      L
+   ...    ureg.slug,  # mass          M
+   ...    ureg.s,  # duration      T
+   ...    ureg.rankine,  # temperature   Θ
+   ...    ureg.lbf,  # force         L M T^-2
+   ...    ureg.W,  # power         L^2 M T^-3
+   ... ]
+   >>> power = ((1 * ureg.lbf) * (1 * ureg.m / ureg.s)).to_preferred(preferred_units)
+   >>> print(power)
+   4.4482216152605005 watt
+
+The list of preferred units can also be specified in the unit registry to prevent having to pass it to every call to ``to_preferred()``.
+
+.. doctest::
+
+   >>> ureg.default_preferred_units = preferred_units
+   >>> power = ((1 * ureg.lbf) * (1 * ureg.m / ureg.s)).to_preferred()
+   >>> print(power)
+   4.4482216152605005 watt
+
+The ``UnitRegistry`` class accepts a parameter ``autoconvert_to_preferred``. If set to ``True``, pint will automatically convert to
+preferred units when producing new quantities. This is disabled by default.
+
+Note when there are multiple good combinations of units to reduce to, to_preferred is not guaranteed to be repeatable.
+For example, ``(1 * ureg.lbf * ureg.m).to_preferred(preferred_units)`` may return ``W s`` or ``ft lbf``.
+
 String parsing
 --------------
 
@@ -281,7 +313,7 @@ Pint's physical quantities can be easily printed:
 
 .. doctest::
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> # The standard string formatting code
    >>> print('The str is {!s}'.format(accel))
    The str is 1.3 meter / second ** 2
@@ -297,7 +329,7 @@ Pint supports float formatting for numpy arrays as well:
 .. doctest::
 
    >>> import numpy as np
-   >>> accel = np.array([-1.1, 1e-6, 1.2505, 1.3]) * ureg['meter/second**2']
+   >>> accel = np.array([-1.1, 1e-6, 1.2505, 1.3]) * ureg.parse_units('meter/second**2')
    >>> # float formatting numpy arrays
    >>> print('The array is {:.2f}'.format(accel))
    The array is [-1.10 0.00 1.25 1.30] meter / second ** 2
@@ -309,7 +341,7 @@ Pint also supports `f-strings`_ from python>=3.6 :
 
 .. doctest::
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> print(f'The str is {accel}')
    The str is 1.3 meter / second ** 2
    >>> print(f'The str is {accel:.3e}')
@@ -368,7 +400,7 @@ Pint also supports the LaTeX `siunitx` package:
 .. doctest::
    :skipif: not_installed['uncertainties']
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> # siunitx Latex print
    >>> print('The siunitx representation is {:Lx}'.format(accel))
    The siunitx representation is \SI[]{1.3}{\meter\per\second\squared}
@@ -380,7 +412,7 @@ Additionally, you can specify a default format specification:
 
 .. doctest::
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> 'The acceleration is {}'.format(accel)
    'The acceleration is 1.3 meter / second ** 2'
    >>> ureg.default_format = 'P'
@@ -414,7 +446,7 @@ and by doing that, string formatting is now localized:
 
 .. doctest::
 
-    >>> accel = 1.3 * ureg['meter/second**2']
+    >>> accel = 1.3 * ureg.parse_units('meter/second**2')
     >>> str(accel)
     '1.3 mètre par seconde²'
     >>> "%s" % accel

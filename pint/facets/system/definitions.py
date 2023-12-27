@@ -8,9 +8,11 @@
 
 from __future__ import annotations
 
-import typing as ty
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Optional
 
+from ...compat import Self
 from ... import errors
 
 
@@ -23,7 +25,7 @@ class BaseUnitRule:
     new_unit_name: str
     #: name of the unit to be kicked out to make room for the new base uni
     #: If None, the current base unit with the same dimensionality will be used
-    old_unit_name: ty.Optional[str] = None
+    old_unit_name: Optional[str] = None
 
     # Instead of defining __post_init__ here,
     # it will be added to the container class
@@ -38,13 +40,16 @@ class SystemDefinition(errors.WithDefErr):
     #: name of the system
     name: str
     #: unit groups that will be included within the system
-    using_group_names: ty.Tuple[str, ...]
+    using_group_names: tuple[str, ...]
     #: rules to define new base unit within the system.
-    rules: ty.Tuple[BaseUnitRule, ...]
+    rules: tuple[BaseUnitRule, ...]
 
     @classmethod
-    def from_lines(cls, lines, non_int_type):
+    def from_lines(
+        cls: type[Self], lines: Iterable[str], non_int_type: type
+    ) -> Optional[Self]:
         # TODO: this is to keep it backwards compatible
+        # TODO: check when is None returned.
         from ...delegates import ParserConfig, txt_defparser
 
         cfg = ParserConfig(non_int_type)
@@ -55,7 +60,8 @@ class SystemDefinition(errors.WithDefErr):
                 return definition
 
     @property
-    def unit_replacements(self) -> ty.Tuple[ty.Tuple[str, str], ...]:
+    def unit_replacements(self) -> tuple[tuple[str, Optional[str]], ...]:
+        # TODO: check if None can be dropped.
         return tuple((el.new_unit_name, el.old_unit_name) for el in self.rules)
 
     def __post_init__(self):

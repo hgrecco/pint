@@ -13,7 +13,7 @@ from inspect import signature
 from itertools import chain
 
 from ...compat import is_upcast_type, np, zero_or_nan
-from ...errors import DimensionalityError, UnitStrippedWarning
+from ...errors import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
 from ...util import iterable, sized
 
 HANDLED_UFUNCS = {}
@@ -220,7 +220,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
                 product /= x.units
         result_unit = product**-1
     else:
-        raise ValueError("Output unit method {} not understood".format(unit_op))
+        raise ValueError(f"Output unit method {unit_op} not understood")
 
     return result_unit
 
@@ -237,7 +237,7 @@ def implements(numpy_func_string, func_type):
         elif func_type == "ufunc":
             HANDLED_UFUNCS[numpy_func_string] = func
         else:
-            raise ValueError("Invalid func_type {}".format(func_type))
+            raise ValueError(f"Invalid func_type {func_type}")
         return func
 
     return decorator
@@ -311,7 +311,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             return result_magnitude
         elif output_unit == "match_input":
             result_unit = first_input_units
-        elif output_unit in [
+        elif output_unit in (
             "sum",
             "mul",
             "delta",
@@ -324,7 +324,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             "cbrt",
             "reciprocal",
             "size",
-        ]:
+        ):
             result_unit = get_op_output_unit(
                 output_unit, first_input_units, tuple(chain(args, kwargs.values()))
             )
@@ -499,8 +499,8 @@ def _frexp(x, *args, **kwargs):
 def _power(x1, x2):
     if _is_quantity(x1):
         return x1**x2
-    else:
-        return x2.__rpow__(x1)
+
+    return x2.__rpow__(x1)
 
 
 @implements("add", "ufunc")
@@ -535,8 +535,8 @@ def _full_like(a, fill_value, **kwargs):
             np.ones_like(a, **kwargs) * fill_value.m,
             fill_value.units,
         )
-    else:
-        return np.ones_like(a, **kwargs) * fill_value
+
+    return np.ones_like(a, **kwargs) * fill_value
 
 
 @implements("interp", "function")
@@ -671,8 +671,8 @@ def _any(a, *args, **kwargs):
     # Only valid when multiplicative unit/no offset
     if a._is_multiplicative:
         return np.any(a._magnitude, *args, **kwargs)
-    else:
-        raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+
+    raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
 
 @implements("all", "function")
@@ -725,7 +725,7 @@ def implement_prod_func(name):
         return registry.Quantity(result, units)
 
 
-for name in ["prod", "nanprod"]:
+for name in ("prod", "nanprod"):
     implement_prod_func(name)
 
 
@@ -745,6 +745,60 @@ def _broadcast_arrays(*args, **kwargs):
     res = np.broadcast_arrays(*unitless_args, **kwargs)
     return [out * unit for out, unit in zip(res, input_units)]
 
+  
+# Handle mutliplicative functions separately to deal with non-multiplicative units
+def _base_unit_if_needed(a):
+    if a._is_multiplicative:
+        return a
+    else:
+        if a.units._REGISTRY.autoconvert_offset_to_baseunit:
+            return a.to_base_units()
+        else:
+            raise OffsetUnitCalculusError(a.units)
+
+
+@implements("trapz", "function")
+def _trapz(y, x=None, dx=1.0, **kwargs):
+    y = _base_unit_if_needed(y)
+    units = y.units
+    if x is not None:
+        if hasattr(x, "units"):
+            x = _base_unit_if_needed(x)
+            units *= x.units
+            x = x._magnitude
+        ret = np.trapz(y._magnitude, x, **kwargs)
+    else:
+        if hasattr(dx, "units"):
+            dx = _base_unit_if_needed(dx)
+            units *= dx.units
+            dx = dx._magnitude
+        ret = np.trapz(y._magnitude, dx=dx, **kwargs)
+
+    return y.units._REGISTRY.Quantity(ret, units)
+
+
+def implement_mul_func(func):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(a, b, **kwargs):
+        a = _base_unit_if_needed(a)
+        units = a.units
+        if hasattr(b, "units"):
+            b = _base_unit_if_needed(b)
+            units *= b.units
+            b = b._magnitude
+
+        mag = func(a._magnitude, b, **kwargs)
+        return a.units._REGISTRY.Quantity(mag, units)
+
+
+for func_str in ("cross", "dot"):
+    implement_mul_func(func_str)
 
 # Implement simple matching-unit or stripped-unit functions based on signature
 
@@ -792,11 +846,11 @@ def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output
         # Conditionally wrap output
         if wrap_output:
             return output_wrap(ret)
-        else:
-            return ret
+
+        return ret
 
 
-for func_str, unit_arguments, wrap_output in [
+for func_str, unit_arguments, wrap_output in (
     ("expand_dims", "a", True),
     ("squeeze", "a", True),
     ("rollaxis", "a", True),
@@ -831,7 +885,6 @@ for func_str, unit_arguments, wrap_output in [
     ("max", ["a", "initial"], True),
     ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
-    ("isclose", ["a", "b", "atol"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
     ("clip", ["a", "a_min", "a_max"], True),
     ("append", ["arr", "values"], True),
@@ -844,11 +897,42 @@ for func_str, unit_arguments, wrap_output in [
     ("delete", ["arr"], True),
     ("resize", "a", True),
     ("reshape", "a", True),
-    ("allclose", ["a", "b", "atol"], False),
     ("intersect1d", ["ar1", "ar2"], True),
-]:
+):
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
 
+
+# implement isclose and allclose
+def implement_close(func_str):
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(*args, **kwargs):
+        bound_args = signature(func).bind(*args, **kwargs)
+        labels = ["a", "b"]
+        arrays = {label: bound_args.arguments[label] for label in labels}
+        if "atol" in bound_args.arguments:
+            atol = bound_args.arguments["atol"]
+            a = arrays["a"]
+            if not hasattr(atol, "_REGISTRY") and hasattr(a, "_REGISTRY"):
+                # always use the units of `a`
+                atol_ = a._REGISTRY.Quantity(atol, a.units)
+            else:
+                atol_ = atol
+            arrays["atol"] = atol_
+
+        args, _ = unwrap_and_wrap_consistent_units(*arrays.values())
+        for label, value in zip(arrays.keys(), args):
+            bound_args.arguments[label] = value
+
+        return func(*bound_args.args, **bound_args.kwargs)
+
+
+for func_str in ("isclose", "allclose"):
+    implement_close(func_str)
 
 # Handle atleast_nd functions
 
@@ -876,7 +960,7 @@ def implement_atleast_nd(func_str):
             return output_unit._REGISTRY.Quantity(arrays_magnitude, output_unit)
 
 
-for func_str in ["atleast_1d", "atleast_2d", "atleast_3d"]:
+for func_str in ("atleast_1d", "atleast_2d", "atleast_3d"):
     implement_atleast_nd(func_str)
 
 
@@ -897,24 +981,24 @@ def implement_single_dimensionless_argument_func(func_str):
         return a._REGISTRY.Quantity(func(a_stripped, *args, **kwargs))
 
 
-for func_str in ["cumprod", "cumproduct", "nancumprod"]:
+for func_str in ("cumprod", "cumproduct", "nancumprod"):
     implement_single_dimensionless_argument_func(func_str)
 
 # Handle single-argument consistent unit functions
-for func_str in [
+for func_str in (
     "block",
     "hstack",
     "vstack",
     "dstack",
     "column_stack",
     "broadcast_arrays",
-]:
+):
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
     )
 
 # Handle functions that ignore units on input and output
-for func_str in [
+for func_str in (
     "size",
     "isreal",
     "iscomplex",
@@ -931,21 +1015,27 @@ for func_str in [
     "count_nonzero",
     "nonzero",
     "result_type",
-]:
+):
     implement_func("function", func_str, input_units=None, output_unit=None)
 
 # Handle functions with output unit defined by operation
-for func_str in ["std", "nanstd", "sum", "nansum", "cumsum", "nancumsum"]:
+for func_str in (
+    "std",
+    "nanstd",
+    "sum",
+    "nansum",
+    "cumsum",
+    "nancumsum",
+    "linalg.norm",
+):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ["cross", "trapz", "dot"]:
-    implement_func("function", func_str, input_units=None, output_unit="mul")
-for func_str in ["diff", "ediff1d"]:
+for func_str in ("diff", "ediff1d"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
-for func_str in ["gradient"]:
+for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ["linalg.solve"]:
+for func_str in ("linalg.solve",):
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
-for func_str in ["var", "nanvar"]:
+for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
 
 
@@ -961,7 +1051,7 @@ def numpy_wrap(func_type, func, args, kwargs, types):
         # ufuncs do not have func.__module__
         name = func.__name__
     else:
-        raise ValueError("Invalid func_type {}".format(func_type))
+        raise ValueError(f"Invalid func_type {func_type}")
 
     if name not in handled or any(is_upcast_type(t) for t in types):
         return NotImplemented
