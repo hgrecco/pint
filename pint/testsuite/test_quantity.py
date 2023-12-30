@@ -831,7 +831,7 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
         x = "some string" * ureg.m
-        with pytest.warns(RuntimeWarning):
+        with pytest.raises(TypeError):
             self.compare_quantity_compact(x, x)
 
     def test_very_large_to_compact(self):

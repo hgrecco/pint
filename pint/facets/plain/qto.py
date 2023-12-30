@@ -4,8 +4,6 @@ from typing import TYPE_CHECKING, Optional
 
 import bisect
 import math
-import numbers
-import warnings
 
 from ...util import infer_base_unit
 from ...compat import (
@@ -100,18 +98,8 @@ def to_compact(
     <Quantity(10.0, 'millinewton')>
     """
 
-    if not isinstance(quantity.magnitude, numbers.Number):
-        msg = "to_compact applied to non numerical types " "has an undefined behavior."
-        w = RuntimeWarning(msg)
-        warnings.warn(w, stacklevel=2)
-        return quantity
 
-    if (
-        quantity.unitless
-        or quantity.magnitude == 0
-        or math.isnan(quantity.magnitude)
-        or math.isinf(quantity.magnitude)
-    ):
+    if quantity.unitless:
         return quantity
 
     SI_prefixes: dict[int, str] = {}
@@ -137,6 +125,11 @@ def to_compact(
     q_base = quantity.to(unit)
 
     magnitude = q_base.magnitude
+    # Support uncertainties
+    if hasattr(magnitude, 'nominal_value'):
+        magnitude = magnitude.nominal_value
+    if magnitude == 0 or math.isnan(magnitude) or math.isinf(magnitude):
+        return quantity
 
     units = list(q_base._units.items())
     units_numerator = [a for a in units if a[1] > 0]
