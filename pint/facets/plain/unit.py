@@ -59,7 +59,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return ret
 
     def __str__(self) -> str:
-        return " ".join(k if v == 1 else f"{k} ** {v}" for k, v in self._units.items())
+        return self._REGISTRY.formatter.format_unit(self)
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())
