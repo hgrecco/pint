@@ -1000,20 +1000,25 @@ class PrettyIPython:
     default_format: str
 
     def _repr_html_(self) -> str:
-        if "~" in self.default_format:
+        if "~" in self._REGISTRY.formatter.default_format:
             return f"{self:~H}"
         return f"{self:H}"
 
     def _repr_latex_(self) -> str:
-        if "~" in self.default_format:
+        if "~" in self._REGISTRY.formatter.default_format:
             return f"${self:~L}$"
         return f"${self:L}$"
 
     def _repr_pretty_(self, p, cycle: bool):
-        if "~" in self.default_format:
+        # if cycle:
+        if "~" in self._REGISTRY.formatter.default_format:
             p.text(f"{self:~P}")
         else:
             p.text(f"{self:P}")
+        # else:
+        #     p.pretty(self.magnitude)
+        #     p.text(" ")
+        #     p.pretty(self.units)
 
 
 def to_units_container(

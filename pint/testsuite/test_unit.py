@@ -157,6 +157,13 @@ class TestUnit(QuantityTestCase):
             def text(text):
                 alltext.append(text)
 
+            @classmethod
+            def pretty(cls, data):
+                try:
+                    data._repr_pretty_(cls, False)
+                except AttributeError:
+                    alltext.append(str(data))
+
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
         assert x._repr_html_() == "kilogram meter<sup>2</sup>/second"

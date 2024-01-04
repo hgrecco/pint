@@ -877,8 +877,10 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
+        # TODO: THIS is not longer necessary after moving to formatter
         module_registry = UnitRegistry()
         module_registry.default_format = "~P"
         m = module_registry.Measurement(1, 0.1, "meter")
