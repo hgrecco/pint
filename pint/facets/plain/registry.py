@@ -49,6 +49,7 @@ from collections.abc import Iterable, Iterator
 
 if TYPE_CHECKING:
     from ..context import Context
+    from ...compat import Locale
 
     # from ..._typing import Quantity, Unit
 
@@ -62,7 +63,7 @@ from ..._typing import (
 
 from ... import pint_eval
 from ..._vendor import appdirs
-from ...compat import TypeAlias, Self, deprecated, Locale
+from ...compat import TypeAlias, Self, deprecated
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
 from ...util import ParserHelper
