@@ -16,7 +16,7 @@ from typing import Any, Generic
 from ..plain import PlainQuantity, MagnitudeT
 
 from ..._typing import Shape
-from ...compat import _to_magnitude, np
+from ...compat import _to_magnitude, np, HAS_NUMPY
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
 from .numpy_func import (
     HANDLED_UFUNCS,
@@ -115,11 +115,12 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         return value
 
     def __array__(self, t=None) -> np.ndarray:
-        warnings.warn(
-            "The unit of the quantity is stripped when downcasting to ndarray.",
-            UnitStrippedWarning,
-            stacklevel=2,
-        )
+        if HAS_NUMPY and isinstance(self._magnitude, np.ndarray):
+            warnings.warn(
+                "The unit of the quantity is stripped when downcasting to ndarray.",
+                UnitStrippedWarning,
+                stacklevel=2,
+            )
         return _to_magnitude(self._magnitude, force_ndarray=True)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
@@ -266,7 +267,7 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
                 isinstance(self._magnitude, np.ma.MaskedArray)
                 and np.ma.is_masked(value)
                 and getattr(value, "size", 0) == 1
-            ) or math.isnan(value):
+            ) or (getattr(value, "ndim", 0) == 0 and math.isnan(value)):
                 self._magnitude[key] = value
                 return
         except TypeError:

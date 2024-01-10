@@ -263,7 +263,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return ret
 
     def __str__(self) -> str:
-        return str(self.magnitude) + " " + str(self.units)
+        return self._REGISTRY.formatter.format_quantity(self)
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())

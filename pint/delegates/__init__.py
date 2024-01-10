@@ -10,5 +10,6 @@
 
 from . import txt_defparser
 from .base_defparser import ParserConfig, build_disk_cache_class
+from .formatter import Formatter
 
-__all__ = ["txt_defparser", "ParserConfig", "build_disk_cache_class"]
+__all__ = ["txt_defparser", "ParserConfig", "build_disk_cache_class", "Formatter"]

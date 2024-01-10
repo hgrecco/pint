@@ -36,6 +36,10 @@ _sq_re = re.compile(
 _unit_re = re.compile(r"<Unit\((.*)\)>")
 
 
+def internal(ureg):
+    return ureg
+
+
 class PintOutputChecker(doctest.OutputChecker):
     def check_output(self, want, got, optionflags):
         check = super().check_output(want, got, optionflags)
