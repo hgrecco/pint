@@ -63,7 +63,7 @@ def test_unit_format_babel():
     dimensionless_unit = ureg.Unit("")
     assert dimensionless_unit.format_babel() == ""
 
-    ureg.fmt_locale = None
+    ureg.set_fmt_locale(None)
     with pytest.raises(ValueError):
         volume.format_babel()
 

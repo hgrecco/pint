@@ -41,8 +41,6 @@
     - plain: basic manipulation and calculation with multiplicative
       dimensions, units and quantities (e.g. length, time, mass, etc).
 
-    - formatting: pretty printing and formatting modifiers.
-
     - nonmultiplicative: manipulation and calculation with offset and
       log units and quantities (e.g. temperature and decibel).
 
@@ -73,7 +71,6 @@ from __future__ import annotations
 
 from .context import ContextRegistry, GenericContextRegistry
 from .dask import DaskRegistry, GenericDaskRegistry
-from .formatting import FormattingRegistry, GenericFormattingRegistry
 from .group import GroupRegistry, GenericGroupRegistry
 from .measurement import MeasurementRegistry, GenericMeasurementRegistry
 from .nonmultiplicative import (
