@@ -86,6 +86,7 @@ Pint Changelog
   (PR #1998)
 - Improved error message in `get_dimensionality()` when non existent units are passed.
   (PR #1874, Issue #1716)
+- Updated definition of US survey units to reflect the 2022 revision by NIST/NGS 
 
 
 0.23 (2023-12-08)
