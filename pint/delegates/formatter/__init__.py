@@ -8,9 +8,10 @@
 
 
 from .base_formatter import BaseFormatter
+from .iso80000_formatter import ISO80000Formatter
 
 
-class Formatter(BaseFormatter):
+class Formatter(ISO80000Formatter, BaseFormatter):
     # TODO: this should derive from all relevant formaters to
     # reproduce the current behavior of Pint.
     pass
