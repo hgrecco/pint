@@ -557,7 +557,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 
 # Note: historically, many of the units in this group were derived from each other (e.g. 1 chain = 10 fathoms = 4 rods = 100 links)
 # but we've followed the NIST's lead here and defined all of the units directly based on "common" units (feet and miles)
-# Source: U.S. Survey Foot: Revised Unit Conversion Factors <https://www.nist.gov/pml/us-surveyfoot/revised-unit-conversion-factors>
+# Source: Warfield, L. , Konijnenburg, J. , Lippa, K. , Lee, G. , Minnich, L. and Williams, J. (2023), Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices as adopted by the 108th National Conference on Weights and Measures, Handbook (NIST HB), National Institute of Standards and Technology, Gaithersburg, MD, [online], https://doi.org/10.6028/NIST.HB.44-2024 (Accessed January 12, 2024)
 @group USCSLengthSurvey
     cables_length = 720 * foot
     chain = 66 * foot = ch
@@ -575,7 +575,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 
 # The adoption of the international foot in 1959 temporarily permitted the continued use of the 1893 definition of the foot for survey purposes.
 # That established the Survey Foot. After 2022, that exception was no longer permitted and all feet are feet (survey or otherwise).
-# Source: U.S. Survey Foot <https://www.nist.gov/pml/us-surveyfoot>
+# Source: Barton, J. , Blackwell, B. , Butcher, T. , Harshman, R., Lee, G. , Olson, D. (2019), Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices as adopted by the 108th National Conference on Weights and Measures 2019, Handbook (NIST HB), National Institute of Standards and Technology, Gaithersburg, MD, [online], h: https://doi.org/10.6028/NIST.HB.44-2020 (Accessed January 12, 2024)
 @group USCSLengthSurveyMendenhall
     survey_foot = 1200 / 3937 * meter = sft
     survey_mile = 5280 * survey_foot = smi = us_statute_mile
