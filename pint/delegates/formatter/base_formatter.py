@@ -34,6 +34,9 @@ _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
 class BaseFormatter:
+    # This default order for sorting dimensions was described in the proposed ISO 80000 specification.
+    dim_order = ( "[substance]", "[mass]", "[current]", "[luminosity]", "[length]", "[]", "[time]", "[temperature]", )
+
     def format_quantity(
         self, quantity: PlainQuantity[MagnitudeT], spec: str = ""
     ) -> str:

@@ -14,7 +14,7 @@ import typing as ty
 import ast
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from ..._typing import Magnitude
 from ... import errors
@@ -61,15 +61,12 @@ class DefaultsDefinition:
 
     group: ty.Optional[str]
     system: ty.Optional[str]
-    dim_order: ty.Optional[List[str]]
 
     def items(self):
         if self.group is not None:
             yield "group", self.group
         if self.system is not None:
             yield "system", self.system
-        if self.dim_order is not None:
-            yield "dim_order", ast.literal_eval(self.dim_order)
 
 
 @dataclass(frozen=True)

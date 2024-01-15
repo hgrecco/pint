@@ -70,19 +70,19 @@ def func_registry():
 
 @pytest.fixture(scope="class")
 def class_registry():
-    """Only use for those test that do not modify the registry."""
+    """Only use for those tests that do not modify the registry."""
     return pint.UnitRegistry()
 
 
 @pytest.fixture(scope="module")
 def module_registry():
-    """Only use for those test that do not modify the registry."""
+    """Only use for those tests that do not modify the registry."""
     return pint.UnitRegistry()
 
 
 @pytest.fixture(scope="session")
 def sess_registry():
-    """Only use for those test that do not modify the registry."""
+    """Only use for those tests that do not modify the registry."""
     return pint.UnitRegistry()
 
 

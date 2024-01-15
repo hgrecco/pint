@@ -307,7 +307,7 @@ def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
 
 
 def dim_sort(items: Iterable[Tuple[str, Number]], registry: UnitRegistry):
-    """Sort a list of units by dimensional order (from `registry._defaults['dim_order']`).
+    """Sort a list of units by dimensional order (from `registry.formatter.dim_order`).
 
     Parameters
     ----------
@@ -329,7 +329,7 @@ def dim_sort(items: Iterable[Tuple[str, Number]], registry: UnitRegistry):
     if registry is None or len(items) <= 1:
         return items
     ret_dict = dict()
-    dim_order = registry._defaults["dim_order"]
+    dim_order = registry.formatter.dim_order
     for unit_name, unit_exponent in items:
         cname = registry.get_name(unit_name)
         if not cname:
