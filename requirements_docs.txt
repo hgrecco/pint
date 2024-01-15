@@ -1,4 +1,4 @@
-sphinx>4
+sphinx>=5
 ipython<=8.12
 matplotlib
 mip>=1.13
