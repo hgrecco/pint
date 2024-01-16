@@ -1016,6 +1016,11 @@ class TestNumpyUnclassified(TestNumpyMethods):
         u.shape = 4, 3
         assert u.magnitude.shape == (4, 3)
 
+    def test_dtype(self):
+        u = self.Q_(np.arange(12, dtype="uint32"))
+
+        assert u.dtype == "uint32"
+
     @helpers.requires_array_function_protocol()
     def test_shape_numpy_func(self):
         assert np.shape(self.q) == (2, 2)

@@ -175,6 +175,10 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     def shape(self) -> Shape:
         return self._magnitude.shape
 
+    @property
+    def dtype(self):
+        return self._magnitude.dtype
+
     @shape.setter
     def shape(self, value):
         self._magnitude.shape = value
