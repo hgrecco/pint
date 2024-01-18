@@ -17,13 +17,27 @@ from .compat import HAS_BABEL
 
 # Backwards compatiblity stuff
 from .delegates.formatter.latex import (
-    latex_escape,
-    siunitx_format_unit,
-)  # noqa: F401
+    vector_to_latex,  # noqa
+    matrix_to_latex,  # noqa
+    ndarray_to_latex_parts,  # noqa
+    ndarray_to_latex,  # noqa
+    latex_escape,  # noqa
+    siunitx_format_unit,  # noqa
+    _EXP_PATTERN,  # noqa
+)  # noqa
 from .delegates.formatter._helpers import (
     formatter,
-    _pretty_fmt_exponent,
-)  # noqa: F401
+    FORMATTER,  # noqa
+    _BASIC_TYPES,  # noqa
+    _parse_spec,  # noqa
+    __JOIN_REG_EXP,  # noqa,
+    _join,  # noqa
+    _PRETTY_EXPONENTS,  # noqa
+    _pretty_fmt_exponent,  # noqa
+    extract_custom_flags,  # noqa
+    remove_custom_flags,  # noqa
+    split_format,  # noqa
+)  # noqa
 
 if TYPE_CHECKING:
     from .registry import UnitRegistry
