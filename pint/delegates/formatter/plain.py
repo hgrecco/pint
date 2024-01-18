@@ -33,7 +33,16 @@ class RawFormatter:
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         with override_locale(babel_kwds.get("locale", None)):
-            return format(magnitude, mspec or "n")
+            if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
+                # Use custom ndarray text formatting--need to handle scalars differently
+                # since they don't respond to printoptions
+                formatter = f"{{:{mspec or 'n'}}}"
+                with np.printoptions(formatter={"float_kind": formatter.format}):
+                    mstr = format(magnitude).replace("\n", "")
+            else:
+                mstr = format(magnitude, mspec or "n")
+
+        return mstr
 
     def format_unit(
         self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
@@ -67,7 +76,16 @@ class CompactFormatter:
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         with override_locale(babel_kwds.get("locale", None)):
-            return format(magnitude, mspec or "n")
+            if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
+                # Use custom ndarray text formatting--need to handle scalars differently
+                # since they don't respond to printoptions
+                formatter = f"{{:{mspec or 'n'}}}"
+                with np.printoptions(formatter={"float_kind": formatter.format}):
+                    mstr = format(magnitude).replace("\n", "")
+            else:
+                mstr = format(magnitude, mspec or "n")
+
+        return mstr
 
     def format_unit(
         self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
@@ -109,18 +127,14 @@ class PrettyFormatter:
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         with override_locale(babel_kwds.get("locale", None)):
-            if isinstance(magnitude, ndarray):
+            if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                formatter = f"{{:{mspec}}}"
-                if magnitude.ndim == 0:
-                    mstr = format(magnitude, mspec or "n")
-                else:
-                    formatter = f"{{:{mspec or 'n'}}}"
-                    with np.printoptions(formatter={"float_kind": formatter.format}):
-                        mstr = format(magnitude).replace("\n", "")
+                formatter = f"{{:{mspec or 'n'}}}"
+                with np.printoptions(formatter={"float_kind": formatter.format}):
+                    mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format(magnitude, mspec or "n").replace("\n", "")
+                mstr = format(magnitude, mspec or "n")
 
             m = _EXP_PATTERN.match(mstr)
 

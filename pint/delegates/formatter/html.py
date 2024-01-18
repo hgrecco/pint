@@ -38,7 +38,7 @@ class HTMLFormatter:
         else:
             if isinstance(magnitude, ndarray):
                 # Use custom ndarray text formatting with monospace font
-                formatter = f"{{:{mspec}}}"
+                formatter = f"{{:{mspec or 'n'}}}"
                 # Need to override for scalars, which are detected as iterable,
                 # and don't respond to printoptions.
                 if magnitude.ndim == 0:
@@ -50,11 +50,13 @@ class HTMLFormatter:
                         )
             elif not iterable(magnitude):
                 # Use plain text for scalars
-                mstr = format(magnitude, mspec)
+                mstr = format(magnitude, mspec or "n")
             else:
                 # Use monospace font for other array-likes
                 mstr = (
-                    "<pre>" + format(magnitude, mspec).replace("\n", "<br>") + "</pre>"
+                    "<pre>"
+                    + format(magnitude, mspec or "n").replace("\n", "<br>")
+                    + "</pre>"
                 )
 
         m = _EXP_PATTERN.match(mstr)
