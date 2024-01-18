@@ -7,10 +7,10 @@
 """
 
 
-from .base_formatter import BabelFormatter
+from .full import MultipleFormatter
 
 
-class Formatter(BabelFormatter):
+class Formatter(MultipleFormatter):
     # TODO: this should derive from all relevant formaters to
     # reproduce the current behavior of Pint.
     pass

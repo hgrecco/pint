@@ -13,7 +13,6 @@ import re
 from typing import Generic
 
 from ...compat import ufloat
-from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
 from ..plain import PlainQuantity, PlainUnit, MagnitudeT
 
 MISSING = object()
@@ -109,6 +108,9 @@ class Measurement(PlainQuantity):
     def __format__(self, spec):
         spec = spec or self._REGISTRY.default_format
 
+        # TODO: provisional
+        from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
+
         # special cases
         if "Lx" in spec:  # the LaTeX siunitx code
             # the uncertainties module supports formatting
@@ -138,7 +140,7 @@ class Measurement(PlainQuantity):
             # Also, SIunitx doesn't accept parentheses, which uncs uses with
             # scientific notation ('e' or 'E' and sometimes 'g' or 'G').
             mstr = mstr.replace("(", "").replace(")", " ")
-            ustr = siunitx_format_unit(self.units._units, self._REGISTRY)
+            ustr = siunitx_format_unit(self.units._units.items(), self._REGISTRY)
             return rf"\SI{opts}{{{mstr}}}{{{ustr}}}"
 
         # standard cases

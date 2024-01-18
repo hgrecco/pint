@@ -24,11 +24,11 @@ def test_format(func_registry):
     assert distance.format_babel(locale="fr_FR", length="long") == "24.0 mètres"
     time = 8.0 * ureg.second
     assert time.format_babel(locale="fr_FR", length="long") == "8.0 secondes"
-    assert time.format_babel(locale="ro", length="short") == "8.0 s"
+    assert time.format_babel(locale="ro_RO", length="short") == "8.0 s"
     acceleration = distance / time**2
     assert (
-        acceleration.format_babel(locale="fr_FR", length="long")
-        == "0.375 mètre par seconde²"
+        acceleration.format_babel(spec="P", locale="fr_FR", length="long")
+        == "0.375 mètre/seconde²"
     )
     mks = ureg.get_system("mks")
     assert mks.format_babel(locale="fr_FR") == "métrique"
@@ -44,9 +44,12 @@ def test_registry_locale():
     assert distance.format_babel(length="long") == "24.0 mètres"
     time = 8.0 * ureg.second
     assert time.format_babel(length="long") == "8.0 secondes"
-    assert time.format_babel(locale="ro", length="short") == "8.0 s"
+    assert time.format_babel(locale="ro_RO", length="short") == "8.0 s"
     acceleration = distance / time**2
-    assert acceleration.format_babel(length="long") == "0.375 mètre par seconde²"
+    assert (
+        acceleration.format_babel(spec="C", length="long") == "0.375 mètre/seconde**2"
+    )
+    assert acceleration.format_babel(spec="P", length="long") == "0.375 mètre/seconde²"
     mks = ureg.get_system("mks")
     assert mks.format_babel(locale="fr_FR") == "métrique"
 

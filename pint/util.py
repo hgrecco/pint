@@ -34,7 +34,6 @@ from collections.abc import Hashable, Generator
 
 from .compat import NUMERIC_TYPES, Self
 from .errors import DefinitionSyntaxError
-from .formatting import format_unit
 from .pint_eval import build_eval_tree
 from . import pint_eval
 
@@ -606,9 +605,15 @@ class UnitsContainer(Mapping[str, Scalar]):
         return f"<UnitsContainer({tmp})>"
 
     def __format__(self, spec: str) -> str:
+        # TODO: provisional
+        from .formatting import format_unit
+
         return format_unit(self, spec)
 
     def format_babel(self, spec: str, registry=None, **kwspec) -> str:
+        # TODO: provisional
+        from .formatting import format_unit
+
         return format_unit(self, spec, registry=registry, **kwspec)
 
     def __copy__(self):
