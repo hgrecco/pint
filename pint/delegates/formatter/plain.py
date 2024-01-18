@@ -49,7 +49,7 @@ class RawFormatter:
     ) -> str:
         units = format_compound_unit(unit, uspec, **babel_kwds)
 
-        return " ".join(k if v == 1 else f"{k} ** {v}" for k, v in units)
+        return " * ".join(k if v == 1 else f"{k} ** {v}" for k, v in units)
 
     def format_quantity(
         self,
@@ -64,7 +64,7 @@ class RawFormatter:
         )
 
         joint_fstring = "{} {}"
-
+        print(repr(mspec), repr(uspec))
         return joint_fstring.format(
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
