@@ -8,12 +8,13 @@ from contextlib import contextmanager
 
 import locale
 
-from ...compat import Locale, babel_parse, Number
+from ...compat import babel_parse
 
 
 if TYPE_CHECKING:
     from ...registry import UnitRegistry
     from ...facets.plain import PlainUnit
+    from ...compat import Locale, Number
 
 T = TypeVar("T")
 
