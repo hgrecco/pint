@@ -290,3 +290,9 @@ def split_format(
         uspec = uspec or default_uspec
 
     return mspec, uspec
+
+
+def join_mu(joint_fstring: str, mstr: str, ustr: str) -> str:
+    if ustr.startswith("1 / "):
+        return joint_fstring.format(mstr, ustr[2:])
+    return joint_fstring.format(mstr, ustr)
