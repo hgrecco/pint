@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, Callable, Any
+from typing import Iterable, Callable, Any
 import warnings
 from ...compat import Number
 import re
-from ...babel_names import _babel_lengths, _babel_units
-from ...compat import babel_parse
 
 FORMATTER = Callable[
     [
@@ -24,9 +22,6 @@ def formatter(
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
     exp_call: FORMATTER = "{:n}".format,
-    locale: Optional[str] = None,
-    babel_length: str = "long",
-    babel_plural_form: str = "one",
     sort: bool = True,
 ) -> str:
     """Format a list of (name, exponent) pairs.
@@ -48,12 +43,6 @@ def formatter(
         the format used for exponentiation. (Default value = "{} ** {}")
     parentheses_fmt : str
         the format used for parenthesis. (Default value = "({0})")
-    locale : str
-        the locale object as defined in babel. (Default value = None)
-    babel_length : str
-        the length of the translated unit, as defined in babel cldr. (Default value = "long")
-    babel_plural_form : str
-        the plural form, calculated as defined in babel. (Default value = "one")
     exp_call : callable
          (Default value = lambda x: f"{x:n}")
     sort : bool, optional
@@ -82,35 +71,6 @@ def formatter(
     pos_terms, neg_terms = [], []
 
     for key, value in items:
-        if locale and babel_length and babel_plural_form and key in _babel_units:
-            _key = _babel_units[key]
-            locale = babel_parse(locale)
-            unit_patterns = locale._data["unit_patterns"]
-            compound_unit_patterns = locale._data["compound_unit_patterns"]
-            plural = "one" if abs(value) <= 0 else babel_plural_form
-            if babel_length not in _babel_lengths:
-                other_lengths = [
-                    _babel_length
-                    for _babel_length in reversed(_babel_lengths)
-                    if babel_length != _babel_length
-                ]
-            else:
-                other_lengths = []
-            for _babel_length in [babel_length] + other_lengths:
-                pat = unit_patterns.get(_key, {}).get(_babel_length, {}).get(plural)
-                if pat is not None:
-                    # Don't remove this positional! This is the format used in Babel
-                    key = pat.replace("{0}", "").strip()
-                    break
-
-            tmp = compound_unit_patterns.get("per", {}).get(babel_length, division_fmt)
-
-            try:
-                division_fmt = tmp.get("compound", division_fmt)
-            except AttributeError:
-                division_fmt = tmp
-            power_fmt = "{}{}"
-            exp_call = _pretty_fmt_exponent
         if value == 1:
             pos_terms.append(key)
         elif value > 0:
