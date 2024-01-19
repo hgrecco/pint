@@ -69,7 +69,7 @@ class TestUnit(QuantityTestCase):
         }.items():
             with subtests.test(spec):
                 ureg.default_format = spec
-                assert f"{x}" == result, f"Failed for {spec}, {result}"
+                assert f"{x}" == result, f"Failed for {spec}, got {x} expected {result}"
         # no '#' here as it's a comment char when define()ing new units
         ureg.define(r"weirdunit = 1 = \~_^&%$_{}")
         x = ureg.Unit(UnitsContainer(weirdunit=1))
