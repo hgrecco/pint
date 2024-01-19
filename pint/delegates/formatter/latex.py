@@ -17,7 +17,8 @@ from ._helpers import split_format, formatter, FORMATTER
 from ..._typing import Magnitude
 from ...compat import ndarray, Unpack, Number
 from ._unit_handlers import BabelKwds, override_locale, format_compound_unit
-from .plain import DEFAULT_NUM_FMT
+from ._helpers import join_mu
+from .plain import format_number
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
@@ -142,9 +143,9 @@ class LatexFormatter:
     ) -> str:
         with override_locale(babel_kwds.get("locale", None)):
             if isinstance(magnitude, ndarray):
-                mstr = ndarray_to_latex(magnitude, mspec or DEFAULT_NUM_FMT)
+                mstr = ndarray_to_latex(magnitude, mspec)
             else:
-                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT).replace("\n", "")
+                mstr = format_number(magnitude, mspec)
 
             mstr = _EXP_PATTERN.sub(r"\1\\times 10^{\2\3}", mstr)
 
@@ -181,7 +182,8 @@ class LatexFormatter:
 
         joint_fstring = r"{}\ {}"
 
-        return joint_fstring.format(
+        return join_mu(
+            joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
@@ -193,11 +195,12 @@ class SIunitxFormatter:
     ) -> str:
         with override_locale(babel_kwds.get("locale", None)):
             if isinstance(magnitude, ndarray):
-                mstr = ndarray_to_latex(magnitude, mspec or DEFAULT_NUM_FMT)
+                mstr = ndarray_to_latex(magnitude, mspec)
             else:
-                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT).replace("\n", "")
+                mstr = format_number(magnitude, mspec)
 
-            mstr = _EXP_PATTERN.sub(r"\1\\times 10^{\2\3}", mstr)
+            # TODO: Why this is not needed in siunitx?
+            # mstr = _EXP_PATTERN.sub(r"\1\\times 10^{\2\3}", mstr)
 
         return mstr
 
@@ -215,10 +218,14 @@ class SIunitxFormatter:
 
         # TODO: not sure if I should call format_compound_unit here.
         # siunitx_format_unit requires certain specific names?
+        # should unit names be translated?
+        # should unit names be shortened?
+        # units = format_compound_unit(unit, uspec, **babel_kwds)
 
-        units = format_compound_unit(unit, uspec, **babel_kwds)
+        formatted = siunitx_format_unit(unit._units.items(), registry)
 
-        formatted = siunitx_format_unit(units, registry)
+        # TODO: is this the right behaviour? Should we return the \si[] when only
+        # the units are returned?
         return rf"\si[]{{{formatted}}}"
 
     def format_quantity(
@@ -233,9 +240,8 @@ class SIunitxFormatter:
             qspec, registry.default_format, registry.separate_format_defaults
         )
 
-        joint_fstring = r"{}\ {}"
+        joint_fstring = "{}{}"
 
-        return joint_fstring.format(
-            self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, **babel_kwds),
-        )
+        mstr = self.format_magnitude(quantity.magnitude, mspec, **babel_kwds)
+        ustr = self.format_unit(quantity.units, uspec, **babel_kwds)[len(r"\si[]") :]
+        return r"\SI[]" + join_mu(joint_fstring, "{%s}" % mstr, ustr)

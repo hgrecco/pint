@@ -7,14 +7,16 @@
 """
 
 from __future__ import annotations
+from functools import partial
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import re
 from ...compat import ndarray, np, Unpack
 from ._helpers import (
     _pretty_fmt_exponent,
     split_format,
     formatter,
+    join_mu,
 )
 
 from ..._typing import Magnitude
@@ -25,7 +27,21 @@ if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
 
 
-DEFAULT_NUM_FMT = ".16n"
+def format_number(value: Any, spec: str = "") -> str:
+    if isinstance(value, float):
+        return format(value, spec or ".16n")
+
+    elif isinstance(value, int):
+        return format(value, spec or "n")
+
+    elif isinstance(value, ndarray) and value.ndim == 0:
+        if issubclass(value.dtype.type, np.integer):
+            return format(value, spec or "n")
+        else:
+            return format(value, spec or ".16n")
+    else:
+        return str(value)
+
 
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
@@ -56,8 +72,8 @@ class RawFormatter:
         )
 
         joint_fstring = "{} {}"
-        print(repr(mspec), repr(uspec))
-        return joint_fstring.format(
+        return join_mu(
+            joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
@@ -71,11 +87,12 @@ class DefaultFormatter:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                formatter = f"{{:{mspec or DEFAULT_NUM_FMT}}}"
-                with np.printoptions(formatter={"float_kind": formatter.format}):
+                with np.printoptions(
+                    formatter={"float_kind": partial(format_number, spec=mspec)}
+                ):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT)
+                mstr = format_number(magnitude, mspec)
 
         return mstr
 
@@ -107,8 +124,8 @@ class DefaultFormatter:
         )
 
         joint_fstring = "{} {}"
-        print(repr(mspec), repr(uspec))
-        return joint_fstring.format(
+        return join_mu(
+            joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
@@ -122,11 +139,12 @@ class CompactFormatter:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                formatter = f"{{:{mspec or DEFAULT_NUM_FMT}}}"
-                with np.printoptions(formatter={"float_kind": formatter.format}):
+                with np.printoptions(
+                    formatter={"float_kind": partial(format_number, spec=mspec)}
+                ):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT)
+                mstr = format_number(magnitude, mspec)
 
         return mstr
 
@@ -159,7 +177,8 @@ class CompactFormatter:
 
         joint_fstring = "{} {}"
 
-        return joint_fstring.format(
+        return join_mu(
+            joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
@@ -173,11 +192,12 @@ class PrettyFormatter:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                formatter = f"{{:{mspec or DEFAULT_NUM_FMT}}}"
-                with np.printoptions(formatter={"float_kind": formatter.format}):
+                with np.printoptions(
+                    formatter={"float_kind": partial(format_number, spec=mspec)}
+                ):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT)
+                mstr = format_number(magnitude, mspec)
 
             m = _EXP_PATTERN.match(mstr)
 
@@ -217,7 +237,8 @@ class PrettyFormatter:
 
         joint_fstring = "{} {}"
 
-        return joint_fstring.format(
+        return join_mu(
+            joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )

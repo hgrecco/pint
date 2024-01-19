@@ -10,16 +10,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 import re
+from functools import partial
 from ...util import iterable
 from ...compat import ndarray, np, Unpack
 from ._helpers import (
     split_format,
     formatter,
+    join_mu,
 )
 
 from ..._typing import Magnitude
 from ._unit_handlers import BabelKwds, format_compound_unit
-from .plain import DEFAULT_NUM_FMT
+from .plain import format_number
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
@@ -38,25 +40,23 @@ class HTMLFormatter:
             assert isinstance(mstr, str)
         else:
             if isinstance(magnitude, ndarray):
-                # Use custom ndarray text formatting with monospace font
-                formatter = f"{{:{mspec or DEFAULT_NUM_FMT}}}"
                 # Need to override for scalars, which are detected as iterable,
                 # and don't respond to printoptions.
                 if magnitude.ndim == 0:
-                    mstr = formatter.format(magnitude)
+                    mstr = format_number(magnitude, mspec)
                 else:
-                    with np.printoptions(formatter={"float_kind": formatter.format}):
-                        mstr = (
-                            "<pre>" + format(magnitude).replace("\n", "<br>") + "</pre>"
-                        )
+                    with np.printoptions(
+                        formatter={"float_kind": partial(format_number, spec=mspec)}
+                    ):
+                        mstr = "<pre>" + format(magnitude).replace("\n", "") + "</pre>"
             elif not iterable(magnitude):
                 # Use plain text for scalars
-                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT)
+                mstr = format_number(magnitude, mspec)
             else:
                 # Use monospace font for other array-likes
                 mstr = (
                     "<pre>"
-                    + format(magnitude, mspec or DEFAULT_NUM_FMT).replace("\n", "<br>")
+                    + format_number(magnitude, mspec).replace("\n", "<br>")
                     + "</pre>"
                 )
 
@@ -108,7 +108,8 @@ class HTMLFormatter:
         else:
             joint_fstring = "{} {}"
 
-        return joint_fstring.format(
+        return join_mu(
+            joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
