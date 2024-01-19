@@ -66,6 +66,11 @@ def formatter(
 
     """
 
+    if sort:
+        items = sorted(items)
+    else:
+        items = tuple(items)
+
     if not items:
         return ""
 
@@ -76,8 +81,6 @@ def formatter(
 
     pos_terms, neg_terms = [], []
 
-    if sort:
-        items = sorted(items)
     for key, value in items:
         if locale and babel_length and babel_plural_form and key in _babel_units:
             _key = _babel_units[key]
