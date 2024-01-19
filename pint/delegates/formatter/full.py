@@ -16,7 +16,7 @@ from ...util import iterable
 from ..._typing import Magnitude
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
-from .plain import RawFormatter, CompactFormatter, PrettyFormatter
+from .plain import RawFormatter, CompactFormatter, PrettyFormatter, DefaultFormatter
 from ._unit_handlers import BabelKwds
 
 if TYPE_CHECKING:
@@ -52,6 +52,7 @@ class MultipleFormatter:
     def __init__(self) -> None:
         self._formatters = {}
         self._formatters["raw"] = RawFormatter()
+        self._formatters["D"] = DefaultFormatter()
         self._formatters["H"] = HTMLFormatter()
         self._formatters["P"] = PrettyFormatter()
         self._formatters["Lx"] = SIunitxFormatter()
@@ -64,7 +65,7 @@ class MultipleFormatter:
         for k, v in self._formatters.items():
             if k in spec:
                 return v
-        return self._formatters["raw"]
+        return self._formatters["D"]
 
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]

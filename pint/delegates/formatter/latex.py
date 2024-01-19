@@ -17,6 +17,7 @@ from ._helpers import split_format, formatter, FORMATTER
 from ..._typing import Magnitude
 from ...compat import ndarray, Unpack, Number
 from ._unit_handlers import BabelKwds, override_locale, format_compound_unit
+from .plain import DEFAULT_NUM_FMT
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
@@ -141,9 +142,9 @@ class LatexFormatter:
     ) -> str:
         with override_locale(babel_kwds.get("locale", None)):
             if isinstance(magnitude, ndarray):
-                mstr = ndarray_to_latex(magnitude, mspec or "n")
+                mstr = ndarray_to_latex(magnitude, mspec or DEFAULT_NUM_FMT)
             else:
-                mstr = format(magnitude, mspec or "n").replace("\n", "")
+                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT).replace("\n", "")
 
             mstr = _EXP_PATTERN.sub(r"\1\\times 10^{\2\3}", mstr)
 
@@ -192,9 +193,9 @@ class SIunitxFormatter:
     ) -> str:
         with override_locale(babel_kwds.get("locale", None)):
             if isinstance(magnitude, ndarray):
-                mstr = ndarray_to_latex(magnitude, mspec or "n")
+                mstr = ndarray_to_latex(magnitude, mspec or DEFAULT_NUM_FMT)
             else:
-                mstr = format(magnitude, mspec or "n").replace("\n", "")
+                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT).replace("\n", "")
 
             mstr = _EXP_PATTERN.sub(r"\1\\times 10^{\2\3}", mstr)
 

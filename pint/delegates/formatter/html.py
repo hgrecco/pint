@@ -19,6 +19,7 @@ from ._helpers import (
 
 from ..._typing import Magnitude
 from ._unit_handlers import BabelKwds, format_compound_unit
+from .plain import DEFAULT_NUM_FMT
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
@@ -38,7 +39,7 @@ class HTMLFormatter:
         else:
             if isinstance(magnitude, ndarray):
                 # Use custom ndarray text formatting with monospace font
-                formatter = f"{{:{mspec or 'n'}}}"
+                formatter = f"{{:{mspec or DEFAULT_NUM_FMT}}}"
                 # Need to override for scalars, which are detected as iterable,
                 # and don't respond to printoptions.
                 if magnitude.ndim == 0:
@@ -50,12 +51,12 @@ class HTMLFormatter:
                         )
             elif not iterable(magnitude):
                 # Use plain text for scalars
-                mstr = format(magnitude, mspec or "n")
+                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT)
             else:
                 # Use monospace font for other array-likes
                 mstr = (
                     "<pre>"
-                    + format(magnitude, mspec or "n").replace("\n", "<br>")
+                    + format(magnitude, mspec or DEFAULT_NUM_FMT).replace("\n", "<br>")
                     + "</pre>"
                 )
 

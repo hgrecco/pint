@@ -25,6 +25,8 @@ if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
 
 
+DEFAULT_NUM_FMT = ".16n"
+
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
@@ -32,15 +34,48 @@ class RawFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
+        return str(magnitude)
+
+    def format_unit(
+        self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+    ) -> str:
+        units = format_compound_unit(unit, uspec, **babel_kwds)
+
+        return " * ".join(k if v == 1 else f"{k} ** {v}" for k, v in units)
+
+    def format_quantity(
+        self,
+        quantity: PlainQuantity[MagnitudeT],
+        qspec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        registry = quantity._REGISTRY
+
+        mspec, uspec = split_format(
+            qspec, registry.default_format, registry.separate_format_defaults
+        )
+
+        joint_fstring = "{} {}"
+        print(repr(mspec), repr(uspec))
+        return joint_fstring.format(
+            self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
+            self.format_unit(quantity.units, uspec, **babel_kwds),
+        )
+
+
+class DefaultFormatter:
+    def format_magnitude(
+        self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
+    ) -> str:
         with override_locale(babel_kwds.get("locale", None)):
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                formatter = f"{{:{mspec or 'n'}}}"
+                formatter = f"{{:{mspec or DEFAULT_NUM_FMT}}}"
                 with np.printoptions(formatter={"float_kind": formatter.format}):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format(magnitude, mspec or "n")
+                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT)
 
         return mstr
 
@@ -49,7 +84,15 @@ class RawFormatter:
     ) -> str:
         units = format_compound_unit(unit, uspec, **babel_kwds)
 
-        return " * ".join(k if v == 1 else f"{k} ** {v}" for k, v in units)
+        return formatter(
+            units,
+            as_ratio=True,
+            single_denominator=False,
+            product_fmt=" * ",
+            division_fmt=" / ",
+            power_fmt="{} ** {}",
+            parentheses_fmt=r"({})",
+        )
 
     def format_quantity(
         self,
@@ -79,11 +122,11 @@ class CompactFormatter:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                formatter = f"{{:{mspec or 'n'}}}"
+                formatter = f"{{:{mspec or DEFAULT_NUM_FMT}}}"
                 with np.printoptions(formatter={"float_kind": formatter.format}):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format(magnitude, mspec or "n")
+                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT)
 
         return mstr
 
@@ -130,11 +173,11 @@ class PrettyFormatter:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                formatter = f"{{:{mspec or 'n'}}}"
+                formatter = f"{{:{mspec or DEFAULT_NUM_FMT}}}"
                 with np.printoptions(formatter={"float_kind": formatter.format}):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format(magnitude, mspec or "n")
+                mstr = format(magnitude, mspec or DEFAULT_NUM_FMT)
 
             m = _EXP_PATTERN.match(mstr)
 
