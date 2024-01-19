@@ -299,7 +299,7 @@ class TestQuantity(QuantityTestCase):
         assert f"{x:~Lx}" == r"\SI[]{1e+20}{\meter}"
         assert f"{x:~P}" == r"1×10²⁰ m"
 
-        x /= 1e40
+        x = ureg.Quantity(1e-20, "meter")
         assert f"{x:~H}" == r"1×10<sup>-20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{-20}\ \mathrm{m}"
         assert f"{x:~Lx}" == r"\SI[]{1e-20}{\meter}"
