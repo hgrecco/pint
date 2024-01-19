@@ -61,7 +61,7 @@ class MultipleFormatter:
 
     def get_formatter(self, spec: str):
         if spec == "":
-            return self._formatters["raw"]
+            return self._formatters["D"]
         for k, v in self._formatters.items():
             if k in spec:
                 return v
@@ -70,6 +70,7 @@ class MultipleFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
+        mspec = mspec or self.default_format
         return self.get_formatter(mspec).format_magnitude(
             magnitude, mspec, **babel_kwds
         )
@@ -77,6 +78,7 @@ class MultipleFormatter:
     def format_unit(
         self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
+        uspec = uspec or self.default_format
         return self.get_formatter(uspec).format_unit(unit, uspec, **babel_kwds)
 
     def format_quantity(
