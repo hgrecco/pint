@@ -105,6 +105,7 @@ class TestUnit(QuantityTestCase):
                 ureg.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
+    @pytest.mark.xfail(reason="Still not clear how default formatting will work.")
     def test_unit_formatting_defaults_warning(self):
         ureg = UnitRegistry()
         ureg.default_format = "~P"

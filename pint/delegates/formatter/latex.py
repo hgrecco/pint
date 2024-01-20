@@ -268,6 +268,9 @@ class SIunitxFormatter:
 
         formatted = siunitx_format_unit(unit._units.items(), registry)
 
+        if "~" in uspec:
+            formatted = formatted.replace(r"\percent", r"\%")
+
         # TODO: is this the right behaviour? Should we return the \si[] when only
         # the units are returned?
         return rf"\si[]{{{formatted}}}"

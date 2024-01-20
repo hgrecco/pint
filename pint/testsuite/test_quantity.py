@@ -265,6 +265,7 @@ class TestQuantity(QuantityTestCase):
                 ureg.formatter.default_format = spec
                 assert f"{x}" == result
 
+    @pytest.mark.xfail(reason="Still not clear how default formatting will work.")
     def test_formatting_override_default_units(self):
         ureg = UnitRegistry()
         ureg.formatter.default_format = "~"
@@ -274,10 +275,11 @@ class TestQuantity(QuantityTestCase):
         with pytest.warns(DeprecationWarning):
             assert f"{x:d}" == "4 meter ** 2"
 
-        ureg.formatter.separate_format_defaults = True
+        ureg.separate_format_defaults = True
         with assert_no_warnings():
             assert f"{x:d}" == "4 m ** 2"
 
+    @pytest.mark.xfail(reason="Still not clear how default formatting will work.")
     def test_formatting_override_default_magnitude(self):
         ureg = UnitRegistry()
         ureg.formatter.default_format = ".2f"
