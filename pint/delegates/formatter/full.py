@@ -66,6 +66,14 @@ class MultipleFormatter:
         for k, v in self._formatters.items():
             if k in spec:
                 return v
+
+        from ...formatting import _ORPHAN_FORMATTER
+
+        try:
+            return _ORPHAN_FORMATTER._formatters[spec]
+        except KeyError:
+            pass
+
         return self._formatters["D"]
 
     def format_magnitude(

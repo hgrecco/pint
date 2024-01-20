@@ -177,7 +177,7 @@ class LatexFormatter:
         registry = quantity._REGISTRY
 
         mspec, uspec = split_format(
-            qspec, registry.default_format, registry.separate_format_defaults
+            qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
         joint_fstring = r"{}\ {}"
@@ -211,7 +211,9 @@ class LatexFormatter:
         registry = measurement._REGISTRY
 
         mspec, uspec = split_format(
-            meas_spec, registry.default_format, registry.separate_format_defaults
+            meas_spec,
+            registry.formatter.default_format,
+            registry.separate_format_defaults,
         )
 
         unc_spec = remove_custom_flags(meas_spec)
@@ -279,7 +281,7 @@ class SIunitxFormatter:
         registry = quantity._REGISTRY
 
         mspec, uspec = split_format(
-            qspec, registry.default_format, registry.separate_format_defaults
+            qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
         joint_fstring = "{}{}"
@@ -314,7 +316,9 @@ class SIunitxFormatter:
         registry = measurement._REGISTRY
 
         mspec, uspec = split_format(
-            meas_spec, registry.default_format, registry.separate_format_defaults
+            meas_spec,
+            registry.formatter.default_format,
+            registry.separate_format_defaults,
         )
 
         unc_spec = remove_custom_flags(meas_spec)

@@ -94,7 +94,7 @@ class HTMLFormatter:
         registry = quantity._REGISTRY
 
         mspec, uspec = split_format(
-            qspec, registry.default_format, registry.separate_format_defaults
+            qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
         if iterable(quantity.magnitude):
@@ -136,7 +136,9 @@ class HTMLFormatter:
         registry = measurement._REGISTRY
 
         mspec, uspec = split_format(
-            meas_spec, registry.default_format, registry.separate_format_defaults
+            meas_spec,
+            registry.formatter.default_format,
+            registry.separate_format_defaults,
         )
 
         unc_spec = remove_custom_flags(meas_spec)
