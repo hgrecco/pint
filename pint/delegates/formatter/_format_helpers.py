@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 U = TypeVar("U")
-V = TypeVar("U")
+V = TypeVar("V")
 
 
 class BabelKwds(TypedDict):
