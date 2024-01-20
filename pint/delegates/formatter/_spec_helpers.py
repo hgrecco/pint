@@ -1,3 +1,13 @@
+"""
+    pint.delegates.formatter._spec_helpers
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Convenient functions to deal with format specifications.
+
+    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
+    :license: BSD, see LICENSE for more details.
+"""
+
 from __future__ import annotations
 
 from typing import Iterable, Callable, Any
@@ -12,101 +22,23 @@ FORMATTER = Callable[
     str,
 ]
 
-
-def formatter(
-    items: Iterable[tuple[str, Number]],
-    as_ratio: bool = True,
-    single_denominator: bool = False,
-    product_fmt: str = " * ",
-    division_fmt: str = " / ",
-    power_fmt: str = "{} ** {}",
-    parentheses_fmt: str = "({0})",
-    exp_call: FORMATTER = "{:n}".format,
-    sort: bool = True,
-) -> str:
-    """Format a list of (name, exponent) pairs.
-
-    Parameters
-    ----------
-    items : list
-        a list of (name, exponent) pairs.
-    as_ratio : bool, optional
-        True to display as ratio, False as negative powers. (Default value = True)
-    single_denominator : bool, optional
-        all with terms with negative exponents are
-        collected together. (Default value = False)
-    product_fmt : str
-        the format used for multiplication. (Default value = " * ")
-    division_fmt : str
-        the format used for division. (Default value = " / ")
-    power_fmt : str
-        the format used for exponentiation. (Default value = "{} ** {}")
-    parentheses_fmt : str
-        the format used for parenthesis. (Default value = "({0})")
-    exp_call : callable
-         (Default value = lambda x: f"{x:n}")
-    sort : bool, optional
-        True to sort the formatted units alphabetically (Default value = True)
-
-    Returns
-    -------
-    str
-        the formula as a string.
-
-    """
-
-    if sort:
-        items = sorted(items)
-    else:
-        items = tuple(items)
-
-    if not items:
-        return ""
-
-    if as_ratio:
-        fun = lambda x: exp_call(abs(x))
-    else:
-        fun = exp_call
-
-    pos_terms, neg_terms = [], []
-
-    for key, value in items:
-        if value == 1:
-            pos_terms.append(key)
-        elif value > 0:
-            pos_terms.append(power_fmt.format(key, fun(value)))
-        elif value == -1 and as_ratio:
-            neg_terms.append(key)
-        else:
-            neg_terms.append(power_fmt.format(key, fun(value)))
-
-    if not as_ratio:
-        # Show as Product: positive * negative terms ** -1
-        return _join(product_fmt, pos_terms + neg_terms)
-
-    # Show as Ratio: positive terms / negative terms
-    pos_ret = _join(product_fmt, pos_terms) or "1"
-
-    if not neg_terms:
-        return pos_ret
-
-    if single_denominator:
-        neg_ret = _join(product_fmt, neg_terms)
-        if len(neg_terms) > 1:
-            neg_ret = parentheses_fmt.format(neg_ret)
-    else:
-        neg_ret = _join(division_fmt, neg_terms)
-
-    return _join(division_fmt, [pos_ret, neg_ret])
-
-
 # Extract just the type from the specification mini-language: see
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
 # We also add uS for uncertainties.
 _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
+_PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
+_JOIN_REG_EXP = re.compile(r"{\d*}")
 
 
-def _parse_spec(spec: str) -> str:
+def parse_spec(spec: str) -> str:
+    """Parse and return spec.
+
+    If an unknown item is found, raise a ValueError.
+
+    This function still needs work:
+    - what happens if two distinct values are found?
+
+    """
     # TODO: provisional
     from ...formatting import _ORPHAN_FORMATTER
 
@@ -128,31 +60,16 @@ def _parse_spec(spec: str) -> str:
     return result
 
 
-__JOIN_REG_EXP = re.compile(r"{\d*}")
-
-
 def _join(fmt: str, iterable: Iterable[Any]) -> str:
     """Join an iterable with the format specified in fmt.
 
     The format can be specified in two ways:
     - PEP3101 format with two replacement fields (eg. '{} * {}')
     - The concatenating string (eg. ' * ')
-
-    Parameters
-    ----------
-    fmt : str
-
-    iterable :
-
-
-    Returns
-    -------
-    str
-
     """
     if not iterable:
         return ""
-    if not __JOIN_REG_EXP.search(fmt):
+    if not _JOIN_REG_EXP.search(fmt):
         return fmt.join(iterable)
     miter = iter(iterable)
     first = next(miter)
@@ -162,21 +79,8 @@ def _join(fmt: str, iterable: Iterable[Any]) -> str:
     return first
 
 
-_PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
-
-
-def _pretty_fmt_exponent(num: Number) -> str:
-    """Format an number into a pretty printed exponent.
-
-    Parameters
-    ----------
-    num : int
-
-    Returns
-    -------
-    str
-
-    """
+def pretty_fmt_exponent(num: Number) -> str:
+    """Format an number into a pretty printed exponent."""
     # unicode dot operator (U+22C5) looks like a superscript decimal
     ret = f"{num:n}".replace("-", "⁻").replace(".", "\u22C5")
     for n in range(10):
@@ -185,6 +89,10 @@ def _pretty_fmt_exponent(num: Number) -> str:
 
 
 def extract_custom_flags(spec: str) -> str:
+    """Return custom flags present in a format specification
+
+    (i.e those not part of Python's formatting mini language)
+    """
     import re
 
     if not spec:
@@ -205,6 +113,11 @@ def extract_custom_flags(spec: str) -> str:
 
 
 def remove_custom_flags(spec: str) -> str:
+    """Remove custom flags present in a format specification
+
+    (i.e those not part of Python's formatting mini language)
+    """
+
     # TODO: provisional
     from ...formatting import _ORPHAN_FORMATTER
 
@@ -219,6 +132,7 @@ def remove_custom_flags(spec: str) -> str:
 def split_format(
     spec: str, default: str, separate_format_defaults: bool = True
 ) -> tuple[str, str]:
+    """Split format specification into magnitude and unit format."""
     mspec = remove_custom_flags(spec)
     uspec = extract_custom_flags(spec)
 
@@ -259,12 +173,25 @@ def split_format(
 
 
 def join_mu(joint_fstring: str, mstr: str, ustr: str) -> str:
+    """Join magnitude and units.
+
+    This avoids that `3 and `1 / m` becomes `3 1 / m`
+    """
     if ustr.startswith("1 / "):
         return joint_fstring.format(mstr, ustr[2:])
     return joint_fstring.format(mstr, ustr)
 
 
 def join_unc(joint_fstring: str, lpar: str, rpar: str, mstr: str, ustr: str) -> str:
+    """Join uncertainty magnitude and units.
+
+    Uncertainty magnitudes might require extra parenthesis when joined to units.
+    - YES: 3 +/- 1
+    - NO : 3(1)
+    - NO : (3 +/ 1)e-9
+
+    This avoids that `(3 + 1)` and `meter` becomes ((3 +/- 1) meter)
+    """
     if mstr.startswith(lpar) or mstr.endswith(rpar):
         return joint_fstring.format(mstr, ustr)
     return joint_fstring.format(lpar + mstr + rpar, ustr)

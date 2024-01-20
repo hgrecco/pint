@@ -10,14 +10,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable
 from ...compat import ndarray, np, Unpack
-from ._helpers import (
+from ._spec_helpers import (
     split_format,
     join_mu,
 )
 
 from ..._typing import Magnitude
 
-from ._unit_handlers import format_compound_unit, BabelKwds, override_locale
+from ._format_helpers import format_compound_unit, BabelKwds, override_locale
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT

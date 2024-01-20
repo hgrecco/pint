@@ -1,10 +1,15 @@
 """
-    pint.delegates.formatter.base_formatter
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Common class and function for all formatters.
+    pint.delegates.formatter.latex
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Implements:
+    - Latex: uses vainilla latex.
+    - SIunitx: uses latex siunitx package format.
+
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
+
 
 from __future__ import annotations
 import functools
@@ -12,12 +17,12 @@ import functools
 from typing import TYPE_CHECKING, Any, Iterable, Union
 
 import re
-from ._helpers import split_format, formatter, FORMATTER
+from ._spec_helpers import split_format, FORMATTER
 
 from ..._typing import Magnitude
 from ...compat import ndarray, Unpack, Number
-from ._unit_handlers import BabelKwds, override_locale, format_compound_unit
-from ._helpers import join_mu, join_unc, remove_custom_flags
+from ._format_helpers import BabelKwds, formatter, override_locale, format_compound_unit
+from ._spec_helpers import join_mu, join_unc, remove_custom_flags
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
@@ -29,10 +34,13 @@ if TYPE_CHECKING:
 def vector_to_latex(
     vec: Iterable[Any], fmtfun: FORMATTER | str = "{:.2n}".format
 ) -> str:
+    """Format a vector into a latex string."""
     return matrix_to_latex([vec], fmtfun)
 
 
 def matrix_to_latex(matrix: ItMatrix, fmtfun: FORMATTER | str = "{:.2n}".format) -> str:
+    """Format a matrix into a latex string."""
+
     ret: list[str] = []
 
     for row in matrix:
@@ -42,8 +50,15 @@ def matrix_to_latex(matrix: ItMatrix, fmtfun: FORMATTER | str = "{:.2n}".format)
 
 
 def ndarray_to_latex_parts(
-    ndarr, fmtfun: FORMATTER = "{:.2n}".format, dim: tuple[int, ...] = tuple()
-):
+    ndarr: ndarray, fmtfun: FORMATTER = "{:.2n}".format, dim: tuple[int, ...] = tuple()
+) -> list[str]:
+    """Convert an numpy array into an iterable of elements to be print.
+
+    e.g.
+    - if the array is 2d, it will return an iterable of rows.
+    - if the array is 3d, it will return an iterable of matrices.
+    """
+
     if isinstance(fmtfun, str):
         fmtfun = fmtfun.format
 
@@ -68,15 +83,16 @@ def ndarray_to_latex_parts(
 
 
 def ndarray_to_latex(
-    ndarr, fmtfun: FORMATTER | str = "{:.2n}".format, dim: tuple[int, ...] = tuple()
+    ndarr: ndarray,
+    fmtfun: FORMATTER | str = "{:.2n}".format,
+    dim: tuple[int, ...] = tuple(),
 ) -> str:
+    """Format a numpy array into string."""
     return "\n".join(ndarray_to_latex_parts(ndarr, fmtfun, dim))
 
 
 def latex_escape(string: str) -> str:
-    """
-    Prepend characters that have a special meaning in LaTeX with a backslash.
-    """
+    """Prepend characters that have a special meaning in LaTeX with a backslash."""
     return functools.reduce(
         lambda s, m: re.sub(m[0], m[1], s),
         (
@@ -138,6 +154,8 @@ _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
 class LatexFormatter:
+    """Latex localizable text formatter."""
+
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
@@ -234,6 +252,11 @@ class LatexFormatter:
 
 
 class SIunitxFormatter:
+    """Latex localizable text formatter with siunitx format.
+
+    See: https://ctan.org/pkg/siunitx
+    """
+
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:

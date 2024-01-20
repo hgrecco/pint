@@ -1,7 +1,10 @@
 """
-    pint.delegates.formatter.base_formatter
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Common class and function for all formatters.
+    pint.delegates.formatter.full
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Implements:
+    - Full: dispatch to other formats, accept defaults.
+
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
@@ -17,7 +20,7 @@ from ..._typing import Magnitude
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
 from .plain import RawFormatter, CompactFormatter, PrettyFormatter, DefaultFormatter
-from ._unit_handlers import BabelKwds
+from ._format_helpers import BabelKwds
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
@@ -25,7 +28,12 @@ if TYPE_CHECKING:
     from ...compat import Locale
 
 
-class MultipleFormatter:
+class FullFormatter:
+    """A formatter that dispatch to other formatters.
+
+    Has a default format, locale and babel_length
+    """
+
     _formatters: dict[str, Any] = {}
 
     default_format: str = ""

@@ -1,18 +1,23 @@
 """
     pint.delegates.formatter
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Formats quantities and units.
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Easy to replace and extend string formatting.
+
+    See pint.delegates.formatter.plain.DefaultFormatter for a
+    description of a formatter.
+
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
 
-from .full import MultipleFormatter
+from .full import FullFormatter
 
 
-class Formatter(MultipleFormatter):
-    # TODO: this should derive from all relevant formaters to
-    # reproduce the current behavior of Pint.
+class Formatter(FullFormatter):
+    """Default Pint Formatter"""
+
     pass
 
 

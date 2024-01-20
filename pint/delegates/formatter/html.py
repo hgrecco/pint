@@ -1,7 +1,10 @@
 """
-    pint.delegates.formatter.base_formatter
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Common class and function for all formatters.
+    pint.delegates.formatter.html
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Implements:
+    - HTML: suitable for web/jupyter notebook outputs.
+
     :copyright: 2022 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
@@ -12,16 +15,15 @@ from typing import TYPE_CHECKING
 import re
 from ...util import iterable
 from ...compat import ndarray, np, Unpack
-from ._helpers import (
+from ._spec_helpers import (
     split_format,
-    formatter,
     join_mu,
     join_unc,
     remove_custom_flags,
 )
 
 from ..._typing import Magnitude
-from ._unit_handlers import BabelKwds, format_compound_unit, override_locale
+from ._format_helpers import BabelKwds, format_compound_unit, formatter, override_locale
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
@@ -31,6 +33,8 @@ _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
 class HTMLFormatter:
+    """HTML localizable text formatter."""
+
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:

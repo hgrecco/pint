@@ -22,15 +22,14 @@ from .delegates.formatter.latex import (
     siunitx_format_unit,  # noqa
     _EXP_PATTERN,  # noqa
 )  # noqa
-from .delegates.formatter._helpers import (
-    formatter,  # noqa
+from .delegates.formatter._spec_helpers import (
     FORMATTER,  # noqa
     _BASIC_TYPES,  # noqa
-    _parse_spec,  # noqa
-    __JOIN_REG_EXP,  # noqa,
+    parse_spec as _parse_spec,  # noqa
+    _JOIN_REG_EXP as __JOIN_REG_EXP,  # noqa,
     _join,  # noqa
     _PRETTY_EXPONENTS,  # noqa
-    _pretty_fmt_exponent,  # noqa
+    pretty_fmt_exponent as _pretty_fmt_exponent,  # noqa
     extract_custom_flags,  # noqa
     remove_custom_flags,  # noqa
     split_format,  # noqa
