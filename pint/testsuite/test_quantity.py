@@ -262,25 +262,25 @@ class TestQuantity(QuantityTestCase):
             ("C~", "4.12345678 kg*m**2/s"),
         ):
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result
 
     def test_formatting_override_default_units(self):
         ureg = UnitRegistry()
-        ureg.default_format = "~"
+        ureg.formatter.default_format = "~"
         x = ureg.Quantity(4, "m ** 2")
 
         assert f"{x:dP}" == "4 meter²"
         with pytest.warns(DeprecationWarning):
             assert f"{x:d}" == "4 meter ** 2"
 
-        ureg.separate_format_defaults = True
+        ureg.formatter.separate_format_defaults = True
         with assert_no_warnings():
             assert f"{x:d}" == "4 m ** 2"
 
     def test_formatting_override_default_magnitude(self):
         ureg = UnitRegistry()
-        ureg.default_format = ".2f"
+        ureg.formatter.default_format = ".2f"
         x = ureg.Quantity(4, "m ** 2")
 
         assert f"{x:dP}" == "4 meter²"
@@ -329,7 +329,7 @@ class TestQuantity(QuantityTestCase):
         )
         x._repr_pretty_(Pretty, False)
         assert "".join(alltext) == "3.5 kilogram·meter²/second"
-        ureg.default_format = "~"
+        ureg.formatter.default_format = "~"
         assert x._repr_html_() == "3.5 kg m<sup>2</sup>/s"
         assert (
             x._repr_latex_() == r"$3.5\ \frac{\mathrm{kg} \cdot "

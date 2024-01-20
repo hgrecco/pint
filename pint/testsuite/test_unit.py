@@ -139,15 +139,15 @@ class TestUnit(QuantityTestCase):
     def test_unit_formatting_custom(self, monkeypatch):
         from pint import formatting, register_unit_format
 
-        monkeypatch.setattr(formatting, "_FORMATTERS", formatting._FORMATTERS.copy())
-
         @register_unit_format("new")
-        def format_new(unit, **options):
+        def format_new(unit, *args, **options):
             return "new format"
 
         ureg = UnitRegistry()
 
         assert f"{ureg.m:new}" == "new format"
+
+        del formatting._ORPHAN_FORMATTER._formatters["new"]
 
     def test_ipython(self):
         alltext = []
