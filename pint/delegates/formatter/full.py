@@ -21,6 +21,7 @@ from ._unit_handlers import BabelKwds
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
+    from ...facets.measurement import Measurement
     from ...compat import Locale
 
 
@@ -104,6 +105,34 @@ class MultipleFormatter:
         return self.get_formatter(spec).format_quantity(
             obj,
             spec,
+            use_plural=babel_kwds.get("use_plural", use_plural),
+            length=babel_kwds.get("length", self.babel_length),
+            locale=babel_kwds.get("locale", self.locale),
+        )
+
+    def format_measurement(
+        self,
+        measurement: Measurement,
+        meas_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        meas_spec = meas_spec or self.default_format
+        # If Compact is selected, do it at the beginning
+        if "#" in meas_spec:
+            meas_spec = meas_spec.replace("#", "")
+            obj = measurement.to_compact()
+        else:
+            obj = measurement
+
+        del measurement
+
+        use_plural = obj.magnitude.nominal_value > 1
+        if iterable(use_plural):
+            use_plural = True
+
+        return self.get_formatter(meas_spec).format_measurement(
+            obj,
+            meas_spec,
             use_plural=babel_kwds.get("use_plural", use_plural),
             length=babel_kwds.get("length", self.babel_length),
             locale=babel_kwds.get("locale", self.locale),

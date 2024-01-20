@@ -9,7 +9,7 @@
 from __future__ import annotations
 from functools import partial
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 import re
 from ...compat import ndarray, np, Unpack
 from ._helpers import (
@@ -17,6 +17,8 @@ from ._helpers import (
     split_format,
     formatter,
     join_mu,
+    join_unc,
+    remove_custom_flags,
 )
 
 from ..._typing import Magnitude
@@ -25,22 +27,7 @@ from ._unit_handlers import format_compound_unit, BabelKwds, override_locale
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
-
-
-def format_number(value: Any, spec: str = "") -> str:
-    if isinstance(value, float):
-        return format(value, spec or ".16n")
-
-    elif isinstance(value, int):
-        return format(value, spec or "n")
-
-    elif isinstance(value, ndarray) and value.ndim == 0:
-        if issubclass(value.dtype.type, np.integer):
-            return format(value, spec or "n")
-        else:
-            return format(value, spec or ".16n")
-    else:
-        return str(value)
+    from ...facets.measurement import Measurement
 
 
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
@@ -78,12 +65,44 @@ class RawFormatter:
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
 
+    def format_uncertainty(
+        self,
+        uncertainty,
+        unc_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        return format(uncertainty, unc_spec)
+
+    def format_measurement(
+        self,
+        measurement: Measurement,
+        meas_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        registry = measurement._REGISTRY
+
+        mspec, uspec = split_format(
+            meas_spec, registry.default_format, registry.separate_format_defaults
+        )
+
+        unc_spec = remove_custom_flags(meas_spec)
+
+        joint_fstring = "{} {}"
+
+        return join_unc(
+            joint_fstring,
+            "(",
+            ")",
+            self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, **babel_kwds),
+        )
+
 
 class DefaultFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)):
+        with override_locale(babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
@@ -130,12 +149,44 @@ class DefaultFormatter:
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
 
+    def format_uncertainty(
+        self,
+        uncertainty,
+        unc_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        return format(uncertainty, unc_spec).replace("+/-", " +/- ")
+
+    def format_measurement(
+        self,
+        measurement: Measurement,
+        meas_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        registry = measurement._REGISTRY
+
+        mspec, uspec = split_format(
+            meas_spec, registry.default_format, registry.separate_format_defaults
+        )
+
+        unc_spec = remove_custom_flags(meas_spec)
+
+        joint_fstring = "{} {}"
+
+        return join_unc(
+            joint_fstring,
+            "(",
+            ")",
+            self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, **babel_kwds),
+        )
+
 
 class CompactFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)):
+        with override_locale(babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
@@ -183,12 +234,44 @@ class CompactFormatter:
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
 
+    def format_uncertainty(
+        self,
+        uncertainty,
+        unc_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        return format(uncertainty, unc_spec).replace("+/-", "+/-")
+
+    def format_measurement(
+        self,
+        measurement: Measurement,
+        meas_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        registry = measurement._REGISTRY
+
+        mspec, uspec = split_format(
+            meas_spec, registry.default_format, registry.separate_format_defaults
+        )
+
+        unc_spec = remove_custom_flags(meas_spec)
+
+        joint_fstring = "{} {}"
+
+        return join_unc(
+            joint_fstring,
+            "(",
+            ")",
+            self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, **babel_kwds),
+        )
+
 
 class PrettyFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)):
+        with override_locale(babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
@@ -241,4 +324,35 @@ class PrettyFormatter:
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
+        )
+
+    def format_uncertainty(
+        self,
+        uncertainty,
+        unc_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        return format(uncertainty, unc_spec).replace("±", " ± ")
+
+    def format_measurement(
+        self,
+        measurement: Measurement,
+        meas_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        registry = measurement._REGISTRY
+
+        mspec, uspec = split_format(
+            meas_spec, registry.default_format, registry.separate_format_defaults
+        )
+
+        unc_spec = meas_spec
+        joint_fstring = "{} {}"
+
+        return join_unc(
+            joint_fstring,
+            "(",
+            ")",
+            self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, **babel_kwds),
         )

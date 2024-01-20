@@ -17,11 +17,11 @@ from ._helpers import split_format, formatter, FORMATTER
 from ..._typing import Magnitude
 from ...compat import ndarray, Unpack, Number
 from ._unit_handlers import BabelKwds, override_locale, format_compound_unit
-from ._helpers import join_mu
-from .plain import format_number
+from ._helpers import join_mu, join_unc, remove_custom_flags
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
+    from ...facets.measurement import Measurement
     from ...util import ItMatrix
     from ...registry import UnitRegistry
 
@@ -141,7 +141,7 @@ class LatexFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)):
+        with override_locale(babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray):
                 mstr = ndarray_to_latex(magnitude, mspec)
             else:
@@ -188,12 +188,54 @@ class LatexFormatter:
             self.format_unit(quantity.units, uspec, **babel_kwds),
         )
 
+    def format_uncertainty(
+        self,
+        uncertainty,
+        unc_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        # uncertainties handles everythin related to latex.
+        unc_str = format(uncertainty, unc_spec)
+
+        if unc_str.startswith(r"\left"):
+            return unc_str
+
+        return unc_str.replace("(", r"\left(").replace(")", r"\right)")
+
+    def format_measurement(
+        self,
+        measurement: Measurement,
+        meas_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        registry = measurement._REGISTRY
+
+        mspec, uspec = split_format(
+            meas_spec, registry.default_format, registry.separate_format_defaults
+        )
+
+        unc_spec = remove_custom_flags(meas_spec)
+
+        # TODO: ugly. uncertainties recognizes L
+        if "L" not in unc_spec:
+            unc_spec += "L"
+
+        joint_fstring = "{}\ {}"
+
+        return join_unc(
+            joint_fstring,
+            r"\left(",
+            r"\right)",
+            self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, **babel_kwds),
+        )
+
 
 class SIunitxFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)):
+        with override_locale(babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray):
                 mstr = ndarray_to_latex(magnitude, mspec)
             else:
@@ -245,3 +287,45 @@ class SIunitxFormatter:
         mstr = self.format_magnitude(quantity.magnitude, mspec, **babel_kwds)
         ustr = self.format_unit(quantity.units, uspec, **babel_kwds)[len(r"\si[]") :]
         return r"\SI[]" + join_mu(joint_fstring, "{%s}" % mstr, ustr)
+
+    def format_uncertainty(
+        self,
+        uncertainty,
+        unc_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        # SIunitx requires space between "+-" (or "\pm") and the nominal value
+        # and uncertainty, and doesn't accept "+/-"
+        # SIunitx doesn't accept parentheses, which uncs uses with
+        # scientific notation ('e' or 'E' and sometimes 'g' or 'G').
+        return (
+            format(uncertainty, unc_spec)
+            .replace("+/-", r" +- ")
+            .replace("(", "")
+            .replace(")", " ")
+        )
+
+    def format_measurement(
+        self,
+        measurement: Measurement,
+        meas_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        registry = measurement._REGISTRY
+
+        mspec, uspec = split_format(
+            meas_spec, registry.default_format, registry.separate_format_defaults
+        )
+
+        unc_spec = remove_custom_flags(meas_spec)
+
+        joint_fstring = "{}{}"
+
+        return r"\SI" + join_unc(
+            joint_fstring,
+            r"",
+            r"",
+            "{%s}"
+            % self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, **babel_kwds)[len(r"\si[]") :],
+        )

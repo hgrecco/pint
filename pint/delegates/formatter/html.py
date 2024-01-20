@@ -17,15 +17,16 @@ from ._helpers import (
     split_format,
     formatter,
     join_mu,
+    join_unc,
+    remove_custom_flags,
 )
 
 from ..._typing import Magnitude
-from ._unit_handlers import BabelKwds, format_compound_unit
-from .plain import format_number
+from ._unit_handlers import BabelKwds, format_compound_unit, override_locale
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
-
+    from ...facets.measurement import Measurement
 
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
@@ -34,31 +35,34 @@ class HTMLFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        if hasattr(magnitude, "_repr_html_"):
-            # If magnitude has an HTML repr, nest it within Pint's
-            mstr = magnitude._repr_html_()  # type: ignore
-            assert isinstance(mstr, str)
-        else:
-            if isinstance(magnitude, ndarray):
-                # Need to override for scalars, which are detected as iterable,
-                # and don't respond to printoptions.
-                if magnitude.ndim == 0:
+        with override_locale(babel_kwds.get("locale", None)) as format_number:
+            if hasattr(magnitude, "_repr_html_"):
+                # If magnitude has an HTML repr, nest it within Pint's
+                mstr = magnitude._repr_html_()  # type: ignore
+                assert isinstance(mstr, str)
+            else:
+                if isinstance(magnitude, ndarray):
+                    # Need to override for scalars, which are detected as iterable,
+                    # and don't respond to printoptions.
+                    if magnitude.ndim == 0:
+                        mstr = format_number(magnitude, mspec)
+                    else:
+                        with np.printoptions(
+                            formatter={"float_kind": partial(format_number, spec=mspec)}
+                        ):
+                            mstr = (
+                                "<pre>" + format(magnitude).replace("\n", "") + "</pre>"
+                            )
+                elif not iterable(magnitude):
+                    # Use plain text for scalars
                     mstr = format_number(magnitude, mspec)
                 else:
-                    with np.printoptions(
-                        formatter={"float_kind": partial(format_number, spec=mspec)}
-                    ):
-                        mstr = "<pre>" + format(magnitude).replace("\n", "") + "</pre>"
-            elif not iterable(magnitude):
-                # Use plain text for scalars
-                mstr = format_number(magnitude, mspec)
-            else:
-                # Use monospace font for other array-likes
-                mstr = (
-                    "<pre>"
-                    + format_number(magnitude, mspec).replace("\n", "<br>")
-                    + "</pre>"
-                )
+                    # Use monospace font for other array-likes
+                    mstr = (
+                        "<pre>"
+                        + format_number(magnitude, mspec).replace("\n", "<br>")
+                        + "</pre>"
+                    )
 
         m = _EXP_PATTERN.match(mstr)
         _exp_formatter = lambda s: f"<sup>{s}</sup>"
@@ -112,4 +116,40 @@ class HTMLFormatter:
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.units, uspec, **babel_kwds),
+        )
+
+    def format_uncertainty(
+        self,
+        uncertainty,
+        unc_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        unc_str = format(uncertainty, unc_spec).replace("+/-", " &plusmn; ")
+
+        unc_str = re.sub(r"\)e\+0?(\d+)", r")×10<sup>\1</sup>", unc_str)
+        unc_str = re.sub(r"\)e-0?(\d+)", r")×10<sup>-\1</sup>", unc_str)
+        return unc_str
+
+    def format_measurement(
+        self,
+        measurement: Measurement,
+        meas_spec: str = "",
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        registry = measurement._REGISTRY
+
+        mspec, uspec = split_format(
+            meas_spec, registry.default_format, registry.separate_format_defaults
+        )
+
+        unc_spec = remove_custom_flags(meas_spec)
+
+        joint_fstring = "{} {}"
+
+        return join_unc(
+            joint_fstring,
+            "(",
+            ")",
+            self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, **babel_kwds),
         )

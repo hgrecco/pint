@@ -256,3 +256,9 @@ def join_mu(joint_fstring: str, mstr: str, ustr: str) -> str:
     if ustr.startswith("1 / "):
         return joint_fstring.format(mstr, ustr[2:])
     return joint_fstring.format(mstr, ustr)
+
+
+def join_unc(joint_fstring: str, lpar: str, rpar: str, mstr: str, ustr: str) -> str:
+    if mstr.startswith(lpar) or mstr.endswith(rpar):
+        return joint_fstring.format(mstr, ustr)
+    return joint_fstring.format(lpar + mstr + rpar, ustr)

@@ -107,7 +107,9 @@ class Measurement(PlainQuantity):
 
     def __format__(self, spec):
         spec = spec or self._REGISTRY.default_format
+        return self._REGISTRY.formatter.format_measurement(self, spec)
 
+    def old_format(self, spec):
         # TODO: provisional
         from ...formatting import _FORMATS, extract_custom_flags, siunitx_format_unit
 

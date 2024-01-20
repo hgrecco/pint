@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import functools
-from typing import Iterable, TypeVar, Callable, TYPE_CHECKING, Literal, TypedDict
+from typing import Any, Iterable, TypeVar, Callable, TYPE_CHECKING, Literal, TypedDict
 
 from locale import getlocale, setlocale, LC_NUMERIC
 from contextlib import contextmanager
 
 import locale
 
-from ...compat import babel_parse
+from ...compat import babel_parse, ndarray
 
+try:
+    from numpy import integer as np_integer
+except ImportError:
+    np_integer = None
 
 if TYPE_CHECKING:
     from ...registry import UnitRegistry
@@ -162,15 +166,39 @@ def format_compound_unit(
     return out
 
 
+def format_number(value: Any, spec: str = "") -> str:
+    if isinstance(value, float):
+        return format(value, spec or ".16n")
+
+    elif isinstance(value, int):
+        return format(value, spec or "n")
+
+    elif isinstance(value, ndarray) and value.ndim == 0:
+        if issubclass(value.dtype.type, np_integer):
+            return format(value, spec or "n")
+        else:
+            return format(value, spec or ".16n")
+    else:
+        return str(value)
+
+
+# TODO: ugly, ugly
+# format has positional only arguments
+# and this cannot be partialized
+# and np requires a callable. We could create a lambda
+def builtin_format(value: Any, spec: str = "") -> str:
+    return format(value, spec)
+
+
 @contextmanager
 def override_locale(locale: str | Locale | None):
     if locale is None:
-        yield
+        yield builtin_format
     else:
         prev_locale_string = getlocale(LC_NUMERIC)
         if isinstance(locale, str):
             setlocale(LC_NUMERIC, locale)
         else:
             setlocale(LC_NUMERIC, str(locale))
-        yield
+        yield format_number
         setlocale(LC_NUMERIC, prev_locale_string)
