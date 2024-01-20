@@ -10,10 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable
 from ...compat import ndarray, np, Unpack
-from ._spec_helpers import (
-    split_format,
-    join_mu,
-)
+from ._spec_helpers import split_format, join_mu, REGISTERED_FORMATTERS
 
 from ..._typing import Magnitude
 
@@ -55,11 +52,9 @@ def register_unit_format(name: str):
         f"{u:custom}"
     """
 
-    from ...formatting import _ORPHAN_FORMATTER
-
     # TODO: kwargs missing in typing
     def wrapper(func: Callable[[PlainUnit, UnitRegistry], str]):
-        if name in _ORPHAN_FORMATTER._formatters:
+        if name in REGISTERED_FORMATTERS:
             raise ValueError(f"format {name!r} already exists")  # or warn instead
 
         class NewFormatter:
@@ -112,6 +107,6 @@ def register_unit_format(name: str):
                     self.format_unit(quantity.units, uspec, **babel_kwds),
                 )
 
-        _ORPHAN_FORMATTER._formatters[name] = NewFormatter()
+        REGISTERED_FORMATTERS[name] = NewFormatter()
 
     return wrapper

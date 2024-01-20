@@ -12,7 +12,6 @@ from __future__ import annotations
 
 
 # Backwards compatiblity stuff
-from .delegates.formatter import Formatter
 from .delegates.formatter.latex import (
     vector_to_latex,  # noqa
     matrix_to_latex,  # noqa
@@ -33,13 +32,9 @@ from .delegates.formatter._spec_helpers import (
     extract_custom_flags,  # noqa
     remove_custom_flags,  # noqa
     split_format,  # noqa
+    REGISTERED_FORMATTERS,
 )  # noqa
 from .delegates.formatter._to_register import register_unit_format  # noqa
-
-
-# TODO: This will be gone soon.
-
-_ORPHAN_FORMATTER = Formatter()
 
 
 def format_unit(unit, spec: str, registry=None, **options):
@@ -56,7 +51,7 @@ def format_unit(unit, spec: str, registry=None, **options):
         spec = "D"
 
     if registry is None:
-        _formatter = _ORPHAN_FORMATTER._formatters.get(spec, None)
+        _formatter = REGISTERED_FORMATTERS.get(spec, None)
     else:
         try:
             _formatter = registry._formatters[spec]

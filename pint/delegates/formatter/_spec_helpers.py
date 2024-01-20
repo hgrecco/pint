@@ -29,6 +29,8 @@ _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
 _PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 _JOIN_REG_EXP = re.compile(r"{\d*}")
 
+REGISTERED_FORMATTERS: dict[str, Any] = {}
+
 
 def parse_spec(spec: str) -> str:
     """Parse and return spec.
@@ -39,16 +41,12 @@ def parse_spec(spec: str) -> str:
     - what happens if two distinct values are found?
 
     """
-    # TODO: provisional
-    from ...formatting import _ORPHAN_FORMATTER
-
-    _FORMATTERS = _ORPHAN_FORMATTER._formatters
 
     result = ""
     for ch in reversed(spec):
         if ch == "~" or ch in _BASIC_TYPES:
             continue
-        elif ch in list(_FORMATTERS.keys()) + ["~"]:
+        elif ch in list(REGISTERED_FORMATTERS.keys()) + ["~"]:
             if result:
                 raise ValueError("expected ':' after format specifier")
             else:
@@ -93,18 +91,12 @@ def extract_custom_flags(spec: str) -> str:
 
     (i.e those not part of Python's formatting mini language)
     """
-    import re
 
     if not spec:
         return ""
 
-    # TODO: provisional
-    from ...formatting import _ORPHAN_FORMATTER
-
-    _FORMATTERS = _ORPHAN_FORMATTER._formatters
-
     # sort by length, with longer items first
-    known_flags = sorted(_FORMATTERS.keys(), key=len, reverse=True)
+    known_flags = sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True)
 
     flag_re = re.compile("(" + "|".join(known_flags + ["~"]) + ")")
     custom_flags = flag_re.findall(spec)
@@ -118,12 +110,7 @@ def remove_custom_flags(spec: str) -> str:
     (i.e those not part of Python's formatting mini language)
     """
 
-    # TODO: provisional
-    from ...formatting import _ORPHAN_FORMATTER
-
-    _FORMATTERS = _ORPHAN_FORMATTER._formatters
-
-    for flag in sorted(_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
+    for flag in sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
         if flag:
             spec = spec.replace(flag, "")
     return spec

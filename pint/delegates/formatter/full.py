@@ -21,6 +21,7 @@ from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
 from .plain import RawFormatter, CompactFormatter, PrettyFormatter, DefaultFormatter
 from ._format_helpers import BabelKwds
+from ._to_register import REGISTERED_FORMATTERS
 
 if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
@@ -75,10 +76,8 @@ class FullFormatter:
             if k in spec:
                 return v
 
-        from ...formatting import _ORPHAN_FORMATTER
-
         try:
-            return _ORPHAN_FORMATTER._formatters[spec]
+            return REGISTERED_FORMATTERS[spec]
         except KeyError:
             pass
 
@@ -200,3 +199,15 @@ class FullFormatter:
             length=length or self.babel_length,
             locale=locale or self.locale,
         )
+
+
+################################################################
+# This allows to format units independently of the registry
+#
+REGISTERED_FORMATTERS["raw"] = RawFormatter()
+REGISTERED_FORMATTERS["D"] = DefaultFormatter()
+REGISTERED_FORMATTERS["H"] = HTMLFormatter()
+REGISTERED_FORMATTERS["P"] = PrettyFormatter()
+REGISTERED_FORMATTERS["Lx"] = SIunitxFormatter()
+REGISTERED_FORMATTERS["L"] = LatexFormatter()
+REGISTERED_FORMATTERS["C"] = CompactFormatter()

@@ -138,7 +138,8 @@ class TestUnit(QuantityTestCase):
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
     def test_unit_formatting_custom(self, monkeypatch):
-        from pint import formatting, register_unit_format
+        from pint import register_unit_format
+        from pint.delegates.formatter._spec_helpers import REGISTERED_FORMATTERS
 
         @register_unit_format("new")
         def format_new(unit, *args, **options):
@@ -148,7 +149,7 @@ class TestUnit(QuantityTestCase):
 
         assert f"{ureg.m:new}" == "new format"
 
-        del formatting._ORPHAN_FORMATTER._formatters["new"]
+        del REGISTERED_FORMATTERS["new"]
 
     def test_ipython(self):
         alltext = []
