@@ -141,11 +141,11 @@ class LatexFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)) as format_number:
+        with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray):
                 mstr = ndarray_to_latex(magnitude, mspec)
             else:
-                mstr = format_number(magnitude, mspec)
+                mstr = format_number(magnitude)
 
             mstr = _EXP_PATTERN.sub(r"\1\\times 10^{\2\3}", mstr)
 
@@ -235,11 +235,11 @@ class SIunitxFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)) as format_number:
+        with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray):
                 mstr = ndarray_to_latex(magnitude, mspec)
             else:
-                mstr = format_number(magnitude, mspec)
+                mstr = format_number(magnitude)
 
             # TODO: Why this is not needed in siunitx?
             # mstr = _EXP_PATTERN.sub(r"\1\\times 10^{\2\3}", mstr)

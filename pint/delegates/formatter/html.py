@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 import re
-from functools import partial
 from ...util import iterable
 from ...compat import ndarray, np, Unpack
 from ._helpers import (
@@ -35,7 +34,7 @@ class HTMLFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)) as format_number:
+        with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             if hasattr(magnitude, "_repr_html_"):
                 # If magnitude has an HTML repr, nest it within Pint's
                 mstr = magnitude._repr_html_()  # type: ignore
@@ -45,22 +44,20 @@ class HTMLFormatter:
                     # Need to override for scalars, which are detected as iterable,
                     # and don't respond to printoptions.
                     if magnitude.ndim == 0:
-                        mstr = format_number(magnitude, mspec)
+                        mstr = format_number(magnitude)
                     else:
-                        with np.printoptions(
-                            formatter={"float_kind": partial(format_number, spec=mspec)}
-                        ):
+                        with np.printoptions(formatter={"float_kind": format_number}):
                             mstr = (
                                 "<pre>" + format(magnitude).replace("\n", "") + "</pre>"
                             )
                 elif not iterable(magnitude):
                     # Use plain text for scalars
-                    mstr = format_number(magnitude, mspec)
+                    mstr = format_number(magnitude)
                 else:
                     # Use monospace font for other array-likes
                     mstr = (
                         "<pre>"
-                        + format_number(magnitude, mspec).replace("\n", "<br>")
+                        + format_number(magnitude).replace("\n", "<br>")
                         + "</pre>"
                     )
 

@@ -1,7 +1,16 @@
 from __future__ import annotations
 
-import functools
-from typing import Any, Iterable, TypeVar, Callable, TYPE_CHECKING, Literal, TypedDict
+from functools import partial
+from typing import (
+    Any,
+    Generator,
+    Iterable,
+    TypeVar,
+    Callable,
+    TYPE_CHECKING,
+    Literal,
+    TypedDict,
+)
 
 from locale import getlocale, setlocale, LC_NUMERIC
 from contextlib import contextmanager
@@ -130,7 +139,7 @@ def localized_form(
     length: Literal["short", "long", "narrow"],
     locale: Locale | str,
 ) -> Iterable[tuple[str, T]]:
-    mapper = functools.partial(
+    mapper = partial(
         format_unit_no_magnitude,
         use_plural=use_plural,
         length=length,
@@ -191,14 +200,16 @@ def builtin_format(value: Any, spec: str = "") -> str:
 
 
 @contextmanager
-def override_locale(locale: str | Locale | None):
+def override_locale(
+    spec: str, locale: str | Locale | None
+) -> Generator[Callable[[Any], str], Any, None]:
     if locale is None:
-        yield builtin_format
+        yield ("{:" + spec + "}").format
     else:
         prev_locale_string = getlocale(LC_NUMERIC)
         if isinstance(locale, str):
             setlocale(LC_NUMERIC, locale)
         else:
             setlocale(LC_NUMERIC, str(locale))
-        yield format_number
+        yield partial(format_number, spec=spec)
         setlocale(LC_NUMERIC, prev_locale_string)

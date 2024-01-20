@@ -7,7 +7,6 @@
 """
 
 from __future__ import annotations
-from functools import partial
 
 from typing import TYPE_CHECKING
 import re
@@ -102,16 +101,14 @@ class DefaultFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)) as format_number:
+        with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                with np.printoptions(
-                    formatter={"float_kind": partial(format_number, spec=mspec)}
-                ):
+                with np.printoptions(formatter={"float_kind": format_number}):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format_number(magnitude, mspec)
+                mstr = format_number(magnitude)
 
         return mstr
 
@@ -186,16 +183,14 @@ class CompactFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)) as format_number:
+        with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                with np.printoptions(
-                    formatter={"float_kind": partial(format_number, spec=mspec)}
-                ):
+                with np.printoptions(formatter={"float_kind": format_number}):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format_number(magnitude, mspec)
+                mstr = format_number(magnitude)
 
         return mstr
 
@@ -271,16 +266,14 @@ class PrettyFormatter:
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
-        with override_locale(babel_kwds.get("locale", None)) as format_number:
+        with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray) and magnitude.ndim > 0:
                 # Use custom ndarray text formatting--need to handle scalars differently
                 # since they don't respond to printoptions
-                with np.printoptions(
-                    formatter={"float_kind": partial(format_number, spec=mspec)}
-                ):
+                with np.printoptions(formatter={"float_kind": format_number}):
                     mstr = format(magnitude).replace("\n", "")
             else:
-                mstr = format_number(magnitude, mspec)
+                mstr = format_number(magnitude)
 
             m = _EXP_PATTERN.match(mstr)
 
