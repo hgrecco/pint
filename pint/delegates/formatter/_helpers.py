@@ -108,7 +108,9 @@ _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
 
 def _parse_spec(spec: str) -> str:
     # TODO: provisional
-    from ...formatting import _FORMATTERS
+    from ...formatting import _ORPHAN_FORMATTER
+
+    _FORMATTERS = _ORPHAN_FORMATTER._formatters
 
     result = ""
     for ch in reversed(spec):
@@ -189,7 +191,9 @@ def extract_custom_flags(spec: str) -> str:
         return ""
 
     # TODO: provisional
-    from ...formatting import _FORMATTERS
+    from ...formatting import _ORPHAN_FORMATTER
+
+    _FORMATTERS = _ORPHAN_FORMATTER._formatters
 
     # sort by length, with longer items first
     known_flags = sorted(_FORMATTERS.keys(), key=len, reverse=True)
@@ -202,7 +206,9 @@ def extract_custom_flags(spec: str) -> str:
 
 def remove_custom_flags(spec: str) -> str:
     # TODO: provisional
-    from ...formatting import _FORMATTERS
+    from ...formatting import _ORPHAN_FORMATTER
+
+    _FORMATTERS = _ORPHAN_FORMATTER._formatters
 
     for flag in sorted(_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
         if flag:

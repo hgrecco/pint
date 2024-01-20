@@ -18,6 +18,7 @@ from contextlib import contextmanager
 import locale
 
 from ...compat import babel_parse, ndarray
+from ...util import UnitsContainer
 
 try:
     from numpy import integer as np_integer
@@ -156,17 +157,28 @@ class BabelKwds(TypedDict):
 
 
 def format_compound_unit(
-    unit: PlainUnit,
+    unit: PlainUnit | UnitsContainer,
     spec: str = "",
     use_plural: bool = False,
     length: Literal["short", "long", "narrow"] | None = None,
     locale: Locale | str | None = None,
 ) -> Iterable[tuple[str, Number]]:
-    registry = unit._REGISTRY
+    # TODO: provisional? Should we allow unbounded units?
+    # Should we allow UnitsContainer?
+    registry = getattr(unit, "_REGISTRY", None)
 
-    out = unit._units.items()
+    if isinstance(unit, UnitsContainer):
+        out = unit.items()
+    else:
+        out = unit._units.items()
 
     if "~" in spec:
+        if registry is None:
+            raise ValueError(
+                f"Can't short format a {type(unit)} without a registry."
+                " This is usually triggered when formatting a instance"
+                " of the internal `UnitsContainer`."
+            )
         out = short_form(out, registry)
 
     if locale is not None:
