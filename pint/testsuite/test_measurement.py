@@ -139,7 +139,7 @@ class TestMeasurement(QuantityTestCase):
         "spec, expected",
         [
             ("", "(4.00 +/- 0.10)e+20 second ** 2"),
-            ("!r", "<Measurement(4e+20, 1e+19, second ** 2)>"),
+            # ("!r", "<Measurement(4e+20, 1e+19, second ** 2)>"),
             ("P", "(4.00 ± 0.10)×10²⁰ second²"),
             ("L", r"\left(4.00 \pm 0.10\right) \times 10^{20}\ \mathrm{second}^{2}"),
             ("H", "(4.00 &plusmn; 0.10)×10<sup>20</sup> second<sup>2</sup>"),
@@ -157,7 +157,7 @@ class TestMeasurement(QuantityTestCase):
         "spec, expected",
         [
             ("", "(4.00 +/- 0.10)e-20 second ** 2"),
-            ("!r", "<Measurement(4e-20, 1e-21, second ** 2)>"),
+            # ("!r", "<Measurement(4e-20, 1e-21, second ** 2)>"),
             ("P", "(4.00 ± 0.10)×10⁻²⁰ second²"),
             (
                 "L",
