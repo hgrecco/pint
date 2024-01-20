@@ -212,7 +212,7 @@ def short_form(
     registry: UnitRegistry,
 ) -> Iterable[tuple[str, T]]:
     """Replace each unit by its short form."""
-    return map_keys(registry.get_symbol, units)
+    return map_keys(registry._get_symbol, units)
 
 
 def localized_form(
