@@ -37,7 +37,7 @@ In case the format is omitted, the corresponding value in the formatter
 
    >>> ureg.formatter.default_format = "P"
    >>> f"{q}"
-
+   '2.3×10⁻⁶ meter³/kilogram/second²'
 
 Pint Format Types
 -----------------
@@ -113,6 +113,7 @@ following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format
    ...
    ...      def format_unit(self, unit, uspec: str = "", **babel_kwds) -> str:
    ...          return "ups!"
+   ...
    >>> ureg.formatter = MyFormatter()
    >>> str(q)
    '2.3e-06 ups!'
