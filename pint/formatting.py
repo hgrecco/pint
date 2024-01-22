@@ -13,7 +13,7 @@ from __future__ import annotations
 import functools
 import re
 import warnings
-from typing import Callable, Any, TYPE_CHECKING, TypeVar, Optional, Union
+from typing import Callable, Any, TYPE_CHECKING, TypeVar, List, Optional, Tuple, Union
 from collections.abc import Iterable
 from numbers import Number
 
@@ -197,6 +197,7 @@ def format_pretty(unit: UnitsContainer, registry: UnitRegistry, **options) -> st
         power_fmt="{}{}",
         parentheses_fmt="({})",
         exp_call=_pretty_fmt_exponent,
+        registry=registry,
         **options,
     )
 
@@ -219,15 +220,26 @@ def latex_escape(string: str) -> str:
 
 @register_unit_format("L")
 def format_latex(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
-    preprocessed = {rf"\mathrm{{{latex_escape(u)}}}": p for u, p in unit.items()}
+    # Lift the sorting by dimensions b/c the preprocessed units are unrecognizeable
+    sorted_units = dim_sort(unit.items(), registry)
+    preprocessed = [
+        (
+            rf"\mathrm{{{latex_escape(u)}}}",
+            p,
+        )
+        for u, p in sorted_units
+    ]
     formatted = formatter(
-        preprocessed.items(),
+        preprocessed,
         as_ratio=True,
         single_denominator=True,
         product_fmt=r" \cdot ",
         division_fmt=r"\frac[{}][{}]",
         power_fmt="{}^[{}]",
         parentheses_fmt=r"\left({}\right)",
+        sort=False,
+        sort_dims=False,
+        registry=registry,
         **options,
     )
     return formatted.replace("[", "{").replace("]", "}")
@@ -259,6 +271,7 @@ def format_html(unit: UnitsContainer, registry: UnitRegistry, **options) -> str:
         division_fmt=r"{}/{}",
         power_fmt=r"{}<sup>{}</sup>",
         parentheses_fmt=r"({})",
+        registry=registry,
         **options,
     )
 
@@ -273,6 +286,7 @@ def format_default(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
         division_fmt=" / ",
         power_fmt="{} ** {}",
         parentheses_fmt=r"({})",
+        registry=registry,
         **options,
     )
 
@@ -287,12 +301,67 @@ def format_compact(unit: UnitsContainer, registry: UnitRegistry, **options) -> s
         division_fmt="/",
         power_fmt="{}**{}",
         parentheses_fmt=r"({})",
+        registry=registry,
         **options,
     )
 
 
+def dim_sort(items: Iterable[Tuple[str, Number]], registry: UnitRegistry):
+    """Sort a list of units by dimensional order (from `registry.formatter.dim_order`).
+
+    Parameters
+    ----------
+    items : tuple
+        a list of tuples containing (unit names, exponent values).
+    registry : UnitRegistry
+        the registry to use for looking up the dimensions of each unit.
+
+    Returns
+    -------
+    list
+        the list of units sorted by most significant dimension first.
+
+    Raises
+    ------
+    KeyError
+        If unit cannot be found in the registry.
+    """
+    if registry is None or len(items) <= 1:
+        return items
+    ret_dict = dict()
+    dim_order = registry.formatter.dim_order
+    for unit_name, unit_exponent in items:
+        cname = registry.get_name(unit_name)
+        if not cname:
+            continue
+        cname_dims = registry.get_dimensionality(cname)
+        if len(cname_dims) == 0:
+            cname_dims = {"[]": None}
+        dim_types = iter(dim_order)
+        while True:
+            try:
+                dim = next(dim_types)
+                if dim in cname_dims:
+                    if dim not in ret_dict:
+                        ret_dict[dim] = list()
+                    ret_dict[dim].append(
+                        (
+                            unit_name,
+                            unit_exponent,
+                        )
+                    )
+                    break
+            except StopIteration:
+                raise KeyError(
+                    f"Unit {unit_name} (aka {cname}) has no recognized dimensions"
+                )
+
+    ret = sum([ret_dict[dim] for dim in dim_order if dim in ret_dict], [])
+    return ret
+
+
 def formatter(
-    items: Iterable[tuple[str, Number]],
+    items: Iterable[Tuple[str, Number]],
     as_ratio: bool = True,
     single_denominator: bool = False,
     product_fmt: str = " * ",
@@ -304,6 +373,8 @@ def formatter(
     babel_length: str = "long",
     babel_plural_form: str = "one",
     sort: bool = True,
+    sort_dims: bool = True,
+    registry: Optional[UnitRegistry] = None,
 ) -> str:
     """Format a list of (name, exponent) pairs.
 
@@ -334,6 +405,14 @@ def formatter(
          (Default value = lambda x: f"{x:n}")
     sort : bool, optional
         True to sort the formatted units alphabetically (Default value = True)
+    sort_dims : bool, optional
+        True to sort the units dimentionally (Default value = False).
+        When dimensions have multiple units, sort by "most significant dimension" the unit contains
+        When both `sort` and `sort_dims` are True, sort alphabetically within sorted dimensions
+        ISO 80000 and other sources guide on how dimensions shoule be ordered; the user
+        can set their preference in the registry.
+    registry : UnitRegistry, optional
+        The registry to use if `sort_dims` is True
 
     Returns
     -------
@@ -354,6 +433,8 @@ def formatter(
 
     if sort:
         items = sorted(items)
+    if sort_dims:
+        items = dim_sort(items, registry)
     for key, value in items:
         if locale and babel_length and babel_plural_form and key in _babel_units:
             _key = _babel_units[key]
@@ -568,7 +649,7 @@ def vector_to_latex(vec: Iterable[Any], fmtfun: FORMATTER = ".2f".format) -> str
 
 
 def matrix_to_latex(matrix: ItMatrix, fmtfun: FORMATTER = ".2f".format) -> str:
-    ret: list[str] = []
+    ret: List[str] = []
 
     for row in matrix:
         ret += [" & ".join(fmtfun(f) for f in row)]

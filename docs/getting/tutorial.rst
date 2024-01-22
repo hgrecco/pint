@@ -91,6 +91,30 @@ a ``Quantity()`` object.
 ``Quantity()`` objects also work well with NumPy arrays, which you can
 read about in the section on :doc:`NumPy support <numpy>`.
 
+Some units are compound, such as [energy], which is stated in terms of
+[mass] * [length]**2 / [time]**2.  Earlier versions of Pint would sort unit names
+alphabetically by default, leading to different orderings of units (old behavior):
+
+```
+    "{:P}".format(ureg.parse_units('pound * ft**2 * second**-2')) would yield:
+    'foot²·pound/second²'
+    "{:P}".format(ureg.parse_units('kg * cm**2 * second**-2')) would yield:
+    'centimeter²·kilogram/second²'
+```
+
+Now by default it sorts by dimensions as proposed by ISO 80000, with [mass]
+coming before [length], which also comes before [time].  The dimension order
+can be changed in the registry (`dim_order` in `defaults`):
+
+.. doctest::
+
+    >>> "{:P}".format(ureg.parse_units('pound * ft**2 * second**-2'))
+    'pound·foot²/second²'
+    >>> "{:P}".format(ureg.parse_units('kg * cm**2 * second**-2'))
+    'kilogram·centimeter²/second²'
+
+
+
 Converting to different units
 -----------------------------
 
@@ -180,11 +204,11 @@ but otherwise keeping your unit definitions intact.
    >>> volume = 10*ureg.cc
    >>> mass = density*volume
    >>> print(mass)
-   14.0 cubic_centimeter * gram / centimeter ** 3
+   14.0 gram * cubic_centimeter / centimeter ** 3
    >>> print(mass.to_reduced_units())
    14.0 gram
    >>> print(mass)
-   14.0 cubic_centimeter * gram / centimeter ** 3
+   14.0 gram * cubic_centimeter / centimeter ** 3
    >>> mass.ito_reduced_units()
    >>> print(mass)
    14.0 gram

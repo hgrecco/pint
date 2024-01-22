@@ -46,6 +46,11 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Never  # noqa
 
+if sys.version_info >= (3, 12):
+    from warnings import deprecated  # noqa
+else:
+    from typing_extensions import deprecated  # noqa
+
 
 def missing_dependency(
     package: str, display_name: Optional[str] = None

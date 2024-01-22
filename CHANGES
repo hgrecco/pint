@@ -4,7 +4,9 @@ Pint Changelog
 0.24 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Add `dim_order` property to BaseFormatter.
+- Add `dim_sort` parameter to formatter.
+  (PR #1864, fixes Issue #1841)
 
 
 0.23 (2023-12-08)

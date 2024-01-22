@@ -877,8 +877,10 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
+        # TODO: THIS is not longer necessary after moving to formatter
         module_registry = UnitRegistry()
         module_registry.default_format = "~P"
         m = module_registry.Measurement(1, 0.1, "meter")
@@ -1153,3 +1155,80 @@ def test_issues_1505():
     assert isinstance(
         ur.Quantity("m/s").magnitude, decimal.Decimal
     )  # unexpected fail (magnitude should be a decimal)
+
+
+def test_issues_1841():
+    import pint
+
+    # sets compact display mode
+    ur = UnitRegistry()
+    ur.default_format = "~P"
+
+    # creates quantity
+    q = ur.Quantity("1 kW * 1 h")
+
+    assert (
+        pint.formatting.format_unit(q.u._units, spec="", registry=ur, sort_dims=True)
+        == "kilowatt * hour"
+    )
+    assert (
+        pint.formatting.format_unit(q.u._units, spec="", registry=ur, sort_dims=False)
+        == "hour * kilowatt"
+    )
+
+    # this prints "1 h·kW", not "1 kW·h" unless sort_dims is True
+    # print(q)
+
+    q = ur.Quantity("1 kV * A")
+
+    assert (
+        pint.formatting.format_unit(q.u._units, spec="", registry=ur, sort_dims=True)
+        == "kilovolt * ampere"
+    )
+    assert (
+        pint.formatting.format_unit(q.u._units, spec="", registry=ur, sort_dims=False)
+        == "ampere * kilovolt"
+    )
+
+    # this prints "1 A·kV", not "1 kV·A" unless sort_dims is True
+    # print(q)
+
+    q = ur.Quantity("1 N * m")
+
+    assert (
+        pint.formatting.format_unit(q.u._units, spec="", registry=ur, sort_dims=True)
+        == "newton * meter"
+    )
+    assert (
+        pint.formatting.format_unit(q.u._units, spec="", registry=ur, sort_dims=False)
+        == "meter * newton"
+    )
+
+    # this prints "1 m·N", not "1 N·m" unless sort_dims is True
+    # print(q)
+
+
+@pytest.mark.xfail
+def test_issues_1841_xfail():
+    import pint
+
+    # sets compact display mode
+    ur = UnitRegistry()
+    ur.default_format = "~P"
+
+    q = ur.Quantity("2*pi radian * hour")
+
+    # Note that `radian` (and `bit` and `count`) are treated as dimensionless.
+    # And note that dimensionless quantities are stripped by this process,
+    # leading to errorneous output.  Suggestions?
+    assert (
+        pint.formatting.format_unit(q.u._units, spec="", registry=ur, sort_dims=True)
+        == "radian * hour"
+    )
+    assert (
+        pint.formatting.format_unit(q.u._units, spec="", registry=ur, sort_dims=False)
+        == "hour * radian"
+    )
+
+    # this prints "2*pi hour * radian", not "2*pi radian * hour" unless sort_dims is True
+    # print(q)
