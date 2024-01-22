@@ -25,6 +25,7 @@ from typing import (
 
 from locale import getlocale, setlocale, LC_NUMERIC
 from contextlib import contextmanager
+from warnings import warn
 
 import locale
 
@@ -276,7 +277,14 @@ def formatter(
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
     exp_call: FORMATTER = "{:n}".format,
-    sort: bool = True,
+    sort: bool | None = None,
+    sort_func: Callable[
+        [
+            Iterable[tuple[str, Number]],
+        ],
+        Iterable[tuple[str, Number]],
+    ]
+    | None = sorted,
 ) -> str:
     """Format a list of (name, exponent) pairs.
 
@@ -309,10 +317,25 @@ def formatter(
 
     """
 
-    if sort:
-        items = sorted(items)
-    else:
+    if sort is False:
+        warn(
+            "The boolean `sort` argument is deprecated. "
+            "Use `sort_fun` to specify the sorting function (default=sorted) "
+            "or None to keep units in the original order."
+        )
+        sort_func = None
+    elif sort is True:
+        warn(
+            "The boolean `sort` argument is deprecated. "
+            "Use `sort_fun` to specify the sorting function (default=sorted) "
+            "or None to keep units in the original order."
+        )
+        sort_func = sorted
+
+    if sort_func is None:
         items = tuple(items)
+    else:
+        items = sort_func(items)
 
     if not items:
         return ""
