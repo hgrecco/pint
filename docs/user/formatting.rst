@@ -104,7 +104,7 @@ You can choose to replace the complete formatter. Briefly, the formatter if an o
 following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format_uncertainty`,
 `format_measurement`. The easiest way to create your own formatter is to subclass one that you like.
 
-.. doctest:: python
+.. doctest::
 
    >>> from pint.delegates.formatter.plain import DefaultFormatter
    >>> class MyFormatter(DefaultFormatter):
