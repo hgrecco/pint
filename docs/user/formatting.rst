@@ -1,12 +1,6 @@
 .. currentmodule:: pint
 
 
-.. ipython:: python
-   :suppress:
-
-   import pint
-
-
 String formatting specification
 ===============================
 
@@ -20,25 +14,29 @@ customized using :ref:`format specifications <formatspec>`. The basic format is:
 
 where each part is optional and the order of these is arbitrary.
 
-.. ipython::
+.. doctest::
 
-    q = 1e-6 * u
-
-    # modifiers
-    f"{q:~P}"  # short pretty
-    f"{q:~#P}"  # compact short pretty
-    f"{q:P#~}"  # also compact short pretty
-
-    # additional magnitude format
-    f"{q:.2f~#P}"  # short compact pretty with 2 float digits
-    f"{q:#~}"  # short compact default
-
+   >>> import pint
+   >>> ureg = pint.UnitRegistry()
+   >>> q = 2.3e-6 * ureg.m ** 3 / (ureg.s ** 2 * ureg.kg)
+   >>> f"{q:~P}"  # short pretty
+   '2.3×10⁻⁶ m³/kg/s²'
+   >>> f"{q:~#P}"  # compact short pretty
+   '2.3 mm³/g/s²'
+   >>> f"{q:P#~}"  # also compact short pretty
+   '2.3 mm³/g/s²'
+   >>> f"{q:.2f~#P}"  # short compact pretty with 2 float digits
+   '2.30 mm³/g/s²'
+   >>> f"{q:#~}"  # short compact default
+   '2.3 mm ** 3 / g / s ** 2'
 
 In case the format is omitted, the corresponding value in the formatter
 ``.default_format`` attribute is filled in. For example:
 
-   ureg.formatter.default_format = "P"
-   f"{q}"
+.. doctest::
+
+   >>> ureg.formatter.default_format = "P"
+   >>> f"{q}"
 
 
 Pint Format Types
@@ -91,15 +89,13 @@ Custom formats
 Using :py:func:`pint.register_unit_format`, it is possible to add custom
 formats:
 
-.. ipython::
+.. doctest::
 
-   In [1]: u = ureg.Unit("m ** 3 / (s ** 2 * kg)")
-
-   In [2]: @pint.register_unit_format("simple")
-      ...: def format_unit_simple(unit, registry, **options):
-      ...:     return " * ".join(f"{u} ** {p}" for u, p in unit.items())
-
-   In [3]: f"{u:~simple}"
+   >>> @pint.register_unit_format("Z")
+   ... def format_unit_simple(unit, registry, **options):
+   ...     return " * ".join(f"{u} ** {p}" for u, p in unit.items())
+   >>> f"{q:Z}"
+   '2.3e-06 meter ** 3 * second ** -2 * kilogram ** -1'
 
 where ``unit`` is a :py:class:`dict` subclass containing the unit names and
 their exponents.
@@ -108,15 +104,18 @@ You can choose to replace the complete formatter. Briefly, the formatter if an o
 following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format_uncertainty`,
 `format_measurement`. The easiest way to create your own formatter is to subclass one that you like.
 
-.. ipython::
+.. doctest:: python
 
-   In [1]: from pint.delegates.formatter.plain import DefaultFormatter, PlainUnit
+   >>> from pint.delegates.formatter.plain import DefaultFormatter
+   >>> class MyFormatter(DefaultFormatter):
+   ...
+   ...      default_format = ""
+   ...
+   ...      def format_unit(self, unit, uspec: str = "", **babel_kwds) -> str:
+   ...          return "ups!"
+   >>> ureg.formatter = MyFormatter()
+   >>> str(q)
+   '2.3e-06 ups!'
 
-   In [2]: class MyFormatter(DefaultFormatter):
-      ...:
-      ...:     def format_unit(self, unit: PlainUnit, uspec: str = "", **babel_kwds) -> str:
-      ...:         return "ups!"
 
-   In [3]: ureg.formatter = MyFormatter()
-
-   In [4]: str(1e-6 * u)
+By replacing other methods, you can customize the output as much as you need.
