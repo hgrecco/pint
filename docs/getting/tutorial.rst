@@ -428,7 +428,7 @@ If Babel_ is installed you can translate unit names to any language
 .. doctest::
 
    >>> ureg.formatter.format_quantity(accel, locale='fr_FR')
-   '1,3 mètre / seconde²'
+   '1,3 mètre/seconde²'
 
 You can also specify the format locale at the registry level either at creation:
 
@@ -446,6 +446,7 @@ and by doing that, string formatting is now localized:
 
 .. doctest::
 
+    >>> ureg.default_format = 'P'
     >>> accel = 1.3 * ureg.parse_units('meter/second**2')
     >>> str(accel)
     '1,3 mètre / seconde²'
