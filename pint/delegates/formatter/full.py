@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Literal, Optional, Any
+from typing import TYPE_CHECKING, Callable, Iterable, Literal, Optional, Any
 import locale
 from ...compat import babel_parse, Number, Unpack
 from ...util import iterable
@@ -49,7 +49,9 @@ class FullFormatter:
         "[time]",
         "[temperature]",
     )
-    default_sort_func: Optional[Callable[Iterable[tuple[str, Number]]], Iterable[tuple[str, Number]]] = None
+    default_sort_func: Optional[
+        Callable[Iterable[tuple[str, Number]]], Iterable[tuple[str, Number]]
+    ] = None
 
     locale: Optional[Locale] = None
     babel_length: Literal["short", "long", "narrow"] = "long"

@@ -4,7 +4,9 @@ Pint Changelog
 0.24 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Add `dim_sort` function to _formatter_helpers.
+- Add `dim_order` and `default_sort_func` properties to FullFormatter.
+  (PR #????, fixes Issue #1841)
 
 
 0.23 (2023-12-08)

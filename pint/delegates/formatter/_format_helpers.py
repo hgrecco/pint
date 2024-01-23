@@ -288,7 +288,7 @@ def dim_sort(items: Iterable[tuple[str, Number]], registry: UnitRegistry):
     KeyError
         If unit cannot be found in the registry.
     """
-    
+
     if registry is None:
         return items
     ret_dict = dict()

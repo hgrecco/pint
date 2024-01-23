@@ -1158,16 +1158,15 @@ def test_issues_1505():
 
 
 def test_issues_1841(subtests):
-    import pint
     from pint.delegates.formatter._format_helpers import dim_sort
 
     ur = UnitRegistry()
     ur.formatter.default_sort_func = dim_sort
 
     for x, spec, result in (
-            (ur.Unit(UnitsContainer(hour=1,watt=1)), "P~", "W·h"),
-            (ur.Unit(UnitsContainer(ampere=1,volt=1)), "P~", "V·A"),
-            (ur.Unit(UnitsContainer(meter=1,newton=1)), "P~", "N·m"),
+        (ur.Unit(UnitsContainer(hour=1, watt=1)), "P~", "W·h"),
+        (ur.Unit(UnitsContainer(ampere=1, volt=1)), "P~", "V·A"),
+        (ur.Unit(UnitsContainer(meter=1, newton=1)), "P~", "N·m"),
     ):
         with subtests.test(spec):
             ur.default_format = spec
@@ -1177,9 +1176,7 @@ def test_issues_1841(subtests):
 
 @pytest.mark.xfail
 def test_issues_1841_xfail():
-    import pint
     from pint import formatting as fmt
-    import pint.delegates.formatter._format_helpers
     from pint.delegates.formatter._format_helpers import dim_sort
 
     # sets compact display mode by default

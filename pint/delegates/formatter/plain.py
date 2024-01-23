@@ -269,7 +269,9 @@ class PrettyFormatter:
             power_fmt="{}{}",
             parentheses_fmt="({})",
             exp_call=pretty_fmt_exponent,
-            sort_func=lambda x: unit._REGISTRY.formatter.default_sort_func(x, unit._REGISTRY),
+            sort_func=lambda x: unit._REGISTRY.formatter.default_sort_func(
+                x, unit._REGISTRY
+            ),
         )
 
     def format_quantity(
