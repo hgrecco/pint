@@ -78,6 +78,12 @@ class HTMLFormatter:
         self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         units = format_compound_unit(unit, uspec, **babel_kwds)
+        if unit._REGISTRY.formatter.default_sort_func is not None:
+            sort_func = lambda x: unit._REGISTRY.formatter.default_sort_func(
+                x, unit._REGISTRY
+            )
+        else:
+            sort_func = None
 
         return formatter(
             units,
@@ -87,9 +93,7 @@ class HTMLFormatter:
             division_fmt=r"{}/{}",
             power_fmt=r"{}<sup>{}</sup>",
             parentheses_fmt=r"({})",
-            sort_func=lambda x: unit._REGISTRY.formatter.default_sort_func(
-                x, unit._REGISTRY
-            ),
+            sort_func=sort_func,
         )
 
     def format_quantity(
