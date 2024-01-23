@@ -1155,3 +1155,52 @@ def test_issues_1505():
     assert isinstance(
         ur.Quantity("m/s").magnitude, decimal.Decimal
     )  # unexpected fail (magnitude should be a decimal)
+
+
+def test_issues_1841(subtests):
+    import pint
+    from pint.delegates.formatter._format_helpers import dim_sort
+
+    ur = UnitRegistry()
+    ur.formatter.default_sort_func = dim_sort
+
+    for x, spec, result in (
+            (ur.Unit(UnitsContainer(hour=1,watt=1)), "P~", "W·h"),
+            (ur.Unit(UnitsContainer(ampere=1,volt=1)), "P~", "V·A"),
+            (ur.Unit(UnitsContainer(meter=1,newton=1)), "P~", "N·m"),
+    ):
+        with subtests.test(spec):
+            ur.default_format = spec
+            breakpoint()
+            assert f"{x}" == result, f"Failed for {spec}, {result}"
+
+
+@pytest.mark.xfail
+def test_issues_1841_xfail():
+    import pint
+    from pint import formatting as fmt
+    import pint.delegates.formatter._format_helpers
+    from pint.delegates.formatter._format_helpers import dim_sort
+
+    # sets compact display mode by default
+    ur = UnitRegistry()
+    ur.default_format = "~P"
+    ur.formatter.default_sort_func = dim_sort
+
+    q = ur.Quantity("2*pi radian * hour")
+
+    # Note that `radian` (and `bit` and `count`) are treated as dimensionless.
+    # And note that dimensionless quantities are stripped by this process,
+    # leading to errorneous output.  Suggestions?
+    breakpoint()
+    assert (
+        fmt.format_unit(q.u._units, spec="", registry=ur, sort_dims=True)
+        == "radian * hour"
+    )
+    assert (
+        fmt.format_unit(q.u._units, spec="", registry=ur, sort_dims=False)
+        == "hour * radian"
+    )
+
+    # this prints "2*pi hour * radian", not "2*pi radian * hour" unless sort_dims is True
+    # print(q)

@@ -11,9 +11,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional, Any
+from typing import TYPE_CHECKING, Callable, Literal, Optional, Any
 import locale
-from ...compat import babel_parse, Unpack
+from ...compat import babel_parse, Number, Unpack
 from ...util import iterable
 
 from ..._typing import Magnitude
@@ -38,6 +38,18 @@ class FullFormatter:
     _formatters: dict[str, Any] = {}
 
     default_format: str = ""
+    # TODO: This can be over-riden by the registry definitions file
+    dim_order = (
+        "[substance]",
+        "[mass]",
+        "[current]",
+        "[luminosity]",
+        "[length]",
+        "[]",
+        "[time]",
+        "[temperature]",
+    )
+    default_sort_func: Optional[Callable[Iterable[tuple[str, Number]]], Iterable[tuple[str, Number]]] = None
 
     locale: Optional[Locale] = None
     babel_length: Literal["short", "long", "narrow"] = "long"

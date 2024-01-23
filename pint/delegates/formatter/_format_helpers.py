@@ -268,6 +268,61 @@ def format_compound_unit(
     return out
 
 
+def dim_sort(items: Iterable[tuple[str, Number]], registry: UnitRegistry):
+    """Sort a list of units by dimensional order (from `registry.formatter.dim_order`).
+
+    Parameters
+    ----------
+    items : tuple
+        a list of tuples containing (unit names, exponent values).
+    registry : UnitRegistry
+        the registry to use for looking up the dimensions of each unit.
+
+    Returns
+    -------
+    list
+        the list of units sorted by most significant dimension first.
+
+    Raises
+    ------
+    KeyError
+        If unit cannot be found in the registry.
+    """
+    
+    if registry is None:
+        return items
+    ret_dict = dict()
+    dim_order = registry.formatter.dim_order
+    for unit_name, unit_exponent in items:
+        cname = registry.get_name(unit_name)
+        if not cname:
+            continue
+        cname_dims = registry.get_dimensionality(cname)
+        if len(cname_dims) == 0:
+            cname_dims = {"[]": None}
+        dim_types = iter(dim_order)
+        while True:
+            try:
+                dim = next(dim_types)
+                if dim in cname_dims:
+                    if dim not in ret_dict:
+                        ret_dict[dim] = list()
+                    ret_dict[dim].append(
+                        (
+                            unit_name,
+                            unit_exponent,
+                        )
+                    )
+                    break
+            except StopIteration:
+                raise KeyError(
+                    f"Unit {unit_name} (aka {cname}) has no recognized dimensions"
+                )
+
+    ret = sum([ret_dict[dim] for dim in dim_order if dim in ret_dict], [])
+    return ret
+
+
 def formatter(
     items: Iterable[tuple[str, Number]],
     as_ratio: bool = True,
@@ -309,6 +364,8 @@ def formatter(
          (Default value = lambda x: f"{x:n}")
     sort : bool, optional
         True to sort the formatted units alphabetically (Default value = True)
+    sort_func : callable
+        If not None, `sort_func` returns its sorting of the formatted units
 
     Returns
     -------
@@ -320,14 +377,14 @@ def formatter(
     if sort is False:
         warn(
             "The boolean `sort` argument is deprecated. "
-            "Use `sort_fun` to specify the sorting function (default=sorted) "
+            "Use `sort_func` to specify the sorting function (default=sorted) "
             "or None to keep units in the original order."
         )
         sort_func = None
     elif sort is True:
         warn(
             "The boolean `sort` argument is deprecated. "
-            "Use `sort_fun` to specify the sorting function (default=sorted) "
+            "Use `sort_func` to specify the sorting function (default=sorted) "
             "or None to keep units in the original order."
         )
         sort_func = sorted
