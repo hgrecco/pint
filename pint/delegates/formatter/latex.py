@@ -173,9 +173,8 @@ class LatexFormatter:
         self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         units = format_compound_unit(unit, uspec, **babel_kwds)
-        if unit._REGISTRY.formatter.default_sort_func:
-            # Lift the sorting by dimensions b/c the preprocessed units are unrecognizeable
-            units = unit._REGISTRY.formatter.default_sort_func(units, unit._REGISTRY)
+        # Lift the sorting by dimensions b/c the preprocessed units are unrecognizeable
+        units = unit._REGISTRY.formatter.default_sort_func(units, unit._REGISTRY)
 
         preprocessed = {rf"\mathrm{{{latex_escape(u)}}}": p for u, p in units}
         formatted = formatter(

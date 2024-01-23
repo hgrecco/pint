@@ -24,7 +24,12 @@ from ._format_helpers import BabelKwds
 from ._to_register import REGISTERED_FORMATTERS
 
 if TYPE_CHECKING:
-    from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
+    from ...facets.plain import (
+        GenericPlainRegistry,
+        PlainQuantity,
+        PlainUnit,
+        MagnitudeT,
+    )
     from ...facets.measurement import Measurement
     from ...compat import Locale
 
@@ -50,8 +55,11 @@ class FullFormatter:
         "[temperature]",
     )
     default_sort_func: Optional[
-        Callable[Iterable[tuple[str, Number]]], Iterable[tuple[str, Number]]
-    ] = None
+        Callable[
+            [Iterable[tuple[str, Number]], GenericPlainRegistry],
+            Iterable[tuple[str, Number]],
+        ]
+    ] = lambda self, x, registry: sorted(x)
 
     locale: Optional[Locale] = None
     babel_length: Literal["short", "long", "narrow"] = "long"
