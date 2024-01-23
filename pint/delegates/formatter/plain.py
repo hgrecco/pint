@@ -77,6 +77,7 @@ class DefaultFormatter:
             division_fmt=" / ",
             power_fmt="{} ** {}",
             parentheses_fmt=r"({})",
+            sort_func=None,
         )
 
     def format_quantity(
@@ -175,6 +176,7 @@ class CompactFormatter:
             division_fmt="/",
             power_fmt="{}**{}",
             parentheses_fmt=r"({})",
+            sort_func=None,
         )
 
     def format_quantity(
@@ -268,9 +270,7 @@ class PrettyFormatter:
             power_fmt="{}{}",
             parentheses_fmt="({})",
             exp_call=pretty_fmt_exponent,
-            sort_func=lambda x: unit._REGISTRY.formatter.default_sort_func(
-                x, unit._REGISTRY
-            ),
+            sort_func=None,
         )
 
     def format_quantity(

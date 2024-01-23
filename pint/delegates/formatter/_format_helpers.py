@@ -265,6 +265,9 @@ def format_compound_unit(
     if locale is not None:
         out = localized_form(out, use_plural, length or "long", locale)
 
+    if registry:
+        out = registry.formatter.default_sort_func(out, registry)
+
     return out
 
 
