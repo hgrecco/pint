@@ -1170,7 +1170,6 @@ def test_issues_1841(subtests):
     ):
         with subtests.test(spec):
             ur.default_format = spec
-            breakpoint()
             assert f"{x}" == result, f"Failed for {spec}, {result}"
 
 
@@ -1189,7 +1188,6 @@ def test_issues_1841_xfail():
     # Note that `radian` (and `bit` and `count`) are treated as dimensionless.
     # And note that dimensionless quantities are stripped by this process,
     # leading to errorneous output.  Suggestions?
-    breakpoint()
     assert (
         fmt.format_unit(q.u._units, spec="", registry=ur, sort_dims=True)
         == "radian * hour"
