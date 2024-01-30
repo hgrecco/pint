@@ -214,14 +214,6 @@ if not HAS_MIP:
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
 # types using guarded imports
 
-try:
-    from dask import array as dask_array
-    from dask.base import compute, persist, visualize
-except ImportError:
-    compute, persist, visualize = None, None, None
-    dask_array = None
-
-
 # TODO: merge with upcast_type_map
 
 #: List upcast type names

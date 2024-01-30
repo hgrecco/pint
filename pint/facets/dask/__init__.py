@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Generic, Any
 import functools
 
-from ...compat import compute, dask_array, persist, visualize, TypeAlias
+from ...compat import TypeAlias
 from ..plain import (
     GenericPlainRegistry,
     PlainQuantity,
@@ -25,14 +25,20 @@ from ..plain import (
 )
 
 
+def is_dask_array(obj):
+    return type(obj).__name__ == "Array" and "dask" == type(obj).__module__[:4]
+
+
 def check_dask_array(f):
     @functools.wraps(f)
     def wrapper(self, *args, **kwargs):
-        if isinstance(self._magnitude, dask_array.Array):
+        if is_dask_array(self._magnitude):
             return f(self, *args, **kwargs)
         else:
-            msg = "Method {} only implemented for objects of {}, not {}".format(
-                f.__name__, dask_array.Array, self._magnitude.__class__
+            msg = (
+                "Method {} only implemented for objects of dask array, not {}.".format(
+                    f.__name__, self._magnitude.__class__.__name__
+                )
             )
             raise AttributeError(msg)
 
@@ -42,7 +48,9 @@ def check_dask_array(f):
 class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     # Dask.array.Array ducking
     def __dask_graph__(self):
-        if isinstance(self._magnitude, dask_array.Array):
+        import dask.array as da
+
+        if isinstance(self._magnitude, da.Array):
             return self._magnitude.__dask_graph__()
 
         return None
@@ -57,11 +65,15 @@ class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
     @property
     def __dask_optimize__(self):
-        return dask_array.Array.__dask_optimize__
+        import dask.array as da
+
+        return da.Array.__dask_optimize__
 
     @property
     def __dask_scheduler__(self):
-        return dask_array.Array.__dask_scheduler__
+        import dask.array as da
+
+        return da.Array.__dask_scheduler__
 
     def __dask_postcompute__(self):
         func, args = self._magnitude.__dask_postcompute__()
@@ -89,6 +101,8 @@ class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         pint.PlainQuantity
             A pint.PlainQuantity wrapped numpy array.
         """
+        from dask.base import compute
+
         (result,) = compute(self, **kwargs)
         return result
 
@@ -106,6 +120,8 @@ class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         pint.PlainQuantity
             A pint.PlainQuantity wrapped Dask array.
         """
+        from dask.base import persist
+
         (result,) = persist(self, **kwargs)
         return result
 
@@ -124,6 +140,8 @@ class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         -------
 
         """
+        from dask.base import visualize
+
         visualize(self, **kwargs)
 
 

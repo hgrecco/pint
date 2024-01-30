@@ -162,9 +162,7 @@ def test_exception_method_not_implemented(local_registry, numpy_array, method):
     q = local_registry.Quantity(numpy_array, units_)
 
     exctruth = (
-        f"Method {method} only implemented for objects of"
-        " <class 'dask.array.core.Array'>, not"
-        " <class 'numpy.ndarray'>"
+        f"Method {method} only implemented for objects of" " dask array, not ndarray."
     )
     with pytest.raises(AttributeError, match=exctruth):
         obj_method = getattr(q, method)
