@@ -27,13 +27,11 @@ import copy
 import functools
 import inspect
 import itertools
-import locale
 import pathlib
 import re
 from collections import defaultdict
 from decimal import Decimal
 from fractions import Fraction
-from numbers import Number
 from token import NAME, NUMBER
 from tokenize import TokenInfo
 
@@ -63,8 +61,9 @@ from ..._typing import (
     Handler,
 )
 
+from ... import pint_eval
 from ..._vendor import appdirs
-from ...compat import babel_parse, tokenizer, TypeAlias, Self
+from ...compat import TypeAlias, Self, deprecated
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
 from ...util import ParserHelper
@@ -131,6 +130,10 @@ class RegistryCache:
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
         self.parse_unit: dict[str, UnitsContainer] = {}
 
+        self.conversion_factor: dict[
+            tuple[UnitsContainer, UnitsContainer], Scalar | DimensionalityError
+        ] = {}
+
     def __eq__(self, other: Any):
         if not isinstance(other, self.__class__):
             return False
@@ -139,6 +142,7 @@ class RegistryCache:
             "root_units",
             "dimensionality",
             "parse_unit",
+            "conversion_factor",
         )
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
@@ -148,14 +152,14 @@ class RegistryMeta(type):
     instead of asking the developer to do it when subclassing.
     """
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any):
         obj = super().__call__(*args, **kwargs)
         obj._after_init()
         return obj
 
 
 # Generic types used to mark types associated to Registries.
-QuantityT = TypeVar("QuantityT", bound=PlainQuantity)
+QuantityT = TypeVar("QuantityT", bound=PlainQuantity[Any])
 UnitT = TypeVar("UnitT", bound=PlainUnit)
 
 
@@ -205,9 +209,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         future release.
     """
 
-    #: Babel.Locale instance or None
-    fmt_locale: Optional[Locale] = None
-
     Quantity: type[QuantityT]
     Unit: type[UnitT]
 
@@ -250,6 +251,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
 
+        self.formatter = delegates.Formatter()
         self._filename = filename
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
@@ -270,7 +272,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self.autoconvert_to_preferred = autoconvert_to_preferred
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
-        self.set_fmt_locale(fmt_locale)
+        self.formatter.set_locale(fmt_locale)
 
         #: sets the formatter used when plotting with matplotlib
         self.mpl_formatter = mpl_formatter
@@ -397,6 +399,26 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         """
         return iter(sorted(self._units.keys()))
 
+    @property
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.fmt_locale"
+    )
+    def fmt_locale(self) -> Locale | None:
+        return self.formatter.locale
+
+    @fmt_locale.setter
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.set_locale"
+    )
+    def fmt_locale(self, loc: str | None):
+        self.formatter.set_locale(loc)
+
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.set_locale"
+    )
     def set_fmt_locale(self, loc: Optional[str]) -> None:
         """Change the locale used by default by `format_babel`.
 
@@ -405,25 +427,25 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         loc : str or None
             None` (do not translate), 'sys' (detect the system locale) or a locale id string.
         """
-        if isinstance(loc, str):
-            if loc == "sys":
-                loc = locale.getdefaultlocale()[0]
 
-            # We call babel parse to fail here and not in the formatting operation
-            babel_parse(loc)
-
-        self.fmt_locale = loc
+        self.formatter.set_locale(loc)
 
     @property
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.default_format"
+    )
     def default_format(self) -> str:
         """Default formatting string for quantities."""
-        return self.Quantity.default_format
+        return self.formatter.default_format
 
     @default_format.setter
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.default_format"
+    )
     def default_format(self, value: str) -> None:
-        self.Unit.default_format = value
-        self.Quantity.default_format = value
-        self.Measurement.default_format = value
+        self.formatter.default_format = value
 
     @property
     def cache_folder(self) -> Optional[pathlib.Path]:
@@ -738,7 +760,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
-    def _get_dimensionality_ratio(self, unit1: UnitLike, unit2: UnitLike):
+    def _get_dimensionality_ratio(
+        self, unit1: UnitLike, unit2: UnitLike
+    ) -> Scalar | None:
         """Get the exponential ratio between two units, i.e. solve unit2 = unit1**x for x.
 
         Parameters
@@ -772,7 +796,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def get_root_units(
         self, input_units: UnitLike, check_nonmult: bool = True
-    ) -> tuple[Number, UnitT]:
+    ) -> tuple[Scalar, UnitT]:
         """Convert unit or dict of units to the root units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -798,6 +822,43 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         f, units = self._get_root_units(input_units, check_nonmult)
 
         return f, self.Unit(units)
+
+    def _get_conversion_factor(
+        self, src: UnitsContainer, dst: UnitsContainer
+    ) -> Scalar | DimensionalityError:
+        """Get conversion factor in non-multiplicative units.
+
+        Parameters
+        ----------
+        src
+            Source units
+        dst
+            Target units
+
+        Returns
+        -------
+            Conversion factor or DimensionalityError
+        """
+        cache = self._cache.conversion_factor
+        try:
+            return cache[(src, dst)]
+        except KeyError:
+            pass
+
+        src_dim = self._get_dimensionality(src)
+        dst_dim = self._get_dimensionality(dst)
+
+        # If the source and destination dimensionality are different,
+        # then the conversion cannot be performed.
+        if src_dim != dst_dim:
+            return DimensionalityError(src, dst, src_dim, dst_dim)
+
+        # Here src and dst have only multiplicative units left. Thus we can
+        # convert with a factor.
+        factor, _ = self._get_root_units(src / dst)
+
+        cache[(src, dst)] = factor
+        return factor
 
     def _get_root_units(
         self, input_units: UnitsContainer, check_nonmult: bool = True
@@ -853,7 +914,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         input_units: Union[UnitsContainer, str],
         check_nonmult: bool = True,
         system=None,
-    ) -> tuple[Number, UnitT]:
+    ) -> tuple[Scalar, UnitT]:
         """Convert unit or dict of units to the plain units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -1013,18 +1074,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         """
 
-        if check_dimensionality:
-            src_dim = self._get_dimensionality(src)
-            dst_dim = self._get_dimensionality(dst)
+        factor = self._get_conversion_factor(src, dst)
 
-            # If the source and destination dimensionality are different,
-            # then the conversion cannot be performed.
-            if src_dim != dst_dim:
-                raise DimensionalityError(src, dst, src_dim, dst_dim)
-
-        # Here src and dst have only multiplicative units left. Thus we can
-        # convert with a factor.
-        factor, _ = self._get_root_units(src / dst)
+        if isinstance(factor, DimensionalityError):
+            raise factor
 
         # factor is type float and if our magnitude is type Decimal then
         # must first convert to Decimal before we can '*' the values
@@ -1061,17 +1114,19 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         tuple of tuples (str, str, str)
             all non-equivalent combinations of (prefix, unit name, suffix)
         """
-        return self._dedup_candidates(
-            self._parse_unit_name(unit_name, case_sensitive=case_sensitive)
-        )
 
-    def _parse_unit_name(
-        self, unit_name: str, case_sensitive: Optional[bool] = None
-    ) -> Generator[tuple[str, str, str], None, None]:
-        """Helper of parse_unit_name."""
         case_sensitive = (
             self.case_sensitive if case_sensitive is None else case_sensitive
         )
+        return self._dedup_candidates(
+            self._yield_unit_triplets(unit_name, case_sensitive)
+        )
+
+    def _yield_unit_triplets(
+        self, unit_name: str, case_sensitive: bool
+    ) -> Generator[tuple[str, str, str], None, None]:
+        """Helper of parse_unit_name."""
+
         stw = unit_name.startswith
         edw = unit_name.endswith
         for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
@@ -1095,6 +1150,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                             self._units[real_name].name,
                             self._suffixes[suffix],
                         )
+
+    # TODO: keep this for backward compatibility
+    _parse_unit_name = _yield_unit_triplets
 
     @staticmethod
     def _dedup_candidates(
@@ -1144,14 +1202,29 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         """
 
-        units = self._parse_units(input_string, as_delta, case_sensitive)
-        return self.Unit(units)
+        return self.Unit(
+            self.parse_units_as_container(input_string, as_delta, case_sensitive)
+        )
 
-    def _parse_units(
+    def parse_units_as_container(
+        self,
+        input_string: str,
+        as_delta: Optional[bool] = None,
+        case_sensitive: Optional[bool] = None,
+    ) -> UnitsContainer:
+        as_delta = (
+            as_delta if as_delta is not None else True
+        )  # TODO This only exists in nonmultiplicative
+        case_sensitive = (
+            case_sensitive if case_sensitive is not None else self.case_sensitive
+        )
+        return self._parse_units_as_container(input_string, as_delta, case_sensitive)
+
+    def _parse_units_as_container(
         self,
         input_string: str,
         as_delta: bool = True,
-        case_sensitive: Optional[bool] = None,
+        case_sensitive: bool = True,
     ) -> UnitsContainer:
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
@@ -1324,7 +1397,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for p in self.preprocessors:
             input_string = p(input_string)
         input_string = string_preprocessor(input_string)
-        gen = tokenizer(input_string)
+        gen = pint_eval.tokenizer(input_string)
 
         def _define_op(s: str):
             return self._eval_token(s, case_sensitive=case_sensitive, **values)

@@ -100,7 +100,9 @@ def to_compact(
     <Quantity(10.0, 'millinewton')>
     """
 
-    if not isinstance(quantity.magnitude, numbers.Number):
+    if not isinstance(quantity.magnitude, numbers.Number) and not hasattr(
+        quantity.magnitude, "nominal_value"
+    ):
         msg = "to_compact applied to non numerical types " "has an undefined behavior."
         w = RuntimeWarning(msg)
         warnings.warn(w, stacklevel=2)
@@ -137,6 +139,9 @@ def to_compact(
     q_base = quantity.to(unit)
 
     magnitude = q_base.magnitude
+    # Support uncertainties
+    if hasattr(magnitude, "nominal_value"):
+        magnitude = magnitude.nominal_value
 
     units = list(q_base._units.items())
     units_numerator = [a for a in units if a[1] > 0]

@@ -35,6 +35,7 @@ class ContextCacheOverlay:
         self.root_units = {}
         self.dimensionality = registry_cache.dimensionality
         self.parse_unit = registry_cache.parse_unit
+        self.conversion_factor = {}
 
 
 class GenericContextRegistry(

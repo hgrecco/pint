@@ -1016,6 +1016,11 @@ class TestNumpyUnclassified(TestNumpyMethods):
         u.shape = 4, 3
         assert u.magnitude.shape == (4, 3)
 
+    def test_dtype(self):
+        u = self.Q_(np.arange(12, dtype="uint32"))
+
+        assert u.dtype == "uint32"
+
     @helpers.requires_array_function_protocol()
     def test_shape_numpy_func(self):
         assert np.shape(self.q) == (2, 2)
@@ -1424,6 +1429,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.intersect1d([1, 3, 4, 3] * self.ureg.m, [3, 1, 2, 1] * self.ureg.m),
             [1, 3] * self.ureg.m,
         )
+
+    @helpers.requires_array_function_protocol()
+    def test_linalg_norm(self):
+        q = np.array([[3, 5, 8], [4, 12, 15]]) * self.ureg.m
+        expected = [5, 13, 17] * self.ureg.m
+        helpers.assert_quantity_equal(np.linalg.norm(q, axis=0), expected)
 
 
 @pytest.mark.skip
