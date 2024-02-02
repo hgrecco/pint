@@ -35,6 +35,7 @@ from ...compat import (
     is_upcast_type,
     np,
     zero_or_nan,
+    deprecated,
 )
 from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
 from ...util import (
@@ -136,8 +137,6 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     """
 
-    #: Default formatting string.
-    default_format: str = ""
     _magnitude: MagnitudeT
 
     @property
@@ -262,8 +261,18 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         )
         return ret
 
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.format_quantity_babel"
+    )
+    def format_babel(self, spec: str = "", **kwspec: Any) -> str:
+        return self._REGISTRY.formatter.format_quantity_babel(self, spec, **kwspec)
+
+    def __format__(self, spec: str) -> str:
+        return self._REGISTRY.formatter.format_quantity(self, spec)
+
     def __str__(self) -> str:
-        return str(self.magnitude) + " " + str(self.units)
+        return self._REGISTRY.formatter.format_quantity(self)
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())

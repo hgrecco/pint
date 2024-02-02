@@ -61,6 +61,14 @@ jobs:
         if: ${{ matrix.extras != null }}
         run: pip install ${{matrix.extras}}
 
+      - name: Install locales
+        if: ${{ matrix.extras != null }}
+        run: |
+          sudo apt-get install language-pack-es language-pack-fr language-pack-ro
+          sudo localedef -i es_ES -f UTF-8 es_ES
+          sudo localedef -i fr_FR -f UTF-8 fr_FR
+          sudo localedef -i ro_RO -f UTF-8 ro_RO
+
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz

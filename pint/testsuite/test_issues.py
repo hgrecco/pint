@@ -877,8 +877,10 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
+        # TODO: THIS is not longer necessary after moving to formatter
         module_registry = UnitRegistry()
         module_registry.default_format = "~P"
         m = module_registry.Measurement(1, 0.1, "meter")
@@ -886,12 +888,12 @@ class TestIssues(QuantityTestCase):
 
     @helpers.requires_babel()
     def test_issue_1400(self, sess_registry):
-        q1 = 3 * sess_registry.W
-        q2 = 3 * sess_registry.W / sess_registry.cm
-        assert q1.format_babel("~", locale="es_Ar") == "3 W"
-        assert q1.format_babel("", locale="es_Ar") == "3 vatios"
-        assert q2.format_babel("~", locale="es_Ar") == "3.0 W / cm"
-        assert q2.format_babel("", locale="es_Ar") == "3.0 vatios por centímetros"
+        q1 = 3.1 * sess_registry.W
+        q2 = 3.1 * sess_registry.W / sess_registry.cm
+        assert q1.format_babel("~", locale="es_ES") == "3,1 W"
+        assert q1.format_babel("", locale="es_ES") == "3,1 vatios"
+        assert q2.format_babel("~", locale="es_ES") == "3,1 W / cm"
+        assert q2.format_babel("", locale="es_ES") == "3,1 vatios / centímetros"
 
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):

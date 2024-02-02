@@ -27,7 +27,6 @@ import copy
 import functools
 import inspect
 import itertools
-import locale
 import pathlib
 import re
 from collections import defaultdict
@@ -64,7 +63,7 @@ from ..._typing import (
 
 from ... import pint_eval
 from ..._vendor import appdirs
-from ...compat import babel_parse, TypeAlias, Self
+from ...compat import TypeAlias, Self, deprecated
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
 from ...util import ParserHelper
@@ -210,9 +209,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         future release.
     """
 
-    #: Babel.Locale instance or None
-    fmt_locale: Optional[Locale] = None
-
     Quantity: type[QuantityT]
     Unit: type[UnitT]
 
@@ -255,6 +251,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
 
+        self.formatter = delegates.Formatter()
         self._filename = filename
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
@@ -275,7 +272,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self.autoconvert_to_preferred = autoconvert_to_preferred
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
-        self.set_fmt_locale(fmt_locale)
+        self.formatter.set_locale(fmt_locale)
 
         #: sets the formatter used when plotting with matplotlib
         self.mpl_formatter = mpl_formatter
@@ -402,6 +399,26 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         """
         return iter(sorted(self._units.keys()))
 
+    @property
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.fmt_locale"
+    )
+    def fmt_locale(self) -> Locale | None:
+        return self.formatter.locale
+
+    @fmt_locale.setter
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.set_locale"
+    )
+    def fmt_locale(self, loc: str | None):
+        self.formatter.set_locale(loc)
+
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.set_locale"
+    )
     def set_fmt_locale(self, loc: Optional[str]) -> None:
         """Change the locale used by default by `format_babel`.
 
@@ -410,25 +427,25 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         loc : str or None
             None` (do not translate), 'sys' (detect the system locale) or a locale id string.
         """
-        if isinstance(loc, str):
-            if loc == "sys":
-                loc = locale.getdefaultlocale()[0]
 
-            # We call babel parse to fail here and not in the formatting operation
-            babel_parse(loc)
-
-        self.fmt_locale = loc
+        self.formatter.set_locale(loc)
 
     @property
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.default_format"
+    )
     def default_format(self) -> str:
         """Default formatting string for quantities."""
-        return self.Quantity.default_format
+        return self.formatter.default_format
 
     @default_format.setter
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.default_format"
+    )
     def default_format(self, value: str) -> None:
-        self.Unit.default_format = value
-        self.Quantity.default_format = value
-        self.Measurement.default_format = value
+        self.formatter.default_format = value
 
     @property
     def cache_folder(self) -> Optional[pathlib.Path]:

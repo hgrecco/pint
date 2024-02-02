@@ -15,7 +15,7 @@ from numbers import Number
 from typing import TYPE_CHECKING, Any, Union
 
 from ..._typing import UnitLike
-from ...compat import NUMERIC_TYPES
+from ...compat import NUMERIC_TYPES, deprecated
 from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 from .definitions import UnitDefinition
@@ -26,9 +26,6 @@ if TYPE_CHECKING:
 
 class PlainUnit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations."""
-
-    #: Default formatting string.
-    default_format: str = ""
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
@@ -58,8 +55,18 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         ret = self.__class__(copy.deepcopy(self._units, memo))
         return ret
 
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.format_unit_babel"
+    )
+    def format_babel(self, spec: str = "", **kwspec: Any) -> str:
+        return self._REGISTRY.formatter.format_unit_babel(self, spec, **kwspec)
+
+    def __format__(self, spec: str) -> str:
+        return self._REGISTRY.formatter.format_unit(self, spec)
+
     def __str__(self) -> str:
-        return " ".join(k if v == 1 else f"{k} ** {v}" for k, v in self._units.items())
+        return self._REGISTRY.formatter.format_unit(self)
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())

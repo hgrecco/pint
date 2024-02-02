@@ -47,6 +47,18 @@ else:
     from typing_extensions import Never  # noqa
 
 
+if sys.version_info >= (3, 11):
+    from typing import Unpack  # noqa
+else:
+    from typing_extensions import Unpack  # noqa
+
+
+if sys.version_info >= (3, 13):
+    from warnings import deprecated  # noqa
+else:
+    from typing_extensions import deprecated  # noqa
+
+
 def missing_dependency(
     package: str, display_name: Optional[str] = None
 ) -> Callable[..., NoReturn]:

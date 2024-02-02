@@ -34,7 +34,6 @@ from collections.abc import Hashable, Generator
 
 from .compat import NUMERIC_TYPES, Self
 from .errors import DefinitionSyntaxError
-from .formatting import format_unit
 from .pint_eval import build_eval_tree
 from . import pint_eval
 
@@ -606,9 +605,15 @@ class UnitsContainer(Mapping[str, Scalar]):
         return f"<UnitsContainer({tmp})>"
 
     def __format__(self, spec: str) -> str:
+        # TODO: provisional
+        from .formatting import format_unit
+
         return format_unit(self, spec)
 
     def format_babel(self, spec: str, registry=None, **kwspec) -> str:
+        # TODO: provisional
+        from .formatting import format_unit
+
         return format_unit(self, spec, registry=registry, **kwspec)
 
     def __copy__(self):
@@ -1000,20 +1005,25 @@ class PrettyIPython:
     default_format: str
 
     def _repr_html_(self) -> str:
-        if "~" in self.default_format:
+        if "~" in self._REGISTRY.formatter.default_format:
             return f"{self:~H}"
         return f"{self:H}"
 
     def _repr_latex_(self) -> str:
-        if "~" in self.default_format:
+        if "~" in self._REGISTRY.formatter.default_format:
             return f"${self:~L}$"
         return f"${self:L}$"
 
     def _repr_pretty_(self, p, cycle: bool):
-        if "~" in self.default_format:
+        # if cycle:
+        if "~" in self._REGISTRY.formatter.default_format:
             p.text(f"{self:~P}")
         else:
             p.text(f"{self:P}")
+        # else:
+        #     p.pretty(self.magnitude)
+        #     p.text(" ")
+        #     p.pretty(self.units)
 
 
 def to_units_container(

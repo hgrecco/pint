@@ -30,6 +30,11 @@ jobs:
           key: pip-docs
           restore-keys: pip-docs
 
+      - name: Install locales
+        run: |
+          sudo apt-get install language-pack-fr
+          sudo localedef -i fr_FR -f UTF-8 fr_FR
+
       - name: Install dependencies
         run: |
           sudo apt install -y pandoc
