@@ -7,7 +7,7 @@ Angles and Angular Frequency
 Angles
 ------
 
-pint treats angle quantities as `dimensionless`, following the conventions of SI. The base unit for angle is the `radian`. 
+pint treats angle quantities as `dimensionless`, following the conventions of SI. The base unit for angle is the `radian`.
 The SI BIPM Brochure (Bureau International des Poids et Mesures) states:
 
 .. note::
