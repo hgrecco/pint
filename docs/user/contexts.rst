@@ -197,7 +197,8 @@ functions. For example:
 
 .. doctest::
 
-    >>> ureg = pint.get_application_registry()
+    >>> ureg = pint.UnitRegistry()
+    >>> pint.set_application_registry(ureg)
     >>> c = pint.Context('ab')
     >>> c.add_transformation('[length]', '[time]',
     ...                      lambda ureg, x: x / ureg.speed_of_light)
