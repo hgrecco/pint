@@ -11,7 +11,7 @@ raise an error if you do this directly:
 .. doctest::
 
     >>> import pint
-    >>> ureg = pint.UnitRegistry()
+    >>> ureg = pint.get_application_registry()
     >>> q = 500 * ureg.nm
     >>> q.to('Hz')
     Traceback (most recent call last):
@@ -197,7 +197,7 @@ functions. For example:
 
 .. doctest::
 
-    >>> ureg = pint.UnitRegistry()
+    >>> ureg = pint.get_application_registry()
     >>> c = pint.Context('ab')
     >>> c.add_transformation('[length]', '[time]',
     ...                      lambda ureg, x: x / ureg.speed_of_light)
@@ -258,7 +258,7 @@ Programmatically:
 
 .. code-block:: python
 
-    >>> ureg = pint.UnitRegistry()
+    >>> ureg = pint.get_application_registry()
     >>> q = ureg.Quantity("1 BTU")
     >>> q.to("J")
     1055.056 joule
@@ -278,7 +278,7 @@ Or with a definitions file::
 
 .. code-block:: python
 
-    >>> ureg = pint.UnitRegistry()
+    >>> ureg = pint.get_application_registry()
     >>> ureg.load_definitions("somefile.txt")
     >>> q = ureg.Quantity("1 BTU")
     >>> q.to("J")

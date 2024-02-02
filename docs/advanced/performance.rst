@@ -69,7 +69,7 @@ A better way to use magnitudes is to use pint's wraps decorator (See :ref:`wrapp
 
     In [1]: import pint
 
-    In [2]: ureg = pint.UnitRegistry()
+    In [2]: ureg = pint.get_application_registry()
 
     In [3]: import numpy as np
 

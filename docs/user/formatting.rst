@@ -26,7 +26,7 @@ In case the format is omitted, the corresponding value in the object's
 
 .. ipython::
 
-   In [1]: ureg = pint.UnitRegistry()
+   In [1]: ureg = pint.get_application_registry()
       ...: ureg.default_format = "~P"
 
    In [2]: u = ureg.Unit("m ** 2 / s ** 2")
@@ -71,7 +71,7 @@ Let's look at some examples:
 
 .. ipython:: python
 
-   ureg = pint.UnitRegistry()
+   ureg = pint.get_application_registry()
    u = ureg.kg * ureg.m / ureg.s ** 2
 
    f"{u:P}"  # using the pretty format
