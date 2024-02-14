@@ -4,8 +4,7 @@ Pint Changelog
 0.24 (unreleased)
 -----------------
 
-- Nothing changed yet.
-
+- Hash functions use usedforsecurity=False for compatibility with FIPS systems (See #1943)
 
 0.23 (2023-12-08)
 -----------------
