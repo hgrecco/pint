@@ -256,7 +256,7 @@ class Hash:
         ],
         b: bytes,
     ) -> Self:
-        hasher = algorithm(b)
+        hasher = algorithm(b, usedforsecurity=False)
         return cls(hasher.name, hasher.hexdigest())
 
     @classmethod

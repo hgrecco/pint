@@ -283,7 +283,7 @@ class DiskCache:
 
         The naming strategy is defined by the header class used.
         """
-        hd = self._hasher()
+        hd = self._hasher(usedforsecurity=False)
         for value in header.for_cache_name():
             hd.update(value)
         return hd.hexdigest()
