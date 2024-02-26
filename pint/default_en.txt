@@ -181,7 +181,7 @@ hour = 60 * minute = h = hr
 day = 24 * hour = d
 week = 7 * day
 fortnight = 2 * week
-year = 365.25 * day = a = yr = julian_year
+year = 365.25 * day = yr = julian_year
 month = year / 12
 
 # decade = 10 * year
