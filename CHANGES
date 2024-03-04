@@ -4,7 +4,7 @@ Pint Changelog
 0.24 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Fixed bug when using context and added regression test.
 
 
 0.23 (2023-12-08)
