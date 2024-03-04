@@ -243,6 +243,7 @@ class GenericContextRegistry(
 
         # Finally we add them to the active context.
         self._active_ctx.insert_contexts(*contexts)
+        self._build_cache()
         self._switch_context_cache_and_units()
 
     def disable_contexts(self, n: Optional[int] = None) -> None:
