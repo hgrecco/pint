@@ -27,10 +27,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.10"
-dynamic = ["version"] # Version is taken from git tags using setuptools_scm
-dependencies = [
-  "typing_extensions"
-]
+dynamic = ["version", "dependencies"]
 
 [tool.setuptools.package-data]
 pint = [
@@ -38,6 +35,8 @@ pint = [
       "constants_en.txt",
       "py.typed"]
 
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt"}
 
 [project.optional-dependencies]
 testbase = [
