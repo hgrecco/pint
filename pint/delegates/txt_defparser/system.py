@@ -96,9 +96,6 @@ class SystemDefinition(
     If the new_unit_name and the old_unit_name, the later and the colon can be omitted.
     """
 
-    opening: BeginSystem
-    body: ty.Union[plain.CommentDefinition, BaseUnitRule]
-
     def derive_definition(self) -> definitions.SystemDefinition:
         return definitions.SystemDefinition(
             self.name, self.using_group_names, self.rules

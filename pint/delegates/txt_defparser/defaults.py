@@ -56,12 +56,6 @@ class DefaultsDefinition(
     See Equality and Comment for more parsing related information.
     """
 
-    opening: BeginDefaults
-    body: ty.Union[
-        plain.CommentDefinition,
-        plain.Equality,
-    ]
-
     @property
     def _valid_fields(self) -> tuple[str, ...]:
         return tuple(f.name for f in fields(definitions.DefaultsDefinition))

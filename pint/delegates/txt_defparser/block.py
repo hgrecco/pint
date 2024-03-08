@@ -50,7 +50,5 @@ class DirectiveBlock(
     Subclass this class for convenience.
     """
 
-    closing: EndDirectiveBlock
-
     def derive_definition(self) -> DefT:
         ...

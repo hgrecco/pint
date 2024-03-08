@@ -14,8 +14,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ... import errors
 import flexparser as fp
+
+from ... import errors
+from ..base_defparser import ParserConfig
 
 
 @dataclass(frozen=True)
@@ -43,7 +45,7 @@ class DefinitionSyntaxError(errors.DefinitionSyntaxError, fp.ParsingError):
 
 
 @dataclass(frozen=True)
-class ImportDefinition(fp.IncludeStatement):
+class ImportDefinition(fp.IncludeStatement[ParserConfig]):
     value: str
 
     @property

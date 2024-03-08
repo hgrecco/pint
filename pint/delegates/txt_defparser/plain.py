@@ -211,11 +211,6 @@ class DimensionDefinition(PintParsedStatement, definitions.DimensionDefinition):
         if not (s.startswith("[") and "=" not in s):
             return None
 
-        try:
-            s = definitions.check_dim(s)
-        except common.DefinitionSyntaxError as ex:
-            return ex
-
         return cls(s)
 
 

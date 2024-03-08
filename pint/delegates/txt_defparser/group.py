@@ -90,12 +90,6 @@ class GroupDefinition(
 
     """
 
-    opening: BeginGroup
-    body: ty.Union[
-        plain.CommentDefinition,
-        plain.UnitDefinition,
-    ]
-
     def derive_definition(self) -> definitions.GroupDefinition:
         return definitions.GroupDefinition(
             self.name, self.using_group_names, self.definitions

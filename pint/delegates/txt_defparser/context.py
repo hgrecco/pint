@@ -171,14 +171,6 @@ class ContextDefinition(
         @end
     """
 
-    opening: BeginContext
-    body: ty.Union[
-        plain.CommentDefinition,
-        BidirectionalRelation,
-        ForwardRelation,
-        plain.UnitDefinition,
-    ]
-
     def derive_definition(self) -> definitions.ContextDefinition:
         return definitions.ContextDefinition(
             self.name, self.aliases, self.defaults, self.relations, self.redefinitions
