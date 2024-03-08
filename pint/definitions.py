@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 from . import errors
-from ._vendor import flexparser as fp
+import flexparser as fp
 from .delegates import ParserConfig, txt_defparser
 
 

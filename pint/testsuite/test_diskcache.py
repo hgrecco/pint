@@ -5,7 +5,7 @@ import time
 import pytest
 
 import pint
-from pint._vendor import flexparser as fp
+import flexparser as fp
 from pint.facets.plain import UnitDefinition
 
 FS_SLEEP = 0.010

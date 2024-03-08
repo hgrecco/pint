@@ -4,8 +4,8 @@ import pathlib
 import typing as ty
 from typing import Optional, Union
 
-from ..._vendor import flexcache as fc
-from ..._vendor import flexparser as fp
+import flexcache as fc
+import flexparser as fp
 from ..base_defparser import ParserConfig
 from . import block, common, context, defaults, group, plain, system
 
@@ -28,20 +28,18 @@ class PintRootBlock(
         ParserConfig,
     ]
 ):
-    body: fp.Multi[
-        ty.Union[
-            plain.CommentDefinition,
-            common.ImportDefinition,
-            context.ContextDefinition,
-            defaults.DefaultsDefinition,
-            system.SystemDefinition,
-            group.GroupDefinition,
-            plain.AliasDefinition,
-            plain.DerivedDimensionDefinition,
-            plain.DimensionDefinition,
-            plain.PrefixDefinition,
-            plain.UnitDefinition,
-        ]
+    body: ty.Union[
+        plain.CommentDefinition,
+        common.ImportDefinition,
+        context.ContextDefinition,
+        defaults.DefaultsDefinition,
+        system.SystemDefinition,
+        group.GroupDefinition,
+        plain.AliasDefinition,
+        plain.DerivedDimensionDefinition,
+        plain.DimensionDefinition,
+        plain.PrefixDefinition,
+        plain.UnitDefinition,
     ]
 
 

@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ... import errors
-from ..._vendor import flexparser as fp
+import flexparser as fp
 
 
 @dataclass(frozen=True)
@@ -51,7 +51,7 @@ class ImportDefinition(fp.IncludeStatement):
         return self.value
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[ImportDefinition]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[ImportDefinition]:
         if s.startswith("@import"):
             return ImportDefinition(s[len("@import") :].strip())
         return None

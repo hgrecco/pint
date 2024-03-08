@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..._vendor import flexparser as fp
+import flexparser as fp
 from ...converters import Converter
 from ...facets.plain import definitions
 from ...util import UnitsContainer
@@ -41,7 +41,7 @@ class Equality(PintParsedStatement, definitions.Equality):
     """
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[Equality]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[Equality]:
         if "=" not in s:
             return None
         parts = [p.strip() for p in s.split("=")]
@@ -63,7 +63,7 @@ class CommentDefinition(PintParsedStatement, definitions.CommentDefinition):
     """
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[CommentDefinition]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[CommentDefinition]:
         if not s.startswith("#"):
             return None
         return cls(s[1:].strip())
@@ -83,7 +83,7 @@ class PrefixDefinition(PintParsedStatement, definitions.PrefixDefinition):
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[PrefixDefinition]:
+    ) -> fp.NullableParsedResult[PrefixDefinition]:
         if "=" not in s:
             return None
 
@@ -140,7 +140,7 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[UnitDefinition]:
+    ) -> fp.NullableParsedResult[UnitDefinition]:
         if "=" not in s:
             return None
 
@@ -205,7 +205,7 @@ class DimensionDefinition(PintParsedStatement, definitions.DimensionDefinition):
     """
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[DimensionDefinition]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[DimensionDefinition]:
         s = s.strip()
 
         if not (s.startswith("[") and "=" not in s):
@@ -235,7 +235,7 @@ class DerivedDimensionDefinition(
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[DerivedDimensionDefinition]:
+    ) -> fp.NullableParsedResult[DerivedDimensionDefinition]:
         if not (s.startswith("[") and "=" in s):
             return None
 
@@ -272,7 +272,7 @@ class AliasDefinition(PintParsedStatement, definitions.AliasDefinition):
     """
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[AliasDefinition]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[AliasDefinition]:
         if not s.startswith("@alias "):
             return None
         name, *aliases = s[len("@alias ") :].split("=")

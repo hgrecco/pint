@@ -62,7 +62,7 @@ from ..._typing import (
 )
 
 from ... import pint_eval
-from ..._vendor import appdirs
+import appdirs
 from ...compat import TypeAlias, Self, deprecated
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree

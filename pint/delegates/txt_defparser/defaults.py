@@ -16,7 +16,7 @@ from __future__ import annotations
 import typing as ty
 from dataclasses import dataclass, fields
 
-from ..._vendor import flexparser as fp
+import flexparser as fp
 from ...facets.plain import definitions
 from . import block, plain
 from ..base_defparser import PintParsedStatement
@@ -30,7 +30,7 @@ class BeginDefaults(PintParsedStatement):
     """
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[BeginDefaults]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[BeginDefaults]:
         if s.strip() == "@defaults":
             return cls()
         return None
@@ -56,12 +56,10 @@ class DefaultsDefinition(
     See Equality and Comment for more parsing related information.
     """
 
-    opening: fp.Single[BeginDefaults]
-    body: fp.Multi[
-        ty.Union[
-            plain.CommentDefinition,
-            plain.Equality,
-        ]
+    opening: BeginDefaults
+    body: ty.Union[
+        plain.CommentDefinition,
+        plain.Equality,
     ]
 
     @property

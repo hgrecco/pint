@@ -20,8 +20,8 @@ from pint import errors
 from pint.facets.plain.definitions import NotNumeric
 from pint.util import ParserHelper, UnitsContainer
 
-from .._vendor import flexcache as fc
-from .._vendor import flexparser as fp
+import flexcache as fc
+import flexparser as fp
 
 
 @dataclass(frozen=True)

@@ -22,10 +22,12 @@ import typing as ty
 from typing import Optional, Union
 from dataclasses import dataclass
 
-from ..._vendor import flexparser as fp
+import flexparser as fp
+
 from ...facets.context import definitions
 from ..base_defparser import ParserConfig, PintParsedStatement
 from . import block, common, plain
+
 
 # TODO check syntax
 T = ty.TypeVar("T", bound="Union[ForwardRelation, BidirectionalRelation]")
@@ -58,7 +60,7 @@ class ForwardRelation(PintParsedStatement, definitions.ForwardRelation):
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[ForwardRelation]:
+    ) -> fp.NullableParsedResult[ForwardRelation]:
         return _from_string_and_context_sep(cls, s, config, "->")
 
 
@@ -74,7 +76,7 @@ class BidirectionalRelation(PintParsedStatement, definitions.BidirectionalRelati
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[BidirectionalRelation]:
+    ) -> fp.NullableParsedResult[BidirectionalRelation]:
         return _from_string_and_context_sep(cls, s, config, "<->")
 
 
@@ -96,7 +98,7 @@ class BeginContext(PintParsedStatement):
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[BeginContext]:
+    ) -> fp.NullableParsedResult[BeginContext]:
         try:
             r = cls._header_re.search(s)
             if r is None:
@@ -169,14 +171,12 @@ class ContextDefinition(
         @end
     """
 
-    opening: fp.Single[BeginContext]
-    body: fp.Multi[
-        ty.Union[
-            plain.CommentDefinition,
-            BidirectionalRelation,
-            ForwardRelation,
-            plain.UnitDefinition,
-        ]
+    opening: BeginContext
+    body: ty.Union[
+        plain.CommentDefinition,
+        BidirectionalRelation,
+        ForwardRelation,
+        plain.UnitDefinition,
     ]
 
     def derive_definition(self) -> definitions.ContextDefinition:

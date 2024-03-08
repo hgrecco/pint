@@ -12,7 +12,7 @@ import re
 import typing as ty
 from dataclasses import dataclass
 
-from ..._vendor import flexparser as fp
+import flexparser as fp
 from ...facets.system import definitions
 from ..base_defparser import PintParsedStatement
 from . import block, common, plain
@@ -21,7 +21,7 @@ from . import block, common, plain
 @dataclass(frozen=True)
 class BaseUnitRule(PintParsedStatement, definitions.BaseUnitRule):
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[BaseUnitRule]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[BaseUnitRule]:
         if ":" not in s:
             return cls(s.strip())
         parts = [p.strip() for p in s.split(":")]
@@ -46,7 +46,7 @@ class BeginSystem(PintParsedStatement):
     using_group_names: ty.Tuple[str, ...]
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[BeginSystem]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[BeginSystem]:
         if not s.startswith("@system"):
             return None
 
@@ -96,8 +96,8 @@ class SystemDefinition(
     If the new_unit_name and the old_unit_name, the later and the colon can be omitted.
     """
 
-    opening: fp.Single[BeginSystem]
-    body: fp.Multi[ty.Union[plain.CommentDefinition, BaseUnitRule]]
+    opening: BeginSystem
+    body: ty.Union[plain.CommentDefinition, BaseUnitRule]
 
     def derive_definition(self) -> definitions.SystemDefinition:
         return definitions.SystemDefinition(
