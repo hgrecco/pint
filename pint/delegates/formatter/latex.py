@@ -183,6 +183,7 @@ class LatexFormatter:
             division_fmt=r"\frac[{}][{}]",
             power_fmt="{}^[{}]",
             parentheses_fmt=r"\left({}\right)",
+            sort_func=None,
         )
         return formatted.replace("[", "{").replace("]", "}")
 

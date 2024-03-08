@@ -78,7 +78,6 @@ class HTMLFormatter:
         self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         units = format_compound_unit(unit, uspec, **babel_kwds)
-
         return formatter(
             units,
             as_ratio=True,
@@ -87,6 +86,7 @@ class HTMLFormatter:
             division_fmt=r"{}/{}",
             power_fmt=r"{}<sup>{}</sup>",
             parentheses_fmt=r"({})",
+            sort_func=None,
         )
 
     def format_quantity(

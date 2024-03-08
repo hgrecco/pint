@@ -11,9 +11,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional, Any
+from typing import TYPE_CHECKING, Callable, Iterable, Literal, Optional, Any
 import locale
-from ...compat import babel_parse, Unpack
+from ...compat import babel_parse, Number, Unpack
 from ...util import iterable
 
 from ..._typing import Magnitude
@@ -24,7 +24,12 @@ from ._format_helpers import BabelKwds
 from ._to_register import REGISTERED_FORMATTERS
 
 if TYPE_CHECKING:
-    from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
+    from ...facets.plain import (
+        GenericPlainRegistry,
+        PlainQuantity,
+        PlainUnit,
+        MagnitudeT,
+    )
     from ...facets.measurement import Measurement
     from ...compat import Locale
 
@@ -38,6 +43,23 @@ class FullFormatter:
     _formatters: dict[str, Any] = {}
 
     default_format: str = ""
+    # TODO: This can be over-riden by the registry definitions file
+    dim_order = (
+        "[substance]",
+        "[mass]",
+        "[current]",
+        "[luminosity]",
+        "[length]",
+        "[]",
+        "[time]",
+        "[temperature]",
+    )
+    default_sort_func: Optional[
+        Callable[
+            [Iterable[tuple[str, Number]], GenericPlainRegistry],
+            Iterable[tuple[str, Number]],
+        ]
+    ] = lambda self, x, registry: sorted(x)
 
     locale: Optional[Locale] = None
     babel_length: Literal["short", "long", "narrow"] = "long"

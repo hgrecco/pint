@@ -77,6 +77,7 @@ class DefaultFormatter:
             division_fmt=" / ",
             power_fmt="{} ** {}",
             parentheses_fmt=r"({})",
+            sort_func=None,
         )
 
     def format_quantity(
@@ -175,6 +176,7 @@ class CompactFormatter:
             division_fmt="/",
             power_fmt="{}**{}",
             parentheses_fmt=r"({})",
+            sort_func=None,
         )
 
     def format_quantity(
@@ -259,7 +261,6 @@ class PrettyFormatter:
         self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         units = format_compound_unit(unit, uspec, **babel_kwds)
-
         return formatter(
             units,
             as_ratio=True,
@@ -269,6 +270,7 @@ class PrettyFormatter:
             power_fmt="{}{}",
             parentheses_fmt="({})",
             exp_call=pretty_fmt_exponent,
+            sort_func=None,
         )
 
     def format_quantity(
