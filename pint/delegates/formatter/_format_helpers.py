@@ -267,14 +267,16 @@ def format_compound_unit(
     return out
 
 
-def dim_sort(items: Iterable[tuple[str, Number]], registry: UnitRegistry):
+def dim_sort(
+    items: Iterable[tuple[str, Number]], registry: UnitRegistry | None
+) -> Iterable[tuple[str, Number]]:
     """Sort a list of units by dimensional order (from `registry.formatter.dim_order`).
 
     Parameters
     ----------
     items : tuple
         a list of tuples containing (unit names, exponent values).
-    registry : UnitRegistry
+    registry : UnitRegistry | None
         the registry to use for looking up the dimensions of each unit.
 
     Returns
@@ -290,36 +292,20 @@ def dim_sort(items: Iterable[tuple[str, Number]], registry: UnitRegistry):
 
     if registry is None:
         return items
-    ret_dict = dict()
-    dim_order = registry.formatter.dim_order
-    for unit_name, unit_exponent in items:
-        cname = registry.get_name(unit_name)
-        if not cname:
-            continue
-        cname_dims = registry.get_dimensionality(cname)
-        if len(cname_dims) == 0:
-            cname_dims = {"[]": None}
-        dim_types = iter(dim_order)
-        while True:
-            try:
-                dim = next(dim_types)
-                if dim in cname_dims:
-                    if dim not in ret_dict:
-                        ret_dict[dim] = list()
-                    ret_dict[dim].append(
-                        (
-                            unit_name,
-                            unit_exponent,
-                        )
-                    )
-                    break
-            except StopIteration:
-                raise KeyError(
-                    f"Unit {unit_name} (aka {cname}) has no recognized dimensions"
-                )
 
-    ret = sum([ret_dict[dim] for dim in dim_order if dim in ret_dict], [])
-    return ret
+    dim_order = registry.formatter.dim_order
+
+    def sort_key(item: tuple[str, Number]):
+        unit_name, _unit_exponent = item
+        cname = registry.get_name(unit_name)
+        cname_dims = registry.get_dimensionality(cname) or {"[]": None}
+        for cname_dim in cname_dims:
+            if cname_dim in dim_order:
+                return dim_order.index(cname_dim), cname
+
+        raise KeyError(f"Unit {unit_name} (aka {cname}) has no recognized dimensions")
+
+    return sorted(items, key=sort_key)
 
 
 def formatter(
