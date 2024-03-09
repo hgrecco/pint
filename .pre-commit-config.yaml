@@ -1,23 +1,21 @@
 exclude: '^pint/_vendor'
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
--   repo: https://github.com/psf/black
-    rev: 23.1.0
-    hooks:
-    - id: black
-    - id: black-jupyter
--   repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.240'
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.7
     hooks:
     - id: ruff
-      args: ["--fix"]
+      args: ["--fix", "--show-fixes"]
+      types_or: [ python, pyi, jupyter ]
+    - id: ruff-format
+      types_or: [ python, pyi, jupyter ]
 -   repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.16
+    rev: 0.7.17
     hooks:
     - id: mdformat
       additional_dependencies:
