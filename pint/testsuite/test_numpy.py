@@ -330,9 +330,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         helpers.assert_quantity_equal(
             np.prod(self.q, axis=axis), [3, 8] * self.ureg.m**2
         )
-        helpers.assert_quantity_equal(
-            np.prod(self.q, where=where), 12 * self.ureg.m**3
-        )
+        helpers.assert_quantity_equal(np.prod(self.q, where=where), 12 * self.ureg.m**3)
 
         with pytest.raises(DimensionalityError):
             np.prod(self.q, axis=axis, where=where)

@@ -190,8 +190,9 @@ class TestMeasurement(QuantityTestCase):
         ],
     )
     def test_format_default(self, func_registry, spec, expected):
-        v, u = func_registry.Quantity(4.0, "s ** 2"), func_registry.Quantity(
-            0.1, "s ** 2"
+        v, u = (
+            func_registry.Quantity(4.0, "s ** 2"),
+            func_registry.Quantity(0.1, "s ** 2"),
         )
         m = func_registry.Measurement(v, u)
         func_registry.default_format = spec

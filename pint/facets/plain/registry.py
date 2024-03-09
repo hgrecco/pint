@@ -662,8 +662,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         prefix, unit_name, _ = candidates[0]
         if len(candidates) > 1:
             logger.warning(
-                "Parsing {} yield multiple results. "
-                "Options are: {!r}".format(name_or_alias, candidates)
+                f"Parsing {name_or_alias} yield multiple results. Options are: {candidates:!r}"
             )
 
         if prefix:
@@ -690,8 +689,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         prefix, unit_name, _ = candidates[0]
         if len(candidates) > 1:
             logger.warning(
-                "Parsing {} yield multiple results. "
-                "Options are: {!r}".format(name_or_alias, candidates)
+                f"Parsing {name_or_alias} yield multiple results. Options are: {candidates:!r}"
             )
 
         return self._prefixes[prefix].symbol + self._units[unit_name].symbol
@@ -1148,7 +1146,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     @staticmethod
     def _dedup_candidates(
-        candidates: Iterable[tuple[str, str, str]]
+        candidates: Iterable[tuple[str, str, str]],
     ) -> tuple[tuple[str, str, str], ...]:
         """Helper of parse_unit_name.
 
