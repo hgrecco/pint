@@ -7,6 +7,8 @@ Pint Changelog
 - Add `dim_sort` function to _formatter_helpers.
 - Add `dim_order` and `default_sort_func` properties to FullFormatter.
   (PR #1926, fixes Issue #1841)
+- Cast offset to Decimal if value is Decimal in `pint.facets.nonmultiplicative.definitions.OffsetConverter`.
+  (Fixes #1950)
 
 
 0.23 (2023-12-08)

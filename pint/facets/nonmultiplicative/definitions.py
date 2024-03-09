@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from ..._typing import Magnitude
 from ...compat import HAS_NUMPY, exp, log
@@ -26,20 +27,22 @@ class OffsetConverter(ScaleConverter):
         return self.offset == 0
 
     def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
+        offset = Decimal(self.offset) if isinstance(value, Decimal) else self.offset
         if inplace:
             value *= self.scale
-            value += self.offset
+            value += offset
         else:
-            value = value * self.scale + self.offset
+            value = value * self.scale + offset
 
         return value
 
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
+        offset = Decimal(self.offset) if isinstance(value, Decimal) else self.offset
         if inplace:
-            value -= self.offset
+            value -= offset
             value /= self.scale
         else:
-            value = (value - self.offset) / self.scale
+            value = (value - offset) / self.scale
 
         return value
 
