@@ -86,6 +86,9 @@ known-first-party= ["pint"]
 
 
 [tool.ruff]
+extend-select = [
+  "I",           # isort
+]
 ignore = [
   # whitespace before ':' - doesn't work well with black
   # "E203",
