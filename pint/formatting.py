@@ -53,9 +53,9 @@ def format_unit(unit, spec: str, registry=None, **options):
         _formatter = REGISTERED_FORMATTERS.get(spec, None)
     else:
         try:
-            _formatter = registry._formatters[spec]
+            _formatter = registry.formatter._formatters[spec]
         except Exception:
-            _formatter = registry._formatters.get(spec, None)
+            _formatter = registry.formatter._formatters.get(spec, None)
 
     if _formatter is None:
         raise ValueError(f"Unknown conversion specified: {spec}")
