@@ -17,12 +17,12 @@ import pathlib
 from dataclasses import dataclass
 from typing import Any
 
+import flexcache as fc
+import flexparser as fp
+
 from pint import errors
 from pint.facets.plain.definitions import NotNumeric
 from pint.util import ParserHelper, UnitsContainer
-
-import flexcache as fc
-import flexparser as fp
 
 
 @dataclass(frozen=True)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import decimal
 import math
@@ -11,7 +13,6 @@ from pint.facets.plain.unit import UnitsContainer
 from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
-
 
 from .helpers import internal
 

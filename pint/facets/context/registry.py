@@ -10,17 +10,17 @@ from __future__ import annotations
 
 import functools
 from collections import ChainMap
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from typing import Any, Generic
-from collections.abc import Callable, Generator
 
-from ...compat import TypeAlias
 from ..._typing import F, Magnitude
+from ...compat import TypeAlias
 from ...errors import UndefinedUnitError
-from ...util import find_connected_nodes, find_shortest_path, logger, UnitsContainer
-from ..plain import GenericPlainRegistry, UnitDefinition, QuantityT, UnitT
-from .definitions import ContextDefinition
+from ...util import UnitsContainer, find_connected_nodes, find_shortest_path, logger
+from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
 from . import objects
+from .definitions import ContextDefinition
 
 # TODO: Put back annotation when possible
 # registry_cache: "RegistryCache"

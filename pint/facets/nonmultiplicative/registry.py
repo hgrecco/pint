@@ -8,15 +8,14 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar, Generic
+from typing import Any, Generic, TypeVar
 
 from ...compat import TypeAlias
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer, logger
-from ..plain import GenericPlainRegistry, UnitDefinition, QuantityT, UnitT
-from .definitions import OffsetConverter, ScaleConverter
+from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
 from . import objects
-
+from .definitions import OffsetConverter, ScaleConverter
 
 T = TypeVar("T")
 

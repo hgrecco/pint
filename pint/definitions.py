@@ -10,8 +10,9 @@
 
 from __future__ import annotations
 
-from . import errors
 import flexparser as fp
+
+from . import errors
 from .delegates import ParserConfig, txt_defparser
 
 

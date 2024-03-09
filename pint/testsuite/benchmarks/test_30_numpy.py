@@ -1,7 +1,9 @@
-from typing import Any
-from collections.abc import Generator
+from __future__ import annotations
+
 import itertools as it
 import operator
+from collections.abc import Generator
+from typing import Any
 
 import pytest
 

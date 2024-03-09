@@ -9,12 +9,11 @@
 """
 from __future__ import annotations
 
-from io import BytesIO
 import operator
 import token as tokenlib
 import tokenize
+from io import BytesIO
 from tokenize import TokenInfo
-
 from typing import Any
 
 try:

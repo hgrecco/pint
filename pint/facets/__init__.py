@@ -71,15 +71,15 @@ from __future__ import annotations
 
 from .context import ContextRegistry, GenericContextRegistry
 from .dask import DaskRegistry, GenericDaskRegistry
-from .group import GroupRegistry, GenericGroupRegistry
-from .measurement import MeasurementRegistry, GenericMeasurementRegistry
+from .group import GenericGroupRegistry, GroupRegistry
+from .measurement import GenericMeasurementRegistry, MeasurementRegistry
 from .nonmultiplicative import (
-    NonMultiplicativeRegistry,
     GenericNonMultiplicativeRegistry,
+    NonMultiplicativeRegistry,
 )
-from .numpy import NumpyRegistry, GenericNumpyRegistry
-from .plain import PlainRegistry, GenericPlainRegistry, QuantityT, UnitT, MagnitudeT
-from .system import SystemRegistry, GenericSystemRegistry
+from .numpy import GenericNumpyRegistry, NumpyRegistry
+from .plain import GenericPlainRegistry, MagnitudeT, PlainRegistry, QuantityT, UnitT
+from .system import GenericSystemRegistry, SystemRegistry
 
 __all__ = [
     "ContextRegistry",

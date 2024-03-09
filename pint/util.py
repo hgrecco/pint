@@ -14,29 +14,26 @@ import logging
 import math
 import operator
 import re
-from collections.abc import Mapping, Iterable, Iterator
+import tokenize
+import types
+from collections.abc import Callable, Generator, Hashable, Iterable, Iterator, Mapping
 from fractions import Fraction
 from functools import lru_cache, partial
 from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
-import tokenize
-import types
 from typing import (
     TYPE_CHECKING,
+    Any,
     ClassVar,
     TypeVar,
-    Any,
 )
-from collections.abc import Callable
-from collections.abc import Hashable, Generator
 
+from . import pint_eval
+from ._typing import Scalar
 from .compat import NUMERIC_TYPES, Self
 from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
-from . import pint_eval
-
-from ._typing import Scalar
 
 if TYPE_CHECKING:
     from ._typing import QuantityOrUnitLike

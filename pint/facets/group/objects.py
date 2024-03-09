@@ -8,13 +8,12 @@
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING, Generic
-from collections.abc import Callable
+from collections.abc import Callable, Generator, Iterable
+from typing import TYPE_CHECKING, Any, Generic
 
-from collections.abc import Generator, Iterable
 from ...util import SharedRegistryObject, getattr_maybe_raise
+from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 from .definitions import GroupDefinition
-from ..plain import PlainQuantity, PlainUnit, MagnitudeT
 
 if TYPE_CHECKING:
     from ..plain import UnitDefinition

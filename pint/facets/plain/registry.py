@@ -30,43 +30,40 @@ import itertools
 import pathlib
 import re
 from collections import defaultdict
+from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
 from fractions import Fraction
 from token import NAME, NUMBER
 from tokenize import TokenInfo
-
 from typing import (
     TYPE_CHECKING,
     Any,
+    Generic,
     TypeVar,
     Union,
-    Generic,
 )
-from collections.abc import Callable, Generator
-from collections.abc import Iterable, Iterator
 
 if TYPE_CHECKING:
-    from ..context import Context
     from ...compat import Locale
+    from ..context import Context
 
     # from ..._typing import Quantity, Unit
 
-from ..._typing import (
-    QuantityOrUnitLike,
-    UnitLike,
-    QuantityArgument,
-    Scalar,
-    Handler,
-)
+import appdirs
 
 from ... import pint_eval
-import appdirs
-from ...compat import TypeAlias, Self, deprecated
+from ..._typing import (
+    Handler,
+    QuantityArgument,
+    QuantityOrUnitLike,
+    Scalar,
+    UnitLike,
+)
+from ...compat import Self, TypeAlias, deprecated
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
-from ...util import ParserHelper
-from ...util import UnitsContainer as UnitsContainer
 from ...util import (
+    ParserHelper,
     _is_dim,
     create_class_with_registry,
     getattr_maybe_raise,
@@ -75,15 +72,16 @@ from ...util import (
     string_preprocessor,
     to_units_container,
 )
+from ...util import UnitsContainer as UnitsContainer
 from .definitions import (
     AliasDefinition,
     CommentDefinition,
     DefaultsDefinition,
     DerivedDimensionDefinition,
     DimensionDefinition,
+    NamedDefinition,
     PrefixDefinition,
     UnitDefinition,
-    NamedDefinition,
 )
 from .objects import PlainQuantity, PlainUnit
 

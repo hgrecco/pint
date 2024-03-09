@@ -11,11 +11,10 @@
 from __future__ import annotations
 
 import functools
-from inspect import signature, Parameter
+from collections.abc import Callable, Iterable
+from inspect import Parameter, signature
 from itertools import zip_longest
-from typing import TYPE_CHECKING, TypeVar, Any
-from collections.abc import Callable
-from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from ._typing import F
 from .errors import DimensionalityError

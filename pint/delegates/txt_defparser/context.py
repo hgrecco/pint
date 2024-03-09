@@ -19,15 +19,14 @@ from __future__ import annotations
 import numbers
 import re
 import typing as ty
-from typing import Union
 from dataclasses import dataclass
+from typing import Union
 
 import flexparser as fp
 
 from ...facets.context import definitions
 from ..base_defparser import ParserConfig, PintParsedStatement
 from . import block, common, plain
-
 
 # TODO check syntax
 T = ty.TypeVar("T", bound="Union[ForwardRelation, BidirectionalRelation]")

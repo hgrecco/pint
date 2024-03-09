@@ -1,21 +1,20 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import bisect
 import math
 import numbers
 import warnings
+from typing import TYPE_CHECKING
 
-from ...util import infer_base_unit
 from ...compat import (
     mip_INF,
     mip_INTEGER,
-    mip_model,
     mip_Model,
+    mip_model,
     mip_OptimizationStatus,
     mip_xsum,
 )
+from ...util import infer_base_unit
 
 if TYPE_CHECKING:
     from ..._typing import UnitLike

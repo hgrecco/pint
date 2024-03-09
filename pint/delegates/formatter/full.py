@@ -11,28 +11,28 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Any
-from collections.abc import Callable, Iterable
 import locale
-from ...compat import babel_parse, Number, Unpack
-from ...util import iterable
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING, Any, Literal
 
 from ..._typing import Magnitude
-from .html import HTMLFormatter
-from .latex import LatexFormatter, SIunitxFormatter
-from .plain import RawFormatter, CompactFormatter, PrettyFormatter, DefaultFormatter
+from ...compat import Number, Unpack, babel_parse
+from ...util import iterable
 from ._format_helpers import BabelKwds
 from ._to_register import REGISTERED_FORMATTERS
+from .html import HTMLFormatter
+from .latex import LatexFormatter, SIunitxFormatter
+from .plain import CompactFormatter, DefaultFormatter, PrettyFormatter, RawFormatter
 
 if TYPE_CHECKING:
+    from ...compat import Locale
+    from ...facets.measurement import Measurement
     from ...facets.plain import (
         GenericPlainRegistry,
+        MagnitudeT,
         PlainQuantity,
         PlainUnit,
-        MagnitudeT,
     )
-    from ...facets.measurement import Measurement
-    from ...compat import Locale
 
 
 class FullFormatter:

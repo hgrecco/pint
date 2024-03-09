@@ -9,12 +9,10 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Generic, Any
+from typing import TYPE_CHECKING, Any, Generic
 
 from ... import errors
-
 from ...compat import TypeAlias
-
 from ..plain import QuantityT, UnitT
 
 if TYPE_CHECKING:
@@ -27,8 +25,8 @@ from ...util import (
     to_units_container,
 )
 from ..group import GenericGroupRegistry
-from .definitions import SystemDefinition
 from . import objects
+from .definitions import SystemDefinition
 
 
 class GenericSystemRegistry(

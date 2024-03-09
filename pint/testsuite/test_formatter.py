@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import pytest
 
-from pint import formatting as fmt
 import pint.delegates.formatter._format_helpers
+from pint import formatting as fmt
 
 
 class TestFormatter:

@@ -8,17 +8,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from collections.abc import Callable
-from ...compat import ndarray, np, Unpack
-from ._spec_helpers import split_format, join_mu, REGISTERED_FORMATTERS
+from typing import TYPE_CHECKING
 
 from ..._typing import Magnitude
-
-from ._format_helpers import format_compound_unit, BabelKwds, override_locale
+from ...compat import Unpack, ndarray, np
+from ._format_helpers import BabelKwds, format_compound_unit, override_locale
+from ._spec_helpers import REGISTERED_FORMATTERS, join_mu, split_format
 
 if TYPE_CHECKING:
-    from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
+    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
 
 

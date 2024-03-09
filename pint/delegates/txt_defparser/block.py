@@ -16,11 +16,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
 from typing import Generic, TypeVar
 
-from ..base_defparser import PintParsedStatement, ParserConfig
 import flexparser as fp
+
+from ..base_defparser import ParserConfig, PintParsedStatement
 
 
 @dataclass(frozen=True)

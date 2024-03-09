@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import decimal
 import pickle
 import time
 
+import flexparser as fp
 import pytest
 
 import pint
-import flexparser as fp
 from pint.facets.plain import UnitDefinition
 
 FS_SLEEP = 0.010

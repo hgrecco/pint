@@ -12,24 +12,28 @@
 
 
 from __future__ import annotations
+
 import functools
-
-from typing import TYPE_CHECKING, Any
-from collections.abc import Iterable
-
 import re
-from ._spec_helpers import split_format, FORMATTER
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
-from ...compat import ndarray, Unpack, Number
-from ._format_helpers import BabelKwds, formatter, override_locale, format_compound_unit
-from ._spec_helpers import join_mu, join_unc, remove_custom_flags
+from ...compat import Number, Unpack, ndarray
+from ._format_helpers import BabelKwds, format_compound_unit, formatter, override_locale
+from ._spec_helpers import (
+    FORMATTER,
+    join_mu,
+    join_unc,
+    remove_custom_flags,
+    split_format,
+)
 
 if TYPE_CHECKING:
-    from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
     from ...facets.measurement import Measurement
-    from ...util import ItMatrix
+    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
+    from ...util import ItMatrix
 
 
 def vector_to_latex(

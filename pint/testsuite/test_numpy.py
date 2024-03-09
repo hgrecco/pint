@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import operator as op
 import pickle

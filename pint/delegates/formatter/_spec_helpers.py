@@ -10,11 +10,12 @@
 
 from __future__ import annotations
 
-from typing import Any
-from collections.abc import Iterable, Callable
-import warnings
-from ...compat import Number
 import re
+import warnings
+from collections.abc import Callable, Iterable
+from typing import Any
+
+from ...compat import Number
 
 FORMATTER = Callable[
     [

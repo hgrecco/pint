@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import Any
 
-from ..._typing import Magnitude
 from ... import errors
+from ..._typing import Magnitude
 from ...converters import Converter
 from ...util import UnitsContainer
 

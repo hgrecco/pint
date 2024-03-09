@@ -16,11 +16,9 @@ from __future__ import annotations
 
 from typing import Generic
 
-from . import registry_helpers
-from . import facets
-from .util import logger, pi_theorem
+from . import facets, registry_helpers
 from .compat import TypeAlias
-
+from .util import logger, pi_theorem
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases

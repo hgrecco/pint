@@ -11,21 +11,19 @@
 
 from __future__ import annotations
 
+import locale
+from collections.abc import Callable, Generator, Iterable
+from contextlib import contextmanager
 from functools import partial
+from locale import LC_NUMERIC, getlocale, setlocale
 from typing import (
-    Any,
-    TypeVar,
     TYPE_CHECKING,
+    Any,
     Literal,
     TypedDict,
+    TypeVar,
 )
-from collections.abc import Generator, Iterable, Callable
-
-from locale import getlocale, setlocale, LC_NUMERIC
-from contextlib import contextmanager
 from warnings import warn
-
-import locale
 
 from pint.delegates.formatter._spec_helpers import FORMATTER, _join
 
@@ -38,9 +36,9 @@ except ImportError:
     np_integer = None
 
 if TYPE_CHECKING:
-    from ...registry import UnitRegistry
-    from ...facets.plain import PlainUnit
     from ...compat import Locale, Number
+    from ...facets.plain import PlainUnit
+    from ...registry import UnitRegistry
 
 T = TypeVar("T")
 U = TypeVar("U")

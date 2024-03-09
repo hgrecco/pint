@@ -8,32 +8,30 @@
 
 from __future__ import annotations
 
-
 import copy
 import datetime
 import locale
 import numbers
 import operator
+from collections.abc import Callable, Iterator, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
-    overload,
     Generic,
     TypeVar,
+    overload,
 )
-from collections.abc import Callable
-from collections.abc import Iterator, Sequence
 
-from ..._typing import UnitLike, QuantityOrUnitLike, Magnitude, Scalar
+from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
     _to_magnitude,
+    deprecated,
     eq,
     is_duck_array_type,
     is_upcast_type,
     np,
     zero_or_nan,
-    deprecated,
 )
 from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
 from ...util import (
@@ -43,8 +41,8 @@ from ...util import (
     logger,
     to_units_container,
 )
-from .definitions import UnitDefinition
 from . import qto
+from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
@@ -56,7 +54,7 @@ if TYPE_CHECKING:
 
 try:
     import uncertainties.unumpy as unp
-    from uncertainties import ufloat, UFloat
+    from uncertainties import UFloat, ufloat
 
     HAS_UNCERTAINTIES = True
 except ImportError:

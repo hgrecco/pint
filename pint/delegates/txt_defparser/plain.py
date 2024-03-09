@@ -26,6 +26,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import flexparser as fp
+
 from ...converters import Converter
 from ...facets.plain import definitions
 from ...util import UnitsContainer

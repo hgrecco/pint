@@ -11,8 +11,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from ...compat import Self
 from ... import errors
+from ...compat import Self
 
 
 @dataclass(frozen=True)

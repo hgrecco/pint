@@ -10,15 +10,11 @@
 from __future__ import annotations
 
 import numbers
-
-from typing import Any
-from collections.abc import Iterable
-
-
-from typing import Generic
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from numbers import Number
+from typing import Any, Generic
 
+from ..._typing import UnitLike
 from ...babel_names import _babel_systems
 from ...compat import babel_parse
 from ...util import (
@@ -27,11 +23,9 @@ from ...util import (
     logger,
     to_units_container,
 )
-from .definitions import SystemDefinition
 from .. import group
 from ..plain import MagnitudeT
-
-from ..._typing import UnitLike
+from .definitions import SystemDefinition
 
 GetRootUnits = Callable[[UnitLike, bool], tuple[Number, UnitLike]]
 

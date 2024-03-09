@@ -11,23 +11,23 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 import re
+from typing import TYPE_CHECKING
+
+from ..._typing import Magnitude
+from ...compat import Unpack, ndarray, np
 from ...util import iterable
-from ...compat import ndarray, np, Unpack
+from ._format_helpers import BabelKwds, format_compound_unit, formatter, override_locale
 from ._spec_helpers import (
-    split_format,
     join_mu,
     join_unc,
     remove_custom_flags,
+    split_format,
 )
 
-from ..._typing import Magnitude
-from ._format_helpers import BabelKwds, format_compound_unit, formatter, override_locale
-
 if TYPE_CHECKING:
-    from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
     from ...facets.measurement import Measurement
+    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
 
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 

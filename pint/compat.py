@@ -10,15 +10,13 @@
 
 from __future__ import annotations
 
-import sys
 import math
+import sys
+from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 from importlib import import_module
 from numbers import Number
-from collections.abc import Mapping
 from typing import Any, NoReturn
-from collections.abc import Callable
-from collections.abc import Iterable
 
 try:
     from uncertainties import UFloat, ufloat
@@ -190,11 +188,15 @@ except ImportError:
 
 # Defines Logarithm and Exponential for Logarithmic Converter
 if HAS_NUMPY:
-    from numpy import exp  # noqa: F401
-    from numpy import log  # noqa: F401
+    from numpy import (
+        exp,  # noqa: F401
+        log,  # noqa: F401
+    )
 else:
-    from math import exp  # noqa: F401
-    from math import log  # noqa: F401
+    from math import (
+        exp,  # noqa: F401
+        log,  # noqa: F401
+    )
 
 if not HAS_BABEL:
     babel_parse = missing_dependency("Babel")  # noqa: F811

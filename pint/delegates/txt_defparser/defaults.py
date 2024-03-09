@@ -17,9 +17,10 @@ import typing as ty
 from dataclasses import dataclass, fields
 
 import flexparser as fp
+
 from ...facets.plain import definitions
-from . import block, plain
 from ..base_defparser import PintParsedStatement
+from . import block, plain
 
 
 @dataclass(frozen=True)

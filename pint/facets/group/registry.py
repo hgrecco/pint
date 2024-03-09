@@ -8,10 +8,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, Any
+from typing import TYPE_CHECKING, Any, Generic
 
-from ...compat import TypeAlias
 from ... import errors
+from ...compat import TypeAlias
 
 if TYPE_CHECKING:
     from ..._typing import Unit, UnitsContainer
@@ -19,12 +19,12 @@ if TYPE_CHECKING:
 from ...util import create_class_with_registry, to_units_container
 from ..plain import (
     GenericPlainRegistry,
-    UnitDefinition,
     QuantityT,
+    UnitDefinition,
     UnitT,
 )
-from .definitions import GroupDefinition
 from . import objects
+from .definitions import GroupDefinition
 
 
 class GenericGroupRegistry(
