@@ -27,22 +27,28 @@ class OffsetConverter(ScaleConverter):
         return self.offset == 0
 
     def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
-        offset = Decimal(self.offset) if isinstance(value, Decimal) else self.offset
+        offset = (
+            Decimal(str(self.offset)) if isinstance(value, Decimal) else self.offset
+        )
+        scale = Decimal(str(self.scale)) if isinstance(value, Decimal) else self.scale
         if inplace:
-            value *= self.scale
+            value *= scale
             value += offset
         else:
-            value = value * self.scale + offset
+            value = value * scale + offset
 
         return value
 
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
-        offset = Decimal(self.offset) if isinstance(value, Decimal) else self.offset
+        offset = (
+            Decimal(str(self.offset)) if isinstance(value, Decimal) else self.offset
+        )
+        scale = Decimal(str(self.scale)) if isinstance(value, Decimal) else self.scale
         if inplace:
             value -= offset
-            value /= self.scale
+            value /= scale
         else:
-            value = (value - offset) / self.scale
+            value = (value - offset) / scale
 
         return value
 
