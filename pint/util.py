@@ -180,9 +180,7 @@ def column_echelon_form(
             ItMatrix,
         ],
         Matrix,
-    ] = (
-        transpose if transpose_result else _noop
-    )
+    ] = transpose if transpose_result else _noop
 
     ech_matrix = matrix_apply(
         transpose(matrix),
@@ -309,7 +307,7 @@ def pi_theorem(quantities: dict[str, Any], registry: Optional[UnitRegistry] = No
 
 
 def solve_dependencies(
-    dependencies: dict[TH, set[TH]]
+    dependencies: dict[TH, set[TH]],
 ) -> Generator[set[TH], None, None]:
     """Solve a dependency graph.
 

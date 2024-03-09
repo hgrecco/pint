@@ -43,8 +43,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             self._units = units._units
         else:
             raise TypeError(
-                "units must be of type str, Unit or "
-                "UnitsContainer; not {}.".format(type(units))
+                "units must be of type str, Unit or " "UnitsContainer; not {}.".format(
+                    type(units)
+                )
             )
 
     def __copy__(self) -> PlainUnit:
