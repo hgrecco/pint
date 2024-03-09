@@ -1200,3 +1200,12 @@ def test_issues_1841_xfail():
 
     # this prints "2*pi hour * radian", not "2*pi radian * hour" unless sort_dims is True
     # print(q)
+
+
+def test_issue_1950():
+    from decimal import Decimal
+
+    ureg = UnitRegistry()
+    qt_celsius = ureg.Quantity(Decimal("0.00"), "°C")
+    qt_kelvin = ureg.Quantity(Decimal("273.15"), "°K")
+    assert qt_celsius.to_base_units() == qt_kelvin.to_base_units()
