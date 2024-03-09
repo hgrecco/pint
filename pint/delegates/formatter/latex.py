@@ -14,7 +14,8 @@
 from __future__ import annotations
 import functools
 
-from typing import TYPE_CHECKING, Any, Iterable, Union
+from typing import TYPE_CHECKING, Any
+from collections.abc import Iterable
 
 import re
 from ._spec_helpers import split_format, FORMATTER
@@ -110,7 +111,7 @@ def siunitx_format_unit(
 ) -> str:
     """Returns LaTeX code for the unit that can be put into an siunitx command."""
 
-    def _tothe(power: Union[int, float]) -> str:
+    def _tothe(power: int | float) -> str:
         if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
             if power == 1:
                 return ""
@@ -241,7 +242,7 @@ class LatexFormatter:
         if "L" not in unc_spec:
             unc_spec += "L"
 
-        joint_fstring = "{}\ {}"
+        joint_fstring = r"{}\ {}"
 
         return join_unc(
             joint_fstring,

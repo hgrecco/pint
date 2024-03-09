@@ -10,7 +10,6 @@
 
 from __future__ import annotations
 
-from typing import Union
 import typing as ty
 from dataclasses import dataclass, fields
 
@@ -135,7 +134,7 @@ class RedefinitionError(ValueError, PintError):
 class UndefinedUnitError(AttributeError, PintError):
     """Raised when the units are not defined in the unit registry."""
 
-    unit_names: Union[str, tuple[str, ...]]
+    unit_names: str | tuple[str, ...]
 
     def __str__(self):
         if isinstance(self.unit_names, str):

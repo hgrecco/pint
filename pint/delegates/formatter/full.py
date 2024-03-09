@@ -11,7 +11,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Iterable, Literal, Optional, Any
+from typing import TYPE_CHECKING, Literal, Any
+from collections.abc import Callable, Iterable
 import locale
 from ...compat import babel_parse, Number, Unpack
 from ...util import iterable
@@ -54,17 +55,17 @@ class FullFormatter:
         "[time]",
         "[temperature]",
     )
-    default_sort_func: Optional[
+    default_sort_func: None | (
         Callable[
             [Iterable[tuple[str, Number]], GenericPlainRegistry],
             Iterable[tuple[str, Number]],
         ]
-    ] = lambda self, x, registry: sorted(x)
+    ) = lambda self, x, registry: sorted(x)
 
-    locale: Optional[Locale] = None
+    locale: Locale | None = None
     babel_length: Literal["short", "long", "narrow"] = "long"
 
-    def set_locale(self, loc: Optional[str]) -> None:
+    def set_locale(self, loc: str | None) -> None:
         """Change the locale used by default by `format_babel`.
 
         Parameters
@@ -183,8 +184,8 @@ class FullFormatter:
         self,
         unit: PlainUnit,
         spec: str = "",
-        length: Optional[Literal["short", "long", "narrow"]] = "long",
-        locale: Optional[Locale] = None,
+        length: Literal["short", "long", "narrow"] | None = "long",
+        locale: Locale | None = None,
     ) -> str:
         if self.locale is None and locale is None:
             raise ValueError(
@@ -204,7 +205,7 @@ class FullFormatter:
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
         length: Literal["short", "long", "narrow"] = "long",
-        locale: Optional[Locale] = None,
+        locale: Locale | None = None,
     ) -> str:
         if self.locale is None and locale is None:
             raise ValueError(

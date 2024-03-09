@@ -10,7 +10,8 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Callable, Any
+from typing import Any
+from collections.abc import Iterable, Callable
 import warnings
 from ...compat import Number
 import re

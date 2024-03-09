@@ -14,14 +14,12 @@ from __future__ import annotations
 from functools import partial
 from typing import (
     Any,
-    Generator,
-    Iterable,
     TypeVar,
-    Callable,
     TYPE_CHECKING,
     Literal,
     TypedDict,
 )
+from collections.abc import Generator, Iterable, Callable
 
 from locale import getlocale, setlocale, LC_NUMERIC
 from contextlib import contextmanager

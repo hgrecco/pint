@@ -13,7 +13,8 @@ from __future__ import annotations
 import functools
 from inspect import signature, Parameter
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Callable, TypeVar, Any, Union, Optional
+from typing import TYPE_CHECKING, TypeVar, Any
+from collections.abc import Callable
 from collections.abc import Iterable
 
 from ._typing import F
@@ -197,8 +198,8 @@ def _apply_defaults(sig, args, kwargs):
 
 def wraps(
     ureg: UnitRegistry,
-    ret: Optional[Union[str, Unit, Iterable[Optional[Union[str, Unit]]]]],
-    args: Optional[Union[str, Unit, Iterable[Optional[Union[str, Unit]]]]],
+    ret: str | Unit | Iterable[str | Unit | None] | None,
+    args: str | Unit | Iterable[str | Unit | None] | None,
     strict: bool = True,
 ) -> Callable[[Callable[..., Any]], Callable[..., Quantity]]:
     """Wraps a function to become pint-aware.
@@ -315,7 +316,7 @@ def wraps(
 
 
 def check(
-    ureg: UnitRegistry, *args: Optional[Union[str, UnitsContainer, Unit]]
+    ureg: UnitRegistry, *args: str | UnitsContainer | Unit | None
 ) -> Callable[[F], F]:
     """Decorator to for quantity type checking for function inputs.
 

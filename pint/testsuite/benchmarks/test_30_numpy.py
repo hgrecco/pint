@@ -1,4 +1,5 @@
-from typing import Generator, Any
+from typing import Any
+from collections.abc import Generator
 import itertools as it
 import operator
 

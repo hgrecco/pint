@@ -25,11 +25,10 @@ import types
 from typing import (
     TYPE_CHECKING,
     ClassVar,
-    Callable,
     TypeVar,
     Any,
-    Optional,
 )
+from collections.abc import Callable
 from collections.abc import Hashable, Generator
 
 from .compat import NUMERIC_TYPES, Self
@@ -64,8 +63,8 @@ def _noop(x: T) -> T:
 
 def matrix_to_string(
     matrix: ItMatrix,
-    row_headers: Optional[Iterable[str]] = None,
-    col_headers: Optional[Iterable[str]] = None,
+    row_headers: Iterable[str] | None = None,
+    col_headers: Iterable[str] | None = None,
     fmtfun: Callable[
         [
             Scalar,
@@ -232,7 +231,7 @@ def column_echelon_form(
     return _transpose(ech_matrix), _transpose(id_matrix), swapped
 
 
-def pi_theorem(quantities: dict[str, Any], registry: Optional[UnitRegistry] = None):
+def pi_theorem(quantities: dict[str, Any], registry: UnitRegistry | None = None):
     """Builds dimensionless quantities using the Buckingham π theorem
 
     Parameters
@@ -348,7 +347,7 @@ def solve_dependencies(
 
 
 def find_shortest_path(
-    graph: dict[TH, set[TH]], start: TH, end: TH, path: Optional[list[TH]] = None
+    graph: dict[TH, set[TH]], start: TH, end: TH, path: list[TH] | None = None
 ):
     """Find shortest path between two nodes within a graph.
 
@@ -390,8 +389,8 @@ def find_shortest_path(
 
 
 def find_connected_nodes(
-    graph: dict[TH, set[TH]], start: TH, visited: Optional[set[TH]] = None
-) -> Optional[set[TH]]:
+    graph: dict[TH, set[TH]], start: TH, visited: set[TH] | None = None
+) -> set[TH] | None:
     """Find all nodes connected to a start node within a graph.
 
     Parameters
@@ -451,12 +450,12 @@ class UnitsContainer(Mapping[str, Scalar]):
     __slots__ = ("_d", "_hash", "_one", "_non_int_type")
 
     _d: udict
-    _hash: Optional[int]
+    _hash: int | None
     _one: Scalar
     _non_int_type: type
 
     def __init__(
-        self, *args: Any, non_int_type: Optional[type] = None, **kwargs: Any
+        self, *args: Any, non_int_type: type | None = None, **kwargs: Any
     ) -> None:
         if args and isinstance(args[0], UnitsContainer):
             default_non_int_type = args[0]._non_int_type
@@ -1027,7 +1026,7 @@ class PrettyIPython:
 
 
 def to_units_container(
-    unit_like: QuantityOrUnitLike, registry: Optional[UnitRegistry] = None
+    unit_like: QuantityOrUnitLike, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 
@@ -1064,7 +1063,7 @@ def to_units_container(
 
 
 def infer_base_unit(
-    unit_like: QuantityOrUnitLike, registry: Optional[UnitRegistry] = None
+    unit_like: QuantityOrUnitLike, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """
     Given a Quantity or UnitLike, give the UnitsContainer for it's plain units.

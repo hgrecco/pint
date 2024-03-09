@@ -11,7 +11,8 @@ from __future__ import annotations
 import functools
 from collections import ChainMap
 from contextlib import contextmanager
-from typing import Any, Callable, Generator, Generic, Optional, Union
+from typing import Any, Generic
+from collections.abc import Callable, Generator
 
 from ...compat import TypeAlias
 from ..._typing import F, Magnitude
@@ -75,7 +76,7 @@ class GenericContextRegistry(
         super()._register_definition_adders()
         self._register_adder(ContextDefinition, self.add_context)
 
-    def add_context(self, context: Union[objects.Context, ContextDefinition]) -> None:
+    def add_context(self, context: objects.Context | ContextDefinition) -> None:
         """Add a context object to the registry.
 
         The context will be accessible by its name and aliases.
@@ -198,7 +199,7 @@ class GenericContextRegistry(
         self.define(definition)
 
     def enable_contexts(
-        self, *names_or_contexts: Union[str, objects.Context], **kwargs: Any
+        self, *names_or_contexts: str | objects.Context, **kwargs: Any
     ) -> None:
         """Enable contexts provided by name or by object.
 
@@ -245,7 +246,7 @@ class GenericContextRegistry(
         self._active_ctx.insert_contexts(*contexts)
         self._switch_context_cache_and_units()
 
-    def disable_contexts(self, n: Optional[int] = None) -> None:
+    def disable_contexts(self, n: int | None = None) -> None:
         """Disable the last n enabled contexts.
 
         Parameters
@@ -404,7 +405,7 @@ class GenericContextRegistry(
         return super()._convert(value, src, dst, inplace)
 
     def _get_compatible_units(
-        self, input_units: UnitsContainer, group_or_system: Optional[str] = None
+        self, input_units: UnitsContainer, group_or_system: str | None = None
     ):
         src_dim = self._get_dimensionality(input_units)
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union, Protocol
+from typing import TYPE_CHECKING, Any, TypeVar, Union, Protocol
+from collections.abc import Callable
 from decimal import Decimal
 from fractions import Fraction
 

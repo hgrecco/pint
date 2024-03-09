@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import bisect
 import math
@@ -82,7 +82,7 @@ def to_reduced_units(
 
 
 def to_compact(
-    quantity: PlainQuantity, unit: Optional[UnitsContainer] = None
+    quantity: PlainQuantity, unit: UnitsContainer | None = None
 ) -> PlainQuantity:
     """ "Return PlainQuantity rescaled to compact, human-readable units.
 
@@ -170,7 +170,7 @@ def to_compact(
 
 
 def to_preferred(
-    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
+    quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
@@ -190,7 +190,7 @@ def to_preferred(
 
 
 def ito_preferred(
-    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
+    quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
@@ -210,7 +210,7 @@ def ito_preferred(
 
 
 def _get_preferred(
-    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
+    quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
 ) -> PlainQuantity:
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.default_preferred_units

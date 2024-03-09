@@ -1,7 +1,8 @@
 import pytest
 
 import pathlib
-from typing import Any, TypeVar, Callable
+from typing import Any, TypeVar
+from collections.abc import Callable
 
 from ...compat import TypeAlias
 

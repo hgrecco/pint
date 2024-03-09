@@ -908,7 +908,7 @@ class TestIssues(QuantityTestCase):
         u2 = ufloat(5.6, 0.78)
         q1_u = module_registry.Quantity(u2 - u1, "m")
         q1_str = str(q1_u)
-        q1_str = "{:.4uS}".format(q1_u)
+        q1_str = f"{q1_u:.4uS}"
         q1_m = q1_u.magnitude
         q2_u = module_registry.Quantity(q1_str)
         # Not equal because the uncertainties are differently random!

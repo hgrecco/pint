@@ -8,7 +8,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
+from collections.abc import Callable
 from ...compat import ndarray, np, Unpack
 from ._spec_helpers import split_format, join_mu, REGISTERED_FORMATTERS
 

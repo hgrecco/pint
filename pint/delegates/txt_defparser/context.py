@@ -19,7 +19,7 @@ from __future__ import annotations
 import numbers
 import re
 import typing as ty
-from typing import Optional, Union
+from typing import Union
 from dataclasses import dataclass
 
 import flexparser as fp
@@ -35,7 +35,7 @@ T = ty.TypeVar("T", bound="Union[ForwardRelation, BidirectionalRelation]")
 
 def _from_string_and_context_sep(
     cls: type[T], s: str, config: ParserConfig, separator: str
-) -> Optional[T]:
+) -> T | None:
     if separator not in s:
         return None
     if ":" not in s:
@@ -192,7 +192,7 @@ class ContextDefinition(
         return self.opening.defaults
 
     @property
-    def relations(self) -> tuple[Union[BidirectionalRelation, ForwardRelation], ...]:
+    def relations(self) -> tuple[BidirectionalRelation | ForwardRelation, ...]:
         return tuple(
             r
             for r in self.body

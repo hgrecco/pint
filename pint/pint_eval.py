@@ -15,7 +15,7 @@ import token as tokenlib
 import tokenize
 from tokenize import TokenInfo
 
-from typing import Any, Optional, Union
+from typing import Any
 
 try:
     from uncertainties import ufloat
@@ -319,9 +319,9 @@ class EvalTreeNode:
 
     def __init__(
         self,
-        left: Union[EvalTreeNode, TokenInfo],
-        operator: Optional[TokenInfo] = None,
-        right: Optional[EvalTreeNode] = None,
+        left: EvalTreeNode | TokenInfo,
+        operator: TokenInfo | None = None,
+        right: EvalTreeNode | None = None,
     ):
         self.left = left
         self.operator = operator
@@ -351,8 +351,8 @@ class EvalTreeNode:
             ],
             Any,
         ],
-        bin_op: Optional[dict[str, BinaryOpT]] = None,
-        un_op: Optional[dict[str, UnaryOpT]] = None,
+        bin_op: dict[str, BinaryOpT] | None = None,
+        un_op: dict[str, UnaryOpT] | None = None,
     ):
         """Evaluate node.
 
@@ -528,7 +528,7 @@ def _build_eval_tree(
 
 def build_eval_tree(
     tokens: Iterable[TokenInfo],
-    op_priority: Optional[dict[str, int]] = None,
+    op_priority: dict[str, int] | None = None,
 ) -> EvalTreeNode:
     """Build an evaluation tree from a set of tokens.
 
