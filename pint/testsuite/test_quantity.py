@@ -174,7 +174,7 @@ class TestQuantity(QuantityTestCase):
             ("{:Lx}", r"\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}"),
         ):
             with subtests.test(spec):
-                assert spec.format(x) == result
+                assert spec.format(x) == result, spec
 
         # Check the special case that prevents e.g. '3 1 / second'
         x = self.Q_(3, UnitsContainer(second=-1))

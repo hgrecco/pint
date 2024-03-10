@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
-from ._format_helpers import BabelKwds, format_compound_unit, override_locale
-from ._spec_helpers import REGISTERED_FORMATTERS, join_mu, split_format
+from ._compound_unit_helpers import BabelKwds, prepare_compount_unit
+from ._format_helpers import join_mu, override_locale
+from ._spec_helpers import REGISTERED_FORMATTERS, split_format
 
 if TYPE_CHECKING:
     from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
@@ -80,9 +81,10 @@ def register_unit_format(name: str):
             def format_unit(
                 self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
             ) -> str:
-                units = unit._REGISTRY.UnitsContainer(
-                    format_compound_unit(unit, uspec, **babel_kwds)
+                numerator, _denominator = prepare_compount_unit(
+                    unit, uspec, **babel_kwds, as_ratio=False
                 )
+                units = unit._REGISTRY.UnitsContainer(numerator)
 
                 return func(units, registry=unit._REGISTRY, **babel_kwds)
 

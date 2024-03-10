@@ -20,11 +20,19 @@ from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
 from ...compat import Number, Unpack, ndarray
-from ._format_helpers import BabelKwds, format_compound_unit, formatter, override_locale
-from ._spec_helpers import (
+from ._compound_unit_helpers import (
+    BabelKwds,
+    SortFunc,
+    prepare_compount_unit,
+)
+from ._format_helpers import (
     FORMATTER,
+    formatter,
     join_mu,
     join_unc,
+    override_locale,
+)
+from ._spec_helpers import (
     remove_custom_flags,
     split_format,
 )
@@ -175,27 +183,46 @@ class LatexFormatter:
         return mstr
 
     def format_unit(
-        self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        unit: PlainUnit,
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        units = format_compound_unit(unit, uspec, **babel_kwds)
+        numerator, denominator = prepare_compount_unit(
+            unit, uspec, sort_func=sort_func, **babel_kwds
+        )
 
-        preprocessed = {rf"\mathrm{{{latex_escape(u)}}}": p for u, p in units}
+        numerator = ((rf"\mathrm{{{latex_escape(u)}}}", p) for u, p in numerator)
+        denominator = ((rf"\mathrm{{{latex_escape(u)}}}", p) for u, p in denominator)
+
+        # Localized latex
+        # if babel_kwds.get("locale", None):
+        #     length = babel_kwds.get("length") or ("short" if "~" in uspec else "long")
+        #     division_fmt = localize_per(length, babel_kwds.get("locale"), "{}/{}")
+        # else:
+        #     division_fmt = "{}/{}"
+
+        # division_fmt = r"\frac" + division_fmt.format("[{}]", "[{}]")
+
         formatted = formatter(
-            preprocessed.items(),
+            numerator,
+            denominator,
             as_ratio=True,
             single_denominator=True,
             product_fmt=r" \cdot ",
             division_fmt=r"\frac[{}][{}]",
             power_fmt="{}^[{}]",
             parentheses_fmt=r"\left({}\right)",
-            sort_func=None,
         )
+
         return formatted.replace("[", "{").replace("]", "}")
 
     def format_quantity(
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         registry = quantity._REGISTRY
@@ -209,13 +236,14 @@ class LatexFormatter:
         return join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, **babel_kwds),
+            self.format_unit(quantity.units, uspec, sort_func, **babel_kwds),
         )
 
     def format_uncertainty(
         self,
         uncertainty,
         unc_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         # uncertainties handles everythin related to latex.
@@ -230,6 +258,7 @@ class LatexFormatter:
         self,
         measurement: Measurement,
         meas_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         registry = measurement._REGISTRY
@@ -253,7 +282,7 @@ class LatexFormatter:
             r"\left(",
             r"\right)",
             self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
-            self.format_unit(measurement.units, uspec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, sort_func, **babel_kwds),
         )
 
 
@@ -264,7 +293,11 @@ class SIunitxFormatter:
     """
 
     def format_magnitude(
-        self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        magnitude: Magnitude,
+        mspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray):
@@ -278,7 +311,11 @@ class SIunitxFormatter:
         return mstr
 
     def format_unit(
-        self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        unit: PlainUnit,
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         registry = unit._REGISTRY
         if registry is None:
@@ -308,6 +345,7 @@ class SIunitxFormatter:
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         registry = quantity._REGISTRY
@@ -319,13 +357,16 @@ class SIunitxFormatter:
         joint_fstring = "{}{}"
 
         mstr = self.format_magnitude(quantity.magnitude, mspec, **babel_kwds)
-        ustr = self.format_unit(quantity.units, uspec, **babel_kwds)[len(r"\si[]") :]
+        ustr = self.format_unit(quantity.units, uspec, sort_func, **babel_kwds)[
+            len(r"\si[]") :
+        ]
         return r"\SI[]" + join_mu(joint_fstring, "{%s}" % mstr, ustr)
 
     def format_uncertainty(
         self,
         uncertainty,
         unc_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         # SIunitx requires space between "+-" (or "\pm") and the nominal value
@@ -343,6 +384,7 @@ class SIunitxFormatter:
         self,
         measurement: Measurement,
         meas_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         registry = measurement._REGISTRY
@@ -363,5 +405,7 @@ class SIunitxFormatter:
             r"",
             "{%s}"
             % self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
-            self.format_unit(measurement.units, uspec, **babel_kwds)[len(r"\si[]") :],
+            self.format_unit(measurement.units, uspec, sort_func, **babel_kwds)[
+                len(r"\si[]") :
+            ],
         )

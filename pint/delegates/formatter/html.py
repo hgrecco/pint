@@ -17,10 +17,19 @@ from typing import TYPE_CHECKING
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
 from ...util import iterable
-from ._format_helpers import BabelKwds, format_compound_unit, formatter, override_locale
-from ._spec_helpers import (
+from ._compound_unit_helpers import (
+    BabelKwds,
+    SortFunc,
+    localize_per,
+    prepare_compount_unit,
+)
+from ._format_helpers import (
+    formatter,
     join_mu,
     join_unc,
+    override_locale,
+)
+from ._spec_helpers import (
     remove_custom_flags,
     split_format,
 )
@@ -75,24 +84,38 @@ class HTMLFormatter:
         return mstr
 
     def format_unit(
-        self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        unit: PlainUnit,
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        units = format_compound_unit(unit, uspec, **babel_kwds)
+        numerator, denominator = prepare_compount_unit(
+            unit, uspec, sort_func=sort_func, **babel_kwds
+        )
+
+        if babel_kwds.get("locale", None):
+            length = babel_kwds.get("length") or ("short" if "~" in uspec else "long")
+            division_fmt = localize_per(length, babel_kwds.get("locale"), "{}/{}")
+        else:
+            division_fmt = "{}/{}"
+
         return formatter(
-            units,
+            numerator,
+            denominator,
             as_ratio=True,
             single_denominator=True,
             product_fmt=r" ",
-            division_fmt=r"{}/{}",
+            division_fmt=division_fmt,
             power_fmt=r"{}<sup>{}</sup>",
             parentheses_fmt=r"({})",
-            sort_func=None,
         )
 
     def format_quantity(
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         registry = quantity._REGISTRY
@@ -116,13 +139,14 @@ class HTMLFormatter:
         return join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, **babel_kwds),
+            self.format_unit(quantity.units, uspec, sort_func, **babel_kwds),
         )
 
     def format_uncertainty(
         self,
         uncertainty,
         unc_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         unc_str = format(uncertainty, unc_spec).replace("+/-", " &plusmn; ")
@@ -135,6 +159,7 @@ class HTMLFormatter:
         self,
         measurement: Measurement,
         meas_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         registry = measurement._REGISTRY
@@ -154,5 +179,5 @@ class HTMLFormatter:
             "(",
             ")",
             self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
-            self.format_unit(measurement.units, uspec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, sort_func, **babel_kwds),
         )

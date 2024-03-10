@@ -12,13 +12,12 @@
 from __future__ import annotations
 
 import locale
-from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, Any, Literal
 
 from ..._typing import Magnitude
-from ...compat import Number, Unpack, babel_parse
+from ...compat import Unpack, babel_parse
 from ...util import iterable
-from ._format_helpers import BabelKwds
+from ._compound_unit_helpers import BabelKwds, SortFunc, sort_by_unit_name
 from ._to_register import REGISTERED_FORMATTERS
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
@@ -28,7 +27,6 @@ if TYPE_CHECKING:
     from ...compat import Locale
     from ...facets.measurement import Measurement
     from ...facets.plain import (
-        GenericPlainRegistry,
         MagnitudeT,
         PlainQuantity,
         PlainUnit,
@@ -44,8 +42,9 @@ class FullFormatter:
     _formatters: dict[str, Any] = {}
 
     default_format: str = ""
+
     # TODO: This can be over-riden by the registry definitions file
-    dim_order = (
+    dim_order: tuple[str, ...] = (
         "[substance]",
         "[mass]",
         "[current]",
@@ -55,15 +54,10 @@ class FullFormatter:
         "[time]",
         "[temperature]",
     )
-    default_sort_func: None | (
-        Callable[
-            [Iterable[tuple[str, Number]], GenericPlainRegistry],
-            Iterable[tuple[str, Number]],
-        ]
-    ) = lambda self, x, registry: sorted(x)
+
+    default_sort_func: SortFunc | None = staticmethod(sort_by_unit_name)
 
     locale: Locale | None = None
-    babel_length: Literal["short", "long", "narrow"] = "long"
 
     def set_locale(self, loc: str | None) -> None:
         """Change the locale used by default by `format_babel`.
@@ -115,10 +109,17 @@ class FullFormatter:
         )
 
     def format_unit(
-        self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        unit: PlainUnit,
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         uspec = uspec or self.default_format
-        return self.get_formatter(uspec).format_unit(unit, uspec, **babel_kwds)
+        sort_func = sort_func or self.default_sort_func
+        return self.get_formatter(uspec).format_unit(
+            unit, uspec, sort_func=sort_func, **babel_kwds
+        )
 
     def format_quantity(
         self,
@@ -136,15 +137,19 @@ class FullFormatter:
 
         del quantity
 
-        use_plural = obj.magnitude > 1
-        if iterable(use_plural):
-            use_plural = True
+        if "use_plural" in babel_kwds:
+            use_plural = babel_kwds["use_plural"]
+        else:
+            use_plural = obj.magnitude > 1
+            if iterable(use_plural):
+                use_plural = True
 
         return self.get_formatter(spec).format_quantity(
             obj,
             spec,
-            use_plural=babel_kwds.get("use_plural", use_plural),
-            length=babel_kwds.get("length", self.babel_length),
+            sort_func=self.default_sort_func,
+            use_plural=use_plural,
+            length=babel_kwds.get("length", None),
             locale=babel_kwds.get("locale", self.locale),
         )
 
@@ -171,8 +176,9 @@ class FullFormatter:
         return self.get_formatter(meas_spec).format_measurement(
             obj,
             meas_spec,
+            sort_func=self.default_sort_func,
             use_plural=babel_kwds.get("use_plural", use_plural),
-            length=babel_kwds.get("length", self.babel_length),
+            length=babel_kwds.get("length", None),
             locale=babel_kwds.get("locale", self.locale),
         )
 
@@ -184,7 +190,7 @@ class FullFormatter:
         self,
         unit: PlainUnit,
         spec: str = "",
-        length: Literal["short", "long", "narrow"] | None = "long",
+        length: Literal["short", "long", "narrow"] | None = None,
         locale: Locale | None = None,
     ) -> str:
         if self.locale is None and locale is None:
@@ -195,8 +201,9 @@ class FullFormatter:
         return self.format_unit(
             unit,
             spec or self.default_format,
+            sort_func=self.default_sort_func,
             use_plural=False,
-            length=length or self.babel_length,
+            length=length,
             locale=locale or self.locale,
         )
 
@@ -204,7 +211,7 @@ class FullFormatter:
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
-        length: Literal["short", "long", "narrow"] = "long",
+        length: Literal["short", "long", "narrow"] | None = None,
         locale: Locale | None = None,
     ) -> str:
         if self.locale is None and locale is None:
@@ -215,11 +222,13 @@ class FullFormatter:
         use_plural = quantity.magnitude > 1
         if iterable(use_plural):
             use_plural = True
+
         return self.format_quantity(
             quantity,
             spec or self.default_format,
+            sort_func=self.default_sort_func,
             use_plural=use_plural,
-            length=length or self.babel_length,
+            length=length,
             locale=locale or self.locale,
         )
 
