@@ -28,10 +28,12 @@ from .delegates.formatter._spec_helpers import (
     REGISTERED_FORMATTERS,
     extract_custom_flags,  # noqa: F401
     remove_custom_flags,  # noqa: F401
-    split_format,  # noqa: F401
 )
 from .delegates.formatter._spec_helpers import (
     parse_spec as _parse_spec,  # noqa: F401
+)
+from .delegates.formatter._spec_helpers import (
+    split_format as split_format,  # noqa: F401
 )
 
 # noqa

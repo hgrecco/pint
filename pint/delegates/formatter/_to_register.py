@@ -9,13 +9,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Iterable
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
+from ...util import UnitsContainer
 from ._compound_unit_helpers import BabelKwds, prepare_compount_unit
 from ._format_helpers import join_mu, override_locale
 from ._spec_helpers import REGISTERED_FORMATTERS, split_format
+from .plain import BaseFormatter
 
 if TYPE_CHECKING:
     from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
@@ -58,7 +60,7 @@ def register_unit_format(name: str):
         if name in REGISTERED_FORMATTERS:
             raise ValueError(f"format {name!r} already exists")  # or warn instead
 
-        class NewFormatter:
+        class NewFormatter(BaseFormatter):
             def format_magnitude(
                 self,
                 magnitude: Magnitude,
@@ -79,14 +81,25 @@ def register_unit_format(name: str):
                 return mstr
 
             def format_unit(
-                self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+                self,
+                unit: PlainUnit | Iterable[tuple[str, Any]],
+                uspec: str = "",
+                **babel_kwds: Unpack[BabelKwds],
             ) -> str:
                 numerator, _denominator = prepare_compount_unit(
-                    unit, uspec, **babel_kwds, as_ratio=False
+                    unit,
+                    uspec,
+                    **babel_kwds,
+                    as_ratio=False,
+                    registry=self._registry,
                 )
-                units = unit._REGISTRY.UnitsContainer(numerator)
 
-                return func(units, registry=unit._REGISTRY, **babel_kwds)
+                if self._registry is None:
+                    units = UnitsContainer(numerator)
+                else:
+                    units = self._registry.UnitsContainer(numerator)
+
+                return func(units, registry=self._registry)
 
             def format_quantity(
                 self,
@@ -94,19 +107,22 @@ def register_unit_format(name: str):
                 qspec: str = "",
                 **babel_kwds: Unpack[BabelKwds],
             ) -> str:
-                registry = quantity._REGISTRY
+                registry = self._registry
 
-                mspec, uspec = split_format(
-                    qspec,
-                    registry.formatter.default_format,
-                    registry.separate_format_defaults,
-                )
+                if registry is None:
+                    mspec, uspec = split_format(qspec, "", True)
+                else:
+                    mspec, uspec = split_format(
+                        qspec,
+                        registry.formatter.default_format,
+                        registry.separate_format_defaults,
+                    )
 
                 joint_fstring = "{} {}"
                 return join_mu(
                     joint_fstring,
                     self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-                    self.format_unit(quantity.units, uspec, **babel_kwds),
+                    self.format_unit(quantity.unit_items(), uspec, **babel_kwds),
                 )
 
         REGISTERED_FORMATTERS[name] = NewFormatter()

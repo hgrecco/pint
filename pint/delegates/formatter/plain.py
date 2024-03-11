@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import itertools
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Iterable
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
@@ -41,12 +41,18 @@ from ._spec_helpers import (
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
     from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
+    from ...registry import UnitRegistry
 
 
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
-class DefaultFormatter:
+class BaseFormatter:
+    def __init__(self, registry: UnitRegistry | None = None):
+        self._registry = registry
+
+
+class DefaultFormatter(BaseFormatter):
     """Simple, localizable plain text formatter.
 
     A formatter is a class with methods to format into string each of the objects
@@ -72,7 +78,7 @@ class DefaultFormatter:
 
     def format_unit(
         self,
-        unit: PlainUnit,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
@@ -82,7 +88,11 @@ class DefaultFormatter:
         """
 
         numerator, denominator = prepare_compount_unit(
-            unit, uspec, sort_func=sort_func, **babel_kwds
+            unit,
+            uspec,
+            sort_func=sort_func,
+            **babel_kwds,
+            registry=self._registry,
         )
 
         if babel_kwds.get("locale", None):
@@ -113,7 +123,7 @@ class DefaultFormatter:
         given a string formatting specification and locale related arguments.
         """
 
-        registry = quantity._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             qspec, registry.formatter.default_format, registry.separate_format_defaults
@@ -123,7 +133,7 @@ class DefaultFormatter:
         return join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, sort_func, **babel_kwds),
+            self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
 
     def format_uncertainty(
@@ -150,7 +160,7 @@ class DefaultFormatter:
         given a string formatting specification and locale related arguments.
         """
 
-        registry = measurement._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             meas_spec,
@@ -171,7 +181,7 @@ class DefaultFormatter:
         )
 
 
-class CompactFormatter:
+class CompactFormatter(BaseFormatter):
     """Simple, localizable plain text formatter without extra spaces."""
 
     def format_magnitude(
@@ -190,13 +200,17 @@ class CompactFormatter:
 
     def format_unit(
         self,
-        unit: PlainUnit,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         numerator, denominator = prepare_compount_unit(
-            unit, uspec, sort_func=sort_func, **babel_kwds
+            unit,
+            uspec,
+            sort_func=sort_func,
+            **babel_kwds,
+            registry=self._registry,
         )
 
         # Division format in compact formatter is not localized.
@@ -220,7 +234,7 @@ class CompactFormatter:
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = quantity._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             qspec, registry.formatter.default_format, registry.separate_format_defaults
@@ -231,7 +245,7 @@ class CompactFormatter:
         return join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, sort_func, **babel_kwds),
+            self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
 
     def format_uncertainty(
@@ -250,7 +264,7 @@ class CompactFormatter:
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = measurement._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             meas_spec,
@@ -271,7 +285,7 @@ class CompactFormatter:
         )
 
 
-class PrettyFormatter:
+class PrettyFormatter(BaseFormatter):
     """Pretty printed localizable plain text formatter without extra spaces."""
 
     def format_magnitude(
@@ -296,13 +310,17 @@ class PrettyFormatter:
 
     def format_unit(
         self,
-        unit: PlainUnit,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         numerator, denominator = prepare_compount_unit(
-            unit, uspec, sort_func=sort_func, **babel_kwds
+            unit,
+            uspec,
+            sort_func=sort_func,
+            **babel_kwds,
+            registry=self._registry,
         )
 
         if babel_kwds.get("locale", None):
@@ -330,7 +348,7 @@ class PrettyFormatter:
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = quantity._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             qspec, registry.formatter.default_format, registry.separate_format_defaults
@@ -341,7 +359,7 @@ class PrettyFormatter:
         return join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, sort_func, **babel_kwds),
+            self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
 
     def format_uncertainty(
@@ -360,7 +378,7 @@ class PrettyFormatter:
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = measurement._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             meas_spec,
@@ -380,7 +398,7 @@ class PrettyFormatter:
         )
 
 
-class RawFormatter:
+class RawFormatter(BaseFormatter):
     """Very simple non-localizable plain text formatter.
 
     Ignores all pint custom string formatting specification.
@@ -393,13 +411,17 @@ class RawFormatter:
 
     def format_unit(
         self,
-        unit: PlainUnit,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         numerator, denominator = prepare_compount_unit(
-            unit, uspec, sort_func=sort_func, **babel_kwds
+            unit,
+            uspec,
+            sort_func=sort_func,
+            **babel_kwds,
+            registry=self._registry,
         )
 
         return " * ".join(
@@ -414,7 +436,7 @@ class RawFormatter:
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = quantity._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             qspec, registry.formatter.default_format, registry.separate_format_defaults
@@ -424,7 +446,7 @@ class RawFormatter:
         return join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, sort_func, **babel_kwds),
+            self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
 
     def format_uncertainty(
@@ -443,7 +465,7 @@ class RawFormatter:
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = measurement._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             meas_spec,

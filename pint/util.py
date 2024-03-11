@@ -543,6 +543,9 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
+    def unit_items(self) -> Iterable[tuple[str, Scalar]]:
+        return self._d.items()
+
     def __iter__(self) -> Iterator[str]:
         return iter(self._d)
 

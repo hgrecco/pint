@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import functools
 import re
 import warnings
 from collections.abc import Callable
@@ -86,6 +87,7 @@ def remove_custom_flags(spec: str) -> str:
     return spec
 
 
+@functools.lru_cache
 def split_format(
     spec: str, default: str, separate_format_defaults: bool = True
 ) -> tuple[str, str]:

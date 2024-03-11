@@ -247,7 +247,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
 
-        self.formatter = delegates.Formatter()
+        self.formatter = delegates.Formatter(self)
         self._filename = filename
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like

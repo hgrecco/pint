@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Iterable
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
@@ -33,6 +33,7 @@ from ._spec_helpers import (
     remove_custom_flags,
     split_format,
 )
+from .plain import BaseFormatter
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
@@ -41,7 +42,7 @@ if TYPE_CHECKING:
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
-class HTMLFormatter:
+class HTMLFormatter(BaseFormatter):
     """HTML localizable text formatter."""
 
     def format_magnitude(
@@ -85,13 +86,17 @@ class HTMLFormatter:
 
     def format_unit(
         self,
-        unit: PlainUnit,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         numerator, denominator = prepare_compount_unit(
-            unit, uspec, sort_func=sort_func, **babel_kwds
+            unit,
+            uspec,
+            sort_func=sort_func,
+            **babel_kwds,
+            registry=self._registry,
         )
 
         if babel_kwds.get("locale", None):
@@ -118,7 +123,7 @@ class HTMLFormatter:
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = quantity._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             qspec, registry.formatter.default_format, registry.separate_format_defaults
@@ -139,7 +144,7 @@ class HTMLFormatter:
         return join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, sort_func, **babel_kwds),
+            self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
 
     def format_uncertainty(
@@ -162,7 +167,7 @@ class HTMLFormatter:
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = measurement._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             meas_spec,

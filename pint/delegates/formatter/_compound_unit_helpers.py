@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import functools
 import locale
 from collections.abc import Callable, Iterable
 from functools import partial
@@ -89,6 +90,7 @@ def localize_per(
     return patterns.get(length, default or "{}/{}")
 
 
+@functools.lru_cache
 def localize_unit_name(
     measurement_unit: str,
     use_plural: bool,
@@ -229,14 +231,15 @@ def sort_by_dimensionality(
 
 
 def prepare_compount_unit(
-    unit: PlainUnit | UnitsContainer,
+    unit: PlainUnit | UnitsContainer | Iterable[tuple[str, T]],
     spec: str = "",
     sort_func: SortFunc | None = None,
     use_plural: bool = True,
     length: Literal["short", "long", "narrow"] | None = None,
     locale: Locale | str | None = None,
     as_ratio: bool = True,
-) -> tuple[Iterable[tuple[str, Any]], Iterable[tuple[str, Any]]]:
+    registry: UnitRegistry | None = None,
+) -> tuple[Iterable[tuple[str, T]], Iterable[tuple[str, T]]]:
     """Format compound unit into unit container given
     an spec and locale.
 
@@ -245,12 +248,12 @@ def prepare_compount_unit(
     iterable of display name, exponent, canonical name
     """
 
-    registry = getattr(unit, "_REGISTRY", None)
-
     if isinstance(unit, UnitsContainer):
         out = unit.items()
-    else:
+    elif hasattr(unit, "_units"):
         out = unit._units.items()
+    else:
+        out = unit
 
     # out: unit_name, unit_exponent
 

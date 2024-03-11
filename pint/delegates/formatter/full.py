@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 import locale
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Iterable, Literal
 
 from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse
@@ -21,7 +21,13 @@ from ._compound_unit_helpers import BabelKwds, SortFunc, sort_by_unit_name
 from ._to_register import REGISTERED_FORMATTERS
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
-from .plain import CompactFormatter, DefaultFormatter, PrettyFormatter, RawFormatter
+from .plain import (
+    BaseFormatter,
+    CompactFormatter,
+    DefaultFormatter,
+    PrettyFormatter,
+    RawFormatter,
+)
 
 if TYPE_CHECKING:
     from ...compat import Locale
@@ -31,9 +37,10 @@ if TYPE_CHECKING:
         PlainQuantity,
         PlainUnit,
     )
+    from ...registry import UnitRegistry
 
 
-class FullFormatter:
+class FullFormatter(BaseFormatter):
     """A formatter that dispatch to other formatters.
 
     Has a default format, locale and babel_length
@@ -59,6 +66,18 @@ class FullFormatter:
 
     locale: Locale | None = None
 
+    def __init__(self, registry: UnitRegistry | None = None):
+        super().__init__(registry)
+
+        self._formatters = {}
+        self._formatters["raw"] = RawFormatter(registry)
+        self._formatters["D"] = DefaultFormatter(registry)
+        self._formatters["H"] = HTMLFormatter(registry)
+        self._formatters["P"] = PrettyFormatter(registry)
+        self._formatters["Lx"] = SIunitxFormatter(registry)
+        self._formatters["L"] = LatexFormatter(registry)
+        self._formatters["C"] = CompactFormatter(registry)
+
     def set_locale(self, loc: str | None) -> None:
         """Change the locale used by default by `format_babel`.
 
@@ -75,16 +94,6 @@ class FullFormatter:
             babel_parse(loc)
 
         self.locale = loc
-
-    def __init__(self) -> None:
-        self._formatters = {}
-        self._formatters["raw"] = RawFormatter()
-        self._formatters["D"] = DefaultFormatter()
-        self._formatters["H"] = HTMLFormatter()
-        self._formatters["P"] = PrettyFormatter()
-        self._formatters["Lx"] = SIunitxFormatter()
-        self._formatters["L"] = LatexFormatter()
-        self._formatters["C"] = CompactFormatter()
 
     def get_formatter(self, spec: str):
         if spec == "":
@@ -110,7 +119,7 @@ class FullFormatter:
 
     def format_unit(
         self,
-        unit: PlainUnit,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
@@ -137,12 +146,17 @@ class FullFormatter:
 
         del quantity
 
-        if "use_plural" in babel_kwds:
-            use_plural = babel_kwds["use_plural"]
+        locale = babel_kwds.get("locale", self.locale)
+
+        if locale:
+            if "use_plural" in babel_kwds:
+                use_plural = babel_kwds["use_plural"]
+            else:
+                use_plural = obj.magnitude > 1
+                if iterable(use_plural):
+                    use_plural = True
         else:
-            use_plural = obj.magnitude > 1
-            if iterable(use_plural):
-                use_plural = True
+            use_plural = False
 
         return self.get_formatter(spec).format_quantity(
             obj,
@@ -150,7 +164,7 @@ class FullFormatter:
             sort_func=self.default_sort_func,
             use_plural=use_plural,
             length=babel_kwds.get("length", None),
-            locale=babel_kwds.get("locale", self.locale),
+            locale=locale,
         )
 
     def format_measurement(
@@ -188,7 +202,7 @@ class FullFormatter:
 
     def format_unit_babel(
         self,
-        unit: PlainUnit,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
         spec: str = "",
         length: Literal["short", "long", "narrow"] | None = None,
         locale: Locale | None = None,
