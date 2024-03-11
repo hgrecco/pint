@@ -14,6 +14,7 @@ from ...compat import (
     mip_OptimizationStatus,
     mip_xsum,
 )
+from ...errors import UndefinedBehavior
 from ...util import infer_base_unit
 
 if TYPE_CHECKING:
@@ -102,9 +103,11 @@ def to_compact(
     if not isinstance(quantity.magnitude, numbers.Number) and not hasattr(
         quantity.magnitude, "nominal_value"
     ):
-        msg = "to_compact applied to non numerical types " "has an undefined behavior."
-        w = RuntimeWarning(msg)
-        warnings.warn(w, stacklevel=2)
+        warnings.warn(
+            "to_compact applied to non numerical types has an undefined behavior.",
+            UndefinedBehavior,
+            stacklevel=2,
+        )
         return quantity
 
     if (

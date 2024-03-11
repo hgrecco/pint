@@ -18,6 +18,7 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
+from pint.errors import UndefinedBehavior
 from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
@@ -835,7 +836,7 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
         x = "some string" * ureg.m
-        with pytest.warns(RuntimeWarning):
+        with pytest.warns(UndefinedBehavior):
             self.compare_quantity_compact(x, x)
 
     def test_very_large_to_compact(self):
