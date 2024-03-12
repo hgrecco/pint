@@ -380,12 +380,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     def test_cumprod_numpy_func(self):
         with pytest.raises(DimensionalityError):
             np.cumprod(self.q)
-        with pytest.raises(DimensionalityError):
-            np.cumproduct(self.q)
         helpers.assert_quantity_equal(np.cumprod(self.q / self.ureg.m), [1, 2, 6, 24])
-        helpers.assert_quantity_equal(
-            np.cumproduct(self.q / self.ureg.m), [1, 2, 6, 24]
-        )
         helpers.assert_quantity_equal(
             np.cumprod(self.q / self.ureg.m, axis=1), [[1, 2], [3, 12]]
         )
