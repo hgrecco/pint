@@ -18,6 +18,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
+    Iterable,
     TypeVar,
     overload,
 )
@@ -327,6 +328,10 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def unitless(self) -> bool:
         """ """
         return not bool(self.to_root_units()._units)
+
+    def unit_items(self) -> Iterable[tuple[str, Scalar]]:
+        """A view of the unit items."""
+        return self._units.unit_items()
 
     @property
     def dimensionless(self) -> bool:

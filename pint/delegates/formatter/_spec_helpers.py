@@ -10,12 +10,11 @@
 
 from __future__ import annotations
 
+import functools
 import re
 import warnings
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from typing import Any
-
-from ...compat import Number
 
 FORMATTER = Callable[
     [
@@ -28,8 +27,6 @@ FORMATTER = Callable[
 # http://docs.python.org/2/library/string.html#format-specification-mini-language
 # We also add uS for uncertainties.
 _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
-_PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
-_JOIN_REG_EXP = re.compile(r"{\d*}")
 
 REGISTERED_FORMATTERS: dict[str, Any] = {}
 
@@ -58,34 +55,6 @@ def parse_spec(spec: str) -> str:
         else:
             break
     return result
-
-
-def _join(fmt: str, iterable: Iterable[Any]) -> str:
-    """Join an iterable with the format specified in fmt.
-
-    The format can be specified in two ways:
-    - PEP3101 format with two replacement fields (eg. '{} * {}')
-    - The concatenating string (eg. ' * ')
-    """
-    if not iterable:
-        return ""
-    if not _JOIN_REG_EXP.search(fmt):
-        return fmt.join(iterable)
-    miter = iter(iterable)
-    first = next(miter)
-    for val in miter:
-        ret = fmt.format(first, val)
-        first = ret
-    return first
-
-
-def pretty_fmt_exponent(num: Number) -> str:
-    """Format an number into a pretty printed exponent."""
-    # unicode dot operator (U+22C5) looks like a superscript decimal
-    ret = f"{num:n}".replace("-", "⁻").replace(".", "\u22C5")
-    for n in range(10):
-        ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
-    return ret
 
 
 def extract_custom_flags(spec: str) -> str:
@@ -118,6 +87,7 @@ def remove_custom_flags(spec: str) -> str:
     return spec
 
 
+@functools.lru_cache
 def split_format(
     spec: str, default: str, separate_format_defaults: bool = True
 ) -> tuple[str, str]:
@@ -159,28 +129,3 @@ def split_format(
         uspec = uspec or default_uspec
 
     return mspec, uspec
-
-
-def join_mu(joint_fstring: str, mstr: str, ustr: str) -> str:
-    """Join magnitude and units.
-
-    This avoids that `3 and `1 / m` becomes `3 1 / m`
-    """
-    if ustr.startswith("1 / "):
-        return joint_fstring.format(mstr, ustr[2:])
-    return joint_fstring.format(mstr, ustr)
-
-
-def join_unc(joint_fstring: str, lpar: str, rpar: str, mstr: str, ustr: str) -> str:
-    """Join uncertainty magnitude and units.
-
-    Uncertainty magnitudes might require extra parenthesis when joined to units.
-    - YES: 3 +/- 1
-    - NO : 3(1)
-    - NO : (3 +/ 1)e-9
-
-    This avoids that `(3 + 1)` and `meter` becomes ((3 +/- 1) meter)
-    """
-    if mstr.startswith(lpar) or mstr.endswith(rpar):
-        return joint_fstring.format(mstr, ustr)
-    return joint_fstring.format(lpar + mstr + rpar, ustr)

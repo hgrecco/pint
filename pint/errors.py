@@ -245,3 +245,11 @@ class UnitStrippedWarning(UserWarning, PintError):
 class UnexpectedScaleInContainer(Exception):
     def __reduce__(self):
         return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
+
+
+@dataclass(frozen=False)
+class UndefinedBehavior(UserWarning, PintError):
+    msg: str
+
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))

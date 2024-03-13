@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-import locale
+import re
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from functools import partial
@@ -19,16 +19,11 @@ from locale import LC_NUMERIC, getlocale, setlocale
 from typing import (
     TYPE_CHECKING,
     Any,
-    Literal,
-    TypedDict,
     TypeVar,
 )
-from warnings import warn
 
-from pint.delegates.formatter._spec_helpers import FORMATTER, _join
-
-from ...compat import babel_parse, ndarray
-from ...util import UnitsContainer
+from ...compat import ndarray
+from ._spec_helpers import FORMATTER
 
 try:
     from numpy import integer as np_integer
@@ -37,20 +32,14 @@ except ImportError:
 
 if TYPE_CHECKING:
     from ...compat import Locale, Number
-    from ...facets.plain import PlainUnit
-    from ...registry import UnitRegistry
 
 T = TypeVar("T")
 U = TypeVar("U")
 V = TypeVar("V")
+W = TypeVar("W")
 
-
-class BabelKwds(TypedDict):
-    """Babel related keywords used in formatters."""
-
-    use_plural: bool
-    length: Literal["short", "long", "narrow"] | None
-    locale: Locale | str | None
+_PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
+_JOIN_REG_EXP = re.compile(r"{\d*}")
 
 
 def format_number(value: Any, spec: str = "") -> str:
@@ -109,221 +98,62 @@ def override_locale(
         setlocale(LC_NUMERIC, prev_locale_string)
 
 
-def format_unit_no_magnitude(
-    measurement_unit: str,
-    use_plural: bool = True,
-    length: Literal["short", "long", "narrow"] = "long",
-    locale: Locale | str | None = locale.LC_NUMERIC,
-) -> str | None:
-    """Format a value of a given unit.
-
-    THIS IS TAKEN FROM BABEL format_unit. But
-    - No magnitude is returned in the string.
-    - If the unit is not found, the same is given.
-    - use_plural instead of value
-
-    Values are formatted according to the locale's usual pluralization rules
-    and number formats.
-
-    >>> format_unit(12, 'length-meter', locale='ro_RO')
-    u'metri'
-    >>> format_unit(15.5, 'length-mile', locale='fi_FI')
-    u'mailia'
-    >>> format_unit(1200, 'pressure-millimeter-ofhg', locale='nb')
-    u'millimeter kvikks\\xf8lv'
-    >>> format_unit(270, 'ton', locale='en')
-    u'tons'
-    >>> format_unit(1234.5, 'kilogram', locale='ar_EG', numbering_system='default')
-    u'كيلوغرام'
-
-
-    The locale's usual pluralization rules are respected.
-
-    >>> format_unit(1, 'length-meter', locale='ro_RO')
-    u'metru'
-    >>> format_unit(0, 'length-mile', locale='cy')
-    u'mi'
-    >>> format_unit(1, 'length-mile', locale='cy')
-    u'filltir'
-    >>> format_unit(3, 'length-mile', locale='cy')
-    u'milltir'
-
-    >>> format_unit(15, 'length-horse', locale='fi')
-    Traceback (most recent call last):
-        ...
-    UnknownUnitError: length-horse is not a known unit in fi
-
-    .. versionadded:: 2.2.0
-
-    :param value: the value to format. If this is a string, no number formatting will be attempted.
-    :param measurement_unit: the code of a measurement unit.
-                             Known units can be found in the CLDR Unit Validity XML file:
-                             https://unicode.org/repos/cldr/tags/latest/common/validity/unit.xml
-    :param length: "short", "long" or "narrow"
-    :param format: An optional format, as accepted by `format_decimal`.
-    :param locale: the `Locale` object or locale identifier
-    :param numbering_system: The numbering system used for formatting number symbols. Defaults to "latn".
-                             The special value "default" will use the default numbering system of the locale.
-    :raise `UnsupportedNumberingSystemError`: If the numbering system is not supported by the locale.
-    """
-    locale = babel_parse(locale)
-    from babel.units import _find_unit_pattern, get_unit_name
-
-    q_unit = _find_unit_pattern(measurement_unit, locale=locale)
-    if not q_unit:
-        return measurement_unit
-
-    unit_patterns = locale._data["unit_patterns"][q_unit].get(length, {})
-
-    if use_plural:
-        plural_form = "other"
-    else:
-        plural_form = "one"
-
-    if plural_form in unit_patterns:
-        return unit_patterns[plural_form].format("").replace("\xa0", "").strip()
-
-    # Fall back to a somewhat bad representation.
-    # nb: This is marked as no-cover, as the current CLDR seemingly has no way for this to happen.
-    fallback_name = get_unit_name(
-        measurement_unit, length=length, locale=locale
-    )  # pragma: no cover
-    return f"{fallback_name or measurement_unit}"  # pragma: no cover
-
-
-def map_keys(
-    func: Callable[
-        [
-            T,
-        ],
-        U,
-    ],
-    items: Iterable[tuple[T, V]],
-) -> Iterable[tuple[U, V]]:
-    """Map dict keys given an items view."""
-    return map(lambda el: (func(el[0]), el[1]), items)
-
-
-def short_form(
-    units: Iterable[tuple[str, T]],
-    registry: UnitRegistry,
-) -> Iterable[tuple[str, T]]:
-    """Replace each unit by its short form."""
-    return map_keys(registry._get_symbol, units)
-
-
-def localized_form(
-    units: Iterable[tuple[str, T]],
-    use_plural: bool,
-    length: Literal["short", "long", "narrow"],
-    locale: Locale | str,
-) -> Iterable[tuple[str, T]]:
-    """Replace each unit by its localized version."""
-    mapper = partial(
-        format_unit_no_magnitude,
-        use_plural=use_plural,
-        length=length,
-        locale=babel_parse(locale),
-    )
-
-    return map_keys(mapper, units)
-
-
-def format_compound_unit(
-    unit: PlainUnit | UnitsContainer,
-    spec: str = "",
-    use_plural: bool = False,
-    length: Literal["short", "long", "narrow"] | None = None,
-    locale: Locale | str | None = None,
-) -> Iterable[tuple[str, Number]]:
-    """Format compound unit into unit container given
-    an spec and locale.
-    """
-
-    # TODO: provisional? Should we allow unbounded units?
-    # Should we allow UnitsContainer?
-    registry = getattr(unit, "_REGISTRY", None)
-
-    if isinstance(unit, UnitsContainer):
-        out = unit.items()
-    else:
-        out = unit._units.items()
-
-    if "~" in spec:
-        if registry is None:
-            raise ValueError(
-                f"Can't short format a {type(unit)} without a registry."
-                " This is usually triggered when formatting a instance"
-                " of the internal `UnitsContainer`."
-            )
-        out = short_form(out, registry)
-
-    if locale is not None:
-        out = localized_form(out, use_plural, length or "long", locale)
-
-    if registry:
-        out = registry.formatter.default_sort_func(out, registry)
-
-    return out
-
-
-def dim_sort(items: Iterable[tuple[str, Number]], registry: UnitRegistry):
-    """Sort a list of units by dimensional order (from `registry.formatter.dim_order`).
-
-    Parameters
-    ----------
-    items : tuple
-        a list of tuples containing (unit names, exponent values).
-    registry : UnitRegistry
-        the registry to use for looking up the dimensions of each unit.
-
-    Returns
-    -------
-    list
-        the list of units sorted by most significant dimension first.
-
-    Raises
-    ------
-    KeyError
-        If unit cannot be found in the registry.
-    """
-
-    if registry is None:
-        return items
-    ret_dict = dict()
-    dim_order = registry.formatter.dim_order
-    for unit_name, unit_exponent in items:
-        cname = registry.get_name(unit_name)
-        if not cname:
-            continue
-        cname_dims = registry.get_dimensionality(cname)
-        if len(cname_dims) == 0:
-            cname_dims = {"[]": None}
-        dim_types = iter(dim_order)
-        while True:
-            try:
-                dim = next(dim_types)
-                if dim in cname_dims:
-                    if dim not in ret_dict:
-                        ret_dict[dim] = list()
-                    ret_dict[dim].append(
-                        (
-                            unit_name,
-                            unit_exponent,
-                        )
-                    )
-                    break
-            except StopIteration:
-                raise KeyError(
-                    f"Unit {unit_name} (aka {cname}) has no recognized dimensions"
-                )
-
-    ret = sum([ret_dict[dim] for dim in dim_order if dim in ret_dict], [])
+def pretty_fmt_exponent(num: Number) -> str:
+    """Format an number into a pretty printed exponent."""
+    # unicode dot operator (U+22C5) looks like a superscript decimal
+    ret = f"{num:n}".replace("-", "⁻").replace(".", "\u22C5")
+    for n in range(10):
+        ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
 
 
+def join_u(fmt: str, iterable: Iterable[Any]) -> str:
+    """Join an iterable with the format specified in fmt.
+
+    The format can be specified in two ways:
+    - PEP3101 format with two replacement fields (eg. '{} * {}')
+    - The concatenating string (eg. ' * ')
+    """
+    if not iterable:
+        return ""
+    if not _JOIN_REG_EXP.search(fmt):
+        return fmt.join(iterable)
+    miter = iter(iterable)
+    first = next(miter)
+    for val in miter:
+        ret = fmt.format(first, val)
+        first = ret
+    return first
+
+
+def join_mu(joint_fstring: str, mstr: str, ustr: str) -> str:
+    """Join magnitude and units.
+
+    This avoids that `3 and `1 / m` becomes `3 1 / m`
+    """
+    if ustr.startswith("1 / "):
+        return joint_fstring.format(mstr, ustr[2:])
+    return joint_fstring.format(mstr, ustr)
+
+
+def join_unc(joint_fstring: str, lpar: str, rpar: str, mstr: str, ustr: str) -> str:
+    """Join uncertainty magnitude and units.
+
+    Uncertainty magnitudes might require extra parenthesis when joined to units.
+    - YES: 3 +/- 1
+    - NO : 3(1)
+    - NO : (3 +/ 1)e-9
+
+    This avoids that `(3 + 1)` and `meter` becomes ((3 +/- 1) meter)
+    """
+    if mstr.startswith(lpar) or mstr.endswith(rpar):
+        return joint_fstring.format(mstr, ustr)
+    return joint_fstring.format(lpar + mstr + rpar, ustr)
+
+
 def formatter(
-    items: Iterable[tuple[str, Number]],
+    numerator: Iterable[tuple[str, Number]],
+    denominator: Iterable[tuple[str, Number]],
     as_ratio: bool = True,
     single_denominator: bool = False,
     product_fmt: str = " * ",
@@ -331,14 +161,6 @@ def formatter(
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
     exp_call: FORMATTER = "{:n}".format,
-    sort: bool | None = None,
-    sort_func: Callable[
-        [
-            Iterable[tuple[str, Number]],
-        ],
-        Iterable[tuple[str, Number]],
-    ]
-    | None = sorted,
 ) -> str:
     """Format a list of (name, exponent) pairs.
 
@@ -361,10 +183,6 @@ def formatter(
         the format used for parenthesis. (Default value = "({0})")
     exp_call : callable
          (Default value = lambda x: f"{x:n}")
-    sort : bool, optional
-        True to sort the formatted units alphabetically (Default value = True)
-    sort_func : callable
-        If not None, `sort_func` returns its sorting of the formatted units
 
     Returns
     -------
@@ -373,61 +191,43 @@ def formatter(
 
     """
 
-    if sort is False:
-        warn(
-            "The boolean `sort` argument is deprecated. "
-            "Use `sort_func` to specify the sorting function (default=sorted) "
-            "or None to keep units in the original order."
-        )
-        sort_func = None
-    elif sort is True:
-        warn(
-            "The boolean `sort` argument is deprecated. "
-            "Use `sort_func` to specify the sorting function (default=sorted) "
-            "or None to keep units in the original order."
-        )
-        sort_func = sorted
-
-    if sort_func is None:
-        items = tuple(items)
-    else:
-        items = sort_func(items)
-
-    if not items:
-        return ""
-
     if as_ratio:
         fun = lambda x: exp_call(abs(x))
     else:
         fun = exp_call
 
-    pos_terms, neg_terms = [], []
-
-    for key, value in items:
+    pos_terms: list[str] = []
+    for key, value in numerator:
         if value == 1:
             pos_terms.append(key)
-        elif value > 0:
+        else:
             pos_terms.append(power_fmt.format(key, fun(value)))
-        elif value == -1 and as_ratio:
+
+    neg_terms: list[str] = []
+    for key, value in denominator:
+        if value == -1 and as_ratio:
             neg_terms.append(key)
         else:
             neg_terms.append(power_fmt.format(key, fun(value)))
 
+    if not pos_terms and not neg_terms:
+        return ""
+
     if not as_ratio:
         # Show as Product: positive * negative terms ** -1
-        return _join(product_fmt, pos_terms + neg_terms)
+        return join_u(product_fmt, pos_terms + neg_terms)
 
     # Show as Ratio: positive terms / negative terms
-    pos_ret = _join(product_fmt, pos_terms) or "1"
+    pos_ret = join_u(product_fmt, pos_terms) or "1"
 
     if not neg_terms:
         return pos_ret
 
     if single_denominator:
-        neg_ret = _join(product_fmt, neg_terms)
+        neg_ret = join_u(product_fmt, neg_terms)
         if len(neg_terms) > 1:
             neg_ret = parentheses_fmt.format(neg_ret)
     else:
-        neg_ret = _join(division_fmt, neg_terms)
+        neg_ret = join_u(division_fmt, neg_terms)
 
-    return _join(division_fmt, [pos_ret, neg_ret])
+    return join_u(division_fmt, [pos_ret, neg_ret])

@@ -16,20 +16,11 @@ from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 from importlib import import_module
 from numbers import Number
-from typing import Any, NoReturn
-
-try:
-    from uncertainties import UFloat, ufloat
-    from uncertainties import unumpy as unp
-
-    HAS_UNCERTAINTIES = True
-except ImportError:
-    UFloat = ufloat = unp = None
-    HAS_UNCERTAINTIES = False
-
-
-from typing import TypeAlias  # noqa
-
+from typing import (
+    Any,
+    NoReturn,
+    TypeAlias,  # noqa
+)
 
 if sys.version_info >= (3, 11):
     from typing import Self  # noqa
@@ -76,6 +67,17 @@ def missing_dependency(
 # TODO: remove this warning after v0.10
 class BehaviorChangeWarning(UserWarning):
     pass
+
+
+try:
+    from uncertainties import UFloat, ufloat
+    from uncertainties import unumpy as unp
+
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    UFloat = ufloat = unp = None
+
+    HAS_UNCERTAINTIES = False
 
 
 try:
@@ -172,6 +174,9 @@ try:
 except ImportError:
     HAS_BABEL = False
 
+    babel_parse = missing_dependency("Babel")  # noqa: F811 # type:ignore
+    babel_units = babel_parse
+
 try:
     import mip
 
@@ -186,6 +191,14 @@ try:
 except ImportError:
     HAS_MIP = False
 
+    mip_missing = missing_dependency("mip")
+    mip_model = mip_missing
+    mip_Model = mip_missing
+    mip_INF = mip_missing
+    mip_INTEGER = mip_missing
+    mip_xsum = mip_missing
+    mip_OptimizationStatus = mip_missing
+
 # Defines Logarithm and Exponential for Logarithmic Converter
 if HAS_NUMPY:
     from numpy import (
@@ -198,18 +211,6 @@ else:
         log,  # noqa: F401
     )
 
-if not HAS_BABEL:
-    babel_parse = missing_dependency("Babel")  # noqa: F811
-    babel_units = babel_parse
-
-if not HAS_MIP:
-    mip_missing = missing_dependency("mip")
-    mip_model = mip_missing
-    mip_Model = mip_missing
-    mip_INF = mip_missing
-    mip_INTEGER = mip_missing
-    mip_xsum = mip_missing
-    mip_OptimizationStatus = mip_missing
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
 # types using guarded imports

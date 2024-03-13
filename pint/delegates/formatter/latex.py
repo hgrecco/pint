@@ -20,14 +20,23 @@ from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
 from ...compat import Number, Unpack, ndarray
-from ._format_helpers import BabelKwds, format_compound_unit, formatter, override_locale
-from ._spec_helpers import (
+from ._compound_unit_helpers import (
+    BabelKwds,
+    SortFunc,
+    prepare_compount_unit,
+)
+from ._format_helpers import (
     FORMATTER,
+    formatter,
     join_mu,
     join_unc,
+    override_locale,
+)
+from ._spec_helpers import (
     remove_custom_flags,
     split_format,
 )
+from .plain import BaseFormatter
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
@@ -158,7 +167,7 @@ def siunitx_format_unit(
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
-class LatexFormatter:
+class LatexFormatter(BaseFormatter):
     """Latex localizable text formatter."""
 
     def format_magnitude(
@@ -175,30 +184,53 @@ class LatexFormatter:
         return mstr
 
     def format_unit(
-        self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        units = format_compound_unit(unit, uspec, **babel_kwds)
+        numerator, denominator = prepare_compount_unit(
+            unit,
+            uspec,
+            sort_func=sort_func,
+            **babel_kwds,
+            registry=self._registry,
+        )
 
-        preprocessed = {rf"\mathrm{{{latex_escape(u)}}}": p for u, p in units}
+        numerator = ((rf"\mathrm{{{latex_escape(u)}}}", p) for u, p in numerator)
+        denominator = ((rf"\mathrm{{{latex_escape(u)}}}", p) for u, p in denominator)
+
+        # Localized latex
+        # if babel_kwds.get("locale", None):
+        #     length = babel_kwds.get("length") or ("short" if "~" in uspec else "long")
+        #     division_fmt = localize_per(length, babel_kwds.get("locale"), "{}/{}")
+        # else:
+        #     division_fmt = "{}/{}"
+
+        # division_fmt = r"\frac" + division_fmt.format("[{}]", "[{}]")
+
         formatted = formatter(
-            preprocessed.items(),
+            numerator,
+            denominator,
             as_ratio=True,
             single_denominator=True,
             product_fmt=r" \cdot ",
             division_fmt=r"\frac[{}][{}]",
             power_fmt="{}^[{}]",
             parentheses_fmt=r"\left({}\right)",
-            sort_func=None,
         )
+
         return formatted.replace("[", "{").replace("]", "}")
 
     def format_quantity(
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = quantity._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             qspec, registry.formatter.default_format, registry.separate_format_defaults
@@ -209,13 +241,14 @@ class LatexFormatter:
         return join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
-            self.format_unit(quantity.units, uspec, **babel_kwds),
+            self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
 
     def format_uncertainty(
         self,
         uncertainty,
         unc_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         # uncertainties handles everythin related to latex.
@@ -230,9 +263,10 @@ class LatexFormatter:
         self,
         measurement: Measurement,
         meas_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = measurement._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             meas_spec,
@@ -253,18 +287,22 @@ class LatexFormatter:
             r"\left(",
             r"\right)",
             self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
-            self.format_unit(measurement.units, uspec, **babel_kwds),
+            self.format_unit(measurement.units, uspec, sort_func, **babel_kwds),
         )
 
 
-class SIunitxFormatter:
+class SIunitxFormatter(BaseFormatter):
     """Latex localizable text formatter with siunitx format.
 
     See: https://ctan.org/pkg/siunitx
     """
 
     def format_magnitude(
-        self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        magnitude: Magnitude,
+        mspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             if isinstance(magnitude, ndarray):
@@ -278,9 +316,13 @@ class SIunitxFormatter:
         return mstr
 
     def format_unit(
-        self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = unit._REGISTRY
+        registry = self._registry
         if registry is None:
             raise ValueError(
                 "Can't format as siunitx without a registry."
@@ -295,7 +337,12 @@ class SIunitxFormatter:
         # should unit names be shortened?
         # units = format_compound_unit(unit, uspec, **babel_kwds)
 
-        formatted = siunitx_format_unit(unit._units.items(), registry)
+        try:
+            units = unit._units.items()
+        except Exception:
+            units = unit
+
+        formatted = siunitx_format_unit(units, registry)
 
         if "~" in uspec:
             formatted = formatted.replace(r"\percent", r"\%")
@@ -308,9 +355,10 @@ class SIunitxFormatter:
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = quantity._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             qspec, registry.formatter.default_format, registry.separate_format_defaults
@@ -319,13 +367,16 @@ class SIunitxFormatter:
         joint_fstring = "{}{}"
 
         mstr = self.format_magnitude(quantity.magnitude, mspec, **babel_kwds)
-        ustr = self.format_unit(quantity.units, uspec, **babel_kwds)[len(r"\si[]") :]
+        ustr = self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds)[
+            len(r"\si[]") :
+        ]
         return r"\SI[]" + join_mu(joint_fstring, "{%s}" % mstr, ustr)
 
     def format_uncertainty(
         self,
         uncertainty,
         unc_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         # SIunitx requires space between "+-" (or "\pm") and the nominal value
@@ -343,9 +394,10 @@ class SIunitxFormatter:
         self,
         measurement: Measurement,
         meas_spec: str = "",
+        sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        registry = measurement._REGISTRY
+        registry = self._registry
 
         mspec, uspec = split_format(
             meas_spec,
@@ -363,5 +415,7 @@ class SIunitxFormatter:
             r"",
             "{%s}"
             % self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
-            self.format_unit(measurement.units, uspec, **babel_kwds)[len(r"\si[]") :],
+            self.format_unit(measurement.units, uspec, sort_func, **babel_kwds)[
+                len(r"\si[]") :
+            ],
         )
