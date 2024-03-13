@@ -80,12 +80,15 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 
-[tool.ruff.isort]
+[tool.ruff]
+extend-exclude = ["build"]
+line-length=88
+
+[tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
 known-first-party= ["pint"]
 
-
-[tool.ruff]
+[tool.ruff.lint]
 extend-select = [
   "I",           # isort
 ]
@@ -100,5 +103,3 @@ ignore = [
   # line break before binary operator
   # "W503"
 ]
-extend-exclude = ["build"]
-line-length=88
