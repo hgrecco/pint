@@ -965,7 +965,7 @@ def implement_single_dimensionless_argument_func(func_str):
         return a._REGISTRY.Quantity(func(a_stripped, *args, **kwargs))
 
 
-for func_str in ("cumprod", "cumprod", "nancumprod"):
+for func_str in ("cumprod", "nancumprod"):
     implement_single_dimensionless_argument_func(func_str)
 
 # Handle single-argument consistent unit functions
