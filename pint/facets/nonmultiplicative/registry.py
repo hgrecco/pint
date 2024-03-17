@@ -192,7 +192,7 @@ class GenericNonMultiplicativeRegistry(
         self, offset_unit: str, all_units: UnitsContainer
     ) -> UnitsContainer:
         slct_unit = self._units[offset_unit]
-        if slct_unit.is_logarithmic or (not slct_unit.is_multiplicative):
+        if slct_unit.is_logarithmic:
             # Extract reference unit
             slct_ref = slct_unit.reference
 
@@ -204,6 +204,11 @@ class GenericNonMultiplicativeRegistry(
                 (u, e) = [(u, e) for u, e in slct_ref.items()].pop()
                 # Add it back to the unit list
                 return all_units.add(u, e)
+
+        if not slct_unit.is_multiplicative:  # is offset unit
+            # Extract reference unit
+            return slct_unit.reference
+
         # Otherwise, return the units unmodified
         return all_units
 

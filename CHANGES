@@ -8,6 +8,8 @@ Pint Changelog
 - Add `dim_order` and `default_sort_func` properties to FullFormatter.
   (PR #1926, fixes Issue #1841)
 
+- Fix converting to offset units of higher dimension e.g. gauge pressure (#1949).
+-
 
 0.23 (2023-12-08)
 -----------------
