@@ -736,7 +736,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for key in ref:
             exp2 = exp * ref[key]
             if _is_dim(key):
-                reg = self._dimensions[key]
+                try:
+                    reg = self._dimensions[key]
+                except KeyError:
+                    raise ValueError(
+                        f"{key} is not defined as dimension in the pint UnitRegistry"
+                    )
                 if isinstance(reg, DerivedDimensionDefinition):
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
                 else:
