@@ -41,8 +41,8 @@ Since pint treats angle quantities as `dimensionless`, it allows conversions bet
 
 .. code-block:: python
 
-    >> from pint import UnitRegistry
-    >>> ureg = UnitRegistry()
+    >>> import pint
+    >>> ureg = pint.get_application_registry()
     >>> angular_frequency = ureg('60rpm')
     >>> angular_frequency.to('Hz')
     <Quantity(6.28318531, 'hertz')>

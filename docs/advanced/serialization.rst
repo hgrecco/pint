@@ -11,7 +11,7 @@ The easiest way to do this is by converting the quantity to a string:
 .. doctest::
 
    >>> import pint
-   >>> ureg = pint.UnitRegistry()
+   >>> ureg = pint.get_application_registry()
    >>> duration = 24.2 * ureg.years
    >>> duration
    <Quantity(24.2, 'year')>
@@ -28,7 +28,7 @@ to recover it in another process/machine, you just:
 .. doctest::
 
    >>> import pint
-   >>> ureg = pint.UnitRegistry()
+   >>> ureg = pint.get_application_registry()
    >>> duration = ureg('24.2 year')
    >>> print(duration)
    24.2 year
