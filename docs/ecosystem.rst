@@ -18,4 +18,4 @@ Packages using pint:
 - `ht <https://github.com/CalebBell/ht/>`_ Practical heat transfer calculations
 - `chemicals <https://github.com/CalebBell/chemicals/>`_ Chemical property calculations and lookups
 - `thermo <https://github.com/CalebBell/thermo/>`_ Thermodynamic equilibrium calculations
-- `Taurus <https://taurus-scada.org/>` Control system UI creation
+- `Taurus <https://taurus-scada.org/>`_ Control system UI creation
