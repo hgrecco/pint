@@ -16,11 +16,9 @@ from __future__ import annotations
 
 from typing import Generic
 
-from . import registry_helpers
-from . import facets
-from .util import logger, pi_theorem
+from . import facets, registry_helpers
 from .compat import TypeAlias
-
+from .util import logger, pi_theorem
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
@@ -33,7 +31,6 @@ class Quantity(
     facets.DaskRegistry.Quantity,
     facets.NumpyRegistry.Quantity,
     facets.MeasurementRegistry.Quantity,
-    facets.FormattingRegistry.Quantity,
     facets.NonMultiplicativeRegistry.Quantity,
     facets.PlainRegistry.Quantity,
 ):
@@ -46,7 +43,6 @@ class Unit(
     facets.DaskRegistry.Unit,
     facets.NumpyRegistry.Unit,
     facets.MeasurementRegistry.Unit,
-    facets.FormattingRegistry.Unit,
     facets.NonMultiplicativeRegistry.Unit,
     facets.PlainRegistry.Unit,
 ):
@@ -60,7 +56,6 @@ class GenericUnitRegistry(
     facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericFormattingRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericNonMultiplicativeRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT],
 ):

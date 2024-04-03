@@ -11,17 +11,17 @@
 
 from __future__ import annotations
 
-from typing import Generic, Any
 import functools
+from typing import Any, Generic
 
-from ...compat import compute, dask_array, persist, visualize, TypeAlias
+from ...compat import TypeAlias, compute, dask_array, persist, visualize
 from ..plain import (
     GenericPlainRegistry,
+    MagnitudeT,
     PlainQuantity,
+    PlainUnit,
     QuantityT,
     UnitT,
-    PlainUnit,
-    MagnitudeT,
 )
 
 

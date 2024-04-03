@@ -1,13 +1,15 @@
-import pytest
+from __future__ import annotations
 
 import pathlib
-from typing import Any, TypeVar, Callable
+from collections.abc import Callable
+from operator import getitem
+from typing import Any, TypeVar
 
-from ...compat import TypeAlias
+import pytest
 
 import pint
 
-from operator import getitem
+from ...compat import TypeAlias
 
 UNITS = ("meter", "kilometer", "second", "minute", "angstrom", "millisecond", "ms")
 

@@ -9,12 +9,10 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Generic, Any, Union, Optional
+from typing import TYPE_CHECKING, Any, Generic
 
 from ... import errors
-
 from ...compat import TypeAlias
-
 from ..plain import QuantityT, UnitT
 
 if TYPE_CHECKING:
@@ -27,8 +25,8 @@ from ...util import (
     to_units_container,
 )
 from ..group import GenericGroupRegistry
-from .definitions import SystemDefinition
 from . import objects
+from .definitions import SystemDefinition
 
 
 class GenericSystemRegistry(
@@ -53,7 +51,7 @@ class GenericSystemRegistry(
     # to enjoy typing goodies
     System: type[objects.System]
 
-    def __init__(self, system: Optional[str] = None, **kwargs):
+    def __init__(self, system: str | None = None, **kwargs):
         super().__init__(**kwargs)
 
         #: Map system name to system.
@@ -62,7 +60,7 @@ class GenericSystemRegistry(
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         self._base_units_cache: dict[UnitsContainerT, UnitsContainerT] = {}
 
-        self._default_system_name: Optional[str] = system
+        self._default_system_name: str | None = system
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -103,7 +101,7 @@ class GenericSystemRegistry(
         return objects.Lister(self._systems)
 
     @property
-    def default_system(self) -> Optional[str]:
+    def default_system(self) -> str | None:
         return self._default_system_name
 
     @default_system.setter
@@ -143,9 +141,9 @@ class GenericSystemRegistry(
 
     def get_base_units(
         self,
-        input_units: Union[UnitLike, Quantity],
+        input_units: UnitLike | Quantity,
         check_nonmult: bool = True,
-        system: Optional[Union[str, objects.System]] = None,
+        system: str | objects.System | None = None,
     ) -> tuple[Number, Unit]:
         """Convert unit or dict of units to the plain units.
 
@@ -183,7 +181,7 @@ class GenericSystemRegistry(
         self,
         input_units: UnitsContainerT,
         check_nonmult: bool = True,
-        system: Optional[Union[str, objects.System]] = None,
+        system: str | objects.System | None = None,
     ):
         if system is None:
             system = self._default_system_name
@@ -225,7 +223,7 @@ class GenericSystemRegistry(
         return base_factor, destination_units
 
     def get_compatible_units(
-        self, input_units: UnitsContainerT, group_or_system: Optional[str] = None
+        self, input_units: UnitsContainerT, group_or_system: str | None = None
     ) -> frozenset[Unit]:
         """ """
 
@@ -241,7 +239,7 @@ class GenericSystemRegistry(
         return frozenset(self.Unit(eq) for eq in equiv)
 
     def _get_compatible_units(
-        self, input_units: UnitsContainerT, group_or_system: Optional[str] = None
+        self, input_units: UnitsContainerT, group_or_system: str | None = None
     ) -> frozenset[Unit]:
         if group_or_system and group_or_system in self._systems:
             members = self._systems[group_or_system].members

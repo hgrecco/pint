@@ -11,9 +11,9 @@ from __future__ import annotations
 import itertools
 import numbers
 import re
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from ... import errors
 from ..plain import UnitDefinition

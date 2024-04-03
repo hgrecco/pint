@@ -3,7 +3,6 @@ from __future__ import annotations
 import math
 import warnings
 from numbers import Number
-from typing import Optional
 
 from . import Quantity
 from .compat import ndarray
@@ -35,7 +34,7 @@ def _get_comparable_magnitudes(first, second, msg):
     return m1, m2
 
 
-def assert_equal(first, second, msg: Optional[str] = None) -> None:
+def assert_equal(first, second, msg: str | None = None) -> None:
     if msg is None:
         msg = f"Comparing {first!r} and {second!r}. "
 
@@ -45,10 +44,10 @@ def assert_equal(first, second, msg: Optional[str] = None) -> None:
     if isinstance(m1, ndarray) or isinstance(m2, ndarray):
         np.testing.assert_array_equal(m1, m2, err_msg=msg)
     elif not isinstance(m1, Number):
-        warnings.warn(RuntimeWarning)
+        warnings.warn("In assert_equal, m1 is not a number ", UserWarning)
         return
     elif not isinstance(m2, Number):
-        warnings.warn(RuntimeWarning)
+        warnings.warn("In assert_equal, m2 is not a number ", UserWarning)
         return
     elif math.isnan(m1):
         assert math.isnan(m2), msg
@@ -59,7 +58,7 @@ def assert_equal(first, second, msg: Optional[str] = None) -> None:
 
 
 def assert_allclose(
-    first, second, rtol: float = 1e-07, atol: float = 0, msg: Optional[str] = None
+    first, second, rtol: float = 1e-07, atol: float = 0, msg: str | None = None
 ) -> None:
     if msg is None:
         try:
@@ -76,10 +75,10 @@ def assert_allclose(
     if isinstance(m1, ndarray) or isinstance(m2, ndarray):
         np.testing.assert_allclose(m1, m2, rtol=rtol, atol=atol, err_msg=msg)
     elif not isinstance(m1, Number):
-        warnings.warn(RuntimeWarning)
+        warnings.warn("In assert_equal, m1 is not a number ", UserWarning)
         return
     elif not isinstance(m2, Number):
-        warnings.warn(RuntimeWarning)
+        warnings.warn("In assert_equal, m2 is not a number ", UserWarning)
         return
     elif math.isnan(m1):
         assert math.isnan(m2), msg

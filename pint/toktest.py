@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import tokenize
+
 from pint.pint_eval import _plain_tokenizer, uncertainty_tokenizer
 
 tokenizer = _plain_tokenizer
