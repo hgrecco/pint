@@ -114,6 +114,21 @@ class PrefixDefinition(NamedDefinition, errors.WithDefErr):
 
 
 @dataclass(frozen=True)
+class 
+(NamedDefinition, errors.WithDefErr):
+    """Definition of a quantitykind."""
+
+    #: canonical symbol
+    defined_symbol: str | None
+    #: Reference units.
+    reference: UnitsContainer | None
+    # valid units for this quantitykind
+    applicable_units: ty.Tuple[str, ...] = ()
+    metadata: ty.Dict[str, str] = ty.field(default_factory=dict)
+
+
+
+@dataclass(frozen=True)
 class UnitDefinition(NamedDefinition, errors.WithDefErr):
     """Definition of a unit."""
 

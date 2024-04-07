@@ -59,13 +59,16 @@ class CommentDefinition(PintParsedStatement, definitions.CommentDefinition):
 
         # This is a comment.
         ## This is also a comment.
+        @ Is a comment
+
 
     Captured value does not include the leading # character and space stripped.
     """
 
     @classmethod
     def from_string(cls, s: str) -> fp.NullableParsedResult[CommentDefinition]:
-        if not s.startswith("#"):
+        return None
+        if not s.startswith("#") and not s.startswith("@"):
             return None
         return cls(s[1:].strip())
 
@@ -85,7 +88,7 @@ class PrefixDefinition(PintParsedStatement, definitions.PrefixDefinition):
     def from_string_and_config(
         cls, s: str, config: ParserConfig
     ) -> fp.NullableParsedResult[PrefixDefinition]:
-        if "=" not in s:
+        if "@prefix" not in s:
             return None
 
         name, value, *aliases = s.split("=")
@@ -118,6 +121,12 @@ class PrefixDefinition(PintParsedStatement, definitions.PrefixDefinition):
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 
+class BeginUnit(common.BeginObject):
+    _object_type = "unit"
+
+@dataclass(frozen=True)
+class UnitDefinition(fp.Block[BeginUnit, common.Attribute, common.End, ParserConfig], definitions.UnitDefinition):
+    pass   
 
 @dataclass(frozen=True)
 class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
@@ -189,94 +198,91 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
             )
 
         try:
-            import pdb
-
-            pdb.set_trace()
             return cls(name, defined_symbol, tuple(aliases), converter, reference)
         except Exception as ex:
             return common.DefinitionSyntaxError(str(ex))
 
 
-@dataclass(frozen=True)
-class DimensionDefinition(PintParsedStatement, definitions.DimensionDefinition):
-    """Definition of a root dimension::
+# @dataclass(frozen=True)
+# class DimensionDefinition(PintParsedStatement, definitions.DimensionDefinition):
+#     """Definition of a root dimension::
 
-        [dimension name]
+#         [dimension name]
 
-    Example::
+#     Example::
 
-        [volume]
-    """
+#         [volume]
+#     """
 
-    @classmethod
-    def from_string(cls, s: str) -> fp.NullableParsedResult[DimensionDefinition]:
-        s = s.strip()
+#     @classmethod
+#     def from_string(cls, s: str) -> fp.NullableParsedResult[DimensionDefinition]:
+#         s = s.strip()
 
-        if not (s.startswith("[") and "=" not in s):
-            return None
+#         if not (s.startswith("[") and "=" not in s):
+#             return None
 
-        return cls(s)
-
-
-@dataclass(frozen=True)
-class DerivedDimensionDefinition(
-    PintParsedStatement, definitions.DerivedDimensionDefinition
-):
-    """Definition of a derived dimension::
-
-        [dimension name] = <relation to other dimensions>
-
-    Example::
-
-        [density] = [mass] / [volume]
-    """
-
-    @classmethod
-    def from_string_and_config(
-        cls, s: str, config: ParserConfig
-    ) -> fp.NullableParsedResult[DerivedDimensionDefinition]:
-        if not (s.startswith("[") and "=" in s):
-            return None
-
-        name, value, *aliases = s.split("=")
-
-        if aliases:
-            return common.DefinitionSyntaxError(
-                "Derived dimensions cannot have aliases."
-            )
-
-        try:
-            reference = config.to_dimension_container(value)
-        except common.DefinitionSyntaxError as exc:
-            return common.DefinitionSyntaxError(
-                f"In {name} derived dimensions must only be referenced "
-                f"to dimensions. {exc}"
-            )
-
-        try:
-            return cls(name.strip(), reference)
-        except Exception as exc:
-            return common.DefinitionSyntaxError(str(exc))
+#         return cls(s)
 
 
-@dataclass(frozen=True)
-class AliasDefinition(PintParsedStatement, definitions.AliasDefinition):
-    """Additional alias(es) for an already existing unit::
+# @dataclass(frozen=True)
+# class DerivedDimensionDefinition(
+#     PintParsedStatement, definitions.DerivedDimensionDefinition
+# ):
+#     """Definition of a derived dimension::
 
-        @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
+#         [dimension name] = <relation to other dimensions>
 
-    Example::
+#     Example::
 
-        @alias meter = my_meter
-    """
+#         [density] = [mass] / [volume]
+#     """
 
-    @classmethod
-    def from_string(cls, s: str) -> fp.NullableParsedResult[AliasDefinition]:
-        if not s.startswith("@alias "):
-            return None
-        name, *aliases = s[len("@alias ") :].split("=")
+#     @classmethod
+#     def from_string_and_config(
+#         cls, s: str, config: ParserConfig
+#     ) -> fp.NullableParsedResult[DerivedDimensionDefinition]:
+#         if not (s.startswith("[") and "=" in s):
+#             return None
 
-        try:
-            return cls(name.strip(), tuple(alias.strip() for alias in aliases))
-        except Exception as exc:
-            return common.DefinitionSyntaxError(str(exc))
+#         name, value, *aliases = s.split("=")
+
+#         if aliases:
+#             return common.DefinitionSyntaxError(
+#                 "Derived dimensions cannot have aliases."
+#             )
+
+#         try:
+#             reference = config.to_dimension_container(value)
+#         except common.DefinitionSyntaxError as exc:
+#             return common.DefinitionSyntaxError(
+#                 f"In {name} derived dimensions must only be referenced "
+#                 f"to dimensions. {exc}"
+#             )
+
+#         try:
+#             return cls(name.strip(), reference)
+#         except Exception as exc:
+#             return common.DefinitionSyntaxError(str(exc))
+
+
+# @dataclass(frozen=True)
+# class AliasDefinition(PintParsedStatement, definitions.AliasDefinition):
+#     """Additional alias(es) for an already existing unit::
+
+#         @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
+
+#     Example::
+
+#         @alias meter = my_meter
+#     """
+
+#     @classmethod
+#     def from_string(cls, s: str) -> fp.NullableParsedResult[AliasDefinition]:
+#         if not s.startswith("@alias "):
+#             return None
+#         name, *aliases = s[len("@alias ") :].split("=")
+
+#         try:
+#             return cls(name.strip(), tuple(alias.strip() for alias in aliases))
+#         except Exception as exc:
+#             return common.DefinitionSyntaxError(str(exc))

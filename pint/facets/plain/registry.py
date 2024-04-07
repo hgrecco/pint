@@ -203,6 +203,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         Separate the default format into magnitude and unit formats as soon as
         possible. The deprecated default is not to separate. This will change in a
         future release.
+    parser: str, optional (Default: 'pint')
+        'pint' or 'qudt'
     """
 
     Quantity: type[QuantityT]
@@ -226,6 +228,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         cache_folder: str | pathlib.Path | None = None,
         separate_format_defaults: bool | None = None,
         mpl_formatter: str = "{:P}",
+        parser: str = "pint",
     ):
         #: Map a definition class to a adder methods.
         self._adders: Handler = {}
@@ -243,9 +246,14 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 cache_folder
             )
 
-        self._def_parser = delegates.txt_defparser.DefParser(
-            delegates.ParserConfig(non_int_type), diskcache=self._diskcache
-        )
+        if parser == "pint":
+            self._def_parser = delegates.txt_defparser.DefParser(
+                delegates.ParserConfig(non_int_type), diskcache=self._diskcache
+            )
+        elif parser == "qudt":
+            self._def_parser = delegates.qudt_parser.QudtParser(
+                delegates.ParserConfig(non_int_type), diskcache=self._diskcache
+            )
 
         self.formatter = delegates.Formatter(self)
         self._filename = filename

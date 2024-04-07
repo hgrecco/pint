@@ -99,6 +99,8 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
     cache_folder : str or pathlib.Path or None, optional
         Specify the folder in which cache files are saved and loaded from.
         If None, the cache is disabled. (default)
+    parser: str, optional (Default: 'pint')
+        'pint' or 'qudt'
     """
 
     Quantity: TypeAlias = Quantity
@@ -120,6 +122,7 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
         non_int_type=float,
         case_sensitive: bool = True,
         cache_folder=None,
+        parser: str = "pint",
     ):
         super().__init__(
             filename=filename,
@@ -136,6 +139,7 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
             non_int_type=non_int_type,
             case_sensitive=case_sensitive,
             cache_folder=cache_folder,
+            parser=parser,
         )
 
     def pi_theorem(self, quantities):
