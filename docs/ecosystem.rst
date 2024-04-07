@@ -20,3 +20,4 @@ Packages using pint:
 - `chemicals <https://github.com/CalebBell/chemicals/>`_ Chemical property calculations and lookups
 - `thermo <https://github.com/CalebBell/thermo/>`_ Thermodynamic equilibrium calculations
 - `Taurus <https://taurus-scada.org/>`_ Control system UI creation
+- `InstrumentKit <https://github.com/instrumentkit/InstrumentKit>`_ Interacting with laboratory equipment over various buses.
