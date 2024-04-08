@@ -68,7 +68,7 @@ class CommentDefinition(PintParsedStatement, definitions.CommentDefinition):
     @classmethod
     def from_string(cls, s: str) -> fp.NullableParsedResult[CommentDefinition]:
         return None
-        if not s.startswith("#") and not s.startswith("@"):
+        if not s.startswith("# ") and not s.startswith("@"):
             return None
         return cls(s[1:].strip())
 
@@ -121,12 +121,6 @@ class PrefixDefinition(PintParsedStatement, definitions.PrefixDefinition):
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 
-class BeginUnit(common.BeginObject):
-    _object_type = "unit"
-
-@dataclass(frozen=True)
-class UnitDefinition(fp.Block[BeginUnit, common.Attribute, common.End, ParserConfig], definitions.UnitDefinition):
-    pass   
 
 @dataclass(frozen=True)
 class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):

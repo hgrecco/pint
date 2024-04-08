@@ -23,7 +23,6 @@ import flexparser as fp
 from ..base_defparser import ParserConfig, PintParsedStatement
 
 
-
 @dataclass(frozen=True)
 class BeginDirectiveBlock(fp.ParsedStatement):
     """An BeginDirectiveBlock is simply a "." statement.
@@ -36,9 +35,9 @@ class BeginDirectiveBlock(fp.ParsedStatement):
 
     @classmethod
     def from_string(cls, s):
-        if s[:len(cls._object_type)] == cls._object_type:
+        if s[: len(cls._object_type)] == cls._object_type:
             obj = cls()
-            obj.name = s[len(cls._object_type)+1:]
+            obj.name = s[len(cls._object_type) + 1 :]
             return obj
 
         return None
@@ -55,10 +54,10 @@ class EndDirectiveBlock(PintParsedStatement):
         return None
 
 
-OPST = TypeVar("OPST", bound="PintParsedStatement") # Opening Parsed Statement Type
-IPST = TypeVar("IPST", bound="PintParsedStatement") #? Inner Parsed Statement Type
+OPST = TypeVar("OPST", bound="PintParsedStatement")  # Opening Parsed Statement Type
+IPST = TypeVar("IPST", bound="PintParsedStatement")  # ? Inner Parsed Statement Type
 
-DefT = TypeVar("DefT") # Definition? Type
+DefT = TypeVar("DefT")  # Definition? Type
 
 
 @dataclass(frozen=True)

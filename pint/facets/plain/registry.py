@@ -81,6 +81,7 @@ from .definitions import (
     DimensionDefinition,
     NamedDefinition,
     PrefixDefinition,
+    QuantitykindDefinition,
     UnitDefinition,
 )
 from .objects import PlainQuantity, PlainUnit
@@ -309,6 +310,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         #: e.g: 'hz' - > set('Hz', )
         self._units_casei: dict[str, set[str]] = defaultdict(set)
 
+        #: Map quantity kind name (string) to its definition (QuantitykindDefinition).
+        self._quantitykinds: dict[str, QuantitykindDefinition] = {}
+
         #: Map prefix name (string) to its definition (PrefixDefinition).
         self._prefixes: dict[str, PrefixDefinition] = {"": PrefixDefinition("", 1)}
 
@@ -359,6 +363,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._register_adder(CommentDefinition, lambda o: o)
         self._register_adder(PrefixDefinition, self._add_prefix)
         self._register_adder(UnitDefinition, self._add_unit)
+        self._register_adder(QuantitykindDefinition, self._add_quantitykind)
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
@@ -577,6 +582,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                     self._add_dimension(DimensionDefinition(dim_name))
 
         self._helper_adder(definition, self._units, self._units_casei)
+
+    def _add_quantitykind(self, definition: QuantitykindDefinition) -> None:
+        self._helper_adder(definition, self._quantitykinds, None)
 
     def load_definitions(
         self, file: Iterable[str] | str | pathlib.Path, is_resource: bool = False

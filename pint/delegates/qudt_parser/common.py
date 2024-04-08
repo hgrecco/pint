@@ -12,14 +12,16 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 import flexparser as fp
 
 from ... import errors
+from ...util import UnitsContainer
 from ..base_defparser import ParserConfig
-from ...facets.plain import definitions
 from . import block
+
 
 @dataclass(frozen=True)
 class DefinitionSyntaxError(errors.DefinitionSyntaxError, fp.ParsingError):
@@ -59,17 +61,18 @@ class ImportDefinition(fp.IncludeStatement[ParserConfig]):
             return ImportDefinition(s[len("@import") :].strip())
         return None
 
+
 ###########################################
+
 
 @dataclass(frozen=True)
 class Attribute(fp.ParsedStatement):
-    """Parses the following `qudt:applicableSystem sou:CGS-EMU ;`
-    """
+    """Parses the following `qudt:applicableSystem sou:CGS-EMU ;`"""
 
     parent: str
     attr: str
     value: str
-    
+
     @classmethod
     def from_string(cls, s):
         if ":" not in s and ";" not in s:
@@ -82,28 +85,25 @@ class Attribute(fp.ParsedStatement):
             attr, value = s, ""
         else:
             attr, value = s.split(" ", 1)
-        
+
         # if not str.isidentifier(lhs):
         #     return InvalidIdentifier(lhs)
 
         return cls(parent, attr, value)
 
 
-
 class BeginObject(fp.ParsedStatement):
-
     _object_type = str
 
     @classmethod
     def from_string(cls, s):
-        if s[:len(cls._object_type)] == cls._object_type:
+        if s[: len(cls._object_type)] == cls._object_type:
             return cls()
 
         return None
 
 
 class BeginHeader(fp.ParsedStatement):
-
     @classmethod
     def from_string(cls, s):
         if s[:9] == "# baseURI":
@@ -113,7 +113,6 @@ class BeginHeader(fp.ParsedStatement):
 
 
 class End(fp.ParsedStatement):
-
     @classmethod
     def from_string(cls, s):
         if s == ".":
@@ -121,33 +120,61 @@ class End(fp.ParsedStatement):
 
         return None
 
-    
+
 class HeaderLine(fp.ParsedStatement):
     # couldnt get BOF to work in place of this in HeaderBlock
     def from_string(cls, s):
         return cls()
-    
-# class HeaderBlock(fp.Block[BeginHeader, HeaderLine, End, ParserConfig], definitions.CommentDefinition):
+
 
 @dataclass(frozen=True)
 class HeaderBlock(fp.Block[BeginHeader, HeaderLine, End, ParserConfig]):
     pass
 
 
-DIMENSIONS = 'substance, current, length, luminousity, mass, temperature, time, dimensionless'.split(', ')
-BASE_UNITS = 'mol, A, m, cd, kg, K, s'.split(', ')
+DIMENSIONS = "substance, current, length, luminousity, mass, temperature, time, dimensionless".split(
+    ", "
+)
+BASE_UNITS = "mol, A, m, cd, kg, K, s".split(", ")
+
 
 class BeginVoag(block.BeginDirectiveBlock):
     _object_type = "voag"
 
+
 @dataclass(frozen=True)
-class VoagDefinitionBlock(fp.Block[BeginVoag, Attribute, block.EndDirectiveBlock, ParserConfig]):
+class VoagDefinitionBlock(
+    fp.Block[BeginVoag, Attribute, block.EndDirectiveBlock, ParserConfig]
+):
     pass
 
 
 class BeginVaem(block.BeginDirectiveBlock):
     _object_type = "vaem"
 
+
 @dataclass(frozen=True)
-class VaemDefinitionBlock(fp.Block[BeginVaem, Attribute, block.EndDirectiveBlock, ParserConfig]):
+class VaemDefinitionBlock(
+    fp.Block[BeginVaem, Attribute, block.EndDirectiveBlock, ParserConfig]
+):
     pass
+
+
+class BeginHttp(block.BeginDirectiveBlock):
+    _object_type = "<http"
+
+
+@dataclass(frozen=True)
+class HttpDefinitionBlock(
+    fp.Block[BeginHttp, Attribute, block.EndDirectiveBlock, ParserConfig]
+):
+    pass
+
+
+def make_units_container(dimensionvector: str) -> UnitsContainer:
+    # use regex to split the dimension vector 'A0E1L0I0M0H0T0D0' into a dictionary of units
+    if ":" in dimensionvector:
+        dimensionvector = dimensionvector.split(":")[1]
+    dimensionvector = re.sub(r"[a-zA-Z]", r" ", dimensionvector).split()
+    units = {unit: int(exponent) for unit, exponent in zip(BASE_UNITS, dimensionvector)}
+    return UnitsContainer(units)

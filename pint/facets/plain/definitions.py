@@ -11,7 +11,7 @@ from __future__ import annotations
 import itertools
 import numbers
 import typing as ty
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Any
 
@@ -114,8 +114,7 @@ class PrefixDefinition(NamedDefinition, errors.WithDefErr):
 
 
 @dataclass(frozen=True)
-class 
-(NamedDefinition, errors.WithDefErr):
+class QuantitykindDefinition(NamedDefinition, errors.WithDefErr):
     """Definition of a quantitykind."""
 
     #: canonical symbol
@@ -124,8 +123,7 @@ class
     reference: UnitsContainer | None
     # valid units for this quantitykind
     applicable_units: ty.Tuple[str, ...] = ()
-    metadata: ty.Dict[str, str] = ty.field(default_factory=dict)
-
+    metadata: ty.Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

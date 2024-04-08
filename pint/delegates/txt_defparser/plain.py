@@ -189,9 +189,6 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
             )
 
         try:
-            import pdb
-
-            pdb.set_trace()
             return cls(name, defined_symbol, tuple(aliases), converter, reference)
         except Exception as ex:
             return common.DefinitionSyntaxError(str(ex))

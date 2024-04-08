@@ -6,11 +6,11 @@ import typing as ty
 import flexcache as fc
 import flexparser as fp
 
-from ..base_defparser import ParserConfig
-# from . import block, common, context, defaults, group, plain, system
-from . import plain, common, unit
 from ...facets.plain import definitions
+from ..base_defparser import ParserConfig
 
+# from . import block, common, context, defaults, group, plain, system
+from . import common, plain, quantitykind, unit
 
 # class QudtRootBlock(
 #     fp.RootBlock[
@@ -32,14 +32,17 @@ from ...facets.plain import definitions
 # ):
 #     pass
 
+
 class QudtRootBlock(
     fp.RootBlock[
         ty.Union[
-                 common.ImportDefinition,
-                 common.HeaderBlock,
-                 unit.UnitDefinitionBlock,
-                 common.VoagDefinitionBlock,
-                 common.VaemDefinitionBlock,
+            common.ImportDefinition,
+            common.HeaderBlock,
+            unit.UnitDefinitionBlock,
+            quantitykind.QuantitykindDefinitionBlock,
+            common.VoagDefinitionBlock,
+            common.VaemDefinitionBlock,
+            common.HttpDefinitionBlock,
         ],
         ParserConfig,
     ]
@@ -85,6 +88,7 @@ class QudtParser:
         common.HeaderBlock,
         common.VoagDefinitionBlock,
         common.VaemDefinitionBlock,
+        common.HttpDefinitionBlock,
     )
 
     def __init__(self, default_config: ParserConfig, diskcache: fc.DiskCache):
@@ -95,10 +99,11 @@ class QudtParser:
         self, parsed_project: fp.ParsedProject[QudtRootBlock, ParserConfig]
     ) -> ty.Generator[fp.ParsedStatement[ParserConfig], None, None]:
         last_location = None
-        
+
         for dim in common.DIMENSIONS:
-            yield definitions.DimensionDefinition("["+dim+"]")
+            yield definitions.DimensionDefinition("[" + dim + "]")
         for stmt in parsed_project.iter_blocks():
+            print(104, stmt)
             if isinstance(stmt, fp.BOS):
                 if isinstance(stmt, fp.BOF):
                     last_location = str(stmt.path)
@@ -114,9 +119,14 @@ class QudtParser:
 
             if isinstance(stmt, self.skip_classes):
                 continue
-            if isinstance(stmt, unit.UnitDefinitionBlock):
+            if isinstance(
+                stmt,
+                (unit.UnitDefinitionBlock, quantitykind.QuantitykindDefinitionBlock),
+            ):
+                print(121)
                 yield stmt.derive_definition()
                 continue
+            print(123)
             assert isinstance(last_location, str)
             if isinstance(stmt, common.DefinitionSyntaxError):
                 stmt.set_location(last_location)
@@ -131,14 +141,14 @@ class QudtParser:
             #         exc.set_location(last_location)
             #         raise exc
 
-                # try:
-                #     yield stmt.derive_definition()
-                # except Exception as exc:
-                #     exc = common.DefinitionSyntaxError(str(exc))
-                #     exc.set_position(*stmt.get_position())
-                #     exc.set_raw(stmt.opening.raw + " [...] " + stmt.closing.raw)
-                #     exc.set_location(last_location)
-                #     raise exc
+            # try:
+            #     yield stmt.derive_definition()
+            # except Exception as exc:
+            #     exc = common.DefinitionSyntaxError(str(exc))
+            #     exc.set_position(*stmt.get_position())
+            #     exc.set_raw(stmt.opening.raw + " [...] " + stmt.closing.raw)
+            #     exc.set_location(last_location)
+            #     raise exc
             else:
                 yield stmt
 
