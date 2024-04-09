@@ -142,6 +142,7 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
     converter: Converter | None
     #: Reference units.
     reference: UnitsContainer | None
+    metadata: ty.Dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self):
         if not errors.is_valid_unit_name(self.name):

@@ -52,5 +52,6 @@ class UnitDefinitionBlock(
             tuple(),
             converter,
             reference,
+            metadata=self.qudt,
         )
         return definition
