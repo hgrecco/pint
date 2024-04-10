@@ -72,9 +72,7 @@ T = TypeVar("T", bound=Magnitude)
 
 def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
-        print(f)
         result = f(self, *args, **kwargs)
-        print(args[0].kind, self.kind, f.__name__)
         # TODO: Implement this for div, maybe move to mul and div funcs
         if (
             hasattr(self, "kind")
@@ -82,7 +80,6 @@ def ireduce_dimensions(f):
             and f.__name__ in ["_mul_div"]
         ):
             result_units_container = UnitsContainer({self.kind: 1, args[0].kind: 1})
-            print(args[0].kind, self.kind)
             for dim in self._REGISTRY._dimensions.values():
                 if (
                     hasattr(dim, "reference")
