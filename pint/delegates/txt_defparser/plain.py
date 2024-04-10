@@ -235,8 +235,8 @@ class DerivedDimensionDefinition(
         if not (s.startswith("[") and "=" in s):
             return None
 
-        name, value, *aliases =  (p.strip() for p in s.split("="))
-        
+        name, value, *aliases = (p.strip() for p in s.split("="))
+
         preferred_unit = None
         if aliases:
             if aliases[0] == "_":

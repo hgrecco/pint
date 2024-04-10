@@ -1,8 +1,11 @@
-from pint import UnitRegistry
+from __future__ import annotations
+
 import pytest
 
-class TestKind():
+from pint import UnitRegistry
 
+
+class TestKind:
     def test_torque_energy(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
@@ -10,7 +13,7 @@ class TestKind():
         force = Q_(1, "lbf").to_kind("[force]")
         # to_kind converts to the preferred_unit of the kind
         assert force.units == ureg.N
-        
+
         # both force and moment_arm have kind defined.
         # Torque is defined in default_en:
         # [torque] = [force] * [moment_arm]
@@ -29,4 +32,3 @@ class TestKind():
         # Torque is not energy so cannot be added
         with pytest.raises(ValueError):
             energy + torque
-        

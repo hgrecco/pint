@@ -76,11 +76,18 @@ def ireduce_dimensions(f):
         result = f(self, *args, **kwargs)
         print(args[0].kind, self.kind, f.__name__)
         # TODO: Implement this for div, maybe move to mul and div funcs
-        if hasattr(self, "kind") and hasattr(args[0], "kind") and f.__name__ in ["_mul_div"]:
+        if (
+            hasattr(self, "kind")
+            and hasattr(args[0], "kind")
+            and f.__name__ in ["_mul_div"]
+        ):
             result_units_container = UnitsContainer({self.kind: 1, args[0].kind: 1})
             print(args[0].kind, self.kind)
             for dim in self._REGISTRY._dimensions.values():
-                if hasattr(dim, "reference") and dim.reference == result_units_container:
+                if (
+                    hasattr(dim, "reference")
+                    and dim.reference == result_units_container
+                ):
                     return result.to_kind(dim.name)
             raise ValueError(
                 f"Cannot multiply quantities with kinds {self.kind} and {args[0].kind}"
@@ -776,7 +783,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             raise DimensionalityError(
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
-        
+
         if hasattr(self, "kind") and hasattr(other, "kind"):
             if self.kind != other.kind:
                 # TODO: Should this be a KindError?
