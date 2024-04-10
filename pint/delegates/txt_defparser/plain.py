@@ -221,11 +221,11 @@ class DerivedDimensionDefinition(
 ):
     """Definition of a derived dimension::
 
-        [dimension name] = <relation to other dimensions>
+        [dimension name] = <relation to other dimensions> [= <preferred unit>]
 
     Example::
 
-        [density] = [mass] / [volume]
+        [density] = [mass] / [volume] = kilogram / meter ** 3
     """
 
     @classmethod
@@ -235,7 +235,16 @@ class DerivedDimensionDefinition(
         if not (s.startswith("[") and "=" in s):
             return None
 
-        name, value, *aliases = s.split("=")
+        name, value, *aliases =  (p.strip() for p in s.split("="))
+        
+        preferred_unit = None
+        if aliases:
+            if aliases[0] == "_":
+                aliases = aliases[1:]
+            else:
+                preferred_unit, *aliases = aliases
+
+            aliases = tuple(alias for alias in aliases if alias not in ("", "_"))
 
         if aliases:
             return common.DefinitionSyntaxError(
@@ -251,7 +260,7 @@ class DerivedDimensionDefinition(
             )
 
         try:
-            return cls(name.strip(), reference)
+            return cls(name.strip(), reference, preferred_unit)
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 

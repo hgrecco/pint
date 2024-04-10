@@ -72,7 +72,19 @@ T = TypeVar("T", bound=Magnitude)
 
 def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
+        print(f)
         result = f(self, *args, **kwargs)
+        print(args[0].kind, self.kind, f.__name__)
+        # TODO: Implement this for div, maybe move to mul and div funcs
+        if hasattr(self, "kind") and hasattr(args[0], "kind") and f.__name__ in ["_mul_div"]:
+            result_units_container = UnitsContainer({self.kind: 1, args[0].kind: 1})
+            print(args[0].kind, self.kind)
+            for dim in self._REGISTRY._dimensions.values():
+                if hasattr(dim, "reference") and dim.reference == result_units_container:
+                    return result.to_kind(dim.name)
+            raise ValueError(
+                f"Cannot multiply quantities with kinds {self.kind} and {args[0].kind}"
+            )
         try:
             if result._REGISTRY.autoconvert_to_preferred:
                 result.ito_preferred()
@@ -434,6 +446,17 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.get_compatible_units(self._units)
 
+    def to_kind(self, kind):
+        kind_definition = self._REGISTRY._dimensions[kind]
+
+        if hasattr(kind_definition, "preferred_unit"):
+            unit = kind_definition.preferred_unit
+        else:
+            unit = self.units
+        result = self.to(unit)
+        result.kind = kind
+        return result
+
     def is_compatible_with(
         self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
     ) -> bool:
@@ -612,6 +635,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             operator function (e.g. operator.add, operator.isub)
 
         """
+        print("PlainQuantity._iadd_sub")
         if not self._check(other):
             # other not from same Registry or not a PlainQuantity
             try:
@@ -724,6 +748,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         op : function
             operator function (e.g. operator.add, operator.isub)
         """
+        print("PlainQuantity._add_sub")
         if not self._check(other):
             # other not from same Registry or not a PlainQuantity
             if zero_or_nan(other, True):
@@ -751,6 +776,13 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             raise DimensionalityError(
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
+        
+        if hasattr(self, "kind") and hasattr(other, "kind"):
+            if self.kind != other.kind:
+                # TODO: Should this be a KindError?
+                raise ValueError(
+                    f"Cannot add/subtract quantities with different kinds: {self.kind} and {other.kind}"
+                )
 
         # Next we define some variables to make if-clauses more readable.
         self_non_mul_units = self._get_non_multiplicative_units()

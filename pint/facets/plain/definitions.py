@@ -234,6 +234,8 @@ class DerivedDimensionDefinition(DimensionDefinition):
 
     #: reference dimensions.
     reference: UnitsContainer
+    # preferred unit 
+    preferred_unit: str | None = None
 
     @property
     def is_base(self) -> bool:

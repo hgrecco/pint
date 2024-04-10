@@ -256,7 +256,7 @@ sverdrup = 1e6 * meter ** 3 / second = sv
 galileo = centimeter / second ** 2 = Gal
 
 # Force
-[force] = [mass] * [acceleration]
+[force] = [mass] * [acceleration] = N
 newton = kilogram * meter / second ** 2 = N
 dyne = gram * centimeter / second ** 2 = dyn
 force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
@@ -265,7 +265,7 @@ force_metric_ton = g_0 * metric_ton = tf = metric_ton_force = force_t = t_force
 atomic_unit_of_force = E_h / a_0 = a_u_force
 
 # Energy
-[energy] = [force] * [length]
+[energy] = [force] * [length] = J
 joule = newton * meter = J
 erg = dyne * centimeter
 watt_hour = watt * hour = Wh = watthour
@@ -329,7 +329,8 @@ centimeter_H2O = centimeter * water * g_0 = cmH2O = cm_H2O
 sound_pressure_level = 20e-6 * pascal = SPL
 
 # Torque
-[torque] = [force] * [length]
+[moment_arm] = [length] = m
+[torque] = [force] * [moment_arm] = N m
 foot_pound = foot * force_pound = ft_lb = footpound
 
 # Viscosity

@@ -166,9 +166,10 @@ class TestDefinition:
         assert x.is_base
         assert x.name == "[time]"
 
-        x = Definition.from_string("[speed] = [length]/[time]")
+        x = Definition.from_string("[speed] = [length]/[time] = m / s")
         assert isinstance(x, DimensionDefinition)
         assert x.reference == UnitsContainer({"[length]": 1, "[time]": -1})
+        assert x.preferred_unit == "m / s"
 
     def test_alias_definition(self):
         x = Definition.from_string("@alias meter = metro = metr")
