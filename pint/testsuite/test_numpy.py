@@ -288,6 +288,11 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         result = np.broadcast_arrays(x, y, subok=True)
         helpers.assert_quantity_equal(result, expected)
 
+    def test_roll_numpy_func(self):
+        helpers.assert_quantity_equal(
+            np.roll(self.q), [[4, 1], [2, 3]] * self.ureg.m
+        )
+
 
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # https://www.numpy.org/devdocs/reference/routines.math.html
