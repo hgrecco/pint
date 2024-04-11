@@ -290,7 +290,7 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
 
     def test_roll_numpy_func(self):
         helpers.assert_quantity_equal(
-            np.roll(self.q), [[4, 1], [2, 3]] * self.ureg.m
+            np.roll(self.q, 1), [[4, 1], [2, 3]] * self.ureg.m
         )
 
 
