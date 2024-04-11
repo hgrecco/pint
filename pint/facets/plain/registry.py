@@ -116,6 +116,9 @@ class RegistryCache:
         #: Maps dimensionality (UnitsContainer) to Units (str)
         self.dimensional_equivalents: dict[UnitsContainer, frozenset[str]] = {}
 
+        #: Maps dimensionality (UnitsContainer) to kinds (str)
+        self.kind_dimensional_equivalents: dict[UnitsContainer, frozenset[str]] = {}
+
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         # TODO: this description is not right.
         self.root_units: dict[UnitsContainer, tuple[Scalar, UnitsContainer]] = {}
@@ -135,6 +138,7 @@ class RegistryCache:
             return False
         attrs = (
             "dimensional_equivalents",
+            "kind_dimensional_equivalents",
             "root_units",
             "dimensionality",
             "parse_unit",
@@ -640,6 +644,13 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
+
+            for kind_name in self._dimensions:
+                di = self._get_dimensionality(self.UnitsContainer({kind_name: 1}))
+                dimeq_set = self._cache.kind_dimensional_equivalents.setdefault(
+                    di, set()
+                )
+                dimeq_set.add(kind_name)
         return self._cache
 
     def get_name(self, name_or_alias: str, case_sensitive: bool | None = None) -> str:
@@ -966,6 +977,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         src_dim = self._get_dimensionality(input_units)
         return self._cache.dimensional_equivalents.setdefault(src_dim, frozenset())
+
+    def get_compatible_kinds(self, dimensionality: UnitsContainer) -> frozenset[str]:
+        return self._cache.kind_dimensional_equivalents.setdefault(
+            dimensionality, frozenset()
+        )
 
     # TODO: remove context from here
     def is_compatible_with(

@@ -461,6 +461,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         result.kind = kind
         return result
 
+    def compatable_kinds(self):
+        return self._REGISTRY.get_compatible_kinds(self.dimensionality)
+
     def is_compatible_with(
         self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
     ) -> bool:

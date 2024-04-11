@@ -32,3 +32,10 @@ class TestKind:
         # Torque is not energy so cannot be added
         with pytest.raises(ValueError):
             energy + torque
+
+    def test_compatable_kinds(self):
+        ureg = UnitRegistry()
+        Q_ = ureg.Quantity
+        q = Q_(1, "N m")
+        assert "[torque]" in q.compatable_kinds()
+        assert "[energy]" in q.compatable_kinds()
