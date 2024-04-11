@@ -33,9 +33,9 @@ class TestKind:
         with pytest.raises(ValueError):
             energy + torque
 
-    def test_compatable_kinds(self):
+    def test_compatible_kinds(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity
         q = Q_(1, "N m")
-        assert "[torque]" in q.compatable_kinds()
-        assert "[energy]" in q.compatable_kinds()
+        assert "[torque]" in q.compatible_kinds()
+        assert "[energy]" in q.compatible_kinds()
