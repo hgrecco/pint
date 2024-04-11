@@ -288,7 +288,7 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         result = np.broadcast_arrays(x, y, subok=True)
         helpers.assert_quantity_equal(result, expected)
 
-    def test_roll_numpy_func(self):
+    def test_roll(self):
         helpers.assert_quantity_equal(
             np.roll(self.q, 1), [[4, 1], [2, 3]] * self.ureg.m
         )
