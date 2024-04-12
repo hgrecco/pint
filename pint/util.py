@@ -786,15 +786,13 @@ class ParserHelper(UnitsContainer):
             reps = False
 
         gen = pint_eval.tokenizer(input_string)
-        print(build_eval_tree(gen))
         ret = build_eval_tree(gen).evaluate(
             partial(cls.eval_token, non_int_type=non_int_type)
         )
-        print(ret)
 
         if isinstance(ret, Number):
             return cls(ret, non_int_type=non_int_type)
-    
+
         if reps:
             ret = cls(
                 ret.scale,
