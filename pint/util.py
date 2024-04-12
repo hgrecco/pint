@@ -671,6 +671,26 @@ class UnitsContainer(Mapping[str, Scalar]):
         return self**-1
 
 
+class NonReducingUnitContainer(UnitsContainer):
+    """ The NonReducingUnitContainer stores UnitsContainers without simplifying common units.
+    This is useful when it is desired to show a unit in the numerator and denominator, eg mm/mm.
+    """
+    def __init__(
+        self, units: list[UnitsContainer] | list[tuple[QuantityOrUnitLike, Scalar]]
+    ) -> None:
+        if all(isinstance(u, tuple) for u in units):
+            units = [u[0]._units ** u[1] for u in units]
+
+        self.non_reduced_units = units
+
+        self.reduced_units = UnitsContainer()
+        for unit in units:
+            self.reduced_units *= unit
+        
+        self._d = self.reduced_units._d
+        self._hash = self.reduced_units._hash
+
+
 class ParserHelper(UnitsContainer):
     """The ParserHelper stores in place the product of variables and
     their respective exponent and implements the corresponding operations.
@@ -766,13 +786,15 @@ class ParserHelper(UnitsContainer):
             reps = False
 
         gen = pint_eval.tokenizer(input_string)
+        print(build_eval_tree(gen))
         ret = build_eval_tree(gen).evaluate(
             partial(cls.eval_token, non_int_type=non_int_type)
         )
+        print(ret)
 
         if isinstance(ret, Number):
             return cls(ret, non_int_type=non_int_type)
-
+    
         if reps:
             ret = cls(
                 ret.scale,

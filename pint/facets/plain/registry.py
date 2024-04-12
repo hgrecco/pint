@@ -72,7 +72,7 @@ from ...util import (
     string_preprocessor,
     to_units_container,
 )
-from ...util import UnitsContainer as UnitsContainer
+from ...util import UnitsContainer, NonReducingUnitContainer
 from .definitions import (
     AliasDefinition,
     CommentDefinition,
@@ -1400,6 +1400,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         return UnitsContainer(*args, non_int_type=self.non_int_type, **kwargs)
 
     __call__ = parse_expression
+
+    def NonReducingUnitContainer(self, units) -> UnitsContainer:
+        return NonReducingUnitContainer(units)
 
 
 class PlainRegistry(GenericPlainRegistry[PlainQuantity[Any], PlainUnit]):
