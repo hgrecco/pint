@@ -38,6 +38,10 @@ class SystemUnit(group.GroupUnit):
     pass
 
 
+class SystemKind(group.GroupKind):
+    pass
+
+
 class System(SharedRegistryObject):
     """A system is a Group plus a set of plain units.
 

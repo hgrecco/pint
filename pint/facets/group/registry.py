@@ -17,18 +17,13 @@ if TYPE_CHECKING:
     from ..._typing import Unit, UnitsContainer
 
 from ...util import create_class_with_registry, to_units_container
-from ..plain import (
-    GenericPlainRegistry,
-    QuantityT,
-    UnitDefinition,
-    UnitT,
-)
+from ..plain import GenericPlainRegistry, KindT, QuantityT, UnitDefinition, UnitT
 from . import objects
 from .definitions import GroupDefinition
 
 
 class GenericGroupRegistry(
-    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+    Generic[QuantityT, UnitT, KindT], GenericPlainRegistry[QuantityT, UnitT, KindT]
 ):
     """Handle of Groups.
 
@@ -149,7 +144,10 @@ class GenericGroupRegistry(
 
 
 class GroupRegistry(
-    GenericGroupRegistry[objects.GroupQuantity[Any], objects.GroupUnit]
+    GenericGroupRegistry[
+        objects.GroupQuantity[Any], objects.GroupUnit, objects.GroupKind
+    ]
 ):
     Quantity: TypeAlias = objects.GroupQuantity[Any]
     Unit: TypeAlias = objects.GroupUnit
+    Kind: TypeAlias = objects.GroupKind

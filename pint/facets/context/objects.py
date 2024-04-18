@@ -14,7 +14,13 @@ from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, Any, Generic, Protocol
 
 from ..._typing import Magnitude
-from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit, UnitDefinition
+from ...facets.plain import (
+    MagnitudeT,
+    PlainKind,
+    PlainQuantity,
+    PlainUnit,
+    UnitDefinition,
+)
 from ...util import UnitsContainer, to_units_container
 from .definitions import ContextDefinition
 
@@ -40,6 +46,10 @@ class ContextQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
 
 class ContextUnit(PlainUnit):
+    pass
+
+
+class ContextKind(PlainKind):
     pass
 
 

@@ -212,6 +212,9 @@ degree_Reaumur = 4 / 5 * kelvin; offset: 273.15 = °Re = reaumur = degRe = degre
 atomic_unit_of_temperature = E_h / k = a_u_temp
 planck_temperature = (hbar * c ** 5 / gravitational_constant / k ** 2) ** 0.5
 
+# Specific heat capacity
+# [specific_heat_capacity] = [energy] / [temperature] / [mass] = J / kg / K
+
 # Area
 [area] = [length] ** 2
 are = 100 * meter ** 2
@@ -299,7 +302,7 @@ standard_liter_per_minute = atmosphere * liter / minute = slpm = slm
 conventional_watt_90 = K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt = W_90
 
 # Momentum
-[momentum] = [length] * [mass] / [time]
+[momentum] = [velocity] * [mass]
 
 # Density (as auxiliary for pressure)
 [density] = [mass] / [volume]

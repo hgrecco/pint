@@ -419,6 +419,24 @@ def find_connected_nodes(
     return visited
 
 
+def is_kind(str_: str) -> bool:
+    """Check if a string is a valid kind.
+
+    Parameters
+    ----------
+    str_
+        String to check.
+
+    Returns
+    -------
+    bool
+        True if the string is a valid kind.
+    """
+    if str_.startswith("[") and str_.endswith("]"):
+        return True
+    return False
+
+
 class udict(dict[str, Scalar]):
     """Custom dict implementing __missing__."""
 
@@ -474,6 +492,9 @@ class UnitsContainer(Mapping[str, Scalar]):
             if not isinstance(value, int) and not isinstance(value, self._non_int_type):
                 d[key] = self._non_int_type(value)
         self._hash = None
+
+    def all_kinds(self) -> set[str]:
+        return all(is_kind(key) for key in self._d)
 
     def copy(self: Self) -> Self:
         """Create a copy of this UnitsContainer."""
@@ -940,22 +961,10 @@ def _is_dim(name: str) -> bool:
     return name[0] == "[" and name[-1] == "]"
 
 
-class SharedRegistryObject:
-    """Base class for object keeping a reference to the registree.
-
-    Such object are for now Quantity and Unit, in a number of places it is
-    that an object from this class has a '_units' attribute.
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-
-    """
+class BaseSharedRegistryObject:
+    """Base class for object keeping a reference to the registree."""
 
     _REGISTRY: ClassVar[UnitRegistry]
-    _units: UnitsContainer
 
     def __new__(cls, *args, **kwargs):
         inst = object.__new__(cls)
@@ -994,6 +1003,22 @@ class SharedRegistryObject:
             )
         else:
             return False
+
+
+class SharedRegistryObject(BaseSharedRegistryObject):
+    """
+    Such object are for now Quantity and Unit, in a number of places it is
+    that an object from this class has a '_units' attribute.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    """
+
+    _units: UnitsContainer
 
 
 class PrettyIPython:

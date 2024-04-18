@@ -8,7 +8,8 @@
 
 from __future__ import annotations
 
+from .kind import PlainKind
 from .quantity import PlainQuantity
 from .unit import PlainUnit, UnitsContainer
 
-__all__ = ["PlainUnit", "PlainQuantity", "UnitsContainer"]
+__all__ = ["PlainUnit", "PlainQuantity", "UnitsContainer", "PlainKind"]

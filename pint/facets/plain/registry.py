@@ -83,7 +83,7 @@ from .definitions import (
     PrefixDefinition,
     UnitDefinition,
 )
-from .objects import PlainQuantity, PlainUnit
+from .objects import PlainKind, PlainQuantity, PlainUnit
 
 T = TypeVar("T")
 
@@ -161,9 +161,10 @@ class RegistryMeta(type):
 # Generic types used to mark types associated to Registries.
 QuantityT = TypeVar("QuantityT", bound=PlainQuantity[Any])
 UnitT = TypeVar("UnitT", bound=PlainUnit)
+KindT = TypeVar("KindT", bound=PlainKind)
 
 
-class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
+class GenericPlainRegistry(Generic[QuantityT, UnitT, KindT], metaclass=RegistryMeta):
     """Base class for all registries.
 
     Capabilities:
@@ -211,6 +212,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     Quantity: type[QuantityT]
     Unit: type[UnitT]
+    Kind: type[KindT]
 
     _diskcache = None
     _def_parser = None
@@ -1272,6 +1274,28 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return ret
 
+    def _dimensions_to_base_units(self, dimensions: UnitsContainer) -> UnitsContainer:
+        """Get the base units for a dimension."""
+        base_units = {self.Unit(unit).dimensonality: unit for unit in self._base_units}
+        return UnitsContainer({base_units[dim]: exp for dim, exp in dimensions.items()})
+
+    def _parse_kinds_as_container(self, input_string: str) -> UnitsContainer:
+        """Parse a units expression and returns a UnitContainer with
+        the canonical names.
+        """
+
+        if not input_string:
+            return self.UnitsContainer()
+
+        # Sanitize input_string with whitespaces.
+        input_string = input_string.strip()
+
+        kinds = ParserHelper.from_string(input_string, self.non_int_type)
+        if kinds.scale != 1:
+            raise ValueError("Unit expression cannot have a scaling factor.")
+
+        return self.UnitsContainer(kinds)
+
     def _eval_token(
         self,
         token: TokenInfo,
@@ -1418,6 +1442,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     __call__ = parse_expression
 
 
-class PlainRegistry(GenericPlainRegistry[PlainQuantity[Any], PlainUnit]):
+class PlainRegistry(GenericPlainRegistry[PlainQuantity[Any], PlainUnit, PlainKind]):
     Quantity: TypeAlias = PlainQuantity[Any]
     Unit: TypeAlias = PlainUnit
+    Kind: TypeAlias = PlainKind

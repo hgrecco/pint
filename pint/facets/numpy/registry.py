@@ -12,17 +12,18 @@ from __future__ import annotations
 from typing import Any, Generic
 
 from ...compat import TypeAlias
-from ..plain import GenericPlainRegistry, QuantityT, UnitT
+from ..plain import GenericPlainRegistry, KindT, QuantityT, UnitT
 from .quantity import NumpyQuantity
-from .unit import NumpyUnit
+from .unit import NumpyKind, NumpyUnit
 
 
 class GenericNumpyRegistry(
-    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+    Generic[QuantityT, UnitT, KindT], GenericPlainRegistry[QuantityT, UnitT, KindT]
 ):
     pass
 
 
-class NumpyRegistry(GenericPlainRegistry[NumpyQuantity[Any], NumpyUnit]):
+class NumpyRegistry(GenericPlainRegistry[NumpyQuantity[Any], NumpyUnit, NumpyKind]):
     Quantity: TypeAlias = NumpyQuantity[Any]
     Unit: TypeAlias = NumpyUnit
+    Kind: TypeAlias = NumpyKind

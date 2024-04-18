@@ -12,7 +12,7 @@ from collections.abc import Callable, Generator, Iterable
 from typing import TYPE_CHECKING, Any, Generic
 
 from ...util import SharedRegistryObject, getattr_maybe_raise
-from ..plain import MagnitudeT, PlainQuantity, PlainUnit
+from ..plain import MagnitudeT, PlainKind, PlainQuantity, PlainUnit
 from .definitions import GroupDefinition
 
 if TYPE_CHECKING:
@@ -37,6 +37,10 @@ class GroupQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
 
 class GroupUnit(PlainUnit):
+    pass
+
+
+class GroupKind(PlainKind):
     pass
 
 

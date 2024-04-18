@@ -49,20 +49,34 @@ class Unit(
     pass
 
 
-class GenericUnitRegistry(
-    Generic[facets.QuantityT, facets.UnitT],
-    facets.GenericSystemRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericContextRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericNonMultiplicativeRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT],
+class Kind(
+    # facets.SystemRegistry.Kind,
+    # facets.ContextRegistry.Kind,
+    # facets.DaskRegistry.Kind,
+    # facets.NumpyRegistry.Kind,
+    # facets.MeasurementRegistry.Kind,
+    # facets.NonMultiplicativeRegistry.Kind,
+    facets.PlainRegistry.Kind,
 ):
     pass
 
 
-class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
+class GenericUnitRegistry(
+    Generic[facets.QuantityT, facets.UnitT, facets.KindT],
+    facets.GenericSystemRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
+    facets.GenericContextRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
+    facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
+    facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
+    facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
+    facets.GenericNonMultiplicativeRegistry[
+        facets.QuantityT, facets.UnitT, facets.KindT
+    ],
+    facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
+):
+    pass
+
+
+class UnitRegistry(GenericUnitRegistry[Quantity, Unit, Kind]):
     """The unit registry stores the definitions and relationships between units.
 
     Parameters
@@ -103,6 +117,7 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
 
     Quantity: TypeAlias = Quantity
     Unit: TypeAlias = Unit
+    Kind: TypeAlias = Kind
 
     def __init__(
         self,
@@ -173,7 +188,7 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
     check = registry_helpers.check
 
 
-class LazyRegistry(Generic[facets.QuantityT, facets.UnitT]):
+class LazyRegistry(Generic[facets.QuantityT, facets.UnitT, facets.KindT]):
     def __init__(self, args=None, kwargs=None):
         self.__dict__["params"] = args or (), kwargs or {}
 

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Generic
 
 from ... import errors
 from ...compat import TypeAlias
-from ..plain import QuantityT, UnitT
+from ..plain import KindT, QuantityT, UnitT
 
 if TYPE_CHECKING:
     from ..._typing import Quantity, Unit
@@ -30,7 +30,7 @@ from .definitions import SystemDefinition
 
 
 class GenericSystemRegistry(
-    Generic[QuantityT, UnitT], GenericGroupRegistry[QuantityT, UnitT]
+    Generic[QuantityT, UnitT, KindT], GenericGroupRegistry[QuantityT, UnitT, KindT]
 ):
     """Handle of Systems.
 
@@ -222,6 +222,24 @@ class GenericSystemRegistry(
 
         return base_factor, destination_units
 
+    def _get_base_units_for_dimensionality(
+        self, dim: UnitsContainerT, system: str | objects.System | None = None
+    ) -> UnitsContainerT:
+        if system is None:
+            system = self._default_system_name
+        bu = self.get_system(system, False).base_units
+        bu = [tuple(val[1])[0] for val in bu.items()]
+
+        # maps dimensionality to base units, {'[length]': 'meter', ...}
+        base_units_map = {
+            list(self[unit].dimensionality.keys())[0]: unit
+            for unit in bu
+            if len(self.Unit(unit).dimensionality) == 1
+        }
+        return self.UnitsContainer(
+            {base_units_map[dim]: exp for dim, exp in dim.items()}
+        )
+
     def get_compatible_units(
         self, input_units: UnitsContainerT, group_or_system: str | None = None
     ) -> frozenset[Unit]:
@@ -259,7 +277,10 @@ class GenericSystemRegistry(
 
 
 class SystemRegistry(
-    GenericSystemRegistry[objects.SystemQuantity[Any], objects.SystemUnit]
+    GenericSystemRegistry[
+        objects.SystemQuantity[Any], objects.SystemUnit, objects.SystemKind
+    ]
 ):
     Quantity: TypeAlias = objects.SystemQuantity[Any]
     Unit: TypeAlias = objects.SystemUnit
+    Kind: TypeAlias = objects.SystemKind

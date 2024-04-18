@@ -47,6 +47,7 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
+    from .kind import PlainKind as Kind
     from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
@@ -74,21 +75,29 @@ def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
         # TODO: Implement this for div, maybe move to mul and div funcs
-        if (
-            hasattr(self, "kind")
-            and hasattr(args[0], "kind")
-            and f.__name__ in ["_mul_div"]
-        ):
-            result_units_container = UnitsContainer({self.kind: 1, args[0].kind: 1})
-            for dim in self._REGISTRY._dimensions.values():
-                if (
-                    hasattr(dim, "reference")
-                    and dim.reference == result_units_container
-                ):
-                    return result.to_kind(dim.name)
-            raise ValueError(
-                f"Cannot multiply quantities with kinds {self.kind} and {args[0].kind}"
-            )
+        if hasattr(self, "_kinds") and hasattr(args[0], "_kinds"):
+            if "mul" in args[1].__name__:
+                result_units_container = self._kinds * args[0]._kinds
+                for dim in self._REGISTRY._dimensions.values():
+                    if (
+                        hasattr(dim, "reference")
+                        and dim.reference == result_units_container
+                    ):
+                        return result.to_kind(dim.name)
+                raise ValueError(
+                    f"Cannot multiply quantities with kinds {self.kinds} and {args[0].kinds}"
+                )
+            elif "div" in args[1].__name__:
+                result_units_container = self._kinds / args[0]._kinds
+                for dim in self._REGISTRY._dimensions.values():
+                    if (
+                        hasattr(dim, "reference")
+                        and dim.reference == result_units_container
+                    ):
+                        return result.to_kind(dim.name)
+                raise ValueError(
+                    f"Cannot divide quantities with kinds {self.kinds} and {args[0].kinds}"
+                )
         try:
             if result._REGISTRY.autoconvert_to_preferred:
                 result.ito_preferred()
@@ -331,6 +340,17 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return self.to(units).magnitude
 
     @property
+    def kinds(self) -> Kind:
+        print(self._REGISTRY.Kind(self._kinds))
+        """PlainQuantity's kinds. Long form for `k`"""
+        return self._REGISTRY.Kind(self._kinds)
+
+    @property
+    def k(self) -> Kind:
+        """PlainQuantity's kinds. Short form for `kinds`"""
+        return self._REGISTRY.Kind(self._kinds)
+
+    @property
     def units(self) -> Unit:
         """PlainQuantity's units. Long form for `u`"""
         return self._REGISTRY.Unit(self._units)
@@ -451,14 +471,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self._units)
 
     def to_kind(self, kind):
-        kind_definition = self._REGISTRY._dimensions[kind]
-
-        if hasattr(kind_definition, "preferred_unit"):
-            unit = kind_definition.preferred_unit
-        else:
-            unit = self.units
-        result = self.to(unit)
-        result.kind = kind
+        kind = self._REGISTRY.Kind(kind)
+        result = self.to(kind.preferred_unit)
+        result._kinds = kind._kinds
         return result
 
     def compatible_kinds(self):
@@ -784,11 +799,11 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
 
-        if hasattr(self, "kind") and hasattr(other, "kind"):
-            if self.kind != other.kind:
+        if hasattr(self, "_kinds") and hasattr(other, "_kinds"):
+            if self._kinds != other._kinds:
                 # TODO: Should this be a KindError?
                 raise ValueError(
-                    f"Cannot add/subtract quantities with different kinds: {self.kind} and {other.kind}"
+                    f"Cannot add/subtract quantities with different kinds: {self._kinds} and {other._kinds}"
                 )
 
         # Next we define some variables to make if-clauses more readable.

@@ -13,7 +13,7 @@ from typing import Any, Generic, TypeVar
 from ...compat import TypeAlias
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer, logger
-from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
+from ..plain import GenericPlainRegistry, KindT, QuantityT, UnitDefinition, UnitT
 from . import objects
 from .definitions import OffsetConverter, ScaleConverter
 
@@ -21,7 +21,7 @@ T = TypeVar("T")
 
 
 class GenericNonMultiplicativeRegistry(
-    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+    Generic[QuantityT, UnitT, KindT], GenericPlainRegistry[QuantityT, UnitT, KindT]
 ):
     """Handle of non multiplicative units (e.g. Temperature).
 
@@ -287,8 +287,11 @@ class GenericNonMultiplicativeRegistry(
 
 class NonMultiplicativeRegistry(
     GenericNonMultiplicativeRegistry[
-        objects.NonMultiplicativeQuantity[Any], objects.NonMultiplicativeUnit
+        objects.NonMultiplicativeQuantity[Any],
+        objects.NonMultiplicativeUnit,
+        objects.NonMultiplicativeKind,
     ]
 ):
     Quantity: TypeAlias = objects.NonMultiplicativeQuantity[Any]
     Unit: TypeAlias = objects.NonMultiplicativeUnit
+    Kind: TypeAlias = objects.NonMultiplicativeKind
