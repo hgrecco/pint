@@ -18,7 +18,7 @@ from ..._typing import F, Magnitude
 from ...compat import TypeAlias
 from ...errors import UndefinedUnitError
 from ...util import UnitsContainer, find_connected_nodes, find_shortest_path, logger
-from ..plain import GenericPlainRegistry, KindT, QuantityT, UnitDefinition, UnitT
+from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
 from . import objects
 from .definitions import ContextDefinition
 
@@ -40,7 +40,7 @@ class ContextCacheOverlay:
 
 
 class GenericContextRegistry(
-    Generic[QuantityT, UnitT, KindT], GenericPlainRegistry[QuantityT, UnitT, KindT]
+    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
 ):
     """Handle of Contexts.
 
@@ -422,10 +422,7 @@ class GenericContextRegistry(
 
 
 class ContextRegistry(
-    GenericContextRegistry[
-        objects.ContextQuantity[Any], objects.ContextUnit, objects.ContextKind
-    ]
+    GenericContextRegistry[objects.ContextQuantity[Any], objects.ContextUnit]
 ):
     Quantity: TypeAlias = objects.ContextQuantity[Any]
     Unit: TypeAlias = objects.ContextUnit
-    Kind: TypeAlias = objects.ContextKind

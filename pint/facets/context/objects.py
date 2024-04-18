@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any, Generic, Protocol
 from ..._typing import Magnitude
 from ...facets.plain import (
     MagnitudeT,
-    PlainKind,
     PlainQuantity,
     PlainUnit,
     UnitDefinition,
@@ -46,10 +45,6 @@ class ContextQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
 
 class ContextUnit(PlainUnit):
-    pass
-
-
-class ContextKind(PlainKind):
     pass
 
 

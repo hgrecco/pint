@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Generic
 
 from ... import errors
 from ...compat import TypeAlias
-from ..plain import KindT, QuantityT, UnitT
+from ..plain import QuantityT, UnitT
 
 if TYPE_CHECKING:
     from ..._typing import Quantity, Unit
@@ -30,7 +30,7 @@ from .definitions import SystemDefinition
 
 
 class GenericSystemRegistry(
-    Generic[QuantityT, UnitT, KindT], GenericGroupRegistry[QuantityT, UnitT, KindT]
+    Generic[QuantityT, UnitT], GenericGroupRegistry[QuantityT, UnitT]
 ):
     """Handle of Systems.
 
@@ -277,10 +277,7 @@ class GenericSystemRegistry(
 
 
 class SystemRegistry(
-    GenericSystemRegistry[
-        objects.SystemQuantity[Any], objects.SystemUnit, objects.SystemKind
-    ]
+    GenericSystemRegistry[objects.SystemQuantity[Any], objects.SystemUnit]
 ):
     Quantity: TypeAlias = objects.SystemQuantity[Any]
     Unit: TypeAlias = objects.SystemUnit
-    Kind: TypeAlias = objects.SystemKind

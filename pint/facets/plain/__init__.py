@@ -18,15 +18,14 @@ from .definitions import (
     ScaleConverter,
     UnitDefinition,
 )
-from .objects import PlainKind, PlainQuantity, PlainUnit
+from .objects import PlainQuantity, PlainUnit
 from .quantity import MagnitudeT
-from .registry import GenericPlainRegistry, KindT, PlainRegistry, QuantityT, UnitT
+from .registry import GenericPlainRegistry, PlainRegistry, QuantityT, UnitT
 
 __all__ = [
     "GenericPlainRegistry",
     "PlainUnit",
     "PlainQuantity",
-    "PlainKind",
     "PlainRegistry",
     "AliasDefinition",
     "DefaultsDefinition",
@@ -36,6 +35,5 @@ __all__ = [
     "UnitDefinition",
     "QuantityT",
     "UnitT",
-    "KindT",
     "MagnitudeT",
 ]

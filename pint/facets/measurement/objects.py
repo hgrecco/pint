@@ -13,7 +13,7 @@ import re
 from typing import Generic
 
 from ...compat import ufloat
-from ..plain import MagnitudeT, PlainKind, PlainQuantity, PlainUnit
+from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 
 MISSING = object()
 
@@ -33,10 +33,6 @@ class MeasurementQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
 
 class MeasurementUnit(PlainUnit):
-    pass
-
-
-class MeasurementKind(PlainKind):
     pass
 
 

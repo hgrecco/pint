@@ -17,9 +17,7 @@ from typing import Any, Generic
 from ...compat import TypeAlias, compute, dask_array, persist, visualize
 from ..plain import (
     GenericPlainRegistry,
-    KindT,
     MagnitudeT,
-    PlainKind,
     PlainQuantity,
     PlainUnit,
     QuantityT,
@@ -133,17 +131,12 @@ class DaskUnit(PlainUnit):
     pass
 
 
-class DaskKind(PlainKind):
-    pass
-
-
 class GenericDaskRegistry(
-    Generic[QuantityT, UnitT, KindT], GenericPlainRegistry[QuantityT, UnitT, KindT]
+    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
 ):
     pass
 
 
-class DaskRegistry(GenericDaskRegistry[DaskQuantity[Any], DaskUnit, DaskKind]):
+class DaskRegistry(GenericDaskRegistry[DaskQuantity[Any], DaskUnit]):
     Quantity: TypeAlias = DaskQuantity[Any]
     Unit: TypeAlias = DaskUnit
-    Kind: TypeAlias = DaskKind

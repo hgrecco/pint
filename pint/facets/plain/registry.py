@@ -83,7 +83,7 @@ from .definitions import (
     PrefixDefinition,
     UnitDefinition,
 )
-from .objects import PlainKind, PlainQuantity, PlainUnit
+from .objects import PlainQuantity, PlainUnit
 
 T = TypeVar("T")
 
@@ -161,10 +161,9 @@ class RegistryMeta(type):
 # Generic types used to mark types associated to Registries.
 QuantityT = TypeVar("QuantityT", bound=PlainQuantity[Any])
 UnitT = TypeVar("UnitT", bound=PlainUnit)
-KindT = TypeVar("KindT", bound=PlainKind)
 
 
-class GenericPlainRegistry(Generic[QuantityT, UnitT, KindT], metaclass=RegistryMeta):
+class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     """Base class for all registries.
 
     Capabilities:
@@ -212,7 +211,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT, KindT], metaclass=RegistryM
 
     Quantity: type[QuantityT]
     Unit: type[UnitT]
-    Kind: type[KindT]
 
     _diskcache = None
     _def_parser = None
@@ -1442,7 +1440,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT, KindT], metaclass=RegistryM
     __call__ = parse_expression
 
 
-class PlainRegistry(GenericPlainRegistry[PlainQuantity[Any], PlainUnit, PlainKind]):
+class PlainRegistry(GenericPlainRegistry[PlainQuantity[Any], PlainUnit]):
     Quantity: TypeAlias = PlainQuantity[Any]
     Unit: TypeAlias = PlainUnit
-    Kind: TypeAlias = PlainKind

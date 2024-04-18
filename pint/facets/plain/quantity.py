@@ -47,7 +47,6 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
-    from .kind import PlainKind as Kind
     from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
@@ -340,17 +339,6 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return self.to(units).magnitude
 
     @property
-    def kinds(self) -> Kind:
-        print(self._REGISTRY.Kind(self._kinds))
-        """PlainQuantity's kinds. Long form for `k`"""
-        return self._REGISTRY.Kind(self._kinds)
-
-    @property
-    def k(self) -> Kind:
-        """PlainQuantity's kinds. Short form for `kinds`"""
-        return self._REGISTRY.Kind(self._kinds)
-
-    @property
     def units(self) -> Unit:
         """PlainQuantity's units. Long form for `u`"""
         return self._REGISTRY.Unit(self._units)
@@ -469,15 +457,6 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                 return self._REGISTRY.get_compatible_units(self._units)
 
         return self._REGISTRY.get_compatible_units(self._units)
-
-    def to_kind(self, kind):
-        kind = self._REGISTRY.Kind(kind)
-        result = self.to(kind.preferred_unit)
-        result._kinds = kind._kinds
-        return result
-
-    def compatible_kinds(self):
-        return self._REGISTRY.get_compatible_kinds(self.dimensionality)
 
     def is_compatible_with(
         self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
@@ -657,7 +636,6 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             operator function (e.g. operator.add, operator.isub)
 
         """
-        print("PlainQuantity._iadd_sub")
         if not self._check(other):
             # other not from same Registry or not a PlainQuantity
             try:
@@ -770,7 +748,6 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         op : function
             operator function (e.g. operator.add, operator.isub)
         """
-        print("PlainQuantity._add_sub")
         if not self._check(other):
             # other not from same Registry or not a PlainQuantity
             if zero_or_nan(other, True):

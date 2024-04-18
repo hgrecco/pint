@@ -1,8 +1,8 @@
 """
-    pint.facets.plain.kind
-    ~~~~~~~~~~~~~~~~~~~~~
+    pint.facets.kind.objects
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
+    :copyright: 2024 by Pint Authors, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -10,28 +10,121 @@ from __future__ import annotations
 
 import copy
 import locale
-import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from ..._typing import UnitLike
-from ...compat import NUMERIC_TYPES, deprecated
-from ...errors import DimensionalityError
-from ...util import PrettyIPython, BaseSharedRegistryObject, UnitsContainer, ParserHelper
-from .definitions import UnitDefinition
+from ...compat import NUMERIC_TYPES
+from ...util import (
+    BaseSharedRegistryObject,
+    PrettyIPython,
+    UnitsContainer,
+)
 
 if TYPE_CHECKING:
-    from ..context import Context
+    pass
 
 
-class PlainKind(PrettyIPython, BaseSharedRegistryObject):
+import copy
+from typing import Generic
+
+from ...compat import ufloat
+from ..plain import MagnitudeT, PlainQuantity, PlainUnit
+
+MISSING = object()
+
+
+class KindQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+    @property
+    def kinds(self) -> Kind:
+        print(self._REGISTRY.Kind(self._kinds))
+        """PlainQuantity's kinds. Long form for `k`"""
+        return self._REGISTRY.Kind(self._kinds)
+
+    @property
+    def k(self) -> Kind:
+        """PlainQuantity's kinds. Short form for `kinds`"""
+        return self._REGISTRY.Kind(self._kinds)
+
+    def to_kind(self, kind):
+        kind = self._REGISTRY.Kind(kind)
+        result = self.to(kind.preferred_unit)
+        result._kinds = kind._kinds
+        return result
+
+    def compatible_kinds(self):
+        return self._REGISTRY.get_compatible_kinds(self.dimensionality)
+
+
+class KindUnit(PlainUnit):
+    pass
+
+
+class QuantityWithKind(PlainQuantity):
+    """Implements a class to describe a quantity with uncertainty.
+
+    Parameters
+    ----------
+    value : pint.Quantity or any numeric type
+        The expected value of the measurement
+    error : pint.Quantity or any numeric type
+        The error or uncertainty of the measurement
+
+    Returns
+    -------
+
+    """
+
+    def __new__(cls, value, error=MISSING, units=MISSING):
+        if units is MISSING:
+            try:
+                value, units = value.magnitude, value.units
+            except AttributeError:
+                # if called with two arguments and the first looks like a ufloat
+                # then assume the second argument is the units, keep value intact
+                if hasattr(value, "nominal_value"):
+                    units = error
+                    error = MISSING  # used for check below
+                else:
+                    units = ""
+        if error is MISSING:
+            # We've already extracted the units from the Quantity above
+            mag = value
+        else:
+            try:
+                error = error.to(units).magnitude
+            except AttributeError:
+                pass
+            if error < 0:
+                raise ValueError("The magnitude of the error cannot be negative")
+            else:
+                mag = ufloat(value, error)
+
+        inst = super().__new__(cls, mag, units)
+        return inst
+
+    def __repr__(self):
+        return "<Measurement({}, {}, {})>".format(
+            self.magnitude.nominal_value, self.magnitude.std_dev, self.units
+        )
+
+    def __str__(self):
+        return f"{self}"
+
+    def __format__(self, spec):
+        spec = spec or self._REGISTRY.default_format
+        return self._REGISTRY.formatter.format_measurement(self, spec)
+
+
+
+
+class KindKind(PrettyIPython, BaseSharedRegistryObject):
     """Implements a class to describe a unit supporting math operations"""
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
         from pint import _unpickle_unit
 
-        return _unpickle_unit, (PlainKind, self._kinds)
+        return _unpickle_unit, (KindKind, self._kinds)
 
     def __init__(self, kinds) -> None:
         super().__init__()
@@ -44,7 +137,7 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
         #     self._kinds = units
         # elif isinstance(units, str):
         #     self._kinds = self._REGISTRY.parse_units(units)._kinds
-        # elif isinstance(units, PlainKind):
+        # elif isinstance(units, KindKind):
         #     self._kinds = units._kinds
         # else:
         #     raise TypeError(
@@ -53,11 +146,11 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
         #         )
         #     )
 
-    def __copy__(self) -> PlainKind:
+    def __copy__(self) -> KindKind:
         ret = self.__class__(self._kinds)
         return ret
 
-    def __deepcopy__(self, memo) -> PlainKind:
+    def __deepcopy__(self, memo) -> KindKind:
         ret = self.__class__(copy.deepcopy(self._kinds, memo))
         return ret
 
@@ -78,7 +171,7 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
 
     @property
     def dimensionless(self) -> bool:
-        """Return True if the PlainKind is dimensionless; False otherwise."""
+        """Return True if the KindKind is dimensionless; False otherwise."""
         return not bool(self.dimensionality)
 
     @property
@@ -87,7 +180,7 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
         Returns
         -------
         dict
-            Dimensionality of the PlainKind, e.g. ``{length: 1, time: -1}``
+            Dimensionality of the KindKind, e.g. ``{length: 1, time: -1}``
         """
         try:
             return self._dimensionality
@@ -102,12 +195,19 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
         units = UnitsContainer()
         for kind in self._kinds:
             kind_definition = self._REGISTRY._dimensions[kind]
-            if hasattr(kind_definition, "preferred_unit") and kind_definition.preferred_unit:
-                units = units * self._REGISTRY.Unit(kind_definition.preferred_unit)._units
+            if (
+                hasattr(kind_definition, "preferred_unit")
+                and kind_definition.preferred_unit
+            ):
+                units = (
+                    units * self._REGISTRY.Unit(kind_definition.preferred_unit)._units
+                )
             else:
                 # kind = "[torque]"
-                base_dimensions = PlainKind(UnitsContainer({kind: 1})).dimensionality
-                units = units * self._REGISTRY._get_base_units_for_dimensionality(base_dimensions)
+                base_dimensions = KindKind(UnitsContainer({kind: 1})).dimensionality
+                units = units * self._REGISTRY._get_base_units_for_dimensionality(
+                    base_dimensions
+                )
         return units
 
     # def compatible_units(self, *contexts):
@@ -126,7 +226,7 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
     #     ----------
     #     other
     #         The object to check. Treated as dimensionless if not a
-    #         Quantity, PlainKind or str.
+    #         Quantity, KindKind or str.
     #     *contexts : str or pint.Context
     #         Contexts to use in the transformation.
     #     **ctx_kwargs :
@@ -145,7 +245,7 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
     #         except DimensionalityError:
     #             return False
 
-    #     if isinstance(other, (PlainQuantity, PlainKind)):
+    #     if isinstance(other, (PlainQuantity, KindKind)):
     #         return self.dimensionality == other.dimensionality
 
     #     if isinstance(other, str):
@@ -181,7 +281,7 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
         return self._REGISTRY.Quantity(1 / other, self._kinds)
 
     def __rtruediv__(self, other):
-        # As PlainKind and Quantity both handle truediv with each other rtruediv can
+        # As KindKind and Quantity both handle truediv with each other rtruediv can
         # only be called for something different.
         if isinstance(other, NUMERIC_TYPES):
             return self._REGISTRY.Quantity(other, 1 / self._kinds)
@@ -193,19 +293,19 @@ class PlainKind(PrettyIPython, BaseSharedRegistryObject):
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
-    def __pow__(self, other) -> PlainKind:
+    def __pow__(self, other) -> KindKind:
         if isinstance(other, NUMERIC_TYPES):
             return self.__class__(self._kinds**other)
 
         else:
-            mess = f"Cannot power PlainKind by {type(other)}"
+            mess = f"Cannot power KindKind by {type(other)}"
             raise TypeError(mess)
 
     def __hash__(self) -> int:
         return self._kinds.__hash__()
 
     def __eq__(self, other) -> bool:
-        # We compare to the plain class of PlainKind because each PlainKind class is
+        # We compare to the plain class of KindKind because each KindKind class is
         # unique.
         if self._check(other):
             if isinstance(other, self.__class__):

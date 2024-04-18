@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Generic
 
-from ..plain import MagnitudeT, PlainKind, PlainQuantity, PlainUnit
+from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 
 
 class NonMultiplicativeQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
@@ -64,8 +64,4 @@ class NonMultiplicativeQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
 
 class NonMultiplicativeUnit(PlainUnit):
-    pass
-
-
-class NonMultiplicativeKind(PlainKind):
     pass

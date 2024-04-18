@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from ...compat import is_upcast_type
-from ..plain import PlainKind, PlainUnit
+from ..plain import PlainUnit
 
 
 class NumpyUnit(PlainUnit):
@@ -41,7 +41,3 @@ class NumpyUnit(PlainUnit):
             )
 
         return NotImplemented
-
-
-class NumpyKind(PlainKind):
-    pass

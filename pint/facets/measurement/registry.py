@@ -13,12 +13,12 @@ from typing import Any, Generic
 
 from ...compat import TypeAlias, ufloat
 from ...util import create_class_with_registry
-from ..plain import GenericPlainRegistry, KindT, QuantityT, UnitT
+from ..plain import GenericPlainRegistry, QuantityT, UnitT
 from . import objects
 
 
 class GenericMeasurementRegistry(
-    Generic[QuantityT, UnitT, KindT], GenericPlainRegistry[QuantityT, UnitT, KindT]
+    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
 ):
     Measurement = objects.Measurement
 
@@ -42,9 +42,7 @@ class MeasurementRegistry(
     GenericMeasurementRegistry[
         objects.MeasurementQuantity[Any],
         objects.MeasurementUnit,
-        objects.MeasurementKind,
     ]
 ):
     Quantity: TypeAlias = objects.MeasurementQuantity[Any]
     Unit: TypeAlias = objects.MeasurementUnit
-    Kind: TypeAlias = objects.MeasurementKind

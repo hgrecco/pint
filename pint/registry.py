@@ -31,6 +31,7 @@ class Quantity(
     facets.DaskRegistry.Quantity,
     facets.NumpyRegistry.Quantity,
     facets.MeasurementRegistry.Quantity,
+    facets.KindRegistry.Quantity,
     facets.NonMultiplicativeRegistry.Quantity,
     facets.PlainRegistry.Quantity,
 ):
@@ -43,40 +44,28 @@ class Unit(
     facets.DaskRegistry.Unit,
     facets.NumpyRegistry.Unit,
     facets.MeasurementRegistry.Unit,
+    facets.KindRegistry.Unit,
     facets.NonMultiplicativeRegistry.Unit,
     facets.PlainRegistry.Unit,
 ):
     pass
 
 
-class Kind(
-    # facets.SystemRegistry.Kind,
-    # facets.ContextRegistry.Kind,
-    # facets.DaskRegistry.Kind,
-    # facets.NumpyRegistry.Kind,
-    # facets.MeasurementRegistry.Kind,
-    # facets.NonMultiplicativeRegistry.Kind,
-    facets.PlainRegistry.Kind,
-):
-    pass
-
-
 class GenericUnitRegistry(
-    Generic[facets.QuantityT, facets.UnitT, facets.KindT],
-    facets.GenericSystemRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
-    facets.GenericContextRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
-    facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
-    facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
-    facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
-    facets.GenericNonMultiplicativeRegistry[
-        facets.QuantityT, facets.UnitT, facets.KindT
-    ],
-    facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT, facets.KindT],
+    Generic[facets.QuantityT, facets.UnitT],
+    facets.GenericSystemRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericContextRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericKindRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericNonMultiplicativeRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT],
 ):
     pass
 
 
-class UnitRegistry(GenericUnitRegistry[Quantity, Unit, Kind]):
+class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
     """The unit registry stores the definitions and relationships between units.
 
     Parameters
@@ -117,7 +106,6 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit, Kind]):
 
     Quantity: TypeAlias = Quantity
     Unit: TypeAlias = Unit
-    Kind: TypeAlias = Kind
 
     def __init__(
         self,
@@ -188,7 +176,7 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit, Kind]):
     check = registry_helpers.check
 
 
-class LazyRegistry(Generic[facets.QuantityT, facets.UnitT, facets.KindT]):
+class LazyRegistry(Generic[facets.QuantityT, facets.UnitT]):
     def __init__(self, args=None, kwargs=None):
         self.__dict__["params"] = args or (), kwargs or {}
 
