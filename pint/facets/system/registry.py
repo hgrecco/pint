@@ -232,7 +232,7 @@ class GenericSystemRegistry(
 
         # maps dimensionality to base units, {'[length]': 'meter', ...}
         base_units_map = {
-            list(self[unit].dimensionality.keys())[0]: unit
+            list(self.parse_expression(unit).dimensionality.keys())[0]: unit
             for unit in bu
             if len(self.Unit(unit).dimensionality) == 1
         }

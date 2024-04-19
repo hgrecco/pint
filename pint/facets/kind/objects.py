@@ -10,46 +10,27 @@ from __future__ import annotations
 
 import copy
 import locale
+import operator
 from numbers import Number
 from typing import TYPE_CHECKING
 
-from ...compat import NUMERIC_TYPES
-from ...util import (
-    BaseSharedRegistryObject,
-    PrettyIPython,
-    UnitsContainer,
-)
+from ...compat import NUMERIC_TYPES, _to_magnitude
+from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer, logger
+from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     pass
 
-
-import copy
 from typing import Generic
 
-from ...compat import ufloat
 from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 
 MISSING = object()
 
 
 class KindQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
-    @property
-    def kinds(self) -> Kind:
-        print(self._REGISTRY.Kind(self._kinds))
-        """PlainQuantity's kinds. Long form for `k`"""
-        return self._REGISTRY.Kind(self._kinds)
-
-    @property
-    def k(self) -> Kind:
-        """PlainQuantity's kinds. Short form for `kinds`"""
-        return self._REGISTRY.Kind(self._kinds)
-
     def to_kind(self, kind):
-        kind = self._REGISTRY.Kind(kind)
-        result = self.to(kind.preferred_unit)
-        result._kinds = kind._kinds
-        return result
+        return self._REGISTRY.QuantityKind(self, kind)
 
     def compatible_kinds(self):
         return self._REGISTRY.get_compatible_kinds(self.dimensionality)
@@ -59,66 +40,148 @@ class KindUnit(PlainUnit):
     pass
 
 
-class QuantityWithKind(PlainQuantity):
-    """Implements a class to describe a quantity with uncertainty.
+class QuantityKind(KindQuantity, SharedRegistryObject):
+    """Implements a class to describe a quantity and its kind.
 
     Parameters
     ----------
     value : pint.Quantity or any numeric type
-        The expected value of the measurement
-    error : pint.Quantity or any numeric type
-        The error or uncertainty of the measurement
 
     Returns
     -------
 
     """
 
-    def __new__(cls, value, error=MISSING, units=MISSING):
-        if units is MISSING:
-            try:
-                value, units = value.magnitude, value.units
-            except AttributeError:
-                # if called with two arguments and the first looks like a ufloat
-                # then assume the second argument is the units, keep value intact
-                if hasattr(value, "nominal_value"):
-                    units = error
-                    error = MISSING  # used for check below
-                else:
-                    units = ""
-        if error is MISSING:
-            # We've already extracted the units from the Quantity above
-            mag = value
-        else:
-            try:
-                error = error.to(units).magnitude
-            except AttributeError:
-                pass
-            if error < 0:
-                raise ValueError("The magnitude of the error cannot be negative")
-            else:
-                mag = ufloat(value, error)
+    def __new__(cls, value, kinds, units=None):
+        # if is_upcast_type(type(value)):
+        #     raise TypeError(f"PlainQuantity cannot wrap upcast type {type(value)}")
 
-        inst = super().__new__(cls, mag, units)
+        if units is None and isinstance(value, str) and value == "":
+            raise ValueError(
+                "Expression to parse as PlainQuantity cannot be an empty string."
+            )
+
+        if units is None and isinstance(value, str):
+            ureg = SharedRegistryObject.__new__(cls)._REGISTRY
+            inst = ureg.parse_expression(value)
+            return cls.__new__(cls, inst)
+
+        if units is None and isinstance(value, cls):
+            return copy.copy(value)
+
+        inst = SharedRegistryObject().__new__(cls)
+
+        if isinstance(kinds, KindKind):
+            kinds = kinds._kinds
+        elif isinstance(kinds, str):
+            kinds = inst._REGISTRY.parse_kinds(kinds)._kinds
+        elif isinstance(kinds, UnitsContainer):
+            kinds = kinds
+        else:
+            raise TypeError(
+                "kinds must be of type str, KindKind or "
+                "UnitsContainer; not {}.".format(type(kinds))
+            )
+
+        if units is None:
+            kk = inst._REGISTRY.Kind(kinds)
+            if kk.preferred_unit:
+                units = kk.preferred_unit
+            else:
+                raise ValueError(
+                    "units must be provided if value is not a Quantity and no preferred unit is defined for the kind."
+                )
+        else:
+            if isinstance(units, (UnitsContainer, UnitDefinition)):
+                units = units
+            elif isinstance(units, str):
+                units = inst._REGISTRY.parse_units(units)._units
+            elif isinstance(units, SharedRegistryObject):
+                if isinstance(units, PlainQuantity) and units.magnitude != 1:
+                    units = copy.copy(units)._units
+                    logger.warning(
+                        "Creating new PlainQuantity using a non unity PlainQuantity as units."
+                    )
+                else:
+                    units = units._units
+            else:
+                raise TypeError(
+                    "units must be of type str, PlainQuantity or "
+                    "UnitsContainer; not {}.".format(type(units))
+                )
+        if isinstance(value, cls):
+            magnitude = value.to(units)._magnitude
+        else:
+            magnitude = _to_magnitude(
+                value, inst.force_ndarray, inst.force_ndarray_like
+            )
+        inst._magnitude = magnitude
+        inst._units = units
+        inst._kinds = kinds
+
         return inst
 
     def __repr__(self):
-        return "<Measurement({}, {}, {})>".format(
-            self.magnitude.nominal_value, self.magnitude.std_dev, self.units
+        return "<QuantityKind({}, {}, {})>".format(
+            self.magnitude, self._kinds, self.units
         )
 
     def __str__(self):
         return f"{self}"
 
-    def __format__(self, spec):
-        spec = spec or self._REGISTRY.default_format
-        return self._REGISTRY.formatter.format_measurement(self, spec)
+    # def __format__(self, spec):
+    #     spec = spec or self._REGISTRY.default_format
+    #     return self._REGISTRY.formatter.format_measurement(self, spec)
+
+    @property
+    def kinds(self) -> KindKind:
+        """PlainQuantity's kinds. Long form for `k`"""
+        return self._REGISTRY.Kind(self._kinds)
+
+    @property
+    def k(self) -> KindKind:
+        """PlainQuantity's kinds. Short form for `kinds`"""
+        return self._REGISTRY.Kind(self._kinds)
+
+    @property
+    def quantity(self):
+        return self._REGISTRY.Quantity(self.magnitude, self.units)
+
+    @property
+    def q(self):
+        return self._REGISTRY.Quantity(self.magnitude, self.units)
+
+    def _mul_div(self, other, op):
+        if isinstance(other, QuantityKind):
+            result = op(self.quantity, other.quantity)
+            result_units_container = op(self._kinds, other._kinds)
+
+            # loop through kind (dimension) definitions.
+            # find one where the reference matches the result_units_container
+            for dim in self._REGISTRY._dimensions.values():
+                if (
+                    hasattr(dim, "reference")
+                    and dim.reference == result_units_container
+                ):
+                    return result.to_kind(dim.name)
+            raise ValueError(
+                f"Cannot {op} quantities with kinds {self.kinds} and {other.kinds}"
+            )
+        else:
+            return op(self.quantity, other)
+
+    def __mul__(self, other):
+        return self._mul_div(other, operator.mul)
+
+    def __div__(self, other):
+        return self._mul_div(other, operator.truediv)
+
+    def __truediv__(self, other):
+        return self._mul_div(other, operator.truediv)
 
 
-
-
-class KindKind(PrettyIPython, BaseSharedRegistryObject):
-    """Implements a class to describe a unit supporting math operations"""
+class KindKind(PrettyIPython, SharedRegistryObject):
+    """Implements a class to describe a kind supporting math operations"""
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
@@ -128,23 +191,17 @@ class KindKind(PrettyIPython, BaseSharedRegistryObject):
 
     def __init__(self, kinds) -> None:
         super().__init__()
-        if isinstance(kinds, UnitsContainer) and kinds.all_kinds():
+        if isinstance(kinds, KindKind):
+            self._kinds = kinds._kinds
+        elif isinstance(kinds, UnitsContainer) and kinds.all_kinds():
             self._kinds = kinds
         elif isinstance(kinds, str):
-            self._kinds = self._REGISTRY._parse_kinds_as_container(kinds)
-        # super().__init__()
-        # if isinstance(units, (UnitsContainer, UnitDefinition)):
-        #     self._kinds = units
-        # elif isinstance(units, str):
-        #     self._kinds = self._REGISTRY.parse_units(units)._kinds
-        # elif isinstance(units, KindKind):
-        #     self._kinds = units._kinds
-        # else:
-        #     raise TypeError(
-        #         "units must be of type str, Unit or " "UnitsContainer; not {}.".format(
-        #             type(units)
-        #         )
-        #     )
+            print(kinds, 1)
+            self._kinds = self._REGISTRY.parse_kinds(kinds)._kinds
+        else:
+            raise TypeError(
+                "kinds must be of type str, UnitsContainer; not {}.".format(type(kinds))
+            )
 
     def __copy__(self) -> KindKind:
         ret = self.__class__(self._kinds)

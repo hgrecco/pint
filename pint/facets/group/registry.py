@@ -17,7 +17,12 @@ if TYPE_CHECKING:
     from ..._typing import Unit, UnitsContainer
 
 from ...util import create_class_with_registry, to_units_container
-from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
+from ..plain import (
+    GenericPlainRegistry,
+    QuantityT,
+    UnitDefinition,
+    UnitT,
+)
 from . import objects
 from .definitions import GroupDefinition
 
