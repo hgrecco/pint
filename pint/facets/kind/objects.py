@@ -109,7 +109,7 @@ class QuantityKind(KindQuantity, SharedRegistryObject):
                     "units must be of type str, PlainQuantity or "
                     "UnitsContainer; not {}.".format(type(units))
                 )
-        if isinstance(value, cls):
+        if isinstance(value, PlainQuantity):
             magnitude = value.to(units)._magnitude
         else:
             magnitude = _to_magnitude(
@@ -121,17 +121,15 @@ class QuantityKind(KindQuantity, SharedRegistryObject):
 
         return inst
 
-    def __repr__(self):
-        return "<QuantityKind({}, {}, {})>".format(
-            self.magnitude, self._kinds, self.units
-        )
+    def __repr__(self) -> str:
+        return f"<QuantityKind({self._magnitude}, {self._units}, {self._kinds})>"
 
     def __str__(self):
         return f"{self}"
 
-    # def __format__(self, spec):
-    #     spec = spec or self._REGISTRY.default_format
-    #     return self._REGISTRY.formatter.format_measurement(self, spec)
+    def __format__(self, spec):
+        spec = spec or self._REGISTRY.default_format
+        return self._REGISTRY.formatter.format_quantitykind(self, spec)
 
     @property
     def kinds(self) -> KindKind:
