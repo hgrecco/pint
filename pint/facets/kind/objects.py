@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from ...compat import NUMERIC_TYPES, _to_magnitude
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer, logger
-from .definitions import UnitDefinition
+from ..plain.definitions import UnitDefinition
 
 if TYPE_CHECKING:
     pass

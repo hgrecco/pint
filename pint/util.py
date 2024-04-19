@@ -961,10 +961,21 @@ def _is_dim(name: str) -> bool:
     return name[0] == "[" and name[-1] == "]"
 
 
-class BaseSharedRegistryObject:
-    """Base class for object keeping a reference to the registree."""
+class SharedRegistryObject:
+    """
+    Such object are for now Quantity and Unit, in a number of places it is
+    that an object from this class has a '_units' attribute.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    """
 
     _REGISTRY: ClassVar[UnitRegistry]
+    _units: UnitsContainer
 
     def __new__(cls, *args, **kwargs):
         inst = object.__new__(cls)
@@ -1004,21 +1015,6 @@ class BaseSharedRegistryObject:
         else:
             return False
 
-
-class SharedRegistryObject(BaseSharedRegistryObject):
-    """
-    Such object are for now Quantity and Unit, in a number of places it is
-    that an object from this class has a '_units' attribute.
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-
-    """
-
-    _units: UnitsContainer
 
 
 class PrettyIPython:
