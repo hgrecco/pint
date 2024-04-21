@@ -296,6 +296,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         #: Might contain prefixed units.
         self._units: dict[str, UnitDefinition] = {}
 
+        #: Map kind name (string) to a set of kind UnitContainers that can be converted to that kind
+        self._kind_relations: dict[str, set[UnitsContainer]] = {}
+
         #: List base unit names
         self._base_units: list[str] = []
 
@@ -561,6 +564,17 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             if dim_name not in self._dimensions:
                 self._add_dimension(DimensionDefinition(dim_name))
         self._helper_adder(definition, self._dimensions, None)
+
+        for kind, container in self._rearrange_dimension_definition(definition):
+            self._kind_relations.setdefault(kind, set()).add(container)
+
+    def _rearrange_dimension_definition(self, definition: DimensionDefinition):
+        # rearrange to give a UnitContainer that is dimensionless
+        dimensionless = definition.reference * UnitsContainer({definition.name: -1})
+        return [
+            (kind, (dimensionless / UnitsContainer({kind: exp})) ** (-1 / exp))
+            for kind, exp in dimensionless.items()
+        ]
 
     def _add_prefix(self, definition: PrefixDefinition) -> None:
         self._helper_adder(definition, self._prefixes, None)
@@ -979,6 +993,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         return self._cache.dimensional_equivalents.setdefault(src_dim, frozenset())
 
     def get_compatible_kinds(self, dimensionality: UnitsContainer) -> frozenset[str]:
+        # TODO: Change this to return KindT
         return self._cache.kind_dimensional_equivalents.setdefault(
             dimensionality, frozenset()
         )

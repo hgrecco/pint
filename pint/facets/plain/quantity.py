@@ -73,30 +73,6 @@ T = TypeVar("T", bound=Magnitude)
 def ireduce_dimensions(f):
     def wrapped(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
-        # TODO: Implement this for div, maybe move to mul and div funcs
-        if hasattr(self, "_kinds") and hasattr(args[0], "_kinds"):
-            if "mul" in args[1].__name__:
-                result_units_container = self._kinds * args[0]._kinds
-                for dim in self._REGISTRY._dimensions.values():
-                    if (
-                        hasattr(dim, "reference")
-                        and dim.reference == result_units_container
-                    ):
-                        return result.to_kind(dim.name)
-                raise ValueError(
-                    f"Cannot multiply quantities with kinds {self.kinds} and {args[0].kinds}"
-                )
-            elif "div" in args[1].__name__:
-                result_units_container = self._kinds / args[0]._kinds
-                for dim in self._REGISTRY._dimensions.values():
-                    if (
-                        hasattr(dim, "reference")
-                        and dim.reference == result_units_container
-                    ):
-                        return result.to_kind(dim.name)
-                raise ValueError(
-                    f"Cannot divide quantities with kinds {self.kinds} and {args[0].kinds}"
-                )
         try:
             if result._REGISTRY.autoconvert_to_preferred:
                 result.ito_preferred()

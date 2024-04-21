@@ -31,13 +31,13 @@ from .plain import (
 
 if TYPE_CHECKING:
     from ...compat import Locale
+    from ...facets.kind import KindKind, QuantityKind
     from ...facets.measurement import Measurement
     from ...facets.plain import (
         MagnitudeT,
         PlainQuantity,
         PlainUnit,
     )
-    from ...facets.kind import KindKind, QuantityKind
     from ...registry import UnitRegistry
 
 
@@ -180,7 +180,7 @@ class FullFormatter(BaseFormatter):
             length=babel_kwds.get("length", None),
             locale=locale,
         )
-        
+
     def format_quantitykind(
         self,
         quantitykind: QuantityKind | Iterable[tuple[str, Any]],
@@ -193,7 +193,6 @@ class FullFormatter(BaseFormatter):
         return self.get_formatter(uspec).format_quantitykind(
             quantitykind, uspec, sort_func=sort_func, **babel_kwds
         )
-
 
     def format_measurement(
         self,

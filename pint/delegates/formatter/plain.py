@@ -39,7 +39,7 @@ from ._spec_helpers import (
 )
 
 if TYPE_CHECKING:
-    from ...facets.kind import KindKind
+    from ...facets.kind import KindKind, QuantityKind
     from ...facets.measurement import Measurement
     from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
@@ -64,7 +64,7 @@ class BaseFormatter:
         """
         kind = kind._kinds
         return self.format_unit(kind, uspec, sort_func, **babel_kwds)
-        
+
     def format_quantitykind(
         self,
         quantitykind: QuantityKind,
@@ -87,7 +87,6 @@ class BaseFormatter:
         k = self.format_kind(quantitykind.kinds, uspec, sort_func, **babel_kwds)
         return mu + " " + k
 
-    
 
 class DefaultFormatter(BaseFormatter):
     """Simple, localizable plain text formatter.
@@ -148,7 +147,6 @@ class DefaultFormatter(BaseFormatter):
             power_fmt="{} ** {}",
             parentheses_fmt=r"({})",
         )
-
 
     def format_quantity(
         self,

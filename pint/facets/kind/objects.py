@@ -11,7 +11,6 @@ from __future__ import annotations
 import copy
 import locale
 import operator
-from numbers import Number
 from typing import TYPE_CHECKING
 
 from ...compat import NUMERIC_TYPES, _to_magnitude
@@ -25,8 +24,6 @@ from typing import Generic
 
 from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 
-MISSING = object()
-
 
 class KindQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     def to_kind(self, kind):
@@ -37,7 +34,8 @@ class KindQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
 
 class KindUnit(PlainUnit):
-    pass
+    def compatible_kinds(self):
+        return self._REGISTRY.get_compatible_kinds(self.dimensionality)
 
 
 class QuantityKind(KindQuantity, SharedRegistryObject):
@@ -87,6 +85,8 @@ class QuantityKind(KindQuantity, SharedRegistryObject):
             kk = inst._REGISTRY.Kind(kinds)
             if kk.preferred_unit:
                 units = kk.preferred_unit
+            elif isinstance(value, PlainQuantity):
+                units = value.units
             else:
                 raise ValueError(
                     "units must be provided if value is not a Quantity and no preferred unit is defined for the kind."
@@ -150,21 +150,17 @@ class QuantityKind(KindQuantity, SharedRegistryObject):
         return self._REGISTRY.Quantity(self.magnitude, self.units)
 
     def _mul_div(self, other, op):
-        if isinstance(other, QuantityKind):
-            result = op(self.quantity, other.quantity)
-            result_units_container = op(self._kinds, other._kinds)
+        if self._check(other):
+            if isinstance(other, QuantityKind):
+                result = op(self.quantity, other.quantity)
+                result_units_container = op(self._kinds, other._kinds)
 
-            # loop through kind (dimension) definitions.
-            # find one where the reference matches the result_units_container
-            for dim in self._REGISTRY._dimensions.values():
-                if (
-                    hasattr(dim, "reference")
-                    and dim.reference == result_units_container
-                ):
-                    return result.to_kind(dim.name)
-            raise ValueError(
-                f"Cannot {op} quantities with kinds {self.kinds} and {other.kinds}"
-            )
+                for kind, relations in self._REGISTRY._kind_relations.items():
+                    if result_units_container in relations:
+                        return result.to_kind(kind)
+                return result.to_kind(result_units_container)
+        elif isinstance(other, NUMERIC_TYPES):
+            return op(self.quantity, other).to_kind(self._kinds)
         else:
             return op(self.quantity, other)
 
@@ -176,6 +172,21 @@ class QuantityKind(KindQuantity, SharedRegistryObject):
 
     def __truediv__(self, other):
         return self._mul_div(other, operator.truediv)
+
+    def __eq__(self, other):
+        if isinstance(other, QuantityKind):
+            return self.q == other.q.to(self.units) and self.kinds == other.kinds
+        else:
+            return False
+
+    def __pow__(self, other) -> KindKind:
+        if isinstance(other, NUMERIC_TYPES):
+            result_q = self.q**other
+            return self.__class__(result_q.m, self._kinds**other, result_q.u)
+
+        else:
+            mess = f"Cannot power KindKind by {type(other)}"
+            raise TypeError(mess)
 
 
 class KindKind(PrettyIPython, SharedRegistryObject):
@@ -209,8 +220,8 @@ class KindKind(PrettyIPython, SharedRegistryObject):
         ret = self.__class__(copy.deepcopy(self._kinds, memo))
         return ret
 
-    # def __format__(self, spec: str) -> str:
-    #     return self._REGISTRY.formatter.format_unit(self, spec)
+    def __format__(self, spec: str) -> str:
+        return self._REGISTRY.formatter.format_kind(self, spec)
 
     def __str__(self) -> str:
         return str(self._kinds)
@@ -220,9 +231,6 @@ class KindKind(PrettyIPython, SharedRegistryObject):
 
     def __repr__(self) -> str:
         return f"<Kind('{self._kinds}')>"
-
-    def __format__(self, spec: str) -> str:
-        return str(self)
 
     @property
     def dimensionless(self) -> bool:
@@ -248,102 +256,57 @@ class KindKind(PrettyIPython, SharedRegistryObject):
     @property
     def preferred_unit(self) -> UnitsContainer:
         units = UnitsContainer()
-        for kind in self._kinds:
+        for kind, exp in self._kinds.items():
             kind_definition = self._REGISTRY._dimensions[kind]
             if (
                 hasattr(kind_definition, "preferred_unit")
                 and kind_definition.preferred_unit
             ):
-                units = (
-                    units * self._REGISTRY.Unit(kind_definition.preferred_unit)._units
+                units *= (
+                    self._REGISTRY.Unit(kind_definition.preferred_unit)._units ** exp
                 )
             else:
                 # kind = "[torque]"
-                base_dimensions = KindKind(UnitsContainer({kind: 1})).dimensionality
-                units = units * self._REGISTRY._get_base_units_for_dimensionality(
-                    base_dimensions
+                base_dimensions = self.__class__(
+                    UnitsContainer({kind: 1})
+                ).dimensionality
+                units *= (
+                    self._REGISTRY._get_base_units_for_dimensionality(base_dimensions)
+                    ** exp
                 )
         return units
 
-    # def compatible_units(self, *contexts):
-    #     if contexts:
-    #         with self._REGISTRY.context(*contexts):
-    #             return self._REGISTRY.get_compatible_units(self)
+    def compatible_units(self, *contexts):
+        return self._REGISTRY.Unit(self.preferred_unit).compatible_units(*contexts)
 
-    #     return self._REGISTRY.get_compatible_units(self)
+    def kind_relations(self):
+        # TODO: Find a way to do for compound kinds
+        if len(self._kinds) == 1:
+            kind_name = list(self._kinds.keys())[0]
+            return self._REGISTRY._kind_relations[kind_name]
 
-    # def is_compatible_with(
-    #     self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
-    # ) -> bool:
-    #     """check if the other object is compatible
+    def _mul_div(self, other, op):
+        if self._check(other) and isinstance(other, (KindKind, QuantityKind)):
+            result_units_container = op(self._kinds, other._kinds)
 
-    #     Parameters
-    #     ----------
-    #     other
-    #         The object to check. Treated as dimensionless if not a
-    #         Quantity, KindKind or str.
-    #     *contexts : str or pint.Context
-    #         Contexts to use in the transformation.
-    #     **ctx_kwargs :
-    #         Values for the Context/s
-
-    #     Returns
-    #     -------
-    #     bool
-    #     """
-    #     from .quantity import PlainQuantity
-
-    #     if contexts or self._REGISTRY._active_ctx:
-    #         try:
-    #             (1 * self).to(other, *contexts, **ctx_kwargs)
-    #             return True
-    #         except DimensionalityError:
-    #             return False
-
-    #     if isinstance(other, (PlainQuantity, KindKind)):
-    #         return self.dimensionality == other.dimensionality
-
-    #     if isinstance(other, str):
-    #         return (
-    #             self.dimensionality == self._REGISTRY.parse_units(other).dimensionality
-    #         )
-
-    #     return self.dimensionless
+            for kind, relations in self._REGISTRY._kind_relations.items():
+                if result_units_container in relations:
+                    return self.__class__(kind)
+            return self.__class__(result_units_container)
+        raise ValueError(
+            f"Cannot {op} KindKind by {type(other)}. Use KindKind or QuantityKind instead."
+        )
 
     def __mul__(self, other):
-        if self._check(other):
-            if isinstance(other, self.__class__):
-                return self.__class__(self._kinds * other._kinds)
-            else:
-                qself = self._REGISTRY.Quantity(1, self._kinds)
-                return qself * other
-
-        if isinstance(other, Number) and other == 1:
-            return self._REGISTRY.Quantity(other, self._kinds)
-
-        return self._REGISTRY.Quantity(1, self._kinds) * other
+        return self._mul_div(other, operator.mul)
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        if self._check(other):
-            if isinstance(other, self.__class__):
-                return self.__class__(self._kinds / other._kinds)
-            else:
-                qself = 1 * self
-                return qself / other
-
-        return self._REGISTRY.Quantity(1 / other, self._kinds)
+        return self._mul_div(other, operator.truediv)
 
     def __rtruediv__(self, other):
-        # As KindKind and Quantity both handle truediv with each other rtruediv can
-        # only be called for something different.
-        if isinstance(other, NUMERIC_TYPES):
-            return self._REGISTRY.Quantity(other, 1 / self._kinds)
-        elif isinstance(other, UnitsContainer):
-            return self.__class__(other / self._kinds)
-
-        return NotImplemented
+        return self._mul_div(other, operator.truediv)
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
@@ -360,28 +323,10 @@ class KindKind(PrettyIPython, SharedRegistryObject):
         return self._kinds.__hash__()
 
     def __eq__(self, other) -> bool:
-        # We compare to the plain class of KindKind because each KindKind class is
-        # unique.
         if self._check(other):
             if isinstance(other, self.__class__):
                 return self._kinds == other._kinds
-            else:
-                return other == self._REGISTRY.Quantity(1, self._kinds)
-
-        elif isinstance(other, NUMERIC_TYPES):
-            return other == self._REGISTRY.Quantity(1, self._kinds)
-
-        else:
-            return self._kinds == other
+        return False
 
     def __ne__(self, other) -> bool:
         return not (self == other)
-
-    # @property
-    # def systems(self):
-    #     out = set()
-    #     for uname in self._kinds.keys():
-    #         for sname, sys in self._REGISTRY._systems.items():
-    #             if uname in sys.members:
-    #                 out.add(sname)
-    #     return frozenset(out)

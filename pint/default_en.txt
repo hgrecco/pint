@@ -122,13 +122,15 @@ count = []
 
 @import constants_en.txt
 
-
 #### UNITS ####
 # Common and less common, grouped by quantity.
 # Conversion factors are exact (except when noted),
 # although floating-point conversion may introduce inaccuracies
 
 # Angle
+[arc_length] = [length]
+[radius] = [length]
+[angle] = [arc_length] / [radius]
 turn = 2 * π * radian = _ = revolution = cycle = circle
 degree = π / 180 * radian = deg = arcdeg = arcdegree = angular_degree
 arcminute = degree / 60 = arcmin = arc_minute = angular_minute
@@ -232,6 +234,7 @@ stere = meter ** 3
 # Frequency
 [frequency] = 1 / [time]
 hertz = 1 / second = Hz
+[angular_frequency] = [angle] / [time]
 revolutions_per_minute = revolution / minute = rpm
 revolutions_per_second = revolution / second = rps
 counts_per_second = count / second = cps
@@ -288,8 +291,14 @@ ton_TNT = 1e9 * calorie = tTNT
 tonne_of_oil_equivalent = 1e10 * international_calorie = toe
 atmosphere_liter = atmosphere * liter = atm_l
 
+# Torque
+[moment_arm] = [length] = m
+[torque] = [force] * [moment_arm] = N m
+foot_pound = foot * force_pound = ft_lb = footpound
+
 # Power
-[power] = [energy] / [time]
+# TODO: implement multiple relations for kinds
+[power] = [energy] / [time]# = [torque] * [angular_frequency] = W
 watt = joule / second = W
 volt_ampere = volt * ampere = VA
 horsepower = 550 * foot * force_pound / second = hp = UK_horsepower = hydraulic_horsepower
@@ -331,10 +340,6 @@ foot_H2O = foot * water * g_0 = ftH2O = feet_H2O
 centimeter_H2O = centimeter * water * g_0 = cmH2O = cm_H2O
 sound_pressure_level = 20e-6 * pascal = SPL
 
-# Torque
-[moment_arm] = [length] = m
-[torque] = [force] * [moment_arm] = N m
-foot_pound = foot * force_pound = ft_lb = footpound
 
 # Viscosity
 [viscosity] = [pressure] * [time]

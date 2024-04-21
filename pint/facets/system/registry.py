@@ -227,8 +227,11 @@ class GenericSystemRegistry(
     ) -> UnitsContainerT:
         if system is None:
             system = self._default_system_name
-        bu = self.get_system(system, False).base_units
-        bu = [tuple(val[1])[0] for val in bu.items()]
+        sys_units = self.get_system(system, False).base_units
+        bu = [
+            u if u not in sys_units else tuple(sys_units[u])[0]
+            for u in self._base_units
+        ]
 
         # maps dimensionality to base units, {'[length]': 'meter', ...}
         base_units_map = {
