@@ -235,32 +235,31 @@ class DerivedDimensionDefinition(
         if not (s.startswith("[") and "=" in s):
             return None
 
-        name, value, *aliases = (p.strip() for p in s.split("="))
+        name, value, *alt_refs = (p.strip() for p in s.split("="))
 
         preferred_unit = None
-        if aliases:
-            if aliases[0] == "_":
-                aliases = aliases[1:]
-            else:
-                preferred_unit, *aliases = aliases
+        if alt_refs:
+            if "[" not in alt_refs[-1]:
+                preferred_unit = alt_refs[-1]
+                alt_refs = alt_refs[:-1]
+        else:
+            alt_refs = []
 
-            aliases = tuple(alias for alias in aliases if alias not in ("", "_"))
+        def to_dim_container(string):
+            try:
+                reference = config.to_dimension_container(string)
+            except common.DefinitionSyntaxError as exc:
+                return common.DefinitionSyntaxError(
+                    f"In {name} derived dimensions must only be referenced "
+                    f"to dimensions. {exc}"
+                )
+            return reference
 
-        if aliases:
-            return common.DefinitionSyntaxError(
-                "Derived dimensions cannot have aliases."
-            )
+        reference = to_dim_container(value)
+        alternate_references = tuple([to_dim_container(ref) for ref in alt_refs])
 
         try:
-            reference = config.to_dimension_container(value)
-        except common.DefinitionSyntaxError as exc:
-            return common.DefinitionSyntaxError(
-                f"In {name} derived dimensions must only be referenced "
-                f"to dimensions. {exc}"
-            )
-
-        try:
-            return cls(name.strip(), reference, preferred_unit)
+            return cls(name.strip(), reference, preferred_unit, alternate_references)
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 

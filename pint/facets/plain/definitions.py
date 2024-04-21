@@ -236,22 +236,19 @@ class DerivedDimensionDefinition(DimensionDefinition):
     reference: UnitsContainer
     # preferred unit
     preferred_unit: str | None = None
+    alternate_references: ty.Tuple[UnitsContainer, ...] = ()
 
     @property
     def is_base(self) -> bool:
         return False
 
-    def __post_init__(self):
-        if not errors.is_valid_dimension_name(self.name):
-            raise self.def_err(errors.MSG_INVALID_DIMENSION_NAME)
-
-        if not all(map(errors.is_dim, self.reference.keys())):
-            return self.def_err(
+    def _validate_reference(self, reference: UnitsContainer) -> None:
+        if not all(map(errors.is_dim, reference.keys())):
+            raise self.def_err(
                 "derived dimensions must only reference other dimensions"
             )
-
         invalid = tuple(
-            itertools.filterfalse(errors.is_valid_dimension_name, self.reference.keys())
+            itertools.filterfalse(errors.is_valid_dimension_name, reference.keys())
         )
 
         if invalid:
@@ -259,6 +256,14 @@ class DerivedDimensionDefinition(DimensionDefinition):
                 f"refers to {', '.join(invalid)} that "
                 + errors.MSG_INVALID_DIMENSION_NAME
             )
+
+    def __post_init__(self):
+        if not errors.is_valid_dimension_name(self.name):
+            raise self.def_err(errors.MSG_INVALID_DIMENSION_NAME)
+
+        self._validate_reference(self.reference)
+        for ref in self.alternate_references:
+            self._validate_reference(ref)
 
 
 @dataclass(frozen=True)

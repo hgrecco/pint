@@ -227,7 +227,6 @@ class TestKind:
         # assert Kind("[force]") in newton.compatible_kinds()
         assert "[force]" in newton.compatible_kinds()
 
-    @pytest.mark.xfail(reason="Need to implement multiple relations for a kind")
     def test_waterpump(self):
         ureg = UnitRegistry()
         Q_ = ureg.Quantity

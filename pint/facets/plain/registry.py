@@ -565,12 +565,20 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 self._add_dimension(DimensionDefinition(dim_name))
         self._helper_adder(definition, self._dimensions, None)
 
-        for kind, container in self._rearrange_dimension_definition(definition):
+        for kind, container in self._rearrange_dimension_definition(
+            definition.name, definition.reference
+        ):
             self._kind_relations.setdefault(kind, set()).add(container)
 
-    def _rearrange_dimension_definition(self, definition: DimensionDefinition):
+        for alt_ref in definition.alternate_references:
+            for kind, container in self._rearrange_dimension_definition(
+                definition.name, alt_ref
+            ):
+                self._kind_relations.setdefault(kind, set()).add(container)
+
+    def _rearrange_dimension_definition(self, name, reference):
         # rearrange to give a UnitContainer that is dimensionless
-        dimensionless = definition.reference * UnitsContainer({definition.name: -1})
+        dimensionless = reference * UnitsContainer({name: -1})
         return [
             (kind, (dimensionless / UnitsContainer({kind: exp})) ** (-1 / exp))
             for kind, exp in dimensionless.items()

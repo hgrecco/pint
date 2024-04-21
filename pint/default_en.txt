@@ -297,8 +297,7 @@ atmosphere_liter = atmosphere * liter = atm_l
 foot_pound = foot * force_pound = ft_lb = footpound
 
 # Power
-# TODO: implement multiple relations for kinds
-[power] = [energy] / [time]# = [torque] * [angular_frequency] = W
+[power] = [energy] / [time] = [torque] * [angular_frequency] = [volumetric_flow_rate] * [pressure] = W
 watt = joule / second = W
 volt_ampere = volt * ampere = VA
 horsepower = 550 * foot * force_pound / second = hp = UK_horsepower = hydraulic_horsepower
