@@ -1884,6 +1884,28 @@ class TestTimedelta(QuantityTestCase):
         with pytest.raises(DimensionalityError):
             after -= d
 
+    def test_init_quantity(self):
+        # 608
+        td = datetime.timedelta(seconds=3)
+        assert self.Q_(td) == 3 * self.ureg.second
+        q_hours = self.Q_(td, "hours")
+        assert q_hours == 3 * self.ureg.second
+        assert q_hours.units == self.ureg.hour
+
+    @helpers.requires_numpy
+    def test_init_quantity_np(self):
+        td = np.timedelta64(3, "s")
+        assert self.Q_(td) == 3 * self.ureg.second
+        q_hours = self.Q_(td, "hours")
+        assert q_hours == 3 * self.ureg.second
+        assert q_hours.units == self.ureg.hour
+
+        td = np.array([3], dtype="timedelta64")
+        assert self.Q_(td) == np.array([3]) * self.ureg.second
+        q_hours = self.Q_(td, "hours")
+        assert q_hours == np.array([3]) * self.ureg.second
+        assert q_hours.units == self.ureg.hour
+
 
 # TODO: do not subclass from QuantityTestCase
 class TestCompareNeutral(QuantityTestCase):
