@@ -203,7 +203,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             return copy.copy(value)
 
         inst = SharedRegistryObject().__new__(cls)
-        if units is None:
+        if units is None and isinstance(value, datetime.timedelta):
+            units = inst.UnitsContainer({"s": 1})
+        elif units is None:
             units = inst.UnitsContainer()
         else:
             if isinstance(units, (UnitsContainer, UnitDefinition)):
@@ -223,6 +225,11 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                     "units must be of type str, PlainQuantity or "
                     "UnitsContainer; not {}.".format(type(units))
                 )
+        if isinstance(value, datetime.timedelta):
+            inst._magnitude = value.total_seconds()
+            inst._units = inst.UnitsContainer({"s": 1})
+            return inst.to(units)
+
         if isinstance(value, cls):
             magnitude = value.to(units)._magnitude
         else:
