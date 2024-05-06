@@ -1201,3 +1201,20 @@ def test_issues_1841_xfail():
 
     # this prints "2*pi hour * radian", not "2*pi radian * hour" unless sort_dims is True
     # print(q)
+
+
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (
+            "8.989e9 newton * meter^2 / coulomb^2",
+            r"\SI[]{8.989E+9}{\meter\squared\newton\per\coulomb\squared}",
+        ),
+        ("5 * meter / second", r"\SI[]{5}{\meter\per\second}"),
+        ("2.2 * meter^4", r"\SI[]{2.2}{\meter\tothe{4}}"),
+        ("2.2 * meter^-4", r"\SI[]{2.2}{\per\meter\tothe{4}}"),
+    ],
+)
+def test_issue1772(given, expected):
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    assert f"{ureg(given):Lx}" == expected
