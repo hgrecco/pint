@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import datetime
 import math
 import sys
 from collections.abc import Callable, Iterable, Mapping
@@ -84,6 +85,7 @@ try:
     import numpy as np
     from numpy import datetime64 as np_datetime64
     from numpy import ndarray
+    from numpy import timedelta64 as np_timedelta64
 
     HAS_NUMPY = True
     NUMPY_VER = np.__version__
@@ -134,6 +136,9 @@ except ImportError:
         pass
 
     class np_datetime64:
+        pass
+
+    class np_timedelta64:
         pass
 
     HAS_NUMPY = False
@@ -291,6 +296,26 @@ def is_duck_array_type(cls: type) -> bool:
         and hasattr(cls, "ndim")
         and hasattr(cls, "dtype")
     )
+
+
+def is_timedelta(obj: Any) -> bool:
+    """Check if the object is a datetime object."""
+    return isinstance(obj, datetime.timedelta) or isinstance(obj, np_timedelta64)
+
+
+def is_timedelta_array(obj: Any) -> bool:
+    """Check if the object is a datetime array."""
+    if isinstance(obj, ndarray) and obj.dtype == np_timedelta64:
+        return True
+
+
+def to_seconds(obj: Any) -> float:
+    """Convert a timedelta object to seconds."""
+    if isinstance(obj, datetime.timedelta):
+        return obj.total_seconds()
+    elif isinstance(obj, np_timedelta64) or obj.dtype == np_timedelta64:
+        return obj.astype(float)
+    raise TypeError(f"Cannot convert {obj!r} to seconds.")
 
 
 def is_duck_array(obj: type) -> bool:
