@@ -7,7 +7,7 @@ authors:
   - name: Hector Grecco
     orcid: ---
     affiliation:
-  - name: Author Banana
+  - name: Jules Chéron
     orcid: ---
     affiliation:
   - name: Author Cherry
@@ -31,9 +31,9 @@ It is distributed with a comprehensive list of physical units, prefixes and cons
 
 # Statement of need
 
-Python is commonly used for scientific data analysis but does not natively provide unit support. Pint provides Quantity objects that store numeric data such as ints, floats or arrays and their units, and propogates or converts units when performing arithmetic operations. This removes the need for researchers to keep track of units and conversion factors, significantly simplifying numerical analysis and reducing the likelihood of errors. 
+Python is commonly used for scientific data analysis but does not natively provide unit support. Pint provides Quantity objects that store numeric data such as ints, floats or arrays and their units, and propogates or converts units when performing arithmetic operations. This removes the need for researchers to keep track of units and conversion factors, significantly simplifying numerical analysis and reducing the likelihood of errors.
 
-Pint and astropy.units are the two widely used python units libraries. [https://sci.bban.top/pdf/10.1145/3276604.3276613.pdf#page=12&zoom=100,72,216] Both  are mature libraries with over 10 years of development and have similar functionality. Pint's main advantages are its simple unit definition file, and integrations with Pandas, Xarray and uncertainties.
+Pint and astropy.units [@astropy_journal] are the two widely used python units libraries. [@700_units] Both are mature libraries with over 10 years of development. Unyt [@unyt_journal] is a relatively new library using sympy. All three libraries have similar core functionality.  Pint's main advantages are its simple unit definition file, and integrations with Pandas, Xarray and uncertainties.
 
 ## Key features
 
@@ -47,7 +47,7 @@ Units definitions are loaded from a text file which is simple and easy to edit. 
 
 ### Advanced string formatting
 
-A quantity can be formatted into string using PEP 3101 https://www.python.org/dev/peps/pep-3101/ syntax. Extended conversion flags are given to provide symbolic, LaTeX and pretty formatting. Unit name translation is available if Babel  http://babel.pocoo.org/ is installed.
+A quantity can be formatted into string using PEP 3101 syntax. Extended conversion flags are given to provide symbolic, LaTeX and pretty formatting. Unit name translation is available if Babel [@babel] is installed.
 
 ### Dimensionality checking
 
@@ -61,13 +61,13 @@ Pint handles conversion between units with different reference points, like posi
 
 NumPy ndarrays can be used as the numerical value of a quantity, and its methods and ufuncs are supported including automatic conversion of units. For example numpy.arccos(q) will require a dimensionless q and the units of the output quantity will be radian.
 
-Matplotlib is a comprehensive library for creating static, animated, and interactive visualizations. [https://matplotlib.org/stable/] Pint supports matplotlib's unit API, which automatically labels plot axes with units and converts plotted data to consitent units. 
+Matplotlib is a comprehensive library for creating static, animated, and interactive visualizations. [https://matplotlib.org/stable/] Pint supports matplotlib's unit API, which automatically labels plot axes with units and converts plotted data to consitent units.
 
-The uncertainties package takes the pain and complexity out of uncertainty calculations. [https://github.com/lmfit/uncertainties] Pint provides `Measurement` objects to propogate units and uncertainty in calculations.
+The uncertainties package takes the pain and complexity out of uncertainty calculations. [@uncertainties] Pint provides `Measurement` objects to propogate units and uncertainty in calculations.
 
 ### Integrations for pandas and Xarray
 
-pint-pandas [https://github.com/hgrecco/pint-pandas] provides integration with pandas, 'a fast, powerful, flexible and easy to use open source data analysis and manipulation tool' [pandas.pydata.org] and pint-xarray[https://github.com/xarray-contrib/pint-xarray/] provides integration with xarray, which 'makes working with labelled multi-dimensional arrays in Python simple, efficient, and fun!' [https://docs.xarray.dev/en/stable/]
+pint-pandas [@pint_pandas] provides integration with pandas, 'a fast, powerful, flexible and easy to use open source data analysis and manipulation tool' [pandas.pydata.org] and pint-xarray[@pint_xarray] provides integration with xarray, which 'makes working with labelled multi-dimensional arrays in Python simple, efficient, and fun!' [https://docs.xarray.dev/en/stable/]
 
 
 ### Contexts
