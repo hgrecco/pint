@@ -4,6 +4,7 @@ Pint Changelog
 0.24 (unreleased)
 -----------------
 
+- Implement numpy broadcast_array (Related to issue #981)
 - Nothing changed yet.
 
 
@@ -53,7 +54,6 @@ Pint Changelog
 0.21 (2023-05-01)
 -----------------
 
-- Implement numpy broadcast_array (Related to issue #981)
 - Add PEP621/631 support.
   (Issue #1647)
 - Exposed matplotlib unit formatter (PR #1703)
