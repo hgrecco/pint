@@ -1007,7 +1007,6 @@ for func_str in (
     "vstack",
     "dstack",
     "column_stack",
-    "broadcast_arrays",
 ):
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
