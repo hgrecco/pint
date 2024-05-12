@@ -36,7 +36,7 @@ Which can be pretty printed using the `Pint` formatter:
     >>> numerator = [item for item in result[0].items() if item[1]>0]
     >>> denominator = [item for item in result[0].items() if item[1]<0]
     >>> print(formatter(numerator, denominator))
-    T * V / L
+    V * T / L
 
 You can also apply the Buckingham π theorem associated to a Registry. In this case,
 you can use derived dimensions such as speed:
