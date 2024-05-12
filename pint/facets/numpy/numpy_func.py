@@ -52,6 +52,10 @@ def _is_sequence_with_quantity_elements(obj):
     -------
     True if obj is a sequence and at least one element is a Quantity; False otherwise
     """
+    if np is not None and isinstance(obj, np.ndarray) and not obj.dtype.hasobject:
+        # If obj is a numpy array, avoid looping on all elements
+        # if dtype does not have objects
+        return False
     return (
         iterable(obj)
         and sized(obj)
