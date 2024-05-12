@@ -1212,7 +1212,7 @@ def test_issue1949(registry_empty):
     assert q.units == ureg.in_Hg_gauge
     assert_equal(q.magnitude, 0.0)
 
-    
+
 @pytest.mark.parametrize(
     "given,expected",
     [
