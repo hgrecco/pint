@@ -1,11 +1,11 @@
 # pytest fixtures
+from __future__ import annotations
 
 import pathlib
 
 import pytest
 
 import pint
-
 
 _TINY = """
 yocto- = 1e-24 = y-

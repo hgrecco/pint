@@ -20,10 +20,11 @@ import re
 import typing as ty
 from dataclasses import dataclass
 
-from ..._vendor import flexparser as fp
+import flexparser as fp
+
 from ...facets.group import definitions
-from . import block, common, plain
 from ..base_defparser import PintParsedStatement
+from . import block, common, plain
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,7 @@ class BeginGroup(PintParsedStatement):
     using_group_names: ty.Tuple[str, ...]
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[BeginGroup]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[BeginGroup]:
         if not s.startswith("@group"):
             return None
 
@@ -89,14 +90,6 @@ class GroupDefinition(
         @end
 
     """
-
-    opening: fp.Single[BeginGroup]
-    body: fp.Multi[
-        ty.Union[
-            plain.CommentDefinition,
-            plain.UnitDefinition,
-        ]
-    ]
 
     def derive_definition(self) -> definitions.GroupDefinition:
         return definitions.GroupDefinition(

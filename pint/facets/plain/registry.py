@@ -27,49 +27,43 @@ import copy
 import functools
 import inspect
 import itertools
-import locale
 import pathlib
 import re
 from collections import defaultdict
+from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
 from fractions import Fraction
 from token import NAME, NUMBER
 from tokenize import TokenInfo
-
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
+    Generic,
     TypeVar,
     Union,
-    Generic,
-    Generator,
-    Optional,
 )
-from collections.abc import Iterable, Iterator
 
 if TYPE_CHECKING:
-    from ..context import Context
     from ...compat import Locale
+    from ..context import Context
 
     # from ..._typing import Quantity, Unit
 
-from ..._typing import (
-    QuantityOrUnitLike,
-    UnitLike,
-    QuantityArgument,
-    Scalar,
-    Handler,
-)
+import appdirs
 
 from ... import pint_eval
-from ..._vendor import appdirs
-from ...compat import babel_parse, TypeAlias, Self
+from ..._typing import (
+    Handler,
+    QuantityArgument,
+    QuantityOrUnitLike,
+    Scalar,
+    UnitLike,
+)
+from ...compat import Self, TypeAlias, deprecated
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
-from ...util import ParserHelper
-from ...util import UnitsContainer as UnitsContainer
 from ...util import (
+    ParserHelper,
     _is_dim,
     create_class_with_registry,
     getattr_maybe_raise,
@@ -78,15 +72,16 @@ from ...util import (
     string_preprocessor,
     to_units_container,
 )
+from ...util import UnitsContainer as UnitsContainer
 from .definitions import (
     AliasDefinition,
     CommentDefinition,
     DefaultsDefinition,
     DerivedDimensionDefinition,
     DimensionDefinition,
+    NamedDefinition,
     PrefixDefinition,
     UnitDefinition,
-    NamedDefinition,
 )
 from .objects import PlainQuantity, PlainUnit
 
@@ -96,7 +91,7 @@ _BLOCK_RE = re.compile(r"[ (]")
 
 
 @functools.lru_cache
-def pattern_to_regex(pattern: Union[str, re.Pattern[str]]) -> re.Pattern[str]:
+def pattern_to_regex(pattern: str | re.Pattern[str]) -> re.Pattern[str]:
     # TODO: This has been changed during typing improvements.
     # if hasattr(pattern, "finditer"):
     if not isinstance(pattern, str):
@@ -210,9 +205,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         future release.
     """
 
-    #: Babel.Locale instance or None
-    fmt_locale: Optional[Locale] = None
-
     Quantity: type[QuantityT]
     Unit: type[UnitT]
 
@@ -227,12 +219,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         on_redefinition: str = "warn",
         auto_reduce_dimensions: bool = False,
         autoconvert_to_preferred: bool = False,
-        preprocessors: Optional[list[PreprocessorType]] = None,
-        fmt_locale: Optional[str] = None,
+        preprocessors: list[PreprocessorType] | None = None,
+        fmt_locale: str | None = None,
         non_int_type: NON_INT_TYPE = float,
         case_sensitive: bool = True,
-        cache_folder: Optional[Union[str, pathlib.Path]] = None,
-        separate_format_defaults: Optional[bool] = None,
+        cache_folder: str | pathlib.Path | None = None,
+        separate_format_defaults: bool | None = None,
         mpl_formatter: str = "{:P}",
     ):
         #: Map a definition class to a adder methods.
@@ -255,6 +247,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
 
+        self.formatter = delegates.Formatter(self)
         self._filename = filename
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
@@ -275,7 +268,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self.autoconvert_to_preferred = autoconvert_to_preferred
 
         #: Default locale identifier string, used when calling format_babel without explicit locale.
-        self.set_fmt_locale(fmt_locale)
+        self.formatter.set_locale(fmt_locale)
 
         #: sets the formatter used when plotting with matplotlib
         self.mpl_formatter = mpl_formatter
@@ -292,7 +285,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         #: Map dimension name (string) to its definition (DimensionDefinition).
         self._dimensions: dict[
-            str, Union[DimensionDefinition, DerivedDimensionDefinition]
+            str, DimensionDefinition | DerivedDimensionDefinition
         ] = {}
 
         #: Map unit name (string) to its definition (UnitDefinition).
@@ -402,7 +395,27 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         """
         return iter(sorted(self._units.keys()))
 
-    def set_fmt_locale(self, loc: Optional[str]) -> None:
+    @property
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.fmt_locale"
+    )
+    def fmt_locale(self) -> Locale | None:
+        return self.formatter.locale
+
+    @fmt_locale.setter
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.set_locale"
+    )
+    def fmt_locale(self, loc: str | None):
+        self.formatter.set_locale(loc)
+
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.set_locale"
+    )
+    def set_fmt_locale(self, loc: str | None) -> None:
         """Change the locale used by default by `format_babel`.
 
         Parameters
@@ -410,28 +423,28 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         loc : str or None
             None` (do not translate), 'sys' (detect the system locale) or a locale id string.
         """
-        if isinstance(loc, str):
-            if loc == "sys":
-                loc = locale.getdefaultlocale()[0]
 
-            # We call babel parse to fail here and not in the formatting operation
-            babel_parse(loc)
-
-        self.fmt_locale = loc
+        self.formatter.set_locale(loc)
 
     @property
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.default_format"
+    )
     def default_format(self) -> str:
         """Default formatting string for quantities."""
-        return self.Quantity.default_format
+        return self.formatter.default_format
 
     @default_format.setter
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.default_format"
+    )
     def default_format(self, value: str) -> None:
-        self.Unit.default_format = value
-        self.Quantity.default_format = value
-        self.Measurement.default_format = value
+        self.formatter.default_format = value
 
     @property
-    def cache_folder(self) -> Optional[pathlib.Path]:
+    def cache_folder(self) -> pathlib.Path | None:
         if self._diskcache:
             return self._diskcache.cache_folder
         return None
@@ -440,7 +453,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def non_int_type(self):
         return self._non_int_type
 
-    def define(self, definition: Union[str, type]) -> None:
+    def define(self, definition: str | type) -> None:
         """Add unit to the registry.
 
         Parameters
@@ -482,7 +495,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self,
         definition: NamedDefinition,
         target_dict: dict[str, Any],
-        casei_target_dict: Optional[dict[str, Any]],
+        casei_target_dict: dict[str, Any] | None,
     ) -> None:
         """Helper function to store a definition in the internal dictionaries.
         It stores the definition under its name, symbol and aliases.
@@ -508,7 +521,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         key: str,
         value: NamedDefinition,
         target_dict: dict[str, Any],
-        casei_target_dict: Optional[dict[str, Any]],
+        casei_target_dict: dict[str, Any] | None,
     ) -> None:
         """Helper function to store a definition in the internal dictionaries.
 
@@ -558,7 +571,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._helper_adder(definition, self._units, self._units_casei)
 
     def load_definitions(
-        self, file: Union[Iterable[str], str, pathlib.Path], is_resource: bool = False
+        self, file: Iterable[str] | str | pathlib.Path, is_resource: bool = False
     ):
         """Add units and prefixes defined in a definition text file.
 
@@ -629,9 +642,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
         return self._cache
 
-    def get_name(
-        self, name_or_alias: str, case_sensitive: Optional[bool] = None
-    ) -> str:
+    def get_name(self, name_or_alias: str, case_sensitive: bool | None = None) -> str:
         """Return the canonical name of a unit."""
 
         if name_or_alias == "dimensionless":
@@ -649,8 +660,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         prefix, unit_name, _ = candidates[0]
         if len(candidates) > 1:
             logger.warning(
-                "Parsing {} yield multiple results. "
-                "Options are: {!r}".format(name_or_alias, candidates)
+                f"Parsing {name_or_alias} yield multiple results. Options are: {candidates!r}"
             )
 
         if prefix:
@@ -668,9 +678,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return unit_name
 
-    def get_symbol(
-        self, name_or_alias: str, case_sensitive: Optional[bool] = None
-    ) -> str:
+    def get_symbol(self, name_or_alias: str, case_sensitive: bool | None = None) -> str:
         """Return the preferred alias for a unit."""
         candidates = self.parse_unit_name(name_or_alias, case_sensitive)
         if not candidates:
@@ -679,8 +687,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         prefix, unit_name, _ = candidates[0]
         if len(candidates) > 1:
             logger.warning(
-                "Parsing {} yield multiple results. "
-                "Options are: {!r}".format(name_or_alias, candidates)
+                f"Parsing {name_or_alias} yield multiple results. Options are: {candidates!r}"
             )
 
         return self._prefixes[prefix].symbol + self._units[unit_name].symbol
@@ -699,9 +706,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._get_dimensionality(input_units)
 
-    def _get_dimensionality(
-        self, input_units: Optional[UnitsContainer]
-    ) -> UnitsContainer:
+    def _get_dimensionality(self, input_units: UnitsContainer | None) -> UnitsContainer:
         """Convert a UnitsContainer to plain dimensions."""
         if not input_units:
             return self.UnitsContainer()
@@ -731,7 +736,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for key in ref:
             exp2 = exp * ref[key]
             if _is_dim(key):
-                reg = self._dimensions[key]
+                try:
+                    reg = self._dimensions[key]
+                except KeyError:
+                    raise ValueError(
+                        f"{key} is not defined as dimension in the pint UnitRegistry"
+                    )
                 if isinstance(reg, DerivedDimensionDefinition):
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
                 else:
@@ -875,7 +885,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         except KeyError:
             pass
 
-        accumulators: dict[Optional[str], int] = defaultdict(int)
+        accumulators: dict[str | None, int] = defaultdict(int)
         accumulators[None] = 1
         self._get_root_units_recurse(input_units, 1, accumulators)
 
@@ -894,7 +904,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def get_base_units(
         self,
-        input_units: Union[UnitsContainer, str],
+        input_units: UnitsContainer | str,
         check_nonmult: bool = True,
         system=None,
     ) -> tuple[Scalar, UnitT]:
@@ -926,7 +936,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     # TODO: accumulators breaks typing list[int, dict[str, int]]
     # So we have changed the behavior here
     def _get_root_units_recurse(
-        self, ref: UnitsContainer, exp: Scalar, accumulators: dict[Optional[str], int]
+        self, ref: UnitsContainer, exp: Scalar, accumulators: dict[str | None, int]
     ) -> None:
         """
 
@@ -964,7 +974,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     # TODO: remove context from here
     def is_compatible_with(
-        self, obj1: Any, obj2: Any, *contexts: Union[str, Context], **ctx_kwargs
+        self, obj1: Any, obj2: Any, *contexts: str | Context, **ctx_kwargs
     ) -> bool:
         """check if the other object is compatible
 
@@ -1077,7 +1087,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         return value
 
     def parse_unit_name(
-        self, unit_name: str, case_sensitive: Optional[bool] = None
+        self, unit_name: str, case_sensitive: bool | None = None
     ) -> tuple[tuple[str, str, str], ...]:
         """Parse a unit to identify prefix, unit name and suffix
         by walking the list of prefix and suffix.
@@ -1139,7 +1149,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     @staticmethod
     def _dedup_candidates(
-        candidates: Iterable[tuple[str, str, str]]
+        candidates: Iterable[tuple[str, str, str]],
     ) -> tuple[tuple[str, str, str], ...]:
         """Helper of parse_unit_name.
 
@@ -1161,8 +1171,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def parse_units(
         self,
         input_string: str,
-        as_delta: Optional[bool] = None,
-        case_sensitive: Optional[bool] = None,
+        as_delta: bool | None = None,
+        case_sensitive: bool | None = None,
     ) -> UnitT:
         """Parse a units expression and returns a UnitContainer with
         the canonical names.
@@ -1192,8 +1202,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def parse_units_as_container(
         self,
         input_string: str,
-        as_delta: Optional[bool] = None,
-        case_sensitive: Optional[bool] = None,
+        as_delta: bool | None = None,
+        case_sensitive: bool | None = None,
     ) -> UnitsContainer:
         as_delta = (
             as_delta if as_delta is not None else True
@@ -1254,7 +1264,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def _eval_token(
         self,
         token: TokenInfo,
-        case_sensitive: Optional[bool] = None,
+        case_sensitive: bool | None = None,
         **values: QuantityArgument,
     ):
         """Evaluate a single token using the following rules:
@@ -1304,9 +1314,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self,
         input_string: str,
         pattern: str,
-        case_sensitive: Optional[bool] = None,
+        case_sensitive: bool | None = None,
         many: bool = False,
-    ) -> Optional[Union[list[str], str]]:
+    ) -> list[str] | str | None:
         """Parse a string with a given regex pattern and returns result.
 
         Parameters
@@ -1355,7 +1365,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def parse_expression(
         self: Self,
         input_string: str,
-        case_sensitive: Optional[bool] = None,
+        case_sensitive: bool | None = None,
         **values: QuantityArgument,
     ) -> QuantityT:
         """Parse a mathematical expression including units and return a quantity object.

@@ -13,11 +13,10 @@ import math
 import warnings
 from typing import Any, Generic
 
-from ..plain import PlainQuantity, MagnitudeT
-
 from ..._typing import Shape
-from ...compat import _to_magnitude, np, HAS_NUMPY
+from ...compat import HAS_NUMPY, _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ..plain import MagnitudeT, PlainQuantity
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
@@ -31,7 +30,7 @@ from .numpy_func import (
 
 try:
     import uncertainties.unumpy as unp
-    from uncertainties import ufloat, UFloat
+    from uncertainties import UFloat, ufloat
 
     HAS_UNCERTAINTIES = True
 except ImportError:
@@ -174,6 +173,10 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     @property
     def shape(self) -> Shape:
         return self._magnitude.shape
+
+    @property
+    def dtype(self):
+        return self._magnitude.dtype
 
     @shape.setter
     def shape(self, value):

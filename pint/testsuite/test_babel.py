@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 import pytest
@@ -20,15 +22,15 @@ def test_format(func_registry):
     dirname = os.path.dirname(__file__)
     ureg.load_definitions(os.path.join(dirname, "../xtranslated.txt"))
 
-    distance = 24.0 * ureg.meter
-    assert distance.format_babel(locale="fr_FR", length="long") == "24.0 mètres"
-    time = 8.0 * ureg.second
-    assert time.format_babel(locale="fr_FR", length="long") == "8.0 secondes"
-    assert time.format_babel(locale="ro", length="short") == "8.0 s"
+    distance = 24.1 * ureg.meter
+    assert distance.format_babel(locale="fr_FR", length="long") == "24,1 mètres"
+    time = 8.1 * ureg.second
+    assert time.format_babel(locale="fr_FR", length="long") == "8,1 secondes"
+    assert time.format_babel(locale="ro_RO", length="short") == "8,1 s"
     acceleration = distance / time**2
     assert (
-        acceleration.format_babel(locale="fr_FR", length="long")
-        == "0.375 mètre par seconde²"
+        acceleration.format_babel(spec=".3nP", locale="fr_FR", length="long")
+        == "0,367 mètre par seconde²"
     )
     mks = ureg.get_system("mks")
     assert mks.format_babel(locale="fr_FR") == "métrique"
@@ -40,13 +42,20 @@ def test_registry_locale():
     dirname = os.path.dirname(__file__)
     ureg.load_definitions(os.path.join(dirname, "../xtranslated.txt"))
 
-    distance = 24.0 * ureg.meter
-    assert distance.format_babel(length="long") == "24.0 mètres"
-    time = 8.0 * ureg.second
-    assert time.format_babel(length="long") == "8.0 secondes"
-    assert time.format_babel(locale="ro", length="short") == "8.0 s"
+    distance = 24.1 * ureg.meter
+    assert distance.format_babel(length="long") == "24,1 mètres"
+    time = 8.1 * ureg.second
+    assert time.format_babel(length="long") == "8,1 secondes"
+    assert time.format_babel(locale="ro_RO", length="short") == "8,1 s"
     acceleration = distance / time**2
-    assert acceleration.format_babel(length="long") == "0.375 mètre par seconde²"
+    assert (
+        acceleration.format_babel(spec=".3nC", length="long")
+        == "0,367 mètre/seconde**2"
+    )
+    assert (
+        acceleration.format_babel(spec=".3nP", length="long")
+        == "0,367 mètre par seconde²"
+    )
     mks = ureg.get_system("mks")
     assert mks.format_babel(locale="fr_FR") == "métrique"
 
@@ -63,7 +72,7 @@ def test_unit_format_babel():
     dimensionless_unit = ureg.Unit("")
     assert dimensionless_unit.format_babel() == ""
 
-    ureg.fmt_locale = None
+    ureg.set_fmt_locale(None)
     with pytest.raises(ValueError):
         volume.format_babel()
 
@@ -79,21 +88,21 @@ def test_no_registry_locale(func_registry):
 @helpers.requires_babel()
 def test_str(func_registry):
     ureg = func_registry
-    d = 24.0 * ureg.meter
+    d = 24.1 * ureg.meter
 
-    s = "24.0 meter"
+    s = "24.1 meter"
     assert str(d) == s
     assert "%s" % d == s
     assert f"{d}" == s
 
     ureg.set_fmt_locale("fr_FR")
-    s = "24.0 mètres"
+    s = "24,1 mètres"
     assert str(d) == s
     assert "%s" % d == s
     assert f"{d}" == s
 
     ureg.set_fmt_locale(None)
-    s = "24.0 meter"
+    s = "24.1 meter"
     assert str(d) == s
     assert "%s" % d == s
     assert f"{d}" == s
