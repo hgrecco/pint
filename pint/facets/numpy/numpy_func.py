@@ -741,6 +741,23 @@ for name in ("prod", "nanprod"):
     implement_prod_func(name)
 
 
+@implements("broadcast_arrays", "function")
+def _broadcast_arrays(*args, **kwargs):
+    # Simply need to map input units to onto list of outputs
+    input_units = []
+    unitless_args = []
+    for x in args:
+        if hasattr(x, "units"):
+            input_units.append(x.units)
+            unitless_args.append(x.m)
+        else:
+            input_units.append(1)
+            unitless_args.append(x)
+
+    res = np.broadcast_arrays(*unitless_args, **kwargs)
+    return [out * unit for out, unit in zip(res, input_units)]
+
+
 # Handle mutliplicative functions separately to deal with non-multiplicative units
 def _base_unit_if_needed(a):
     if a._is_multiplicative:
@@ -797,7 +814,6 @@ def implement_mul_func(func):
 
 for func_str in ("cross", "dot"):
     implement_mul_func(func_str)
-
 
 # Implement simple matching-unit or stripped-unit functions based on signature
 
@@ -991,7 +1007,6 @@ for func_str in (
     "vstack",
     "dstack",
     "column_stack",
-    "broadcast_arrays",
 ):
     implement_func(
         "function", func_str, input_units="all_consistent", output_unit="match_input"
