@@ -888,6 +888,26 @@ class TestIssues(QuantityTestCase):
         m = module_registry.Measurement(1, 0.1, "meter")
         assert m.default_format == "~P"
 
+    @helpers.requires_numpy()
+    def test_issue1674(self, module_registry):
+        Q_ = module_registry.Quantity
+        arr_of_q = np.array([Q_(2, "m"), Q_(4, "m")], dtype="object")
+        q_arr = Q_(np.array([1, 2]), "m")
+
+        helpers.assert_quantity_equal(
+            arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m^2")], dtype="object")
+        )
+        helpers.assert_quantity_equal(
+            arr_of_q / q_arr, np.array([Q_(2, ""), Q_(2, "")], dtype="object")
+        )
+
+        arr_of_q = np.array([Q_(2, "m"), Q_(4, "s")], dtype="object")
+        q_arr = Q_(np.array([1, 2]), "m")
+
+        helpers.assert_quantity_equal(
+            arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m s")], dtype="object")
+        )
+
     @helpers.requires_babel()
     def test_issue_1400(self, sess_registry):
         q1 = 3.1 * sess_registry.W
