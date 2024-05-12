@@ -287,7 +287,7 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
 
         result = np.broadcast_arrays(x, y, subok=True)
         helpers.assert_quantity_equal(result, expected)
-        
+
         helpers.assert_quantity_equal(
             np.broadcast_arrays(self.q[:, 1], np.array([1, 2])),
             [np.array([[2, 4], [2, 4]]) * self.ureg.m, np.array([1, 2])],
