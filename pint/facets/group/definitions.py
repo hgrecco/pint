@@ -10,10 +10,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Optional
 
-from ...compat import Self
 from ... import errors
+from ...compat import Self
 from .. import plain
 
 
@@ -31,7 +30,7 @@ class GroupDefinition(errors.WithDefErr):
     @classmethod
     def from_lines(
         cls: type[Self], lines: Iterable[str], non_int_type: type
-    ) -> Optional[Self]:
+    ) -> Self | None:
         # TODO: this is to keep it backwards compatible
         from ...delegates import ParserConfig, txt_defparser
 

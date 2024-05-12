@@ -1,5 +1,7 @@
 """Tests for global UnitRegistry, Unit, and Quantity
 """
+from __future__ import annotations
+
 import pickle
 
 import pytest

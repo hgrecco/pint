@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import operator as op
 import pickle
@@ -286,6 +288,11 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         result = np.broadcast_arrays(x, y, subok=True)
         helpers.assert_quantity_equal(result, expected)
 
+    def test_roll(self):
+        helpers.assert_quantity_equal(
+            np.roll(self.q, 1), [[4, 1], [2, 3]] * self.ureg.m
+        )
+
 
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # https://www.numpy.org/devdocs/reference/routines.math.html
@@ -330,9 +337,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         helpers.assert_quantity_equal(
             np.prod(self.q, axis=axis), [3, 8] * self.ureg.m**2
         )
-        helpers.assert_quantity_equal(
-            np.prod(self.q, where=where), 12 * self.ureg.m**3
-        )
+        helpers.assert_quantity_equal(np.prod(self.q, where=where), 12 * self.ureg.m**3)
 
         with pytest.raises(DimensionalityError):
             np.prod(self.q, axis=axis, where=where)
@@ -380,12 +385,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     def test_cumprod_numpy_func(self):
         with pytest.raises(DimensionalityError):
             np.cumprod(self.q)
-        with pytest.raises(DimensionalityError):
-            np.cumproduct(self.q)
         helpers.assert_quantity_equal(np.cumprod(self.q / self.ureg.m), [1, 2, 6, 24])
-        helpers.assert_quantity_equal(
-            np.cumproduct(self.q / self.ureg.m), [1, 2, 6, 24]
-        )
         helpers.assert_quantity_equal(
             np.cumprod(self.q / self.ureg.m, axis=1), [[1, 2], [3, 12]]
         )
@@ -1016,6 +1016,11 @@ class TestNumpyUnclassified(TestNumpyMethods):
         u.shape = 4, 3
         assert u.magnitude.shape == (4, 3)
 
+    def test_dtype(self):
+        u = self.Q_(np.arange(12, dtype="uint32"))
+
+        assert u.dtype == "uint32"
+
     @helpers.requires_array_function_protocol()
     def test_shape_numpy_func(self):
         assert np.shape(self.q) == (2, 2)
@@ -1424,6 +1429,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.intersect1d([1, 3, 4, 3] * self.ureg.m, [3, 1, 2, 1] * self.ureg.m),
             [1, 3] * self.ureg.m,
         )
+
+    @helpers.requires_array_function_protocol()
+    def test_linalg_norm(self):
+        q = np.array([[3, 5, 8], [4, 12, 15]]) * self.ureg.m
+        expected = [5, 13, 17] * self.ureg.m
+        helpers.assert_quantity_equal(np.linalg.norm(q, axis=0), expected)
 
 
 @pytest.mark.skip

@@ -10,23 +10,17 @@
 
 from __future__ import annotations
 
-import sys
 import math
-import tokenize
+import sys
+from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 from importlib import import_module
-from io import BytesIO
 from numbers import Number
-from collections.abc import Mapping
-from typing import Any, NoReturn, Callable, Optional, Union
-from collections.abc import Generator, Iterable
-
-
-if sys.version_info >= (3, 10):
-    from typing import TypeAlias  # noqa
-else:
-    from typing_extensions import TypeAlias  # noqa
-
+from typing import (
+    Any,
+    NoReturn,
+    TypeAlias,  # noqa
+)
 
 if sys.version_info >= (3, 11):
     from typing import Self  # noqa
@@ -40,8 +34,20 @@ else:
     from typing_extensions import Never  # noqa
 
 
+if sys.version_info >= (3, 11):
+    from typing import Unpack  # noqa
+else:
+    from typing_extensions import Unpack  # noqa
+
+
+if sys.version_info >= (3, 13):
+    from warnings import deprecated  # noqa
+else:
+    from typing_extensions import deprecated  # noqa
+
+
 def missing_dependency(
-    package: str, display_name: Optional[str] = None
+    package: str, display_name: str | None = None
 ) -> Callable[..., NoReturn]:
     """Return a helper function that raises an exception when used.
 
@@ -58,22 +64,20 @@ def missing_dependency(
     return _inner
 
 
-def tokenizer(input_string: str) -> Generator[tokenize.TokenInfo, None, None]:
-    """Tokenize an input string, encoded as UTF-8
-    and skipping the ENCODING token.
-
-    See Also
-    --------
-    tokenize.tokenize
-    """
-    for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
-        if tokinfo.type != tokenize.ENCODING:
-            yield tokinfo
-
-
 # TODO: remove this warning after v0.10
 class BehaviorChangeWarning(UserWarning):
     pass
+
+
+try:
+    from uncertainties import UFloat, ufloat
+    from uncertainties import unumpy as unp
+
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    UFloat = ufloat = unp = None
+
+    HAS_UNCERTAINTIES = False
 
 
 try:
@@ -83,7 +87,10 @@ try:
 
     HAS_NUMPY = True
     NUMPY_VER = np.__version__
-    NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
+    if HAS_UNCERTAINTIES:
+        NUMERIC_TYPES = (Number, Decimal, ndarray, np.number, UFloat)
+    else:
+        NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
         if isinstance(value, (dict, bool)) or value is None:
@@ -92,6 +99,11 @@ try:
             raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
             return np.asarray(value)
+        elif HAS_UNCERTAINTIES:
+            from pint.facets.measurement.objects import Measurement
+
+            if isinstance(value, Measurement):
+                return ufloat(value.value, value.error)
         if force_ndarray or (
             force_ndarray_like and not is_duck_array_type(type(value))
         ):
@@ -144,16 +156,13 @@ except ImportError:
                 "lists and tuples are valid magnitudes for "
                 "Quantity only when NumPy is present."
             )
+        elif HAS_UNCERTAINTIES:
+            from pint.facets.measurement.objects import Measurement
+
+            if isinstance(value, Measurement):
+                return ufloat(value.value, value.error)
         return value
 
-
-try:
-    from uncertainties import ufloat
-
-    HAS_UNCERTAINTIES = True
-except ImportError:
-    ufloat = None
-    HAS_UNCERTAINTIES = False
 
 try:
     from babel import Locale
@@ -164,6 +173,9 @@ try:
     HAS_BABEL = hasattr(babel_units, "format_unit")
 except ImportError:
     HAS_BABEL = False
+
+    babel_parse = missing_dependency("Babel")  # noqa: F811 # type:ignore
+    babel_units = babel_parse
 
 try:
     import mip
@@ -179,19 +191,6 @@ try:
 except ImportError:
     HAS_MIP = False
 
-# Defines Logarithm and Exponential for Logarithmic Converter
-if HAS_NUMPY:
-    from numpy import exp  # noqa: F401
-    from numpy import log  # noqa: F401
-else:
-    from math import exp  # noqa: F401
-    from math import log  # noqa: F401
-
-if not HAS_BABEL:
-    babel_parse = missing_dependency("Babel")  # noqa: F811
-    babel_units = babel_parse
-
-if not HAS_MIP:
     mip_missing = missing_dependency("mip")
     mip_model = mip_missing
     mip_Model = mip_missing
@@ -199,6 +198,19 @@ if not HAS_MIP:
     mip_INTEGER = mip_missing
     mip_xsum = mip_missing
     mip_OptimizationStatus = mip_missing
+
+# Defines Logarithm and Exponential for Logarithmic Converter
+if HAS_NUMPY:
+    from numpy import (
+        exp,  # noqa: F401
+        log,  # noqa: F401
+    )
+else:
+    from math import (
+        exp,  # noqa: F401
+        log,  # noqa: F401
+    )
+
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
 # types using guarded imports
@@ -225,7 +237,7 @@ upcast_type_names = (
 )
 
 #: Map type name to the actual type (for upcast types).
-upcast_type_map: Mapping[str, Optional[type]] = {k: None for k in upcast_type_names}
+upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
 
 
 def fully_qualified_name(t: type) -> str:
@@ -286,7 +298,7 @@ def is_duck_array(obj: type) -> bool:
     return is_duck_array_type(type(obj))
 
 
-def eq(lhs: Any, rhs: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
+def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
     """Comparison of scalars and arrays.
 
     Parameters
@@ -309,7 +321,7 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
     return out
 
 
-def isnan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
+def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     """Test for NaN or NaT.
 
     Parameters
@@ -326,23 +338,32 @@ def isnan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
         Always return False for non-numeric types.
     """
     if is_duck_array_type(type(obj)):
-        if obj.dtype.kind in "if":
+        if obj.dtype.kind in "ifc":
             out = np.isnan(obj)
         elif obj.dtype.kind in "Mm":
             out = np.isnat(obj)
         else:
-            # Not a numeric or datetime type
-            out = np.full(obj.shape, False)
+            if HAS_UNCERTAINTIES:
+                try:
+                    out = unp.isnan(obj)
+                except TypeError:
+                    # Not a numeric or UFloat type
+                    out = np.full(obj.shape, False)
+            else:
+                # Not a numeric or datetime type
+                out = np.full(obj.shape, False)
         return out.any() if check_all else out
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
+    elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
+        return unp.isnan(obj)
     try:
         return math.isnan(obj)
     except TypeError:
         return False
 
 
-def zero_or_nan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
+def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     """Test if obj is zero, NaN, or NaT.
 
     Parameters

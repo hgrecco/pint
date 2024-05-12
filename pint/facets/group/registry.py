@@ -8,10 +8,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, Any, Optional
+from typing import TYPE_CHECKING, Any, Generic
 
-from ...compat import TypeAlias
 from ... import errors
+from ...compat import TypeAlias
 
 if TYPE_CHECKING:
     from ..._typing import Unit, UnitsContainer
@@ -19,12 +19,12 @@ if TYPE_CHECKING:
 from ...util import create_class_with_registry, to_units_container
 from ..plain import (
     GenericPlainRegistry,
-    UnitDefinition,
     QuantityT,
+    UnitDefinition,
     UnitT,
 )
-from .definitions import GroupDefinition
 from . import objects
+from .definitions import GroupDefinition
 
 
 class GenericGroupRegistry(
@@ -121,7 +121,7 @@ class GenericGroupRegistry(
         return self.Group(name)
 
     def get_compatible_units(
-        self, input_units: UnitsContainer, group: Optional[str] = None
+        self, input_units: UnitsContainer, group: str | None = None
     ) -> frozenset[Unit]:
         """ """
         if group is None:
@@ -134,7 +134,7 @@ class GenericGroupRegistry(
         return frozenset(self.Unit(eq) for eq in equiv)
 
     def _get_compatible_units(
-        self, input_units: UnitsContainer, group: Optional[str] = None
+        self, input_units: UnitsContainer, group: str | None = None
     ) -> frozenset[str]:
         ret = super()._get_compatible_units(input_units)
 

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
+import contextlib
 import doctest
 import pickle
 import re
-import contextlib
 
 import pytest
 from packaging.version import parse as version_parse
@@ -34,6 +36,10 @@ _sq_re = re.compile(
 )
 
 _unit_re = re.compile(r"<Unit\((.*)\)>")
+
+
+def internal(ureg):
+    return ureg
 
 
 class PintOutputChecker(doctest.OutputChecker):

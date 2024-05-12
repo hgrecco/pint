@@ -70,6 +70,7 @@ Pint: makes units easy
     Advanced topics <advanced/index>
     ecosystem
     API Reference <api/index>
+    changes
 
 .. toctree::
     :maxdepth: 1

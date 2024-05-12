@@ -413,6 +413,7 @@ matching_input_copy_units_output_ufuncs = [
     "take",
     "trace",
     "transpose",
+    "roll",
     "ceil",
     "floor",
     "hypot",
@@ -740,24 +741,27 @@ def _base_unit_if_needed(a):
             raise OffsetUnitCalculusError(a.units)
 
 
+# Can remove trapz wrapping when we only support numpy>=2
 @implements("trapz", "function")
-def _trapz(a, x=None, dx=1.0, **kwargs):
-    a = _base_unit_if_needed(a)
-    units = a.units
+@implements("trapezoid", "function")
+def _trapz(y, x=None, dx=1.0, **kwargs):
+    trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+    y = _base_unit_if_needed(y)
+    units = y.units
     if x is not None:
         if hasattr(x, "units"):
             x = _base_unit_if_needed(x)
             units *= x.units
             x = x._magnitude
-        ret = np.trapz(a._magnitude, x, **kwargs)
+        ret = trapezoid(y._magnitude, x, **kwargs)
     else:
         if hasattr(dx, "units"):
             dx = _base_unit_if_needed(dx)
             units *= dx.units
             dx = dx._magnitude
-        ret = np.trapz(a._magnitude, dx=dx, **kwargs)
+        ret = trapezoid(y._magnitude, dx=dx, **kwargs)
 
-    return a.units._REGISTRY.Quantity(ret, units)
+    return y.units._REGISTRY.Quantity(ret, units)
 
 
 def implement_mul_func(func):
@@ -850,6 +854,7 @@ for func_str, unit_arguments, wrap_output in (
     ("median", "a", True),
     ("nanmedian", "a", True),
     ("transpose", "a", True),
+    ("roll", "a", True),
     ("copy", "a", True),
     ("average", "a", True),
     ("nanmean", "a", True),
@@ -965,7 +970,7 @@ def implement_single_dimensionless_argument_func(func_str):
         return a._REGISTRY.Quantity(func(a_stripped, *args, **kwargs))
 
 
-for func_str in ("cumprod", "cumproduct", "nancumprod"):
+for func_str in ("cumprod", "nancumprod"):
     implement_single_dimensionless_argument_func(func_str)
 
 # Handle single-argument consistent unit functions
@@ -1003,7 +1008,15 @@ for func_str in (
     implement_func("function", func_str, input_units=None, output_unit=None)
 
 # Handle functions with output unit defined by operation
-for func_str in ("std", "nanstd", "sum", "nansum", "cumsum", "nancumsum"):
+for func_str in (
+    "std",
+    "nanstd",
+    "sum",
+    "nansum",
+    "cumsum",
+    "nancumsum",
+    "linalg.norm",
+):
     implement_func("function", func_str, input_units=None, output_unit="sum")
 for func_str in ("diff", "ediff1d"):
     implement_func("function", func_str, input_units=None, output_unit="delta")

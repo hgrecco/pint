@@ -10,13 +10,13 @@ from __future__ import annotations
 
 import weakref
 from collections import ChainMap, defaultdict
-from typing import Any, Callable, Protocol, Generic, Optional, TYPE_CHECKING
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING, Any, Generic, Protocol
 
-from ...facets.plain import UnitDefinition, PlainQuantity, PlainUnit, MagnitudeT
+from ..._typing import Magnitude
+from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit, UnitDefinition
 from ...util import UnitsContainer, to_units_container
 from .definitions import ContextDefinition
-from ..._typing import Magnitude
 
 if TYPE_CHECKING:
     from ...registry import UnitRegistry
@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 class Transformation(Protocol):
     def __call__(
-        self, ureg: UnitRegistry, value: Magnitude, **kwargs: Any
-    ) -> Magnitude:
+        self, ureg: UnitRegistry, value: PlainQuantity, **kwargs: Any
+    ) -> PlainQuantity:
         ...
 
 
@@ -96,11 +96,11 @@ class Context:
 
     def __init__(
         self,
-        name: Optional[str] = None,
+        name: str | None = None,
         aliases: tuple[str, ...] = tuple(),
-        defaults: Optional[dict[str, Any]] = None,
+        defaults: dict[str, Any] | None = None,
     ) -> None:
-        self.name: Optional[str] = name
+        self.name: str | None = name
         self.aliases: tuple[str, ...] = aliases
 
         #: Maps (src, dst) -> transformation function
@@ -155,7 +155,7 @@ class Context:
     def from_lines(
         cls,
         lines: Iterable[str],
-        to_base_func: Optional[ToBaseFunc] = None,
+        to_base_func: ToBaseFunc | None = None,
         non_int_type: type = float,
     ) -> Context:
         context_definition = ContextDefinition.from_lines(lines, non_int_type)
@@ -167,7 +167,7 @@ class Context:
 
     @classmethod
     def from_definition(
-        cls, cd: ContextDefinition, to_base_func: Optional[ToBaseFunc] = None
+        cls, cd: ContextDefinition, to_base_func: ToBaseFunc | None = None
     ) -> Context:
         ctx = cls(cd.name, cd.aliases, cd.defaults)
 
@@ -246,7 +246,7 @@ class Context:
     def hashable(
         self,
     ) -> tuple[
-        Optional[str],
+        str | None,
         tuple[str, ...],
         frozenset[tuple[SrcDst, int]],
         frozenset[tuple[str, Any]],
@@ -278,7 +278,7 @@ class ContextChain(ChainMap[SrcDst, Context]):
         super().__init__()
         self.contexts: list[Context] = []
         self.maps.clear()  # Remove default empty map
-        self._graph: Optional[dict[SrcDst, set[UnitsContainer]]] = None
+        self._graph: dict[SrcDst, set[UnitsContainer]] | None = None
 
     def insert_contexts(self, *contexts: Context):
         """Insert one or more contexts in reversed order the chained map.
@@ -292,7 +292,7 @@ class ContextChain(ChainMap[SrcDst, Context]):
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
-    def remove_contexts(self, n: Optional[int] = None):
+    def remove_contexts(self, n: int | None = None):
         """Remove the last n inserted contexts from the chain.
 
         Parameters

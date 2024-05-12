@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import itertools
 import logging
 import math
@@ -16,8 +18,10 @@ from pint import (
 from pint.testsuite import helpers
 from pint.util import UnitsContainer
 
+from .helpers import internal
 
-def add_ctxs(ureg):
+
+def add_ctxs(ureg: UnitRegistry):
     a, b = UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": -1})
     d = Context("lc")
     d.add_transformation(a, b, lambda ureg, x: ureg.speed_of_light / x)
@@ -33,7 +37,7 @@ def add_ctxs(ureg):
     ureg.add_context(d)
 
 
-def add_arg_ctxs(ureg):
+def add_arg_ctxs(ureg: UnitRegistry):
     a, b = UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": -1})
     d = Context("lc")
     d.add_transformation(a, b, lambda ureg, x, n: ureg.speed_of_light / x / n)
@@ -49,7 +53,7 @@ def add_arg_ctxs(ureg):
     ureg.add_context(d)
 
 
-def add_argdef_ctxs(ureg):
+def add_argdef_ctxs(ureg: UnitRegistry):
     a, b = UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": -1})
     d = Context("lc", defaults=dict(n=1))
     assert d.defaults == dict(n=1)
@@ -67,7 +71,7 @@ def add_argdef_ctxs(ureg):
     ureg.add_context(d)
 
 
-def add_sharedargdef_ctxs(ureg):
+def add_sharedargdef_ctxs(ureg: UnitRegistry):
     a, b = UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": -1})
     d = Context("lc", defaults=dict(n=1))
     assert d.defaults == dict(n=1)
@@ -90,37 +94,37 @@ class TestContexts:
         ureg = func_registry
         add_ctxs(ureg)
         with ureg.context("lc"):
-            assert ureg._active_ctx
-            assert ureg._active_ctx.graph
+            assert internal(ureg)._active_ctx
+            assert internal(ureg)._active_ctx.graph
 
-        assert not ureg._active_ctx
-        assert not ureg._active_ctx.graph
+        assert not internal(ureg)._active_ctx
+        assert not internal(ureg)._active_ctx.graph
 
         with ureg.context("lc", n=1):
-            assert ureg._active_ctx
-            assert ureg._active_ctx.graph
+            assert internal(ureg)._active_ctx
+            assert internal(ureg)._active_ctx.graph
 
-        assert not ureg._active_ctx
-        assert not ureg._active_ctx.graph
+        assert not internal(ureg)._active_ctx
+        assert not internal(ureg)._active_ctx.graph
 
     def test_known_context_enable(self, func_registry):
         ureg = func_registry
         add_ctxs(ureg)
         ureg.enable_contexts("lc")
-        assert ureg._active_ctx
-        assert ureg._active_ctx.graph
+        assert internal(ureg)._active_ctx
+        assert internal(ureg)._active_ctx.graph
         ureg.disable_contexts(1)
 
-        assert not ureg._active_ctx
-        assert not ureg._active_ctx.graph
+        assert not internal(ureg)._active_ctx
+        assert not internal(ureg)._active_ctx.graph
 
         ureg.enable_contexts("lc", n=1)
-        assert ureg._active_ctx
-        assert ureg._active_ctx.graph
+        assert internal(ureg)._active_ctx
+        assert internal(ureg)._active_ctx.graph
         ureg.disable_contexts(1)
 
-        assert not ureg._active_ctx
-        assert not ureg._active_ctx.graph
+        assert not internal(ureg)._active_ctx
+        assert not internal(ureg)._active_ctx.graph
 
     def test_graph(self, func_registry):
         ureg = func_registry
@@ -139,27 +143,27 @@ class TestContexts:
         g.update({l: {t, c}, t: {l}, c: {l}})
 
         with ureg.context("lc"):
-            assert ureg._active_ctx.graph == g_sp
+            assert internal(ureg)._active_ctx.graph == g_sp
 
         with ureg.context("lc", n=1):
-            assert ureg._active_ctx.graph == g_sp
+            assert internal(ureg)._active_ctx.graph == g_sp
 
         with ureg.context("ab"):
-            assert ureg._active_ctx.graph == g_ab
+            assert internal(ureg)._active_ctx.graph == g_ab
 
         with ureg.context("lc"):
             with ureg.context("ab"):
-                assert ureg._active_ctx.graph == g
+                assert internal(ureg)._active_ctx.graph == g
 
         with ureg.context("ab"):
             with ureg.context("lc"):
-                assert ureg._active_ctx.graph == g
+                assert internal(ureg)._active_ctx.graph == g
 
         with ureg.context("lc", "ab"):
-            assert ureg._active_ctx.graph == g
+            assert internal(ureg)._active_ctx.graph == g
 
         with ureg.context("ab", "lc"):
-            assert ureg._active_ctx.graph == g
+            assert internal(ureg)._active_ctx.graph == g
 
     def test_graph_enable(self, func_registry):
         ureg = func_registry
@@ -178,33 +182,33 @@ class TestContexts:
         g.update({l: {t, c}, t: {l}, c: {l}})
 
         ureg.enable_contexts("lc")
-        assert ureg._active_ctx.graph == g_sp
+        assert internal(ureg)._active_ctx.graph == g_sp
         ureg.disable_contexts(1)
 
         ureg.enable_contexts("lc", n=1)
-        assert ureg._active_ctx.graph == g_sp
+        assert internal(ureg)._active_ctx.graph == g_sp
         ureg.disable_contexts(1)
 
         ureg.enable_contexts("ab")
-        assert ureg._active_ctx.graph == g_ab
+        assert internal(ureg)._active_ctx.graph == g_ab
         ureg.disable_contexts(1)
 
         ureg.enable_contexts("lc")
         ureg.enable_contexts("ab")
-        assert ureg._active_ctx.graph == g
+        assert internal(ureg)._active_ctx.graph == g
         ureg.disable_contexts(2)
 
         ureg.enable_contexts("ab")
         ureg.enable_contexts("lc")
-        assert ureg._active_ctx.graph == g
+        assert internal(ureg)._active_ctx.graph == g
         ureg.disable_contexts(2)
 
         ureg.enable_contexts("lc", "ab")
-        assert ureg._active_ctx.graph == g
+        assert internal(ureg)._active_ctx.graph == g
         ureg.disable_contexts(2)
 
         ureg.enable_contexts("ab", "lc")
-        assert ureg._active_ctx.graph == g
+        assert internal(ureg)._active_ctx.graph == g
         ureg.disable_contexts(2)
 
     def test_known_nested_context(self, func_registry):
@@ -212,22 +216,22 @@ class TestContexts:
         add_ctxs(ureg)
 
         with ureg.context("lc"):
-            x = dict(ureg._active_ctx)
-            y = dict(ureg._active_ctx.graph)
-            assert ureg._active_ctx
-            assert ureg._active_ctx.graph
+            x = dict(internal(ureg)._active_ctx)
+            y = dict(internal(ureg)._active_ctx.graph)
+            assert internal(ureg)._active_ctx
+            assert internal(ureg)._active_ctx.graph
 
             with ureg.context("ab"):
-                assert ureg._active_ctx
-                assert ureg._active_ctx.graph
-                assert x != ureg._active_ctx
-                assert y != ureg._active_ctx.graph
+                assert internal(ureg)._active_ctx
+                assert internal(ureg)._active_ctx.graph
+                assert x != internal(ureg)._active_ctx
+                assert y != internal(ureg)._active_ctx.graph
 
-            assert x == ureg._active_ctx
-            assert y == ureg._active_ctx.graph
+            assert x == internal(ureg)._active_ctx
+            assert y == internal(ureg)._active_ctx.graph
 
-        assert not ureg._active_ctx
-        assert not ureg._active_ctx.graph
+        assert not internal(ureg)._active_ctx
+        assert not internal(ureg)._active_ctx.graph
 
     def test_unknown_context(self, func_registry):
         ureg = func_registry
@@ -235,25 +239,25 @@ class TestContexts:
         with pytest.raises(KeyError):
             with ureg.context("la"):
                 pass
-        assert not ureg._active_ctx
-        assert not ureg._active_ctx.graph
+        assert not internal(ureg)._active_ctx
+        assert not internal(ureg)._active_ctx.graph
 
     def test_unknown_nested_context(self, func_registry):
         ureg = func_registry
         add_ctxs(ureg)
 
         with ureg.context("lc"):
-            x = dict(ureg._active_ctx)
-            y = dict(ureg._active_ctx.graph)
+            x = dict(internal(ureg)._active_ctx)
+            y = dict(internal(ureg)._active_ctx.graph)
             with pytest.raises(KeyError):
                 with ureg.context("la"):
                     pass
 
-            assert x == ureg._active_ctx
-            assert y == ureg._active_ctx.graph
+            assert x == internal(ureg)._active_ctx
+            assert y == internal(ureg)._active_ctx.graph
 
-        assert not ureg._active_ctx
-        assert not ureg._active_ctx.graph
+        assert not internal(ureg)._active_ctx
+        assert not internal(ureg)._active_ctx.graph
 
     def test_one_context(self, func_registry):
         ureg = func_registry
@@ -498,21 +502,21 @@ class TestContexts:
         q = 500 * ureg.meter
         s = (ureg.speed_of_light / q).to("Hz")
 
-        nctx = len(ureg._contexts)
+        nctx = len(internal(ureg)._contexts)
 
-        assert ctx.name not in ureg._contexts
+        assert ctx.name not in internal(ureg)._contexts
         ureg.add_context(ctx)
 
-        assert ctx.name in ureg._contexts
-        assert len(ureg._contexts) == nctx + 1 + len(ctx.aliases)
+        assert ctx.name in internal(ureg)._contexts
+        assert len(internal(ureg)._contexts) == nctx + 1 + len(ctx.aliases)
 
         with ureg.context(ctx.name):
             assert q.to("Hz") == s
             assert s.to("meter") == q
 
         ureg.remove_context(ctx.name)
-        assert ctx.name not in ureg._contexts
-        assert len(ureg._contexts) == nctx
+        assert ctx.name not in internal(ureg)._contexts
+        assert len(internal(ureg)._contexts) == nctx
 
     @pytest.mark.parametrize(
         "badrow",
@@ -661,11 +665,11 @@ class TestDefinedContexts:
         b = Context.__keytransform__(
             UnitsContainer({"[length]": 1.0}), UnitsContainer({"[time]": -1.0})
         )
-        assert a in ureg._contexts["sp"].funcs
-        assert b in ureg._contexts["sp"].funcs
+        assert a in internal(ureg)._contexts["sp"].funcs
+        assert b in internal(ureg)._contexts["sp"].funcs
         with ureg.context("sp"):
-            assert a in ureg._active_ctx
-            assert b in ureg._active_ctx
+            assert a in internal(ureg)._active_ctx
+            assert b in internal(ureg)._active_ctx
 
     def test_spectroscopy(self, class_registry):
         ureg = class_registry
@@ -681,7 +685,7 @@ class TestDefinedContexts:
                     da, db = Context.__keytransform__(
                         a.dimensionality, b.dimensionality
                     )
-                    p = find_shortest_path(ureg._active_ctx.graph, da, db)
+                    p = find_shortest_path(internal(ureg)._active_ctx.graph, da, db)
                     assert p
                     msg = f"{a} <-> {b}"
                     # assertAlmostEqualRelError converts second to first
@@ -703,7 +707,7 @@ class TestDefinedContexts:
             a = qty_direct.to_base_units()
             b = qty_indirect.to_base_units()
             da, db = Context.__keytransform__(a.dimensionality, b.dimensionality)
-            p = find_shortest_path(ureg._active_ctx.graph, da, db)
+            p = find_shortest_path(internal(ureg)._active_ctx.graph, da, db)
             assert p
             msg = f"{a} <-> {b}"
             helpers.assert_quantity_almost_equal(b, a, rtol=0.01, msg=msg)

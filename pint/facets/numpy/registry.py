@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, Any
+from typing import Any, Generic
 
 from ...compat import TypeAlias
 from ..plain import GenericPlainRegistry, QuantityT, UnitT
