@@ -1147,7 +1147,7 @@ def test_issue1725(registry_empty):
     assert registry_empty.get_compatible_units("dollar") == set()
 
 
-def test_issues_1505():
+def test_issue1505():
     ur = UnitRegistry(non_int_type=decimal.Decimal)
 
     assert isinstance(ur.Quantity("1m/s").magnitude, decimal.Decimal)
@@ -1201,6 +1201,16 @@ def test_issues_1841_xfail():
 
     # this prints "2*pi hour * radian", not "2*pi radian * hour" unless sort_dims is True
     # print(q)
+
+
+def test_issue1949(registry_empty):
+    ureg = UnitRegistry()
+    ureg.define(
+        "in_Hg_gauge = 3386389 * gram / metre / second ** 2; offset:101325000 = inHg_g = in_Hg_g = inHg_gauge"
+    )
+    q = ureg.Quantity("1 atm").to("inHg_gauge")
+    assert q.units == ureg.in_Hg_gauge
+    assert_equal(q.magnitude, 0.0)
 
 
 @pytest.mark.parametrize(
