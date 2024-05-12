@@ -9,9 +9,9 @@
 
 from __future__ import annotations
 
-from typing import Generic, Any
+from typing import Any, Generic
 
-from ...compat import ufloat, TypeAlias
+from ...compat import TypeAlias, ufloat
 from ...util import create_class_with_registry
 from ..plain import GenericPlainRegistry, QuantityT, UnitT
 from . import objects

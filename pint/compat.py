@@ -10,30 +10,17 @@
 
 from __future__ import annotations
 
-import sys
 import math
+import sys
+from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 from importlib import import_module
 from numbers import Number
-from collections.abc import Mapping
-from typing import Any, NoReturn, Callable, Optional, Union
-from collections.abc import Iterable
-
-try:
-    from uncertainties import UFloat, ufloat
-    from uncertainties import unumpy as unp
-
-    HAS_UNCERTAINTIES = True
-except ImportError:
-    UFloat = ufloat = unp = None
-    HAS_UNCERTAINTIES = False
-
-
-if sys.version_info >= (3, 10):
-    from typing import TypeAlias  # noqa
-else:
-    from typing_extensions import TypeAlias  # noqa
-
+from typing import (
+    Any,
+    NoReturn,
+    TypeAlias,  # noqa
+)
 
 if sys.version_info >= (3, 11):
     from typing import Self  # noqa
@@ -47,8 +34,20 @@ else:
     from typing_extensions import Never  # noqa
 
 
+if sys.version_info >= (3, 11):
+    from typing import Unpack  # noqa
+else:
+    from typing_extensions import Unpack  # noqa
+
+
+if sys.version_info >= (3, 13):
+    from warnings import deprecated  # noqa
+else:
+    from typing_extensions import deprecated  # noqa
+
+
 def missing_dependency(
-    package: str, display_name: Optional[str] = None
+    package: str, display_name: str | None = None
 ) -> Callable[..., NoReturn]:
     """Return a helper function that raises an exception when used.
 
@@ -68,6 +67,17 @@ def missing_dependency(
 # TODO: remove this warning after v0.10
 class BehaviorChangeWarning(UserWarning):
     pass
+
+
+try:
+    from uncertainties import UFloat, ufloat
+    from uncertainties import unumpy as unp
+
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    UFloat = ufloat = unp = None
+
+    HAS_UNCERTAINTIES = False
 
 
 try:
@@ -164,6 +174,9 @@ try:
 except ImportError:
     HAS_BABEL = False
 
+    babel_parse = missing_dependency("Babel")  # noqa: F811 # type:ignore
+    babel_units = babel_parse
+
 try:
     import mip
 
@@ -178,19 +191,6 @@ try:
 except ImportError:
     HAS_MIP = False
 
-# Defines Logarithm and Exponential for Logarithmic Converter
-if HAS_NUMPY:
-    from numpy import exp  # noqa: F401
-    from numpy import log  # noqa: F401
-else:
-    from math import exp  # noqa: F401
-    from math import log  # noqa: F401
-
-if not HAS_BABEL:
-    babel_parse = missing_dependency("Babel")  # noqa: F811
-    babel_units = babel_parse
-
-if not HAS_MIP:
     mip_missing = missing_dependency("mip")
     mip_model = mip_missing
     mip_Model = mip_missing
@@ -198,6 +198,19 @@ if not HAS_MIP:
     mip_INTEGER = mip_missing
     mip_xsum = mip_missing
     mip_OptimizationStatus = mip_missing
+
+# Defines Logarithm and Exponential for Logarithmic Converter
+if HAS_NUMPY:
+    from numpy import (
+        exp,  # noqa: F401
+        log,  # noqa: F401
+    )
+else:
+    from math import (
+        exp,  # noqa: F401
+        log,  # noqa: F401
+    )
+
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
 # types using guarded imports
@@ -224,7 +237,7 @@ upcast_type_names = (
 )
 
 #: Map type name to the actual type (for upcast types).
-upcast_type_map: Mapping[str, Optional[type]] = {k: None for k in upcast_type_names}
+upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
 
 
 def fully_qualified_name(t: type) -> str:
@@ -285,7 +298,7 @@ def is_duck_array(obj: type) -> bool:
     return is_duck_array_type(type(obj))
 
 
-def eq(lhs: Any, rhs: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
+def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
     """Comparison of scalars and arrays.
 
     Parameters
@@ -308,7 +321,7 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
     return out
 
 
-def isnan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
+def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     """Test for NaN or NaT.
 
     Parameters
@@ -350,7 +363,7 @@ def isnan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
         return False
 
 
-def zero_or_nan(obj: Any, check_all: bool) -> Union[bool, Iterable[bool]]:
+def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     """Test if obj is zero, NaN, or NaT.
 
     Parameters

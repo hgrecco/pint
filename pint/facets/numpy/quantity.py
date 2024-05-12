@@ -13,11 +13,10 @@ import math
 import warnings
 from typing import Any, Generic
 
-from ..plain import PlainQuantity, MagnitudeT
-
 from ..._typing import Shape
-from ...compat import _to_magnitude, np
+from ...compat import HAS_NUMPY, _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ..plain import MagnitudeT, PlainQuantity
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
@@ -31,7 +30,7 @@ from .numpy_func import (
 
 try:
     import uncertainties.unumpy as unp
-    from uncertainties import ufloat, UFloat
+    from uncertainties import UFloat, ufloat
 
     HAS_UNCERTAINTIES = True
 except ImportError:
@@ -115,11 +114,12 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         return value
 
     def __array__(self, t=None) -> np.ndarray:
-        warnings.warn(
-            "The unit of the quantity is stripped when downcasting to ndarray.",
-            UnitStrippedWarning,
-            stacklevel=2,
-        )
+        if HAS_NUMPY and isinstance(self._magnitude, np.ndarray):
+            warnings.warn(
+                "The unit of the quantity is stripped when downcasting to ndarray.",
+                UnitStrippedWarning,
+                stacklevel=2,
+            )
         return _to_magnitude(self._magnitude, force_ndarray=True)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
@@ -173,6 +173,10 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     @property
     def shape(self) -> Shape:
         return self._magnitude.shape
+
+    @property
+    def dtype(self):
+        return self._magnitude.dtype
 
     @shape.setter
     def shape(self, value):

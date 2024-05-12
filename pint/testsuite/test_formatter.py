@@ -1,40 +1,49 @@
+from __future__ import annotations
+
 import pytest
 
 from pint import formatting as fmt
+from pint.delegates.formatter._format_helpers import formatter, join_u
 
 
 class TestFormatter:
     def test_join(self):
         for empty in ((), []):
-            assert fmt._join("s", empty) == ""
-        assert fmt._join("*", "1 2 3".split()) == "1*2*3"
-        assert fmt._join("{0}*{1}", "1 2 3".split()) == "1*2*3"
+            assert join_u("s", empty) == ""
+        assert join_u("*", "1 2 3".split()) == "1*2*3"
+        assert join_u("{0}*{1}", "1 2 3".split()) == "1*2*3"
 
     def test_formatter(self):
-        assert fmt.formatter({}.items()) == ""
-        assert fmt.formatter(dict(meter=1).items()) == "meter"
-        assert fmt.formatter(dict(meter=-1).items()) == "1 / meter"
-        assert fmt.formatter(dict(meter=-1).items(), as_ratio=False) == "meter ** -1"
+        assert formatter({}.items(), ()) == ""
+        assert formatter(dict(meter=1).items(), ()) == "meter"
+        assert formatter((), dict(meter=-1).items()) == "1 / meter"
+        assert formatter((), dict(meter=-1).items(), as_ratio=False) == "meter ** -1"
 
         assert (
-            fmt.formatter(dict(meter=-1, second=-1).items(), as_ratio=False)
+            formatter((), dict(meter=-1, second=-1).items(), as_ratio=False)
             == "meter ** -1 * second ** -1"
         )
-        assert fmt.formatter(dict(meter=-1, second=-1).items()) == "1 / meter / second"
         assert (
-            fmt.formatter(dict(meter=-1, second=-1).items(), single_denominator=True)
+            formatter(
+                (),
+                dict(meter=-1, second=-1).items(),
+            )
+            == "1 / meter / second"
+        )
+        assert (
+            formatter((), dict(meter=-1, second=-1).items(), single_denominator=True)
             == "1 / (meter * second)"
         )
         assert (
-            fmt.formatter(dict(meter=-1, second=-2).items())
+            formatter((), dict(meter=-1, second=-2).items())
             == "1 / meter / second ** 2"
         )
         assert (
-            fmt.formatter(dict(meter=-1, second=-2).items(), single_denominator=True)
+            formatter((), dict(meter=-1, second=-2).items(), single_denominator=True)
             == "1 / (meter * second ** 2)"
         )
 
-    def test_parse_spec(self):
+    def testparse_spec(self):
         assert fmt._parse_spec("") == ""
         assert fmt._parse_spec("") == ""
         with pytest.raises(ValueError):

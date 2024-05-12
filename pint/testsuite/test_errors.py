@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pickle
 
 import pytest
@@ -142,3 +144,13 @@ class TestErrors:
 
                     with pytest.raises(PintError):
                         raise ex
+
+    def test_dimensionality_error_message(self):
+        ureg = UnitRegistry(system="SI")
+        with pytest.raises(ValueError) as error:
+            ureg.get_dimensionality("[bilbo]")
+
+        assert (
+            str(error.value)
+            == "[bilbo] is not defined as dimension in the pint UnitRegistry"
+        )
