@@ -741,8 +741,11 @@ def _base_unit_if_needed(a):
             raise OffsetUnitCalculusError(a.units)
 
 
+# Can remove trapz wrapping when we only support numpy>=2
 @implements("trapz", "function")
+@implements("trapezoid", "function")
 def _trapz(y, x=None, dx=1.0, **kwargs):
+    trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
     y = _base_unit_if_needed(y)
     units = y.units
     if x is not None:
@@ -750,13 +753,13 @@ def _trapz(y, x=None, dx=1.0, **kwargs):
             x = _base_unit_if_needed(x)
             units *= x.units
             x = x._magnitude
-        ret = np.trapz(y._magnitude, x, **kwargs)
+        ret = trapezoid(y._magnitude, x, **kwargs)
     else:
         if hasattr(dx, "units"):
             dx = _base_unit_if_needed(dx)
             units *= dx.units
             dx = dx._magnitude
-        ret = np.trapz(y._magnitude, dx=dx, **kwargs)
+        ret = trapezoid(y._magnitude, dx=dx, **kwargs)
 
     return y.units._REGISTRY.Quantity(ret, units)
 
