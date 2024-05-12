@@ -16,7 +16,7 @@ The default UnitRegistry inherits from all of them.
     :members:
     :exclude-members: Quantity, Unit, Measurement, Group, Context, System
 
-.. automodule:: pint.facets.formatting
+.. automodule:: pint.delegates.formatter
     :members:
     :exclude-members: Quantity, Unit, Measurement, Group, Context, System
 

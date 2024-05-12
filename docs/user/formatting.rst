@@ -95,7 +95,7 @@ formats:
    ... def format_unit_simple(unit, registry, **options):
    ...     return " * ".join(f"{u} ** {p}" for u, p in unit.items())
    >>> f"{q:Z}"
-   '2.3e-06 meter ** 3 * second ** -2 * kilogram ** -1'
+   '2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2'
 
 where ``unit`` is a :py:class:`dict` subclass containing the unit names and
 their exponents.

@@ -33,7 +33,9 @@ Which can be pretty printed using the `Pint` formatter:
 
     >>> from pint import formatter
     >>> result = pi_theorem({'V': '[length]/[time]', 'T': '[time]', 'L': '[length]'})
-    >>> print(formatter(result[0].items()))
+    >>> numerator = [item for item in result[0].items() if item[1]>0]
+    >>> denominator = [item for item in result[0].items() if item[1]<0]
+    >>> print(formatter(numerator, denominator))
     T * V / L
 
 You can also apply the Buckingham π theorem associated to a Registry. In this case,
