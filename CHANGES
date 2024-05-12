@@ -49,6 +49,8 @@ Pint Changelog
   (PR #1819)
 - Add numpy.linalg.norm implementation.
   (PR #1251)
+- Improved error message in `get_dimensionality()` when non existent units are passed.
+  (PR #1874, Issue #1716)
 
 0.22 (2023-05-25)
 -----------------
