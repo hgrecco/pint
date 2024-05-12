@@ -757,7 +757,7 @@ def _broadcast_arrays(*args, **kwargs):
     res = np.broadcast_arrays(*unitless_args, **kwargs)
     return [out * unit for out, unit in zip(res, input_units)]
 
-  
+
 # Handle mutliplicative functions separately to deal with non-multiplicative units
 def _base_unit_if_needed(a):
     if a._is_multiplicative:
