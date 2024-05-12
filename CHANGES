@@ -4,6 +4,8 @@ Pint Changelog
 0.24 (unreleased)
 -----------------
 
+- NumPy 2.0 support
+  (PR #1985, #1971)
 - Implement numpy roll (Related to issue #981)
 - Add `dim_sort` function to _formatter_helpers.
 - Add `dim_order` and `default_sort_func` properties to FullFormatter.
@@ -11,8 +13,9 @@ Pint Changelog
 - Fix LaTeX siuntix formatting when using non_int_type=decimal.Decimal.
 - Added refractive index units.
   (PR #1816)
-
-
+- Fix converting to offset units of higher dimension e.g. gauge pressure
+  (PR #1949)
+  
 
 0.23 (2023-12-08)
 -----------------

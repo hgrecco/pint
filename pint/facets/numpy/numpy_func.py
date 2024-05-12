@@ -741,7 +741,7 @@ def _base_unit_if_needed(a):
             raise OffsetUnitCalculusError(a.units)
 
 
-# Can remove trapz wrapping when we only support numpy>=2
+# NP2 Can remove trapz wrapping when we only support numpy>=2
 @implements("trapz", "function")
 @implements("trapezoid", "function")
 def _trapz(y, x=None, dx=1.0, **kwargs):
