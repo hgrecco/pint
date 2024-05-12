@@ -4,6 +4,7 @@ Pint Changelog
 0.24 (unreleased)
 -----------------
 
+- Added dBW, decibel Watts, which is used in RF high power applications
 - NumPy 2.0 support
   (PR #1985, #1971)
 - Implement numpy roll (Related to issue #981)

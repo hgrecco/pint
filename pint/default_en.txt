@@ -504,6 +504,7 @@ refractive_index_unit = [] = RIU
 
 # Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
 
+decibelwatt = watt; logbase: 10; logfactor: 10 = dBW
 decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm
 decibelmicrowatt = 1e-6 watt; logbase: 10; logfactor: 10 = dBu
 
