@@ -153,7 +153,7 @@ def join_unc(joint_fstring: str, lpar: str, rpar: str, mstr: str, ustr: str) -> 
 
 def formatter(
     numerator: Iterable[tuple[str, Number]],
-    denominator: Iterable[tuple[str, Number]] = (),
+    denominator: Iterable[tuple[str, Number]],
     as_ratio: bool = True,
     single_denominator: bool = False,
     product_fmt: str = " * ",
