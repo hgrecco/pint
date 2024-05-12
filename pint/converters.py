@@ -12,22 +12,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from dataclasses import fields as dc_fields
-
-from typing import Any, Optional
+from typing import Any, ClassVar
 
 from ._typing import Magnitude
-
-from .compat import HAS_NUMPY, exp, log, Self  # noqa: F401
+from .compat import HAS_NUMPY, Self, exp, log  # noqa: F401
 
 
 @dataclass(frozen=True)
 class Converter:
     """Base class for value converters."""
 
-    # list[type[Converter]]
-    _subclasses = []
-    # dict[frozenset[str], type[Converter]]
-    _param_names_to_subclass = {}
+    _subclasses: ClassVar[list[type[Converter]]] = []
+    _param_names_to_subclass: ClassVar[dict[frozenset[str], type[Converter]]] = {}
 
     @property
     def is_multiplicative(self) -> bool:
@@ -53,7 +49,7 @@ class Converter:
         return frozenset(p.name for p in dc_fields(new_cls))
 
     @classmethod
-    def preprocess_kwargs(cls, **kwargs: Any) -> Optional[dict[str, Any]]:
+    def preprocess_kwargs(cls, **kwargs: Any) -> dict[str, Any] | None:
         return None
 
     @classmethod

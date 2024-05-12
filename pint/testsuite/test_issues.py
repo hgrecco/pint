@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import decimal
 import math
@@ -7,10 +9,13 @@ import pytest
 
 from pint import Context, DimensionalityError, UnitRegistry, get_application_registry
 from pint.compat import np
+from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
 from pint.facets.plain.unit import UnitsContainer
 from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
+
+from .helpers import internal
 
 
 # TODO: do not subclass from QuantityTestCase
@@ -727,7 +732,7 @@ class TestIssues(QuantityTestCase):
     def test_issue1062_issue1097(self):
         # Must not be used by any other tests
         ureg = UnitRegistry()
-        assert "nanometer" not in ureg._units
+        assert "nanometer" not in internal(ureg)._units
         for i in range(5):
             ctx = Context.from_lines(["@context _", "cal = 4 J"])
             with ureg.context("sp", ctx):
@@ -874,21 +879,43 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
+        # TODO: THIS is not longer necessary after moving to formatter
         module_registry = UnitRegistry()
         module_registry.default_format = "~P"
         m = module_registry.Measurement(1, 0.1, "meter")
         assert m.default_format == "~P"
 
+    @helpers.requires_numpy()
+    def test_issue1674(self, module_registry):
+        Q_ = module_registry.Quantity
+        arr_of_q = np.array([Q_(2, "m"), Q_(4, "m")], dtype="object")
+        q_arr = Q_(np.array([1, 2]), "m")
+
+        helpers.assert_quantity_equal(
+            arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m^2")], dtype="object")
+        )
+        helpers.assert_quantity_equal(
+            arr_of_q / q_arr, np.array([Q_(2, ""), Q_(2, "")], dtype="object")
+        )
+
+        arr_of_q = np.array([Q_(2, "m"), Q_(4, "s")], dtype="object")
+        q_arr = Q_(np.array([1, 2]), "m")
+
+        helpers.assert_quantity_equal(
+            arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m s")], dtype="object")
+        )
+
     @helpers.requires_babel()
     def test_issue_1400(self, sess_registry):
-        q1 = 3 * sess_registry.W
-        q2 = 3 * sess_registry.W / sess_registry.cm
-        assert q1.format_babel("~", locale="es_Ar") == "3 W"
-        assert q1.format_babel("", locale="es_Ar") == "3 vatios"
-        assert q2.format_babel("~", locale="es_Ar") == "3.0 W / cm"
-        assert q2.format_babel("", locale="es_Ar") == "3.0 vatios por centímetros"
+        q1 = 3.1 * sess_registry.W
+        q2 = 3.1 * sess_registry.W / sess_registry.cm
+        assert q1.format_babel("~", locale="es_ES") == "3,1 W"
+        assert q1.format_babel("", locale="es_ES") == "3,1 vatios"
+        assert q2.format_babel("~", locale="es_ES") == "3,1 W/cm"
+        assert q2.format_babel("", locale="es_ES") == "3,1 vatios por centímetro"
 
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):
@@ -903,7 +930,7 @@ class TestIssues(QuantityTestCase):
         u2 = ufloat(5.6, 0.78)
         q1_u = module_registry.Quantity(u2 - u1, "m")
         q1_str = str(q1_u)
-        q1_str = "{:.4uS}".format(q1_u)
+        q1_str = f"{q1_u:.4uS}"
         q1_m = q1_u.magnitude
         q2_u = module_registry.Quantity(q1_str)
         # Not equal because the uncertainties are differently random!
@@ -1140,7 +1167,7 @@ def test_issue1725(registry_empty):
     assert registry_empty.get_compatible_units("dollar") == set()
 
 
-def test_issues_1505():
+def test_issue1505():
     ur = UnitRegistry(non_int_type=decimal.Decimal)
 
     assert isinstance(ur.Quantity("1m/s").magnitude, decimal.Decimal)
@@ -1157,3 +1184,75 @@ def test_issue_1845():
     # before issue 1845 these inputs would have resulted in a TypeError
     assert ur("km / h * m").units == ur.Quantity("meter ** 2 / hour")
     assert ur("kW / min * W").units == ur.Quantity("watts ** 2 / minute")
+
+    
+    
+@pytest.mark.parametrize(
+    "units,spec,expected",
+    [
+        # (dict(hour=1, watt=1), "P~", "W·h"),
+        (dict(ampere=1, volt=1), "P~", "V·A"),
+        # (dict(meter=1, newton=1), "P~", "N·m"),
+    ],
+)
+def test_issues_1841(func_registry, units, spec, expected):
+    ur = func_registry
+    ur.formatter.default_sort_func = sort_by_dimensionality
+    ur.default_format = spec
+    value = ur.Unit(UnitsContainer(**units))
+    assert f"{value}" == expected
+
+
+@pytest.mark.xfail
+def test_issues_1841_xfail():
+    from pint import formatting as fmt
+    from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+
+    # sets compact display mode by default
+    ur = UnitRegistry()
+    ur.default_format = "~P"
+    ur.formatter.default_sort_func = sort_by_dimensionality
+
+    q = ur.Quantity("2*pi radian * hour")
+
+    # Note that `radian` (and `bit` and `count`) are treated as dimensionless.
+    # And note that dimensionless quantities are stripped by this process,
+    # leading to errorneous output.  Suggestions?
+    assert (
+        fmt.format_unit(q.u._units, spec="", registry=ur, sort_dims=True)
+        == "radian * hour"
+    )
+    assert (
+        fmt.format_unit(q.u._units, spec="", registry=ur, sort_dims=False)
+        == "hour * radian"
+    )
+
+    # this prints "2*pi hour * radian", not "2*pi radian * hour" unless sort_dims is True
+    # print(q)
+
+
+def test_issue1949(registry_empty):
+    ureg = UnitRegistry()
+    ureg.define(
+        "in_Hg_gauge = 3386389 * gram / metre / second ** 2; offset:101325000 = inHg_g = in_Hg_g = inHg_gauge"
+    )
+    q = ureg.Quantity("1 atm").to("inHg_gauge")
+    assert q.units == ureg.in_Hg_gauge
+    assert_equal(q.magnitude, 0.0)
+
+
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (
+            "8.989e9 newton * meter^2 / coulomb^2",
+            r"\SI[]{8.989E+9}{\meter\squared\newton\per\coulomb\squared}",
+        ),
+        ("5 * meter / second", r"\SI[]{5}{\meter\per\second}"),
+        ("2.2 * meter^4", r"\SI[]{2.2}{\meter\tothe{4}}"),
+        ("2.2 * meter^-4", r"\SI[]{2.2}{\per\meter\tothe{4}}"),
+    ],
+)
+def test_issue1772(given, expected):
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    assert f"{ureg(given):Lx}" == expected

@@ -14,31 +14,26 @@ import logging
 import math
 import operator
 import re
-from collections.abc import Mapping, Iterable, Iterator
+import tokenize
+import types
+from collections.abc import Callable, Generator, Hashable, Iterable, Iterator, Mapping
 from fractions import Fraction
 from functools import lru_cache, partial
 from logging import NullHandler
 from numbers import Number
 from token import NAME, NUMBER
-import tokenize
-import types
 from typing import (
     TYPE_CHECKING,
-    ClassVar,
-    Callable,
-    TypeVar,
     Any,
-    Optional,
+    ClassVar,
+    TypeVar,
 )
-from collections.abc import Hashable, Generator
 
+from . import pint_eval
+from ._typing import Scalar
 from .compat import NUMERIC_TYPES, Self
 from .errors import DefinitionSyntaxError
-from .formatting import format_unit
 from .pint_eval import build_eval_tree
-from . import pint_eval
-
-from ._typing import Scalar
 
 if TYPE_CHECKING:
     from ._typing import QuantityOrUnitLike
@@ -65,8 +60,8 @@ def _noop(x: T) -> T:
 
 def matrix_to_string(
     matrix: ItMatrix,
-    row_headers: Optional[Iterable[str]] = None,
-    col_headers: Optional[Iterable[str]] = None,
+    row_headers: Iterable[str] | None = None,
+    col_headers: Iterable[str] | None = None,
     fmtfun: Callable[
         [
             Scalar,
@@ -181,9 +176,7 @@ def column_echelon_form(
             ItMatrix,
         ],
         Matrix,
-    ] = (
-        transpose if transpose_result else _noop
-    )
+    ] = transpose if transpose_result else _noop
 
     ech_matrix = matrix_apply(
         transpose(matrix),
@@ -233,7 +226,7 @@ def column_echelon_form(
     return _transpose(ech_matrix), _transpose(id_matrix), swapped
 
 
-def pi_theorem(quantities: dict[str, Any], registry: Optional[UnitRegistry] = None):
+def pi_theorem(quantities: dict[str, Any], registry: UnitRegistry | None = None):
     """Builds dimensionless quantities using the Buckingham π theorem
 
     Parameters
@@ -310,7 +303,7 @@ def pi_theorem(quantities: dict[str, Any], registry: Optional[UnitRegistry] = No
 
 
 def solve_dependencies(
-    dependencies: dict[TH, set[TH]]
+    dependencies: dict[TH, set[TH]],
 ) -> Generator[set[TH], None, None]:
     """Solve a dependency graph.
 
@@ -349,7 +342,7 @@ def solve_dependencies(
 
 
 def find_shortest_path(
-    graph: dict[TH, set[TH]], start: TH, end: TH, path: Optional[list[TH]] = None
+    graph: dict[TH, set[TH]], start: TH, end: TH, path: list[TH] | None = None
 ):
     """Find shortest path between two nodes within a graph.
 
@@ -391,8 +384,8 @@ def find_shortest_path(
 
 
 def find_connected_nodes(
-    graph: dict[TH, set[TH]], start: TH, visited: Optional[set[TH]] = None
-) -> Optional[set[TH]]:
+    graph: dict[TH, set[TH]], start: TH, visited: set[TH] | None = None
+) -> set[TH] | None:
     """Find all nodes connected to a start node within a graph.
 
     Parameters
@@ -452,12 +445,12 @@ class UnitsContainer(Mapping[str, Scalar]):
     __slots__ = ("_d", "_hash", "_one", "_non_int_type")
 
     _d: udict
-    _hash: Optional[int]
+    _hash: int | None
     _one: Scalar
     _non_int_type: type
 
     def __init__(
-        self, *args: Any, non_int_type: Optional[type] = None, **kwargs: Any
+        self, *args: Any, non_int_type: type | None = None, **kwargs: Any
     ) -> None:
         if args and isinstance(args[0], UnitsContainer):
             default_non_int_type = args[0]._non_int_type
@@ -550,6 +543,9 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
+    def unit_items(self) -> Iterable[tuple[str, Scalar]]:
+        return self._d.items()
+
     def __iter__(self) -> Iterator[str]:
         return iter(self._d)
 
@@ -606,9 +602,15 @@ class UnitsContainer(Mapping[str, Scalar]):
         return f"<UnitsContainer({tmp})>"
 
     def __format__(self, spec: str) -> str:
+        # TODO: provisional
+        from .formatting import format_unit
+
         return format_unit(self, spec)
 
     def format_babel(self, spec: str, registry=None, **kwspec) -> str:
+        # TODO: provisional
+        from .formatting import format_unit
+
         return format_unit(self, spec, registry=registry, **kwspec)
 
     def __copy__(self):
@@ -1005,24 +1007,29 @@ class PrettyIPython:
     default_format: str
 
     def _repr_html_(self) -> str:
-        if "~" in self.default_format:
+        if "~" in self._REGISTRY.formatter.default_format:
             return f"{self:~H}"
         return f"{self:H}"
 
     def _repr_latex_(self) -> str:
-        if "~" in self.default_format:
+        if "~" in self._REGISTRY.formatter.default_format:
             return f"${self:~L}$"
         return f"${self:L}$"
 
     def _repr_pretty_(self, p, cycle: bool):
-        if "~" in self.default_format:
+        # if cycle:
+        if "~" in self._REGISTRY.formatter.default_format:
             p.text(f"{self:~P}")
         else:
             p.text(f"{self:P}")
+        # else:
+        #     p.pretty(self.magnitude)
+        #     p.text(" ")
+        #     p.pretty(self.units)
 
 
 def to_units_container(
-    unit_like: QuantityOrUnitLike, registry: Optional[UnitRegistry] = None
+    unit_like: QuantityOrUnitLike, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 
@@ -1048,8 +1055,7 @@ def to_units_container(
             # TODO: document how to whether to lift preprocessing loop out to caller
             for p in registry.preprocessors:
                 unit_like = p(unit_like)
-            # TODO: Why not parse.units here?
-            return registry._parse_units(unit_like)
+            return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
     elif dict in mro:
@@ -1060,7 +1066,7 @@ def to_units_container(
 
 
 def infer_base_unit(
-    unit_like: QuantityOrUnitLike, registry: Optional[UnitRegistry] = None
+    unit_like: QuantityOrUnitLike, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """
     Given a Quantity or UnitLike, give the UnitsContainer for it's plain units.

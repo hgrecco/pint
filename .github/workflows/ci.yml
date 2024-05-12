@@ -7,18 +7,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9, "3.10", "3.11"]
-        numpy: [null, "numpy>=1.21,<2.0.0"]
+        python-version: ["3.10", "3.11", "3.12"]
+        numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - python-version: 3.9 # Minimal versions
+          - python-version: "3.10" # Minimal versions
             numpy: "numpy"
             extras: matplotlib==2.2.5
-          - python-version: 3.9
+          - python-version: "3.10"
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray netCDF4 dask[complete]==2023.4.0 graphviz babel==2.8"
+            extras: "sparse xarray netCDF4 dask[complete]==2023.4.0 graphviz babel==2.8 mip>=1.13"
     runs-on: ubuntu-latest
 
     env:
@@ -61,6 +61,14 @@ jobs:
         if: ${{ matrix.extras != null }}
         run: pip install ${{matrix.extras}}
 
+      - name: Install locales
+        if: ${{ matrix.extras != null }}
+        run: |
+          sudo apt-get install language-pack-es language-pack-fr language-pack-ro
+          sudo localedef -i es_ES -f UTF-8 es_ES
+          sudo localedef -i fr_FR -f UTF-8 fr_FR
+          sudo localedef -i ro_RO -f UTF-8 ro_RO
+
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
@@ -92,8 +100,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9, "3.10", "3.11"]
-        numpy: [ "numpy>=1.21,<2.0.0" ]
+        python-version: ["3.10", "3.11", "3.12"]
+        numpy: [ "numpy>=1.23,<2.0.0" ]
     runs-on: windows-latest
 
     env:
@@ -153,8 +161,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9, "3.10", "3.11"]
-        numpy: [null, "numpy>=1.21,<2.0.0" ]
+        python-version: ["3.10", "3.11", "3.12"]
+        numpy: [null, "numpy>=1.23,<2.0.0" ]
     runs-on: macos-latest
 
     env:

@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import operator
+
 import pytest
 
 # Conditionally import NumPy and any upcast type libraries

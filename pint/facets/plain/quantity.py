@@ -8,28 +8,26 @@
 
 from __future__ import annotations
 
-
 import copy
 import datetime
 import locale
 import numbers
 import operator
+from collections.abc import Callable, Iterator, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    overload,
     Generic,
+    Iterable,
     TypeVar,
-    Optional,
-    Union,
+    overload,
 )
-from collections.abc import Iterator, Sequence
 
-from ..._typing import UnitLike, QuantityOrUnitLike, Magnitude, Scalar
+from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
     _to_magnitude,
+    deprecated,
     eq,
     is_duck_array_type,
     is_upcast_type,
@@ -44,8 +42,8 @@ from ...util import (
     logger,
     to_units_container,
 )
-from .definitions import UnitDefinition
 from . import qto
+from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
@@ -57,7 +55,7 @@ if TYPE_CHECKING:
 
 try:
     import uncertainties.unumpy as unp
-    from uncertainties import ufloat, UFloat
+    from uncertainties import UFloat, ufloat
 
     HAS_UNCERTAINTIES = True
 except ImportError:
@@ -136,15 +134,13 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     """
 
-    #: Default formatting string.
-    default_format: str = ""
     _magnitude: MagnitudeT
 
     @property
     def ndim(self) -> int:
         if isinstance(self.magnitude, numbers.Number):
             return 0
-        if str(self.magnitude) == "<NA>":
+        if str(type(self.magnitude)) == "NAType":
             return 0
         return self.magnitude.ndim
 
@@ -169,25 +165,23 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     @overload
     def __new__(
-        cls, value: MagnitudeT, units: Optional[UnitLike] = None
+        cls, value: MagnitudeT, units: UnitLike | None = None
     ) -> PlainQuantity[MagnitudeT]:
         ...
 
     @overload
-    def __new__(
-        cls, value: str, units: Optional[UnitLike] = None
-    ) -> PlainQuantity[Any]:
+    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
         ...
 
     @overload
     def __new__(  # type: ignore[misc]
-        cls, value: Sequence[ScalarT], units: Optional[UnitLike] = None
+        cls, value: Sequence[ScalarT], units: UnitLike | None = None
     ) -> PlainQuantity[Any]:
         ...
 
     @overload
     def __new__(
-        cls, value: PlainQuantity[Any], units: Optional[UnitLike] = None
+        cls, value: PlainQuantity[Any], units: UnitLike | None = None
     ) -> PlainQuantity[Any]:
         ...
 
@@ -262,8 +256,18 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         )
         return ret
 
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.format_quantity_babel"
+    )
+    def format_babel(self, spec: str = "", **kwspec: Any) -> str:
+        return self._REGISTRY.formatter.format_quantity_babel(self, spec, **kwspec)
+
+    def __format__(self, spec: str) -> str:
+        return self._REGISTRY.formatter.format_quantity(self, spec)
+
     def __str__(self) -> str:
-        return str(self.magnitude) + " " + str(self.units)
+        return self._REGISTRY.formatter.format_quantity(self)
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())
@@ -325,6 +329,10 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         """ """
         return not bool(self.to_root_units()._units)
 
+    def unit_items(self) -> Iterable[tuple[str, Scalar]]:
+        """A view of the unit items."""
+        return self._units.unit_items()
+
     @property
     def dimensionless(self) -> bool:
         """ """
@@ -332,7 +340,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         return not bool(tmp.dimensionality)
 
-    _dimensionality: Optional[UnitsContainerT] = None
+    _dimensionality: UnitsContainerT | None = None
 
     @property
     def dimensionality(self) -> UnitsContainerT:
@@ -427,7 +435,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self._units)
 
     def is_compatible_with(
-        self, other: Any, *contexts: Union[str, Context], **ctx_kwargs: Any
+        self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
     ) -> bool:
         """check if the other object is compatible
 
@@ -484,7 +492,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         )
 
     def ito(
-        self, other: Optional[QuantityOrUnitLike] = None, *contexts, **ctx_kwargs
+        self, other: QuantityOrUnitLike | None = None, *contexts, **ctx_kwargs
     ) -> None:
         """Inplace rescale to different units.
 
@@ -506,7 +514,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return None
 
     def to(
-        self, other: Optional[QuantityOrUnitLike] = None, *contexts, **ctx_kwargs
+        self, other: QuantityOrUnitLike | None = None, *contexts, **ctx_kwargs
     ) -> PlainQuantity:
         """Return PlainQuantity rescaled to different units.
 
@@ -1280,7 +1288,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def __abs__(self) -> PlainQuantity[MagnitudeT]:
         return self.__class__(abs(self._magnitude), self._units)
 
-    def __round__(self, ndigits: Optional[int] = 0) -> PlainQuantity[MagnitudeT]:
+    def __round__(self, ndigits: int | None = 0) -> PlainQuantity[MagnitudeT]:
         return self.__class__(round(self._magnitude, ndigits=ndigits), self._units)
 
     def __pos__(self) -> PlainQuantity[MagnitudeT]:

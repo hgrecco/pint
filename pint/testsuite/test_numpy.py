@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import operator as op
 import pickle
@@ -286,6 +288,11 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         result = np.broadcast_arrays(x, y, subok=True)
         helpers.assert_quantity_equal(result, expected)
 
+    def test_roll(self):
+        helpers.assert_quantity_equal(
+            np.roll(self.q, 1), [[4, 1], [2, 3]] * self.ureg.m
+        )
+
 
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # https://www.numpy.org/devdocs/reference/routines.math.html
@@ -330,9 +337,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         helpers.assert_quantity_equal(
             np.prod(self.q, axis=axis), [3, 8] * self.ureg.m**2
         )
-        helpers.assert_quantity_equal(
-            np.prod(self.q, where=where), 12 * self.ureg.m**3
-        )
+        helpers.assert_quantity_equal(np.prod(self.q, where=where), 12 * self.ureg.m**3)
 
         with pytest.raises(DimensionalityError):
             np.prod(self.q, axis=axis, where=where)
@@ -380,12 +385,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     def test_cumprod_numpy_func(self):
         with pytest.raises(DimensionalityError):
             np.cumprod(self.q)
-        with pytest.raises(DimensionalityError):
-            np.cumproduct(self.q)
         helpers.assert_quantity_equal(np.cumprod(self.q / self.ureg.m), [1, 2, 6, 24])
-        helpers.assert_quantity_equal(
-            np.cumproduct(self.q / self.ureg.m), [1, 2, 6, 24]
-        )
         helpers.assert_quantity_equal(
             np.cumprod(self.q / self.ureg.m, axis=1), [[1, 2], [3, 12]]
         )
@@ -438,12 +438,22 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.cross(a, b), [[-15, -2, 39]] * self.ureg.kPa * self.ureg.m**2
         )
 
+    # NP2: Remove this when we only support np>=2.0
     @helpers.requires_array_function_protocol()
     def test_trapz(self):
         helpers.assert_quantity_equal(
             np.trapz([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
             7.5 * self.ureg.J * self.ureg.m,
         )
+
+    @helpers.requires_array_function_protocol()
+    def test_trapezoid(self):
+        # NP2: Remove this when we only support np>=2.0
+        if np.lib.NumpyVersion(np.__version__) >= "2.0.0b1":
+            helpers.assert_quantity_equal(
+                np.trapezoid([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
+                7.5 * self.ureg.J * self.ureg.m,
+            )
 
     @helpers.requires_array_function_protocol()
     def test_dot(self):
@@ -758,9 +768,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.minimum(self.q, self.Q_([0, 5], "m")), self.Q_([[0, 2], [0, 4]], "m")
         )
 
+    # NP2: Can remove Q_(arr).ptp test when we only support numpy>=2
     def test_ptp(self):
-        assert self.q.ptp() == 3 * self.ureg.m
+        if not np.lib.NumpyVersion(np.__version__) >= "2.0.0b1":
+            assert self.q.ptp() == 3 * self.ureg.m
 
+    # NP2: Keep this test for numpy>=2, it's only arr.ptp() that is deprecated
     @helpers.requires_array_function_protocol()
     def test_ptp_numpy_func(self):
         helpers.assert_quantity_equal(np.ptp(self.q, axis=0), [2, 2] * self.ureg.m)
@@ -1015,6 +1028,11 @@ class TestNumpyUnclassified(TestNumpyMethods):
         u = self.Q_(np.arange(12))
         u.shape = 4, 3
         assert u.magnitude.shape == (4, 3)
+
+    def test_dtype(self):
+        u = self.Q_(np.arange(12, dtype="uint32"))
+
+        assert u.dtype == "uint32"
 
     @helpers.requires_array_function_protocol()
     def test_shape_numpy_func(self):

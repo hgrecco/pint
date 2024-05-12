@@ -8,15 +8,14 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar, Generic, Optional
+from typing import Any, Generic, TypeVar
 
 from ...compat import TypeAlias
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer, logger
-from ..plain import GenericPlainRegistry, UnitDefinition, QuantityT, UnitT
-from .definitions import OffsetConverter, ScaleConverter
+from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
 from . import objects
-
+from .definitions import OffsetConverter, ScaleConverter
 
 T = TypeVar("T")
 
@@ -57,17 +56,17 @@ class GenericNonMultiplicativeRegistry(
         # plain units on multiplication and division.
         self.autoconvert_offset_to_baseunit = autoconvert_offset_to_baseunit
 
-    def _parse_units(
+    def parse_units_as_container(
         self,
         input_string: str,
-        as_delta: Optional[bool] = None,
-        case_sensitive: Optional[bool] = None,
+        as_delta: bool | None = None,
+        case_sensitive: bool | None = None,
     ) -> UnitsContainer:
         """ """
         if as_delta is None:
             as_delta = self.default_as_delta
 
-        return super()._parse_units(input_string, as_delta, case_sensitive)
+        return super().parse_units_as_container(input_string, as_delta, case_sensitive)
 
     def _add_unit(self, definition: UnitDefinition) -> None:
         super()._add_unit(definition)
@@ -136,7 +135,7 @@ class GenericNonMultiplicativeRegistry(
         except KeyError:
             raise UndefinedUnitError(unit_name)
 
-    def _validate_and_extract(self, units: UnitsContainer) -> Optional[str]:
+    def _validate_and_extract(self, units: UnitsContainer) -> str | None:
         """Used to check if a given units is suitable for a simple
         conversion.
 
@@ -193,7 +192,7 @@ class GenericNonMultiplicativeRegistry(
         self, offset_unit: str, all_units: UnitsContainer
     ) -> UnitsContainer:
         slct_unit = self._units[offset_unit]
-        if slct_unit.is_logarithmic or (not slct_unit.is_multiplicative):
+        if slct_unit.is_logarithmic:
             # Extract reference unit
             slct_ref = slct_unit.reference
 
@@ -205,6 +204,11 @@ class GenericNonMultiplicativeRegistry(
                 (u, e) = [(u, e) for u, e in slct_ref.items()].pop()
                 # Add it back to the unit list
                 return all_units.add(u, e)
+
+        if not slct_unit.is_multiplicative:  # is offset unit
+            # Extract reference unit
+            return slct_unit.reference
+
         # Otherwise, return the units unmodified
         return all_units
 
