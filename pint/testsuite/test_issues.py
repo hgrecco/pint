@@ -1167,7 +1167,7 @@ def test_issue1725(registry_empty):
     assert registry_empty.get_compatible_units("dollar") == set()
 
 
-def test_issues_1505():
+def test_issue1505():
     ur = UnitRegistry(non_int_type=decimal.Decimal)
 
     assert isinstance(ur.Quantity("1m/s").magnitude, decimal.Decimal)
@@ -1221,3 +1221,30 @@ def test_issues_1841_xfail():
 
     # this prints "2*pi hour * radian", not "2*pi radian * hour" unless sort_dims is True
     # print(q)
+
+
+def test_issue1949(registry_empty):
+    ureg = UnitRegistry()
+    ureg.define(
+        "in_Hg_gauge = 3386389 * gram / metre / second ** 2; offset:101325000 = inHg_g = in_Hg_g = inHg_gauge"
+    )
+    q = ureg.Quantity("1 atm").to("inHg_gauge")
+    assert q.units == ureg.in_Hg_gauge
+    assert_equal(q.magnitude, 0.0)
+
+
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (
+            "8.989e9 newton * meter^2 / coulomb^2",
+            r"\SI[]{8.989E+9}{\meter\squared\newton\per\coulomb\squared}",
+        ),
+        ("5 * meter / second", r"\SI[]{5}{\meter\per\second}"),
+        ("2.2 * meter^4", r"\SI[]{2.2}{\meter\tothe{4}}"),
+        ("2.2 * meter^-4", r"\SI[]{2.2}{\per\meter\tothe{4}}"),
+    ],
+)
+def test_issue1772(given, expected):
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    assert f"{ureg(given):Lx}" == expected
