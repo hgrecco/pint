@@ -438,12 +438,22 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.cross(a, b), [[-15, -2, 39]] * self.ureg.kPa * self.ureg.m**2
         )
 
+    # NP2: Remove this when we only support np>=2.0
     @helpers.requires_array_function_protocol()
     def test_trapz(self):
         helpers.assert_quantity_equal(
             np.trapz([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
             7.5 * self.ureg.J * self.ureg.m,
         )
+
+    @helpers.requires_array_function_protocol()
+    def test_trapezoid(self):
+        # NP2: Remove this when we only support np>=2.0
+        if np.lib.NumpyVersion(np.__version__) >= "2.0.0b1":
+            helpers.assert_quantity_equal(
+                np.trapezoid([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
+                7.5 * self.ureg.J * self.ureg.m,
+            )
 
     @helpers.requires_array_function_protocol()
     def test_dot(self):
@@ -758,9 +768,12 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.minimum(self.q, self.Q_([0, 5], "m")), self.Q_([[0, 2], [0, 4]], "m")
         )
 
+    # NP2: Can remove Q_(arr).ptp test when we only support numpy>=2
     def test_ptp(self):
-        assert self.q.ptp() == 3 * self.ureg.m
+        if not np.lib.NumpyVersion(np.__version__) >= "2.0.0b1":
+            assert self.q.ptp() == 3 * self.ureg.m
 
+    # NP2: Keep this test for numpy>=2, it's only arr.ptp() that is deprecated
     @helpers.requires_array_function_protocol()
     def test_ptp_numpy_func(self):
         helpers.assert_quantity_equal(np.ptp(self.q, axis=0), [2, 2] * self.ureg.m)
