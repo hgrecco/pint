@@ -111,10 +111,11 @@ following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format
    ...
    ...      default_format = ""
    ...
-   ...      def format_unit(self, unit, uspec: str = "", **babel_kwds) -> str:
+   ...      def format_unit(self, unit, uspec, sort_func, **babel_kwds) -> str:
    ...          return "ups!"
    ...
    >>> ureg.formatter = MyFormatter()
+   >>> ureg.formatter._registry = ureg
    >>> str(q)
    '2.3e-06 ups!'
 
