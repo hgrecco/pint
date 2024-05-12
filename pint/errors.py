@@ -8,87 +8,163 @@
     :license: BSD, see LICENSE for more details.
 """
 
-OFFSET_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/latest/nonmult.html"
-LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/latest/nonmult.html"
+from __future__ import annotations
+
+import typing as ty
+from dataclasses import dataclass, fields
+
+OFFSET_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/nonmult.html"
+LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/log_units.html"
+
+MSG_INVALID_UNIT_NAME = "is not a valid unit name (must follow Python identifier rules)"
+MSG_INVALID_UNIT_SYMBOL = "is not a valid unit symbol (must not contain spaces)"
+MSG_INVALID_UNIT_ALIAS = "is not a valid unit alias (must not contain spaces)"
+
+MSG_INVALID_PREFIX_NAME = (
+    "is not a valid prefix name (must follow Python identifier rules)"
+)
+MSG_INVALID_PREFIX_SYMBOL = "is not a valid prefix symbol (must not contain spaces)"
+MSG_INVALID_PREFIX_ALIAS = "is not a valid prefix alias (must not contain spaces)"
+
+MSG_INVALID_DIMENSION_NAME = "is not a valid dimension name (must follow Python identifier rules and enclosed by square brackets)"
+MSG_INVALID_CONTEXT_NAME = (
+    "is not a valid context name (must follow Python identifier rules)"
+)
+MSG_INVALID_GROUP_NAME = "is not a valid group name (must not contain spaces)"
+MSG_INVALID_SYSTEM_NAME = (
+    "is not a valid system name (must follow Python identifier rules)"
+)
 
 
-def _file_prefix(filename=None, lineno=None):
-    if filename and lineno is not None:
-        return f"While opening {filename}, in line {lineno}: "
-    elif filename:
-        return f"While opening {filename}: "
-    elif lineno is not None:
-        return f"In line {lineno}: "
-    else:
-        return ""
+def is_dim(name: str) -> bool:
+    """Return True if the name is flanked by square brackets `[` and `]`."""
+    return name[0] == "[" and name[-1] == "]"
 
 
-class DefinitionSyntaxError(SyntaxError):
+def is_valid_prefix_name(name: str) -> bool:
+    """Return True if the name is a valid python identifier or empty."""
+    return str.isidentifier(name) or name == ""
+
+
+is_valid_unit_name = is_valid_system_name = is_valid_context_name = str.isidentifier
+
+
+def _no_space(name: str) -> bool:
+    """Return False if the name contains a space in any position."""
+    return name.strip() == name and " " not in name
+
+
+is_valid_group_name = _no_space
+
+is_valid_unit_alias = (
+    is_valid_prefix_alias
+) = is_valid_unit_symbol = is_valid_prefix_symbol = _no_space
+
+
+def is_valid_dimension_name(name: str) -> bool:
+    """Return True if the name is consistent with a dimension name.
+
+    - flanked by square brackets.
+    - empty dimension name or identifier.
+    """
+
+    # TODO: shall we check also fro spaces?
+    return name == "[]" or (
+        len(name) > 1 and is_dim(name) and str.isidentifier(name[1:-1])
+    )
+
+
+class WithDefErr:
+    """Mixing class to make some classes more readable."""
+
+    def def_err(self, msg: str):
+        return DefinitionError(self.name, self.__class__, msg)
+
+
+@dataclass(frozen=False)
+class PintError(Exception):
+    """Base exception for all Pint errors."""
+
+
+@dataclass(frozen=False)
+class DefinitionError(ValueError, PintError):
+    """Raised when a definition is not properly constructed."""
+
+    name: str
+    definition_type: type
+    msg: str
+
+    def __str__(self):
+        msg = f"Cannot define '{self.name}' ({self.definition_type}): {self.msg}"
+        return msg
+
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
+
+
+@dataclass(frozen=False)
+class DefinitionSyntaxError(ValueError, PintError):
     """Raised when a textual definition has a syntax error."""
 
-    def __init__(self, msg, *, filename=None, lineno=None):
-        super().__init__(msg)
-        self.filename = filename
-        self.lineno = lineno
+    msg: str
 
     def __str__(self):
-        return _file_prefix(self.filename, self.lineno) + str(self.args[0])
-
-    @property
-    def __dict__(self):
-        # SyntaxError.filename and lineno are special fields that don't appear in
-        # the __dict__. This messes up pickling and deepcopy, as well
-        # as any other Python library that expects sane behaviour.
-        return {"filename": self.filename, "lineno": self.lineno}
+        return self.msg
 
     def __reduce__(self):
-        return DefinitionSyntaxError, self.args, self.__dict__
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
 
 
-class RedefinitionError(ValueError):
+@dataclass(frozen=False)
+class RedefinitionError(ValueError, PintError):
     """Raised when a unit or prefix is redefined."""
 
-    def __init__(self, name, definition_type, *, filename=None, lineno=None):
-        super().__init__(name, definition_type)
-        self.filename = filename
-        self.lineno = lineno
+    name: str
+    definition_type: type
 
     def __str__(self):
-        msg = f"Cannot redefine '{self.args[0]}' ({self.args[1]})"
-        return _file_prefix(self.filename, self.lineno) + msg
+        msg = f"Cannot redefine '{self.name}' ({self.definition_type})"
+        return msg
 
     def __reduce__(self):
-        return RedefinitionError, self.args, self.__dict__
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
 
 
-class UndefinedUnitError(AttributeError):
+@dataclass(frozen=False)
+class UndefinedUnitError(AttributeError, PintError):
     """Raised when the units are not defined in the unit registry."""
 
-    def __init__(self, *unit_names):
-        if len(unit_names) == 1 and not isinstance(unit_names[0], str):
-            unit_names = unit_names[0]
-        super().__init__(*unit_names)
+    unit_names: str | tuple[str, ...]
 
     def __str__(self):
-        if len(self.args) == 1:
-            return f"'{self.args[0]}' is not defined in the unit registry"
-        return f"{self.args} are not defined in the unit registry"
+        if isinstance(self.unit_names, str):
+            return f"'{self.unit_names}' is not defined in the unit registry"
+        if (
+            isinstance(self.unit_names, (tuple, list, set))
+            and len(self.unit_names) == 1
+        ):
+            return f"'{tuple(self.unit_names)[0]}' is not defined in the unit registry"
+        return f"{tuple(self.unit_names)} are not defined in the unit registry"
+
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
 
 
-class PintTypeError(TypeError):
-    pass
+@dataclass(frozen=False)
+class PintTypeError(TypeError, PintError):
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
 
 
+@dataclass(frozen=False)
 class DimensionalityError(PintTypeError):
     """Raised when trying to convert between incompatible units."""
 
-    def __init__(self, units1, units2, dim1="", dim2="", *, extra_msg=""):
-        super().__init__()
-        self.units1 = units1
-        self.units2 = units2
-        self.dim1 = dim1
-        self.dim2 = dim2
-        self.extra_msg = extra_msg
+    units1: ty.Any
+    units2: ty.Any
+    dim1: str = ""
+    dim2: str = ""
+    extra_msg: str = ""
 
     def __str__(self):
         if self.dim1 or self.dim2:
@@ -104,34 +180,76 @@ class DimensionalityError(PintTypeError):
         )
 
     def __reduce__(self):
-        return TypeError.__new__, (DimensionalityError,), self.__dict__
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
 
 
+@dataclass(frozen=False)
 class OffsetUnitCalculusError(PintTypeError):
     """Raised on ambiguous operations with offset units."""
+
+    units1: ty.Any
+    units2: ty.Optional[ty.Any] = None
+
+    def yield_units(self):
+        yield self.units1
+        if self.units2:
+            yield self.units2
 
     def __str__(self):
         return (
             "Ambiguous operation with offset unit (%s)."
-            % ", ".join(str(u) for u in self.args)
+            % ", ".join(str(u) for u in self.yield_units())
             + " See "
             + OFFSET_ERROR_DOCS_HTML
             + " for guidance."
         )
 
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
 
+
+@dataclass(frozen=False)
 class LogarithmicUnitCalculusError(PintTypeError):
     """Raised on inappropriate operations with logarithmic units."""
+
+    units1: ty.Any
+    units2: ty.Optional[ty.Any] = None
+
+    def yield_units(self):
+        yield self.units1
+        if self.units2:
+            yield self.units2
 
     def __str__(self):
         return (
             "Ambiguous operation with logarithmic unit (%s)."
-            % ", ".join(str(u) for u in self.args)
+            % ", ".join(str(u) for u in self.yield_units())
             + " See "
             + LOG_ERROR_DOCS_HTML
             + " for guidance."
         )
 
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
 
-class UnitStrippedWarning(UserWarning):
-    pass
+
+@dataclass(frozen=False)
+class UnitStrippedWarning(UserWarning, PintError):
+    msg: str
+
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
+
+
+@dataclass(frozen=False)
+class UnexpectedScaleInContainer(Exception):
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))
+
+
+@dataclass(frozen=False)
+class UndefinedBehavior(UserWarning, PintError):
+    msg: str
+
+    def __reduce__(self):
+        return self.__class__, tuple(getattr(self, f.name) for f in fields(self))

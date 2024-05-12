@@ -5,26 +5,24 @@ on: [push, pull_request]
 jobs:
   test-linux:
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8]
-        numpy: [null, "numpy>=1.14,<2.0.0"]
-        uncertainties: [null, "uncertainties==3.0.1", "uncertainties>=3.0.1,<4.0.0"]
+        python-version: ["3.10", "3.11", "3.12"]
+        numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
+        uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - python-version: 3.6
-            numpy: numpy==1.14.6
+          - python-version: "3.10" # Minimal versions
+            numpy: "numpy"
             extras: matplotlib==2.2.5
-          - python-version: 3.8
+          - python-version: "3.10"
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
-          - python-version: 3.9
-            numpy: numpy
-
+            extras: "sparse xarray netCDF4 dask[complete]==2023.4.0 graphviz babel==2.8 mip>=1.13"
     runs-on: ubuntu-latest
 
     env:
-      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc"
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
 
     steps:
       - uses: actions/checkout@v2
@@ -54,7 +52,7 @@ jobs:
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
-      
+
       - name: Install uncertainties
         if: ${{ matrix.uncertainties != null }}
         run: pip install "${{matrix.uncertainties}}"
@@ -63,11 +61,19 @@ jobs:
         if: ${{ matrix.extras != null }}
         run: pip install ${{matrix.extras}}
 
+      - name: Install locales
+        if: ${{ matrix.extras != null }}
+        run: |
+          sudo apt-get install language-pack-es language-pack-fr language-pack-ro
+          sudo localedef -i es_ES -f UTF-8 es_ES
+          sudo localedef -i fr_FR -f UTF-8 fr_FR
+          sudo localedef -i ro_RO -f UTF-8 ro_RO
+
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests
-          pip install .
+          pip install packaging
+          pip install .[testbase]
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
@@ -77,30 +83,154 @@ jobs:
         run: |
           pytest $TEST_OPTS
 
-      - name: Coverage report
-        run: coverage report -m
+      # - name: Coverage report
+      #   run: coverage report -m
 
-      - name: Coveralls Parallel
-        env:
-          COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
-          COVERALLS_PARALLEL: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_SERVICE_NAME: github
-        run: |
-          pip install coveralls
-          coveralls
+      # - name: Coveralls Parallel
+      #   env:
+      #     COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
+      #     COVERALLS_PARALLEL: true
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     COVERALLS_SERVICE_NAME: github
+      #   run: |
+      #     pip install coveralls "requests<2.29"
+      #     coveralls
 
-  coveralls:
-    needs: test-linux
-    runs-on: ubuntu-latest
+  test-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        numpy: [ "numpy>=1.23,<2.0.0" ]
+    runs-on: windows-latest
+
+    env:
+      TEST_OPTS: "-rfsxEX -s -k issue1498b --benchmark-skip"
+
     steps:
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.x
-    - name: Coveralls Finished
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_SERVICE_NAME: github
-      run: |
-        pip install coveralls
-        coveralls --finish
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 100
+
+      - name: Get tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Setup caching
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: pip-windows-${{ matrix.python-version }}
+          restore-keys: |
+            pip-windows-${{ matrix.python-version }}
+
+      - name: Install numpy
+        if: ${{ matrix.numpy != null }}
+        run: pip install "${{matrix.numpy}}"
+
+      # - name: Install uncertainties
+      #   if: ${{ matrix.uncertainties != null }}
+      #   run: pip install "${{matrix.uncertainties}}"
+      #
+      # - name: Install extras
+      #   if: ${{ matrix.extras != null }}
+      #   run: pip install ${{matrix.extras}}
+
+      - name: Install dependencies
+        run: |
+          # sudo apt install -y graphviz
+          pip install packaging
+          pip install .[testbase]
+
+      # - name: Install pytest-mpl
+      #   if: contains(matrix.extras, 'matplotlib')
+      #   run: pip install pytest-mpl
+
+      - name: Run tests
+        run: pytest -rfsxEX -s -k issue1498b --benchmark-skip
+
+  test-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        numpy: [null, "numpy>=1.23,<2.0.0" ]
+    runs-on: macos-latest
+
+    env:
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 100
+
+      - name: Get tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Setup caching
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: pip-${{ matrix.python-version }}
+          restore-keys: |
+            pip-${{ matrix.python-version }}
+
+      - name: Install numpy
+        if: ${{ matrix.numpy != null }}
+        run: pip install "${{matrix.numpy}}"
+
+      - name: Install dependencies
+        run: |
+          pip install packaging
+          pip install .[testbase]
+
+      - name: Run Tests
+        run: |
+          pytest $TEST_OPTS
+
+      # - name: Coverage report
+      #   run: coverage report -m
+
+      # - name: Coveralls Parallel
+      #   env:
+      #     COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
+      #     COVERALLS_PARALLEL: true
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     COVERALLS_SERVICE_NAME: github
+      #   run: |
+      #     pip install coveralls "requests<2.29"
+      #     coveralls
+
+  # coveralls:
+  #   needs: test-linux
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/setup-python@v2
+  #     with:
+  #       python-version: 3.x
+  #   - name: Coveralls Finished
+  #     continue-on-error: true
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       COVERALLS_SERVICE_NAME: github
+  #     run: |
+  #       pip install coveralls "requests<2.29"
+  #       coveralls --finish

@@ -1,14 +1,22 @@
+from __future__ import annotations
+
+import math
+
 import pytest
 
-from pint.converters import LogarithmicConverter, OffsetConverter, ScaleConverter
-from pint.definitions import (
+from pint.definitions import Definition
+from pint.errors import DefinitionSyntaxError
+from pint.facets.nonmultiplicative.definitions import (
+    LogarithmicConverter,
+    OffsetConverter,
+)
+from pint.facets.plain import (
     AliasDefinition,
-    Definition,
     DimensionDefinition,
     PrefixDefinition,
+    ScaleConverter,
     UnitDefinition,
 )
-from pint.errors import DefinitionSyntaxError
 from pint.util import UnitsContainer
 
 
@@ -20,7 +28,6 @@ class TestDefinition:
             Definition.from_string("[x] = [time] * meter")
 
     def test_prefix_definition(self):
-
         with pytest.raises(ValueError):
             Definition.from_string("m- = 1e-3 k")
 
@@ -31,7 +38,6 @@ class TestDefinition:
             assert x.aliases == ()
             assert x.converter.to_reference(1000) == 1
             assert x.converter.from_reference(0.001) == 1
-            assert str(x) == "m"
 
         x = Definition.from_string("kilo- = 1e-3 = k-")
         assert isinstance(x, PrefixDefinition)
@@ -79,7 +85,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer(kelvin=1)
 
         x = Definition.from_string(
-            "turn = 6.28 * radian = _ = revolution = = cycle = _"
+            f"turn = {math.tau} * radian = _ = revolution = = cycle = _"
         )
         assert isinstance(x, UnitDefinition)
         assert x.name == "turn"
@@ -87,7 +93,7 @@ class TestDefinition:
         assert x.symbol == "turn"
         assert not x.is_base
         assert isinstance(x.converter, ScaleConverter)
-        assert x.converter.scale == 6.28
+        assert x.converter.scale == math.tau
         assert x.reference == UnitsContainer(radian=1)
 
         with pytest.raises(ValueError):
@@ -96,7 +102,6 @@ class TestDefinition:
             )
 
     def test_log_unit_definition(self):
-
         x = Definition.from_string(
             "decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm"
         )
@@ -135,7 +140,7 @@ class TestDefinition:
         assert x.converter.logfactor == 1
         assert x.reference == UnitsContainer()
 
-        eulersnumber = 2.71828182845904523536028747135266249775724709369995
+        eulersnumber = math.e
         x = Definition.from_string(
             "neper = 1 ; logbase: %1.50f; logfactor: 0.5 = Np" % eulersnumber
         )
@@ -157,7 +162,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer()
 
     def test_dimension_definition(self):
-        x = DimensionDefinition("[time]", "", (), None, is_base=True)
+        x = DimensionDefinition("[time]")
         assert x.is_base
         assert x.name == "[time]"
 

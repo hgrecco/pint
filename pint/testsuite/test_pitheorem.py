@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import itertools
 import logging
 
@@ -5,9 +7,9 @@ from pint import pi_theorem
 from pint.testsuite import QuantityTestCase
 
 
+# TODO: do not subclass from QuantityTestCase
 class TestPiTheorem(QuantityTestCase):
     def test_simple(self, caplog):
-
         # simple movement
         with caplog.at_level(logging.DEBUG):
             assert pi_theorem({"V": "m/s", "T": "s", "L": "m"}) == [

@@ -1,10 +1,13 @@
 """Tests for global UnitRegistry, Unit, and Quantity
 """
+from __future__ import annotations
+
 import pickle
 
 import pytest
 
 from pint import (
+    ApplicationRegistry,
     Measurement,
     Quantity,
     UndefinedUnitError,
@@ -14,6 +17,14 @@ from pint import (
     set_application_registry,
 )
 from pint.testsuite import helpers
+
+
+@pytest.fixture
+def isolate_application_registry(monkeypatch):
+    import pint
+
+    new = ApplicationRegistry(UnitRegistry())
+    monkeypatch.setattr(pint, "application_registry", new)
 
 
 class TestDefaultApplicationRegistry:
@@ -94,20 +105,16 @@ class TestDefaultApplicationRegistry:
             pickle.loads(b)
 
 
+@pytest.fixture
+def custom_registry(isolate_application_registry):
+    ureg = UnitRegistry(None)
+    ureg.define("foo = []")
+    ureg.define("bar = foo / 2")
+    set_application_registry(ureg)
+
+
+@pytest.mark.usefixtures("custom_registry")
 class TestCustomApplicationRegistry:
-    @classmethod
-    def setup_class(cls):
-        cls.ureg_bak = get_application_registry()
-        cls.ureg = UnitRegistry(None)
-        cls.ureg.define("foo = []")
-        cls.ureg.define("bar = foo / 2")
-        set_application_registry(cls.ureg)
-        assert get_application_registry() is cls.ureg
-
-    @classmethod
-    def teardown_class(cls):
-        set_application_registry(cls.ureg_bak)
-
     @helpers.allprotos
     def test_unit(self, protocol):
         u = Unit("foo")
@@ -158,6 +165,7 @@ class TestCustomApplicationRegistry:
         assert str(m.units) == "foo"
 
 
+@pytest.mark.usefixtures("isolate_application_registry")
 class TestSwapApplicationRegistry:
     """Test that the constructors of Quantity, Unit, and Measurement capture
     the registry that is set as the application registry at creation time
@@ -170,19 +178,12 @@ class TestSwapApplicationRegistry:
 
     """
 
-    @classmethod
-    def setup_class(cls):
-        cls.ureg_bak = get_application_registry()
-        cls.ureg1 = UnitRegistry(None)
-        cls.ureg1.define("foo = [dim1]")
-        cls.ureg1.define("bar = foo / 2")
-        cls.ureg2 = UnitRegistry(None)
-        cls.ureg2.define("foo = [dim2]")
-        cls.ureg2.define("bar = foo / 3")
-
-    @classmethod
-    def teardown_class(cls):
-        set_application_registry(cls.ureg_bak)
+    ureg1 = UnitRegistry(None)
+    ureg1.define("foo = [dim1]")
+    ureg1.define("bar = foo / 2")
+    ureg2 = UnitRegistry(None)
+    ureg2.define("foo = [dim2]")
+    ureg2.define("bar = foo / 3")
 
     @helpers.allprotos
     def test_quantity_1arg(self, protocol):
@@ -259,3 +260,24 @@ class TestSwapApplicationRegistry:
         assert m1.to("bar").error.magnitude == 2
         assert m2.to("bar").error.magnitude == 3
         assert m3.to("bar").error.magnitude == 3
+
+
+@pytest.mark.usefixtures("isolate_application_registry")
+def test_update_saved_registries():
+    ureg1 = get_application_registry()
+    ureg2 = get_application_registry()
+
+    new = UnitRegistry()
+    new.define("foo = []")
+    set_application_registry(new)
+
+    assert ureg1.Unit("foo") == ureg2.Unit("foo")
+
+
+@pytest.mark.usefixtures("isolate_application_registry")
+def test_modify_application_registry():
+    ar = get_application_registry()
+    u = ar.get()
+    ar.force_ndarray_like = True
+
+    assert ar.force_ndarray_like == u.force_ndarray_like

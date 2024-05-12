@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import pytest
 
 from pint import DimensionalityError
 from pint.testsuite import QuantityTestCase, helpers
 
 
+# TODO: do not subclass from QuantityTestCase
 @helpers.requires_not_uncertainties()
 class TestNotMeasurement(QuantityTestCase):
     def test_instantiate(self):
@@ -12,11 +15,13 @@ class TestNotMeasurement(QuantityTestCase):
             M_(4.0, 0.1, "s")
 
 
+# TODO: do not subclass from QuantityTestCase
 @helpers.requires_uncertainties()
 class TestMeasurement(QuantityTestCase):
     def test_simple(self):
         M_ = self.ureg.Measurement
-        M_(4.0, 0.1, "s")
+        m = M_(4.0, 0.1, "s * s")
+        assert repr(m) == "<Measurement(4.0, 0.1, second ** 2)>"
 
     def test_build(self):
         M_ = self.ureg.Measurement
@@ -36,125 +41,164 @@ class TestMeasurement(QuantityTestCase):
             assert m.error == u
             assert m.rel == m.error / abs(m.value)
 
-    def test_format(self, subtests):
-        v, u = self.Q_(4.0, "s ** 2"), self.Q_(0.1, "s ** 2")
-        m = self.ureg.Measurement(v, u)
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            ("", "(4.00 +/- 0.10) second ** 2"),
+            ("P", "(4.00 ± 0.10) second²"),
+            ("L", r"\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}"),
+            ("H", "(4.00 &plusmn; 0.10) second<sup>2</sup>"),
+            ("C", "(4.00+/-0.10) second**2"),
+            ("Lx", r"\SI{4.00 +- 0.10}{\second\squared}"),
+            (".1f", "(4.0 +/- 0.1) second ** 2"),
+            (".1fP", "(4.0 ± 0.1) second²"),
+            (".1fL", r"\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}"),
+            (".1fH", "(4.0 &plusmn; 0.1) second<sup>2</sup>"),
+            (".1fC", "(4.0+/-0.1) second**2"),
+            (".1fLx", r"\SI{4.0 +- 0.1}{\second\squared}"),
+        ],
+    )
+    def test_format(self, func_registry, spec, expected):
+        Q_ = func_registry.Quantity
+        v, u = Q_(4.0, "s ** 2"), Q_(0.1, "s ** 2")
+        m = func_registry.Measurement(v, u)
+        assert format(m, spec) == expected
 
-        for spec, result in (
-            ("{}", "(4.00 +/- 0.10) second ** 2"),
-            ("{!r}", "<Measurement(4.0, 0.1, second ** 2)>"),
-            ("{:P}", "(4.00 ± 0.10) second²"),
-            ("{:L}", r"\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}"),
-            ("{:H}", "(4.00 &plusmn; 0.10) second<sup>2</sup>"),
-            ("{:C}", "(4.00+/-0.10) second**2"),
-            ("{:Lx}", r"\SI{4.00 +- 0.10}{\second\squared}"),
-            ("{:.1f}", "(4.0 +/- 0.1) second ** 2"),
-            ("{:.1fP}", "(4.0 ± 0.1) second²"),
-            ("{:.1fL}", r"\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}"),
-            ("{:.1fH}", "(4.0 &plusmn; 0.1) second<sup>2</sup>"),
-            ("{:.1fC}", "(4.0+/-0.1) second**2"),
-            ("{:.1fLx}", r"\SI{4.0 +- 0.1}{\second\squared}"),
-        ):
-            with subtests.test(spec):
-                assert spec.format(m) == result
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            ("uS", "0.200(10) second ** 2"),
+            (".3uS", "0.2000(100) second ** 2"),
+            (".3uSP", "0.2000(100) second²"),
+            (".3uSL", r"0.2000\left(100\right)\ \mathrm{second}^{2}"),
+            (".3uSH", "0.2000(100) second<sup>2</sup>"),
+            (".3uSC", "0.2000(100) second**2"),
+        ],
+    )
+    def test_format_paru(self, func_registry, spec, expected):
+        Q_ = func_registry.Quantity
+        v, u = Q_(0.20, "s ** 2"), Q_(0.01, "s ** 2")
+        m = func_registry.Measurement(v, u)
+        assert format(m, spec) == expected
 
-    def test_format_paru(self, subtests):
-        v, u = self.Q_(0.20, "s ** 2"), self.Q_(0.01, "s ** 2")
-        m = self.ureg.Measurement(v, u)
-
-        for spec, result in (
-            ("{:uS}", "0.200(10) second ** 2"),
-            ("{:.3uS}", "0.2000(100) second ** 2"),
-            ("{:.3uSP}", "0.2000(100) second²"),
-            ("{:.3uSL}", r"0.2000\left(100\right)\ \mathrm{second}^{2}"),
-            ("{:.3uSH}", "0.2000(100) second<sup>2</sup>"),
-            ("{:.3uSC}", "0.2000(100) second**2"),
-        ):
-            with subtests.test(spec):
-                assert spec.format(m) == result
-
-    def test_format_u(self, subtests):
-        v, u = self.Q_(0.20, "s ** 2"), self.Q_(0.01, "s ** 2")
-        m = self.ureg.Measurement(v, u)
-
-        for spec, result in (
-            ("{:.3u}", "(0.2000 +/- 0.0100) second ** 2"),
-            ("{:.3uP}", "(0.2000 ± 0.0100) second²"),
-            ("{:.3uL}", r"\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}"),
-            ("{:.3uH}", "(0.2000 &plusmn; 0.0100) second<sup>2</sup>"),
-            ("{:.3uC}", "(0.2000+/-0.0100) second**2"),
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            (".3u", "(0.2000 +/- 0.0100) second ** 2"),
+            (".3uP", "(0.2000 ± 0.0100) second²"),
+            (".3uL", r"\left(0.2000 \pm 0.0100\right)\ \mathrm{second}^{2}"),
+            (".3uH", "(0.2000 &plusmn; 0.0100) second<sup>2</sup>"),
+            (".3uC", "(0.2000+/-0.0100) second**2"),
             (
-                "{:.3uLx}",
+                ".3uLx",
                 r"\SI{0.2000 +- 0.0100}{\second\squared}",
             ),
-            ("{:.1uLx}", r"\SI{0.20 +- 0.01}{\second\squared}"),
-        ):
-            with subtests.test(spec):
-                assert spec.format(m) == result
+            (".1uLx", r"\SI{0.20 +- 0.01}{\second\squared}"),
+        ],
+    )
+    def test_format_u(self, func_registry, spec, expected):
+        Q_ = func_registry.Quantity
+        v, u = Q_(0.20, "s ** 2"), Q_(0.01, "s ** 2")
+        m = func_registry.Measurement(v, u)
+        assert format(m, spec) == expected
 
-    def test_format_percu(self, subtests):
-        self.test_format_perce(subtests)
-        v, u = self.Q_(0.20, "s ** 2"), self.Q_(0.01, "s ** 2")
-        m = self.ureg.Measurement(v, u)
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            (".1u%", "(20 +/- 1)% second ** 2"),
+            (".1u%P", "(20 ± 1)% second²"),
+            (".1u%L", r"\left(20 \pm 1\right) \%\ \mathrm{second}^{2}"),
+            (".1u%H", "(20 &plusmn; 1)% second<sup>2</sup>"),
+            (".1u%C", "(20+/-1)% second**2"),
+        ],
+    )
+    def test_format_percu(self, func_registry, spec, expected):
+        Q_ = func_registry.Quantity
+        v, u = Q_(0.20, "s ** 2"), Q_(0.01, "s ** 2")
+        m = func_registry.Measurement(v, u)
+        assert format(m, spec) == expected
 
-        for spec, result in (
-            ("{:.1u%}", "(20 +/- 1)% second ** 2"),
-            ("{:.1u%P}", "(20 ± 1)% second²"),
-            ("{:.1u%L}", r"\left(20 \pm 1\right) \%\ \mathrm{second}^{2}"),
-            ("{:.1u%H}", "(20 &plusmn; 1)% second<sup>2</sup>"),
-            ("{:.1u%C}", "(20+/-1)% second**2"),
-        ):
-            with subtests.test(spec):
-                assert spec.format(m) == result
-
-    def test_format_perce(self, subtests):
-        v, u = self.Q_(0.20, "s ** 2"), self.Q_(0.01, "s ** 2")
-        m = self.ureg.Measurement(v, u)
-        for spec, result in (
-            ("{:.1ue}", "(2.0 +/- 0.1)e-01 second ** 2"),
-            ("{:.1ueP}", "(2.0 ± 0.1)×10⁻¹ second²"),
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            (".1ue", "(2.0 +/- 0.1)e-01 second ** 2"),
+            (".1ueP", "(2.0 ± 0.1)×10⁻¹ second²"),
             (
-                "{:.1ueL}",
+                ".1ueL",
                 r"\left(2.0 \pm 0.1\right) \times 10^{-1}\ \mathrm{second}^{2}",
             ),
-            ("{:.1ueH}", "(2.0 &plusmn; 0.1)×10<sup>-1</sup> second<sup>2</sup>"),
-            ("{:.1ueC}", "(2.0+/-0.1)e-01 second**2"),
-        ):
-            with subtests.test(spec):
-                assert spec.format(m) == result
+            (".1ueH", "(2.0 &plusmn; 0.1)×10<sup>-1</sup> second<sup>2</sup>"),
+            (".1ueC", "(2.0+/-0.1)e-01 second**2"),
+        ],
+    )
+    def test_format_perce(self, func_registry, spec, expected):
+        Q_ = func_registry.Quantity
+        v, u = Q_(0.20, "s ** 2"), Q_(0.01, "s ** 2")
+        m = func_registry.Measurement(v, u)
+        assert format(m, spec) == expected
 
-    def test_format_exponential_pos(self, subtests):
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            ("", "(4.00 +/- 0.10)e+20 second ** 2"),
+            # ("!r", "<Measurement(4e+20, 1e+19, second ** 2)>"),
+            ("P", "(4.00 ± 0.10)×10²⁰ second²"),
+            ("L", r"\left(4.00 \pm 0.10\right) \times 10^{20}\ \mathrm{second}^{2}"),
+            ("H", "(4.00 &plusmn; 0.10)×10<sup>20</sup> second<sup>2</sup>"),
+            ("C", "(4.00+/-0.10)e+20 second**2"),
+            ("Lx", r"\SI{4.00 +- 0.10 e+20}{\second\squared}"),
+        ],
+    )
+    def test_format_exponential_pos(self, func_registry, spec, expected):
         # Quantities in exponential format come with their own parenthesis, don't wrap
         # them twice
-        m = self.ureg.Quantity(4e20, "s^2").plus_minus(1e19)
-        for spec, result in (
-            ("{}", "(4.00 +/- 0.10)e+20 second ** 2"),
-            ("{!r}", "<Measurement(4e+20, 1e+19, second ** 2)>"),
-            ("{:P}", "(4.00 ± 0.10)×10²⁰ second²"),
-            ("{:L}", r"\left(4.00 \pm 0.10\right) \times 10^{20}\ \mathrm{second}^{2}"),
-            ("{:H}", "(4.00 &plusmn; 0.10)×10<sup>20</sup> second<sup>2</sup>"),
-            ("{:C}", "(4.00+/-0.10)e+20 second**2"),
-            ("{:Lx}", r"\SI{4.00 +- 0.10 e+20}{\second\squared}"),
-        ):
-            with subtests.test(spec):
-                assert spec.format(m) == result
+        m = func_registry.Quantity(4e20, "s^2").plus_minus(1e19)
+        assert format(m, spec) == expected
 
-    def test_format_exponential_neg(self, subtests):
-        m = self.ureg.Quantity(4e-20, "s^2").plus_minus(1e-21)
-        for spec, result in (
-            ("{}", "(4.00 +/- 0.10)e-20 second ** 2"),
-            ("{!r}", "<Measurement(4e-20, 1e-21, second ** 2)>"),
-            ("{:P}", "(4.00 ± 0.10)×10⁻²⁰ second²"),
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            ("", "(4.00 +/- 0.10)e-20 second ** 2"),
+            # ("!r", "<Measurement(4e-20, 1e-21, second ** 2)>"),
+            ("P", "(4.00 ± 0.10)×10⁻²⁰ second²"),
             (
-                "{:L}",
+                "L",
                 r"\left(4.00 \pm 0.10\right) \times 10^{-20}\ \mathrm{second}^{2}",
             ),
-            ("{:H}", "(4.00 &plusmn; 0.10)×10<sup>-20</sup> second<sup>2</sup>"),
-            ("{:C}", "(4.00+/-0.10)e-20 second**2"),
-            ("{:Lx}", r"\SI{4.00 +- 0.10 e-20}{\second\squared}"),
-        ):
-            with subtests.test(spec):
-                assert spec.format(m) == result
+            ("H", "(4.00 &plusmn; 0.10)×10<sup>-20</sup> second<sup>2</sup>"),
+            ("C", "(4.00+/-0.10)e-20 second**2"),
+            ("Lx", r"\SI{4.00 +- 0.10 e-20}{\second\squared}"),
+        ],
+    )
+    def test_format_exponential_neg(self, func_registry, spec, expected):
+        m = func_registry.Quantity(4e-20, "s^2").plus_minus(1e-21)
+        assert format(m, spec) == expected
+
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            ("", "(4.00 +/- 0.10) second ** 2"),
+            ("P", "(4.00 ± 0.10) second²"),
+            ("L", r"\left(4.00 \pm 0.10\right)\ \mathrm{second}^{2}"),
+            ("H", "(4.00 &plusmn; 0.10) second<sup>2</sup>"),
+            ("C", "(4.00+/-0.10) second**2"),
+            ("Lx", r"\SI{4.00 +- 0.10}{\second\squared}"),
+            (".1f", "(4.0 +/- 0.1) second ** 2"),
+            (".1fP", "(4.0 ± 0.1) second²"),
+            (".1fL", r"\left(4.0 \pm 0.1\right)\ \mathrm{second}^{2}"),
+            (".1fH", "(4.0 &plusmn; 0.1) second<sup>2</sup>"),
+            (".1fC", "(4.0+/-0.1) second**2"),
+            (".1fLx", r"\SI{4.0 +- 0.1}{\second\squared}"),
+        ],
+    )
+    def test_format_default(self, func_registry, spec, expected):
+        v, u = (
+            func_registry.Quantity(4.0, "s ** 2"),
+            func_registry.Quantity(0.1, "s ** 2"),
+        )
+        m = func_registry.Measurement(v, u)
+        func_registry.default_format = spec
+        assert f"{m}" == expected
 
     def test_raise_build(self):
         v, u = self.Q_(1.0, "s"), self.Q_(0.1, "s")
@@ -169,7 +213,6 @@ class TestMeasurement(QuantityTestCase):
             v.plus_minus(u, relative=True)
 
     def test_propagate_linear(self):
-
         v1, u1 = self.Q_(8.0, "s"), self.Q_(0.7, "s")
         v2, u2 = self.Q_(5.0, "s"), self.Q_(0.6, "s")
         v2, u3 = self.Q_(-5.0, "s"), self.Q_(0.6, "s")
@@ -198,7 +241,7 @@ class TestMeasurement(QuantityTestCase):
                 (
                     ml.error.magnitude + mr.error.magnitude
                     if ml is mr
-                    else (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** 0.5
+                    else (ml.error.magnitude**2 + mr.error.magnitude**2) ** 0.5
                 ),
             )
             assert r.value.units == ml.value.units
@@ -212,12 +255,11 @@ class TestMeasurement(QuantityTestCase):
                 r.error.magnitude,
                 0
                 if ml is mr
-                else (ml.error.magnitude ** 2 + mr.error.magnitude ** 2) ** 0.5,
+                else (ml.error.magnitude**2 + mr.error.magnitude**2) ** 0.5,
             )
             assert r.value.units == ml.value.units
 
     def test_propagate_product(self):
-
         v1, u1 = self.Q_(8.0, "s"), self.Q_(0.7, "s")
         v2, u2 = self.Q_(5.0, "s"), self.Q_(0.6, "s")
         v2, u3 = self.Q_(-5.0, "s"), self.Q_(0.6, "s")
@@ -248,3 +290,11 @@ class TestMeasurement(QuantityTestCase):
         y = self.Q_(5.0, "meter").plus_minus(0.1)
         assert x <= y
         assert not (x >= y)
+
+    def test_tokenization(self):
+        from pint import pint_eval
+
+        pint_eval.tokenizer = pint_eval.uncertainty_tokenizer
+        for p in pint_eval.tokenizer("8 + / - 4"):
+            print(p)
+        assert True

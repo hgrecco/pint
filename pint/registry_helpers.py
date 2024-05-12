@@ -2,18 +2,29 @@
     pint.registry_helpers
     ~~~~~~~~~~~~~~~~~~~~~
 
-    Miscellaneous methods of the registry writen as separate functions.
+    Miscellaneous methods of the registry written as separate functions.
 
     :copyright: 2016 by Pint Authors, see AUTHORS for more details..
     :license: BSD, see LICENSE for more details.
 """
 
-import functools
-from inspect import signature
-from itertools import zip_longest
+from __future__ import annotations
 
+import functools
+from collections.abc import Callable, Iterable
+from inspect import Parameter, signature
+from itertools import zip_longest
+from typing import TYPE_CHECKING, Any, TypeVar
+
+from ._typing import F
 from .errors import DimensionalityError
 from .util import UnitsContainer, to_units_container
+
+if TYPE_CHECKING:
+    from ._typing import Quantity, Unit
+    from .registry import UnitRegistry
+
+T = TypeVar("T")
 
 
 def _replace_units(original_units, values_by_name):
@@ -61,7 +72,6 @@ def _to_units_container(a, registry=None):
 
 
 def _parse_wrap_args(args, registry=None):
-
     # Arguments which contain definitions
     # (i.e. names that appear alone and for the first time)
     defs_args = set()
@@ -109,8 +119,13 @@ def _parse_wrap_args(args, registry=None):
                 "Not all variable referenced in %s are defined using !" % args[ndx]
             )
 
-    def _converter(ureg, values, strict):
-        new_values = list(value for value in values)
+    def _converter(ureg, sig, values, kw, strict):
+        len_initial_values = len(values)
+
+        # pack kwargs
+        for i, param_name in enumerate(sig.parameters):
+            if i >= len_initial_values:
+                values.append(kw[param_name])
 
         values_by_name = {}
 
@@ -118,13 +133,13 @@ def _parse_wrap_args(args, registry=None):
         for ndx in defs_args_ndx:
             value = values[ndx]
             values_by_name[args_as_uc[ndx][0]] = value
-            new_values[ndx] = getattr(value, "_magnitude", value)
+            values[ndx] = getattr(value, "_magnitude", value)
 
         # second pass: calculate derived values based on named values
         for ndx in dependent_args_ndx:
             value = values[ndx]
             assert _replace_units(args_as_uc[ndx][0], values_by_name) is not None
-            new_values[ndx] = ureg._convert(
+            values[ndx] = ureg._convert(
                 getattr(value, "_magnitude", value),
                 getattr(value, "_units", UnitsContainer({})),
                 _replace_units(args_as_uc[ndx][0], values_by_name),
@@ -132,9 +147,8 @@ def _parse_wrap_args(args, registry=None):
 
         # third pass: convert other arguments
         for ndx in unit_args_ndx:
-
             if isinstance(values[ndx], ureg.Quantity):
-                new_values[ndx] = ureg._convert(
+                values[ndx] = ureg._convert(
                     values[ndx]._magnitude, values[ndx]._units, args_as_uc[ndx][0]
                 )
             else:
@@ -142,7 +156,7 @@ def _parse_wrap_args(args, registry=None):
                     if isinstance(values[ndx], str):
                         # if the value is a string, we try to parse it
                         tmp_value = ureg.parse_expression(values[ndx])
-                        new_values[ndx] = ureg._convert(
+                        values[ndx] = ureg._convert(
                             tmp_value._magnitude, tmp_value._units, args_as_uc[ndx][0]
                         )
                     else:
@@ -150,32 +164,43 @@ def _parse_wrap_args(args, registry=None):
                             "A wrapped function using strict=True requires "
                             "quantity or a string for all arguments with not None units. "
                             "(error found for {}, {})".format(
-                                args_as_uc[ndx][0], new_values[ndx]
+                                args_as_uc[ndx][0], values[ndx]
                             )
                         )
 
-        return new_values, values_by_name
+        # unpack kwargs
+        for i, param_name in enumerate(sig.parameters):
+            if i >= len_initial_values:
+                kw[param_name] = values[i]
+
+        return values[:len_initial_values], kw, values_by_name
 
     return _converter
 
 
-def _apply_defaults(func, args, kwargs):
+def _apply_defaults(sig, args, kwargs):
     """Apply default keyword arguments.
 
     Named keywords may have been left blank. This function applies the default
     values so that every argument is defined.
     """
 
-    sig = signature(func)
-    bound_arguments = sig.bind(*args, **kwargs)
-    for param in sig.parameters.values():
-        if param.name not in bound_arguments.arguments:
-            bound_arguments.arguments[param.name] = param.default
-    args = [bound_arguments.arguments[key] for key in sig.parameters.keys()]
-    return args, {}
+    for i, param in enumerate(sig.parameters.values()):
+        if (
+            i >= len(args)
+            and param.default != Parameter.empty
+            and param.name not in kwargs
+        ):
+            kwargs[param.name] = param.default
+    return list(args), kwargs
 
 
-def wraps(ureg, ret, args, strict=True):
+def wraps(
+    ureg: UnitRegistry,
+    ret: str | Unit | Iterable[str | Unit | None] | None,
+    args: str | Unit | Iterable[str | Unit | None] | None,
+    strict: bool = True,
+) -> Callable[[Callable[..., Any]], Callable[..., Quantity]]:
     """Wraps a function to become pint-aware.
 
     Use it when a function requires a numerical value but in some specific
@@ -190,9 +215,9 @@ def wraps(ureg, ret, args, strict=True):
     ----------
     ureg : pint.UnitRegistry
         a UnitRegistry instance.
-    ret : str, pint.Unit, iterable of str, or iterable of pint.Unit
+    ret : str, pint.Unit, or iterable of str or pint.Unit
         Units of each of the return values. Use `None` to skip argument conversion.
-    args : str, pint.Unit, iterable of str, or iterable of pint.Unit
+    args : str, pint.Unit, or iterable of str or pint.Unit
         Units of each of the input arguments. Use `None` to skip argument conversion.
     strict : bool
         Indicates that only quantities are accepted. (Default value = True)
@@ -206,7 +231,7 @@ def wraps(ureg, ret, args, strict=True):
     ------
     TypeError
         if the number of given arguments does not match the number of function parameters.
-        if the any of the provided arguments is not a unit a string or Quantity
+        if any of the provided arguments is not a unit a string or Quantity
 
     """
 
@@ -239,9 +264,9 @@ def wraps(ureg, ret, args, strict=True):
             )
         ret = _to_units_container(ret, ureg)
 
-    def decorator(func):
-
-        count_params = len(signature(func).parameters)
+    def decorator(func: Callable[..., Any]) -> Callable[..., Quantity]:
+        sig = signature(func)
+        count_params = len(sig.parameters)
         if len(args) != count_params:
             raise TypeError(
                 "%s takes %i parameters, but %i units were passed"
@@ -256,15 +281,16 @@ def wraps(ureg, ret, args, strict=True):
         )
 
         @functools.wraps(func, assigned=assigned, updated=updated)
-        def wrapper(*values, **kw):
-
-            values, kw = _apply_defaults(func, values, kw)
+        def wrapper(*values, **kw) -> Quantity:
+            values, kw = _apply_defaults(sig, values, kw)
 
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.
-            new_values, values_by_name = converter(ureg, values, strict)
+            new_values, new_kw, values_by_name = converter(
+                ureg, sig, values, kw, strict
+            )
 
-            result = func(*new_values, **kw)
+            result = func(*new_values, **new_kw)
 
             if is_ret_container:
                 out_units = (
@@ -288,7 +314,9 @@ def wraps(ureg, ret, args, strict=True):
     return decorator
 
 
-def check(ureg, *args):
+def check(
+    ureg: UnitRegistry, *args: str | UnitsContainer | Unit | None
+) -> Callable[[F], F]:
     """Decorator to for quantity type checking for function inputs.
 
     Use it to ensure that the decorated function input parameters match
@@ -321,8 +349,8 @@ def check(ureg, *args):
     ]
 
     def decorator(func):
-
-        count_params = len(signature(func).parameters)
+        sig = signature(func)
+        count_params = len(sig.parameters)
         if len(dimensions) != count_params:
             raise TypeError(
                 "%s takes %i parameters, but %i dimensions were passed"
@@ -338,10 +366,13 @@ def check(ureg, *args):
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*args, **kwargs):
-            list_args, empty = _apply_defaults(func, args, kwargs)
+            list_args, kw = _apply_defaults(sig, args, kwargs)
+
+            for i, param_name in enumerate(sig.parameters):
+                if i >= len(args):
+                    list_args.append(kw[param_name])
 
             for dim, value in zip(dimensions, list_args):
-
                 if dim is None:
                     continue
 
