@@ -1185,8 +1185,7 @@ def test_issue_1845():
     assert ur("km / h * m").units == ur.Quantity("meter ** 2 / hour")
     assert ur("kW / min * W").units == ur.Quantity("watts ** 2 / minute")
 
-    
-    
+
 @pytest.mark.parametrize(
     "units,spec,expected",
     [
