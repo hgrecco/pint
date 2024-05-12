@@ -494,6 +494,10 @@ buckingham = debye * angstrom
 bohr_magneton = e * hbar / (2 * m_e) = µ_B = mu_B
 nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 
+# Refractive index
+[refractive_index] = []
+refractive_index_unit = [] = RIU
+
 # Logaritmic Unit Definition
 #  Unit = scale; logbase; logfactor
 #  x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )

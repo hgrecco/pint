@@ -11,8 +11,11 @@ Pint Changelog
 - Add `dim_order` and `default_sort_func` properties to FullFormatter.
   (PR #1926, fixes Issue #1841)
 - Fix LaTeX siuntix formatting when using non_int_type=decimal.Decimal.
+- Added refractive index units.
+  (PR #1816)
 - Fix converting to offset units of higher dimension e.g. gauge pressure
   (PR #1949)
+  
 
 0.23 (2023-12-08)
 -----------------
