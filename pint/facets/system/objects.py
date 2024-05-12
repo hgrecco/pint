@@ -10,14 +10,11 @@
 from __future__ import annotations
 
 import numbers
-
-from typing import Any, Optional
-from collections.abc import Iterable
-
-
-from typing import Callable, Generic
+from collections.abc import Callable, Iterable
 from numbers import Number
+from typing import Any, Generic
 
+from ..._typing import UnitLike
 from ...babel_names import _babel_systems
 from ...compat import babel_parse
 from ...util import (
@@ -26,11 +23,9 @@ from ...util import (
     logger,
     to_units_container,
 )
-from .definitions import SystemDefinition
 from .. import group
 from ..plain import MagnitudeT
-
-from ..._typing import UnitLike
+from .definitions import SystemDefinition
 
 GetRootUnits = Callable[[UnitLike, bool], tuple[Number, UnitLike]]
 
@@ -73,7 +68,7 @@ class System(SharedRegistryObject):
         #: Names of the _used_groups in used by this system.
         self._used_groups: set[str] = set()
 
-        self._computed_members: Optional[frozenset[str]] = None
+        self._computed_members: frozenset[str] | None = None
 
         # Add this system to the system dictionary
         self._REGISTRY._systems[self.name] = self
@@ -154,7 +149,7 @@ class System(SharedRegistryObject):
     def from_definition(
         cls: type[System],
         system_definition: SystemDefinition,
-        get_root_func: Optional[GetRootUnits] = None,
+        get_root_func: GetRootUnits | None = None,
     ) -> System:
         if get_root_func is None:
             # TODO: kept for backwards compatibility

@@ -413,6 +413,7 @@ matching_input_copy_units_output_ufuncs = [
     "take",
     "trace",
     "transpose",
+    "roll",
     "ceil",
     "floor",
     "hypot",
@@ -850,6 +851,7 @@ for func_str, unit_arguments, wrap_output in (
     ("median", "a", True),
     ("nanmedian", "a", True),
     ("transpose", "a", True),
+    ("roll", "a", True),
     ("copy", "a", True),
     ("average", "a", True),
     ("nanmean", "a", True),
@@ -965,7 +967,7 @@ def implement_single_dimensionless_argument_func(func_str):
         return a._REGISTRY.Quantity(func(a_stripped, *args, **kwargs))
 
 
-for func_str in ("cumprod", "cumproduct", "nancumprod"):
+for func_str in ("cumprod", "nancumprod"):
     implement_single_dimensionless_argument_func(func_str)
 
 # Handle single-argument consistent unit functions

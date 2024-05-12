@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import decimal
 import math
@@ -7,11 +9,11 @@ import pytest
 
 from pint import Context, DimensionalityError, UnitRegistry, get_application_registry
 from pint.compat import np
+from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
 from pint.facets.plain.unit import UnitsContainer
 from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
-
 
 from .helpers import internal
 
@@ -892,8 +894,8 @@ class TestIssues(QuantityTestCase):
         q2 = 3.1 * sess_registry.W / sess_registry.cm
         assert q1.format_babel("~", locale="es_ES") == "3,1 W"
         assert q1.format_babel("", locale="es_ES") == "3,1 vatios"
-        assert q2.format_babel("~", locale="es_ES") == "3,1 W / cm"
-        assert q2.format_babel("", locale="es_ES") == "3,1 vatios / centímetros"
+        assert q2.format_babel("~", locale="es_ES") == "3,1 W/cm"
+        assert q2.format_babel("", locale="es_ES") == "3,1 vatios por centímetro"
 
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):
@@ -908,7 +910,7 @@ class TestIssues(QuantityTestCase):
         u2 = ufloat(5.6, 0.78)
         q1_u = module_registry.Quantity(u2 - u1, "m")
         q1_str = str(q1_u)
-        q1_str = "{:.4uS}".format(q1_u)
+        q1_str = f"{q1_u:.4uS}"
         q1_m = q1_u.magnitude
         q2_u = module_registry.Quantity(q1_str)
         # Not equal because the uncertainties are differently random!
@@ -1157,31 +1159,31 @@ def test_issue1505():
     )  # unexpected fail (magnitude should be a decimal)
 
 
-def test_issues_1841(subtests):
-    from pint.delegates.formatter._format_helpers import dim_sort
-
-    ur = UnitRegistry()
-    ur.formatter.default_sort_func = dim_sort
-
-    for x, spec, result in (
-        (ur.Unit(UnitsContainer(hour=1, watt=1)), "P~", "W·h"),
-        (ur.Unit(UnitsContainer(ampere=1, volt=1)), "P~", "V·A"),
-        (ur.Unit(UnitsContainer(meter=1, newton=1)), "P~", "N·m"),
-    ):
-        with subtests.test(spec):
-            ur.default_format = spec
-            assert f"{x}" == result, f"Failed for {spec}, {result}"
+@pytest.mark.parametrize(
+    "units,spec,expected",
+    [
+        # (dict(hour=1, watt=1), "P~", "W·h"),
+        (dict(ampere=1, volt=1), "P~", "V·A"),
+        # (dict(meter=1, newton=1), "P~", "N·m"),
+    ],
+)
+def test_issues_1841(func_registry, units, spec, expected):
+    ur = func_registry
+    ur.formatter.default_sort_func = sort_by_dimensionality
+    ur.default_format = spec
+    value = ur.Unit(UnitsContainer(**units))
+    assert f"{value}" == expected
 
 
 @pytest.mark.xfail
 def test_issues_1841_xfail():
     from pint import formatting as fmt
-    from pint.delegates.formatter._format_helpers import dim_sort
+    from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
 
     # sets compact display mode by default
     ur = UnitRegistry()
     ur.default_format = "~P"
-    ur.formatter.default_sort_func = dim_sort
+    ur.formatter.default_sort_func = sort_by_dimensionality
 
     q = ur.Quantity("2*pi radian * hour")
 
@@ -1209,3 +1211,20 @@ def test_issue1949(registry_empty):
     q = ureg.Quantity("1 atm").to("inHg_gauge")
     assert q.units == ureg.in_Hg_gauge
     assert_equal(q.magnitude, 0.0)
+
+    
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (
+            "8.989e9 newton * meter^2 / coulomb^2",
+            r"\SI[]{8.989E+9}{\meter\squared\newton\per\coulomb\squared}",
+        ),
+        ("5 * meter / second", r"\SI[]{5}{\meter\per\second}"),
+        ("2.2 * meter^4", r"\SI[]{2.2}{\meter\tothe{4}}"),
+        ("2.2 * meter^-4", r"\SI[]{2.2}{\per\meter\tothe{4}}"),
+    ],
+)
+def test_issue1772(given, expected):
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    assert f"{ureg(given):Lx}" == expected

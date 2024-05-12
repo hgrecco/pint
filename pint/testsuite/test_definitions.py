@@ -1,6 +1,8 @@
-import pytest
+from __future__ import annotations
 
 import math
+
+import pytest
 
 from pint.definitions import Definition
 from pint.errors import DefinitionSyntaxError

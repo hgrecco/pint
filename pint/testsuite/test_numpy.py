@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import operator as op
 import pickle
@@ -286,6 +288,11 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         result = np.broadcast_arrays(x, y, subok=True)
         helpers.assert_quantity_equal(result, expected)
 
+    def test_roll(self):
+        helpers.assert_quantity_equal(
+            np.roll(self.q, 1), [[4, 1], [2, 3]] * self.ureg.m
+        )
+
 
 class TestNumpyMathematicalFunctions(TestNumpyMethods):
     # https://www.numpy.org/devdocs/reference/routines.math.html
@@ -330,9 +337,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         helpers.assert_quantity_equal(
             np.prod(self.q, axis=axis), [3, 8] * self.ureg.m**2
         )
-        helpers.assert_quantity_equal(
-            np.prod(self.q, where=where), 12 * self.ureg.m**3
-        )
+        helpers.assert_quantity_equal(np.prod(self.q, where=where), 12 * self.ureg.m**3)
 
         with pytest.raises(DimensionalityError):
             np.prod(self.q, axis=axis, where=where)
@@ -380,12 +385,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     def test_cumprod_numpy_func(self):
         with pytest.raises(DimensionalityError):
             np.cumprod(self.q)
-        with pytest.raises(DimensionalityError):
-            np.cumproduct(self.q)
         helpers.assert_quantity_equal(np.cumprod(self.q / self.ureg.m), [1, 2, 6, 24])
-        helpers.assert_quantity_equal(
-            np.cumproduct(self.q / self.ureg.m), [1, 2, 6, 24]
-        )
         helpers.assert_quantity_equal(
             np.cumprod(self.q / self.ureg.m, axis=1), [[1, 2], [3, 12]]
         )

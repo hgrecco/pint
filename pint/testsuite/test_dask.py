@@ -1,5 +1,6 @@
-import importlib
+from __future__ import annotations
 
+import importlib
 import pathlib
 
 import pytest

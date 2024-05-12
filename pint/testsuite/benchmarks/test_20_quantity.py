@@ -1,11 +1,12 @@
-from typing import Any
+from __future__ import annotations
+
 import itertools as it
 import operator
+from typing import Any
 
 import pytest
 
 import pint
-
 
 UNITS = ("meter", "kilometer", "second", "minute", "angstrom")
 ALL_VALUES = ("int", "float", "complex")
