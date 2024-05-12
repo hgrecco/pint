@@ -184,7 +184,7 @@ def to_preferred(
     >>> (1*ureg.acre).to_preferred([ureg.meters])
     <Quantity(4046.87261, 'meter ** 2')>
     >>> (1*(ureg.force_pound*ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'second * watt')>
+    <Quantity(4.44822162, 'watt * second')>
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -204,7 +204,7 @@ def ito_preferred(
     >>> (1*ureg.acre).to_preferred([ureg.meters])
     <Quantity(4046.87261, 'meter ** 2')>
     >>> (1*(ureg.force_pound*ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'second * watt')>
+    <Quantity(4.44822162, 'watt * second')>
     """
 
     units = _get_preferred(quantity, preferred_units)
