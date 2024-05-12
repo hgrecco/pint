@@ -20,7 +20,7 @@ Pint Changelog
   (PR #1949)
 - Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
   (PR #1853)
-  
+
 
 0.23 (2023-12-08)
 -----------------
