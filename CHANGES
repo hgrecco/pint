@@ -18,6 +18,8 @@ Pint Changelog
   (PR #1816)
 - Fix converting to offset units of higher dimension e.g. gauge pressure
   (PR #1949)
+- Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
+  (PR #1853)
   
 
 0.23 (2023-12-08)
@@ -47,8 +49,6 @@ Pint Changelog
   (PR #1819)
 - Add numpy.linalg.norm implementation.
   (PR #1251)
-- Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
-  (PR #1853)
 
 0.22 (2023-05-25)
 -----------------
