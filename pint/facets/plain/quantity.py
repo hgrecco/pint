@@ -27,6 +27,7 @@ from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
     _to_magnitude,
+    convert_timedelta,
     deprecated,
     eq,
     is_duck_array_type,
@@ -34,7 +35,6 @@ from ...compat import (
     is_timedelta_array,
     is_upcast_type,
     np,
-    to_seconds,
     zero_or_nan,
 )
 from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
@@ -204,11 +204,17 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         if units is None and isinstance(value, cls):
             return copy.copy(value)
-
         inst = SharedRegistryObject().__new__(cls)
-        if units is None and (is_timedelta(value) or is_timedelta_array(value)):
-            units = inst.UnitsContainer({"s": 1})
-        elif units is None:
+
+        if is_timedelta(value) or is_timedelta_array(value):
+            m, u = convert_timedelta(value)
+            inst._magnitude = m
+            inst._units = inst.UnitsContainer({u: 1})
+            if units:
+                inst.ito(units)
+            return inst
+
+        if units is None:
             units = inst.UnitsContainer()
         else:
             if isinstance(units, (UnitsContainer, UnitDefinition)):
@@ -228,11 +234,6 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                     "units must be of type str, PlainQuantity or "
                     "UnitsContainer; not {}.".format(type(units))
                 )
-        if is_timedelta(value) or is_timedelta_array(value):
-            inst._magnitude = to_seconds(value)
-            inst._units = inst.UnitsContainer({"s": 1})
-            return inst.to(units)
-
         if isinstance(value, cls):
             magnitude = value.to(units)._magnitude
         else:
