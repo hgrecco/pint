@@ -119,7 +119,7 @@ class GenericNonMultiplicativeRegistry(
         Raises
         ------
         UndefinedUnitError
-            If the unit is not in the registyr.
+            If the unit is not in the registry.
         """
         if unit_name in self._units:
             return self._units[unit_name].is_multiplicative
@@ -192,7 +192,7 @@ class GenericNonMultiplicativeRegistry(
         self, offset_unit: str, all_units: UnitsContainer
     ) -> UnitsContainer:
         slct_unit = self._units[offset_unit]
-        if slct_unit.is_logarithmic or (not slct_unit.is_multiplicative):
+        if slct_unit.is_logarithmic:
             # Extract reference unit
             slct_ref = slct_unit.reference
 
@@ -204,6 +204,11 @@ class GenericNonMultiplicativeRegistry(
                 (u, e) = [(u, e) for u, e in slct_ref.items()].pop()
                 # Add it back to the unit list
                 return all_units.add(u, e)
+
+        if not slct_unit.is_multiplicative:  # is offset unit
+            # Extract reference unit
+            return slct_unit.reference
+
         # Otherwise, return the units unmodified
         return all_units
 
@@ -249,6 +254,7 @@ class GenericNonMultiplicativeRegistry(
                 src, dst, extra_msg=f" - In destination units, {ex}"
             )
 
+        # convert if no offset units are present
         if not (src_offset_unit or dst_offset_unit):
             return super()._convert(value, src, dst, inplace)
 
@@ -262,6 +268,8 @@ class GenericNonMultiplicativeRegistry(
 
         # clean src from offset units by converting to reference
         if src_offset_unit:
+            if any(u.startswith("delta_") for u in dst):
+                raise DimensionalityError(src, dst)
             value = self._units[src_offset_unit].converter.to_reference(value, inplace)
             src = src.remove([src_offset_unit])
             # Add reference unit for multiplicative section
@@ -269,6 +277,8 @@ class GenericNonMultiplicativeRegistry(
 
         # clean dst units from offset units
         if dst_offset_unit:
+            if any(u.startswith("delta_") for u in src):
+                raise DimensionalityError(src, dst)
             dst = dst.remove([dst_offset_unit])
             # Add reference unit for multiplicative section
             dst = self._add_ref_of_log_or_offset_unit(dst_offset_unit, dst)

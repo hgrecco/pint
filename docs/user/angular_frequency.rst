@@ -2,7 +2,7 @@
 
 
 Angles and Angular Frequency
-=================
+=============================
 
 Angles
 ------
