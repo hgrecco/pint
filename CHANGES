@@ -12,6 +12,8 @@ Pint Changelog
 - Add `dim_sort` function to _formatter_helpers.
 - Add `dim_order` and `default_sort_func` properties to FullFormatter.
   (PR #1926, fixes Issue #1841)
+- Documented packages using pint.
+  (PR #1960)
 - Fixed bug causing operations between arrays of quantity scalars and quantity holding
   array resulting in incorrect units.
   (PR #1677)
