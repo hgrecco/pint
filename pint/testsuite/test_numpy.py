@@ -447,13 +447,16 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         )
 
     @helpers.requires_array_function_protocol()
+    # NP2: Remove this when we only support np>=2.0
+    @pytest.mark.skipif(
+        np.lib.NumpyVersion(np.__version__) < "2.0.0b1",
+        reason="trapezoid added in numpy2",
+    )
     def test_trapezoid(self):
-        # NP2: Remove this when we only support np>=2.0
-        if np.lib.NumpyVersion(np.__version__) >= "2.0.0b1":
-            helpers.assert_quantity_equal(
-                np.trapezoid([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
-                7.5 * self.ureg.J * self.ureg.m,
-            )
+        helpers.assert_quantity_equal(
+            np.trapezoid([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
+            7.5 * self.ureg.J * self.ureg.m,
+        )
 
     @helpers.requires_array_function_protocol()
     def test_dot(self):
