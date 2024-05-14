@@ -18,7 +18,7 @@ eulers_number = 2.71828182845904523536028747135266249775724709369995
 #### DEFINED EXACT CONSTANTS ####
 
 speed_of_light = 299792458 m/s = c = c_0                      # since 1983
-planck_constant = 6.62607015e-34 J s = h                      # since May 2019
+planck_constant = 6.62607015e-34 J s = ℎ                      # since May 2019
 elementary_charge = 1.602176634e-19 C = e                     # since May 2019
 avogadro_number = 6.02214076e23                               # since May 2019
 boltzmann_constant = 1.380649e-23 J K^-1 = k = k_B            # since May 2019
@@ -31,19 +31,19 @@ conventional_von_klitzing_constant = 2.5812807e4 ohm = R_K90  # since Jan 1990
 # Floating-point conversion may introduce inaccuracies
 
 zeta = c / (cm/s) = ζ
-dirac_constant = h / (2 * π) = ħ = hbar = atomic_unit_of_action = a_u_action
+dirac_constant = ℎ / (2 * π) = ħ = hbar = atomic_unit_of_action = a_u_action
 avogadro_constant = avogadro_number * mol^-1 = N_A
 molar_gas_constant = k * N_A = R
 faraday_constant = e * N_A
-conductance_quantum = 2 * e ** 2 / h = G_0
-magnetic_flux_quantum = h / (2 * e) = Φ_0 = Phi_0
-josephson_constant = 2 * e / h = K_J
-von_klitzing_constant = h / e ** 2 = R_K
-stefan_boltzmann_constant = 2 / 15 * π ** 5 * k ** 4 / (h ** 3 * c ** 2) = σ = sigma
-first_radiation_constant = 2 * π * h * c ** 2 = c_1
-second_radiation_constant = h * c / k = c_2
-wien_wavelength_displacement_law_constant = h * c / (k * wien_x)
-wien_frequency_displacement_law_constant = wien_u * k / h
+conductance_quantum = 2 * e ** 2 / ℎ = G_0
+magnetic_flux_quantum = ℎ / (2 * e) = Φ_0 = Phi_0
+josephson_constant = 2 * e / ℎ = K_J
+von_klitzing_constant = ℎ / e ** 2 = R_K
+stefan_boltzmann_constant = 2 / 15 * π ** 5 * k ** 4 / (ℎ ** 3 * c ** 2) = σ = sigma
+first_radiation_constant = 2 * π * ℎ * c ** 2 = c_1
+second_radiation_constant = ℎ * c / k = c_2
+wien_wavelength_displacement_law_constant = ℎ * c / (k * wien_x)
+wien_frequency_displacement_law_constant = wien_u * k / ℎ
 
 #### MEASURED CONSTANTS ####
 # Recommended CODATA-2018 values
@@ -65,10 +65,10 @@ K_alpha_W_d_220 = 0.108852175                                                   
 
 #### DERIVED CONSTANTS ####
 
-fine_structure_constant = (2 * h * R_inf / (m_e * c)) ** 0.5 = α = alpha
-vacuum_permeability = 2 * α * h / (e ** 2 * c) = µ_0 = mu_0 = mu0 = magnetic_constant
-vacuum_permittivity = e ** 2 / (2 * α * h * c) = ε_0 = epsilon_0 = eps_0 = eps0 = electric_constant
-impedance_of_free_space = 2 * α * h / e ** 2 = Z_0 = characteristic_impedance_of_vacuum
+fine_structure_constant = (2 * ℎ * R_inf / (m_e * c)) ** 0.5 = α = alpha
+vacuum_permeability = 2 * α * ℎ / (e ** 2 * c) = µ_0 = mu_0 = mu0 = magnetic_constant
+vacuum_permittivity = e ** 2 / (2 * α * ℎ * c) = ε_0 = epsilon_0 = eps_0 = eps0 = electric_constant
+impedance_of_free_space = 2 * α * ℎ / e ** 2 = Z_0 = characteristic_impedance_of_vacuum
 coulomb_constant = α * hbar * c / e ** 2 = k_C
 classical_electron_radius = α * hbar / (m_e * c) = r_e
 thomson_cross_section = 8 / 3 * π * r_e ** 2 = σ_e = sigma_e

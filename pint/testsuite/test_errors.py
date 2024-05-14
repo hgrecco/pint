@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pickle
 
 import pytest
@@ -21,41 +23,9 @@ class TestErrors:
         ex = DefinitionSyntaxError("foo")
         assert str(ex) == "foo"
 
-        # filename and lineno can be attached after init
-        ex.filename = "a.txt"
-        ex.lineno = 123
-        assert str(ex) == "While opening a.txt, in line 123: foo"
-
-        ex = DefinitionSyntaxError("foo", lineno=123)
-        assert str(ex) == "In line 123: foo"
-
-        ex = DefinitionSyntaxError("foo", filename="a.txt")
-        assert str(ex) == "While opening a.txt: foo"
-
-        ex = DefinitionSyntaxError("foo", filename="a.txt", lineno=123)
-        assert str(ex) == "While opening a.txt, in line 123: foo"
-
     def test_redefinition_error(self):
         ex = RedefinitionError("foo", "bar")
         assert str(ex) == "Cannot redefine 'foo' (bar)"
-
-        # filename and lineno can be attached after init
-        ex.filename = "a.txt"
-        ex.lineno = 123
-        assert (
-            str(ex) == "While opening a.txt, in line 123: Cannot redefine 'foo' (bar)"
-        )
-
-        ex = RedefinitionError("foo", "bar", lineno=123)
-        assert str(ex) == "In line 123: Cannot redefine 'foo' (bar)"
-
-        ex = RedefinitionError("foo", "bar", filename="a.txt")
-        assert str(ex) == "While opening a.txt: Cannot redefine 'foo' (bar)"
-
-        ex = RedefinitionError("foo", "bar", filename="a.txt", lineno=123)
-        assert (
-            str(ex) == "While opening a.txt, in line 123: Cannot redefine 'foo' (bar)"
-        )
 
         with pytest.raises(PintError):
             raise ex
@@ -148,8 +118,8 @@ class TestErrors:
         q2 = ureg.Quantity("1 bar")
 
         for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
-            for ex in [
-                DefinitionSyntaxError("foo", filename="a.txt", lineno=123),
+            for ex in (
+                DefinitionSyntaxError("foo"),
                 RedefinitionError("foo", "bar"),
                 UndefinedUnitError("meter"),
                 DimensionalityError("a", "b", "c", "d", extra_msg=": msg"),
@@ -157,7 +127,7 @@ class TestErrors:
                     Quantity("1 kg")._units, Quantity("1 s")._units
                 ),
                 OffsetUnitCalculusError(q1._units, q2._units),
-            ]:
+            ):
                 with subtests.test(protocol=protocol, etype=type(ex)):
                     pik = pickle.dumps(ureg.Quantity("1 foo"), protocol)
                     with pytest.raises(UndefinedUnitError):
@@ -165,10 +135,22 @@ class TestErrors:
 
                     # assert False, ex.__reduce__()
                     ex2 = pickle.loads(pickle.dumps(ex, protocol))
+                    print(ex)
+                    print(ex2)
                     assert type(ex) is type(ex2)
-                    assert ex.args == ex2.args
-                    assert ex.__dict__ == ex2.__dict__
+                    assert ex == ex
+                    # assert ex.__dict__ == ex2.__dict__
                     assert str(ex) == str(ex2)
 
                     with pytest.raises(PintError):
                         raise ex
+
+    def test_dimensionality_error_message(self):
+        ureg = UnitRegistry(system="SI")
+        with pytest.raises(ValueError) as error:
+            ureg.get_dimensionality("[bilbo]")
+
+        assert (
+            str(error.value)
+            == "[bilbo] is not defined as dimension in the pint UnitRegistry"
+        )

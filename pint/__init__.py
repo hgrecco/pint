@@ -11,7 +11,11 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from .context import Context
+from __future__ import annotations
+
+from importlib.metadata import version
+
+from .delegates.formatter._format_helpers import formatter
 from .errors import (  # noqa: F401
     DefinitionSyntaxError,
     DimensionalityError,
@@ -22,18 +26,17 @@ from .errors import (  # noqa: F401
     UndefinedUnitError,
     UnitStrippedWarning,
 )
-from .formatting import formatter, register_unit_format
-from .measurement import Measurement
-from .quantity import Quantity
+from .formatting import register_unit_format
 from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
-from .unit import Unit
 from .util import logger, pi_theorem  # noqa: F401
 
-try:
-    from importlib.metadata import version
-except ImportError:
-    # Backport for Python < 3.8
-    from importlib_metadata import version
+# Default Quantity, Unit and Measurement are the ones
+# build in the default registry.
+Quantity = UnitRegistry.Quantity
+Unit = UnitRegistry.Unit
+Measurement = UnitRegistry.Measurement
+Context = UnitRegistry.Context
+Group = UnitRegistry.Group
 
 try:  # pragma: no cover
     __version__ = version("pint")
@@ -64,7 +67,7 @@ def _unpickle(cls, *args):
     object of type cls
 
     """
-    from .unit import UnitsContainer
+    from pint.util import UnitsContainer
 
     for arg in args:
         # Prefixed units are defined within the registry
@@ -115,29 +118,17 @@ def get_application_registry():
     return application_registry
 
 
-def test():
-    """Run all tests.
-
-    Returns
-    -------
-    unittest.TestResult
-    """
-    from .testsuite import run
-
-    return run()
-
-
 # Enumerate all user-facing objects
 # Hint to intersphinx that, when building objects.inv, these objects must be registered
 # under the top-level module and not in their original submodules
 __all__ = (
-    "Context",
     "Measurement",
     "Quantity",
     "Unit",
     "UnitRegistry",
     "PintError",
     "DefinitionSyntaxError",
+    "LogarithmicUnitCalculusError",
     "DimensionalityError",
     "OffsetUnitCalculusError",
     "RedefinitionError",
@@ -149,4 +140,5 @@ __all__ = (
     "register_unit_format",
     "pi_theorem",
     "__version__",
+    "Context",
 )

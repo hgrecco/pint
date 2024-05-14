@@ -2,6 +2,15 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Latest Version
 
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/python/black
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff
+
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff-Format
+
 .. image:: https://readthedocs.org/projects/pint/badge/
     :target: https://pint.readthedocs.org/
     :alt: Documentation
@@ -40,8 +49,7 @@ and constants. Due to its modular design, you can extend (or even rewrite!)
 the complete list without changing the source code. It supports a lot of
 numpy mathematical operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 3.7+ with no other dependency.
-If you need Python 3.6 compatibility, use Pint 0.17.
+It has a complete test coverage. It runs in Python 3.9+ with no other dependency.
 It is licensed under BSD.
 
 It is extremely easy and natural to use:
@@ -151,7 +159,7 @@ see CHANGES_
 .. _`NumPy`: http://www.numpy.org/
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/
 .. _`Babel`: http://babel.pocoo.org/
-.. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/extending.html#extension-types
-.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb
+.. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/development/extending.html#extension-types
+.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pint-pandas.ipynb
 .. _`AUTHORS`: https://github.com/hgrecco/pint/blob/master/AUTHORS
 .. _`CHANGES`: https://github.com/hgrecco/pint/blob/master/CHANGES

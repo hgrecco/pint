@@ -1,8 +1,233 @@
 Pint Changelog
 ==============
 
-0.18 (unreleased)
+0.24 (unreleased)
 -----------------
+
+- Fix detection of invalid conversion between offset and delta units. (PR #1905)
+- Added dBW, decibel Watts, which is used in RF high power applications
+- NumPy 2.0 support
+  (PR #1985, #1971)
+- Implement numpy roll (Related to issue #981)
+- Add `dim_sort` function to _formatter_helpers.
+- Add `dim_order` and `default_sort_func` properties to FullFormatter.
+  (PR #1926, fixes Issue #1841)
+- Documented packages using pint.
+  (PR #1960)
+- Fixed bug causing operations between arrays of quantity scalars and quantity holding
+  array resulting in incorrect units.
+  (PR #1677)
+- Fix LaTeX siuntix formatting when using non_int_type=decimal.Decimal.
+- Added refractive index units.
+  (PR #1816)
+- Fix converting to offset units of higher dimension e.g. gauge pressure
+  (PR #1949)
+- Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
+  (PR #1853)
+- Improved error message in `get_dimensionality()` when non existent units are passed.
+  (PR #1874, Issue #1716)
+- Fix default format in jupyter notebooks (Issue #1206)
+
+
+0.23 (2023-12-08)
+-----------------
+
+- Add _get_conversion_factor to registry with cache.
+- Homogenize input and ouput of internal regitry functions to
+  facility typing, subclassing and wrapping.
+  (_yield_unit_triplets, )
+- Generated downstream_status page to track the
+  state of downstream projects.
+- Improve typing annotation.
+- Updated to flexparser 0.2.
+- Faster wraps
+  (PR #1862)
+- Add codspeed github action.
+- Move benchmarks to pytest-benchmarks.
+- Support pytest on python 3.12 wrt Fraction formatting change
+  (#1818)
+- Fixed Transformation type protocol.
+  (PR #1805, PR #1832)
+- Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
+  (PR #1803)
+- Enable Pint to parse uncertainty numbers.
+  (See #1611, #1614)
+- Optimize matplotlib unit conversion for Quantity arrays
+  (PR #1819)
+- Add numpy.linalg.norm implementation.
+  (PR #1251)
+
+0.22 (2023-05-25)
+-----------------
+
+- Drop Python 3.8 compatability following NEP-29.
+- Drop NumPy < 1.21 following NEP-29.
+- Improved typing experience.
+- Migrated fully to pyproject.toml.
+- Migrated to ruff.
+- In order to make static typing possible as required by mypy
+  and similar tools, the way to subclass the registry has been
+  changed.
+- Allow non-quantity atol parameters for isclose and allclose.
+  (PR #1783)
+
+
+0.21 (2023-05-01)
+-----------------
+
+- Add PEP621/631 support.
+  (Issue #1647)
+- Exposed matplotlib unit formatter (PR #1703)
+- Fix error when when re-registering a formatter.
+  (PR #1629)
+- Add new SI prefixes: ronna-, ronto-, quetta-, quecto-.
+  (PR #1652)
+- Fix unit check with `atol` using `np.allclose` & `np.isclose`.
+  (Issue #1658)
+- Implementation for numpy.positive added for Quantity.
+  (PR #1663)
+- Changed frequency to angular frequency in the docs.
+  (PR #1668)
+- Remove deprecated `alen` numpy function
+  (PR #1678)
+- Updated URLs for log and offset unit errors.
+  (PR #1727)
+- Patched TYPE_CHECKING import regression.
+  (PR #1686)
+- Parse '°' along with previous text, rather than adding a space,
+  allowing, eg 'Δ°C' as a unit.
+  (PR #1729)
+- Improved escaping of special characters for LaTeX format
+  (PR #1712)
+- Avoid addition of spurious trailing zeros when converting units and non-int-type is
+  Decimal (PR #1625).
+- Implementation for numpy.delete added for Quantity.
+  (PR #1669)
+- Fixed Quantity type returned from `__dask_postcompute__`.
+  (PR #1722)
+- Added Townsend unit
+  (PR #1738)
+- Fix get_compatible_units() in dynamically added units.
+  (Issue #1725)
+- Fix pint-convert script
+  (Issue #1646)
+- Honor non_int_type when dividing.
+  (Issue #1505)
+- Fix `trapz`, `dot`, and `cross` to work properly with non-multiplicative units
+  (Issue #1593)
+
+### Breaking Changes
+
+- Support percent and ppm units. Support the `%` symbol.
+  (Issue #1277)
+- Fix error when parsing subtraction operator followed by white space.
+  (PR #1701)
+- Removed Td as an alias for denier (within the Textile group)
+
+0.20.1 (2022-10-27)
+-------------------
+
+- Simplify registry subclassing.
+  (Issue #1631)
+- Restore intersphinx cross reference functionality.
+  (Issue #1637)
+- Use a newer version of flexparser that can deal with
+  imports in linked/temporary folders.
+  (Issue #1634)
+
+
+0.20 (2022-10-25)
+-----------------
+
+- Reorganized code into facets.
+  Each facet encapsulate a Pint functionality.
+  (See #1466, #1479)
+- The definition parser is now completely appart, making it easy to try other formats.
+  (See #1595)
+- Extra requires for optional packages are now explicit in setup.cfg
+  (See #1627)
+- Parse both Greek mu and micro Unicode points without error.
+  (Issue #1030, #574)
+- Added angular frequency documentation page.
+- Move ASV benchmarks to dedicated folder. (Issue #1542)
+- An ndim attribute has been added to Quantity and DataFrame has been added to upcast
+  types for pint-pandas compatibility. (#1596)
+- Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
+  (Issue #1510, #1530)
+- Update test_non_int tests for pytest.
+- Better support for uncertainties (See #1611, #1614)
+- Implement `numpy.broadcast_arrays` (#1607)
+- An ndim attribute has been added to Quantity and DataFrame has been added to upcast
+  types for pint-pandas compatibility. (#1596)
+- Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
+  (Issue #1510, #1530)
+- Update test_non_int tests for pytest.
+- Create NaN-value quantities of appropriate non-int-type (Issue #1570).
+- New documentation format and organization!
+- Better support for pandas and dask.
+- Fix masked arrays (with multiple values) incorrectly being passed through
+  setitem (Issue #1584)
+- Add Quantity.to_preferred
+
+0.19.2 (2022-04-23)
+-------------------
+
+- Add the ``separate_format_defaults`` registry setting (Issue #1501, PR #1503)
+- Handle definitions @import from relative paths on Windows
+  (Issue #1508, thanks khaeru)
+
+
+0.19.1 (2022-04-06)
+-------------------
+
+- Provide a method to iter the definitions in the order they appear,
+  recursing the imported files. (Issue #1498)
+
+
+0.19 (2022-04-04)
+-----------------
+
+- Better separation between parsing and loading of definitions.
+  Implement a parsed "binary" version of "textual" definition files.
+  Infrastructure to disk cache parsed definition files and RegistryCache
+  resulting in a 10X speed up in registry instantiation when enabled.
+  (Issue #1465)
+- Deprecate the old format defaulting behavior and prepare for the new one (Issue #1407)
+- Fix a bug for offset units of higher dimension, e.g. gauge pressure.
+  (Issue #1066, thanks dalito)
+- Fix type hints of function wrapper (Issue #1431)
+- Upgrade min version of uncertainties to 3.1.4
+- Add a example for `register_unit_format` to the formatting docs (Issue #1422).
+- Fix setting options of the application registry (Issue #1403).
+- Fix Quantity & Unit `is_compatible_with` with registry active contexts (Issue #1424).
+- Allow Quantity to parse 'NaN' and 'inf(inity)', case insensitive
+- Fix casting error when using to_reduced_units with array of int.
+  (Issue #1184)
+- Use default numpy `np.printoptions` available since numpy 1.15.
+- Implement `numpy.nanprod` (Issue #1369)
+- Fix default_format ignored for measurement (Issue #1456)
+- Add `pint.testing` with functions to compare pint objects in tests (Issue #1421).
+- Fix handling modulo & floordiv operator in pint_eval (Issue #1470)
+- Fix `to_compact` and `infer_base_unit` for non-float non_int_type.
+- Fix `to_reduced_units` to work with dimensionless units. (Issue #919)
+- Fix parsing of units string with same canonalized name (Issue #1441 & #1142)
+- The pint-pandas example notebook has been moved to the pint-pandas package.
+
+### New Units
+- `sverdrup` (PR #1404)
+- `cooling_tower_ton` (PR #1484)
+
+### Breaking Changes
+
+- Update hour default symbol to `h`. (Issue #719)
+- Replace `h` with `ℎ` (U+210E) as default symbol for planck constant.
+- Change minimal Python version support to 3.8+
+- Change minimal Numpy version support to 1.19+
+
+0.18 (2021-10-26)
+-----------------
+
+### Release Manager: jules-cheron
 
 - Implement use of Quantity in the Quantity constructor (convert to specified units).
   (Issue #1231)
@@ -13,12 +238,18 @@ Pint Changelog
   (Issue #1085)
 - Fix handling of positional max/min arguments in clip function.
   (Issue #1244)
-- Fix string formatting of numpy array scalars
+- Fix string formatting of numpy array scalars.
 - Fix default format for Measurement class (Issue #1300)
 - Fix parsing of pretty units with same exponents but different sign. (Issue #1360)
 - Convert the application registry to a wrapper object (Issue #1365)
-- Fix default format in jupyter notebooks (Issue #1206)
-- Add documentation for the string format options (Issue #1357, #1375)
+- Add documentation for the string format options.
+   (Issue #1357, #1375, thanks keewis)
+- Support custom units formats.
+  (Issue #1371, thanks keewis)
+- Autoupdate pre-commit hooks.
+- Improved the application registry.
+  (Issue #1366, thanks keewis)
+- Improved testing isolation using pytest fixtures.
 
 ### Breaking Changes
 
@@ -54,7 +285,7 @@ Pint Changelog
 - Fix tolist function with scalar ndarray.
   (Issue #1195, thanks jules-ch)
 - Corrected typos and dacstrings
-- Implements a first benchmark suite in airspeed velocity (asv). 
+- Implements a first benchmark suite in airspeed velocity (asv).
 - Power for pseudo-dimensionless units.
   (Issue #1185, thanks Kevin Fuhr)
 
