@@ -13,6 +13,14 @@ from pint.testsuite import helpers
 from pint.testsuite.test_umath import TestUFuncs
 
 
+def requires_numpy_2(reason=None):
+    if reason is None:
+        reason = "requires numpy >= 2"
+    return pytest.mark.skipif(
+        np.lib.NumpyVersion(np.__version__) < "2.0.0b1", reason=reason
+    )
+
+
 @helpers.requires_numpy
 class TestNumpyMethods:
     @classmethod
@@ -448,10 +456,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     # NP2: Remove this when we only support np>=2.0
-    @pytest.mark.skipif(
-        np.lib.NumpyVersion(np.__version__) < "2.0.0b1",
-        reason="trapezoid added in numpy2",
-    )
+    @requires_numpy_2(reason="trapezoid added in numpy2")
     def test_trapezoid(self):
         helpers.assert_quantity_equal(
             np.trapezoid([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
