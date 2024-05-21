@@ -858,7 +858,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
         assert np.var(self.q) == 1.25 * self.ureg.m**2
         assert np.var(self.q_temperature) == 1.25 * self.ureg.delta_degC**2
 
-
     @helpers.requires_array_function_protocol()
     def test_nanvar_numpy_func(self):
         helpers.assert_quantity_almost_equal(
@@ -879,7 +878,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.std(self.q), 1.11803 * self.ureg.m, rtol=1e-5
         )
         helpers.assert_quantity_almost_equal(
-            np.std(self.q_temperature) , 1.11803 * self.ureg.delta_degC, rtol=1e-5
+            np.std(self.q_temperature), 1.11803 * self.ureg.delta_degC, rtol=1e-5
         )
 
     def test_cumprod(self):

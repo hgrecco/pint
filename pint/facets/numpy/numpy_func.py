@@ -1011,9 +1011,7 @@ for func_str in (
     "linalg.norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ("diff", "ediff1d",
-    "std",
-    "nanstd",):
+for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
