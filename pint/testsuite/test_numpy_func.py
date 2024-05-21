@@ -216,6 +216,14 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         with pytest.raises(OffsetUnitCalculusError):
             np.trapz(t, x=z)
 
+    def test_correlate(self):
+        a = self.Q_(np.array([1, 2, 3]), "m")
+        v = self.Q_(np.array([0, 1, 0.5]), "s")
+        res = np.correlate(a, v, "full")
+        ref = np.array([0.5, 2., 3.5, 3., 0.])
+        assert np.array_equal(res.magnitude, ref)
+        assert res.units == "meter * second"
+
     def test_dot(self):
         with ExitStack() as stack:
             stack.callback(
