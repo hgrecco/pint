@@ -197,7 +197,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
                 product /= x.units
         result_unit = product
     elif unit_op == "variance":
-        result_unit = ((1 * first_input_units + 1 * first_input_units) ** 2).units
+        result_unit = ((1 * first_input_units - 1 * first_input_units) ** 2).units
     elif unit_op == "square":
         result_unit = first_input_units**2
     elif unit_op == "sqrt":
@@ -429,7 +429,7 @@ matching_input_copy_units_output_ufuncs = [
 ]
 copy_units_output_ufuncs = ["ldexp", "fmod", "mod", "remainder"]
 op_units_output_ufuncs = {
-    "var": "square",
+    "var": "variance",
     "multiply": "mul",
     "true_divide": "div",
     "divide": "div",
@@ -438,7 +438,7 @@ op_units_output_ufuncs = {
     "cbrt": "cbrt",
     "square": "square",
     "reciprocal": "reciprocal",
-    "std": "sum",
+    "std": "delta",
     "sum": "sum",
     "cumsum": "sum",
     "matmul": "mul",

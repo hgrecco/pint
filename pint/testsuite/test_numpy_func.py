@@ -172,8 +172,8 @@ class TestNumPyFuncUtils(TestNumpyMethods):
 
     def test_op_output_unit_variance(self):
         assert get_op_output_unit("variance", self.ureg.m) == self.ureg.m**2
-        with pytest.raises(OffsetUnitCalculusError):
-            get_op_output_unit("variance", self.ureg.degC)
+        # with pytest.raises(OffsetUnitCalculusError):
+        assert get_op_output_unit("variance", self.ureg.degC) == self.ureg.delta_degC**2
 
     def test_op_output_unit_square(self):
         assert get_op_output_unit("square", self.ureg.m) == self.ureg.m**2
