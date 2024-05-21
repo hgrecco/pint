@@ -779,6 +779,15 @@ def _trapz(y, x=None, dx=1.0, **kwargs):
     return y.units._REGISTRY.Quantity(ret, units)
 
 
+@implements("correlate", "function")
+def _correlate(a, v, mode="valid", **kwargs):
+    a = _base_unit_if_needed(a)
+    v = _base_unit_if_needed(v)
+    units = a.units * v.units
+    ret = np.correlate(a._magnitude, v._magnitude, mode=mode, **kwargs)
+    return a.units._REGISTRY.Quantity(ret, units)
+
+
 def implement_mul_func(func):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
