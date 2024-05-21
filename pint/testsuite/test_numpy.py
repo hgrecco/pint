@@ -850,11 +850,14 @@ class TestNumpyUnclassified(TestNumpyMethods):
         assert np.nanmedian(self.q_nan) == 2 * self.ureg.m
 
     def test_var(self):
+        assert self.q.var() == 1.25 * self.ureg.m**2
         assert self.q_temperature.var() == 1.25 * self.ureg.delta_degC**2
 
     @helpers.requires_array_function_protocol()
     def test_var_numpy_func(self):
         assert np.var(self.q) == 1.25 * self.ureg.m**2
+        assert np.var(self.q_temperature) == 1.25 * self.ureg.delta_degC**2
+
 
     @helpers.requires_array_function_protocol()
     def test_nanvar_numpy_func(self):

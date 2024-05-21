@@ -1004,8 +1004,6 @@ for func_str in (
 
 # Handle functions with output unit defined by operation
 for func_str in (
-    "std",
-    "nanstd",
     "sum",
     "nansum",
     "cumsum",
@@ -1013,7 +1011,9 @@ for func_str in (
     "linalg.norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ("diff", "ediff1d"):
+for func_str in ("diff", "ediff1d",
+    "std",
+    "nanstd",):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
