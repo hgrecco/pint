@@ -63,7 +63,9 @@ from ...compat import Self, TypeAlias, deprecated
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
 from ...util import (
+    NonReducingUnitContainer,
     ParserHelper,
+    UnitsContainer,
     _is_dim,
     create_class_with_registry,
     getattr_maybe_raise,
@@ -72,7 +74,6 @@ from ...util import (
     string_preprocessor,
     to_units_container,
 )
-from ...util import UnitsContainer, NonReducingUnitContainer
 from .definitions import (
     AliasDefinition,
     CommentDefinition,

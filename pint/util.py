@@ -677,9 +677,10 @@ class UnitsContainer(Mapping[str, Scalar]):
 
 
 class NonReducingUnitContainer(UnitsContainer):
-    """ The NonReducingUnitContainer stores UnitsContainers without simplifying common units.
+    """The NonReducingUnitContainer stores UnitsContainers without simplifying common units.
     This is useful when it is desired to show a unit in the numerator and denominator, eg mm/mm.
     """
+
     def __init__(
         self, units: list[UnitsContainer] | list[tuple[QuantityOrUnitLike, Scalar]]
     ) -> None:
@@ -691,7 +692,7 @@ class NonReducingUnitContainer(UnitsContainer):
         self.reduced_units = UnitsContainer()
         for unit in units:
             self.reduced_units *= unit
-        
+
         self._d = self.reduced_units._d
         self._hash = self.reduced_units._hash
 
