@@ -124,8 +124,8 @@ def siunitx_format_unit(
 ) -> str:
     """Returns LaTeX code for the unit that can be put into an siunitx command."""
 
-    def _tothe(power: int | float) -> str:
-        if isinstance(power, int) or (isinstance(power, float) and power.is_integer()):
+    def _tothe(power) -> str:
+        if power == int(power):
             if power == 1:
                 return ""
             elif power == 2:

@@ -4,9 +4,28 @@ Pint Changelog
 0.24 (unreleased)
 -----------------
 
+- Fix detection of invalid conversion between offset and delta units. (PR #1905)
+- Added dBW, decibel Watts, which is used in RF high power applications
+- NumPy 2.0 support
+  (PR #1985, #1971)
+- Implement numpy roll (Related to issue #981)
 - Add `dim_sort` function to _formatter_helpers.
 - Add `dim_order` and `default_sort_func` properties to FullFormatter.
   (PR #1926, fixes Issue #1841)
+- Documented packages using pint.
+  (PR #1960)
+- Fixed bug causing operations between arrays of quantity scalars and quantity holding
+  array resulting in incorrect units.
+  (PR #1677)
+- Fix LaTeX siuntix formatting when using non_int_type=decimal.Decimal.
+- Added refractive index units.
+  (PR #1816)
+- Fix converting to offset units of higher dimension e.g. gauge pressure
+  (PR #1949)
+- Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
+  (PR #1853)
+- Improved error message in `get_dimensionality()` when non existent units are passed.
+  (PR #1874, Issue #1716)
 
 
 0.23 (2023-12-08)

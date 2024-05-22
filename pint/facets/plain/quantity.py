@@ -140,7 +140,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def ndim(self) -> int:
         if isinstance(self.magnitude, numbers.Number):
             return 0
-        if str(self.magnitude) == "<NA>":
+        if str(type(self.magnitude)) == "NAType":
             return 0
         return self.magnitude.ndim
 

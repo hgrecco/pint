@@ -989,6 +989,8 @@ class TestConvertWithOffset(QuantityTestCase):
         (({"degC": 2}, {"kelvin": 2}), "error"),
         (({"degC": 1, "degF": 1}, {"kelvin": 2}), "error"),
         (({"degC": 1, "kelvin": 1}, {"kelvin": 2}), "error"),
+        (({"delta_degC": 1}, {"degF": 1}), "error"),
+        (({"delta_degC": 1}, {"degC": 1}), "error"),
     ]
 
     @pytest.mark.parametrize(("input_tuple", "expected"), convert_with_offset)
