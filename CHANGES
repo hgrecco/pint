@@ -7,6 +7,8 @@ Pint Changelog
 - Add `dim_sort` function to _formatter_helpers.
 - Add `dim_order` and `default_sort_func` properties to FullFormatter.
   (PR #1926, fixes Issue #1841)
+- Minimum version requirement added for typing_extensions>=4.0.0. 
+  (PR #1996)
 
 
 0.23 (2023-12-08)
