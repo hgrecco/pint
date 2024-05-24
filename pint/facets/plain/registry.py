@@ -63,7 +63,7 @@ from ...compat import Self, TypeAlias, deprecated
 from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
 from ...pint_eval import build_eval_tree
 from ...util import (
-    NonReducingUnitContainer,
+    NonReducingUnitsContainer,
     ParserHelper,
     UnitsContainer,
     _is_dim,
@@ -1407,8 +1407,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     __call__ = parse_expression
 
-    def NonReducingUnitContainer(self, units) -> UnitsContainer:
-        return NonReducingUnitContainer(units)
+    def NonReducingUnitsContainer(self, units) -> UnitsContainer:
+        return NonReducingUnitsContainer(units)
 
 
 class PlainRegistry(GenericPlainRegistry[PlainQuantity[Any], PlainUnit]):

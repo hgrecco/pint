@@ -104,7 +104,9 @@ class HTMLFormatter(BaseFormatter):
             division_fmt = localize_per(length, babel_kwds.get("locale"), "{}/{}")
         else:
             division_fmt = "{}/{}"
+        import pdb
 
+        pdb.set_trace()
         return formatter(
             numerator,
             denominator,

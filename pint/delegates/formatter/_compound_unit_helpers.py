@@ -26,7 +26,7 @@ from typing import (
 )
 
 from ...compat import babel_parse
-from ...util import UnitsContainer
+from ...util import NonReducingUnitsContainer, UnitsContainer
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -250,6 +250,8 @@ def prepare_compount_unit(
 
     if isinstance(unit, UnitsContainer):
         out = unit.items()
+    elif hasattr(unit, "_units") and isinstance(unit._units, NonReducingUnitsContainer):
+        out = unit._units.non_reduced_d_items
     elif hasattr(unit, "_units"):
         out = unit._units.items()
     else:

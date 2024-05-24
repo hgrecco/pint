@@ -832,6 +832,19 @@ class TestRegistry(QuantityTestCase):
         assert ureg.parse_units("j", case_sensitive=False) == UnitsContainer(joule=1)
 
 
+class TestNonReducing(QuantityTestCase):
+    def test_init(self):
+        ureg = self.ureg
+        NRUC_ = ureg.NonReducingUnitsContainer
+
+        mm_per_mm_unit = NRUC_([(ureg.mm, 1), (ureg.mm, -1)])
+        assert mm_per_mm_unit.non_reduced_units == [
+            ureg.UnitsContainer({"millimeter": 1}),
+            ureg.UnitsContainer({"millimeter": -1}),
+        ]
+        assert mm_per_mm_unit == ureg.dimensionless
+
+
 class TestCaseInsensitiveRegistry(QuantityTestCase):
     kwargs = dict(case_sensitive=False)
 

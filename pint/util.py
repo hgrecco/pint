@@ -676,25 +676,45 @@ class UnitsContainer(Mapping[str, Scalar]):
         return value
 
 
-class NonReducingUnitContainer(UnitsContainer):
-    """The NonReducingUnitContainer stores UnitsContainers without simplifying common units.
+class NonReducingUnitsContainer(UnitsContainer):
+    """The NonReducingUnitsContainer stores UnitsContainers without simplifying common units.
     This is useful when it is desired to show a unit in the numerator and denominator, eg mm/mm.
     """
 
     def __init__(
         self, units: list[UnitsContainer] | list[tuple[QuantityOrUnitLike, Scalar]]
     ) -> None:
-        if all(isinstance(u, tuple) for u in units):
-            units = [u[0]._units ** u[1] for u in units]
+        self.non_reduced_units = []
 
-        self.non_reduced_units = units
+        for u in units:
+            if isinstance(u, tuple):
+                u = u[0]._units ** u[1]
+            if hasattr(u, "_units"):
+                u = u._units
+            self.non_reduced_units.append(u)
 
         self.reduced_units = UnitsContainer()
-        for unit in units:
+        for unit in self.non_reduced_units:
             self.reduced_units *= unit
 
         self._d = self.reduced_units._d
         self._hash = self.reduced_units._hash
+
+        self.non_reduced_d_items = [
+            (key, value)
+            for uc in self.non_reduced_units
+            for key, value in uc._d.items()
+        ]
+        self.i = 0
+
+    def __repr__(self) -> str:
+        tmp = "[%s]" % ", ".join(
+            [f"'{key}': {value}" for key, value in self.non_reduced_d_items]
+        )
+        return f"<NonReducingUnitsContainer({tmp})>"
+
+    def unit_items(self) -> Iterable[tuple[str, Scalar]]:
+        return [items for _d in self.non_reduced_units for items in _d.items()]
 
 
 class ParserHelper(UnitsContainer):
