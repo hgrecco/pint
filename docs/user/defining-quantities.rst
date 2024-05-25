@@ -134,7 +134,7 @@ For example, the units of
 .. doctest::
 
    >>> Q_('3 l / 100 km')
-   <Quantity(0.03, 'kilometer * liter')>
+   <Quantity(0.03, 'liter * kilometer')>
 
 may be unexpected at first but, are a consequence of applying this rule. Use
 brackets to get the expected result:

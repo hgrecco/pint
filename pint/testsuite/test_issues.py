@@ -888,6 +888,26 @@ class TestIssues(QuantityTestCase):
         m = module_registry.Measurement(1, 0.1, "meter")
         assert m.default_format == "~P"
 
+    @helpers.requires_numpy()
+    def test_issue1674(self, module_registry):
+        Q_ = module_registry.Quantity
+        arr_of_q = np.array([Q_(2, "m"), Q_(4, "m")], dtype="object")
+        q_arr = Q_(np.array([1, 2]), "m")
+
+        helpers.assert_quantity_equal(
+            arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m^2")], dtype="object")
+        )
+        helpers.assert_quantity_equal(
+            arr_of_q / q_arr, np.array([Q_(2, ""), Q_(2, "")], dtype="object")
+        )
+
+        arr_of_q = np.array([Q_(2, "m"), Q_(4, "s")], dtype="object")
+        q_arr = Q_(np.array([1, 2]), "m")
+
+        helpers.assert_quantity_equal(
+            arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m s")], dtype="object")
+        )
+
     @helpers.requires_babel()
     def test_issue_1400(self, sess_registry):
         q1 = 3.1 * sess_registry.W
@@ -1147,7 +1167,7 @@ def test_issue1725(registry_empty):
     assert registry_empty.get_compatible_units("dollar") == set()
 
 
-def test_issues_1505():
+def test_issue1505():
     ur = UnitRegistry(non_int_type=decimal.Decimal)
 
     assert isinstance(ur.Quantity("1m/s").magnitude, decimal.Decimal)
@@ -1157,6 +1177,13 @@ def test_issues_1505():
     assert isinstance(
         ur.Quantity("m/s").magnitude, decimal.Decimal
     )  # unexpected fail (magnitude should be a decimal)
+
+
+def test_issue_1845():
+    ur = UnitRegistry(auto_reduce_dimensions=True, non_int_type=decimal.Decimal)
+    # before issue 1845 these inputs would have resulted in a TypeError
+    assert ur("km / h * m").units == ur.Quantity("meter ** 2 / hour")
+    assert ur("kW / min * W").units == ur.Quantity("watts ** 2 / minute")
 
 
 @pytest.mark.parametrize(
@@ -1201,3 +1228,30 @@ def test_issues_1841_xfail():
 
     # this prints "2*pi hour * radian", not "2*pi radian * hour" unless sort_dims is True
     # print(q)
+
+
+def test_issue1949(registry_empty):
+    ureg = UnitRegistry()
+    ureg.define(
+        "in_Hg_gauge = 3386389 * gram / metre / second ** 2; offset:101325000 = inHg_g = in_Hg_g = inHg_gauge"
+    )
+    q = ureg.Quantity("1 atm").to("inHg_gauge")
+    assert q.units == ureg.in_Hg_gauge
+    assert_equal(q.magnitude, 0.0)
+
+
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (
+            "8.989e9 newton * meter^2 / coulomb^2",
+            r"\SI[]{8.989E+9}{\meter\squared\newton\per\coulomb\squared}",
+        ),
+        ("5 * meter / second", r"\SI[]{5}{\meter\per\second}"),
+        ("2.2 * meter^4", r"\SI[]{2.2}{\meter\tothe{4}}"),
+        ("2.2 * meter^-4", r"\SI[]{2.2}{\per\meter\tothe{4}}"),
+    ],
+)
+def test_issue1772(given, expected):
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    assert f"{ureg(given):Lx}" == expected
