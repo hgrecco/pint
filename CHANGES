@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.24 (unreleased)
+0.24 (2024-06-07)
 -----------------
 
 - Fix detection of invalid conversion between offset and delta units. (PR #1905)
