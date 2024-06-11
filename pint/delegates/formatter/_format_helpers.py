@@ -161,6 +161,7 @@ def formatter(
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
     exp_call: FORMATTER = "{:n}".format,
+    empty_numerator_fmt = "1",
 ) -> str:
     """Format a list of (name, exponent) pairs.
 
@@ -183,6 +184,8 @@ def formatter(
         the format used for parenthesis. (Default value = "({0})")
     exp_call : callable
          (Default value = lambda x: f"{x:n}")
+    empty_numerator_fmt : str
+        the format used for an empty numerator. (Default value = "1")
 
     Returns
     -------
@@ -218,7 +221,7 @@ def formatter(
         return join_u(product_fmt, pos_terms + neg_terms)
 
     # Show as Ratio: positive terms / negative terms
-    pos_ret = join_u(product_fmt, pos_terms) or "1"
+    pos_ret = join_u(product_fmt, pos_terms) or empty_numerator_fmt
 
     if not neg_terms:
         return pos_ret
