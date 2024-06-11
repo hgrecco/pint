@@ -211,7 +211,7 @@ def formatter(
             neg_terms.append(power_fmt.format(key, fun(value)))
 
     if not pos_terms and not neg_terms:
-        return ""
+        return "dimensionless"
 
     if not as_ratio:
         # Show as Product: positive * negative terms ** -1

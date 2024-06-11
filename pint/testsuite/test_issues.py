@@ -1255,3 +1255,14 @@ def test_issue1949(registry_empty):
 def test_issue1772(given, expected):
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     assert f"{ureg(given):Lx}" == expected
+
+
+def test_issue2007():
+    ureg = UnitRegistry()
+    q = ureg.Quantity(1, "")
+    assert f"{q:P}" == '1 dimensionless'
+    assert f"{q:C}" == '1 dimensionless'
+    assert f"{q:D}" == '1 dimensionless'
+    assert f"{q:H}" == '1 dimensionless'
+    assert f"{q:L}" == '1\\ dimensionless'
+    assert f"{q:Lx}" == '\\SI[]{1}{}'
