@@ -131,6 +131,8 @@ def join_mu(joint_fstring: str, mstr: str, ustr: str) -> str:
 
     This avoids that `3 and `1 / m` becomes `3 1 / m`
     """
+    if ustr == "":
+        return mstr
     if ustr.startswith("1 / "):
         return joint_fstring.format(mstr, ustr[2:])
     return joint_fstring.format(mstr, ustr)
@@ -211,7 +213,7 @@ def formatter(
             neg_terms.append(power_fmt.format(key, fun(value)))
 
     if not pos_terms and not neg_terms:
-        return "dimensionless"
+        return ""
 
     if not as_ratio:
         # Show as Product: positive * negative terms ** -1

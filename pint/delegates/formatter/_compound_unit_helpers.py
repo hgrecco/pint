@@ -254,7 +254,9 @@ def prepare_compount_unit(
         out = unit._units.items()
     else:
         out = unit
-
+    print(out)
+    if len(out) == 0 and not "~" in spec:
+        out = {"dimensionless": 1}.items()
     # out: unit_name, unit_exponent
 
     if "~" in spec:
