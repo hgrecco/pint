@@ -21,3 +21,4 @@ Packages using pint:
 - `thermo <https://github.com/CalebBell/thermo/>`_ Thermodynamic equilibrium calculations
 - `Taurus <https://taurus-scada.org/>`_ Control system UI creation
 - `InstrumentKit <https://github.com/instrumentkit/InstrumentKit>`_ Interacting with laboratory equipment over various buses.
+- `NEMO <https://github.com/bje-/NEMO/>`_ Electricity production cost model
