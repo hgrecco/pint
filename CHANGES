@@ -4,7 +4,7 @@ Pint Changelog
 0.25 (unreleased)
 -----------------
 
-Nothing added yet.
+- Fix custom formatter needing the registry object. (PR #2011)
 
 
 0.24 (2024-06-07)

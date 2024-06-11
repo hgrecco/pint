@@ -103,11 +103,17 @@ class FullFormatter(BaseFormatter):
                 return v
 
         try:
-            return REGISTERED_FORMATTERS[spec]
+            orphan_fmt = REGISTERED_FORMATTERS[spec]
         except KeyError:
-            pass
+            return self._formatters["D"]
 
-        return self._formatters["D"]
+        try:
+            fmt = orphan_fmt.__class__(self._registry)
+            spec = getattr(fmt, "spec", spec)
+            self._formatters[spec] = fmt
+            return fmt
+        except Exception:
+            return orphan_fmt
 
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
