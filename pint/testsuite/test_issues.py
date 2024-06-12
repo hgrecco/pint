@@ -403,6 +403,12 @@ class TestIssues(QuantityTestCase):
     def test_micro_creation_U00b5(self, module_registry):
         module_registry.Quantity(2, "µm")
 
+    def test_micro_creation_mu(self, module_registry):
+        module_registry.Quantity(2, "mug")
+
+    def test_micro_creation_mc(self, module_registry):
+        module_registry.Quantity(2, "mcg")
+
     @helpers.requires_numpy
     def test_issue171_real_imag(self, module_registry):
         qr = [1.0, 2.0, 3.0, 4.0] * module_registry.meter
