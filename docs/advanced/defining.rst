@@ -53,9 +53,11 @@ way is to create a new file (e.g. `mydef.txt`) with your definitions::
 
 and then in Python, you can load it as:
 
-   >>> from pint import UnitRegistry
+   >>> import pint
    >>> # First we create the registry.
-   >>> ureg = UnitRegistry()
+   >>> ureg = pint.UnitRegistry()
+   >>> # Set pint to use the new registry
+   >>> pint.set_application_registry(ureg)
    >>> # Then we append the new definitions
    >>> ureg.load_definitions('/your/path/to/my_def.txt') # doctest: +SKIP
 
@@ -63,8 +65,7 @@ If you make a translation of the default units or define a completely new set,
 you don't want to append the translated definitions so you just give the
 filename to the constructor::
 
-   >>> from pint import UnitRegistry
-   >>> ureg = UnitRegistry('/your/path/to/default_es.txt') # doctest: +SKIP
+   >>> ureg = pint.UnitRegistry('/your/path/to/default_es.txt') # doctest: +SKIP
 
 In the definition file, prefixes are identified by a trailing dash::
 
@@ -100,10 +101,11 @@ Let's add a dog_year (sometimes written as dy) equivalent to 52 (human) days:
 
 .. doctest::
 
-   >>> from pint import UnitRegistry
+   >>> import pint
    >>> # We first instantiate the registry.
    >>> # If we do not provide any parameter, the default unit definitions are used.
-   >>> ureg = UnitRegistry()
+   >>> ureg = pint.UnitRegistry()
+   >>> pint.set_application_registry(ureg)
    >>> Q_ = ureg.Quantity
 
    # Here we add the unit
