@@ -1260,10 +1260,16 @@ def test_issue1772(given, expected):
 def test_issue2007():
     ureg = UnitRegistry()
     q = ureg.Quantity(1, "")
-    assert f"{q:P}" == '1 dimensionless'
-    assert f"{q:C}" == '1 dimensionless'
-    assert f"{q:D}" == '1 dimensionless'
-    assert f"{q:H}" == '1 dimensionless'
-    # assert f"{q:L}" == '1\\ dimensionless'
-    assert f"{q:Lx}" == '\\SI[]{1}{}'
-    assert f"{q:~P}" == '1'
+    assert f"{q:P}" == "1 dimensionless"
+    assert f"{q:C}" == "1 dimensionless"
+    assert f"{q:D}" == "1 dimensionless"
+    assert f"{q:H}" == "1 dimensionless"
+
+    assert f"{q:L}" == "1\\ \\mathrm{dimensionless}"
+    #  L returned '1\\ dimensionless' in pint 0.23
+
+    assert f"{q:Lx}" == "\\SI[]{1}{}"
+    assert f"{q:~P}" == "1"
+    assert f"{q:~C}" == "1"
+    assert f"{q:~D}" == "1"
+    assert f"{q:~H}" == "1"
