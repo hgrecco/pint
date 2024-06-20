@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import itertools
 import logging
 import math
@@ -15,7 +17,6 @@ from pint import (
 )
 from pint.testsuite import helpers
 from pint.util import UnitsContainer
-
 
 from .helpers import internal
 

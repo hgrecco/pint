@@ -14,14 +14,15 @@ import functools
 import itertools
 import numbers
 import pathlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any
+
+import flexcache as fc
+import flexparser as fp
 
 from pint import errors
 from pint.facets.plain.definitions import NotNumeric
 from pint.util import ParserHelper, UnitsContainer
-
-from .._vendor import flexcache as fc
-from .._vendor import flexparser as fp
 
 
 @dataclass(frozen=True)
@@ -72,7 +73,7 @@ class PintParsedStatement(fp.ParsedStatement[ParserConfig]):
 
 
 @functools.lru_cache
-def build_disk_cache_class(non_int_type: type):
+def build_disk_cache_class(chosen_non_int_type: type):
     """Build disk cache class, taking into account the non_int_type."""
 
     @dataclass(frozen=True)
@@ -80,14 +81,18 @@ def build_disk_cache_class(non_int_type: type):
         from .. import __version__
 
         pint_version: str = __version__
-        non_int_type: str = field(default_factory=lambda: non_int_type.__qualname__)
+        non_int_type: str = chosen_non_int_type.__qualname__
 
+    @dataclass(frozen=True)
     class PathHeader(fc.NameByFileContent, PintHeader):
         pass
 
+    @dataclass(frozen=True)
     class ParsedProjecHeader(fc.NameByHashIter, PintHeader):
         @classmethod
-        def from_parsed_project(cls, pp: fp.ParsedProject, reader_id):
+        def from_parsed_project(
+            cls, pp: fp.ParsedProject[Any, ParserConfig], reader_id: str
+        ):
             tmp = (
                 f"{stmt.content_hash.algorithm_name}:{stmt.content_hash.hexdigest}"
                 for stmt in pp.iter_statements()

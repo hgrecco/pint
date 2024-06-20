@@ -12,7 +12,7 @@ import copy
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import UnitLike
 from ...compat import NUMERIC_TYPES, deprecated
@@ -43,8 +43,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             self._units = units._units
         else:
             raise TypeError(
-                "units must be of type str, Unit or "
-                "UnitsContainer; not {}.".format(type(units))
+                "units must be of type str, Unit or " "UnitsContainer; not {}.".format(
+                    type(units)
+                )
             )
 
     def __copy__(self) -> PlainUnit:
@@ -103,7 +104,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self)
 
     def is_compatible_with(
-        self, other: Any, *contexts: Union[str, Context], **ctx_kwargs: Any
+        self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
     ) -> bool:
         """check if the other object is compatible
 

@@ -1,10 +1,12 @@
+from __future__ import annotations
+
+import contextlib
 import doctest
 import math
 import os
+import pathlib
 import unittest
 import warnings
-import contextlib
-import pathlib
 
 from pint import UnitRegistry
 from pint.testsuite.helpers import PintOutputChecker

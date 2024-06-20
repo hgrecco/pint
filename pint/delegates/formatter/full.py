@@ -11,25 +11,36 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional, Any
 import locale
-from ...compat import babel_parse, Unpack
-from ...util import iterable
+from typing import TYPE_CHECKING, Any, Iterable, Literal
 
 from ..._typing import Magnitude
+from ...compat import Unpack, babel_parse
+from ...util import iterable
+from ._compound_unit_helpers import BabelKwds, SortFunc, sort_by_unit_name
+from ._to_register import REGISTERED_FORMATTERS
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
-from .plain import RawFormatter, CompactFormatter, PrettyFormatter, DefaultFormatter
-from ._format_helpers import BabelKwds
-from ._to_register import REGISTERED_FORMATTERS
+from .plain import (
+    BaseFormatter,
+    CompactFormatter,
+    DefaultFormatter,
+    PrettyFormatter,
+    RawFormatter,
+)
 
 if TYPE_CHECKING:
-    from ...facets.plain import PlainQuantity, PlainUnit, MagnitudeT
-    from ...facets.measurement import Measurement
     from ...compat import Locale
+    from ...facets.measurement import Measurement
+    from ...facets.plain import (
+        MagnitudeT,
+        PlainQuantity,
+        PlainUnit,
+    )
+    from ...registry import UnitRegistry
 
 
-class FullFormatter:
+class FullFormatter(BaseFormatter):
     """A formatter that dispatch to other formatters.
 
     Has a default format, locale and babel_length
@@ -39,10 +50,35 @@ class FullFormatter:
 
     default_format: str = ""
 
-    locale: Optional[Locale] = None
-    babel_length: Literal["short", "long", "narrow"] = "long"
+    # TODO: This can be over-riden by the registry definitions file
+    dim_order: tuple[str, ...] = (
+        "[substance]",
+        "[mass]",
+        "[current]",
+        "[luminosity]",
+        "[length]",
+        "[]",
+        "[time]",
+        "[temperature]",
+    )
 
-    def set_locale(self, loc: Optional[str]) -> None:
+    default_sort_func: SortFunc | None = staticmethod(sort_by_unit_name)
+
+    locale: Locale | None = None
+
+    def __init__(self, registry: UnitRegistry | None = None):
+        super().__init__(registry)
+
+        self._formatters = {}
+        self._formatters["raw"] = RawFormatter(registry)
+        self._formatters["D"] = DefaultFormatter(registry)
+        self._formatters["H"] = HTMLFormatter(registry)
+        self._formatters["P"] = PrettyFormatter(registry)
+        self._formatters["Lx"] = SIunitxFormatter(registry)
+        self._formatters["L"] = LatexFormatter(registry)
+        self._formatters["C"] = CompactFormatter(registry)
+
+    def set_locale(self, loc: str | None) -> None:
         """Change the locale used by default by `format_babel`.
 
         Parameters
@@ -59,16 +95,6 @@ class FullFormatter:
 
         self.locale = loc
 
-    def __init__(self) -> None:
-        self._formatters = {}
-        self._formatters["raw"] = RawFormatter()
-        self._formatters["D"] = DefaultFormatter()
-        self._formatters["H"] = HTMLFormatter()
-        self._formatters["P"] = PrettyFormatter()
-        self._formatters["Lx"] = SIunitxFormatter()
-        self._formatters["L"] = LatexFormatter()
-        self._formatters["C"] = CompactFormatter()
-
     def get_formatter(self, spec: str):
         if spec == "":
             return self._formatters["D"]
@@ -77,11 +103,17 @@ class FullFormatter:
                 return v
 
         try:
-            return REGISTERED_FORMATTERS[spec]
+            orphan_fmt = REGISTERED_FORMATTERS[spec]
         except KeyError:
-            pass
+            return self._formatters["D"]
 
-        return self._formatters["D"]
+        try:
+            fmt = orphan_fmt.__class__(self._registry)
+            spec = getattr(fmt, "spec", spec)
+            self._formatters[spec] = fmt
+            return fmt
+        except Exception:
+            return orphan_fmt
 
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
@@ -92,10 +124,17 @@ class FullFormatter:
         )
 
     def format_unit(
-        self, unit: PlainUnit, uspec: str = "", **babel_kwds: Unpack[BabelKwds]
+        self,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         uspec = uspec or self.default_format
-        return self.get_formatter(uspec).format_unit(unit, uspec, **babel_kwds)
+        sort_func = sort_func or self.default_sort_func
+        return self.get_formatter(uspec).format_unit(
+            unit, uspec, sort_func=sort_func, **babel_kwds
+        )
 
     def format_quantity(
         self,
@@ -113,16 +152,25 @@ class FullFormatter:
 
         del quantity
 
-        use_plural = obj.magnitude > 1
-        if iterable(use_plural):
-            use_plural = True
+        locale = babel_kwds.get("locale", self.locale)
+
+        if locale:
+            if "use_plural" in babel_kwds:
+                use_plural = babel_kwds["use_plural"]
+            else:
+                use_plural = obj.magnitude > 1
+                if iterable(use_plural):
+                    use_plural = True
+        else:
+            use_plural = False
 
         return self.get_formatter(spec).format_quantity(
             obj,
             spec,
-            use_plural=babel_kwds.get("use_plural", use_plural),
-            length=babel_kwds.get("length", self.babel_length),
-            locale=babel_kwds.get("locale", self.locale),
+            sort_func=self.default_sort_func,
+            use_plural=use_plural,
+            length=babel_kwds.get("length", None),
+            locale=locale,
         )
 
     def format_measurement(
@@ -148,8 +196,9 @@ class FullFormatter:
         return self.get_formatter(meas_spec).format_measurement(
             obj,
             meas_spec,
+            sort_func=self.default_sort_func,
             use_plural=babel_kwds.get("use_plural", use_plural),
-            length=babel_kwds.get("length", self.babel_length),
+            length=babel_kwds.get("length", None),
             locale=babel_kwds.get("locale", self.locale),
         )
 
@@ -159,10 +208,10 @@ class FullFormatter:
 
     def format_unit_babel(
         self,
-        unit: PlainUnit,
+        unit: PlainUnit | Iterable[tuple[str, Any]],
         spec: str = "",
-        length: Optional[Literal["short", "long", "narrow"]] = "long",
-        locale: Optional[Locale] = None,
+        length: Literal["short", "long", "narrow"] | None = None,
+        locale: Locale | None = None,
     ) -> str:
         if self.locale is None and locale is None:
             raise ValueError(
@@ -172,8 +221,9 @@ class FullFormatter:
         return self.format_unit(
             unit,
             spec or self.default_format,
+            sort_func=self.default_sort_func,
             use_plural=False,
-            length=length or self.babel_length,
+            length=length,
             locale=locale or self.locale,
         )
 
@@ -181,8 +231,8 @@ class FullFormatter:
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
-        length: Literal["short", "long", "narrow"] = "long",
-        locale: Optional[Locale] = None,
+        length: Literal["short", "long", "narrow"] | None = None,
+        locale: Locale | None = None,
     ) -> str:
         if self.locale is None and locale is None:
             raise ValueError(
@@ -192,11 +242,13 @@ class FullFormatter:
         use_plural = quantity.magnitude > 1
         if iterable(use_plural):
             use_plural = True
+
         return self.format_quantity(
             quantity,
             spec or self.default_format,
+            sort_func=self.default_sort_func,
             use_plural=use_plural,
-            length=length or self.babel_length,
+            length=length,
             locale=locale or self.locale,
         )
 

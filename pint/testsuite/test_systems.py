@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import pytest
 
 from pint import UnitRegistry
 from pint.testsuite import QuantityTestCase
-
 
 from .helpers import internal
 

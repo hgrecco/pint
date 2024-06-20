@@ -19,10 +19,11 @@ from __future__ import annotations
 import numbers
 import re
 import typing as ty
-from typing import Optional, Union
 from dataclasses import dataclass
+from typing import Union
 
-from ..._vendor import flexparser as fp
+import flexparser as fp
+
 from ...facets.context import definitions
 from ..base_defparser import ParserConfig, PintParsedStatement
 from . import block, common, plain
@@ -33,7 +34,7 @@ T = ty.TypeVar("T", bound="Union[ForwardRelation, BidirectionalRelation]")
 
 def _from_string_and_context_sep(
     cls: type[T], s: str, config: ParserConfig, separator: str
-) -> Optional[T]:
+) -> T | None:
     if separator not in s:
         return None
     if ":" not in s:
@@ -58,7 +59,7 @@ class ForwardRelation(PintParsedStatement, definitions.ForwardRelation):
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[ForwardRelation]:
+    ) -> fp.NullableParsedResult[ForwardRelation]:
         return _from_string_and_context_sep(cls, s, config, "->")
 
 
@@ -74,7 +75,7 @@ class BidirectionalRelation(PintParsedStatement, definitions.BidirectionalRelati
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[BidirectionalRelation]:
+    ) -> fp.NullableParsedResult[BidirectionalRelation]:
         return _from_string_and_context_sep(cls, s, config, "<->")
 
 
@@ -96,7 +97,7 @@ class BeginContext(PintParsedStatement):
     @classmethod
     def from_string_and_config(
         cls, s: str, config: ParserConfig
-    ) -> fp.FromString[BeginContext]:
+    ) -> fp.NullableParsedResult[BeginContext]:
         try:
             r = cls._header_re.search(s)
             if r is None:
@@ -169,16 +170,6 @@ class ContextDefinition(
         @end
     """
 
-    opening: fp.Single[BeginContext]
-    body: fp.Multi[
-        ty.Union[
-            plain.CommentDefinition,
-            BidirectionalRelation,
-            ForwardRelation,
-            plain.UnitDefinition,
-        ]
-    ]
-
     def derive_definition(self) -> definitions.ContextDefinition:
         return definitions.ContextDefinition(
             self.name, self.aliases, self.defaults, self.relations, self.redefinitions
@@ -200,7 +191,7 @@ class ContextDefinition(
         return self.opening.defaults
 
     @property
-    def relations(self) -> tuple[Union[BidirectionalRelation, ForwardRelation], ...]:
+    def relations(self) -> tuple[BidirectionalRelation | ForwardRelation, ...]:
         return tuple(
             r
             for r in self.body

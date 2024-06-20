@@ -10,16 +10,17 @@ from __future__ import annotations
 
 import functools
 from collections import ChainMap
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from typing import Any, Callable, Generator, Generic, Optional, Union
+from typing import Any, Generic
 
-from ...compat import TypeAlias
 from ..._typing import F, Magnitude
+from ...compat import TypeAlias
 from ...errors import UndefinedUnitError
-from ...util import find_connected_nodes, find_shortest_path, logger, UnitsContainer
-from ..plain import GenericPlainRegistry, UnitDefinition, QuantityT, UnitT
-from .definitions import ContextDefinition
+from ...util import UnitsContainer, find_connected_nodes, find_shortest_path, logger
+from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
 from . import objects
+from .definitions import ContextDefinition
 
 # TODO: Put back annotation when possible
 # registry_cache: "RegistryCache"
@@ -75,7 +76,7 @@ class GenericContextRegistry(
         super()._register_definition_adders()
         self._register_adder(ContextDefinition, self.add_context)
 
-    def add_context(self, context: Union[objects.Context, ContextDefinition]) -> None:
+    def add_context(self, context: objects.Context | ContextDefinition) -> None:
         """Add a context object to the registry.
 
         The context will be accessible by its name and aliases.
@@ -198,7 +199,7 @@ class GenericContextRegistry(
         self.define(definition)
 
     def enable_contexts(
-        self, *names_or_contexts: Union[str, objects.Context], **kwargs: Any
+        self, *names_or_contexts: str | objects.Context, **kwargs: Any
     ) -> None:
         """Enable contexts provided by name or by object.
 
@@ -246,7 +247,7 @@ class GenericContextRegistry(
         self._build_cache()
         self._switch_context_cache_and_units()
 
-    def disable_contexts(self, n: Optional[int] = None) -> None:
+    def disable_contexts(self, n: int | None = None) -> None:
         """Disable the last n enabled contexts.
 
         Parameters
@@ -405,7 +406,7 @@ class GenericContextRegistry(
         return super()._convert(value, src, dst, inplace)
 
     def _get_compatible_units(
-        self, input_units: UnitsContainer, group_or_system: Optional[str] = None
+        self, input_units: UnitsContainer, group_or_system: str | None = None
     ):
         src_dim = self._get_dimensionality(input_units)
 

@@ -13,7 +13,7 @@ import re
 from typing import Generic
 
 from ...compat import ufloat
-from ..plain import PlainQuantity, PlainUnit, MagnitudeT
+from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 
 MISSING = object()
 
