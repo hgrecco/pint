@@ -604,7 +604,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             if cache is None:
                 self._build_cache()
                 diskcache.save(self._cache, loaded_files, "build_cache")
-            return
+            else:
+                self._cache = cache
+                return
 
         self._cache = RegistryCache()
 
