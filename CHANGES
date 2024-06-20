@@ -4,6 +4,7 @@ Pint Changelog
 0.25 (unreleased)
 -----------------
 
+- Fixed bug when using context and added regression test. (This PR)
 - Fix custom formatter needing the registry object. (PR #2011)
 
 
