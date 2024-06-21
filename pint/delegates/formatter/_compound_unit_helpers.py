@@ -89,6 +89,11 @@ def localize_per(
     if patterns is None:
         return default or "{}/{}"
 
+    # babel 2.8
+    if isinstance(patterns, str):
+        return patterns
+
+    # babe; 2.15
     return patterns.get("compound", default or "{}/{}")
 
 
