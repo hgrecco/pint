@@ -102,9 +102,11 @@ class FullFormatter(BaseFormatter):
             if k in spec:
                 return v
 
-        try:
-            orphan_fmt = REGISTERED_FORMATTERS[spec]
-        except KeyError:
+        for k, v in REGISTERED_FORMATTERS.items():
+            if k in spec:
+                orphan_fmt = REGISTERED_FORMATTERS[k]
+                break
+        else:
             return self._formatters["D"]
 
         try:
