@@ -1286,7 +1286,7 @@ def test_issue2017():
     assert f"{base_unit:~test}" == "us"
     assert f"{base_unit:test}" == "microsecond"
 
- 
+
 def test_issue2007():
     ureg = UnitRegistry()
     q = ureg.Quantity(1, "")
