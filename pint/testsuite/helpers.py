@@ -131,12 +131,21 @@ def requires_numpy_at_least(version):
 def requires_babel(tested_locales=[]):
     if not HAS_BABEL:
         return pytest.mark.skip("Requires Babel with units support")
-    import babel
 
-    locales_available = all(
-        [loc in babel.localedata.locale_identifiers() for loc in tested_locales]
+    import locale
+
+    default_locale = locale.getlocale(locale.LC_NUMERIC)
+    locales_unavailable = False
+    try:
+        for loc in tested_locales:
+            locale.setlocale(locale.LC_NUMERIC, loc)
+    except locale.Error:
+        locales_unavailable = True
+    locale.setlocale(locale.LC_NUMERIC, default_locale)
+
+    return pytest.mark.skipif(
+        locales_unavailable, reason="Tested locales not available."
     )
-    return pytest.mark.skipif(locales_available, reason="Tested locales not available.")
 
 
 requires_not_babel = pytest.mark.skipif(
