@@ -20,12 +20,11 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Literal,
-    TypeAlias,
     TypedDict,
     TypeVar,
 )
 
-from ...compat import babel_parse
+from ...compat import TypeAlias, babel_parse
 from ...util import UnitsContainer
 
 T = TypeVar("T")
