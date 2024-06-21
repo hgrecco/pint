@@ -256,6 +256,12 @@ def prepare_compount_unit(
 
     # out: unit_name, unit_exponent
 
+    if len(out) == 0:
+        if "~" in spec:
+            return ([], [])
+        else:
+            return ([("dimensionless", 1)], [])
+
     if "~" in spec:
         if registry is None:
             raise ValueError(
