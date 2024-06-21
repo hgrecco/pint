@@ -7,6 +7,7 @@ Pint Changelog
 - Fix custom formatter needing the registry object. (PR #2011)
 - Support python 3.9 following difficulties installing with NumPy 2. (PR #2019)
 - Fix default formatting of dimensionless unit issue. (PR #2012)
+- Fix bug preventing custom formatters with modifiers working. (PR #2021)
 
 0.24 (2024-06-07)
 -----------------
