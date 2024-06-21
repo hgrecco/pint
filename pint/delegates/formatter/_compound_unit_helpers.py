@@ -82,11 +82,19 @@ def localize_per(
     locale = babel_parse(locale)
 
     patterns = locale._data["compound_unit_patterns"].get("per", None)
-
     if patterns is None:
         return default or "{}/{}"
 
-    return patterns.get(length, default or "{}/{}")
+    patterns = patterns.get(length, None)
+    if patterns is None:
+        return default or "{}/{}"
+
+    # babel 2.8
+    if isinstance(patterns, str):
+        return patterns
+
+    # babe; 2.15
+    return patterns.get("compound", default or "{}/{}")
 
 
 @functools.lru_cache
