@@ -128,9 +128,17 @@ def requires_numpy_at_least(version):
     )
 
 
-requires_babel = pytest.mark.skipif(
-    not HAS_BABEL, reason="Requires Babel with units support"
-)
+def requires_babel(tested_locales=[]):
+    if not HAS_BABEL:
+        return pytest.mark.skip("Requires Babel with units support")
+    import babel
+
+    locales_available = all(
+        [loc in babel.localedata.locale_identifiers() for loc in tested_locales]
+    )
+    return pytest.mark.skipif(locales_available, reason="Tested locales not available.")
+
+
 requires_not_babel = pytest.mark.skipif(
     HAS_BABEL, reason="Requires Babel not to be installed"
 )
