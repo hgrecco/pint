@@ -13,8 +13,8 @@ jobs:
         extras: [null]
         include:
           - python-version: "3.10" # Minimal versions
-            numpy: "numpy"
-            extras: matplotlib==3.5.3
+            numpy: "numpy>=1.23,<2.0.0"
+            extras: matplotlib==3.0.3
           - python-version: "3.10"
             numpy: "numpy"
             uncertainties: "uncertainties"
