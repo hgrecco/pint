@@ -90,9 +90,10 @@ Currency Symbols
 
 Many common currency symbols are not supported by the pint parser. A preprocessor can be used as a workaround:
 
-.. code-block:: python
-  ureg = pint.UnitRegistry(preprocessors = [lambda s: s.replace("€", "EUR")])
-  ureg.define("euro = [currency] = € = EUR")
+.. doctest::
 
-  print(ureg.Quantity("1 €"))
-  >>> 1 EUR
+   >>> import pint
+   >>> ureg = pint.UnitRegistry(preprocessors = [lambda s: s.replace("€", "EUR")])
+   >>> ureg.define("euro = [currency] = € = EUR")
+   >>> print(ureg.Quantity("1 €"))
+   1 EUR
