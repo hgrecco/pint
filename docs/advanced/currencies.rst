@@ -96,4 +96,4 @@ Many common currency symbols are not supported by the pint parser. A preprocesso
    >>> ureg = pint.UnitRegistry(preprocessors = [lambda s: s.replace("€", "EUR")])
    >>> ureg.define("euro = [currency] = € = EUR")
    >>> print(ureg.Quantity("1 €"))
-   1 EUR
+   1 euro
