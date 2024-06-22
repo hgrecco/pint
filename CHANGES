@@ -6,6 +6,7 @@ Pint Changelog
 
 - Add docs to the functions in ``pint.testing`` (PR #2070)
 - Fix round function returning float instead of int (#2081)
+- Change Quantity repr to include magnitude repr & units. (PR #1579)
 
 
 0.24.4 (2024-11-07)
@@ -215,7 +216,6 @@ Pint Changelog
 - Fix masked arrays (with multiple values) incorrectly being passed through
   setitem (Issue #1584)
 - Add Quantity.to_preferred
-- Change Quantity repr to include magnitude repr & units.
 
 
 0.19.2 (2022-04-23)

@@ -133,7 +133,7 @@ class TestQuantity(QuantityTestCase):
         assert str(x) == "4.2 meter"
         assert repr(x) == "<Quantity(4.2, units='meter')>"
         x = self.Q_(2.9325156461464651456456545649)
-        assert repr(x) == "<Quantity(2.932515646146465, units='dimensionless')>"
+        assert repr(x) == "<Quantity(2.93251565, units='dimensionless')>"
 
     @helpers.requires_numpy
     def test_quantity_repr_numpy(self):
