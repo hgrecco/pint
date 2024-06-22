@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import pytest
 
 from pint import UnitRegistry
 from pint.testsuite import QuantityTestCase
+
+from .helpers import internal
 
 
 class TestGroup:
@@ -13,7 +17,7 @@ class TestGroup:
 
     def test_units_programmatically(self):
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
+        d = internal(ureg)._groups
 
         assert root._used_groups == set()
         assert root._used_by == set()
@@ -38,7 +42,7 @@ class TestGroup:
 
     def test_groups_programmatically(self):
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
+        d = internal(ureg)._groups
         g2 = ureg.Group("g2")
 
         assert d.keys() == {"root", "g2"}
@@ -53,7 +57,7 @@ class TestGroup:
         lines = ["@group mygroup", "meter = 3", "second = 2"]
 
         ureg, root = self._build_empty_reg_root()
-        d = ureg._groups
+        d = internal(ureg)._groups
 
         grp = ureg.Group.from_lines(lines, lambda x: None)
 
@@ -221,7 +225,7 @@ class TestSystem(QuantityTestCase):
         lines = ["@system %s using test-imperial" % sysname, "inch"]
 
         s = ureg.System.from_lines(lines, ureg.get_base_units)
-        ureg._systems[s.name] = s
+        internal(ureg)._systems[s.name] = s
 
         # base_factor, destination_units
         c = ureg.get_base_units("inch", system=sysname)
@@ -243,7 +247,7 @@ class TestSystem(QuantityTestCase):
         lines = ["@system %s using test-imperial" % sysname, "pint:meter"]
 
         s = ureg.System.from_lines(lines, ureg.get_base_units)
-        ureg._systems[s.name] = s
+        internal(ureg)._systems[s.name] = s
 
         # base_factor, destination_units
         c = ureg.get_base_units("inch", system=sysname)
@@ -272,7 +276,7 @@ class TestSystem(QuantityTestCase):
         lines = ["@system %s using test-imperial" % sysname, "mph:meter"]
 
         s = ureg.System.from_lines(lines, ureg.get_base_units)
-        ureg._systems[s.name] = s
+        internal(ureg)._systems[s.name] = s
         # base_factor, destination_units
         c = ureg.get_base_units("inch", system=sysname)
         assert round(abs(c[0] - 0.056), 2) == 0

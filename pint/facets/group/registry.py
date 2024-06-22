@@ -8,18 +8,28 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, FrozenSet
+from typing import TYPE_CHECKING, Any, Generic
+
+from ... import errors
+from ...compat import TypeAlias
 
 if TYPE_CHECKING:
-    from pint import Unit
+    from ..._typing import Unit, UnitsContainer
 
-from ...util import build_dependent_class, create_class_with_registry
-from ..plain import PlainRegistry, UnitDefinition
+from ...util import create_class_with_registry, to_units_container
+from ..plain import (
+    GenericPlainRegistry,
+    QuantityT,
+    UnitDefinition,
+    UnitT,
+)
+from . import objects
 from .definitions import GroupDefinition
-from .objects import Group
 
 
-class GroupRegistry(PlainRegistry):
+class GenericGroupRegistry(
+    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+):
     """Handle of Groups.
 
     Group units
@@ -29,23 +39,21 @@ class GroupRegistry(PlainRegistry):
     - Parse @group directive.
     """
 
-    _group_class = Group
+    # TODO: Change this to Group: Group to specify class
+    # and use introspection to get system class as a way
+    # to enjoy typing goodies
+    Group = type[objects.Group]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         #: Map group name to group.
-        #: :type: dict[ str | Group]
-        self._groups: Dict[str, Group] = {}
+        self._groups: dict[str, objects.Group] = {}
         self._groups["root"] = self.Group("root")
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-        cls.Group = build_dependent_class(cls, "Group", "_group_class")
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
         super()._init_dynamic_classes()
-        self.Group = create_class_with_registry(self, self.Group)
+        self.Group = create_class_with_registry(self, objects.Group)
 
     def _after_init(self) -> None:
         """Invoked at the end of ``__init__``.
@@ -69,15 +77,26 @@ class GroupRegistry(PlainRegistry):
             all_units = self.get_group("root", False).members
             grp.add_units(*(all_units - group_units))
 
-    def _register_directives(self) -> None:
-        super()._register_directives()
-        self._register_directive(
-            "@group",
-            lambda gd: self.Group.from_definition(gd, self.define),
-            GroupDefinition,
-        )
+    def _register_definition_adders(self) -> None:
+        super()._register_definition_adders()
+        self._register_adder(GroupDefinition, self._add_group)
 
-    def get_group(self, name: str, create_if_needed: bool = True) -> Group:
+    def _add_unit(self, definition: UnitDefinition):
+        super()._add_unit(definition)
+        # TODO: delta units are missing
+        self.get_group("root").add_units(definition.name)
+
+    def _add_group(self, gd: GroupDefinition):
+        if gd.name in self._groups:
+            raise ValueError(f"Group {gd.name} already present in registry")
+        try:
+            # As a Group is a SharedRegistryObject
+            # it adds itself to the registry.
+            self.Group.from_definition(gd)
+        except KeyError as e:
+            raise errors.DefinitionSyntaxError(f"unknown dimension {e} in context")
+
+    def get_group(self, name: str, create_if_needed: bool = True) -> objects.Group:
         """Return a Group.
 
         Parameters
@@ -101,22 +120,23 @@ class GroupRegistry(PlainRegistry):
 
         return self.Group(name)
 
-    def _define(self, definition):
+    def get_compatible_units(
+        self, input_units: UnitsContainer, group: str | None = None
+    ) -> frozenset[Unit]:
+        """ """
+        if group is None:
+            return super().get_compatible_units(input_units)
 
-        # In addition to the what is done by the PlainRegistry,
-        # this adds all units to the `root` group.
+        input_units = to_units_container(input_units)
 
-        definition, d, di = super()._define(definition)
+        equiv = self._get_compatible_units(input_units, group)
 
-        if isinstance(definition, UnitDefinition):
-            # We add all units to the root group
-            self.get_group("root").add_units(definition.name)
+        return frozenset(self.Unit(eq) for eq in equiv)
 
-        return definition, d, di
-
-    def _get_compatible_units(self, input_units, group) -> FrozenSet["Unit"]:
-
-        ret = super()._get_compatible_units(input_units, group)
+    def _get_compatible_units(
+        self, input_units: UnitsContainer, group: str | None = None
+    ) -> frozenset[str]:
+        ret = super()._get_compatible_units(input_units)
 
         if not group:
             return ret
@@ -126,3 +146,10 @@ class GroupRegistry(PlainRegistry):
         else:
             raise ValueError("Unknown Group with name '%s'" % group)
         return frozenset(ret & members)
+
+
+class GroupRegistry(
+    GenericGroupRegistry[objects.GroupQuantity[Any], objects.GroupUnit]
+):
+    Quantity: TypeAlias = objects.GroupQuantity[Any]
+    Unit: TypeAlias = objects.GroupUnit

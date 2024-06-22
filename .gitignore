@@ -14,6 +14,8 @@ MANIFEST
 .mypy_cache
 pip-wheel-metadata
 pint/testsuite/dask-worker-space
+venv
+.envrc
 
 # WebDAV file system cache files
 .DAV/

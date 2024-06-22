@@ -9,24 +9,29 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Dict, FrozenSet, Tuple, Union
+from typing import TYPE_CHECKING, Any, Generic
+
+from ... import errors
+from ...compat import TypeAlias
+from ..plain import QuantityT, UnitT
 
 if TYPE_CHECKING:
-    from pint import Quantity, Unit
+    from ..._typing import Quantity, Unit
 
 from ..._typing import UnitLike
 from ...util import UnitsContainer as UnitsContainerT
 from ...util import (
-    build_dependent_class,
     create_class_with_registry,
     to_units_container,
 )
-from ..group import GroupRegistry
+from ..group import GenericGroupRegistry
+from . import objects
 from .definitions import SystemDefinition
-from .objects import Lister, System
 
 
-class SystemRegistry(GroupRegistry):
+class GenericSystemRegistry(
+    Generic[QuantityT, UnitT], GenericGroupRegistry[QuantityT, UnitT]
+):
     """Handle of Systems.
 
     Conversion between units with different dimensions according
@@ -41,28 +46,26 @@ class SystemRegistry(GroupRegistry):
     - Parse @group directive.
     """
 
-    _system_class = System
+    # TODO: Change this to System: System to specify class
+    # and use introspection to get system class as a way
+    # to enjoy typing goodies
+    System: type[objects.System]
 
-    def __init__(self, system=None, **kwargs):
+    def __init__(self, system: str | None = None, **kwargs):
         super().__init__(**kwargs)
 
         #: Map system name to system.
-        #: :type: dict[ str | System]
-        self._systems: Dict[str, System] = {}
+        self._systems: dict[str, objects.System] = {}
 
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
-        self._base_units_cache = dict()
+        self._base_units_cache: dict[UnitsContainerT, UnitsContainerT] = {}
 
-        self._default_system = system
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__()
-        cls.System = build_dependent_class(cls, "System", "_system_class")
+        self._default_system_name: str | None = system
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
         super()._init_dynamic_classes()
-        self.System = create_class_with_registry(self, self.System)
+        self.System = create_class_with_registry(self, objects.System)
 
     def _after_init(self) -> None:
         """Invoked at the end of ``__init__``.
@@ -73,43 +76,51 @@ class SystemRegistry(GroupRegistry):
         super()._after_init()
 
         #: System name to be used by default.
-        self._default_system = self._default_system or self._defaults.get(
+        self._default_system_name = self._default_system_name or self._defaults.get(
             "system", None
         )
 
-    def _register_directives(self) -> None:
-        super()._register_directives()
-        self._register_directive(
-            "@system",
-            lambda gd: self.System.from_definition(gd, self.get_root_units),
-            SystemDefinition,
-        )
+    def _register_definition_adders(self) -> None:
+        super()._register_definition_adders()
+        self._register_adder(SystemDefinition, self._add_system)
+
+    def _add_system(self, sd: SystemDefinition) -> None:
+        if sd.name in self._systems:
+            raise ValueError(f"System {sd.name} already present in registry")
+
+        try:
+            # As a System is a SharedRegistryObject
+            # it adds itself to the registry.
+            self.System.from_definition(sd)
+        except KeyError as e:
+            # TODO: fix this error message
+            raise errors.DefinitionError(f"unknown dimension {e} in context")
 
     @property
     def sys(self):
-        return Lister(self._systems)
+        return objects.Lister(self._systems)
 
     @property
-    def default_system(self) -> System:
-        return self._default_system
+    def default_system(self) -> str | None:
+        return self._default_system_name
 
     @default_system.setter
-    def default_system(self, name):
+    def default_system(self, name: str) -> None:
         if name:
             if name not in self._systems:
                 raise ValueError("Unknown system %s" % name)
 
             self._base_units_cache = {}
 
-        self._default_system = name
+        self._default_system_name = name
 
-    def get_system(self, name: str, create_if_needed: bool = True) -> System:
+    def get_system(self, name: str, create_if_needed: bool = True) -> objects.System:
         """Return a Group.
 
         Parameters
         ----------
         name : str
-            Name of the group to be
+            Name of the group to be.
         create_if_needed : bool
             If True, create a group if not found. If False, raise an Exception.
             (Default value = True)
@@ -130,10 +141,10 @@ class SystemRegistry(GroupRegistry):
 
     def get_base_units(
         self,
-        input_units: Union[UnitLike, Quantity],
+        input_units: UnitLike | Quantity,
         check_nonmult: bool = True,
-        system: Union[str, System, None] = None,
-    ) -> Tuple[Number, Unit]:
+        system: str | objects.System | None = None,
+    ) -> tuple[Number, Unit]:
         """Convert unit or dict of units to the plain units.
 
         If any unit is non multiplicative and check_converter is True,
@@ -170,16 +181,15 @@ class SystemRegistry(GroupRegistry):
         self,
         input_units: UnitsContainerT,
         check_nonmult: bool = True,
-        system: Union[str, System, None] = None,
+        system: str | objects.System | None = None,
     ):
-
         if system is None:
-            system = self._default_system
+            system = self._default_system_name
 
         # The cache is only done for check_nonmult=True and the current system.
         if (
             check_nonmult
-            and system == self._default_system
+            and system == self._default_system_name
             and input_units in self._base_units_cache
         ):
             return self._base_units_cache[input_units]
@@ -212,17 +222,32 @@ class SystemRegistry(GroupRegistry):
 
         return base_factor, destination_units
 
-    def _get_compatible_units(self, input_units, group_or_system) -> FrozenSet[Unit]:
+    def get_compatible_units(
+        self, input_units: UnitsContainerT, group_or_system: str | None = None
+    ) -> frozenset[Unit]:
+        """ """
+
+        group_or_system = group_or_system or self._default_system_name
 
         if group_or_system is None:
-            group_or_system = self._default_system
+            return super().get_compatible_units(input_units)
 
+        input_units = to_units_container(input_units)
+
+        equiv = self._get_compatible_units(input_units, group_or_system)
+
+        return frozenset(self.Unit(eq) for eq in equiv)
+
+    def _get_compatible_units(
+        self, input_units: UnitsContainerT, group_or_system: str | None = None
+    ) -> frozenset[Unit]:
         if group_or_system and group_or_system in self._systems:
             members = self._systems[group_or_system].members
             # group_or_system has been handled by System
-            return frozenset(members & super()._get_compatible_units(input_units, None))
+            return frozenset(members & super()._get_compatible_units(input_units))
 
         try:
+            # This will be handled by groups
             return super()._get_compatible_units(input_units, group_or_system)
         except ValueError as ex:
             # It might be also a system
@@ -231,3 +256,10 @@ class SystemRegistry(GroupRegistry):
                     "Unknown Group o System with name '%s'" % group_or_system
                 ) from ex
             raise ex
+
+
+class SystemRegistry(
+    GenericSystemRegistry[objects.SystemQuantity[Any], objects.SystemUnit]
+):
+    Quantity: TypeAlias = objects.SystemQuantity[Any]
+    Unit: TypeAlias = objects.SystemUnit

@@ -12,23 +12,20 @@ import copy
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import UnitLike
-from ...compat import NUMERIC_TYPES
+from ...compat import NUMERIC_TYPES, deprecated
 from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
-    from pint import Context
+    from ..context import Context
 
 
 class PlainUnit(PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a unit supporting math operations."""
-
-    #: Default formatting string.
-    default_format: str = ""
 
     def __reduce__(self):
         # See notes in Quantity.__reduce__
@@ -46,8 +43,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             self._units = units._units
         else:
             raise TypeError(
-                "units must be of type str, Unit or "
-                "UnitsContainer; not {}.".format(type(units))
+                "units must be of type str, Unit or " "UnitsContainer; not {}.".format(
+                    type(units)
+                )
             )
 
     def __copy__(self) -> PlainUnit:
@@ -58,14 +56,24 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         ret = self.__class__(copy.deepcopy(self._units, memo))
         return ret
 
+    @deprecated(
+        "This function will be removed in future versions of pint.\n"
+        "Use ureg.formatter.format_unit_babel"
+    )
+    def format_babel(self, spec: str = "", **kwspec: Any) -> str:
+        return self._REGISTRY.formatter.format_unit_babel(self, spec, **kwspec)
+
+    def __format__(self, spec: str) -> str:
+        return self._REGISTRY.formatter.format_unit(self, spec)
+
     def __str__(self) -> str:
-        return " ".join(k if v == 1 else f"{k} ** {v}" for k, v in self._units.items())
+        return self._REGISTRY.formatter.format_unit(self)
 
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        return "<Unit('{}')>".format(self._units)
+        return f"<Unit('{self._units}')>"
 
     @property
     def dimensionless(self) -> bool:
@@ -96,7 +104,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return self._REGISTRY.get_compatible_units(self)
 
     def is_compatible_with(
-        self, other: Any, *contexts: Union[str, Context], **ctx_kwargs: Any
+        self, other: Any, *contexts: str | Context, **ctx_kwargs: Any
     ) -> bool:
         """check if the other object is compatible
 
@@ -165,18 +173,18 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             return self._REGISTRY.Quantity(other, 1 / self._units)
         elif isinstance(other, UnitsContainer):
             return self.__class__(other / self._units)
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
-    def __pow__(self, other) -> "PlainUnit":
+    def __pow__(self, other) -> PlainUnit:
         if isinstance(other, NUMERIC_TYPES):
             return self.__class__(self._units**other)
 
         else:
-            mess = "Cannot power PlainUnit by {}".format(type(other))
+            mess = f"Cannot power PlainUnit by {type(other)}"
             raise TypeError(mess)
 
     def __hash__(self) -> int:
@@ -207,8 +215,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             return self_q.compare(other, op)
         elif isinstance(other, (PlainUnit, UnitsContainer, dict)):
             return self_q.compare(self._REGISTRY.Quantity(1, other), op)
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     __lt__ = lambda self, other: self.compare(other, op=operator.lt)
     __le__ = lambda self, other: self.compare(other, op=operator.le)

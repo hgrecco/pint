@@ -1,8 +1,0 @@
-status = [
-  "ci",
-  "docbuild",
-  "lint"
-]
-delete_merged_branches = true
-timeout_sec = 10800
-block_labels = [ "do-not-merge-yet" ]

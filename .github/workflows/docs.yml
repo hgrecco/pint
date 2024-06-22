@@ -14,10 +14,10 @@ jobs:
       - name: Get tags
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
-      - name: Set up Python 3.8
+      - name: Set up minimal Python version
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: "3.10"
 
       - name: Get pip cache dir
         id: pip-cache
@@ -29,6 +29,11 @@ jobs:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: pip-docs
           restore-keys: pip-docs
+
+      - name: Install locales
+        run: |
+          sudo apt-get install language-pack-fr
+          sudo localedef -i fr_FR -f UTF-8 fr_FR
 
       - name: Install dependencies
         run: |

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from importlib.metadata import version
 
+from .delegates.formatter._format_helpers import formatter
 from .errors import (  # noqa: F401
     DefinitionSyntaxError,
     DimensionalityError,
@@ -25,7 +26,7 @@ from .errors import (  # noqa: F401
     UndefinedUnitError,
     UnitStrippedWarning,
 )
-from .formatting import formatter, register_unit_format
+from .formatting import register_unit_format
 from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
 from .util import logger, pi_theorem  # noqa: F401
 
@@ -35,6 +36,7 @@ Quantity = UnitRegistry.Quantity
 Unit = UnitRegistry.Unit
 Measurement = UnitRegistry.Measurement
 Context = UnitRegistry.Context
+Group = UnitRegistry.Group
 
 try:  # pragma: no cover
     __version__ = version("pint")
@@ -65,7 +67,7 @@ def _unpickle(cls, *args):
     object of type cls
 
     """
-    from pint.facets.plain import UnitsContainer
+    from pint.util import UnitsContainer
 
     for arg in args:
         # Prefixed units are defined within the registry

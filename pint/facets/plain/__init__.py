@@ -1,6 +1,6 @@
 """
     pint.facets.plain
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~
 
     Base implementation for registry, units and quantities.
 
@@ -18,18 +18,22 @@ from .definitions import (
     ScaleConverter,
     UnitDefinition,
 )
-from .objects import PlainQuantity, PlainUnit, UnitsContainer
-from .registry import PlainRegistry
+from .objects import PlainQuantity, PlainUnit
+from .quantity import MagnitudeT
+from .registry import GenericPlainRegistry, PlainRegistry, QuantityT, UnitT
 
 __all__ = [
-    PlainUnit,
-    PlainQuantity,
-    PlainRegistry,
-    AliasDefinition,
-    DefaultsDefinition,
-    DimensionDefinition,
-    PrefixDefinition,
-    ScaleConverter,
-    UnitDefinition,
-    UnitsContainer,
+    "GenericPlainRegistry",
+    "PlainUnit",
+    "PlainQuantity",
+    "PlainRegistry",
+    "AliasDefinition",
+    "DefaultsDefinition",
+    "DimensionDefinition",
+    "PrefixDefinition",
+    "ScaleConverter",
+    "UnitDefinition",
+    "QuantityT",
+    "UnitT",
+    "MagnitudeT",
 ]

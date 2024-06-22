@@ -9,6 +9,12 @@
 
 from __future__ import annotations
 
+import numbers
+from collections.abc import Callable, Iterable
+from numbers import Number
+from typing import Any, Generic
+
+from ..._typing import UnitLike
 from ...babel_names import _babel_systems
 from ...compat import babel_parse
 from ...util import (
@@ -17,7 +23,19 @@ from ...util import (
     logger,
     to_units_container,
 )
+from .. import group
+from ..plain import MagnitudeT
 from .definitions import SystemDefinition
+
+GetRootUnits = Callable[[UnitLike, bool], tuple[Number, UnitLike]]
+
+
+class SystemQuantity(Generic[MagnitudeT], group.GroupQuantity[MagnitudeT]):
+    pass
+
+
+class SystemUnit(group.GroupUnit):
+    pass
 
 
 class System(SharedRegistryObject):
@@ -29,32 +47,28 @@ class System(SharedRegistryObject):
     The System belongs to one Registry.
 
     See SystemDefinition for the definition file syntax.
+
+    Parameters
+    ----------
+    name
+        Name of the group.
     """
 
-    def __init__(self, name):
-        """
-        :param name: Name of the group
-        :type name: str
-        """
-
+    def __init__(self, name: str):
         #: Name of the system
         #: :type: str
         self.name = name
 
         #: Maps root unit names to a dict indicating the new unit and its exponent.
-        #: :type: dict[str, dict[str, number]]]
-        self.base_units = {}
+        self.base_units: dict[str, dict[str, numbers.Number]] = {}
 
         #: Derived unit names.
-        #: :type: set(str)
-        self.derived_units = set()
+        self.derived_units: set[str] = set()
 
         #: Names of the _used_groups in used by this system.
-        #: :type: set(str)
-        self._used_groups = set()
+        self._used_groups: set[str] = set()
 
-        #: :type: frozenset | None
-        self._computed_members = None
+        self._computed_members: frozenset[str] | None = None
 
         # Add this system to the system dictionary
         self._REGISTRY._systems[self.name] = self
@@ -62,7 +76,7 @@ class System(SharedRegistryObject):
     def __dir__(self):
         return list(self.members)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
         getattr_maybe_raise(self, item)
         u = getattr(self._REGISTRY, self.name + "_" + item, None)
         if u is not None:
@@ -73,11 +87,11 @@ class System(SharedRegistryObject):
     def members(self):
         d = self._REGISTRY._groups
         if self._computed_members is None:
-            self._computed_members = set()
+            tmp: set[str] = set()
 
             for group_name in self._used_groups:
                 try:
-                    self._computed_members |= d[group_name].members
+                    tmp |= d[group_name].members
                 except KeyError:
                     logger.warning(
                         "Could not resolve {} in System {}".format(
@@ -85,7 +99,7 @@ class System(SharedRegistryObject):
                         )
                     )
 
-            self._computed_members = frozenset(self._computed_members)
+            self._computed_members = frozenset(tmp)
 
         return self._computed_members
 
@@ -93,19 +107,19 @@ class System(SharedRegistryObject):
         """Invalidate computed members in this Group and all parent nodes."""
         self._computed_members = None
 
-    def add_groups(self, *group_names):
+    def add_groups(self, *group_names: str) -> None:
         """Add groups to group."""
         self._used_groups |= set(group_names)
 
         self.invalidate_members()
 
-    def remove_groups(self, *group_names):
+    def remove_groups(self, *group_names: str) -> None:
         """Remove groups from group."""
         self._used_groups -= set(group_names)
 
         self.invalidate_members()
 
-    def format_babel(self, locale):
+    def format_babel(self, locale: str) -> str:
         """translate the name of the system."""
         if locale and self.name in _babel_systems:
             name = _babel_systems[self.name]
@@ -113,22 +127,42 @@ class System(SharedRegistryObject):
             return locale.measurement_systems[name]
         return self.name
 
+    # TODO: When 3.11 is minimal version, use Self
+
     @classmethod
-    def from_lines(cls, lines, get_root_func, non_int_type=float):
-        system_definition = SystemDefinition.from_lines(lines, get_root_func)
+    def from_lines(
+        cls: type[System],
+        lines: Iterable[str],
+        get_root_func: GetRootUnits,
+        non_int_type: type = float,
+    ) -> System:
+        # TODO: we changed something here it used to be
+        # system_definition = SystemDefinition.from_lines(lines, get_root_func)
+        system_definition = SystemDefinition.from_lines(lines, non_int_type)
+
+        if system_definition is None:
+            raise ValueError(f"Could not define System from from {lines}")
+
         return cls.from_definition(system_definition, get_root_func)
 
     @classmethod
-    def from_definition(cls, system_definition: SystemDefinition, get_root_func):
+    def from_definition(
+        cls: type[System],
+        system_definition: SystemDefinition,
+        get_root_func: GetRootUnits | None = None,
+    ) -> System:
+        if get_root_func is None:
+            # TODO: kept for backwards compatibility
+            get_root_func = cls._REGISTRY.get_root_units
         base_unit_names = {}
         derived_unit_names = []
-        for lineno, new_unit, old_unit in system_definition.unit_replacements:
+        for new_unit, old_unit in system_definition.unit_replacements:
             if old_unit is None:
                 old_unit_dict = to_units_container(get_root_func(new_unit)[1])
 
                 if len(old_unit_dict) != 1:
                     raise ValueError(
-                        "The new plain must be a root dimension if not discarded unit is specified."
+                        "The new unit must be a root dimension if not discarded unit is specified."
                     )
 
                 old_unit, value = dict(old_unit_dict).popitem()
@@ -138,8 +172,8 @@ class System(SharedRegistryObject):
                 # The old unit MUST be a root unit, if not raise an error.
                 if old_unit != str(get_root_func(old_unit)[1]):
                     raise ValueError(
-                        "In `%s`, the unit at the right of the `:` (%s) must be a root unit."
-                        % (lineno, old_unit)
+                        f"The old unit {old_unit} must be a root unit "
+                        f"in order to be replaced by new unit {new_unit}"
                     )
 
                 # Here we find new_unit expanded in terms of root_units
@@ -171,12 +205,12 @@ class System(SharedRegistryObject):
 
 
 class Lister:
-    def __init__(self, d):
+    def __init__(self, d: dict[str, Any]):
         self.d = d
 
-    def __dir__(self):
+    def __dir__(self) -> list[str]:
         return list(self.d.keys())
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
         getattr_maybe_raise(self, item)
         return self.d[item]

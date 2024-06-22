@@ -10,6 +10,6 @@
 
 from __future__ import annotations
 
-from .registry import NumpyRegistry
+from .registry import GenericNumpyRegistry, NumpyRegistry
 
-__all__ = [NumpyRegistry]
+__all__ = ["NumpyRegistry", "GenericNumpyRegistry"]

@@ -11,11 +11,12 @@ from __future__ import annotations
 import functools
 import math
 import warnings
-from typing import Any
+from typing import Any, Generic
 
-from ..._typing import Shape, _MagnitudeType
-from ...compat import _to_magnitude, np
+from ..._typing import Shape
+from ...compat import HAS_NUMPY, _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ..plain import MagnitudeT, PlainQuantity
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
@@ -26,6 +27,16 @@ from .numpy_func import (
     op_units_output_ufuncs,
     set_units_ufuncs,
 )
+
+try:
+    import uncertainties.unumpy as unp
+    from uncertainties import UFloat, ufloat
+
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    unp = np
+    ufloat = Ufloat = None
+    HAS_UNCERTAINTIES = False
 
 
 def method_wraps(numpy_func):
@@ -40,7 +51,7 @@ def method_wraps(numpy_func):
     return wrapper
 
 
-class NumpyQuantity:
+class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     """ """
 
     # NumPy function/ufunc support
@@ -52,11 +63,11 @@ class NumpyQuantity:
             return NotImplemented
 
         # Replicate types from __array_function__
-        types = set(
+        types = {
             type(arg)
             for arg in list(inputs) + list(kwargs.values())
             if hasattr(arg, "__array_ufunc__")
-        )
+        }
 
         return numpy_wrap("ufunc", ufunc, inputs, kwargs, types)
 
@@ -99,19 +110,19 @@ class NumpyQuantity:
 
         if output_unit is not None:
             return self.__class__(value, output_unit)
-        else:
-            return value
+
+        return value
 
     def __array__(self, t=None) -> np.ndarray:
-        warnings.warn(
-            "The unit of the quantity is stripped when downcasting to ndarray.",
-            UnitStrippedWarning,
-            stacklevel=2,
-        )
+        if HAS_NUMPY and isinstance(self._magnitude, np.ndarray):
+            warnings.warn(
+                "The unit of the quantity is stripped when downcasting to ndarray.",
+                UnitStrippedWarning,
+                stacklevel=2,
+            )
         return _to_magnitude(self._magnitude, force_ndarray=True)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
-
         if min is not None:
             if isinstance(min, self.__class__):
                 min = min.to(self).magnitude
@@ -129,11 +140,11 @@ class NumpyQuantity:
                 raise DimensionalityError("dimensionless", self._units)
         return self.__class__(self.magnitude.clip(min, max, out, **kwargs), self._units)
 
-    def fill(self: NumpyQuantity[np.ndarray], value) -> None:
+    def fill(self: NumpyQuantity, value) -> None:
         self._units = value._units
         return self.magnitude.fill(value.magnitude)
 
-    def put(self: NumpyQuantity[np.ndarray], indices, values, mode="raise") -> None:
+    def put(self: NumpyQuantity, indices, values, mode="raise") -> None:
         if isinstance(values, self.__class__):
             values = values.to(self).magnitude
         elif self.dimensionless:
@@ -143,11 +154,11 @@ class NumpyQuantity:
         self.magnitude.put(indices, values, mode)
 
     @property
-    def real(self) -> NumpyQuantity[_MagnitudeType]:
+    def real(self) -> NumpyQuantity:
         return self.__class__(self._magnitude.real, self._units)
 
     @property
-    def imag(self) -> NumpyQuantity[_MagnitudeType]:
+    def imag(self) -> NumpyQuantity:
         return self.__class__(self._magnitude.imag, self._units)
 
     @property
@@ -162,6 +173,10 @@ class NumpyQuantity:
     @property
     def shape(self) -> Shape:
         return self._magnitude.shape
+
+    @property
+    def dtype(self):
+        return self._magnitude.dtype
 
     @shape.setter
     def shape(self, value):
@@ -223,6 +238,11 @@ class NumpyQuantity:
                     )
                 else:
                     raise exc
+        elif (
+            HAS_UNCERTAINTIES and item == "ndim" and isinstance(self._magnitude, UFloat)
+        ):
+            # Dimensionality of a single UFloat is 0, like any other scalar
+            return 0
 
         try:
             return getattr(self._magnitude, item)
@@ -245,7 +265,12 @@ class NumpyQuantity:
 
     def __setitem__(self, key, value):
         try:
-            if np.ma.is_masked(value) or math.isnan(value):
+            # If we're dealing with a masked single value or a nan, set it
+            if (
+                isinstance(self._magnitude, np.ma.MaskedArray)
+                and np.ma.is_masked(value)
+                and getattr(value, "size", 0) == 1
+            ) or (getattr(value, "ndim", 0) == 0 and math.isnan(value)):
                 self._magnitude[key] = value
                 return
         except TypeError:

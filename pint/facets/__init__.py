@@ -7,8 +7,8 @@
     keeping each part small enough to be hackable.
 
     Each facet contains one or more of the following modules:
-    - definitions: classes and functions to parse a string into an specific object.
-      These objects must be immutable and pickable. (e.g. ContextDefinition)
+    - definitions: classes describing specific unit-related definitons.
+      These objects must be immutable, pickable and not reference the registry (e.g. ContextDefinition)
     - objects: classes and functions that encapsulate behavior (e.g. Context)
     - registry: implements a subclass of PlainRegistry or class that can be
       mixed with it (e.g. ContextRegistry)
@@ -16,8 +16,7 @@
     In certain cases, some of these modules might be collapsed into a single one
     as the code is very short (like in dask) or expanded as the code is too long
     (like in plain, where quantity and unit object are in their own module).
-    Additionally, certain facets might not have one of them (e.g. dask adds no
-    feature in relation to parsing).
+    Additionally, certain facets might not have one of them.
 
     An important part of this scheme is that each facet should export only a few
     classes in the __init__.py and everything else should not be accessed by any
@@ -31,8 +30,8 @@
 
     class NumpyRegistry:
 
-        _quantity_class = NumpyQuantity
-        _unit_class = NumpyUnit
+        Quantity = NumpyQuantity
+        Unit = NumpyUnit
 
     This tells pint that it should use NumpyQuantity as base class for a quantity
     class that belongs to a registry that has NumpyRegistry as one of its bases.
@@ -41,8 +40,6 @@
 
     - plain: basic manipulation and calculation with multiplicative
       dimensions, units and quantities (e.g. length, time, mass, etc).
-
-    - formatting: pretty printing and formatting modifiers.
 
     - nonmultiplicative: manipulation and calculation with offset and
       log units and quantities (e.g. temperature and decibel).
@@ -72,24 +69,38 @@
 
 from __future__ import annotations
 
-from .context import ContextRegistry
-from .dask import DaskRegistry
-from .formatting import FormattingRegistry
-from .group import GroupRegistry
-from .measurement import MeasurementRegistry
-from .nonmultiplicative import NonMultiplicativeRegistry
-from .numpy import NumpyRegistry
-from .plain import PlainRegistry
-from .system import SystemRegistry
+from .context import ContextRegistry, GenericContextRegistry
+from .dask import DaskRegistry, GenericDaskRegistry
+from .group import GenericGroupRegistry, GroupRegistry
+from .measurement import GenericMeasurementRegistry, MeasurementRegistry
+from .nonmultiplicative import (
+    GenericNonMultiplicativeRegistry,
+    NonMultiplicativeRegistry,
+)
+from .numpy import GenericNumpyRegistry, NumpyRegistry
+from .plain import GenericPlainRegistry, MagnitudeT, PlainRegistry, QuantityT, UnitT
+from .system import GenericSystemRegistry, SystemRegistry
 
 __all__ = [
-    ContextRegistry,
-    DaskRegistry,
-    FormattingRegistry,
-    GroupRegistry,
-    MeasurementRegistry,
-    NonMultiplicativeRegistry,
-    NumpyRegistry,
-    PlainRegistry,
-    SystemRegistry,
+    "ContextRegistry",
+    "DaskRegistry",
+    "FormattingRegistry",
+    "GroupRegistry",
+    "MeasurementRegistry",
+    "NonMultiplicativeRegistry",
+    "NumpyRegistry",
+    "PlainRegistry",
+    "SystemRegistry",
+    "GenericContextRegistry",
+    "GenericDaskRegistry",
+    "GenericFormattingRegistry",
+    "GenericGroupRegistry",
+    "GenericMeasurementRegistry",
+    "GenericNonMultiplicativeRegistry",
+    "GenericNumpyRegistry",
+    "GenericPlainRegistry",
+    "GenericSystemRegistry",
+    "QuantityT",
+    "UnitT",
+    "MagnitudeT",
 ]

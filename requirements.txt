@@ -1,0 +1,4 @@
+appdirs>=1.4.4
+typing_extensions
+flexcache>=0.3
+flexparser>=0.3

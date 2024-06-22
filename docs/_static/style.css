@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Open+Sans:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+
+body {
+  font-family: 'Open Sans', sans-serif;
+}
+
+h1 {
+  font-family: "Lato", sans-serif;
+}
+
+pre, code {
+  font-size: 100%;
+  line-height: 155%;
+}
+
+/* Main page overview cards */
+
+.sd-card {
+  border-radius: 0;
+  padding: 30px 10px 20px 10px;
+  margin: 10px 0px;
+}
+
+.sd-card .sd-card-header {
+  text-align: center;
+}
+
+.sd-card .sd-card-header .sd-card-text {
+  margin: 0px;
+}
+
+.sd-card .sd-card-img-top {
+  height: 52px;
+  width: 52px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sd-card .sd-card-header {
+  border: none;
+  color: #150458 !important;
+  font-size: var(--pst-font-size-h5);
+  font-weight: bold;
+  padding: 2.5rem 0rem 0.5rem 0rem;
+}

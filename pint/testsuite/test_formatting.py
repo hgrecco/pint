@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 import pint.formatting as fmt
@@ -52,3 +54,20 @@ def test_split_format(format, default, flag, expected):
     result = fmt.split_format(format, default, flag)
 
     assert result == expected
+
+
+def test_register_unit_format(func_registry):
+    @fmt.register_unit_format("custom")
+    def format_custom(unit, registry, **options):
+        # Ensure the registry is correct..
+        registry.Unit(unit)
+        return "<formatted unit>"
+
+    quantity = 1.0 * func_registry.meter
+    assert f"{quantity:custom}" == "1.0 <formatted unit>"
+
+    with pytest.raises(ValueError, match="format 'custom' already exists"):
+
+        @fmt.register_unit_format("custom")
+        def format_custom_redefined(unit, registry, **options):
+            return "<overwritten>"
