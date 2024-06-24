@@ -1,13 +1,14 @@
 Pint Changelog
 ==============
 
-0.24.1 (unreleased)
+0.24.1 (2024-06-24)
 -----------------
 
 - Fix custom formatter needing the registry object. (PR #2011)
 - Support python 3.9 following difficulties installing with NumPy 2. (PR #2019)
 - Fix default formatting of dimensionless unit issue. (PR #2012)
 - Fix bug preventing custom formatters with modifiers working. (PR #2021)
+
 
 0.24 (2024-06-07)
 -----------------
@@ -66,6 +67,7 @@ Pint Changelog
   (PR #1819)
 - Add numpy.linalg.norm implementation.
   (PR #1251)
+
 
 0.22 (2023-05-25)
 -----------------
