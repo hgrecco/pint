@@ -1043,3 +1043,8 @@ class TestConvertWithOffset(QuantityTestCase):
         # Define against unknown name
         with pytest.raises(KeyError):
             ureg.define("@alias notexist = something")
+
+    def test_prefix_offset_units(self):
+        ureg = UnitRegistry()
+        with pytest.raises(errors.OffsetUnitCalculusError):
+            ureg.parse_units("kilodegree_Celsius")
