@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from importlib.metadata import version
 
+from .delegates.formatter._format_helpers import formatter
 from .errors import (  # noqa: F401
     DefinitionSyntaxError,
     DimensionalityError,
@@ -25,10 +26,9 @@ from .errors import (  # noqa: F401
     UndefinedUnitError,
     UnitStrippedWarning,
 )
-from .formatting import formatter, register_unit_format
+from .formatting import register_unit_format
 from .registry import ApplicationRegistry, LazyRegistry, UnitRegistry
 from .util import logger, pi_theorem  # noqa: F401
-
 
 # Default Quantity, Unit and Measurement are the ones
 # build in the default registry.

@@ -7,7 +7,7 @@
     keeping each part small enough to be hackable.
 
     Each facet contains one or more of the following modules:
-    - definitions: classes describing an specific unit related definiton.
+    - definitions: classes describing specific unit-related definitons.
       These objects must be immutable, pickable and not reference the registry (e.g. ContextDefinition)
     - objects: classes and functions that encapsulate behavior (e.g. Context)
     - registry: implements a subclass of PlainRegistry or class that can be
@@ -41,8 +41,6 @@
     - plain: basic manipulation and calculation with multiplicative
       dimensions, units and quantities (e.g. length, time, mass, etc).
 
-    - formatting: pretty printing and formatting modifiers.
-
     - nonmultiplicative: manipulation and calculation with offset and
       log units and quantities (e.g. temperature and decibel).
 
@@ -73,16 +71,16 @@ from __future__ import annotations
 
 from .context import ContextRegistry, GenericContextRegistry
 from .dask import DaskRegistry, GenericDaskRegistry
-from .formatting import FormattingRegistry, GenericFormattingRegistry
-from .group import GroupRegistry, GenericGroupRegistry
-from .measurement import MeasurementRegistry, GenericMeasurementRegistry
+from .group import GenericGroupRegistry, GroupRegistry
+from .measurement import GenericMeasurementRegistry, MeasurementRegistry
 from .nonmultiplicative import (
-    NonMultiplicativeRegistry,
     GenericNonMultiplicativeRegistry,
+    NonMultiplicativeRegistry,
 )
-from .numpy import NumpyRegistry, GenericNumpyRegistry
-from .plain import PlainRegistry, GenericPlainRegistry, QuantityT, UnitT, MagnitudeT
-from .system import SystemRegistry, GenericSystemRegistry
+
+from .numpy import GenericNumpyRegistry, NumpyRegistry
+from .plain import GenericPlainRegistry, MagnitudeT, PlainRegistry, QuantityT, UnitT
+from .system import GenericSystemRegistry, SystemRegistry
 from .uncertainties import UncertaintyRegistry, GenericUncertaintyRegistry
 
 __all__ = [

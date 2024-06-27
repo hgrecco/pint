@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import functools
 import logging
@@ -13,6 +15,8 @@ from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 from pint.util import ParserHelper, UnitsContainer
+
+from .helpers import internal
 
 
 # TODO: do not subclass from QuantityTestCase
@@ -67,7 +71,7 @@ class TestUnit(QuantityTestCase):
         }.items():
             with subtests.test(spec):
                 ureg.default_format = spec
-                assert f"{x}" == result, f"Failed for {spec}, {result}"
+                assert f"{x}" == result, f"Failed for {spec}, got {x} expected {result}"
         # no '#' here as it's a comment char when define()ing new units
         ureg.define(r"weirdunit = 1 = \~_^&%$_{}")
         x = ureg.Unit(UnitsContainer(weirdunit=1))
@@ -103,6 +107,7 @@ class TestUnit(QuantityTestCase):
                 ureg.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
+    @pytest.mark.xfail(reason="Still not clear how default formatting will work.")
     def test_unit_formatting_defaults_warning(self):
         ureg = UnitRegistry()
         ureg.default_format = "~P"
@@ -135,17 +140,18 @@ class TestUnit(QuantityTestCase):
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
     def test_unit_formatting_custom(self, monkeypatch):
-        from pint import formatting, register_unit_format
-
-        monkeypatch.setattr(formatting, "_FORMATTERS", formatting._FORMATTERS.copy())
+        from pint import register_unit_format
+        from pint.delegates.formatter._spec_helpers import REGISTERED_FORMATTERS
 
         @register_unit_format("new")
-        def format_new(unit, **options):
+        def format_new(unit, *args, **options):
             return "new format"
 
         ureg = UnitRegistry()
 
         assert f"{ureg.m:new}" == "new format"
+
+        del REGISTERED_FORMATTERS["new"]
 
     def test_ipython(self):
         alltext = []
@@ -154,6 +160,13 @@ class TestUnit(QuantityTestCase):
             @staticmethod
             def text(text):
                 alltext.append(text)
+
+            @classmethod
+            def pretty(cls, data):
+                try:
+                    data._repr_pretty_(cls, False)
+                except AttributeError:
+                    alltext.append(str(data))
 
         ureg = UnitRegistry()
         x = ureg.Unit(UnitsContainer(meter=2, kilogram=1, second=-1))
@@ -293,11 +306,11 @@ class TestRegistry(QuantityTestCase):
         assert len(dir(ureg)) > 0
 
     def test_load(self):
-        import pkg_resources
+        from importlib.resources import files
 
         from .. import compat
 
-        data = pkg_resources.resource_filename(compat.__name__, "default_en.txt")
+        data = files(compat.__package__).joinpath("default_en.txt")
         ureg1 = UnitRegistry()
         ureg2 = UnitRegistry(data)
         assert dir(ureg1) == dir(ureg2)
@@ -593,6 +606,23 @@ class TestRegistry(QuantityTestCase):
         h3 = ureg.wraps((None,), (None, None))(hfunc)
         assert h3(3, 1) == (3, 1)
 
+        def kfunc(a, /, b, c=5, *, d=6):
+            return a, b, c, d
+
+        k1 = ureg.wraps((None,), (None, None, None, None))(kfunc)
+        assert k1(1, 2, 3, d=4) == (1, 2, 3, 4)
+        assert k1(1, 2, c=3, d=4) == (1, 2, 3, 4)
+        assert k1(1, b=2, c=3, d=4) == (1, 2, 3, 4)
+        assert k1(1, d=4, b=2, c=3) == (1, 2, 3, 4)
+        assert k1(1, 2, c=3) == (1, 2, 3, 6)
+        assert k1(1, 2, d=4) == (1, 2, 5, 4)
+        assert k1(1, 2) == (1, 2, 5, 6)
+
+        k2 = ureg.wraps((None,), ("meter", "centimeter", "meter", "centimeter"))(kfunc)
+        assert k2(
+            1 * ureg.meter, 2 * ureg.centimeter, 3 * ureg.meter, d=4 * ureg.centimeter
+        ) == (1, 2, 3, 4)
+
     def test_wrap_referencing(self):
         ureg = self.ureg
 
@@ -641,6 +671,7 @@ class TestRegistry(QuantityTestCase):
         assert f0(3.0 * ureg.centimeter) == 0.03 * ureg.meter
         with pytest.raises(DimensionalityError):
             f0(3.0 * ureg.kilogram)
+        assert f0(x=3.0 * ureg.centimeter) == 0.03 * ureg.meter
 
         f0b = ureg.check(ureg.meter)(func)
         with pytest.raises(DimensionalityError):
@@ -677,13 +708,13 @@ class TestRegistry(QuantityTestCase):
         q = 8.0 * self.ureg.inch
         t = 8.0 * self.ureg.degF
         dt = 8.0 * self.ureg.delta_degF
-        assert q.to("yard").magnitude == self.ureg._units[
+        assert q.to("yard").magnitude == internal(self.ureg)._units[
             "inch"
         ].converter.to_reference(8.0)
-        assert t.to("kelvin").magnitude == self.ureg._units[
+        assert t.to("kelvin").magnitude == internal(self.ureg)._units[
             "degF"
         ].converter.to_reference(8.0)
-        assert dt.to("kelvin").magnitude == self.ureg._units[
+        assert dt.to("kelvin").magnitude == internal(self.ureg)._units[
             "delta_degF"
         ].converter.to_reference(8.0)
 
@@ -881,13 +912,6 @@ class TestCompatibleUnits(QuantityTestCase):
 
 
 class TestRegistryWithDefaultRegistry(TestRegistry):
-    @classmethod
-    def setup_class(cls):
-        from pint import _DEFAULT_REGISTRY
-
-        cls.ureg = _DEFAULT_REGISTRY
-        cls.Q_ = cls.ureg.Quantity
-
     def test_lazy(self):
         x = LazyRegistry()
         x.test = "test"
@@ -896,8 +920,10 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         y("meter")
         assert isinstance(y, UnitRegistry)
 
-    def test_redefinition(self):
-        d = self.ureg.define
+    def test_redefinition(self, func_registry):
+        ureg = UnitRegistry(on_redefinition="raise")
+        d = ureg.define
+        assert "meter" in internal(self.ureg)._units
         with pytest.raises(RedefinitionError):
             d("meter = [time]")
         with pytest.raises(RedefinitionError):
@@ -908,7 +934,7 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
             d("[velocity] = [length]")
 
         # aliases
-        assert "inch" in self.ureg._units
+        assert "inch" in internal(self.ureg)._units
         with pytest.raises(RedefinitionError):
             d("bla = 3.2 meter = inch")
         with pytest.raises(RedefinitionError):
@@ -963,6 +989,8 @@ class TestConvertWithOffset(QuantityTestCase):
         (({"degC": 2}, {"kelvin": 2}), "error"),
         (({"degC": 1, "degF": 1}, {"kelvin": 2}), "error"),
         (({"degC": 1, "kelvin": 1}, {"kelvin": 2}), "error"),
+        (({"delta_degC": 1}, {"degF": 1}), "error"),
+        (({"delta_degC": 1}, {"degC": 1}), "error"),
     ]
 
     @pytest.mark.parametrize(("input_tuple", "expected"), convert_with_offset)
@@ -1007,7 +1035,7 @@ class TestConvertWithOffset(QuantityTestCase):
             assert ureg.Unit(a) == ureg.Unit("canonical")
 
         # Test that aliases defined multiple times are not duplicated
-        assert ureg._units["canonical"].aliases == (
+        assert internal(ureg)._units["canonical"].aliases == (
             "alias1",
             "alias2",
         )

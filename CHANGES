@@ -1,15 +1,78 @@
 Pint Changelog
 ==============
 
-0.23 (unreleased)
+0.25 (unreleased)
 -----------------
 
+- Nothing added yet.
+
+
+0.24.1 (2024-06-24)
+-----------------
+
+- Fix custom formatter needing the registry object. (PR #2011)
+- Support python 3.9 following difficulties installing with NumPy 2. (PR #2019)
+- Fix default formatting of dimensionless unit issue. (PR #2012)
+- Fix bug preventing custom formatters with modifiers working. (PR #2021)
+
+
+0.24 (2024-06-07)
+-----------------
+
+- Fix detection of invalid conversion between offset and delta units. (PR #1905)
+- Added dBW, decibel Watts, which is used in RF high power applications
+- NumPy 2.0 support
+  (PR #1985, #1971)
+- Implement numpy roll (Related to issue #981)
+- Implement numpy correlate
+  (PR #1990)
+- Add `dim_sort` function to _formatter_helpers.
+- Add `dim_order` and `default_sort_func` properties to FullFormatter.
+  (PR #1926, fixes Issue #1841)
+- Documented packages using pint.
+  (PR #1960)
+- Fixed bug causing operations between arrays of quantity scalars and quantity holding
+  array resulting in incorrect units.
+  (PR #1677)
+- Fix LaTeX siuntix formatting when using non_int_type=decimal.Decimal.
+  (PR #1977)
+- Added refractive index units.
+  (PR #1816)
+- Fix converting to offset units of higher dimension e.g. gauge pressure
+  (PR #1949)
+- Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
+  (PR #1853)
+- Improved error message in `get_dimensionality()` when non existent units are passed.
+  (PR #1874, Issue #1716)
+
+
+0.23 (2023-12-08)
+-----------------
+
+- Add _get_conversion_factor to registry with cache.
+- Homogenize input and ouput of internal regitry functions to
+  facility typing, subclassing and wrapping.
+  (_yield_unit_triplets, )
+- Generated downstream_status page to track the
+  state of downstream projects.
+- Improve typing annotation.
+- Updated to flexparser 0.2.
+- Faster wraps
+  (PR #1862)
+- Add codspeed github action.
+- Move benchmarks to pytest-benchmarks.
+- Support pytest on python 3.12 wrt Fraction formatting change
+  (#1818)
 - Fixed Transformation type protocol.
-  (PR #1805)
+  (PR #1805, PR #1832)
 - Documented to_preferred and created added an autoautoconvert_to_preferred registry option.
   (PR #1803)
+- Enable Pint to parse uncertainty numbers.
+  (See #1611, #1614)
 - Optimize matplotlib unit conversion for Quantity arrays
   (PR #1819)
+- Add numpy.linalg.norm implementation.
+  (PR #1251)
 
 
 0.22 (2023-05-25)
@@ -105,9 +168,15 @@ Pint Changelog
   (Issue #1030, #574)
 - Added angular frequency documentation page.
 - Move ASV benchmarks to dedicated folder. (Issue #1542)
+- An ndim attribute has been added to Quantity and DataFrame has been added to upcast
+  types for pint-pandas compatibility. (#1596)
+- Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
+  (Issue #1510, #1530)
+- Update test_non_int tests for pytest.
+- Better support for uncertainties (See #1611, #1614)
 - Implement `numpy.broadcast_arrays` (#1607)
 - An ndim attribute has been added to Quantity and DataFrame has been added to upcast
-types for pint-pandas compatibility. (#1596)
+  types for pint-pandas compatibility. (#1596)
 - Fix a recursion error that would be raised when passing quantities to `cond` and `x`.
   (Issue #1510, #1530)
 - Update test_non_int tests for pytest.
@@ -116,7 +185,6 @@ types for pint-pandas compatibility. (#1596)
 - Better support for pandas and dask.
 - Fix masked arrays (with multiple values) incorrectly being passed through
   setitem (Issue #1584)
-
 - Add Quantity.to_preferred
 
 0.19.2 (2022-04-23)

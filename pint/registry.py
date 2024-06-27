@@ -16,11 +16,9 @@ from __future__ import annotations
 
 from typing import Generic
 
-from . import registry_helpers
-from . import facets
-from .util import logger, pi_theorem
+from . import facets, registry_helpers
 from .compat import TypeAlias
-
+from .util import logger, pi_theorem
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
@@ -34,7 +32,6 @@ class Quantity(
     facets.DaskRegistry.Quantity,
     facets.NumpyRegistry.Quantity,
     facets.MeasurementRegistry.Quantity,
-    facets.FormattingRegistry.Quantity,
     facets.NonMultiplicativeRegistry.Quantity,
     facets.PlainRegistry.Quantity,
 ):
@@ -48,7 +45,6 @@ class Unit(
     facets.DaskRegistry.Unit,
     facets.NumpyRegistry.Unit,
     facets.MeasurementRegistry.Unit,
-    facets.FormattingRegistry.Unit,
     facets.NonMultiplicativeRegistry.Unit,
     facets.PlainRegistry.Unit,
 ):
@@ -63,7 +59,6 @@ class GenericUnitRegistry(
     facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericFormattingRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericNonMultiplicativeRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT],
 ):
@@ -77,31 +72,38 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
     ----------
     filename :
         path of the units definition file to load or line-iterable object.
-        Empty to load the default definition file.
+        Empty string to load the default definition file. (default)
         None to leave the UnitRegistry empty.
     force_ndarray : bool
         convert any input, scalar or not to a numpy.ndarray.
+        (Default: False)
     force_ndarray_like : bool
         convert all inputs other than duck arrays to a numpy.ndarray.
+        (Default: False)
     default_as_delta :
         In the context of a multiplication of units, interpret
         non-multiplicative units as their *delta* counterparts.
+        (Default: False)
     autoconvert_offset_to_baseunit :
         If True converts offset units in quantities are
         converted to their plain units in multiplicative
-        context. If False no conversion happens.
+        context. If False no conversion happens. (Default: False)
     on_redefinition : str
         action to take in case a unit is redefined.
-        'warn', 'raise', 'ignore'
+        'warn', 'raise', 'ignore' (Default: 'raise')
     auto_reduce_dimensions :
         If True, reduce dimensionality on appropriate operations.
+        (Default: False)
     autoconvert_to_preferred :
         If True, converts preferred units on appropriate operations.
+        (Default: False)
     preprocessors :
         list of callables which are iteratively ran on any input expression
-        or unit string
+        or unit string or None for no preprocessor.
+        (Default=None)
     fmt_locale :
-        locale identifier string, used in `format_babel`. Default to None
+        locale identifier string, used in `format_babel` or None.
+        (Default=None)
     case_sensitive : bool, optional
         Control default case sensitivity of unit parsing. (Default: True)
     cache_folder : str or pathlib.Path or None, optional

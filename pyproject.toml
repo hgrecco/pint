@@ -24,13 +24,11 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11"
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.9"
-dynamic = ["version"] # Version is taken from git tags using setuptools_scm
-dependencies = [
-  "typing_extensions"
-]
+dynamic = ["version", "dependencies"]
 
 [tool.setuptools.package-data]
 pint = [
@@ -38,6 +36,8 @@ pint = [
       "constants_en.txt",
       "py.typed"]
 
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt"}
 
 [project.optional-dependencies]
 testbase = [
@@ -57,7 +57,7 @@ bench = [
     "pytest",
     "pytest-codspeed"
 ]
-numpy = ["numpy >= 1.19.5"]
+numpy = ["numpy >= 1.23"]
 uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel <= 2.8"]
 pandas = ["pint-pandas >= 0.3"]
@@ -82,12 +82,18 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 
-[tool.ruff.isort]
+[tool.ruff]
+extend-exclude = ["build"]
+line-length=88
+
+[tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
 known-first-party= ["pint"]
 
-
-[tool.ruff]
+[tool.ruff.lint]
+extend-select = [
+  "I",           # isort
+]
 ignore = [
   # whitespace before ':' - doesn't work well with black
   # "E203",
@@ -99,5 +105,3 @@ ignore = [
   # line break before binary operator
   # "W503"
 ]
-extend-exclude = ["build"]
-line-length=88
