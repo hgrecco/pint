@@ -246,6 +246,7 @@ def prepare_compount_unit(
     locale: Locale | str | None = None,
     as_ratio: bool = True,
     registry: UnitRegistry | None = None,
+    empty_numerator_fmt="1",
 ) -> tuple[Iterable[tuple[str, T]], Iterable[tuple[str, T]]]:
     """Format compound unit into unit container given
     an spec and locale.
