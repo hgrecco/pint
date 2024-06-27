@@ -913,7 +913,7 @@ class TestIssues(QuantityTestCase):
             arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m s")], dtype="object")
         )
 
-    @helpers.requires_babel()
+    @helpers.requires_babel(["es_ES"])
     def test_issue_1400(self, sess_registry):
         q1 = 3.1 * sess_registry.W
         q2 = 3.1 * sess_registry.W / sess_registry.cm
