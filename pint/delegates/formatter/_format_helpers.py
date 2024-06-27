@@ -163,7 +163,7 @@ def formatter(
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
     exp_call: FORMATTER = "{:n}".format,
-    empty_numerator_fmt = "1",
+    empty_numerator_fmt="1",
 ) -> str:
     """Format a list of (name, exponent) pairs.
 

@@ -144,9 +144,11 @@ class FullFormatter(BaseFormatter):
             sort_func = _sort_func
             empty_numerator_fmt = ""
         return self.get_formatter(uspec).format_unit(
-            unit, uspec, sort_func=sort_func, 
-                        empty_numerator_fmt = empty_numerator_fmt,
-**babel_kwds
+            unit,
+            uspec,
+            sort_func=sort_func,
+            empty_numerator_fmt=empty_numerator_fmt,
+            **babel_kwds,
         )
 
     def format_quantity(
