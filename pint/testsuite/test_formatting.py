@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 import pint.formatting as fmt
@@ -57,6 +59,8 @@ def test_split_format(format, default, flag, expected):
 def test_register_unit_format(func_registry):
     @fmt.register_unit_format("custom")
     def format_custom(unit, registry, **options):
+        # Ensure the registry is correct..
+        registry.Unit(unit)
         return "<formatted unit>"
 
     quantity = 1.0 * func_registry.meter

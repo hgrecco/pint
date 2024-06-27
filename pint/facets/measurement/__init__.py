@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 from .objects import Measurement, MeasurementQuantity
-from .registry import MeasurementRegistry, GenericMeasurementRegistry
+from .registry import GenericMeasurementRegistry, MeasurementRegistry
 
 __all__ = [
     "Measurement",

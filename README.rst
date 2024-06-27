@@ -2,8 +2,13 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Latest Version
 
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/python/black
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff
+
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff-Format
 
 .. image:: https://readthedocs.org/projects/pint/badge/
     :target: https://pint.readthedocs.org/

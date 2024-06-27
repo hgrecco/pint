@@ -1,12 +1,43 @@
 .. _angular_frequency:
 
 
+Angles and Angular Frequency
+=============================
+
+Angles
+------
+
+pint treats angle quantities as `dimensionless`, following the conventions of SI. The base unit for angle is the `radian`.
+The SI BIPM Brochure (Bureau International des Poids et Mesures) states:
+
+.. note::
+
+    Plane and solid angles, when expressed in radians and steradians respectively, are in effect
+    also treated within the SI as quantities with the unit one (see section 5.4.8). The symbols rad
+    and sr are written explicitly where appropriate, in order to emphasize that, for radians or
+    steradians, the quantity being considered is, or involves the plane angle or solid angle
+    respectively. For steradians it emphasizes the distinction between units of flux and intensity
+    in radiometry and photometry for example. However, it is a long-established practice in
+    mathematics and across all areas of science to make use of rad = 1 and sr = 1.
+
+
+This leads to behavior some users may find unintuitive. For example, since angles have no dimensionality, it is not possible to check whether a quantity has an angle dimension.
+
+.. code-block:: python
+
+    >>> import pint
+    >>> ureg = pint.UnitRegistry()
+    >>> angle = ureg('1 rad')
+    >>> angle.dimensionality
+    <UnitsContainer({})>
+
+
 Angular Frequency
-=================
+-----------------
 
 `Hertz` is a unit for frequency, that is often also used for angular frequency. For example, a shaft spinning at `60 revolutions per minute` will often be said to spin at `1 Hz`, rather than `1 revolution per second`.
 
-By default, pint treats angle quantities as `dimensionless`, so allows conversions between frequencies and angular frequencies. The base unit for angle is the `radian`. This leads to some unintuitive behaviour, as pint will convert angular frequencies into frequencies by converting angles into `radians`, rather than `revolutions`. This leads to converted values `2 * pi` larger than expected:
+Since pint treats angle quantities as `dimensionless`, it allows conversions between frequencies and angular frequencies. This leads to some unintuitive behaviour, as pint will convert angular frequencies into frequencies by converting angles into `radians`, rather than `revolutions`. This leads to converted values `2 * pi` larger than expected:
 
 .. code-block:: python
 
@@ -16,7 +47,7 @@ By default, pint treats angle quantities as `dimensionless`, so allows conversio
     >>> angular_frequency.to('Hz')
     <Quantity(6.28318531, 'hertz')>
 
-pint follows the conventions of SI. The SI BIPM Brochure (Bureau International des Poids et Mesures) states:
+The SI BIPM Brochure (Bureau International des Poids et Mesures) states:
 
 .. note::
 

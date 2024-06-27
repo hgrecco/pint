@@ -1,7 +1,9 @@
+from __future__ import annotations
+
+import contextlib
 import doctest
 import pickle
 import re
-import contextlib
 
 import pytest
 from packaging.version import parse as version_parse
@@ -126,9 +128,26 @@ def requires_numpy_at_least(version):
     )
 
 
-requires_babel = pytest.mark.skipif(
-    not HAS_BABEL, reason="Requires Babel with units support"
-)
+def requires_babel(tested_locales=[]):
+    if not HAS_BABEL:
+        return pytest.mark.skip("Requires Babel with units support")
+
+    import locale
+
+    default_locale = locale.getlocale(locale.LC_NUMERIC)
+    locales_unavailable = False
+    try:
+        for loc in tested_locales:
+            locale.setlocale(locale.LC_NUMERIC, loc)
+    except locale.Error:
+        locales_unavailable = True
+    locale.setlocale(locale.LC_NUMERIC, default_locale)
+
+    return pytest.mark.skipif(
+        locales_unavailable, reason="Tested locales not available."
+    )
+
+
 requires_not_babel = pytest.mark.skipif(
     HAS_BABEL, reason="Requires Babel not to be installed"
 )

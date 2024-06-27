@@ -1,10 +1,49 @@
 Pint Changelog
 ==============
 
-0.24 (unreleased)
+0.25 (unreleased)
 -----------------
 
-- Nothing changed yet.
+- Nothing added yet.
+
+
+0.24.1 (2024-06-24)
+-----------------
+
+- Fix custom formatter needing the registry object. (PR #2011)
+- Support python 3.9 following difficulties installing with NumPy 2. (PR #2019)
+- Fix default formatting of dimensionless unit issue. (PR #2012)
+- Fix bug preventing custom formatters with modifiers working. (PR #2021)
+
+
+0.24 (2024-06-07)
+-----------------
+
+- Fix detection of invalid conversion between offset and delta units. (PR #1905)
+- Added dBW, decibel Watts, which is used in RF high power applications
+- NumPy 2.0 support
+  (PR #1985, #1971)
+- Implement numpy roll (Related to issue #981)
+- Implement numpy correlate
+  (PR #1990)
+- Add `dim_sort` function to _formatter_helpers.
+- Add `dim_order` and `default_sort_func` properties to FullFormatter.
+  (PR #1926, fixes Issue #1841)
+- Documented packages using pint.
+  (PR #1960)
+- Fixed bug causing operations between arrays of quantity scalars and quantity holding
+  array resulting in incorrect units.
+  (PR #1677)
+- Fix LaTeX siuntix formatting when using non_int_type=decimal.Decimal.
+  (PR #1977)
+- Added refractive index units.
+  (PR #1816)
+- Fix converting to offset units of higher dimension e.g. gauge pressure
+  (PR #1949)
+- Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
+  (PR #1853)
+- Improved error message in `get_dimensionality()` when non existent units are passed.
+  (PR #1874, Issue #1716)
 
 
 0.23 (2023-12-08)
@@ -34,6 +73,7 @@ Pint Changelog
   (PR #1819)
 - Add numpy.linalg.norm implementation.
   (PR #1251)
+
 
 0.22 (2023-05-25)
 -----------------

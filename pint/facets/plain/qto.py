@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
-
 import bisect
 import math
 import numbers
 import warnings
+from typing import TYPE_CHECKING
 
-from ...util import infer_base_unit
 from ...compat import (
     mip_INF,
     mip_INTEGER,
-    mip_model,
     mip_Model,
+    mip_model,
     mip_OptimizationStatus,
     mip_xsum,
 )
+from ...errors import UndefinedBehavior
+from ...util import infer_base_unit
 
 if TYPE_CHECKING:
     from ..._typing import UnitLike
@@ -82,7 +82,7 @@ def to_reduced_units(
 
 
 def to_compact(
-    quantity: PlainQuantity, unit: Optional[UnitsContainer] = None
+    quantity: PlainQuantity, unit: UnitsContainer | None = None
 ) -> PlainQuantity:
     """ "Return PlainQuantity rescaled to compact, human-readable units.
 
@@ -103,9 +103,11 @@ def to_compact(
     if not isinstance(quantity.magnitude, numbers.Number) and not hasattr(
         quantity.magnitude, "nominal_value"
     ):
-        msg = "to_compact applied to non numerical types " "has an undefined behavior."
-        w = RuntimeWarning(msg)
-        warnings.warn(w, stacklevel=2)
+        warnings.warn(
+            "to_compact applied to non numerical types has an undefined behavior.",
+            UndefinedBehavior,
+            stacklevel=2,
+        )
         return quantity
 
     if (
@@ -170,7 +172,7 @@ def to_compact(
 
 
 def to_preferred(
-    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
+    quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
@@ -182,7 +184,7 @@ def to_preferred(
     >>> (1*ureg.acre).to_preferred([ureg.meters])
     <Quantity(4046.87261, 'meter ** 2')>
     >>> (1*(ureg.force_pound*ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'second * watt')>
+    <Quantity(4.44822162, 'watt * second')>
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -190,7 +192,7 @@ def to_preferred(
 
 
 def ito_preferred(
-    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
+    quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
@@ -202,7 +204,7 @@ def ito_preferred(
     >>> (1*ureg.acre).to_preferred([ureg.meters])
     <Quantity(4046.87261, 'meter ** 2')>
     >>> (1*(ureg.force_pound*ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'second * watt')>
+    <Quantity(4.44822162, 'watt * second')>
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -210,7 +212,7 @@ def ito_preferred(
 
 
 def _get_preferred(
-    quantity: PlainQuantity, preferred_units: Optional[list[UnitLike]] = None
+    quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
 ) -> PlainQuantity:
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.default_preferred_units

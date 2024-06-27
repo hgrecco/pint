@@ -84,3 +84,16 @@ currency on its own dimension, and then implement transformations::
 More sophisticated formulas, e.g. dealing with flat fees and thresholds, can be
 implemented with arbitrary python code by programmatically defining a context (see
 :ref:`contexts`).
+
+Currency Symbols
+----------------
+
+Many common currency symbols are not supported by the pint parser. A preprocessor can be used as a workaround:
+
+.. doctest::
+
+   >>> import pint
+   >>> ureg = pint.UnitRegistry(preprocessors = [lambda s: s.replace("€", "EUR")])
+   >>> ureg.define("euro = [currency] = € = EUR")
+   >>> print(ureg.Quantity("1 €"))
+   1 euro
