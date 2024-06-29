@@ -442,15 +442,20 @@ class UnitsContainer(Mapping[str, Scalar]):
         Numerical type used for non integer values.
     """
 
-    __slots__ = ("_d", "_hash", "_one", "_non_int_type")
+    __slots__ = ("_d", "_hash", "_one", "_non_int_type", "_auto_reduce_units")
 
     _d: udict
     _hash: int | None
     _one: Scalar
     _non_int_type: type
+    _auto_reduce_units: bool
 
     def __init__(
-        self, *args: Any, non_int_type: type | None = None, **kwargs: Any
+        self,
+        *args: Any,
+        non_int_type: type | None = None,
+        auto_reduce_units: bool = True,
+        **kwargs: Any,
     ) -> None:
         if args and isinstance(args[0], UnitsContainer):
             default_non_int_type = args[0]._non_int_type
@@ -458,6 +463,7 @@ class UnitsContainer(Mapping[str, Scalar]):
             default_non_int_type = float
 
         self._non_int_type = non_int_type or default_non_int_type
+        self._auto_reduce_units = auto_reduce_units
 
         if self._non_int_type is float:
             self._one = 1
@@ -620,12 +626,19 @@ class UnitsContainer(Mapping[str, Scalar]):
         out._hash = self._hash
         out._non_int_type = self._non_int_type
         out._one = self._one
+        out._auto_reduce_units = self._auto_reduce_units
         return out
 
+    def __deepcopy__(self, memo):
+        return self.copy()
+
     def __mul__(self, other: Any):
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, UnitsContainer):
             err = "Cannot multiply UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
+
+        if not self._auto_reduce_units:
+            return NonReducingUnitsContainer([self, other])
 
         new = self.copy()
         for key, value in other.items():
@@ -650,9 +663,12 @@ class UnitsContainer(Mapping[str, Scalar]):
         return new
 
     def __truediv__(self, other: Any):
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, UnitsContainer):
             err = "Cannot divide UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
+
+        if not self._auto_reduce_units:
+            return NonReducingUnitsContainer([self, UnitsContainer({}) / other])
 
         new = self.copy()
         for key, value in other.items():
@@ -664,7 +680,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         return new
 
     def __rtruediv__(self, other: Any):
-        if not isinstance(other, self.__class__) and other != 1:
+        if not isinstance(other, UnitsContainer) and other != 1:
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
 
@@ -682,9 +698,14 @@ class NonReducingUnitsContainer(UnitsContainer):
     """
 
     def __init__(
-        self, units: list[UnitsContainer] | list[tuple[QuantityOrUnitLike, Scalar]]
+        self,
+        units: list[UnitsContainer] | list[tuple[QuantityOrUnitLike, Scalar]],
+        non_int_type: type | None = None,
+        auto_reduce_units: bool = True,
     ) -> None:
         self.non_reduced_units = []
+        self._non_int_type = non_int_type
+        self.auto_reduce_units = auto_reduce_units
 
         for u in units:
             if isinstance(u, tuple):

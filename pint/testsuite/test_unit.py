@@ -844,6 +844,18 @@ class TestNonReducing(QuantityTestCase):
         ]
         assert mm_per_mm_unit == ureg.dimensionless
 
+    def test_ureg_auto_reduce_units(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        NRUC_ = ureg.NonReducingUnitsContainer
+
+        ureg.Unit("mm") / ureg.Unit("mm") == NRUC_([(ureg.mm, 1), (ureg.mm, -1)])
+
+    def test_formatting(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        u = ureg.Unit("mm") / ureg.Unit("mm")
+        assert format(u, "~D") == "mm / mm"
+        assert format(u, "P") == "millimeter/millimeter"
+
 
 class TestCaseInsensitiveRegistry(QuantityTestCase):
     kwargs = dict(case_sensitive=False)
