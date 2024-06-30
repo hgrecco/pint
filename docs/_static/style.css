@@ -38,8 +38,14 @@ pre, code {
 
 .sd-card .sd-card-header {
   border: none;
-  color: #150458 !important;
+  color: #150458;
   font-size: var(--pst-font-size-h5);
   font-weight: bold;
   padding: 2.5rem 0rem 0.5rem 0rem;
+}
+
+html[data-theme=dark] {
+  .sd-card .sd-card-header {
+    color: #FFF;
+  }
 }
