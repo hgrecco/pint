@@ -44,7 +44,7 @@ pre, code {
   padding: 2.5rem 0rem 0.5rem 0rem;
 }
 
-@media (prefers-color-scheme: dark) {
+html[data-theme=dark] {
   .sd-card .sd-card-header {
     color: #FFF;
   }
