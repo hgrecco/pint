@@ -142,48 +142,44 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return self.dimensionless
 
     def __mul__(self, other):
-        if self._check(other):
-            if isinstance(other, self.__class__):
-                return self.__class__(self._units * other._units)
-            else:
+            if self._check(other):
+                if isinstance(other, self.__class__):
+                    return self.__class__(self._units * other._units)
                 qself = self._REGISTRY.Quantity(1, self._units)
                 return qself * other
 
-        if isinstance(other, Number) and other == 1:
-            return self._REGISTRY.Quantity(other, self._units)
+            if isinstance(other, Number) and other == 1:
+                return self._REGISTRY.Quantity(other, self._units)
 
-        return self._REGISTRY.Quantity(1, self._units) * other
+            return self._REGISTRY.Quantity(1, self._units) * other
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        if self._check(other):
-            if isinstance(other, self.__class__):
-                return self.__class__(self._units / other._units)
-            else:
+            if self._check(other):
+                if isinstance(other, self.__class__):
+                    return self.__class__(self._units / other._units)
                 qself = 1 * self
                 return qself / other
 
-        return self._REGISTRY.Quantity(1 / other, self._units)
+            return self._REGISTRY.Quantity(1 / other, self._units)
 
     def __rtruediv__(self, other):
-        # As PlainUnit and Quantity both handle truediv with each other rtruediv can
-        # only be called for something different.
-        if isinstance(other, NUMERIC_TYPES):
-            return self._REGISTRY.Quantity(other, 1 / self._units)
-        elif isinstance(other, UnitsContainer):
-            return self.__class__(other / self._units)
+            # As PlainUnit and Quantity both handle truediv with each other rtruediv can
+            # only be called for something different.
+            if isinstance(other, NUMERIC_TYPES):
+                return self._REGISTRY.Quantity(other, 1 / self._units)
+            if isinstance(other, UnitsContainer):
+                return self.__class__(other / self._units)
 
-        return NotImplemented
+            return NotImplemented
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
     def __pow__(self, other) -> PlainUnit:
-        if isinstance(other, NUMERIC_TYPES):
-            return self.__class__(self._units**other)
-
-        else:
+            if isinstance(other, NUMERIC_TYPES):
+                return self.__class__(self._units**other)
             mess = f"Cannot power PlainUnit by {type(other)}"
             raise TypeError(mess)
 
@@ -191,32 +187,27 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return self._units.__hash__()
 
     def __eq__(self, other) -> bool:
-        # We compare to the plain class of PlainUnit because each PlainUnit class is
-        # unique.
-        if self._check(other):
-            if isinstance(other, self.__class__):
-                return self._units == other._units
-            else:
+            # We compare to the plain class of PlainUnit because each PlainUnit class is
+            # unique.
+            if self._check(other):
+                if isinstance(other, self.__class__):
+                    return self._units == other._units
+            elif isinstance(other, NUMERIC_TYPES):
                 return other == self._REGISTRY.Quantity(1, self._units)
-
-        elif isinstance(other, NUMERIC_TYPES):
-            return other == self._REGISTRY.Quantity(1, self._units)
-
-        else:
             return self._units == other
 
     def __ne__(self, other) -> bool:
         return not (self == other)
 
     def compare(self, other, op) -> bool:
-        self_q = self._REGISTRY.Quantity(1, self)
+            self_q = self._REGISTRY.Quantity(1, self)
 
-        if isinstance(other, NUMERIC_TYPES):
-            return self_q.compare(other, op)
-        elif isinstance(other, (PlainUnit, UnitsContainer, dict)):
-            return self_q.compare(self._REGISTRY.Quantity(1, other), op)
+            if isinstance(other, NUMERIC_TYPES):
+                return self_q.compare(other, op)
+            if isinstance(other, (PlainUnit, UnitsContainer, dict)):
+                return self_q.compare(self._REGISTRY.Quantity(1, other), op)
 
-        return NotImplemented
+            return NotImplemented
 
     __lt__ = lambda self, other: self.compare(other, op=operator.lt)
     __le__ = lambda self, other: self.compare(other, op=operator.le)
@@ -263,10 +254,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             if not isinstance(value, self._REGISTRY.Quantity):
                 value = self._REGISTRY.Quantity(1, value)
             return value.to(self)
-        elif strict:
+        if strict:
             raise ValueError("%s must be a Quantity" % value)
-        else:
-            return value * self
+        return value * self
 
     def m_from(self, value, strict=True, name="value"):
         """Converts a numerical value or quantity to this unit, then returns

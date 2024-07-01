@@ -96,7 +96,7 @@ def check_implemented(f):
             return NotImplemented
         # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
         # and expects PlainQuantity * array[PlainQuantity] should return NotImplemented
-        elif isinstance(other, list) and other and isinstance(other[0], type(self)):
+        if isinstance(other, list) and other and isinstance(other[0], type(self)):
             return NotImplemented
         return f(self, *args, **kwargs)
 
@@ -273,15 +273,13 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        if HAS_UNCERTAINTIES:
-            if isinstance(self._magnitude, UFloat):
-                return f"<Quantity({self._magnitude:.6}, '{self._units}')>"
-            else:
+            if HAS_UNCERTAINTIES:
+                if isinstance(self._magnitude, UFloat):
+                    return f"<Quantity({self._magnitude:.6}, '{self._units}')>"
                 return f"<Quantity({self._magnitude}, '{self._units}')>"
-        elif isinstance(self._magnitude, float):
-            return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
-
-        return f"<Quantity({self._magnitude}, '{self._units}')>"
+            elif isinstance(self._magnitude, float):
+                return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
+            return f"<Quantity({self._magnitude}, '{self._units}')>"
 
     def __hash__(self) -> int:
         self_base = self.to_base_units()
@@ -835,12 +833,12 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         ...
 
     def __iadd__(self, other):
-        if isinstance(other, datetime.datetime):
-            return self.to_timedelta() + other
-        elif is_duck_array_type(type(self._magnitude)):
-            return self._iadd_sub(other, operator.iadd)
+            if isinstance(other, datetime.datetime):
+                return self.to_timedelta() + other
+            if is_duck_array_type(type(self._magnitude)):
+                return self._iadd_sub(other, operator.iadd)
 
-        return self._add_sub(other, operator.add)
+            return self._add_sub(other, operator.add)
 
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
@@ -1111,13 +1109,12 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     @check_implemented
     def __rmod__(self, other):
-        if self._check(other):
-            magnitude = other._magnitude % self.to(other._units)._magnitude
-            return self.__class__(magnitude, other._units)
-        elif self.dimensionless:
-            magnitude = other % self.to("")._magnitude
-            return self.__class__(magnitude, self.UnitsContainer({}))
-        else:
+            if self._check(other):
+                magnitude = other._magnitude % self.to(other._units)._magnitude
+                return self.__class__(magnitude, other._units)
+            if self.dimensionless:
+                magnitude = other % self.to("")._magnitude
+                return self.__class__(magnitude, self.UnitsContainer({}))
             raise DimensionalityError(self._units, "dimensionless")
 
     @check_implemented
@@ -1153,58 +1150,58 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             raise
         except TypeError:
             return NotImplemented
-        else:
-            if not self._ok_for_muldiv:
-                raise OffsetUnitCalculusError(self._units)
 
-            if is_duck_array_type(type(getattr(other, "_magnitude", other))):
-                # arrays are refused as exponent, because they would create
-                # len(array) quantities of len(set(array)) different units
-                # unless the plain is dimensionless. Ensure dimensionless
-                # units are reduced to "dimensionless".
-                # Note: this will strip Units of degrees or radians from PlainQuantity
-                if self.dimensionless:
-                    if getattr(other, "dimensionless", False):
-                        self._magnitude = self.m_as("") ** other.m_as("")
-                        self._units = self.UnitsContainer()
-                        return self
-                    elif not getattr(other, "dimensionless", True):
-                        raise DimensionalityError(other._units, "dimensionless")
-                    else:
-                        self._magnitude = self.m_as("") ** other
-                        self._units = self.UnitsContainer()
-                        return self
-                elif np.size(other) > 1:
-                    raise DimensionalityError(
-                        self._units,
-                        "dimensionless",
-                        extra_msg=". PlainQuantity array exponents are only allowed if the "
-                        "plain is dimensionless",
-                    )
+        if not self._ok_for_muldiv:
+            raise OffsetUnitCalculusError(self._units)
 
-            if other == 1:
-                return self
-            elif other == 0:
-                self._units = self.UnitsContainer()
-            else:
-                if not self._is_multiplicative:
-                    if self._REGISTRY.autoconvert_offset_to_baseunit:
-                        self.ito_base_units()
-                    else:
-                        raise OffsetUnitCalculusError(self._units)
-
+        if is_duck_array_type(type(getattr(other, "_magnitude", other))):
+            # arrays are refused as exponent, because they would create
+            # len(array) quantities of len(set(array)) different units
+            # unless the plain is dimensionless. Ensure dimensionless
+            # units are reduced to "dimensionless".
+            # Note: this will strip Units of degrees or radians from PlainQuantity
+            if self.dimensionless:
                 if getattr(other, "dimensionless", False):
-                    other = other.to_base_units().magnitude
-                    self._units **= other
+                    self._magnitude = self.m_as("") ** other.m_as("")
+                    self._units = self.UnitsContainer()
+                    return self
                 elif not getattr(other, "dimensionless", True):
-                    raise DimensionalityError(self._units, "dimensionless")
+                    raise DimensionalityError(other._units, "dimensionless")
                 else:
-                    self._units **= other
+                    self._magnitude = self.m_as("") ** other
+                    self._units = self.UnitsContainer()
+                    return self
+            elif np.size(other) > 1:
+                raise DimensionalityError(
+                    self._units,
+                    "dimensionless",
+                    extra_msg=". PlainQuantity array exponents are only allowed if the "
+                    "plain is dimensionless",
+                )
 
-            self._magnitude **= _to_magnitude(
-                other, self.force_ndarray, self.force_ndarray_like
-            )
+        if other == 1:
             return self
+        if other == 0:
+            self._units = self.UnitsContainer()
+        else:
+            if not self._is_multiplicative:
+                if self._REGISTRY.autoconvert_offset_to_baseunit:
+                    self.ito_base_units()
+                else:
+                    raise OffsetUnitCalculusError(self._units)
+
+            if getattr(other, "dimensionless", False):
+                other = other.to_base_units().magnitude
+                self._units **= other
+            elif not getattr(other, "dimensionless", True):
+                raise DimensionalityError(self._units, "dimensionless")
+            else:
+                self._units **= other
+
+        self._magnitude **= _to_magnitude(
+            other, self.force_ndarray, self.force_ndarray_like
+        )
+        return self
 
     @check_implemented
     def __pow__(self, other) -> PlainQuantity[MagnitudeT]:
@@ -1214,62 +1211,62 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             raise
         except TypeError:
             return NotImplemented
-        else:
-            if not self._ok_for_muldiv:
-                raise OffsetUnitCalculusError(self._units)
 
-            if is_duck_array_type(type(getattr(other, "_magnitude", other))):
-                # arrays are refused as exponent, because they would create
-                # len(array) quantities of len(set(array)) different units
-                # unless the plain is dimensionless.
-                # Note: this will strip Units of degrees or radians from PlainQuantity
-                if self.dimensionless:
-                    if getattr(other, "dimensionless", False):
-                        return self.__class__(
-                            self._convert_magnitude_not_inplace(self.UnitsContainer())
-                            ** other.m_as("")
-                        )
-                    elif not getattr(other, "dimensionless", True):
-                        raise DimensionalityError(other._units, "dimensionless")
-                    else:
-                        return self.__class__(
-                            self._convert_magnitude_not_inplace(self.UnitsContainer())
-                            ** other
-                        )
-                elif np.size(other) > 1:
-                    raise DimensionalityError(
-                        self._units,
-                        "dimensionless",
-                        extra_msg=". PlainQuantity array exponents are only allowed if the "
-                        "plain is dimensionless",
-                    )
+        if not self._ok_for_muldiv:
+            raise OffsetUnitCalculusError(self._units)
 
-            new_self = self
-            if other == 1:
-                return self
-            elif other == 0:
-                exponent = 0
-                units = self.UnitsContainer()
-            else:
-                if not self._is_multiplicative:
-                    if self._REGISTRY.autoconvert_offset_to_baseunit:
-                        new_self = self.to_root_units()
-                    else:
-                        raise OffsetUnitCalculusError(self._units)
-
+        if is_duck_array_type(type(getattr(other, "_magnitude", other))):
+            # arrays are refused as exponent, because they would create
+            # len(array) quantities of len(set(array)) different units
+            # unless the plain is dimensionless.
+            # Note: this will strip Units of degrees or radians from PlainQuantity
+            if self.dimensionless:
                 if getattr(other, "dimensionless", False):
-                    exponent = other.to_root_units().magnitude
-                    units = new_self._units**exponent
+                    return self.__class__(
+                        self._convert_magnitude_not_inplace(self.UnitsContainer())
+                        ** other.m_as("")
+                    )
                 elif not getattr(other, "dimensionless", True):
                     raise DimensionalityError(other._units, "dimensionless")
                 else:
-                    exponent = _to_magnitude(
-                        other, force_ndarray=False, force_ndarray_like=False
+                    return self.__class__(
+                        self._convert_magnitude_not_inplace(self.UnitsContainer())
+                        ** other
                     )
-                    units = new_self._units**exponent
+            elif np.size(other) > 1:
+                raise DimensionalityError(
+                    self._units,
+                    "dimensionless",
+                    extra_msg=". PlainQuantity array exponents are only allowed if the "
+                    "plain is dimensionless",
+                )
 
-            magnitude = new_self._magnitude**exponent
-            return self.__class__(magnitude, units)
+        new_self = self
+        if other == 1:
+            return self
+        if other == 0:
+            exponent = 0
+            units = self.UnitsContainer()
+        else:
+            if not self._is_multiplicative:
+                if self._REGISTRY.autoconvert_offset_to_baseunit:
+                    new_self = self.to_root_units()
+                else:
+                    raise OffsetUnitCalculusError(self._units)
+
+            if getattr(other, "dimensionless", False):
+                exponent = other.to_root_units().magnitude
+                units = new_self._units**exponent
+            elif not getattr(other, "dimensionless", True):
+                raise DimensionalityError(other._units, "dimensionless")
+            else:
+                exponent = _to_magnitude(
+                    other, force_ndarray=False, force_ndarray_like=False
+                )
+                units = new_self._units**exponent
+
+        magnitude = new_self._magnitude**exponent
+        return self.__class__(magnitude, units)
 
     @check_implemented
     def __rpow__(self, other) -> PlainQuantity[MagnitudeT]:
@@ -1370,7 +1367,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                 return op(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()), other
                 )
-            elif zero_or_nan(other, True):
+            if zero_or_nan(other, True):
                 # Handle the special case in which we compare to zero or NaN
                 # (or an array of zeros or NaNs)
                 if self._is_multiplicative:
@@ -1381,10 +1378,8 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                     # non-multiplicative quantity to plain units
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
                         return op(self.to_base_units()._magnitude, other)
-                    else:
-                        raise OffsetUnitCalculusError(self._units)
-            else:
-                raise ValueError(f"Cannot compare PlainQuantity and {type(other)}")
+                    raise OffsetUnitCalculusError(self._units)
+            raise ValueError(f"Cannot compare PlainQuantity and {type(other)}")
 
         # Registry equality check based on util.SharedRegistryObject
         if self._REGISTRY is not other._REGISTRY:
@@ -1407,10 +1402,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     __gt__ = lambda self, other: self.compare(other, op=operator.gt)
 
     def __bool__(self) -> bool:
-        # Only cast when non-ambiguous (when multiplicative unit)
-        if self._is_multiplicative:
-            return bool(self._magnitude)
-        else:
+            # Only cast when non-ambiguous (when multiplicative unit)
+            if self._is_multiplicative:
+                return bool(self._magnitude)
             raise ValueError(
                 "Boolean value of PlainQuantity with offset unit is ambiguous."
             )

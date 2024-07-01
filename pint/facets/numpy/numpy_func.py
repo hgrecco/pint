@@ -70,8 +70,8 @@ def _get_first_input_units(args, kwargs=None):
     for arg in chain(args, kwargs.values()):
         if _is_quantity(arg):
             return arg.units
-        elif _is_sequence_with_quantity_elements(arg):
-            return next(arg_i.units for arg_i in arg if _is_quantity(arg_i))
+    if _is_sequence_with_quantity_elements(arg):
+        return next(arg_i.units for arg_i in arg if _is_quantity(arg_i))
     raise TypeError("Expected at least one Quantity; found none")
 
 
@@ -86,18 +86,17 @@ def convert_arg(arg, pre_calc_units):
     if pre_calc_units is not None:
         if _is_quantity(arg):
             return arg.m_as(pre_calc_units)
-        elif _is_sequence_with_quantity_elements(arg):
+        if _is_sequence_with_quantity_elements(arg):
             return [convert_arg(item, pre_calc_units) for item in arg]
-        elif arg is not None:
+        if arg is not None:
             if pre_calc_units.dimensionless:
                 return pre_calc_units._REGISTRY.Quantity(arg).m_as(pre_calc_units)
-            elif not _is_quantity(arg) and zero_or_nan(arg, True):
+            if not _is_quantity(arg) and zero_or_nan(arg, True):
                 return arg
-            else:
-                raise DimensionalityError("dimensionless", pre_calc_units)
-    elif _is_quantity(arg):
+            raise DimensionalityError("dimensionless", pre_calc_units)
+    if _is_quantity(arg):
         return arg.m
-    elif _is_sequence_with_quantity_elements(arg):
+    if _is_sequence_with_quantity_elements(arg):
         return [convert_arg(item, pre_calc_units) for item in arg]
     return arg
 
@@ -643,14 +642,11 @@ def _isin(element, test_elements, assume_unique=False, invert=False):
                 # sequence may
                 pass
         test_elements = compatible_test_elements
-    else:
-        # Consider non-quantity like dimensionless quantity
-        if not element.dimensionless:
-            # Unit do not match, so all false
-            return np.full(element.shape, False)
-        else:
-            # Convert to units of element
-            element._REGISTRY.Quantity(test_elements).m_as(element.units)
+    if not element.dimensionless:
+        # Unit do not match, so all false
+        return np.full(element.shape, False)
+    # Convert to units of element
+    element._REGISTRY.Quantity(test_elements).m_as(element.units)
 
     return np.isin(element.m, test_elements, assume_unique=assume_unique, invert=invert)
 
@@ -660,7 +656,7 @@ def _pad(array, pad_width, mode="constant", **kwargs):
     def _recursive_convert(arg, unit):
         if iterable(arg):
             return tuple(_recursive_convert(a, unit=unit) for a in arg)
-        elif not _is_quantity(arg):
+        if not _is_quantity(arg):
             if arg == 0 or np.isnan(arg):
                 arg = unit._REGISTRY.Quantity(arg, unit)
             else:
@@ -696,8 +692,7 @@ def _all(a, *args, **kwargs):
     # Only valid when multiplicative unit/no offset
     if a._is_multiplicative:
         return np.all(a._magnitude, *args, **kwargs)
-    else:
-        raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
+    raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
 
 def implement_prod_func(name):
@@ -749,11 +744,9 @@ for name in ("prod", "nanprod"):
 def _base_unit_if_needed(a):
     if a._is_multiplicative:
         return a
-    else:
-        if a.units._REGISTRY.autoconvert_offset_to_baseunit:
-            return a.to_base_units()
-        else:
-            raise OffsetUnitCalculusError(a.units)
+    if a.units._REGISTRY.autoconvert_offset_to_baseunit:
+        return a.to_base_units()
+    raise OffsetUnitCalculusError(a.units)
 
 
 # NP2 Can remove trapz wrapping when we only support numpy>=2
@@ -968,9 +961,8 @@ def implement_atleast_nd(func_str):
                 else original._REGISTRY.Quantity(array_magnitude, original.units)
                 for array_magnitude, original in zip(arrays_magnitude, arrays)
             ]
-        else:
-            output_unit = arrays[0].units
-            return output_unit._REGISTRY.Quantity(arrays_magnitude, output_unit)
+        output_unit = arrays[0].units
+        return output_unit._REGISTRY.Quantity(arrays_magnitude, output_unit)
 
 
 for func_str in ("atleast_1d", "atleast_2d", "atleast_3d"):

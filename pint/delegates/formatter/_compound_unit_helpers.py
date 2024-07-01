@@ -267,8 +267,7 @@ def prepare_compount_unit(
     if len(out) == 0:
         if "~" in spec:
             return ([], [])
-        else:
-            return ([("dimensionless", 1)], [])
+        return ([("dimensionless", 1)], [])
 
     if "~" in spec:
         if registry is None:

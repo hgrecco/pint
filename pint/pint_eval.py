@@ -75,8 +75,7 @@ class tokens_with_lookahead:
     def __next__(self):
         if self.buffer:
             return self.buffer.pop(0)
-        else:
-            return self.iter.__next__()
+        return self.iter.__next__()
 
     def lookahead(self, n):
         """Return an item n entries ahead in the iteration."""
@@ -383,7 +382,7 @@ class EvalTreeNode:
                 self.left.evaluate(define_op, bin_op, un_op),
                 self.right.evaluate(define_op, bin_op, un_op),
             )
-        elif self.operator:
+        if self.operator:
             assert isinstance(self.left, EvalTreeNode), "self.left not EvalTreeNode (4)"
             # unary operator
             op_text = self.operator.string

@@ -30,11 +30,10 @@ def check_dask_array(f):
     def wrapper(self, *args, **kwargs):
         if isinstance(self._magnitude, dask_array.Array):
             return f(self, *args, **kwargs)
-        else:
-            msg = "Method {} only implemented for objects of {}, not {}".format(
-                f.__name__, dask_array.Array, self._magnitude.__class__
-            )
-            raise AttributeError(msg)
+        msg = "Method {} only implemented for objects of {}, not {}".format(
+            f.__name__, dask_array.Array, self._magnitude.__class__
+        )
+        raise AttributeError(msg)
 
     return wrapper
 
