@@ -83,17 +83,16 @@ def ndarray_to_latex_parts(
         return [vector_to_latex(ndarr, fmtfun)]
     if ndarr.ndim == 2:
         return [matrix_to_latex(ndarr, fmtfun)]
-    else:
+    if ndarr.ndim == 3:
+        header = ("arr[%s," % ",".join("%d" % d for d in dim)) + "%d,:,:]"
         ret = []
-        if ndarr.ndim == 3:
-            header = ("arr[%s," % ",".join("%d" % d for d in dim)) + "%d,:,:]"
-            for elno, el in enumerate(ndarr):
-                ret += [header % elno + " = " + matrix_to_latex(el, fmtfun)]
-        else:
-            for elno, el in enumerate(ndarr):
-                ret += ndarray_to_latex_parts(el, fmtfun, dim + (elno,))
-
+        for elno, el in enumerate(ndarr):
+            ret += [header % elno + " = " + matrix_to_latex(el, fmtfun)]
         return ret
+    ret = []
+    for elno, el in enumerate(ndarr):
+        ret += ndarray_to_latex_parts(el, fmtfun, dim + (elno,))
+    return ret
 
 
 def ndarray_to_latex(
@@ -128,15 +127,13 @@ def siunitx_format_unit(
         if power == int(power):
             if power == 1:
                 return ""
-            elif power == 2:
+            if power == 2:
                 return r"\squared"
-            elif power == 3:
+            if power == 3:
                 return r"\cubed"
-            else:
-                return rf"\tothe{{{int(power):d}}}"
-        else:
-            # limit float powers to 3 decimal places
-            return rf"\tothe{{{power:.3f}}}".rstrip("0")
+            return rf"\tothe{{{int(power):d}}}"
+        # limit float powers to 3 decimal places
+        return rf"\tothe{{{power:.3f}}}".rstrip("0")
 
     lpos = []
     lneg = []

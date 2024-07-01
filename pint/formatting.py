@@ -149,8 +149,7 @@ def format_unit(unit, spec: str, registry=None, **options):
     if not unit:
         if spec.endswith("%"):
             return ""
-        else:
-            return "dimensionless"
+        return "dimensionless"
 
     if not spec:
         spec = "D"

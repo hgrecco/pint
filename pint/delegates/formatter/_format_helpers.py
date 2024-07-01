@@ -50,17 +50,13 @@ def format_number(value: Any, spec: str = "") -> str:
     """
     if isinstance(value, float):
         return format(value, spec or ".16n")
-
-    elif isinstance(value, int):
+    if isinstance(value, int):
         return format(value, spec or "n")
-
-    elif isinstance(value, ndarray) and value.ndim == 0:
+    if isinstance(value, ndarray) and value.ndim == 0:
         if issubclass(value.dtype.type, np_integer):
             return format(value, spec or "n")
-        else:
-            return format(value, spec or ".16n")
-    else:
-        return str(value)
+        return format(value, spec or ".16n")
+    return str(value)
 
 
 def builtin_format(value: Any, spec: str = "") -> str:

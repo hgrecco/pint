@@ -263,9 +263,8 @@ def check_upcast_type(obj: type) -> bool:
     fqn = fully_qualified_name(obj)
     if fqn not in upcast_type_map:
         return False
-    else:
-        module_name, class_name = fqn.rsplit(".", 1)
-        cls = getattr(import_module(module_name), class_name)
+    module_name, class_name = fqn.rsplit(".", 1)
+    cls = getattr(import_module(module_name), class_name)
 
     upcast_type_map[fqn] = cls
     # This is to check we are importing the same thing.
@@ -359,7 +358,7 @@ def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
         return out.any() if check_all else out
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
-    elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
+    if HAS_UNCERTAINTIES and isinstance(obj, UFloat):
         return unp.isnan(obj)
     try:
         return math.isnan(obj)

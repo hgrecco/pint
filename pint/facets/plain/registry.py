@@ -778,7 +778,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         dim1, dim2 = (self.get_dimensionality(unit) for unit in (unit1, unit2))
         if dim1 == dim2:
             return 1
-        elif not dim1 or not dim2 or dim1.keys() != dim2.keys():  # not comparable
+        if not dim1 or not dim2 or dim1.keys() != dim2.keys():  # not comparable
             return None
 
         ratios = (dim2[key] / val for key, val in dim1.items())
@@ -1292,23 +1292,21 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if token_type == NAME:
             if token_text == "dimensionless":
                 return self.Quantity(1)
-            elif token_text.lower() in ("inf", "infinity"):
+            if token_text.lower() in ("inf", "infinity"):
                 return self.non_int_type("inf")
-            elif token_text.lower() == "nan":
+            if token_text.lower() == "nan":
                 return self.non_int_type("nan")
-            elif token_text in values:
+            if token_text in values:
                 return self.Quantity(values[token_text])
-            else:
-                return self.Quantity(
-                    1,
-                    self.UnitsContainer(
-                        {self.get_name(token_text, case_sensitive=case_sensitive): 1}
-                    ),
-                )
-        elif token_type == NUMBER:
+            return self.Quantity(
+                1,
+                self.UnitsContainer(
+                    {self.get_name(token_text, case_sensitive=case_sensitive): 1}
+                ),
+            )
+        if token_type == NUMBER:
             return ParserHelper.eval_token(token, non_int_type=self.non_int_type)
-        else:
-            raise Exception("unknown token type")
+        raise Exception("unknown token type")
 
     def parse_pattern(
         self,

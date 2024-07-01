@@ -725,9 +725,8 @@ class ParserHelper(UnitsContainer):
         """
         if non_int_type is float:
             return cls(1, [(input_word, 1)], non_int_type=non_int_type)
-        else:
-            ONE = non_int_type("1")
-            return cls(ONE, [(input_word, ONE)], non_int_type=non_int_type)
+        ONE = non_int_type("1")
+        return cls(ONE, [(input_word, ONE)], non_int_type=non_int_type)
 
     @classmethod
     def eval_token(cls, token: tokenize.TokenInfo, non_int_type: type = float):
@@ -818,14 +817,14 @@ class ParserHelper(UnitsContainer):
         self.scale = state[-1]
 
     def __eq__(self, other: Any) -> bool:
-        if isinstance(other, ParserHelper):
-            return self.scale == other.scale and super().__eq__(other)
-        elif isinstance(other, str):
-            return self == ParserHelper.from_string(other, self._non_int_type)
-        elif isinstance(other, Number):
-            return self.scale == other and not len(self._d)
+            if isinstance(other, ParserHelper):
+                return self.scale == other.scale and super().__eq__(other)
+            if isinstance(other, str):
+                return self == ParserHelper.from_string(other, self._non_int_type)
+            if isinstance(other, Number):
+                return self.scale == other and not len(self._d)
 
-        return self.scale == 1 and super().__eq__(other)
+            return self.scale == 1 and super().__eq__(other)
 
     def operate(self, items, op=operator.iadd, cleanup: bool = True):
         d = udict(self._d)
@@ -991,14 +990,12 @@ class SharedRegistryObject:
         """
         if self._REGISTRY is getattr(other, "_REGISTRY", None):
             return True
-
-        elif isinstance(other, SharedRegistryObject):
+        if isinstance(other, SharedRegistryObject):
             mess = "Cannot operate with {} and {} of different registries."
             raise ValueError(
                 mess.format(self.__class__.__name__, other.__class__.__name__)
             )
-        else:
-            return False
+        return False
 
 
 class PrettyIPython:
@@ -1048,21 +1045,19 @@ def to_units_container(
     mro = type(unit_like).mro()
     if UnitsContainer in mro:
         return unit_like
-    elif SharedRegistryObject in mro:
+    if SharedRegistryObject in mro:
         return unit_like._units
-    elif str in mro:
+    if str in mro:
         if registry:
             # TODO: document how to whether to lift preprocessing loop out to caller
             for p in registry.preprocessors:
                 unit_like = p(unit_like)
             return registry.parse_units_as_container(unit_like)
-        else:
-            return ParserHelper.from_string(unit_like)
-    elif dict in mro:
+        return ParserHelper.from_string(unit_like)
+    if dict in mro:
         if registry:
             return registry.UnitsContainer(unit_like)
-        else:
-            return UnitsContainer(unit_like)
+        return UnitsContainer(unit_like)
 
 
 def infer_base_unit(
