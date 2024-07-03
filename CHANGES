@@ -8,6 +8,7 @@ Pint Changelog
 - Added mu and mc as alternatives for SI micro prefix
 - Added ℓ as alternative for liter
 - Support permille units and `‰` symbol (PR #2033, Issue #1963)
+- Switch from appdirs to platformdirs.
 
 
 0.24.1 (2024-06-24)
