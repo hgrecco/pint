@@ -42,10 +42,10 @@ parser.add_argument(
 )
 parser.add_argument(
     "-U",
-    "--no-unc",
+    "--with-unc",
     dest="unc",
-    action="store_false",
-    help="ignore uncertainties in constants",
+    action="store_true",
+    help="consider uncertainties in constants",
 )
 parser.add_argument(
     "-C",
@@ -160,6 +160,7 @@ if args.unc:
 
 
 def convert(u_from, u_to=None, unc=None, factor=None):
+    prec_unc = 0
     q = ureg.Quantity(u_from)
     fmt = f".{args.prec}g"
     if unc:
@@ -171,7 +172,8 @@ def convert(u_from, u_to=None, unc=None, factor=None):
     if factor:
         q *= ureg.Quantity(factor)
         nq *= ureg.Quantity(factor).to_base_units()
-    prec_unc = use_unc(nq.magnitude, fmt, args.prec_unc)
+    if args.unc:
+        prec_unc = use_unc(nq.magnitude, fmt, args.prec_unc)
     if prec_unc > 0:
         fmt = f".{prec_unc}uS"
     else:
