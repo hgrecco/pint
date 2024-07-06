@@ -77,36 +77,39 @@ With the `uncertainties` package, the experimental uncertainty in the physical
 constants is considered, and the result is given in compact notation, with the
 uncertainty in the last figures in parentheses:
 
-.. code-block:: console
-
-    $ pint-convert Eh eV
-    1 hartree = 27.21138624599(5) eV
-
-The precision is limited by both the maximum number of significant digits (`-p`)
-and the maximum number of uncertainty digits (`-u`, 2 by default)::
-
-    $ pint-convert -p 20 Eh eV
-    1 hartree = 27.211386245988(52) eV
-
-    $ pint-convert -p 20 -u 4 Eh eV
-    1 hartree = 27.21138624598847(5207) eV
-
-The uncertainty can be disabled with `-U`):
+The uncertainty can be enabled with `-U` (by default it is not enabled):
 
 .. code-block:: console
 
     $ pint-convert -p 20 -U Eh eV
     1 hartree = 27.211386245988471444 eV
 
+.. code-block:: console
+
+    $ pint-convert -U Eh eV
+    1 hartree = 27.21138624599(5) eV
+
+The precision is limited by both the maximum number of significant digits (`-p`)
+and the maximum number of uncertainty digits (`-u`, 2 by default)::
+
+    $ pint-convert -U -p 20 Eh eV
+    1 hartree = 27.211386245988(52) eV
+
+    $ pint-convert -U -p 20 -u 4 Eh eV
+    1 hartree = 27.21138624598847(5207) eV
+
 Correlations between experimental constants are also known, and taken into
-account. Use `-C` to disable it:
+account if uncertainties `-U` is enabled. Use `-C` to disable it:
 
 .. code-block:: console
 
     $ pint-convert --sys atomic m_p
+    1 proton_mass = 1836.15267344 m_e
+
+    $ pint-convert -U --sys atomic m_p
     1 proton_mass = 1836.15267344(11) m_e
 
-    $ pint-convert --sys atomic -C m_p
+    $ pint-convert -U --sys atomic -C m_p
     1 proton_mass = 1836.15267344(79) m_e
 
 Again, note that results may differ slightly, usually in the last figure, from
