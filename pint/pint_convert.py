@@ -77,7 +77,10 @@ def _set(key: str, value):
 
 
 if args.unc:
-    import uncertainties
+    try:
+        import uncertainties
+    except ImportError:
+        raise Exception('Failed to import uncertainties library!\n Please install uncertainies')
 
     # Measured constants subject to correlation
     #  R_i: Rydberg constant
@@ -103,9 +106,12 @@ if args.unc:
             [0.00194, 0.97560, 0.98516, 0.98058, 1.0, 0.51521],  # m_p
             [0.00233, 0.52445, 0.52959, 0.52714, 0.51521, 1.0],
         ]  # m_n
-        (R_i, g_e, m_u, m_e, m_p, m_n) = uncertainties.correlated_values_norm(
-            [R_i, g_e, m_u, m_e, m_p, m_n], corr
-        )
+        try:
+            (R_i, g_e, m_u, m_e, m_p, m_n) = uncertainties.correlated_values_norm(
+                [R_i, g_e, m_u, m_e, m_p, m_n], corr
+            )
+        except AttributeError:
+            raise Exception('Correlation cannot be calculated!\n  Please install numpy package')
     else:
         R_i = uncertainties.ufloat(*R_i)
         g_e = uncertainties.ufloat(*g_e)
