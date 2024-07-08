@@ -80,7 +80,9 @@ if args.unc:
     try:
         import uncertainties
     except ImportError:
-        raise Exception('Failed to import uncertainties library!\n Please install uncertainies')
+        raise Exception(
+            "Failed to import uncertainties library!\n Please install uncertainies"
+        )
 
     # Measured constants subject to correlation
     #  R_i: Rydberg constant
@@ -111,7 +113,9 @@ if args.unc:
                 [R_i, g_e, m_u, m_e, m_p, m_n], corr
             )
         except AttributeError:
-            raise Exception('Correlation cannot be calculated!\n  Please install numpy package')
+            raise Exception(
+                "Correlation cannot be calculated!\n  Please install numpy package"
+            )
     else:
         R_i = uncertainties.ufloat(*R_i)
         g_e = uncertainties.ufloat(*g_e)
