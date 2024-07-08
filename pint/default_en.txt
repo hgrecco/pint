@@ -150,6 +150,7 @@ byte = 8 * bit = B = octet
 
 # Ratios
 percent = 0.01 = %
+permille = 0.001 = ‰
 ppm = 1e-6
 
 # Length
@@ -221,7 +222,7 @@ hectare = 100 * are = ha
 
 # Volume
 [volume] = [length] ** 3
-liter = decimeter ** 3 = l = L = litre
+liter = decimeter ** 3 = l = L = ℓ = litre
 cubic_centimeter = centimeter ** 3 = cc
 lambda = microliter = λ
 stere = meter ** 3
