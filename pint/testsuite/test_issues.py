@@ -940,6 +940,7 @@ class TestIssues(QuantityTestCase):
         assert q2.format_babel("~", locale="es_ES") == "3,1 W/cm"
         assert q2.format_babel("", locale="es_ES") == "3,1 vatios por centímetro"
 
+    @helpers.requires_numpy()
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):
         from numpy.testing import assert_almost_equal
