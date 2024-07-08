@@ -7,7 +7,12 @@ import pprint
 
 import pytest
 
-from pint import Context, DimensionalityError, UnitRegistry, get_application_registry
+from pint import (
+    Context,
+    DimensionalityError,
+    UnitRegistry,
+    get_application_registry,
+)
 from pint.compat import np
 from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
 from pint.facets.plain.unit import UnitsContainer
@@ -882,6 +887,24 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    def test_issue1963(self, module_registry):
+        ureg = module_registry
+        assert ureg("‰") == ureg("permille")
+        assert ureg("‰") == ureg.permille
+
+        a = ureg.Quantity("10 ‰")
+        b = ureg.Quantity("100 ppm")
+        c = ureg.Quantity("0.5")
+
+        assert f"{a}" == "10 permille"
+        assert f"{a:~}" == "10 ‰"
+
+        assert_equal(a, 0.01)
+        assert_equal(1e2 * b, a)
+        assert_equal(c, 50 * a)
+
+        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), ureg.permille)
+
     @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
@@ -911,7 +934,7 @@ class TestIssues(QuantityTestCase):
             arr_of_q * q_arr, np.array([Q_(2, "m^2"), Q_(8, "m s")], dtype="object")
         )
 
-    @helpers.requires_babel()
+    @helpers.requires_babel(["es_ES"])
     def test_issue_1400(self, sess_registry):
         q1 = 3.1 * sess_registry.W
         q2 = 3.1 * sess_registry.W / sess_registry.cm
@@ -920,6 +943,7 @@ class TestIssues(QuantityTestCase):
         assert q2.format_babel("~", locale="es_ES") == "3,1 W/cm"
         assert q2.format_babel("", locale="es_ES") == "3,1 vatios por centímetro"
 
+    @helpers.requires_numpy()
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):
         from numpy.testing import assert_almost_equal
@@ -1258,3 +1282,46 @@ def test_issue1949(registry_empty):
 def test_issue1772(given, expected):
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     assert f"{ureg(given):Lx}" == expected
+
+
+def test_issue2017():
+    ureg = UnitRegistry()
+
+    from pint import formatting as fmt
+
+    @fmt.register_unit_format("test")
+    def _test_format(unit, registry, **options):
+        print("format called")
+        proc = {u.replace("µ", "u"): e for u, e in unit.items()}
+        return fmt.formatter(
+            proc.items(),
+            as_ratio=True,
+            single_denominator=False,
+            product_fmt="*",
+            division_fmt="/",
+            power_fmt="{}{}",
+            parentheses_fmt="({})",
+            **options,
+        )
+
+    base_unit = ureg.microsecond
+    assert f"{base_unit:~test}" == "us"
+    assert f"{base_unit:test}" == "microsecond"
+
+
+def test_issue2007():
+    ureg = UnitRegistry()
+    q = ureg.Quantity(1, "")
+    assert f"{q:P}" == "1 dimensionless"
+    assert f"{q:C}" == "1 dimensionless"
+    assert f"{q:D}" == "1 dimensionless"
+    assert f"{q:H}" == "1 dimensionless"
+
+    assert f"{q:L}" == "1\\ \\mathrm{dimensionless}"
+    #  L returned '1\\ dimensionless' in pint 0.23
+
+    assert f"{q:Lx}" == "\\SI[]{1}{}"
+    assert f"{q:~P}" == "1"
+    assert f"{q:~C}" == "1"
+    assert f"{q:~D}" == "1"
+    assert f"{q:~H}" == "1"

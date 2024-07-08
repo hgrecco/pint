@@ -150,6 +150,7 @@ byte = 8 * bit = B = octet
 
 # Ratios
 percent = 0.01 = %
+permille = 0.001 = ‰
 ppm = 1e-6
 
 # Length
