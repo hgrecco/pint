@@ -4,7 +4,7 @@ Pint Changelog
 0.25 (unreleased)
 -----------------
 
-- Nothing added yet.
+- Support permille units and `‰` symbol (PR #2033, Issue #1963)
 
 
 0.24.1 (2024-06-24)

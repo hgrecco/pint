@@ -255,6 +255,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # use a default preprocessor to support "%"
         self.preprocessors.insert(0, lambda string: string.replace("%", " percent "))
 
+        # use a default preprocessor to support permille "‰"
+        self.preprocessors.insert(0, lambda string: string.replace("‰", " permille "))
+
         #: mode used to fill in the format defaults
         self.separate_format_defaults = separate_format_defaults
 

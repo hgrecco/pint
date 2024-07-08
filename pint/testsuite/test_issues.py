@@ -884,6 +884,24 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    def test_issue1963(self, module_registry):
+        ureg = module_registry
+        assert ureg("‰") == ureg("permille")
+        assert ureg("‰") == ureg.permille
+
+        a = ureg.Quantity("10 ‰")
+        b = ureg.Quantity("100 ppm")
+        c = ureg.Quantity("0.5")
+
+        assert f"{a}" == "10 permille"
+        assert f"{a:~}" == "10 ‰"
+
+        assert_equal(a, 0.01)
+        assert_equal(1e2 * b, a)
+        assert_equal(c, 50 * a)
+
+        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), ureg.permille)
+
     @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
