@@ -81,7 +81,7 @@ if args.unc:
         import uncertainties
     except ImportError:
         raise Exception(
-            "Failed to import uncertainties library!\n Please install uncertainies"
+            "Failed to import uncertainties library!\n Please install uncertainties package"
         )
 
     # Measured constants subject to correlation
