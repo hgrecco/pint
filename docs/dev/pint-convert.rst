@@ -82,7 +82,7 @@ The uncertainty can be enabled with `-U` (by default it is not enabled):
 .. code-block:: console
 
     $ pint-convert -p 20 -U Eh eV
-    1 hartree = 27.211386245988471444 eV
+    1 hartree = 27.211386245988(52) eV
 
 .. code-block:: console
 
