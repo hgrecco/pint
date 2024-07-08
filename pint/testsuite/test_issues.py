@@ -408,6 +408,12 @@ class TestIssues(QuantityTestCase):
     def test_micro_creation_U00b5(self, module_registry):
         module_registry.Quantity(2, "µm")
 
+    def test_micro_creation_mu(self, module_registry):
+        module_registry.Quantity(2, "mug")
+
+    def test_micro_creation_mc(self, module_registry):
+        module_registry.Quantity(2, "mcg")
+
     def test_liter_creation_U2113(self, module_registry):
         module_registry.Quantity(2, "ℓ")
 
