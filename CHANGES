@@ -5,6 +5,7 @@ Pint Changelog
 -----------------
 
 - Fix the default behaviour for pint-convert (cli) for importing uncertainties package
+- Added ℓ as alternative for liter
 - Support permille units and `‰` symbol (PR #2033, Issue #1963)
 
 
