@@ -242,6 +242,7 @@ upcast_type_names = (
     "pandas.core.frame.DataFrame",
     "pandas.Series",
     "pandas.DataFrame",
+    "xarray.core.dataarray.DataArray",
 )
 
 #: Map type name to the actual type (for upcast types).
