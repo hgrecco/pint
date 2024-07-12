@@ -240,6 +240,8 @@ upcast_type_names = (
     "xarray.core.variable.Variable",
     "pandas.core.series.Series",
     "pandas.core.frame.DataFrame",
+    "pandas.Series",
+    "pandas.DataFrame",
     "xarray.core.dataarray.DataArray",
 )
 
