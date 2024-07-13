@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.25 (unreleased)
+0.24.3 (2024-07-13)
 -----------------
 
 - Fix the default behaviour for pint-convert (cli) for importing uncertainties package (PR #2032, Issue #2016)
