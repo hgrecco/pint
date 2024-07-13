@@ -9,7 +9,7 @@ Pint Changelog
 - Added ℓ as alternative for liter
 - Fix the default behaviour for pint-convert (cli) for importing uncertainties package (PR #2032, Issue #2016)
 - Support permille units and `‰` symbol (PR #2033, Issue #1963)
-
+- Fixed compatibility with Python 3.13 (Issue #1969)
 
 0.24.1 (2024-06-24)
 -----------------
