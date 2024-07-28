@@ -60,7 +60,12 @@ from ..._typing import (
     UnitLike,
 )
 from ...compat import Self, TypeAlias, deprecated
-from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
+from ...errors import (
+    DimensionalityError,
+    OffsetUnitCalculusError,
+    RedefinitionError,
+    UndefinedUnitError,
+)
 from ...pint_eval import build_eval_tree
 from ...util import (
     ParserHelper,
@@ -667,6 +672,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             )
 
         if prefix:
+            if not self._units[unit_name].is_multiplicative:
+                raise OffsetUnitCalculusError(
+                    "Prefixing a unit requires multiplying the unit."
+                )
+
             name = prefix + unit_name
             symbol = self.get_symbol(name, case_sensitive)
             prefix_def = self._prefixes[prefix]
