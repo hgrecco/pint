@@ -1,4 +1,4 @@
 platformdirs>=2.1.0
-typing_extensions
+typing_extensions>=4.0.0
 flexcache>=0.3
 flexparser>=0.3
