@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 
     # from ..._typing import Quantity, Unit
 
-import appdirs
+import platformdirs
 
 from ... import pint_eval
 from ..._typing import (
@@ -238,8 +238,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._init_dynamic_classes()
 
         if cache_folder == ":auto:":
-            cache_folder = appdirs.user_cache_dir(appname="pint", appauthor=False)
-            cache_folder = pathlib.Path(cache_folder)
+            cache_folder = platformdirs.user_cache_path(appname="pint", appauthor=False)
 
         from ... import delegates  # TODO: change thiss
 
