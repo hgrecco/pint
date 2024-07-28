@@ -8,7 +8,7 @@ Pint Changelog
 - Added mu and mc as alternatives for SI micro prefix
 - Added ℓ as alternative for liter
 - Support permille units and `‰` symbol (PR #2033, Issue #1963)
-
+- Fixed compatibility with Python 3.13 (Issue #1969)
 
 0.24.1 (2024-06-24)
 -----------------
