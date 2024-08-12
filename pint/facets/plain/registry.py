@@ -367,7 +367,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         new._init_dynamic_classes()
         return new
 
-    def __getattr__(self, item: str) -> QuantityT:
+    def __getattr__(self, item: str) -> UnitT:
         getattr_maybe_raise(self, item)
 
         # self.Unit will call parse_units
