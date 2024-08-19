@@ -2020,3 +2020,5 @@ class TestCompareNeutral(QuantityTestCase):
         assert isinstance(quantity, self.Q_)
         assert isinstance(quantity.units, self.ureg.Unit)
         assert isinstance(quantity.m, float)
+
+        assert isinstance(self.ureg.m, self.ureg.Unit)
