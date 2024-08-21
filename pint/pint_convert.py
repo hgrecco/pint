@@ -91,23 +91,23 @@ if args.unc:
     #  m_e: Electron mass
     #  m_p: Proton mass
     #  m_n: Neutron mass
-    R_i = (ureg._units["R_inf"].converter.scale, 0.0000000000021e7)
-    g_e = (ureg._units["g_e"].converter.scale, 0.00000000000035)
-    m_u = (ureg._units["m_u"].converter.scale, 0.00000000050e-27)
+    R_i = (ureg._units["R_inf"].converter.scale, 0.0000000000012e7)
+    g_e = (ureg._units["g_e"].converter.scale, 0.00000000000036)
+    m_u = (ureg._units["m_u"].converter.scale, 0.00000000052e-27)
     m_e = (ureg._units["m_e"].converter.scale, 0.00000000028e-30)
-    m_p = (ureg._units["m_p"].converter.scale, 0.00000000051e-27)
-    m_n = (ureg._units["m_n"].converter.scale, 0.00000000095e-27)
+    m_p = (ureg._units["m_p"].converter.scale, 0.00000000052e-27)
+    m_n = (ureg._units["m_n"].converter.scale, 0.00000000085e-27)
     if args.corr:
         # Correlation matrix between measured constants (to be completed below)
-        #          R_i       g_e       m_u       m_e       m_p       m_n
+        #         R_i      g_e      m_u      m_e      m_p      m_n
         corr = [
-            [1.0, -0.00206, 0.00369, 0.00436, 0.00194, 0.00233],  # R_i
-            [-0.00206, 1.0, 0.99029, 0.99490, 0.97560, 0.52445],  # g_e
-            [0.00369, 0.99029, 1.0, 0.99536, 0.98516, 0.52959],  # m_u
-            [0.00436, 0.99490, 0.99536, 1.0, 0.98058, 0.52714],  # m_e
-            [0.00194, 0.97560, 0.98516, 0.98058, 1.0, 0.51521],  # m_p
-            [0.00233, 0.52445, 0.52959, 0.52714, 0.51521, 1.0],
-        ]  # m_n
+            [ 1.00000,-0.00122, 0.00438, 0.00225, 0.00455, 0.00277],  # R_i
+            [-0.00122, 1.00000, 0.97398, 0.97555, 0.97404, 0.59702],  # g_e
+            [ 0.00438, 0.97398, 1.00000, 0.99839, 0.99965, 0.61279],  # m_u
+            [ 0.00225, 0.97555, 0.99839, 1.00000, 0.99845, 0.61199],  # m_e
+            [ 0.00455, 0.97404, 0.99965, 0.99845, 1.00000, 0.61281],  # m_p
+            [ 0.00277, 0.59702, 0.61279, 0.61199, 0.61281, 1.00000],  # m_n
+        ]
         try:
             (R_i, g_e, m_u, m_e, m_p, m_n) = uncertainties.correlated_values_norm(
                 [R_i, g_e, m_u, m_e, m_p, m_n], corr

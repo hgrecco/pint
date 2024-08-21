@@ -164,7 +164,7 @@ nautical_mile = 1852 * meter = nmi
 bohr = hbar / (alpha * m_e * c) = a_0 = a0 = bohr_radius = atomic_unit_of_length = a_u_length
 x_unit_Cu = K_alpha_Cu_d_220 * d_220 / 1537.4 = Xu_Cu
 x_unit_Mo = K_alpha_Mo_d_220 * d_220 / 707.831 = Xu_Mo
-angstrom_star = K_alpha_W_d_220 * d_220 / 0.2090100 = Å_star
+angstrom_star = K_alpha_W_d_220 * d_220 / 0.20901 = Å_star
 planck_length = (hbar * gravitational_constant / c ** 3) ** 0.5
 
 # Mass
