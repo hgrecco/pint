@@ -10,6 +10,7 @@ Pint Changelog
 - Support permille units and `‰` symbol (PR #2033, Issue #1963)
 - Switch from appdirs to platformdirs.
 - Fixes issues related to GenericPlainRegistry.__getattr__ type (PR #2038, Issues #1946 and #1804)
+- Update constants to CODATA 2022 recommended values.
 
 
 0.24.1 (2024-06-24)
