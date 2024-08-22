@@ -51,7 +51,7 @@ wien_frequency_displacement_law_constant = wien_u * k / ℎ
 # The choice of measured constants is based on convenience and on available uncertainty.
 # The uncertainty in the last significant digits is given in parentheses as a comment.
 # The K_alpha values are either backtransformed from the corresponding x unit or
-# from the the CODATA-2018 publication (doi:10.1103/RevModPhys.93.025010)
+# from the CODATA-2018 publication (doi:10.1103/RevModPhys.93.025010)
 
 newtonian_constant_of_gravitation = 6.67430e-11 m^3/(kg s^2) = _ = gravitational_constant  # (15)
 rydberg_constant = 1.0973731568157e7 * m^-1 = R_∞ = R_inf                                  # (12)

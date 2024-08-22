@@ -149,7 +149,7 @@ if args.unc:
     _set(
         "K_alpha_Cu_d_220",
         uncertainties.ufloat(
-            ureg._units["K_alpha_Cu_d_220"].converter.scale, 0.00000022
+            ureg._units["K_alpha_Cu_d_220"].converter.scale, 0.00000024
         ),
     )
 
