@@ -9,6 +9,7 @@ Pint Unit Registry has the concept of system, which is a group of units
 
     >>> import pint
     >>> ureg = pint.UnitRegistry(system='mks')
+    >>> pint.set_application_registry(ureg)
     >>> ureg.default_system
     'mks'
 

@@ -8,17 +8,15 @@ and perform unit conversions in Python.
 Initializing a Registry
 -----------------------
 
-Before using Pint, initialize a :class:`UnitRegistry() <pint.registry.UnitRegistry>`
-object. The ``UnitRegistry`` stores the unit definitions, their relationships,
-and handles conversions between units.
+Pint's ``UnitRegistry`` stores the unit definitions, their relationships,
+and handles conversions between units. A ``UnitRegistry`` populated with the
+`default list of units`_ and prefixes is initialized when you import Pint:
 
 .. doctest::
 
-   >>> from pint import UnitRegistry
-   >>> ureg = UnitRegistry()
+   >>> import pint
+   >>> ureg = pint.get_application_registry()
 
-If no parameters are given to the constructor, the ``UnitRegistry`` is populated
-with the `default list of units`_ and prefixes.
 
 Defining a Quantity
 -------------------
@@ -434,7 +432,8 @@ You can also specify the format locale at the registry level either at creation:
 
 .. doctest::
 
-    >>> ureg = UnitRegistry(fmt_locale='fr_FR')
+    >>> ureg = pint.UnitRegistry(fmt_locale='fr_FR')
+    >>> pint.set_application_registry(ureg)
 
 or later:
 

@@ -17,7 +17,7 @@ where each part is optional and the order of these is arbitrary.
 .. doctest::
 
    >>> import pint
-   >>> ureg = pint.UnitRegistry()
+   >>> ureg = pint.get_application_registry()
    >>> q = 2.3e-6 * ureg.m ** 3 / (ureg.s ** 2 * ureg.kg)
    >>> f"{q:~P}"  # short pretty
    '2.3×10⁻⁶ m³/kg/s²'
@@ -66,6 +66,7 @@ Modifier Meaning                                             Example
 ======== =================================================== ================================
 ``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m·mg/s²`` (``f"{q:#~P}"``)
 ======== =================================================== ================================
+
 
 Unit modifiers
 --------------

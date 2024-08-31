@@ -13,12 +13,12 @@ a **UnitRegistry**:
 .. testsetup:: *
 
    import pint
-   ureg = pint.UnitRegistry()
+   ureg = pint.get_application_registry()
 
 .. doctest::
 
    >>> import pint
-   >>> ureg = pint.UnitRegistry()
+   >>> ureg = pint.get_application_registry()
    >>> ureg.setup_matplotlib()
 
 This support can also be disabled with:
@@ -36,7 +36,7 @@ This allows plotting quantities with different units:
    import numpy as np
    import pint
 
-   ureg = pint.UnitRegistry()
+   ureg = pint.get_application_registry()
    ureg.setup_matplotlib(True)
 
    y = np.linspace(0, 30) * ureg.miles
@@ -56,7 +56,7 @@ This also allows controlling the actual plotting units for the x and y axes:
    import numpy as np
    import pint
 
-   ureg = pint.UnitRegistry()
+   ureg = pint.get_application_registry()
    ureg.setup_matplotlib(True)
 
    y = np.linspace(0, 30) * ureg.miles
@@ -79,7 +79,7 @@ Users have the possibility to change the format of the units on the plot:
    import numpy as np
    import pint
 
-   ureg = pint.UnitRegistry()
+   ureg = pint.get_application_registry()
    ureg.setup_matplotlib(True)
 
    ureg.mpl_formatter = "{:~P}"
