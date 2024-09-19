@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import datetime
 import logging
@@ -16,6 +18,7 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
+from pint.errors import UndefinedBehavior
 from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
@@ -172,7 +175,7 @@ class TestQuantity(QuantityTestCase):
             ("{:Lx}", r"\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}"),
         ):
             with subtests.test(spec):
-                assert spec.format(x) == result
+                assert spec.format(x) == result, spec
 
         # Check the special case that prevents e.g. '3 1 / second'
         x = self.Q_(3, UnitsContainer(second=-1))
@@ -833,7 +836,7 @@ class TestQuantityToCompact(QuantityTestCase):
     def test_nonnumeric_magnitudes(self):
         ureg = self.ureg
         x = "some string" * ureg.m
-        with pytest.warns(RuntimeWarning):
+        with pytest.warns(UndefinedBehavior):
             self.compare_quantity_compact(x, x)
 
     def test_very_large_to_compact(self):
@@ -2011,3 +2014,11 @@ class TestCompareNeutral(QuantityTestCase):
         assert q2 > 0
         with pytest.raises(DimensionalityError):
             q1.__gt__(ureg.Quantity(0, ""))
+
+    def test_types(self):
+        quantity = self.Q_(1.0, "m")
+        assert isinstance(quantity, self.Q_)
+        assert isinstance(quantity.units, self.ureg.Unit)
+        assert isinstance(quantity.m, float)
+
+        assert isinstance(self.ureg.m, self.ureg.Unit)

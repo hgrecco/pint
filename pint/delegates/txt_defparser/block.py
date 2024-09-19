@@ -16,11 +16,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
 from typing import Generic, TypeVar
 
-from ..base_defparser import PintParsedStatement, ParserConfig
-from ..._vendor import flexparser as fp
+import flexparser as fp
+
+from ..base_defparser import ParserConfig, PintParsedStatement
 
 
 @dataclass(frozen=True)
@@ -28,7 +28,7 @@ class EndDirectiveBlock(PintParsedStatement):
     """An EndDirectiveBlock is simply an "@end" statement."""
 
     @classmethod
-    def from_string(cls, s: str) -> fp.FromString[EndDirectiveBlock]:
+    def from_string(cls, s: str) -> fp.NullableParsedResult[EndDirectiveBlock]:
         if s == "@end":
             return cls()
         return None
@@ -49,8 +49,6 @@ class DirectiveBlock(
 
     Subclass this class for convenience.
     """
-
-    closing: EndDirectiveBlock
 
     def derive_definition(self) -> DefT:
         ...

@@ -8,12 +8,12 @@
 
 from __future__ import annotations
 
-from typing import Callable, Any, TYPE_CHECKING, Generic, Optional
+from collections.abc import Callable, Generator, Iterable
+from typing import TYPE_CHECKING, Any, Generic
 
-from collections.abc import Generator, Iterable
 from ...util import SharedRegistryObject, getattr_maybe_raise
+from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 from .definitions import GroupDefinition
-from ..plain import PlainQuantity, PlainUnit, MagnitudeT
 
 if TYPE_CHECKING:
     from ..plain import UnitDefinition
@@ -81,7 +81,7 @@ class Group(SharedRegistryObject):
 
         #: A cache of the included units.
         #: None indicates that the cache has been invalidated.
-        self._computed_members: Optional[frozenset[str]] = None
+        self._computed_members: frozenset[str] | None = None
 
     @property
     def members(self) -> frozenset[str]:
@@ -197,7 +197,7 @@ class Group(SharedRegistryObject):
     def from_definition(
         cls,
         group_definition: GroupDefinition,
-        add_unit_func: Optional[AddUnitFunc] = None,
+        add_unit_func: AddUnitFunc | None = None,
     ) -> Group:
         grp = cls(group_definition.name)
 

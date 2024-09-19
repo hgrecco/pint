@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import functools
 import logging
@@ -987,6 +989,8 @@ class TestConvertWithOffset(QuantityTestCase):
         (({"degC": 2}, {"kelvin": 2}), "error"),
         (({"degC": 1, "degF": 1}, {"kelvin": 2}), "error"),
         (({"degC": 1, "kelvin": 1}, {"kelvin": 2}), "error"),
+        (({"delta_degC": 1}, {"degF": 1}), "error"),
+        (({"delta_degC": 1}, {"degC": 1}), "error"),
     ]
 
     @pytest.mark.parametrize(("input_tuple", "expected"), convert_with_offset)
@@ -1039,3 +1043,8 @@ class TestConvertWithOffset(QuantityTestCase):
         # Define against unknown name
         with pytest.raises(KeyError):
             ureg.define("@alias notexist = something")
+
+    def test_prefix_offset_units(self):
+        ureg = UnitRegistry()
+        with pytest.raises(errors.OffsetUnitCalculusError):
+            ureg.parse_units("kilodegree_Celsius")

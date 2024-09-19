@@ -1,11 +1,11 @@
 # pytest fixtures
+from __future__ import annotations
 
 import pathlib
 
 import pytest
 
 import pint
-
 
 _TINY = """
 yocto- = 1e-24 = y-
@@ -14,7 +14,7 @@ atto- =  1e-18 = a-
 femto- = 1e-15 = f-
 pico- =  1e-12 = p-
 nano- =  1e-9  = n-
-micro- = 1e-6  = µ- = μ- = u-
+micro- = 1e-6  = µ- = μ- = u- = mu- = mc-
 milli- = 1e-3  = m-
 centi- = 1e-2  = c-
 deci- =  1e-1  = d-
