@@ -415,7 +415,7 @@ Additionally, you can specify a default format specification:
    >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> 'The acceleration is {}'.format(accel)
    'The acceleration is 1.3 meter / second ** 2'
-   >>> ureg.default_format = 'P'
+   >>> ureg.formatter.default_format = 'P'
    >>> 'The acceleration is {}'.format(accel)
    'The acceleration is 1.3 meter/second²'
 
@@ -446,7 +446,7 @@ and by doing that, string formatting is now localized:
 
 .. doctest::
 
-    >>> ureg.default_format = 'P'
+    >>> ureg.formatter.default_format = 'P'
     >>> accel = 1.3 * ureg.parse_units('meter/second**2')
     >>> str(accel)
     '1,3 mètres par seconde²'
