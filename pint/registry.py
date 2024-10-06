@@ -28,6 +28,7 @@ from .util import logger, pi_theorem
 class Quantity(
     facets.SystemRegistry.Quantity,
     facets.ContextRegistry.Quantity,
+    facets.UncertaintyRegistry.Quantity,
     facets.DaskRegistry.Quantity,
     facets.NumpyRegistry.Quantity,
     facets.MeasurementRegistry.Quantity,
@@ -40,6 +41,7 @@ class Quantity(
 class Unit(
     facets.SystemRegistry.Unit,
     facets.ContextRegistry.Unit,
+    facets.UncertaintyRegistry.Unit,
     facets.DaskRegistry.Unit,
     facets.NumpyRegistry.Unit,
     facets.MeasurementRegistry.Unit,
@@ -53,6 +55,7 @@ class GenericUnitRegistry(
     Generic[facets.QuantityT, facets.UnitT],
     facets.GenericSystemRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericContextRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericUncertaintyRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
