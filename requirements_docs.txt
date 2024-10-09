@@ -1,6 +1,7 @@
-sphinx>4
-ipython
+sphinx>=6
+ipython<=8.12
 matplotlib
+mip>=1.13
 nbsphinx
 numpy
 pytest
@@ -15,6 +16,7 @@ dask[complete]
 setuptools>=41.2
 Serialize
 pygments>=2.4
-sphinx-book-theme==0.3.3
+sphinx-book-theme>=1.1.0
 sphinx_copybutton
 sphinx_design
+typing_extensions
