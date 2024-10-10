@@ -2,6 +2,14 @@
     :target: https://pypi.python.org/pypi/pint
     :alt: Latest Version
 
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff
+
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/format.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff-Format
+
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/python/black
 
@@ -43,7 +51,7 @@ and constants. Due to its modular design, you can extend (or even rewrite!)
 the complete list without changing the source code. It supports a lot of
 numpy mathematical operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 3.8+ with no other dependency.
+It has a complete test coverage. It runs in Python 3.9+ with no other dependency.
 It is licensed under BSD.
 
 It is extremely easy and natural to use:
@@ -65,15 +73,6 @@ and you can make good use of numpy if you want:
     >>> np.sum(_)
     <Quantity(7.07, 'meter')>
 
-Pint: Valispace's Fork
-======================
-
-Valispace's Pint Fork is up to date with the original Pint's master repository.
-
-We opted to use a custom Pint package because we wanted to implement our own solutions specifically for Valispace and our customers.
-For example, we define the *delta_* version of logarithmic units, as done for the temperature units with an offset,
-and we allow the option to turn the sum of logarithmic quantities into logarithmic addition.
-Any other change will be commited to the original Pint package.
 
 Quick Installation
 ------------------
@@ -82,20 +81,21 @@ To install Pint, simply:
 
 .. code-block:: bash
 
-    $ pip install -e git+https://git@github.com/valispace/pint.git#egg=pint
+    $ pip install pint
 
-This way you are substituting pint by valispace's fork version. Use ``#egg=valispacepint`` to run both versions in the same system.
-And then simply enjoy it!
+or utilizing conda, with the conda-forge channel:
+
+.. code-block:: bash
+
+    $ conda install -c conda-forge pint
+
+and then simply enjoy it!
 
 
 Documentation
 -------------
 
-Full documentation is available at http://pint.readthedocs.org/.
-At the moment we rely on the same documentation as the original repository.
-
-The main difference is that you can set up the unit registry as ``ureg = UnitRegistry(logarithmic_math=True)``,
-and it will convert additions of quantities with logarithmic units into logarithmic additions.
+Full documentation is available at http://pint.readthedocs.org/
 
 
 Command-line converter
@@ -149,7 +149,7 @@ like numpy and uncertainties if they are installed
 
 
 Pint is maintained by a community of scientists, programmers and enthusiasts around the world.
-See AUTHORS_ for a complete list. Valispace's fork additionally includes contributions from the Valispace development team.
+See AUTHORS_ for a complete list.
 
 To review an ordered list of notable changes for each version of a project,
 see CHANGES_
@@ -161,7 +161,7 @@ see CHANGES_
 .. _`NumPy`: http://www.numpy.org/
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/
 .. _`Babel`: http://babel.pocoo.org/
-.. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/extending.html#extension-types
-.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pandas_support.ipynb
+.. _`Pandas Extension Types`: https://pandas.pydata.org/pandas-docs/stable/development/extending.html#extension-types
+.. _`pint-pandas Jupyter notebook`: https://github.com/hgrecco/pint-pandas/blob/master/notebooks/pint-pandas.ipynb
 .. _`AUTHORS`: https://github.com/hgrecco/pint/blob/master/AUTHORS
 .. _`CHANGES`: https://github.com/hgrecco/pint/blob/master/CHANGES
