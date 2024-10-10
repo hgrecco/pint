@@ -7,22 +7,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9, "3.10", "3.11"]
-        numpy: [null, "numpy>=1.19,<2.0.0"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - python-version: 3.8 # Minimal versions
-            numpy: numpy==1.19.5
-            extras: matplotlib==2.2.5
-          - python-version: 3.8
+          - python-version: "3.10" # Minimal versions
+            numpy: "numpy>=1.23,<2.0.0"
+            extras: matplotlib==3.5.3
+          - python-version: "3.10"
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray netCDF4 dask[complete] graphviz babel==2.8"
+            extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 mip>=1.13"
+          - python-version: "3.10"
+            numpy: "numpy==1.26.1"
+            uncertainties: null
+            extras: "babel==2.15 matplotlib==3.9.0"
     runs-on: ubuntu-latest
 
     env:
-      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc"
+      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
 
     steps:
       - uses: actions/checkout@v2
@@ -61,11 +65,19 @@ jobs:
         if: ${{ matrix.extras != null }}
         run: pip install ${{matrix.extras}}
 
+      - name: Install locales
+        if: ${{ matrix.extras != null }}
+        run: |
+          sudo apt-get install language-pack-es language-pack-fr language-pack-ro
+          sudo localedef -i es_ES -f UTF-8 es_ES
+          sudo localedef -i fr_FR -f UTF-8 fr_FR
+          sudo localedef -i ro_RO -f UTF-8 ro_RO
+
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
-          pip install pytest pytest-cov pytest-subtests packaging
-          pip install .
+          pip install packaging
+          pip install .[testbase]
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
@@ -75,41 +87,15 @@ jobs:
         run: |
           pytest $TEST_OPTS
 
-      - name: Coverage report
-        run: coverage report -m
+      # - name: Coverage report
+      #   run: coverage report -m
 
-      - name: Coveralls Parallel
-        env:
-          COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
-          COVERALLS_PARALLEL: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_SERVICE_NAME: github
-        run: |
-          pip install coveralls
-          coveralls
-
-  coveralls:
-    needs: test-linux
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.x
-    - name: Coveralls Finished
-      continue-on-error: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_SERVICE_NAME: github
-      run: |
-        pip install coveralls
-        coveralls --finish
-
-  # Dummy task to summarize all. See https://github.com/bors-ng/bors-ng/issues/1300
-  ci-success:
-    name: ci
-    if: ${{ success() }}
-    needs: test-linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: CI succeeded
-        run: exit 0
+      # - name: Coveralls Parallel
+      #   env:
+      #     COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
+      #     COVERALLS_PARALLEL: true
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     COVERALLS_SERVICE_NAME: github
+      #   run: |
+      #     pip install coveralls "requests<2.29"
+      #     coveralls
