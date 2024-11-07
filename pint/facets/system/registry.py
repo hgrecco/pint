@@ -222,6 +222,27 @@ class GenericSystemRegistry(
 
         return base_factor, destination_units
 
+    def _get_base_units_for_dimensionality(
+        self, dim: UnitsContainerT, system: str | objects.System | None = None
+    ) -> UnitsContainerT:
+        if system is None:
+            system = self._default_system_name
+        sys_units = self.get_system(system, False).base_units
+        bu = [
+            u if u not in sys_units else tuple(sys_units[u])[0]
+            for u in self._base_units
+        ]
+
+        # maps dimensionality to base units, {'[length]': 'meter', ...}
+        base_units_map = {
+            list(self.parse_expression(unit).dimensionality.keys())[0]: unit
+            for unit in bu
+            if len(self.Unit(unit).dimensionality) == 1
+        }
+        return self.UnitsContainer(
+            {base_units_map[dim]: exp for dim, exp in dim.items()}
+        )
+
     def get_compatible_units(
         self, input_units: UnitsContainerT, group_or_system: str | None = None
     ) -> frozenset[Unit]:
