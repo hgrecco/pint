@@ -1,8 +1,20 @@
 Pint Changelog
 ==============
 
-0.25 (unreleased)
------------------
+0.24.3 (2024-07-28)
+-------------------
+
+- add error for prefixed non multi units (#1998)
+- build: typing_extensions version
+- build: switch from appdirs to platformdirs
+- fix GenericPlainRegistry getattr type (#2045)
+- Replace references to the deprecated `UnitRegistry.default_format` (#2058)
+- fix: upgrade to flexparser>=0.4, exceptions are no longer dataclasses.
+  (required for Python 3.13)
+
+
+0.24.2 (2024-07-28)
+-------------------
 
 - Fix the default behaviour for pint-convert (cli) for importing uncertainties package (PR #2032, Issue #2016)
 - Added mu and mc as alternatives for SI micro prefix
