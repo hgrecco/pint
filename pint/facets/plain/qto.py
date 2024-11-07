@@ -110,12 +110,12 @@ def to_compact(
         )
         return quantity
 
-    if (
-        quantity.unitless
-        or quantity.magnitude == 0
-        or math.isnan(quantity.magnitude)
-        or math.isinf(quantity.magnitude)
-    ):
+    qm = (
+        quantity.magnitude
+        if not hasattr(quantity.magnitude, "nominal_value")
+        else quantity.magnitude.nominal_value
+    )
+    if quantity.unitless or qm == 0 or math.isnan(qm) or math.isinf(qm):
         return quantity
 
     SI_prefixes: dict[int, str] = {}
