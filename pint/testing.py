@@ -1,3 +1,13 @@
+"""
+	pint.testing
+	~~~~~~~~~~~~
+
+	Functions for testing whether pint quantities are equal.
+
+	:copyright: 2016 by Pint Authors, see AUTHORS for more details..
+	:license: BSD, see LICENSE for more details.
+"""
+
 from __future__ import annotations
 
 import math
@@ -35,6 +45,25 @@ def _get_comparable_magnitudes(first, second, msg):
 
 
 def assert_equal(first, second, msg: str | None = None) -> None:
+    """
+    Assert that two quantities are equal
+
+    Parameters
+    ----------
+    first
+        First quantity to compare
+
+    second
+        Second quantity to compare
+
+    msg
+        If supplied, message to show if the two quantities aren't equal.
+
+    Raises
+    ------
+    AssertionError
+        The two quantities are not equal.
+    """
     if msg is None:
         msg = f"Comparing {first!r} and {second!r}. "
 
@@ -60,6 +89,33 @@ def assert_equal(first, second, msg: str | None = None) -> None:
 def assert_allclose(
     first, second, rtol: float = 1e-07, atol: float = 0, msg: str | None = None
 ) -> None:
+    """
+    Assert that two quantities are all close
+
+    Unlike numpy, this uses a symmetric check of closeness.
+
+    Parameters
+    ----------
+    first
+        First quantity to compare
+
+    second
+        Second quantity to compare
+
+    rtol
+        Relative tolerance to use when checking for closeness.
+
+    atol
+        Absolute tolerance to use when checking for closeness.
+
+    msg
+        If supplied, message to show if the two quantities aren't equal.
+
+    Raises
+    ------
+    AssertionError
+        The two quantities are not close to within the supplied tolerance.
+    """
     if msg is None:
         try:
             msg = f"Comparing {first!r} and {second!r}. "
