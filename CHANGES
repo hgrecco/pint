@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.24.3 (2024-07-28)
+0.24.4 (2024-11-07)
 -------------------
 
 - add error for prefixed non multi units (#1998)
