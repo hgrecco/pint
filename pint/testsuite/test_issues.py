@@ -408,6 +408,15 @@ class TestIssues(QuantityTestCase):
     def test_micro_creation_U00b5(self, module_registry):
         module_registry.Quantity(2, "µm")
 
+    def test_micro_creation_mu(self, module_registry):
+        module_registry.Quantity(2, "mug")
+
+    def test_micro_creation_mc(self, module_registry):
+        module_registry.Quantity(2, "mcg")
+
+    def test_liter_creation_U2113(self, module_registry):
+        module_registry.Quantity(2, "ℓ")
+
     @helpers.requires_numpy
     def test_issue171_real_imag(self, module_registry):
         qr = [1.0, 2.0, 3.0, 4.0] * module_registry.meter
@@ -884,6 +893,24 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    def test_issue1963(self, module_registry):
+        ureg = module_registry
+        assert ureg("‰") == ureg("permille")
+        assert ureg("‰") == ureg.permille
+
+        a = ureg.Quantity("10 ‰")
+        b = ureg.Quantity("100 ppm")
+        c = ureg.Quantity("0.5")
+
+        assert f"{a}" == "10 permille"
+        assert f"{a:~}" == "10 ‰"
+
+        assert_equal(a, 0.01)
+        assert_equal(1e2 * b, a)
+        assert_equal(c, 50 * a)
+
+        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), ureg.permille)
+
     @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
@@ -922,6 +949,7 @@ class TestIssues(QuantityTestCase):
         assert q2.format_babel("~", locale="es_ES") == "3,1 W/cm"
         assert q2.format_babel("", locale="es_ES") == "3,1 vatios por centímetro"
 
+    @helpers.requires_numpy()
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):
         from numpy.testing import assert_almost_equal

@@ -42,10 +42,10 @@ parser.add_argument(
 )
 parser.add_argument(
     "-U",
-    "--no-unc",
+    "--with-unc",
     dest="unc",
-    action="store_false",
-    help="ignore uncertainties in constants",
+    action="store_true",
+    help="consider uncertainties in constants",
 )
 parser.add_argument(
     "-C",
@@ -77,7 +77,12 @@ def _set(key: str, value):
 
 
 if args.unc:
-    import uncertainties
+    try:
+        import uncertainties
+    except ImportError:
+        raise Exception(
+            "Failed to import uncertainties library!\n Please install uncertainties package"
+        )
 
     # Measured constants subject to correlation
     #  R_i: Rydberg constant
@@ -103,9 +108,14 @@ if args.unc:
             [0.00194, 0.97560, 0.98516, 0.98058, 1.0, 0.51521],  # m_p
             [0.00233, 0.52445, 0.52959, 0.52714, 0.51521, 1.0],
         ]  # m_n
-        (R_i, g_e, m_u, m_e, m_p, m_n) = uncertainties.correlated_values_norm(
-            [R_i, g_e, m_u, m_e, m_p, m_n], corr
-        )
+        try:
+            (R_i, g_e, m_u, m_e, m_p, m_n) = uncertainties.correlated_values_norm(
+                [R_i, g_e, m_u, m_e, m_p, m_n], corr
+            )
+        except AttributeError:
+            raise Exception(
+                "Correlation cannot be calculated!\n  Please install numpy package"
+            )
     else:
         R_i = uncertainties.ufloat(*R_i)
         g_e = uncertainties.ufloat(*g_e)
@@ -160,6 +170,7 @@ if args.unc:
 
 
 def convert(u_from, u_to=None, unc=None, factor=None):
+    prec_unc = 0
     q = ureg.Quantity(u_from)
     fmt = f".{args.prec}g"
     if unc:
@@ -171,7 +182,8 @@ def convert(u_from, u_to=None, unc=None, factor=None):
     if factor:
         q *= ureg.Quantity(factor)
         nq *= ureg.Quantity(factor).to_base_units()
-    prec_unc = use_unc(nq.magnitude, fmt, args.prec_unc)
+    if args.unc:
+        prec_unc = use_unc(nq.magnitude, fmt, args.prec_unc)
     if prec_unc > 0:
         fmt = f".{prec_unc}uS"
     else:

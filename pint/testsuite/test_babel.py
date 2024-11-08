@@ -66,7 +66,7 @@ def test_unit_format_babel():
     volume = ureg.Unit("ml")
     assert volume.format_babel() == "millilitre"
 
-    ureg.default_format = "~"
+    ureg.formatter.default_format = "~"
     assert volume.format_babel() == "ml"
 
     dimensionless_unit = ureg.Unit("")
