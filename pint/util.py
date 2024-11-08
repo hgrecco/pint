@@ -26,6 +26,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
+    TypeAlias,
     TypeVar,
 )
 
@@ -47,11 +48,8 @@ T = TypeVar("T")
 TH = TypeVar("TH", bound=Hashable)
 TT = TypeVar("TT", bound=type)
 
-# TODO: Change when Python 3.10 becomes minimal version.
-# ItMatrix: TypeAlias = Iterable[Iterable[PintScalar]]
-# Matrix: TypeAlias = list[list[PintScalar]]
-ItMatrix = Iterable[Iterable[Scalar]]
-Matrix = list[list[Scalar]]
+ItMatrix: TypeAlias = Iterable[Iterable[Scalar]]
+Matrix: TypeAlias = list[list[Scalar]]
 
 
 def _noop(x: T) -> T:
