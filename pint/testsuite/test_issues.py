@@ -886,7 +886,7 @@ class TestIssues(QuantityTestCase):
         assert_equal(1e2 * b, a)
         assert_equal(c, 50 * a)
 
-        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), ureg.permille)
+        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), 1 * ureg.permille)
 
     @pytest.mark.xfail
     @helpers.requires_uncertainties()
