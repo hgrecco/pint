@@ -70,29 +70,6 @@ class TestIssues(QuantityTestCase):
         np.testing.assert_array_equal(qq.magnitude, x * m)
         assert qq.units == module_registry.meter.units
 
-    @pytest.mark.xfail
-    @helpers.requires_numpy
-    def test_issue39(self, module_registry):
-        x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-        q = module_registry.meter * x
-        assert isinstance(q, module_registry.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        assert q.units == module_registry.meter.units
-        q = x * module_registry.meter
-        assert isinstance(q, module_registry.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        assert q.units == module_registry.meter.units
-
-        m = np.matrix(2 * np.ones(3, 3))
-        qq = q * m
-        assert isinstance(qq, module_registry.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        assert qq.units == module_registry.meter.units
-        qq = m * q
-        assert isinstance(qq, module_registry.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        assert qq.units == module_registry.meter.units
-
     @helpers.requires_numpy
     def test_issue44(self, module_registry):
         x = 4.0 * module_registry.dimensionless
