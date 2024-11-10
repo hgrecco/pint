@@ -1207,7 +1207,7 @@ def test_issue_1845():
 def test_issues_1841(func_registry, units, spec, expected):
     ur = func_registry
     ur.formatter.default_sort_func = sort_by_dimensionality
-    ur.default_format = spec
+    ur.formatter.default_format = spec
     value = ur.Unit(UnitsContainer(**units))
     assert f"{value}" == expected
 
@@ -1219,7 +1219,7 @@ def test_issues_1841_xfail():
 
     # sets compact display mode by default
     ur = UnitRegistry()
-    ur.default_format = "~P"
+    ur.formatter.default_format = "~P"
     ur.formatter.default_sort_func = sort_by_dimensionality
 
     q = ur.Quantity("2*pi radian * hour")
