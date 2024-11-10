@@ -207,14 +207,14 @@ class TestNumPyFuncUtils(TestNumpyMethods):
             t = self.Q_(np.array([0.0, 4.0, 8.0]), "degC")
             z = self.Q_(np.array([0.0, 2.0, 4.0]), "m")
             helpers.assert_quantity_equal(
-                np.trapz(t, x=z), self.Q_(1108.6, "kelvin meter")
+                np.trapezoid(t, x=z), self.Q_(1108.6, "kelvin meter")
             )
 
     def test_trapz_no_autoconvert(self):
         t = self.Q_(np.array([0.0, 4.0, 8.0]), "degC")
         z = self.Q_(np.array([0.0, 2.0, 4.0]), "m")
         with pytest.raises(OffsetUnitCalculusError):
-            np.trapz(t, x=z)
+            np.trapezoid(t, x=z)
 
     def test_correlate(self):
         a = self.Q_(np.array([1, 2, 3]), "m")

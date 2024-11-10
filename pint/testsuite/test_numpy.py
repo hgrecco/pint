@@ -442,7 +442,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
     @helpers.requires_array_function_protocol()
     def test_trapz(self):
         helpers.assert_quantity_equal(
-            np.trapz([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
+            np.trapezoid([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
             7.5 * self.ureg.J * self.ureg.m,
         )
 
