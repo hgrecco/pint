@@ -1227,8 +1227,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_equal(q, self.Q_([[2, 2], [6, 4]], "m"))
         np.copyto(q, 0, where=[[False, False], [True, False]])
         helpers.assert_quantity_equal(q, self.Q_([[2, 2], [0, 4]], "m"))
-        np.copyto(a, q)
-        self.assertNDArrayEqual(a, np.array([[2, 2], [0, 4]]))
+        with pytest.warns(UnitStrippedWarning):
+            # as a is not quantity, the unit is stripped.
+            np.copyto(a, q)
+            self.assertNDArrayEqual(a, np.array([[2, 2], [0, 4]]))
 
     @helpers.requires_array_function_protocol()
     def test_tile(self):
