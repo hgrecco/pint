@@ -89,6 +89,7 @@ cache-keys = [{ file = "pyproject.toml" }, { git = true }]
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
+xfail_strict = true
 pythonpath = "."
 
 [tool.ruff.format]
