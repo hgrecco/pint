@@ -1,58 +1,47 @@
-name: CI
+name: Test and release when tagged
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          environments: lint
+      - run: pixi run --environment lint lint
+
   test-linux:
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        environment:
+          - test-py39
+          - test-py310
+          - test-py311
+          - test-py312
+          - test-py313
         numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - python-version: "3.10" # Minimal versions
+          - environment: "test-py310" # Minimal versions
             numpy: "numpy>=1.23,<2.0.0"
             extras: matplotlib==3.5.3
-          - python-version: "3.10"
+          - environment: "test-py310"
             numpy: "numpy"
             uncertainties: "uncertainties"
             extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 mip>=1.13"
-          - python-version: "3.10"
+          - environment: "test-py310"
             numpy: "numpy==1.26.1"
             uncertainties: null
             extras: "babel==2.15 matplotlib==3.9.0"
-    runs-on: ubuntu-latest
-
-    env:
-      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
-
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
         with:
-          fetch-depth: 100
-
-      - name: Get tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Get pip cache dir
-        id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: Setup caching
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: pip-${{ matrix.python-version }}
-          restore-keys: |
-            pip-${{ matrix.python-version }}
-
+          environments: ${{ matrix.environment }}
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
@@ -82,159 +71,67 @@ jobs:
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
         run: pip install pytest-mpl
-
-      - name: Run Tests
-        run: |
-          pytest $TEST_OPTS
-
-      # - name: Coverage report
-      #   run: coverage report -m
-
-      # - name: Coveralls Parallel
-      #   env:
-      #     COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
-      #     COVERALLS_PARALLEL: true
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     COVERALLS_SERVICE_NAME: github
-      #   run: |
-      #     pip install coveralls "requests<2.29"
-      #     coveralls
+      - run: pixi run --environment ${{ matrix.environment }} test
 
   test-windows:
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-        numpy: [ "numpy>=1.23,<2.0.0" ]
     runs-on: windows-latest
-
-    env:
-      TEST_OPTS: "-rfsxEX -s -k issue1498b --benchmark-skip"
-
+    strategy:
+      matrix:
+        environment:
+          - test-py39
+          - test-py310
+          - test-py311
+          - test-py312
+          - test-py313
+        numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
         with:
-          fetch-depth: 100
-
-      - name: Get tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Get pip cache dir
-        id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: Setup caching
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: pip-windows-${{ matrix.python-version }}
-          restore-keys: |
-            pip-windows-${{ matrix.python-version }}
-
+          environments: ${{ matrix.environment }}
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
-
-      # - name: Install uncertainties
-      #   if: ${{ matrix.uncertainties != null }}
-      #   run: pip install "${{matrix.uncertainties}}"
-      #
-      # - name: Install extras
-      #   if: ${{ matrix.extras != null }}
-      #   run: pip install ${{matrix.extras}}
-
-      - name: Install dependencies
-        run: |
-          # sudo apt install -y graphviz
-          pip install packaging
-          pip install .[testbase]
-
-      # - name: Install pytest-mpl
-      #   if: contains(matrix.extras, 'matplotlib')
-      #   run: pip install pytest-mpl
-
-      - name: Run tests
-        run: pytest -rfsxEX -s -k issue1498b --benchmark-skip
+      - run: pixi run --environment ${{ matrix.environment }} test
 
   test-macos:
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-        numpy: [null, "numpy>=1.23,<2.0.0" ]
     runs-on: macos-latest
-
-    env:
-      TEST_OPTS: "-rfsxEX -s --cov=pint --cov-config=.coveragerc --benchmark-skip"
-
+    strategy:
+      matrix:
+        environment:
+          - test-py39
+          - test-py310
+          - test-py311
+          - test-py312
+          - test-py313
+        numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
         with:
-          fetch-depth: 100
-
-      - name: Get tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Get pip cache dir
-        id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: Setup caching
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: pip-${{ matrix.python-version }}
-          restore-keys: |
-            pip-${{ matrix.python-version }}
-
+          environments: ${{ matrix.environment }}
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
+      - run: pixi run --environment ${{ matrix.environment }} test
 
-      - name: Install dependencies
-        run: |
-          pip install packaging
-          pip install .[testbase]
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [test-linux, test-windows, test-macos, lint]
 
-      - name: Run Tests
-        run: |
-          pytest $TEST_OPTS
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pint
+    permissions:
+      id-token: write  # for trusted publising to PyPI
 
-      # - name: Coverage report
-      #   run: coverage report -m
-
-      # - name: Coveralls Parallel
-      #   env:
-      #     COVERALLS_FLAG_NAME: ${{ matrix.test-number }}
-      #     COVERALLS_PARALLEL: true
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     COVERALLS_SERVICE_NAME: github
-      #   run: |
-      #     pip install coveralls "requests<2.29"
-      #     coveralls
-
-  # coveralls:
-  #   needs: test-linux
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/setup-python@v2
-  #     with:
-  #       python-version: 3.x
-  #   - name: Coveralls Finished
-  #     continue-on-error: true
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       COVERALLS_SERVICE_NAME: github
-  #     run: |
-  #       pip install coveralls "requests<2.29"
-  #       coveralls --finish
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          environments: build
+      - name: Build the package
+        run: pixi run --environment build build
+      - name: Publish to PyPI
+        run: pixi run --environment build publish
