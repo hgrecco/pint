@@ -1,10 +1,34 @@
 Pint Changelog
 ==============
 
-0.25 (unreleased)
------------------
+0.25.0 (unreleased)
+-------------------
 
-- Nothing added yet.
+- Nothing changed yet
+
+
+0.24.4 (2024-11-07)
+-------------------
+
+- add error for prefixed non multi units (#1998)
+- build: typing_extensions version
+- build: switch from appdirs to platformdirs
+- fix GenericPlainRegistry getattr type (#2045)
+- Replace references to the deprecated `UnitRegistry.default_format` (#2058)
+- fix: upgrade to flexparser>=0.4, exceptions are no longer dataclasses.
+  (required for Python 3.13)
+
+
+0.24.2 (2024-07-28)
+-------------------
+
+- Fix the default behaviour for pint-convert (cli) for importing uncertainties package (PR #2032, Issue #2016)
+- Added mu and mc as alternatives for SI micro prefix
+- Added ℓ as alternative for liter
+- Support permille units and `‰` symbol (PR #2033, Issue #1963)
+- Switch from appdirs to platformdirs.
+- Fixes issues related to GenericPlainRegistry.__getattr__ type (PR #2038, Issues #1946 and #1804)
+- Removed deprecated references in documentation and tests (PR #2058, Issue #2057)
 
 
 0.24.1 (2024-06-24)
@@ -29,6 +53,8 @@ Pint Changelog
 - Add `dim_sort` function to _formatter_helpers.
 - Add `dim_order` and `default_sort_func` properties to FullFormatter.
   (PR #1926, fixes Issue #1841)
+- Minimum version requirement added for typing_extensions>=4.0.0.
+  (PR #1996)
 - Documented packages using pint.
   (PR #1960)
 - Fixed bug causing operations between arrays of quantity scalars and quantity holding
@@ -42,6 +68,8 @@ Pint Changelog
   (PR #1949)
 - Fix unhandled TypeError when auto_reduce_dimensions=True and non_int_type=Decimal
   (PR #1853)
+- Creating prefixed offset units now raises an error.
+  (PR #1998)
 - Improved error message in `get_dimensionality()` when non existent units are passed.
   (PR #1874, Issue #1716)
 
