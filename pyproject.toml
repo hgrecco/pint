@@ -39,7 +39,6 @@ dependencies = [
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-testbase = ["pytest", "pytest-cov", "pytest-subtests", "pytest-benchmark"]
 test = [
   "pytest",
   "pytest-mpl",
@@ -47,7 +46,7 @@ test = [
   "pytest-subtests",
   "pytest-benchmark",
 ]
-bench = ["pytest", "pytest-codspeed"]
+codspeed = ["pytest", "pytest-codspeed"]
 numpy = ["numpy >= 1.23"]
 uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel <= 2.8"]
@@ -93,6 +92,16 @@ pint = { path = ".", editable = true }
 lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
 test = { features = ["test"], solve-group = "default" }
+codspeed = { features = ["codspeed"], solve-group = "default" }
+full = { features = [
+  "numpy",
+  "uncertainties",
+  "babel",
+  "pandas",
+  "xarray",
+  "dask",
+  "mip",
+] }
 test-py39 = ["test", "py39"]
 test-py310 = ["test", "py310"]
 test-py311 = ["test", "py311"]
@@ -119,7 +128,8 @@ build = "uv build"
 publish = "uv publish"
 
 [tool.pixi.feature.test.tasks]
-test = "pytest --doctest-modules"
+test = "pytest --benchmark-skip"
+bench = "pytest --benchmark-only"
 
 [tool.pixi.feature.py39.dependencies]
 python = "3.9.*"
