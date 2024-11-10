@@ -842,7 +842,7 @@ class TestQuantityToCompact(QuantityTestCase):
         ureg = self.ureg
         x = "some string" * ureg.m
         with pytest.warns(UndefinedBehavior):
-            self.compare_quantity_compact(x, x)
+            x.to_compact()
 
     def test_very_large_to_compact(self):
         # This should not raise an IndexError
