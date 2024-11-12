@@ -39,14 +39,10 @@ dependencies = [
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-test = [
-  "pytest",
-  "pytest-mpl",
-  "pytest-cov",
-  "pytest-subtests",
-  "pytest-benchmark",
-]
-codspeed = ["pytest", "pytest-codspeed"]
+test = ["pytest", "pytest-cov", "pytest-subtests", "pytest-benchmark"]
+test-mpl = ["pytest-mpl"]
+test-full = ["pint[test, test-mpl]"]
+codspeed = ["pint[test-full]", "pytest-codspeed"]
 numpy = ["numpy >= 1.23"]
 uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel <= 2.8"]
@@ -54,6 +50,10 @@ pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
 dask = ["dask"]
 mip = ["mip >= 1.13"]
+matplotlib = ["matplotlib"]
+full = [
+  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,mip,matplotlib]",
+]
 
 [project.urls]
 Homepage = "https://github.com/hgrecco/pint"
@@ -89,11 +89,18 @@ platforms = ['osx-arm64', 'linux-64', 'win-64']
 pint = { path = ".", editable = true }
 
 [tool.pixi.environments]
+dev = { features = ["numpy", "dev", "py313"], solve-group = "default" }
 lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
 test = { features = ["test"], solve-group = "default" }
+test-full = { features = ["test-full"], solve-group = "default" }
+numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
+# When pint[full] works in pixi, this will be easier.
 full = { features = [
+  "test",
+  "test-mpl",
+  "codspeed",
   "numpy",
   "uncertainties",
   "babel",
@@ -101,12 +108,27 @@ full = { features = [
   "xarray",
   "dask",
   "mip",
-] }
+  "matplotlib",
+], solve-group = "default" }
+
 test-py39 = ["test", "py39"]
 test-py310 = ["test", "py310"]
 test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
+test-py39-numpy = ["numpy", "test", "py39"]
+test-py310-numpy = ["numpy", "test", "py310"]
+test-py311-numpy = ["numpy", "test", "py311"]
+test-py312-numpy = ["numpy", "test", "py312"]
+test-py313-numpy = ["numpy", "test", "py313"]
+test-py39-full = ["full", "test", "py39"]
+test-py310-full = ["full", "test", "py310"]
+test-py311-full = ["full", "test", "py311"]
+test-py312-full = ["full", "test", "py312"]
+test-py313-full = ["full", "test", "py313"]
+
+[tool.pixi.feature.dev.dependencies]
+tomlkit = "*"
 
 [tool.pixi.feature.lint.dependencies]
 pre-commit = "*"
