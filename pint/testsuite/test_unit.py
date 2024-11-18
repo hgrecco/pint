@@ -70,7 +70,7 @@ class TestUnit(QuantityTestCase):
             "Lx~": r"\si[]{\%}",
         }.items():
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, got {x} expected {result}"
         # no '#' here as it's a comment char when define()ing new units
         ureg.define(r"weirdunit = 1 = \~_^&%$_{}")
@@ -83,7 +83,7 @@ class TestUnit(QuantityTestCase):
             # "Lx~": r"\si[]{\textbackslash \textasciitilde \_\textasciicircum \&\%\$\_\{\}}",
         }.items():
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
     def test_unit_default_formatting(self, subtests):
@@ -104,13 +104,13 @@ class TestUnit(QuantityTestCase):
             ("C~", "kg*m**2/s"),
         ):
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
     @pytest.mark.xfail(reason="Still not clear how default formatting will work.")
     def test_unit_formatting_defaults_warning(self):
         ureg = UnitRegistry()
-        ureg.default_format = "~P"
+        ureg.formatter.default_format = "~P"
         x = ureg.Unit("m / s ** 2")
 
         with pytest.warns(DeprecationWarning):
@@ -136,7 +136,7 @@ class TestUnit(QuantityTestCase):
             ("C~", "oil_bbl"),
         ):
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
     def test_unit_formatting_custom(self, monkeypatch):
@@ -177,7 +177,7 @@ class TestUnit(QuantityTestCase):
         )
         x._repr_pretty_(Pretty, False)
         assert "".join(alltext) == "kilogram·meter²/second"
-        ureg.default_format = "~"
+        ureg.formatter.default_format = "~"
         assert x._repr_html_() == "kg m<sup>2</sup>/s"
         assert (
             x._repr_latex_() == r"$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$"
@@ -322,11 +322,11 @@ class TestRegistry(QuantityTestCase):
         q = ureg.meter
         s1 = f"{q}"
         s2 = f"{q:~}"
-        ureg.default_format = "~"
+        ureg.formatter.default_format = "~"
         s3 = f"{q}"
         assert s2 == s3
         assert s1 != s3
-        assert ureg.default_format == "~"
+        assert ureg.formatter.default_format == "~"
 
     def test_iterate(self):
         ureg = UnitRegistry()
@@ -989,6 +989,8 @@ class TestConvertWithOffset(QuantityTestCase):
         (({"degC": 2}, {"kelvin": 2}), "error"),
         (({"degC": 1, "degF": 1}, {"kelvin": 2}), "error"),
         (({"degC": 1, "kelvin": 1}, {"kelvin": 2}), "error"),
+        (({"delta_degC": 1}, {"degF": 1}), "error"),
+        (({"delta_degC": 1}, {"degC": 1}), "error"),
     ]
 
     @pytest.mark.parametrize(("input_tuple", "expected"), convert_with_offset)
@@ -1041,3 +1043,8 @@ class TestConvertWithOffset(QuantityTestCase):
         # Define against unknown name
         with pytest.raises(KeyError):
             ureg.define("@alias notexist = something")
+
+    def test_prefix_offset_units(self):
+        ureg = UnitRegistry()
+        with pytest.raises(errors.OffsetUnitCalculusError):
+            ureg.parse_units("kilodegree_Celsius")

@@ -52,6 +52,10 @@ def _is_sequence_with_quantity_elements(obj):
     -------
     True if obj is a sequence and at least one element is a Quantity; False otherwise
     """
+    if np is not None and isinstance(obj, np.ndarray) and not obj.dtype.hasobject:
+        # If obj is a numpy array, avoid looping on all elements
+        # if dtype does not have objects
+        return False
     return (
         iterable(obj)
         and sized(obj)
@@ -790,6 +794,15 @@ def _trapz(y, x=None, dx=1.0, **kwargs):
         ret = trapezoid(y._magnitude, dx=dx, **kwargs)
 
     return y.units._REGISTRY.Quantity(ret, units)
+
+
+@implements("correlate", "function")
+def _correlate(a, v, mode="valid", **kwargs):
+    a = _base_unit_if_needed(a)
+    v = _base_unit_if_needed(v)
+    units = a.units * v.units
+    ret = np.correlate(a._magnitude, v._magnitude, mode=mode, **kwargs)
+    return a.units._REGISTRY.Quantity(ret, units)
 
 
 def implement_mul_func(func):

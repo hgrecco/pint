@@ -12,7 +12,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import flexparser as fp
 
@@ -20,7 +20,6 @@ from ... import errors
 from ..base_defparser import ParserConfig
 
 
-@dataclass(frozen=True)
 class DefinitionSyntaxError(errors.DefinitionSyntaxError, fp.ParsingError):
     """A syntax error was found in a definition. Combines:
 
@@ -30,7 +29,11 @@ class DefinitionSyntaxError(errors.DefinitionSyntaxError, fp.ParsingError):
     and an extra location attribute in which the filename or reseource is stored.
     """
 
-    location: str = field(init=False, default="")
+    msg: str
+
+    def __init__(self, msg: str, location: str = ""):
+        self.msg = msg
+        self.location = location
 
     def __str__(self) -> str:
         msg = (

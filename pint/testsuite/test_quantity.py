@@ -2014,3 +2014,11 @@ class TestCompareNeutral(QuantityTestCase):
         assert q2 > 0
         with pytest.raises(DimensionalityError):
             q1.__gt__(ureg.Quantity(0, ""))
+
+    def test_types(self):
+        quantity = self.Q_(1.0, "m")
+        assert isinstance(quantity, self.Q_)
+        assert isinstance(quantity.units, self.ureg.Unit)
+        assert isinstance(quantity.m, float)
+
+        assert isinstance(self.ureg.m, self.ureg.Unit)

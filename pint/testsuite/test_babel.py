@@ -16,7 +16,7 @@ def test_no_babel(func_registry):
         distance.format_babel(locale="fr_FR", length="long")
 
 
-@helpers.requires_babel()
+@helpers.requires_babel(["fr_FR", "ro_RO"])
 def test_format(func_registry):
     ureg = func_registry
     dirname = os.path.dirname(__file__)
@@ -36,7 +36,7 @@ def test_format(func_registry):
     assert mks.format_babel(locale="fr_FR") == "métrique"
 
 
-@helpers.requires_babel()
+@helpers.requires_babel(["fr_FR", "ro_RO"])
 def test_registry_locale():
     ureg = UnitRegistry(fmt_locale="fr_FR")
     dirname = os.path.dirname(__file__)
@@ -60,13 +60,13 @@ def test_registry_locale():
     assert mks.format_babel(locale="fr_FR") == "métrique"
 
 
-@helpers.requires_babel()
+@helpers.requires_babel(["fr_FR"])
 def test_unit_format_babel():
     ureg = UnitRegistry(fmt_locale="fr_FR")
     volume = ureg.Unit("ml")
     assert volume.format_babel() == "millilitre"
 
-    ureg.default_format = "~"
+    ureg.formatter.default_format = "~"
     assert volume.format_babel() == "ml"
 
     dimensionless_unit = ureg.Unit("")
@@ -85,7 +85,7 @@ def test_no_registry_locale(func_registry):
         distance.format_babel()
 
 
-@helpers.requires_babel()
+@helpers.requires_babel(["fr_FR"])
 def test_str(func_registry):
     ureg = func_registry
     d = 24.1 * ureg.meter

@@ -111,16 +111,16 @@ will not work:
 .. doctest::
 
     >>> -161.0 * ureg('dBm/Hz') == (-161.0 * ureg.dBm / ureg.Hz)
-    False
+    np.False_
 
 But this will:
 
 .. doctest::
 
     >>> ureg('-161.0 dBm/Hz') == (-161.0 * ureg.dBm / ureg.Hz)
-    True
+    np.True_
     >>> Q_(-161.0, 'dBm') / ureg.Hz == (-161.0 * ureg.dBm / ureg.Hz)
-    True
+    np.True_
 
 To begin using this feature while avoiding problems, define logarithmic units
 as single-unit quantities and convert them to their base units as quickly as
