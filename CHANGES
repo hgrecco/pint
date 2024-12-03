@@ -4,7 +4,7 @@ Pint Changelog
 0.25.0 (unreleased)
 -------------------
 
-- Nothing changed yet
+- Add docs to the functions in ``pint.testing`` (PR #2070)
 
 
 0.24.4 (2024-11-07)
@@ -22,7 +22,6 @@ Pint Changelog
 0.24.2 (2024-07-28)
 -------------------
 
-- Add docs to the functions in ``pint.testing`` (PR #2070)
 - Fix the default behaviour for pint-convert (cli) for importing uncertainties package (PR #2032, Issue #2016)
 - Added mu and mc as alternatives for SI micro prefix
 - Added ℓ as alternative for liter
