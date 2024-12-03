@@ -400,7 +400,7 @@ class TestIssues(QuantityTestCase):
         module_registry.Quantity(2, "Å")
 
     def test_alternative_angstrom_definition(self, module_registry):
-        module_registry.Quantity(2, "\u212B")
+        module_registry.Quantity(2, "\u212b")
 
     def test_micro_creation_U03bc(self, module_registry):
         module_registry.Quantity(2, "μm")
@@ -1331,3 +1331,21 @@ def test_issue2007():
     assert f"{q:~C}" == "1"
     assert f"{q:~D}" == "1"
     assert f"{q:~H}" == "1"
+
+
+@helpers.requires_uncertainties()
+@helpers.requires_numpy()
+def test_issue2044():
+    from numpy.testing import assert_almost_equal
+    from uncertainties import ufloat
+
+    ureg = UnitRegistry()
+    # First make sure this doesn't fail completely (A Measurement)
+    q = ureg.Quantity(10_000, "m").plus_minus(0.01).to_compact()
+    assert_almost_equal(q.m.n, 10.0)
+    assert q.u == "kilometer"
+
+    # Similarly, for a Ufloat with units
+    q = (ufloat(10_000, 0.01) * ureg.m).to_compact()
+    assert_almost_equal(q.m.n, 10.0)
+    assert q.u == "kilometer"
