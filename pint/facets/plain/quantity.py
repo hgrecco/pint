@@ -19,6 +19,7 @@ from typing import (
     Any,
     Generic,
     Iterable,
+    Self,
     TypeVar,
     overload,
 )
@@ -515,7 +516,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     def to(
         self, other: QuantityOrUnitLike | None = None, *contexts, **ctx_kwargs
-    ) -> PlainQuantity:
+    ) -> Self:
         """Return PlainQuantity rescaled to different units.
 
         Parameters
