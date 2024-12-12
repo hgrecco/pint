@@ -6,6 +6,7 @@ Pint Changelog
 
 - Add docs to the functions in ``pint.testing`` (PR #2070)
 - Fix round function returning float instead of int (#2081)
+- Fix return type of `PlainQuantity.to` (#2088)
 
 
 0.24.4 (2024-11-07)
