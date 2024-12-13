@@ -131,7 +131,18 @@ class TestQuantity(QuantityTestCase):
     def test_quantity_repr(self):
         x = self.Q_(4.2, UnitsContainer(meter=1))
         assert str(x) == "4.2 meter"
-        assert repr(x) == "<Quantity(4.2, 'meter')>"
+        assert repr(x) == "<Quantity(4.2, units='meter')>"
+        x = self.Q_(2.9325156461464651456456545649)
+        assert repr(x) == "<Quantity(2.93251565, units='dimensionless')>"
+
+    @helpers.requires_numpy
+    def test_quantity_repr_numpy(self):
+        x = self.Q_(4.2)
+        assert repr(x) == "<Quantity(4.2, units='dimensionless')>"
+        x = self.Q_(np.array(2.0))
+        assert repr(x) == "<Quantity(array(2.), units='dimensionless')>"
+        x = self.Q_(np.array(2.0, dtype=np.float32))
+        assert repr(x) == "<Quantity(array(2., dtype=float32), units='dimensionless')>"
 
     def test_quantity_hash(self):
         x = self.Q_(4.2, "meter")
