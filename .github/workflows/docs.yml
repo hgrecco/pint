@@ -2,6 +2,9 @@ name: Documentation Build
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   docbuild:
     runs-on: ubuntu-latest
