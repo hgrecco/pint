@@ -6,6 +6,7 @@ Pint Changelog
 
 - Add docs to the functions in ``pint.testing`` (PR #2070)
 - Fix round function returning float instead of int (#2081)
+- Update constants to CODATA 2022 recommended values. (#2049)
 
 
 0.24.4 (2024-11-07)
