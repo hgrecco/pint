@@ -7,6 +7,7 @@ Pint Changelog
 - Add docs to the functions in ``pint.testing`` (PR #2070)
 - Fix round function returning float instead of int (#2081)
 - Update constants to CODATA 2022 recommended values. (#2049)
+- Fixed issue with `.to_compact` and Magnitudes with uncertainties / Quantities with units (PR #2069, issue #2044)
 
 
 0.24.4 (2024-11-07)
@@ -31,7 +32,6 @@ Pint Changelog
 - Switch from appdirs to platformdirs.
 - Fixes issues related to GenericPlainRegistry.__getattr__ type (PR #2038, Issues #1946 and #1804)
 - Removed deprecated references in documentation and tests (PR #2058, Issue #2057)
-- Fixed issue with `.to_compact` and Magnitudes with uncertainties / Quantities with units (PR #2069, issue #2044)
 
 
 0.24.1 (2024-06-24)
