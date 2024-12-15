@@ -32,6 +32,7 @@ from ...compat import (
     is_duck_array_type,
     is_upcast_type,
     np,
+    Self,
     zero_or_nan,
 )
 from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
@@ -515,7 +516,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     def to(
         self, other: QuantityOrUnitLike | None = None, *contexts, **ctx_kwargs
-    ) -> PlainQuantity:
+    ) -> Self:
         """Return PlainQuantity rescaled to different units.
 
         Parameters

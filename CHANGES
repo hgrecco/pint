@@ -6,6 +6,7 @@ Pint Changelog
 
 - Add docs to the functions in ``pint.testing`` (PR #2070)
 - Fix round function returning float instead of int (#2081)
+- Fix return type of `PlainQuantity.to` (#2088)
 - Update constants to CODATA 2022 recommended values. (#2049)
 - Fixed issue with `.to_compact` and Magnitudes with uncertainties / Quantities with units (PR #2069, issue #2044)
 
