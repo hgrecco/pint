@@ -19,7 +19,6 @@ from typing import (
     Any,
     Generic,
     Iterable,
-    Self,
     TypeVar,
     overload,
 )
@@ -33,6 +32,7 @@ from ...compat import (
     is_duck_array_type,
     is_upcast_type,
     np,
+    Self,
     zero_or_nan,
 )
 from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
