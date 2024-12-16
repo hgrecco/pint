@@ -26,13 +26,13 @@ from typing import (
 from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
+    Self,
     _to_magnitude,
     deprecated,
     eq,
     is_duck_array_type,
     is_upcast_type,
     np,
-    Self,
     zero_or_nan,
 )
 from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
