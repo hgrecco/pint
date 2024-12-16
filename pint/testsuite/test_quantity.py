@@ -377,6 +377,56 @@ class TestQuantity(QuantityTestCase):
             round(abs(self.Q_("2 second").to("millisecond").magnitude - 2000), 7) == 0
         )
 
+    def test_to_human(self):
+        ureg = self.ureg
+        Q_ = self.Q_
+        time_units = [ureg.s, ureg.min, ureg.hr, ureg.day, ureg.year]
+        
+        temp = (1000*ureg.s).to_human(time_units)
+        helpers.assert_quantity_almost_equal(temp, Q_(16.6666667, 'minute'))
+        assert temp.units == ureg.minute
+
+        temp = (100000*ureg.s).to_human(time_units)
+        helpers.assert_quantity_almost_equal(temp, Q_(1.15740741, 'day'))
+        assert temp.units == ureg.day
+
+        temp = (100000000*ureg.s).to_human(time_units)
+        helpers.assert_quantity_almost_equal(temp, Q_(3.16880878, 'year'))
+        assert temp.units == ureg.year
+
+        temp = ureg.Quantity(100000,"m**3/hr").to_human([ureg.Unit("m**3/s"), ureg.Unit("liter/s")])
+        helpers.assert_quantity_almost_equal(temp, Q_(27.7777778, 'meter ** 3 / second'))
+        assert temp.units == ureg.Unit("m**3/s")
+
+        temp = ureg.Quantity(1000,"m**3/hr").to_human([ureg.Unit("m**3/s"), ureg.Unit("liter/s")])
+        helpers.assert_quantity_almost_equal(temp, Q_(277.777778, 'liter / second'))
+        assert temp.units == ureg.Unit("liter/s")
+
+    def test_to_human_registry(self):
+        ureg = self.ureg
+        Q_ = self.Q_
+        ureg.default_human_units = [ureg.s, ureg.min, ureg.hr, ureg.day, ureg.year, ureg.Unit("m**3/s"), ureg.Unit("liter/s")]
+        
+        temp = (1000*ureg.s).to_human()
+        helpers.assert_quantity_almost_equal(temp, Q_(16.6666667, 'minute'))
+        assert temp.units == ureg.minute
+
+        temp = (100000*ureg.s).to_human()
+        helpers.assert_quantity_almost_equal(temp, Q_(1.15740741, 'day'))
+        assert temp.units == ureg.day
+
+        temp = (100000000*ureg.s).to_human()
+        helpers.assert_quantity_almost_equal(temp, Q_(3.16880878, 'year'))
+        assert temp.units == ureg.year
+
+        temp = ureg.Quantity(100000,"m**3/hr").to_human()
+        helpers.assert_quantity_almost_equal(temp, Q_(27.7777778, 'meter ** 3 / second'))
+        assert temp.units == ureg.Unit("m**3/s")
+
+        temp = ureg.Quantity(1000,"m**3/hr").to_human()
+        helpers.assert_quantity_almost_equal(temp, Q_(277.777778, 'liter / second'))
+        assert temp.units == ureg.Unit("liter/s")
+
     @helpers.requires_mip
     def test_to_preferred(self):
         ureg = self.ureg

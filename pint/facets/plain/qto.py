@@ -195,6 +195,9 @@ def to_human(
     <Quantity(277.777778, 'liter / second')>
 
     """
+    if human_units is None:
+        human_units = quantity._REGISTRY.default_human_units
+
     candidate_units = []
     if human_units:
         for unit in human_units:
