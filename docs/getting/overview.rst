@@ -105,6 +105,7 @@ License
 -------
 
 .. literalinclude:: ../../LICENSE
+   :language: none
 
 .. _`comprehensive list of physical units, prefixes and constants`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
 .. _`uncertainties package`: https://pythonhosted.org/uncertainties/
