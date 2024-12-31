@@ -24,6 +24,11 @@ from typing import (
     TypeAlias,  # noqa
 )
 
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias  # noqa
+else:
+    from typing_extensions import TypeAlias  # noqa
+
 if sys.version_info >= (3, 11):
     from typing import Self  # noqa
 else:
@@ -73,7 +78,8 @@ class BehaviorChangeWarning(UserWarning):
 
 try:
     from uncertainties import UFloat, ufloat
-    from uncertainties import unumpy as unp
+
+    unp = None
 
     HAS_UNCERTAINTIES = True
 except ImportError:
@@ -91,6 +97,8 @@ try:
     HAS_NUMPY = True
     NUMPY_VER = np.__version__
     if HAS_UNCERTAINTIES:
+        from uncertainties import unumpy as unp
+
         NUMERIC_TYPES = (Number, Decimal, ndarray, np.number, UFloat)
     else:
         NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
@@ -239,6 +247,8 @@ upcast_type_names = (
     "xarray.core.variable.Variable",
     "pandas.core.series.Series",
     "pandas.core.frame.DataFrame",
+    "pandas.Series",
+    "pandas.DataFrame",
     "xarray.core.dataarray.DataArray",
 )
 

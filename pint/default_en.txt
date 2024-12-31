@@ -72,7 +72,7 @@ pico- =  1e-12 = p-
 nano- =  1e-9  = n-
 # The micro (U+00B5) and Greek mu (U+03BC) are both valid prefixes,
 # and they often use the same glyph.
-micro- = 1e-6  = µ- = μ- = u-
+micro- = 1e-6  = µ- = μ- = u- = mu- = mc-
 milli- = 1e-3  = m-
 centi- = 1e-2  = c-
 deci- =  1e-1  = d-
@@ -150,6 +150,7 @@ byte = 8 * bit = B = octet
 
 # Ratios
 percent = 0.01 = %
+permille = 0.001 = ‰
 ppm = 1e-6
 
 # Length
@@ -161,9 +162,6 @@ astronomical_unit = 149597870700 * meter = au  # since Aug 2012
 parsec = 1 / tansec * astronomical_unit = pc
 nautical_mile = 1852 * meter = nmi
 bohr = hbar / (alpha * m_e * c) = a_0 = a0 = bohr_radius = atomic_unit_of_length = a_u_length
-x_unit_Cu = K_alpha_Cu_d_220 * d_220 / 1537.4 = Xu_Cu
-x_unit_Mo = K_alpha_Mo_d_220 * d_220 / 707.831 = Xu_Mo
-angstrom_star = K_alpha_W_d_220 * d_220 / 0.2090100 = Å_star
 planck_length = (hbar * gravitational_constant / c ** 3) ** 0.5
 
 # Mass
@@ -221,7 +219,7 @@ hectare = 100 * are = ha
 
 # Volume
 [volume] = [length] ** 3
-liter = decimeter ** 3 = l = L = litre
+liter = decimeter ** 3 = l = L = ℓ = litre
 cubic_centimeter = centimeter ** 3 = cc
 lambda = microliter = λ
 stere = meter ** 3
@@ -494,12 +492,17 @@ buckingham = debye * angstrom
 bohr_magneton = e * hbar / (2 * m_e) = µ_B = mu_B
 nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 
+# Refractive index
+[refractive_index] = []
+refractive_index_unit = [] = RIU
+
 # Logaritmic Unit Definition
 #  Unit = scale; logbase; logfactor
 #  x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )
 
 # Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
 
+decibelwatt = watt; logbase: 10; logfactor: 10 = dBW
 decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm
 decibelmicrowatt = 1e-6 watt; logbase: 10; logfactor: 10 = dBu
 

@@ -95,10 +95,11 @@ formats:
    ... def format_unit_simple(unit, registry, **options):
    ...     return " * ".join(f"{u} ** {p}" for u, p in unit.items())
    >>> f"{q:Z}"
-   '2.3e-06 meter ** 3 * second ** -2 * kilogram ** -1'
+   '2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2'
 
 where ``unit`` is a :py:class:`dict` subclass containing the unit names and
-their exponents.
+their exponents, ``registry`` is the current instance of :py:class:``UnitRegistry`` and
+``options`` is not yet implemented.
 
 You can choose to replace the complete formatter. Briefly, the formatter if an object with the
 following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format_uncertainty`,
@@ -111,10 +112,11 @@ following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format
    ...
    ...      default_format = ""
    ...
-   ...      def format_unit(self, unit, uspec: str = "", **babel_kwds) -> str:
+   ...      def format_unit(self, unit, uspec, sort_func, **babel_kwds) -> str:
    ...          return "ups!"
    ...
    >>> ureg.formatter = MyFormatter()
+   >>> ureg.formatter._registry = ureg
    >>> str(q)
    '2.3e-06 ups!'
 

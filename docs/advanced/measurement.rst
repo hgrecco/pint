@@ -69,4 +69,4 @@ the `Propagation of uncertainty`_ rules.
 
 
 .. _`Propagation of uncertainty`: http://en.wikipedia.org/wiki/Propagation_of_uncertainty
-.. _`Uncertainties package`: https://uncertainties-python-package.readthedocs.io/en/latest/
+.. _`Uncertainties package`: https://uncertainties.readthedocs.io/en/latest/

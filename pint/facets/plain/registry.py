@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 
     # from ..._typing import Quantity, Unit
 
-import appdirs
+import platformdirs
 
 from ... import pint_eval
 from ..._typing import (
@@ -60,7 +60,12 @@ from ..._typing import (
     UnitLike,
 )
 from ...compat import Self, TypeAlias, deprecated
-from ...errors import DimensionalityError, RedefinitionError, UndefinedUnitError
+from ...errors import (
+    DimensionalityError,
+    OffsetUnitCalculusError,
+    RedefinitionError,
+    UndefinedUnitError,
+)
 from ...pint_eval import build_eval_tree
 from ...util import (
     ParserHelper,
@@ -233,8 +238,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._init_dynamic_classes()
 
         if cache_folder == ":auto:":
-            cache_folder = appdirs.user_cache_dir(appname="pint", appauthor=False)
-            cache_folder = pathlib.Path(cache_folder)
+            cache_folder = platformdirs.user_cache_path(appname="pint", appauthor=False)
 
         from ... import delegates  # TODO: change thiss
 
@@ -254,6 +258,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self.preprocessors = preprocessors or []
         # use a default preprocessor to support "%"
         self.preprocessors.insert(0, lambda string: string.replace("%", " percent "))
+
+        # use a default preprocessor to support permille "‰"
+        self.preprocessors.insert(0, lambda string: string.replace("‰", " permille "))
 
         #: mode used to fill in the format defaults
         self.separate_format_defaults = separate_format_defaults
@@ -360,7 +367,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         new._init_dynamic_classes()
         return new
 
-    def __getattr__(self, item: str) -> QuantityT:
+    def __getattr__(self, item: str) -> UnitT:
         getattr_maybe_raise(self, item)
 
         # self.Unit will call parse_units
@@ -664,6 +671,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             )
 
         if prefix:
+            if not self._units[unit_name].is_multiplicative:
+                raise OffsetUnitCalculusError(
+                    "Prefixing a unit requires multiplying the unit."
+                )
+
             name = prefix + unit_name
             symbol = self.get_symbol(name, case_sensitive)
             prefix_def = self._prefixes[prefix]
@@ -736,7 +748,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for key in ref:
             exp2 = exp * ref[key]
             if _is_dim(key):
-                reg = self._dimensions[key]
+                try:
+                    reg = self._dimensions[key]
+                except KeyError:
+                    raise ValueError(
+                        f"{key} is not defined as dimension in the pint UnitRegistry"
+                    )
                 if isinstance(reg, DerivedDimensionDefinition):
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
                 else:

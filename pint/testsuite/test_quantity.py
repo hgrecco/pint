@@ -60,6 +60,11 @@ class TestQuantity(QuantityTestCase):
             assert 4.2 * self.ureg.meter == self.Q_(4.2, 2 * self.ureg.meter)
         assert len(caplog.records) == 1
 
+    def test_round(self):
+        x = self.Q_(1.1, "kg")
+        assert isinstance(round(x).magnitude, int)
+        assert isinstance(round(x, 0).magnitude, float)
+
     def test_quantity_with_quantity(self):
         x = self.Q_(4.2, "m")
         assert self.Q_(x, "m").magnitude == 4.2
@@ -2074,3 +2079,11 @@ class TestCompareNeutral(QuantityTestCase):
         assert q2 > 0
         with pytest.raises(DimensionalityError):
             q1.__gt__(ureg.Quantity(0, ""))
+
+    def test_types(self):
+        quantity = self.Q_(1.0, "m")
+        assert isinstance(quantity, self.Q_)
+        assert isinstance(quantity.units, self.ureg.Unit)
+        assert isinstance(quantity.m, float)
+
+        assert isinstance(self.ureg.m, self.ureg.Unit)

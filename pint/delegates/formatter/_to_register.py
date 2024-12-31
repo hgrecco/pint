@@ -61,6 +61,8 @@ def register_unit_format(name: str):
             raise ValueError(f"format {name!r} already exists")  # or warn instead
 
         class NewFormatter(BaseFormatter):
+            spec = name
+
             def format_magnitude(
                 self,
                 magnitude: Magnitude,
