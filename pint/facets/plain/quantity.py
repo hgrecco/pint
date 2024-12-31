@@ -28,9 +28,12 @@ from ...compat import (
     HAS_NUMPY,
     Self,
     _to_magnitude,
+    convert_timedelta,
     deprecated,
     eq,
     is_duck_array_type,
+    is_timedelta,
+    is_timedelta_array,
     is_upcast_type,
     np,
     zero_or_nan,
@@ -202,8 +205,16 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         if units is None and isinstance(value, cls):
             return copy.copy(value)
-
         inst = SharedRegistryObject().__new__(cls)
+
+        if is_timedelta(value) or is_timedelta_array(value):
+            m, u = convert_timedelta(value)
+            inst._magnitude = m
+            inst._units = inst.UnitsContainer({u: 1})
+            if units:
+                inst.ito(units)
+            return inst
+
         if units is None:
             units = inst.UnitsContainer()
         else:

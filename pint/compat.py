@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import datetime
 import math
 import sys
 from collections.abc import Callable, Iterable, Mapping
@@ -19,6 +20,8 @@ from numbers import Number
 from typing import (
     Any,
     NoReturn,
+    Tuple,
+    TypeAlias,  # noqa
 )
 
 if sys.version_info >= (3, 10):
@@ -89,6 +92,7 @@ try:
     import numpy as np
     from numpy import datetime64 as np_datetime64
     from numpy import ndarray
+    from numpy import timedelta64 as np_timedelta64
 
     HAS_NUMPY = True
     NUMPY_VER = np.__version__
@@ -141,6 +145,9 @@ except ImportError:
         pass
 
     class np_datetime64:
+        pass
+
+    class np_timedelta64:
         pass
 
     HAS_NUMPY = False
@@ -300,6 +307,41 @@ def is_duck_array_type(cls: type) -> bool:
         and hasattr(cls, "ndim")
         and hasattr(cls, "dtype")
     )
+
+
+def is_timedelta(obj: Any) -> bool:
+    """Check if the object is a datetime object."""
+    return isinstance(obj, datetime.timedelta) or isinstance(obj, np_timedelta64)
+
+
+def is_timedelta_array(obj: Any) -> bool:
+    """Check if the object is a datetime array."""
+    if isinstance(obj, ndarray) and obj.dtype.type == np_timedelta64:
+        return True
+
+
+def convert_timedelta(obj: Any) -> Tuple[float, str]:
+    """Convert a timedelta object to magnitude and unit string."""
+    _dtype_to_unit = {
+        "timedelta64[Y]": "year",
+        "timedelta64[M]": "month",
+        "timedelta64[W]": "week",
+        "timedelta64[D]": "day",
+        "timedelta64[h]": "hour",
+        "timedelta64[m]": "minute",
+        "timedelta64[s]": "s",
+        "timedelta64[ms]": "ms",
+        "timedelta64[us]": "us",
+        "timedelta64[ns]": "ns",
+        "timedelta64[ps]": "ps",
+        "timedelta64[fs]": "fs",
+        "timedelta64[as]": "as",
+    }
+    if isinstance(obj, datetime.timedelta):
+        return obj.total_seconds(), "s"
+    elif isinstance(obj, np_timedelta64) or obj.dtype.type == np_timedelta64:
+        return obj.astype(float), _dtype_to_unit[str(obj.dtype)]
+    raise TypeError(f"Cannot convert {obj!r} to seconds.")
 
 
 def is_duck_array(obj: type) -> bool:
