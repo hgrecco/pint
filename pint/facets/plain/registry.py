@@ -962,7 +962,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             if reg.is_base:
                 accumulators[key] += exp2
             else:
-                accumulators[None] *= reg.converter.scale**exp2
+                # Use division operator for division instead of exponentiation
+                if exp2 < 0:
+                    accumulators[None] /= reg.converter.scale**abs(exp2)
+                else:
+                    accumulators[None] *= reg.converter.scale**abs(exp2)
                 if reg.reference is not None:
                     self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
