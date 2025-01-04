@@ -897,29 +897,35 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         except KeyError:
             pass
 
-
         accumulators: dict[str | None, int] = defaultdict(int)
-        fraction: dict[str, dict[Decimal|Float, Decimal|int]] = dict(numerator=dict(), denominator=dict())
+        fraction: dict[str, dict[Decimal | float, Decimal | int]] = dict(
+            numerator=dict(), denominator=dict()
+        )
         self._get_root_units_recurse(input_units, 1, accumulators, fraction)
-       
+
         # Identify if terms appear in both numerator and denominator
         def terms_are_unique(fraction):
             for n_factor, n_exp in fraction["numerator"].items():
                 if n_factor in fraction["denominator"]:
                     return False
             return True
+
         # Cancel out terms where factor matches
         while not terms_are_unique(fraction):
             for n_factor, n_exponent in fraction["numerator"].items():
                 if n_factor in fraction["denominator"]:
                     if n_exponent >= fraction["denominator"][n_factor]:
-                        fraction["numerator"][n_factor] -= fraction["denominator"][n_factor]
+                        fraction["numerator"][n_factor] -= fraction["denominator"][
+                            n_factor
+                        ]
                         del fraction["denominator"][n_factor]
                         continue
             for d_factor, d_exponent in fraction["denominator"].items():
                 if d_factor in fraction["numerator"]:
                     if d_exponent >= fraction["numerator"][d_factor]:
-                        fraction["denominator"][d_factor] -= fraction["numerator"][d_factor]
+                        fraction["denominator"][d_factor] -= fraction["numerator"][
+                            d_factor
+                        ]
                         del fraction["numerator"][d_factor]
                         continue
 
@@ -981,7 +987,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     # TODO: accumulators breaks typing list[int, dict[str, int]]
     # So we have changed the behavior here
     def _get_root_units_recurse(
-        self, ref: UnitsContainer, exp: Scalar, accumulators: dict[str | None, int], fraction: dict[str, dict[Decimal|float, Decimal|int]]
+        self,
+        ref: UnitsContainer,
+        exp: Scalar,
+        accumulators: dict[str | None, int],
+        fraction: dict[str, dict[Decimal | float, Decimal | int]],
     ) -> None:
         """
 
@@ -996,13 +1006,18 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 accumulators[key] += exp2
             else:
                 # Build numerator and denominator
-                #print(reg.converter.scale, exp2)
                 if exp2 < 0:
-                    fraction['denominator'][reg.converter.scale] = fraction['denominator'].get(reg.converter.scale, 0)-exp2
+                    fraction["denominator"][reg.converter.scale] = (
+                        fraction["denominator"].get(reg.converter.scale, 0) - exp2
+                    )
                 else:
-                    fraction['numerator'][reg.converter.scale] = fraction['numerator'].get(reg.converter.scale, 0)+exp2
+                    fraction["numerator"][reg.converter.scale] = (
+                        fraction["numerator"].get(reg.converter.scale, 0) + exp2
+                    )
                 if reg.reference is not None:
-                    self._get_root_units_recurse(reg.reference, exp2, accumulators, fraction)
+                    self._get_root_units_recurse(
+                        reg.reference, exp2, accumulators, fraction
+                    )
 
     def get_compatible_units(self, input_units: QuantityOrUnitLike) -> frozenset[UnitT]:
         """ """

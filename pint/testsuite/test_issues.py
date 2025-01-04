@@ -1355,8 +1355,8 @@ def test_issue2107():
     # Use decimal
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     # 2 L/h is equal to 48 L/day
-    flow = decimal.Decimal('2')*ureg.L/ureg.h
-    assert flow.to(ureg.L/ureg.day).magnitude == 48.0
+    flow = decimal.Decimal("2") * ureg.L / ureg.h
+    assert flow.to(ureg.L / ureg.day).magnitude == 48.0
     # 1 inch is equal to 1000 thou
     distance = ureg.Quantity(decimal.Decimal("1.0"), ureg.inch)
     assert distance.to(ureg.thou).magnitude == 1000.0
@@ -1364,8 +1364,8 @@ def test_issue2107():
     # Perform the same conversions without decimal
     ureg = UnitRegistry()
     # 2 L/h is equal to 48 L/day
-    flow = 2*ureg.L/ureg.h
-    assert flow.to(ureg.L/ureg.day).magnitude == 48.0
+    flow = 2 * ureg.L / ureg.h
+    assert flow.to(ureg.L / ureg.day).magnitude == 48.0
     # 1 inch is equal to 1000 thou
     distance = ureg.Quantity(1, ureg.inch)
     assert distance.to(ureg.thou).magnitude == 1000.0
