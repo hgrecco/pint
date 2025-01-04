@@ -939,7 +939,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             if d_exponent == 0:
                 del fraction["denominator"][d_factor]
             else:
-                factor /= d_factor**d_exponent
+                factor *= d_factor**-d_exponent
 
         units = self.UnitsContainer(
             {k: v for k, v in accumulators.items() if k is not None and v != 0}
