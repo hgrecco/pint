@@ -1353,5 +1353,5 @@ def test_issue2044():
 
 def test_issue2112():
     ureg = UnitRegistry()
-    conductivity = 1.0 * ureg.mS/ureg.cm
+    conductivity = 1.0 * ureg.mS / ureg.cm
     assert conductivity.check("[conductivity]") is True
