@@ -496,6 +496,10 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 [refractive_index] = []
 refractive_index_unit = [] = RIU
 
+# Absorbance
+[absorbance] = []
+absorbance_unit = [] = AU
+
 # Logaritmic Unit Definition
 #  Unit = scale; logbase; logfactor
 #  x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )
