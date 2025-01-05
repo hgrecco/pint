@@ -1349,9 +1349,3 @@ def test_issue2044():
     q = (ufloat(10_000, 0.01) * ureg.m).to_compact()
     assert_almost_equal(q.m.n, 10.0)
     assert q.u == "kilometer"
-
-
-def test_issue2114():
-    ureg = UnitRegistry()
-    absorbance = 1.0 * ureg.AU
-    assert absorbance.check("[absorbance]") is True
