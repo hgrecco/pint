@@ -10,6 +10,8 @@ Pint Changelog
 - Update constants to CODATA 2022 recommended values. (#2049)
 - Fixed issue with `.to_compact` and Magnitudes with uncertainties / Quantities with units (PR #2069, issue #2044)
 - Fixed issue in unit conversion which led to loss of precision when using `decimal`. (#2107)
+- Add conductivity dimension. (#2112)
+
 
 0.24.4 (2024-11-07)
 -------------------
