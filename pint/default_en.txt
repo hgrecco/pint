@@ -448,6 +448,9 @@ conventional_ohm_90 = R_K / R_K90 * ohm = Ω_90 = ohm_90
 siemens = ampere / volt = S = mho
 absiemens = 1e9 * siemens = abS = abmho
 
+# Conductivity
+[conductivity] = [conductance]/[length]
+
 # Capacitance
 [capacitance] = [charge] / [electric_potential]
 farad = coulomb / volt = F
