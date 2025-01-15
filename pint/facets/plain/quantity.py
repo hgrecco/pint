@@ -1,9 +1,9 @@
 """
-    pint.facets.plain.quantity
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.plain.quantity
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from typing import (
 from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
+    Self,
     _to_magnitude,
     deprecated,
     eq,
@@ -515,7 +516,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     def to(
         self, other: QuantityOrUnitLike | None = None, *contexts, **ctx_kwargs
-    ) -> PlainQuantity:
+    ) -> Self:
         """Return PlainQuantity rescaled to different units.
 
         Parameters
@@ -1288,8 +1289,8 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def __abs__(self) -> PlainQuantity[MagnitudeT]:
         return self.__class__(abs(self._magnitude), self._units)
 
-    def __round__(self, ndigits: int | None = 0) -> PlainQuantity[MagnitudeT]:
-        return self.__class__(round(self._magnitude, ndigits=ndigits), self._units)
+    def __round__(self, ndigits: int | None = None) -> PlainQuantity[int]:
+        return self.__class__(round(self._magnitude, ndigits), self._units)
 
     def __pos__(self) -> PlainQuantity[MagnitudeT]:
         return self.__class__(operator.pos(self._magnitude), self._units)

@@ -162,9 +162,6 @@ astronomical_unit = 149597870700 * meter = au  # since Aug 2012
 parsec = 1 / tansec * astronomical_unit = pc
 nautical_mile = 1852 * meter = nmi
 bohr = hbar / (alpha * m_e * c) = a_0 = a0 = bohr_radius = atomic_unit_of_length = a_u_length
-x_unit_Cu = K_alpha_Cu_d_220 * d_220 / 1537.4 = Xu_Cu
-x_unit_Mo = K_alpha_Mo_d_220 * d_220 / 707.831 = Xu_Mo
-angstrom_star = K_alpha_W_d_220 * d_220 / 0.2090100 = Å_star
 planck_length = (hbar * gravitational_constant / c ** 3) ** 0.5
 
 # Mass
@@ -451,6 +448,9 @@ conventional_ohm_90 = R_K / R_K90 * ohm = Ω_90 = ohm_90
 siemens = ampere / volt = S = mho
 absiemens = 1e9 * siemens = abS = abmho
 
+# Conductivity
+[conductivity] = [conductance]/[length]
+
 # Capacitance
 [capacitance] = [charge] / [electric_potential]
 farad = coulomb / volt = F
@@ -498,6 +498,10 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 # Refractive index
 [refractive_index] = []
 refractive_index_unit = [] = RIU
+
+# Absorbance
+[absorbance] = []
+absorbance_unit = [] = AU
 
 # Logaritmic Unit Definition
 #  Unit = scale; logbase; logfactor
