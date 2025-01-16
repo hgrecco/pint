@@ -11,6 +11,7 @@ Pint Changelog
 - Fixed issue with `.to_compact` and Magnitudes with uncertainties / Quantities with units (PR #2069, issue #2044)
 - Add conductivity dimension. (#2112)
 - Add absorbance unit and dimension. (#2114)
+- Add membrane filtration flux and permeability dimensionality, and shorthand "LMH". (#2116)
 
 
 0.24.4 (2024-11-07)
