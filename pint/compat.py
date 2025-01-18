@@ -117,7 +117,7 @@ try:
             return np.asarray(value)
         return value
 
-    def _test_array_function_protocol():
+    def _test_array_function_protocol() -> bool:
         # Test if the __array_function__ protocol is enabled
         try:
 

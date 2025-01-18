@@ -111,11 +111,11 @@ ignore = [
 # python_version = "3.9"
 # follow_imports = "skip"
 ignore_missing_imports = true
-files = "pint/facets"  # directory mypy should analyze
+files = "pint"  # directory mypy should analyze
 # # Directories to exclude from mypy's analysis
-# exclude = [
-#     "pint/testsuite",
-#     "docs",
-#     "pint/default_en.txt",
-#     "pint/constants_en.txt",
-# ]
+exclude = [
+    "pint/testsuite",
+    "docs",
+    "pint/default_en.txt",
+    "pint/constants_en.txt",
+]

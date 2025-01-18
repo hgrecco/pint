@@ -97,12 +97,12 @@ class Measurement(PlainQuantity):
 
         return _unpickle_measurement, (Measurement, self.magnitude, self._units)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<Measurement({}, {}, {})>".format(
             self.magnitude.nominal_value, self.magnitude.std_dev, self.units
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self}"
 
     def __format__(self, spec):

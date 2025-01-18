@@ -422,7 +422,7 @@ def find_connected_nodes(
 class udict(dict[str, Scalar]):
     """Custom dict implementing __missing__."""
 
-    def __missing__(self, key: str):
+    def __missing__(self, key: str) -> int:
         return 0
 
     def copy(self: Self) -> Self:
@@ -839,13 +839,13 @@ class ParserHelper(UnitsContainer):
 
         return self.__class__(self.scale, d, non_int_type=self._non_int_type)
 
-    def __str__(self):
+    def __str__(self) -> str:
         tmp = "{%s}" % ", ".join(
             [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
         return f"{self.scale} {tmp}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         tmp = "{%s}" % ", ".join(
             [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )

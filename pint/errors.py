@@ -148,7 +148,7 @@ class UndefinedUnitError(AttributeError, PintError):
         else:
             self.unit_names = tuple(unit_names)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if len(self.unit_names) == 1:
             return f"'{tuple(self.unit_names)[0]}' is not defined in the unit registry"
         return f"{tuple(self.unit_names)} are not defined in the unit registry"
@@ -184,7 +184,7 @@ class DimensionalityError(PintTypeError):
         self.dim2 = dim2
         self.extra_msg = extra_msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.dim1 or self.dim2:
             dim1 = f" ({self.dim1})"
             dim2 = f" ({self.dim2})"

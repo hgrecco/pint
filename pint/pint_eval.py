@@ -95,7 +95,7 @@ def _plain_tokenizer(input_string):
 
 
 def uncertainty_tokenizer(input_string):
-    def _number_or_nan(token):
+    def _number_or_nan(token) -> bool:
         if token.type == tokenlib.NUMBER or (
             token.type == tokenlib.NAME and token.string == "nan"
         ):
