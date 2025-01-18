@@ -105,7 +105,7 @@ class Measurement(PlainQuantity):
     def __str__(self) -> str:
         return f"{self}"
 
-    def __format__(self, spec):
+    def __format__(self, spec) -> str:
         spec = spec or self._REGISTRY.default_format
         return self._REGISTRY.formatter.format_measurement(self, spec)
 

@@ -263,7 +263,7 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
                 "supports indexing".format(self._magnitude)
             )
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         try:
             # If we're dealing with a masked single value or a nan, set it
             if (

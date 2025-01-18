@@ -96,7 +96,7 @@ class DefinitionError(ValueError, PintError):
         self.definition_type = definition_type
         self.msg = msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         msg = f"Cannot define '{self.name}' ({self.definition_type}): {self.msg}"
         return msg
 
@@ -112,7 +112,7 @@ class DefinitionSyntaxError(ValueError, PintError):
     def __init__(self, msg: str) -> None:
         self.msg = msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.msg
 
     def __reduce__(self):
@@ -129,7 +129,7 @@ class RedefinitionError(ValueError, PintError):
         self.name = name
         self.definition_type = definition_type
 
-    def __str__(self):
+    def __str__(self) -> str:
         msg = f"Cannot redefine '{self.name}' ({self.definition_type})"
         return msg
 
@@ -222,7 +222,7 @@ class OffsetUnitCalculusError(PintTypeError):
         if self.units2:
             yield self.units2
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             "Ambiguous operation with offset unit (%s)."
             % ", ".join(str(u) for u in self.yield_units())
@@ -250,7 +250,7 @@ class LogarithmicUnitCalculusError(PintTypeError):
         if self.units2:
             yield self.units2
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             "Ambiguous operation with logarithmic unit (%s)."
             % ", ".join(str(u) for u in self.yield_units())
