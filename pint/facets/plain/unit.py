@@ -241,7 +241,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
                     out.add(sname)
         return frozenset(out)
 
-    def from_(self, value, strict=True, name="value"):
+    def from_(self, value, strict: bool=True, name="value"):
         """Converts a numerical value or quantity to this unit
 
         Parameters
@@ -268,7 +268,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         else:
             return value * self
 
-    def m_from(self, value, strict=True, name="value"):
+    def m_from(self, value, strict: bool=True, name="value"):
         """Converts a numerical value or quantity to this unit, then returns
         the magnitude of the converted value
 

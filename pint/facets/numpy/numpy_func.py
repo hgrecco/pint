@@ -597,7 +597,7 @@ def _unwrap(p, discont=None, axis=-1):
 
 
 @implements("copyto", "function")
-def _copyto(dst, src, casting="same_kind", where=True) -> None:
+def _copyto(dst, src, casting="same_kind", where: bool=True) -> None:
     if _is_quantity(dst):
         if _is_quantity(src):
             src = src.m_as(dst.units)
@@ -619,7 +619,7 @@ def _einsum(subscripts, *operands, **kwargs):
 
 
 @implements("isin", "function")
-def _isin(element, test_elements, assume_unique=False, invert=False):
+def _isin(element, test_elements, assume_unique: bool=False, invert: bool=False):
     if not _is_quantity(element):
         raise ValueError(
             "Cannot test if unit-aware elements are in not-unit-aware array"
@@ -815,7 +815,7 @@ for func_str in ("cross", "dot"):
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
-def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output=True) -> None:
+def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output: bool=True) -> None:
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return

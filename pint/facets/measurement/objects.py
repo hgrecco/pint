@@ -20,7 +20,7 @@ MISSING = object()
 
 class MeasurementQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     # Measurement support
-    def plus_minus(self, error, relative=False):
+    def plus_minus(self, error, relative: bool=False):
         if isinstance(error, self.__class__):
             if relative:
                 raise ValueError(f"{error} is not a valid relative error.")
