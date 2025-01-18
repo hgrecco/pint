@@ -127,7 +127,7 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
         non_int_type=float,
         case_sensitive: bool = True,
         cache_folder=None,
-    ):
+    ) -> None:
         super().__init__(
             filename=filename,
             force_ndarray=force_ndarray,
@@ -181,10 +181,10 @@ class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
 
 
 class LazyRegistry(Generic[facets.QuantityT, facets.UnitT]):
-    def __init__(self, args=None, kwargs=None):
+    def __init__(self, args=None, kwargs=None) -> None:
         self.__dict__["params"] = args or (), kwargs or {}
 
-    def __init(self):
+    def __init(self) -> None:
         args, kwargs = self.__dict__["params"]
         kwargs["on_redefinition"] = "raise"
         self.__class__ = UnitRegistry
@@ -197,7 +197,7 @@ class LazyRegistry(Generic[facets.QuantityT, facets.UnitT]):
         self.__init()
         return getattr(self, item)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key, value) -> None:
         if key == "__class__":
             super().__setattr__(key, value)
         else:
@@ -218,7 +218,7 @@ class ApplicationRegistry:
 
     __slots__ = ["_registry"]
 
-    def __init__(self, registry):
+    def __init__(self, registry) -> None:
         self._registry = registry
 
     def get(self):
@@ -250,7 +250,7 @@ class ApplicationRegistry:
     def __getattr__(self, name):
         return getattr(self._registry, name)
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name, value) -> None:
         if name in self.__slots__:
             super().__setattr__(name, value)
         else:

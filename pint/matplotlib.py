@@ -19,7 +19,7 @@ from .util import iterable, sized
 class PintAxisInfo(matplotlib.units.AxisInfo):
     """Support default axis and tick labeling and default limits."""
 
-    def __init__(self, units):
+    def __init__(self, units) -> None:
         """Set the default label to the pretty-print of the unit."""
         formatter = units._REGISTRY.mpl_formatter
         super().__init__(label=formatter.format(units))
@@ -28,7 +28,7 @@ class PintAxisInfo(matplotlib.units.AxisInfo):
 class PintConverter(matplotlib.units.ConversionInterface):
     """Implement support for pint within matplotlib's unit conversion framework."""
 
-    def __init__(self, registry):
+    def __init__(self, registry) -> None:
         super().__init__()
         self._reg = registry
 

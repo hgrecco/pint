@@ -91,7 +91,7 @@ class DefinitionError(ValueError, PintError):
     definition_type: type
     msg: str
 
-    def __init__(self, name: str, definition_type: type, msg: str):
+    def __init__(self, name: str, definition_type: type, msg: str) -> None:
         self.name = name
         self.definition_type = definition_type
         self.msg = msg
@@ -109,7 +109,7 @@ class DefinitionSyntaxError(ValueError, PintError):
 
     msg: str
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         self.msg = msg
 
     def __str__(self):
@@ -125,7 +125,7 @@ class RedefinitionError(ValueError, PintError):
     name: str
     definition_type: type
 
-    def __init__(self, name: str, definition_type: type):
+    def __init__(self, name: str, definition_type: type) -> None:
         self.name = name
         self.definition_type = definition_type
 
@@ -142,7 +142,7 @@ class UndefinedUnitError(AttributeError, PintError):
 
     unit_names: tuple[str, ...]
 
-    def __init__(self, unit_names: str | ty.Iterable[str]):
+    def __init__(self, unit_names: str | ty.Iterable[str]) -> None:
         if isinstance(unit_names, str):
             self.unit_names = (unit_names,)
         else:
@@ -266,7 +266,7 @@ class LogarithmicUnitCalculusError(PintTypeError):
 class UnitStrippedWarning(UserWarning, PintError):
     msg: str
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         self.msg = msg
 
     def __reduce__(self):
@@ -280,7 +280,7 @@ class UnexpectedScaleInContainer(Exception):
 class UndefinedBehavior(UserWarning, PintError):
     msg: str
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         self.msg = msg
 
     def __reduce__(self):

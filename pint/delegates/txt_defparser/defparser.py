@@ -46,7 +46,7 @@ class _PintParser(fp.Parser[PintRootBlock, ParserConfig]):
 
     _diskcache: fc.DiskCache | None
 
-    def __init__(self, config: ParserConfig, *args: ty.Any, **kwargs: ty.Any):
+    def __init__(self, config: ParserConfig, *args: ty.Any, **kwargs: ty.Any) -> None:
         self._diskcache = kwargs.pop("diskcache", None)
         super().__init__(config, *args, **kwargs)
 
@@ -68,7 +68,7 @@ class DefParser:
         plain.CommentDefinition,
     )
 
-    def __init__(self, default_config: ParserConfig, diskcache: fc.DiskCache):
+    def __init__(self, default_config: ParserConfig, diskcache: fc.DiskCache) -> None:
         self._default_config = default_config
         self._diskcache = diskcache
 

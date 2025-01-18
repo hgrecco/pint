@@ -122,7 +122,7 @@ try:
         try:
 
             class FakeArray:
-                def __array_function__(self, *args, **kwargs):
+                def __array_function__(self, *args, **kwargs) -> None:
                     return
 
             np.concatenate([FakeArray()])

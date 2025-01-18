@@ -66,7 +66,7 @@ class FullFormatter(BaseFormatter):
 
     locale: Locale | None = None
 
-    def __init__(self, registry: UnitRegistry | None = None):
+    def __init__(self, registry: UnitRegistry | None = None) -> None:
         super().__init__(registry)
 
         self._formatters = {}

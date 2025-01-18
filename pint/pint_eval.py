@@ -65,7 +65,7 @@ def _power(left: Any, right: Any) -> Any:
 
 # https://stackoverflow.com/a/1517965/1291237
 class tokens_with_lookahead:
-    def __init__(self, iter):
+    def __init__(self, iter) -> None:
         self.iter = iter
         self.buffer = []
 
@@ -321,7 +321,7 @@ class EvalTreeNode:
         left: EvalTreeNode | TokenInfo,
         operator: TokenInfo | None = None,
         right: EvalTreeNode | None = None,
-    ):
+    ) -> None:
         self.left = left
         self.operator = operator
         self.right = right

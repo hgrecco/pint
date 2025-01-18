@@ -567,7 +567,7 @@ class UnitsContainer(Mapping[str, Scalar]):
     def __getstate__(self) -> tuple[udict, Scalar, type]:
         return self._d, self._one, self._non_int_type
 
-    def __setstate__(self, state: tuple[udict, Scalar, type]):
+    def __setstate__(self, state: tuple[udict, Scalar, type]) -> None:
         self._d, self._one, self._non_int_type = state
         self._hash = None
 
@@ -706,7 +706,7 @@ class ParserHelper(UnitsContainer):
 
     scale: Scalar
 
-    def __init__(self, scale: Scalar = 1, *args, **kwargs):
+    def __init__(self, scale: Scalar = 1, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.scale = scale
 
@@ -813,7 +813,7 @@ class ParserHelper(UnitsContainer):
     def __getstate__(self):
         return super().__getstate__() + (self.scale,)
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         super().__setstate__(state[:-1])
         self.scale = state[-1]
 
@@ -1016,7 +1016,7 @@ class PrettyIPython:
             return f"${self:~L}$"
         return f"${self:L}$"
 
-    def _repr_pretty_(self, p, cycle: bool):
+    def _repr_pretty_(self, p, cycle: bool) -> None:
         # if cycle:
         if "~" in self._REGISTRY.formatter.default_format:
             p.text(f"{self:~P}")
