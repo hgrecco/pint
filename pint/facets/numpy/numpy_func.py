@@ -575,6 +575,12 @@ def _where(condition, *args):
     return output_wrap(np.where(condition, *args))
 
 
+@implements("repeat", "function")
+def _repeat(a, repeats, axis=None):
+    a, output_wrap = unwrap_and_wrap_consistent_units(a)
+    return output_wrap(np.repeat(a, repeats, axis))
+
+
 @implements("concatenate", "function")
 def _concatenate(sequence, *args, **kwargs):
     sequence, output_wrap = unwrap_and_wrap_consistent_units(*sequence)
