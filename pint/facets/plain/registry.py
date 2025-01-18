@@ -231,7 +231,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         cache_folder: str | pathlib.Path | None = None,
         separate_format_defaults: bool | None = None,
         mpl_formatter: str = "{:P}",
-    ):
+    ) -> None:
         #: Map a definition class to a adder methods.
         self._adders: Handler = {}
         self._register_definition_adders()
@@ -415,7 +415,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         "This function will be removed in future versions of pint.\n"
         "Use ureg.formatter.set_locale"
     )
-    def fmt_locale(self, loc: str | None):
+    def fmt_locale(self, loc: str | None) -> None:
         self.formatter.set_locale(loc)
 
     @deprecated(

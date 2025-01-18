@@ -51,7 +51,7 @@ class GenericSystemRegistry(
     # to enjoy typing goodies
     System: type[objects.System]
 
-    def __init__(self, system: str | None = None, **kwargs):
+    def __init__(self, system: str | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
 
         #: Map system name to system.

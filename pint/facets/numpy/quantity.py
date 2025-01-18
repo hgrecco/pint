@@ -179,7 +179,7 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         return self._magnitude.dtype
 
     @shape.setter
-    def shape(self, value):
+    def shape(self, value) -> None:
         self._magnitude.shape = value
 
     def searchsorted(self, v, side="left", sorter=None):
@@ -207,7 +207,7 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         """
         return np.prod(self, *args, **kwargs)
 
-    def __ito_if_needed(self, to_units):
+    def __ito_if_needed(self, to_units) -> None:
         if self.unitless and to_units == "radian":
             return
 

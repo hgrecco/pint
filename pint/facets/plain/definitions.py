@@ -24,7 +24,7 @@ from ...util import UnitsContainer
 class NotNumeric(Exception):
     """Internal exception. Do not expose outside Pint"""
 
-    def __init__(self, value: Any):
+    def __init__(self, value: Any) -> None:
         self.value = value
 
 
