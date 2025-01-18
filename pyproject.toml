@@ -3,7 +3,7 @@ name = "Pint"
 authors = [
   {name="Hernan E. Grecco", email="hernan.grecco@gmail.com"}
 ]
-license = {text = "BSD"}
+license = {text = "BSD-3-Clause"}
 description = "Physical quantities module"
 readme = "README.rst"
 maintainers = [
