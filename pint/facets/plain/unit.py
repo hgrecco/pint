@@ -80,6 +80,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         """Return True if the PlainUnit is dimensionless; False otherwise."""
         return not bool(self.dimensionality)
 
+    _dimensionality: UnitsContainer | None = None
+
     @property
     def dimensionality(self) -> UnitsContainer:
         """
@@ -88,11 +90,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         dict
             Dimensionality of the PlainUnit, e.g. ``{length: 1, time: -1}``
         """
-        try:
-            return self._dimensionality
-        except AttributeError:
-            dim = self._REGISTRY._get_dimensionality(self._units)
-            self._dimensionality = dim
+        if self._dimensionality is None:
+            self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
 
         return self._dimensionality
 
@@ -241,7 +240,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
                     out.add(sname)
         return frozenset(out)
 
-    def from_(self, value, strict: bool=True, name="value"):
+    def from_(self, value, strict: bool = True, name="value"):
         """Converts a numerical value or quantity to this unit
 
         Parameters
@@ -268,7 +267,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         else:
             return value * self
 
-    def m_from(self, value, strict: bool=True, name="value"):
+    def m_from(self, value, strict: bool = True, name="value"):
         """Converts a numerical value or quantity to this unit, then returns
         the magnitude of the converted value
 

@@ -130,7 +130,7 @@ class FullFormatter(BaseFormatter):
         unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
-        **babel_kwds: Unpack[BabelKwds],
+        **babel_kwds: Unpack[BabelKwds] | Unpack[dict[str, None]],
     ) -> str:
         uspec = uspec or self.default_format
         sort_func = sort_func or self.default_sort_func
@@ -142,7 +142,7 @@ class FullFormatter(BaseFormatter):
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
-        **babel_kwds: Unpack[BabelKwds],
+        **babel_kwds: Unpack[BabelKwds] | Unpack[dict[str, None]],
     ) -> str:
         spec = spec or self.default_format
         # If Compact is selected, do it at the beginning
@@ -179,7 +179,7 @@ class FullFormatter(BaseFormatter):
         self,
         measurement: Measurement,
         meas_spec: str = "",
-        **babel_kwds: Unpack[BabelKwds],
+        **babel_kwds: Unpack[BabelKwds] | Unpack[dict[str, None]],
     ) -> str:
         meas_spec = meas_spec or self.default_format
         # If Compact is selected, do it at the beginning

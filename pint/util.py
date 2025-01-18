@@ -1029,7 +1029,7 @@ class PrettyIPython:
 
 
 def to_units_container(
-    unit_like: QuantityOrUnitLike, registry: UnitRegistry | None = None
+    unit_like: QuantityOrUnitLike | None, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 

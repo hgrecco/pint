@@ -109,7 +109,7 @@ ignore = [
 # https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file
 [tool.mypy]
 # python_version = "3.9"
-# follow_imports = "skip"
+follow_imports = "silent"
 ignore_missing_imports = true
 files = "pint"  # directory mypy should analyze
 # # Directories to exclude from mypy's analysis

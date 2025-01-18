@@ -38,7 +38,7 @@ def _get_reduced_units(
             if unit1 != unit2:
                 power = quantity._REGISTRY._get_dimensionality_ratio(unit1, unit2)
                 if power:
-                    units = units.add(unit2, exp / power).remove([unit1])
+                    units = units.add(unit2, exp / power).remove([unit1])  # type: ignore# exponent type
                     break
     return units
 

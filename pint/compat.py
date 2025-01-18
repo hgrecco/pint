@@ -99,7 +99,9 @@ try:
     else:
         NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
-    def _to_magnitude(value, force_ndarray: bool=False, force_ndarray_like: bool=False):
+    def _to_magnitude(
+        value, force_ndarray: bool = False, force_ndarray_like: bool = False
+    ):
         if isinstance(value, (dict, bool)) or value is None:
             raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
         elif isinstance(value, str) and value == "":
@@ -149,7 +151,9 @@ except ImportError:
     HAS_NUMPY_ARRAY_FUNCTION = False
     NP_NO_VALUE = None
 
-    def _to_magnitude(value, force_ndarray: bool=False, force_ndarray_like: bool=False):
+    def _to_magnitude(
+        value, force_ndarray: bool = False, force_ndarray_like: bool = False
+    ):
         if force_ndarray or force_ndarray_like:
             raise ValueError(
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."
