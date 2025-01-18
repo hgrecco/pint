@@ -503,6 +503,13 @@ refractive_index_unit = [] = RIU
 [absorbance] = []
 absorbance_unit = [] = AU
 
+# Membrane filtration flux
+LMH = L / m**2 / h
+[membrane_flux] = [volume] / [area] / [time]
+
+# Membrane filtration permeability
+[membrane_permeability] = [membrane_flux] / [pressure]
+
 # Logaritmic Unit Definition
 #  Unit = scale; logbase; logfactor
 #  x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )
