@@ -119,3 +119,4 @@ exclude = [
     "pint/default_en.txt",
     "pint/constants_en.txt",
 ]
+disable_error_code = "operator,override"

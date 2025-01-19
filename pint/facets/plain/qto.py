@@ -4,7 +4,7 @@ import bisect
 import math
 import numbers
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, no_type_check
 
 from ...compat import (
     mip_INF,
@@ -193,7 +193,7 @@ def to_preferred(
 
 def ito_preferred(
     quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
-) -> PlainQuantity:
+) -> None:
     """Return Quantity converted to a unit composed of the preferred units.
 
     Examples
@@ -211,9 +211,10 @@ def ito_preferred(
     return quantity.ito(units)
 
 
+@no_type_check
 def _get_preferred(
     quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
-) -> PlainQuantity:
+) -> UnitsContainer:
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.default_preferred_units
 

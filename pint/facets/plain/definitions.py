@@ -13,7 +13,7 @@ import numbers
 import typing as ty
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Any
+from typing import Any, no_type_check
 
 from ... import errors
 from ..._typing import Magnitude
@@ -121,7 +121,7 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
     defined_symbol: str | None
     #: additional names for the same unit
     aliases: tuple[str, ...]
-    #: A functiont that converts a value in these units into the reference units
+    #: A function that converts a value in these units into the reference units
     # TODO: this has changed as converter is now annotated as converter.
     # Briefly, in several places converter attributes like as_multiplicative were
     # accesed. So having a generic function is a no go.
@@ -192,7 +192,7 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
         """Indicates if it is a base unit."""
 
         # TODO: This is set in __post_init__
-        return self._is_base
+        return self._is_base  # type: ignore[attr-defined]
 
     @property
     def is_multiplicative(self) -> bool:
@@ -283,8 +283,10 @@ class AliasDefinition(errors.WithDefErr):
 class ScaleConverter(Converter):
     """A linear transformation without offset."""
 
-    scale: float
+    scale: numbers.Number
 
+    # typing non_int_type related
+    @no_type_check
     def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         if inplace:
             value *= self.scale
@@ -293,6 +295,8 @@ class ScaleConverter(Converter):
 
         return value
 
+    # typing non_int_type related
+    @no_type_check
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         if inplace:
             value /= self.scale

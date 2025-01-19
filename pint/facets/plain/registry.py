@@ -647,7 +647,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
-        return self._cache
 
     def get_name(self, name_or_alias: str, case_sensitive: bool | None = None) -> str:
         """Return the canonical name of a unit."""

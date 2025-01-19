@@ -68,7 +68,9 @@ class DefParser:
         plain.CommentDefinition,
     )
 
-    def __init__(self, default_config: ParserConfig, diskcache: fc.DiskCache) -> None:
+    def __init__(
+        self, default_config: ParserConfig, diskcache: fc.DiskCache | None
+    ) -> None:
         self._default_config = default_config
         self._diskcache = diskcache
 
