@@ -4,7 +4,7 @@ import bisect
 import math
 import numbers
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, no_type_check
 
 from ...compat import (
     mip_INF,
@@ -38,7 +38,7 @@ def _get_reduced_units(
             if unit1 != unit2:
                 power = quantity._REGISTRY._get_dimensionality_ratio(unit1, unit2)
                 if power:
-                    units = units.add(unit2, exp / power).remove([unit1])
+                    units = units.add(unit2, exp / power).remove([unit1])  # type: ignore# exponent type
                     break
     return units
 
@@ -193,7 +193,7 @@ def to_preferred(
 
 def ito_preferred(
     quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
-) -> PlainQuantity:
+) -> None:
     """Return Quantity converted to a unit composed of the preferred units.
 
     Examples
@@ -211,9 +211,10 @@ def ito_preferred(
     return quantity.ito(units)
 
 
+@no_type_check
 def _get_preferred(
     quantity: PlainQuantity, preferred_units: list[UnitLike] | None = None
-) -> PlainQuantity:
+) -> UnitsContainer:
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.default_preferred_units
 

@@ -44,7 +44,7 @@ class GenericGroupRegistry(
     # to enjoy typing goodies
     Group = type[objects.Group]
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         #: Map group name to group.
         self._groups: dict[str, objects.Group] = {}
@@ -81,7 +81,7 @@ class GenericGroupRegistry(
         super()._register_definition_adders()
         self._register_adder(GroupDefinition, self._add_group)
 
-    def _add_unit(self, definition: UnitDefinition):
+    def _add_unit(self, definition: UnitDefinition) -> None:
         super()._add_unit(definition)
         # TODO: delta units are missing
         self.get_group("root").add_units(definition.name)

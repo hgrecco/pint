@@ -48,5 +48,10 @@ T = TypeVar("T")
 
 
 class Handler(Protocol):
+    @overload
+    def __getitem__(self, Never, /) -> Never:
+        ...
+
+    @overload
     def __getitem__(self, item: type[T]) -> Callable[[T], None]:
         ...
