@@ -40,7 +40,8 @@ class GenericMeasurementRegistry(
 
 class MeasurementRegistry(
     GenericMeasurementRegistry[
-        objects.MeasurementQuantity[Any], objects.MeasurementUnit
+        objects.MeasurementQuantity[Any],
+        objects.MeasurementUnit,
     ]
 ):
     Quantity: TypeAlias = objects.MeasurementQuantity[Any]
