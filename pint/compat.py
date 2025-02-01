@@ -171,6 +171,18 @@ except ImportError:
         return value
 
 
+
+try:
+    from auto_uncertainties import Uncertainty
+except ImportError:
+    HAS_AUTOUNCERTAINTIES = False
+
+    class Uncertainty(object):
+        ...
+
+else:
+    HAS_AUTOUNCERTAINTIES = True
+
 try:
     from babel import Locale
     from babel import units as babel_units
