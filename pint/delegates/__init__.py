@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from . import txt_defparser
 from .base_defparser import ParserConfig, build_disk_cache_class
+from .toml_parser import toml_parser
 from .formatter import Formatter
 
-__all__ = ["txt_defparser", "ParserConfig", "build_disk_cache_class", "Formatter"]
+__all__ = ["txt_defparser", "ParserConfig", "build_disk_cache_class", "Formatter", "toml_parser"]
