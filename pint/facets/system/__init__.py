@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-from .definitions import SystemDefinition
+from .definitions import SystemDefinition, BaseUnitRule
 from .objects import System
 from .registry import GenericSystemRegistry, SystemRegistry
 

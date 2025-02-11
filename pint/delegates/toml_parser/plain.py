@@ -29,84 +29,49 @@ import flexparser as fp
 
 from ...converters import Converter
 from ...facets.plain import definitions as definitions_
-from ...facets.group import GroupDefinition as GroupDefinition_
-from ...util import UnitsContainer
+from ...facets import group 
+from ...facets import system
+from ...facets import context
+from ...util import UnitsContainer, to_units_container
 from ..base_defparser import ParserConfig
 from . import common
 
 import copy
 
 @dataclass(frozen=True)
-class Equality(definitions_.Equality):
-    """An equality statement contains a left and right hand separated
-
-    lhs and rhs should be space stripped.
-    """
-
-    @classmethod
-    def from_string(cls, s: str) -> fp.NullableParsedResult[Equality]:
-        if "=" not in s:
-            return None
-        parts = [p.strip() for p in s.split("=")]
-        if len(parts) != 2:
-            return common.DefinitionSyntaxError(
-                f"Exactly two terms expected, not {len(parts)} (`{s}`)"
-            )
-        return cls(*parts)
-
-
-@dataclass(frozen=True)
-class CommentDefinition(definitions_.CommentDefinition):
-    """Comments start with a # character.
-
-        # This is a comment.
-        ## This is also a comment.
-
-    Captured value does not include the leading # character and space stripped.
-    """
-
-    @classmethod
-    def from_string(cls, s: str) -> fp.NullableParsedResult[CommentDefinition]:
-        if not s.startswith("#"):
-            return None
-        return cls(s[1:].strip())
-
-
-@dataclass(frozen=True)
 class PrefixDefinition(definitions_.PrefixDefinition):
     """Definition of a prefix::
 
-        <prefix>- = <value> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+        [<prefix>.<name>]
+        value = "<value>"
+        defined_symbol = "<symbol>"
+        aliases = [
+            "<alias 1>",
+            ...
+            "<alias N>",
+        ]
 
     Example::
 
-        deca- =  1e+1  = da- = deka-
+        [prefix.micro]
+        value = "1e-6"
+        defined_symbol = "µ"
+        aliases = [
+            "μ",
+            "u",
+            "mu",
+            "mc",
+        ]
     """
 
     @classmethod
     def from_dict_and_config(
         cls, d: from_dict, config: ParserConfig
     ) -> PrefixDefinition:
-        name = d["name"]
+        name = d["name"].strip()
         value = d["value"]
         defined_symbol = d.get("defined_symbol", None)
         aliases = d.get("aliases", [])
-
-        name = name.strip()
-        # if not name.endswith("-"):
-        #     return None
-
-        # name = name.rstrip("-")
-        # aliases = tuple(alias.strip().rstrip("-") for alias in aliases)
-
-        # defined_symbol = None
-        # if aliases:
-        #     if aliases[0] == "_":
-        #         aliases = aliases[1:]
-        #     else:
-        #         defined_symbol, *aliases = aliases
-
-        #     aliases = tuple(alias for alias in aliases if alias not in ("", "_"))
 
         try:
             value = config.to_number(value)
@@ -125,11 +90,42 @@ class PrefixDefinition(definitions_.PrefixDefinition):
 class UnitDefinition(definitions_.UnitDefinition):
     """Definition of a unit::
 
-        <canonical name> = <relation to another unit or dimension> [= <symbol>] [= <alias>] [ = <alias> ] [...]
+        [unit.<name>]
+        aliases = [
+            "<alias 1>",
+            ...
+            "<alias N>",
+        ]
+        defined_symbol = "<symbol>"
+        value = "<relation to another unit>"
 
     Example::
 
-        millennium = 1e3 * year = _ = millennia
+        [unit.meter]
+        defined_symbol = "m"
+        aliases = [
+            "metre",
+        ]
+        value = "[length]"
+
+        [unit.kelvin]
+        defined_symbol = "K"
+        aliases = [
+            "degK",
+            "°K",
+            "degree_Kelvin",
+            "degreeK",
+        ]
+        value = "[temperature]; offset: 0"
+
+        [unit.radian]
+        defined_symbol = "rad"
+        value = "[]"
+
+
+        [unit.pi]
+        defined_symbol = "π"
+        value = "3.1415926535897932384626433832795028841971693993751"
 
     Parameters
     ----------
@@ -212,18 +208,21 @@ class DerivedDimensionDefinition(
 ):
     """Definition of a derived dimension::
 
-        [dimension name] = <relation to other dimensions>
+        [dimension.<name>]
+        value = "<relation to another dimension>"
 
     Example::
 
-        [density] = [mass] / [volume]
+        [dimension.density]
+        value = "[mass] / [volume]"
+
     """
 
     @classmethod
     def from_dict_and_config(
         cls, d: from_dict, config: ParserConfig
     ) -> DerivedDimensionDefinition:
-        name = d["name"]
+        name = "["+d["name"]+"]"
         value = d["value"]
 
         try:
@@ -241,49 +240,42 @@ class DerivedDimensionDefinition(
 
 
 @dataclass(frozen=True)
-class AliasDefinition(definitions_.AliasDefinition):
-    """Additional alias(es) for an already existing unit::
-
-        @alias <canonical name or previous alias> = <alias> [ = <alias> ] [...]
-
-    Example::
-
-        @alias meter = my_meter
-    """
-
-    @classmethod
-    def from_string(cls, s: str) -> fp.NullableParsedResult[AliasDefinition]:
-        if not s.startswith("@alias "):
-            return None
-        name, *aliases = s[len("@alias ") :].split("=")
-
-        try:
-            return cls(name.strip(), tuple(alias.strip() for alias in aliases))
-        except Exception as exc:
-            return common.DefinitionSyntaxError(str(exc))
-
-
-@dataclass(frozen=True)
 class GroupDefinition(
-    GroupDefinition_
+    group.GroupDefinition
 ):
-    """Definition of a group.
+    """Definition of a group. Can be composed of other groups.
 
-        @group <name> [using <group 1>, ..., <group N>]
-            <definition 1>
+        [group.<name>]
+        using_group_names = [
+            "<group 1>",
             ...
-            <definition N>
-        @end
-
-    See UnitDefinition and Comment for more parsing related information.
+            "<group N>",
+        ]
+        # Definitions are the same as unit definitions
+        [group.<name>.definitions.<unit name>]
+        aliases = [
+            "<alias 1>",
+            ...
+            "<alias N>",
+        ]
+        defined_symbol = "<symbol>"
+        value = "<relation to another unit>"
 
     Example::
 
-        @group AvoirdupoisUS using Avoirdupois
-            US_hundredweight = hundredweight = US_cwt
-            US_ton = ton
-            US_force_ton = force_ton = _ = US_ton_force
-        @end
+
+    [group.AvoirdupoisUK]
+    using_group_names = [
+        "Avoirdupois",
+    ]
+
+    [group.AvoirdupoisUK.definitions.UK_hundredweight]
+    defined_symbol = "UK_cwt"
+    value = "long_hundredweight"
+
+    [group.AvoirdupoisUK.definitions.UK_ton]
+    value = "long_ton"
+
 
     """
 
@@ -291,6 +283,7 @@ class GroupDefinition(
     def from_dict_and_config(cls, d, config) -> GroupDefinition:
         name = d["name"]
         using_group_names = d.get("using_group_names", ())
+
         definitions = []
         for key, value in d["definitions"].items():
             dat=copy.copy(value)
@@ -299,4 +292,147 @@ class GroupDefinition(
         
         return cls(
             name, using_group_names, definitions
+        )
+
+@dataclass(frozen=True)
+class SystemDefinition(
+    system.SystemDefinition
+):
+    """Definition of a system.
+
+        [system.<name>]
+        using = [
+            "<group 1>",
+            ...
+            "<group N>",
+        ]
+        rules = [
+            "<unit 1>: <base unit 1>",
+            ...
+            "<unit N>: <base unit N>",
+        ]
+
+    The syntax for the rule is:
+
+        new_unit_name : old_unit_name
+
+    where:
+        - old_unit_name: a root unit part which is going to be removed from the system.
+        - new_unit_name: a non root unit which is going to replace the old_unit.
+
+    If the new_unit_name and the old_unit_name, the later and the colon can be omitted.
+
+    See Rule for more parsing related information.
+
+    Example::
+
+    [system.Planck]
+    using_group_names = [
+        "international",
+    ]
+    rules = [
+        "planck_length: meter",
+        "planck_mass: gram",
+        "planck_time: second",
+        "planck_current: ampere",
+        "planck_temperature: kelvin",
+    ]
+
+    """
+
+    @classmethod
+    def from_dict_and_config(cls, d, config) -> SystemDefinition:
+        name = d["name"]
+        using_group_names = d.get("using_group_names", ())
+
+        rules = []
+        for dat in d["rules"]:
+            dat = [item.strip() for item in dat.split(":")]
+            rules.append(system.BaseUnitRule(*dat))
+
+        return cls(
+            name, using_group_names, rules
+        )
+
+        
+@dataclass(frozen=True)
+class ContextDefinition(
+    context.ContextDefinition
+):
+    """Definition of a context.
+
+        [context.<name>]
+        aliases = [
+            "<alias 1>",
+            ...
+            "<alias N>",
+        ]
+        relations = [
+            # can establish unidirectional relationships between dimensions:
+            "[dimension 1] -> [dimension A]: <equation 1>",
+            # can establish bidirectional relationships between dimensions:
+            "[dimension 2] <-> [dimension B]: <equation 2>",
+            ...
+            "[dimension N] -> [dimension Z]: <equation N>",
+        ]
+        [context.<name>.defaults]
+        # default parameters can be defined for use in equations
+        <parameter 1> = "<value 1>"
+        ...
+        <parameter N> = "<value N>"        
+
+    See ForwardRelation and BidirectionalRelation for more parsing related information.
+
+    Example::
+
+        [context.chemistry]
+        aliases = [
+            "chem",
+        ]
+        relations = [
+            "[substance] -> [mass]: value * mw",
+            "[mass] -> [substance]: value / mw",
+            "[substance] / [volume] -> [mass] / [volume]: value * mw",
+            "[mass] / [volume] -> [substance] / [volume]: value / mw",
+            "[substance] / [mass] -> [mass] / [mass]: value * mw",
+            "[mass] / [mass] -> [substance] / [mass]: value / mw",
+            "[substance] / [volume] -> [substance]: value * volume",
+            "[substance] -> [substance] / [volume]: value / volume",
+            "[substance] / [mass] -> [substance]: value * solvent_mass",
+            "[substance] -> [substance] / [mass]: value / solvent_mass",
+            "[substance] / [mass] -> [substance]/[volume]: value * solvent_mass / volume",
+            "[substance] / [volume] -> [substance] / [mass]: value / solvent_mass * volume",
+        ]
+
+        [context.chemistry.defaults]
+        mw = "0"
+        volume = "0"
+        solvent_mass = "0"
+
+    """
+
+    @classmethod
+    def from_dict_and_config(cls, d, config) -> ContextDefinition:
+        name = d["name"]
+        aliases = d.get("aliases", ())
+        defaults = d.get("defaults", {})
+        relations = []
+
+        for dat in d["relations"]:
+            dat, eqn = dat.split(":")
+            if "<->" in dat:
+                src, dst = dat.split("<->")
+                obj = context.BidirectionalRelation
+            else:
+                src, dst = dat.split("->")
+                obj = context.ForwardRelation
+            src = to_units_container(src)
+            dst = to_units_container(dst)
+            relations.append(
+                obj(src, dst, eqn)
+            )
+        redefinitions = d.get("redefinitions", {})
+
+        return cls(
+            name,aliases,  defaults, relations, redefinitions
         )

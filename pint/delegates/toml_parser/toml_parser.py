@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pathlib
 import typing as ty
-import toml
+import tomllib 
 import copy
 
 import flexcache as fc
@@ -75,8 +75,8 @@ class TomlParser:
             'unit': plain.UnitDefinition,
             'prefix': plain.PrefixDefinition,
             'dimension': plain.DerivedDimensionDefinition,
-            # 'system': system.SystemDefinition,
-            # 'context': context.ContextDefinition,
+            'system': plain.SystemDefinition,
+            'context': plain.ContextDefinition,
             'group': plain.GroupDefinition,
         }
         for definition_type in parsed_project.keys():
@@ -135,8 +135,8 @@ class TomlParser:
     def parse_file(
         self, filename: pathlib.Path | str, cfg: ParserConfig | None = None
     ) -> dict:
-        with open(filename, 'r', encoding="utf-8") as f:
-            data = toml.load(f)
+        with open(filename, 'rb') as f:
+            data = tomllib.load(f)
         return data
 
     def parse_string(
