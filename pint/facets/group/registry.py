@@ -91,12 +91,12 @@ class GenericGroupRegistry(
         self._group_definitions.append(gd)
         if gd.name in self._groups:
             raise ValueError(f"Group {gd.name} already present in registry")
-        # try:
+        try:
             # As a Group is a SharedRegistryObject
             # it adds itself to the registry.
-        self.Group.from_definition(gd)
-        # except KeyError as e:
-        #     raise errors.DefinitionSyntaxError(f"unknown dimension {e} in context")
+            self.Group.from_definition(gd)
+        except KeyError as e:
+            raise errors.DefinitionSyntaxError(f"unknown dimension {e} in context")
 
     def get_group(self, name: str, create_if_needed: bool = True) -> objects.Group:
         """Return a Group.
