@@ -44,7 +44,7 @@ jobs:
           pip install .
 
       - name: Build documentation
-        run: sphinx-build -n -j auto -b html -d build/doctrees docs build/html
+        run: sphinx-build -n -b html -d build/doctrees docs build/html
 
       - name: Doc Tests
-        run: sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest
+        run: sphinx-build -a -b doctest -d build/doctrees docs build/doctest
