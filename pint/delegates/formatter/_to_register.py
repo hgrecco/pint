@@ -8,8 +8,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Iterable
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np

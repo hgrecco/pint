@@ -12,7 +12,8 @@
 from __future__ import annotations
 
 import locale
-from typing import TYPE_CHECKING, Any, Iterable, Literal
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, Literal
 
 from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse

@@ -19,12 +19,8 @@ from numbers import Number
 from typing import (
     Any,
     NoReturn,
+    TypeAlias,  # noqa
 )
-
-if sys.version_info >= (3, 10):
-    from typing import TypeAlias  # noqa
-else:
-    from typing_extensions import TypeAlias  # noqa
 
 if sys.version_info >= (3, 11):
     from typing import Self  # noqa

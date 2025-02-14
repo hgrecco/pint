@@ -304,7 +304,7 @@ def pi_theorem(quantities: dict[str, Any], registry: UnitRegistry | None = None)
 
 def solve_dependencies(
     dependencies: dict[TH, set[TH]],
-) -> Generator[set[TH], None, None]:
+) -> Generator[set[TH]]:
     """Solve a dependency graph.
 
     Parameters
