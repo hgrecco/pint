@@ -34,6 +34,7 @@ dependencies = [
 ]
 
 [tool.hatch.build]
+packages = ["pint"]
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
