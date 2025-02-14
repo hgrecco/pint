@@ -17,8 +17,6 @@ jobs:
     strategy:
       matrix:
         environment:
-          - test-py39
-          - test-py310
           - test-py311
           - test-py312
           - test-py313
@@ -26,14 +24,14 @@ jobs:
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - environment: "test-py310" # Minimal versions
+          - environment: "test-py311" # Minimal versions
             numpy: "numpy>=1.23,<2.0.0"
             extras: matplotlib==3.5.3
-          - environment: "test-py310"
+          - environment: "test-py311"
             numpy: "numpy"
             uncertainties: "uncertainties"
             extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 mip>=1.13"
-          - environment: "test-py310"
+          - environment: "test-py311"
             numpy: "numpy==1.26.1"
             uncertainties: null
             extras: "babel==2.15 matplotlib==3.9.0"
@@ -78,8 +76,6 @@ jobs:
     strategy:
       matrix:
         environment:
-          - test-py39
-          - test-py310
           - test-py311
           - test-py312
           - test-py313
@@ -99,8 +95,6 @@ jobs:
     strategy:
       matrix:
         environment:
-          - test-py39
-          - test-py310
           - test-py311
           - test-py312
           - test-py313
