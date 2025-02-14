@@ -92,6 +92,7 @@ pint = { path = ".", editable = true }
 dev = { features = ["numpy", "dev", "py313"], solve-group = "default" }
 lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
+typecheck = { features = ["typecheck"], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
 test-full = { features = ["test-full"], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
@@ -153,6 +154,13 @@ publish = "uv publish"
 test = "pytest --benchmark-skip"
 bench = "pytest --benchmark-only"
 
+[tool.pixi.feature.typecheck.dependencies]
+pyright = "*"
+pip = "*"
+
+[tool.pixi.feature.typecheck.tasks]
+typecheck = "pyright"
+
 [tool.pixi.feature.py39.dependencies]
 python = "3.9.*"
 
@@ -167,3 +175,14 @@ python = "3.12.*"
 
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
+
+[tool.pyright]
+include = ["pint"]
+exclude = ["pint/testsuite"]
+
+[tool.pyright.defineConstant]
+HAS_BABEL = true
+HAS_UNCERTAINTIES = true
+HAS_NUMPY = true
+AS_MIP = true
+HAS_DASK = true
