@@ -64,7 +64,6 @@ jobs:
         run: |
           sudo apt install -y graphviz
           pip install packaging
-          pip install .[testbase]
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
