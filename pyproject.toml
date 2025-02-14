@@ -39,8 +39,8 @@ include = ["pint/default_en.txt", "pint/constants_en.txt"]
 [project.optional-dependencies]
 test = ["pytest", "pytest-cov", "pytest-subtests", "pytest-benchmark"]
 test-mpl = ["pytest-mpl"]
-test-full = ["pint[test, test-mpl]"]
-codspeed = ["pint[test-full]", "pytest-codspeed"]
+test-all = ["pint[test, test-mpl]"]
+codspeed = ["pint[test-all]", "pytest-codspeed"]
 numpy = ["numpy >= 1.23"]
 uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel <= 2.8"]
@@ -49,7 +49,7 @@ xarray = ["xarray"]
 dask = ["dask"]
 mip = ["mip >= 1.13"]
 matplotlib = ["matplotlib"]
-full = [
+all = [
   "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,mip,matplotlib]",
 ]
 
@@ -92,11 +92,11 @@ lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
 typecheck = { features = ["typecheck"], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
-test-full = { features = ["test-full"], solve-group = "default" }
+test-all = { features = ["test-all"], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
-# When pint[full] works in pixi, this will be easier.
-full = { features = [
+# When pint[all] works in pixi, this will be easier.
+all = { features = [
   "test",
   "test-mpl",
   "codspeed",
@@ -116,9 +116,9 @@ test-py313 = ["test", "py313"]
 test-py311-numpy = ["numpy", "test", "py311"]
 test-py312-numpy = ["numpy", "test", "py312"]
 test-py313-numpy = ["numpy", "test", "py313"]
-test-py311-full = ["full", "test", "py311"]
-test-py312-full = ["full", "test", "py312"]
-test-py313-full = ["full", "test", "py313"]
+test-py311-all = ["all", "test", "py311"]
+test-py312-all = ["all", "test", "py312"]
+test-py313-all = ["all", "test", "py313"]
 
 [tool.pixi.feature.dev.dependencies]
 tomlkit = "*"
