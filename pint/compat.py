@@ -18,27 +18,12 @@ from importlib import import_module
 from numbers import Number
 from typing import (
     Any,
+    Never,  # noqa
     NoReturn,
+    Self,  # noqa
     TypeAlias,  # noqa
+    Unpack,  # noqa
 )
-
-if sys.version_info >= (3, 11):
-    from typing import Self  # noqa
-else:
-    from typing_extensions import Self  # noqa
-
-
-if sys.version_info >= (3, 11):
-    from typing import Never  # noqa
-else:
-    from typing_extensions import Never  # noqa
-
-
-if sys.version_info >= (3, 11):
-    from typing import Unpack  # noqa
-else:
-    from typing_extensions import Unpack  # noqa
-
 
 if sys.version_info >= (3, 13):
     from warnings import deprecated  # noqa
