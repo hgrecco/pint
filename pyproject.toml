@@ -20,13 +20,11 @@ classifiers = [
   "Programming Language :: Python",
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development :: Libraries",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 keywords = ["physical", "quantities", "unit", "conversion", "science"]
 dependencies = [
   "platformdirs>=2.1.0",
@@ -112,18 +110,12 @@ full = { features = [
   "matplotlib",
 ], solve-group = "default" }
 
-test-py39 = ["test", "py39"]
-test-py310 = ["test", "py310"]
 test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
-test-py39-numpy = ["numpy", "test", "py39"]
-test-py310-numpy = ["numpy", "test", "py310"]
 test-py311-numpy = ["numpy", "test", "py311"]
 test-py312-numpy = ["numpy", "test", "py312"]
 test-py313-numpy = ["numpy", "test", "py313"]
-test-py39-full = ["full", "test", "py39"]
-test-py310-full = ["full", "test", "py310"]
 test-py311-full = ["full", "test", "py311"]
 test-py312-full = ["full", "test", "py312"]
 test-py313-full = ["full", "test", "py313"]
@@ -160,12 +152,6 @@ pip = "*"
 
 [tool.pixi.feature.typecheck.tasks]
 typecheck = "pyright"
-
-[tool.pixi.feature.py39.dependencies]
-python = "3.9.*"
-
-[tool.pixi.feature.py310.dependencies]
-python = "3.10.*"
 
 [tool.pixi.feature.py311.dependencies]
 python = "3.11.*"
