@@ -440,9 +440,10 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     # NP2: Remove this when we only support np>=2.0
     @helpers.requires_array_function_protocol()
+    @helpers.requires_numpy_previous_than("2.0")
     def test_trapz(self):
         helpers.assert_quantity_equal(
-            np.trapezoid([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
+            np.trapz([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
             7.5 * self.ureg.J * self.ureg.m,
         )
 

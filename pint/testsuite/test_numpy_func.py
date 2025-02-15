@@ -195,7 +195,24 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         # TODO (#905 follow-up): test that NotImplemented is returned when upcast types
         # present
 
+    @helpers.requires_numpy_previous_than("2.0")
     def test_trapz(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            t = self.Q_(np.array([0.0, 4.0, 8.0]), "degC")
+            z = self.Q_(np.array([0.0, 2.0, 4.0]), "m")
+            helpers.assert_quantity_equal(
+                np.trapz(t, x=z), self.Q_(1108.6, "kelvin meter")
+            )
+
+    @helpers.requires_numpy_at_least("2.0")
+    def test_trapezoid(self):
         with ExitStack() as stack:
             stack.callback(
                 setattr,
