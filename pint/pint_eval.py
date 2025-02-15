@@ -65,7 +65,7 @@ def _power(left: Any, right: Any) -> Any:
 
 # https://stackoverflow.com/a/1517965/1291237
 class tokens_with_lookahead:
-    def __init__(self, iter):
+    def __init__(self, iter) -> None:
         self.iter = iter
         self.buffer = []
 
@@ -95,7 +95,7 @@ def _plain_tokenizer(input_string):
 
 
 def uncertainty_tokenizer(input_string):
-    def _number_or_nan(token):
+    def _number_or_nan(token) -> bool:
         if token.type == tokenlib.NUMBER or (
             token.type == tokenlib.NAME and token.string == "nan"
         ):
@@ -321,7 +321,7 @@ class EvalTreeNode:
         left: EvalTreeNode | TokenInfo,
         operator: TokenInfo | None = None,
         right: EvalTreeNode | None = None,
-    ):
+    ) -> None:
         self.left = left
         self.operator = operator
         self.right = right

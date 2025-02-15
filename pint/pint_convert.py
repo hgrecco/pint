@@ -71,7 +71,7 @@ ureg.enable_contexts("Gau", "ESU", "sp", "energy", "boltzmann")
 ureg.default_system = args.system
 
 
-def _set(key: str, value):
+def _set(key: str, value) -> None:
     obj = ureg._units[key].converter
     object.__setattr__(obj, "scale", value)
 
@@ -170,7 +170,7 @@ if args.unc:
     ureg._build_cache()
 
 
-def convert(u_from, u_to=None, unc=None, factor=None):
+def convert(u_from, u_to=None, unc=None, factor=None) -> None:
     prec_unc = 0
     q = ureg.Quantity(u_from)
     fmt = f".{args.prec}g"
@@ -206,7 +206,7 @@ def use_unc(num, fmt, prec_unc):
     return max(0, min(prec_unc, unc))
 
 
-def main():
+def main() -> None:
     convert(args.fr, args.to)
 
 
