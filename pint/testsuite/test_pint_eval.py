@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from pint.pint_eval import _plain_tokenizer as plain_tokenizer
-from pint.pint_eval import build_eval_tree, uncertainty_tokenizer
+from pint.pint_eval import build_eval_tree, plain_tokenizer, uncertainty_tokenizer
 from pint.util import string_preprocessor
 
 TOKENIZERS = (plain_tokenizer, uncertainty_tokenizer)

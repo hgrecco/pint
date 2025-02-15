@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from pint.pint_eval import _plain_tokenizer as plain_tokenizer
-from pint.pint_eval import uncertainty_tokenizer
+from pint.pint_eval import plain_tokenizer, uncertainty_tokenizer
 
 VALUES = [
     "1",
