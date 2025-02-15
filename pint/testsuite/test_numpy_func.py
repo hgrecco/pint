@@ -210,6 +210,7 @@ class TestNumPyFuncUtils(TestNumpyMethods):
                 np.trapezoid(t, x=z), self.Q_(1108.6, "kelvin meter")
             )
 
+    @helpers.requires_numpy_at_least("2.0")
     def test_trapz_no_autoconvert(self):
         t = self.Q_(np.array([0.0, 4.0, 8.0]), "degC")
         z = self.Q_(np.array([0.0, 2.0, 4.0]), "m")
