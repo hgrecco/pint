@@ -18,4 +18,8 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.1
         with:
           environments: docs
+      - name: Install locales
+        run: |
+          sudo apt-get install language-pack-fr
+          sudo localedef -i fr_FR -f UTF-8 fr_FR
       - run: pixi run --environment docs doctest
