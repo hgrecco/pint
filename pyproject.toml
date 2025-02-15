@@ -53,6 +53,25 @@ matplotlib = ["matplotlib"]
 all = [
   "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,mip,matplotlib]",
 ]
+docs = [
+  "sphinx>=6",
+  "ipython<=8.12",
+  "nbsphinx",
+  "jupyter_client",
+  "ipykernel",
+  "graphviz",
+  "pooch",
+  "sparse",
+  "Serialize",
+  "pygments>=2.4",
+  "sphinx-book-theme>=1.1.0",
+  "sphinx_copybutton",
+  "sphinx_design",
+  "docutils",                 #==0.14",
+  "commonmark==0.8.1",
+  "recommonmark==0.5.0",
+  "babel",
+]
 
 [project.urls]
 Homepage = "https://github.com/hgrecco/pint"
@@ -96,6 +115,16 @@ test = { features = ["test"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
+docs = { features = [
+  "docs",
+  "numpy",
+  "mip",
+  "matplotlib",
+  "dask",
+  "xarray",
+  "test",
+  "py311",
+] }
 # When pint[all] works in pixi, this will be easier.
 all = { features = [
   "test",
@@ -153,6 +182,16 @@ pip = "*"
 
 [tool.pixi.feature.typecheck.tasks]
 typecheck = "pyright"
+
+[tool.pixi.feature.docs.pypi-dependencies]
+pint = { path = ".", editable = true }
+
+[tool.pixi.feature.docs.tasks]
+docbuild = "sphinx-build -n -j auto -b html -d build/doctrees docs build/html"
+doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest"
+
+[tool.pixi.feature.docs.dependencies]
+pandoc = "*"
 
 [tool.pixi.feature.py311.dependencies]
 python = "3.11.*"
