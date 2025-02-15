@@ -10,8 +10,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from numbers import Number
-from typing import Iterable
 
 from .delegates.formatter._format_helpers import (
     _PRETTY_EXPONENTS,  # noqa: F401

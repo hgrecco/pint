@@ -13,12 +13,11 @@ import datetime
 import locale
 import numbers
 import operator
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
-    Iterable,
     TypeVar,
     overload,
 )

@@ -4,6 +4,11 @@ Pint Changelog
 0.25.0 (unreleased)
 -------------------
 
+- Bump minimum Python version to 3.11.:
+- Upgrade code to Python 3.11.
+- Move to pixi/uv/ruff.
+- Refactor compat to make it easier to test.
+- Implemented several pixi environment and tasks to simplify development.
 - Add docs to the functions in ``pint.testing`` (PR #2070)
 - Fix round function returning float instead of int (#2081)
 - Fix return type of `PlainQuantity.to` (#2088)

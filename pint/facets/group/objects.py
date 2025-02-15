@@ -107,7 +107,7 @@ class Group(SharedRegistryObject):
         for name in self._used_by:
             d[name].invalidate_members()
 
-    def iter_used_groups(self) -> Generator[tuple[str, Group], None, None]:
+    def iter_used_groups(self) -> Generator[tuple[str, Group]]:
         pending = set(self._used_groups)
         d = self._REGISTRY._groups
         while pending:

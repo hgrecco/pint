@@ -36,7 +36,7 @@ else:
     NUMPY_OP2_MATH = (np.add, np.subtract, np.multiply, np.true_divide)
 
 
-def float_range(n: int) -> Generator[float, None, None]:
+def float_range(n: int) -> Generator[float]:
     return (float(x) for x in range(1, n + 1))
 
 
