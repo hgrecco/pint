@@ -14,8 +14,10 @@ if TYPE_CHECKING:
 
 
 HAS_NUMPY = False
+HAS_AUTOUNCERTAINTIES = False
+
 if TYPE_CHECKING:
-    from .compat import HAS_NUMPY
+    from .compat import HAS_NUMPY, HAS_AUTOUNCERTAINTIES
 
 if HAS_NUMPY:
     from .compat import np
@@ -26,8 +28,12 @@ else:
     Scalar: TypeAlias = Union[float, int, Decimal, Fraction]
     Array: TypeAlias = Never
 
+if HAS_AUTOUNCERTAINTIES:
+    from auto_uncertainties import Uncertainty
+else:
+    Uncertainty: TypeAlias = Never
 # TODO: Change when Python 3.10 becomes minimal version.
-Magnitude = Union[Scalar, Array]
+Magnitude = Union[Scalar, Array, Uncertainty]
 
 UnitLike = Union[str, dict[str, Scalar], "UnitsContainer", "Unit"]
 

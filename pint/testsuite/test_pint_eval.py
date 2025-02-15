@@ -142,6 +142,12 @@ class TestPintEval:
             ("3 kg + 5", "((3 * kg) + 5)"),
             ("(5 % 2) m", "((5 % 2) * m)"),  # mod operator
             ("(5 // 2) m", "((5 // 2) * m)"),  # floordiv operator
+            # Uncertainties
+            ("3 +/- 5", "(3 ± 5)"),
+            ("3 ± 5", "(3 ± 5)"),
+            ("3 +- 5", "(3 ± 5)"),
+            ("2 * (3 +- 5)", "(2 * (3 ± 5))"),
+            ("(3 +- 5)^2", "((3 ± 5) ** 2)"),
         ),
     )
     def test_preprocessed_eval_tree(self, input_text, parsed):
