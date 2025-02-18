@@ -55,8 +55,8 @@ class TestConverter:
     @helpers.requires_numpy
     def test_converter_inplace(self):
         for c in (ScaleConverter(20.0), OffsetConverter(20.0, 2)):
-            fun1 = lambda x, y: c.from_reference(c.to_reference(x, y), y)# noqa: E731
-            fun2 = lambda x, y: c.to_reference(c.from_reference(x, y), y)# noqa: E731
+            fun1 = lambda x, y: c.from_reference(c.to_reference(x, y), y)  # noqa: E731
+            fun2 = lambda x, y: c.to_reference(c.from_reference(x, y), y)  # noqa: E731
             for fun, (inplace, comp) in itertools.product(
                 (fun1, fun2), ((True, True), (False, False))
             ):
@@ -75,14 +75,10 @@ class TestConverter:
         c = LogarithmicConverter(scale=1, logbase=10, logfactor=1)
 
         def from_to(value, inplace):
-            return c.from_reference(
-                    c.to_reference(value, inplace), inplace
-                )
+            return c.from_reference(c.to_reference(value, inplace), inplace)
 
         def to_from(value, inplace):
-            return c.to_reference(
-                    c.from_reference(value, inplace), inplace
-                )
+            return c.to_reference(c.from_reference(value, inplace), inplace)
 
         for fun, (inplace, comp) in itertools.product(
             (from_to, to_from), ((True, True), (False, False))

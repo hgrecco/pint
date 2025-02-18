@@ -1,11 +1,11 @@
 """
-    pint.util
-    ~~~~~~~~~
+pint.util
+~~~~~~~~~
 
-    Miscellaneous functions for pint.
+Miscellaneous functions for pint.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

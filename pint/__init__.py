@@ -1,14 +1,14 @@
 """
-    pint
-    ~~~~
+pint
+~~~~
 
-    Pint is Python module/package to define, operate and manipulate
-    **physical quantities**: the product of a numerical value and a
-    unit of measurement. It allows arithmetic operations between them
-    and conversions from and to different units.
+Pint is Python module/package to define, operate and manipulate
+**physical quantities**: the product of a numerical value and a
+unit of measurement. It allows arithmetic operations between them
+and conversions from and to different units.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

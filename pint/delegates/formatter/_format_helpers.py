@@ -1,13 +1,12 @@
 """
-    pint.delegates.formatter._format_helpers
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter._format_helpers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Convenient functions to help string formatting operations.
+Convenient functions to help string formatting operations.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
-
 
 from __future__ import annotations
 
@@ -101,7 +100,7 @@ def override_locale(
 def pretty_fmt_exponent(num: Number) -> str:
     """Format an number into a pretty printed exponent."""
     # unicode dot operator (U+22C5) looks like a superscript decimal
-    ret = f"{num:n}".replace("-", "⁻").replace(".", "\u22C5")
+    ret = f"{num:n}".replace("-", "⁻").replace(".", "\u22c5")
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret

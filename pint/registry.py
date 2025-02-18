@@ -1,15 +1,15 @@
 """
-    pint.registry
-    ~~~~~~~~~~~~~
+pint.registry
+~~~~~~~~~~~~~
 
-    Defines the UnitRegistry, a class to contain units and their relations.
+Defines the UnitRegistry, a class to contain units and their relations.
 
-    This registry contains all pint capabilities, but you can build your
-    customized registry by picking only the features that you actually
-    need.
+This registry contains all pint capabilities, but you can build your
+customized registry by picking only the features that you actually
+need.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

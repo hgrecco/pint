@@ -1,9 +1,9 @@
 """
-    pint.facets.context.registry
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.context.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -276,32 +276,32 @@ class GenericContextRegistry(
         >>> import pint.facets.context.objects
         >>> import pint
         >>> ureg = pint.UnitRegistry()
-        >>> ureg.add_context(pint.facets.context.objects.Context('one'))
-        >>> ureg.add_context(pint.facets.context.objects.Context('two'))
-        >>> with ureg.context('one'):
+        >>> ureg.add_context(pint.facets.context.objects.Context("one"))
+        >>> ureg.add_context(pint.facets.context.objects.Context("two"))
+        >>> with ureg.context("one"):
         ...     pass
 
         If a context has an argument, you can specify its value as a keyword argument:
 
-        >>> with ureg.context('one', n=1):
+        >>> with ureg.context("one", n=1):
         ...     pass
 
         Multiple contexts can be entered in single call:
 
-        >>> with ureg.context('one', 'two', n=1):
+        >>> with ureg.context("one", "two", n=1):
         ...     pass
 
         Or nested allowing you to give different values to the same keyword argument:
 
-        >>> with ureg.context('one', n=1):
-        ...     with ureg.context('two', n=2):
+        >>> with ureg.context("one", n=1):
+        ...     with ureg.context("two", n=2):
         ...         pass
 
         A nested context inherits the defaults from the containing context:
 
-        >>> with ureg.context('one', n=1):
+        >>> with ureg.context("one", n=1):
         ...     # Here n takes the value of the outer context
-        ...     with ureg.context('two'):
+        ...     with ureg.context("two"):
         ...         pass
         """
         # Enable the contexts.
@@ -336,9 +336,11 @@ class GenericContextRegistry(
 
         Examples
         --------
-        >>> @ureg.with_context('sp')
+        >>> @ureg.with_context("sp")
         ... def my_cool_fun(wavelength):
-        ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
+        ...     print(
+        ...         "This wavelength is equivalent to: %s", wavelength.to("terahertz")
+        ...     )
         """
 
         def decorator(func):
