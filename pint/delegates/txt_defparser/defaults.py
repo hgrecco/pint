@@ -1,14 +1,14 @@
 """
-    pint.delegates.txt_defparser.defaults
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.txt_defparser.defaults
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Definitions for parsing Default sections.
+Definitions for parsing Default sections.
 
-    See each one for a slighly longer description of the
-    syntax.
+See each one for a slighly longer description of the
+syntax.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
