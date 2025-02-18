@@ -13,7 +13,7 @@ from collections import ChainMap, defaultdict
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, Any, Generic, Protocol
 
-from ..._typing import Magnitude
+from ..._typing import Magnitude, UnitLike
 from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit, UnitDefinition
 from ...util import UnitsContainer, to_units_container
 from .definitions import ContextDefinition
@@ -28,8 +28,6 @@ class Transformation(Protocol):
     ) -> PlainQuantity:
         ...
 
-
-from ..._typing import UnitLike
 
 ToBaseFunc = Callable[[UnitsContainer], UnitsContainer]
 SrcDst = tuple[UnitsContainer, UnitsContainer]

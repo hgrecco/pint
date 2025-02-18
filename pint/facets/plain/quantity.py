@@ -1401,10 +1401,10 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             )
         return op(self.to_root_units().magnitude, other.to_root_units().magnitude)
 
-    __lt__ = lambda self, other: self.compare(other, op=operator.lt)
-    __le__ = lambda self, other: self.compare(other, op=operator.le)
-    __ge__ = lambda self, other: self.compare(other, op=operator.ge)
-    __gt__ = lambda self, other: self.compare(other, op=operator.gt)
+    __lt__ = lambda self, other: self.compare(other, op=operator.lt)  # noqa: E731
+    __le__ = lambda self, other: self.compare(other, op=operator.le)  # noqa: E731
+    __ge__ = lambda self, other: self.compare(other, op=operator.ge)  # noqa: E731
+    __gt__ = lambda self, other: self.compare(other, op=operator.gt)  # noqa: E731
 
     def __bool__(self) -> bool:
         # Only cast when non-ambiguous (when multiplicative unit)

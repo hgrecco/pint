@@ -159,9 +159,9 @@ class TestToUnitsContainer:
 class TestParseHelper:
     def test_basic(self):
         # Parse Helper ar mutables, so we build one everytime
-        x = lambda: ParserHelper(1, meter=2)
-        xp = lambda: ParserHelper(1, meter=2)
-        y = lambda: ParserHelper(2, meter=2)
+        x = lambda: ParserHelper(1, meter=2)  # noqa: E731
+        xp = lambda: ParserHelper(1, meter=2)  # noqa: E731
+        y = lambda: ParserHelper(2, meter=2)  # noqa: E731
 
         assert x() == xp()
         assert x() != y()
@@ -179,9 +179,9 @@ class TestParseHelper:
 
     def test_calculate(self):
         # Parse Helper ar mutables, so we build one everytime
-        x = lambda: ParserHelper(1.0, meter=2)
-        y = lambda: ParserHelper(2.0, meter=-2)
-        z = lambda: ParserHelper(2.0, meter=2)
+        x = lambda: ParserHelper(1.0, meter=2)  # noqa: E731
+        y = lambda: ParserHelper(2.0, meter=-2)  # noqa: E731
+        z = lambda: ParserHelper(2.0, meter=2)  # noqa: E731
 
         assert x() * 4.0 == ParserHelper(4.0, meter=2)
         assert x() * y() == ParserHelper(2.0)
@@ -199,7 +199,7 @@ class TestParseHelper:
         token = next(pint_eval.tokenizer(expression))
         actual = ParserHelper.eval_token(token)
         assert expected == actual
-        assert type(expected) == type(actual)
+        assert type(expected) is type(actual)
 
     def test_eval_token(self):
         self._test_eval_token(1000.0, "1e3")

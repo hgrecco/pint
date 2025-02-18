@@ -27,10 +27,10 @@ class TestPiTheorem(QuantityTestCase):
         T = "ms"
         L = "cm"
 
-        f1 = lambda x: x
-        f2 = lambda x: self.Q_(1, x)
-        f3 = lambda x: self.Q_(1, x).units
-        f4 = lambda x: self.Q_(1, x).dimensionality
+        f1 = lambda x: x  # noqa: E731
+        f2 = lambda x: self.Q_(1, x)  # noqa: E731
+        f3 = lambda x: self.Q_(1, x).units  # noqa: E731
+        f4 = lambda x: self.Q_(1, x).dimensionality  # noqa: E731
 
         fs = f1, f2, f3, f4
         for fv, ft, fl in itertools.product(fs, fs, fs):

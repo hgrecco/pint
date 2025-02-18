@@ -10,10 +10,9 @@ import pytest
 import pint
 from pint.facets.plain import UnitDefinition
 
-FS_SLEEP = 0.010
-
-
 from .helpers import internal
+
+FS_SLEEP = 0.010
 
 
 @pytest.fixture

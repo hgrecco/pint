@@ -104,7 +104,7 @@ def formatter(
         return ""
 
     if as_ratio:
-        fun = lambda x: exp_call(abs(x))
+        fun = lambda x: exp_call(abs(x))  # noqa: E731
     else:
         fun = exp_call
 

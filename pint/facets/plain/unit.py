@@ -218,10 +218,10 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         return NotImplemented
 
-    __lt__ = lambda self, other: self.compare(other, op=operator.lt)
-    __le__ = lambda self, other: self.compare(other, op=operator.le)
-    __ge__ = lambda self, other: self.compare(other, op=operator.ge)
-    __gt__ = lambda self, other: self.compare(other, op=operator.gt)
+    __lt__ = lambda self, other: self.compare(other, op=operator.lt)  # noqa: E731
+    __le__ = lambda self, other: self.compare(other, op=operator.le)  # noqa: E731
+    __ge__ = lambda self, other: self.compare(other, op=operator.ge)  # noqa: E731
+    __gt__ = lambda self, other: self.compare(other, op=operator.gt)  # noqa: E731
 
     def __int__(self) -> int:
         return int(self._REGISTRY.Quantity(1, self._units))

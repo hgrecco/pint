@@ -77,7 +77,7 @@ class HTMLFormatter(BaseFormatter):
                     )
 
         m = _EXP_PATTERN.match(mstr)
-        _exp_formatter = lambda s: f"<sup>{s}</sup>"
+        _exp_formatter = lambda s: f"<sup>{s}</sup>"  # noqa: E731
 
         if m:
             exp = int(m.group(2) + m.group(3))
