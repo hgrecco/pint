@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: prefix-dev/setup-pixi@v0.8.2
         with:
           environments: lint
       - run: pixi run --environment lint lint
@@ -37,7 +37,7 @@ jobs:
             extras: "babel==2.15 matplotlib==3.9.0"
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: prefix-dev/setup-pixi@v0.8.2
         with:
           environments: ${{ matrix.environment }}
       - name: Install numpy
@@ -81,7 +81,7 @@ jobs:
         numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: prefix-dev/setup-pixi@v0.8.2
         with:
           environments: ${{ matrix.environment }}
       - name: Install numpy
@@ -100,7 +100,7 @@ jobs:
         numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: prefix-dev/setup-pixi@v0.8.2
         with:
           environments: ${{ matrix.environment }}
       - name: Install numpy
@@ -121,7 +121,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: prefix-dev/setup-pixi@v0.8.2
         with:
           environments: build
       - name: Build the package
