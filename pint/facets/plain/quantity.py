@@ -1383,6 +1383,10 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                         return op(self.to_base_units()._magnitude, other)
                     else:
                         raise OffsetUnitCalculusError(self._units)
+            elif isinstance(
+                other, (numbers.Number, np.number) if HAS_NUMPY else numbers.Number
+            ):
+                return op(self._magnitude, other)
             else:
                 raise ValueError(f"Cannot compare PlainQuantity and {type(other)}")
 
