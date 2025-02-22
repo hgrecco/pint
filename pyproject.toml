@@ -54,7 +54,7 @@ all = [
   "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,mip,matplotlib]",
 ]
 docs = [
-  "sphinx>=6",
+  "sphinx>=6,<8.2",
   "ipython<=8.12",
   "nbsphinx",
   "jupyter_client",
