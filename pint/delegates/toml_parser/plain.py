@@ -23,20 +23,16 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 
-import flexparser as fp
-
 from ...converters import Converter
+from ...facets import context, group, system
 from ...facets.plain import definitions as definitions_
-from ...facets import group 
-from ...facets import system
-from ...facets import context
 from ...util import UnitsContainer, to_units_container
 from ..base_defparser import ParserConfig
 from . import common
 
-import copy
 
 @dataclass(frozen=True)
 class PrefixDefinition(definitions_.PrefixDefinition):
@@ -65,9 +61,7 @@ class PrefixDefinition(definitions_.PrefixDefinition):
     """
 
     @classmethod
-    def from_dict_and_config(
-        cls, d: from_dict, config: ParserConfig
-    ) -> PrefixDefinition:
+    def from_dict_and_config(cls, d: dict, config: ParserConfig) -> PrefixDefinition:
         name = d["name"].strip()
         value = d["value"]
         defined_symbol = d.get("defined_symbol", None)
@@ -137,14 +131,12 @@ class UnitDefinition(definitions_.UnitDefinition):
     """
 
     @classmethod
-    def from_dict_and_config(
-        cls, d: from_dict, config: ParserConfig
-    ) -> UnitDefinition:
+    def from_dict_and_config(cls, d: dict, config: ParserConfig) -> UnitDefinition:
         name = d["name"]
         value = d["value"]
         aliases = d.get("aliases", [])
         defined_symbol = d.get("defined_symbol", None)
-        
+
         if ";" in value:
             [converter, modifiers] = value.split(";", 1)
 
@@ -195,17 +187,12 @@ class DimensionDefinition(definitions_.DimensionDefinition):
     """
 
     @classmethod
-    def from_dict_and_config(
-        cls, d: from_dict, config: ParserConfig
-    ) -> DimensionDefinition:
-
+    def from_dict_and_config(cls, d: dict, config: ParserConfig) -> DimensionDefinition:
         return cls(**d)
 
 
 @dataclass(frozen=True)
-class DerivedDimensionDefinition(
-    definitions_.DerivedDimensionDefinition
-):
+class DerivedDimensionDefinition(definitions_.DerivedDimensionDefinition):
     """Definition of a derived dimension::
 
         [dimension.<name>]
@@ -220,9 +207,9 @@ class DerivedDimensionDefinition(
 
     @classmethod
     def from_dict_and_config(
-        cls, d: from_dict, config: ParserConfig
+        cls, d: dict, config: ParserConfig
     ) -> DerivedDimensionDefinition:
-        name = "["+d["name"]+"]"
+        name = "[" + d["name"] + "]"
         value = d["value"]
 
         try:
@@ -240,9 +227,7 @@ class DerivedDimensionDefinition(
 
 
 @dataclass(frozen=True)
-class GroupDefinition(
-    group.GroupDefinition
-):
+class GroupDefinition(group.GroupDefinition):
     """Definition of a group. Can be composed of other groups.
 
         [group.<name>]
@@ -286,18 +271,15 @@ class GroupDefinition(
 
         definitions = []
         for key, value in d["definitions"].items():
-            dat=copy.copy(value)
-            dat['name']=key
+            dat = copy.copy(value)
+            dat["name"] = key
             definitions.append(UnitDefinition.from_dict_and_config(dat, config))
-        
-        return cls(
-            name, using_group_names, definitions
-        )
+
+        return cls(name, using_group_names, definitions)
+
 
 @dataclass(frozen=True)
-class SystemDefinition(
-    system.SystemDefinition
-):
+class SystemDefinition(system.SystemDefinition):
     """Definition of a system.
 
         [system.<name>]
@@ -350,15 +332,11 @@ class SystemDefinition(
             dat = [item.strip() for item in dat.split(":")]
             rules.append(system.BaseUnitRule(*dat))
 
-        return cls(
-            name, using_group_names, rules
-        )
+        return cls(name, using_group_names, rules)
 
-        
+
 @dataclass(frozen=True)
-class ContextDefinition(
-    context.ContextDefinition
-):
+class ContextDefinition(context.ContextDefinition):
     """Definition of a context.
 
         [context.<name>]
@@ -379,7 +357,7 @@ class ContextDefinition(
         # default parameters can be defined for use in equations
         <parameter 1> = "<value 1>"
         ...
-        <parameter N> = "<value N>"        
+        <parameter N> = "<value N>"
 
     See ForwardRelation and BidirectionalRelation for more parsing related information.
 
@@ -428,11 +406,7 @@ class ContextDefinition(
                 obj = context.ForwardRelation
             src = to_units_container(src)
             dst = to_units_container(dst)
-            relations.append(
-                obj(src, dst, eqn)
-            )
+            relations.append(obj(src, dst, eqn))
         redefinitions = d.get("redefinitions", {})
 
-        return cls(
-            name,aliases,  defaults, relations, redefinitions
-        )
+        return cls(name, aliases, defaults, relations, redefinitions)
