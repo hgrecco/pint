@@ -49,6 +49,11 @@ if sys.version_info >= (3, 13):
 else:
     from typing_extensions import deprecated  # noqa
 
+if sys.version_info >= (3, 11):
+    import tomllib  # noqa
+else:
+    pass
+
 
 def missing_dependency(
     package: str, display_name: str | None = None
