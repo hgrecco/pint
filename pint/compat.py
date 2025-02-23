@@ -239,9 +239,9 @@ HAS_DASK = find_spec("dask") is not None
 try:
     import tomli_w  # noqa: F401
 
-    HAS_TOMLLI_W = True
+    HAS_TOMLI_W = True
 except ImportError:
-    HAS_TOMLLI_W = False
+    HAS_TOMLI_W = False
 
 if sys.version_info >= (3, 11):
     import tomllib  # noqa
@@ -263,10 +263,10 @@ if HAS_TOMLLIB:
 else:
     tomllib = None
 
-if HAS_TOMLLI_W:
+if HAS_TOMLI_W:
     import tomli_w  # noqa: F401
 else:
-    tomllib_w = None
+    tomli_w = None
 
 
 if HAS_BABEL:
