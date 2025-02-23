@@ -263,7 +263,7 @@ class GenericContextRegistry(
     @contextmanager
     def context(
         self: GenericContextRegistry[QuantityT, UnitT], *names: str, **kwargs: Any
-    ) -> Generator[GenericContextRegistry[QuantityT, UnitT], None, None]:
+    ) -> Generator[GenericContextRegistry[QuantityT, UnitT]]:
         """Used as a context manager, this function enables to activate a context
         which is removed after usage.
 

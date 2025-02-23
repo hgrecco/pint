@@ -41,7 +41,7 @@ class Definition:
         for definition in parser.iter_parsed_project(pp):
             if isinstance(definition, Exception):
                 raise errors.DefinitionSyntaxError(str(definition))
-            if not isinstance(definition, (fp.BOS, fp.BOF, fp.BOS)):
+            if not isinstance(definition, (fp.BOS, fp.BOF)):
                 return definition
 
         # TODO: What shall we do in this return path.

@@ -375,11 +375,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # self.Unit will call parse_units
         return self.Unit(item)
 
+    @deprecated(
+        "Calling the getitem method from a UnitRegistry will be removed in future versions of pint.\n"
+        "use `parse_expression` method or use the registry as a callable."
+    )
     def __getitem__(self, item: str) -> UnitT:
-        logger.warning(
-            "Calling the getitem method from a UnitRegistry is deprecated. "
-            "use `parse_expression` method or use the registry as a callable."
-        )
         return self.parse_expression(item)
 
     def __contains__(self, item: str) -> bool:
@@ -1137,7 +1137,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def _yield_unit_triplets(
         self, unit_name: str, case_sensitive: bool
-    ) -> Generator[tuple[str, str, str], None, None]:
+    ) -> Generator[tuple[str, str, str]]:
         """Helper of parse_unit_name."""
 
         stw = unit_name.startswith

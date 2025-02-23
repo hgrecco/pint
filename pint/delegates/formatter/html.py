@@ -12,7 +12,8 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
