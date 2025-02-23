@@ -1,11 +1,11 @@
 """
-    pint.facets.plain
-    ~~~~~~~~~~~~~~~~~
+pint.facets.plain
+~~~~~~~~~~~~~~~~~
 
-    Base implementation for registry, units and quantities.
+Base implementation for registry, units and quantities.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

@@ -12,9 +12,9 @@ np = pytest.importorskip("numpy", reason="NumPy is not available")
 dask = pytest.importorskip("dask", reason="Dask is not available")
 distributed = pytest.importorskip("distributed", reason="Distributed is not available")
 
-from dask.distributed import Client
-from distributed.client import futures_of
-from distributed.utils_test import (  # noqa: F401
+from dask.distributed import Client  # noqa: E402
+from distributed.client import futures_of  # noqa: E402
+from distributed.utils_test import (  # noqa: E402, F401
     cleanup,
     cluster,
     gen_cluster,
@@ -151,8 +151,8 @@ def test_compute_persist_equivalent(local_registry, dask_array, numpy_array):
 
     assert np.all(res_compute == res_persist)
     assert res_compute.units == res_persist.units == units_
-    assert type(res_compute) == local_registry.Quantity
-    assert type(res_persist) == local_registry.Quantity
+    assert type(res_compute) is local_registry.Quantity
+    assert type(res_persist) is local_registry.Quantity
 
 
 @pytest.mark.parametrize("method", ["compute", "persist", "visualize"])

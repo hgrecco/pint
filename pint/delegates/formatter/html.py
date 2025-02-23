@@ -1,12 +1,12 @@
 """
-    pint.delegates.formatter.html
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.html
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements:
-    - HTML: suitable for web/jupyter notebook outputs.
+Implements:
+- HTML: suitable for web/jupyter notebook outputs.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ class HTMLFormatter(BaseFormatter):
                     )
 
         m = _EXP_PATTERN.match(mstr)
-        _exp_formatter = lambda s: f"<sup>{s}</sup>"
+        _exp_formatter = lambda s: f"<sup>{s}</sup>"  # noqa: E731
 
         if m:
             exp = int(m.group(2) + m.group(3))
