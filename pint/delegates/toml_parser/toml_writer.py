@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import fields
 
-import tomli_w
+from ...compat import tomli_w
 
 from ...facets.plain import GenericPlainRegistry
 
