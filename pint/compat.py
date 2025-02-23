@@ -31,11 +31,6 @@ if sys.version_info >= (3, 13):
 else:
     from typing_extensions import deprecated  # noqa
 
-if sys.version_info >= (3, 11):
-    import tomllib  # noqa
-else:
-    tomllib = None
-
 
 def missing_dependency(
     package: str, display_name: str | None = None
@@ -245,6 +240,20 @@ try:
 except ImportError:
     HAS_DASK = False
 
+try:
+    import tomli_w  # noqa: F401
+
+    HAS_TOMLLI_W = True
+except ImportError:
+    HAS_TOMLLI_W = False
+
+if sys.version_info >= (3, 11):
+    import tomllib  # noqa
+
+    HAS_TOMLLIB = True
+else:
+    HAS_TOMLLIB = False
+
 
 ##############################
 # Imports are handled here
@@ -252,6 +261,17 @@ except ImportError:
 # them as constants
 # in mypy configuration.
 ##############################
+
+if HAS_TOMLLIB:
+    import tomllib  # noqa: F401
+else:
+    tomllib = None
+
+if HAS_TOMLLI_W:
+    import tomli_w  # noqa: F401
+else:
+    tomllib_w = None
+
 
 if HAS_BABEL:
     from babel import Locale
