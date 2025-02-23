@@ -1,4 +1,4 @@
-sphinx>=6
+sphinx<8
 ipython<=8.12
 matplotlib
 mip>=1.13
@@ -7,6 +7,7 @@ numpy
 pytest
 jupyter_client
 ipykernel
+ipython
 graphviz
 xarray
 pooch
