@@ -52,7 +52,7 @@ else:
 if sys.version_info >= (3, 11):
     import tomllib  # noqa
 else:
-    pass
+    tomllib = None
 
 
 def missing_dependency(
