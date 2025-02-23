@@ -251,9 +251,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._def_parser = delegates.txt_defparser.DefParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
-        self._toml_parser = delegates.toml_parser.TomlParser(
+        self._toml_parser = delegates.toml_defparser.TomlParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
+        self.write_definitions = lambda x: delegates.write_definitions(x, self)
         self.formatter = delegates.Formatter(self)
         self._filename = filename
         self.force_ndarray = force_ndarray
