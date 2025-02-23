@@ -4,8 +4,8 @@ import copy
 import pathlib
 
 import flexcache as fc
-from ...compat import tomllib
 
+from ...compat import tomllib
 from ..base_defparser import ParserConfig
 from . import plain
 
