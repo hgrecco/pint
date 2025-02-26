@@ -304,6 +304,21 @@ class TestGraph:
         p = find_shortest_path(g, 2, 1)
         assert p == [2, 1]
 
+    def test_shortest_path_densely_connected_2146(self):
+        import itertools
+        g = collections.defaultdict(set)
+        for i, j in itertools.combinations(range(42), 2):
+            g[i].add(j)
+            g[j].add(i)
+        p = find_shortest_path(g, 0, 39)
+        assert p == [0, 39]
+        p = find_shortest_path(g, 0, 41)
+        assert p == [0, 41]
+        p = find_shortest_path(g, 17, 2)
+        assert p == [17, 2]
+        p = find_shortest_path(g, 12, 12)
+        assert p == [12]
+
 
 class TestMatrix:
     def test_matrix_to_string(self):
