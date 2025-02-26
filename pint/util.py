@@ -341,7 +341,7 @@ def solve_dependencies(
 
 
 def find_shortest_path(
-    graph: dict[TH, set[TH]], start: TH, end: TH, path: list[TH] | None = None
+    graph: dict[TH, set[TH]], start: TH, end: TH
 ):
     """Find shortest path between two nodes within a graph.
 
@@ -354,16 +354,13 @@ def find_shortest_path(
         Starting node.
     end
         End node.
-    path
-        Path to prepend to the one found.
-        (default = None, empty path.)
 
     Returns
     -------
     list[TH]
         The shortest path between two nodes.
     """
-    path = (path or []) + [start]
+    path = [start]
     if start == end:
         return path
 
