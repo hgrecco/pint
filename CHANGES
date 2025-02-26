@@ -17,6 +17,7 @@ Pint Changelog
 - Add conductivity dimension. (#2112)
 - Add absorbance unit and dimension. (#2114)
 - Add membrane filtration flux and permeability dimensionality, and shorthand "LMH". (#2116)
+- Fix find_shortest_path to use breadth first search (#2146)
 
 
 0.24.4 (2024-11-07)
