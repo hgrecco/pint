@@ -16,6 +16,7 @@ import operator
 import re
 import tokenize
 import types
+from collections import deque
 from collections.abc import Callable, Generator, Hashable, Iterable, Iterator, Mapping
 from fractions import Fraction
 from functools import lru_cache, partial
@@ -366,19 +367,19 @@ def find_shortest_path(
     if start == end:
         return path
 
-    # TODO: raise ValueError when start not in graph
-    if start not in graph:
-        return None
+    fifo = deque()
+    fifo.append((start, path))
+    visited = set()
+    while fifo:
+        node, path = fifo.popleft()
+        visited.add(node)
+        for adjascent_node in graph[node] - visited:
+            if adjascent_node == end:
+                return path + [adjascent_node]
+            else:
+                fifo.append((adjascent_node, path + [adjascent_node]))
 
-    shortest = None
-    for node in graph[start]:
-        if node not in path:
-            newpath = find_shortest_path(graph, node, end, path)
-            if newpath:
-                if not shortest or len(newpath) < len(shortest):
-                    shortest = newpath
-
-    return shortest
+    return None
 
 
 def find_connected_nodes(
