@@ -304,4 +304,4 @@ class TestMeasurement(QuantityTestCase):
         m = self.Q_(5.0, "meter").plus_minus(0.1)
         # quantity + measurement = measurement
         result = q + m
-        assert isinstance(result, Measurement)
+        assert isinstance(result, self.ureg.Measurement)
