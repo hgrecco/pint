@@ -1,12 +1,13 @@
 """
-    pint.delegates
-    ~~~~~~~~~~~~~~
+pint.delegates
+~~~~~~~~~~~~~~
 
-    Defines methods and classes to handle autonomous tasks.
+Defines methods and classes to handle autonomous tasks.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
+
 from __future__ import annotations
 
 from . import txt_defparser

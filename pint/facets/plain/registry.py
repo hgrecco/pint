@@ -1,23 +1,23 @@
 """
-    pint.facets.plain.registry
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.plain.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 
-    The registry contains the following important methods:
+The registry contains the following important methods:
 
-    - parse_unit_name: Parse a unit to identify prefix, unit name and suffix
-      by walking the list of prefix and suffix.
-      Result is cached: NO
-    - parse_units: Parse a units expression and returns a UnitContainer with
-      the canonical names.
-      The expression can only contain products, ratios and powers of units;
-      prefixed units and pluralized units.
-      Result is cached: YES
-    - parse_expression: Parse a mathematical expression including units and
-      return a quantity object.
-      Result is cached: NO
+- parse_unit_name: Parse a unit to identify prefix, unit name and suffix
+  by walking the list of prefix and suffix.
+  Result is cached: NO
+- parse_units: Parse a units expression and returns a UnitContainer with
+  the canonical names.
+  The expression can only contain products, ratios and powers of units;
+  prefixed units and pluralized units.
+  Result is cached: YES
+- parse_expression: Parse a mathematical expression including units and
+  return a quantity object.
+  Result is cached: NO
 
 """
 
@@ -493,7 +493,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 break
         else:
             raise TypeError(
-                f"No loader function defined " f"for {definition.__class__.__name__}"
+                f"No loader function defined for {definition.__class__.__name__}"
             )
 
         adder_func(definition)

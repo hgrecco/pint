@@ -166,24 +166,22 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @overload
     def __new__(
         cls, value: MagnitudeT, units: UnitLike | None = None
-    ) -> PlainQuantity[MagnitudeT]:
-        ...
+    ) -> PlainQuantity[MagnitudeT]: ...
 
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
-        ...
+    def __new__(
+        cls, value: str, units: UnitLike | None = None
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(
         cls, value: PlainQuantity[Any], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
@@ -831,8 +829,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         ...
 
     @overload
-    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]:
-        ...
+    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
 
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):
@@ -1401,10 +1398,10 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             )
         return op(self.to_root_units().magnitude, other.to_root_units().magnitude)
 
-    __lt__ = lambda self, other: self.compare(other, op=operator.lt)
-    __le__ = lambda self, other: self.compare(other, op=operator.le)
-    __ge__ = lambda self, other: self.compare(other, op=operator.ge)
-    __gt__ = lambda self, other: self.compare(other, op=operator.gt)
+    __lt__ = lambda self, other: self.compare(other, op=operator.lt)  # noqa: E731
+    __le__ = lambda self, other: self.compare(other, op=operator.le)  # noqa: E731
+    __ge__ = lambda self, other: self.compare(other, op=operator.ge)  # noqa: E731
+    __gt__ = lambda self, other: self.compare(other, op=operator.gt)  # noqa: E731
 
     def __bool__(self) -> bool:
         # Only cast when non-ambiguous (when multiplicative unit)

@@ -1,9 +1,9 @@
 """
-    pint.facets.numpy.numpy_func
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.numpy.numpy_func
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

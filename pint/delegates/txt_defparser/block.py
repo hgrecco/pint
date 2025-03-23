@@ -1,17 +1,16 @@
 """
-    pint.delegates.txt_defparser.block
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.txt_defparser.block
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Classes for Pint Blocks, which are defined by:
+Classes for Pint Blocks, which are defined by:
 
-        @<block name>
-            <content>
-        @end
+    @<block name>
+        <content>
+    @end
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
-
 
 from __future__ import annotations
 
@@ -50,5 +49,4 @@ class DirectiveBlock(
     Subclass this class for convenience.
     """
 
-    def derive_definition(self) -> DefT:
-        ...
+    def derive_definition(self) -> DefT: ...
