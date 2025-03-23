@@ -23,7 +23,7 @@ jobs:
         run: pip install "numpy>=1.23,<2.0.0"
 
       - name: Install bench dependencies
-        run: pip install .[bench]
+        run: pip install .[codspeed]
 
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v2
