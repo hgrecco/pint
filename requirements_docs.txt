@@ -19,3 +19,4 @@ sphinx-book-theme>=1.1.0
 sphinx_copybutton
 sphinx_design
 typing_extensions
+sciform

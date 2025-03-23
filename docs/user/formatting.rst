@@ -103,7 +103,8 @@ their exponents, ``registry`` is the current instance of :py:class:``UnitRegistr
 
 You can choose to replace the complete formatter. Briefly, the formatter if an object with the
 following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format_uncertainty`,
-`format_measurement`. The easiest way to create your own formatter is to subclass one that you like.
+`format_measurement`. The easiest way to create your own formatter is to subclass one that you
+like and replace the methods you need. For example, to replace the unit formatting:
 
 .. doctest::
 
@@ -121,4 +122,27 @@ following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format
    '2.3e-06 ups!'
 
 
-By replacing other methods, you can customize the output as much as you need.
+By replacing other methods, you can customize the output as much as you need. 
+
+SciForm_ is a library that can be used to format the magnitude of the number. This can be used
+in a customer formatter as follows:
+
+.. doctest::
+
+   >>> from sciform import Formatter
+   >>> sciform_formatter = Formatter(round_mode="sig_fig", ndigits=4, exp_mode="engineering")
+
+   >>> class MyFormatter(DefaultFormatter):
+   ...
+   ...      default_format = ""
+   ...
+   ...      def format_magnitude(self, value, spec, **options) -> str:
+   ...          return sciform_formatter(value)
+   ...
+   >>> ureg.formatter = MyFormatter()
+   >>> ureg.formatter._registry = ureg
+   >>> str(q * 10)
+   '23.00e-06 meter ** 3 / second ** 2 / kilogram'
+
+
+.. _SciForm: https://sciform.readthedocs.io/en/stable/
