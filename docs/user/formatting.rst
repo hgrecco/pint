@@ -122,9 +122,7 @@ like and replace the methods you need. For example, to replace the unit formatti
    '2.3e-06 ups!'
 
 
-By replacing other methods, you can customize the output as much as you need. The functions in
-`pint.delegates.formatter <https://github.com/hgrecco/pint/tree/master/pint/delegates/formatter/>`_
-are a good starting point to understand how to implement your own formatter.
+By replacing other methods, you can customize the output as much as you need. 
 
 SciForm_ is a library that can be used to format the magnitude of the number. This can be used
 in a customer formatter as follows:
