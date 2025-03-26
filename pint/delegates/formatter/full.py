@@ -32,6 +32,7 @@ from .plain import (
 
 if TYPE_CHECKING:
     from ...compat import Locale
+    from ...facets.kind import KindKind, QuantityKind
     from ...facets.measurement import Measurement
     from ...facets.plain import (
         MagnitudeT,
@@ -139,6 +140,19 @@ class FullFormatter(BaseFormatter):
             unit, uspec, sort_func=sort_func, **babel_kwds
         )
 
+    def format_kind(
+        self,
+        kind: KindKind | Iterable[tuple[str, Any]],
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        uspec = uspec or self.default_format
+        sort_func = sort_func or self.default_sort_func
+        return self.get_formatter(uspec).format_kind(
+            kind, uspec, sort_func=sort_func, **babel_kwds
+        )
+
     def format_quantity(
         self,
         quantity: PlainQuantity[MagnitudeT],
@@ -174,6 +188,19 @@ class FullFormatter(BaseFormatter):
             use_plural=use_plural,
             length=babel_kwds.get("length", None),
             locale=locale,
+        )
+
+    def format_quantitykind(
+        self,
+        quantitykind: QuantityKind | Iterable[tuple[str, Any]],
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        uspec = uspec or self.default_format
+        sort_func = sort_func or self.default_sort_func
+        return self.get_formatter(uspec).format_quantitykind(
+            quantitykind, uspec, sort_func=sort_func, **babel_kwds
         )
 
     def format_measurement(
