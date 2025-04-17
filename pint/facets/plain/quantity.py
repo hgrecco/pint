@@ -166,24 +166,22 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @overload
     def __new__(
         cls, value: MagnitudeT, units: UnitLike | None = None
-    ) -> PlainQuantity[MagnitudeT]:
-        ...
+    ) -> PlainQuantity[MagnitudeT]: ...
 
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
-        ...
+    def __new__(
+        cls, value: str, units: UnitLike | None = None
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(
         cls, value: PlainQuantity[Any], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
@@ -747,18 +745,56 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                 raise DimensionalityError(self._units, "dimensionless")
             return self.__class__(magnitude, units)
 
+        # Special case for logarithmic units: dB can be added to dBm, dBW, etc.
+        # Get non-multiplicative units before checking dimensionality
+        self_non_mul_units = self._get_non_multiplicative_units()
+        other_non_mul_units = other._get_non_multiplicative_units()
+
+        # Check if we're dealing with logarithmic units that can be added (dB + dBm, etc.)
+        if (
+            len(self_non_mul_units) == 1
+            and len(other_non_mul_units) == 1
+            and hasattr(
+                self._get_unit_definition(self_non_mul_units[0]), "is_logarithmic"
+            )
+            and hasattr(
+                self._get_unit_definition(other_non_mul_units[0]), "is_logarithmic"
+            )
+            and self._get_unit_definition(self_non_mul_units[0]).is_logarithmic
+            and self._get_unit_definition(other_non_mul_units[0]).is_logarithmic
+        ):
+            # Case 1: both are the same logarithmic unit (dB + dB)
+            if self_non_mul_units[0] == other_non_mul_units[0]:
+                # Add the magnitudes directly when the same logarithmic unit
+                magnitude = op(self._magnitude, other._magnitude)
+                return self.__class__(magnitude, self._units)
+
+            # Case 2: Special handling for adding dimensionless dB to other logarithmic units
+            elif (
+                other_non_mul_units[0] == "decibel"
+                and self.dimensionality != other.dimensionality
+            ):
+                # Add the magnitude directly - this assumes both are in logarithmic scale
+                magnitude = op(self._magnitude, other._magnitude)
+                return self.__class__(magnitude, self._units)
+            elif (
+                self_non_mul_units[0] == "decibel"
+                and self.dimensionality != other.dimensionality
+            ):
+                # Add the magnitude directly - this assumes both are in logarithmic scale
+                magnitude = op(other._magnitude, self._magnitude)
+                return self.__class__(magnitude, other._units)
         if not self.dimensionality == other.dimensionality:
             raise DimensionalityError(
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
 
         # Next we define some variables to make if-clauses more readable.
-        self_non_mul_units = self._get_non_multiplicative_units()
+        # We already have self_non_mul_units and other_non_mul_units from our logarithmic check
         is_self_multiplicative = len(self_non_mul_units) == 0
+        is_other_multiplicative = len(other_non_mul_units) == 0
         if len(self_non_mul_units) == 1:
             self_non_mul_unit = self_non_mul_units[0]
-        other_non_mul_units = other._get_non_multiplicative_units()
-        is_other_multiplicative = len(other_non_mul_units) == 0
         if len(other_non_mul_units) == 1:
             other_non_mul_unit = other_non_mul_units[0]
 
@@ -831,8 +867,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         ...
 
     @overload
-    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]:
-        ...
+    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
 
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):
@@ -1401,10 +1436,17 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             )
         return op(self.to_root_units().magnitude, other.to_root_units().magnitude)
 
-    __lt__ = lambda self, other: self.compare(other, op=operator.lt)
-    __le__ = lambda self, other: self.compare(other, op=operator.le)
-    __ge__ = lambda self, other: self.compare(other, op=operator.ge)
-    __gt__ = lambda self, other: self.compare(other, op=operator.gt)
+    def __lt__(self, other):
+        return self.compare(other, op=operator.lt)
+
+    def __le__(self, other):
+        return self.compare(other, op=operator.le)
+
+    def __ge__(self, other):
+        return self.compare(other, op=operator.ge)
+
+    def __gt__(self, other):
+        return self.compare(other, op=operator.gt)
 
     def __bool__(self) -> bool:
         # Only cast when non-ambiguous (when multiplicative unit)
