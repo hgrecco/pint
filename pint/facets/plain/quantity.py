@@ -94,6 +94,13 @@ def check_implemented(f):
         other = args[0]
         if is_upcast_type(type(other)):
             return NotImplemented
+        # ensure Measurement handles operations with Quantity
+        if (
+            HAS_UNCERTAINTIES
+            and not type(self).__name__ == "Measurement"
+            and type(other).__name__ == "Measurement"
+        ):
+            return NotImplemented
         # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
         # and expects PlainQuantity * array[PlainQuantity] should return NotImplemented
         elif isinstance(other, list) and other and isinstance(other[0], type(self)):
@@ -166,24 +173,22 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @overload
     def __new__(
         cls, value: MagnitudeT, units: UnitLike | None = None
-    ) -> PlainQuantity[MagnitudeT]:
-        ...
+    ) -> PlainQuantity[MagnitudeT]: ...
 
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
-        ...
+    def __new__(
+        cls, value: str, units: UnitLike | None = None
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(
         cls, value: PlainQuantity[Any], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
@@ -831,8 +836,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         ...
 
     @overload
-    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]:
-        ...
+    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
 
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):
