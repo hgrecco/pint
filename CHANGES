@@ -19,7 +19,7 @@ Pint Changelog
 - Add membrane filtration flux and permeability dimensionality, and shorthand "LMH". (#2116)
 - Fix find_shortest_path to use breadth first search (#2146)
 - Fix typo in ``pyproject.toml``: rename ``AS_MIP`` to ``HAS_MIP`` so that MIP support is correctly detected. (#2152)
-
+- Fix ability to add dB units, and to add dB (dimensionless) to referenced dB units, such as dBm or dBW (#1160)
 
 0.24.4 (2024-11-07)
 -------------------
