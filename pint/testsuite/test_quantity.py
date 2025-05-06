@@ -513,6 +513,8 @@ class TestQuantity(QuantityTestCase):
     def test_both_symbol(self):
         assert self.Q_(2, "ms") == self.Q_(2, "millisecond")
         assert self.Q_(2, "cm") == self.Q_(2, "centimeter")
+        assert self.Q_(2, "mm / s ** 2") == self.Q_(
+            2, "millimeter_per_second_squared")
 
     def test_dimensionless_units(self):
         assert (

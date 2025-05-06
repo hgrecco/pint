@@ -252,6 +252,7 @@ sverdrup = 1e6 * meter ** 3 / second = sv
 # Acceleration
 [acceleration] = [velocity] / [time]
 galileo = centimeter / second ** 2 = Gal
+meter_per_second_squared = meter / second ** 2
 
 # Force
 [force] = [mass] * [acceleration]
