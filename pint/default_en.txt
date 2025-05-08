@@ -559,23 +559,24 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 # but we've followed the NIST's lead here and defined all of the units directly based on "common" units (feet and miles)
 # Source: Warfield, L. , Konijnenburg, J. , Lippa, K. , Lee, G. , Minnich, L. and Williams, J. (2023), Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices as adopted by the 108th National Conference on Weights and Measures, Handbook (NIST HB), National Institute of Standards and Technology, Gaithersburg, MD, [online], https://doi.org/10.6028/NIST.HB.44-2024 (Accessed January 12, 2024)
 @group USCSLengthSurvey
-    cables_length = 720 * foot
-    chain = 66 * foot = ch
-    fathom = 6 * foot
-    furlong = 660 * foot = fur
-    league = 3 * mile
     link = 0.66 * foot = li = survey_link
+    fathom = 6 * foot
     rod = 16.5 * foot = rd = pole = perch
+    chain = 66 * foot = ch
+    furlong = 660 * foot = fur
+    cables_length = 720 * foot
+    league = 3 * mile
 
     square_rod = rod ** 2 = sq_rd = sq_rod = sq_pole = sq_perch
     acre = 43560 * square_foot
     square_league = league ** 2
+    
     acre_foot = acre * foot = _ = acre_feet
 @end
 
 # The adoption of the international foot in 1959 temporarily permitted the continued use of the 1893 definition of the foot for survey purposes.
 # That established the Survey Foot. After 2022, that exception was no longer permitted and all feet are feet (survey or otherwise).
-# Source: Barton, J. , Blackwell, B. , Butcher, T. , Harshman, R., Lee, G. , Olson, D. (2019), Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices as adopted by the 108th National Conference on Weights and Measures 2019, Handbook (NIST HB), National Institute of Standards and Technology, Gaithersburg, MD, [online], h: https://doi.org/10.6028/NIST.HB.44-2020 (Accessed January 12, 2024)
+# Source: Barton, J. , Blackwell, B. , Butcher, T. , Harshman, R., Lee, G. , Olson, D. (2019), Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices as adopted by the 108th National Conference on Weights and Measures 2019, Handbook (NIST HB), National Institute of Standards and Technology, Gaithersburg, MD, [online], https://doi.org/10.6028/NIST.HB.44-2020 (Accessed January 12, 2024)
 @group USCSLengthSurveyMendenhall
     survey_foot = 1200 / 3937 * meter = sft
     survey_mile = 5280 * survey_foot = smi = us_statute_mile
