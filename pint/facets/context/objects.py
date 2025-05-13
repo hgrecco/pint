@@ -213,13 +213,15 @@ class Context:
         return to_units_container(src), to_units_container(dst)
 
     def transform(
-        self, src: UnitLike, dst: UnitLike, registry: Any, value: Magnitude
+        self, src: UnitLike, dst: UnitLike, registry: Any, value: Magnitude, **ctx_kwargs
     ) -> Magnitude:
         """Transform a value."""
 
         _key = self.__keytransform__(src, dst)
         func = self.funcs[_key]
-        return func(registry, value, **self.defaults)
+        defaults = self.defaults.copy()
+        defaults.update(ctx_kwargs)
+        return func(registry, value, **defaults)
 
     def redefine(self, definition: str) -> None:
         """Override the definition of a unit in the registry.
@@ -322,12 +324,12 @@ class ContextChain(ChainMap[SrcDst, Context]):
 
     # TODO: type registry
     def transform(
-        self, src: UnitsContainer, dst: UnitsContainer, registry: Any, value: Magnitude
+        self, src: UnitsContainer, dst: UnitsContainer, registry: Any, value: Magnitude, **ctx_kwargs
     ):
         """Transform the value, finding the rule in the chained context.
         (A rule in last context will take precedence)
         """
-        return self[(src, dst)].transform(src, dst, registry, value)
+        return self[(src, dst)].transform(src, dst, registry, value, **ctx_kwargs)
 
     def hashable(self) -> tuple[Any, ...]:
         """Generate a unique hashable and comparable representation of self, which can

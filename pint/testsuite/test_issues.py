@@ -1325,3 +1325,24 @@ def test_issue2044():
     q = (ufloat(10_000, 0.01) * ureg.m).to_compact()
     assert_almost_equal(q.m.n, 10.0)
     assert q.u == "kilometer"
+
+
+def test_issue2172():
+    ureg = UnitRegistry()
+
+    def mass_to_volume(u, value, *, density=None):
+        """Convert mass to volume using density."""
+        density = density or 1000 * u.kilogram / u.meter**3 # 5 C
+        return value / density
+
+    context = Context("Water")
+    context.add_transformation("[mass]", "[volume]", mass_to_volume)
+    ureg.add_context(context)
+
+    ureg.enable_contexts(context.name)
+    mass = ureg.Quantity(1000, "kg")
+    assert mass.to("m**3").m == pytest.approx(1.0)
+    assert mass.to("m**3", density=958.05 * ureg.kilogram / ureg.meter**3).m == pytest.approx(1.0437868587234487) # 100 C
+
+    mass.ito("m**3", density=958.05 * ureg.kilogram / ureg.meter**3)
+    assert mass.m == pytest.approx(1.0437868587234487) # 100 C

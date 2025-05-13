@@ -477,7 +477,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             with self._REGISTRY.context(*contexts, **ctx_kwargs):
                 return self._REGISTRY.convert(self._magnitude, self._units, other)
 
-        return self._REGISTRY.convert(self._magnitude, self._units, other)
+        return self._REGISTRY.convert(self._magnitude, self._units, other, **ctx_kwargs)
 
     def _convert_magnitude(self, other, *contexts, **ctx_kwargs):
         if contexts:
@@ -489,6 +489,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             self._units,
             other,
             inplace=is_duck_array_type(type(self._magnitude)),
+            **ctx_kwargs,
         )
 
     def ito(
