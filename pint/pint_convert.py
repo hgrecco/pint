@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import re
+import sys
 from typing import Any
 
 from pint import UnitRegistry
@@ -24,7 +25,7 @@ def _set(ureg: UnitRegistry, key: str, value: Any):
     object.__setattr__(obj, "scale", value)
 
 
-def _define_constants(ureg: UnitRegistry):
+def _define_constants(ureg: UnitRegistry, use_corr: bool):
     # Measured constants subject to correlation
     #  R_i: Rydberg constant
     #  g_e: Electron g factor
@@ -38,7 +39,7 @@ def _define_constants(ureg: UnitRegistry):
     m_e = (ureg._units["m_e"].converter.scale, 0.00000000028e-30)
     m_p = (ureg._units["m_p"].converter.scale, 0.00000000051e-27)
     m_n = (ureg._units["m_n"].converter.scale, 0.00000000095e-27)
-    if args.corr:
+    if use_corr:
         # Correlation matrix between measured constants (to be completed below)
         #          R_i       g_e       m_u       m_e       m_p       m_n
         corr = [
@@ -109,7 +110,7 @@ def _define_constants(ureg: UnitRegistry):
     ureg._build_cache()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Unit converter.", usage=argparse.SUPPRESS
     )
@@ -192,7 +193,7 @@ if __name__ == "__main__":
                 "Failed to import uncertainties library!\n Please install uncertainties package"
             )
 
-        _define_constants(ureg)
+        _define_constants(ureg, args.corr)
 
         num = nq.magnitude
         fmt = fmt
@@ -218,3 +219,7 @@ if __name__ == "__main__":
 
     fmt = "{:" + fmt + "} {:~P}"
     print(("{:} = " + fmt).format(q, nq.magnitude, nq.units))
+
+
+if __name__ == "__main__":
+    sys.exit(main())
