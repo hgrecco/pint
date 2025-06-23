@@ -761,22 +761,33 @@ def _base_unit_if_needed(a):
 @implements("trapezoid", "function")
 def _trapz(y, x=None, dx=1.0, **kwargs):
     trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
-    y = _base_unit_if_needed(y)
-    units = y.units
+    if hasattr(y, "units"):
+        y = _base_unit_if_needed(y)
+        units = y.units
+        y = y._magnitude
+        Q = y.units._REGISTRY.Quantity
+    else:
+        units = 1
+        Q = None 
     if x is not None:
         if hasattr(x, "units"):
             x = _base_unit_if_needed(x)
             units *= x.units
+            Q = Q or units._REGISTRY.Quantity
             x = x._magnitude
-        ret = trapezoid(y._magnitude, x, **kwargs)
+        ret = trapezoid(y, x, **kwargs)
     else:
         if hasattr(dx, "units"):
             dx = _base_unit_if_needed(dx)
             units *= dx.units
+            Q = Q or units._REGISTRY.Quantity
             dx = dx._magnitude
-        ret = trapezoid(y._magnitude, dx=dx, **kwargs)
-
-    return y.units._REGISTRY.Quantity(ret, units)
+        ret = trapezoid(y, dx=dx, **kwargs)
+    
+    if Q is not None:
+        return Q(ret, units)
+    else:
+        return ret
 
 
 @implements("correlate", "function")
