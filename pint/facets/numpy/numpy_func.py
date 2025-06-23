@@ -764,8 +764,8 @@ def _trapz(y, x=None, dx=1.0, **kwargs):
     if hasattr(y, "units"):
         y = _base_unit_if_needed(y)
         units = y.units
-        y = y._magnitude
         Q = y.units._REGISTRY.Quantity
+        y = y._magnitude
     else:
         units = 1
         Q = None 
