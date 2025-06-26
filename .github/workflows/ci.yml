@@ -40,6 +40,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
+          cache: true
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
@@ -84,6 +85,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
+          cache: true
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
@@ -103,6 +105,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
+          cache: true
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
