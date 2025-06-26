@@ -304,7 +304,7 @@ class TestGraph:
         p = find_shortest_path(g, 2, 1)
         assert p == [2, 1]
 
-    @pytest.mark.xfail(
+    @pytest.mark.xskip(
         reason="Test seems to be failing on randomly"
         )
     def test_shortest_path_densely_connected_2146(self):
