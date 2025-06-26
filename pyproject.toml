@@ -72,11 +72,15 @@ docs = [
   "recommonmark==0.5.0",
   "babel",
   "sciform",
+  "scipy",
 ]
 
 [project.urls]
 Homepage = "https://github.com/hgrecco/pint"
 Documentation = "https://pint.readthedocs.io/"
+
+[project.scripts]
+pint-convert = "pint.pint_convert:main"
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
