@@ -1020,6 +1020,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         src: QuantityOrUnitLike,
         dst: QuantityOrUnitLike,
         inplace: bool = False,
+        **ctx_kwargs,
     ) -> T:
         """Convert value from some source to destination units.
 
@@ -1047,7 +1048,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if src == dst:
             return value
 
-        return self._convert(value, src, dst, inplace)
+        return self._convert(value, src, dst, inplace, **ctx_kwargs)
 
     def _convert(
         self,

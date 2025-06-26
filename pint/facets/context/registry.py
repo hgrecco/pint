@@ -364,6 +364,7 @@ class GenericContextRegistry(
         src: UnitsContainer,
         dst: UnitsContainer,
         inplace: bool = False,
+        **ctx_kwargs,
     ) -> Magnitude:
         """Convert value from some source to destination units.
 
@@ -381,6 +382,8 @@ class GenericContextRegistry(
             destination units.
         inplace :
              (Default value = False)
+        **ctx_kwargs :
+            keyword arguments for the context
 
         Returns
         -------
@@ -398,11 +401,11 @@ class GenericContextRegistry(
             if path:
                 src = self.Quantity(value, src)
                 for a, b in zip(path[:-1], path[1:]):
-                    src = self._active_ctx.transform(a, b, self, src)
+                    src = self._active_ctx.transform(a, b, self, src, **ctx_kwargs)
 
                 value, src = src._magnitude, src._units
 
-        return super()._convert(value, src, dst, inplace)
+        return super()._convert(value, src, dst, inplace, **ctx_kwargs)
 
     def _get_compatible_units(
         self, input_units: UnitsContainer, group_or_system: str | None = None
