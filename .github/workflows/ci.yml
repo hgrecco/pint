@@ -41,6 +41,7 @@ jobs:
         with:
           environments: ${{ matrix.environment }}
           cache: true
+          manifest-path: pyproject.toml
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
@@ -86,6 +87,7 @@ jobs:
         with:
           environments: ${{ matrix.environment }}
           cache: true
+          manifest-path: pyproject.toml
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
@@ -106,6 +108,7 @@ jobs:
         with:
           environments: ${{ matrix.environment }}
           cache: true
+          manifest-path: pyproject.toml
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: pip install "${{matrix.numpy}}"
