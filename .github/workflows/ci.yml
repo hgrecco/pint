@@ -40,7 +40,6 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
-          cache: true
           manifest-path: pyproject.toml
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
@@ -86,7 +85,6 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
-          cache: true
           manifest-path: pyproject.toml
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
@@ -107,7 +105,6 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
-          cache: true
           manifest-path: pyproject.toml
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
