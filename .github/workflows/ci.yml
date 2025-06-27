@@ -20,12 +20,12 @@ jobs:
           - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
+        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
           - environment: "test-py311" # Minimal versions
-            numpy: "numpy>=1.23,<2.0.0"
+            numpy: "numpy>=1.25,<2.0.0"
             extras: matplotlib==3.5.3
           - environment: "test-py311"
             numpy: "numpy"
@@ -79,7 +79,7 @@ jobs:
           - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
+        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v0.8.10
@@ -99,7 +99,7 @@ jobs:
           - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.23,<2.0.0", "numpy>=2.0.0rc1"]
+        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v0.8.10
