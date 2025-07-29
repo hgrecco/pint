@@ -1,6 +1,6 @@
 name: Test and release when tagged
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   lint:
