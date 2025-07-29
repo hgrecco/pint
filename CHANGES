@@ -14,6 +14,7 @@ Pint Changelog
 - Fix return type of `PlainQuantity.to` (#2088)
 - Update constants to CODATA 2022 recommended values. (#2049)
 - Fixed issue with `.to_compact` and Magnitudes with uncertainties / Quantities with units (PR #2069, issue #2044)
+- Fixed issue in unit conversion which led to loss of precision when using `decimal`. (#2107)
 - Add conductivity dimension. (#2112)
 - Add absorbance unit and dimension. (#2114)
 - Add membrane filtration flux and permeability dimensionality, and shorthand "LMH". (#2116)
