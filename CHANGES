@@ -20,6 +20,7 @@ Pint Changelog
 - Fix find_shortest_path to use breadth first search (#2146)
 - Fix typo in ``pyproject.toml``: rename ``AS_MIP`` to ``HAS_MIP`` so that MIP support is correctly detected. (#2152)
 - Fix handling of extra arguments in conversion with enabled contexts (#2172)
+- Fix swapped left and right arguments in interp (#2187)
 
 
 0.24.4 (2024-11-07)

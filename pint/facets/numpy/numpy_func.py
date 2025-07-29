@@ -559,7 +559,7 @@ def _full_like(a, fill_value, **kwargs):
 def _interp(x, xp, fp, left=None, right=None, period=None):
     # Need to handle x and y units separately
     (x, xp, period), _ = unwrap_and_wrap_consistent_units(x, xp, period)
-    (fp, right, left), output_wrap = unwrap_and_wrap_consistent_units(fp, left, right)
+    (fp, left, right), output_wrap = unwrap_and_wrap_consistent_units(fp, left, right)
     return output_wrap(np.interp(x, xp, fp, left=left, right=right, period=period))
 
 
