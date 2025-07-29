@@ -105,7 +105,6 @@ extend-select = ["I"]
 ignore = [
   "E402",  # module level import not at top of file
   "E731",  # do not assign a lambda expression, use a def
-  "D201", "D210", "D213"
 ]
 
 [tool.pixi.project]
