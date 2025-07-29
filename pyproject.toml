@@ -103,8 +103,8 @@ docstring-code-format = true
 [tool.ruff.lint]
 extend-select = ["I"]
 ignore = [
-  "E402",  # module level import not at top of file
-  "E731",  # do not assign a lambda expression, use a def
+  "E402", # module level import not at top of file
+  "E731", # do not assign a lambda expression, use a def
 ]
 
 [tool.pixi.project]
