@@ -101,7 +101,7 @@ class TestDefinition:
                 "degF = 9 / 5 * kelvin; offset: 255.372222 bla",
             )
 
-        x = Definition.from_string(f"meter_per_second_squared = acceleration")
+        x = Definition.from_string("meter_per_second_squared = acceleration")
 
         assert isinstance(x, UnitDefinition)
         assert x.name == "meter_per_second_squared"
