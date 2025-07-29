@@ -94,6 +94,13 @@ def check_implemented(f):
         other = args[0]
         if is_upcast_type(type(other)):
             return NotImplemented
+        # ensure Measurement handles operations with Quantity
+        if (
+            HAS_UNCERTAINTIES
+            and not type(self).__name__ == "Measurement"
+            and type(other).__name__ == "Measurement"
+        ):
+            return NotImplemented
         # pandas often gets to arrays of quantities [ Q_(1,"m"), Q_(2,"m")]
         # and expects PlainQuantity * array[PlainQuantity] should return NotImplemented
         elif isinstance(other, list) and other and isinstance(other[0], type(self)):
