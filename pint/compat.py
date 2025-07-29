@@ -1,11 +1,11 @@
 """
-    pint.compat
-    ~~~~~~~~~~~
+pint.compat
+~~~~~~~~~~~
 
-    Compatibility layer.
+Compatibility layer.
 
-    :copyright: 2013 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2013 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -18,31 +18,13 @@ from importlib import import_module
 from numbers import Number
 from typing import (
     Any,
+    # Remove once all dependent packages change their imports.
+    Never,  # noqa
     NoReturn,
+    Self,  # noqa
+    TypeAlias,  # noqa
+    Unpack,  # noqa
 )
-
-if sys.version_info >= (3, 10):
-    from typing import TypeAlias  # noqa
-else:
-    from typing_extensions import TypeAlias  # noqa
-
-if sys.version_info >= (3, 11):
-    from typing import Self  # noqa
-else:
-    from typing_extensions import Self  # noqa
-
-
-if sys.version_info >= (3, 11):
-    from typing import Never  # noqa
-else:
-    from typing_extensions import Never  # noqa
-
-
-if sys.version_info >= (3, 11):
-    from typing import Unpack  # noqa
-else:
-    from typing_extensions import Unpack  # noqa
-
 
 if sys.version_info >= (3, 13):
     from warnings import deprecated  # noqa
@@ -66,187 +48,6 @@ def missing_dependency(
         )
 
     return _inner
-
-
-# TODO: remove this warning after v0.10
-class BehaviorChangeWarning(UserWarning):
-    pass
-
-
-try:
-    from uncertainties import UFloat, ufloat
-
-    unp = None
-
-    HAS_UNCERTAINTIES = True
-except ImportError:
-    UFloat = ufloat = unp = None
-
-    HAS_UNCERTAINTIES = False
-
-
-try:
-    import numpy as np
-    from numpy import datetime64 as np_datetime64
-    from numpy import ndarray
-
-    HAS_NUMPY = True
-    NUMPY_VER = np.__version__
-    if HAS_UNCERTAINTIES:
-        from uncertainties import unumpy as unp
-
-        NUMERIC_TYPES = (Number, Decimal, ndarray, np.number, UFloat)
-    else:
-        NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
-
-    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
-        if isinstance(value, (dict, bool)) or value is None:
-            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
-        elif isinstance(value, str) and value == "":
-            raise ValueError("Quantity magnitude cannot be an empty string.")
-        elif isinstance(value, (list, tuple)):
-            return np.asarray(value)
-        elif HAS_UNCERTAINTIES:
-            from pint.facets.measurement.objects import Measurement
-
-            if isinstance(value, Measurement):
-                return ufloat(value.value, value.error)
-        if force_ndarray or (
-            force_ndarray_like and not is_duck_array_type(type(value))
-        ):
-            return np.asarray(value)
-        return value
-
-    def _test_array_function_protocol():
-        # Test if the __array_function__ protocol is enabled
-        try:
-
-            class FakeArray:
-                def __array_function__(self, *args, **kwargs):
-                    return
-
-            np.concatenate([FakeArray()])
-            return True
-        except ValueError:
-            return False
-
-    HAS_NUMPY_ARRAY_FUNCTION = _test_array_function_protocol()
-
-    NP_NO_VALUE = np._NoValue
-
-except ImportError:
-    np = None
-
-    class ndarray:
-        pass
-
-    class np_datetime64:
-        pass
-
-    HAS_NUMPY = False
-    NUMPY_VER = "0"
-    NUMERIC_TYPES = (Number, Decimal)
-    HAS_NUMPY_ARRAY_FUNCTION = False
-    NP_NO_VALUE = None
-
-    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
-        if force_ndarray or force_ndarray_like:
-            raise ValueError(
-                "Cannot force to ndarray or ndarray-like when NumPy is not present."
-            )
-        elif isinstance(value, (dict, bool)) or value is None:
-            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
-        elif isinstance(value, str) and value == "":
-            raise ValueError("Quantity magnitude cannot be an empty string.")
-        elif isinstance(value, (list, tuple)):
-            raise TypeError(
-                "lists and tuples are valid magnitudes for "
-                "Quantity only when NumPy is present."
-            )
-        elif HAS_UNCERTAINTIES:
-            from pint.facets.measurement.objects import Measurement
-
-            if isinstance(value, Measurement):
-                return ufloat(value.value, value.error)
-        return value
-
-
-try:
-    from babel import Locale
-    from babel import units as babel_units
-
-    babel_parse = Locale.parse
-
-    HAS_BABEL = hasattr(babel_units, "format_unit")
-except ImportError:
-    HAS_BABEL = False
-
-    babel_parse = missing_dependency("Babel")  # noqa: F811 # type:ignore
-    babel_units = babel_parse
-
-try:
-    import mip
-
-    mip_model = mip.model
-    mip_Model = mip.Model
-    mip_INF = mip.INF
-    mip_INTEGER = mip.INTEGER
-    mip_xsum = mip.xsum
-    mip_OptimizationStatus = mip.OptimizationStatus
-
-    HAS_MIP = True
-except ImportError:
-    HAS_MIP = False
-
-    mip_missing = missing_dependency("mip")
-    mip_model = mip_missing
-    mip_Model = mip_missing
-    mip_INF = mip_missing
-    mip_INTEGER = mip_missing
-    mip_xsum = mip_missing
-    mip_OptimizationStatus = mip_missing
-
-# Defines Logarithm and Exponential for Logarithmic Converter
-if HAS_NUMPY:
-    from numpy import (
-        exp,  # noqa: F401
-        log,  # noqa: F401
-    )
-else:
-    from math import (
-        exp,  # noqa: F401
-        log,  # noqa: F401
-    )
-
-
-# Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
-# types using guarded imports
-
-try:
-    from dask import array as dask_array
-    from dask.base import compute, persist, visualize
-except ImportError:
-    compute, persist, visualize = None, None, None
-    dask_array = None
-
-
-# TODO: merge with upcast_type_map
-
-#: List upcast type names
-upcast_type_names = (
-    "pint_pandas.pint_array.PintArray",
-    "xarray.core.dataarray.DataArray",
-    "xarray.core.dataset.Dataset",
-    "xarray.core.variable.Variable",
-    "pandas.core.series.Series",
-    "pandas.core.frame.DataFrame",
-    "pandas.Series",
-    "pandas.DataFrame",
-    "xarray.core.dataarray.DataArray",
-)
-
-#: Map type name to the actual type (for upcast types).
-upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
 
 
 def fully_qualified_name(t: type) -> str:
@@ -392,3 +193,216 @@ def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     if check_all and is_duck_array_type(type(out)):
         return out.all()
     return out
+
+
+# TODO: remove this warning after v0.10
+class BehaviorChangeWarning(UserWarning):
+    pass
+
+
+##############
+# try imports
+##############
+
+try:
+    import babel  # noqa: F401
+    from babel import units as babel_units
+
+    HAS_BABEL = hasattr(babel_units, "format_unit")
+except ImportError:
+    HAS_BABEL = False
+
+try:
+    import uncertainties  # noqa: F401
+
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    HAS_UNCERTAINTIES = False
+
+try:
+    import numpy  # noqa: F401
+
+    HAS_NUMPY = True
+except ImportError:
+    HAS_NUMPY = False
+
+try:
+    import mip  # noqa: F401
+
+    HAS_MIP = True
+except ImportError:
+    HAS_MIP = False
+
+try:
+    import dask  # noqa: F401
+
+    HAS_DASK = True
+except ImportError:
+    HAS_DASK = False
+
+
+##############################
+# Imports are handled here
+# in order to be able to have
+# them as constants
+# in mypy configuration.
+##############################
+
+if HAS_BABEL:
+    from babel import Locale
+    from babel import units as babel_units
+
+    babel_parse = Locale.parse
+else:
+    babel_parse = missing_dependency("Babel")  # noqa: F811 # type:ignore
+    babel_units = babel_parse
+    Locale = missing_dependency
+
+if HAS_UNCERTAINTIES:
+    from uncertainties import UFloat, ufloat
+
+    unp = None
+else:
+    UFloat = ufloat = unp = None
+
+
+if HAS_NUMPY:
+    import numpy as np
+    from numpy import datetime64 as np_datetime64
+    from numpy import (
+        exp,  # noqa: F401
+        log,  # noqa: F401
+        ndarray,
+    )
+
+    NUMPY_VER = np.__version__
+    if HAS_UNCERTAINTIES:
+        from uncertainties import unumpy as unp
+
+        NUMERIC_TYPES = (Number, Decimal, ndarray, np.number, UFloat)
+    else:
+        NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
+
+    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
+        if isinstance(value, (dict, bool)) or value is None:
+            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
+        elif isinstance(value, str) and value == "":
+            raise ValueError("Quantity magnitude cannot be an empty string.")
+        elif isinstance(value, (list, tuple)):
+            return np.asarray(value)
+        elif HAS_UNCERTAINTIES:
+            from pint.facets.measurement.objects import Measurement
+
+            if isinstance(value, Measurement):
+                return ufloat(value.value, value.error)
+        if force_ndarray or (
+            force_ndarray_like and not is_duck_array_type(type(value))
+        ):
+            return np.asarray(value)
+        return value
+
+    def _test_array_function_protocol():
+        # Test if the __array_function__ protocol is enabled
+        try:
+
+            class FakeArray:
+                def __array_function__(self, *args, **kwargs):
+                    return
+
+            np.concatenate([FakeArray()])
+            return True
+        except ValueError:
+            return False
+
+    HAS_NUMPY_ARRAY_FUNCTION = _test_array_function_protocol()
+
+    NP_NO_VALUE = np._NoValue
+
+else:
+    np = None
+
+    class ndarray:
+        pass
+
+    class np_datetime64:
+        pass
+
+    from math import (
+        exp,  # noqa: F401
+        log,  # noqa: F401
+    )
+
+    NUMPY_VER = "0"
+    NUMERIC_TYPES = (Number, Decimal)
+    HAS_NUMPY_ARRAY_FUNCTION = False
+    NP_NO_VALUE = None
+
+    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
+        if force_ndarray or force_ndarray_like:
+            raise ValueError(
+                "Cannot force to ndarray or ndarray-like when NumPy is not present."
+            )
+        elif isinstance(value, (dict, bool)) or value is None:
+            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
+        elif isinstance(value, str) and value == "":
+            raise ValueError("Quantity magnitude cannot be an empty string.")
+        elif isinstance(value, (list, tuple)):
+            raise TypeError(
+                "lists and tuples are valid magnitudes for "
+                "Quantity only when NumPy is present."
+            )
+        elif HAS_UNCERTAINTIES:
+            from pint.facets.measurement.objects import Measurement
+
+            if isinstance(value, Measurement):
+                return ufloat(value.value, value.error)
+        return value
+
+
+if HAS_MIP:
+    import mip
+
+    mip_model = mip.model
+    mip_Model = mip.Model
+    mip_INF = mip.INF
+    mip_INTEGER = mip.INTEGER
+    mip_xsum = mip.xsum
+    mip_OptimizationStatus = mip.OptimizationStatus
+else:
+    mip_missing = missing_dependency("mip")
+    mip_model = mip_missing
+    mip_Model = mip_missing
+    mip_INF = mip_missing
+    mip_INTEGER = mip_missing
+    mip_xsum = mip_missing
+    mip_OptimizationStatus = mip_missing
+
+
+# Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
+# types using guarded imports
+
+if HAS_DASK:
+    from dask import array as dask_array
+    from dask.base import compute, persist, visualize
+else:
+    compute, persist, visualize = None, None, None
+    dask_array = None
+
+
+# TODO: merge with upcast_type_map
+
+#: List upcast type names
+upcast_type_names = (
+    "pint_pandas.pint_array.PintArray",
+    "xarray.core.dataarray.DataArray",
+    "xarray.core.dataset.Dataset",
+    "xarray.core.variable.Variable",
+    "pandas.core.series.Series",
+    "pandas.core.frame.DataFrame",
+    "pandas.Series",
+    "pandas.DataFrame",
+    "xarray.core.dataarray.DataArray",
+)
+
+#: Map type name to the actual type (for upcast types).
+upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}

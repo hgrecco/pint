@@ -1,23 +1,23 @@
 """
-    pint.facets.plain.registry
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.plain.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 
-    The registry contains the following important methods:
+The registry contains the following important methods:
 
-    - parse_unit_name: Parse a unit to identify prefix, unit name and suffix
-      by walking the list of prefix and suffix.
-      Result is cached: NO
-    - parse_units: Parse a units expression and returns a UnitContainer with
-      the canonical names.
-      The expression can only contain products, ratios and powers of units;
-      prefixed units and pluralized units.
-      Result is cached: YES
-    - parse_expression: Parse a mathematical expression including units and
-      return a quantity object.
-      Result is cached: NO
+- parse_unit_name: Parse a unit to identify prefix, unit name and suffix
+  by walking the list of prefix and suffix.
+  Result is cached: NO
+- parse_units: Parse a units expression and returns a UnitContainer with
+  the canonical names.
+  The expression can only contain products, ratios and powers of units;
+  prefixed units and pluralized units.
+  Result is cached: YES
+- parse_expression: Parse a mathematical expression including units and
+  return a quantity object.
+  Result is cached: NO
 
 """
 
@@ -373,11 +373,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # self.Unit will call parse_units
         return self.Unit(item)
 
+    @deprecated(
+        "Calling the getitem method from a UnitRegistry will be removed in future versions of pint.\n"
+        "use `parse_expression` method or use the registry as a callable."
+    )
     def __getitem__(self, item: str) -> UnitT:
-        logger.warning(
-            "Calling the getitem method from a UnitRegistry is deprecated. "
-            "use `parse_expression` method or use the registry as a callable."
-        )
         return self.parse_expression(item)
 
     def __contains__(self, item: str) -> bool:
@@ -493,7 +493,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 break
         else:
             raise TypeError(
-                f"No loader function defined " f"for {definition.__class__.__name__}"
+                f"No loader function defined for {definition.__class__.__name__}"
             )
 
         adder_func(definition)
@@ -1073,6 +1073,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         src: QuantityOrUnitLike,
         dst: QuantityOrUnitLike,
         inplace: bool = False,
+        **ctx_kwargs,
     ) -> T:
         """Convert value from some source to destination units.
 
@@ -1100,7 +1101,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if src == dst:
             return value
 
-        return self._convert(value, src, dst, inplace)
+        return self._convert(value, src, dst, inplace, **ctx_kwargs)
 
     def _convert(
         self,
@@ -1182,7 +1183,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def _yield_unit_triplets(
         self, unit_name: str, case_sensitive: bool
-    ) -> Generator[tuple[str, str, str], None, None]:
+    ) -> Generator[tuple[str, str, str]]:
         """Helper of parse_unit_name."""
 
         stw = unit_name.startswith

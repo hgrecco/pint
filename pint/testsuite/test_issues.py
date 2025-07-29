@@ -70,29 +70,6 @@ class TestIssues(QuantityTestCase):
         np.testing.assert_array_equal(qq.magnitude, x * m)
         assert qq.units == module_registry.meter.units
 
-    @pytest.mark.xfail
-    @helpers.requires_numpy
-    def test_issue39(self, module_registry):
-        x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-        q = module_registry.meter * x
-        assert isinstance(q, module_registry.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        assert q.units == module_registry.meter.units
-        q = x * module_registry.meter
-        assert isinstance(q, module_registry.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        assert q.units == module_registry.meter.units
-
-        m = np.matrix(2 * np.ones(3, 3))
-        qq = q * m
-        assert isinstance(qq, module_registry.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        assert qq.units == module_registry.meter.units
-        qq = m * q
-        assert isinstance(qq, module_registry.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        assert qq.units == module_registry.meter.units
-
     @helpers.requires_numpy
     def test_issue44(self, module_registry):
         x = 4.0 * module_registry.dimensionless
@@ -909,7 +886,7 @@ class TestIssues(QuantityTestCase):
         assert_equal(1e2 * b, a)
         assert_equal(c, 50 * a)
 
-        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), ureg.permille)
+        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), 1 * ureg.permille)
 
     @pytest.mark.xfail
     @helpers.requires_uncertainties()
@@ -1230,7 +1207,7 @@ def test_issue_1845():
 def test_issues_1841(func_registry, units, spec, expected):
     ur = func_registry
     ur.formatter.default_sort_func = sort_by_dimensionality
-    ur.default_format = spec
+    ur.formatter.default_format = spec
     value = ur.Unit(UnitsContainer(**units))
     assert f"{value}" == expected
 
@@ -1242,7 +1219,7 @@ def test_issues_1841_xfail():
 
     # sets compact display mode by default
     ur = UnitRegistry()
-    ur.default_format = "~P"
+    ur.formatter.default_format = "~P"
     ur.formatter.default_sort_func = sort_by_dimensionality
 
     q = ur.Quantity("2*pi radian * hour")
@@ -1297,7 +1274,6 @@ def test_issue2017():
 
     @fmt.register_unit_format("test")
     def _test_format(unit, registry, **options):
-        print("format called")
         proc = {u.replace("µ", "u"): e for u, e in unit.items()}
         return fmt.formatter(
             proc.items(),
@@ -1369,3 +1345,26 @@ def test_issue2107():
     # 1 inch is equal to 1000 thou
     distance = ureg.Quantity(1, ureg.inch)
     assert distance.to(ureg.thou).magnitude == 1000.0
+
+    
+def test_issue2172():
+    ureg = UnitRegistry()
+
+    def mass_to_volume(u, value, *, density=None):
+        """Convert mass to volume using density."""
+        density = density or 1000 * u.kilogram / u.meter**3  # 5 C
+        return value / density
+
+    context = Context("Water")
+    context.add_transformation("[mass]", "[volume]", mass_to_volume)
+    ureg.add_context(context)
+
+    ureg.enable_contexts(context.name)
+    mass = ureg.Quantity(1000, "kg")
+    assert mass.to("m**3").m == pytest.approx(1.0)
+    assert mass.to(
+        "m**3", density=958.05 * ureg.kilogram / ureg.meter**3
+    ).m == pytest.approx(1.0437868587234487)  # 100 C
+
+    mass.ito("m**3", density=958.05 * ureg.kilogram / ureg.meter**3)
+    assert mass.m == pytest.approx(1.0437868587234487)  # 100 C

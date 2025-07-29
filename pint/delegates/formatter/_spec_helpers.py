@@ -1,11 +1,11 @@
 """
-    pint.delegates.formatter._spec_helpers
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter._spec_helpers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Convenient functions to deal with format specifications.
+Convenient functions to deal with format specifications.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -87,10 +87,18 @@ def remove_custom_flags(spec: str) -> str:
     return spec
 
 
+##########
+# This weird way of defining split format
+# is the only reasonable way I foudn to use
+# lru_cache in a function that might emit warning
+# and do it every time.
+# TODO: simplify it when there are no warnings.
+
+
 @functools.lru_cache
-def split_format(
+def _split_format(
     spec: str, default: str, separate_format_defaults: bool = True
-) -> tuple[str, str]:
+) -> tuple[str, str, list[str]]:
     """Split format specification into magnitude and unit format."""
     mspec = remove_custom_flags(spec)
     uspec = extract_custom_flags(spec)
@@ -98,34 +106,42 @@ def split_format(
     default_mspec = remove_custom_flags(default)
     default_uspec = extract_custom_flags(default)
 
+    warns = []
     if separate_format_defaults in (False, None):
         # should we warn always or only if there was no explicit choice?
         # Given that we want to eventually remove the flag again, I'd say yes?
         if spec and separate_format_defaults is None:
             if not uspec and default_uspec:
-                warnings.warn(
-                    (
-                        "The given format spec does not contain a unit formatter."
-                        " Falling back to the builtin defaults, but in the future"
-                        " the unit formatter specified in the `default_format`"
-                        " attribute will be used instead."
-                    ),
-                    DeprecationWarning,
+                warns.append(
+                    "The given format spec does not contain a unit formatter."
+                    " Falling back to the builtin defaults, but in the future"
+                    " the unit formatter specified in the `default_format`"
+                    " attribute will be used instead."
                 )
             if not mspec and default_mspec:
-                warnings.warn(
-                    (
-                        "The given format spec does not contain a magnitude formatter."
-                        " Falling back to the builtin defaults, but in the future"
-                        " the magnitude formatter specified in the `default_format`"
-                        " attribute will be used instead."
-                    ),
-                    DeprecationWarning,
+                warns.append(
+                    "The given format spec does not contain a magnitude formatter."
+                    " Falling back to the builtin defaults, but in the future"
+                    " the magnitude formatter specified in the `default_format`"
+                    " attribute will be used instead."
                 )
         elif not spec:
             mspec, uspec = default_mspec, default_uspec
     else:
         mspec = mspec or default_mspec
         uspec = uspec or default_uspec
+
+    return mspec, uspec, warns
+
+
+def split_format(
+    spec: str, default: str, separate_format_defaults: bool = True
+) -> tuple[str, str]:
+    """Split format specification into magnitude and unit format."""
+
+    mspec, uspec, warns = _split_format(spec, default, separate_format_defaults)
+
+    for warn_msg in warns:
+        warnings.warn(warn_msg, DeprecationWarning)
 
     return mspec, uspec

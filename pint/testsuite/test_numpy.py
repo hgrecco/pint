@@ -440,6 +440,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
     # NP2: Remove this when we only support np>=2.0
     @helpers.requires_array_function_protocol()
+    @helpers.requires_numpy_previous_than("2.0")
     def test_trapz(self):
         helpers.assert_quantity_equal(
             np.trapz([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
@@ -1094,22 +1095,62 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_interp_numpy_func(self):
-        x = [1, 4] * self.ureg.m
+        x = [-1, 1, 4] * self.ureg.m
         xp = np.linspace(0, 3, 5) * self.ureg.m
         fp = self.Q_([0, 5, 10, 15, 20], self.ureg.degC)
+        left = self.Q_(-999.0, self.ureg.degC)
+        right = self.Q_(999.0, self.ureg.degC)
         helpers.assert_quantity_almost_equal(
-            np.interp(x, xp, fp), self.Q_([6.66667, 20.0], self.ureg.degC), rtol=1e-5
+            np.interp(x, xp, fp),
+            self.Q_([0.0, 6.66667, 20.0], self.ureg.degC),
+            rtol=1e-5,
+        )
+        helpers.assert_quantity_almost_equal(
+            np.interp(x, xp, fp, right=right),
+            self.Q_([0.0, 6.6667, 999.0], self.ureg.degC),
+            rtol=1e-5,
+        )
+        helpers.assert_quantity_almost_equal(
+            np.interp(x, xp, fp, left=left),
+            self.Q_([-999.0, 6.6667, 20], self.ureg.degC),
+            rtol=1e-5,
+        )
+        helpers.assert_quantity_almost_equal(
+            np.interp(x, xp, fp, left=left, right=right),
+            self.Q_([-999.0, 6.6667, 999.0], self.ureg.degC),
+            rtol=1e-5,
         )
 
-        x_ = np.array([1, 4])
+        x_ = np.array([-1, 1, 4])
         xp_ = np.linspace(0, 3, 5)
         fp_ = [0, 5, 10, 15, 20]
+        left_ = -999.0
+        right_ = 999.0
 
         helpers.assert_quantity_almost_equal(
-            np.interp(x_, xp_, fp), self.Q_([6.6667, 20.0], self.ureg.degC), rtol=1e-5
+            np.interp(x_, xp_, fp),
+            self.Q_([0.0, 6.6667, 20.0], self.ureg.degC),
+            rtol=1e-5,
         )
         helpers.assert_quantity_almost_equal(
-            np.interp(x, xp, fp_), [6.6667, 20.0], rtol=1e-5
+            np.interp(x, xp, fp_),
+            [0.0, 6.6667, 20.0],
+            rtol=1e-5,
+        )
+        helpers.assert_quantity_almost_equal(
+            np.interp(x, xp, fp_, right=right_),
+            [0.0, 6.6667, 999.0],
+            rtol=1e-5,
+        )
+        helpers.assert_quantity_almost_equal(
+            np.interp(x, xp, fp_, left=left_),
+            [-999.0, 6.6667, 20],
+            rtol=1e-5,
+        )
+        helpers.assert_quantity_almost_equal(
+            np.interp(x, xp, fp_, left=left_, right=right_),
+            [-999.0, 6.6667, 999.0],
+            rtol=1e-5,
         )
 
     def test_comparisons(self):
@@ -1227,8 +1268,10 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_equal(q, self.Q_([[2, 2], [6, 4]], "m"))
         np.copyto(q, 0, where=[[False, False], [True, False]])
         helpers.assert_quantity_equal(q, self.Q_([[2, 2], [0, 4]], "m"))
-        np.copyto(a, q)
-        self.assertNDArrayEqual(a, np.array([[2, 2], [0, 4]]))
+        with pytest.warns(UnitStrippedWarning):
+            # as a is not quantity, the unit is stripped.
+            np.copyto(a, q)
+            self.assertNDArrayEqual(a, np.array([[2, 2], [0, 4]]))
 
     @helpers.requires_array_function_protocol()
     def test_tile(self):

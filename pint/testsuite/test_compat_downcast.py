@@ -169,4 +169,4 @@ def test_array_quantity_creation_by_multiplication(
     # This is to avoid having a ureg built at the module level.
     unit = unit(local_registry)
 
-    assert type(op(local_registry, array, unit)) == local_registry.Quantity
+    assert type(op(local_registry, array, unit)) is local_registry.Quantity

@@ -1,62 +1,47 @@
 [project]
 name = "Pint"
-authors = [
-  {name="Hernan E. Grecco", email="hernan.grecco@gmail.com"}
-]
-license = {text = "BSD"}
+authors = [{ name = "Hernan E. Grecco", email = "hernan.grecco@gmail.com" }]
+dynamic = ["version"]
+license = { text = "BSD" }
 description = "Physical quantities module"
 readme = "README.rst"
 maintainers = [
-  {name="Hernan E. Grecco", email="hernan.grecco@gmail.com"},
-  {name="Jules Chéron", email="julescheron@gmail.com"}
+  { name = "Hernan E. Grecco", email = "hernan.grecco@gmail.com" },
+  { name = "Jules Chéron", email = "julescheron@gmail.com" },
 ]
-keywords = ["physical", "quantities", "unit", "conversion", "science"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Programming Language :: Python",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Software Development :: Libraries",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Programming Language :: Python",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Software Development :: Libraries",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.9"
-dynamic = ["version", "dependencies"]
+requires-python = ">=3.11"
+keywords = ["physical", "quantities", "unit", "conversion", "science"]
+dependencies = [
+  "platformdirs>=2.1.0",
+  "typing_extensions>=4.0.0",
+  "flexcache>=0.3",
+  "flexparser>=0.4",
+]
 
-[tool.setuptools.package-data]
-pint = [
-      "default_en.txt",
-      "constants_en.txt",
-      "py.typed"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = "requirements.txt"}
+[tool.hatch.build]
+packages = ["pint"]
+include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-testbase = [
-    "pytest",
-    "pytest-cov",
-    "pytest-subtests",
-    "pytest-benchmark"
-]
-test = [
-    "pytest",
-    "pytest-mpl",
-    "pytest-cov",
-    "pytest-subtests",
-    "pytest-benchmark"
-]
-bench = [
-    "pytest",
-    "pytest-codspeed"
-]
+test = ["pytest", "pytest-cov", "pytest-subtests", "pytest-benchmark"]
+test-mpl = ["pytest-mpl"]
+test-all = ["pint[test, test-mpl]"]
+codspeed = ["pint[test-all]", "pytest-codspeed"]
 numpy = ["numpy >= 1.23"]
 uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel <= 2.8"]
@@ -64,6 +49,31 @@ pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
 dask = ["dask"]
 mip = ["mip >= 1.13"]
+matplotlib = ["matplotlib"]
+all = [
+  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,mip,matplotlib]",
+]
+docs = [
+  "sphinx>=6,<8.2",
+  "ipython<=8.12",
+  "nbsphinx",
+  "jupyter_client",
+  "ipykernel",
+  "graphviz",
+  "pooch",
+  "sparse",
+  "Serialize",
+  "pygments>=2.4",
+  "sphinx-book-theme>=1.1.0",
+  "sphinx_copybutton",
+  "sphinx_design",
+  "docutils",                 #==0.14",
+  "commonmark==0.8.1",
+  "recommonmark==0.5.0",
+  "babel",
+  "sciform",
+  "scipy",
+]
 
 [project.urls]
 Homepage = "https://github.com/hgrecco/pint"
@@ -72,35 +82,143 @@ Documentation = "https://pint.readthedocs.io/"
 [project.scripts]
 pint-convert = "pint.pint_convert:main"
 
-[tool.setuptools]
-packages = ["pint"]
-
 [build-system]
-requires = ["setuptools>=61", "wheel", "setuptools_scm[toml]>=3.4.3"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
-[tool.setuptools_scm]
+[tool.hatch.version]
+source = "vcs"
 
-[tool.ruff]
-extend-exclude = ["build"]
-line-length=88
+[tool.uv]
+cache-keys = [{ file = "pyproject.toml" }, { git = true }]
 
-[tool.ruff.lint.isort]
-required-imports = ["from __future__ import annotations"]
-known-first-party= ["pint"]
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
+xfail_strict = true
+pythonpath = "."
+
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.ruff.lint]
-extend-select = [
-  "I",           # isort
-]
+extend-select = ["I"]
 ignore = [
-  # whitespace before ':' - doesn't work well with black
-  # "E203",
-  "E402",
-  # line too long - let black worry about that
-  "E501",
-  # do not assign a lambda expression, use a def
-  "E731",
-  # line break before binary operator
-  # "W503"
+  "E402", # module level import not at top of file
+  "E731", # do not assign a lambda expression, use a def
 ]
+
+[tool.pixi.project]
+channels = ["https://fast.prefix.dev/conda-forge"]
+platforms = ['osx-arm64', 'linux-64', 'win-64']
+
+[tool.pixi.tasks]
+
+[tool.pixi.pypi-dependencies]
+pint = { path = ".", editable = true }
+
+[tool.pixi.environments]
+dev = { features = ["numpy", "dev", "py313"], solve-group = "default" }
+lint = { features = ["lint"], no-default-feature = true }
+build = { features = ["build"], no-default-feature = true }
+typecheck = { features = ["typecheck"], solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+test-all = { features = ["test-all"], solve-group = "default" }
+numpy = { features = ["numpy"], solve-group = "default" }
+codspeed = { features = ["codspeed"], solve-group = "default" }
+docs = { features = [
+  "docs",
+  "numpy",
+  "mip",
+  "matplotlib",
+  "dask",
+  "xarray",
+  "test",
+  "py311",
+] }
+# When pint[all] works in pixi, this will be easier.
+all = { features = [
+  "test",
+  "test-mpl",
+  "codspeed",
+  "numpy",
+  "uncertainties",
+  "babel",
+  "pandas",
+  "xarray",
+  "dask",
+  "mip",
+  "matplotlib",
+], solve-group = "default" }
+
+test-py311 = ["test", "py311"]
+test-py312 = ["test", "py312"]
+test-py313 = ["test", "py313"]
+test-py311-numpy = ["numpy", "test", "py311"]
+test-py312-numpy = ["numpy", "test", "py312"]
+test-py313-numpy = ["numpy", "test", "py313"]
+test-py311-all = ["all", "test", "py311"]
+test-py312-all = ["all", "test", "py312"]
+test-py313-all = ["all", "test", "py313"]
+
+[tool.pixi.feature.dev.dependencies]
+tomlkit = "*"
+
+[tool.pixi.feature.lint.dependencies]
+pre-commit = "*"
+pre-commit-hooks = "*"
+taplo = "*"
+ruff = "*"
+mdformat = "*"
+mdformat-ruff = "*"
+
+[tool.pixi.feature.lint.tasks]
+pre-commit-install = "pre-commit install"
+lint = "pre-commit run"
+
+[tool.pixi.feature.build.dependencies]
+uv = "*"
+
+[tool.pixi.feature.build.tasks]
+build = "uv build"
+publish = "uv publish"
+
+[tool.pixi.feature.test.tasks]
+test = "pytest --benchmark-skip"
+bench = "pytest --benchmark-only"
+
+[tool.pixi.feature.typecheck.dependencies]
+pyright = "*"
+pip = "*"
+
+[tool.pixi.feature.typecheck.tasks]
+typecheck = "pyright"
+
+[tool.pixi.feature.docs.pypi-dependencies]
+pint = { path = ".", editable = true }
+
+[tool.pixi.feature.docs.tasks]
+docbuild = "sphinx-build -n -j auto -b html -d build/doctrees docs build/html"
+doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest"
+
+[tool.pixi.feature.docs.dependencies]
+pandoc = "*"
+
+[tool.pixi.feature.py311.dependencies]
+python = "3.11.*"
+
+[tool.pixi.feature.py312.dependencies]
+python = "3.12.*"
+
+[tool.pixi.feature.py313.dependencies]
+python = "3.13.*"
+
+[tool.pyright]
+include = ["pint"]
+exclude = ["pint/testsuite"]
+
+[tool.pyright.defineConstant]
+HAS_BABEL = true
+HAS_UNCERTAINTIES = true
+HAS_NUMPY = true
+HAS_MIP = true
+HAS_DASK = true
