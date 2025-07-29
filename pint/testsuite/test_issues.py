@@ -1346,7 +1346,7 @@ def test_issue2107():
     distance = ureg.Quantity(1, ureg.inch)
     assert distance.to(ureg.thou).magnitude == 1000.0
 
-    
+
 def test_issue2172():
     ureg = UnitRegistry()
 
