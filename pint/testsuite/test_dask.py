@@ -151,8 +151,8 @@ def test_compute_persist_equivalent(local_registry, dask_array, numpy_array):
 
     assert np.all(res_compute == res_persist)
     assert res_compute.units == res_persist.units == units_
-    assert type(res_compute) == local_registry.Quantity
-    assert type(res_persist) == local_registry.Quantity
+    assert type(res_compute) is local_registry.Quantity
+    assert type(res_persist) is local_registry.Quantity
 
 
 @pytest.mark.parametrize("method", ["compute", "persist", "visualize"])

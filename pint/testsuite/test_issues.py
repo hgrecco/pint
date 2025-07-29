@@ -1332,7 +1332,7 @@ def test_issue2172():
 
     def mass_to_volume(u, value, *, density=None):
         """Convert mass to volume using density."""
-        density = density or 1000 * u.kilogram / u.meter**3 # 5 C
+        density = density or 1000 * u.kilogram / u.meter**3  # 5 C
         return value / density
 
     context = Context("Water")
@@ -1342,7 +1342,9 @@ def test_issue2172():
     ureg.enable_contexts(context.name)
     mass = ureg.Quantity(1000, "kg")
     assert mass.to("m**3").m == pytest.approx(1.0)
-    assert mass.to("m**3", density=958.05 * ureg.kilogram / ureg.meter**3).m == pytest.approx(1.0437868587234487) # 100 C
+    assert mass.to(
+        "m**3", density=958.05 * ureg.kilogram / ureg.meter**3
+    ).m == pytest.approx(1.0437868587234487)  # 100 C
 
     mass.ito("m**3", density=958.05 * ureg.kilogram / ureg.meter**3)
-    assert mass.m == pytest.approx(1.0437868587234487) # 100 C
+    assert mass.m == pytest.approx(1.0437868587234487)  # 100 C

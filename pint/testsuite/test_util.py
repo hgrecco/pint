@@ -199,7 +199,7 @@ class TestParseHelper:
         token = next(pint_eval.tokenizer(expression))
         actual = ParserHelper.eval_token(token)
         assert expected == actual
-        assert type(expected) == type(actual)
+        assert type(expected) is type(actual)
 
     def test_eval_token(self):
         self._test_eval_token(1000.0, "1e3")
@@ -306,6 +306,7 @@ class TestGraph:
 
     def test_shortest_path_densely_connected_2146(self):
         import itertools
+
         g = collections.defaultdict(set)
         for i, j in itertools.combinations(range(42), 2):
             g[i].add(j)

@@ -122,7 +122,7 @@ like and replace the methods you need. For example, to replace the unit formatti
    '2.3e-06 ups!'
 
 
-By replacing other methods, you can customize the output as much as you need. 
+By replacing other methods, you can customize the output as much as you need.
 
 SciForm_ is a library that can be used to format the magnitude of the number. This can be used
 in a customer formatter as follows:

@@ -10,7 +10,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: lint
-      - run: pixi run --environment lint lint
+      - run: pixi run --environment lint lint --all-files --show-diff-on-failure
 
   test-linux:
     runs-on: ubuntu-latest

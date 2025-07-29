@@ -1,9 +1,9 @@
 """
-    pint.facets.plain.unit
-    ~~~~~~~~~~~~~~~~~~~~~
+pint.facets.plain.unit
+~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             self._units = units._units
         else:
             raise TypeError(
-                "units must be of type str, Unit or " "UnitsContainer; not {}.".format(
+                "units must be of type str, Unit or UnitsContainer; not {}.".format(
                     type(units)
                 )
             )

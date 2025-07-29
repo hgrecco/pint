@@ -166,24 +166,22 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @overload
     def __new__(
         cls, value: MagnitudeT, units: UnitLike | None = None
-    ) -> PlainQuantity[MagnitudeT]:
-        ...
+    ) -> PlainQuantity[MagnitudeT]: ...
 
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
-        ...
+    def __new__(
+        cls, value: str, units: UnitLike | None = None
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(
         cls, value: PlainQuantity[Any], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
@@ -832,8 +830,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         ...
 
     @overload
-    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]:
-        ...
+    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
 
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):

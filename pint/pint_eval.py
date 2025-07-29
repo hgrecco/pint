@@ -1,12 +1,13 @@
 """
-    pint.pint_eval
-    ~~~~~~~~~~~~~~
+pint.pint_eval
+~~~~~~~~~~~~~~
 
-    An expression evaluator to be used as a safe replacement for builtin eval.
+An expression evaluator to be used as a safe replacement for builtin eval.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
+
 from __future__ import annotations
 
 import operator
@@ -165,7 +166,7 @@ def uncertainty_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]
                 end = toklist.lookahead(e_index + 2).end
             possible_e = tokenize.TokenInfo(
                 type=tokenlib.STRING,
-                string=f"e{toklist.lookahead(e_index+1).string}{exp_number}",
+                string=f"e{toklist.lookahead(e_index + 1).string}{exp_number}",
                 start=possible_e_token.start,
                 end=end,
                 line=possible_e_token.line,
