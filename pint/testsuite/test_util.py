@@ -306,6 +306,7 @@ class TestGraph:
 
     def test_shortest_path_densely_connected_2146(self):
         import itertools
+
         g = collections.defaultdict(set)
         for i, j in itertools.combinations(range(42), 2):
             g[i].add(j)

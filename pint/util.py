@@ -1,11 +1,11 @@
 """
-    pint.util
-    ~~~~~~~~~
+pint.util
+~~~~~~~~~
 
-    Miscellaneous functions for pint.
+Miscellaneous functions for pint.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -340,9 +340,7 @@ def solve_dependencies(
         yield t
 
 
-def find_shortest_path(
-    graph: dict[TH, set[TH]], start: TH, end: TH
-):
+def find_shortest_path(graph: dict[TH, set[TH]], start: TH, end: TH):
     """Find shortest path between two nodes within a graph.
 
     Parameters
