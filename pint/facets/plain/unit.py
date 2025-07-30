@@ -163,8 +163,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             else:
                 qself = 1 * self
                 return qself / other
-
-        return self._REGISTRY.Quantity(1 / other, self._units)
+        # Perform division after initializing a Quantity for compatibility with with
+        # upcast types #2126
+        return self._REGISTRY.Quantity(1, self._units) / other
 
     def __rtruediv__(self, other):
         # As PlainUnit and Quantity both handle truediv with each other rtruediv can
