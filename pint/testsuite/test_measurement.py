@@ -301,7 +301,7 @@ class TestMeasurement(QuantityTestCase):
 
     def test_measurement_result(self):
         q = self.ureg.Quantity(4.2, "meter")
-        m = self.ureg.Measurement(5.0, "meter").plus_minus(0.1)
+        m = self.ureg.Measurement(5.0, 0.1, "meter")
         # quantity + measurement = measurement
         result = q + m
         assert isinstance(result, self.ureg.Measurement)
