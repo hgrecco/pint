@@ -304,4 +304,4 @@ class TestMeasurement(QuantityTestCase):
         m = func_registry.Measurement(5.0, 0.1, "meter")
         # quantity + measurement = measurement
         result = q + m
-        assert isinstance(result, self.ureg.Measurement)
+        assert isinstance(result, func_registry.Measurement)
