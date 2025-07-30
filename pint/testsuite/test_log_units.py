@@ -262,6 +262,7 @@ def test_compound_log_unit_parse_expr(module_registry_auto_offset):
         ("10 dB", "sub", "20 dB", "-10 dB"),
         ("10 dBm", "add", "20 dB", "30 dBm"),
         ("10 dBm", "sub", "20 dB", "-10 dBm"),
+         # This is not ideal, would rather it return 1000 mW^2 or 30 dBmW^2
         ("10 dBm", "add", "20 dBm", "0.001 kg^2 m^4 s^-6"),
     ],
 )
