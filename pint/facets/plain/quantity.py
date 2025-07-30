@@ -763,21 +763,21 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         # Check if we're dealing with logarithmic units that can be added (dB + dBm, etc.)
         if self._is_logarithmic and other._is_logarithmic:
-            # Case 1: both are the same logarithmic unit (dB + dB)
-            if self.units == other.units:
-                # Add the magnitudes directly when the same logarithmic unit
-                magnitude = op(self._magnitude, other._magnitude)
-                return self.__class__(magnitude, self._units)
+            self_base = self.to_base_units()
+            other_base = other.to_base_units()
+            if op == operator.add:
+                result = self_base * other_base
+            elif op == operator.sub:
+                result = self_base / other_base
 
-            # Case 2: Special handling for adding dimensionless dB to other logarithmic units
-            elif other.dimensionless and self.dimensionality != other.dimensionality:
-                # Add the magnitude directly - this assumes both are in logarithmic scale
-                magnitude = op(self._magnitude, other._magnitude)
-                return self.__class__(magnitude, self._units)
-            elif self.dimensionless and self.dimensionality != other.dimensionality:
-                # Add the magnitude directly - this assumes both are in logarithmic scale
-                magnitude = op(other._magnitude, self._magnitude)
-                return self.__class__(magnitude, other._units)
+            if self_base.dimensionless and other_base.dimensionless:
+                return result.to(self._units)
+            elif self_base.dimensionless:
+                return result.to(other._units)
+            elif other_base.dimensionless:
+                return result.to(self._units)
+            else:
+                return result
 
         if not self.dimensionality == other.dimensionality:
             raise DimensionalityError(

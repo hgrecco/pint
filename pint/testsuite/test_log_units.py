@@ -269,6 +269,40 @@ def test_dbm_db_addition(module_registry_auto_offset):
     assert power.to("dBm").magnitude == pytest.approx(15)
 
 
+def test_dbm_dbm_addition(module_registry_auto_offset):
+    """Test a dBm value can be added to a dBm and the answer is correct."""
+    power = 10 * module_registry_auto_offset.dBm + 20 * module_registry_auto_offset.dBm
+    helpers.assert_quantity_almost_equal(
+        power, module_registry_auto_offset.Quantity("1000 mW^2")
+    )
+
+
+@pytest.mark.parametrize(
+    "a, op, b, expected",
+    [
+        ("10 dB", "add", "20 dB", "30 dB"),
+        ("10 dB", "sub", "20 dB", "-10 dB"),
+        ("10 dBm", "add", "20 dB", "30 dBm"),
+        ("10 dBm", "sub", "20 dB", "-10 dBm"),
+        ("10 dBm", "add", "20 dBm", "0.001 kg^2 m^4 s^-6"),
+    ],
+)
+def test_log_unit_arithmetic(a, op, b, expected, module_registry_auto_offset):
+    """Test arithmetic operations with logarithmic units."""
+    Q_ = module_registry_auto_offset.Quantity
+    a_q = Q_(a)
+    b_q = Q_(b)
+
+    if op == "add":
+        result = a_q + b_q
+    elif op == "sub":
+        result = a_q - b_q
+
+    expected_q = Q_(expected)
+    helpers.assert_quantity_almost_equal(result, expected_q)
+    assert result.units == expected_q.units
+
+
 @pytest.mark.xfail
 @pytest.mark.parametrize(
     "freq1,octaves,freq2",
