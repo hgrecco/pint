@@ -60,6 +60,8 @@ class TestQuantity(QuantityTestCase):
             assert 4.2 * self.ureg.meter == self.Q_(4.2, 2 * self.ureg.meter)
         assert len(caplog.records) == 1
 
+        assert self.Q_("4.2×10⁻¹² ft/s") == self.Q_(4.2e-12, "foot/second")
+
     def test_round(self):
         x = self.Q_(1.1, "kg")
         assert isinstance(round(x).magnitude, int)

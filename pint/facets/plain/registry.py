@@ -240,7 +240,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if cache_folder == ":auto:":
             cache_folder = platformdirs.user_cache_path(appname="pint", appauthor=False)
 
-        from ... import delegates  # TODO: change thiss
+        from ... import delegates  # TODO: change this
 
         if cache_folder is not None:
             self._diskcache = delegates.build_disk_cache_class(non_int_type)(
@@ -261,6 +261,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         # use a default preprocessor to support permille "‰"
         self.preprocessors.insert(0, lambda string: string.replace("‰", " permille "))
+
+        # use a default preprocessor to support multiplication sign "×"
+        self.preprocessors.insert(0, lambda string: string.replace("×", "*"))
 
         #: mode used to fill in the format defaults
         self.separate_format_defaults = separate_format_defaults

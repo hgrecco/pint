@@ -4,7 +4,7 @@ Pint Changelog
 0.25.0 (unreleased)
 -------------------
 
-- Bump minimum Python version to 3.11.:
+- Bump minimum Python version to 3.11.
 - Upgrade code to Python 3.11.
 - Move to pixi/uv/ruff.
 - Refactor compat to make it easier to test.
@@ -22,6 +22,7 @@ Pint Changelog
 - Fix typo in ``pyproject.toml``: rename ``AS_MIP`` to ``HAS_MIP`` so that MIP support is correctly detected. (#2152)
 - Fix handling of extra arguments in conversion with enabled contexts (#2172)
 - Fix swapped left and right arguments in interp (#2187)
+- Fix formatted scientific notation bug in Python 3.13 (#2168)
 
 
 0.24.4 (2024-11-07)
