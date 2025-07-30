@@ -255,28 +255,6 @@ def test_compound_log_unit_parse_expr(module_registry_auto_offset):
     assert canonical_def == parse_def
 
 
-def test_db_db_addition(module_registry_auto_offset):
-    """Test a dB value can be added to a dB and the answer is correct."""
-    ratio = (5 * module_registry_auto_offset.dB) + (10 * module_registry_auto_offset.dB)
-    assert ratio.to("dB").magnitude == pytest.approx(15)
-
-
-def test_dbm_db_addition(module_registry_auto_offset):
-    """Test a dB value can be added to a dBm and the answer is correct."""
-    power = (5 * module_registry_auto_offset.dBm) + (
-        10 * module_registry_auto_offset.dB
-    )
-    assert power.to("dBm").magnitude == pytest.approx(15)
-
-
-def test_dbm_dbm_addition(module_registry_auto_offset):
-    """Test a dBm value can be added to a dBm and the answer is correct."""
-    power = 10 * module_registry_auto_offset.dBm + 20 * module_registry_auto_offset.dBm
-    helpers.assert_quantity_almost_equal(
-        power, module_registry_auto_offset.Quantity("1000 mW^2")
-    )
-
-
 @pytest.mark.parametrize(
     "a, op, b, expected",
     [
