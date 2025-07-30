@@ -746,20 +746,52 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                 raise DimensionalityError(self._units, "dimensionless")
             return self.__class__(magnitude, units)
 
+        # Special case for logarithmic units: dB can be added to dBm, dBW, etc.
+        # Get non-multiplicative units before checking dimensionality
+        self_non_mul_units = self._get_non_multiplicative_units()
+        other_non_mul_units = other._get_non_multiplicative_units()
+
+        # Next we define some variables to make if-clauses more readable.
+        # We already have self_non_mul_units and other_non_mul_units from our logarithmic check
+        is_self_multiplicative = len(self_non_mul_units) == 0
+        is_other_multiplicative = len(other_non_mul_units) == 0
+        
+
+        if len(self_non_mul_units) == 1:
+            self_non_mul_unit = self_non_mul_units[0]
+        if len(other_non_mul_units) == 1:
+            other_non_mul_unit = other_non_mul_units[0]
+
+        # Check if we're dealing with logarithmic units that can be added (dB + dBm, etc.)
+        if (self._is_logarithmic and other._is_logarithmic):
+            # Case 1: both are the same logarithmic unit (dB + dB)
+            if self.units == other.units:
+                # Add the magnitudes directly when the same logarithmic unit
+                magnitude = op(self._magnitude, other._magnitude)
+                return self.__class__(magnitude, self._units)
+
+            # Case 2: Special handling for adding dimensionless dB to other logarithmic units
+            elif (
+                other.dimensionless
+                and self.dimensionality != other.dimensionality
+            ):
+                # Add the magnitude directly - this assumes both are in logarithmic scale
+                magnitude = op(self._magnitude, other._magnitude)
+                return self.__class__(magnitude, self._units)
+            elif (
+                self.dimensionless
+                and self.dimensionality != other.dimensionality
+            ):
+                # Add the magnitude directly - this assumes both are in logarithmic scale
+                magnitude = op(other._magnitude, self._magnitude)
+                return self.__class__(magnitude, other._units)
+
+
         if not self.dimensionality == other.dimensionality:
             raise DimensionalityError(
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
 
-        # Next we define some variables to make if-clauses more readable.
-        self_non_mul_units = self._get_non_multiplicative_units()
-        is_self_multiplicative = len(self_non_mul_units) == 0
-        if len(self_non_mul_units) == 1:
-            self_non_mul_unit = self_non_mul_units[0]
-        other_non_mul_units = other._get_non_multiplicative_units()
-        is_other_multiplicative = len(other_non_mul_units) == 0
-        if len(other_non_mul_units) == 1:
-            other_non_mul_unit = other_non_mul_units[0]
 
         # Presence of non-multiplicative units gives rise to several cases.
         if is_self_multiplicative and is_other_multiplicative:
@@ -1454,6 +1486,11 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def _get_non_multiplicative_units(self) -> list[str]:
         """Return a list of the of non-multiplicative units of the PlainQuantity object."""
         return []
+
+    @property
+    def _is_logarithmic(self) -> bool:
+        """Check if the PlainQuantity object has logarithmic units."""
+        return False
 
     def _get_delta_units(self) -> list[str]:
         """Return list of delta units ot the PlainQuantity object."""

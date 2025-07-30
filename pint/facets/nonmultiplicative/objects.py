@@ -26,6 +26,16 @@ class NonMultiplicativeQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
             for unit in self._units
             if not self._get_unit_definition(unit).is_multiplicative
         ]
+    
+    @property
+    def _is_logarithmic(self) -> bool:
+        """Check if the PlainQuantity object has logarithmic units."""
+        if (
+            len(self._units) == 1 and
+            self._get_unit_definition(next(iter(self._units))).is_logarithmic
+            ):
+                return True
+        return False
 
     def _get_delta_units(self) -> list[str]:
         """Return list of delta units ot the PlainQuantity object."""
