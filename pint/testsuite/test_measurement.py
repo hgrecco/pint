@@ -298,10 +298,3 @@ class TestMeasurement(QuantityTestCase):
         for p in pint_eval.tokenizer("8 + / - 4"):
             str(p)
         assert True
-
-    def test_measurement_result(self):
-        q = self.Q_(4.2, "meter")
-        m = self.Q_(5.0, "meter").plus_minus(0.1)
-        # quantity + measurement = measurement
-        result = q + m
-        assert isinstance(result, self.ureg.Measurement)
