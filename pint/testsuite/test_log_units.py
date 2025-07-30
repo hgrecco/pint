@@ -255,18 +255,31 @@ def test_compound_log_unit_parse_expr(module_registry_auto_offset):
     assert canonical_def == parse_def
 
 
-def test_db_db_addition(module_registry_auto_offset):
-    """Test a dB value can be added to a dB and the answer is correct."""
-    ratio = (5 * module_registry_auto_offset.dB) + (10 * module_registry_auto_offset.dB)
-    assert ratio.to("dB").magnitude == pytest.approx(15)
+@pytest.mark.parametrize(
+    "a, op, b, expected",
+    [
+        ("10 dB", "add", "20 dB", "30 dB"),
+        ("10 dB", "sub", "20 dB", "-10 dB"),
+        ("10 dBm", "add", "20 dB", "30 dBm"),
+        ("10 dBm", "sub", "20 dB", "-10 dBm"),
+        # This is not ideal, would rather it return 1000 mW^2 or 30 dBmW^2
+        ("10 dBm", "add", "20 dBm", "0.001 kg^2 m^4 s^-6"),
+    ],
+)
+def test_log_unit_arithmetic(a, op, b, expected, module_registry_auto_offset):
+    """Test arithmetic operations with logarithmic units."""
+    Q_ = module_registry_auto_offset.Quantity
+    a_q = Q_(a)
+    b_q = Q_(b)
 
+    if op == "add":
+        result = a_q + b_q
+    elif op == "sub":
+        result = a_q - b_q
 
-def test_dbm_db_addition(module_registry_auto_offset):
-    """Test a dB value can be added to a dBm and the answer is correct."""
-    power = (5 * module_registry_auto_offset.dBm) + (
-        10 * module_registry_auto_offset.dB
-    )
-    assert power.to("dBm").magnitude == pytest.approx(15)
+    expected_q = Q_(expected)
+    helpers.assert_quantity_almost_equal(result, expected_q)
+    assert result.units == expected_q.units
 
 
 @pytest.mark.xfail
