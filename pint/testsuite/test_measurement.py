@@ -296,5 +296,5 @@ class TestMeasurement(QuantityTestCase):
 
         pint_eval.tokenizer = pint_eval.uncertainty_tokenizer
         for p in pint_eval.tokenizer("8 + / - 4"):
-            print(p)
+            str(p)
         assert True

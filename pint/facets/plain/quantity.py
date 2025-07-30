@@ -13,12 +13,11 @@ import datetime
 import locale
 import numbers
 import operator
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
-    Iterable,
     TypeVar,
     overload,
 )
@@ -170,24 +169,22 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @overload
     def __new__(
         cls, value: MagnitudeT, units: UnitLike | None = None
-    ) -> PlainQuantity[MagnitudeT]:
-        ...
+    ) -> PlainQuantity[MagnitudeT]: ...
 
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
-        ...
+    def __new__(
+        cls, value: str, units: UnitLike | None = None
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(
         cls, value: PlainQuantity[Any], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
@@ -489,7 +486,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             with self._REGISTRY.context(*contexts, **ctx_kwargs):
                 return self._REGISTRY.convert(self._magnitude, self._units, other)
 
-        return self._REGISTRY.convert(self._magnitude, self._units, other)
+        return self._REGISTRY.convert(self._magnitude, self._units, other, **ctx_kwargs)
 
     def _convert_magnitude(self, other, *contexts, **ctx_kwargs):
         if contexts:
@@ -501,6 +498,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             self._units,
             other,
             inplace=is_duck_array_type(type(self._magnitude)),
+            **ctx_kwargs,
         )
 
     def ito(
@@ -843,8 +841,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         ...
 
     @overload
-    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]:
-        ...
+    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
 
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):

@@ -1,23 +1,23 @@
 """
-    pint.facets.plain.registry
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.plain.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 
-    The registry contains the following important methods:
+The registry contains the following important methods:
 
-    - parse_unit_name: Parse a unit to identify prefix, unit name and suffix
-      by walking the list of prefix and suffix.
-      Result is cached: NO
-    - parse_units: Parse a units expression and returns a UnitContainer with
-      the canonical names.
-      The expression can only contain products, ratios and powers of units;
-      prefixed units and pluralized units.
-      Result is cached: YES
-    - parse_expression: Parse a mathematical expression including units and
-      return a quantity object.
-      Result is cached: NO
+- parse_unit_name: Parse a unit to identify prefix, unit name and suffix
+  by walking the list of prefix and suffix.
+  Result is cached: NO
+- parse_units: Parse a units expression and returns a UnitContainer with
+  the canonical names.
+  The expression can only contain products, ratios and powers of units;
+  prefixed units and pluralized units.
+  Result is cached: YES
+- parse_expression: Parse a mathematical expression including units and
+  return a quantity object.
+  Result is cached: NO
 
 """
 
@@ -373,11 +373,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # self.Unit will call parse_units
         return self.Unit(item)
 
+    @deprecated(
+        "Calling the getitem method from a UnitRegistry will be removed in future versions of pint.\n"
+        "use `parse_expression` method or use the registry as a callable."
+    )
     def __getitem__(self, item: str) -> UnitT:
-        logger.warning(
-            "Calling the getitem method from a UnitRegistry is deprecated. "
-            "use `parse_expression` method or use the registry as a callable."
-        )
         return self.parse_expression(item)
 
     def __contains__(self, item: str) -> bool:
@@ -493,7 +493,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 break
         else:
             raise TypeError(
-                f"No loader function defined " f"for {definition.__class__.__name__}"
+                f"No loader function defined for {definition.__class__.__name__}"
             )
 
         adder_func(definition)
@@ -898,10 +898,49 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             pass
 
         accumulators: dict[str | None, int] = defaultdict(int)
-        accumulators[None] = 1
-        self._get_root_units_recurse(input_units, 1, accumulators)
+        fraction: dict[str, dict[Decimal | float, Decimal | int]] = dict(
+            numerator=dict(), denominator=dict()
+        )
+        self._get_root_units_recurse(input_units, 1, accumulators, fraction)
 
-        factor = accumulators[None]
+        # Identify if terms appear in both numerator and denominator
+        def terms_are_unique(fraction):
+            for n_factor, n_exp in fraction["numerator"].items():
+                if n_factor in fraction["denominator"]:
+                    return False
+            return True
+
+        # Cancel out terms where factor matches
+        while not terms_are_unique(fraction):
+            for n_factor, n_exponent in fraction["numerator"].items():
+                if n_factor in fraction["denominator"]:
+                    if n_exponent >= fraction["denominator"][n_factor]:
+                        fraction["numerator"][n_factor] -= fraction["denominator"][
+                            n_factor
+                        ]
+                        del fraction["denominator"][n_factor]
+                        continue
+            for d_factor, d_exponent in fraction["denominator"].items():
+                if d_factor in fraction["numerator"]:
+                    if d_exponent >= fraction["numerator"][d_factor]:
+                        fraction["denominator"][d_factor] -= fraction["numerator"][
+                            d_factor
+                        ]
+                        del fraction["numerator"][d_factor]
+                        continue
+
+        factor = 1
+        for n_factor, n_exponent in fraction["numerator"].copy().items():
+            if n_exponent == 0:
+                del fraction["numerator"][n_factor]
+            else:
+                factor *= n_factor**n_exponent
+        for d_factor, d_exponent in fraction["denominator"].copy().items():
+            if d_exponent == 0:
+                del fraction["denominator"][d_factor]
+            else:
+                factor *= d_factor**-d_exponent
+
         units = self.UnitsContainer(
             {k: v for k, v in accumulators.items() if k is not None and v != 0}
         )
@@ -948,7 +987,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     # TODO: accumulators breaks typing list[int, dict[str, int]]
     # So we have changed the behavior here
     def _get_root_units_recurse(
-        self, ref: UnitsContainer, exp: Scalar, accumulators: dict[str | None, int]
+        self,
+        ref: UnitsContainer,
+        exp: Scalar,
+        accumulators: dict[str | None, int],
+        fraction: dict[str, dict[Decimal | float, Decimal | int]],
     ) -> None:
         """
 
@@ -962,9 +1005,19 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             if reg.is_base:
                 accumulators[key] += exp2
             else:
-                accumulators[None] *= reg.converter.scale**exp2
+                # Build numerator and denominator
+                if exp2 < 0:
+                    fraction["denominator"][reg.converter.scale] = (
+                        fraction["denominator"].get(reg.converter.scale, 0) - exp2
+                    )
+                else:
+                    fraction["numerator"][reg.converter.scale] = (
+                        fraction["numerator"].get(reg.converter.scale, 0) + exp2
+                    )
                 if reg.reference is not None:
-                    self._get_root_units_recurse(reg.reference, exp2, accumulators)
+                    self._get_root_units_recurse(
+                        reg.reference, exp2, accumulators, fraction
+                    )
 
     def get_compatible_units(self, input_units: QuantityOrUnitLike) -> frozenset[UnitT]:
         """ """
@@ -1020,6 +1073,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         src: QuantityOrUnitLike,
         dst: QuantityOrUnitLike,
         inplace: bool = False,
+        **ctx_kwargs,
     ) -> T:
         """Convert value from some source to destination units.
 
@@ -1047,7 +1101,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if src == dst:
             return value
 
-        return self._convert(value, src, dst, inplace)
+        return self._convert(value, src, dst, inplace, **ctx_kwargs)
 
     def _convert(
         self,
@@ -1129,7 +1183,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def _yield_unit_triplets(
         self, unit_name: str, case_sensitive: bool
-    ) -> Generator[tuple[str, str, str], None, None]:
+    ) -> Generator[tuple[str, str, str]]:
         """Helper of parse_unit_name."""
 
         stw = unit_name.startswith

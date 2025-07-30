@@ -1,11 +1,11 @@
 """
-    pint.definitions
-    ~~~~~~~~~~~~~~~~
+pint.definitions
+~~~~~~~~~~~~~~~~
 
-    Kept for backwards compatibility
+Kept for backwards compatibility
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ class Definition:
         for definition in parser.iter_parsed_project(pp):
             if isinstance(definition, Exception):
                 raise errors.DefinitionSyntaxError(str(definition))
-            if not isinstance(definition, (fp.BOS, fp.BOF, fp.BOS)):
+            if not isinstance(definition, (fp.BOS, fp.BOF)):
                 return definition
 
         # TODO: What shall we do in this return path.

@@ -1,51 +1,36 @@
 """
-    pint.pint_eval
-    ~~~~~~~~~~~~~~
+pint.pint_eval
+~~~~~~~~~~~~~~
 
-    An expression evaluator to be used as a safe replacement for builtin eval.
+An expression evaluator to be used as a safe replacement for builtin eval.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
+
 from __future__ import annotations
 
 import operator
 import token as tokenlib
 import tokenize
+from collections.abc import Iterable
 from io import BytesIO
 from tokenize import TokenInfo
-from typing import Any
+from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
 
-try:
-    from uncertainties import ufloat
-
-    HAS_UNCERTAINTIES = True
-except ImportError:
-    HAS_UNCERTAINTIES = False
-    ufloat = None
-
+from .compat import HAS_UNCERTAINTIES, ufloat
 from .errors import DefinitionSyntaxError
 
-# For controlling order of operations
-_OP_PRIORITY = {
-    "+/-": 4,
-    "**": 3,
-    "^": 3,
-    "unary": 2,
-    "*": 1,
-    "": 1,  # operator for implicit ops
-    "//": 1,
-    "/": 1,
-    "%": 1,
-    "+": 0,
-    "-": 0,
-}
+S = TypeVar("S")
 
+if HAS_UNCERTAINTIES:
+    _ufloat = ufloat  # type: ignore
+else:
 
-def _ufloat(left, right):
-    if HAS_UNCERTAINTIES:
-        return ufloat(left, right)
-    raise TypeError("Could not import support for uncertainties")
+    def _ufloat(*args: Any, **kwargs: Any):
+        raise TypeError(
+            "Please install the uncertainties package to be able to parse quantities with uncertainty."
+        )
 
 
 def _power(left: Any, right: Any) -> Any:
@@ -63,46 +48,93 @@ def _power(left: Any, right: Any) -> Any:
     return operator.pow(left, right)
 
 
-# https://stackoverflow.com/a/1517965/1291237
-class tokens_with_lookahead:
-    def __init__(self, iter):
+UnaryOpT = Callable[
+    [
+        Any,
+    ],
+    Any,
+]
+BinaryOpT = Callable[[Any, Any], Any]
+
+_UNARY_OPERATOR_MAP: dict[str, UnaryOpT] = {"+": lambda x: x, "-": lambda x: x * -1}
+
+_BINARY_OPERATOR_MAP: dict[str, BinaryOpT] = {
+    "+/-": _ufloat,
+    "**": _power,
+    "*": operator.mul,
+    "": operator.mul,  # operator for implicit ops
+    "/": operator.truediv,
+    "+": operator.add,
+    "-": operator.sub,
+    "%": operator.mod,
+    "//": operator.floordiv,
+}
+
+# For controlling order of operations
+_OP_PRIORITY = {
+    "+/-": 4,
+    "**": 3,
+    "^": 3,
+    "unary": 2,
+    "*": 1,
+    "": 1,  # operator for implicit ops
+    "//": 1,
+    "/": 1,
+    "%": 1,
+    "+": 0,
+    "-": 0,
+}
+
+
+class IteratorLookAhead(Generic[S]):
+    """An iterator with lookahead buffer.
+
+    Adapted: https://stackoverflow.com/a/1517965/1291237
+    """
+
+    def __init__(self, iter: Iterator[S]):
         self.iter = iter
-        self.buffer = []
+        self.buffer: list[S] = []
 
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self) -> S:
         if self.buffer:
             return self.buffer.pop(0)
         else:
             return self.iter.__next__()
 
-    def lookahead(self, n):
+    def lookahead(self, n: int) -> S:
         """Return an item n entries ahead in the iteration."""
         while n >= len(self.buffer):
             try:
                 self.buffer.append(self.iter.__next__())
             except StopIteration:
-                return None
+                raise ValueError("Cannot look ahead, out of range")
         return self.buffer[n]
 
 
-def _plain_tokenizer(input_string):
+def plain_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]:
+    """Standard python tokenizer"""
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
         if tokinfo.type != tokenlib.ENCODING:
             yield tokinfo
 
 
-def uncertainty_tokenizer(input_string):
-    def _number_or_nan(token):
+def uncertainty_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]:
+    """Tokenizer capable of parsing uncertainties as v+/-u and v±u"""
+
+    def _number_or_nan(token: TokenInfo) -> bool:
         if token.type == tokenlib.NUMBER or (
             token.type == tokenlib.NAME and token.string == "nan"
         ):
             return True
         return False
 
-    def _get_possible_e(toklist, e_index):
+    def _get_possible_e(
+        toklist: IteratorLookAhead[TokenInfo], e_index: int
+    ) -> TokenInfo | None:
         possible_e_token = toklist.lookahead(e_index)
         if (
             possible_e_token.string[0] == "e"
@@ -134,7 +166,7 @@ def uncertainty_tokenizer(input_string):
                 end = toklist.lookahead(e_index + 2).end
             possible_e = tokenize.TokenInfo(
                 type=tokenlib.STRING,
-                string=f"e{toklist.lookahead(e_index+1).string}{exp_number}",
+                string=f"e{toklist.lookahead(e_index + 1).string}{exp_number}",
                 start=possible_e_token.start,
                 end=end,
                 line=possible_e_token.line,
@@ -143,7 +175,7 @@ def uncertainty_tokenizer(input_string):
             possible_e = None
         return possible_e
 
-    def _apply_e_notation(mantissa, exponent):
+    def _apply_e_notation(mantissa: TokenInfo, exponent: TokenInfo) -> TokenInfo:
         if mantissa.string == "nan":
             return mantissa
         if float(mantissa.string) == 0.0:
@@ -156,7 +188,12 @@ def uncertainty_tokenizer(input_string):
             line=exponent.line,
         )
 
-    def _finalize_e(nominal_value, std_dev, toklist, possible_e):
+    def _finalize_e(
+        nominal_value: TokenInfo,
+        std_dev: TokenInfo,
+        toklist: IteratorLookAhead[TokenInfo],
+        possible_e: TokenInfo,
+    ) -> tuple[TokenInfo, TokenInfo]:
         nominal_value = _apply_e_notation(nominal_value, possible_e)
         std_dev = _apply_e_notation(std_dev, possible_e)
         next(toklist)  # consume 'e' and positive exponent value
@@ -178,8 +215,9 @@ def uncertainty_tokenizer(input_string):
     # wading through all that vomit, just eliminate the problem
     # in the input by rewriting ± as +/-.
     input_string = input_string.replace("±", "+/-")
-    toklist = tokens_with_lookahead(_plain_tokenizer(input_string))
+    toklist = IteratorLookAhead(plain_tokenizer(input_string))
     for tokinfo in toklist:
+        assert tokinfo is not None
         line = tokinfo.line
         start = tokinfo.start
         if (
@@ -194,7 +232,7 @@ def uncertainty_tokenizer(input_string):
                 end=toklist.lookahead(1).end,
                 line=line,
             )
-            for i in range(-1, 1):
+            for _ in range(-1, 1):
                 next(toklist)
             yield plus_minus_op
         elif (
@@ -280,31 +318,7 @@ def uncertainty_tokenizer(input_string):
 if HAS_UNCERTAINTIES:
     tokenizer = uncertainty_tokenizer
 else:
-    tokenizer = _plain_tokenizer
-
-import typing
-
-UnaryOpT = typing.Callable[
-    [
-        Any,
-    ],
-    Any,
-]
-BinaryOpT = typing.Callable[[Any, Any], Any]
-
-_UNARY_OPERATOR_MAP: dict[str, UnaryOpT] = {"+": lambda x: x, "-": lambda x: x * -1}
-
-_BINARY_OPERATOR_MAP: dict[str, BinaryOpT] = {
-    "+/-": _ufloat,
-    "**": _power,
-    "*": operator.mul,
-    "": operator.mul,  # operator for implicit ops
-    "/": operator.truediv,
-    "+": operator.add,
-    "-": operator.sub,
-    "%": operator.mod,
-    "//": operator.floordiv,
-}
+    tokenizer = plain_tokenizer
 
 
 class EvalTreeNode:
@@ -344,12 +358,7 @@ class EvalTreeNode:
 
     def evaluate(
         self,
-        define_op: typing.Callable[
-            [
-                Any,
-            ],
-            Any,
-        ],
+        define_op: UnaryOpT,
         bin_op: dict[str, BinaryOpT] | None = None,
         un_op: dict[str, UnaryOpT] | None = None,
     ):
@@ -393,9 +402,6 @@ class EvalTreeNode:
 
         # single value
         return define_op(self.left)
-
-
-from collections.abc import Iterable
 
 
 def _build_eval_tree(

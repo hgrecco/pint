@@ -1,9 +1,9 @@
 """
-    pint.facets.numpy.numpy_func
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.numpy.numpy_func
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -201,7 +201,7 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
                 product /= x.units
         result_unit = product
     elif unit_op == "variance":
-        result_unit = ((1 * first_input_units + 1 * first_input_units) ** 2).units
+        result_unit = ((1 * first_input_units - 1 * first_input_units) ** 2).units
     elif unit_op == "square":
         result_unit = first_input_units**2
     elif unit_op == "sqrt":
@@ -445,7 +445,7 @@ matching_input_copy_units_output_ufuncs = [
 ]
 copy_units_output_ufuncs = ["ldexp", "fmod", "mod", "remainder"]
 op_units_output_ufuncs = {
-    "var": "square",
+    "var": "variance",
     "multiply": "mul",
     "true_divide": "div",
     "divide": "div",
@@ -454,7 +454,7 @@ op_units_output_ufuncs = {
     "cbrt": "cbrt",
     "square": "square",
     "reciprocal": "reciprocal",
-    "std": "sum",
+    "std": "delta",
     "sum": "sum",
     "cumsum": "sum",
     "matmul": "mul",
@@ -559,7 +559,7 @@ def _full_like(a, fill_value, **kwargs):
 def _interp(x, xp, fp, left=None, right=None, period=None):
     # Need to handle x and y units separately
     (x, xp, period), _ = unwrap_and_wrap_consistent_units(x, xp, period)
-    (fp, right, left), output_wrap = unwrap_and_wrap_consistent_units(fp, left, right)
+    (fp, left, right), output_wrap = unwrap_and_wrap_consistent_units(fp, left, right)
     return output_wrap(np.interp(x, xp, fp, left=left, right=right, period=period))
 
 
@@ -1033,8 +1033,6 @@ for func_str in (
 
 # Handle functions with output unit defined by operation
 for func_str in (
-    "std",
-    "nanstd",
     "sum",
     "nansum",
     "cumsum",
@@ -1042,7 +1040,7 @@ for func_str in (
     "linalg.norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ("diff", "ediff1d"):
+for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")

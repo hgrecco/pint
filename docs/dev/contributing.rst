@@ -115,7 +115,7 @@ features that work best as an extension package versus direct inclusion in Pint 
 * Extension (separate packages)
 
   * Duck array types that wrap Pint (come above Pint
-    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`
+    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`)
 
   * Uses features independent/on top of the libraries
 
@@ -128,6 +128,32 @@ features that work best as an extension package versus direct inclusion in Pint 
   * Intermingling of APIs occurs
 
   * Examples: Dask
+
+
+Creating a release
+------------------
+
+Maintainers may create a new release by tagging a commit::
+
+    $ # do changes and commit
+    $ git tag -a 0.24.rc0 -m "Tagging 0.24.rc0"
+    $ git push --tags
+
+For the final release, add date to the 0.24 section in CHANGES, then::
+
+    $ git commit -a -m "Preparing for release 0.24"
+    $ git tag -a 0.24 -m "Tagging 0.24"
+
+Then add to CHANGES the following::
+
+    0.25 (unreleased)
+    -----------------
+
+And push the tags and CHANGES ::
+
+    $ git commit -a -m "Back to development: 0.25"
+    $ git push --tags
+
 
 
 .. _github: http://github.com/hgrecco/pint

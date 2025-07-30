@@ -252,6 +252,7 @@ sverdrup = 1e6 * meter ** 3 / second = sv
 # Acceleration
 [acceleration] = [velocity] / [time]
 galileo = centimeter / second ** 2 = Gal
+meter_per_second_squared = meter / second ** 2
 
 # Force
 [force] = [mass] * [acceleration]
@@ -448,6 +449,9 @@ conventional_ohm_90 = R_K / R_K90 * ohm = Ω_90 = ohm_90
 siemens = ampere / volt = S = mho
 absiemens = 1e9 * siemens = abS = abmho
 
+# Conductivity
+[conductivity] = [conductance]/[length]
+
 # Capacitance
 [capacitance] = [charge] / [electric_potential]
 farad = coulomb / volt = F
@@ -495,6 +499,17 @@ nuclear_magneton = e * hbar / (2 * m_p) = µ_N = mu_N
 # Refractive index
 [refractive_index] = []
 refractive_index_unit = [] = RIU
+
+# Absorbance
+[absorbance] = []
+absorbance_unit = [] = AU
+
+# Membrane filtration flux
+LMH = L / m**2 / h
+[membrane_flux] = [volume] / [area] / [time]
+
+# Membrane filtration permeability
+[membrane_permeability] = [membrane_flux] / [pressure]
 
 # Logaritmic Unit Definition
 #  Unit = scale; logbase; logfactor

@@ -1,9 +1,9 @@
 """
-    pint.facets.context.registry
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.context.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -260,7 +260,7 @@ class GenericContextRegistry(
     @contextmanager
     def context(
         self: GenericContextRegistry[QuantityT, UnitT], *names: str, **kwargs: Any
-    ) -> Generator[GenericContextRegistry[QuantityT, UnitT], None, None]:
+    ) -> Generator[GenericContextRegistry[QuantityT, UnitT]]:
         """Used as a context manager, this function enables to activate a context
         which is removed after usage.
 
@@ -276,32 +276,32 @@ class GenericContextRegistry(
         >>> import pint.facets.context.objects
         >>> import pint
         >>> ureg = pint.UnitRegistry()
-        >>> ureg.add_context(pint.facets.context.objects.Context('one'))
-        >>> ureg.add_context(pint.facets.context.objects.Context('two'))
-        >>> with ureg.context('one'):
+        >>> ureg.add_context(pint.facets.context.objects.Context("one"))
+        >>> ureg.add_context(pint.facets.context.objects.Context("two"))
+        >>> with ureg.context("one"):
         ...     pass
 
         If a context has an argument, you can specify its value as a keyword argument:
 
-        >>> with ureg.context('one', n=1):
+        >>> with ureg.context("one", n=1):
         ...     pass
 
         Multiple contexts can be entered in single call:
 
-        >>> with ureg.context('one', 'two', n=1):
+        >>> with ureg.context("one", "two", n=1):
         ...     pass
 
         Or nested allowing you to give different values to the same keyword argument:
 
-        >>> with ureg.context('one', n=1):
-        ...     with ureg.context('two', n=2):
+        >>> with ureg.context("one", n=1):
+        ...     with ureg.context("two", n=2):
         ...         pass
 
         A nested context inherits the defaults from the containing context:
 
-        >>> with ureg.context('one', n=1):
+        >>> with ureg.context("one", n=1):
         ...     # Here n takes the value of the outer context
-        ...     with ureg.context('two'):
+        ...     with ureg.context("two"):
         ...         pass
         """
         # Enable the contexts.
@@ -336,9 +336,11 @@ class GenericContextRegistry(
 
         Examples
         --------
-        >>> @ureg.with_context('sp')
+        >>> @ureg.with_context("sp")
         ... def my_cool_fun(wavelength):
-        ...     print('This wavelength is equivalent to: %s', wavelength.to('terahertz'))
+        ...     print(
+        ...         "This wavelength is equivalent to: %s", wavelength.to("terahertz")
+        ...     )
         """
 
         def decorator(func):
@@ -364,6 +366,7 @@ class GenericContextRegistry(
         src: UnitsContainer,
         dst: UnitsContainer,
         inplace: bool = False,
+        **ctx_kwargs,
     ) -> Magnitude:
         """Convert value from some source to destination units.
 
@@ -381,6 +384,8 @@ class GenericContextRegistry(
             destination units.
         inplace :
              (Default value = False)
+        **ctx_kwargs :
+            keyword arguments for the context
 
         Returns
         -------
@@ -398,11 +403,11 @@ class GenericContextRegistry(
             if path:
                 src = self.Quantity(value, src)
                 for a, b in zip(path[:-1], path[1:]):
-                    src = self._active_ctx.transform(a, b, self, src)
+                    src = self._active_ctx.transform(a, b, self, src, **ctx_kwargs)
 
                 value, src = src._magnitude, src._units
 
-        return super()._convert(value, src, dst, inplace)
+        return super()._convert(value, src, dst, inplace, **ctx_kwargs)
 
     def _get_compatible_units(
         self, input_units: UnitsContainer, group_or_system: str | None = None
