@@ -23,6 +23,13 @@ class TestMeasurement(QuantityTestCase):
         m = M_(4.0, 0.1, "s * s")
         assert repr(m) == "<Measurement(4.0, 0.1, second ** 2)>"
 
+    def test_measurement_result(self):
+        q = self.ureg.Quantity(4.2, "meter")
+        m = self.ureg.Measurement(5.0, 0.1, "meter")
+        # quantity + measurement = measurement
+        result = q + m
+        assert isinstance(result, self.ureg.Measurement)
+
     def test_build(self):
         M_ = self.ureg.Measurement
         v, u = self.Q_(4.0, "s"), self.Q_(0.1, "s")
@@ -298,10 +305,3 @@ class TestMeasurement(QuantityTestCase):
         for p in pint_eval.tokenizer("8 + / - 4"):
             str(p)
         assert True
-
-    def test_measurement_result(self):
-        q = self.ureg.Quantity(4.2, "meter")
-        m = self.ureg.Measurement(5.0, 0.1, "meter")
-        # quantity + measurement = measurement
-        result = q + m
-        assert isinstance(result, self.ureg.Measurement)
