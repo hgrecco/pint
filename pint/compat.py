@@ -240,6 +240,20 @@ try:
 except ImportError:
     HAS_DASK = False
 
+try:
+    import tomli_w  # noqa: F401
+
+    HAS_TOMLI_W = True
+except ImportError:
+    HAS_TOMLI_W = False
+
+if sys.version_info >= (3, 11):
+    import tomllib  # noqa
+
+    HAS_TOMLLIB = True
+else:
+    HAS_TOMLLIB = False
+
 
 ##############################
 # Imports are handled here
@@ -247,6 +261,17 @@ except ImportError:
 # them as constants
 # in mypy configuration.
 ##############################
+
+if HAS_TOMLLIB:
+    import tomllib  # noqa: F401
+else:
+    tomllib = None
+
+if HAS_TOMLI_W:
+    import tomli_w  # noqa: F401
+else:
+    tomli_w = None
+
 
 if HAS_BABEL:
     from babel import Locale

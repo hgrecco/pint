@@ -250,7 +250,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._def_parser = delegates.txt_defparser.DefParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
-
+        self._toml_parser = delegates.toml_defparser.TomlParser(
+            delegates.ParserConfig(non_int_type), diskcache=self._diskcache
+        )
+        self.write_definitions = lambda x: delegates.write_definitions(x, self)
         self.formatter = delegates.Formatter(self)
         self._filename = filename
         self.force_ndarray = force_ndarray
@@ -597,11 +600,17 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
             parsed_project = self._def_parser.parse_string("\n".join(file))
+        elif str(file)[-5:] == ".toml":
+            parsed_project = self._toml_parser.parse_file(file)
         else:
             parsed_project = self._def_parser.parse_file(file)
 
-        for definition in self._def_parser.iter_parsed_project(parsed_project):
-            self._helper_dispatch_adder(definition)
+        if str(file)[-5:] == ".toml":
+            for definition in self._toml_parser.iter_parsed_project(parsed_project):
+                self._helper_dispatch_adder(definition)
+        else:
+            for definition in self._def_parser.iter_parsed_project(parsed_project):
+                self._helper_dispatch_adder(definition)
 
         return parsed_project
 
