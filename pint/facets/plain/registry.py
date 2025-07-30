@@ -121,6 +121,9 @@ class RegistryCache:
         #: Maps dimensionality (UnitsContainer) to Units (str)
         self.dimensional_equivalents: dict[UnitsContainer, frozenset[str]] = {}
 
+        #: Maps dimensionality (UnitsContainer) to kinds (str)
+        self.kind_dimensional_equivalents: dict[UnitsContainer, frozenset[str]] = {}
+
         #: Maps dimensionality (UnitsContainer) to Dimensionality (UnitsContainer)
         # TODO: this description is not right.
         self.root_units: dict[UnitsContainer, tuple[Scalar, UnitsContainer]] = {}
@@ -140,6 +143,7 @@ class RegistryCache:
             return False
         attrs = (
             "dimensional_equivalents",
+            "kind_dimensional_equivalents",
             "root_units",
             "dimensionality",
             "parse_unit",
@@ -298,6 +302,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         #: Map unit name (string) to its definition (UnitDefinition).
         #: Might contain prefixed units.
         self._units: dict[str, UnitDefinition] = {}
+
+        #: Map kind name (string) to a set of kind UnitContainers that can be converted to that kind
+        self._kind_relations: dict[str, set[UnitsContainer]] = {}
 
         #: List base unit names
         self._base_units: list[str] = []
@@ -565,6 +572,25 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 self._add_dimension(DimensionDefinition(dim_name))
         self._helper_adder(definition, self._dimensions, None)
 
+        for kind, container in self._rearrange_dimension_definition(
+            definition.name, definition.reference
+        ):
+            self._kind_relations.setdefault(kind, set()).add(container)
+
+        for alt_ref in definition.alternate_references:
+            for kind, container in self._rearrange_dimension_definition(
+                definition.name, alt_ref
+            ):
+                self._kind_relations.setdefault(kind, set()).add(container)
+
+    def _rearrange_dimension_definition(self, name, reference):
+        # rearrange to give a UnitContainer that is dimensionless
+        dimensionless = reference * UnitsContainer({name: -1})
+        return [
+            (kind, (dimensionless / UnitsContainer({kind: exp})) ** (-1 / exp))
+            for kind, exp in dimensionless.items()
+        ]
+
     def _add_prefix(self, definition: PrefixDefinition) -> None:
         self._helper_adder(definition, self._prefixes, None)
 
@@ -647,6 +673,13 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
                 except Exception as exc:
                     logger.warning(f"Could not resolve {unit_name}: {exc!r}")
+
+            for kind_name in self._dimensions:
+                di = self._get_dimensionality(self.UnitsContainer({kind_name: 1}))
+                dimeq_set = self._cache.kind_dimensional_equivalents.setdefault(
+                    di, set()
+                )
+                dimeq_set.add(kind_name)
         return self._cache
 
     def get_name(self, name_or_alias: str, case_sensitive: bool | None = None) -> str:
@@ -1037,6 +1070,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         src_dim = self._get_dimensionality(input_units)
         return self._cache.dimensional_equivalents.setdefault(src_dim, frozenset())
 
+    def get_compatible_kinds(self, dimensionality: UnitsContainer) -> frozenset[str]:
+        # TODO: Change this to return KindT
+        return self._cache.kind_dimensional_equivalents.setdefault(
+            dimensionality, frozenset()
+        )
+
     # TODO: remove context from here
     def is_compatible_with(
         self, obj1: Any, obj2: Any, *contexts: str | Context, **ctx_kwargs
@@ -1326,6 +1365,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             cache[input_string] = ret
 
         return ret
+
+    def _dimensions_to_base_units(self, dimensions: UnitsContainer) -> UnitsContainer:
+        """Get the base units for a dimension."""
+        base_units = {self.Unit(unit).dimensonality: unit for unit in self._base_units}
+        return UnitsContainer({base_units[dim]: exp for dim, exp in dimensions.items()})
 
     def _eval_token(
         self,

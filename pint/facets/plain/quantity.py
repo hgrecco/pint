@@ -758,6 +758,13 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
 
+        if hasattr(self, "_kinds") and hasattr(other, "_kinds"):
+            if self._kinds != other._kinds:
+                # TODO: Should this be a KindError?
+                raise ValueError(
+                    f"Cannot add/subtract quantities with different kinds: {self._kinds} and {other._kinds}"
+                )
+
         # Next we define some variables to make if-clauses more readable.
         self_non_mul_units = self._get_non_multiplicative_units()
         is_self_multiplicative = len(self_non_mul_units) == 0

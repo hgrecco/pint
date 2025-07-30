@@ -122,13 +122,15 @@ count = []
 
 @import constants_en.txt
 
-
 #### UNITS ####
 # Common and less common, grouped by quantity.
 # Conversion factors are exact (except when noted),
 # although floating-point conversion may introduce inaccuracies
 
 # Angle
+[arc_length] = [length]
+[radius] = [length]
+[angle] = [arc_length] / [radius]
 turn = 2 * π * radian = _ = revolution = cycle = circle
 degree = π / 180 * radian = deg = arcdeg = arcdegree = angular_degree
 arcminute = degree / 60 = arcmin = arc_minute = angular_minute
@@ -210,6 +212,9 @@ degree_Reaumur = 4 / 5 * kelvin; offset: 273.15 = °Re = reaumur = degRe = degre
 atomic_unit_of_temperature = E_h / k = a_u_temp
 planck_temperature = (hbar * c ** 5 / gravitational_constant / k ** 2) ** 0.5
 
+# Specific heat capacity
+# [specific_heat_capacity] = [energy] / [temperature] / [mass] = J / kg / K
+
 # Area
 [area] = [length] ** 2
 are = 100 * meter ** 2
@@ -227,6 +232,7 @@ stere = meter ** 3
 # Frequency
 [frequency] = 1 / [time]
 hertz = 1 / second = Hz
+[angular_frequency] = [angle] / [time]
 revolutions_per_minute = revolution / minute = rpm
 revolutions_per_second = revolution / second = rps
 counts_per_second = count / second = cps
@@ -255,7 +261,7 @@ galileo = centimeter / second ** 2 = Gal
 meter_per_second_squared = meter / second ** 2
 
 # Force
-[force] = [mass] * [acceleration]
+[force] = [mass] * [acceleration] = N
 newton = kilogram * meter / second ** 2 = N
 dyne = gram * centimeter / second ** 2 = dyn
 force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
@@ -264,7 +270,7 @@ force_metric_ton = g_0 * metric_ton = tf = metric_ton_force = force_t = t_force
 atomic_unit_of_force = E_h / a_0 = a_u_force
 
 # Energy
-[energy] = [force] * [length]
+[energy] = [force] * [length] = J
 joule = newton * meter = J
 erg = dyne * centimeter
 watt_hour = watt * hour = Wh = watthour
@@ -284,8 +290,13 @@ ton_TNT = 1e9 * calorie = tTNT
 tonne_of_oil_equivalent = 1e10 * international_calorie = toe
 atmosphere_liter = atmosphere * liter = atm_l
 
+# Torque
+[moment_arm] = [length] = m
+[torque] = [force] * [moment_arm] = N m
+foot_pound = foot * force_pound = ft_lb = footpound
+
 # Power
-[power] = [energy] / [time]
+[power] = [energy] / [time] = [torque] * [angular_frequency] = [volumetric_flow_rate] * [pressure] = W
 watt = joule / second = W
 volt_ampere = volt * ampere = VA
 horsepower = 550 * foot * force_pound / second = hp = UK_horsepower = hydraulic_horsepower
@@ -298,7 +309,7 @@ standard_liter_per_minute = atmosphere * liter / minute = slpm = slm
 conventional_watt_90 = K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt = W_90
 
 # Momentum
-[momentum] = [length] * [mass] / [time]
+[momentum] = [velocity] * [mass]
 
 # Density (as auxiliary for pressure)
 [density] = [mass] / [volume]
@@ -327,9 +338,6 @@ foot_H2O = foot * water * g_0 = ftH2O = feet_H2O
 centimeter_H2O = centimeter * water * g_0 = cmH2O = cm_H2O
 sound_pressure_level = 20e-6 * pascal = SPL
 
-# Torque
-[torque] = [force] * [length]
-foot_pound = foot * force_pound = ft_lb = footpound
 
 # Viscosity
 [viscosity] = [pressure] * [time]

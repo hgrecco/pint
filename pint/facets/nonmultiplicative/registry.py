@@ -302,7 +302,8 @@ class GenericNonMultiplicativeRegistry(
 
 class NonMultiplicativeRegistry(
     GenericNonMultiplicativeRegistry[
-        objects.NonMultiplicativeQuantity[Any], objects.NonMultiplicativeUnit
+        objects.NonMultiplicativeQuantity[Any],
+        objects.NonMultiplicativeUnit,
     ]
 ):
     Quantity: TypeAlias = objects.NonMultiplicativeQuantity[Any]

@@ -40,6 +40,7 @@ from ._spec_helpers import (
 )
 
 if TYPE_CHECKING:
+    from ...facets.kind import KindKind, QuantityKind
     from ...facets.measurement import Measurement
     from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
@@ -51,6 +52,41 @@ _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 class BaseFormatter:
     def __init__(self, registry: UnitRegistry | None = None):
         self._registry = registry
+
+    def format_kind(
+        self,
+        kind: KindKind | Iterable[tuple[str, Any]],
+        uspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        """Format a unit (can be compound) into string
+        given a string formatting specification and locale related arguments.
+        """
+        kind = kind._kinds
+        return self.format_unit(kind, uspec, sort_func, **babel_kwds)
+
+    def format_quantitykind(
+        self,
+        quantitykind: QuantityKind,
+        qspec: str = "",
+        sort_func: SortFunc | None = None,
+        **babel_kwds: Unpack[BabelKwds],
+    ) -> str:
+        """Format a quantitykind into string
+        given a string formatting specification and locale related arguments.
+        """
+        quantity = quantitykind.quantity
+
+        registry = self._registry
+
+        mspec, uspec = split_format(
+            qspec, registry.formatter.default_format, registry.separate_format_defaults
+        )
+
+        mu = self.format_quantity(quantity, qspec, sort_func, **babel_kwds)
+        k = self.format_kind(quantitykind.kinds, uspec, sort_func, **babel_kwds)
+        return mu + " " + k
 
 
 class DefaultFormatter(BaseFormatter):

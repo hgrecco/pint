@@ -221,11 +221,11 @@ class DerivedDimensionDefinition(
 ):
     """Definition of a derived dimension::
 
-        [dimension name] = <relation to other dimensions>
+        [dimension name] = <relation to other dimensions> [= <preferred unit>]
 
     Example::
 
-        [density] = [mass] / [volume]
+        [density] = [mass] / [volume] = kilogram / meter ** 3
     """
 
     @classmethod
@@ -235,23 +235,31 @@ class DerivedDimensionDefinition(
         if not (s.startswith("[") and "=" in s):
             return None
 
-        name, value, *aliases = s.split("=")
+        name, value, *alt_refs = (p.strip() for p in s.split("="))
 
-        if aliases:
-            return common.DefinitionSyntaxError(
-                "Derived dimensions cannot have aliases."
-            )
+        preferred_unit = None
+        if alt_refs:
+            if "[" not in alt_refs[-1]:
+                preferred_unit = alt_refs[-1]
+                alt_refs = alt_refs[:-1]
+        else:
+            alt_refs = []
+
+        def to_dim_container(string):
+            try:
+                reference = config.to_dimension_container(string)
+            except common.DefinitionSyntaxError as exc:
+                return common.DefinitionSyntaxError(
+                    f"In {name} derived dimensions must only be referenced "
+                    f"to dimensions. {exc}"
+                )
+            return reference
+
+        reference = to_dim_container(value)
+        alternate_references = tuple([to_dim_container(ref) for ref in alt_refs])
 
         try:
-            reference = config.to_dimension_container(value)
-        except common.DefinitionSyntaxError as exc:
-            return common.DefinitionSyntaxError(
-                f"In {name} derived dimensions must only be referenced "
-                f"to dimensions. {exc}"
-            )
-
-        try:
-            return cls(name.strip(), reference)
+            return cls(name.strip(), reference, preferred_unit, alternate_references)
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 

@@ -31,6 +31,7 @@ class Quantity(
     facets.DaskRegistry.Quantity,
     facets.NumpyRegistry.Quantity,
     facets.MeasurementRegistry.Quantity,
+    facets.KindRegistry.Quantity,
     facets.NonMultiplicativeRegistry.Quantity,
     facets.PlainRegistry.Quantity,
 ):
@@ -43,6 +44,7 @@ class Unit(
     facets.DaskRegistry.Unit,
     facets.NumpyRegistry.Unit,
     facets.MeasurementRegistry.Unit,
+    facets.KindRegistry.Unit,
     facets.NonMultiplicativeRegistry.Unit,
     facets.PlainRegistry.Unit,
 ):
@@ -56,6 +58,7 @@ class GenericUnitRegistry(
     facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
+    facets.GenericKindRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericNonMultiplicativeRegistry[facets.QuantityT, facets.UnitT],
     facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT],
 ):
