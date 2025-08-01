@@ -1,7 +1,8 @@
 sphinx<8
 ipython<=8.12
 matplotlib
-mip>=1.13
+# Only install mip if Python is less than 3.12, otherwise it causes "Windows fatal exception: access violation" (see Issue #2121).
+mip>=1.13; python_version < '3.12'
 nbsphinx
 numpy
 pytest
