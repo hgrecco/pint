@@ -25,6 +25,8 @@ Pint Changelog
 - Fix formatted scientific notation bug in Python 3.13 (#2168)
 - Fix ability to add dB units, and to add dB (dimensionless) to referenced dB units, such as dBm or dBW (#1160)
 - Improve pressure unit definitions in default definition file (#2186)
+- Fix issues with MIP and Dask at the install level (#2188)
+- Skip false xfail tests (#2188)
 - Avoid and document known issues with MIP during install, testing and runtime (#2188 and #2121)
 - Fix issue with Dask by restricting its version to < 2025.3.0 (#2188 and Dask #1016)
 - Skip false xfail tests linked to a known numpy issue (#2188 and #1776)
