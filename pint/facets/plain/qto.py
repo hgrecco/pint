@@ -3,6 +3,7 @@ from __future__ import annotations
 import bisect
 import math
 import numbers
+import sys
 import warnings
 from typing import TYPE_CHECKING
 
@@ -176,6 +177,8 @@ def to_preferred(
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
+    Note: this feature crashes on Python >= 3.12 (issue #2121).
+
     Examples
     --------
 
@@ -186,6 +189,9 @@ def to_preferred(
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
     <Quantity(4.44822162, 'watt * second')>
     """
+
+    if sys.version_info.major == 3 and sys.version_info.minor >= 12:
+        raise Exception("This feature crashes on Python >= 3.12 (issue #2121)")
 
     units = _get_preferred(quantity, preferred_units)
     return quantity.to(units)
@@ -196,6 +202,8 @@ def ito_preferred(
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
+    Note: this feature crashes on Python >= 3.12 (issue #2121).
+
     Examples
     --------
 
@@ -206,6 +214,9 @@ def ito_preferred(
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
     <Quantity(4.44822162, 'watt * second')>
     """
+
+    if sys.version_info.major == 3 and sys.version_info.minor >= 12:
+        raise Exception("This feature crashes on Python >= 3.12 (issue #2121)")
 
     units = _get_preferred(quantity, preferred_units)
     return quantity.ito(units)
