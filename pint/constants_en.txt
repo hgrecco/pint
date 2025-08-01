@@ -3,6 +3,7 @@
 # Language: english
 # Source: https://physics.nist.gov/cuu/Constants/
 #         https://physics.nist.gov/PhysRefData/XrayTrans/Html/search.html
+#         https://physics.nist.gov/cuu/pdf/sp811.pdf
 # :copyright: 2013,2019 by Pint Authors, see AUTHORS for more details.
 
 #### MATHEMATICAL CONSTANTS ####
@@ -26,6 +27,8 @@ standard_gravity = 9.80665 m/s^2 = g_0 = g0 = g_n = gravity   # since 1901
 standard_atmosphere = 1.01325e5 Pa = atm = atmosphere         # since 1954
 conventional_josephson_constant = 4.835979e14 Hz / V = K_J90  # since Jan 1990
 conventional_von_klitzing_constant = 2.5812807e4 ohm = R_K90  # since Jan 1990
+conventional_water_density = 1000 kg/m^3 = ρH2O
+conventional_mercury_density = 13595.1 kg/m^3 = ρHg
 
 #### DERIVED EXACT CONSTANTS ####
 # Floating-point conversion may introduce inaccuracies
@@ -61,6 +64,13 @@ neutron_mass = 1.67492750056e-27 kg = m_n                                       
 x_unit_Cu = 1.00207697e-13 m = Xu_Cu                                                       # (28)
 x_unit_Mo = 1.00209952e-13 m = Xu_Mo                                                       # (53)
 angstrom_star = 1.00001495e-10 = Å_star                                                    # (90)
+
+# Mass densities
+water_density_4C = 999.972 kg/m^3 = ρH2O_4C				# approximate
+water_density_60F = 999.001 kg/m^3 = ρH2O_60F			# approximate
+mercury_density_0C = 13595.1 kg/m^3 = ρHg_0C			# approximate
+mercury_density_32F = 13595.1 kg/m^3 = ρHg_4C			# approximate
+mercury_density_60F = 13556.8 kg/m^3 = ρHg_60F			# approximate
 
 #### DERIVED CONSTANTS ####
 
