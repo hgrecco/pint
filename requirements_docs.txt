@@ -1,7 +1,8 @@
 sphinx<8
 ipython<=8.12
 matplotlib
-mip>=1.13
+# Only install mip if Python is less than 3.12, otherwise it causes "Windows fatal exception: access violation" (see Issue #2121).
+mip>=1.13; python_version < '3.12'
 nbsphinx
 numpy
 pytest
@@ -11,7 +12,8 @@ graphviz
 xarray
 pooch
 sparse
-dask[complete]
+# Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
+dask[complete]<2025.3.0
 setuptools>=41.2
 Serialize
 pygments>=2.4
