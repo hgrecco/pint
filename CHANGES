@@ -24,6 +24,9 @@ Pint Changelog
 - Fix swapped left and right arguments in interp (#2187)
 - Fix formatted scientific notation bug in Python 3.13 (#2168)
 - Fix ability to add dB units, and to add dB (dimensionless) to referenced dB units, such as dBm or dBW (#1160)
+- Fix issues with MIP and Dask at the install level (#2188)
+- Skip false xfail tests (#2188)
+- Improve `Contributing` documentation (#2188)
 
 
 0.24.4 (2024-11-07)
