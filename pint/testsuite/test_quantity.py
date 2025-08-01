@@ -6,6 +6,7 @@ import logging
 import math
 import operator as op
 import pickle
+import sys
 import warnings
 from unittest.mock import patch
 
@@ -385,6 +386,10 @@ class TestQuantity(QuantityTestCase):
         )
 
     @helpers.requires_mip
+    @pytest.mark.skipif(
+        sys.version_info.major == 3 and sys.version_info.minor > 11,
+        reason="Crashes on Python>=3.12 (issue #2121).",
+    )
     def test_to_preferred(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -423,6 +428,10 @@ class TestQuantity(QuantityTestCase):
         assert result.units == ureg.volts
 
     @helpers.requires_mip
+    @pytest.mark.skipif(
+        sys.version_info.major == 3 and sys.version_info.minor > 11,
+        reason="Crashes on Python>=3.12 (issue #2121).",
+    )
     def test_to_preferred_registry(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -438,6 +447,10 @@ class TestQuantity(QuantityTestCase):
         assert pressure.units == ureg.Pa
 
     @helpers.requires_mip
+    @pytest.mark.skipif(
+        sys.version_info.major == 3 and sys.version_info.minor > 11,
+        reason="Crashes on Python>=3.12 (issue #2121).",
+    )
     def test_autoconvert_to_preferred(self):
         ureg = self.ureg
         Q_ = self.Q_
