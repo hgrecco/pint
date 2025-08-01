@@ -12,7 +12,8 @@ graphviz
 xarray
 pooch
 sparse
-dask[complete]
+# Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
+dask[complete]<2025.3.0
 setuptools>=41.2
 Serialize
 pygments>=2.4

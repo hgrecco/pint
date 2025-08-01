@@ -47,7 +47,8 @@ uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel <= 2.8"]
 pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
-dask = ["dask"]
+# Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
+dask = ["dask < 2025.3.0"]
 # Only install mip if Python is less than 3.12, otherwise it causes "Windows fatal exception: access violation" (see Issue #2121).
 mip = ["mip >= 1.13; python_version < '3.12'"]
 matplotlib = ["matplotlib"]
