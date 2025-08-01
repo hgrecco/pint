@@ -16,6 +16,7 @@ from ...compat import (
 )
 from ...errors import UndefinedBehavior
 from ...util import infer_base_unit
+import itertools
 
 if TYPE_CHECKING:
     from ..._typing import UnitLike
@@ -84,7 +85,7 @@ def to_reduced_units(
 def to_compact(
     quantity: PlainQuantity, unit: UnitsContainer | None = None
 ) -> PlainQuantity:
-    """ "Return PlainQuantity rescaled to compact, human-readable units.
+    """ "Return PlainQuantity in compact, human-readable units by adding or modifying the SI prefix.
 
     To get output in terms of a different unit, use the unit parameter.
 
@@ -169,6 +170,50 @@ def to_compact(
     new_unit_container = q_base._units.rename(unit_str, new_unit_str)
 
     return quantity.to(new_unit_container)
+
+def to_human(
+    quantity: PlainQuantity, human_units: list[UnitLike] | None = None
+) -> PlainQuantity:
+    """Return Quantity converted to the smallest human_unit with a magnitude greater than 1,
+    or the largest magnitude if all conversions give magnitudes less than 1.
+    
+    Examples
+    --------
+
+    >>> import pint
+    >>> ureg = pint.UnitRegistry()
+    >>> time_units = [ureg.s, ureg.min, ureg.hr, ureg.day, ureg.year]
+    >>> (1000*ureg.s).to_human(time_units)
+    <Quantity(16.6666667, 'minute')>
+    >>> (100000*ureg.s).to_human(time_units)
+    <Quantity(1.15740741, 'day')>
+    >>> (100000000*ureg.s).to_human(time_units)
+    <Quantity(3.16880878, 'year')>
+    >>> ureg.Quantity(100000,"m**3/hr").to_human([ureg.Unit("m**3/s"), ureg.Unit("liter/s")])
+    <Quantity(27.7777778, 'meter ** 3 / second')>
+    >>> ureg.Quantity(1000,"m**3/hr").to_human([ureg.Unit("m**3/s"), ureg.Unit("liter/s")])
+    <Quantity(277.777778, 'liter / second')>
+
+    """
+    if human_units is None:
+        human_units = quantity._REGISTRY.default_human_units
+
+    candidate_units = []
+    if human_units:
+        for unit in human_units:
+            if unit.dimensionality == quantity.dimensionality:
+                candidate_units.append(unit)
+    if candidate_units == []:
+        return quantity
+
+    results = [quantity.to(cu) for cu in candidate_units]
+    results = sorted(results, key=lambda x:x.m)
+
+    for result in results:
+        if result.m > 1:
+            return result
+    return results[-1]
+    
 
 
 def to_preferred(

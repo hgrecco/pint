@@ -578,6 +578,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     # convenient that they live in PlainQuantity.
     # They are implemented elsewhere to keep Quantity class clean.
     to_compact = qto.to_compact
+    to_human = qto.to_human
     to_preferred = qto.to_preferred
     ito_preferred = qto.ito_preferred
     to_reduced_units = qto.to_reduced_units
