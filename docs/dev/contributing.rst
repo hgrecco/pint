@@ -76,7 +76,7 @@ Then type::
     $ conda install git
     $ pip install -e ".[test]"
     $ pip install -r requirements_docs.txt
-    $ pip install pre-commit # This step and the next are optional but recommended.
+    $ pip install pre-commit
     $ pre-commit install
 
 All
