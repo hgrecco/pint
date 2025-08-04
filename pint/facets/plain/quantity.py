@@ -582,6 +582,8 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     ito_preferred = qto.ito_preferred
     to_reduced_units = qto.to_reduced_units
     ito_reduced_units = qto.ito_reduced_units
+    to_unprefixed = qto.to_unprefixed
+    ito_unprefixed = qto.ito_unprefixed
 
     # Mathematical operations
     def __int__(self) -> int:

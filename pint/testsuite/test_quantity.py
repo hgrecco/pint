@@ -466,6 +466,25 @@ class TestQuantity(QuantityTestCase):
         pressure = Q_(1, "N") * Q_("1 m**-2")
         assert pressure.units == ureg.Pa
 
+    params = [
+        ("mks", "1 mm^2/MW", "m^2/W"),
+        ("mks", "1 Mg", "kg"),
+        ("mks", "1 ton", "ton"),
+        ("mks", "1 mS / cm", "S / m"),
+        ("cgs", "1 mm^2/MW", "cm^2/W"),
+        ("cgs", "1 Mg", "g"),
+        ("cgs", "1 ton", "ton"),
+        ("cgs", "1 mS / cm", "S / cm"),
+    ]
+
+    @pytest.mark.parametrize(("sys", "input_string", "expected"), params)
+    def test_to_unprefixed(self, sys, input_string, expected):
+        ureg = UnitRegistry(system=sys)
+        Q_ = ureg.Quantity
+
+        result = Q_(input_string).to_unprefixed()
+        assert result.units == ureg.Unit(expected)
+
     @helpers.requires_numpy
     def test_convert_numpy(self):
         # Conversions with single units take a different codepath than
