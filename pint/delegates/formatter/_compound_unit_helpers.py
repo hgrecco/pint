@@ -24,7 +24,7 @@ from typing import (
 )
 
 from ...compat import TypeAlias, babel_parse
-from ...util import UnitsContainer
+from ...util import NonReducingUnitsContainer, UnitsContainer
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -245,6 +245,7 @@ def prepare_compount_unit(
     locale: Locale | str | None = None,
     as_ratio: bool = True,
     registry: UnitRegistry | None = None,
+    empty_numerator_fmt="1",
 ) -> tuple[Iterable[tuple[str, T]], Iterable[tuple[str, T]]]:
     """Format compound unit into unit container given
     an spec and locale.
@@ -256,6 +257,8 @@ def prepare_compount_unit(
 
     if isinstance(unit, UnitsContainer):
         out = unit.items()
+    elif hasattr(unit, "_units") and isinstance(unit._units, NonReducingUnitsContainer):
+        out = unit._units.non_reduced_d_items
     elif hasattr(unit, "_units"):
         out = unit._units.items()
     else:
