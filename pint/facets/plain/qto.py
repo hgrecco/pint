@@ -3,7 +3,6 @@ from __future__ import annotations
 import bisect
 import math
 import numbers
-from operator import pos
 import sys
 import warnings
 from typing import TYPE_CHECKING
