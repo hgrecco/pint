@@ -66,6 +66,7 @@ run any commands to install pint or its dependencies, you just need to be in the
 To run the tests, linting and documentation building, you can use the following commands:
 
   $ pixi run --environment test-py313-all test # runs tests only
+  $ pixi run --environment test-py313-all pytest -k test_log # run specific tests
   $ pixi run --environment test-py313-all bench # runs tests and benchmarks. Much slower and rarely needed.
   $ pixi run --environment lint lint --all-files
   $ pixi run docbuild
