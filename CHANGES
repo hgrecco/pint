@@ -29,6 +29,7 @@ Pint Changelog
 - Fix issue with Dask by restricting its version to < 2025.3.0 (#2188 and Dask #1016)
 - Skip false xfail tests linked to a known numpy issue (#2188 and #1776)
 - Improve `Contributing` documentation (#2188)
+- Add `Quantity.to_unprefixed` and `ito_unprefixed` methods that remove SI prefixes without converting to base units. (#2201)
 
 
 0.24.4 (2024-11-07)

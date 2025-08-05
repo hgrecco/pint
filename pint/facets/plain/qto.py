@@ -16,11 +16,10 @@ from ...compat import (
     mip_xsum,
 )
 from ...errors import UndefinedBehavior
-from ...util import infer_base_unit
+from ...util import UnitsContainer, infer_base_unit
 
 if TYPE_CHECKING:
     from ..._typing import UnitLike
-    from ...util import UnitsContainer
     from .quantity import PlainQuantity
 
 
@@ -170,6 +169,39 @@ def to_compact(
     new_unit_container = q_base._units.rename(unit_str, new_unit_str)
 
     return quantity.to(new_unit_container)
+
+
+def _get_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
+    units = list(quantity._units.items())
+    new_units = []
+
+    base_unit_map = {}
+
+    for unit in quantity._REGISTRY._base_units:
+        base_unit_map[unit] = str(quantity._REGISTRY.get_base_units(unit)[1]._units)
+
+    # TODO: This code is very similar to util.infer_base_unit.
+    # Look at combining the two functions.
+    for unit in units:
+        candidates = quantity._REGISTRY.parse_unit_name(unit[0])
+        _, unprefix_unit, _ = candidates[0]
+        # the unprefix_unit could be g rather than kg.
+        # check whether the base_unit for the unprefix_unit also maps to g
+        if unprefix_unit in base_unit_map:
+            unprefix_unit = base_unit_map[unprefix_unit]
+        new_units.append((unprefix_unit, unit[1]))
+    new_unit_container = UnitsContainer(new_units)
+    return new_unit_container
+
+
+def to_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
+    units = _get_unprefixed(quantity)
+    return quantity.to(units)
+
+
+def ito_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
+    units = _get_unprefixed(quantity)
+    return quantity.ito(units)
 
 
 def to_preferred(
