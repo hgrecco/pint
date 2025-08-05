@@ -54,7 +54,7 @@ Here is how to set up your environment if you're contributing to this project fo
 Using pixi
 ~~~~~~~~~~
 
-First install `pixi`_, then run the following commands in a terminal
+First install `pixi`_, then run the following commands in a terminal::
 
     $ git clone git@github.com:hgrecco/pint.git
     $ cd pint
@@ -63,7 +63,7 @@ pixi handles setting up environments and downloading and installing modules so y
 run any commands to install pint or its dependencies, you just need to be in the pint directory.
 
 
-To run the tests, linting and documentation building, you can use the following commands:
+To run the tests, linting and documentation building, you can use the following commands::
 
   $ pixi run --environment test-py313-all test # runs tests only
   $ pixi run --environment test-py313-all pytest -k test_log # run specific tests
@@ -72,7 +72,7 @@ To run the tests, linting and documentation building, you can use the following 
   $ pixi run docbuild
   $ pixi run doctest
 
-Other common commands include:
+Other common commands include::
 
   $ pixi run --environment test-py313-all python # runs a python shell with pint installed
   $ pixi run --environment test-py313-all python my_script.py # runs a script with pint installed
