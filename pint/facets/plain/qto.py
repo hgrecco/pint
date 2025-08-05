@@ -3,6 +3,7 @@ from __future__ import annotations
 import bisect
 import math
 import numbers
+from operator import pos
 import sys
 import warnings
 from typing import TYPE_CHECKING
@@ -180,6 +181,8 @@ def _get_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
     for unit in quantity._REGISTRY._base_units:
         base_unit_map[unit] = str(quantity._REGISTRY.get_base_units(unit)[1]._units)
 
+    # TODO: This code is very similar to util.infer_base_unit.
+    # Look at combining the two functions.
     for unit in units:
         candidates = quantity._REGISTRY.parse_unit_name(unit[0])
         _, unprefix_unit, _ = candidates[0]
