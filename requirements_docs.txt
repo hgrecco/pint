@@ -8,6 +8,7 @@ numpy
 pytest
 jupyter_client
 ipykernel
+ipython
 graphviz
 xarray
 pooch
