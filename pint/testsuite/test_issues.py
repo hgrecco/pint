@@ -19,6 +19,7 @@ from pint.facets.plain.unit import UnitsContainer
 from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
+from pint.errors import UndefinedUnitError
 
 from .helpers import internal
 
@@ -1368,3 +1369,10 @@ def test_issue2172():
 
     mass.ito("m**3", density=958.05 * ureg.kilogram / ureg.meter**3)
     assert mass.m == pytest.approx(1.0437868587234487)  # 100 C
+
+
+def test_issue2199(func_registry):
+    """raise exception when Quantity.from_tuple called with invalid units"""
+    msg = r"\'wrong\' is not defined in the unit registry"
+    with pytest.raises(UndefinedUnitError, match=msg):
+        func_registry.Quantity.from_tuple((1, (('wrong', 1),)))
