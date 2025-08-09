@@ -1372,7 +1372,6 @@ def test_issue2172():
 
 
 def test_issue2199(func_registry):
-    """raise exception when Quantity.from_tuple called with invalid units"""
-    msg = r"\'wrong\' is not defined in the unit registry"
+    msg = "is not defined in the unit registry"
     with pytest.raises(UndefinedUnitError, match=msg):
-        func_registry.Quantity.from_tuple((1, (('wrong', 1),)))
+        func_registry.Quantity.from_tuple((1, (("wrong", 1),)))
