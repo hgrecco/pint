@@ -10,6 +10,7 @@ import pytest
 from pint import (
     Context,
     DimensionalityError,
+    UndefinedUnitError,
     UnitRegistry,
     get_application_registry,
 )
@@ -19,7 +20,6 @@ from pint.facets.plain.unit import UnitsContainer
 from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
 from pint.util import ParserHelper
-from pint.errors import UndefinedUnitError
 
 from .helpers import internal
 
