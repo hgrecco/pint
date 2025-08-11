@@ -1501,8 +1501,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     @helpers.requires_array_function_protocol()
     def test_geomspace(self):
-        start = 1* self.ureg.m
-        stop = 1* self.ureg.km
+        start = 1 * self.ureg.m
+        stop = 1 * self.ureg.km
         expected = [1, 10, 100, 1000] * self.ureg.m
         helpers.assert_quantity_equal(np.geomspace(start, stop, num=4), expected)
 
