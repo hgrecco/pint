@@ -79,7 +79,6 @@ class TestNumpyArrayCreation(TestNumpyMethods):
         )
         self.assertNDArrayEqual(np.full_like(self.q, 2), np.array([[2, 2], [2, 2]]))
 
-    
 
 class TestNumpyArrayManipulation(TestNumpyMethods):
     # TODO
