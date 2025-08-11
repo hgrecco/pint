@@ -30,6 +30,7 @@ Pint Changelog
 - Skip false xfail tests linked to a known numpy issue (#2188 and #1776)
 - Improve `Contributing` documentation (#2188)
 - Add `Quantity.to_unprefixed` and `ito_unprefixed` methods that remove SI prefixes without converting to base units. (#2201)
+- Add support for `numpy.geomspace` (#2206)
 
 
 0.24.4 (2024-11-07)
