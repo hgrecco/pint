@@ -903,6 +903,7 @@ for func_str, unit_arguments, wrap_output in (
     ("append", ["arr", "values"], True),
     ("compress", "a", True),
     ("linspace", ["start", "stop"], True),
+    ("geomspace", ["start", "stop"], True),
     ("tile", "A", True),
     ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
