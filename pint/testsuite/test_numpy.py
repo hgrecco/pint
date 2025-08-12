@@ -1520,6 +1520,14 @@ class TestNumpyUnclassified(TestNumpyMethods):
         with pytest.raises(OffsetUnitCalculusError):
             np.geomspace(start, stop)
 
+    @helpers.requires_array_function_protocol()
+    def test_geomspace_nonquantity(self):
+        expected = [1, 2, 4] * self.ureg.dimensionless
+        result1 = np.geomspace(1, 4 * self.ureg.dimensionless, num=3)
+        helpers.assert_quantity_equal(result1, expected)
+        result2 = np.geomspace(1 * self.ureg.dimensionless, 4, num=3)
+        helpers.assert_quantity_equal(result2, expected)
+
 
 @pytest.mark.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):

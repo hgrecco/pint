@@ -1052,6 +1052,14 @@ for func_str in ("var", "nanvar"):
 
 @implements("geomspace", "function")
 def _geomspace(start, stop, num=50, endpoint=True, dtype=None, axis=0):
+    if all(not _is_quantity(arg) for arg in (start, stop)):
+        return np.geomspace(start, stop, num, endpoint, dtype, axis)
+    first_input_units = _get_first_input_units((start, stop))
+    if not _is_quantity(start):
+        start = start * first_input_units._REGISTRY.parse_units("dimensionless")
+    if not _is_quantity(stop):
+        stop = stop * first_input_units._REGISTRY.parse_units("dimensionless")
+
     start = _base_unit_if_needed(start)
     stop = _base_unit_if_needed(stop)
     (start, stop), output_wrap = unwrap_and_wrap_consistent_units(start, stop)
