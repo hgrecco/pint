@@ -1506,6 +1506,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         expected = [1, 10, 100, 1000] * self.ureg.m
         helpers.assert_quantity_equal(np.geomspace(start, stop, num=4), expected)
 
+
 @pytest.mark.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):
     """Universal functions (ufuncs) >  Bittwiddling functions
