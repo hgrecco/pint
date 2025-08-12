@@ -903,7 +903,6 @@ for func_str, unit_arguments, wrap_output in (
     ("append", ["arr", "values"], True),
     ("compress", "a", True),
     ("linspace", ["start", "stop"], True),
-    ("geomspace", ["start", "stop"], True),
     ("tile", "A", True),
     ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
@@ -1049,6 +1048,14 @@ for func_str in ("linalg.solve",):
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
+
+
+@implements("geomspace", "function")
+def _geomspace(start, stop, num=50, endpoint=True, dtype=None, axis=0):
+    start = _base_unit_if_needed(start)
+    stop = _base_unit_if_needed(stop)
+    (start, stop), output_wrap = unwrap_and_wrap_consistent_units(start, stop)
+    return output_wrap(np.geomspace(start, stop, num, endpoint, dtype, axis))
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):
