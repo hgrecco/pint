@@ -4,11 +4,32 @@ Pint Changelog
 0.25.0 (unreleased)
 -------------------
 
+- Bump minimum Python version to 3.11.
+- Upgrade code to Python 3.11.
+- Move to pixi/uv/ruff.
+- Refactor compat to make it easier to test.
+- Implemented several pixi environment and tasks to simplify development.
 - Add docs to the functions in ``pint.testing`` (PR #2070)
 - Fix round function returning float instead of int (#2081)
 - Fix return type of `PlainQuantity.to` (#2088)
 - Update constants to CODATA 2022 recommended values. (#2049)
 - Fixed issue with `.to_compact` and Magnitudes with uncertainties / Quantities with units (PR #2069, issue #2044)
+- Fixed issue in unit conversion which led to loss of precision when using `decimal`. (#2107)
+- Add conductivity dimension. (#2112)
+- Add absorbance unit and dimension. (#2114)
+- Add membrane filtration flux and permeability dimensionality, and shorthand "LMH". (#2116)
+- Fix find_shortest_path to use breadth first search (#2146)
+- Fix typo in ``pyproject.toml``: rename ``AS_MIP`` to ``HAS_MIP`` so that MIP support is correctly detected. (#2152)
+- Fix handling of extra arguments in conversion with enabled contexts (#2172)
+- Fix swapped left and right arguments in interp (#2187)
+- Fix formatted scientific notation bug in Python 3.13 (#2168)
+- Fix ability to add dB units, and to add dB (dimensionless) to referenced dB units, such as dBm or dBW (#1160)
+- Improve pressure unit definitions in default definition file (#2186)
+- Avoid and document known issues with MIP during install, testing and runtime (#2188 and #2121)
+- Fix issue with Dask by restricting its version to < 2025.3.0 (#2188 and Dask #1016)
+- Skip false xfail tests linked to a known numpy issue (#2188 and #1776)
+- Improve `Contributing` documentation (#2188)
+- Add `Quantity.to_unprefixed` and `ito_unprefixed` methods that remove SI prefixes without converting to base units. (#2201)
 
 
 0.24.4 (2024-11-07)

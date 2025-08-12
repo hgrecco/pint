@@ -91,7 +91,7 @@ class _TestBasic(NonIntTypeTestCase):
             ):
                 x = self.Q_(*args)
                 assert math.isnan(x.magnitude)
-                assert type(x.magnitude) == self.kwargs["non_int_type"]
+                assert type(x.magnitude) is self.kwargs["non_int_type"]
                 assert x.units == self.ureg.UnitsContainer(meter=1)
 
         else:

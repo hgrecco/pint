@@ -1,9 +1,9 @@
 """
-    pint.facets.group.objects
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.group.objects
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -107,7 +107,7 @@ class Group(SharedRegistryObject):
         for name in self._used_by:
             d[name].invalidate_members()
 
-    def iter_used_groups(self) -> Generator[tuple[str, Group], None, None]:
+    def iter_used_groups(self) -> Generator[tuple[str, Group]]:
         pending = set(self._used_groups)
         d = self._REGISTRY._groups
         while pending:

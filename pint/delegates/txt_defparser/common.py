@@ -1,13 +1,13 @@
 """
-    pint.delegates.txt_defparser.common
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.txt_defparser.common
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Definitions for parsing an Import Statement
+Definitions for parsing an Import Statement
 
-    Also DefinitionSyntaxError
+Also DefinitionSyntaxError
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

@@ -1,11 +1,11 @@
 """
-    pint.util
-    ~~~~~~~~~
+pint.util
+~~~~~~~~~
 
-    Miscellaneous functions for pint.
+Miscellaneous functions for pint.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import operator
 import re
 import tokenize
 import types
+from collections import deque
 from collections.abc import Callable, Generator, Hashable, Iterable, Iterator, Mapping
 from fractions import Fraction
 from functools import lru_cache, partial
@@ -26,6 +27,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
+    TypeAlias,
     TypeVar,
 )
 
@@ -47,11 +49,8 @@ T = TypeVar("T")
 TH = TypeVar("TH", bound=Hashable)
 TT = TypeVar("TT", bound=type)
 
-# TODO: Change when Python 3.10 becomes minimal version.
-# ItMatrix: TypeAlias = Iterable[Iterable[PintScalar]]
-# Matrix: TypeAlias = list[list[PintScalar]]
-ItMatrix = Iterable[Iterable[Scalar]]
-Matrix = list[list[Scalar]]
+ItMatrix: TypeAlias = Iterable[Iterable[Scalar]]
+Matrix: TypeAlias = list[list[Scalar]]
 
 
 def _noop(x: T) -> T:
@@ -304,7 +303,7 @@ def pi_theorem(quantities: dict[str, Any], registry: UnitRegistry | None = None)
 
 def solve_dependencies(
     dependencies: dict[TH, set[TH]],
-) -> Generator[set[TH], None, None]:
+) -> Generator[set[TH]]:
     """Solve a dependency graph.
 
     Parameters
@@ -341,9 +340,7 @@ def solve_dependencies(
         yield t
 
 
-def find_shortest_path(
-    graph: dict[TH, set[TH]], start: TH, end: TH, path: list[TH] | None = None
-):
+def find_shortest_path(graph: dict[TH, set[TH]], start: TH, end: TH):
     """Find shortest path between two nodes within a graph.
 
     Parameters
@@ -355,32 +352,29 @@ def find_shortest_path(
         Starting node.
     end
         End node.
-    path
-        Path to prepend to the one found.
-        (default = None, empty path.)
 
     Returns
     -------
     list[TH]
         The shortest path between two nodes.
     """
-    path = (path or []) + [start]
+    path = [start]
     if start == end:
         return path
 
-    # TODO: raise ValueError when start not in graph
-    if start not in graph:
-        return None
+    fifo = deque()
+    fifo.append((start, path))
+    visited = set()
+    while fifo:
+        node, path = fifo.popleft()
+        visited.add(node)
+        for adjascent_node in graph[node] - visited:
+            if adjascent_node == end:
+                return path + [adjascent_node]
+            else:
+                fifo.append((adjascent_node, path + [adjascent_node]))
 
-    shortest = None
-    for node in graph[start]:
-        if node not in path:
-            newpath = find_shortest_path(graph, node, end, path)
-            if newpath:
-                if not shortest or len(newpath) < len(shortest):
-                    shortest = newpath
-
-    return shortest
+    return None
 
 
 def find_connected_nodes(

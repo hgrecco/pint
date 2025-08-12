@@ -1,18 +1,19 @@
 """
-    pint.delegates.formatter.full
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.full
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements:
-    - Full: dispatch to other formats, accept defaults.
+Implements:
+- Full: dispatch to other formats, accept defaults.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 import locale
-from typing import TYPE_CHECKING, Any, Iterable, Literal
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, Literal
 
 from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse

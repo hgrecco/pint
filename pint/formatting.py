@@ -1,17 +1,17 @@
 """
-    pint.formatter
-    ~~~~~~~~~~~~~~
+pint.formatter
+~~~~~~~~~~~~~~
 
-    Format units for pint.
+Format units for pint.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from numbers import Number
-from typing import Iterable
 
 from .delegates.formatter._format_helpers import (
     _PRETTY_EXPONENTS,  # noqa: F401

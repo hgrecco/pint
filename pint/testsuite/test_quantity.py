@@ -6,6 +6,7 @@ import logging
 import math
 import operator as op
 import pickle
+import sys
 import warnings
 from unittest.mock import patch
 
@@ -59,6 +60,8 @@ class TestQuantity(QuantityTestCase):
         with caplog.at_level(logging.DEBUG):
             assert 4.2 * self.ureg.meter == self.Q_(4.2, 2 * self.ureg.meter)
         assert len(caplog.records) == 1
+
+        assert self.Q_("4.2×10⁻¹² ft/s") == self.Q_(4.2e-12, "foot/second")
 
     def test_round(self):
         x = self.Q_(1.1, "kg")
@@ -273,13 +276,13 @@ class TestQuantity(QuantityTestCase):
                 ureg.formatter.default_format = spec
                 assert f"{x}" == result
 
-    @pytest.mark.xfail(reason="Still not clear how default formatting will work.")
     def test_formatting_override_default_units(self):
         ureg = UnitRegistry()
         ureg.formatter.default_format = "~"
         x = ureg.Quantity(4, "m ** 2")
 
         assert f"{x:dP}" == "4 meter²"
+        ureg.separate_format_defaults = None
         with pytest.warns(DeprecationWarning):
             assert f"{x:d}" == "4 meter ** 2"
 
@@ -287,13 +290,13 @@ class TestQuantity(QuantityTestCase):
         with assert_no_warnings():
             assert f"{x:d}" == "4 m ** 2"
 
-    @pytest.mark.xfail(reason="Still not clear how default formatting will work.")
     def test_formatting_override_default_magnitude(self):
         ureg = UnitRegistry()
         ureg.formatter.default_format = ".2f"
         x = ureg.Quantity(4, "m ** 2")
 
         assert f"{x:dP}" == "4 meter²"
+        ureg.separate_format_defaults = None
         with pytest.warns(DeprecationWarning):
             assert f"{x:D}" == "4 meter ** 2"
 
@@ -383,6 +386,10 @@ class TestQuantity(QuantityTestCase):
         )
 
     @helpers.requires_mip
+    @pytest.mark.skipif(
+        sys.version_info.major == 3 and sys.version_info.minor > 11,
+        reason="Crashes on Python>=3.12 (issue #2121).",
+    )
     def test_to_preferred(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -421,6 +428,10 @@ class TestQuantity(QuantityTestCase):
         assert result.units == ureg.volts
 
     @helpers.requires_mip
+    @pytest.mark.skipif(
+        sys.version_info.major == 3 and sys.version_info.minor > 11,
+        reason="Crashes on Python>=3.12 (issue #2121).",
+    )
     def test_to_preferred_registry(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -436,6 +447,10 @@ class TestQuantity(QuantityTestCase):
         assert pressure.units == ureg.Pa
 
     @helpers.requires_mip
+    @pytest.mark.skipif(
+        sys.version_info.major == 3 and sys.version_info.minor > 11,
+        reason="Crashes on Python>=3.12 (issue #2121).",
+    )
     def test_autoconvert_to_preferred(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -450,6 +465,25 @@ class TestQuantity(QuantityTestCase):
         ]
         pressure = Q_(1, "N") * Q_("1 m**-2")
         assert pressure.units == ureg.Pa
+
+    params = [
+        ("mks", "1 mm^2/MW", "m^2/W"),
+        ("mks", "1 Mg", "kg"),
+        ("mks", "1 ton", "ton"),
+        ("mks", "1 mS / cm", "S / m"),
+        ("cgs", "1 mm^2/MW", "cm^2/W"),
+        ("cgs", "1 Mg", "g"),
+        ("cgs", "1 ton", "ton"),
+        ("cgs", "1 mS / cm", "S / cm"),
+    ]
+
+    @pytest.mark.parametrize(("sys", "input_string", "expected"), params)
+    def test_to_unprefixed(self, sys, input_string, expected):
+        ureg = UnitRegistry(system=sys)
+        Q_ = ureg.Quantity
+
+        result = Q_(input_string).to_unprefixed()
+        assert result.units == ureg.Unit(expected)
 
     @helpers.requires_numpy
     def test_convert_numpy(self):
@@ -513,6 +547,7 @@ class TestQuantity(QuantityTestCase):
     def test_both_symbol(self):
         assert self.Q_(2, "ms") == self.Q_(2, "millisecond")
         assert self.Q_(2, "cm") == self.Q_(2, "centimeter")
+        assert self.Q_(2, "mm / s ** 2") == self.Q_(2, "millimeter_per_second_squared")
 
     def test_dimensionless_units(self):
         assert (
@@ -842,7 +877,7 @@ class TestQuantityToCompact(QuantityTestCase):
         ureg = self.ureg
         x = "some string" * ureg.m
         with pytest.warns(UndefinedBehavior):
-            self.compare_quantity_compact(x, x)
+            x.to_compact()
 
     def test_very_large_to_compact(self):
         # This should not raise an IndexError

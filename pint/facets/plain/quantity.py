@@ -13,12 +13,11 @@ import datetime
 import locale
 import numbers
 import operator
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
-    Iterable,
     TypeVar,
     overload,
 )
@@ -169,24 +168,22 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @overload
     def __new__(
         cls, value: MagnitudeT, units: UnitLike | None = None
-    ) -> PlainQuantity[MagnitudeT]:
-        ...
+    ) -> PlainQuantity[MagnitudeT]: ...
 
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> PlainQuantity[Any]:
-        ...
+    def __new__(
+        cls, value: str, units: UnitLike | None = None
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     @overload
     def __new__(
         cls, value: PlainQuantity[Any], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]:
-        ...
+    ) -> PlainQuantity[Any]: ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
@@ -480,7 +477,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             with self._REGISTRY.context(*contexts, **ctx_kwargs):
                 return self._REGISTRY.convert(self._magnitude, self._units, other)
 
-        return self._REGISTRY.convert(self._magnitude, self._units, other)
+        return self._REGISTRY.convert(self._magnitude, self._units, other, **ctx_kwargs)
 
     def _convert_magnitude(self, other, *contexts, **ctx_kwargs):
         if contexts:
@@ -492,6 +489,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             self._units,
             other,
             inplace=is_duck_array_type(type(self._magnitude)),
+            **ctx_kwargs,
         )
 
     def ito(
@@ -586,6 +584,8 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     ito_preferred = qto.ito_preferred
     to_reduced_units = qto.to_reduced_units
     ito_reduced_units = qto.ito_reduced_units
+    to_unprefixed = qto.to_unprefixed
+    ito_unprefixed = qto.ito_unprefixed
 
     # Mathematical operations
     def __int__(self) -> int:
@@ -750,20 +750,43 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                 raise DimensionalityError(self._units, "dimensionless")
             return self.__class__(magnitude, units)
 
+        # Special case for logarithmic units: dB can be added to dBm, dBW, etc.
+        # Get non-multiplicative units before checking dimensionality
+        self_non_mul_units = self._get_non_multiplicative_units()
+        other_non_mul_units = other._get_non_multiplicative_units()
+
+        # Next we define some variables to make if-clauses more readable.
+        # We already have self_non_mul_units and other_non_mul_units from our logarithmic check
+        is_self_multiplicative = len(self_non_mul_units) == 0
+        is_other_multiplicative = len(other_non_mul_units) == 0
+
+        if len(self_non_mul_units) == 1:
+            self_non_mul_unit = self_non_mul_units[0]
+        if len(other_non_mul_units) == 1:
+            other_non_mul_unit = other_non_mul_units[0]
+
+        # Check if we're dealing with logarithmic units that can be added (dB + dBm, etc.)
+        if self._is_logarithmic and other._is_logarithmic:
+            self_base = self.to_base_units()
+            other_base = other.to_base_units()
+            if op == operator.add:
+                result = self_base * other_base
+            elif op == operator.sub:
+                result = self_base / other_base
+
+            if self_base.dimensionless and other_base.dimensionless:
+                return result.to(self._units)
+            elif self_base.dimensionless:
+                return result.to(other._units)
+            elif other_base.dimensionless:
+                return result.to(self._units)
+            else:
+                return result
+
         if not self.dimensionality == other.dimensionality:
             raise DimensionalityError(
                 self._units, other._units, self.dimensionality, other.dimensionality
             )
-
-        # Next we define some variables to make if-clauses more readable.
-        self_non_mul_units = self._get_non_multiplicative_units()
-        is_self_multiplicative = len(self_non_mul_units) == 0
-        if len(self_non_mul_units) == 1:
-            self_non_mul_unit = self_non_mul_units[0]
-        other_non_mul_units = other._get_non_multiplicative_units()
-        is_other_multiplicative = len(other_non_mul_units) == 0
-        if len(other_non_mul_units) == 1:
-            other_non_mul_unit = other_non_mul_units[0]
 
         # Presence of non-multiplicative units gives rise to several cases.
         if is_self_multiplicative and is_other_multiplicative:
@@ -834,8 +857,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         ...
 
     @overload
-    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]:
-        ...
+    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
 
     def __iadd__(self, other):  # type: ignore[misc]
         if isinstance(other, datetime.datetime):
@@ -1467,6 +1489,11 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def _get_non_multiplicative_units(self) -> list[str]:
         """Return a list of the of non-multiplicative units of the PlainQuantity object."""
         return []
+
+    @property
+    def _is_logarithmic(self) -> bool:
+        """Check if the PlainQuantity object has logarithmic units."""
+        return False
 
     def _get_delta_units(self) -> list[str]:
         """Return list of delta units ot the PlainQuantity object."""

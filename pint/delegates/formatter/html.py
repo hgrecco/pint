@@ -1,18 +1,19 @@
 """
-    pint.delegates.formatter.html
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.html
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements:
-    - HTML: suitable for web/jupyter notebook outputs.
+Implements:
+- HTML: suitable for web/jupyter notebook outputs.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
