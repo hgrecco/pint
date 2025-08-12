@@ -247,7 +247,7 @@ def implements(numpy_func_string, func_type):
     return decorator
 
 
-def implement_func(func_type, func_str, input_units=None, output_unit=None):
+def implement_func(func_type, func_str, input_units=None, output_unit=None) -> None:
     """Add default-behavior NumPy function/ufunc to the handled list.
 
     Parameters
@@ -597,7 +597,7 @@ def _unwrap(p, discont=None, axis=-1):
 
 
 @implements("copyto", "function")
-def _copyto(dst, src, casting="same_kind", where=True):
+def _copyto(dst, src, casting="same_kind", where: bool = True) -> None:
     if _is_quantity(dst):
         if _is_quantity(src):
             src = src.m_as(dst.units)
@@ -619,7 +619,7 @@ def _einsum(subscripts, *operands, **kwargs):
 
 
 @implements("isin", "function")
-def _isin(element, test_elements, assume_unique=False, invert=False):
+def _isin(element, test_elements, assume_unique: bool = False, invert: bool = False):
     if not _is_quantity(element):
         raise ValueError(
             "Cannot test if unit-aware elements are in not-unit-aware array"
@@ -700,7 +700,7 @@ def _all(a, *args, **kwargs):
         raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
 
-def implement_prod_func(name):
+def implement_prod_func(name) -> None:
     if np is None:
         return
 
@@ -788,7 +788,7 @@ def _correlate(a, v, mode="valid", **kwargs):
     return a.units._REGISTRY.Quantity(ret, units)
 
 
-def implement_mul_func(func):
+def implement_mul_func(func) -> None:
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
@@ -815,7 +815,9 @@ for func_str in ("cross", "dot"):
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
-def implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output=True):
+def implement_consistent_units_by_argument(
+    func_str, unit_arguments, wrap_output: bool = True
+) -> None:
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
@@ -916,7 +918,7 @@ for func_str, unit_arguments, wrap_output in (
 
 
 # implement isclose and allclose
-def implement_close(func_str):
+def implement_close(func_str) -> None:
     if np is None:
         return
 
@@ -950,7 +952,7 @@ for func_str in ("isclose", "allclose"):
 # Handle atleast_nd functions
 
 
-def implement_atleast_nd(func_str):
+def implement_atleast_nd(func_str) -> None:
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
@@ -979,7 +981,7 @@ for func_str in ("atleast_1d", "atleast_2d", "atleast_3d"):
 
 # Handle cumulative products (which must be dimensionless for consistent units across
 # output array)
-def implement_single_dimensionless_argument_func(func_str):
+def implement_single_dimensionless_argument_func(func_str) -> None:
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return

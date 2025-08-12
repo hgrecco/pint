@@ -57,6 +57,7 @@ class SystemDefinition(errors.WithDefErr):
         for definition in parser.iter_parsed_project(pp):
             if isinstance(definition, cls):
                 return definition
+        return None
 
     @property
     def unit_replacements(self) -> tuple[tuple[str, str | None], ...]:

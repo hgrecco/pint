@@ -31,7 +31,7 @@ class DefinitionSyntaxError(errors.DefinitionSyntaxError, fp.ParsingError):
 
     msg: str
 
-    def __init__(self, msg: str, location: str = ""):
+    def __init__(self, msg: str, location: str = "") -> None:
         self.msg = msg
         self.location = location
 

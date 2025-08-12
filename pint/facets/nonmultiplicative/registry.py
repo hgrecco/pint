@@ -94,6 +94,7 @@ class GenericNonMultiplicativeRegistry(
             "delta_" + alias for alias in definition.aliases
         )
 
+        assert isinstance(definition.reference, UnitsContainer)
         delta_reference = self.UnitsContainer(
             {ref: value for ref, value in definition.reference.items()}
         )
@@ -198,6 +199,7 @@ class GenericNonMultiplicativeRegistry(
 
             # TODO: Check that reference is None
 
+            assert isinstance(slct_ref, UnitsContainer)
             # If reference unit is not dimensionless
             if slct_ref != UnitsContainer():
                 # Extract reference unit

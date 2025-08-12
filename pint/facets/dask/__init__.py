@@ -109,7 +109,7 @@ class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         return result
 
     @check_dask_array
-    def visualize(self, **kwargs):
+    def visualize(self, **kwargs) -> None:
         """Produce a visual representation of the Dask graph.
 
         The graphviz library is required.

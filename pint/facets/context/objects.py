@@ -246,7 +246,7 @@ class Context:
             if isinstance(definition, UnitDefinition):
                 self._redefine(definition)
 
-    def _redefine(self, definition: UnitDefinition):
+    def _redefine(self, definition: UnitDefinition) -> None:
         self.redefinitions.append(definition)
 
     def hashable(
@@ -280,13 +280,13 @@ class ContextChain(ChainMap[SrcDst, Context]):
     to transform from one dimension to another.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.contexts: list[Context] = []
         self.maps.clear()  # Remove default empty map
         self._graph: dict[SrcDst, set[UnitsContainer]] | None = None
 
-    def insert_contexts(self, *contexts: Context):
+    def insert_contexts(self, *contexts: Context) -> None:
         """Insert one or more contexts in reversed order the chained map.
         (A rule in last context will take precedence)
 
@@ -298,7 +298,7 @@ class ContextChain(ChainMap[SrcDst, Context]):
         self.maps = [ctx.relation_to_context for ctx in reversed(contexts)] + self.maps
         self._graph = None
 
-    def remove_contexts(self, n: int | None = None):
+    def remove_contexts(self, n: int | None = None) -> None:
         """Remove the last n inserted contexts from the chain.
 
         Parameters

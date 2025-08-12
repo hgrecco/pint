@@ -58,7 +58,7 @@ class Group(SharedRegistryObject):
         If not given, a root Group will be created.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         # The name of the group.
         self.name = name
 

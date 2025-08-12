@@ -95,7 +95,7 @@ def _unpickle_measurement(cls, *args):
     return _unpickle(application_registry.Measurement, *args)
 
 
-def set_application_registry(registry):
+def set_application_registry(registry) -> None:
     """Set the application registry, which is used for unpickling operations
     and when invoking pint.Quantity or pint.Unit directly.
 

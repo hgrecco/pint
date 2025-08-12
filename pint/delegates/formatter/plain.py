@@ -49,7 +49,7 @@ _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
 class BaseFormatter:
-    def __init__(self, registry: UnitRegistry | None = None):
+    def __init__(self, registry: UnitRegistry | None = None) -> None:
         self._registry = registry
 
 
