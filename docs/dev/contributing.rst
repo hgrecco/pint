@@ -49,8 +49,12 @@ the most common
 Setting up your environment
 ---------------------------
 
-If you're contributing to this project for the fist time, you can set up your
-environment on Linux or OSX with the following commands::
+Here is how to set up your environment if you're contributing to this project for the fist time.
+
+Linux or OSX
+~~~~~~~~~~~~
+
+In a terminal, navigate where you want the code to be downloaded, and type::
 
     $ git clone git@github.com:hgrecco/pint.git
     $ cd pint
@@ -61,6 +65,28 @@ environment on Linux or OSX with the following commands::
     $ pip install pre-commit # This step and the next are optional but recommended.
     $ pre-commit install
 
+Windows
+~~~~~~~
+
+Here it is assumed you are working with Conda, and that Pint has already been git-cloned.
+In an Anaconda Prompt, activate your environment and navigate to the Pint directory.
+Then type::
+
+    $ conda install pip
+    $ conda install git
+    $ pip install -e ".[test]"
+    $ pip install -r requirements_docs.txt
+    $ pip install pre-commit
+    $ pre-commit install
+
+All
+~~~
+
+Additionally, the following external applications are required at some stage:
+
+- Graphviz_ (used in the `visualize()` function of the Dask library)
+- Pandoc_ (used in documentation building)
+- Pixi_ (used when committing changes)
 
 Writing tests
 -------------
@@ -87,7 +113,9 @@ We use pytest_ for testing. If you contribute code you need to add tests:
 Running tests and building documentation
 ----------------------------------------
 
-To run the test suite, invoke pytest from the ``pint`` directory::
+To run the test suite, invoke pytest from the ``pint`` directory from a terminal with
+administrator privileges (otherwise you may run into permission errors due to temporary
+file management)::
 
     $ cd pint
     $ pytest
@@ -115,7 +143,7 @@ features that work best as an extension package versus direct inclusion in Pint 
 * Extension (separate packages)
 
   * Duck array types that wrap Pint (come above Pint
-    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`
+    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`)
 
   * Uses features independent/on top of the libraries
 
@@ -128,6 +156,32 @@ features that work best as an extension package versus direct inclusion in Pint 
   * Intermingling of APIs occurs
 
   * Examples: Dask
+
+
+Creating a release
+------------------
+
+Maintainers may create a new release by tagging a commit::
+
+    $ # do changes and commit
+    $ git tag -a 0.24.rc0 -m "Tagging 0.24.rc0"
+    $ git push --tags
+
+For the final release, add date to the 0.24 section in CHANGES, then::
+
+    $ git commit -a -m "Preparing for release 0.24"
+    $ git tag -a 0.24 -m "Tagging 0.24"
+
+Then add to CHANGES the following::
+
+    0.25 (unreleased)
+    -----------------
+
+And push the tags and CHANGES ::
+
+    $ git commit -a -m "Back to development: 0.25"
+    $ git push --tags
+
 
 
 .. _github: http://github.com/hgrecco/pint
@@ -143,3 +197,6 @@ features that work best as an extension package versus direct inclusion in Pint 
 .. _pytest: https://docs.pytest.org/en/stable/
 .. _sphinx: https://www.sphinx-doc.org/en/master/
 .. _`extension/compatibility packages`:
+.. _Graphviz: https://graphviz.gitlab.io/download/
+.. _Pandoc: https://pandoc.org/installing.html
+.. _Pixi: https://pixi.sh/latest/installation/

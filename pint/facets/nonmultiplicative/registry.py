@@ -1,9 +1,9 @@
 """
-    pint.facets.nonmultiplicative.registry
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.nonmultiplicative.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -213,7 +213,12 @@ class GenericNonMultiplicativeRegistry(
         return all_units
 
     def _convert(
-        self, value: T, src: UnitsContainer, dst: UnitsContainer, inplace: bool = False, **ctx_kwargs: Any
+        self,
+        value: T,
+        src: UnitsContainer,
+        dst: UnitsContainer,
+        inplace: bool = False,
+        **ctx_kwargs: Any,
     ) -> T:
         """Convert value from some source to destination units.
 

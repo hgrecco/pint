@@ -1327,12 +1327,32 @@ def test_issue2044():
     assert q.u == "kilometer"
 
 
+def test_issue2107():
+    # Use decimal
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    # 2 L/h is equal to 48 L/day
+    flow = decimal.Decimal("2") * ureg.L / ureg.h
+    assert flow.to(ureg.L / ureg.day).magnitude == 48.0
+    # 1 inch is equal to 1000 thou
+    distance = ureg.Quantity(decimal.Decimal("1.0"), ureg.inch)
+    assert distance.to(ureg.thou).magnitude == 1000.0
+
+    # Perform the same conversions without decimal
+    ureg = UnitRegistry()
+    # 2 L/h is equal to 48 L/day
+    flow = 2 * ureg.L / ureg.h
+    assert flow.to(ureg.L / ureg.day).magnitude == 48.0
+    # 1 inch is equal to 1000 thou
+    distance = ureg.Quantity(1, ureg.inch)
+    assert distance.to(ureg.thou).magnitude == 1000.0
+
+
 def test_issue2172():
     ureg = UnitRegistry()
 
     def mass_to_volume(u, value, *, density=None):
         """Convert mass to volume using density."""
-        density = density or 1000 * u.kilogram / u.meter**3 # 5 C
+        density = density or 1000 * u.kilogram / u.meter**3  # 5 C
         return value / density
 
     context = Context("Water")
@@ -1342,7 +1362,9 @@ def test_issue2172():
     ureg.enable_contexts(context.name)
     mass = ureg.Quantity(1000, "kg")
     assert mass.to("m**3").m == pytest.approx(1.0)
-    assert mass.to("m**3", density=958.05 * ureg.kilogram / ureg.meter**3).m == pytest.approx(1.0437868587234487) # 100 C
+    assert mass.to(
+        "m**3", density=958.05 * ureg.kilogram / ureg.meter**3
+    ).m == pytest.approx(1.0437868587234487)  # 100 C
 
     mass.ito("m**3", density=958.05 * ureg.kilogram / ureg.meter**3)
-    assert mass.m == pytest.approx(1.0437868587234487) # 100 C
+    assert mass.m == pytest.approx(1.0437868587234487)  # 100 C

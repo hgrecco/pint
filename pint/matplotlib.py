@@ -1,12 +1,12 @@
 """
-    pint.matplotlib
-    ~~~~~~~~~~~~~~~
+pint.matplotlib
+~~~~~~~~~~~~~~~
 
-    Functions and classes related to working with Matplotlib's support
-    for plotting with units.
+Functions and classes related to working with Matplotlib's support
+for plotting with units.
 
-    :copyright: 2017 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2017 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

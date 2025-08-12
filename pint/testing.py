@@ -1,11 +1,11 @@
 """
-	pint.testing
-	~~~~~~~~~~~~
+pint.testing
+~~~~~~~~~~~~
 
-	Functions for testing whether pint quantities are equal.
+Functions for testing whether pint quantities are equal.
 
-	:copyright: 2016 by Pint Authors, see AUTHORS for more details..
-	:license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details..
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

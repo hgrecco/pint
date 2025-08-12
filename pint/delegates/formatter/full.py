@@ -1,12 +1,12 @@
 """
-    pint.delegates.formatter.full
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.full
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements:
-    - Full: dispatch to other formats, accept defaults.
+Implements:
+- Full: dispatch to other formats, accept defaults.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
