@@ -1,7 +1,11 @@
 {
 	"name": "pint",
 	"image": "mcr.microsoft.com/devcontainers/python:1-3.13",
-	"features": {},
+	"features": {
+		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+			"packages": "graphviz"
+		}
+	},
 	"postCreateCommand": "pip install -e '.[test]';pip install -r requirements_docs.txt;pip install pre-commit;pre-commit install",
 	"customizations": {
 		"vscode": {
