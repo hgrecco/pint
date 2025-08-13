@@ -1041,6 +1041,9 @@ for func_str in (
     "nancumsum",
     "linalg.norm",
     "linalg.eigvals",
+    "linalg.eigvalsh",
+    "linalg.matrix_norm",
+    "linalg.vector_norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
 for func_str in ("diff", "ediff1d", "std", "nanstd"):
