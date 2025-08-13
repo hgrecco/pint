@@ -388,6 +388,7 @@ set_units_ufuncs = {
     "exp": ("", ""),
     "expm1": ("", ""),
     "exp2": ("", ""),
+    "vander": ("", ""),
     "log": ("", ""),
     "log10": ("", ""),
     "log1p": ("", ""),
@@ -429,6 +430,7 @@ matching_input_copy_units_output_ufuncs = [
     "take",
     "trace",
     "transpose",
+    "linalg.matrix_transpose",
     "roll",
     "ceil",
     "floor",
@@ -1036,6 +1038,8 @@ for func_str in (
 for func_str in (
     "sum",
     "diag",
+    "tril",
+    "triu",
     "nansum",
     "cumsum",
     "nancumsum",
@@ -1050,10 +1054,12 @@ for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ("linalg.solve",):
+for func_str in ("linalg.solve", "linalg.lstsq"):
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
+for func_str in ("linalg.inv", "linalg.pinv"):
+    implement_func("function", func_str, input_units=None, output_unit="reciprocal")
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):
