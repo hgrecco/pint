@@ -1,19 +1,16 @@
 {
 	"name": "pint",
-	"image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
+	"image": "mcr.microsoft.com/devcontainers/python:0-3.13",
 	"features": {},
-	"postCreateCommand": "pip3 install --user -e .",
+	"postCreateCommand": "pip install -e '.[test]';pip install -r requirements_docs.txt;pip install pre-commit;pre-commit install",
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"charliermarsh.ruff",
 				"hbenl.vscode-test-explorer",
-				"littlefoxteam.vscode-python-test-adapter",
 				"ms-python.python",
 				"redhat.vscode-yaml",
 				"tamasfe.even-better-toml"
 			]
 		}
-	},
-	"forwardPorts": [8080]
+	}
 }
