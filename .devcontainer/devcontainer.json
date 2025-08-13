@@ -1,6 +1,6 @@
 {
 	"name": "pint",
-	"image": "mcr.microsoft.com/devcontainers/python:0-3.13",
+	"image": "mcr.microsoft.com/devcontainers/python:1-3.13",
 	"features": {},
 	"postCreateCommand": "pip install -e '.[test]';pip install -r requirements_docs.txt;pip install pre-commit;pre-commit install",
 	"customizations": {
