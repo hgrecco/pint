@@ -415,6 +415,7 @@ matching_input_copy_units_output_ufuncs = [
     "conjugate",
     "copy",
     "diagonal",
+    "linalg.diagonal",
     "max",
     "mean",
     "min",
@@ -1034,10 +1035,12 @@ for func_str in (
 # Handle functions with output unit defined by operation
 for func_str in (
     "sum",
+    "diag",
     "nansum",
     "cumsum",
     "nancumsum",
     "linalg.norm",
+    "linalg.eigvals",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
 for func_str in ("diff", "ediff1d", "std", "nanstd"):
