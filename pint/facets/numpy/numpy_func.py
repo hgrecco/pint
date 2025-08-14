@@ -284,7 +284,9 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
     if func is None:
         return
     for func_str_piece in func_str_split[1:]:
-        func = getattr(func, func_str_piece)
+        func = getattr(func, func_str_piece, None)
+        if func is None:
+            return
 
     @implements(func_str, func_type)
     def implementation(*args, **kwargs):
