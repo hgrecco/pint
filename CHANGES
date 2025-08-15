@@ -4,7 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
-- No changes yet.
+- Add devcontainer.json to add GitHub Codespace support (#2208)
 
 
 0.25.0 (2025-08-25)
@@ -36,7 +36,6 @@ Pint Changelog
 - Skip false xfail tests linked to a known numpy issue (#2188 and #1776)
 - Improve `Contributing` documentation (#2188)
 - Add `Quantity.to_unprefixed` and `ito_unprefixed` methods that remove SI prefixes without converting to base units. (#2201)
-- Add devcontainer.json to add GitHub Codespace support (#2208)
 
 
 0.24.4 (2024-11-07)
