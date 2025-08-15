@@ -1509,6 +1509,35 @@ class TestNumpyUnclassified(TestNumpyMethods):
         expected = [5, 13, 17] * self.ureg.m
         helpers.assert_quantity_equal(np.linalg.norm(q, axis=0), expected)
 
+    @helpers.requires_array_function_protocol()
+    def test_geomspace(self):
+        start = 1 * self.ureg.m
+        stop = 1 * self.ureg.km
+        expected = [1, 10, 100, 1000] * self.ureg.m
+        helpers.assert_quantity_equal(np.geomspace(start, stop, num=4), expected)
+
+    @helpers.requires_array_function_protocol()
+    def test_geomspace_incompatible_inputs(self):
+        start = 1 * self.ureg.m
+        stop = 1 * self.ureg.s
+        with pytest.raises(DimensionalityError):
+            np.geomspace(start, stop)
+
+    @helpers.requires_array_function_protocol()
+    def test_geomspace_offset(self):
+        start = self.Q_(1, self.ureg.degC)
+        stop = self.Q_(2, self.ureg.degC)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.geomspace(start, stop)
+
+    @helpers.requires_array_function_protocol()
+    def test_geomspace_nonquantity(self):
+        expected = [1, 2, 4] * self.ureg.dimensionless
+        result1 = np.geomspace(1, 4 * self.ureg.dimensionless, num=3)
+        helpers.assert_quantity_equal(result1, expected)
+        result2 = np.geomspace(1 * self.ureg.dimensionless, 4, num=3)
+        helpers.assert_quantity_equal(result2, expected)
+
 
 @pytest.mark.skip
 class TestBitTwiddlingUfuncs(TestUFuncs):
