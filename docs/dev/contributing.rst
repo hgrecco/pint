@@ -51,8 +51,43 @@ Setting up your environment
 
 Here is how to set up your environment if you're contributing to this project for the fist time.
 
-Linux or OSX
-~~~~~~~~~~~~
+Using pixi
+~~~~~~~~~~
+
+First install `pixi`_, then run the following commands in a terminal::
+
+    $ git clone git@github.com:hgrecco/pint.git
+    $ cd pint
+
+pixi handles setting up environments and downloading and installing modules so you don't neeed to
+run any commands to install pint or its dependencies, you just need to be in the pint directory.
+
+
+To run the tests, linting and documentation building, you can use the following commands::
+
+  $ pixi run --environment test-py313-all test # runs tests only
+  $ pixi run --environment test-py313-all pytest -k test_log # run specific tests
+  $ pixi run --environment test-py313-all bench # runs tests and benchmarks. Much slower and rarely needed.
+  $ pixi run --environment lint lint --all-files
+  $ pixi run docbuild
+  $ pixi run doctest
+
+Other common commands include::
+
+  $ pixi run --environment test-py313-all python # runs a python shell with pint installed
+  $ pixi run --environment test-py313-all python my_script.py # runs a script with pint installed
+
+A full list of the environments and commands available can be found in the `pyproject.toml`_ file.
+
+
+Setting up your environment (legacy)
+------------------------------------
+
+It is recommended to use pixi, as described above. Alternatively if you want to set up
+your environment manually, you can do so using `venv`/`pip` or `conda`/`pip`.
+
+Using venv/pip with Linux or OSX
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In a terminal, navigate where you want the code to be downloaded, and type::
 
@@ -65,8 +100,8 @@ In a terminal, navigate where you want the code to be downloaded, and type::
     $ pip install pre-commit # This step and the next are optional but recommended.
     $ pre-commit install
 
-Windows
-~~~~~~~
+Using conda/pip with Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here it is assumed you are working with Conda, and that Pint has already been git-cloned.
 In an Anaconda Prompt, activate your environment and navigate to the Pint directory.
@@ -210,3 +245,4 @@ And push the tags and CHANGES ::
 .. _Graphviz: https://graphviz.gitlab.io/download/
 .. _Pandoc: https://pandoc.org/installing.html
 .. _Pixi: https://pixi.sh/latest/installation/
+.. _pyproject.toml: https://github.com/hgrecco/pint/blob/master/pyproject.toml
