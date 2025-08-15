@@ -420,6 +420,8 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     @classmethod
     def from_tuple(cls, tup):
+        for units_tup in tup[1]:
+            cls._REGISTRY.get_name(units_tup[0])
         return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
 
     def to_tuple(self) -> tuple[MagnitudeT, tuple[tuple[str, ...]]]:
