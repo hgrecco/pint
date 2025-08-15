@@ -471,6 +471,16 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         )
 
     @helpers.requires_array_function_protocol()
+    def test_dot_nonquantity(self):
+        a = np.array([0, 0, 1, 0])
+        b = self.Q_(self.q.ravel(), "m")
+        expected = 3 * self.ureg.m
+        result1 = np.dot(a, b)
+        helpers.assert_quantity_equal(result1, expected)
+        result2 = np.dot(a, b)
+        helpers.assert_quantity_equal(result2, expected)
+
+    @helpers.requires_array_function_protocol()
     def test_einsum(self):
         a = np.arange(25).reshape(5, 5) * self.ureg.m
         b = np.arange(5) * self.ureg.m

@@ -797,15 +797,24 @@ def implement_mul_func(func):
 
     @implements(func_str, "function")
     def implementation(a, b, **kwargs):
-        a = _base_unit_if_needed(a)
-        units = a.units
-        if hasattr(b, "units"):
-            b = _base_unit_if_needed(b)
-            units *= b.units
-            b = b._magnitude
+        if _is_quantity(a):
+            a = _base_unit_if_needed(a)
+            units = a.units
+            a = a._magnitude
+            if _is_quantity(b):
+                b = _base_unit_if_needed(b)
+                units *= b.units
+                b = b._magnitude
+        else:
+            if _is_quantity(b):
+                b = _base_unit_if_needed(b)
+                units = b.units
+                b = b._magnitude
+            else:
+                return func(a, b, **kwargs)
 
-        mag = func(a._magnitude, b, **kwargs)
-        return a.units._REGISTRY.Quantity(mag, units)
+        mag = func(a, b, **kwargs)
+        return mag * units
 
 
 for func_str in ("cross", "dot"):
