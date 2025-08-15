@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Fix raising exception in `Quantity.from_tuple` with invalid units (#2199)
 - Add devcontainer.json to add GitHub Codespace support (#2208)
 - Add support for `numpy.geomspace` (#2206)
 
