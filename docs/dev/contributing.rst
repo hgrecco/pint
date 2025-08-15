@@ -114,6 +114,16 @@ Then type::
     $ pip install pre-commit
     $ pre-commit install
 
+GitHub Codespace
+~~~~~~~~~~~~~~~~
+
+GitHub codespace is an online Linux environment with a vscode web UI. It is
+useful for developers who don't have a Linux device but want to test and
+debug their code on Linux.
+
+Log in to github. On `pint repo main page <https://github.com/hgrecco/pint>`_,
+click Code -> Codespaces -> Create codespace on main.
+
 All
 ~~~
 
