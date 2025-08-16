@@ -390,7 +390,6 @@ set_units_ufuncs = {
     "exp": ("", ""),
     "expm1": ("", ""),
     "exp2": ("", ""),
-    "vander": ("", ""),
     "log": ("", ""),
     "log10": ("", ""),
     "log1p": ("", ""),
@@ -418,7 +417,6 @@ matching_input_copy_units_output_ufuncs = [
     "conjugate",
     "copy",
     "diagonal",
-    "linalg.diagonal",
     "max",
     "mean",
     "min",
@@ -432,7 +430,6 @@ matching_input_copy_units_output_ufuncs = [
     "take",
     "trace",
     "transpose",
-    "linalg.matrix_transpose",
     "roll",
     "ceil",
     "floor",
@@ -874,6 +871,7 @@ for func_str, unit_arguments, wrap_output in (
     ("moveaxis", "a", True),
     ("around", "a", True),
     ("diagonal", "a", True),
+    ("linalg.diagonal", "x", True),
     ("mean", "a", True),
     ("ptp", "a", True),
     ("ravel", "a", True),
@@ -883,6 +881,7 @@ for func_str, unit_arguments, wrap_output in (
     ("median", "a", True),
     ("nanmedian", "a", True),
     ("transpose", "a", True),
+    ("linalg.matrix_transpose", "x", True),
     ("roll", "a", True),
     ("copy", "a", True),
     ("average", "a", True),
@@ -1056,7 +1055,7 @@ for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ("linalg.solve", "linalg.lstsq"):
+for func_str in ("linalg.solve",):
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")

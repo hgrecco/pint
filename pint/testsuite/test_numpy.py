@@ -140,6 +140,13 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
         )
 
     @helpers.requires_array_function_protocol()
+    @helpers.requires_numpy_at_least("2.0")
+    def test_linalg_matrix_transpose(self):
+        helpers.assert_quantity_equal(
+            np.linalg.matrix_transpose(self.q), [[1, 3], [2, 4]] * self.ureg.m
+        )
+
+    @helpers.requires_array_function_protocol()
     def test_flip_numpy_func(self):
         helpers.assert_quantity_equal(
             np.flip(self.q, axis=0), [[3, 4], [1, 2]] * self.ureg.m
@@ -566,6 +573,25 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         with pytest.raises(DimensionalityError):
             op.ipow(arr_cp, q_cp)
 
+    # Advanced matrix operations
+    def test_eigvals(self):
+        q = [[2, 1], [1, 2]] * self.ureg.m
+        helpers.assert_quantity_equal(np.linalg.eigvals(q), [3, 1] * self.ureg.m)
+
+    def test_eigvals_offset(self):
+        q = self.Q_([[2, 1], [1, 2]], self.ureg.degC)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.linalg.eigvals(q)
+
+    def test_eigvalsh(self):
+        q = [[5 + 2j, 9 - 2j], [0 + 2j, 2 - 1j]] * self.ureg.m
+        helpers.assert_quantity_equal(np.linalg.eigvalsh(q), [1, 6] * self.ureg.m)
+
+    def test_eigvalsh_offset(self):
+        q = self.Q_([[5 + 2j, 9 - 2j], [0 + 2j, 2 - 1j]], self.ureg.degC)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.linalg.eigvalsh(q)
+
 
 class TestNumpyUnclassified(TestNumpyMethods):
     def test_tolist(self):
@@ -639,6 +665,53 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_diagonal_numpy_func(self):
         q = [[1, 2, 3], [1, 2, 3], [1, 2, 3]] * self.ureg.m
         helpers.assert_quantity_equal(np.diagonal(q, offset=-1), [1, 2] * self.ureg.m)
+
+    @helpers.requires_array_function_protocol()
+    @helpers.requires_numpy_at_least("2.0")
+    def test_linalg_diagonal(self):
+        q = [[1, 2, 3], [1, 2, 3], [1, 2, 3]] * self.ureg.m
+        helpers.assert_quantity_equal(
+            np.linalg.diagonal(q, offset=-1), [1, 2] * self.ureg.m
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_tril(self):
+        q = [[1, 2, 3], [1, 2, 3], [1, 2, 3]] * self.ureg.m
+        helpers.assert_quantity_equal(
+            np.tril(q), [[1, 0, 0], [1, 2, 0], [1, 2, 3]] * self.ureg.m
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_tril_offset(self):
+        q = self.Q_([[1, 2, 3], [1, 2, 3], [1, 2, 3]], self.ureg.degC)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.tril(q)
+
+    @helpers.requires_array_function_protocol()
+    def test_triu(self):
+        q = [[1, 2, 3], [1, 2, 3], [1, 2, 3]] * self.ureg.m
+        helpers.assert_quantity_equal(
+            np.triu(q), [[1, 2, 3], [0, 2, 3], [0, 0, 3]] * self.ureg.m
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_triu_offset(self):
+        q = self.Q_([[1, 2, 3], [1, 2, 3], [1, 2, 3]], self.ureg.degC)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.triu(q)
+
+    @helpers.requires_array_function_protocol()
+    def test_diag(self):
+        q = [1, 2, 3] * self.ureg.m
+        helpers.assert_quantity_equal(
+            np.diag(q), [[1, 0, 0], [0, 2, 0], [0, 0, 3]] * self.ureg.m
+        )
+
+    @helpers.requires_array_function_protocol()
+    def test_diag_offset(self):
+        q = self.Q_([1, 2, 3], self.ureg.degC)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.diag(q)
 
     def test_compress(self):
         helpers.assert_quantity_equal(
@@ -1498,6 +1571,18 @@ class TestNumpyUnclassified(TestNumpyMethods):
         q = np.array([[3, 5, 8], [4, 12, 15]]) * self.ureg.m
         expected = [5, 13, 17] * self.ureg.m
         helpers.assert_quantity_equal(np.linalg.norm(q, axis=0), expected)
+
+    @helpers.requires_array_function_protocol()
+    def test_linalg_vector_norm(self):
+        q = np.array([[3, 5, 8], [4, 12, 15]]) * self.ureg.m
+        expected = [5, 13, 17] * self.ureg.m
+        helpers.assert_quantity_equal(np.linalg.vector_norm(q, axis=0), expected)
+
+    @helpers.requires_array_function_protocol()
+    def test_linalg_matrix_norm(self):
+        helpers.assert_quantity_equal(
+            np.linalg.matrix_norm(self.q, ord=1), 6 * self.ureg.m
+        )
 
     @helpers.requires_array_function_protocol()
     def test_geomspace(self):
