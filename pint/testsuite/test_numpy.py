@@ -1573,12 +1573,14 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_equal(np.linalg.norm(q, axis=0), expected)
 
     @helpers.requires_array_function_protocol()
+    @helpers.requires_numpy_at_least("2.0")
     def test_linalg_vector_norm(self):
         q = np.array([[3, 5, 8], [4, 12, 15]]) * self.ureg.m
         expected = [5, 13, 17] * self.ureg.m
         helpers.assert_quantity_equal(np.linalg.vector_norm(q, axis=0), expected)
 
     @helpers.requires_array_function_protocol()
+    @helpers.requires_numpy_at_least("2.0")
     def test_linalg_matrix_norm(self):
         helpers.assert_quantity_equal(
             np.linalg.matrix_norm(self.q, ord=1), 6 * self.ureg.m
