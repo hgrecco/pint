@@ -1059,8 +1059,6 @@ for func_str in ("linalg.solve",):
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
-for func_str in ("linalg.inv", "linalg.pinv"):
-    implement_func("function", func_str, input_units=None, output_unit="reciprocal")
 
 
 @implements("geomspace", "function")
