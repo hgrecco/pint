@@ -142,7 +142,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             return 0
         if str(type(self.magnitude)) == "NAType":
             return 0
-        return self.magnitude.ndim
+        if hasattr(self.magnitude, "ndim"):
+            return self.magnitude.ndim
+        return 0
 
     @property
     def force_ndarray(self) -> bool:
@@ -161,7 +163,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         # Note: type(self) would be a mistake as subclasses built by
         # dinamically can't be pickled
         # TODO: Check if this is still the case.
-        return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
+        return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)  # type: ignore
 
     @overload
     def __new__(
@@ -236,7 +238,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
         # as one calls iter(self) without waiting for the first element to be drawn from
         # the iterator
-        it_magnitude = iter(self.magnitude)
+        it_magnitude = iter(self.magnitude)  # type: ignore[arg-type]# magnitude may not be iterable
 
         def it_outer():
             for element in it_magnitude:
@@ -416,7 +418,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             a[i] = seq_i.m_as(units)
             # raises DimensionalityError if incompatible units are used in the sequence
 
-        return cls(a, units)
+        return cls(a, units)  # type: ignore[arg-type]
 
     @classmethod
     def from_tuple(cls, tup):
@@ -859,13 +861,21 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @overload
     def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
 
-    def __iadd__(self, other):
+    def __iadd__(self, other):  # type: ignore[misc]
         if isinstance(other, datetime.datetime):
             return self.to_timedelta() + other
         elif is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.iadd)
 
         return self._add_sub(other, operator.add)
+
+    @overload
+    def __add__(self, other: datetime.datetime) -> datetime.timedelta:  # type: ignore[misc]
+        ...
+
+    @overload
+    def __add__(self, other) -> PlainQuantity[MagnitudeT]:
+        ...
 
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
@@ -1090,7 +1100,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     __rdiv__ = __rtruediv__
     __idiv__ = __itruediv__
 
-    def __ifloordiv__(self, other):
+    def __ifloordiv__(self, other):  # type: ignore[misc]
         if self._check(other):
             self._magnitude //= other.to(self._units)._magnitude
         elif self.dimensionless:
@@ -1240,7 +1250,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         except TypeError:
             return NotImplemented
         else:
-            if not self._ok_for_muldiv:
+            if not self._ok_for_muldiv:  # type: ignore[truthy-function]
                 raise OffsetUnitCalculusError(self._units)
 
             if is_duck_array_type(type(getattr(other, "_magnitude", other))):
@@ -1294,7 +1304,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
                     units = new_self._units**exponent
 
             magnitude = new_self._magnitude**exponent
-            return self.__class__(magnitude, units)
+            return self.__class__(magnitude, units)  # type: ignore# calling __new__ with Any
 
     @check_implemented
     def __rpow__(self, other) -> PlainQuantity[MagnitudeT]:
@@ -1311,16 +1321,16 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             return other**new_self._magnitude
 
     def __abs__(self) -> PlainQuantity[MagnitudeT]:
-        return self.__class__(abs(self._magnitude), self._units)
+        return self.__class__(abs(self._magnitude), self._units)  # type: ignore# calling __new__ with object
 
     def __round__(self, ndigits: int | None = None) -> PlainQuantity[int]:
-        return self.__class__(round(self._magnitude, ndigits), self._units)
+        return self.__class__(round(self._magnitude, ndigits), self._units)  # type: ignore# calling __new__ with object
 
     def __pos__(self) -> PlainQuantity[MagnitudeT]:
-        return self.__class__(operator.pos(self._magnitude), self._units)
+        return self.__class__(operator.pos(self._magnitude), self._units)  # type: ignore# calling __new__ with object
 
     def __neg__(self) -> PlainQuantity[MagnitudeT]:
-        return self.__class__(operator.neg(self._magnitude), self._units)
+        return self.__class__(operator.neg(self._magnitude), self._units)  # type: ignore# calling __new__ with object
 
     @check_implemented
     def __eq__(self, other):
@@ -1499,7 +1509,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return True
 
     def to_timedelta(self: PlainQuantity[MagnitudeT]) -> datetime.timedelta:
-        return datetime.timedelta(microseconds=self.to("microseconds").magnitude)
+        return datetime.timedelta(microseconds=float(self.to("microseconds").magnitude))
 
     # We put this last to avoid overriding UnitsContainer
     # and I do not want to rename it.

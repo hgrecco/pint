@@ -109,6 +109,22 @@ ignore = [
   "E731", # do not assign a lambda expression, use a def
 ]
 
+# Configuration for mypy
+# https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file
+[tool.mypy]
+# python_version = "3.9"
+follow_imports = "silent"
+ignore_missing_imports = true
+files = "pint"  # directory mypy should analyze
+# # Directories to exclude from mypy's analysis
+exclude = [
+    "pint/testsuite",
+    "docs",
+    "pint/default_en.txt",
+    "pint/constants_en.txt",
+]
+disable_error_code = "operator,override"
+
 [tool.pixi.project]
 channels = ["https://fast.prefix.dev/conda-forge"]
 platforms = ['osx-arm64', 'linux-64', 'win-64']

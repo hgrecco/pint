@@ -39,7 +39,7 @@ class Converter:
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
         return value
 
-    def __init_subclass__(cls, **kwargs: Any):
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         # Get constructor parameters
         super().__init_subclass__(**kwargs)
         cls._subclasses.append(cls)

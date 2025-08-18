@@ -91,12 +91,12 @@ class DefinitionError(ValueError, PintError):
     definition_type: type
     msg: str
 
-    def __init__(self, name: str, definition_type: type, msg: str):
+    def __init__(self, name: str, definition_type: type, msg: str) -> None:
         self.name = name
         self.definition_type = definition_type
         self.msg = msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         msg = f"Cannot define '{self.name}' ({self.definition_type}): {self.msg}"
         return msg
 
@@ -109,10 +109,10 @@ class DefinitionSyntaxError(ValueError, PintError):
 
     msg: str
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         self.msg = msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.msg
 
     def __reduce__(self):
@@ -125,11 +125,11 @@ class RedefinitionError(ValueError, PintError):
     name: str
     definition_type: type
 
-    def __init__(self, name: str, definition_type: type):
+    def __init__(self, name: str, definition_type: type) -> None:
         self.name = name
         self.definition_type = definition_type
 
-    def __str__(self):
+    def __str__(self) -> str:
         msg = f"Cannot redefine '{self.name}' ({self.definition_type})"
         return msg
 
@@ -142,13 +142,13 @@ class UndefinedUnitError(AttributeError, PintError):
 
     unit_names: tuple[str, ...]
 
-    def __init__(self, unit_names: str | ty.Iterable[str]):
+    def __init__(self, unit_names: str | ty.Iterable[str]) -> None:
         if isinstance(unit_names, str):
             self.unit_names = (unit_names,)
         else:
             self.unit_names = tuple(unit_names)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if len(self.unit_names) == 1:
             return f"'{tuple(self.unit_names)[0]}' is not defined in the unit registry"
         return f"{tuple(self.unit_names)} are not defined in the unit registry"
@@ -184,7 +184,7 @@ class DimensionalityError(PintTypeError):
         self.dim2 = dim2
         self.extra_msg = extra_msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.dim1 or self.dim2:
             dim1 = f" ({self.dim1})"
             dim2 = f" ({self.dim2})"
@@ -222,7 +222,7 @@ class OffsetUnitCalculusError(PintTypeError):
         if self.units2:
             yield self.units2
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             "Ambiguous operation with offset unit (%s)."
             % ", ".join(str(u) for u in self.yield_units())
@@ -250,7 +250,7 @@ class LogarithmicUnitCalculusError(PintTypeError):
         if self.units2:
             yield self.units2
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             "Ambiguous operation with logarithmic unit (%s)."
             % ", ".join(str(u) for u in self.yield_units())
@@ -266,7 +266,7 @@ class LogarithmicUnitCalculusError(PintTypeError):
 class UnitStrippedWarning(UserWarning, PintError):
     msg: str
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         self.msg = msg
 
     def __reduce__(self):
@@ -280,7 +280,7 @@ class UnexpectedScaleInContainer(Exception):
 class UndefinedBehavior(UserWarning, PintError):
     msg: str
 
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         self.msg = msg
 
     def __reduce__(self):

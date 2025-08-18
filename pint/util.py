@@ -416,7 +416,7 @@ def find_connected_nodes(
 class udict(dict[str, Scalar]):
     """Custom dict implementing __missing__."""
 
-    def __missing__(self, key: str):
+    def __missing__(self, key: str) -> int:
         return 0
 
     def copy(self: Self) -> Self:
@@ -561,7 +561,7 @@ class UnitsContainer(Mapping[str, Scalar]):
     def __getstate__(self) -> tuple[udict, Scalar, type]:
         return self._d, self._one, self._non_int_type
 
-    def __setstate__(self, state: tuple[udict, Scalar, type]):
+    def __setstate__(self, state: tuple[udict, Scalar, type]) -> None:
         self._d, self._one, self._non_int_type = state
         self._hash = None
 
@@ -700,7 +700,7 @@ class ParserHelper(UnitsContainer):
 
     scale: Scalar
 
-    def __init__(self, scale: Scalar = 1, *args, **kwargs):
+    def __init__(self, scale: Scalar = 1, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.scale = scale
 
@@ -807,7 +807,7 @@ class ParserHelper(UnitsContainer):
     def __getstate__(self):
         return super().__getstate__() + (self.scale,)
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         super().__setstate__(state[:-1])
         self.scale = state[-1]
 
@@ -833,13 +833,13 @@ class ParserHelper(UnitsContainer):
 
         return self.__class__(self.scale, d, non_int_type=self._non_int_type)
 
-    def __str__(self):
+    def __str__(self) -> str:
         tmp = "{%s}" % ", ".join(
             [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
         return f"{self.scale} {tmp}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         tmp = "{%s}" % ", ".join(
             [f"'{key}': {value}" for key, value in sorted(self._d.items())]
         )
@@ -1010,7 +1010,7 @@ class PrettyIPython:
             return f"${self:~L}$"
         return f"${self:L}$"
 
-    def _repr_pretty_(self, p, cycle: bool):
+    def _repr_pretty_(self, p, cycle: bool) -> None:
         # if cycle:
         if "~" in self._REGISTRY.formatter.default_format:
             p.text(f"{self:~P}")
@@ -1023,7 +1023,7 @@ class PrettyIPython:
 
 
 def to_units_container(
-    unit_like: QuantityOrUnitLike, registry: UnitRegistry | None = None
+    unit_like: QuantityOrUnitLike | None, registry: UnitRegistry | None = None
 ) -> UnitsContainer:
     """Convert a unit compatible type to a UnitsContainer.
 

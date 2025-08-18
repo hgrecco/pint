@@ -18,7 +18,7 @@ from ..plain import QuantityT, UnitT
 if TYPE_CHECKING:
     from ..._typing import Quantity, Unit
 
-from ..._typing import UnitLike
+from ..._typing import QuantityOrUnitLike, UnitLike
 from ...util import UnitsContainer as UnitsContainerT
 from ...util import (
     create_class_with_registry,
@@ -51,7 +51,7 @@ class GenericSystemRegistry(
     # to enjoy typing goodies
     System: type[objects.System]
 
-    def __init__(self, system: str | None = None, **kwargs):
+    def __init__(self, system: str | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
 
         #: Map system name to system.
@@ -223,7 +223,7 @@ class GenericSystemRegistry(
         return base_factor, destination_units
 
     def get_compatible_units(
-        self, input_units: UnitsContainerT, group_or_system: str | None = None
+        self, input_units: QuantityOrUnitLike, group_or_system: str | None = None
     ) -> frozenset[Unit]:
         """ """
 
@@ -240,7 +240,7 @@ class GenericSystemRegistry(
 
     def _get_compatible_units(
         self, input_units: UnitsContainerT, group_or_system: str | None = None
-    ) -> frozenset[Unit]:
+    ) -> frozenset[str]:
         if group_or_system and group_or_system in self._systems:
             members = self._systems[group_or_system].members
             # group_or_system has been handled by System

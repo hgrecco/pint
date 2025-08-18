@@ -72,11 +72,11 @@ class LogarithmicConverter(ScaleConverter):
     logfactor: float
 
     @property
-    def is_multiplicative(self):
+    def is_multiplicative(self) -> bool:
         return False
 
     @property
-    def is_logarithmic(self):
+    def is_logarithmic(self) -> bool:
         return True
 
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:

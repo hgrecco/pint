@@ -53,7 +53,7 @@ class System(SharedRegistryObject):
         Name of the group.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         #: Name of the system
         #: :type: str
         self.name = name
@@ -102,7 +102,7 @@ class System(SharedRegistryObject):
 
         return self._computed_members
 
-    def invalidate_members(self):
+    def invalidate_members(self) -> None:
         """Invalidate computed members in this Group and all parent nodes."""
         self._computed_members = None
 
@@ -204,7 +204,7 @@ class System(SharedRegistryObject):
 
 
 class Lister:
-    def __init__(self, d: dict[str, Any]):
+    def __init__(self, d: dict[str, Any]) -> None:
         self.d = d
 
     def __dir__(self) -> list[str]:

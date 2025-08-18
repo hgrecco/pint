@@ -47,7 +47,6 @@ def _power(left: Any, right: Any) -> Any:
 
     return operator.pow(left, right)
 
-
 UnaryOpT = Callable[
     [
         Any,
@@ -335,7 +334,7 @@ class EvalTreeNode:
         left: EvalTreeNode | TokenInfo,
         operator: TokenInfo | None = None,
         right: EvalTreeNode | None = None,
-    ):
+    ) -> None:
         self.left = left
         self.operator = operator
         self.right = right

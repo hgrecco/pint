@@ -20,7 +20,7 @@ MISSING = object()
 
 class MeasurementQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     # Measurement support
-    def plus_minus(self, error, relative=False):
+    def plus_minus(self, error, relative: bool = False):
         if isinstance(error, self.__class__):
             if relative:
                 raise ValueError(f"{error} is not a valid relative error.")
@@ -97,15 +97,15 @@ class Measurement(PlainQuantity):
 
         return _unpickle_measurement, (Measurement, self.magnitude, self._units)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<Measurement({}, {}, {})>".format(
             self.magnitude.nominal_value, self.magnitude.std_dev, self.units
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self}"
 
-    def __format__(self, spec):
+    def __format__(self, spec) -> str:
         spec = spec or self._REGISTRY.default_format
         return self._REGISTRY.formatter.format_measurement(self, spec)
 
