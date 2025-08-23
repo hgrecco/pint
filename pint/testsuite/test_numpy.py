@@ -477,7 +477,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         expected = 3 * self.ureg.m
         result1 = np.dot(a, b)
         helpers.assert_quantity_equal(result1, expected)
-        result2 = np.dot(a, b)
+        result2 = np.dot(b, a)
         helpers.assert_quantity_equal(result2, expected)
 
     @helpers.requires_array_function_protocol()
