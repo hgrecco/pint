@@ -27,12 +27,9 @@ from ...compat import (
     HAS_NUMPY,
     Self,
     _to_magnitude,
-    convert_timedelta,
     deprecated,
     eq,
     is_duck_array_type,
-    is_timedelta,
-    is_timedelta_array,
     is_upcast_type,
     np,
     zero_or_nan,
@@ -166,6 +163,18 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         # TODO: Check if this is still the case.
         return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
+    def _is_timedelta(self, value) -> bool:
+        """Check if the object is a datetime object."""
+        return isinstance(value, datetime.timedelta)
+
+    def _convert_timedelta(self, value):
+        """Convert a datetime.timedelta object to a magnitude and units."""
+        if isinstance(value, datetime.timedelta):
+            total_seconds = value.total_seconds()
+            return total_seconds, "seconds"
+        else:
+            raise TypeError(f"Cannot convert {value!r} to seconds.")
+
     @overload
     def __new__(
         cls, value: MagnitudeT, units: UnitLike | None = None
@@ -204,8 +213,8 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             return copy.copy(value)
         inst = SharedRegistryObject().__new__(cls)
 
-        if is_timedelta(value) or is_timedelta_array(value):
-            m, u = convert_timedelta(value)
+        if cls._is_timedelta(cls, value):
+            m, u = cls.convert_timedelta(value)
             inst._magnitude = m
             inst._units = inst.UnitsContainer({u: 1})
             if units:
