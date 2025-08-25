@@ -20,6 +20,7 @@ from ...compat import (
     _to_magnitude,
     is_duck_array,
     np,
+    np_timedelta64,
 )
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
 from ..plain import MagnitudeT, PlainQuantity
@@ -314,10 +315,8 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
     def _is_timedelta(self, value) -> bool:
         return (
             isinstance(value, datetime.timedelta)
-            or isinstance(value, np.timedelta64)
-            or (
-                is_duck_array(value) and value.dtype.type == np.timedelta64
-            )
+            or isinstance(value, np_timedelta64)
+            or (is_duck_array(value) and value.dtype.type == np_timedelta64)
         )
 
     def _convert_timedelta(self, value: Any) -> tuple[float, str]:
@@ -339,6 +338,6 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         }
         if isinstance(value, datetime.timedelta):
             return value.total_seconds(), "seconds"
-        elif isinstance(value, np.timedelta64) or value.dtype.type == np.timedelta64:
+        elif isinstance(value, np_timedelta64) or value.dtype.type == np_timedelta64:
             return value.astype(float), _dtype_to_unit[str(value.dtype)]
         raise TypeError(f"Cannot convert {value!r} to seconds.")
