@@ -795,7 +795,9 @@ def _dimensionless_if_needed(*args):
             registry = arg.units._REGISTRY
             break
     if registry is None:
-        raise ValueError("At least one argument must be a Quantity to determine the registry.")
+        raise ValueError(
+            "At least one argument must be a Quantity to determine the registry."
+        )
     new_args = []
     for arg in args:
         if _is_quantity(arg):
@@ -803,6 +805,7 @@ def _dimensionless_if_needed(*args):
         else:
             new_args.append(registry.Quantity(arg, "dimensionless"))
     return new_args
+
 
 def implement_mul_func(func):
     # If NumPy is not available, do not attempt implement that which does not exist
