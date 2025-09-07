@@ -284,7 +284,9 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
     if func is None:
         return
     for func_str_piece in func_str_split[1:]:
-        func = getattr(func, func_str_piece)
+        func = getattr(func, func_str_piece, None)
+        if func is None:
+            return
 
     @implements(func_str, func_type)
     def implementation(*args, **kwargs):
@@ -885,6 +887,7 @@ for func_str, unit_arguments, wrap_output in (
     ("moveaxis", "a", True),
     ("around", "a", True),
     ("diagonal", "a", True),
+    ("linalg.diagonal", "x", True),
     ("mean", "a", True),
     ("ptp", "a", True),
     ("ravel", "a", True),
@@ -894,6 +897,7 @@ for func_str, unit_arguments, wrap_output in (
     ("median", "a", True),
     ("nanmedian", "a", True),
     ("transpose", "a", True),
+    ("linalg.matrix_transpose", "x", True),
     ("roll", "a", True),
     ("copy", "a", True),
     ("average", "a", True),
@@ -1050,10 +1054,17 @@ for func_str in (
 # Handle functions with output unit defined by operation
 for func_str in (
     "sum",
+    "diag",
+    "tril",
+    "triu",
     "nansum",
     "cumsum",
     "nancumsum",
     "linalg.norm",
+    "linalg.eigvals",
+    "linalg.eigvalsh",
+    "linalg.matrix_norm",
+    "linalg.vector_norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
 for func_str in ("diff", "ediff1d", "std", "nanstd"):

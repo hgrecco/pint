@@ -7,6 +7,7 @@ Pint Changelog
 - Fix raising exception in `Quantity.from_tuple` with invalid units (#2199)
 - Add devcontainer.json to add GitHub Codespace support (#2208)
 - Add support for `numpy.geomspace` (#2206)
+- Add support for `linalg.diagonal`, `linalg.matrix_transpose`, `diag`, `tril`, `triu`, `linalg.eigvals`, `linalg.eigvalsh`, `linalg.matrix_norm` and `linalg.vector_norm` (#2210)
 
 
 0.25.0 (2025-08-25)
