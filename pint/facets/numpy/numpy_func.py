@@ -788,6 +788,25 @@ def _correlate(a, v, mode="valid", **kwargs):
     return a.units._REGISTRY.Quantity(ret, units)
 
 
+def _dimensionless_if_needed(*args):
+    registry = None
+    for arg in args:
+        if _is_quantity(arg):
+            registry = arg.units._REGISTRY
+            break
+    if registry is None:
+        raise ValueError(
+            "At least one argument must be a Quantity to determine the registry."
+        )
+    new_args = []
+    for arg in args:
+        if _is_quantity(arg):
+            new_args.append(arg)
+        else:
+            new_args.append(registry.Quantity(arg, "dimensionless"))
+    return new_args
+
+
 def implement_mul_func(func):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
@@ -797,15 +816,12 @@ def implement_mul_func(func):
 
     @implements(func_str, "function")
     def implementation(a, b, **kwargs):
+        a, b = _dimensionless_if_needed(a, b)
         a = _base_unit_if_needed(a)
-        units = a.units
-        if hasattr(b, "units"):
-            b = _base_unit_if_needed(b)
-            units *= b.units
-            b = b._magnitude
-
-        mag = func(a._magnitude, b, **kwargs)
-        return a.units._REGISTRY.Quantity(mag, units)
+        b = _base_unit_if_needed(b)
+        units = a.units * b.units
+        mag = func(a._magnitude, b._magnitude, **kwargs)
+        return mag * units
 
 
 for func_str in ("cross", "dot"):
