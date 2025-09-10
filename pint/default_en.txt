@@ -252,6 +252,7 @@ sverdrup = 1e6 * meter ** 3 / second = sv
 # Acceleration
 [acceleration] = [velocity] / [time]
 galileo = centimeter / second ** 2 = Gal
+meter_per_second_squared = meter / second ** 2
 
 # Force
 [force] = [mass] * [acceleration]
@@ -299,13 +300,8 @@ conventional_watt_90 = K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt = W_90
 # Momentum
 [momentum] = [length] * [mass] / [time]
 
-# Density (as auxiliary for pressure)
+# Density
 [density] = [mass] / [volume]
-mercury = 13.5951 * kilogram / liter = Hg = Hg_0C = Hg_32F = conventional_mercury
-water = 1.0 * kilogram / liter = H2O = conventional_water
-mercury_60F = 13.5568 * kilogram / liter = Hg_60F   # approximate
-water_39F = 0.999972 * kilogram / liter = water_4C  # approximate
-water_60F = 0.999001 * kilogram / liter             # approximate
 
 # Pressure
 [pressure] = [force] / [area]
@@ -316,14 +312,27 @@ technical_atmosphere = kilogram * g_0 / centimeter ** 2 = at
 torr = atm / 760
 pound_force_per_square_inch = force_pound / inch ** 2 = psi
 kip_per_square_inch = kip / inch ** 2 = ksi
-millimeter_Hg = millimeter * Hg * g_0 = mmHg = mm_Hg = millimeter_Hg_0C
-centimeter_Hg = centimeter * Hg * g_0 = cmHg = cm_Hg = centimeter_Hg_0C
-inch_Hg = inch * Hg * g_0 = inHg = in_Hg = inch_Hg_32F
-inch_Hg_60F = inch * Hg_60F * g_0
-inch_H2O_39F = inch * water_39F * g_0
-inch_H2O_60F = inch * water_60F * g_0
-foot_H2O = foot * water * g_0 = ftH2O = feet_H2O
-centimeter_H2O = centimeter * water * g_0 = cmH2O = cm_H2O
+meter_H2O = meter * conventional_water_density * g_0 = mH2O = m_H2O
+meter_H2O_4C = meter * water_density_4C * g_0 = mH2O_4C = m_H2O_4C
+meter_H2O_60F = meter * water_density_60F * g_0 = mH2O_60F = m_H2O_60F
+inch_H2O = inch * conventional_water_density * g_0 = inH2O = in_H2O = inchesH2O = inches_H2O
+inch_H2O_4C = inch * water_density_4C * g_0 = inH2O_4C = in_H2O_4C = inchesH2O_4C = inches_H2O_4C
+inch_H2O_60F = inch * water_density_60F * g_0 = inH2O_60F = in_H2O_60F = inchesH2O_60F = inches_H2O_60F
+foot_H2O = foot * conventional_water_density * g_0 = ftH2O = ft_H2O = feetH2O = feet_H2O
+foot_H2O_4C = foot * water_density_4C * g_0 = ftH2O_4C = ft_H2O_4C = feetH2O_4C = feet_H2O_4C
+foot_H2O_60F = foot * water_density_60F * g_0 = ftH2O_60F = ft_H2O_60F = feetH2O_60F = feet_H2O_60F
+meter_Hg = meter * conventional_mercury_density * g_0 = mHg = m_Hg
+meter_Hg_0C = meter * mercury_density_0C * g_0 = mHg_0C = m_Hg_0C
+meter_Hg_32F = meter * mercury_density_32F * g_0 = mHg_32F = m_Hg_32F
+meter_Hg_60F = meter * mercury_density_60F * g_0 = mHg_60F = m_Hg_60F
+inch_Hg = inch * conventional_mercury_density * g_0 = inHg = in_Hg = inchesHg = inches_Hg
+inch_Hg_0C = inch * mercury_density_0C * g_0 = inHg_0C = in_Hg_0C = inchesHg_0C = inches_Hg_0C
+inch_Hg_32F = inch * mercury_density_32F * g_0 = inHg_32F = in_Hg_32F = inchesHg_32F = inches_Hg_32F
+inch_Hg_60F = inch * mercury_density_60F * g_0 = inHg_60F = in_Hg_60F = inchesHg_60F = inches_Hg_60F
+foot_Hg = foot * conventional_mercury_density * g_0 = ftHg = ft_Hg = feetHg = feet_Hg
+foot_Hg_0C = foot * mercury_density_0C * g_0 = ftHg_0C = ft_Hg_0C = feetHg_0C = feet_Hg_0C
+foot_Hg_32F = foot * mercury_density_32F * g_0 = ftHg_32F = ft_Hg_32F = feetHg_32F = feet_Hg_32F
+foot_Hg_60F = foot * mercury_density_60F * g_0 = ftHg_60F = ft_Hg_60F = feetHg_60F = feet_Hg_60F
 sound_pressure_level = 20e-6 * pascal = SPL
 
 # Torque

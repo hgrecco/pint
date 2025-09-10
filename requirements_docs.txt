@@ -1,7 +1,8 @@
 sphinx<8
 ipython<=8.12
 matplotlib
-mip>=1.13
+# Install of mip crashes from Python 3.13 due to cffi dependency issue (see https://github.com/python-cffi/cffi/issues/48 and https://stackoverflow.com/questions/79463080/building-wheel-for-cffi-fails-when-installing-python-mip)
+mip>=1.13; python_version < '3.13'
 nbsphinx
 numpy
 pytest
@@ -12,7 +13,8 @@ graphviz
 xarray
 pooch
 sparse
-dask[complete]
+# Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
+dask[complete]<2025.3.0
 setuptools>=41.2
 Serialize
 pygments>=2.4
@@ -20,3 +22,5 @@ sphinx-book-theme>=1.1.0
 sphinx_copybutton
 sphinx_design
 typing_extensions
+sciform
+scipy

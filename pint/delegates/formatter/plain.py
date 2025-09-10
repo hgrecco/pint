@@ -1,15 +1,15 @@
 """
-    pint.delegates.formatter.plain
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.plain
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements plain text formatters:
-    - Raw: as simple as it gets (no locale aware, no unit formatter.)
-    - Default: used when no string spec is given.
-    - Compact: like default but with less spaces.
-    - Pretty: pretty printed formatter.
+Implements plain text formatters:
+- Raw: as simple as it gets (no locale aware, no unit formatter.)
+- Default: used when no string spec is given.
+- Compact: like default but with less spaces.
+- Pretty: pretty printed formatter.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

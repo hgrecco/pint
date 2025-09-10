@@ -49,8 +49,47 @@ the most common
 Setting up your environment
 ---------------------------
 
-If you're contributing to this project for the fist time, you can set up your
-environment on Linux or OSX with the following commands::
+Here is how to set up your environment if you're contributing to this project for the fist time.
+
+Using pixi
+~~~~~~~~~~
+
+First install `pixi`_, then run the following commands in a terminal::
+
+    $ git clone git@github.com:hgrecco/pint.git
+    $ cd pint
+
+pixi handles setting up environments and downloading and installing modules so you don't neeed to
+run any commands to install pint or its dependencies, you just need to be in the pint directory.
+
+
+To run the tests, linting and documentation building, you can use the following commands::
+
+  $ pixi run --environment test-py313-all test # runs tests only
+  $ pixi run --environment test-py313-all pytest -k test_log # run specific tests
+  $ pixi run --environment test-py313-all bench # runs tests and benchmarks. Much slower and rarely needed.
+  $ pixi run --environment lint lint --all-files
+  $ pixi run docbuild
+  $ pixi run doctest
+
+Other common commands include::
+
+  $ pixi run --environment test-py313-all python # runs a python shell with pint installed
+  $ pixi run --environment test-py313-all python my_script.py # runs a script with pint installed
+
+A full list of the environments and commands available can be found in the `pyproject.toml`_ file.
+
+
+Setting up your environment (legacy)
+------------------------------------
+
+It is recommended to use pixi, as described above. Alternatively if you want to set up
+your environment manually, you can do so using `venv`/`pip` or `conda`/`pip`.
+
+Using venv/pip with Linux or OSX
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In a terminal, navigate where you want the code to be downloaded, and type::
 
     $ git clone git@github.com:hgrecco/pint.git
     $ cd pint
@@ -61,6 +100,38 @@ environment on Linux or OSX with the following commands::
     $ pip install pre-commit # This step and the next are optional but recommended.
     $ pre-commit install
 
+Using conda/pip with Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here it is assumed you are working with Conda, and that Pint has already been git-cloned.
+In an Anaconda Prompt, activate your environment and navigate to the Pint directory.
+Then type::
+
+    $ conda install pip
+    $ conda install git
+    $ pip install -e ".[test]"
+    $ pip install -r requirements_docs.txt
+    $ pip install pre-commit
+    $ pre-commit install
+
+GitHub Codespace
+~~~~~~~~~~~~~~~~
+
+GitHub codespace is an online Linux environment with a vscode web UI. It is
+useful for developers who don't have a Linux device but want to test and
+debug their code on Linux.
+
+Log in to github. On `pint repo main page <https://github.com/hgrecco/pint>`_,
+click Code -> Codespaces -> Create codespace on main.
+
+All
+~~~
+
+Additionally, the following external applications are required at some stage:
+
+- Graphviz_ (used in the `visualize()` function of the Dask library)
+- Pandoc_ (used in documentation building)
+- Pixi_ (used when committing changes)
 
 Writing tests
 -------------
@@ -87,7 +158,9 @@ We use pytest_ for testing. If you contribute code you need to add tests:
 Running tests and building documentation
 ----------------------------------------
 
-To run the test suite, invoke pytest from the ``pint`` directory::
+To run the test suite, invoke pytest from the ``pint`` directory from a terminal with
+administrator privileges (otherwise you may run into permission errors due to temporary
+file management)::
 
     $ cd pint
     $ pytest
@@ -115,7 +188,7 @@ features that work best as an extension package versus direct inclusion in Pint 
 * Extension (separate packages)
 
   * Duck array types that wrap Pint (come above Pint
-    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`
+    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`)
 
   * Uses features independent/on top of the libraries
 
@@ -128,6 +201,32 @@ features that work best as an extension package versus direct inclusion in Pint 
   * Intermingling of APIs occurs
 
   * Examples: Dask
+
+
+Creating a release
+------------------
+
+Maintainers may create a new release by tagging a commit::
+
+    $ # do changes and commit
+    $ git tag -a 0.24.rc0 -m "Tagging 0.24.rc0"
+    $ git push --tags
+
+For the final release, add date to the 0.24 section in CHANGES, then::
+
+    $ git commit -a -m "Preparing for release 0.24"
+    $ git tag -a 0.24 -m "Tagging 0.24"
+
+Then add to CHANGES the following::
+
+    0.25 (unreleased)
+    -----------------
+
+And push the tags and CHANGES ::
+
+    $ git commit -a -m "Back to development: 0.25"
+    $ git push --tags
+
 
 
 .. _github: http://github.com/hgrecco/pint
@@ -143,3 +242,7 @@ features that work best as an extension package versus direct inclusion in Pint 
 .. _pytest: https://docs.pytest.org/en/stable/
 .. _sphinx: https://www.sphinx-doc.org/en/master/
 .. _`extension/compatibility packages`:
+.. _Graphviz: https://graphviz.gitlab.io/download/
+.. _Pandoc: https://pandoc.org/installing.html
+.. _Pixi: https://pixi.sh/latest/installation/
+.. _pyproject.toml: https://github.com/hgrecco/pint/blob/master/pyproject.toml
