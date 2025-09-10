@@ -5,7 +5,7 @@ import pathlib
 
 import flexcache as fc
 
-from ...compat import tomllib
+import tomllib
 from ..base_defparser import ParserConfig
 from . import plain
 
