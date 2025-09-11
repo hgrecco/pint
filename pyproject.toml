@@ -52,9 +52,9 @@ dask = ["dask < 2025.3.0"]
 # Install of mip crashes from Python 3.13 due to cffi dependency issue (see https://github.com/python-cffi/cffi/issues/48 and https://stackoverflow.com/questions/79463080/building-wheel-for-cffi-fails-when-installing-python-mip)
 mip = ["mip >= 1.13; python_version < '3.13'"]
 matplotlib = ["matplotlib"]
-tomli_w = ["tomli_w"]
+tomli-w = ["tomli-w", "tomlkit"]
 all = [
-  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,mip,matplotlib,tomli_w]",
+  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,mip,matplotlib,tomli-w]",
 ]
 docs = [
   "sphinx>=6,<8.2",
@@ -128,6 +128,7 @@ test = { features = ["test"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
+tomli-w = { features = ["tomli-w"], solve-group = "default" }
 docs = { features = [
   "docs",
   "numpy",
@@ -151,6 +152,7 @@ all = { features = [
   "dask",
   "mip",
   "matplotlib",
+  "tomli-w",
 ], solve-group = "default" }
 
 test-py311 = ["test", "py311"]
