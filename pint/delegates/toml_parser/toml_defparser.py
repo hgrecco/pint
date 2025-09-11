@@ -28,6 +28,8 @@ class TomlParser:
             for key, value in parsed_project[definition_type].items():
                 d = copy.copy(value)
                 d["name"] = key
+                if definition_type == "dimension":
+                    d["name"] = f"[{d['name']}]"
                 stmt = stmts[definition_type].from_dict_and_config(
                     d, self._default_config
                 )

@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+import tomlkit
+from tomlkit import comment
+from tomlkit import document
+from tomlkit import nl
+from tomlkit import table
+
+
 from dataclasses import fields
 
 from ...compat import tomli_w
@@ -14,7 +21,7 @@ keep_fields = [
 
 
 def add_key_if_not_empty(dat, key, value):
-    if value == () or value is None:
+    if value == () or value is None or value == {}:
         return dat
     else:
         dat[key] = value
@@ -49,70 +56,62 @@ def prefixes_units_dimensions(ureg):
                 if (isinstance(definition, DimensionDefinition) and definition.is_base) or definition.value_text == "":
                     # skip base dimensions
                     continue
-                data[definition_type][definition.name] = parse_simple_definition(
+                name_ = definition.name
+                if definition_type == "dimension":
+                    name_ = definition.name[1:-1]  # remove the brackets
+                data[definition_type][name_] = parse_simple_definition(
                     definition, definition_type
                 )
     return data
 
 
 def groups(ureg):
-    group_data = {}
+    group_data = []
     for group in ureg._group_definitions:
-        dat = {}
+        dat = {'name': group.name}
         for attr in ["using_group_names"]:
             dat = add_key_if_not_empty(dat, attr, getattr(group, attr))
         dat["definitions"] = {}
         for definition in group.definitions:
-            try: print(definition)
-            except: pass
             dat["definitions"][definition.name] = parse_simple_definition(
                 definition, "unit"
             )
-        group_data[group.name] = dat
+        group_data.append(dat)
     return group_data
 
 
 def systems(ureg):
-    system_data = {}
+    system_data = []
     for group in ureg._system_definitions:
-        dat = {}
+        dat = {'name': group.name}
         for attr in ["using_group_names"]:
             dat = add_key_if_not_empty(dat, attr, getattr(group, attr))
         dat["rules"] = []
         for rule in group.rules:
             dat["rules"].append(rule.raw)
-        system_data[group.name] = dat
+        system_data.append(dat)
     return system_data
 
 
 def contexts(ureg):
-    context_data = {}
+    context_data = []
     for group in ureg._context_definitions:
-        dat = {}
+        dat = {'name': group.name}
         for attr in ["aliases", "defaults", "redefinitions"]:
             dat = add_key_if_not_empty(dat, attr, getattr(group, attr))
         dat["relations"] = []
         for rule in group.relations:
             dat["relations"].append(rule.raw)
-        context_data[group.name] = dat
+        context_data.append(dat)
     return context_data
 
-
-
-def write_definitions(filename: str, ureg: GenericPlainRegistry):
-    data = prefixes_units_dimensions(ureg)
-    data["group"] = groups(ureg)
-    data["system"] = systems(ureg)
-    data["context"] = contexts(ureg)
-    with open(filename, "wb") as f:
-        tomli_w.dump(data, f)
-
-
-import tomlkit
-from tomlkit import comment
-from tomlkit import document
-from tomlkit import nl
-from tomlkit import table
+def to_inline_table(d):
+    definition_item = tomlkit.table()
+    for k, v in d.items():
+        definition_item_item = tomlkit.inline_table()
+        definition_item_item.update(v)
+        definition_item.add(k, definition_item_item)
+    return definition_item
 
 def write_definitions(filename: str, ureg: GenericPlainRegistry):
     data = prefixes_units_dimensions(ureg)
@@ -122,51 +121,30 @@ def write_definitions(filename: str, ureg: GenericPlainRegistry):
     
     doc = document()
     for definition in ["prefix", "dimension", "unit",]:
-        definition_table = tomlkit.table()
-        for key, value in data[definition].items():
-            definition_item = tomlkit.inline_table()
-            definition_item.update(value)
-            definition_table.add(key, definition_item)
+        definition_table = to_inline_table(data[definition])
 
         doc.add(definition, definition_table)        
         doc.add(nl())
 
     for definition in ["group", "system", "context"]:
-        definition_table = tomlkit.table()
-        for key, value in data[definition].items():
-            definition_item = tomlkit.table()
-            for k, v in value.items():
-                if k == "definitions":
-                    definition_item_item = tomlkit.table()
-                    for kk, vv in v.items():
-                        definition_item_item_item = tomlkit.inline_table()
-                        definition_item_item_item.update(vv)
-                        definition_item_item.add(kk, definition_item_item_item)
-                    definition_item.add(k, definition_item_item)
-                    continue
-                elif k == "relations":
-                    definition_item_item = tomlkit.array()
-                    for vv in v:
-                        definition_item_item.add_line(vv)
-                    definition_item.add(k, definition_item_item)
-                    continue
-                else:
-                    definition_item_item = tomlkit.inline_table()
-                if isinstance(v, (list,tuple)):
-                    definition_item.add(k, v)
-                else:
-                    definition_item_item.update(v)
-                    definition_item.add(k, definition_item_item)
-                    
-                # 
-                # definition_item_item.update(v)
-                # definition_item.add(k, definition_item_item)
-            definition_table.add(key, definition_item)
-        doc.add(definition, definition_table)
-        doc.add(nl())
-
-
+        multiline_definition_table = tomlkit.aot()
+        for item in data[definition]:
+            if "definitions" in item:
+                item['definitions'] = to_inline_table(item['definitions'])
+            if "relations" in item:
+                definition_item_item = tomlkit.array().multiline(True)
+                for vv in item['relations']:
+                    definition_item_item.append(vv)
+                item['relations'] = definition_item_item
+            if "defaults" in item:
+                definition_item_item = tomlkit.inline_table()
+                definition_item_item.update(item['defaults'])
+                item['defaults'] = definition_item_item
+            multiline_definition_table.append(item)
+        doc.add(definition, multiline_definition_table)
+        
     text = tomlkit.dumps(doc)
+    text=text.replace('\n[group.', '[group.')
     with open(filename, "wb") as fp:
         fp.write(text.encode("utf-8"))
         
