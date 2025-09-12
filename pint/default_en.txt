@@ -616,11 +616,11 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 @end
 
 @group Avoirdupois
-    dram = pound / 256 = dr = avoirdupois_dram = avdp_dram = drachm
+    dram = pound / 256 = dr = avoirdupois_dram = avdp_dram
     ounce = pound / 16 = oz = avoirdupois_ounce = avdp_ounce
     pound = 7e3 * grain = lb = avoirdupois_pound = avdp_pound
     stone = 14 * pound
-    quarter = 28 * stone
+    quarter = 28 * pound
     bag = 94 * pound
     hundredweight = 100 * pound = cwt = short_hundredweight
     long_hundredweight = 112 * pound
@@ -657,7 +657,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 
 @group Apothecary
     scruple = 20 * grain
-    apothecary_dram = 3 * scruple = ap_dr
+    apothecary_dram = 3 * scruple = ap_dr = apothecary_drachm = drachm
     apothecary_ounce = 8 * apothecary_dram = ap_oz
     apothecary_pound = 12 * apothecary_ounce = ap_lb
 @end
