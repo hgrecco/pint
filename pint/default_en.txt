@@ -170,7 +170,7 @@ unified_atomic_mass_unit = atomic_mass_constant = u = amu
 dalton = atomic_mass_constant = Da
 grain = 64.79891 * milligram = gr
 gamma_mass = microgram
-carat = 200 * milligram = ct = karat
+carat = 200 * milligram = ct
 planck_mass = (hbar * c / gravitational_constant) ** 0.5
 
 # Time
