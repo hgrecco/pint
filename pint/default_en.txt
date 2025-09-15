@@ -268,7 +268,7 @@ atomic_unit_of_force = E_h / a_0 = a_u_force
 joule = newton * meter = J
 erg = dyne * centimeter
 watt_hour = watt * hour = Wh = watthour
-electron_volt = e * volt = eV
+electron_volt = e * volt = eV = electronvolt
 rydberg = ℎ * c * R_inf = Ry
 hartree = 2 * rydberg = E_h = Eh = hartree_energy = atomic_unit_of_energy = a_u_energy
 calorie = 4.184 * joule = cal = thermochemical_calorie = cal_th
