@@ -258,8 +258,8 @@ meter_per_second_squared = meter / second ** 2
 [force] = [mass] * [acceleration]
 newton = kilogram * meter / second ** 2 = N
 dyne = gram * centimeter / second ** 2 = dyn
-force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
-force_gram = g_0 * gram = gf = gram_force
+force_kilogram = g_0 * kilogram = kgf = kilogram_force 
+force_gram = g_0 * gram = gf = gram_force = pond
 force_metric_ton = g_0 * metric_ton = tf = metric_ton_force = force_t = t_force
 atomic_unit_of_force = E_h / a_0 = a_u_force
 
