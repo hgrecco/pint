@@ -39,8 +39,8 @@ class GenericMeasurementRegistry(
 
 class MeasurementRegistry(
     GenericMeasurementRegistry[
-        objects.MeasurementQuantity[Any], objects.MeasurementUnit
+        objects.MeasurementQuantity, objects.MeasurementUnit
     ]
 ):
-    Quantity: TypeAlias = objects.MeasurementQuantity[Any]
+    Quantity: TypeAlias = objects.MeasurementQuantity
     Unit: TypeAlias = objects.MeasurementUnit

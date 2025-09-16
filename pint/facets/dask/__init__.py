@@ -136,6 +136,6 @@ class GenericDaskRegistry(
     pass
 
 
-class DaskRegistry(GenericDaskRegistry[DaskQuantity[Any], DaskUnit]):
-    Quantity: TypeAlias = DaskQuantity[Any]
+class DaskRegistry(GenericDaskRegistry[DaskQuantity, DaskUnit]):
+    Quantity: TypeAlias = DaskQuantity
     Unit: TypeAlias = DaskUnit

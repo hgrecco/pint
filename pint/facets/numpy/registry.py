@@ -22,6 +22,6 @@ class GenericNumpyRegistry(
     pass
 
 
-class NumpyRegistry(GenericPlainRegistry[NumpyQuantity[Any], NumpyUnit]):
-    Quantity: TypeAlias = NumpyQuantity[Any]
+class NumpyRegistry(GenericPlainRegistry[NumpyQuantity, NumpyUnit]):
+    Quantity: TypeAlias = NumpyQuantity
     Unit: TypeAlias = NumpyUnit

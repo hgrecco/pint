@@ -259,7 +259,7 @@ class GenericSystemRegistry(
 
 
 class SystemRegistry(
-    GenericSystemRegistry[objects.SystemQuantity[Any], objects.SystemUnit]
+    GenericSystemRegistry[objects.SystemQuantity, objects.SystemUnit]
 ):
-    Quantity: TypeAlias = objects.SystemQuantity[Any]
+    Quantity: TypeAlias = objects.SystemQuantity
     Unit: TypeAlias = objects.SystemUnit
