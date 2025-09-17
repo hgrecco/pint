@@ -33,6 +33,7 @@ from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
 from fractions import Fraction
+from math import isnan
 from token import NAME, NUMBER
 from tokenize import TokenInfo
 from typing import (
@@ -909,7 +910,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # Identify if terms appear in both numerator and denominator
         def terms_are_unique(fraction):
             for n_factor, n_exp in fraction["numerator"].items():
-                if n_factor in fraction["denominator"]:
+                if isnan(n_factor):
+                    # Ignore nans so that they correctly resolve in the factor calculations
+                    continue
+                elif n_factor in fraction["denominator"]:
                     return False
             return True
 
@@ -917,7 +921,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         while not terms_are_unique(fraction):
             for n_factor, n_exponent in fraction["numerator"].items():
                 if n_factor in fraction["denominator"]:
-                    if n_exponent >= fraction["denominator"][n_factor]:
+                    if isnan(n_factor):
+                        # Ignore nans so that they correctly resolve in the factor calculations
+                        continue
+                    elif n_exponent >= fraction["denominator"][n_factor]:
                         fraction["numerator"][n_factor] -= fraction["denominator"][
                             n_factor
                         ]
@@ -925,6 +932,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                         continue
             for d_factor, d_exponent in fraction["denominator"].items():
                 if d_factor in fraction["numerator"]:
+                    if isnan(d_factor):
+                        # ignore nans so that they correctly resolve in the factor calculations
+                        continue
                     if d_exponent >= fraction["numerator"][d_factor]:
                         fraction["denominator"][d_factor] -= fraction["numerator"][
                             d_factor
