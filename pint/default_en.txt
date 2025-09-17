@@ -148,10 +148,11 @@ byte = 8 * bit = B = octet
 # byte = 8 * bit = _ = octet
 ## NOTE: B (byte) symbol can conflict with Bell
 
-# Ratios
+# Dimensionless ratios
 percent = 0.01 = %
-permille = 0.001 = ‰
+permille = 0.001 = ‰   # NOTE: ‰ = U+2030 (PER MILLE SIGN)
 ppm = 1e-6
+strain = 1 = ε = ϵ     # NOTE: ε = U+03B5 (GREEK SMALL LETTER EPSILON), ϵ = U+03F5 (GREEK LUNATE EPSILON SYMBOL)
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
