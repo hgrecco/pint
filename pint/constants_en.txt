@@ -63,7 +63,7 @@ proton_mass = 1.67262192595e-27 kg = m_p                                        
 neutron_mass = 1.67492750056e-27 kg = m_n                                                  # (85)
 x_unit_Cu = 1.00207697e-13 m = Xu_Cu                                                       # (28)
 x_unit_Mo = 1.00209952e-13 m = Xu_Mo                                                       # (53)
-angstrom_star = 1.00001495e-10 = Å_star                                                    # (90)
+angstrom_star = 1.00001495e-10 m = Å_star                                                  # (90)
 
 # Mass densities
 water_density_4C = 999.972 kg/m^3 = ρH2O_4C				# approximate
