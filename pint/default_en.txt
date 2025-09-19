@@ -134,7 +134,7 @@ degree = π / 180 * radian = deg = arcdeg = arcdegree = angular_degree
 arcminute = degree / 60 = arcmin = arc_minute = angular_minute
 arcsecond = arcminute / 60 = arcsec = arc_second = angular_second
 milliarcsecond = 1e-3 * arcsecond = mas
-grade = π / 200 * radian = grad = gon
+grade = π / 200 * radian = grad = gon = gradian
 mil = π / 32000 * radian
 
 # Solid angle
