@@ -568,7 +568,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def _add_derived_dimension(self, definition: DerivedDimensionDefinition) -> None:
         for dim_name in definition.reference.keys():
             if dim_name not in self._dimensions:
-                self._add_dimension(DimensionDefinition(dim_name))
+                self._add_dimension(DimensionDefinition(dim_name, definition.value_text))
         self._helper_adder(definition, self._dimensions, None)
 
     def _add_prefix(self, definition: PrefixDefinition) -> None:

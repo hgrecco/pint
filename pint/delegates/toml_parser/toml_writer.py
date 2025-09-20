@@ -56,6 +56,9 @@ def prefixes_units_dimensions(ureg):
                 if (isinstance(definition, DimensionDefinition) and definition.is_base) or definition.value_text == "":
                     # skip base dimensions
                     continue
+                if definition_type == "unit" and definition.name in ureg:
+                    # skip built-in units
+                    continue
                 name_ = definition.name
                 if definition_type == "dimension":
                     name_ = definition.name[1:-1]  # remove the brackets
@@ -88,7 +91,10 @@ def systems(ureg):
             dat = add_key_if_not_empty(dat, attr, getattr(group, attr))
         dat["rules"] = []
         for rule in group.rules:
-            dat["rules"].append(rule.raw)
+            rule_text = rule.new_unit_name
+            if rule.old_unit_name:
+                rule_text += f": {rule.old_unit_name}"
+            dat["rules"].append(rule_text)
         system_data.append(dat)
     return system_data
 
@@ -101,7 +107,7 @@ def contexts(ureg):
             dat = add_key_if_not_empty(dat, attr, getattr(group, attr))
         dat["relations"] = []
         for rule in group.relations:
-            dat["relations"].append(rule.raw)
+            dat["relations"].append(rule.value_text)
         context_data.append(dat)
     return context_data
 

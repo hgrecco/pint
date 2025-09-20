@@ -24,16 +24,21 @@ class TomlParser:
             "context": plain.ContextDefinition,
             "group": plain.GroupDefinition,
         }
-        for definition_type in parsed_project.keys():
-            for key, value in parsed_project[definition_type].items():
-                d = copy.copy(value)
-                d["name"] = key
-                if definition_type == "dimension":
-                    d["name"] = f"[{d['name']}]"
-                stmt = stmts[definition_type].from_dict_and_config(
-                    d, self._default_config
-                )
-                yield stmt
+        for definition_type in ["prefix", "unit", "dimension", "system", "context", "group"]:
+            if definition_type in ["unit", "prefix", "dimension"]:
+                for key, value in parsed_project[definition_type].items():
+                    d = copy.copy(value)
+                    d["name"] = key
+                    stmt = stmts[definition_type].from_dict_and_config(
+                        d, self._default_config
+                    )
+                    yield stmt
+            elif definition_type in ["system", "context", "group"]:
+                for entry in parsed_project[definition_type]:
+                    stmt = stmts[definition_type].from_dict_and_config(
+                        entry, self._default_config
+                    )
+                    yield stmt
 
     def parse_file(
         self, filename: pathlib.Path | str, cfg: ParserConfig | None = None
