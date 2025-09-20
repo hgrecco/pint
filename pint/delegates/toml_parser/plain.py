@@ -68,14 +68,14 @@ class PrefixDefinition(definitions_.PrefixDefinition):
         aliases = d.get("aliases", [])
 
         try:
-            value = config.to_number(value)
+            value_number = config.to_number(value)
         except definitions_.NotNumeric as ex:
             return common.DefinitionSyntaxError(
                 f"Prefix definition ('{name}') must contain only numbers, not {ex.value}"
             )
 
         try:
-            return cls(name, value, defined_symbol, aliases)
+            return cls(name, value.strip(), value_number, defined_symbol, aliases)
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 
@@ -221,7 +221,7 @@ class DerivedDimensionDefinition(definitions_.DerivedDimensionDefinition):
             )
 
         try:
-            return cls(name.strip(), reference)
+            return cls(name.strip(), value.strip(), reference)
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 
@@ -271,7 +271,6 @@ class GroupDefinition(group.GroupDefinition):
 
         definitions = []
         for key, value in d["definitions"].items():
-            print(key, value)
             dat = copy.copy(value)
             dat["name"] = key
             definitions.append(UnitDefinition.from_dict_and_config(dat, config))
@@ -397,8 +396,8 @@ class ContextDefinition(context.ContextDefinition):
         defaults = d.get("defaults", {})
         relations = []
 
-        for dat in d["relations"]:
-            dat, eqn = dat.split(":")
+        for relation in d["relations"]:
+            dat, eqn = relation.split(":")
             if "<->" in dat:
                 src, dst = dat.split("<->")
                 obj = context.BidirectionalRelation
@@ -407,7 +406,7 @@ class ContextDefinition(context.ContextDefinition):
                 obj = context.ForwardRelation
             src = to_units_container(src)
             dst = to_units_container(dst)
-            relations.append(obj(src, dst, eqn))
+            relations.append(obj(relation, src, dst, eqn))
         redefinitions = d.get("redefinitions", {})
 
         return cls(name, aliases, defaults, relations, redefinitions)
