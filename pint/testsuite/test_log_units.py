@@ -95,6 +95,8 @@ log_unit_names = [
     "dBm",
     "decibelmicrowatt",
     "dBuW",
+    "dBµW",
+    "dBμW",
     "decibel",
     "dB",
     "decade",
