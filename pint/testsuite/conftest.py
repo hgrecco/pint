@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pathlib
+import sys
 
 import pytest
 
@@ -63,9 +64,15 @@ def registry_tiny(tiny_definition_file: pathlib.Path):
     return pint.UnitRegistry(tiny_definition_file)
 
 
-@pytest.fixture
-def func_registry():
-    return pint.UnitRegistry()
+if sys.version_info >= (3, 11):
+    registry_files = ["pint/default_en.txt", "pint/default_en.toml"]
+else:
+    registry_files = ["pint/default_en.txt"]
+
+
+@pytest.fixture(params=registry_files)
+def func_registry(request):
+    return pint.UnitRegistry(request.param)
 
 
 @pytest.fixture(scope="class")

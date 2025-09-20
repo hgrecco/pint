@@ -72,6 +72,8 @@ class DefaultsDefinition:
 class NamedDefinition:
     #: name of the prefix
     name: str
+    #: original text representing the value
+    value_text: str
 
 
 @dataclass(frozen=True)

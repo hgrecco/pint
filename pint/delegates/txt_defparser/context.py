@@ -46,7 +46,7 @@ def _from_string_and_context_sep(
 
     src, dst = (config.to_dimension_container(s) for s in parts)
 
-    return cls(src, dst, eq.strip())
+    return cls(s, src, dst, eq.strip())
 
 
 @dataclass(frozen=True)
