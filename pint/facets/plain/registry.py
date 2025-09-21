@@ -597,8 +597,13 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             calling_frame = inspect.stack()[1]
             calling_module = inspect.getmodule(calling_frame[0])
             if not isinstance(file, str):
-                raise ValueError(f"Invalid type for file when is_resource=True, needed str, got {type(file)}")
-            if calling_module is None or (calling_package:= calling_module.__package__) is None:
+                raise ValueError(
+                    f"Invalid type for file when is_resource=True, needed str, got {type(file)}"
+                )
+            if (
+                calling_module is None
+                or (calling_package := calling_module.__package__) is None
+            ):
                 raise ValueError("Cannot determine calling module's package")
 
             parsed_project = self._def_parser.parse_file((calling_package, file))

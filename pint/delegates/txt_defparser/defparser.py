@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pathlib
 import typing as ty
 
 import flexcache as fc
@@ -52,7 +51,8 @@ class _PintParser(fp.Parser[PintRootBlock, ParserConfig]):
         super().__init__(config, *args, **kwargs)
 
     def parse_file(
-        self, path: SourceLocationT, 
+        self,
+        path: SourceLocationT,
     ) -> fp.ParsedSource[PintRootBlock, ParserConfig]:
         if self._diskcache is None:
             return super().parse_file(path)
