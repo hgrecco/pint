@@ -8,6 +8,7 @@ Pint Changelog
 - Add devcontainer.json to add GitHub Codespace support (#2208)
 - Add support for `numpy.geomspace` (#2206)
 - Add support for `linalg.diagonal`, `linalg.matrix_transpose`, `diag`, `tril`, `triu`, `linalg.eigvals`, `linalg.eigvalsh`, `linalg.matrix_norm` and `linalg.vector_norm` (#2210)
+- Fixed `nan`/`nan` to return `nan` rather than 1 in unit conversion (#2228)
 
 
 0.25.0 (2025-08-25)
