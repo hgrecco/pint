@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import pathlib
 import typing as ty
 
 import flexcache as fc
 import flexparser as fp
+from flexparser.flexparser import SourceLocationT
 
 from ..base_defparser import ParserConfig
 from . import block, common, context, defaults, group, plain, system
@@ -51,7 +51,8 @@ class _PintParser(fp.Parser[PintRootBlock, ParserConfig]):
         super().__init__(config, *args, **kwargs)
 
     def parse_file(
-        self, path: pathlib.Path
+        self,
+        path: SourceLocationT,
     ) -> fp.ParsedSource[PintRootBlock, ParserConfig]:
         if self._diskcache is None:
             return super().parse_file(path)
@@ -119,7 +120,7 @@ class DefParser:
                 yield stmt
 
     def parse_file(
-        self, filename: pathlib.Path | str, cfg: ParserConfig | None = None
+        self, filename: SourceLocationT, cfg: ParserConfig | None = None
     ) -> fp.ParsedProject[PintRootBlock, ParserConfig]:
         return fp.parse(
             filename,

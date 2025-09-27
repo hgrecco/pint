@@ -317,6 +317,11 @@ class TestRegistry(QuantityTestCase):
         with pytest.raises(FileNotFoundError):
             UnitRegistry(None).load_definitions("notexisting")
 
+        # test loading from resource
+        UnitRegistry(None).load_definitions("test_units.txt", is_resource=True)
+        with pytest.raises(FileNotFoundError):
+            UnitRegistry(None).load_definitions("notexisting", is_resource=True)
+
     def test_default_format(self):
         ureg = UnitRegistry()
         q = ureg.meter

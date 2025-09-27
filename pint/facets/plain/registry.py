@@ -333,7 +333,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         if self._filename == "":
             path = pathlib.Path(__file__).parent.parent.parent / "default_en.txt"
-            loaded_files = self.load_definitions(path, True)
+            loaded_files = self.load_definitions(path)
         elif self._filename is not None:
             loaded_files = self.load_definitions(self._filename)
         else:
@@ -593,8 +593,21 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             used to indicate that the file is a resource file
             and therefore should be loaded from the package. (Default value = False)
         """
+        if is_resource:
+            calling_frame = inspect.stack()[1]
+            calling_module = inspect.getmodule(calling_frame[0])
+            if not isinstance(file, str):
+                raise ValueError(
+                    f"Invalid type for file when is_resource=True, needed str, got {type(file)}"
+                )
+            if (
+                calling_module is None
+                or (calling_package := calling_module.__package__) is None
+            ):
+                raise ValueError("Cannot determine calling module's package")
 
-        if isinstance(file, (list, tuple)):
+            parsed_project = self._def_parser.parse_file((calling_package, file))
+        elif isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
             parsed_project = self._def_parser.parse_string("\n".join(file))
         else:
