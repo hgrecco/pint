@@ -63,7 +63,7 @@ class GenericUnitRegistry(
     pass
 
 
-class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
+class UnitRegistry(GenericUnitRegistry[Quantity[facets.MagnitudeT], Unit]):
     """The unit registry stores the definitions and relationships between units.
 
     Parameters
