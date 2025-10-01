@@ -2062,3 +2062,10 @@ class TestCompareNeutral(QuantityTestCase):
         assert isinstance(quantity.m, float)
 
         assert isinstance(self.ureg.m, self.ureg.Unit)
+
+
+class TestGenericQuantityTyping:
+    def test_generic_type_use(self):
+        from pint import Quantity
+
+        _ = Quantity[int]

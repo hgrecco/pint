@@ -8,7 +8,7 @@ pint.facets.measurement.registry
 
 from __future__ import annotations
 
-from typing import Any, Generic
+from typing import Generic
 
 from ...compat import TypeAlias, ufloat
 from ...util import create_class_with_registry
@@ -38,9 +38,7 @@ class GenericMeasurementRegistry(
 
 
 class MeasurementRegistry(
-    GenericMeasurementRegistry[
-        objects.MeasurementQuantity[Any], objects.MeasurementUnit
-    ]
+    GenericMeasurementRegistry[objects.MeasurementQuantity, objects.MeasurementUnit]
 ):
-    Quantity: TypeAlias = objects.MeasurementQuantity[Any]
+    Quantity: TypeAlias = objects.MeasurementQuantity
     Unit: TypeAlias = objects.MeasurementUnit
