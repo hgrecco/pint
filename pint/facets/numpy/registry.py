@@ -8,7 +8,7 @@ pint.facets.numpy.registry
 
 from __future__ import annotations
 
-from typing import Any, Generic
+from typing import Generic
 
 from ...compat import TypeAlias
 from ..plain import GenericPlainRegistry, QuantityT, UnitT

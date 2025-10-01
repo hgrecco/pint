@@ -11,7 +11,7 @@ Adds pint the capability to interoperate with Dask
 from __future__ import annotations
 
 import functools
-from typing import Any, Generic
+from typing import Generic
 
 from ...compat import TypeAlias, compute, dask_array, persist, visualize
 from ..plain import (

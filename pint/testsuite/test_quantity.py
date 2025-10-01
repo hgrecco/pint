@@ -2067,4 +2067,5 @@ class TestCompareNeutral(QuantityTestCase):
 class TestGenericQuantityTyping:
     def test_generic_type_use(self):
         from pint import Quantity
+
         _ = Quantity[int]
