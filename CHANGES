@@ -8,6 +8,7 @@ Pint Changelog
 - Add devcontainer.json to add GitHub Codespace support (#2208)
 - Add support for `numpy.geomspace` (#2206)
 - Add support for `linalg.diagonal`, `linalg.matrix_transpose`, `diag`, `tril`, `triu`, `linalg.eigvals`, `linalg.eigvalsh`, `linalg.matrix_norm` and `linalg.vector_norm` (#2210)
+- An example of performing currency conversions that change over time has been added to the docs. (#2240)
 - Add support for `pint.Quantity` being used as Generic.
 
 0.25.0 (2025-08-25)

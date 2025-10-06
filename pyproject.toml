@@ -75,6 +75,7 @@ docs = [
   "babel",
   "sciform",
   "scipy",
+  "currencyconverter",
 ]
 
 [project.urls]
