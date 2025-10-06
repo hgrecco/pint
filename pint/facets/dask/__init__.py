@@ -11,7 +11,7 @@ Adds pint the capability to interoperate with Dask
 from __future__ import annotations
 
 import functools
-from typing import Any, Generic
+from typing import Generic
 
 from ...compat import TypeAlias, compute, dask_array, persist, visualize
 from ..plain import (
@@ -136,6 +136,6 @@ class GenericDaskRegistry(
     pass
 
 
-class DaskRegistry(GenericDaskRegistry[DaskQuantity[Any], DaskUnit]):
-    Quantity: TypeAlias = DaskQuantity[Any]
+class DaskRegistry(GenericDaskRegistry[DaskQuantity, DaskUnit]):
+    Quantity: TypeAlias = DaskQuantity
     Unit: TypeAlias = DaskUnit
