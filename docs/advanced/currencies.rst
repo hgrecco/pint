@@ -134,7 +134,7 @@ The following example demonstrates how to use `currency_converter` with Pint to 
    >>> with ureg.context("FX", date=date(2010, 11, 21)):
    ...     q = q.to("USD")
    >>> print(q)
-   1.3676 USD  
+   1.3656 USD
 
 Note that the `currency_converter` package is not a dependency of Pint, so you will need to install it separately, for example with `pip install currencyconverter`.
 
