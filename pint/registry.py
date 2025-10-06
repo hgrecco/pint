@@ -26,13 +26,14 @@ from .util import logger, pi_theorem
 
 
 class Quantity(
-    facets.SystemRegistry.Quantity,
-    facets.ContextRegistry.Quantity,
-    facets.DaskRegistry.Quantity,
-    facets.NumpyRegistry.Quantity,
-    facets.MeasurementRegistry.Quantity,
-    facets.NonMultiplicativeRegistry.Quantity,
-    facets.PlainRegistry.Quantity,
+    Generic[facets.MagnitudeT],
+    facets.SystemRegistry.Quantity[facets.MagnitudeT],
+    facets.ContextRegistry.Quantity[facets.MagnitudeT],
+    facets.DaskRegistry.Quantity[facets.MagnitudeT],
+    facets.NumpyRegistry.Quantity[facets.MagnitudeT],
+    facets.MeasurementRegistry.Quantity[facets.MagnitudeT],
+    facets.NonMultiplicativeRegistry.Quantity[facets.MagnitudeT],
+    facets.PlainRegistry.Quantity[facets.MagnitudeT],
 ):
     pass
 
@@ -62,7 +63,7 @@ class GenericUnitRegistry(
     pass
 
 
-class UnitRegistry(GenericUnitRegistry[Quantity, Unit]):
+class UnitRegistry(GenericUnitRegistry[Quantity[facets.MagnitudeT], Unit]):
     """The unit registry stores the definitions and relationships between units.
 
     Parameters
