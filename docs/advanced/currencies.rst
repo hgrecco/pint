@@ -101,7 +101,7 @@ Many common currency symbols are not supported by the pint parser. A preprocesso
 Example using Currency Converter
 -------------------------------
 
-The following example demonstrates how to use `currency_converter` with Pint to perform currency conversions with historical rates.
+The following example demonstrates how to use `currency_converter`_ with Pint to perform currency conversions with historical rates.
 
 .. doctest::
 
@@ -136,6 +136,10 @@ The following example demonstrates how to use `currency_converter` with Pint to 
    >>> print(q)
    1.3656 USD
 
-Note that the `currency_converter` package is not a dependency of Pint, so you will need to install it separately, for example with `pip install currencyconverter`.
+Note that the `currency_converter`_ package is not a dependency of Pint, so you will need to install it separately:
+
+.. code-block:: bash
+
+    pip install currencyconverter
 
 .. _`currency_converter`: https://alexprengere.github.io/currencyconverter/
