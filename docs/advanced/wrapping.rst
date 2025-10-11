@@ -262,8 +262,8 @@ If you just want to check the dimensionality of a quantity, you can do so with t
     False
 
 
-Checking dimensionality
------------------------
+Type Annotations
+----------------
 
 Pint's Quantity class supports type annotations, which can be used to specify the type of
 the magnitude (e.g., float, int, np.ndarray)
