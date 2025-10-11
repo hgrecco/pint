@@ -100,6 +100,7 @@ class GenericNonMultiplicativeRegistry(
 
         delta_def = UnitDefinition(
             delta_name,
+            "",
             delta_symbol,
             delta_aliases,
             ScaleConverter(definition.converter.scale),
