@@ -907,7 +907,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         )
         self._get_root_units_recurse(input_units, 1, accumulators, fraction)
 
-        if any(isnan(k) for k in itertools.chain(fraction["numerator"], fraction["denominator"])):
+        if any(
+            isnan(k)
+            for k in itertools.chain(fraction["numerator"], fraction["denominator"])
+        ):
             # If there is a nan factor, the result is nan
             return float("nan"), self.UnitsContainer()
 
