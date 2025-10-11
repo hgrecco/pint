@@ -907,13 +907,14 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         )
         self._get_root_units_recurse(input_units, 1, accumulators, fraction)
 
+        if any(isnan(k) for k in itertools.chain(fraction["numerator"], fraction["denominator"])):
+            # If there is a nan factor, the result is nan
+            return float("nan"), self.UnitsContainer()
+
         # Identify if terms appear in both numerator and denominator
         def terms_are_unique(fraction):
             for n_factor, n_exp in fraction["numerator"].items():
-                if isnan(n_factor):
-                    # Ignore nans so that they correctly resolve in the factor calculations
-                    continue
-                elif n_factor in fraction["denominator"]:
+                if n_factor in fraction["denominator"]:
                     return False
             return True
 
@@ -921,10 +922,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         while not terms_are_unique(fraction):
             for n_factor, n_exponent in fraction["numerator"].items():
                 if n_factor in fraction["denominator"]:
-                    if isnan(n_factor):
-                        # Ignore nans so that they correctly resolve in the factor calculations
-                        continue
-                    elif n_exponent >= fraction["denominator"][n_factor]:
+                    if n_exponent >= fraction["denominator"][n_factor]:
                         fraction["numerator"][n_factor] -= fraction["denominator"][
                             n_factor
                         ]
@@ -932,9 +930,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                         continue
             for d_factor, d_exponent in fraction["denominator"].items():
                 if d_factor in fraction["numerator"]:
-                    if isnan(d_factor):
-                        # ignore nans so that they correctly resolve in the factor calculations
-                        continue
                     if d_exponent >= fraction["numerator"][d_factor]:
                         fraction["denominator"][d_factor] -= fraction["numerator"][
                             d_factor
