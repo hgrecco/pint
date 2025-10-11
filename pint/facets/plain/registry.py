@@ -33,6 +33,7 @@ from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
 from fractions import Fraction
+from math import isnan
 from token import NAME, NUMBER
 from tokenize import TokenInfo
 from typing import (
@@ -905,6 +906,13 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             numerator=dict(), denominator=dict()
         )
         self._get_root_units_recurse(input_units, 1, accumulators, fraction)
+
+        if any(
+            isnan(k)
+            for k in itertools.chain(fraction["numerator"], fraction["denominator"])
+        ):
+            # If there is a nan factor, the result is nan
+            return float("nan"), self.UnitsContainer()
 
         # Identify if terms appear in both numerator and denominator
         def terms_are_unique(fraction):
