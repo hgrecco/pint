@@ -24,6 +24,7 @@ from .definitions import UnitDefinition
 if TYPE_CHECKING:
     from ..context import Context
     from .. import QuantityT
+    from .quantity import PlainQuantity
 
 MagnitudeT = TypeVar("MagnitudeT", bound=Magnitude)
 
@@ -149,7 +150,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __mul__(self, other: PlainUnit) -> PlainUnit: ...  # type: ignore[misc]
 
     @overload
-    def __mul__(self, other) -> QuantityT[Magnitude]: ...
+    def __mul__(self, other) -> QuantityT[MagnitudeT]: ...
 
     def __mul__(self, other):
         if self._check(other):
@@ -164,7 +165,14 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.Quantity(1, self._units) * other
 
-    __rmul__ = __mul__
+    @overload
+    def __rmul__(self, other: PlainUnit) -> PlainUnit: ...  # type: ignore[misc]
+
+    @overload
+    def __rmul__(self, other) -> QuantityT[MagnitudeT]: ...
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __truediv__(self, other):
         if self._check(other):
