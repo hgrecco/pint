@@ -12,21 +12,17 @@ import copy
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, overload
 
-
-from ..._typing import UnitLike, Magnitude
+from ..._typing import UnitLike
 from ...compat import NUMERIC_TYPES, deprecated
 from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
-    from ..context import Context
     from .. import QuantityT
-    from .quantity import PlainQuantity
-
-MagnitudeT = TypeVar("MagnitudeT", bound=Magnitude)
+    from ..context import Context
 
 
 class PlainUnit(PrettyIPython, SharedRegistryObject):
@@ -150,7 +146,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __mul__(self, other: PlainUnit) -> PlainUnit: ...  # type: ignore[misc]
 
     @overload
-    def __mul__(self, other) -> QuantityT[MagnitudeT]: ...
+    def __mul__(self, other) -> QuantityT: ...
 
     def __mul__(self, other):
         if self._check(other):
@@ -169,7 +165,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __rmul__(self, other: PlainUnit) -> PlainUnit: ...  # type: ignore[misc]
 
     @overload
-    def __rmul__(self, other) -> QuantityT[MagnitudeT]: ...
+    def __rmul__(self, other) -> QuantityT: ...
 
     def __rmul__(self, other):
         return self.__mul__(other)

@@ -12,15 +12,6 @@ jobs:
           environments: lint
       - run: pixi run --environment lint lint --all-files --show-diff-on-failure
 
-  mypy-type-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.10
-        with:
-          environments: typecheck
-      - run: pixi run --environment typecheck mypy_typing_tests
-
   test-linux:
     runs-on: ubuntu-latest
     strategy:

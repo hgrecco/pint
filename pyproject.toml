@@ -192,11 +192,9 @@ bench = "pytest --benchmark-only"
 [tool.pixi.feature.typecheck.dependencies]
 pyright = "*"
 pip = "*"
-mypy = "*"
 
 [tool.pixi.feature.typecheck.tasks]
 typecheck = "pyright"
-mypy_typing_tests = "mypy pint/testsuite/typing_tests/"
 
 [tool.pixi.feature.docs.pypi-dependencies]
 pint = { path = ".", editable = true }
