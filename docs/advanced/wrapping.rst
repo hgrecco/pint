@@ -1,7 +1,7 @@
 .. _wrapping:
 
-Wrapping, checking functions and type annotations
-=================================================
+Wrapping and checking functions
+===============================
 
 In some cases you might want to use pint with a pre-existing web service or library
 which is not units aware. Or you might want to write a fast implementation of a
@@ -260,20 +260,3 @@ If you just want to check the dimensionality of a quantity, you can do so with t
     True
     >>> distance.check('[time]')
     False
-
-
-Type Annotations
-----------------
-
-Pint's Quantity class supports type annotations, which can be used to specify the type of
-the magnitude (e.g., float, int, np.ndarray)
-
-
-.. doctest::
-
-    >>> import numpy as np
-    >>> import pint
-    >>> def my_scalar_func(x: pint.Quantity[float]) -> pint.Quantity[float]:
-    ...     pass
-    >>> def my_array_func(x: pint.Quantity[np.ndarray[(3, ), int]]) -> pint.Quantity[np.ndarray[(3, ), int]]:
-    ...     pass
