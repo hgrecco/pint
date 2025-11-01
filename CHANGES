@@ -1,15 +1,17 @@
 Pint Changelog
 ==============
 
-0.26.0 (unreleased)
+0.25.1 (2025-11-01)
 -------------------
 
 - Fix raising exception in `Quantity.from_tuple` with invalid units (#2199)
+- Several unit definition fixes.
 - Add devcontainer.json to add GitHub Codespace support (#2208)
 - Add support for `numpy.geomspace` (#2206)
 - Add support for `linalg.diagonal`, `linalg.matrix_transpose`, `diag`, `tril`, `triu`, `linalg.eigvals`, `linalg.eigvalsh`, `linalg.matrix_norm` and `linalg.vector_norm` (#2210)
 - An example of performing currency conversions that change over time has been added to the docs. (#2240)
-- Add support for `pint.Quantity` being used as Generic.
+- Add support for `pint.Quantity` being used as Generic. (#2231)
+- Add a typing and IDE autocomplete page to the documentation. (#2243)
 - Fixed `nan`/`nan` to return `nan` rather than 1 in unit conversion (#2228)
 
 
