@@ -1,6 +1,6 @@
 .. _typing:
 
-Wrapping and checking functions
+Typing and IDE Autocompletion
 ===============================
 
 Type Annotations
@@ -18,4 +18,3 @@ the magnitude (e.g., float, int, np.ndarray)
     ...     pass
     >>> def my_array_func(x: pint.Quantity[np.ndarray[(3, ), int]]) -> pint.Quantity[np.ndarray[(3, ), int]]:
     ...     pass
-##
