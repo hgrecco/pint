@@ -6,7 +6,7 @@ Pint Changelog
 Nothing changed yet.
 
 
-0.25.1 (2025-11-06)
+0.25.2 (2025-11-06)
 -------------------
 
 - Revert typing change in `pint.Unit`
