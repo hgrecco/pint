@@ -10,8 +10,14 @@ Adds pint the capability to system of units.
 
 from __future__ import annotations
 
-from .definitions import SystemDefinition
+from .definitions import BaseUnitRule, SystemDefinition
 from .objects import System
 from .registry import GenericSystemRegistry, SystemRegistry
 
-__all__ = ["SystemDefinition", "System", "SystemRegistry", "GenericSystemRegistry"]
+__all__ = [
+    "SystemDefinition",
+    "System",
+    "SystemRegistry",
+    "GenericSystemRegistry",
+    "BaseUnitRule",
+]
