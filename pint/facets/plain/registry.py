@@ -1194,7 +1194,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
     def _yield_unit_triplets(
         self, unit_name: str, case_sensitive: bool
-    ) -> Generator[tuple[str, str, str], None, None]:
+    ) -> Generator[tuple[str, str, str]]:
         """Helper of parse_unit_name."""
         stw = unit_name.startswith
         edw = unit_name.endswith
