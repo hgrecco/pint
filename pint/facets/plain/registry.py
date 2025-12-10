@@ -1196,31 +1196,35 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self, unit_name: str, case_sensitive: bool
     ) -> Generator[tuple[str, str, str]]:
         """Helper of parse_unit_name."""
-
         stw = unit_name.startswith
         edw = unit_name.endswith
-        for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
-            if stw(prefix) and edw(suffix):
-                name = unit_name[len(prefix) :]
-                if suffix:
-                    name = name[: -len(suffix)]
-                    if len(name) == 1:
-                        continue
-                if case_sensitive:
-                    if name in self._units:
-                        yield (
-                            self._prefixes[prefix].name,
-                            self._units[name].name,
-                            self._suffixes[suffix],
-                        )
-                else:
-                    for real_name in self._units_casei.get(name.lower(), ()):
-                        yield (
-                            self._prefixes[prefix].name,
-                            self._units[real_name].name,
-                            self._suffixes[suffix],
-                        )
-
+        yelded_any=False
+        for case_sensitive_search_cycle in (True,False):
+            for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
+                if stw(prefix) and edw(suffix):
+                    name = unit_name[len(prefix) :]
+                    if suffix:
+                        name = name[: -len(suffix)]
+                        if len(name) == 1:
+                            continue
+                    if case_sensitive_search_cycle:
+                        if name in self._units:
+                            yelded_any=True
+                            yield (
+                                self._prefixes[prefix].name,
+                                self._units[name].name,
+                                self._suffixes[suffix],
+                            )
+                    else:
+                        for real_name in self._units_casei.get(name.lower(), ()):
+                            yield (
+                                self._prefixes[prefix].name,
+                                self._units[real_name].name,
+                                self._suffixes[suffix],
+                            )
+            if case_sensitive or yelded_any:
+                break
+            
     # TODO: keep this for backward compatibility
     _parse_unit_name = _yield_unit_triplets
 
