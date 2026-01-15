@@ -22,7 +22,7 @@ from typing import (
     overload,
 )
 
-from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
+from ..._typing import Array, Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
     Self,
@@ -34,7 +34,7 @@ from ...compat import (
     np,
     zero_or_nan,
 )
-from ...errors import Array, DimensionalityError, OffsetUnitCalculusError, PintTypeError
+from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
 from ...util import (
     PrettyIPython,
     SharedRegistryObject,
