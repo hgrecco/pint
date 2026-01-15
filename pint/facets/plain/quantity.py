@@ -34,7 +34,7 @@ from ...compat import (
     np,
     zero_or_nan,
 )
-from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
+from ...errors import Array, DimensionalityError, OffsetUnitCalculusError, PintTypeError
 from ...util import (
     PrettyIPython,
     SharedRegistryObject,
@@ -360,7 +360,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @classmethod
     def from_list(
         cls, quant_list: list[PlainQuantity[MagnitudeT]], units=None
-    ) -> PlainQuantity[MagnitudeT]:
+    ) -> PlainQuantity[Array[MagnitudeT]]:
         """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
@@ -384,7 +384,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @classmethod
     def from_sequence(
         cls, seq: Sequence[PlainQuantity[MagnitudeT]], units=None
-    ) -> PlainQuantity[MagnitudeT]:
+    ) -> PlainQuantity[Array[MagnitudeT]]:
         """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
 
