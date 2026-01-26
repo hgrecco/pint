@@ -113,14 +113,14 @@ It is fairly good at detecting compound units:
     <Quantity(7.12770743e+10, 'furlong / fortnight ** 2')>
 
 And behaves well when given dimensionless quantities, which are parsed into
-their appropriate objects:
+dimensionless ``Quantity`` objects:
 
 .. doctest::
 
    >>> ureg('2.54')
-   2.54
+   <Quantity(2.54, 'dimensionless')>
    >>> type(ureg('2.54'))
-   <class 'float'>
+   <class 'pint.Quantity'>
    >>> Q_('2.54')
    <Quantity(2.54, 'dimensionless')>
    >>> type(Q_('2.54'))
