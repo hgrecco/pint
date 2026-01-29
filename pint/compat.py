@@ -227,11 +227,11 @@ except ImportError:
     HAS_NUMPY = False
 
 try:
-    import mip  # noqa: F401
+    import scipy  # noqa: F401
 
-    HAS_MIP = True
+    HAS_SCIPY = True
 except ImportError:
-    HAS_MIP = False
+    HAS_SCIPY = False
 
 try:
     import dask  # noqa: F401
@@ -359,23 +359,10 @@ else:
         return value
 
 
-if HAS_MIP:
-    import mip
-
-    mip_model = mip.model
-    mip_Model = mip.Model
-    mip_INF = mip.INF
-    mip_INTEGER = mip.INTEGER
-    mip_xsum = mip.xsum
-    mip_OptimizationStatus = mip.OptimizationStatus
+if HAS_SCIPY:
+    import scipy
 else:
-    mip_missing = missing_dependency("mip")
-    mip_model = mip_missing
-    mip_Model = mip_missing
-    mip_INF = mip_missing
-    mip_INTEGER = mip_missing
-    mip_xsum = mip_missing
-    mip_OptimizationStatus = mip_missing
+    scipy = missing_dependency("scipy")
 
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast

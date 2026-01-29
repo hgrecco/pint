@@ -3,18 +3,10 @@ from __future__ import annotations
 import bisect
 import math
 import numbers
-import sys
 import warnings
 from typing import TYPE_CHECKING
 
-from ...compat import (
-    mip_INF,
-    mip_INTEGER,
-    mip_Model,
-    mip_model,
-    mip_OptimizationStatus,
-    mip_xsum,
-)
+from ...compat import np, scipy
 from ...errors import UndefinedBehavior
 from ...util import UnitsContainer, infer_base_unit
 
@@ -209,8 +201,6 @@ def to_preferred(
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
-    Note: this feature crashes on Python >= 3.12 (issue #2121).
-
     Examples
     --------
 
@@ -221,9 +211,6 @@ def to_preferred(
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
     <Quantity(4.44822162, 'watt * second')>
     """
-
-    if sys.version_info.major == 3 and sys.version_info.minor >= 12:
-        raise Exception("This feature crashes on Python >= 3.12 (issue #2121)")
 
     units = _get_preferred(quantity, preferred_units)
     return quantity.to(units)
@@ -234,8 +221,6 @@ def ito_preferred(
 ) -> PlainQuantity:
     """Return Quantity converted to a unit composed of the preferred units.
 
-    Note: this feature crashes on Python >= 3.12 (issue #2121).
-
     Examples
     --------
 
@@ -246,9 +231,6 @@ def ito_preferred(
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
     <Quantity(4.44822162, 'watt * second')>
     """
-
-    if sys.version_info.major == 3 and sys.version_info.minor >= 12:
-        raise Exception("This feature crashes on Python >= 3.12 (issue #2121)")
 
     units = _get_preferred(quantity, preferred_units)
     return quantity.ito(units)
@@ -374,50 +356,7 @@ def _get_preferred(
 
     # Now that the input data is minimized, setup the optimization problem
 
-    # use mip to select units from preferred units
-
-    model = mip_Model()
-    model.verbose = 0
-
-    # Make one variable for each candidate unit
-
-    vars = [
-        model.add_var(str(unit), lb=-mip_INF, ub=mip_INF, var_type=mip_INTEGER)
-        for unit in (preferred_units + unpreferred_units)
-    ]
-
-    # where [u1 ... uN] are powers of N candidate units (vars)
-    # and [d1(uI) ... dK(uI)] are the K dimensional exponents of candidate unit I
-    # and [t1 ... tK] are the dimensional exponents of the quantity (quantity)
-    # create the following constraints
-    #
-    #                ⎡ d1(u1) ⋯ dK(u1) ⎤
-    # [ u1 ⋯ uN ] * ⎢    ⋮    ⋱         ⎢ = [ t1 ⋯ tK ]
-    #                ⎣ d1(uN)    dK(uN) ⎦
-    #
-    # in English, the units we choose, and their exponents, when combined, must have the
-    # target dimensionality
-
-    matrix = [
-        [preferred_unit.dimensionality[dimension] for dimension in dimensions]
-        for preferred_unit in (preferred_units + unpreferred_units)
-    ]
-
-    # Do the matrix multiplication with mip_model.xsum for performance and create constraints
-    for i in range(len(dimensions)):
-        dot = mip_model.xsum([var * vector[i] for var, vector in zip(vars, matrix)])
-        # add constraint to the model
-        model += dot == dimensionality[i]
-
-    # where [c1 ... cN] are costs, 1 when a preferred variable, and a large value when not
-    # minimize sum(abs(u1) * c1 ... abs(uN) * cN)
-
-    # linearize the optimization variable via a proxy
-    objective = model.add_var("objective", lb=0, ub=mip_INF, var_type=mip_INTEGER)
-
-    # Constrain the objective to be equal to the sums of the absolute values of the preferred
-    # unit powers. Do this by making a separate constraint for each permutation of signedness.
-    # Also apply the cost coefficient, which causes the output to prefer the preferred units
+    # use scipy.optimize.milp to select units from preferred units
 
     # prefer units that interact with fewer dimensions
     cost = [len(p.dimensionality) for p in preferred_units]
@@ -428,37 +367,58 @@ def _get_preferred(
     )  # arbitrary, just needs to be larger
     cost.extend([bias] * len(unpreferred_units))
 
-    for i in range(1 << len(vars)):
-        sum = mip_xsum(
-            [
-                (-1 if i & 1 << (len(vars) - j - 1) else 1) * cost[j] * var
-                for j, var in enumerate(vars)
-            ]
-        )
-        model += objective >= sum
+    all_units = preferred_units + unpreferred_units
+    num_units = len(all_units)
+    num_dims = len(dimensions)
 
-    model.objective = objective
+    # where [u_1 ... u_N] are powers of N candidate units (vars)
+    # introduce auxiliary variables [a_1 ... a_N] to handle absolute values
+    # such that |u_i| <= a_i
+    # variables: x = [u_1, ..., u_N, a_1, ..., a_N]
+    # objective: min c @ x
+    # where c = [0, ..., 0, cost_1, ..., cost_i]
+    c = np.concatenate([np.zeros(num_units), np.array(cost)])
+
+    # u: (-inf, inf), a: (0, inf)
+    bounds = scipy.optimize.Bounds(
+        lb=np.concatenate([-np.inf * np.ones(num_units), np.zeros(num_units)]),
+        ub=np.inf * np.ones(2 * num_units),
+    )
+
+    # constraint: 1 means integer
+    integrality = np.ones(2 * num_units, dtype=np.intp)
+
+    # constraint: |u_i| <= a_i
+    E = np.eye(num_units)
+    constraints = [
+        # 1)  u_i - a_i <= 0
+        scipy.optimize.LinearConstraint(A=np.hstack([E, -E]), lb=-np.inf, ub=0),
+        # 2) -u_i - a_i <= 0
+        scipy.optimize.LinearConstraint(A=np.hstack([-E, -E]), lb=-np.inf, ub=0),
+    ]
+
+    # constraint: [D, 0] @ [u, a] = dimensionality
+    if num_dims > 0:
+        D = np.array(
+            [[unit.dimensionality[d] for d in dimensions] for unit in all_units]
+        ).transpose()
+
+        A_eq = np.hstack([D, np.zeros((num_dims, num_units))])
+        b_eq = np.array(dimensionality)
+        constraints.append(scipy.optimize.LinearConstraint(A=A_eq, lb=b_eq, ub=b_eq))
 
     # run the mips minimizer and extract the result if successful
-    if model.optimize() == mip_OptimizationStatus.OPTIMAL:
-        optimal_units = []
-        min_objective = float("inf")
-        for i in range(model.num_solutions):
-            if model.objective_values[i] < min_objective:
-                min_objective = model.objective_values[i]
-                optimal_units.clear()
-            elif model.objective_values[i] > min_objective:
-                continue
+    res = scipy.optimize.milp(
+        c, constraints=constraints, integrality=integrality, bounds=bounds
+    )
 
-            temp_unit = quantity._REGISTRY.Unit("")
-            for var in vars:
-                if var.xi(i):
-                    temp_unit *= quantity._REGISTRY.Unit(var.name) ** var.xi(i)
-            optimal_units.append(temp_unit)
+    if res.success and res.x is not None:
+        exponents = np.round(res.x[:num_units]).astype(int)
 
-        sorting_keys = {tuple(sorted(unit._units)): unit for unit in optimal_units}
-        min_key = sorted(sorting_keys)[0]
-        result_unit = sorting_keys[min_key]
+        result_unit = quantity._REGISTRY.Unit("")
+        for unit, exponent in zip(all_units, exponents, strict=True):
+            if exponent != 0:
+                result_unit *= unit**exponent
 
         return result_unit
 

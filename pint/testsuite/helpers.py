@@ -13,9 +13,9 @@ from pint.testing import assert_equal as assert_quantity_equal  # noqa: F401
 
 from ..compat import (
     HAS_BABEL,
-    HAS_MIP,
     HAS_NUMPY,
     HAS_NUMPY_ARRAY_FUNCTION,
+    HAS_SCIPY,
     HAS_UNCERTAINTIES,
     NUMPY_VER,
 )
@@ -157,7 +157,7 @@ requires_uncertainties = pytest.mark.skipif(
 requires_not_uncertainties = pytest.mark.skipif(
     HAS_UNCERTAINTIES, reason="Requires Uncertainties not to be installed."
 )
-requires_mip = pytest.mark.skipif(not HAS_MIP, reason="Requires MIP")
+requires_scipy = pytest.mark.skipif(not HAS_SCIPY, reason="Requires scipy")
 
 # Parametrization
 
