@@ -35,6 +35,7 @@ jobs:
             numpy: "numpy==1.26.1"
             uncertainties: null
             extras: "babel==2.15 matplotlib==3.9.0"
+          - environment: "test-py313-all"
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v0.8.10
@@ -81,6 +82,8 @@ jobs:
           - test-py312
           - test-py313
         numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
+        include:
+          - environment: "test-py313-all"
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v0.8.10
@@ -101,6 +104,8 @@ jobs:
           - test-py312
           - test-py313
         numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
+        include:
+          - environment: "test-py313-all"
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v0.8.10
