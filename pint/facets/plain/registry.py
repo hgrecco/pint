@@ -1472,7 +1472,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         def _define_op(s: str):
             return self._eval_token(s, case_sensitive=case_sensitive, **values)
 
-        return build_eval_tree(gen).evaluate(_define_op)
+        result = build_eval_tree(gen).evaluate(_define_op)
+
+        if not isinstance(result, self.Quantity):
+            return self.Quantity(result)
+        return result
 
     # We put this last to avoid overriding UnitsContainer
     # and I do not want to rename it.
