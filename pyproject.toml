@@ -49,11 +49,10 @@ pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
 # Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
 dask = ["dask < 2025.3.0"]
-# Install of mip crashes from Python 3.13 due to cffi dependency issue (see https://github.com/python-cffi/cffi/issues/48 and https://stackoverflow.com/questions/79463080/building-wheel-for-cffi-fails-when-installing-python-mip)
-mip = ["mip >= 1.13; python_version < '3.13'"]
+scipy = ["scipy"]
 matplotlib = ["matplotlib"]
 all = [
-  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,mip,matplotlib]",
+  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
 ]
 docs = [
   "sphinx>=6,<8.2",
@@ -131,7 +130,7 @@ codspeed = { features = ["codspeed"], solve-group = "default" }
 docs = { features = [
   "docs",
   "numpy",
-  "mip",
+  "scipy",
   "matplotlib",
   "dask",
   "xarray",
@@ -149,7 +148,7 @@ all = { features = [
   "pandas",
   "xarray",
   "dask",
-  "mip",
+  "scipy",
   "matplotlib",
 ], solve-group = "default" }
 
@@ -223,5 +222,5 @@ exclude = ["pint/testsuite"]
 HAS_BABEL = true
 HAS_UNCERTAINTIES = true
 HAS_NUMPY = true
-HAS_MIP = true
+HAS_SCIPY = true
 HAS_DASK = true

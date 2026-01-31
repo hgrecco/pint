@@ -6,7 +6,6 @@ import logging
 import math
 import operator as op
 import pickle
-import sys
 import warnings
 from unittest.mock import patch
 
@@ -385,11 +384,7 @@ class TestQuantity(QuantityTestCase):
             round(abs(self.Q_("2 second").to("millisecond").magnitude - 2000), 7) == 0
         )
 
-    @helpers.requires_mip
-    @pytest.mark.skipif(
-        sys.version_info.major == 3 and sys.version_info.minor > 11,
-        reason="Crashes on Python>=3.12 (issue #2121).",
-    )
+    @helpers.requires_scipy
     def test_to_preferred(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -427,11 +422,7 @@ class TestQuantity(QuantityTestCase):
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
 
-    @helpers.requires_mip
-    @pytest.mark.skipif(
-        sys.version_info.major == 3 and sys.version_info.minor > 11,
-        reason="Crashes on Python>=3.12 (issue #2121).",
-    )
+    @helpers.requires_scipy
     def test_to_preferred_registry(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -446,11 +437,7 @@ class TestQuantity(QuantityTestCase):
         pressure = (Q_(1, "N") * Q_("1 m**-2")).to_preferred()
         assert pressure.units == ureg.Pa
 
-    @helpers.requires_mip
-    @pytest.mark.skipif(
-        sys.version_info.major == 3 and sys.version_info.minor > 11,
-        reason="Crashes on Python>=3.12 (issue #2121).",
-    )
+    @helpers.requires_scipy
     def test_autoconvert_to_preferred(self):
         ureg = self.ureg
         Q_ = self.Q_

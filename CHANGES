@@ -5,6 +5,7 @@ Pint Changelog
 -----------------
 
 - `GenericPlainRegistry.parse_expression` now correctly returns a dimensionless Quantity when taking a float, int, or NaN (#2259)
+- Replace MIP with scipy in `Quantity.to_preferred` (#2264)
 
 
 0.25.1 (2025-11-06)
