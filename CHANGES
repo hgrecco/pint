@@ -3,7 +3,8 @@ Pint Changelog
 
 0.26 (unreleased)
 -----------------
-Nothing changed yet.
+
+- Replace MIP with scipy in `Quantity.to_preferred` (#2264)
 
 
 0.25.1 (2025-11-06)
