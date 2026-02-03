@@ -801,6 +801,25 @@ class TestQuantity(QuantityTestCase):
         q = self.Q_(1, unit_str)
         assert q._units == UnitsContainer(expected_unit)
 
+    def test_noether_unit_conversion(self):
+        """Test the conversion of the new Noether unit for momentum."""
+        # Test forward conversion from Nn to base SI units
+        q_nn = self.ureg.Quantity(1, "Nn")
+        q_si = q_nn.to("kilogram * meter / second")
+        assert q_si.magnitude == 1
+        assert q_si.units == self.ureg.Unit("kilogram * meter / second")
+
+        # Test reverse conversion from base SI units to Nn
+        q_si_rev = self.ureg.Quantity(1, "kilogram * meter / second")
+        q_nn_rev = q_si_rev.to("Nn")
+        assert q_nn_rev.magnitude == 1
+        assert q_nn_rev.units == self.ureg.Unit("Nn")
+
+        # Test with a different magnitude
+        q_nn_10 = self.ureg.Quantity(10, "Nn")
+        q_si_10 = q_nn_10.to("kg*m/s")
+        assert q_si_10.magnitude == 10
+
 
 # TODO: do not subclass from QuantityTestCase
 class TestQuantityToCompact(QuantityTestCase):

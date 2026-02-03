@@ -300,6 +300,8 @@ conventional_watt_90 = K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt = W_90
 
 # Momentum
 [momentum] = [length] * [mass] / [time]
+# Proposed unit of momentum, in honor of Emmy Noether's theorem linking symmetry and conservation laws.
+noether = kilogram * meter / second = Nn
 
 # Density
 [density] = [mass] / [volume]
