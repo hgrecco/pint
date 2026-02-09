@@ -167,8 +167,10 @@ def formatter(
 
     Parameters
     ----------
-    items : list
-        a list of (name, exponent) pairs.
+    numerator : list
+        a list of (name, exponent) pairs with positive exponents.
+    denominator : list
+        a list of (name, exponent) pairs with negaitve exponents.
     as_ratio : bool, optional
         True to display as ratio, False as negative powers. (Default value = True)
     single_denominator : bool, optional
