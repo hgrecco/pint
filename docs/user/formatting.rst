@@ -21,6 +21,8 @@ where each part is optional and the order of these is arbitrary.
    >>> q = 2.3e-6 * ureg.m ** 3 / (ureg.s ** 2 * ureg.kg)
    >>> f"{q:~P}"  # short pretty
    '2.3×10⁻⁶ m³/kg/s²'
+   >>> f"{q:~§P}"  # short pretty with negative exponents
+   '2.3×10⁻⁶ kg⁻¹·m³·s⁻²'
    >>> f"{q:~#P}"  # compact short pretty
    '2.3 mm³/g/s²'
    >>> f"{q:P#~}"  # also compact short pretty
@@ -74,6 +76,7 @@ Unit modifiers
 Modifier Meaning                                             Example
 ======== =================================================== ================================
 ``~``    Use the unit's symbol instead of its canonical name ``kg·m/s²`` (``f"{u:~P}"``)
+``§``    Use negative exponents instead of ratio             ``kg·m·s⁻²`` (``f"{u:~§P}"``)
 ======== =================================================== ================================
 
 Magnitude modifiers
