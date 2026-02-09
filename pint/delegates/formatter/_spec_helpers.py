@@ -69,7 +69,7 @@ def extract_custom_flags(spec: str) -> str:
     # sort by length, with longer items first
     known_flags = sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True)
 
-    flag_re = re.compile("(" + "|".join(known_flags + ["~"]) + ")")
+    flag_re = re.compile("(" + "|".join(known_flags + ["~", "§"]) + ")")
     custom_flags = flag_re.findall(spec)
 
     return "".join(custom_flags)
@@ -81,7 +81,10 @@ def remove_custom_flags(spec: str) -> str:
     (i.e those not part of Python's formatting mini language)
     """
 
-    for flag in sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
+    for flag in sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True) + [
+        "~",
+        "§",
+    ]:
         if flag:
             spec = spec.replace(flag, "")
     return spec

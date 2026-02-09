@@ -174,6 +174,7 @@ class FullFormatter(BaseFormatter):
             use_plural=use_plural,
             length=babel_kwds.get("length", None),
             locale=locale,
+            as_ratio=False if "§" in spec else True,
         )
 
     def format_measurement(

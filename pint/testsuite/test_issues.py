@@ -1408,3 +1408,12 @@ def test_issue2256():
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
     assert f"{q:test}" == "2.3e-06 kg⁻¹·m³·s⁻²"
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
+
+
+def test_issue2256_2():
+    ureg = UnitRegistry()
+
+    q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
+    assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
+    assert f"{q:~§P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
+    assert f"{q:§}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
