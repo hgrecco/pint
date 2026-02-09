@@ -106,10 +106,13 @@ class HTMLFormatter(BaseFormatter):
         else:
             division_fmt = "{}/{}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=True,
             product_fmt=r" ",
             division_fmt=division_fmt,

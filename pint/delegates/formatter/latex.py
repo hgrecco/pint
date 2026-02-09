@@ -209,10 +209,13 @@ class LatexFormatter(BaseFormatter):
 
         # division_fmt = r"\frac" + division_fmt.format("[{}]", "[{}]")
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         formatted = formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=True,
             product_fmt=r" \cdot ",
             division_fmt=r"\frac[{}][{}]",
