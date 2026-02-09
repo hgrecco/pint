@@ -88,6 +88,8 @@ def register_unit_format(name: str):
                 uspec: str = "",
                 **babel_kwds: Unpack[BabelKwds],
             ) -> str:
+                if "as_ratio" in babel_kwds.keys():
+                    babel_kwds.pop("as_ratio")
                 numerator, _denominator = prepare_compount_unit(
                     unit,
                     uspec,
