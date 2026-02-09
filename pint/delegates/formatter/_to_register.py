@@ -92,7 +92,7 @@ def register_unit_format(name: str):
                     unit,
                     uspec,
                     **babel_kwds,
-                    as_ratio=False,
+                    as_ratio=False,  # required to get _denominator empty
                     registry=self._registry,
                 )
 
