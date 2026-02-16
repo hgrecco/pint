@@ -47,7 +47,7 @@ Pint Format Types
 Spec    Name            Examples
 ======= =============== ======================================================================
 ``D``   default         ``3.4e+09 kilogram * meter / second ** 2``
-``P``   pretty          ``3.4×10⁹ kilogram·meter/second²``
+``P``   pretty          ``3.4×10⁹ kilogram⋅meter/second²``
 ``H``   HTML            ``3.4×10<sup>9</sup> kilogram meter/second<sup>2</sup>``
 ``L``   latex           ``3.4\\times 10^{9}\\ \\frac{\\mathrm{kilogram} \\cdot \\mathrm{meter}}{\\mathrm{second}^{2}}``
 ``Lx``  latex siunitx   ``\\SI[]{3.4e+09}{\\kilo\\gram\\meter\\per\\second\\squared}``
@@ -64,7 +64,7 @@ Quantity modifiers
 ======== =================================================== ================================
 Modifier Meaning                                             Example
 ======== =================================================== ================================
-``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m·mg/s²`` (``f"{q:#~P}"``)
+``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m⋅mg/s²`` (``f"{q:#~P}"``)
 ======== =================================================== ================================
 
 Unit modifiers
@@ -73,7 +73,7 @@ Unit modifiers
 ======== =================================================== ================================
 Modifier Meaning                                             Example
 ======== =================================================== ================================
-``~``    Use the unit's symbol instead of its canonical name ``kg·m/s²`` (``f"{u:~P}"``)
+``~``    Use the unit's symbol instead of its canonical name ``kg⋅m/s²`` (``f"{u:~P}"``)
 ======== =================================================== ================================
 
 Magnitude modifiers

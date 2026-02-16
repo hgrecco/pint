@@ -335,7 +335,7 @@ class PrettyFormatter(BaseFormatter):
             denominator,
             as_ratio=True,
             single_denominator=False,
-            product_fmt="·",
+            product_fmt="⋅",
             division_fmt=division_fmt,
             power_fmt="{}{}",
             parentheses_fmt="({})",

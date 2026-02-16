@@ -1200,9 +1200,9 @@ def test_issue_1845():
 @pytest.mark.parametrize(
     "units,spec,expected",
     [
-        # (dict(hour=1, watt=1), "P~", "W·h"),
-        (dict(ampere=1, volt=1), "P~", "V·A"),
-        # (dict(meter=1, newton=1), "P~", "N·m"),
+        # (dict(hour=1, watt=1), "P~", "W⋅h"),
+        (dict(ampere=1, volt=1), "P~", "V⋅A"),
+        # (dict(meter=1, newton=1), "P~", "N⋅m"),
     ],
 )
 def test_issues_1841(func_registry, units, spec, expected):
