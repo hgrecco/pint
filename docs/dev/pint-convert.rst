@@ -68,7 +68,7 @@ compatible units:
     540 nanometer = 5.4e-07 m
 
     $ pint-convert kcal/mol
-    $ 1.0 kilocalorie / mole = 4184 kg·m²/mol/s²
+    $ 1.0 kilocalorie / mole = 4184 kg⋅m²/mol/s²
 
     $ pint-convert 540nm kcal/mol
     540 nanometer = 52.9471025594 kcal/mol
