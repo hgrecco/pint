@@ -8,6 +8,7 @@ pint.facets.numpy.quantity
 
 from __future__ import annotations
 
+import bisect
 import functools
 import math
 import warnings
@@ -16,6 +17,7 @@ from typing import Any, Generic
 from ..._typing import Shape
 from ...compat import HAS_NUMPY, _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ...util import UnitsContainer, infer_base_unit
 from ..plain import MagnitudeT, PlainQuantity
 from .numpy_func import (
     HANDLED_UFUNCS,
@@ -304,3 +306,93 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
                 f"Neither Quantity object nor its magnitude ({self._magnitude}) "
                 "supports indexing"
             ) from exc
+
+    def to_compact(
+        self, unit: UnitsContainer | None = None, maximumPrefix: bool = False
+    ) -> NumpyQuantity[MagnitudeT]:
+        """Return NumpyQuantity rescaled to compact, human-readable units.
+
+        Arrays are scaled to the smallest common prefix by default, set `maximumPrefix`
+        to `True` to use the largest possible prefix instead.
+        Infinite and  `nan` values are ignored.
+        To get output in terms of a different unit, use the unit parameter.
+
+
+        Examples
+        --------
+
+        >>> import pint
+        >>> ureg = pint.UnitRegistry()
+        >>> ([200e-9, 300e-12] * ureg.s).to_compact()
+        <Quantity([200.0, 0.3], , 'nanosecond')>
+        >>> ([1e-2, 3] * ureg("kg m/s^2")).to_compact("N")
+        <Quantity([0.01, 3.0], 'newton')>
+        >>> ([1, 6000] * ureg("g")).to_compact(maximumPrefix=True)
+        <Quantity([0.001, 6.0], 'kilogram')>
+        """
+        qm = self.magnitude
+        if (
+            self.unitless
+            or np.all(qm == 0)
+            or np.all(np.isnan(qm))
+            or np.all(np.isinf(qm))
+        ):
+            return self
+
+        SI_prefixes: dict[int, str] = {}
+        for prefix in self._REGISTRY._prefixes.values():
+            try:
+                scale = prefix.converter.scale
+                # Kludgy way to check if this is an SI prefix
+                log10_scale = int(math.log10(scale))
+                if log10_scale == math.log10(scale):
+                    SI_prefixes[log10_scale] = prefix.name
+            except Exception:
+                SI_prefixes[0] = ""
+
+        SI_prefixes_list = sorted(SI_prefixes.items())
+        SI_powers = [item[0] for item in SI_prefixes_list]
+        SI_bases = [item[1] for item in SI_prefixes_list]
+
+        if unit is None:
+            unit = infer_base_unit(self, registry=self._REGISTRY)
+        else:
+            unit = infer_base_unit(self.__class__(1, unit), registry=self._REGISTRY)
+
+        q_base = self.to(unit)
+
+        magnitude = q_base.magnitude
+        # Support uncertainties
+        if hasattr(magnitude, "nominal_value"):
+            magnitude = magnitude.nominal_value
+
+        units = list(q_base._units.items())
+        units_numerator = [a for a in units if a[1] > 0]
+
+        if len(units_numerator) > 0:
+            unit_str, unit_power = units_numerator[0]
+        else:
+            unit_str, unit_power = units[0]
+
+        if unit_power > 0:
+            power = np.floor(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
+        else:
+            power = np.ceil(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
+
+        finite_powers = power[np.isfinite(power)]
+        pivot = (
+            finite_powers[np.argmax(np.abs(finite_powers))]
+            if maximumPrefix
+            else (finite_powers[np.argmin(np.abs(finite_powers))])
+        )
+        index = bisect.bisect_left(SI_powers, pivot)
+
+        if index >= len(SI_bases):
+            index = -1
+
+        prefix_str = SI_bases[index]
+
+        new_unit_str = prefix_str + unit_str
+        new_unit_container = q_base._units.rename(unit_str, new_unit_str)
+
+        return self.to(new_unit_container)

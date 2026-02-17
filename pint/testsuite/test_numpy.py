@@ -1696,3 +1696,53 @@ class TestBitTwiddlingUfuncs(TestUFuncs):
             (self.q1, self.q2, self.qs),
             "same",
         )
+
+
+@helpers.requires_numpy
+class TestToCompact:
+    @classmethod
+    def setup_class(cls):
+        from pint import UnitRegistry
+
+        cls.ureg = UnitRegistry(force_ndarray=True)
+        cls.Q_ = cls.ureg.Quantity
+
+    @classmethod
+    def teardown_class(cls):
+        cls.ureg = None
+        cls.Q_ = None
+
+    @property
+    def q_pos(self):
+        return [1e3, 1e8] * self.ureg.g
+
+    @property
+    def q_neg(self):
+        return [1e-3, 1e-4] * self.ureg.m
+
+    @property
+    def q_one_nan(self):
+        return [1e-3, 5e-3, np.nan] * self.ureg.m
+
+    @property
+    def q_all_nan(self):
+        return [np.nan, np.nan] * self.ureg.m
+
+    @property
+    def q_scalar(self):
+        return 1e3 * self.ureg.m
+
+    def test_to_compact(self):
+        assert self.q_pos.to_compact().units == "kilogram"
+        assert self.q_neg.to_compact().units == "millimeter"
+
+    def test_to_compact_maximum(self):
+        assert self.q_pos.to_compact(maximumPrefix=True).units == "megagram"
+        assert self.q_neg.to_compact(maximumPrefix=True).units == "micrometer"
+
+    def test_to_compact_new_unit(self):
+        assert self.q_pos.to_compact(unit="metric_ton").units == "metric_ton"
+
+    def test_to_compact_nan(self):
+        assert self.q_one_nan.to_compact().units == "millimeter"
+        assert self.q_all_nan.to_compact().units == "meter"
