@@ -8,13 +8,20 @@ pint.facets.numpy.quantity
 
 from __future__ import annotations
 
+import datetime
 import functools
 import math
 import warnings
 from typing import Any, Generic
 
 from ..._typing import Shape
-from ...compat import HAS_NUMPY, _to_magnitude, np
+from ...compat import (
+    HAS_NUMPY,
+    _to_magnitude,
+    is_duck_array,
+    np,
+    np_timedelta64,
+)
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
 from ..plain import MagnitudeT, PlainQuantity
 from .numpy_func import (
@@ -304,3 +311,33 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
                 f"Neither Quantity object nor its magnitude ({self._magnitude}) "
                 "supports indexing"
             ) from exc
+
+    def _is_timedelta(self, value) -> bool:
+        return (
+            isinstance(value, datetime.timedelta)
+            or isinstance(value, np_timedelta64)
+            or (is_duck_array(value) and value.dtype.type == np_timedelta64)
+        )
+
+    def _convert_timedelta(self, value: Any) -> tuple[float, str]:
+        """Convert a timedelta object to magnitude and unit string."""
+        _dtype_to_unit = {
+            "timedelta64[Y]": "year",
+            "timedelta64[M]": "month",
+            "timedelta64[W]": "week",
+            "timedelta64[D]": "day",
+            "timedelta64[h]": "hour",
+            "timedelta64[m]": "minute",
+            "timedelta64[s]": "s",
+            "timedelta64[ms]": "ms",
+            "timedelta64[us]": "us",
+            "timedelta64[ns]": "ns",
+            "timedelta64[ps]": "ps",
+            "timedelta64[fs]": "fs",
+            "timedelta64[as]": "as",
+        }
+        if isinstance(value, datetime.timedelta):
+            return value.total_seconds(), "seconds"
+        elif isinstance(value, np_timedelta64) or value.dtype.type == np_timedelta64:
+            return value.astype(float), _dtype_to_unit[str(value.dtype)]
+        raise TypeError(f"Cannot convert {value!r} to seconds.")
