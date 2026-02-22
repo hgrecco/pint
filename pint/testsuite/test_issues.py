@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import copy
 import decimal
+import importlib.util
 import math
 import pprint
+import subprocess
+import sys
 
 import pytest
 
@@ -1392,3 +1395,30 @@ def test_issue2228(func_registry):
         UnitsContainer({"meter": 1, "centimeter": -1})
     )
     assert ok_factor == 100.0
+
+
+def test_issue2265():
+    """Check that dask.array is not imported with pint."""
+    if importlib.util.find_spec("dask") is None:
+        pytest.skip("dask is not available")
+
+    command = [sys.executable, "-c", "import pint, sys; print('dask.array' in sys.modules)"]
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    assert result.stdout.strip() == "False"
+
+
+def test_issue2265_2():
+    """Verify that lazy-loaded dask_array.Array works when accessed."""
+    if importlib.util.find_spec("dask") is None:
+        pytest.skip("dask is not available")
+
+    from pint.compat import dask_array, HAS_DASK
+
+    if not HAS_DASK:
+        pytest.skip("dask is not available")
+
+    # Access dask_array.Array to trigger lazy import
+    dask_array_class = dask_array.Array
+    assert dask_array_class is not None
+    # Verify it's the actual dask Array class by checking module
+    assert dask_array_class.__module__ == "dask.array.core"
