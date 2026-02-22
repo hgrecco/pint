@@ -1402,7 +1402,11 @@ def test_issue2265():
     if importlib.util.find_spec("dask") is None:
         pytest.skip("dask is not available")
 
-    command = [sys.executable, "-c", "import pint, sys; print('dask.array' in sys.modules)"]
+    command = [
+        sys.executable,
+        "-c",
+        "import pint, sys; print('dask.array' in sys.modules)",
+    ]
     result = subprocess.run(command, check=True, capture_output=True, text=True)
     assert result.stdout.strip() == "False"
 
@@ -1412,7 +1416,7 @@ def test_issue2265_2():
     if importlib.util.find_spec("dask") is None:
         pytest.skip("dask is not available")
 
-    from pint.compat import dask_array, HAS_DASK
+    from pint.compat import HAS_DASK, dask_array
 
     if not HAS_DASK:
         pytest.skip("dask is not available")
