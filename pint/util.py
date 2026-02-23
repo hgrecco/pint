@@ -915,7 +915,7 @@ _subs_re_list = [
 _subs_re = [
     (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re_list
 ]
-_pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⋅⁻", "0123456789*-")
+_pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⋅⁻", "0123456789**-")
 _pretty_exp_re = re.compile(r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?)")
 
 
