@@ -104,7 +104,7 @@ class FullFormatter(BaseFormatter):
             if k in spec:
                 return v
 
-        clean_spec = re.sub(r"\~|\§", "", spec)
+        clean_spec = re.sub(r"\~|\^", "", spec)
         if clean_spec in REGISTERED_FORMATTERS:
             orphan_fmt = REGISTERED_FORMATTERS[clean_spec]
         else:
@@ -174,7 +174,7 @@ class FullFormatter(BaseFormatter):
             use_plural=use_plural,
             length=babel_kwds.get("length", None),
             locale=locale,
-            as_ratio=False if "§" in spec else True,
+            as_ratio=False if "^" in spec else True,
         )
 
     def format_measurement(
