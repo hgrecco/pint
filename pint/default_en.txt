@@ -435,6 +435,10 @@ conventional_volt_90 = K_J90 / K_J * volt = V_90
 [electric_field] = [electric_potential] / [length]
 atomic_unit_of_electric_field = e * k_C / a_0 ** 2 = a_u_electric_field
 
+# Electric field gradient
+[electric_field_gradient] = [energy] / [area] / [charge]
+atomic_unit_of_electric_field_gradient = E_h / a_0 ** 2 / e = a_u_efg
+
 # Electric displacement field
 [electric_displacement_field] = [charge] / [area]
 
