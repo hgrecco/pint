@@ -832,6 +832,36 @@ class TestRegistry(QuantityTestCase):
         assert ureg.parse_units("j", case_sensitive=False) == UnitsContainer(joule=1)
 
 
+class TestNonReducing(QuantityTestCase):
+    def test_init(self):
+        ureg = self.ureg
+        NRUC_ = ureg.NonReducingUnitsContainer
+
+        strain_unit_container = NRUC_([(ureg.mm, 1), (ureg.mm, -1)])
+        assert strain_unit_container.non_reduced_units == [
+            ureg.UnitsContainer({"millimeter": 1}),
+            ureg.UnitsContainer({"millimeter": -1}),
+        ]
+        assert strain_unit_container == ureg.dimensionless
+
+    def test_ureg_auto_reduce_units(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        NRUC_ = ureg.NonReducingUnitsContainer
+
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        strain_unit == NRUC_([(ureg.mm, 1), (ureg.mm, -1)])
+        strain_unit == ureg.Unit("dimensionless")
+
+        strain_q = ureg.Quantity(1, "mm") / ureg.Quantity(1, "mm")
+        assert strain_q.units == strain_unit
+
+    def test_formatting(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        assert format(strain_unit, "~D") == "mm / mm"
+        assert format(strain_unit, "P") == "millimeter/millimeter"
+
+
 class TestCaseInsensitiveRegistry(QuantityTestCase):
     kwargs = dict(case_sensitive=False)
 

@@ -69,7 +69,9 @@ from ...errors import (
 )
 from ...pint_eval import build_eval_tree
 from ...util import (
+    NonReducingUnitsContainer,
     ParserHelper,
+    UnitsContainer,
     _is_dim,
     create_class_with_registry,
     getattr_maybe_raise,
@@ -78,7 +80,6 @@ from ...util import (
     string_preprocessor,
     to_units_container,
 )
-from ...util import UnitsContainer as UnitsContainer
 from .definitions import (
     AliasDefinition,
     CommentDefinition,
@@ -223,6 +224,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
+        auto_reduce_units: bool = True,
         auto_reduce_dimensions: bool = False,
         autoconvert_to_preferred: bool = False,
         preprocessors: list[PreprocessorType] | None = None,
@@ -271,6 +273,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         #: Action to take in case a unit is redefined. 'warn', 'raise', 'ignore'
         self._on_redefinition = on_redefinition
+
+        #: Determines if units should be reduced on appropriate operations.
+        self.auto_reduce_units = auto_reduce_units
 
         #: Determines if dimensionality should be reduced on appropriate operations.
         self.auto_reduce_dimensions = auto_reduce_dimensions
@@ -1335,7 +1340,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         if as_delta:
             cache[input_string] = ret
-
         return ret
 
     def _eval_token(
@@ -1483,7 +1487,20 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     # TODO: Maybe in the future we need to change it to a more meaningful
     # non-colliding name.
     def UnitsContainer(self, *args: Any, **kwargs: Any) -> UnitsContainer:
-        return UnitsContainer(*args, non_int_type=self.non_int_type, **kwargs)
+        return UnitsContainer(
+            *args,
+            non_int_type=self.non_int_type,
+            auto_reduce_units=self.auto_reduce_units,
+            **kwargs,
+        )
+
+    def NonReducingUnitsContainer(self, *args: Any, **kwargs: Any) -> UnitsContainer:
+        return NonReducingUnitsContainer(
+            *args,
+            non_int_type=self.non_int_type,
+            auto_reduce_units=self.auto_reduce_units,
+            **kwargs,
+        )
 
     __call__ = parse_expression
 
