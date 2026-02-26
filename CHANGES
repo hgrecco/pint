@@ -8,6 +8,7 @@ Pint Changelog
 - Replace MIP with scipy in `Quantity.to_preferred` (#2264)
 - New unit formatting modifier added (`^`) to format unit with negative exponents (#2256)
 - Add atomic unit of electric field gradient (`atomic_unit_of_electric_field_gradient`, `a_u_efg`) (#2269)
+- Fix problem with `to_compact()` and numpy quantities (#2274)
 
 
 0.25.1 (2025-11-06)
