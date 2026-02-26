@@ -102,10 +102,13 @@ class DefaultFormatter(BaseFormatter):
         else:
             division_fmt = "{} / {}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=False,
             product_fmt="{} * {}",
             division_fmt=division_fmt,
@@ -217,10 +220,13 @@ class CompactFormatter(BaseFormatter):
         # Division format in compact formatter is not localized.
         division_fmt = "{}/{}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=False,
             product_fmt="*",  # TODO: Should this just be ''?
             division_fmt=division_fmt,
@@ -330,10 +336,13 @@ class PrettyFormatter(BaseFormatter):
         else:
             division_fmt = "{}/{}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=False,
             product_fmt="⋅",
             division_fmt=division_fmt,
