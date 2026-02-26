@@ -705,7 +705,7 @@ class NonReducingUnitsContainer(UnitsContainer):
     ) -> None:
         self.non_reduced_units = []
         self._non_int_type = non_int_type
-        self.auto_reduce_units = auto_reduce_units
+        self._auto_reduce_units = auto_reduce_units
 
         for u in units:
             if isinstance(u, tuple):
