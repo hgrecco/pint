@@ -1426,3 +1426,26 @@ def test_issue2265_2():
     assert dask_array_class is not None
     # Verify it's the actual dask Array class by checking module
     assert dask_array_class.__module__ == "dask.array.core"
+def test_issue2256():
+    ureg = UnitRegistry()
+
+    from pint import formatting as fmt
+    from pint.delegates.formatter.plain import PrettyFormatter
+
+    @fmt.register_unit_format("test2256")
+    def _test_format(unit, registry, **options):
+        pf = PrettyFormatter(registry)
+        return pf.format_unit(unit, "~", as_ratio=False)
+
+    q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
+    assert f"{q:test2256}" == "2.3e-06 kg⁻¹·m³·s⁻²"
+    assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
+
+
+def test_issue2256_2():
+    ureg = UnitRegistry()
+
+    q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
+    assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
+    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
+    assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"

@@ -6,6 +6,7 @@ Pint Changelog
 
 - `GenericPlainRegistry.parse_expression` now correctly returns a dimensionless Quantity when taking a float, int, or NaN (#2259)
 - Replace MIP with scipy in `Quantity.to_preferred` (#2264)
+- New unit formatting modifier added (`^`) to format unit with negative exponents (#2256)
 - Add atomic unit of electric field gradient (`atomic_unit_of_electric_field_gradient`, `a_u_efg`) (#2269)
 - Defer expensive loading of dask.array (#2265)
 
