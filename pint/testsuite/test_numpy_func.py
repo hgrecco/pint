@@ -290,3 +290,30 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
         with pytest.raises(OffsetUnitCalculusError):
             np.cross(t, z)
+
+    def test_vdot(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            # Real case with offset
+            t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+            z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+            helpers.assert_quantity_almost_equal(
+                np.vdot(t, z), self.Q_(1678.9, "kelvin meter")
+            )
+            # Complex case
+            a = self.Q_(np.array([1j, 2j]), "m")
+            b = self.Q_(np.array([1j, 2j]), "s")
+            # conj(1j)*1j + conj(2j)*2j = 1 + 4 = 5
+            helpers.assert_quantity_almost_equal(np.vdot(a, b), self.Q_(5.0, "m * s"))
+
+    def test_vdot_no_autoconvert(self):
+        t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+        z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+        with pytest.raises(OffsetUnitCalculusError):
+            np.vdot(t, z)
