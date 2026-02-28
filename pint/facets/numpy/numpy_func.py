@@ -826,7 +826,7 @@ def implement_mul_func(func):
         return mag * units
 
 
-for func_str in ("cross", "dot", "vdot"):
+for func_str in ("cross", "dot", "vdot", "inner", "outer"):
     implement_mul_func(func_str)
 
 

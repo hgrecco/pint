@@ -317,3 +317,47 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
         with pytest.raises(OffsetUnitCalculusError):
             np.vdot(t, z)
+
+    def test_inner(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+            z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+            helpers.assert_quantity_almost_equal(
+                np.inner(t, z), self.Q_(1678.9, "kelvin meter")
+            )
+
+    def test_inner_no_autoconvert(self):
+        t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+        z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+        with pytest.raises(OffsetUnitCalculusError):
+            np.inner(t, z)
+
+    def test_outer(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            t = self.Q_(np.array([0.0, 5.0]), "degC")
+            z = self.Q_(np.array([1.0, 2.0]), "m")
+            # [273.15, 278.15] outer [1.0, 2.0] = [[273.15, 546.3], [278.15, 556.3]]
+            expected = np.array([[273.15, 546.3], [278.15, 556.3]])
+            helpers.assert_quantity_almost_equal(
+                np.outer(t, z), self.Q_(expected, "kelvin meter")
+            )
+
+    def test_outer_no_autoconvert(self):
+        t = self.Q_(np.array([0.0, 5.0]), "degC")
+        z = self.Q_(np.array([1.0, 2.0]), "m")
+        with pytest.raises(OffsetUnitCalculusError):
+            np.outer(t, z)
