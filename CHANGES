@@ -126,6 +126,7 @@ Pint Changelog
   (PR #1998)
 - Improved error message in `get_dimensionality()` when non existent units are passed.
   (PR #1874, Issue #1716)
+- Fix default format in jupyter notebooks (Issue #1206)
 
 
 0.23 (2023-12-08)
