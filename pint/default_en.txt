@@ -134,7 +134,7 @@ degree = π / 180 * radian = deg = arcdeg = arcdegree = angular_degree
 arcminute = degree / 60 = arcmin = arc_minute = angular_minute
 arcsecond = arcminute / 60 = arcsec = arc_second = angular_second
 milliarcsecond = 1e-3 * arcsecond = mas
-grade = π / 200 * radian = grad = gon
+grade = π / 200 * radian = grad = gon = gradian
 mil = π / 32000 * radian
 
 # Solid angle
@@ -148,10 +148,11 @@ byte = 8 * bit = B = octet
 # byte = 8 * bit = _ = octet
 ## NOTE: B (byte) symbol can conflict with Bell
 
-# Ratios
+# Dimensionless ratios
 percent = 0.01 = %
-permille = 0.001 = ‰
+permille = 0.001 = ‰   # NOTE: ‰ = U+2030 (PER MILLE SIGN)
 ppm = 1e-6
+strain = 1 = ε = ϵ     # NOTE: ε = U+03B5 (GREEK SMALL LETTER EPSILON), ϵ = U+03F5 (GREEK LUNATE EPSILON SYMBOL)
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
@@ -170,7 +171,7 @@ unified_atomic_mass_unit = atomic_mass_constant = u = amu
 dalton = atomic_mass_constant = Da
 grain = 64.79891 * milligram = gr
 gamma_mass = microgram
-carat = 200 * milligram = ct = karat
+carat = 200 * milligram = ct
 planck_mass = (hbar * c / gravitational_constant) ** 0.5
 
 # Time
@@ -206,7 +207,7 @@ planck_time = (hbar * gravitational_constant / c ** 5) ** 0.5
 degree_Celsius = kelvin; offset: 273.15 = °C = celsius = degC = degreeC
 degree_Rankine = 5 / 9 * kelvin; offset: 0 = °R = rankine = degR = degreeR
 degree_Fahrenheit = 5 / 9 * kelvin; offset: 233.15 + 200 / 9 = °F = fahrenheit = degF = degreeF
-degree_Reaumur = 4 / 5 * kelvin; offset: 273.15 = °Re = reaumur = degRe = degreeRe = degree_Réaumur = réaumur
+degree_Reaumur = 5 / 4 * kelvin; offset: 273.15 = °Re = reaumur = degRe = degreeRe = degree_Réaumur = réaumur
 atomic_unit_of_temperature = E_h / k = a_u_temp
 planck_temperature = (hbar * c ** 5 / gravitational_constant / k ** 2) ** 0.5
 
@@ -238,7 +239,7 @@ reciprocal_centimeter = 1 / cm = cm_1 = kayser
 # Velocity
 [velocity] = [length] / [time]
 [speed] = [velocity]
-knot = nautical_mile / hour = kt = knot_international = international_knot
+knot = nautical_mile / hour = kn = kt = knot_international = international_knot
 mile_per_hour = mile / hour = mph = MPH
 kilometer_per_hour = kilometer / hour = kph = KPH
 kilometer_per_second = kilometer / second = kps
@@ -258,8 +259,8 @@ meter_per_second_squared = meter / second ** 2
 [force] = [mass] * [acceleration]
 newton = kilogram * meter / second ** 2 = N
 dyne = gram * centimeter / second ** 2 = dyn
-force_kilogram = g_0 * kilogram = kgf = kilogram_force = pond
-force_gram = g_0 * gram = gf = gram_force
+force_kilogram = g_0 * kilogram = kgf = kilogram_force
+force_gram = g_0 * gram = gf = gram_force = pond
 force_metric_ton = g_0 * metric_ton = tf = metric_ton_force = force_t = t_force
 atomic_unit_of_force = E_h / a_0 = a_u_force
 
@@ -268,7 +269,7 @@ atomic_unit_of_force = E_h / a_0 = a_u_force
 joule = newton * meter = J
 erg = dyne * centimeter
 watt_hour = watt * hour = Wh = watthour
-electron_volt = e * volt = eV
+electron_volt = e * volt = eV = electronvolt
 rydberg = ℎ * c * R_inf = Ry
 hartree = 2 * rydberg = E_h = Eh = hartree_energy = atomic_unit_of_energy = a_u_energy
 calorie = 4.184 * joule = cal = thermochemical_calorie = cal_th
@@ -433,6 +434,10 @@ conventional_volt_90 = K_J90 / K_J * volt = V_90
 # Electric field
 [electric_field] = [electric_potential] / [length]
 atomic_unit_of_electric_field = e * k_C / a_0 ** 2 = a_u_electric_field
+
+# Electric field gradient
+[electric_field_gradient] = [energy] / [area] / [charge]
+atomic_unit_of_electric_field_gradient = E_h / a_0 ** 2 / e = a_u_efg
 
 # Electric displacement field
 [electric_displacement_field] = [charge] / [area]
@@ -616,11 +621,11 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 @end
 
 @group Avoirdupois
-    dram = pound / 256 = dr = avoirdupois_dram = avdp_dram = drachm
+    dram = pound / 256 = dr = avoirdupois_dram = avdp_dram
     ounce = pound / 16 = oz = avoirdupois_ounce = avdp_ounce
     pound = 7e3 * grain = lb = avoirdupois_pound = avdp_pound
     stone = 14 * pound
-    quarter = 28 * stone
+    quarter = 28 * pound
     bag = 94 * pound
     hundredweight = 100 * pound = cwt = short_hundredweight
     long_hundredweight = 112 * pound
@@ -657,7 +662,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 
 @group Apothecary
     scruple = 20 * grain
-    apothecary_dram = 3 * scruple = ap_dr
+    apothecary_dram = 3 * scruple = ap_dr = apothecary_drachm = drachm
     apothecary_ounce = 8 * apothecary_dram = ap_oz
     apothecary_pound = 12 * apothecary_ounce = ap_lb
 @end

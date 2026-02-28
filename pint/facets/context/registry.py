@@ -427,7 +427,7 @@ class GenericContextRegistry(
 
 
 class ContextRegistry(
-    GenericContextRegistry[objects.ContextQuantity[Any], objects.ContextUnit]
+    GenericContextRegistry[objects.ContextQuantity, objects.ContextUnit]
 ):
-    Quantity: TypeAlias = objects.ContextQuantity[Any]
+    Quantity: TypeAlias = objects.ContextQuantity
     Unit: TypeAlias = objects.ContextUnit

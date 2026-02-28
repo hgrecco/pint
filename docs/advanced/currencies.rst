@@ -97,3 +97,49 @@ Many common currency symbols are not supported by the pint parser. A preprocesso
    >>> ureg.define("euro = [currency] = € = EUR")
    >>> print(ureg.Quantity("1 €"))
    1 euro
+
+Example using Currency Converter
+-------------------------------
+
+The following example demonstrates how to use `currency_converter`_ with Pint to perform currency conversions with historical rates.
+
+.. doctest::
+
+   >>> import itertools
+   >>> import pint
+   >>> import currency_converter
+   >>> from datetime import date
+   >>>
+   >>> # create a currency converter instance to load all of the data
+   >>> cc = currency_converter.CurrencyConverter(fallback_on_missing_rate=True)
+   >>>
+   >>> # load custom units and instantiate Quantity base class that is used everywhere
+   >>> ureg = pint.UnitRegistry()
+   >>> for c in cc.currencies:
+   ...     ureg.define(f"{c} = [currency_{c}]")  # i.e. USD = [currency_USD]
+   >>>
+   >>> # add programmatic context for currency conversion
+   >>> currency_context = pint.Context("FX", defaults={"date": None})
+   >>> for a, b in itertools.combinations(list(cc.currencies), 2):
+   ...     def a2b(_ureg, x, date=None, a=a, b=b):
+   ...         return cc.convert(x.magnitude, a, b, date=date) * _ureg(b)
+   ...     def b2a(_ureg, x, date=None, a=a, b=b):
+   ...         return cc.convert(x.magnitude, b, a, date=date) * _ureg(a)
+   ...     currency_context.add_transformation(f"[currency_{a}]", f"[currency_{b}]", a2b)
+   ...     currency_context.add_transformation(f"[currency_{b}]", f"[currency_{a}]", b2a)
+   >>> ureg.add_context(currency_context)
+   >>>
+   >>> # Example usage
+   >>> q = ureg.Quantity("1 EUR")
+   >>> with ureg.context("FX", date=date(2010, 11, 21)):
+   ...     q = q.to("USD")
+   >>> print(q)
+   1.3656 USD
+
+Note that the `currency_converter`_ package is not a dependency of Pint, so you will need to install it separately:
+
+.. code-block:: bash
+
+    pip install currencyconverter
+
+.. _`currency_converter`: https://alexprengere.github.io/currencyconverter/

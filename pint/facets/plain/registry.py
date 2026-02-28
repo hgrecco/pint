@@ -33,6 +33,7 @@ from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
 from fractions import Fraction
+from math import isnan
 from token import NAME, NUMBER
 from tokenize import TokenInfo
 from typing import (
@@ -160,7 +161,7 @@ class RegistryMeta(type):
 
 
 # Generic types used to mark types associated to Registries.
-QuantityT = TypeVar("QuantityT", bound=PlainQuantity[Any])
+QuantityT = TypeVar("QuantityT", bound=PlainQuantity)
 UnitT = TypeVar("UnitT", bound=PlainUnit)
 
 
@@ -906,6 +907,13 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         )
         self._get_root_units_recurse(input_units, 1, accumulators, fraction)
 
+        if any(
+            isnan(k)
+            for k in itertools.chain(fraction["numerator"], fraction["denominator"])
+        ):
+            # If there is a nan factor, the result is nan
+            return float("nan"), self.UnitsContainer()
+
         # Identify if terms appear in both numerator and denominator
         def terms_are_unique(fraction):
             for n_factor, n_exp in fraction["numerator"].items():
@@ -1464,7 +1472,11 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         def _define_op(s: str):
             return self._eval_token(s, case_sensitive=case_sensitive, **values)
 
-        return build_eval_tree(gen).evaluate(_define_op)
+        result = build_eval_tree(gen).evaluate(_define_op)
+
+        if not isinstance(result, self.Quantity):
+            return self.Quantity(result)
+        return result
 
     # We put this last to avoid overriding UnitsContainer
     # and I do not want to rename it.
@@ -1476,6 +1488,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     __call__ = parse_expression
 
 
-class PlainRegistry(GenericPlainRegistry[PlainQuantity[Any], PlainUnit]):
-    Quantity: TypeAlias = PlainQuantity[Any]
+class PlainRegistry(GenericPlainRegistry[PlainQuantity, PlainUnit]):
+    Quantity: TypeAlias = PlainQuantity
     Unit: TypeAlias = PlainUnit

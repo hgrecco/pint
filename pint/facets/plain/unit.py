@@ -154,7 +154,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.Quantity(1, self._units) * other
 
-    __rmul__ = __mul__
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __truediv__(self, other):
         if self._check(other):

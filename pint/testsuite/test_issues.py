@@ -1375,3 +1375,45 @@ def test_issue2199(func_registry):
     msg = "is not defined in the unit registry"
     with pytest.raises(UndefinedUnitError, match=msg):
         func_registry.Quantity.from_tuple((1, (("wrong", 1),)))
+
+
+def test_issue2228(func_registry):
+    func_registry.define("test2228A = nan meter")
+    func_registry.define("test2228B = nan meter")
+    # Behaviour before 2228 was fixed
+    nan_factor, _ = func_registry._get_root_units(
+        UnitsContainer({"test2228A": 1, "test2228B": -1})
+    )
+    assert nan_factor != 1
+    # Expected behaviour - return nan
+    assert math.isnan(nan_factor)
+
+    ok_factor, _ = func_registry._get_root_units(
+        UnitsContainer({"meter": 1, "centimeter": -1})
+    )
+    assert ok_factor == 100.0
+
+
+def test_issue2256():
+    ureg = UnitRegistry()
+
+    from pint import formatting as fmt
+    from pint.delegates.formatter.plain import PrettyFormatter
+
+    @fmt.register_unit_format("test2256")
+    def _test_format(unit, registry, **options):
+        pf = PrettyFormatter(registry)
+        return pf.format_unit(unit, "~", as_ratio=False)
+
+    q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
+    assert f"{q:test2256}" == "2.3e-06 kg⁻¹·m³·s⁻²"
+    assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
+
+
+def test_issue2256_2():
+    ureg = UnitRegistry()
+
+    q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
+    assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
+    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
+    assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
