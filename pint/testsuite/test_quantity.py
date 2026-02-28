@@ -1911,6 +1911,66 @@ class TestTimedelta(QuantityTestCase):
         with pytest.raises(DimensionalityError):
             after -= d
 
+    def test_init_quantity(self):
+        # 608
+        td = datetime.timedelta(seconds=3)
+        assert self.Q_(td) == 3 * self.ureg.second
+        q_hours = self.Q_(td, "hours")
+        assert q_hours == 3 * self.ureg.second
+        assert q_hours.units == self.ureg.hour
+
+    @pytest.mark.parametrize(
+        ["timedelta_unit", "pint_unit"],
+        (
+            pytest.param("s", "second", id="second"),
+            pytest.param("ms", "millisecond", id="millisecond"),
+            pytest.param("us", "microsecond", id="microsecond"),
+            pytest.param("ns", "nanosecond", id="nanosecond"),
+            pytest.param("m", "minute", id="minute"),
+            pytest.param("h", "hour", id="hour"),
+            pytest.param("D", "day", id="day"),
+            pytest.param("W", "week", id="week"),
+            pytest.param("M", "month", id="month"),
+            pytest.param("Y", "year", id="year"),
+        ),
+    )
+    @helpers.requires_numpy
+    def test_init_quantity_np(self, timedelta_unit, pint_unit):
+        # test init with the timedelta unit
+        td = np.timedelta64(3, timedelta_unit)
+        result = self.Q_(td)
+        expected = self.Q_(3, pint_unit)
+        helpers.assert_quantity_almost_equal(result, expected)
+        # check units are same. Use Q_ since Unit(s) != Unit(second)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test init with unit specified
+        result = self.Q_(td, "hours")
+        expected = self.Q_(3, pint_unit).to("hours")
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test array
+        td = np.array([3], dtype="timedelta64[{}]".format(timedelta_unit))
+        result = self.Q_(td)
+        expected = self.Q_([3], pint_unit)
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test array with unit specified
+        result = self.Q_(td, "hours")
+        expected = self.Q_([3], pint_unit).to("hours")
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
 
 # TODO: do not subclass from QuantityTestCase
 class TestCompareNeutral(QuantityTestCase):

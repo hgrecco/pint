@@ -199,8 +199,16 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         if units is None and isinstance(value, cls):
             return copy.copy(value)
-
         inst = SharedRegistryObject().__new__(cls)
+
+        if cls._is_timedelta(cls, value):
+            m, u = cls._convert_timedelta(cls, value)
+            inst._magnitude = m
+            inst._units = inst.UnitsContainer({u: 1})
+            if units:
+                inst.ito(units)
+            return inst
+
         if units is None:
             units = inst.UnitsContainer()
         else:
