@@ -15,6 +15,7 @@ import sys
 from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 from importlib import import_module
+from importlib.util import find_spec
 from numbers import Number
 from typing import (
     Any,
@@ -233,12 +234,7 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
-try:
-    import dask  # noqa: F401
-
-    HAS_DASK = True
-except ImportError:
-    HAS_DASK = False
+HAS_DASK = find_spec("dask") is not None
 
 
 ##############################
@@ -369,8 +365,13 @@ else:
 # types using guarded imports
 
 if HAS_DASK:
-    from dask import array as dask_array
     from dask.base import compute, persist, visualize
+
+    class _LazyDaskArray:
+        def __getattr__(self, attr):
+            return getattr(import_module("dask.array"), attr)
+
+    dask_array = _LazyDaskArray()
 else:
     compute, persist, visualize = None, None, None
     dask_array = None
