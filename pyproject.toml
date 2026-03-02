@@ -113,7 +113,7 @@ ignore = [
   "E731", # do not assign a lambda expression, use a def
 ]
 
-[tool.pixi.workspace]
+[tool.pixi.project]
 channels = ["https://fast.prefix.dev/conda-forge"]
 platforms = ['osx-arm64', 'linux-64', 'win-64']
 
