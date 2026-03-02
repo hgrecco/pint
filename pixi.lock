@@ -5526,8 +5526,8 @@ packages:
   requires_python: '>=3.10'
 - pypi: ./
   name: pint
-  version: 0.25.2.dev12+gea74ca9a9
-  sha256: b17cc96aca22d942724060f48723bbd6bea4e255b859ac6aaf44e9412fb489c8
+  version: 0.25.2.dev14+g384e13ade
+  sha256: adc7e4384cc3a7ea73b27f40e9ec2694209e5360525de90d2cb6fc437273801e
   requires_dist:
   - flexcache>=0.3
   - flexparser>=0.4
