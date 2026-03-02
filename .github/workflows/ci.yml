@@ -6,11 +6,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v6.0.2
-=======
-      - uses: actions/checkout@v4
->>>>>>> 520aec02 (versions)
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: lint
@@ -40,11 +36,7 @@ jobs:
             uncertainties: null
             extras: "babel==2.15 matplotlib==3.9.0"
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v6.0.2
-=======
-      - uses: actions/checkout@v4
->>>>>>> 520aec02 (versions)
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: ${{ matrix.environment }}
@@ -90,11 +82,7 @@ jobs:
           - test-py313
         numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v6.0.2
-=======
-      - uses: actions/checkout@v4
->>>>>>> 520aec02 (versions)
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: ${{ matrix.environment }}
@@ -114,11 +102,7 @@ jobs:
           - test-py313
         numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v6.0.2
-=======
-      - uses: actions/checkout@v4
->>>>>>> 520aec02 (versions)
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: ${{ matrix.environment }}
@@ -140,11 +124,7 @@ jobs:
       id-token: write  # for trusted publising to PyPI
 
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v6.0.2
-=======
-      - uses: actions/checkout@v4
->>>>>>> 520aec02 (versions)
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: build
