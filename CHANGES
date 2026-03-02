@@ -9,6 +9,7 @@ Pint Changelog
 0.25.3 (2026-03-19)
 -----------------
 
+- Bump minimum numpy version to 2.0.0
 - `GenericPlainRegistry.parse_expression` now correctly returns a dimensionless Quantity when taking a float, int, or NaN (#2259)
 - Replace MIP with scipy in `Quantity.to_preferred` (#2264)
 - New unit formatting modifier added (`^`) to format unit with negative exponents (#2256)
