@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.9.4
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: lint
       - run: pixi run --environment lint lint --all-files --show-diff-on-failure
@@ -37,7 +37,7 @@ jobs:
             extras: "babel==2.15 matplotlib==3.9.0"
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.9.4
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
           log-level: vvv
@@ -83,7 +83,7 @@ jobs:
         numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.9.4
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
           log-level: vvv
@@ -103,7 +103,7 @@ jobs:
         numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.9.4
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: ${{ matrix.environment }}
           log-level: vvv
@@ -125,7 +125,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.9.4
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: build
       - name: Build the package
