@@ -1426,6 +1426,8 @@ def test_issue2265_2():
     assert dask_array_class is not None
     # Verify it's the actual dask Array class by checking module
     assert dask_array_class.__module__ == "dask.array.core"
+
+
 def test_issue2256():
     ureg = UnitRegistry()
 
