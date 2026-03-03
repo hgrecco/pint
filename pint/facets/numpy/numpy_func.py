@@ -813,8 +813,18 @@ def implement_mul_func(func):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
+    if "." not in func_str:
+        func = getattr(np, func_str, None)
+    else:
+        parts = func_str.split(".")
+        module = np
+        for part in parts[:-1]:
+            module = getattr(module, part, None)
+        func = getattr(module, parts[-1], None)
 
-    func = getattr(np, func_str)
+    # if NumPy does not implement it, do not implement it either
+    if func is None:
+        return
 
     @implements(func_str, "function")
     def implementation(a, b, **kwargs):
