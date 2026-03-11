@@ -1397,6 +1397,30 @@ def test_issue2228(func_registry):
     assert ok_factor == 100.0
 
 
+def test_issue2261(func_registry):
+    func_registry.define("truckload = nan kg")
+
+    # Converting to a prefixed form of a NaN unit should give a numeric result
+    q = func_registry.Quantity("1000 truckloads")
+    result = q.to("kilotruckload")
+    assert result.magnitude == 1.0
+
+    # Reverse direction should also work
+    q2 = func_registry.Quantity("1 kilotruckload")
+    result2 = q2.to("truckload")
+    assert result2.magnitude == 1000.0
+
+    # NaN should still propagate when converting to a non-NaN unit
+    q3 = func_registry.Quantity("2 truckloads")
+    result3 = q3.to("kg")
+    assert math.isnan(result3.magnitude)
+
+    # Compound units containing a NaN unit should also convert correctly
+    q4 = func_registry.Quantity("1000 truckload/day")
+    result4 = q4.to("kilotruckload/day")
+    assert result4.magnitude == 1.0
+
+
 def test_issue2265():
     """Check that dask.array is not imported with pint."""
     if importlib.util.find_spec("dask") is None:
