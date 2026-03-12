@@ -907,13 +907,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         )
         self._get_root_units_recurse(input_units, 1, accumulators, fraction)
 
-        if any(
-            isnan(k)
-            for k in itertools.chain(fraction["numerator"], fraction["denominator"])
-        ):
-            # If there is a nan factor, the result is nan
-            return float("nan"), self.UnitsContainer()
-
         # Identify if terms appear in both numerator and denominator
         def terms_are_unique(fraction):
             for n_factor, n_exp in fraction["numerator"].items():
@@ -944,11 +937,17 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for n_factor, n_exponent in fraction["numerator"].copy().items():
             if n_exponent == 0:
                 del fraction["numerator"][n_factor]
+            elif isinstance(n_factor, tuple):
+                # Uncancelled NaN factor: result is NaN
+                factor = float("nan")
             else:
                 factor *= n_factor**n_exponent
         for d_factor, d_exponent in fraction["denominator"].copy().items():
             if d_exponent == 0:
                 del fraction["denominator"][d_factor]
+            elif isinstance(d_factor, tuple):
+                # Uncancelled NaN factor: result is NaN
+                factor = float("nan")
             else:
                 factor *= d_factor**-d_exponent
 
@@ -1016,14 +1015,21 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             if reg.is_base:
                 accumulators[key] += exp2
             else:
-                # Build numerator and denominator
+                # Build numerator and denominator.
+                # For NaN scales, use a unit-specific key so that NaN factors
+                # from different units don't incorrectly cancel each other,
+                # while NaN factors from the same unit (e.g. truckload appearing
+                # via kilotruckload) can still cancel correctly.
+                scale_key = (
+                    (key, "nan") if isnan(reg.converter.scale) else reg.converter.scale
+                )
                 if exp2 < 0:
-                    fraction["denominator"][reg.converter.scale] = (
-                        fraction["denominator"].get(reg.converter.scale, 0) - exp2
+                    fraction["denominator"][scale_key] = (
+                        fraction["denominator"].get(scale_key, 0) - exp2
                     )
                 else:
-                    fraction["numerator"][reg.converter.scale] = (
-                        fraction["numerator"].get(reg.converter.scale, 0) + exp2
+                    fraction["numerator"][scale_key] = (
+                        fraction["numerator"].get(scale_key, 0) + exp2
                     )
                 if reg.reference is not None:
                     self._get_root_units_recurse(
