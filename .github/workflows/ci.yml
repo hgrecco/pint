@@ -20,19 +20,19 @@ jobs:
           - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
+        numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
           - environment: "test-py311" # Minimal versions
-            numpy: "numpy>=1.25,<2.0.0"
+            numpy: "numpy>=2.0.0,<2.1.0"
             extras: matplotlib==3.5.3
           - environment: "test-py311"
             numpy: "numpy"
             uncertainties: "uncertainties"
             extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 scipy"
           - environment: "test-py311"
-            numpy: "numpy==1.26.1"
+            numpy: "numpy>=2.0.0,<2.1.0"
             uncertainties: null
             extras: "babel==2.15 matplotlib==3.9.0"
     steps:
@@ -80,7 +80,7 @@ jobs:
           - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
+        numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v0.8.10
@@ -100,7 +100,7 @@ jobs:
           - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
+        numpy: [null, "numpy>=2.4.0"]
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v0.8.10
