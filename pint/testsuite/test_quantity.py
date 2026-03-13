@@ -168,7 +168,7 @@ class TestQuantity(QuantityTestCase):
                 "{:L}",
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
-            ("{:P}", "4.12345678 kilogram·meter²/second"),
+            ("{:P}", "4.12345678 kilogram⋅meter²/second"),
             ("{:H}", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("{:C}", "4.12345678 kilogram*meter**2/second"),
             ("{:~}", "4.12345678 kg * m ** 2 / s"),
@@ -176,7 +176,7 @@ class TestQuantity(QuantityTestCase):
                 "{:L~}",
                 r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}",
             ),
-            ("{:P~}", "4.12345678 kg·m²/s"),
+            ("{:P~}", "4.12345678 kg⋅m²/s"),
             ("{:H~}", "4.12345678 kg m<sup>2</sup>/s"),
             ("{:C~}", "4.12345678 kg*m**2/s"),
             ("{:Lx}", r"\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}"),
@@ -209,8 +209,8 @@ class TestQuantity(QuantityTestCase):
                 "{:.2f}",
                 "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kilogram * meter ** 2",
             ),
-            ("{:.2f~P}", "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg·m²"),
-            ("{:g~P}", "[1e-16 1 1e+07 1e+12 nan inf] kg·m²"),
+            ("{:.2f~P}", "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg⋅m²"),
+            ("{:g~P}", "[1e-16 1 1e+07 1e+12 nan inf] kg⋅m²"),
             (
                 "{:.2f~H}",
                 (
@@ -262,12 +262,12 @@ class TestQuantity(QuantityTestCase):
                 "L",
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
-            ("P", "4.12345678 kilogram·meter²/second"),
+            ("P", "4.12345678 kilogram⋅meter²/second"),
             ("H", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("C", "4.12345678 kilogram*meter**2/second"),
             ("~", "4.12345678 kg * m ** 2 / s"),
             ("L~", r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
-            ("P~", "4.12345678 kg·m²/s"),
+            ("P~", "4.12345678 kg⋅m²/s"),
             ("H~", "4.12345678 kg m<sup>2</sup>/s"),
             ("C~", "4.12345678 kg*m**2/s"),
         ):
@@ -340,7 +340,7 @@ class TestQuantity(QuantityTestCase):
             r"\mathrm{meter}^{2}}{\mathrm{second}}$"
         )
         x._repr_pretty_(Pretty, False)
-        assert "".join(alltext) == "3.5 kilogram·meter²/second"
+        assert "".join(alltext) == "3.5 kilogram⋅meter²/second"
         ureg.formatter.default_format = "~"
         assert x._repr_html_() == "3.5 kg m<sup>2</sup>/s"
         assert (
@@ -349,7 +349,7 @@ class TestQuantity(QuantityTestCase):
         )
         alltext = []
         x._repr_pretty_(Pretty, False)
-        assert "".join(alltext) == "3.5 kg·m²/s"
+        assert "".join(alltext) == "3.5 kg⋅m²/s"
 
     def test_to_base_units(self):
         x = self.Q_("1*inch")
