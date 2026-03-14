@@ -51,8 +51,9 @@ xarray = ["xarray"]
 dask = ["dask < 2025.3.0"]
 scipy = ["scipy"]
 matplotlib = ["matplotlib"]
+tomli_w = ["tomli_w"]
 all = [
-  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
+  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib,tomli_w]",
 ]
 docs = [
   "sphinx>=6,<8.2",
