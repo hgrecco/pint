@@ -34,6 +34,8 @@ class TomlParser:
                     )
                     yield stmt
             elif definition_type in ["system", "context", "group"]:
+                if definition_type not in parsed_project:
+                    continue
                 for entry in parsed_project[definition_type]:
                     stmt = stmts[definition_type].from_dict_and_config(
                         entry, self._default_config
