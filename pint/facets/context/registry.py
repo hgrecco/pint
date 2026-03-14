@@ -192,6 +192,7 @@ class GenericContextRegistry(
         # be shared by other registries, and (2) it would alter the cache key
         definition = UnitDefinition(
             name=basedef.name,
+            value_text=definition.value_text,
             defined_symbol=basedef.symbol,
             aliases=basedef.aliases,
             reference=definition.reference,
