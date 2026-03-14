@@ -170,7 +170,7 @@ class UnitDefinition(definitions_.UnitDefinition):
             )
 
         try:
-            return cls(name, defined_symbol, tuple(aliases), converter, reference)
+            return cls(name, value, defined_symbol, tuple(aliases), converter, reference)
         except Exception as ex:
             return common.DefinitionSyntaxError(str(ex))
 
@@ -271,6 +271,7 @@ class GroupDefinition(group.GroupDefinition):
 
         definitions = []
         for key, value in d["definitions"].items():
+            print(key, value)
             dat = copy.copy(value)
             dat["name"] = key
             definitions.append(UnitDefinition.from_dict_and_config(dat, config))
