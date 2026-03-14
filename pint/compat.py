@@ -236,6 +236,20 @@ except ImportError:
 
 HAS_DASK = find_spec("dask") is not None
 
+try:
+    import tomli_w  # noqa: F401
+
+    HAS_TOMLI_W = True
+except ImportError:
+    HAS_TOMLI_W = False
+
+try:
+    import tomli_w  # noqa: F401
+
+    HAS_TOMLI_W = True
+except ImportError:
+    HAS_TOMLI_W = False
+
 
 ##############################
 # Imports are handled here
@@ -243,6 +257,12 @@ HAS_DASK = find_spec("dask") is not None
 # them as constants
 # in mypy configuration.
 ##############################
+
+if HAS_TOMLI_W:
+    import tomli_w  # noqa: F401
+else:
+    tomli_w = None
+
 
 if HAS_BABEL:
     from babel import Locale

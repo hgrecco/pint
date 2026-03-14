@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.26 (unreleased)
+0.25.3 (unreleased)
 -----------------
 
 - `GenericPlainRegistry.parse_expression` now correctly returns a dimensionless Quantity when taking a float, int, or NaN (#2259)
@@ -12,7 +12,7 @@ Pint Changelog
 - Add support for numpy's `vdot`, `inner`, `outer`, `linalg.outer`, `matvec`, `vecmat`, `tensordot`, and `linalg.tensordot` (#2279)
 
 
-0.25.1 (2025-11-06)
+0.25.2 (2025-11-06)
 -------------------
 
 - Revert typing change in `pint.Unit`

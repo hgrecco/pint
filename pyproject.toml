@@ -38,7 +38,7 @@ packages = ["pint"]
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov", "pytest-subtests", "pytest-benchmark"]
+test = ["pytest", "pytest-cov", "pytest-subtests", "pytest-benchmark", "tomlkit"]
 test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
 codspeed = ["pint[test-all]", "pytest-codspeed"]
@@ -51,8 +51,9 @@ xarray = ["xarray"]
 dask = ["dask < 2025.3.0"]
 scipy = ["scipy"]
 matplotlib = ["matplotlib"]
+tomli-w = ["tomli-w", "tomlkit"]
 all = [
-  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
+  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib,tomli-w]",
 ]
 docs = [
   "sphinx>=6,<8.2",
@@ -127,6 +128,7 @@ test = { features = ["test"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
+tomli-w = { features = ["tomli-w"], solve-group = "default" }
 docs = { features = [
   "docs",
   "numpy",
@@ -150,6 +152,7 @@ all = { features = [
   "dask",
   "scipy",
   "matplotlib",
+  "tomli-w",
 ], solve-group = "default" }
 
 test-py311 = ["test", "py311"]
