@@ -316,7 +316,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._units_casei: dict[str, set[str]] = defaultdict(set)
 
         #: Map prefix name (string) to its definition (PrefixDefinition).
-        self._prefixes: dict[str, PrefixDefinition] = {"": PrefixDefinition("","", 1)}
+        self._prefixes: dict[str, PrefixDefinition] = {"": PrefixDefinition("", "", 1)}
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes: dict[str, str] = {"": "", "s": ""}
@@ -569,7 +569,9 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def _add_derived_dimension(self, definition: DerivedDimensionDefinition) -> None:
         for dim_name in definition.reference.keys():
             if dim_name not in self._dimensions:
-                self._add_dimension(DimensionDefinition(dim_name, definition.value_text))
+                self._add_dimension(
+                    DimensionDefinition(dim_name, definition.value_text)
+                )
         self._helper_adder(definition, self._dimensions, None)
 
     def _add_prefix(self, definition: PrefixDefinition) -> None:
@@ -694,7 +696,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             prefix_def = self._prefixes[prefix]
             self._units[name] = UnitDefinition(
                 name,
-                "", # the value text is set to empty to indicate it is a prefixed unit not directly defined in the definitions file
+                "",  # the value text is set to empty to indicate it is a prefixed unit not directly defined in the definitions file
                 symbol,
                 tuple(),
                 prefix_def.converter,

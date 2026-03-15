@@ -189,7 +189,9 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
             )
 
         try:
-            return cls(name, value, defined_symbol, tuple(aliases), converter, reference)
+            return cls(
+                name, value, defined_symbol, tuple(aliases), converter, reference
+            )
         except Exception as ex:
             return common.DefinitionSyntaxError(str(ex))
 

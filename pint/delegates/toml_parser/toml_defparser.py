@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import copy
 import pathlib
+import tomllib
 
 import flexcache as fc
 
-import tomllib
 from ..base_defparser import ParserConfig
 from . import plain
 
@@ -24,7 +24,14 @@ class TomlParser:
             "context": plain.ContextDefinition,
             "group": plain.GroupDefinition,
         }
-        for definition_type in ["prefix", "unit", "dimension", "system", "context", "group"]:
+        for definition_type in [
+            "prefix",
+            "unit",
+            "dimension",
+            "system",
+            "context",
+            "group",
+        ]:
             if definition_type in ["unit", "prefix", "dimension"]:
                 for key, value in parsed_project[definition_type].items():
                     d = copy.copy(value)

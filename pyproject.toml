@@ -38,7 +38,13 @@ packages = ["pint"]
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov", "pytest-subtests", "pytest-benchmark", "tomlkit"]
+test = [
+  "pytest",
+  "pytest-cov",
+  "pytest-subtests",
+  "pytest-benchmark",
+  "tomlkit",
+]
 test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
 codspeed = ["pint[test-all]", "pytest-codspeed"]
