@@ -95,8 +95,7 @@ In a terminal, navigate where you want the code to be downloaded, and type::
     $ cd pint
     $ python -m virtualenv venv
     $ source venv/bin/activate
-    $ pip install -e '.[test]'
-    $ pip install -r requirements_docs.txt
+    $ pip install -e '.[test,docs]'
     $ pip install pre-commit # This step and the next are optional but recommended.
     $ pre-commit install
 
@@ -109,8 +108,7 @@ Then type::
 
     $ conda install pip
     $ conda install git
-    $ pip install -e ".[test]"
-    $ pip install -r requirements_docs.txt
+    $ pip install -e ".[test,docs]"
     $ pip install pre-commit
     $ pre-commit install
 
