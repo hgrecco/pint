@@ -237,18 +237,11 @@ except ImportError:
 HAS_DASK = find_spec("dask") is not None
 
 try:
-    import tomli_w  # noqa: F401
+    import tomlkit  # noqa: F401
 
-    HAS_TOMLI_W = True
+    HAS_TOMLKIT = True
 except ImportError:
-    HAS_TOMLI_W = False
-
-try:
-    import tomli_w  # noqa: F401
-
-    HAS_TOMLI_W = True
-except ImportError:
-    HAS_TOMLI_W = False
+    HAS_TOMLKIT = False
 
 
 ##############################
@@ -258,10 +251,10 @@ except ImportError:
 # in mypy configuration.
 ##############################
 
-if HAS_TOMLI_W:
-    import tomli_w  # noqa: F401
+if HAS_TOMLKIT:
+    import tomlkit  # noqa: F401
 else:
-    tomli_w = None
+    tomlkit = None
 
 
 if HAS_BABEL:

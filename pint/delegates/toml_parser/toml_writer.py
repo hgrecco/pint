@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import fields
 
-import tomlkit
-from tomlkit import document, nl
+from ...compat import tomlkit
+nl = tomlkit.nl
 
 from ...facets.plain import GenericPlainRegistry
 from ...facets.plain.definitions import DimensionDefinition
@@ -124,7 +124,7 @@ def write_definitions(filename: str, ureg: GenericPlainRegistry):
     data["system"] = systems(ureg)
     data["context"] = contexts(ureg)
 
-    doc = document()
+    doc = tomlkit.document()
     for definition in [
         "prefix",
         "dimension",

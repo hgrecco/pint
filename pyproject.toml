@@ -38,12 +38,12 @@ packages = ["pint"]
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-test = [
+test = [  
+  "tomlkit",
   "pytest",
   "pytest-cov",
   "pytest-subtests",
   "pytest-benchmark",
-  "tomlkit",
 ]
 test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
@@ -56,10 +56,10 @@ xarray = ["xarray"]
 # Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
 dask = ["dask < 2025.3.0"]
 scipy = ["scipy"]
+tomlkit = ["tomlkit"]
 matplotlib = ["matplotlib"]
-tomli-w = ["tomli-w", "tomlkit"]
 all = [
-  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib,tomli-w]",
+  "pint[numpy,uncertainties,babel,pandas,xarray,dask,scipy,matplotlib,tomlkit]",
 ]
 docs = [
   "sphinx>=6,<8.2",
@@ -75,7 +75,7 @@ docs = [
   "sphinx-book-theme>=1.1.0",
   "sphinx_copybutton",
   "sphinx_design",
-  "docutils",                 #==0.14",
+  "docutils",
   "commonmark==0.8.1",
   "recommonmark==0.5.0",
   "babel",
@@ -135,7 +135,6 @@ test = { features = ["test"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
-tomli-w = { features = ["tomli-w"], solve-group = "default" }
 docs = { features = [
   "docs",
   "numpy",
@@ -159,7 +158,6 @@ all = { features = [
   "dask",
   "scipy",
   "matplotlib",
-  "tomli-w",
 ], solve-group = "default" }
 
 test-py311 = ["test", "py311"]
