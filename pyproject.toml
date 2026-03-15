@@ -144,6 +144,7 @@ docs = { features = [
   "xarray",
   "test",
   "py311",
+  "tomlkit",
 ] }
 # When pint[all] works in pixi, this will be easier.
 all = { features = [
