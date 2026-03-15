@@ -38,7 +38,7 @@ packages = ["pint"]
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-test = [  
+test = [
   "tomlkit",
   "pytest",
   "pytest-cov",
