@@ -82,6 +82,7 @@ docs = [
   "sciform",
   "scipy",
   "currencyconverter",
+  "tomlkit",
 ]
 
 [project.urls]
