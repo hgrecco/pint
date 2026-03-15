@@ -75,6 +75,10 @@ docs = [
   "sciform",
   "scipy",
   "currencyconverter",
+  "matplotlib",
+  "numpy",
+  "xarray",
+  "dask[complete]<2025.3.0",
 ]
 
 [project.urls]
