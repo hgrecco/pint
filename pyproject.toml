@@ -38,7 +38,13 @@ packages = ["pint"]
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov", "pytest-subtests", "pytest-benchmark"]
+test = [
+  "tomlkit",
+  "pytest",
+  "pytest-cov",
+  "pytest-subtests",
+  "pytest-benchmark",
+]
 test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
 codspeed = ["pint[test-all]", "pytest-codspeed"]
@@ -50,9 +56,10 @@ xarray = ["xarray"]
 # Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
 dask = ["dask < 2025.3.0"]
 scipy = ["scipy"]
+tomlkit = ["tomlkit"]
 matplotlib = ["matplotlib"]
 all = [
-  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
+  "pint[numpy,uncertainties,babel,pandas,xarray,dask,scipy,matplotlib,tomlkit]",
 ]
 docs = [
   "sphinx>=6,<8.2",
@@ -68,13 +75,14 @@ docs = [
   "sphinx-book-theme>=1.1.0",
   "sphinx_copybutton",
   "sphinx_design",
-  "docutils",                 #==0.14",
+  "docutils",
   "commonmark==0.8.1",
   "recommonmark==0.5.0",
   "babel",
   "sciform",
   "scipy",
   "currencyconverter",
+  "tomlkit",
 ]
 
 [project.urls]
@@ -136,6 +144,7 @@ docs = { features = [
   "xarray",
   "test",
   "py311",
+  "tomlkit",
 ] }
 # When pint[all] works in pixi, this will be easier.
 all = { features = [

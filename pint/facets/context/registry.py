@@ -67,6 +67,8 @@ class GenericContextRegistry(
         # Map context chain to units override
         self._context_units = {}
 
+        self._context_definitions: list[ContextDefinition] = []
+
         super().__init__(**kwargs)
 
         # Allow contexts to add override layers to the units
@@ -85,6 +87,7 @@ class GenericContextRegistry(
         see :meth:`enable_contexts`.
         """
         if isinstance(context, ContextDefinition):
+            self._context_definitions.append(context)
             context = objects.Context.from_definition(context, self.get_dimensionality)
 
         if not context.name:
@@ -189,6 +192,7 @@ class GenericContextRegistry(
         # be shared by other registries, and (2) it would alter the cache key
         definition = UnitDefinition(
             name=basedef.name,
+            value_text=definition.value_text,
             defined_symbol=basedef.symbol,
             aliases=basedef.aliases,
             reference=definition.reference,
