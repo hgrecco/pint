@@ -6,16 +6,16 @@ jobs:
   docbuild:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: actions/checkout@v6.0.2
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: docs
       - run: pixi run --environment docs docbuild
   doctest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: actions/checkout@v6.0.2
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: docs
       - name: Install locales
