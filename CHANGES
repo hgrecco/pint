@@ -1,7 +1,12 @@
 Pint Changelog
 ==============
 
-0.25.3 (unreleased)
+0.26.0 (unreleased)
+-------------------
+
+- Nothing yet.
+
+0.25.3 (2026-03-19)
 -----------------
 
 - `GenericPlainRegistry.parse_expression` now correctly returns a dimensionless Quantity when taking a float, int, or NaN (#2259)
