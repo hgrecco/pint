@@ -532,7 +532,7 @@ LMH = L / m**2 / h
 
 decibelwatt = watt; logbase: 10; logfactor: 10 = dBW
 decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm
-decibelmicrowatt = 1e-6 watt; logbase: 10; logfactor: 10 = dBu
+decibelmicrowatt = 1e-6 watt; logbase: 10; logfactor: 10 = dBuW = dBµW = dBμW  # NOTE: µ = U+00B5, μ = U+03BC
 
 decibel = 1 ; logbase: 10; logfactor: 10 = dB
 # bell = 1 ; logbase: 10; logfactor: = B
