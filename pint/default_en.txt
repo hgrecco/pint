@@ -231,6 +231,7 @@ hertz = 1 / second = Hz
 revolutions_per_minute = revolution / minute = rpm
 revolutions_per_second = revolution / second = rps
 counts_per_second = count / second = cps
+beats_per_minute = 1 / minute = bpm
 
 # Wavenumber
 [wavenumber] = 1 / [length]
