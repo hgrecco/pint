@@ -1830,6 +1830,7 @@ class TestOffsetUnitMath(QuantityTestCase):
                 in1_cp = copy.copy(in1)
                 helpers.assert_quantity_almost_equal(op.ipow(in1_cp, in2), expected)
 
+    @helpers.requires_numpy()
     def test_matmul_with_numpy(self):
         A = [[1, 2], [3, 4]] * self.ureg.m
         B = np.array([[0, -1], [-1, 0]])
