@@ -841,12 +841,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.minimum(self.q, self.Q_([0, 5], "m")), self.Q_([[0, 2], [0, 4]], "m")
         )
 
-    # NP2: Can remove Q_(arr).ptp test when we only support numpy>=2
-    def test_ptp(self):
-        if not np.lib.NumpyVersion(np.__version__) >= "2.0.0b1":
-            assert self.q.ptp() == 3 * self.ureg.m
-
-    # NP2: Keep this test for numpy>=2, it's only arr.ptp() that is deprecated
     @helpers.requires_array_function_protocol()
     def test_ptp_numpy_func(self):
         helpers.assert_quantity_equal(np.ptp(self.q, axis=0), [2, 2] * self.ureg.m)
