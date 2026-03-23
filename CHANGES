@@ -4,7 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
-- Nothing yet.
+- Add beats per minute (`beats_per_minute`, `bpm`) (#2286)
 
 0.25.3 (2026-03-19)
 -----------------
