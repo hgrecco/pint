@@ -445,19 +445,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.cross(a, b), [[-15, -2, 39]] * self.ureg.kPa * self.ureg.m**2
         )
 
-    # NP2: Remove this when we only support np>=2.0
     @helpers.requires_array_function_protocol()
-    @helpers.requires_numpy_previous_than("2.0")
-    def test_trapz(self):
-        helpers.assert_quantity_equal(
-            np.trapz([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
-            7.5 * self.ureg.J * self.ureg.m,
-        )
-
-    @helpers.requires_array_function_protocol()
-    # NP2: Remove this when we only support np>=2.0
-    # trapezoid added in numpy 2.0
-    @helpers.requires_numpy_at_least("2.0")
     def test_trapezoid(self):
         helpers.assert_quantity_equal(
             np.trapezoid([1.0, 2.0, 3.0, 4.0] * self.ureg.J, dx=1 * self.ureg.m),
