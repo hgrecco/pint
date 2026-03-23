@@ -710,6 +710,7 @@ class TestQuantity(QuantityTestCase):
         with pytest.raises(TypeError):
             iter(x)
 
+    @helpers.requires_numpy()
     def test_no_longer_array_function_warning_on_creation(self):
         # Test that warning is no longer raised on first creation
         with warnings.catch_warnings():
