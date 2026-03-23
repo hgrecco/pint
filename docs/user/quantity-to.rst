@@ -79,6 +79,14 @@ Summary Table
 
 .. note::
 
+   ``.to_compact()`` and ``.to_unprefixed()`` only change the SI prefix and
+   rescale the magnitude accordingly — the unit type is preserved (e.g. ``mW``
+   stays as watts, ``km`` stays as metres). In contrast, ``.to_base_units()``,
+   ``.to_root_units()``, ``.to_reduced_units()``, and ``.to_preferred()`` can
+   change the unit entirely (e.g. ``N·m`` becomes ``J``, ``kg·m²/s²``).
+
+.. note::
+
    ``.to_base_units().to_compact()`` on a prefixed unit like ``mW`` expands to
    base SI units (``kg·m²/s³``) before rescaling — the result (``Mg·m²/s³``) is
    numerically correct but less readable. Use ``.to_reduced_units().to_compact()``
