@@ -71,6 +71,16 @@ Summary Table
      - ``200 ns``
      - ``1 kW``
      - ``1 N·m``
+   * - ``.to_preferred([ureg.W, ureg.s, ureg.J, ureg.m])`` †
+     - ``5000 m``
+     - ``2e-07 s``
+     - ``1 kW`` †
+     - ``1 J`` †
+
+.. note::
+
+   † ``.to_preferred()`` requires ``scipy`` for multi-dimensional quantities.
+   Values marked † are expected results when scipy is available.
 
 .. note::
 
