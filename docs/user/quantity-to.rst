@@ -8,15 +8,81 @@ covers all ``to_*`` and ``ito_*`` methods available on a :class:`Quantity
 <pint.quantity.Quantity>`.
 
 The ``ito_*`` variants perform the conversion **in place** (modifying the quantity),
-while the ``to_*`` variants return a **new** quantity.
+while the ``to_*`` variants return a **new** quantity and can be chained.
 
-Setup:
+Setup used throughout this page:
 
 .. doctest::
 
    >>> import pint
    >>> ureg = pint.UnitRegistry()
    >>> Q_ = ureg.Quantity
+
+
+Summary Table
+-------------
+
+.. list-table::
+   :header-rows: 1
+   :stub-columns: 1
+
+   * - Method
+     - ``Q_(5000, "m")``
+     - ``Q_(200e-9, "s")``
+     - ``Q_(1e6, "mW")``
+     - ``Q_(1, "N*m")``
+   * - ``.to_base_units()``
+     - ``5000 m``
+     - ``2e-07 s``
+     - ``1000 kg·m²/s³``
+     - ``1 kg·m²/s²``
+   * - ``.to_root_units()``
+     - ``5000 m``
+     - ``2e-07 s``
+     - ``1e6 g·m²/s³``
+     - ``1000 g·m²/s²``
+   * - ``.to_compact()``
+     - ``5 km``
+     - ``200 ns``
+     - ``1 kW``
+     - ``1 N·m``
+   * - ``.to_reduced_units()``
+     - ``5000 m``
+     - ``2e-07 s``
+     - ``1e6 mW``
+     - ``1 N·m``
+   * - ``.to_unprefixed()``
+     - ``5000 m``
+     - ``2e-07 s``
+     - ``1000 W``
+     - ``1 N·m``
+   * - ``.to_base_units().to_compact()``
+     - ``5 km``
+     - ``200 ns``
+     - ``1 Mg·m²/s³``
+     - ``1 kg·m²/s²``
+   * - ``.to_reduced_units().to_compact()``
+     - ``5 km``
+     - ``200 ns``
+     - ``1 kW``
+     - ``1 N·m``
+   * - ``.to_unprefixed().to_compact()``
+     - ``5 km``
+     - ``200 ns``
+     - ``1 kW``
+     - ``1 N·m``
+
+.. note::
+
+   ``.to_base_units().to_compact()`` on a prefixed unit like ``mW`` expands to
+   base SI units (``kg·m²/s³``) before rescaling — the result (``Mg·m²/s³``) is
+   numerically correct but less readable. Use ``.to_reduced_units().to_compact()``
+   or ``.to_unprefixed().to_compact()`` to stay in named units like ``kW``.
+
+.. note::
+
+   ``.to_preferred()`` requires ``scipy`` and is not shown in the table above.
+   See :ref:`to_preferred_section` below.
 
 
 to / ito
@@ -61,8 +127,9 @@ Convert to base units as defined by the unit registry (SI base units by default)
 to_root_units / ito_root_units
 -------------------------------
 
-Convert to root units. Unlike ``to_base_units``, this does not apply any
-unit system transformations and gives the truly primitive units.
+Convert to root units — the primitive units before any system-level
+transformations. For most units this matches ``to_base_units``, but differs for
+units like ``mW`` where the root unit uses grams rather than kilograms.
 
 .. doctest::
 
@@ -108,11 +175,13 @@ Pass a unit to compact within a specific unit family:
    <Quantity(10.0, 'millinewton')>
 
 
+.. _to_preferred_section:
+
 to_preferred / ito_preferred
 -----------------------------
 
-Convert to a unit composed of a given list of preferred units. If no preferred units
-are given, the registry's ``default_preferred_units`` are used.
+Convert to a unit composed of a given list of preferred units. Requires ``scipy``.
+If no preferred units are given, the registry's ``default_preferred_units`` are used.
 
 .. doctest::
 
@@ -128,7 +197,7 @@ to_unprefixed / ito_unprefixed
 --------------------------------
 
 Remove SI prefixes without converting to base units. Useful when you want the
-unprefixed form of a unit while keeping it in the same unit family.
+unprefixed form of a unit while staying in the same unit family.
 
 .. doctest::
 
@@ -168,3 +237,19 @@ Convert a time quantity to a :class:`datetime.timedelta` object.
    datetime.timedelta(seconds=9000)
    >>> Q_(500, "ms").to_timedelta()
    datetime.timedelta(microseconds=500000)
+
+
+Chaining Conversions
+--------------------
+
+Since ``to_*`` methods return new quantities, they can be chained. The ``ito_*``
+variants return ``None`` and cannot be chained.
+
+.. doctest::
+
+   >>> Q_(1, "m * km").to_reduced_units().to_compact()
+   <Quantity(1.0, 'kilometer ** 2')>
+   >>> Q_(1, "Wh").to_base_units().to_compact()
+   <Quantity(3.6, 'kilojoule')>
+   >>> Q_(0.003, "km").to_unprefixed().to_compact()
+   <Quantity(3.0, 'meter')>
