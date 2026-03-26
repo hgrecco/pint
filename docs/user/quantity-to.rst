@@ -30,13 +30,8 @@ Summary Table
 ..    ureg = pint.UnitRegistry()
 ..    Q_ = ureg.Quantity
 ..
-..    inputs = {
-..        "Q_(5000, 'm')": Q_(5000, "m"),
-..        "Q_(200e-9, 's')": Q_(200e-9, "s"),
-..        "Q_(1e6, 'mW')": Q_(1e6, "mW"),
-..        "Q_(1, 'N*m')": Q_(1, "N*m"),
-..        "Q_(1e-7, 'Hz')": Q_(1e-7, "Hz"),
-..    }
+..    quantities = [Q_(5000, "m"), Q_(200e-9, "s"), Q_(1e6, "mW"), Q_(1, "N*m"), Q_(1e-7, "Hz")]
+..    inputs = {fmt(q): q for q in quantities}
 ..
 ..    conversions = {
 ..        ".to_base_units()": lambda q: q.to_base_units(),
@@ -63,11 +58,11 @@ Summary Table
      <thead>
        <tr style="text-align: right;">
          <th></th>
-         <th>Q_(5000, 'm')</th>
-         <th>Q_(200e-9, 's')</th>
-         <th>Q_(1e6, 'mW')</th>
-         <th>Q_(1, 'N*m')</th>
-         <th>Q_(1e-7, 'Hz')</th>
+         <th>5000 m</th>
+         <th>2e-07 s</th>
+         <th>1e+06 mW</th>
+         <th>1 m·N</th>
+         <th>1e-07 Hz</th>
        </tr>
        <tr>
          <th>Method</th>
