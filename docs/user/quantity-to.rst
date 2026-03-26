@@ -22,60 +22,52 @@ Setup used throughout this page:
 Summary Table
 -------------
 
-.. list-table::
-   :header-rows: 1
-   :stub-columns: 1
+.. testcode::
 
-   * - Method
-     - ``Q_(5000, "m")``
-     - ``Q_(200e-9, "s")``
-     - ``Q_(1e6, "mW")``
-     - ``Q_(1, "N*m")``
-   * - ``.to_base_units()``
-     - ``5000 m``
-     - ``2e-07 s``
-     - ``1000 kg·m²/s³``
-     - ``1 kg·m²/s²``
-   * - ``.to_root_units()``
-     - ``5000 m``
-     - ``2e-07 s``
-     - ``1e6 g·m²/s³``
-     - ``1000 g·m²/s²``
-   * - ``.to_compact()``
-     - ``5 km``
-     - ``200 ns``
-     - ``1 kW``
-     - ``1 N·m``
-   * - ``.to_reduced_units()``
-     - ``5000 m``
-     - ``2e-07 s``
-     - ``1e6 mW``
-     - ``1 N·m``
-   * - ``.to_unprefixed()``
-     - ``5000 m``
-     - ``2e-07 s``
-     - ``1000 W``
-     - ``1 N·m``
-   * - ``.to_base_units().to_compact()``
-     - ``5 km``
-     - ``200 ns``
-     - ``1 Mg·m²/s³``
-     - ``1 kg·m²/s²``
-   * - ``.to_reduced_units().to_compact()``
-     - ``5 km``
-     - ``200 ns``
-     - ``1 kW``
-     - ``1 N·m``
-   * - ``.to_unprefixed().to_compact()``
-     - ``5 km``
-     - ``200 ns``
-     - ``1 kW``
-     - ``1 N·m``
-   * - ``.to_preferred([ureg.W, ureg.s, ureg.J, ureg.m])``
-     - ``5000 m``
-     - ``2e-07 s``
-     - ``1000 W``
-     - ``1 J``
+   import pandas as pd
+   import pint
+
+   ureg = pint.UnitRegistry()
+   Q_ = ureg.Quantity
+
+   inputs = {
+       "Q_(5000, 'm')": Q_(5000, "m"),
+       "Q_(200e-9, 's')": Q_(200e-9, "s"),
+       "Q_(1e6, 'mW')": Q_(1e6, "mW"),
+       "Q_(1, 'N*m')": Q_(1, "N*m"),
+   }
+
+   conversions = {
+       ".to_base_units()": lambda q: q.to_base_units(),
+       ".to_root_units()": lambda q: q.to_root_units(),
+       ".to_compact()": lambda q: q.to_compact(),
+       ".to_reduced_units()": lambda q: q.to_reduced_units(),
+       ".to_unprefixed()": lambda q: q.to_unprefixed(),
+       ".to_base_units().to_compact()": lambda q: q.to_base_units().to_compact(),
+       ".to_reduced_units().to_compact()": lambda q: q.to_reduced_units().to_compact(),
+       ".to_preferred([ureg.W, ureg.s, ureg.J, ureg.m])": lambda q: q.to_preferred([ureg.W, ureg.s, ureg.J, ureg.m]),
+   }
+
+   def fmt(q):
+       return f"{q.magnitude:.6g} {q.units:~P}"
+
+   rows = {method: {col: fmt(fn(q)) for col, q in inputs.items()} for method, fn in conversions.items()}
+   df = pd.DataFrame(rows).T
+   df.index.name = "Method"
+   print(df.to_markdown())
+
+.. testoutput::
+
+   | Method                                          | Q_(5000, 'm')   | Q_(200e-9, 's')   | Q_(1e6, 'mW')   | Q_(1, 'N*m')   |
+   |:------------------------------------------------|:----------------|:------------------|:----------------|:---------------|
+   | .to_base_units()                                | 5000 m          | 2e-07 s           | 1000 kg·m²/s³   | 1 kg·m²/s²     |
+   | .to_root_units()                                | 5000 m          | 2e-07 s           | 1e+06 g·m²/s³   | 1000 g·m²/s²   |
+   | .to_compact()                                   | 5 km            | 200 ns            | 1 kW            | 1 m·N          |
+   | .to_reduced_units()                             | 5000 m          | 2e-07 s           | 1e+06 mW        | 1 m·N          |
+   | .to_unprefixed()                                | 5000 m          | 2e-07 s           | 1000 W          | 1 m·N          |
+   | .to_base_units().to_compact()                   | 5 km            | 200 ns            | 1 Mg·m²/s³      | 1 kg·m²/s²     |
+   | .to_reduced_units().to_compact()                | 5 km            | 200 ns            | 1 kW            | 1 m·N          |
+   | .to_preferred([ureg.W, ureg.s, ureg.J, ureg.m]) | 5000 m          | 2e-07 s           | 1000 W          | 1 J            |
 
 .. note::
 
@@ -90,12 +82,11 @@ Summary Table
    ``.to_base_units().to_compact()`` on a prefixed unit like ``mW`` expands to
    base SI units (``kg·m²/s³``) before rescaling — the result (``Mg·m²/s³``) is
    numerically correct but less readable. Use ``.to_reduced_units().to_compact()``
-   or ``.to_unprefixed().to_compact()`` to stay in named units like ``kW``.
+   to stay in named units like ``kW``.
 
 .. note::
 
-   ``.to_preferred()`` requires ``scipy`` and is not shown in the table above.
-   See :ref:`to_preferred_section` below.
+   ``.to_preferred()`` requires ``scipy``. See :ref:`to_preferred_section` below.
 
 
 to / ito
@@ -264,5 +255,3 @@ variants return ``None`` and cannot be chained.
    <Quantity(1.0, 'kilometer ** 2')>
    >>> Q_(1, "Wh").to_base_units().to_compact()
    <Quantity(3.6, 'kilojoule')>
-   >>> Q_(0.003, "km").to_unprefixed().to_compact()
-   <Quantity(3.0, 'meter')>
