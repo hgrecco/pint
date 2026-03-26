@@ -35,6 +35,7 @@ Summary Table
 ..        "Q_(200e-9, 's')": Q_(200e-9, "s"),
 ..        "Q_(1e6, 'mW')": Q_(1e6, "mW"),
 ..        "Q_(1, 'N*m')": Q_(1, "N*m"),
+..        "Q_(1e-7, 'Hz')": Q_(1e-7, "Hz"),
 ..    }
 ..
 ..    conversions = {
@@ -66,9 +67,11 @@ Summary Table
          <th>Q_(200e-9, 's')</th>
          <th>Q_(1e6, 'mW')</th>
          <th>Q_(1, 'N*m')</th>
+         <th>Q_(1e-7, 'Hz')</th>
        </tr>
        <tr>
          <th>Method</th>
+         <th></th>
          <th></th>
          <th></th>
          <th></th>
@@ -82,6 +85,7 @@ Summary Table
          <td>2e-07 s</td>
          <td>1000 kg·m²/s³</td>
          <td>1 kg·m²/s²</td>
+         <td>1e-07 1/s</td>
        </tr>
        <tr>
          <th>.to_root_units()</th>
@@ -89,6 +93,7 @@ Summary Table
          <td>2e-07 s</td>
          <td>1e+06 g·m²/s³</td>
          <td>1000 g·m²/s²</td>
+         <td>1e-07 1/s</td>
        </tr>
        <tr>
          <th>.to_compact()</th>
@@ -96,6 +101,7 @@ Summary Table
          <td>200 ns</td>
          <td>1 kW</td>
          <td>1 m·N</td>
+         <td>100 nHz</td>
        </tr>
        <tr>
          <th>.to_reduced_units()</th>
@@ -103,6 +109,7 @@ Summary Table
          <td>2e-07 s</td>
          <td>1e+06 mW</td>
          <td>1 m·N</td>
+         <td>1e-07 Hz</td>
        </tr>
        <tr>
          <th>.to_unprefixed()</th>
@@ -110,6 +117,7 @@ Summary Table
          <td>2e-07 s</td>
          <td>1000 W</td>
          <td>1 m·N</td>
+         <td>1e-07 Hz</td>
        </tr>
        <tr>
          <th>.to_base_units().to_compact()</th>
@@ -117,6 +125,7 @@ Summary Table
          <td>200 ns</td>
          <td>1 Mg·m²/s³</td>
          <td>1 kg·m²/s²</td>
+         <td>100 1/Gs</td>
        </tr>
        <tr>
          <th>.to_reduced_units().to_compact()</th>
@@ -124,6 +133,7 @@ Summary Table
          <td>200 ns</td>
          <td>1 kW</td>
          <td>1 m·N</td>
+         <td>100 nHz</td>
        </tr>
        <tr>
          <th>.to_preferred([ureg.W, ureg.s, ureg.J, ureg.m])</th>
@@ -131,6 +141,7 @@ Summary Table
          <td>2e-07 s</td>
          <td>1000 W</td>
          <td>1 J</td>
+         <td>1e-07 1/s</td>
        </tr>
      </tbody>
    </table>
