@@ -196,6 +196,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         # We compare to the plain class of PlainUnit because each PlainUnit class is
         # unique.
         if isinstance(other, str):
+            if str(self) == other:
+                return True
             try:
                 other = self._REGISTRY.Unit(other)
             except Exception:
