@@ -252,6 +252,22 @@ class TestUnit(QuantityTestCase):
         assert self.U_("byte") == self.U_("byte")
         assert not (self.U_("byte") != self.U_("byte"))
 
+    @pytest.mark.parametrize(
+        ("unit", "string", "expected"),
+        [
+            ("meter", "meter", True),
+            ("meter", "m", True),
+            ("m", "meter", True),
+            ("dimensionless", "dimensionless", True),
+            ("", "dimensionless", True),
+            ("meter", "second", False),
+            ("meter", "not_a_unit_xyz", False),
+        ],
+    )
+    def test_unit_eq_string(self, unit, string, expected):
+        # gh-634: Unit equality with strings, including dimensionless
+        assert (self.U_(unit) == string) is expected
+
     def test_unit_cmp(self):
         x = self.U_("m")
         assert x < self.U_("km")
