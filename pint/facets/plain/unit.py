@@ -195,6 +195,14 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other) -> bool:
         # We compare to the plain class of PlainUnit because each PlainUnit class is
         # unique.
+        if isinstance(other, str):
+            if str(self) == other:
+                return True
+            try:
+                other = self._REGISTRY.Unit(other)
+            except Exception:
+                return False
+
         if self._check(other):
             if isinstance(other, self.__class__):
                 return self._units == other._units
