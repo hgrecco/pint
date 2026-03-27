@@ -1276,7 +1276,7 @@ def test_issue2017():
 
     from pint import formatting as fmt
 
-    @fmt.register_unit_format("test")
+    @fmt.register_unit_format("test2017")
     def _test_format(unit, registry, **options):
         proc = {u.replace("µ", "u"): e for u, e in unit.items()}
         return fmt.formatter(
@@ -1291,8 +1291,8 @@ def test_issue2017():
         )
 
     base_unit = ureg.microsecond
-    assert f"{base_unit:~test}" == "us"
-    assert f"{base_unit:test}" == "microsecond"
+    assert f"{base_unit:~test2017}" == "us"
+    assert f"{base_unit:test2017}" == "microsecond"
 
 
 def test_issue2007():

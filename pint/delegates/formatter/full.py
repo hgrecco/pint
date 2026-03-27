@@ -12,7 +12,6 @@ Implements:
 from __future__ import annotations
 
 import locale
-import re
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -104,9 +103,10 @@ class FullFormatter(BaseFormatter):
             if k in spec:
                 return v
 
-        clean_spec = re.sub(r"\~|\^", "", spec)
-        if clean_spec in REGISTERED_FORMATTERS:
-            orphan_fmt = REGISTERED_FORMATTERS[clean_spec]
+        for k, v in REGISTERED_FORMATTERS.items():
+            if k in spec:
+                orphan_fmt = REGISTERED_FORMATTERS[k]
+                break
         else:
             return self._formatters["D"]
 

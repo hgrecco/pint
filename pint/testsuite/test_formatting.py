@@ -64,6 +64,7 @@ def test_register_unit_format(func_registry):
         return "<formatted unit>"
 
     quantity = 1.0 * func_registry.meter
+    assert f"{quantity:g#~custom}" == "1 <formatted unit>"
     assert f"{quantity:custom}" == "1.0 <formatted unit>"
 
     with pytest.raises(ValueError, match="format 'custom' already exists"):
