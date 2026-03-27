@@ -208,6 +208,8 @@ doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/docte
 
 [tool.pixi.feature.docs.dependencies]
 pandoc = "*"
+pandas = "*"
+tabulate = "*"
 
 [tool.pixi.feature.py311.dependencies]
 python = "3.11.*"
