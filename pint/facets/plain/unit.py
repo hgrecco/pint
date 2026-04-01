@@ -73,7 +73,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        return f"<Unit('{self._units}')>"
+        return f"Unit('{self._units}')"
 
     @property
     def dimensionless(self) -> bool:

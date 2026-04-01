@@ -98,9 +98,7 @@ class Measurement(PlainQuantity):
         return _unpickle_measurement, (Measurement, self.magnitude, self._units)
 
     def __repr__(self):
-        return "<Measurement({}, {}, {})>".format(
-            self.magnitude.nominal_value, self.magnitude.std_dev, self.units
-        )
+        return f"Measurement({repr(self.magnitude.nominal_value)}, {repr(self.magnitude.std_dev)}, {self.units})"
 
     def __str__(self):
         return f"{self}"

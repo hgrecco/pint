@@ -270,7 +270,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def __bytes__(self) -> bytes:
         return str(self).encode(locale.getpreferredencoding())
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if HAS_UNCERTAINTIES:
             if isinstance(self._magnitude, UFloat):
                 return f"<Quantity({self._magnitude:.6}, '{self._units}')>"
@@ -280,6 +280,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
 
         return f"<Quantity({self._magnitude}, '{self._units}')>"
+
+    def __repr__(self) -> str:
+        return f"Quantity({repr(self._magnitude)}, \"{self._units}\")"
 
     def __hash__(self) -> int:
         self_base = self.to_base_units()
