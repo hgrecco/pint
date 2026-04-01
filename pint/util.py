@@ -592,12 +592,6 @@ class UnitsContainer(Mapping[str, Scalar]):
     def __repr__(self) -> str:
         return f"UnitsContainer({repr(self._d)})"
 
-    def __str__(self) -> str:
-        tmp = "{%s}" % ", ".join(
-            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
-        )
-        return f"<UnitsContainer({tmp})>"
-
     def __format__(self, spec: str) -> str:
         # TODO: provisional
         from .formatting import format_unit
