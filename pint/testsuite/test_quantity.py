@@ -133,7 +133,7 @@ class TestQuantity(QuantityTestCase):
     def test_quantity_repr(self):
         x = self.Q_(4.2, UnitsContainer(meter=1))
         assert str(x) == "4.2 meter"
-        assert repr(x) == "<Quantity(4.2, 'meter')>"
+        assert repr(x) == "Quantity(4.2, \"meter\")"
 
     def test_quantity_hash(self):
         x = self.Q_(4.2, "meter")

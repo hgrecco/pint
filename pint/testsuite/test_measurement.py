@@ -21,7 +21,7 @@ class TestMeasurement(QuantityTestCase):
     def test_simple(self):
         M_ = self.ureg.Measurement
         m = M_(4.0, 0.1, "s * s")
-        assert repr(m) == "<Measurement(4.0, 0.1, second ** 2)>"
+        assert repr(m) == "Measurement(4.0, 0.1, \"second ** 2\")"
 
     def test_build(self):
         M_ = self.ureg.Measurement

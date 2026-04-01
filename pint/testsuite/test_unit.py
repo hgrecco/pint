@@ -34,7 +34,7 @@ class TestUnit(QuantityTestCase):
     def test_unit_repr(self):
         x = self.U_(UnitsContainer(meter=1))
         assert str(x) == "meter"
-        assert repr(x) == "<Unit('meter')>"
+        assert repr(x) == "Unit(\"meter\")"
 
     def test_unit_formatting(self, subtests):
         x = self.U_(UnitsContainer(meter=2, kilogram=1, second=-1))
