@@ -134,12 +134,10 @@ class TestQuantity(QuantityTestCase):
         x = self.Q_(4.2, UnitsContainer(meter=1))
         x_arr = self.Q_(np.array([1.0, 2.0, 3.0]), UnitsContainer(meter=2))
         assert str(x) == "4.2 meter"
-        assert repr(x) == "Quantity(4.2, \"meter\")"
-        assert repr(x_arr) == "Quantity(array([1., 2., 3.]), \"meter ** 2\")"
+        assert repr(x) == 'Quantity(4.2, "meter")'
+        assert repr(x_arr) == 'Quantity(array([1., 2., 3.]), "meter ** 2")'
 
         # Imports needed for the eval
-        from pint import Quantity
-        from numpy import array
         assert eval(repr(x)) == x
         assert np.all(eval(repr(x_arr)) == x_arr)
 

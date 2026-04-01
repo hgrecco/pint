@@ -839,12 +839,6 @@ class ParserHelper(UnitsContainer):
     def __repr__(self):
         return f"ParserHelper({repr(self.scale)}, {repr(self._d)})"
 
-    def __str__(self):
-        tmp = "{%s}" % ", ".join(
-            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
-        )
-        return f"<ParserHelper({self.scale}, {tmp})>"
-
     def __mul__(self, other):
         if isinstance(other, str):
             new = self.add(other, self._one)
