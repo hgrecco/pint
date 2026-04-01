@@ -23,6 +23,9 @@ class TestMeasurement(QuantityTestCase):
         m = M_(4.0, 0.1, "s * s")
         assert repr(m) == "Measurement(4.0, 0.1, \"second ** 2\")"
 
+        # Just check that we can eval this, as we can't __eq__ Measurements
+        eval(repr(m).replace("Measurement","M_"))
+
     def test_build(self):
         M_ = self.ureg.Measurement
         v, u = self.Q_(4.0, "s"), self.Q_(0.1, "s")
