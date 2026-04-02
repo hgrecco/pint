@@ -136,8 +136,6 @@ class TestQuantity(QuantityTestCase):
         assert repr(x) == 'Quantity(4.2, "meter")'
 
         # Imports needed for the eval
-        from numpy import array  # noqa: F401
-
         from pint import Quantity  # noqa: F401
 
         assert eval(repr(x)) == x
