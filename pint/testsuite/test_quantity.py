@@ -130,13 +130,10 @@ class TestQuantity(QuantityTestCase):
         assert self.Q_(1000, "millimeter") == self.Q_(1, "meter")
         assert self.Q_(1000, "millimeter/min") == self.Q_(1000 / 60, "millimeter/s")
 
-    @helpers.requires_numpy
     def test_quantity_repr(self):
         x = self.Q_(4.2, UnitsContainer(meter=1))
-        x_arr = self.Q_(np.array([1.0, 2.0, 3.0]), UnitsContainer(meter=2))
         assert str(x) == "4.2 meter"
         assert repr(x) == 'Quantity(4.2, "meter")'
-        assert repr(x_arr) == 'Quantity(array([1., 2., 3.]), "meter ** 2")'
 
         # Imports needed for the eval
         from numpy import array  # noqa: F401
@@ -144,6 +141,17 @@ class TestQuantity(QuantityTestCase):
         from pint import Quantity  # noqa: F401
 
         assert eval(repr(x)) == x
+
+    @helpers.requires_numpy
+    def test_quantity_repr_numpy(self):
+        x_arr = self.Q_(np.array([1.0, 2.0, 3.0]), UnitsContainer(meter=2))
+        assert repr(x_arr) == 'Quantity(array([1., 2., 3.]), "meter ** 2")'
+
+        # Imports needed for the eval
+        from numpy import array  # noqa: F401
+
+        from pint import Quantity  # noqa: F401
+
         assert np.all(eval(repr(x_arr)) == x_arr)
 
     def test_quantity_hash(self):
