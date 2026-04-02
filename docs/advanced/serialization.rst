@@ -14,7 +14,7 @@ The easiest way to do this is by converting the quantity to a string:
    >>> ureg = pint.UnitRegistry()
    >>> duration = 24.2 * ureg.years
    >>> duration
-   <Quantity(24.2, 'year')>
+   Quantity(24.2, "year")
    >>> serialized = str(duration)
    >>> print(serialized)
    24.2 year
@@ -83,7 +83,7 @@ To unpickle, just
 
     >>> loaded = pickle.loads(serialized)
     >>> ureg.Quantity.from_tuple(loaded)
-    <Quantity(24.2, 'year')>
+    Quantity(24.2, "year")
 
 (To pickle to and from a file just use the dump and load method as described in _Pickle)
 

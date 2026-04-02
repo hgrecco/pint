@@ -45,7 +45,7 @@ Since pint treats angle quantities as `dimensionless`, it allows conversions bet
     >>> ureg = UnitRegistry()
     >>> angular_frequency = ureg('60rpm')
     >>> angular_frequency.to('Hz')
-    <Quantity(6.28318531, 'hertz')>
+    Quantity(6.28318531, "hertz")
 
 The SI BIPM Brochure (Bureau International des Poids et Mesures) states:
 

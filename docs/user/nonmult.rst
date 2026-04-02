@@ -53,7 +53,7 @@ Subtraction of two temperatures given in offset units yields a *delta* unit:
 .. doctest::
 
     >>> Q_(25.4, ureg.degC) - Q_(10., ureg.degC)
-    <Quantity(15.4, 'delta_degree_Celsius')>
+    Quantity(15.399999999999999, "delta_degree_Celsius")
 
 You can add or subtract a quantity with *delta* unit and a quantity with
 offset unit:
@@ -61,9 +61,9 @@ offset unit:
 .. doctest::
 
     >>> Q_(25.4, ureg.degC) + Q_(10., ureg.delta_degC)
-    <Quantity(35.4, 'degree_Celsius')>
+    Quantity(35.4, "degree_Celsius")
     >>> Q_(25.4, ureg.degC) - Q_(10., ureg.delta_degC)
-    <Quantity(15.4, 'degree_Celsius')>
+    Quantity(15.399999999999999, "degree_Celsius")
 
 If you want to add a quantity with absolute unit to one with offset unit, like here
 
@@ -81,14 +81,14 @@ absolute unit before addition
 .. doctest::
 
     >>> Q_(10., ureg.degC).to(ureg.kelvin) + heating_rate * Q_(30, ureg.min)
-    <Quantity(298.15, 'kelvin')>
+    Quantity(298.15, "kelvin")
 
 or convert the absolute unit to a *delta* unit:
 
 .. doctest::
 
     >>> Q_(10., ureg.degC) + heating_rate.to('delta_degC/min') * Q_(30, ureg.min)
-    <Quantity(25.0, 'degree_Celsius')>
+    Quantity(25.0, "degree_Celsius")
 
 In contrast to subtraction, the addition of quantities with offset units
 is ambiguous, e.g. for *10 degC + 100 degC* two different result are reasonable
@@ -119,7 +119,7 @@ to be explicitly created:
         ...
     OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
     >>> Q_(25.4, ureg.degC)
-    <Quantity(25.4, 'degree_Celsius')>
+    Quantity(25.4, "degree_Celsius")
 
 As an alternative to raising an error, pint can be configured to work more
 relaxed via setting the UnitRegistry parameter *autoconvert_offset_to_baseunit*
@@ -133,7 +133,7 @@ to true. In this mode, pint behaves differently:
     >>> ureg = UnitRegistry(autoconvert_offset_to_baseunit = True)
     >>> T = 25.4 * ureg.degC
     >>> T
-    <Quantity(25.4, 'degree_Celsius')>
+    Quantity(25.4, "degree_Celsius")
 
 * Before all other multiplications, all divisions and in case of
   exponentiation [#f1]_ involving quantities with offset-units, pint
@@ -143,9 +143,9 @@ to true. In this mode, pint behaves differently:
 .. doctest::
 
     >>> 1/T
-    <Quantity(0.0033495..., '1 / kelvin')>
+    Quantity(0.0033495..., "1 / kelvin")
     >>> T * 10 * ureg.meter
-    <Quantity(527.15, 'kelvin * meter')>
+    Quantity(527.15, "kelvin * meter")
 
 You can change the behaviour at any time:
 
@@ -184,7 +184,7 @@ Note that the magnitude is left unchanged:
 .. doctest::
 
     >>> Q_(10, 'degC/meter')
-    <Quantity(10, 'delta_degree_Celsius / meter')>
+    Quantity(10, "delta_degree_Celsius / meter")
 
 To define a new temperature, you need to specify the offset. For example,
 this is the definition of the celsius and fahrenheit::
