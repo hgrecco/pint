@@ -130,6 +130,7 @@ class TestQuantity(QuantityTestCase):
         assert self.Q_(1000, "millimeter") == self.Q_(1, "meter")
         assert self.Q_(1000, "millimeter/min") == self.Q_(1000 / 60, "millimeter/s")
 
+    @helpers.requires_numpy
     def test_quantity_repr(self):
         x = self.Q_(4.2, UnitsContainer(meter=1))
         x_arr = self.Q_(np.array([1.0, 2.0, 3.0]), UnitsContainer(meter=2))
