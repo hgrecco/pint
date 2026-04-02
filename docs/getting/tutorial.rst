@@ -319,7 +319,7 @@ Pint's physical quantities can be easily printed:
    The str is 1.3 meter / second ** 2
    >>> # The standard representation formatting code
    >>> print('The repr is {!r}'.format(accel))
-   The repr is <Quantity(1.3, 'meter / second ** 2')>
+   The repr is Quantity(1.3, "meter / second ** 2")
    >>> # Accessing useful attributes
    >>> print('The magnitude is {0.magnitude} with units {0.units}'.format(accel))
    The magnitude is 1.3 with units meter / second ** 2
