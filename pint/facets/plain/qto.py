@@ -87,9 +87,9 @@ def to_compact(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (200e-9 * ureg.s).to_compact()
-    <Quantity(200.0, 'nanosecond')>
+    Quantity(199.99999999999997, "nanosecond")
     >>> (1e-2 * ureg("kg m/s^2")).to_compact("N")
-    <Quantity(10.0, 'millinewton')>
+    Quantity(10.0, "millinewton")
     """
 
     if not isinstance(quantity.magnitude, numbers.Number) and not hasattr(
@@ -207,9 +207,9 @@ def to_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    <Quantity(4046.87261, 'meter ** 2')>
+    Quantity(4046.8726098742513, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'watt * second')>
+    Quantity(4.4482216152605005, "watt * second")
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -227,9 +227,9 @@ def ito_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    <Quantity(4046.87261, 'meter ** 2')>
+    Quantity(4046.8726098742513, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'watt * second')>
+    Quantity(4.4482216152605005, "watt * second")
     """
 
     units = _get_preferred(quantity, preferred_units)

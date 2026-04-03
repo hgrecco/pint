@@ -29,7 +29,7 @@ Once you've initialized your ``UnitRegistry``, you can define quantities easily:
 
    >>> distance = 24.0 * ureg.meter
    >>> distance
-   <Quantity(24.0, 'meter')>
+   Quantity(24.0, "meter")
    >>> print(distance)
    24.0 meter
 
@@ -42,7 +42,7 @@ magnitude, units, and dimensionality:
    >>> distance.magnitude
    24.0
    >>> distance.units
-   <Unit('meter')>
+   Unit("meter")
    >>> print(distance.dimensionality)
    [length]
 
@@ -56,7 +56,7 @@ and can correctly handle many mathematical operations, including with other
    8.0 second
    >>> speed = distance / time
    >>> speed
-   <Quantity(3.0, 'meter / second')>
+   Quantity(3.0, "meter / second")
    >>> print(speed)
    3.0 meter / second
    >>> print(speed.dimensionality)
@@ -101,11 +101,11 @@ the ``to()`` method, which accepts a string or a :class:`Unit() <pint.unit.Unit>
 .. doctest::
 
    >>> speed.to('inch/minute')
-   <Quantity(7086.61417, 'inch / minute')>
+   Quantity(7086.614173228347, "inch / minute")
    >>> ureg.inch / ureg.minute
-   <Unit('inch / minute')>
+   Unit("inch / minute")
    >>> speed.to(ureg.inch / ureg.minute)
-   <Quantity(7086.61417, 'inch / minute')>
+   Quantity(7086.614173228347, "inch / minute")
 
 This method returns a new object leaving the original intact as can be seen by:
 
@@ -121,7 +121,7 @@ use the ``ito()`` method:
 
    >>> speed.ito(ureg.inch / ureg.minute)
    >>> speed
-   <Quantity(7086.61417, 'inch / minute')>
+   Quantity(7086.614173228347, "inch / minute")
    >>> print(speed)
    7086.6141... inch / minute
 
@@ -234,7 +234,7 @@ many cases, units can be defined as strings:
 .. doctest::
 
    >>> 2.54 * ureg('centimeter')
-   <Quantity(2.54, 'centimeter')>
+   Quantity(2.54, "centimeter")
 
 or using the ``Quantity`` constructor:
 
@@ -242,23 +242,23 @@ or using the ``Quantity`` constructor:
 
    >>> Q_ = ureg.Quantity
    >>> Q_(2.54, 'centimeter')
-   <Quantity(2.54, 'centimeter')>
+   Quantity(2.54, "centimeter")
 
 Numbers are also parsed, so you can use an expression:
 
 .. doctest::
 
    >>> ureg('2.54 * centimeter')
-   <Quantity(2.54, 'centimeter')>
+   Quantity(2.54, "centimeter")
    >>> Q_('2.54 * centimeter')
-   <Quantity(2.54, 'centimeter')>
+   Quantity(2.54, "centimeter")
 
 or leave out the `*` altogether:
 
 .. doctest::
 
    >>> Q_('2.54cm')
-   <Quantity(2.54, 'centimeter')>
+   Quantity(2.54, "centimeter")
 
 This enables you to build a simple unit converter in 3 lines:
 
@@ -267,7 +267,7 @@ This enables you to build a simple unit converter in 3 lines:
    >>> user_input = '2.54 * centimeter to inch'
    >>> src, dst = user_input.split(' to ')
    >>> Q_(src).to(dst)
-   <Quantity(1.0, 'inch')>
+   Quantity(1.0, "inch")
 
 Strings containing values can be parsed using the ``ureg.parse_pattern()`` function.
 A ``format``-like string with the units defined in it is used as the pattern:
@@ -277,7 +277,7 @@ A ``format``-like string with the units defined in it is used as the pattern:
    >>> input_string = '10 feet 10 inches'
    >>> pattern = '{feet} feet {inch} inches'
    >>> ureg.parse_pattern(input_string, pattern)
-   [<Quantity(10.0, 'foot')>, <Quantity(10.0, 'inch')>]
+   [Quantity(10.0, "foot"), Quantity(10.0, "inch")]
 
 To search for multiple matches, set the ``many`` parameter to ``True``. The following
 example also demonstrates how the parser is able to find matches in amongst filler characters:
@@ -287,7 +287,7 @@ example also demonstrates how the parser is able to find matches in amongst fill
    >>> input_string = '10 feet - 20 feet ! 30 feet.'
    >>> pattern = '{feet} feet'
    >>> ureg.parse_pattern(input_string, pattern, many=True)
-   [[<Quantity(10.0, 'foot')>], [<Quantity(20.0, 'foot')>], [<Quantity(30.0, 'foot')>]]
+   [[Quantity(10.0, "foot")], [Quantity(20.0, "foot")], [Quantity(30.0, "foot")]]
 
 The full power of regex can also be employed when writing patterns:
 
@@ -296,7 +296,7 @@ The full power of regex can also be employed when writing patterns:
    >>> input_string = "10` - 20 feet ! 30 ft."
    >>> pattern = r"{feet}(`| feet| ft)"
    >>> ureg.parse_pattern(input_string, pattern, many=True)
-   [[<Quantity(10.0, 'foot')>], [<Quantity(20.0, 'foot')>], [<Quantity(30.0, 'foot')>]]
+   [[Quantity(10.0, "foot")], [Quantity(20.0, "foot")], [Quantity(30.0, "foot")]]
 
 *Note that the curly brackets (``{}``) are converted to a float-matching pattern by the parser.*
 
@@ -319,7 +319,7 @@ Pint's physical quantities can be easily printed:
    The str is 1.3 meter / second ** 2
    >>> # The standard representation formatting code
    >>> print('The repr is {!r}'.format(accel))
-   The repr is <Quantity(1.3, 'meter / second ** 2')>
+   The repr is Quantity(1.3, "meter / second ** 2")
    >>> # Accessing useful attributes
    >>> print('The magnitude is {0.magnitude} with units {0.units}'.format(accel))
    The magnitude is 1.3 with units meter / second ** 2

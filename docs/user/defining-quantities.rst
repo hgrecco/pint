@@ -19,16 +19,16 @@ quantity by multiplying a ``Unit()`` and a scalar:
     >>> from pint import UnitRegistry
     >>> ureg = UnitRegistry()
     >>> ureg.meter
-    <Unit('meter')>
+    Unit("meter")
     >>> 30.0 * ureg.meter
-    <Quantity(30.0, 'meter')>
+    Quantity(30.0, "meter")
 
 This works to build up complex units as well:
 
 .. doctest::
 
     >>> 9.8 * ureg.meter / ureg.second**2
-    <Quantity(9.8, 'meter / second ** 2')>
+    Quantity(9.8, "meter / second ** 2")
 
 
 Using the constructor
@@ -44,7 +44,7 @@ We typically abbreviate that constructor as `Q_` to make it's usage less verbose
 
     >>> Q_ = ureg.Quantity
     >>> Q_(1.78, ureg.meter)
-    <Quantity(1.78, 'meter')>
+    Quantity(1.78, "meter")
 
 As you can see below, the multiplication and constructor methods should produce
 the same results:
@@ -54,7 +54,7 @@ the same results:
     >>> Q_(30.0, ureg.meter) == 30.0 * ureg.meter
     True
     >>> Q_(9.8, ureg.meter / ureg.second**2)
-    <Quantity(9.8, 'meter / second ** 2')>
+    Quantity(9.8, "meter / second ** 2")
 
 Quantity can be created with itself, if units is specified ``pint`` will try to convert it to the desired units.
 If not, pint will just copy the quantity.
@@ -63,9 +63,9 @@ If not, pint will just copy the quantity.
 
     >>> length = Q_(30.0, ureg.meter)
     >>> Q_(length, 'cm')
-    <Quantity(3000.0, 'centimeter')>
+    Quantity(3000.0, "centimeter")
     >>> Q_(length)
-    <Quantity(30.0, 'meter')>
+    Quantity(30.0, "meter")
 
 Using string parsing
 --------------------
@@ -77,11 +77,11 @@ invokes the parsing function ``UnitRegistry.parse_expression``:
 .. doctest::
 
     >>> 30.0 * ureg('meter')
-    <Quantity(30.0, 'meter')>
+    Quantity(30.0, "meter")
     >>> ureg('30.0 meters')
-    <Quantity(30.0, 'meter')>
+    Quantity(30.0, "meter")
     >>> ureg('3000cm').to('meters')
-    <Quantity(30.0, 'meter')>
+    Quantity(30.0, "meter")
 
 The parsing function is also available to the ``Quantity()`` constructor and
 the various ``.to()`` methods:
@@ -89,18 +89,18 @@ the various ``.to()`` methods:
 .. doctest::
 
     >>> Q_('30.0 meters')
-    <Quantity(30.0, 'meter')>
+    Quantity(30.0, "meter")
     >>> Q_(30.0, 'meter')
-    <Quantity(30.0, 'meter')>
+    Quantity(30.0, "meter")
     >>> Q_('3000.0cm').to('meter')
-    <Quantity(30.0, 'meter')>
+    Quantity(30.0, "meter")
 
 Or as a standalone method on the ``UnitRegistry``:
 
 .. doctest::
 
    >>> 2.54 * ureg.parse_expression('centimeter')
-   <Quantity(2.54, 'centimeter')>
+   Quantity(2.54, "centimeter")
 
 It is fairly good at detecting compound units:
 
@@ -108,9 +108,9 @@ It is fairly good at detecting compound units:
 
     >>> g = ureg('9.8 meters/second**2')
     >>> g
-    <Quantity(9.8, 'meter / second ** 2')>
+    Quantity(9.8, "meter / second ** 2")
     >>> g.to('furlongs/fortnight**2')
-    <Quantity(7.12770743e+10, 'furlong / fortnight ** 2')>
+    Quantity(71277074338.9091, "furlong / fortnight ** 2")
 
 And behaves well when given dimensionless quantities, which are parsed into
 dimensionless ``Quantity`` objects:
@@ -118,11 +118,11 @@ dimensionless ``Quantity`` objects:
 .. doctest::
 
    >>> ureg('2.54')
-   <Quantity(2.54, 'dimensionless')>
+   Quantity(2.54, "dimensionless")
    >>> type(ureg('2.54'))
    <class 'pint.Quantity'>
    >>> Q_('2.54')
-   <Quantity(2.54, 'dimensionless')>
+   Quantity(2.54, "dimensionless")
    >>> type(Q_('2.54'))
    <class 'pint.Quantity'>
 
@@ -134,7 +134,7 @@ For example, the units of
 .. doctest::
 
    >>> Q_('3 l / 100 km')
-   <Quantity(0.03, 'liter * kilometer')>
+   Quantity(0.03, "liter * kilometer")
 
 may be unexpected at first but, are a consequence of applying this rule. Use
 brackets to get the expected result:
@@ -142,7 +142,7 @@ brackets to get the expected result:
 .. doctest::
 
    >>> Q_('3 l / (100 km)')
-   <Quantity(0.03, 'liter / kilometer')>
+   Quantity(0.03, "liter / kilometer")
 
 Special strings for NaN (Not a Number) and inf(inity) are also handled in a case-insensitive fashion.
 Note that, as usual, NaN != NaN.
@@ -150,13 +150,13 @@ Note that, as usual, NaN != NaN.
 .. doctest::
 
    >>> Q_('inf m')
-   <Quantity(inf, 'meter')>
+   Quantity(inf, "meter")
    >>> Q_('-INFINITY m')
-   <Quantity(-inf, 'meter')>
+   Quantity(-inf, "meter")
    >>> Q_('nan m')
-   <Quantity(nan, 'meter')>
+   Quantity(nan, "meter")
    >>> Q_('NaN m')
-   <Quantity(nan, 'meter')>
+   Quantity(nan, "meter")
 
 .. note:: Since version 0.7, Pint **does not** use eval_ under the hood.
    This change removes the `serious security problems`_ that the system is

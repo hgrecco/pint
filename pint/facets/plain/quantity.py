@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 
 try:
     import uncertainties.unumpy as unp
-    from uncertainties import UFloat, ufloat
+    from uncertainties import ufloat
 
     HAS_UNCERTAINTIES = True
 except ImportError:
@@ -271,15 +271,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        if HAS_UNCERTAINTIES:
-            if isinstance(self._magnitude, UFloat):
-                return f"<Quantity({self._magnitude:.6}, '{self._units}')>"
-            else:
-                return f"<Quantity({self._magnitude}, '{self._units}')>"
-        elif isinstance(self._magnitude, float):
-            return f"<Quantity({self._magnitude:.9}, '{self._units}')>"
-
-        return f"<Quantity({self._magnitude}, '{self._units}')>"
+        return f'Quantity({repr(self._magnitude)}, "{self._units}")'
 
     def __hash__(self) -> int:
         self_base = self.to_base_units()

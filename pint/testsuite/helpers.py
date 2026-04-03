@@ -22,13 +22,13 @@ from ..compat import (
 
 _number_re = r"([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)"
 _q_re = re.compile(
-    r"<Quantity\("
+    r"Quantity\("
     + r"\s*"
     + r"(?P<magnitude>%s)" % _number_re
     + r"\s*,\s*"
-    + r"'(?P<unit>.*)'"
+    + r"\"(?P<unit>.*)\""
     + r"\s*"
-    + r"\)>"
+    + r"\)"
 )
 
 _sq_re = re.compile(
