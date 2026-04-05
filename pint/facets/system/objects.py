@@ -75,12 +75,12 @@ class System(SharedRegistryObject):
     def __dir__(self):
         return list(self.members)
 
+    @property
+    def constants(self) -> "SystemConstantsAccessor":
+        return SystemConstantsAccessor(self._REGISTRY, self.name)
+
     def __getattr__(self, item: str) -> Any:
         getattr_maybe_raise(self, item)
-        if item in self._REGISTRY.get_group("constants").members:
-            return self._REGISTRY.Quantity(
-                *self._REGISTRY.get_base_units(item, system=self.name)
-            )
         u = getattr(self._REGISTRY, self.name + "_" + item, None)
         if u is not None:
             return u
@@ -217,3 +217,35 @@ class Lister:
     def __getattr__(self, item: str) -> Any:
         getattr_maybe_raise(self, item)
         return self.d[item]
+
+
+class SystemConstantsAccessor:
+    """Provides access to physical constants as Quantities in a specific system's base units.
+
+    Example::
+
+        ureg.sys.imperial.constants.speed_of_light  # <Quantity(327857018.8, 'yard / second')>
+    """
+
+    def __init__(self, registry, system_name: str):
+        object.__setattr__(self, "_registry", registry)
+        object.__setattr__(self, "_system_name", system_name)
+
+    def __dir__(self) -> list:
+        registry = object.__getattribute__(self, "_registry")
+        return sorted(registry.constants.members)
+
+    def __getattr__(self, item: str):
+        registry = object.__getattribute__(self, "_registry")
+        system_name = object.__getattribute__(self, "_system_name")
+
+        units_dict = registry._units
+        if item not in units_dict:
+            raise AttributeError(f"'{item}' is not a known constant")
+
+        canonical = units_dict[item].name
+        if canonical not in registry.constants.members:
+            raise AttributeError(f"'{item}' is not a physical constant")
+
+        factor, base_units = registry.get_base_units(canonical, system=system_name)
+        return registry.Quantity(factor, base_units)
