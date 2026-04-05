@@ -221,4 +221,6 @@ class Group(SharedRegistryObject):
 
     def __getattr__(self, item: str):
         getattr_maybe_raise(self, item)
-        return self._REGISTRY
+        if item in self._REGISTRY.constants.members:
+            return self._REGISTRY.Quantity(*self._REGISTRY.get_base_units(item))
+        return getattr(self._REGISTRY, item)

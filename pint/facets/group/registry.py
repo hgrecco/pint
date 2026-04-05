@@ -96,6 +96,11 @@ class GenericGroupRegistry(
         except KeyError as e:
             raise errors.DefinitionSyntaxError(f"unknown dimension {e} in context")
 
+    @property
+    def constants(self) -> objects.Group:
+        """Return the constants group."""
+        return self.get_group("constants", create_if_needed=False)
+
     def get_group(self, name: str, create_if_needed: bool = True) -> objects.Group:
         """Return a Group.
 

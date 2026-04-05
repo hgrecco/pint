@@ -77,6 +77,8 @@ class System(SharedRegistryObject):
 
     def __getattr__(self, item: str) -> Any:
         getattr_maybe_raise(self, item)
+        if item in self._REGISTRY.get_group("constants").members:
+            return self._REGISTRY.Quantity(*self._REGISTRY.get_base_units(item, system=self.name))
         u = getattr(self._REGISTRY, self.name + "_" + item, None)
         if u is not None:
             return u
