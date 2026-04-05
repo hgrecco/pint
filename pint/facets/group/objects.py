@@ -83,6 +83,9 @@ class Group(SharedRegistryObject):
         #: None indicates that the cache has been invalidated.
         self._computed_members: frozenset[str] | None = None
 
+    def __dir__(self) -> list[str]:
+        return sorted(self.members)
+
     @property
     def members(self) -> frozenset[str]:
         """Names of the units that are members of the group.
