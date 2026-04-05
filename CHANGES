@@ -6,6 +6,7 @@ Pint Changelog
 
 - Add beats per minute (`beats_per_minute`, `bpm`) (#2286)
 - Bump minimum numpy version to 2.0.0
+- Fix `Unit.__eq__` when comparing with strings using unit aliases (e.g. `Unit('metre') == 'meter'`) (#634)
 - Fix regression when using magnitude format specs in string formats (#2291)
 - Updated repr for various objects so that eval(repr(...))) works (#1495)
 
