@@ -97,7 +97,6 @@ def is_duck_array_type(cls: type) -> bool:
     return issubclass(cls, ndarray) or (
         not hasattr(cls, "_magnitude")
         and not hasattr(cls, "_units")
-        and HAS_NUMPY_ARRAY_FUNCTION
         and hasattr(cls, "__array_function__")
         and hasattr(cls, "ndim")
         and hasattr(cls, "dtype")
@@ -297,21 +296,6 @@ if HAS_NUMPY:
             return np.asarray(value)
         return value
 
-    def _test_array_function_protocol():
-        # Test if the __array_function__ protocol is enabled
-        try:
-
-            class FakeArray:
-                def __array_function__(self, *args, **kwargs):
-                    return
-
-            np.concatenate([FakeArray()])
-            return True
-        except ValueError:
-            return False
-
-    HAS_NUMPY_ARRAY_FUNCTION = _test_array_function_protocol()
-
     NP_NO_VALUE = np._NoValue
 
 else:
@@ -330,7 +314,6 @@ else:
 
     NUMPY_VER = "0"
     NUMERIC_TYPES = (Number, Decimal)
-    HAS_NUMPY_ARRAY_FUNCTION = False
     NP_NO_VALUE = None
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):

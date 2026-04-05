@@ -133,7 +133,24 @@ class TestQuantity(QuantityTestCase):
     def test_quantity_repr(self):
         x = self.Q_(4.2, UnitsContainer(meter=1))
         assert str(x) == "4.2 meter"
-        assert repr(x) == "<Quantity(4.2, 'meter')>"
+        assert repr(x) == 'Quantity(4.2, "meter")'
+
+        # Imports needed for the eval
+        from pint import Quantity  # noqa: F401
+
+        assert eval(repr(x)) == x
+
+    @helpers.requires_numpy
+    def test_quantity_repr_numpy(self):
+        x_arr = self.Q_(np.array([1.0, 2.0, 3.0]), UnitsContainer(meter=2))
+        assert repr(x_arr) == 'Quantity(array([1., 2., 3.]), "meter ** 2")'
+
+        # Imports needed for the eval
+        from numpy import array  # noqa: F401
+
+        from pint import Quantity  # noqa: F401
+
+        assert np.all(eval(repr(x_arr)) == x_arr)
 
     def test_quantity_hash(self):
         x = self.Q_(4.2, "meter")
@@ -710,7 +727,7 @@ class TestQuantity(QuantityTestCase):
         with pytest.raises(TypeError):
             iter(x)
 
-    @helpers.requires_array_function_protocol()
+    @helpers.requires_numpy()
     def test_no_longer_array_function_warning_on_creation(self):
         # Test that warning is no longer raised on first creation
         with warnings.catch_warnings():
@@ -1830,8 +1847,7 @@ class TestOffsetUnitMath(QuantityTestCase):
                 in1_cp = copy.copy(in1)
                 helpers.assert_quantity_almost_equal(op.ipow(in1_cp, in2), expected)
 
-    # matmul is only a ufunc since 1.16
-    @helpers.requires_numpy_at_least("1.16")
+    @helpers.requires_numpy()
     def test_matmul_with_numpy(self):
         A = [[1, 2], [3, 4]] * self.ureg.m
         B = np.array([[0, -1], [-1, 0]])

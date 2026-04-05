@@ -58,7 +58,7 @@ It is extremely easy and natural to use:
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> 3 * ureg.meter + 4 * ureg.cm
-    <Quantity(3.04, 'meter')>
+    Quantity(3.04, "meter")
 
 and you can make good use of numpy if you want:
 
@@ -66,9 +66,9 @@ and you can make good use of numpy if you want:
 
     >>> import numpy as np
     >>> [3, 4] * ureg.meter + [4, 3] * ureg.cm
-    <Quantity([ 3.04  4.03], 'meter')>
+    Quantity([ 3.04  4.03], "meter")
     >>> np.sum(_)
-    <Quantity(7.07, 'meter')>
+    Quantity(7.07, "meter")
 
 
 Quick Installation

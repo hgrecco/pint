@@ -590,10 +590,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         return self.__format__("")
 
     def __repr__(self) -> str:
-        tmp = "{%s}" % ", ".join(
-            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
-        )
-        return f"<UnitsContainer({tmp})>"
+        return f"UnitsContainer({repr(self._d)})"
 
     def __format__(self, spec: str) -> str:
         # TODO: provisional
@@ -840,10 +837,7 @@ class ParserHelper(UnitsContainer):
         return f"{self.scale} {tmp}"
 
     def __repr__(self):
-        tmp = "{%s}" % ", ".join(
-            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
-        )
-        return f"<ParserHelper({self.scale}, {tmp})>"
+        return f"ParserHelper({repr(self.scale)}, {repr(self._d)})"
 
     def __mul__(self, other):
         if isinstance(other, str):

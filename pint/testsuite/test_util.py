@@ -67,13 +67,13 @@ class TestUnitsContainer:
     def test_unitcontainer_repr(self):
         x = UnitsContainer()
         assert str(x) == "dimensionless"
-        assert repr(x) == "<UnitsContainer({})>"
+        assert repr(x) == "UnitsContainer({})"
         x = UnitsContainer(meter=1, second=2)
         assert str(x) == "meter * second ** 2"
-        assert repr(x) == "<UnitsContainer({'meter': 1, 'second': 2})>"
+        assert repr(x) == "UnitsContainer({'meter': 1, 'second': 2})"
         x = UnitsContainer(meter=1, second=2.5)
         assert str(x) == "meter * second ** 2.5"
-        assert repr(x) == "<UnitsContainer({'meter': 1, 'second': 2.5})>"
+        assert repr(x) == "UnitsContainer({'meter': 1, 'second': 2.5})"
 
     def test_unitcontainer_bool(self):
         assert UnitsContainer(meter=1, second=2)
@@ -166,7 +166,7 @@ class TestParseHelper:
         assert x() == xp()
         assert x() != y()
         assert ParserHelper.from_string("") == ParserHelper()
-        assert repr(x()) == "<ParserHelper(1, {'meter': 2})>"
+        assert repr(x()) == "ParserHelper(1, {'meter': 2})"
 
         assert ParserHelper(2) == 2
 
