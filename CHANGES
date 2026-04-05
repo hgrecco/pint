@@ -6,6 +6,7 @@ Pint Changelog
 
 - Add beats per minute (`beats_per_minute`, `bpm`) (#2286)
 - Bump minimum numpy version to 2.0.0
+- Fix `Unit.__eq__` when comparing with strings using unit aliases (e.g. `Unit('metre') == 'meter'`) (#634)
 
 0.25.3 (2026-03-19)
 -----------------
