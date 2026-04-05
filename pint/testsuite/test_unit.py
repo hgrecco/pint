@@ -262,6 +262,8 @@ class TestUnit(QuantityTestCase):
             ("", "dimensionless", True),
             ("meter", "second", False),
             ("meter", "not_a_unit_xyz", False),
+            ("metre", "meter", True),
+            ("metre", "metre", True),
         ],
     )
     def test_unit_eq_string(self, unit, string, expected):
