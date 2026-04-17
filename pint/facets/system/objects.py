@@ -213,5 +213,3 @@ class Lister:
     def __getattr__(self, item: str) -> Any:
         getattr_maybe_raise(self, item)
         return self.d[item]
-
-

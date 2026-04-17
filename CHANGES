@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Add `ureg.constants` for accessing physical constants (#1078)
 - Add `system` parameter to `to_base_units` and `ito_base_units` to allow converting to the base units of a specific unit system (#2297)
 - Add beats per minute (`beats_per_minute`, `bpm`) (#2286)
 - Bump minimum numpy version to 2.0.0
