@@ -549,20 +549,34 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
-    def ito_base_units(self) -> None:
-        """Return PlainQuantity rescaled to plain units."""
+    def ito_base_units(self, system=None) -> None:
+        """Return PlainQuantity rescaled to plain units.
 
-        _, other = self._REGISTRY._get_base_units(self._units)
+        Parameters
+        ----------
+        system : str or System, optional
+            The unit system to convert to. If None, uses the registry's
+            default system.
+        """
+
+        _, other = self._REGISTRY._get_base_units(self._units, system=system)
 
         self._magnitude = self._convert_magnitude(other)
         self._units = other
 
         return None
 
-    def to_base_units(self) -> PlainQuantity[MagnitudeT]:
-        """Return PlainQuantity rescaled to plain units."""
+    def to_base_units(self, system=None) -> PlainQuantity[MagnitudeT]:
+        """Return PlainQuantity rescaled to plain units.
 
-        _, other = self._REGISTRY._get_base_units(self._units)
+        Parameters
+        ----------
+        system : str or System, optional
+            The unit system to convert to. If None, uses the registry's
+            default system.
+        """
+
+        _, other = self._REGISTRY._get_base_units(self._units, system=system)
 
         magnitude = self._convert_magnitude_not_inplace(other)
 
