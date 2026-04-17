@@ -382,6 +382,20 @@ class TestQuantity(QuantityTestCase):
             x.to_base_units(), self.Q_(0.0254 / 60.0, "meter/second")
         )
 
+    @pytest.mark.parametrize(
+        "input_quantity, system, expected_quantity",
+        [
+            ("100 meter", "imperial", "109.36132983377078 yard"),
+            ("1 km", "mks", "1000 meter"),
+            ("1 inch", "mks", "0.0254 meter"),
+        ],
+    )
+    def test_to_base_units_with_system(self, input_quantity, system, expected_quantity):
+        helpers.assert_quantity_almost_equal(
+            self.Q_(input_quantity).to_base_units(system=system),
+            self.Q_(expected_quantity),
+        )
+
     def test_convert(self):
         helpers.assert_quantity_almost_equal(
             self.Q_("2 inch").to("meter"), self.Q_(2.0 * 0.0254, "meter")
