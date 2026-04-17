@@ -1475,3 +1475,12 @@ def test_issue2256_2():
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
     assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
+
+
+
+def test_issue1078():
+    """ureg.constants.<name> returns a Quantity; ureg.<name> returns a Unit."""
+    ureg = UnitRegistry()
+
+    assert isinstance(ureg.constants.speed_of_light, ureg.Quantity)
+    assert isinstance(ureg.speed_of_light, ureg.Unit)
