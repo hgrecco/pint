@@ -22,7 +22,7 @@ from typing import (
     overload,
 )
 
-from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
+from ..._typing import Array, Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
     Self,
@@ -352,7 +352,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @classmethod
     def from_list(
         cls, quant_list: list[PlainQuantity[MagnitudeT]], units=None
-    ) -> PlainQuantity[MagnitudeT]:
+    ) -> PlainQuantity[Array[MagnitudeT]]:
         """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
@@ -376,7 +376,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     @classmethod
     def from_sequence(
         cls, seq: Sequence[PlainQuantity[MagnitudeT]], units=None
-    ) -> PlainQuantity[MagnitudeT]:
+    ) -> PlainQuantity[Array[MagnitudeT]]:
         """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
 
