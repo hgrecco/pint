@@ -224,6 +224,9 @@ class Group(SharedRegistryObject):
 
     def __getattr__(self, item: str):
         getattr_maybe_raise(self, item)
-        if item in self._REGISTRY.constants.members:
-            return self._REGISTRY.Quantity(*self._REGISTRY.get_base_units(item))
+        units_dict = self._REGISTRY._units
+        if item in units_dict:
+            canonical = units_dict[item].name
+            if canonical in self._REGISTRY.constants.members:
+                return self._REGISTRY.Quantity(*self._REGISTRY.get_base_units(canonical))
         return getattr(self._REGISTRY, item)
