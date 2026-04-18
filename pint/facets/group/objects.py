@@ -228,5 +228,7 @@ class Group(SharedRegistryObject):
         if item in units_dict:
             canonical = units_dict[item].name
             if canonical in self._REGISTRY.constants.members:
-                return self._REGISTRY.Quantity(*self._REGISTRY.get_base_units(canonical))
+                return self._REGISTRY.Quantity(
+                    *self._REGISTRY.get_base_units(canonical)
+                )
         return getattr(self._REGISTRY, item)
