@@ -1477,9 +1477,10 @@ def test_issue2256_2():
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
 
 
-def test_issue1078():
+@pytest.mark.parametrize("name", ["speed_of_light", "c"])
+def test_issue1078(name):
     """ureg.constants.<name> returns a Quantity; ureg.<name> returns a Unit."""
     ureg = UnitRegistry()
 
-    assert isinstance(ureg.constants.speed_of_light, ureg.Quantity)
-    assert isinstance(ureg.speed_of_light, ureg.Unit)
+    assert isinstance(getattr(ureg.constants, name), ureg.Quantity)
+    assert isinstance(getattr(ureg, name), ureg.Unit)
