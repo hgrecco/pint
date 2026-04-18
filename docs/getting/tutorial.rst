@@ -225,6 +225,23 @@ preferred units when producing new quantities. This is disabled by default.
 Note when there are multiple good combinations of units to reduce to, to_preferred is not guaranteed to be repeatable.
 For example, ``(1 * ureg.lbf * ureg.m).to_preferred(preferred_units)`` may return ``W s`` or ``ft lbf``.
 
+Constants
+---------
+
+Pint includes a number of physical constants, which can be accessed as Quantities through the ``UnitRegistry``:
+
+.. doctest::
+
+   >>> ureg.constants.speed_of_light
+   Quantity(299792458.0, "meter / second")
+
+They are also provided as Units, so you can use them in calculations:
+
+.. doctest::
+
+   >>> speed.to(ureg.speed_of_light)
+   Quantity(1.0006922855944561e-08, "speed_of_light")
+
 String parsing
 --------------
 
