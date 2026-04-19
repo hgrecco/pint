@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Allow string parsing of offset units (#386)
 - Add `system` parameter to `to_base_units` and `ito_base_units` to allow converting to the base units of a specific unit system (#2297)
 - Add beats per minute (`beats_per_minute`, `bpm`) (#2286)
 - Bump minimum numpy version to 2.0.0
@@ -362,10 +363,6 @@ Pint Changelog
 - Improved the application registry.
   (Issue #1366, thanks keewis)
 - Improved testing isolation using pytest fixtures.
-- Fix string formatting of numpy array scalars
-- Allow string parsing of offset units
-  (Issue #386)
-
 ### Breaking Changes
 
 - pint no longer supports Python 3.6
@@ -377,7 +374,6 @@ Pint Changelog
 0.17 (2021-03-22)
 -----------------
 
-- Do not build "universal" wheel as Python 2 is not supported.
 - Add the Wh unit for battery capacity measurements
   (PR #1260, thanks Maciej Grela)
 - Fix issue with reducable dimensionless units when using power (Quantity**ndarray)
