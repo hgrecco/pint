@@ -110,19 +110,19 @@ def test_build_eval_tree(tokenizer, input_text: str, parsed: str):
         ("3 * -(2 + 4)", "(3 * (- (2 + 4)))"),  # parenthetical unary
         ("3 * -((2 + 4))", "(3 * (- (2 + 4)))"),  # parenthetical unary
         # implicit op
-        ("3 4", "(3 * 4)"),
+        ("3 4", "(3 4)"),
         # implicit op, then parentheses
-        ("3 (2 + 4)", "(3 * (2 + 4))"),
+        ("3 (2 + 4)", "(3 (2 + 4))"),
         # parentheses, then implicit
-        ("(3 ** 4 ) 5", "((3 ** 4) * 5)"),
+        ("(3 ** 4 ) 5", "((3 ** 4) 5)"),
         # implicit op, then exponentiation
-        ("3 4 ** 5", "(3 * (4 ** 5))"),
+        ("3 4 ** 5", "(3 (4 ** 5))"),
         # implicit op, then addition
-        ("3 4 + 5", "((3 * 4) + 5)"),
+        ("3 4 + 5", "((3 4) + 5)"),
         # power followed by implicit
-        ("3 ** 4 5", "((3 ** 4) * 5)"),
+        ("3 ** 4 5", "((3 ** 4) 5)"),
         # implicit with parentheses
-        ("3 (4 ** 5)", "(3 * (4 ** 5))"),
+        ("3 (4 ** 5)", "(3 (4 ** 5))"),
         # exponent with e
         ("3e-1", "3e-1"),
         # multiple units with exponents
@@ -132,7 +132,7 @@ def test_build_eval_tree(tokenizer, input_text: str, parsed: str):
         # multiple units with neg exponents
         ("kg^-1 * s^-2", "((kg ** (- 1)) * (s ** (- 2)))"),
         # multiple units with neg exponents, implicit op
-        ("kg^-1 s^-2", "((kg ** (- 1)) * (s ** (- 2)))"),
+        ("kg^-1 s^-2", "((kg ** (- 1)) (s ** (- 2)))"),
         # nested power
         ("2 ^ 3 ^ 2", "(2 ** (3 ** 2))"),
         # nested power
@@ -141,9 +141,9 @@ def test_build_eval_tree(tokenizer, input_text: str, parsed: str):
         ("gram / meter ** 2 / second", "((gram / (meter ** 2)) / second)"),
         # units should behave like numbers, so we don't need a bunch of extra tests for them
         # implicit op, then addition
-        ("3 kg + 5", "((3 * kg) + 5)"),
-        ("(5 % 2) m", "((5 % 2) * m)"),  # mod operator
-        ("(5 // 2) m", "((5 // 2) * m)"),  # floordiv operator
+        ("3 kg + 5", "((3 kg) + 5)"),
+        ("(5 % 2) m", "((5 % 2) m)"),  # mod operator
+        ("(5 // 2) m", "((5 // 2) m)"),  # floordiv operator
     ),
 )
 def test_preprocessed_eval_tree(tokenizer, input_text: str, parsed: str):
