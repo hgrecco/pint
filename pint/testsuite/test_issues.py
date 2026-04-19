@@ -462,9 +462,10 @@ class TestIssues(QuantityTestCase):
         y = module_registry.Quantity("42 mm s")
         assert x == y
 
-        # offset unit combined with another unit should still fail
+        # offset unit combined with another unit should still fail (default registry settings)
+        ureg = UnitRegistry()
         with pytest.raises(OffsetUnitCalculusError):
-            module_registry.Quantity("42 degC/m")
+            ureg.Quantity("42 degC/m")
 
     def test_issue468(self, module_registry):
         @module_registry.wraps("kg", "meter")
