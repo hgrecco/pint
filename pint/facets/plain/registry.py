@@ -1485,6 +1485,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                 return self.Quantity(left, right)
             return left * right
 
+        # replace implicit multiplication with self._eval_implicit_mul
         bin_op = {**_BINARY_OPERATOR_MAP, "": _eval_implicit_mul}
         result = build_eval_tree(gen).evaluate(_define_op, bin_op=bin_op)
 
