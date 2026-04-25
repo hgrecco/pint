@@ -164,24 +164,18 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
     @overload
-    def __new__(
-        cls, value: MagnitudeT, units: UnitLike | None = None
-    ) -> PlainQuantity[MagnitudeT]: ...
+    def __new__(cls, value: MagnitudeT, units: UnitLike | None = None) -> Self: ...
 
     @overload
-    def __new__(
-        cls, value: str, units: UnitLike | None = None
-    ) -> PlainQuantity[Any]: ...
+    def __new__(cls, value: str, units: UnitLike | None = None) -> Self: ...
 
     @overload
     def __new__(  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]: ...
+    ) -> Self: ...
 
     @overload
-    def __new__(
-        cls, value: PlainQuantity[Any], units: UnitLike | None = None
-    ) -> PlainQuantity[Any]: ...
+    def __new__(cls, value: Self, units: UnitLike | None = None) -> Self: ...
 
     def __new__(cls, value, units=None):
         if is_upcast_type(type(value)):
@@ -244,11 +238,11 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         return it_outer()
 
-    def __copy__(self) -> PlainQuantity[MagnitudeT]:
+    def __copy__(self) -> Self:
         ret = self.__class__(copy.copy(self._magnitude), self._units)
         return ret
 
-    def __deepcopy__(self, memo) -> PlainQuantity[MagnitudeT]:
+    def __deepcopy__(self, memo) -> Self:
         ret = self.__class__(
             copy.deepcopy(self._magnitude, memo), copy.deepcopy(self._units, memo)
         )
@@ -411,7 +405,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return cls(a, units)
 
     @classmethod
-    def from_tuple(cls, tup):
+    def from_tuple(cls, tup) -> Self:
         for units_tup in tup[1]:
             cls._REGISTRY.get_name(units_tup[0])
         return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
