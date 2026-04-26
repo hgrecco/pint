@@ -38,6 +38,8 @@ from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
+    from typing_extensions import TypeIs
+
     from ._typing import QuantityOrUnitLike
     from .registry import UnitRegistry
 
@@ -960,7 +962,7 @@ class SharedRegistryObject:
             inst._REGISTRY = application_registry.get()
         return inst
 
-    def _check(self, other: Any) -> bool:
+    def _check(self, other: Any) -> "TypeIs[SharedRegistryObject]":
         """Check if the other object use a registry and if so that it is the
         same registry.
 

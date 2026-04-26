@@ -46,7 +46,7 @@ SortFunc: TypeAlias = Callable[
 ]
 
 
-class BabelKwds(TypedDict):
+class BabelKwds(TypedDict, total=False):
     """Babel related keywords used in formatters."""
 
     use_plural: bool
