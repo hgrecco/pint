@@ -18,6 +18,9 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
+    SupportsComplex,
+    SupportsFloat,
+    SupportsInt,
     TypeVar,
     overload,
 )
@@ -560,7 +563,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         return None
 
-    def to_base_units(self, system=None) -> PlainQuantity[MagnitudeT]:
+    def to_base_units(self, system=None) -> Self:
         """Return PlainQuantity rescaled to plain units.
 
         Parameters
@@ -588,17 +591,17 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     ito_unprefixed = qto.ito_unprefixed
 
     # Mathematical operations
-    def __int__(self) -> int:
+    def __int__(self: PlainQuantity[SupportsInt]) -> int:
         if self.dimensionless:
             return int(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
 
-    def __float__(self) -> float:
+    def __float__(self: PlainQuantity[SupportsFloat]) -> float:
         if self.dimensionless:
             return float(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
 
-    def __complex__(self) -> complex:
+    def __complex__(self: PlainQuantity[SupportsComplex]) -> complex:
         if self.dimensionless:
             return complex(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
@@ -1310,16 +1313,16 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             new_self = self.to_root_units()
             return other**new_self._magnitude
 
-    def __abs__(self) -> PlainQuantity[MagnitudeT]:
+    def __abs__(self) -> Self:
         return self.__class__(abs(self._magnitude), self._units)
 
     def __round__(self, ndigits: int | None = None) -> PlainQuantity[int]:
         return self.__class__(round(self._magnitude, ndigits), self._units)
 
-    def __pos__(self) -> PlainQuantity[MagnitudeT]:
+    def __pos__(self) -> Self:
         return self.__class__(operator.pos(self._magnitude), self._units)
 
-    def __neg__(self) -> PlainQuantity[MagnitudeT]:
+    def __neg__(self) -> Self:
         return self.__class__(operator.neg(self._magnitude), self._units)
 
     @check_implemented
