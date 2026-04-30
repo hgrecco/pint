@@ -14,16 +14,16 @@ need.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Generic, SupportsAbs, TypeVar
 
 from typing_extensions import override
 
 from . import facets, registry_helpers
+from ._typing import Magnitude
 from .compat import TypeAlias
 from .util import logger, pi_theorem
 
-if TYPE_CHECKING:
-    from .facets.plain.quantity import _AbsOutputT, _CanAbs
+T = TypeVar("T", bound=Magnitude)
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
@@ -46,7 +46,7 @@ class Quantity(
         def __round__(self, ndigits: int | None = None) -> Quantity[int]: ...
 
         @override
-        def __abs__(self: Quantity[_CanAbs[_AbsOutputT]]) -> Quantity[_AbsOutputT]: ...
+        def __abs__(self: Quantity[SupportsAbs[T]]) -> Quantity[T]: ...
 
 
 class Unit(
