@@ -18,13 +18,11 @@ from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
     Self,
     SupportsAbs,
     SupportsComplex,
     SupportsFloat,
     SupportsInt,
-    TypeVar,
     overload,
 )
 
@@ -67,12 +65,6 @@ except ImportError:
     unp = np
     ufloat = Ufloat = None
     HAS_UNCERTAINTIES = False
-
-
-MagnitudeT = TypeVar("MagnitudeT", bound=Magnitude)
-ScalarT = TypeVar("ScalarT", bound=Scalar)
-
-T = TypeVar("T", bound=Magnitude)
 
 
 def ireduce_dimensions(f):
@@ -123,7 +115,7 @@ def method_wraps(numpy_func):
 # TODO: remove all nonmultiplicative remnants
 
 
-class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
+class PlainQuantity[MagnitudeT](PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -176,7 +168,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
     @overload
     def __new__(  # type: ignore[misc]
-        cls, value: Sequence[ScalarT], units: UnitLike | None = None
+        cls, value: Sequence[Scalar], units: UnitLike | None = None
     ) -> Self: ...
 
     @overload
@@ -418,7 +410,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
     def to_tuple(self) -> tuple[MagnitudeT, tuple[tuple[str, Scalar], ...]]:
         return self.m, tuple(self._units.items())
 
-    def compatible_units(self, *contexts):
+    def compatible_units(self, *contexts) -> frozenset[Unit]:
         if contexts:
             with self._REGISTRY.context(*contexts):
                 return self._REGISTRY.get_compatible_units(self._units)
@@ -1317,7 +1309,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             new_self = self.to_root_units()
             return other**new_self._magnitude
 
-    def __abs__(self: PlainQuantity[SupportsAbs[T]]) -> PlainQuantity[T]:
+    def __abs__[T: Magnitude](self: PlainQuantity[SupportsAbs[T]]) -> PlainQuantity[T]:
         cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
         return cls(abs(self._magnitude), self._units)
 
