@@ -14,7 +14,9 @@ need.
 
 from __future__ import annotations
 
-from typing import Generic
+from typing import TYPE_CHECKING, Generic
+
+from typing_extensions import override
 
 from . import facets, registry_helpers
 from .compat import TypeAlias
@@ -35,7 +37,10 @@ class Quantity(
     facets.NonMultiplicativeRegistry.Quantity[facets.MagnitudeT],
     facets.PlainRegistry.Quantity[facets.MagnitudeT],
 ):
-    pass
+    if TYPE_CHECKING:
+
+        @override
+        def __round__(self, ndigits: int | None = None) -> "Quantity[int]": ...
 
 
 class Unit(
