@@ -25,6 +25,7 @@ from typing import (
     SupportsInt,
     TypeVar,
     overload,
+    type_check_only,
 )
 
 from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
@@ -50,12 +51,21 @@ from . import qto
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
+    from typing import Protocol, TypeVar
+
     from ..context import Context
     from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
     if HAS_NUMPY:
         import numpy as np  # noqa
+
+    _AbsOutputT = TypeVar("_AbsOutputT", bound=Magnitude, covariant=True)
+
+    @type_check_only
+    class _CanAbs(Protocol[_AbsOutputT]):
+        def __abs__(self, /) -> _AbsOutputT: ...
+
 
 try:
     import uncertainties.unumpy as unp
@@ -1316,7 +1326,9 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             new_self = self.to_root_units()
             return other**new_self._magnitude
 
-    def __abs__(self) -> Self:
+    def __abs__(
+        self: PlainQuantity[_CanAbs[_AbsOutputT]],
+    ) -> PlainQuantity[_AbsOutputT]:
         return self.__class__(abs(self._magnitude), self._units)
 
     def __round__(self, ndigits: int | None = None) -> PlainQuantity[int]:

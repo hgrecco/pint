@@ -22,6 +22,9 @@ from . import facets, registry_helpers
 from .compat import TypeAlias
 from .util import logger, pi_theorem
 
+if TYPE_CHECKING:
+    from .facets.plain.quantity import _AbsOutputT, _CanAbs
+
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
 # but
@@ -40,7 +43,10 @@ class Quantity(
     if TYPE_CHECKING:
 
         @override
-        def __round__(self, ndigits: int | None = None) -> "Quantity[int]": ...
+        def __round__(self, ndigits: int | None = None) -> Quantity[int]: ...
+
+        @override
+        def __abs__(self: Quantity[_CanAbs[_AbsOutputT]]) -> Quantity[_AbsOutputT]: ...
 
 
 class Unit(
