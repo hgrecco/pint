@@ -538,7 +538,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
 
         return None
 
-    def to_root_units(self) -> PlainQuantity[MagnitudeT]:
+    def to_root_units(self) -> Self:
         """Return PlainQuantity rescaled to root units."""
 
         _, other = self._REGISTRY._get_root_units(self._units)
