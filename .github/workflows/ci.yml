@@ -17,21 +17,21 @@ jobs:
     strategy:
       matrix:
         environment:
-          - test-py311
           - test-py312
           - test-py313
+          - test-py314
         numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - environment: "test-py311" # Minimal versions
+          - environment: "test-py312" # Minimal versions
             numpy: "numpy>=2.0.0,<2.1.0"
             extras: matplotlib==3.5.3
-          - environment: "test-py311"
+          - environment: "test-py312"
             numpy: "numpy"
             uncertainties: "uncertainties"
             extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 scipy"
-          - environment: "test-py311"
+          - environment: "test-py312"
             numpy: "numpy>=2.0.0,<2.1.0"
             uncertainties: null
             extras: "babel==2.15 matplotlib==3.9.0"
@@ -77,10 +77,10 @@ jobs:
     strategy:
       matrix:
         environment:
-          - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
+          - test-py314
+        numpy: [ null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0" ]
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: prefix-dev/setup-pixi@v0.9.4
@@ -97,9 +97,9 @@ jobs:
     strategy:
       matrix:
         environment:
-          - test-py311
           - test-py312
           - test-py313
+          - test-py314
         numpy: [null, "numpy>=2.4.0"]
     steps:
       - uses: actions/checkout@v6.0.2
@@ -114,14 +114,14 @@ jobs:
 
   publish:
     if: github.ref_type == 'tag'
-    needs: [test-linux, test-windows, test-macos, lint]
+    needs: [ test-linux, test-windows, test-macos, lint ]
 
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/pint
     permissions:
-      id-token: write  # for trusted publising to PyPI
+      id-token: write # for trusted publishing to PyPI
 
     steps:
       - uses: actions/checkout@v6.0.2
