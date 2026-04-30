@@ -20,11 +20,11 @@ classifiers = [
   "Programming Language :: Python",
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development :: Libraries",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 keywords = ["physical", "quantities", "unit", "conversion", "science"]
 dependencies = [
   "platformdirs>=2.1.0",
@@ -139,7 +139,7 @@ docs = { features = [
   "dask",
   "xarray",
   "test",
-  "py311",
+  "py312",
 ] }
 # When pint[all] works in pixi, this will be easier.
 all = { features = [
@@ -156,15 +156,15 @@ all = { features = [
   "matplotlib",
 ], solve-group = "default" }
 
-test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
-test-py311-numpy = ["numpy", "test", "py311"]
+test-py314 = ["test", "py314"]
 test-py312-numpy = ["numpy", "test", "py312"]
 test-py313-numpy = ["numpy", "test", "py313"]
-test-py311-all = ["all", "test", "py311"]
+test-py314-numpy = ["numpy", "test", "py314"]
 test-py312-all = ["all", "test", "py312"]
 test-py313-all = ["all", "test", "py313"]
+test-py314-all = ["all", "test", "py314"]
 
 [tool.pixi.feature.dev.dependencies]
 tomlkit = "*"
@@ -209,18 +209,20 @@ doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/docte
 [tool.pixi.feature.docs.dependencies]
 pandoc = "*"
 
-[tool.pixi.feature.py311.dependencies]
-python = "3.11.*"
-
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
 
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
 
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
+
 [tool.pyright]
 include = ["pint"]
 exclude = ["pint/testsuite"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
 
 [tool.pyright.defineConstant]
 HAS_BABEL = true
