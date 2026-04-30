@@ -51,15 +51,12 @@ from . import qto
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
-    from typing import TypeVar
-
     from ..context import Context
     from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
     if HAS_NUMPY:
         import numpy as np  # noqa
-
 
 try:
     import uncertainties.unumpy as unp
