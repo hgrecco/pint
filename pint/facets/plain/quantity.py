@@ -410,7 +410,7 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
         return cls(a, units)
 
     @classmethod
-    def from_tuple(cls, tup) -> Self:
+    def from_tuple(cls, tup: tuple[MagnitudeT, Iterable[tuple[str, Scalar]]]) -> Self:
         for units_tup in tup[1]:
             cls._REGISTRY.get_name(units_tup[0])
         return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
@@ -1318,10 +1318,12 @@ class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
             return other**new_self._magnitude
 
     def __abs__(self: PlainQuantity[SupportsAbs[T]]) -> PlainQuantity[T]:
-        return self.__class__(abs(self._magnitude), self._units)
+        cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
+        return cls(abs(self._magnitude), self._units)
 
     def __round__(self, ndigits: int | None = None) -> PlainQuantity[int]:
-        return self.__class__(round(self._magnitude, ndigits), self._units)
+        cls: type[PlainQuantity[int]] = self.__class__  # type: ignore
+        return cls(round(self._magnitude, ndigits), self._units)
 
     def __pos__(self) -> Self:
         return self.__class__(operator.pos(self._magnitude), self._units)
