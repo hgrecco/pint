@@ -30,8 +30,7 @@ jobs:
           - environment: "test-py312"
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8
-              scipy"
+            extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 scipy pyyaml"
           - environment: "test-py312"
             numpy: "numpy>=2.0.0,<2.1.0"
             uncertainties: null
