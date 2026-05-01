@@ -49,16 +49,16 @@ jobs:
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
         run: |
-          pixi run -e ${{ matrix.environment }} pip debug
-          pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
+          pip debug
+          pip install "${{matrix.numpy}}"
 
       - name: Install uncertainties
         if: ${{ matrix.uncertainties != null }}
-        run: pixi run -e ${{ matrix.environment }} pip install "${{matrix.uncertainties}}"
+        run: pip install "${{matrix.uncertainties}}"
 
       - name: Install extras
         if: ${{ matrix.extras != null }}
-        run: pixi run -e ${{ matrix.environment }} pip install ${{matrix.extras}}
+        run: pip install ${{matrix.extras}}
 
       - name: Install locales
         if: ${{ matrix.extras != null }}
@@ -72,11 +72,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
-          pixi run -e ${{ matrix.environment }} pip install packaging
+          pip install packaging
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
-        run: pixi run -e ${{ matrix.environment }} pip install pytest-mpl
+        run: pip install pytest-mpl
       - run: pixi run --environment ${{ matrix.environment }} test
 
   test-windows:
