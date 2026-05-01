@@ -43,6 +43,7 @@ test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
 codspeed = ["pint[test-all]", "pytest-codspeed"]
 numpy = ["numpy >= 2.0.0"]
+optype = ["optype[numpy]"]
 uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel <= 2.8"]
 pandas = ["pint-pandas >= 0.3"]
@@ -52,7 +53,7 @@ dask = ["dask < 2025.3.0"]
 scipy = ["scipy"]
 matplotlib = ["matplotlib"]
 all = [
-  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
+  "pint[numpy,optype,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
 ]
 docs = [
   "sphinx>=6,<8.2",

@@ -14,7 +14,7 @@ need.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, SupportsAbs, TypeVar
+from typing import TYPE_CHECKING, Generic, SupportsAbs, TypeVar, overload
 
 from typing_extensions import override
 
@@ -23,6 +23,9 @@ from ._typing import Magnitude
 from .compat import TypeAlias
 from .util import logger, pi_theorem
 
+if TYPE_CHECKING:
+    import optype as opt
+
 T = TypeVar("T", bound=Magnitude)
 
 # To build the Quantity and Unit classes
@@ -30,20 +33,26 @@ T = TypeVar("T", bound=Magnitude)
 # but
 
 
-class Quantity(
-    Generic[facets.MagnitudeT],
-    facets.SystemRegistry.Quantity[facets.MagnitudeT],
-    facets.ContextRegistry.Quantity[facets.MagnitudeT],
-    facets.DaskRegistry.Quantity[facets.MagnitudeT],
-    facets.NumpyRegistry.Quantity[facets.MagnitudeT],
-    facets.MeasurementRegistry.Quantity[facets.MagnitudeT],
-    facets.NonMultiplicativeRegistry.Quantity[facets.MagnitudeT],
-    facets.PlainRegistry.Quantity[facets.MagnitudeT],
+class Quantity[MagnitudeT: Magnitude](
+    facets.SystemRegistry.Quantity[MagnitudeT],
+    facets.ContextRegistry.Quantity[MagnitudeT],
+    facets.DaskRegistry.Quantity[MagnitudeT],
+    facets.NumpyRegistry.Quantity[MagnitudeT],
+    facets.MeasurementRegistry.Quantity[MagnitudeT],
+    facets.NonMultiplicativeRegistry.Quantity[MagnitudeT],
+    facets.PlainRegistry.Quantity[MagnitudeT],
 ):
     if TYPE_CHECKING:
 
+        @overload
         @override
-        def __round__(self, ndigits: int | None = None) -> Quantity[int]: ...
+        def __round__[T: Magnitude](
+            self: Quantity[opt.CanRound1[T]], ndigits: None = None
+        ) -> Quantity[T]: ...
+        @overload
+        def __round__[T: Magnitude, N](
+            self: Quantity[opt.CanRound2[N, T]], ndigits: N
+        ) -> Quantity[T]: ...
 
         @override
         def __abs__(self: Quantity[SupportsAbs[T]]) -> Quantity[T]: ...
@@ -74,7 +83,9 @@ class GenericUnitRegistry(
     pass
 
 
-class UnitRegistry(GenericUnitRegistry[Quantity[facets.MagnitudeT], Unit]):
+class UnitRegistry[MagnitudeT: Magnitude](
+    GenericUnitRegistry[Quantity[MagnitudeT], Unit]
+):
     """The unit registry stores the definitions and relationships between units.
 
     Parameters

@@ -49,6 +49,8 @@ from . import qto
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
+    import optype as opt
+
     from ..context import Context
     from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
@@ -1309,13 +1311,25 @@ class PlainQuantity[MagnitudeT](PrettyIPython, SharedRegistryObject):
             new_self = self.to_root_units()
             return other**new_self._magnitude
 
-    def __abs__[T: Magnitude](self: PlainQuantity[SupportsAbs[T]]) -> PlainQuantity[T]:
+    def __abs__[T: Magnitude](self: PlainQuantity[opt.CanAbs[T]]) -> PlainQuantity[T]:
         cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
         return cls(abs(self._magnitude), self._units)
 
-    def __round__(self, ndigits: int | None = None) -> PlainQuantity[int]:
-        cls: type[PlainQuantity[int]] = self.__class__  # type: ignore
-        return cls(round(self._magnitude, ndigits), self._units)
+    @overload
+    def __round__[T: Magnitude](
+        self: PlainQuantity[opt.CanRound1[T]], ndigits: None = None
+    ) -> PlainQuantity[T]: ...
+    @overload
+    def __round__[T: Magnitude, N](
+        self: PlainQuantity[opt.CanRound2[N, T]], ndigits: N
+    ) -> PlainQuantity[T]: ...
+    def __round__[T: Magnitude, N](
+        self: PlainQuantity[opt.CanRound1[T]] | PlainQuantity[opt.CanRound2[N, T]],
+        ndigits: N | None = None,
+    ) -> PlainQuantity[T]:
+        cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
+        mag: opt.CanRound[N, T, T] = self._magnitude  # type: ignore
+        return cls(opt.do_round(mag, ndigits), self._units)
 
     def __pos__(self) -> Self:
         return self.__class__(operator.pos(self._magnitude), self._units)
