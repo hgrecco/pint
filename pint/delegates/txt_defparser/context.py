@@ -20,7 +20,6 @@ import numbers
 import re
 import typing as ty
 from dataclasses import dataclass
-from typing import Union
 
 import flexparser as fp
 

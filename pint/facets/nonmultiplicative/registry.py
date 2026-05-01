@@ -17,6 +17,7 @@ from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
 from . import objects
 from .definitions import OffsetConverter, ScaleConverter
 
+
 class GenericNonMultiplicativeRegistry(
     Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
 ):
