@@ -21,7 +21,7 @@ from .compat import TypeAlias
 from .util import logger, pi_theorem
 
 if TYPE_CHECKING:
-    from ._typing import Magnitude
+    from ._typing import Magnitude, Quantity as _Quantity, Unit as _Unit
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
@@ -52,15 +52,14 @@ class Unit(
     pass
 
 
-class GenericUnitRegistry(
-    Generic[facets.QuantityT, facets.UnitT],
-    facets.GenericSystemRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericContextRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericDaskRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericNumpyRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericMeasurementRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericNonMultiplicativeRegistry[facets.QuantityT, facets.UnitT],
-    facets.GenericPlainRegistry[facets.QuantityT, facets.UnitT],
+class GenericUnitRegistry[QuantityT: _Quantity, UnitT: _Unit](
+    facets.GenericSystemRegistry[QuantityT, UnitT],
+    facets.GenericContextRegistry[QuantityT, UnitT],
+    facets.GenericDaskRegistry[QuantityT, UnitT],
+    facets.GenericNumpyRegistry[QuantityT, UnitT],
+    facets.GenericMeasurementRegistry[QuantityT, UnitT],
+    facets.GenericNonMultiplicativeRegistry[QuantityT, UnitT],
+    facets.GenericPlainRegistry[QuantityT, UnitT],
 ):
     pass
 
@@ -185,7 +184,7 @@ class UnitRegistry[MagnitudeT: Magnitude](
     check = registry_helpers.check
 
 
-class LazyRegistry(Generic[facets.QuantityT, facets.UnitT]):
+class LazyRegistry[QuantityT: Quantity, UnitT: Unit]:
     def __init__(self, args=None, kwargs=None):
         self.__dict__["params"] = args or (), kwargs or {}
 

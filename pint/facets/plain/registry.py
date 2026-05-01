@@ -158,12 +158,7 @@ class RegistryMeta(type):
         return obj
 
 
-# Generic types used to mark types associated to Registries.
-QuantityT = TypeVar("QuantityT", bound=PlainQuantity)
-UnitT = TypeVar("UnitT", bound=PlainUnit)
-
-
-class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
+class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](metaclass=RegistryMeta):
     """Base class for all registries.
 
     Capabilities:

@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Generic
 
 from ... import errors
 from ...compat import TypeAlias
-from ..plain import QuantityT, UnitT
 
 if TYPE_CHECKING:
     from ..._typing import Quantity, Unit
@@ -29,8 +28,8 @@ from . import objects
 from .definitions import SystemDefinition
 
 
-class GenericSystemRegistry(
-    Generic[QuantityT, UnitT], GenericGroupRegistry[QuantityT, UnitT]
+class GenericSystemRegistry[QuantityT: Quantity, UnitT: Unit](
+    GenericGroupRegistry[QuantityT, UnitT]
 ):
     """Handle of Systems.
 
