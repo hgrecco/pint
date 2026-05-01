@@ -48,9 +48,7 @@ jobs:
 
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
-        run: |
-          pixi run -e ${{ matrix.environment }} pip debug
-          pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
+        run: pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
 
       - name: Install uncertainties
         if: ${{ matrix.uncertainties != null }}
