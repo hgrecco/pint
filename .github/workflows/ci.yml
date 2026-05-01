@@ -121,7 +121,7 @@ jobs:
       name: pypi
       url: https://pypi.org/p/pint
     permissions:
-      id-token: write # for trusted publishing to PyPI
+      id-token: write  # for trusted publishing to PyPI
 
     steps:
       - uses: actions/checkout@v6.0.2
