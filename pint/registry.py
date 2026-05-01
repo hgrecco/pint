@@ -14,14 +14,16 @@ need.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING
 
 from . import facets, registry_helpers
 from .compat import TypeAlias
 from .util import logger, pi_theorem
 
 if TYPE_CHECKING:
-    from ._typing import Magnitude, Quantity as _Quantity, Unit as _Unit
+    from ._typing import Magnitude
+    from ._typing import Quantity as _Quantity
+    from ._typing import Unit as _Unit
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases

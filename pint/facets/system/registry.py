@@ -9,7 +9,7 @@ pint.facets.systems.registry
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING
 
 from ... import errors
 from ...compat import TypeAlias

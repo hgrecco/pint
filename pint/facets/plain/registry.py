@@ -39,8 +39,6 @@ from tokenize import TokenInfo
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
-    TypeVar,
     Union,
 )
 
@@ -158,7 +156,9 @@ class RegistryMeta(type):
         return obj
 
 
-class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](metaclass=RegistryMeta):
+class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
+    metaclass=RegistryMeta
+):
     """Base class for all registries.
 
     Capabilities:

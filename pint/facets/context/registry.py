@@ -12,7 +12,7 @@ import functools
 from collections import ChainMap
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generic, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from ..._typing import FuncType, Magnitude
 from ...compat import TypeAlias
@@ -21,7 +21,6 @@ from ...util import UnitsContainer, find_connected_nodes, find_shortest_path, lo
 from ..plain import GenericPlainRegistry, UnitDefinition
 from . import objects
 from .definitions import ContextDefinition
-
 
 if TYPE_CHECKING:
     from ..._typing import Quantity, Unit

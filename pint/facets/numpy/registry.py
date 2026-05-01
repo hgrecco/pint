@@ -8,7 +8,7 @@ pint.facets.numpy.registry
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING
 
 from ...compat import TypeAlias
 from ..plain import GenericPlainRegistry
