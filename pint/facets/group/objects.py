@@ -9,13 +9,14 @@ pint.facets.group.objects
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Iterable
-from typing import TYPE_CHECKING, Any, Generic
+from typing import TYPE_CHECKING, Any
 
 from ...util import SharedRegistryObject, getattr_maybe_raise
-from ..plain import MagnitudeT, PlainQuantity, PlainUnit
+from ..plain import PlainQuantity, PlainUnit
 from .definitions import GroupDefinition
 
 if TYPE_CHECKING:
+    from ..._typing import Magnitude
     from ..plain import UnitDefinition
 
     DefineFunc = Callable[
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
     ]
 
 
-class GroupQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+class GroupQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     pass
 
 

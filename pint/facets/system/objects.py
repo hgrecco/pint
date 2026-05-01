@@ -11,9 +11,9 @@ from __future__ import annotations
 import numbers
 from collections.abc import Callable, Iterable
 from numbers import Number
-from typing import Any, Generic
+from typing import Any
 
-from ..._typing import UnitLike
+from ..._typing import Magnitude, UnitLike
 from ...babel_names import _babel_systems
 from ...compat import babel_parse
 from ...util import (
@@ -23,13 +23,12 @@ from ...util import (
     to_units_container,
 )
 from .. import group
-from ..plain import MagnitudeT
 from .definitions import SystemDefinition
 
 GetRootUnits = Callable[[UnitLike, bool], tuple[Number, UnitLike]]
 
 
-class SystemQuantity(Generic[MagnitudeT], group.GroupQuantity[MagnitudeT]):
+class SystemQuantity[MagnitudeT: Magnitude](group.GroupQuantity[MagnitudeT]):
     pass
 
 

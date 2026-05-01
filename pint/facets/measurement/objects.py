@@ -10,15 +10,18 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import Generic
+from typing import TYPE_CHECKING
 
 from ...compat import ufloat
-from ..plain import MagnitudeT, PlainQuantity, PlainUnit
+from ..plain import PlainQuantity, PlainUnit
+
+if TYPE_CHECKING:
+    from ..._typing import Magnitude
 
 MISSING = object()
 
 
-class MeasurementQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+class MeasurementQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     # Measurement support
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):
