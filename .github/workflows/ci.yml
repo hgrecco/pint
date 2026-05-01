@@ -40,6 +40,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: ${{ matrix.environment }}
+          activate-environment: true
           log-level: vvv
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
@@ -69,7 +70,7 @@ jobs:
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
-        run: pip install pytest-mpl jinja2
+        run: pip install pytest-mpl
       - run: pixi run --environment ${{ matrix.environment }} test
 
   test-windows:
