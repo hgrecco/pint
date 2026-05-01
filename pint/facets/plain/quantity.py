@@ -19,10 +19,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Self,
-    SupportsAbs,
-    SupportsComplex,
-    SupportsFloat,
-    SupportsInt,
     overload,
 )
 
@@ -117,7 +113,7 @@ def method_wraps(numpy_func):
 # TODO: remove all nonmultiplicative remnants
 
 
-class PlainQuantity[MagnitudeT](PrettyIPython, SharedRegistryObject):
+class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -587,17 +583,17 @@ class PlainQuantity[MagnitudeT](PrettyIPython, SharedRegistryObject):
     ito_unprefixed = qto.ito_unprefixed
 
     # Mathematical operations
-    def __int__(self: PlainQuantity[SupportsInt]) -> int:
+    def __int__(self: PlainQuantity[opt.CanInt]) -> int:
         if self.dimensionless:
             return int(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
 
-    def __float__(self: PlainQuantity[SupportsFloat]) -> float:
+    def __float__(self: PlainQuantity[opt.CanFloat]) -> float:
         if self.dimensionless:
             return float(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
 
-    def __complex__(self: PlainQuantity[SupportsComplex]) -> complex:
+    def __complex__(self: PlainQuantity[opt.CanComplex]) -> complex:
         if self.dimensionless:
             return complex(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
@@ -1332,10 +1328,12 @@ class PlainQuantity[MagnitudeT](PrettyIPython, SharedRegistryObject):
         return cls(opt.do_round(mag, ndigits), self._units)
 
     def __pos__(self) -> Self:
-        return self.__class__(operator.pos(self._magnitude), self._units)
+        mag: MagnitudeT = opt.do_pos(self._magnitude)  # type: ignore
+        return self.__class__(mag, self._units)
 
     def __neg__(self) -> Self:
-        return self.__class__(operator.neg(self._magnitude), self._units)
+        mag: MagnitudeT = opt.do_neg(self._magnitude)  # type: ignore
+        return self.__class__(mag, self._units)
 
     @check_implemented
     def __eq__(self, other):
