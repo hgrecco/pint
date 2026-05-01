@@ -22,7 +22,6 @@ from typing import (
     SupportsComplex,
     SupportsFloat,
     SupportsInt,
-    TypeVar,
     overload,
 )
 
@@ -65,11 +64,6 @@ except ImportError:
     unp = np
     ufloat = Ufloat = None
     HAS_UNCERTAINTIES = False
-
-
-ScalarT = TypeVar("ScalarT", bound=Scalar)
-
-T = TypeVar("T", bound=Magnitude)
 
 
 def ireduce_dimensions(f):
@@ -172,7 +166,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     def __new__(cls, value: str, units: UnitLike | None = None) -> Self: ...
 
     @overload
-    def __new__(  # type: ignore[misc]
+    def __new__[ScalarT: Scalar](  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
     ) -> Self: ...
 
