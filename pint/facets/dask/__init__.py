@@ -11,8 +11,7 @@ Adds pint the capability to interoperate with Dask
 from __future__ import annotations
 
 import functools
-
-from pint._typing import Magnitude, Unit
+from typing import TYPE_CHECKING
 
 from ...compat import TypeAlias, compute, dask_array, persist, visualize
 from ..plain import (
@@ -20,6 +19,9 @@ from ..plain import (
     PlainQuantity,
     PlainUnit,
 )
+
+if TYPE_CHECKING:
+    from ..._typing import Magnitude, Unit
 
 
 def check_dask_array(f):

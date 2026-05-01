@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     import optype as opt
 
     from ..context import Context
+    from ..system import System
     from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
@@ -538,7 +539,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
-    def ito_base_units(self, system=None) -> None:
+    def ito_base_units(self, system: str | System | None = None) -> None:
         """Return PlainQuantity rescaled to plain units.
 
         Parameters
@@ -555,7 +556,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return None
 
-    def to_base_units(self, system=None) -> Self:
+    def to_base_units(self, system: str | System | None = None) -> Self:
         """Return PlainQuantity rescaled to plain units.
 
         Parameters
