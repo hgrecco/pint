@@ -80,7 +80,6 @@ docs = [
   "numpy",
   "xarray",
   "dask[complete]<2025.3.0",
-  "optype[numpy]",
 ]
 
 [project.urls]
@@ -141,7 +140,7 @@ docs = { features = [
   "dask",
   "xarray",
   "test",
-  "py312",
+  "py311",
 ] }
 # When pint[all] works in pixi, this will be easier.
 all = { features = [
