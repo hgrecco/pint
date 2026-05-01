@@ -20,16 +20,10 @@ from typing import (
     Any,
     Literal,
     TypedDict,
-    TypeVar,
 )
 
 from ...compat import TypeAlias, babel_parse
 from ...util import UnitsContainer
-
-T = TypeVar("T")
-U = TypeVar("U")
-V = TypeVar("V")
-W = TypeVar("W")
 
 if TYPE_CHECKING:
     from ...compat import Locale, Number
@@ -54,7 +48,7 @@ class BabelKwds(TypedDict, total=False):
     locale: Locale | str | None
 
 
-def partition(
+def partition[T](
     predicate: Callable[[T], bool], iterable: Iterable[T]
 ) -> tuple[filterfalse[T], filter[T]]:
     """Partition entries into false entries and true entries.
@@ -139,13 +133,13 @@ def localize_unit_name(
     return f"{fallback_name or measurement_unit}"  # pragma: no cover
 
 
-def extract2(element: tuple[str, T, str]) -> tuple[str, T]:
+def extract2[T](element: tuple[str, T, str]) -> tuple[str, T]:
     """Extract display name and exponent from a tuple containing display name, exponent and unit name."""
 
     return element[:2]
 
 
-def to_name_exponent_name(element: tuple[str, T]) -> tuple[str, T, str]:
+def to_name_exponent_name[T](element: tuple[str, T]) -> tuple[str, T, str]:
     """Convert unit name and exponent to unit name as display name, exponent and unit name."""
 
     # TODO: write a generic typing
@@ -153,14 +147,14 @@ def to_name_exponent_name(element: tuple[str, T]) -> tuple[str, T, str]:
     return element + (element[0],)
 
 
-def to_symbol_exponent_name(
+def to_symbol_exponent_name[T](
     el: tuple[str, T], registry: UnitRegistry
 ) -> tuple[str, T, str]:
     """Convert unit name and exponent to unit symbol as display name, exponent and unit name."""
     return registry._get_symbol(el[0]), el[1], el[0]
 
 
-def localize_display_exponent_name(
+def localize_display_exponent_name[T](
     element: tuple[str, T, str],
     use_plural: bool,
     length: Literal["short", "long", "narrow"] = "long",
@@ -236,7 +230,7 @@ def sort_by_dimensionality(
     return sorted(items, key=sort_key)
 
 
-def prepare_compount_unit(
+def prepare_compount_unit[T](
     unit: PlainUnit | UnitsContainer | Iterable[tuple[str, T]],
     spec: str = "",
     sort_func: SortFunc | None = None,

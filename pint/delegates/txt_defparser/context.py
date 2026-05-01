@@ -28,11 +28,8 @@ from ...facets.context import definitions
 from ..base_defparser import ParserConfig, PintParsedStatement
 from . import block, common, plain
 
-# TODO check syntax
-T = ty.TypeVar("T", bound="Union[ForwardRelation, BidirectionalRelation]")
 
-
-def _from_string_and_context_sep(
+def _from_string_and_context_sep[T: ForwardRelation | BidirectionalRelation](
     cls: type[T], s: str, config: ParserConfig, separator: str
 ) -> T | None:
     if separator not in s:

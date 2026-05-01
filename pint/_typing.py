@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 from fractions import Fraction
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Protocol, Union
 
 from .compat import Never, TypeAlias
 
@@ -35,16 +35,12 @@ QuantityOrUnitLike = Union["Quantity", UnitLike]
 
 Shape = tuple[int, ...]
 
-S = TypeVar("S")
-
 FuncType = Callable[..., Any]
 
 
 # TODO: Improve or delete types
 QuantityArgument = Any
 
-T = TypeVar("T")
-
 
 class Handler(Protocol):
-    def __getitem__(self, item: type[T]) -> Callable[[T], None]: ...
+    def __getitem__[T](self, item: type[T]) -> Callable[[T], None]: ...

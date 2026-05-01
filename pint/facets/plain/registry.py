@@ -91,8 +91,6 @@ from .definitions import (
 )
 from .objects import PlainQuantity, PlainUnit
 
-T = TypeVar("T")
-
 _BLOCK_RE = re.compile(r"[ (]")
 
 
@@ -343,7 +341,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._build_cache(loaded_files)
         self._initialized = True
 
-    def _register_adder(
+    def _register_adder[T](
         self,
         definition_class: type[T],
         adder_func: Callable[
@@ -1084,7 +1082,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return not isinstance(obj2, (self.Quantity, self.Unit))
 
-    def convert(
+    def convert[T](
         self,
         value: T,
         src: QuantityOrUnitLike,
@@ -1120,7 +1118,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._convert(value, src, dst, inplace, **ctx_kwargs)
 
-    def _convert(
+    def _convert[T](
         self,
         value: T,
         src: UnitsContainer,

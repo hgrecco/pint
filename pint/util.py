@@ -28,7 +28,6 @@ from typing import (
     Any,
     ClassVar,
     TypeAlias,
-    TypeVar,
 )
 
 from . import pint_eval
@@ -47,15 +46,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
 
-T = TypeVar("T")
-TH = TypeVar("TH", bound=Hashable)
-TT = TypeVar("TT", bound=type)
-
 ItMatrix: TypeAlias = Iterable[Iterable[Scalar]]
 Matrix: TypeAlias = list[list[Scalar]]
 
 
-def _noop(x: T) -> T:
+def _noop[T](x: T) -> T:
     return x
 
 
@@ -303,7 +298,7 @@ def pi_theorem(quantities: dict[str, Any], registry: UnitRegistry | None = None)
     return results
 
 
-def solve_dependencies(
+def solve_dependencies[TH: Hashable](
     dependencies: dict[TH, set[TH]],
 ) -> Generator[set[TH]]:
     """Solve a dependency graph.
@@ -342,7 +337,7 @@ def solve_dependencies(
         yield t
 
 
-def find_shortest_path(graph: dict[TH, set[TH]], start: TH, end: TH):
+def find_shortest_path[TH: Hashable](graph: dict[TH, set[TH]], start: TH, end: TH):
     """Find shortest path between two nodes within a graph.
 
     Parameters
@@ -379,7 +374,7 @@ def find_shortest_path(graph: dict[TH, set[TH]], start: TH, end: TH):
     return None
 
 
-def find_connected_nodes(
+def find_connected_nodes[TH: Hashable](
     graph: dict[TH, set[TH]], start: TH, visited: set[TH] | None = None
 ) -> set[TH] | None:
     """Find all nodes connected to a start node within a graph.
@@ -1144,7 +1139,7 @@ def sized(y: Any) -> bool:
     return True
 
 
-def create_class_with_registry(
+def create_class_with_registry[TT: type](
     registry: UnitRegistry, base_class: type[TT]
 ) -> type[TT]:
     """Create new class inheriting from base_class and
