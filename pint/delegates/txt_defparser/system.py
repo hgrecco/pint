@@ -73,7 +73,7 @@ class SystemDefinition(
     block.DirectiveBlock[
         definitions.SystemDefinition,
         BeginSystem,
-        plain.CommentDefinition | BaseUnitRule,
+        ty.Union[plain.CommentDefinition, BaseUnitRule],
     ]
 ):
     """Definition of a System:

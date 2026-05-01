@@ -13,6 +13,7 @@ syntax.
 
 from __future__ import annotations
 
+import typing as ty
 from dataclasses import dataclass, fields
 
 import flexparser as fp
@@ -41,7 +42,7 @@ class DefaultsDefinition(
     block.DirectiveBlock[
         definitions.DefaultsDefinition,
         BeginDefaults,
-        plain.CommentDefinition | plain.Equality,
+        ty.Union[plain.CommentDefinition, plain.Equality],
     ]
 ):
     """Directive to store values.

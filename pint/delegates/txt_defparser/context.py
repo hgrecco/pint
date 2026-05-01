@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import numbers
 import re
+import typing as ty
 from dataclasses import dataclass
 
 import flexparser as fp
@@ -129,12 +130,12 @@ class ContextDefinition(
     block.DirectiveBlock[
         definitions.ContextDefinition,
         BeginContext,
-        (
-            plain.CommentDefinition
-            | BidirectionalRelation
-            | ForwardRelation
-            | plain.UnitDefinition
-        ),
+        ty.Union[
+            plain.CommentDefinition,
+            BidirectionalRelation,
+            ForwardRelation,
+            plain.UnitDefinition,
+        ],
     ]
 ):
     """Definition of a Context

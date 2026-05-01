@@ -12,19 +12,19 @@ from . import block, common, context, defaults, group, plain, system
 
 class PintRootBlock(
     fp.RootBlock[
-        (
-            plain.CommentDefinition
-            | common.ImportDefinition
-            | context.ContextDefinition
-            | defaults.DefaultsDefinition
-            | system.SystemDefinition
-            | group.GroupDefinition
-            | plain.AliasDefinition
-            | plain.DerivedDimensionDefinition
-            | plain.DimensionDefinition
-            | plain.PrefixDefinition
-            | plain.UnitDefinition
-        ),
+        ty.Union[
+            plain.CommentDefinition,
+            common.ImportDefinition,
+            context.ContextDefinition,
+            defaults.DefaultsDefinition,
+            system.SystemDefinition,
+            group.GroupDefinition,
+            plain.AliasDefinition,
+            plain.DerivedDimensionDefinition,
+            plain.DimensionDefinition,
+            plain.PrefixDefinition,
+            plain.UnitDefinition,
+        ],
         ParserConfig,
     ]
 ):
