@@ -12,15 +12,20 @@ import functools
 from collections import ChainMap
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from typing import Any, Generic
+from typing import Any, Generic, Protocol
 
-from ..._typing import F, Magnitude
+from ..._typing import FuncType, Magnitude
 from ...compat import TypeAlias
 from ...errors import UndefinedUnitError
 from ...util import UnitsContainer, find_connected_nodes, find_shortest_path, logger
 from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
 from . import objects
 from .definitions import ContextDefinition
+
+
+class _Decorator(Protocol):
+    def __call__[F: FuncType](self, f: F, /) -> F: ...
+
 
 # TODO: Put back annotation when possible
 # registry_cache: "RegistryCache"
@@ -316,7 +321,7 @@ class GenericContextRegistry(
             # the added contexts are removed from the active one.
             self.disable_contexts(len(names))
 
-    def with_context(self, name: str, **kwargs: Any) -> Callable[[F], F]:
+    def with_context(self, name: str, **kwargs: Any) -> _Decorator:
         """Decorator to wrap a function call in a Pint context.
 
         Use it to ensure that a certain context is active when

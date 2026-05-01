@@ -38,7 +38,6 @@ Shape = tuple[int, ...]
 S = TypeVar("S")
 
 FuncType = Callable[..., Any]
-F = TypeVar("F", bound=FuncType)
 
 
 # TODO: Improve or delete types
