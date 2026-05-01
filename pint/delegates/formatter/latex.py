@@ -353,7 +353,7 @@ class SIunitxFormatter(BaseFormatter):
         # the units are returned?
         return rf"\si[]{{{formatted}}}"
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",

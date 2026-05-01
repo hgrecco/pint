@@ -234,7 +234,7 @@ class CompactFormatter(BaseFormatter):
             parentheses_fmt=r"({})",
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
@@ -351,7 +351,7 @@ class PrettyFormatter(BaseFormatter):
             exp_call=pretty_fmt_exponent,
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
@@ -439,7 +439,7 @@ class RawFormatter(BaseFormatter):
             for k, v in itertools.chain(numerator, denominator)
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",

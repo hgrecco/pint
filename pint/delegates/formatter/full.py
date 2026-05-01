@@ -230,7 +230,7 @@ class FullFormatter(BaseFormatter):
             locale=locale or self.locale,
         )
 
-    def format_quantity_babel(
+    def format_quantity_babel[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
