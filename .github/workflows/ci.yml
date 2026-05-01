@@ -1,6 +1,6 @@
 name: Test and release when tagged
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   lint:
@@ -20,9 +20,9 @@ jobs:
           - test-py312
           - test-py313
           - test-py314
-        numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
-        uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
-        extras: [null]
+        numpy: [ null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0" ]
+        uncertainties: [ null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0" ]
+        extras: [ null ]
         include:
           - environment: "test-py312" # Minimal versions
             numpy: "numpy>=2.0.0,<2.1.0"
@@ -30,7 +30,8 @@ jobs:
           - environment: "test-py312"
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 scipy"
+            extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8
+              scipy"
           - environment: "test-py312"
             numpy: "numpy>=2.0.0,<2.1.0"
             uncertainties: null
@@ -69,7 +70,7 @@ jobs:
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
-        run: pip install pytest-mpl
+        run: pip install pytest-mpl jinja2
       - run: pixi run --environment ${{ matrix.environment }} test
 
   test-windows:
@@ -100,7 +101,7 @@ jobs:
           - test-py312
           - test-py313
           - test-py314
-        numpy: [null, "numpy>=2.4.0"]
+        numpy: [ null, "numpy>=2.4.0" ]
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: prefix-dev/setup-pixi@v0.9.4
