@@ -27,12 +27,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
+    Self,
     TypeAlias,
 )
 
 from . import pint_eval
 from ._typing import Scalar
-from .compat import NUMERIC_TYPES, Self
+from .compat import NUMERIC_TYPES
 from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
 
@@ -416,7 +417,7 @@ class udict(dict[str, Scalar]):
     def __missing__(self, key: str):
         return 0
 
-    def copy(self: Self) -> Self:
+    def copy(self) -> Self:
         return udict(self)
 
 
@@ -466,11 +467,11 @@ class UnitsContainer(Mapping[str, Scalar]):
                 d[key] = self._non_int_type(value)
         self._hash = None
 
-    def copy(self: Self) -> Self:
+    def copy(self) -> Self:
         """Create a copy of this UnitsContainer."""
         return self.__copy__()
 
-    def add(self: Self, key: str, value: Number) -> Self:
+    def add(self, key: str, value: Number) -> Self:
         """Create a new UnitsContainer adding value to
         the value existing for a given key.
 
@@ -495,7 +496,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def remove(self: Self, keys: Iterable[str]) -> Self:
+    def remove(self, keys: Iterable[str]) -> Self:
         """Create a new UnitsContainer purged from given entries.
 
         Parameters
@@ -514,7 +515,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def rename(self: Self, oldkey: str, newkey: str) -> Self:
+    def rename(self, oldkey: str, newkey: str) -> Self:
         """Create a new UnitsContainer in which an entry has been renamed.
 
         Parameters

@@ -20,9 +20,7 @@ from numbers import Number
 from typing import (
     Any,
     # Remove once all dependent packages change their imports.
-    Never,  # noqa
     NoReturn,
-    Self,  # noqa
     TypeAlias,  # noqa
     Unpack,  # noqa
 )

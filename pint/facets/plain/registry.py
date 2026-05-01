@@ -39,7 +39,6 @@ from tokenize import TokenInfo
 from typing import (
     TYPE_CHECKING,
     Any,
-    Union,
 )
 
 if TYPE_CHECKING:
@@ -47,6 +46,8 @@ if TYPE_CHECKING:
     from ..context import Context
 
     # from ..._typing import Quantity, Unit
+
+from typing import Self, TypeAlias
 
 import platformdirs
 
@@ -58,7 +59,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import Self, TypeAlias, deprecated
+from ...compat import deprecated
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -107,7 +108,7 @@ def pattern_to_regex(pattern: str | re.Pattern[str]) -> re.Pattern[str]:
     return re.compile(pattern)
 
 
-NON_INT_TYPE = type[Union[float, Decimal, Fraction]]
+NON_INT_TYPE = type[float | Decimal | Fraction]
 PreprocessorType = Callable[[str], str]
 
 
@@ -358,7 +359,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
-    def __deepcopy__(self: Self, memo) -> type[Self]:
+    def __deepcopy__(self, memo) -> type[Self]:
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
@@ -1439,7 +1440,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         return results
 
     def parse_expression(
-        self: Self,
+        self,
         input_string: str,
         case_sensitive: bool | None = None,
         **values: QuantityArgument,
