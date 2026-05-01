@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import functools
 from collections import ChainMap
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any, Generic, Protocol
 

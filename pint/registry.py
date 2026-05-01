@@ -14,26 +14,28 @@ need.
 
 from __future__ import annotations
 
-from typing import Generic
+from typing import TYPE_CHECKING, Generic
 
 from . import facets, registry_helpers
 from .compat import TypeAlias
 from .util import logger, pi_theorem
+
+if TYPE_CHECKING:
+    from ._typing import Magnitude
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
 # but
 
 
-class Quantity(
-    Generic[facets.MagnitudeT],
-    facets.SystemRegistry.Quantity[facets.MagnitudeT],
-    facets.ContextRegistry.Quantity[facets.MagnitudeT],
-    facets.DaskRegistry.Quantity[facets.MagnitudeT],
-    facets.NumpyRegistry.Quantity[facets.MagnitudeT],
-    facets.MeasurementRegistry.Quantity[facets.MagnitudeT],
-    facets.NonMultiplicativeRegistry.Quantity[facets.MagnitudeT],
-    facets.PlainRegistry.Quantity[facets.MagnitudeT],
+class Quantity[MagnitudeT: Magnitude](
+    facets.SystemRegistry.Quantity[MagnitudeT],
+    facets.ContextRegistry.Quantity[MagnitudeT],
+    facets.DaskRegistry.Quantity[MagnitudeT],
+    facets.NumpyRegistry.Quantity[MagnitudeT],
+    facets.MeasurementRegistry.Quantity[MagnitudeT],
+    facets.NonMultiplicativeRegistry.Quantity[MagnitudeT],
+    facets.PlainRegistry.Quantity[MagnitudeT],
 ):
     pass
 
@@ -63,7 +65,9 @@ class GenericUnitRegistry(
     pass
 
 
-class UnitRegistry(GenericUnitRegistry[Quantity[facets.MagnitudeT], Unit]):
+class UnitRegistry[MagnitudeT: Magnitude](
+    GenericUnitRegistry[Quantity[MagnitudeT], Unit]
+):
     """The unit registry stores the definitions and relationships between units.
 
     Parameters

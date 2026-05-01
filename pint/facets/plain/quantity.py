@@ -18,7 +18,6 @@ from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
     Self,
     SupportsComplex,
     SupportsFloat,
@@ -68,7 +67,6 @@ except ImportError:
     HAS_UNCERTAINTIES = False
 
 
-MagnitudeT = TypeVar("MagnitudeT", bound=Magnitude)
 ScalarT = TypeVar("ScalarT", bound=Scalar)
 
 T = TypeVar("T", bound=Magnitude)
@@ -122,7 +120,7 @@ def method_wraps(numpy_func):
 # TODO: remove all nonmultiplicative remnants
 
 
-class PlainQuantity(Generic[MagnitudeT], PrettyIPython, SharedRegistryObject):
+class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 

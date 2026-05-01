@@ -34,7 +34,6 @@ if TYPE_CHECKING:
     from ...compat import Locale
     from ...facets.measurement import Measurement
     from ...facets.plain import (
-        MagnitudeT,
         PlainQuantity,
         PlainUnit,
     )
@@ -139,7 +138,7 @@ class FullFormatter(BaseFormatter):
             unit, uspec, sort_func=sort_func, **babel_kwds
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
@@ -231,7 +230,7 @@ class FullFormatter(BaseFormatter):
             locale=locale or self.locale,
         )
 
-    def format_quantity_babel(
+    def format_quantity_babel[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
