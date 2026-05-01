@@ -1,6 +1,6 @@
 name: Test and release when tagged
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
   lint:
@@ -20,9 +20,9 @@ jobs:
           - test-py312
           - test-py313
           - test-py314
-        numpy: [ null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0" ]
-        uncertainties: [ null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0" ]
-        extras: [ null ]
+        numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
+        uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
+        extras: [null]
         include:
           - environment: "test-py312" # Minimal versions
             numpy: "numpy>=2.0.0,<2.1.0"
@@ -81,7 +81,7 @@ jobs:
           - test-py312
           - test-py313
           - test-py314
-        numpy: [ null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0" ]
+        numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: prefix-dev/setup-pixi@v0.9.4
@@ -101,7 +101,7 @@ jobs:
           - test-py312
           - test-py313
           - test-py314
-        numpy: [ null, "numpy>=2.4.0" ]
+        numpy: [null, "numpy>=2.4.0"]
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: prefix-dev/setup-pixi@v0.9.4
@@ -115,7 +115,7 @@ jobs:
 
   publish:
     if: github.ref_type == 'tag'
-    needs: [ test-linux, test-windows, test-macos, lint ]
+    needs: [test-linux, test-windows, test-macos, lint]
 
     runs-on: ubuntu-latest
     environment:
