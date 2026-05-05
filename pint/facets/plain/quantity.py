@@ -237,15 +237,18 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return inst
 
-    def __iter__(self: PlainQuantity[Iterable]) -> Iterator[PlainQuantity[Any]]:
+    def __iter__[T: Magnitude](
+        self: PlainQuantity[opt.CanIter[T]],
+    ) -> Iterator[PlainQuantity[T]]:
         # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
         # as one calls iter(self) without waiting for the first element to be drawn from
         # the iterator
-        it_magnitude = iter(self.magnitude)
+        it_magnitude: Iterator[T] = iter(self.magnitude)
 
         def it_outer():
             for element in it_magnitude:
-                yield self.__class__(element, self._units)
+                cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
+                yield cls(element, self._units)
 
         return it_outer()
 

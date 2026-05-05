@@ -14,6 +14,7 @@ need.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, overload, override
 
 from . import facets, registry_helpers
@@ -43,6 +44,11 @@ class Quantity[MagnitudeT: Magnitude](
     facets.PlainRegistry.Quantity[MagnitudeT],
 ):
     if TYPE_CHECKING:
+
+        @override
+        def __iter__[T: Magnitude](
+            self: Quantity[opt.CanIter[T]],
+        ) -> Iterator[Quantity[T]]: ...
 
         @overload
         def __round__[T: Magnitude](
