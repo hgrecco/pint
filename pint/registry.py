@@ -21,11 +21,11 @@ from .compat import TypeAlias
 from .util import logger, pi_theorem
 
 if TYPE_CHECKING:
+    import optype as opt
+
     from ._typing import Magnitude
     from ._typing import Quantity as _Quantity
     from ._typing import Unit as _Unit
-
-    import optype as opt
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
