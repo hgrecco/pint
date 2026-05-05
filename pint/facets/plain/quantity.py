@@ -1452,10 +1452,10 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     __ge__ = lambda self, other: self.compare(other, op=operator.ge)
     __gt__ = lambda self, other: self.compare(other, op=operator.gt)
 
-    def __bool__(self) -> bool:
+    def __bool__[B: bool](self: PlainQuantity[opt.CanBool[B]]) -> B:
         # Only cast when non-ambiguous (when multiplicative unit)
         if self._is_multiplicative:
-            return bool(self._magnitude)
+            return bool(self._magnitude)  # type: ignore
         else:
             raise ValueError(
                 "Boolean value of PlainQuantity with offset unit is ambiguous."
@@ -1463,11 +1463,40 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
     __nonzero__ = __bool__
 
-    def tolist(self):
+    @overload
+    def tolist[T: opt.numpy.Array0D | np.number](
+        self: PlainQuantity[T],
+    ) -> PlainQuantity[T]: ...
+    @overload
+    def tolist[X: np.number](
+        self: PlainQuantity[opt.numpy.Array1D[X]],
+    ) -> list[PlainQuantity[X]]: ...
+    @overload
+    def tolist[X: np.number](
+        self: PlainQuantity[opt.numpy.Array2D[X]],
+    ) -> list[list[PlainQuantity[X]]]: ...
+    @overload
+    def tolist[X: np.number](
+        self: PlainQuantity[opt.numpy.Array3D[X]],
+    ) -> list[list[list[PlainQuantity[X]]]]: ...
+    @overload
+    def tolist[X: np.number](
+        self: PlainQuantity[
+            opt.numpy.Array[tuple[int, int, int, int, *tuple[int, ...]], X]
+        ],
+    ) -> list[list[list[list[Any]]]]: ...
+    def tolist[T: opt.numpy.Array | np.number](
+        self: PlainQuantity[T],
+    ) -> PlainQuantity[T] | list[Any]:
         units = self._units
 
         try:
             values = self._magnitude.tolist()
+        except AttributeError:
+            raise AttributeError(
+                f"Magnitude '{type(self._magnitude).__name__}' does not support tolist."
+            )
+        else:
             if not isinstance(values, list):
                 return self.__class__(values, units)
 
@@ -1475,12 +1504,8 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
                 self.__class__(value, units).tolist()
                 if isinstance(value, list)
                 else self.__class__(value, units)
-                for value in self._magnitude.tolist()
+                for value in values
             ]
-        except AttributeError:
-            raise AttributeError(
-                f"Magnitude '{type(self._magnitude).__name__}' does not support tolist."
-            )
 
     def _get_unit_definition(self, unit: str) -> UnitDefinition:
         try:

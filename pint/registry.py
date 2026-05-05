@@ -14,13 +14,14 @@ need.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, override
+from typing import TYPE_CHECKING, Any, overload, override
 
 from . import facets, registry_helpers
 from .compat import TypeAlias
 from .util import logger, pi_theorem
 
 if TYPE_CHECKING:
+    import numpy as np
     import optype as opt
 
     from ._typing import Magnitude
@@ -44,7 +45,6 @@ class Quantity[MagnitudeT: Magnitude](
     if TYPE_CHECKING:
 
         @overload
-        @override
         def __round__[T: Magnitude](
             self: Quantity[opt.CanRound1[T]], ndigits: None = None
         ) -> Quantity[T]: ...
@@ -55,6 +55,29 @@ class Quantity[MagnitudeT: Magnitude](
 
         @override
         def __abs__[T: Magnitude](self: Quantity[opt.CanAbs[T]]) -> Quantity[T]: ...
+
+        @overload
+        def tolist[T: opt.numpy.Array0D | np.number](
+            self: Quantity[T],
+        ) -> Quantity[T]: ...
+        @overload
+        def tolist[X: np.number](
+            self: Quantity[opt.numpy.Array1D[X]],
+        ) -> list[Quantity[X]]: ...
+        @overload
+        def tolist[X: np.number](
+            self: Quantity[opt.numpy.Array2D[X]],
+        ) -> list[list[Quantity[X]]]: ...
+        @overload
+        def tolist[X: np.number](
+            self: Quantity[opt.numpy.Array3D[X]],
+        ) -> list[list[list[Quantity[X]]]]: ...
+        @overload
+        def tolist[X: np.number](
+            self: Quantity[
+                opt.numpy.Array[tuple[int, int, int, int, *tuple[int, ...]], X]
+            ],
+        ) -> list[list[list[list[Any]]]]: ...
 
 
 class Unit(
