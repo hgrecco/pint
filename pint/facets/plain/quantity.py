@@ -55,6 +55,13 @@ if TYPE_CHECKING:
     if HAS_NUMPY:
         import numpy as np  # noqa
 
+    do_round = opt.do_round
+    do_pos = opt.do_pos
+else:
+    do_round = round
+    do_pos = operator.pos
+    do_neg = operator.neg
+
 try:
     import uncertainties.unumpy as unp
     from uncertainties import ufloat
@@ -1326,14 +1333,14 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     ) -> PlainQuantity[T]:
         cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
         mag: opt.CanRound[N, T, T] = self._magnitude  # type: ignore
-        return cls(opt.do_round(mag, ndigits), self._units)
+        return cls(do_round(mag, ndigits), self._units)
 
     def __pos__(self) -> Self:
-        mag: MagnitudeT = opt.do_pos(self._magnitude)  # type: ignore
+        mag: MagnitudeT = do_pos(self._magnitude)  # type: ignore
         return self.__class__(mag, self._units)
 
     def __neg__(self) -> Self:
-        mag: MagnitudeT = opt.do_neg(self._magnitude)  # type: ignore
+        mag: MagnitudeT = do_neg(self._magnitude)  # type: ignore
         return self.__class__(mag, self._units)
 
     @check_implemented
