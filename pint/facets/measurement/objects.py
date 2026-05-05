@@ -10,13 +10,10 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import TYPE_CHECKING
 
+from ..._typing import Magnitude
 from ...compat import ufloat
 from ..plain import PlainQuantity, PlainUnit
-
-if TYPE_CHECKING:
-    from ..._typing import Magnitude
 
 MISSING = object()
 

@@ -8,12 +8,8 @@ pint.facets.nonmultiplicative.objects
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
+from ..._typing import Magnitude
 from ..plain import PlainQuantity, PlainUnit
-
-if TYPE_CHECKING:
-    from ..._typing import Magnitude
 
 
 class NonMultiplicativeQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):

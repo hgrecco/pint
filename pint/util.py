@@ -27,13 +27,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
+    Self,
     TypeAlias,
-    TypeVar,
 )
 
 from . import pint_eval
 from ._typing import Scalar
-from .compat import NUMERIC_TYPES, Self
+from .compat import NUMERIC_TYPES
 from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
 
@@ -47,15 +47,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
 
-T = TypeVar("T")
-TH = TypeVar("TH", bound=Hashable)
-TT = TypeVar("TT", bound=type)
-
 ItMatrix: TypeAlias = Iterable[Iterable[Scalar]]
 Matrix: TypeAlias = list[list[Scalar]]
 
 
-def _noop(x: T) -> T:
+def _noop[T](x: T) -> T:
     return x
 
 
@@ -303,7 +299,7 @@ def pi_theorem(quantities: dict[str, Any], registry: UnitRegistry | None = None)
     return results
 
 
-def solve_dependencies(
+def solve_dependencies[TH: Hashable](
     dependencies: dict[TH, set[TH]],
 ) -> Generator[set[TH]]:
     """Solve a dependency graph.
@@ -342,7 +338,7 @@ def solve_dependencies(
         yield t
 
 
-def find_shortest_path(graph: dict[TH, set[TH]], start: TH, end: TH):
+def find_shortest_path[TH: Hashable](graph: dict[TH, set[TH]], start: TH, end: TH):
     """Find shortest path between two nodes within a graph.
 
     Parameters
@@ -379,7 +375,7 @@ def find_shortest_path(graph: dict[TH, set[TH]], start: TH, end: TH):
     return None
 
 
-def find_connected_nodes(
+def find_connected_nodes[TH: Hashable](
     graph: dict[TH, set[TH]], start: TH, visited: set[TH] | None = None
 ) -> set[TH] | None:
     """Find all nodes connected to a start node within a graph.
@@ -421,7 +417,7 @@ class udict(dict[str, Scalar]):
     def __missing__(self, key: str):
         return 0
 
-    def copy(self: Self) -> Self:
+    def copy(self) -> Self:
         return udict(self)
 
 
@@ -471,11 +467,11 @@ class UnitsContainer(Mapping[str, Scalar]):
                 d[key] = self._non_int_type(value)
         self._hash = None
 
-    def copy(self: Self) -> Self:
+    def copy(self) -> Self:
         """Create a copy of this UnitsContainer."""
         return self.__copy__()
 
-    def add(self: Self, key: str, value: Number) -> Self:
+    def add(self, key: str, value: Number) -> Self:
         """Create a new UnitsContainer adding value to
         the value existing for a given key.
 
@@ -500,7 +496,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def remove(self: Self, keys: Iterable[str]) -> Self:
+    def remove(self, keys: Iterable[str]) -> Self:
         """Create a new UnitsContainer purged from given entries.
 
         Parameters
@@ -519,7 +515,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def rename(self: Self, oldkey: str, newkey: str) -> Self:
+    def rename(self, oldkey: str, newkey: str) -> Self:
         """Create a new UnitsContainer in which an entry has been renamed.
 
         Parameters
@@ -1144,7 +1140,7 @@ def sized(y: Any) -> bool:
     return True
 
 
-def create_class_with_registry(
+def create_class_with_registry[TT: type](
     registry: UnitRegistry, base_class: type[TT]
 ) -> type[TT]:
     """Create new class inheriting from base_class and

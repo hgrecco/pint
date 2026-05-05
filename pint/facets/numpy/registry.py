@@ -8,16 +8,19 @@ pint.facets.numpy.registry
 
 from __future__ import annotations
 
-from typing import Generic
+from typing import TYPE_CHECKING
 
 from ...compat import TypeAlias
-from ..plain import GenericPlainRegistry, QuantityT, UnitT
+from ..plain import GenericPlainRegistry
 from .quantity import NumpyQuantity
 from .unit import NumpyUnit
 
+if TYPE_CHECKING:
+    from ..._typing import Quantity, Unit
 
-class GenericNumpyRegistry(
-    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+
+class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
+    GenericPlainRegistry[QuantityT, UnitT]
 ):
     pass
 

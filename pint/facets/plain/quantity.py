@@ -166,8 +166,8 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     def __new__(cls, value: str, units: UnitLike | None = None) -> Self: ...
 
     @overload
-    def __new__(  # type: ignore[misc]
-        cls, value: Sequence[Scalar], units: UnitLike | None = None
+    def __new__[ScalarT: Scalar](  # type: ignore[misc]
+        cls, value: Sequence[ScalarT], units: UnitLike | None = None
     ) -> Self: ...
 
     @overload

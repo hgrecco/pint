@@ -39,9 +39,6 @@ from tokenize import TokenInfo
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
-    TypeVar,
-    Union,
 )
 
 if TYPE_CHECKING:
@@ -49,6 +46,8 @@ if TYPE_CHECKING:
     from ..context import Context
 
     # from ..._typing import Quantity, Unit
+
+from typing import Self, TypeAlias
 
 import platformdirs
 
@@ -60,7 +59,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import Self, TypeAlias, deprecated
+from ...compat import deprecated
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -91,8 +90,6 @@ from .definitions import (
 )
 from .objects import PlainQuantity, PlainUnit
 
-T = TypeVar("T")
-
 _BLOCK_RE = re.compile(r"[ (]")
 
 
@@ -111,7 +108,7 @@ def pattern_to_regex(pattern: str | re.Pattern[str]) -> re.Pattern[str]:
     return re.compile(pattern)
 
 
-NON_INT_TYPE = type[Union[float, Decimal, Fraction]]
+NON_INT_TYPE = type[float | Decimal | Fraction]
 PreprocessorType = Callable[[str], str]
 
 
@@ -160,12 +157,9 @@ class RegistryMeta(type):
         return obj
 
 
-# Generic types used to mark types associated to Registries.
-QuantityT = TypeVar("QuantityT", bound=PlainQuantity)
-UnitT = TypeVar("UnitT", bound=PlainUnit)
-
-
-class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
+class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
+    metaclass=RegistryMeta
+):
     """Base class for all registries.
 
     Capabilities:
@@ -343,7 +337,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._build_cache(loaded_files)
         self._initialized = True
 
-    def _register_adder(
+    def _register_adder[T](
         self,
         definition_class: type[T],
         adder_func: Callable[
@@ -365,7 +359,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
-    def __deepcopy__(self: Self, memo) -> type[Self]:
+    def __deepcopy__(self, memo) -> type[Self]:
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
@@ -1084,7 +1078,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return not isinstance(obj2, (self.Quantity, self.Unit))
 
-    def convert(
+    def convert[T](
         self,
         value: T,
         src: QuantityOrUnitLike,
@@ -1120,7 +1114,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._convert(value, src, dst, inplace, **ctx_kwargs)
 
-    def _convert(
+    def _convert[T](
         self,
         value: T,
         src: UnitsContainer,
@@ -1446,7 +1440,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         return results
 
     def parse_expression(
-        self: Self,
+        self,
         input_string: str,
         case_sensitive: bool | None = None,
         **values: QuantityArgument,

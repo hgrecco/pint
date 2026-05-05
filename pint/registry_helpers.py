@@ -14,17 +14,15 @@ import functools
 from collections.abc import Callable, Iterable
 from inspect import Parameter, signature
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
-from ._typing import F
+from ._typing import FuncType
 from .errors import DimensionalityError
 from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
     from ._typing import Quantity, Unit
     from .registry import UnitRegistry
-
-T = TypeVar("T")
 
 
 def _replace_units(original_units, values_by_name):
@@ -314,7 +312,7 @@ def wraps(
     return decorator
 
 
-def check(
+def check[F: FuncType](
     ureg: UnitRegistry, *args: str | UnitsContainer | Unit | None
 ) -> Callable[[F], F]:
     """Decorator to for quantity type checking for function inputs.

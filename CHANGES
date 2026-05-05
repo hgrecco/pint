@@ -6,6 +6,7 @@ Pint Changelog
 
 - Add `system` parameter to `to_base_units` and `ito_base_units` to allow converting to the base units of a specific unit system (#2297)
 - Add beats per minute (`beats_per_minute`, `bpm`) (#2286)
+- Drop support for Python 3.11 in favour of Python 3.14 (#2304)
 - Bump minimum numpy version to 2.0.0
 - Fix `Unit.__eq__` when comparing with strings using unit aliases (e.g. `Unit('metre') == 'meter'`) (#634)
 - Fix regression when using magnitude format specs in string formats (#2291)
