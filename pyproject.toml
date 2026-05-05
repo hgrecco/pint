@@ -80,6 +80,7 @@ docs = [
   "numpy",
   "xarray",
   "dask[complete]<2025.3.0",
+  "optype[numpy]",
 ]
 
 [project.urls]

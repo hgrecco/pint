@@ -11,11 +11,7 @@ from __future__ import annotations
 import numbers
 from collections.abc import Callable, Iterable
 from numbers import Number
-<<<<<<< HEAD
-from typing import Any
-=======
 from typing import Any, Self
->>>>>>> origin/master
 
 from ..._typing import Magnitude, UnitLike
 from ...babel_names import _babel_systems

@@ -11,12 +11,11 @@ if TYPE_CHECKING:
     from .util import UnitsContainer
 
 
-type _BuiltinScalar = complex | float | int | Decimal | Fraction
-
 HAS_NUMPY = False
 if TYPE_CHECKING:
     from .compat import HAS_NUMPY
 
+type _BuiltinScalar = complex | float | int | Decimal | Fraction
 if HAS_NUMPY:
     from .compat import np
 

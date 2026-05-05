@@ -14,10 +14,9 @@ need.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, SupportsAbs, overload, override
+from typing import TYPE_CHECKING, overload, override
 
 from . import facets, registry_helpers
-from ._typing import Magnitude
 from .compat import TypeAlias
 from .util import logger, pi_theorem
 
@@ -55,7 +54,7 @@ class Quantity[MagnitudeT: Magnitude](
         ) -> Quantity[T]: ...
 
         @override
-        def __abs__[T: Magnitude](self: Quantity[SupportsAbs[T]]) -> Quantity[T]: ...
+        def __abs__[T: Magnitude](self: Quantity[opt.CanAbs[T]]) -> Quantity[T]: ...
 
 
 class Unit(

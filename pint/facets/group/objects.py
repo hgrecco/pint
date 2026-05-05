@@ -17,7 +17,6 @@ from ..plain import PlainQuantity, PlainUnit
 from .definitions import GroupDefinition
 
 if TYPE_CHECKING:
-    from ..._typing import Magnitude
     from ..plain import UnitDefinition
 
     DefineFunc = Callable[
