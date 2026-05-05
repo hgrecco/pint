@@ -155,7 +155,15 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     def force_ndarray_like(self) -> bool:
         return self._REGISTRY.force_ndarray_like
 
-    def __reduce__(self) -> tuple[type, Magnitude, UnitsContainer]:
+    def __reduce__(
+        self,
+    ) -> tuple[
+        Callable[
+            [type[PlainQuantity[MagnitudeT]], MagnitudeT, UnitsContainer],
+            PlainQuantity[MagnitudeT],
+        ],
+        tuple[type[PlainQuantity[MagnitudeT]], MagnitudeT, UnitsContainer],
+    ]:
         """Allow pickling quantities. Since UnitRegistries are not pickled, upon
         unpickling the new object is always attached to the application registry.
         """
