@@ -7,13 +7,23 @@ import os
 import pathlib
 import unittest
 import warnings
+from typing import TYPE_CHECKING, Any
 
 from pint import UnitRegistry
 from pint.testsuite.helpers import PintOutputChecker
 
+if TYPE_CHECKING:
+    from pint import Quantity, Unit
+
 
 class QuantityTestCase:
     kwargs = {}
+
+    # NOTE: These type annotations are technically lies,
+    #   but the intention is to support type-checking tests.
+    ureg: UnitRegistry
+    Q_: type[Quantity[Any]]
+    U_: type[Unit]
 
     @classmethod
     def setup_class(cls):
@@ -23,9 +33,9 @@ class QuantityTestCase:
 
     @classmethod
     def teardown_class(cls):
-        cls.ureg = None
-        cls.Q_ = None
-        cls.U_ = None
+        cls.ureg = None  # type: ignore
+        cls.Q_ = None  # type: ignore
+        cls.U_ = None  # type: ignore
 
 
 @contextlib.contextmanager

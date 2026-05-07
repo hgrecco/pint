@@ -15,10 +15,9 @@ need.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, overload, override
+from typing import TYPE_CHECKING, Any, TypeAlias, overload, override
 
 from . import facets, registry_helpers
-from .compat import TypeAlias
 from .util import logger, pi_theorem
 
 if TYPE_CHECKING:
