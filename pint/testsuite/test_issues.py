@@ -1951,3 +1951,15 @@ def test_issue1887_ndarray_to_latex_template_and_spec():
     expected = r"\begin{pmatrix}1.00 & 2.50\end{pmatrix}"
     assert ndarray_to_latex(arr, ".2f") == expected
     assert ndarray_to_latex(arr, "{:.2f}") == expected
+
+
+def test_issue800():
+    ureg = UnitRegistry()
+    assert ureg.parse_expression(
+        "Constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    assert ureg.parse_expression(
+        "constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_expression("Constant", constant=95)
