@@ -1393,6 +1393,13 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             elif token_text in values:
                 return self.Quantity(values[token_text])
             else:
+                case_insensitive = case_sensitive is False or (
+                    case_sensitive is None and not self.case_sensitive
+                )
+                if case_insensitive:
+                    for name, value in values.items():
+                        if name.lower() == token_text.lower():
+                            return self.Quantity(value)
                 return self.Quantity(
                     1,
                     self.UnitsContainer(

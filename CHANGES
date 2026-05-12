@@ -42,6 +42,8 @@ Pint Changelog
 - `Quantity` now converts  `datetime.timedelta` objects to seconds or specified units when
   initializing a `Quantity` with a `datetime.timedelta` value.  (#1978)
 - Prefer the Greek mu `μ` (U+03BC) over the micro sign `µ` (U+00B5) as the default symbol for the `micro-` prefix and `micron`, matching the Unicode standard's recommendation (#2177)
+- Updated repr for various objects so that eval(repr(...))) works (#1495)
+- Fix `parse_expression` not matching passed values case insensitively when `case_sensitive=False` (#800)
 
 0.25.3 (2026-03-19)
 -------------------
