@@ -1977,3 +1977,15 @@ def test_issue2535(func_registry):
 def test_issue2543_dot_multiplication(expr, expected):
     ureg = UnitRegistry()
     assert ureg.parse_units(expr) == ureg.parse_units(expected)
+
+
+def test_issue800():
+    ureg = UnitRegistry()
+    assert ureg.parse_expression(
+        "Constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    assert ureg.parse_expression(
+        "constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_expression("Constant", constant=95)
