@@ -1827,3 +1827,15 @@ def test_issue1814_unknown_operator_raises(expr):
     ureg = UnitRegistry()
     with pytest.raises(DefinitionSyntaxError):
         ureg.Quantity(expr)
+
+
+def test_issue800():
+    ureg = UnitRegistry()
+    assert ureg.parse_expression(
+        "Constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    assert ureg.parse_expression(
+        "constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_expression("Constant", constant=95)
