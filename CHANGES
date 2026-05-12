@@ -23,6 +23,7 @@ Pint Changelog
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
 - Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
+- Fix `parse_expression` not matching passed values case insensitively when `case_sensitive=False` (#800)
 
 
 0.26.1 (2026-09-10)

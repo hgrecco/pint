@@ -1769,3 +1769,15 @@ def test_issue2397_fathom_is_exact_international_yards(sess_registry):
     assert (1 * ureg.survey_fathom).to(ureg.survey_foot).magnitude == 6
     assert (1 * ureg.cables_length).to(ureg.foot).magnitude == 720
     assert (1 * ureg.survey_cables_length).to(ureg.survey_foot).magnitude == 720
+
+
+def test_issue800():
+    ureg = UnitRegistry()
+    assert ureg.parse_expression(
+        "Constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    assert ureg.parse_expression(
+        "constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_expression("Constant", constant=95)
