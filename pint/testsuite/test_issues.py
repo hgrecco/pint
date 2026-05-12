@@ -1758,3 +1758,15 @@ def test_negative_magnitude_pretty_exponent_leaves_arrays_alone():
         formatted = f"{ureg.Quantity(np.array(values), 'meter'):P}"
         assert "×10" not in formatted
         assert formatted == f"{ureg.Quantity(np.array(values), 'meter'):}"
+
+
+def test_issue800():
+    ureg = UnitRegistry()
+    assert ureg.parse_expression(
+        "Constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    assert ureg.parse_expression(
+        "constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_expression("Constant", constant=95)
