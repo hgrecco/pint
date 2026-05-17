@@ -19,8 +19,10 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: typecheck
-      - run: pixi run --environment typecheck typecheck
+      - uses: jakebailey/pyright-action@v2
         continue-on-error: true
+        with:
+          version: PATH
 
   test-linux:
     runs-on: ubuntu-latest
