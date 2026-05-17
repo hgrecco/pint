@@ -66,10 +66,12 @@ class TestQuantity(QuantityTestCase):
 
         assert self.Q_("4.2×10⁻¹² ft/s") == self.Q_(4.2e-12, "foot/second")
 
-    def test_round(self):
-        x = self.Q_(1.1, "kg")
-        assert isinstance(round(x).magnitude, int)
-        assert isinstance(round(x, 0).magnitude, float)
+    def test_round(self) -> None:
+        x: Q_[float] = self.Q_(1.1, "kg")
+        round1 = assert_type(round(x), "Q_[int]")
+        round2 = assert_type(round(x, 0), "Q_[float]")
+        assert isinstance(round1.magnitude, int)
+        assert isinstance(round2.magnitude, float)
 
     def test_quantity_with_quantity(self):
         x = self.Q_(4.2, "m")

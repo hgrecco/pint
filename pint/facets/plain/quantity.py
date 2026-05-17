@@ -46,6 +46,7 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     import optype as opt
+    from optype import do_neg, do_pos, do_round
 
     from ..context import Context
     from ..system import System
@@ -55,8 +56,6 @@ if TYPE_CHECKING:
     if HAS_NUMPY:
         import numpy as np  # noqa
 
-    do_round = opt.do_round
-    do_pos = opt.do_pos
 else:
     do_round = round
     do_pos = operator.pos
