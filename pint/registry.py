@@ -15,7 +15,7 @@ need.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, TypeAlias, overload, override
+from typing import TYPE_CHECKING, Any, Self, TypeAlias, overload, override
 
 from . import facets, registry_helpers
 from .util import logger, pi_theorem
@@ -114,7 +114,16 @@ class Unit(
     facets.NonMultiplicativeRegistry.Unit,
     facets.PlainRegistry.Unit,
 ):
-    pass
+    if TYPE_CHECKING:
+
+        @overload
+        def __mul__(self, other: Self) -> Self: ...
+        @overload
+        def __mul__[T: Magnitude](self, other: T) -> Quantity[T]: ...
+        @overload
+        def __mul__(self, other: str) -> Quantity[Any]: ...
+
+        __rmul__ = __mul__
 
 
 class GenericUnitRegistry[QuantityT: _Quantity, UnitT: _Unit](
