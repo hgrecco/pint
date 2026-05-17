@@ -21,6 +21,8 @@ from . import facets, registry_helpers
 from .util import logger, pi_theorem
 
 if TYPE_CHECKING:
+    import datetime
+
     import numpy as np
     import optype as opt
 
@@ -83,6 +85,24 @@ class Quantity[MagnitudeT: Magnitude](
                 opt.numpy.Array[tuple[int, int, int, int, *tuple[int, ...]], X]
             ],
         ) -> list[list[list[list[Any]]]]: ...
+
+        @overload
+        def __iadd__[T: int | float](
+            self: Quantity[T], other: datetime.datetime
+        ) -> datetime.timedelta: ...
+        @overload
+        def __iadd__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanIAdd[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+
+        @overload
+        def __isub__[T: int | float](
+            self: Quantity[T], other: datetime.datetime
+        ) -> datetime.timedelta: ...
+        @overload
+        def __isub__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanISub[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
 
 
 class Unit(

@@ -19,6 +19,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Self,
+    cast,
     overload,
 )
 
@@ -169,7 +170,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         from pint import _unpickle_quantity
 
         # Note: type(self) would be a mistake as subclasses built by
-        # dinamically can't be pickled
+        # dynamically can't be pickled
         # TODO: Check if this is still the case.
         return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
@@ -868,28 +869,35 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, units)
 
     @overload
-    def __iadd__(self, other: datetime.datetime) -> datetime.timedelta:  # type: ignore[misc]
-        ...
-
+    def __iadd__[T: int | float](
+        self: PlainQuantity[T], other: datetime.datetime
+    ) -> datetime.timedelta: ...
     @overload
-    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
-
+    def __iadd__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIAdd[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):
-            return self.to_timedelta() + other
+            return cast("PlainQuantity[int | float]", self).to_timedelta() + other
         elif is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.iadd)
-
         return self._add_sub(other, operator.add)
 
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
-            return self.to_timedelta() + other
-
+            return cast("PlainQuantity[int | float]", self).to_timedelta() + other
         return self._add_sub(other, operator.add)
 
     __radd__ = __add__
 
+    @overload
+    def __isub__[T: int | float](
+        self: PlainQuantity[T], other: datetime.datetime
+    ) -> datetime.timedelta: ...
+    @overload
+    def __isub__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanISub[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
     def __isub__(self, other):
         if is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.isub)
@@ -1554,7 +1562,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     def _ok_for_muldiv(self, no_offset_units=None) -> bool:
         return True
 
-    def to_timedelta(self: PlainQuantity[MagnitudeT]) -> datetime.timedelta:
+    def to_timedelta[T: int | float](self: PlainQuantity[T]) -> datetime.timedelta:
         return datetime.timedelta(microseconds=self.to("microseconds").magnitude)
 
     # We put this last to avoid overriding UnitsContainer
