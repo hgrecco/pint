@@ -7,13 +7,10 @@ import os
 import pathlib
 import unittest
 import warnings
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 
 from pint import UnitRegistry
 from pint.testsuite.helpers import PintOutputChecker
-
-if TYPE_CHECKING:
-    from pint import Quantity, Unit
 
 
 class QuantityTestCase:
@@ -24,20 +21,22 @@ class QuantityTestCase:
     ureg: UnitRegistry
 
     if TYPE_CHECKING:
-        Q_: TypeAlias = Quantity
-        U_: TypeAlias = Unit
+        from pint import Quantity as Q_
+        from pint import Unit as U_
 
     @classmethod
-    def setup_class(cls):
+    def setup_class(cls) -> None:
+        assert not TYPE_CHECKING
         cls.ureg = UnitRegistry(**cls.kwargs)
-        cls.Q_ = cls.ureg.Quantity  # type: ignore
-        cls.U_ = cls.ureg.Unit  # type: ignore
+        cls.Q_ = cls.ureg.Quantity
+        cls.U_ = cls.ureg.Unit
 
     @classmethod
-    def teardown_class(cls):
-        cls.ureg = None  # type: ignore
-        cls.Q_ = None  # type: ignore
-        cls.U_ = None  # type: ignore
+    def teardown_class(cls) -> None:
+        assert not TYPE_CHECKING
+        cls.ureg = None
+        cls.Q_ = None
+        cls.U_ = None
 
 
 @contextlib.contextmanager

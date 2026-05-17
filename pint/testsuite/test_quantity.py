@@ -7,6 +7,7 @@ import math
 import operator as op
 import pickle
 import warnings
+from typing import TYPE_CHECKING, assert_type
 from unittest.mock import patch
 
 import pytest
@@ -21,6 +22,9 @@ from pint.compat import np
 from pint.errors import UndefinedBehavior
 from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
+
+if TYPE_CHECKING:
+    from pint import Quantity as Q_
 
 
 class FakeWrapper:
@@ -1139,8 +1143,9 @@ class TestQuantityBasicMath(QuantityTestCase):
         self._test_numeric(np.ones((1, 3)), self._test_inplace)
 
     def test_quantity_abs_round(self):
-        x = self.Q_(-4.2, "meter")
-        y = self.Q_(4.2, "meter")
+        x: Q_[float] = self.Q_(-4.2, "meter")
+        y: Q_[float] = self.Q_(4.2, "meter")
+        c: Q_[complex] = self.Q_(3 + 2j, "meter")
 
         for fun in (abs, round, op.pos, op.neg):
             zx = self.Q_(fun(x.magnitude), "meter")
@@ -1151,6 +1156,15 @@ class TestQuantityBasicMath(QuantityTestCase):
             assert ry == zy, f"while testing {fun}"
             assert rx is not zx, f"while testing {fun}"
             assert ry is not zy, f"while testing {fun}"
+
+        # type checking test:
+        assert_type(abs(x), Q_[float])
+        assert_type(abs(c), Q_[float])
+        assert_type(round(x), Q_[int])
+        assert_type(+x, Q_[float])
+        assert_type(+c, Q_[complex])
+        assert_type(-x, Q_[float])
+        assert_type(-c, Q_[complex])
 
     def test_quantity_float_complex(self):
         x = self.Q_(-4.2, None)
