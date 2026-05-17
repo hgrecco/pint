@@ -126,9 +126,9 @@ pint = { path = ".", editable = true }
 dev = { features = ["numpy", "dev", "py313"], solve-group = "default" }
 lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
-typecheck = { features = ["typecheck", "numpy"], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
+typecheck = { features = ["typecheck", "test-all"], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
 docs = { features = [
