@@ -19,6 +19,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: typecheck
+          activate-environment: true
       - uses: jakebailey/pyright-action@v2
         continue-on-error: true
         with:
