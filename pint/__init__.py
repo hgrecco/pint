@@ -14,7 +14,7 @@ and conversions from and to different units.
 from __future__ import annotations
 
 from importlib.metadata import version
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
 
 from .delegates.formatter._format_helpers import formatter
 from .errors import (  # noqa: F401
@@ -33,7 +33,10 @@ from .util import logger, pi_theorem  # noqa: F401
 
 # Default Quantity, Unit and Measurement are the ones
 # build in the default registry.
-Quantity: TypeAlias = UnitRegistry.Quantity
+if TYPE_CHECKING:
+    from .registry import Quantity
+else:
+    Quantity: TypeAlias = UnitRegistry.Quantity
 Unit: TypeAlias = UnitRegistry.Unit
 Measurement: TypeAlias = UnitRegistry.Measurement
 Context: TypeAlias = UnitRegistry.Context
