@@ -1158,13 +1158,13 @@ class TestQuantityBasicMath(QuantityTestCase):
             assert ry is not zy, f"while testing {fun}"
 
         # type checking test:
-        assert_type(abs(x), Q_[float])
-        assert_type(abs(c), Q_[float])
-        assert_type(round(x), Q_[int])
-        assert_type(+x, Q_[float])
-        assert_type(+c, Q_[complex])
-        assert_type(-x, Q_[float])
-        assert_type(-c, Q_[complex])
+        assert_type(abs(x), "Q_[float]")
+        assert_type(abs(c), "Q_[float]")
+        assert_type(round(x), "Q_[int]")
+        assert_type(+x, "Q_[float]")
+        assert_type(+c, "Q_[complex]")
+        assert_type(-x, "Q_[float]")
+        assert_type(-c, "Q_[complex]")
 
     def test_quantity_float_complex(self):
         x = self.Q_(-4.2, None)
