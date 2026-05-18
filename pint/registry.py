@@ -12,7 +12,7 @@ need.
 :license: BSD, see LICENSE for more details.
 """
 # pyright: reportNoOverloadImplementation=none
-# pyright: reportInvalidTypeArguments=information
+# pyright: reportInvalidTypeArguments=warning
 
 from __future__ import annotations
 
@@ -168,6 +168,48 @@ class Quantity[MagnitudeT: Magnitude](
         def __imul__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanIMul[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
+
+        @overload
+        def __mul__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanMul[T, U]], other: Quantity[T]
+        ) -> Quantity[U]: ...
+        @overload
+        def __mul__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanMul[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __mul__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRMul[MagnitudeT, U]],
+        ) -> Quantity[U]: ...
+        @overload
+        def __mul__[U: Magnitude](
+            self,
+            other: opt.CanRMul[MagnitudeT, U],
+        ) -> Quantity[U]: ...
+
+        __rmul__ = __mul__
+
+        @overload
+        def __matmul__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanMatmul[T, U]], other: Quantity[T]
+        ) -> Quantity[U]: ...
+        @overload
+        def __matmul__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanMatmul[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __matmul__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRMatmul[MagnitudeT, U]],
+        ) -> Quantity[U]: ...
+        @overload
+        def __matmul__[U: Magnitude](
+            self,
+            other: opt.CanRMatmul[MagnitudeT, U],
+        ) -> Quantity[U]: ...
+
+        __rmatmul__ = __matmul__
 
         @override
         def __itruediv__[T: Magnitude, U: Magnitude](

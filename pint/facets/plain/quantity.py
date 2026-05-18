@@ -5,6 +5,7 @@ pint.facets.plain.quantity
 :copyright: 2022 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+# pyright: reportInvalidTypeArguments=warning
 
 from __future__ import annotations
 
@@ -243,7 +244,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
         # as one calls iter(self) without waiting for the first element to be drawn from
         # the iterator
-        it_magnitude: Iterator[T] = iter(self.magnitude)
+        it_magnitude: Iterator[T] = iter(self.magnitude)  # type: ignore
 
         def it_outer():
             for element in it_magnitude:
@@ -411,10 +412,11 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         if units is None:
             if len_seq:
                 units = seq[0].u
+                dtype = np.dtype(seq[0].m)
             else:
                 raise ValueError("Cannot determine units from empty sequence!")
 
-        a = np.empty(len_seq)
+        a: opt.numpy.Array1D[T] = np.empty(len_seq, dtype=dtype)
 
         for i, seq_i in enumerate(seq):
             a[i] = seq_i.m_as(units)
@@ -1131,12 +1133,48 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return self._mul_div(other, operator.mul)
 
-    def __mul__(self, other):
+    @overload
+    def __mul__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanMul[T, U]], other: PlainQuantity[T]
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __mul__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanMul[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __mul__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRMul[MagnitudeT, U]],
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __mul__[U: Magnitude](
+        self,
+        other: opt.CanRMul[MagnitudeT, U],
+    ) -> PlainQuantity[U]: ...
+    def __mul__(self: PlainQuantity, other) -> PlainQuantity:
         return self._mul_div(other, operator.mul)
 
     __rmul__ = __mul__
 
-    def __matmul__(self, other):
+    @overload
+    def __matmul__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanMatmul[T, U]], other: PlainQuantity[T]
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __matmul__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanMatmul[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __matmul__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRMatmul[MagnitudeT, U]],
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __matmul__[U: Magnitude](
+        self,
+        other: opt.CanRMatmul[MagnitudeT, U],
+    ) -> PlainQuantity[U]: ...
+    def __matmul__(self: PlainQuantity, other) -> PlainQuantity:
         return np.matmul(self, other)
 
     __rmatmul__ = __matmul__
