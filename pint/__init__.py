@@ -34,13 +34,17 @@ from .util import logger, pi_theorem  # noqa: F401
 # Default Quantity, Unit and Measurement are the ones
 # build in the default registry.
 if TYPE_CHECKING:
+    # This is a workaround for https://github.com/hgrecco/pint/issues/2306
+    from .facets.context.objects import Context
+    from .facets.group.objects import Group
+    from .facets.measurement.objects import Measurement
     from .registry import Quantity
 else:
     Quantity: TypeAlias = UnitRegistry.Quantity
+    Measurement: TypeAlias = UnitRegistry.Measurement
+    Context: TypeAlias = UnitRegistry.Context
+    Group: TypeAlias = UnitRegistry.Group
 Unit: TypeAlias = UnitRegistry.Unit
-Measurement: TypeAlias = UnitRegistry.Measurement
-Context: TypeAlias = UnitRegistry.Context
-Group: TypeAlias = UnitRegistry.Group
 
 try:  # pragma: no cover
     __version__ = version("pint")
@@ -130,6 +134,7 @@ __all__ = (
     "Quantity",
     "Unit",
     "UnitRegistry",
+    "Group",
     "PintError",
     "DefinitionSyntaxError",
     "LogarithmicUnitCalculusError",
