@@ -204,7 +204,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         if units is None and isinstance(value, str):
             ureg = SharedRegistryObject.__new__(cls)._REGISTRY
-            inst = ureg.parse_expression(value)
+            inst = cast(Self, ureg.parse_expression(value))
             return cls.__new__(cls, inst)
 
         if units is None and isinstance(value, cls):
@@ -905,8 +905,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         return self._add_sub(other, operator.add)
 
     @overload
-    def __add__[T: int | float](
-        self: PlainQuantity[T], other: datetime.datetime
+    def __add__(
+        self: PlainQuantity[int | float], other: datetime.datetime
     ) -> datetime.timedelta: ...
     @overload
     def __add__[T: Magnitude, U: Magnitude](
@@ -926,8 +926,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     __radd__ = __add__
 
     @overload
-    def __isub__[T: int | float](
-        self: PlainQuantity[T], other: datetime.datetime
+    def __isub__(
+        self: PlainQuantity[int | float], other: datetime.datetime
     ) -> datetime.timedelta: ...
     @overload
     def __isub__[T: Magnitude, U: Magnitude](
@@ -961,8 +961,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         return self._add_sub(other, operator.sub)
 
     @overload
-    def __rsub__[T: int | float](
-        self: PlainQuantity[T],
+    def __rsub__(
+        self: PlainQuantity[int | float],
         other: datetime.datetime,
     ) -> datetime.datetime: ...
     @overload
@@ -1684,7 +1684,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def _ok_for_muldiv(self, no_offset_units=None) -> bool:
         return True
 
-    def to_timedelta[T: int | float](self: PlainQuantity[T]) -> datetime.timedelta:
+    def to_timedelta(self: PlainQuantity[int | float]) -> datetime.timedelta:
         return datetime.timedelta(microseconds=self.to("microseconds").magnitude)
 
     # We put this last to avoid overriding UnitsContainer
