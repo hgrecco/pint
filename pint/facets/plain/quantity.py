@@ -1119,7 +1119,9 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return self.__class__(magnitude, units)
 
-    def __imul__(self, other):
+    def __imul__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIMul[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.imul)
 
@@ -1143,7 +1145,9 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             b = t(b)
         return operator.truediv(a, b)
 
-    def __itruediv__(self, other):
+    def __itruediv__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanITruediv[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.itruediv)
 
@@ -1176,7 +1180,9 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     __rdiv__ = __rtruediv__
     __idiv__ = __itruediv__
 
-    def __ifloordiv__(self, other):
+    def __ifloordiv__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIFloordiv[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if self._check(other):
             self._magnitude //= other.to(self._units)._magnitude
         elif self.dimensionless:
@@ -1207,7 +1213,9 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, self.UnitsContainer({}))
 
     @check_implemented
-    def __imod__(self, other):
+    def __imod__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIMod[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if not self._check(other):
             other = self.__class__(other, self.UnitsContainer({}))
         self._magnitude %= other.to(self._units)._magnitude
@@ -1254,7 +1262,9 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return (self.__class__(q, self.UnitsContainer({})), self.__class__(r, unit))
 
     @check_implemented
-    def __ipow__(self, other):
+    def __ipow__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIPow[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if not is_duck_array_type(type(self._magnitude)):
             return self.__pow__(other)
 

@@ -146,6 +146,31 @@ class Quantity[MagnitudeT: Magnitude](
             other: opt.CanRSub[MagnitudeT, U],
         ) -> Quantity[U]: ...
 
+        @override
+        def __imul__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanIMul[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+
+        @override
+        def __itruediv__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanITruediv[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+
+        @override
+        def __ifloordiv__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanIFloordiv[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+
+        @override
+        def __imod__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanIMod[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+
+        @override
+        def __ipow__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanIPow[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+
 
 class Unit(
     facets.SystemRegistry.Unit,
