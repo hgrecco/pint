@@ -359,11 +359,16 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
 
     @classmethod
-    def from_list[T: np.number](
-        cls: type[PlainQuantity[opt.numpy.Array1D[T]]],
-        quant_list: list[PlainQuantity[T]],
+    def from_list[T: np.floating | np.integer](
+        cls: type[PlainQuantity[opt.numpy.Array1D[np.float64]]],
+        quant_list: list[
+            PlainQuantity[np.floating]
+            | PlainQuantity[np.integer]
+            | PlainQuantity[float]
+            | PlainQuantity[int]
+        ],
         units: UnitLike | None = None,
-    ) -> PlainQuantity[opt.numpy.Array1D[T]]:
+    ) -> PlainQuantity[opt.numpy.Array1D[np.float64]]:
         """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
@@ -385,11 +390,16 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return cls.from_sequence(quant_list, units=units)
 
     @classmethod
-    def from_sequence[T: np.number](
-        cls: type[PlainQuantity[opt.numpy.Array1D[T]]],
-        seq: Sequence[PlainQuantity[T]],
+    def from_sequence(
+        cls: type[PlainQuantity[opt.numpy.Array1D[np.float64]]],
+        seq: Sequence[
+            PlainQuantity[np.floating]
+            | PlainQuantity[np.integer]
+            | PlainQuantity[float]
+            | PlainQuantity[int]
+        ],
         units: UnitLike | None = None,
-    ) -> PlainQuantity[opt.numpy.Array1D[T]]:
+    ) -> PlainQuantity[opt.numpy.Array1D[np.float64]]:
         """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
 
@@ -412,11 +422,10 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         if units is None:
             if len_seq:
                 units = seq[0].u
-                dtype = np.dtype(type(seq[0].m))
             else:
                 raise ValueError("Cannot determine units from empty sequence!")
 
-        a: opt.numpy.Array1D[T] = np.empty(len_seq, dtype=dtype)
+        a = np.empty(len_seq)
 
         for i, seq_i in enumerate(seq):
             a[i] = seq_i.m_as(units)

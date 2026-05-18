@@ -67,19 +67,29 @@ class Quantity[MagnitudeT: Magnitude](
 
         @classmethod
         @override
-        def from_list[T: np.number](
-            cls: type[Quantity[opt.numpy.Array1D[T]]],
-            quant_list: list[Quantity[T]],
+        def from_list[T: np.floating | np.integer](
+            cls: type[Quantity[opt.numpy.Array1D[np.float64]]],
+            quant_list: list[
+                Quantity[np.floating]
+                | Quantity[np.integer]
+                | Quantity[float]
+                | Quantity[int]
+            ],
             units: UnitLike | None = None,
-        ) -> Quantity[opt.numpy.Array1D[T]]: ...
+        ) -> Quantity[opt.numpy.Array1D[np.float64]]: ...
 
         @classmethod
         @override
         def from_sequence[T: np.number](
-            cls: type[Quantity[opt.numpy.Array1D[T]]],
-            quant_list: Sequence[Quantity[T]],
+            cls: type[Quantity[opt.numpy.Array1D[np.float64]]],
+            seq: Sequence[
+                Quantity[np.floating]
+                | Quantity[np.integer]
+                | Quantity[float]
+                | Quantity[int]
+            ],
             units: UnitLike | None = None,
-        ) -> Quantity[opt.numpy.Array1D[T]]: ...
+        ) -> Quantity[opt.numpy.Array1D[np.float64]]: ...
 
         @overload
         def tolist[T: opt.numpy.Array0D | np.number](
