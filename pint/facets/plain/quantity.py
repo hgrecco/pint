@@ -358,9 +358,11 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
 
     @classmethod
-    def from_list(
-        cls, quant_list: list[PlainQuantity[MagnitudeT]], units=None
-    ) -> PlainQuantity[MagnitudeT]:
+    def from_list[T: np.number](
+        cls: type[PlainQuantity[opt.numpy.Array1D[T]]],
+        quant_list: list[PlainQuantity[T]],
+        units: UnitLike | None = None,
+    ) -> PlainQuantity[opt.numpy.Array1D[T]]:
         """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
@@ -382,9 +384,11 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return cls.from_sequence(quant_list, units=units)
 
     @classmethod
-    def from_sequence(
-        cls, seq: Sequence[PlainQuantity[MagnitudeT]], units=None
-    ) -> PlainQuantity[MagnitudeT]:
+    def from_sequence[T: np.number](
+        cls: type[PlainQuantity[opt.numpy.Array1D[T]]],
+        seq: Sequence[PlainQuantity[T]],
+        units: UnitLike | None = None,
+    ) -> PlainQuantity[opt.numpy.Array1D[T]]:
         """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
 

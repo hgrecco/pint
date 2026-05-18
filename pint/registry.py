@@ -16,7 +16,7 @@ need.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, Any, Self, TypeAlias, overload, override
 
 from . import facets, registry_helpers
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     import numpy as np
     import optype as opt
 
-    from ._typing import Magnitude
+    from ._typing import Magnitude, UnitLike
     from ._typing import Quantity as _Quantity
     from ._typing import Unit as _Unit
 
@@ -64,6 +64,22 @@ class Quantity[MagnitudeT: Magnitude](
 
         @override
         def __abs__[T: Magnitude](self: Quantity[opt.CanAbs[T]]) -> Quantity[T]: ...
+
+        @classmethod
+        @override
+        def from_list[T: np.number](
+            cls: type[Quantity[opt.numpy.Array1D[T]]],
+            quant_list: list[Quantity[T]],
+            units: UnitLike | None = None,
+        ) -> Quantity[opt.numpy.Array1D[T]]: ...
+
+        @classmethod
+        @override
+        def from_sequence[T: np.number](
+            cls: type[Quantity[opt.numpy.Array1D[T]]],
+            quant_list: Sequence[Quantity[T]],
+            units: UnitLike | None = None,
+        ) -> Quantity[opt.numpy.Array1D[T]]: ...
 
         @overload
         def tolist[T: opt.numpy.Array0D | np.number](
