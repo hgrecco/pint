@@ -1137,7 +1137,25 @@ class TestQuantityBasicMath(QuantityTestCase):
         # self._test_quantity_ifloordiv(unit, ifunc)
 
     def test_float(self):
+        # Runtime tests
         self._test_numeric(1.0, self._test_not_inplace)
+        # Typing tests (TODO: expand these with more cases)
+        if TYPE_CHECKING:
+            x: Q_[float] = self.Q_(1.0)
+            y: Q_[float] = self.Q_(1.0)
+            assert_type(x + y, "Q_[float]")
+            assert_type(x - y, "Q_[float]")
+            assert_type(x * y, "Q_[float]")
+            assert_type(x / y, "Q_[float]")
+            assert_type(x // y, "Q_[float]")
+            assert_type(x % y, "Q_[float]")
+            assert_type(divmod(x, y), "tuple[Q_[float], Q_[float]]")
+            x += y
+            x -= y
+            x *= y
+            x /= y
+            x //= y
+            x %= y
 
     def test_fraction(self):
         import fractions

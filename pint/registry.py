@@ -104,6 +104,48 @@ class Quantity[MagnitudeT: Magnitude](
             self: Quantity[opt.CanISub[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
 
+        @overload
+        def __add__[T: int | float](
+            self: Quantity[T], other: datetime.datetime
+        ) -> datetime.timedelta: ...
+        @overload
+        def __add__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanAdd[T, U]], other: Quantity[T]
+        ) -> Quantity[U]: ...
+        @overload
+        def __add__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanAdd[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __add__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRAdd[MagnitudeT, U]],
+        ) -> Quantity[U]: ...
+        @overload
+        def __add__[U: Magnitude](
+            self,
+            other: opt.CanRAdd[MagnitudeT, U],
+        ) -> Quantity[U]: ...
+
+        @overload
+        def __sub__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanSub[T, U]], other: Quantity[T]
+        ) -> Quantity[U]: ...
+        @overload
+        def __sub__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanSub[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __sub__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRSub[MagnitudeT, U]],
+        ) -> Quantity[U]: ...
+        @overload
+        def __sub__[U: Magnitude](
+            self,
+            other: opt.CanRSub[MagnitudeT, U],
+        ) -> Quantity[U]: ...
+
 
 class Unit(
     facets.SystemRegistry.Unit,

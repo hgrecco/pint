@@ -883,6 +883,28 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             return self._iadd_sub(other, operator.iadd)
         return self._add_sub(other, operator.add)
 
+    @overload
+    def __add__[T: int | float](
+        self: PlainQuantity[T], other: datetime.datetime
+    ) -> datetime.timedelta: ...
+    @overload
+    def __add__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanAdd[T, U]], other: PlainQuantity[T]
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __add__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanAdd[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __add__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRAdd[MagnitudeT, U]],
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __add__[U: Magnitude](
+        self,
+        other: opt.CanRAdd[MagnitudeT, U],
+    ) -> PlainQuantity[U]: ...
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
             return cast("PlainQuantity[int | float]", self).to_timedelta() + other
@@ -904,9 +926,50 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return self._add_sub(other, operator.sub)
 
+    @overload
+    def __sub__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanSub[T, U]], other: PlainQuantity[T]
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __sub__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanSub[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __sub__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRSub[MagnitudeT, U]],
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __sub__[U: Magnitude](
+        self,
+        other: opt.CanRSub[MagnitudeT, U],
+    ) -> PlainQuantity[U]: ...
     def __sub__(self, other):
         return self._add_sub(other, operator.sub)
 
+    @overload
+    def __rsub__[R](
+        self: PlainQuantity[opt.CanRSub[datetime.datetime, R]],
+        other: PlainQuantity[datetime.datetime],
+    ) -> R: ...
+    @overload
+    def __rsub__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanRSub[T, U]], other: PlainQuantity[T]
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __rsub__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanRSub[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __rsub__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanSub[MagnitudeT, U]],
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __rsub__[U: Magnitude](
+        self,
+        other: opt.CanSub[MagnitudeT, U],
+    ) -> PlainQuantity[U]: ...
     def __rsub__(self, other):
         if isinstance(other, datetime.datetime):
             return other - self.to_timedelta()
