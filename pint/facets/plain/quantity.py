@@ -412,7 +412,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         if units is None:
             if len_seq:
                 units = seq[0].u
-                dtype = np.dtype(seq[0].m)
+                dtype = np.dtype(type(seq[0].m))
             else:
                 raise ValueError("Cannot determine units from empty sequence!")
 
