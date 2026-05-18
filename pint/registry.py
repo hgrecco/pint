@@ -56,8 +56,8 @@ class Quantity[MagnitudeT: Magnitude](
             self: Quantity[opt.CanRound1[T]], ndigits: None = None
         ) -> Quantity[T]: ...
         @overload
-        def __round__[T: Magnitude, N](
-            self: Quantity[opt.CanRound2[N, T]], ndigits: N
+        def __round__[T: Magnitude](
+            self: Quantity[opt.CanRound2[int, T]], ndigits: int
         ) -> Quantity[T]: ...
 
         @override

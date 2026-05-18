@@ -1342,15 +1342,15 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         self: PlainQuantity[opt.CanRound1[T]], ndigits: None = None
     ) -> PlainQuantity[T]: ...
     @overload
-    def __round__[T: Magnitude, N](
-        self: PlainQuantity[opt.CanRound2[N, T]], ndigits: N
+    def __round__[T: Magnitude](
+        self: PlainQuantity[opt.CanRound2[int, T]], ndigits: int
     ) -> PlainQuantity[T]: ...
-    def __round__[T: Magnitude, N](
-        self: PlainQuantity[opt.CanRound1[T]] | PlainQuantity[opt.CanRound2[N, T]],
-        ndigits: N | None = None,
+    def __round__[T: Magnitude, int](
+        self: PlainQuantity[opt.CanRound1[T]] | PlainQuantity[opt.CanRound2[int, T]],
+        ndigits: int | None = None,
     ) -> PlainQuantity[T]:
         cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
-        mag: opt.CanRound[N, T, T] = self._magnitude  # type: ignore
+        mag: opt.CanRound[int, T, T] = self._magnitude  # type: ignore
         return cls(do_round(mag, ndigits), self._units)
 
     def __pos__(self) -> Self:
