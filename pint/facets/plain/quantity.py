@@ -948,10 +948,10 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return self._add_sub(other, operator.sub)
 
     @overload
-    def __rsub__[R](
-        self: PlainQuantity[opt.CanRSub[datetime.datetime, R]],
-        other: PlainQuantity[datetime.datetime],
-    ) -> R: ...
+    def __rsub__[T: int | float](
+        self: PlainQuantity[T],
+        other: datetime.datetime,
+    ) -> datetime.datetime: ...
     @overload
     def __rsub__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanRSub[T, U]], other: PlainQuantity[T]
@@ -972,7 +972,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     ) -> PlainQuantity[U]: ...
     def __rsub__(self, other):
         if isinstance(other, datetime.datetime):
-            return other - self.to_timedelta()
+            return other - cast("PlainQuantity[int | float]", self).to_timedelta()
 
         return -self._add_sub(other, operator.sub)
 
