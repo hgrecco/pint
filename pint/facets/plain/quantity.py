@@ -923,7 +923,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             return cast("PlainQuantity[int | float]", self).to_timedelta() + other
         return self._add_sub(other, operator.add)
 
-    __radd__ = __add__
+    if TYPE_CHECKING:
+        __radd__ = __add__
+    else:
+        # this way a subclass can override just `__add__`
+        # and `__radd__` will have the same behavior
+        def __radd__(self, other):
+            return self.__add__(other)
 
     @overload
     def __isub__(
@@ -1161,7 +1167,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __mul__(self: PlainQuantity, other) -> PlainQuantity:
         return self._mul_div(other, operator.mul)
 
-    __rmul__ = __mul__
+    if TYPE_CHECKING:
+        __rmul__ = __mul__
+    else:
+        # this way a subclass can override just `__mul__`
+        # and `__rmul__` will have the same behavior
+        def __rmul__(self, other):
+            return self.__mul__(other)
 
     @overload
     def __matmul__[T: Magnitude, U: Magnitude](
@@ -1184,7 +1196,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __matmul__(self: PlainQuantity, other) -> PlainQuantity:
         return np.matmul(self, other)
 
-    __rmatmul__ = __matmul__
+    if TYPE_CHECKING:
+        __rmatmul__ = __matmul__
+    else:
+        # this way a subclass can override just `__matmul__`
+        # and `__rmatmul__` will have the same behavior
+        def __rmatmul__(self, other):
+            return self.__matmul__(other)
 
     def _truedivide_cast_int(self, a, b):
         t = self._REGISTRY.non_int_type
