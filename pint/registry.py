@@ -11,6 +11,8 @@ need.
 :copyright: 2022 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+# pyright: reportNoOverloadImplementation=none
+# pyright: reportInvalidTypeArguments=information
 
 from __future__ import annotations
 
