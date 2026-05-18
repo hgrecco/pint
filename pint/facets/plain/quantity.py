@@ -1332,11 +1332,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @overload
     def __divmod__[T: Magnitude, U1: Magnitude, U2: Magnitude](
-        self: PlainQuantity[opt.CanDivmod[T, tuple[U1, U2]]], other: PlainQuantity[T] | T
+        self: PlainQuantity[opt.CanDivmod[T, tuple[U1, U2]]],
+        other: PlainQuantity[T] | T,
     ) -> tuple[PlainQuantity[U1], PlainQuantity[U2]]: ...
     @overload
     def __divmod__[U1: Magnitude, U2: Magnitude](
-        self, other: PlainQuantity[opt.CanRDivmod[MagnitudeT_co, tuple[U1, U2]]] | opt.CanRDivmod[MagnitudeT_co, tuple[U1, U2]]
+        self,
+        other: PlainQuantity[opt.CanRDivmod[MagnitudeT_co, tuple[U1, U2]]]
+        | opt.CanRDivmod[MagnitudeT_co, tuple[U1, U2]],
     ) -> tuple[PlainQuantity[U1], PlainQuantity[U2]]: ...
     @check_implemented
     def __divmod__(self: PlainQuantity, other) -> tuple[PlainQuantity, PlainQuantity]:
@@ -1445,7 +1448,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         | opt.CanRPow[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     @check_implemented
-    def __pow__(self: PlainQuantity, other) -> PlainQuantity
+    def __pow__(self: PlainQuantity, other) -> PlainQuantity:
         try:
             _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
