@@ -17,7 +17,16 @@ need.
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from typing import TYPE_CHECKING, Any, Self, TypeAlias, overload, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Self,
+    TypeAlias,
+    TypeVar,
+    overload,
+    override,
+)
 
 from . import facets, registry_helpers
 from .util import logger, pi_theorem
@@ -37,14 +46,18 @@ if TYPE_CHECKING:
 # but
 
 
-class Quantity[MagnitudeT: Magnitude](
-    facets.SystemRegistry.Quantity[MagnitudeT],
-    facets.ContextRegistry.Quantity[MagnitudeT],
-    facets.DaskRegistry.Quantity[MagnitudeT],
-    facets.NumpyRegistry.Quantity[MagnitudeT],
-    facets.MeasurementRegistry.Quantity[MagnitudeT],
-    facets.NonMultiplicativeRegistry.Quantity[MagnitudeT],
-    facets.PlainRegistry.Quantity[MagnitudeT],
+MagnitudeT_co = TypeVar("MagnitudeT_co", covariant=True, bound="Magnitude")
+
+
+class Quantity(
+    facets.SystemRegistry.Quantity[MagnitudeT_co],
+    facets.ContextRegistry.Quantity[MagnitudeT_co],
+    facets.DaskRegistry.Quantity[MagnitudeT_co],
+    facets.NumpyRegistry.Quantity[MagnitudeT_co],
+    facets.MeasurementRegistry.Quantity[MagnitudeT_co],
+    facets.NonMultiplicativeRegistry.Quantity[MagnitudeT_co],
+    facets.PlainRegistry.Quantity[MagnitudeT_co],
+    Generic[MagnitudeT_co],
 ):
     if TYPE_CHECKING:
 
@@ -115,8 +128,8 @@ class Quantity[MagnitudeT: Magnitude](
         ) -> list[list[list[list[Any]]]]: ...
 
         @overload
-        def __iadd__[T: int | float](
-            self: Quantity[T], other: datetime.datetime
+        def __iadd__(
+            self: Quantity[int | float], other: datetime.datetime
         ) -> datetime.timedelta: ...
         @overload
         def __iadd__[T: Magnitude, U: Magnitude](
@@ -124,8 +137,8 @@ class Quantity[MagnitudeT: Magnitude](
         ) -> Quantity[U]: ...
 
         @overload
-        def __isub__[T: int | float](
-            self: Quantity[T], other: datetime.datetime
+        def __isub__(
+            self: Quantity[int | float], other: datetime.datetime
         ) -> datetime.timedelta: ...
         @overload
         def __isub__[T: Magnitude, U: Magnitude](
@@ -133,45 +146,29 @@ class Quantity[MagnitudeT: Magnitude](
         ) -> Quantity[U]: ...
 
         @overload
-        def __add__[T: int | float](
-            self: Quantity[T], other: datetime.datetime
+        def __add__(
+            self: Quantity[int | float], other: datetime.datetime
         ) -> datetime.timedelta: ...
         @overload
         def __add__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanAdd[T, U]], other: Quantity[T]
-        ) -> Quantity[U]: ...
-        @overload
-        def __add__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanAdd[T, U]], other: T
+            self: Quantity[opt.CanAdd[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
         @overload
         def __add__[U: Magnitude](
             self,
-            other: Quantity[opt.CanRAdd[MagnitudeT, U]],
-        ) -> Quantity[U]: ...
-        @overload
-        def __add__[U: Magnitude](
-            self,
-            other: opt.CanRAdd[MagnitudeT, U],
+            other: Quantity[opt.CanRAdd[MagnitudeT_co, U]]
+            | opt.CanRAdd[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
         @overload
         def __sub__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanSub[T, U]], other: Quantity[T]
-        ) -> Quantity[U]: ...
-        @overload
-        def __sub__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanSub[T, U]], other: T
+            self: Quantity[opt.CanSub[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
         @overload
         def __sub__[U: Magnitude](
             self,
-            other: Quantity[opt.CanRSub[MagnitudeT, U]],
-        ) -> Quantity[U]: ...
-        @overload
-        def __sub__[U: Magnitude](
-            self,
-            other: opt.CanRSub[MagnitudeT, U],
+            other: Quantity[opt.CanRSub[MagnitudeT_co, U]]
+            | opt.CanRSub[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
         @override
@@ -181,42 +178,26 @@ class Quantity[MagnitudeT: Magnitude](
 
         @overload
         def __mul__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanMul[T, U]], other: Quantity[T]
-        ) -> Quantity[U]: ...
-        @overload
-        def __mul__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanMul[T, U]], other: T
+            self: Quantity[opt.CanMul[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
         @overload
         def __mul__[U: Magnitude](
             self,
-            other: Quantity[opt.CanRMul[MagnitudeT, U]],
-        ) -> Quantity[U]: ...
-        @overload
-        def __mul__[U: Magnitude](
-            self,
-            other: opt.CanRMul[MagnitudeT, U],
+            other: Quantity[opt.CanRMul[MagnitudeT_co, U]]
+            | opt.CanRMul[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
         __rmul__ = __mul__
 
         @overload
         def __matmul__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanMatmul[T, U]], other: Quantity[T]
-        ) -> Quantity[U]: ...
-        @overload
-        def __matmul__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanMatmul[T, U]], other: T
+            self: Quantity[opt.CanMatmul[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
         @overload
         def __matmul__[U: Magnitude](
             self,
-            other: Quantity[opt.CanRMatmul[MagnitudeT, U]],
-        ) -> Quantity[U]: ...
-        @overload
-        def __matmul__[U: Magnitude](
-            self,
-            other: opt.CanRMatmul[MagnitudeT, U],
+            other: Quantity[opt.CanRMatmul[MagnitudeT_co, U]]
+            | opt.CanRMatmul[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
         __rmatmul__ = __matmul__
