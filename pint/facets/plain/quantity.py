@@ -19,7 +19,9 @@ from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
+    Generic,
     Self,
+    TypeVar,
     cast,
     overload,
 )
@@ -121,8 +123,10 @@ def method_wraps(numpy_func):
 
 # TODO: remove all nonmultiplicative remnants
 
+MagnitudeT_co = TypeVar("MagnitudeT_co", bound=Magnitude, covariant=True)
 
-class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
+
+class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co]):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -138,7 +142,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
     """
 
-    _magnitude: MagnitudeT
+    _magnitude: MagnitudeT_co
 
     @property
     def ndim(self) -> int:
@@ -160,10 +164,10 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         self,
     ) -> tuple[
         Callable[
-            [type[PlainQuantity[MagnitudeT]], MagnitudeT, UnitsContainer],
-            PlainQuantity[MagnitudeT],
+            [type[PlainQuantity[MagnitudeT_co]], MagnitudeT_co, UnitsContainer],
+            PlainQuantity[MagnitudeT_co],
         ],
-        tuple[type[PlainQuantity[MagnitudeT]], MagnitudeT, UnitsContainer],
+        tuple[type[PlainQuantity[MagnitudeT_co]], MagnitudeT_co, UnitsContainer],
     ]:
         """Allow pickling quantities. Since UnitRegistries are not pickled, upon
         unpickling the new object is always attached to the application registry.
@@ -176,7 +180,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
     @overload
-    def __new__(cls, value: MagnitudeT, units: UnitLike | None = None) -> Self: ...
+    def __new__(cls, value: MagnitudeT_co, units: UnitLike | None = None) -> Self: ...
 
     @overload
     def __new__(cls, value: str, units: UnitLike | None = None) -> Self: ...
@@ -233,7 +237,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             magnitude = _to_magnitude(
                 value, inst.force_ndarray, inst.force_ndarray_like
             )
-        inst._magnitude = magnitude
+        inst._magnitude = cast("MagnitudeT_co", magnitude)
         inst._units = units
 
         return inst
@@ -290,16 +294,16 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return hash((self_base.__class__, self_base.magnitude, self_base.units))
 
     @property
-    def magnitude(self) -> MagnitudeT:
+    def magnitude(self) -> MagnitudeT_co:
         """PlainQuantity's magnitude. Long form for `m`"""
         return self._magnitude
 
     @property
-    def m(self) -> MagnitudeT:
+    def m(self) -> MagnitudeT_co:
         """PlainQuantity's magnitude. Short form for `magnitude`"""
         return self._magnitude
 
-    def m_as(self, units: QuantityOrUnitLike | None) -> MagnitudeT:
+    def m_as(self, units: QuantityOrUnitLike | None) -> MagnitudeT_co:
         """PlainQuantity's magnitude expressed in particular units.
 
         Parameters
@@ -434,12 +438,14 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return cls(a, units)
 
     @classmethod
-    def from_tuple(cls, tup: tuple[MagnitudeT, Iterable[tuple[str, Scalar]]]) -> Self:
+    def from_tuple(
+        cls, tup: tuple[MagnitudeT_co, Iterable[tuple[str, Scalar]]]
+    ) -> Self:
         for units_tup in tup[1]:
             cls._REGISTRY.get_name(units_tup[0])
         return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
 
-    def to_tuple(self) -> tuple[MagnitudeT, tuple[tuple[str, Scalar], ...]]:
+    def to_tuple(self) -> tuple[MagnitudeT_co, tuple[tuple[str, Scalar], ...]]:
         return self.m, tuple(self._units.items())
 
     def compatible_units(self, *contexts) -> frozenset[Unit]:
@@ -904,21 +910,13 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     ) -> datetime.timedelta: ...
     @overload
     def __add__[T: Magnitude, U: Magnitude](
-        self: PlainQuantity[opt.CanAdd[T, U]], other: PlainQuantity[T]
-    ) -> PlainQuantity[U]: ...
-    @overload
-    def __add__[T: Magnitude, U: Magnitude](
-        self: PlainQuantity[opt.CanAdd[T, U]], other: T
+        self: PlainQuantity[opt.CanAdd[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]: ...
     @overload
     def __add__[U: Magnitude](
         self,
-        other: PlainQuantity[opt.CanRAdd[MagnitudeT, U]],
-    ) -> PlainQuantity[U]: ...
-    @overload
-    def __add__[U: Magnitude](
-        self,
-        other: opt.CanRAdd[MagnitudeT, U],
+        other: PlainQuantity[opt.CanRAdd[MagnitudeT_co, U]]
+        | opt.CanRAdd[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
@@ -952,12 +950,12 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     @overload
     def __sub__[U: Magnitude](
         self,
-        other: PlainQuantity[opt.CanRSub[MagnitudeT, U]],
+        other: PlainQuantity[opt.CanRSub[MagnitudeT_co, U]],
     ) -> PlainQuantity[U]: ...
     @overload
     def __sub__[U: Magnitude](
         self,
-        other: opt.CanRSub[MagnitudeT, U],
+        other: opt.CanRSub[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __sub__(self, other):
         return self._add_sub(other, operator.sub)
@@ -978,12 +976,12 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     @overload
     def __rsub__[U: Magnitude](
         self,
-        other: PlainQuantity[opt.CanSub[MagnitudeT, U]],
+        other: PlainQuantity[opt.CanSub[MagnitudeT_co, U]],
     ) -> PlainQuantity[U]: ...
     @overload
     def __rsub__[U: Magnitude](
         self,
-        other: opt.CanSub[MagnitudeT, U],
+        other: opt.CanSub[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __rsub__(self, other):
         if isinstance(other, datetime.datetime):
@@ -1153,12 +1151,12 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     @overload
     def __mul__[U: Magnitude](
         self,
-        other: PlainQuantity[opt.CanRMul[MagnitudeT, U]],
+        other: PlainQuantity[opt.CanRMul[MagnitudeT_co, U]],
     ) -> PlainQuantity[U]: ...
     @overload
     def __mul__[U: Magnitude](
         self,
-        other: opt.CanRMul[MagnitudeT, U],
+        other: opt.CanRMul[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __mul__(self: PlainQuantity, other) -> PlainQuantity:
         return self._mul_div(other, operator.mul)
@@ -1176,12 +1174,12 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     @overload
     def __matmul__[U: Magnitude](
         self,
-        other: PlainQuantity[opt.CanRMatmul[MagnitudeT, U]],
+        other: PlainQuantity[opt.CanRMatmul[MagnitudeT_co, U]],
     ) -> PlainQuantity[U]: ...
     @overload
     def __matmul__[U: Magnitude](
         self,
-        other: opt.CanRMatmul[MagnitudeT, U],
+        other: opt.CanRMatmul[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __matmul__(self: PlainQuantity, other) -> PlainQuantity:
         return np.matmul(self, other)
@@ -1379,7 +1377,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             return self
 
     @check_implemented
-    def __pow__(self, other) -> PlainQuantity[MagnitudeT]:
+    def __pow__(self, other) -> PlainQuantity[MagnitudeT_co]:
         try:
             _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
@@ -1444,7 +1442,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             return self.__class__(magnitude, units)
 
     @check_implemented
-    def __rpow__(self, other) -> PlainQuantity[MagnitudeT]:
+    def __rpow__(self, other) -> PlainQuantity[MagnitudeT_co]:
         try:
             _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
@@ -1478,11 +1476,11 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return cls(do_round(mag, ndigits), self._units)
 
     def __pos__(self) -> Self:
-        mag: MagnitudeT = do_pos(self._magnitude)  # type: ignore
+        mag: MagnitudeT_co = do_pos(self._magnitude)  # type: ignore
         return self.__class__(mag, self._units)
 
     def __neg__(self) -> Self:
-        mag: MagnitudeT = do_neg(self._magnitude)  # type: ignore
+        mag: MagnitudeT_co = do_neg(self._magnitude)  # type: ignore
         return self.__class__(mag, self._units)
 
     @check_implemented
