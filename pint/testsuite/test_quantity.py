@@ -1141,6 +1141,8 @@ class TestQuantityBasicMath(QuantityTestCase):
         self._test_numeric(1.0, self._test_not_inplace)
         # Typing tests (TODO: expand these with more cases)
         if TYPE_CHECKING:
+            from typing import Any  # noqa
+
             x: Q_[float] = self.Q_(1.0)
             y: Q_[float] = self.Q_(1.0)
             assert_type(x + y, "Q_[float]")
@@ -1149,6 +1151,7 @@ class TestQuantityBasicMath(QuantityTestCase):
             assert_type(x / y, "Q_[float]")
             assert_type(x // y, "Q_[float]")
             assert_type(x % y, "Q_[float]")
+            assert_type(x**y, "Q_[Any]")  # NOTE: This is a known problem in typeshed
             assert_type(divmod(x, y), "tuple[Q_[float], Q_[float]]")
             x += y
             x -= y
@@ -1156,6 +1159,7 @@ class TestQuantityBasicMath(QuantityTestCase):
             x /= y
             x //= y
             x %= y
+            x **= y
 
     def test_fraction(self):
         import fractions

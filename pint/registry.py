@@ -171,6 +171,21 @@ class Quantity(
             | opt.CanRSub[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
+        @overload
+        def __rsub__(
+            self: Quantity[int | float],
+            other: datetime.datetime,
+        ) -> datetime.datetime: ...
+        @overload
+        def __rsub__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanRSub[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __rsub__[U: Magnitude](
+            self,
+            other: opt.CanSub[MagnitudeT_co, U],
+        ) -> Quantity[U]: ...
+
         @override
         def __imul__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanIMul[T, U]], other: Quantity[T] | T
@@ -207,9 +222,51 @@ class Quantity(
             self: Quantity[opt.CanITruediv[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
 
+        @overload
+        def __truediv__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanTruediv[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+        @overload
+        def __truediv__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRTruediv[MagnitudeT_co, U]]
+            | opt.CanRTruediv[MagnitudeT_co, U],
+        ) -> Quantity[U]: ...
+
+        @overload
+        def __rtruediv__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanRTruediv[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __rtruediv__[U: Magnitude](
+            self,
+            other: opt.CanTruediv[MagnitudeT_co, U],
+        ) -> Quantity[U]: ...
+
         @override
         def __ifloordiv__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanIFloordiv[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+
+        @overload
+        def __floordiv__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanFloordiv[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+        @overload
+        def __floordiv__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRFloordiv[MagnitudeT_co, U]]
+            | opt.CanRTruediv[MagnitudeT_co, U],
+        ) -> Quantity[U]: ...
+
+        @overload
+        def __rfloordiv__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanRFloordiv[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __rfloordiv__[U: Magnitude](
+            self,
+            other: opt.CanFloordiv[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
         @override
@@ -217,10 +274,73 @@ class Quantity(
             self: Quantity[opt.CanIMod[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
 
+        @overload
+        def __mod__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanMod[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+        @overload
+        def __mod__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRMod[MagnitudeT_co, U]]
+            | opt.CanRMod[MagnitudeT_co, U],
+        ) -> Quantity[U]: ...
+
+        @overload
+        def __rmod__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanRMod[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __rmod__[U: Magnitude](
+            self,
+            other: opt.CanMod[MagnitudeT_co, U],
+        ) -> Quantity[U]: ...
+
         @override
         def __ipow__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanIPow[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
+
+        @overload
+        def __pow__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanPow[T, U]], other: Quantity[T] | T
+        ) -> Quantity[U]: ...
+        @overload
+        def __pow__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRPow[MagnitudeT_co, U]]
+            | opt.CanRPow[MagnitudeT_co, U],
+        ) -> Quantity[U]: ...
+
+        @overload
+        def __rpow__[T: Magnitude, U: Magnitude](
+            self: Quantity[opt.CanRPow[T, U]], other: T
+        ) -> Quantity[U]: ...
+        @overload
+        def __rpow__[U: Magnitude](
+            self,
+            other: opt.CanPow[MagnitudeT_co, U],
+        ) -> Quantity[U]: ...
+
+        @overload
+        def __divmod__[T: Magnitude, U1: Magnitude, U2: Magnitude](
+            self: Quantity[opt.CanDivmod[T, tuple[U1, U2]]],
+            other: Quantity[T] | T,
+        ) -> tuple[Quantity[U1], Quantity[U2]]: ...
+        @overload
+        def __divmod__[U1: Magnitude, U2: Magnitude](
+            self,
+            other: Quantity[opt.CanRDivmod[MagnitudeT_co, tuple[U1, U2]]]
+            | opt.CanRDivmod[MagnitudeT_co, tuple[U1, U2]],
+        ) -> tuple[Quantity[U1], Quantity[U2]]: ...
+
+        @overload
+        def __rdivmod__[T: Magnitude, U1: Magnitude, U2: Magnitude](
+            self: Quantity[opt.CanRDivmod[T, tuple[U1, U2]]], other: T
+        ) -> tuple[Quantity[U1], Quantity[U2]]: ...
+        @overload
+        def __rdivmod__[U1: Magnitude, U2: Magnitude](
+            self, other: opt.CanDivmod[MagnitudeT_co, tuple[U1, U2]]
+        ) -> tuple[Quantity[U1], Quantity[U2]]: ...
 
 
 class Unit(
