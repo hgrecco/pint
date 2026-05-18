@@ -130,7 +130,11 @@ lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
 test = { features = ["test"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
-typecheck = { features = ["typecheck", "test-all"], solve-group = "default" }
+typecheck = { features = [
+  "typecheck",
+  "optype",
+  "test-all",
+], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
 docs = { features = [
