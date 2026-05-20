@@ -206,6 +206,11 @@ class TestParseHelper:
         self._test_eval_token(1000.0, "1E3")
         self._test_eval_token(1000, "1000")
 
+    def test_eval_token_unknown_type(self):
+        token = next(pint_eval.tokenizer("+"))
+        with pytest.raises(ValueError, match="unknown token type"):
+            ParserHelper.eval_token(token)
+
     def test_nan(self, subtests):
         for s in ("nan", "NAN", "NaN", "123 NaN nan NAN 456"):
             with subtests.test(s):
@@ -232,6 +237,12 @@ class TestStringProcessor:
         self._test("square bcd", "bcd**2")
         self._test("cubic bcd", "bcd**3")
         self._test("bcd efg", "bcd*efg")
+
+    def test_mixed_whitespace_exponent(self):
+        self._test("bcd  ^  3", "bcd ** 3")
+        self._test("bcd  squared", "bcd**2")
+        self._test("bcd squared  efg", "bcd**2*efg")
+        self._test("bcd  cubed  efg", "bcd**3*efg")
 
     def test_per(self):
         self._test("miles per hour", "miles/hour")
@@ -373,6 +384,11 @@ class TestOtherUtils:
         assert iterable("test")
         assert iterable(i for i in range(5))
         assert not iterable(0)
+        # Edge cases: empty and single-element containers
+        assert iterable([])
+        assert iterable("")
+        assert iterable([42])
+        assert iterable({"a": 1})
 
     def test_sized(self):
         # Test with list, string, generator, and scalar
@@ -380,3 +396,10 @@ class TestOtherUtils:
         assert sized("test")
         assert not sized(i for i in range(5))
         assert not sized(0)
+        # Edge cases: empty and single-element containers, dict, tuple
+        assert sized([])
+        assert sized("")
+        assert sized([42])
+        assert sized({"a": 1})
+        assert sized((1, 2))
+        assert not sized(iter([1, 2, 3]))

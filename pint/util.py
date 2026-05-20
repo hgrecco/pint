@@ -733,7 +733,7 @@ class ParserHelper(UnitsContainer):
         elif token_type == NAME:
             return ParserHelper.from_word(token_text, non_int_type=non_int_type)
         else:
-            raise Exception("unknown token type")
+            raise ValueError("unknown token type")
 
     @classmethod
     @lru_cache
