@@ -164,6 +164,7 @@ parsec = 1 / tansec * astronomical_unit = pc
 nautical_mile = 1852 * meter = nmi
 bohr = hbar / (alpha * m_e * c) = a_0 = a0 = bohr_radius = atomic_unit_of_length = a_u_length
 planck_length = (hbar * gravitational_constant / c ** 3) ** 0.5
+banana = 0.18 * meter = bananas
 
 # Mass
 metric_ton = 1e3 * kilogram = t = tonne
