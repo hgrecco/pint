@@ -9,10 +9,30 @@ pint.facets.nonmultiplicative.definitions
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from ..._typing import Magnitude
 from ...compat import HAS_NUMPY, exp, log
 from ..plain import ScaleConverter
+
+
+def _matching_scalar(value: Magnitude, scalar):
+    """Coerce a scale/offset scalar to a type that can be combined with ``value``.
+
+    ``Decimal`` does not support arithmetic with ``float``, so an affine
+    conversion of a ``Decimal`` magnitude with float scale/offset (or of a
+    plain ``float`` magnitude in a ``Decimal`` registry) raises ``TypeError``.
+    Match the scalar to the magnitude: promote it to ``Decimal`` for a
+    ``Decimal`` magnitude, and demote a ``Decimal`` scalar to ``float`` for any
+    other magnitude. Other numeric types (float, complex, Fraction, numpy
+    arrays) already interoperate, so they are returned unchanged.
+    """
+    if isinstance(value, Decimal):
+        if not isinstance(scalar, Decimal):
+            return Decimal(str(scalar))
+    elif isinstance(scalar, Decimal):
+        return float(scalar)
+    return scalar
 
 
 @dataclass(frozen=True)
@@ -26,20 +46,24 @@ class OffsetConverter(ScaleConverter):
         return self.offset == 0
 
     def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
+        scale = _matching_scalar(value, self.scale)
+        offset = _matching_scalar(value, self.offset)
         if inplace:
-            value *= self.scale
-            value += self.offset
+            value *= scale
+            value += offset
         else:
-            value = value * self.scale + self.offset
+            value = value * scale + offset
 
         return value
 
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
+        scale = _matching_scalar(value, self.scale)
+        offset = _matching_scalar(value, self.offset)
         if inplace:
-            value -= self.offset
-            value /= self.scale
+            value -= offset
+            value /= scale
         else:
-            value = (value - self.offset) / self.scale
+            value = (value - offset) / scale
 
         return value
 

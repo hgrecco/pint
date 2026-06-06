@@ -1475,3 +1475,36 @@ def test_issue2256_2():
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
     assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
+
+
+def test_issue2305():
+    # Offset (affine) conversion of a Decimal magnitude must not raise
+    # TypeError from mixing Decimal with the float scale/offset.
+    from decimal import Decimal
+
+    ureg = UnitRegistry()
+
+    # to_reference (degC -> K): adds the offset
+    q = ureg.Quantity(Decimal(10), "degC").to("K")
+    assert q.magnitude == Decimal("283.15")
+    assert isinstance(q.magnitude, Decimal)
+
+    # from_reference (K -> degC): subtracts the offset
+    q = ureg.Quantity(Decimal(300), "kelvin").to("degC")
+    assert q.magnitude == Decimal("26.85")
+    assert isinstance(q.magnitude, Decimal)
+
+    # scale and offset together (degF): the Decimal result tracks the float
+    # scale (5/9), so compare with a tolerance like the float path does
+    degf = ureg.Quantity(Decimal(32), "degF").to("K").magnitude
+    assert isinstance(degf, Decimal)
+    assert abs(float(degf) - 273.15) < 1e-9
+
+    # float magnitudes are unaffected
+    assert ureg.Quantity(10.0, "degC").to("K").magnitude == 273.15 + 10.0
+
+    # and in a Decimal registry, float magnitudes still convert (no longer
+    # the "problem just moves around" reported in the issue)
+    ureg_dec = UnitRegistry(non_int_type=Decimal)
+    assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
+    assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
