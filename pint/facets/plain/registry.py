@@ -59,7 +59,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import deprecated
+from ...compat import coerce_scalar, deprecated
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -1149,12 +1149,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if isinstance(factor, DimensionalityError):
             raise factor
 
-        # factor is type float and if our magnitude is type Decimal then
-        # must first convert to Decimal before we can '*' the values
-        if isinstance(value, Decimal):
-            factor = Decimal(str(factor))
-        elif isinstance(value, Fraction):
-            factor = Fraction(str(factor))
+        # Decimal/Fraction magnitudes can't mix with float — coerce to match.
+        factor = coerce_scalar(value, factor)
 
         if inplace:
             value *= factor

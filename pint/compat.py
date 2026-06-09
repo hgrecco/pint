@@ -14,6 +14,7 @@ import math
 import sys
 from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
+from fractions import Fraction
 from importlib import import_module
 from importlib.util import find_spec
 from numbers import Number
@@ -29,6 +30,27 @@ if sys.version_info >= (3, 13):
     from warnings import deprecated  # noqa
 else:
     from typing_extensions import deprecated  # noqa
+
+
+def coerce_scalar(value, scalar):
+    """Coerce a scalar (a conversion scale or offset) to be arithmetically
+    compatible with value (magnitude).
+
+    Decimal refuses arithmetic with float (both directions raise TypeError);
+    Fraction loses its type when combined with float. Promote the scalar to
+    match a Decimal/Fraction magnitude, and demote a Decimal scalar to float
+    when value is a plain float (the only case where float OP Decimal fails).
+    int OP Decimal works fine and is left unchanged.
+    """
+    if isinstance(value, Decimal):
+        if not isinstance(scalar, Decimal):
+            return Decimal(str(scalar))
+    elif isinstance(value, Fraction):
+        if not isinstance(scalar, Fraction):
+            return Fraction(str(scalar))
+    elif isinstance(value, float) and isinstance(scalar, Decimal):
+        return float(scalar)
+    return scalar
 
 
 def missing_dependency(
