@@ -26,7 +26,7 @@ class OffsetConverter(ScaleConverter):
         return self.offset == 0
 
     def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
-        # Decimal magnitudes can't mix with float scale/offset — promote to match.
+        # Decimal magnitudes can't mix with float scale/offset — coerce to match.
         scale = coerce_scalar(value, self.scale)
         offset = coerce_scalar(value, self.offset)
         if inplace:
@@ -38,7 +38,7 @@ class OffsetConverter(ScaleConverter):
         return value
 
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
-        # Decimal magnitudes can't mix with float scale/offset — promote to match.
+        # Decimal magnitudes can't mix with float scale/offset — coerce to match.
         scale = coerce_scalar(value, self.scale)
         offset = coerce_scalar(value, self.offset)
         if inplace:
