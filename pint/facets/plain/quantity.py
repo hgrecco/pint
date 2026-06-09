@@ -1043,7 +1043,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     __rmul__ = __mul__
 
     def __matmul__(self, other):
-        return np.matmul(self, other)
+        return self._mul_div(other, operator.matmul, operator.mul)
 
     __rmatmul__ = __matmul__
 
