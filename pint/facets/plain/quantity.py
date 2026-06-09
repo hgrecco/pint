@@ -1161,7 +1161,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         | opt.CanRMatmul[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __matmul__(self: PlainQuantity, other) -> PlainQuantity:
-        return np.matmul(self, other)
+        return self._mul_div(other, operator.matmul, operator.mul)
 
     if TYPE_CHECKING:
         __rmatmul__ = __matmul__
