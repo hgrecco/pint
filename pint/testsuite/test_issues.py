@@ -7,6 +7,7 @@ import math
 import pprint
 import subprocess
 import sys
+from unittest.mock import patch
 
 import pytest
 
@@ -1475,3 +1476,25 @@ def test_issue2256_2():
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
     assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
+
+
+def test_issue2320():
+    # symbol ("kg") and prefixed ("kWh", "ms") spellings, plus the delta form of an
+    # offset unit, must be able to hit the parse_units cache. The previous cache-hit
+    # guard required the raw input to be a self._units key, which those spellings never
+    # are, so the populated cache entry was unreachable and every call re-parsed.
+    ureg = UnitRegistry()
+    for spelling in ("kg", "kWh", "ms", "degC**2"):
+        ureg.parse_units(spelling)  # prime the cache
+        with patch.object(
+            ParserHelper, "from_string", wraps=ParserHelper.from_string
+        ) as spy:
+            ureg.parse_units(spelling)
+        assert spy.call_count == 0, f"{spelling} re-parsed instead of hitting the cache"
+
+    # The cache must stay case-sensitivity aware: priming a case-insensitive lookup must
+    # not let the same spelling resolve under a case-sensitive lookup.
+    ureg = UnitRegistry()
+    assert ureg.parse_units("Meter", case_sensitive=False) == UnitsContainer(meter=1)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_units("Meter", case_sensitive=True)
