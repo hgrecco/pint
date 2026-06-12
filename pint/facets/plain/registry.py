@@ -127,7 +127,9 @@ class RegistryCache:
         self.dimensionality: dict[UnitsContainer, UnitsContainer] = {}
 
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit: dict[str, UnitsContainer] = {}
+        #: Keyed on (input string, case_sensitive) because the same spelling can resolve
+        #: differently under each mode (e.g. "Meter" is undefined when case-sensitive).
+        self.parse_unit: dict[tuple[str, bool], UnitsContainer] = {}
 
         self.conversion_factor: dict[
             tuple[UnitsContainer, UnitsContainer], Scalar | DimensionalityError
@@ -1300,8 +1302,17 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # Issue #1097: it is possible, when a unit was defined while a different context
         # was active, that the unit is in self._cache.parse_unit but not in self._units.
         # If this is the case, force self._units to be repopulated.
-        if as_delta and input_string in cache and input_string in self._units:
-            return cache[input_string]
+        # Issue #2320: validate the cached result's canonical names rather than the raw
+        # input string. The input string can be a symbol ("kg") or prefixed form ("kWh",
+        # "ms") that is never a self._units key, so guarding on it left those (very common)
+        # spellings unable to ever hit the cache. The cached UnitsContainer always holds
+        # canonical names, which are self._units keys exactly while the definitions are live.
+        # The cache is keyed on (input, case_sensitive) so a case-insensitive result is not
+        # returned for a case-sensitive lookup of the same spelling.
+        if as_delta and (input_string, case_sensitive) in cache:
+            cached = cache[input_string, case_sensitive]
+            if all(name in self._units for name in cached):
+                return cached
 
         for p in self.preprocessors:
             input_string = p(input_string)
@@ -1330,7 +1341,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             ret = ret.add(cname, value)
 
         if as_delta:
-            cache[input_string] = ret
+            cache[input_string, case_sensitive] = ret
 
         return ret
 

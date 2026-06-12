@@ -13,6 +13,8 @@ Pint Changelog
 - Fix regression when using magnitude format specs in string formats (#2291)
 - Updated repr for various objects so that eval(repr(...)) works (#1495)
 - Improve type annotations for `Quantity` (#2302, #2303)
+- Fix `parse_units` cache never being hit for symbol and prefixed spellings (e.g. `kg`, `kWh`, `ms`), making those very common lookups re-parse on every call (#2320)
+- Updated repr for various objects so that eval(repr(...))) works (#1495)
 
 0.25.3 (2026-03-19)
 -----------------
