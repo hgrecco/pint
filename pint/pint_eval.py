@@ -515,11 +515,13 @@ def _build_eval_tree(
                 raise DefinitionSyntaxError("unclosed parentheses in tokens")
             if depth > 0 or prev_op:
                 # have to close recursion
-                assert result is not None
+                if result is None:
+                    raise DefinitionSyntaxError("missing operand")
                 return result, index
             else:
                 # recursion all closed, so just return the final result
-                assert result is not None
+                if result is None:
+                    raise DefinitionSyntaxError("missing operand")
                 return result, -1
 
         if index + 1 >= len(tokens):
