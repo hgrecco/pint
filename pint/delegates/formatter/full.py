@@ -135,7 +135,11 @@ class FullFormatter(BaseFormatter):
         uspec = uspec or self.default_format
         sort_func = sort_func or self.default_sort_func
         return self.get_formatter(uspec).format_unit(
-            unit, uspec, sort_func=sort_func, **babel_kwds
+            unit,
+            uspec,
+            sort_func=sort_func,
+            as_ratio=False if "^" in uspec else True,
+            **babel_kwds,
         )
 
     def format_quantity[MagnitudeT: Magnitude](
