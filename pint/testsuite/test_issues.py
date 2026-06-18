@@ -1508,3 +1508,34 @@ def test_issue2305():
     ureg_dec = UnitRegistry(non_int_type=Decimal)
     assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
     assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue2255():
+    # wraps must resolve the string unit specs for the *input* arguments through
+    # the registry, exactly as it already does for the return units. Otherwise a
+    # spec such as "dimensionless" is parsed as a unit literally named
+    # "dimensionless" (a non-empty UnitsContainer) instead of an empty,
+    # genuinely dimensionless one, and converting an argument to it raised an
+    # AssertionError deep in the offset-unit handling.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    exp = ureg.wraps("dimensionless", "dimensionless")(math.exp)
+    assert exp(Q_(1)) == Q_(math.exp(1), "dimensionless")
+    # a dimensionless argument carrying convertible units is converted first
+    assert exp(Q_(100, "percent")) == Q_(math.exp(1), "dimensionless")
+
+    # other functions taking dimensionless parameters used to raise as well
+    factorial = ureg.wraps("dimensionless", "dimensionless")(math.factorial)
+    assert factorial(Q_(5)) == Q_(120, "dimensionless")
+
+    asin = ureg.wraps("radian", "dimensionless")(math.asin)
+    assert asin(Q_(1)) == Q_(math.asin(1), "radian")
+
+    # input specs are now parsed with the registry, so a symbol/prefixed
+    # spelling behaves like its canonical name (km -> kilometer)
+    @ureg.wraps(None, "km")
+    def f(x):
+        return x
+
+    assert f(Q_(1000, "m")) == 1.0

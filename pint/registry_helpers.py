@@ -243,7 +243,7 @@ def wraps(
                 % (type(arg), arg)
             )
 
-    converter = _parse_wrap_args(args)
+    converter = _parse_wrap_args(args, ureg)
 
     is_ret_container = isinstance(ret, (list, tuple))
     if is_ret_container:
