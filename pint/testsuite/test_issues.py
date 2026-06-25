@@ -1508,3 +1508,36 @@ def test_issue2305():
     ureg_dec = UnitRegistry(non_int_type=Decimal)
     assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
     assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue2254():
+    # wraps must handle functions with a VAR_POSITIONAL (*args) parameter.
+    # Previously calling with 0 args raised KeyError and calling with more
+    # than one Quantity argument raised DimensionalityError because the single
+    # unit spec was only applied to the first argument.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    # Plain sum with reference units: all *args share the same unit.
+    @ureg.wraps("=A", "=A")
+    def vsum(*values):
+        return sum(values)
+
+    # Single arg: existing behaviour must be preserved.
+    assert vsum(Q_(3, "m")) == Q_(3, "m")
+
+    # Multiple Quantity args of the same dimension are converted to the first
+    # arg's unit before the call and the result carries that unit.
+    result = vsum(Q_(1, "m"), Q_(200, "cm"))
+    assert result.magnitude == pytest.approx(3.0)
+    assert result.units == ureg.meter
+
+    # Plain numbers (no units) still work and return a dimensionless Quantity.
+    assert vsum(3, 4) == 7
+
+    # Fixed unit spec: convert every *arg to metres, return raw magnitude.
+    @ureg.wraps(None, "m")
+    def vsum_raw(*values):
+        return sum(values)
+
+    assert vsum_raw(Q_(1, "m"), Q_(200, "cm")) == pytest.approx(3.0)

@@ -120,34 +120,77 @@ def _parse_wrap_args(args, registry=None):
     def _converter(ureg, sig, values, kw, strict):
         len_initial_values = len(values)
 
-        # pack kwargs
+        # pack kwargs, skipping VAR_POSITIONAL/VAR_KEYWORD params since they
+        # collect positional/keyword args and don't appear in kw themselves
         for i, param_name in enumerate(sig.parameters):
-            if i >= len_initial_values:
+            param = sig.parameters[param_name]
+            if i >= len_initial_values and param.kind not in (
+                Parameter.VAR_POSITIONAL,
+                Parameter.VAR_KEYWORD,
+            ):
                 values.append(kw[param_name])
+
+        # For VAR_POSITIONAL parameters: expand unit specs to cover all actual
+        # positional args passed beyond the single spec defined for *args.
+        local_args_as_uc = args_as_uc
+        local_defs_ndx = defs_args_ndx
+        local_dep_ndx = dependent_args_ndx
+        local_unit_ndx = unit_args_ndx
+
+        if len(values) > len(args_as_uc):
+            var_pos_ndx = next(
+                (
+                    i
+                    for i, pname in enumerate(sig.parameters)
+                    if sig.parameters[pname].kind == Parameter.VAR_POSITIONAL
+                ),
+                None,
+            )
+            if var_pos_ndx is not None:
+                local_args_as_uc = list(args_as_uc)
+                local_defs_ndx = set(defs_args_ndx)
+                local_dep_ndx = set(dependent_args_ndx)
+                local_unit_ndx = set(unit_args_ndx)
+
+                var_uc, _ = args_as_uc[var_pos_ndx]
+                for ndx in range(len(args_as_uc), len(values)):
+                    if var_pos_ndx in defs_args_ndx:
+                        # The first *args value defined the reference unit;
+                        # subsequent ones are dependent on it.
+                        local_args_as_uc.append((UnitsContainer({var_uc: 1}), True))
+                        local_dep_ndx.add(ndx)
+                    elif var_pos_ndx in dependent_args_ndx:
+                        local_args_as_uc.append(args_as_uc[var_pos_ndx])
+                        local_dep_ndx.add(ndx)
+                    else:
+                        local_args_as_uc.append(args_as_uc[var_pos_ndx])
+                        local_unit_ndx.add(ndx)
 
         values_by_name = {}
 
         # first pass: Grab named values
-        for ndx in defs_args_ndx:
+        for ndx in local_defs_ndx:
+            if ndx >= len(values):
+                continue
             value = values[ndx]
-            values_by_name[args_as_uc[ndx][0]] = value
+            values_by_name[local_args_as_uc[ndx][0]] = value
             values[ndx] = getattr(value, "_magnitude", value)
 
         # second pass: calculate derived values based on named values
-        for ndx in dependent_args_ndx:
+        for ndx in local_dep_ndx:
             value = values[ndx]
-            assert _replace_units(args_as_uc[ndx][0], values_by_name) is not None
+            assert _replace_units(local_args_as_uc[ndx][0], values_by_name) is not None
             values[ndx] = ureg._convert(
                 getattr(value, "_magnitude", value),
                 getattr(value, "_units", UnitsContainer({})),
-                _replace_units(args_as_uc[ndx][0], values_by_name),
+                _replace_units(local_args_as_uc[ndx][0], values_by_name),
             )
 
         # third pass: convert other arguments
-        for ndx in unit_args_ndx:
+        for ndx in local_unit_ndx:
             if isinstance(values[ndx], ureg.Quantity):
                 values[ndx] = ureg._convert(
-                    values[ndx]._magnitude, values[ndx]._units, args_as_uc[ndx][0]
+                    values[ndx]._magnitude, values[ndx]._units, local_args_as_uc[ndx][0]
                 )
             else:
                 if strict:
@@ -155,20 +198,26 @@ def _parse_wrap_args(args, registry=None):
                         # if the value is a string, we try to parse it
                         tmp_value = ureg.parse_expression(values[ndx])
                         values[ndx] = ureg._convert(
-                            tmp_value._magnitude, tmp_value._units, args_as_uc[ndx][0]
+                            tmp_value._magnitude,
+                            tmp_value._units,
+                            local_args_as_uc[ndx][0],
                         )
                     else:
                         raise ValueError(
                             "A wrapped function using strict=True requires "
                             "quantity or a string for all arguments with not None units. "
                             "(error found for {}, {})".format(
-                                args_as_uc[ndx][0], values[ndx]
+                                local_args_as_uc[ndx][0], values[ndx]
                             )
                         )
 
-        # unpack kwargs
+        # unpack kwargs, skipping VAR_POSITIONAL/VAR_KEYWORD
         for i, param_name in enumerate(sig.parameters):
-            if i >= len_initial_values:
+            param = sig.parameters[param_name]
+            if i >= len_initial_values and param.kind not in (
+                Parameter.VAR_POSITIONAL,
+                Parameter.VAR_KEYWORD,
+            ):
                 kw[param_name] = values[i]
 
         return values[:len_initial_values], kw, values_by_name
