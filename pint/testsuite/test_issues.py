@@ -1508,3 +1508,16 @@ def test_issue2305():
     ureg_dec = UnitRegistry(non_int_type=Decimal)
     assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
     assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue2156(func_registry):
+    # `unit in registry` should work with a Unit object, not just a string.
+    # Previously the membership test passed the Unit straight to __getattr__,
+    # which assumed a str and raised AttributeError ('Unit' has no 'endswith').
+    ureg = func_registry
+    assert ureg.Unit("J") in ureg
+    assert (ureg.Unit("m") / ureg.Unit("s")) in ureg
+    # the existing string path is unchanged
+    assert "joule" in ureg
+    assert "kJ" in ureg
+    assert "definitely_not_a_unit" not in ureg

@@ -381,7 +381,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def __contains__(self, item: str) -> bool:
         """Support checking prefixed units with the `in` operator"""
         try:
-            self.__getattr__(item)
+            self.__getattr__(str(item))
             return True
         except UndefinedUnitError:
             return False
