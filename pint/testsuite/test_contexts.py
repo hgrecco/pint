@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import decimal
 import itertools
 import logging
 import math
@@ -809,6 +810,23 @@ def test_redefine(subtests):
             assert asd.to("baz").magnitude == 4
 
         ureg.disable_contexts()
+
+
+def test_redefine_non_int_type():
+    # A redefinition parsed with the wrong numerical type crashes on conversion when
+    # the registry uses a non-float non_int_type, because the redefined unit's scale
+    # ends up mixing e.g. float and Decimal. See GH #2301.
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    ureg.define("CV = 2.6 L")
+
+    c = Context("columnvolume")
+    c.redefine("CV = 3.14 L", non_int_type=decimal.Decimal)
+    ureg.add_context(c)
+    ureg.enable_contexts("columnvolume")
+
+    converted = ureg.Quantity(decimal.Decimal("1.0"), "CV").to("L")
+    assert isinstance(converted.magnitude, decimal.Decimal)
+    assert converted.magnitude == decimal.Decimal("3.14")
 
 
 def test_define_nan():
