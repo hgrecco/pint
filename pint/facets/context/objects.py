@@ -227,19 +227,21 @@ class Context:
         defaults.update(ctx_kwargs)
         return func(registry, value, **defaults)
 
-    def redefine(self, definition: str) -> None:
+    def redefine(self, definition: str, non_int_type: type = float) -> None:
         """Override the definition of a unit in the registry.
 
         Parameters
         ----------
         definition : str
             <unit> = <new definition>``, e.g. ``pound = 0.5 kg``
+        non_int_type : type
+            Numerical type used to parse the magnitudes in ``definition``. Pass the
+            registry's ``non_int_type`` (e.g. ``decimal.Decimal``) so the redefinition
+            is compatible with quantities created by that registry.
         """
         from ...delegates import ParserConfig, txt_defparser
 
-        # TODO: kept for backwards compatibility.
-        #       this is not a good idea as we have no way of known the correct non_int_type
-        cfg = ParserConfig(float)
+        cfg = ParserConfig(non_int_type)
         parser = txt_defparser.DefParser(cfg, None)
         pp = parser.parse_string(definition)
         for definition in parser.iter_parsed_project(pp):

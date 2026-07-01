@@ -270,6 +270,11 @@ Programmatically:
     >>> q.to("J")
     1055.056 joule
 
+If the registry uses a non-default ``non_int_type`` (e.g. ``decimal.Decimal``), pass the
+same type to ``redefine`` (for example ``ctx.redefine("BTU = 1055 J",
+non_int_type=decimal.Decimal)``) so the redefinition is parsed compatibly with quantities
+created by that registry.
+
 Or with a definitions file::
 
     @context somecontract
