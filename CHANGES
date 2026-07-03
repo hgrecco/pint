@@ -13,6 +13,7 @@ Pint Changelog
 - Fix regression when using magnitude format specs in string formats (#2291)
 - Updated repr for various objects so that eval(repr(...)) works (#1495)
 - Improve type annotations for `Quantity` (#2302, #2303)
+- Fix `@alias` failing with a bare `KeyError` when the target is a prefixed unit (e.g. `@alias millimeter = ...`, `@alias meV = ...`); such aliases now register correctly, and aliasing an unknown unit raises `UndefinedUnitError` (#1076, #1447)
 
 0.25.3 (2026-03-19)
 -----------------

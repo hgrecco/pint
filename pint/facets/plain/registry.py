@@ -548,7 +548,11 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
     def _add_alias(self, definition: AliasDefinition) -> None:
         unit_dict = self._units
-        unit = unit_dict[definition.name]
+        # Resolve the target through get_name so that prefixed units (e.g.
+        # ``millimeter``, ``meV``) -- which are created lazily and are not yet
+        # in ``self._units`` -- are materialized before the lookup, and so an
+        # unknown target raises UndefinedUnitError instead of a bare KeyError.
+        unit = unit_dict[self.get_name(definition.name)]
         while not isinstance(unit, UnitDefinition):
             unit = unit_dict[unit.name]
         for alias in definition.aliases:

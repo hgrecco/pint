@@ -1060,8 +1060,24 @@ class TestConvertWithOffset(QuantityTestCase):
         )
 
         # Define against unknown name
-        with pytest.raises(KeyError):
+        with pytest.raises(UndefinedUnitError):
             ureg.define("@alias notexist = something")
+
+    def test_alias_prefixed_unit(self):
+        # Aliasing a prefixed unit (e.g. millimeter = milli + meter) used to
+        # raise a bare KeyError because the prefixed unit is created lazily and
+        # is not present in ``_units`` until first resolved. See GH #1076/#1447.
+        ureg = UnitRegistry()
+
+        ureg.define("@alias millimeter = DUT_MILLIMETERS")
+        assert ureg.Unit("DUT_MILLIMETERS") == ureg.Unit("millimeter")
+
+        # A prefixed unit whose base is not the SI reference (meV = milli + eV)
+        ureg.define("@alias meV = my_energy_unit")
+        assert ureg.Unit("my_energy_unit") == ureg.Unit("meV")
+
+        # The prefixed unit itself keeps resolving normally afterwards
+        assert ureg.Unit("mm") == ureg.Unit("millimeter")
 
     def test_prefix_offset_units(self):
         ureg = UnitRegistry()
