@@ -133,3 +133,13 @@ def test_volts(sess_registry):
     b = infer_base_unit(r)
     assert b == sess_registry.Quantity(1, "V").units
     helpers.assert_quantity_almost_equal(r, sess_registry.Quantity(1, "uV"))
+
+
+def test_infer_base_unit_ambiguous_prefixed_unit(sess_registry):
+    # "dtex" parses both as the registered unit dtex and as deci + tex, so
+    # parse_unit_name returns two candidates; infer_base_unit / to_compact must
+    # take the first (like Quantity._get_unprefixed) rather than assert and crash.
+    # See https://github.com/hgrecco/pint/issues/2246
+    q = sess_registry.Quantity(100, "dtex")
+    assert q.to_compact() == q
+    assert infer_base_unit(q) == sess_registry.Quantity(1, "dtex").units

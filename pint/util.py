@@ -1086,7 +1086,10 @@ def infer_base_unit(
 
     for unit_name, power in original_units.items():
         candidates = registry.parse_unit_name(unit_name)
-        assert len(candidates) == 1
+        # A unit name can be parsed as more than one (prefix, unit, suffix)
+        # candidate when it collides with a prefixed unit (e.g. "dtex" is both
+        # the registered unit dtex and deci + tex); take the first, matching the
+        # sibling logic in Quantity._get_unprefixed (facets/plain/qto.py).
         _, base_unit, _ = candidates[0]
         d[base_unit] += power
 
