@@ -678,6 +678,15 @@ class TestRegistry(QuantityTestCase):
         assert g4(3.0 * ureg.meter, 2.0) == ureg("(3*meter)**2 * 2")
         assert g4(3.0, 2.0 * ureg.second) == ureg("3**2 * 2 * second")
 
+        def gfunc4(x, y):
+            return x / y
+
+        g5 = ureg.wraps("=A/B", ["=A", "=B"])(gfunc4)
+        helpers.assert_quantity_equal(
+            g5(np.array([1]) * ureg.angstrom, np.array([2]) * ureg.second),
+            np.array([0.5]) * ureg.angstrom / ureg.second,
+        )
+
     def test_check(self):
         def func(x):
             return x

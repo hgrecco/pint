@@ -39,11 +39,11 @@ def _replace_units(original_units, values_by_name):
     -------
 
     """
-    q = 1
+    q = UnitsContainer({})
     for arg_name, exponent in original_units.items():
-        q = q * values_by_name[arg_name] ** exponent
+        q *= getattr(values_by_name[arg_name], "_units", UnitsContainer({})) ** exponent
 
-    return getattr(q, "_units", UnitsContainer({}))
+    return q
 
 
 def _to_units_container(a, registry=None):
