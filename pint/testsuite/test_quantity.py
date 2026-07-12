@@ -15,6 +15,7 @@ import pytest
 from pint import (
     DimensionalityError,
     OffsetUnitCalculusError,
+    Unit,
     UnitRegistry,
     get_application_registry,
 )
@@ -1685,6 +1686,23 @@ class TestOffsetUnitMath(QuantityTestCase):
             helpers.assert_quantity_almost_equal(
                 op.itruediv(q1_cp, q2), Q_(*expected), atol=0.01
             )
+
+    def test_division_by_plain_unit_from_same_registry(self):
+        ureg = get_application_registry()
+
+        result = ureg.Quantity(2, "L") * Unit("mL")
+        helpers.assert_quantity_equal(result, ureg.Quantity(2, "L * mL"))
+
+        quantity = ureg.Quantity(2, "L")
+        quantity *= Unit("mL")
+        helpers.assert_quantity_equal(quantity, ureg.Quantity(2, "L * mL"))
+
+        result = ureg.Quantity(1, "L").units / Unit("mL")
+        helpers.assert_quantity_equal(result, ureg.Quantity(1000, ""))
+
+        quantity = ureg.Quantity(1, "L")
+        quantity /= Unit("mL")
+        helpers.assert_quantity_equal(quantity, ureg.Quantity(1000, ""))
 
     multiplications_with_autoconvert_to_baseunit = [
         (((100, "kelvin"), (10, "degC")), (28315.0, "kelvin**2")),
