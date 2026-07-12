@@ -77,7 +77,7 @@ docs = [
   "scipy",
   "currencyconverter",
   "matplotlib",
-  "numpy",
+  "numpy<2.5",
   "xarray",
   "dask[complete]<2025.3.0",
   "optype[numpy]",
