@@ -460,6 +460,20 @@ class TestQuantity(QuantityTestCase):
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
 
+    def test_to_preferred_accepts_unitlike_strings(self):
+        ureg = self.ureg
+        q = self.Q_("1 g")
+
+        preferred = q.to_preferred(["kg"])
+
+        assert preferred.units == ureg.kg
+        assert preferred.magnitude == 0.001
+
+        q.ito_preferred(["kg"])
+
+        assert q.units == ureg.kg
+        assert q.magnitude == 0.001
+
     @helpers.requires_scipy
     def test_to_preferred_registry(self):
         ureg = self.ureg
