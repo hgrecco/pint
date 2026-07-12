@@ -1477,6 +1477,16 @@ def test_issue2256_2():
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
 
 
+def test_issue2313():
+    ureg = UnitRegistry()
+
+    inverse_second = ureg.Unit("second") ** -1
+
+    assert f"{inverse_second:~P}" == "1/s"
+    assert f"{inverse_second:~^P}" == "s⁻¹"
+    assert f"{inverse_second:^}" == "second ** -1"
+
+
 def test_issue2305():
     # Offset (affine) conversion of a Decimal magnitude must not raise
     # TypeError from mixing Decimal with the float scale/offset.
