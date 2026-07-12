@@ -642,6 +642,41 @@ class TestRegistry(QuantityTestCase):
             1 * ureg.meter, 2 * ureg.centimeter, 3 * ureg.meter, d=4 * ureg.centimeter
         ) == (1, 2, 3, 4)
 
+        def kwargs_func(arg1, arg2, kwarg1=0, **kwargs):
+            assert kwargs == {"printmsg": True}
+            return arg1 + arg2 + kwarg1
+
+        kwargs_wrapped = ureg.wraps(
+            ret=ureg.centimeter,
+            args=(ureg.meter, ureg.meter, ureg.meter),
+            strict=False,
+        )(kwargs_func)
+        assert (
+            kwargs_wrapped(
+                1 * ureg.meter, 2 * ureg.meter, kwarg1=5 * ureg.meter, printmsg=True
+            )
+            == 8 * ureg.centimeter
+        )
+
+        kwargs_wrapped_with_placeholder = ureg.wraps(
+            ret=ureg.centimeter,
+            args=(ureg.meter, ureg.meter, ureg.meter, None),
+            strict=False,
+        )(kwargs_func)
+        assert (
+            kwargs_wrapped_with_placeholder(
+                1 * ureg.meter, 2 * ureg.meter, kwarg1=5 * ureg.meter, printmsg=True
+            )
+            == 8 * ureg.centimeter
+        )
+
+        with pytest.raises(TypeError):
+            ureg.wraps(
+                ret=ureg.centimeter,
+                args=(ureg.meter, ureg.meter, ureg.meter, ureg.meter),
+                strict=False,
+            )(kwargs_func)
+
     def test_wrap_referencing(self):
         ureg = self.ureg
 
