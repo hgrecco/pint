@@ -1090,10 +1090,22 @@ for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ("linalg.solve",):
-    implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
+
+
+@implements("linalg.solve", "function")
+def _linalg_solve(a, b, **kwargs):
+    args = tuple(
+        _base_unit_if_needed(arg) if _is_quantity(arg) else arg for arg in (a, b)
+    )
+    first_input_units = _get_first_input_units(args, kwargs)
+    stripped_args, stripped_kwargs = convert_to_consistent_units(*args, **kwargs)
+    result_magnitude = np.linalg.solve(*stripped_args, **stripped_kwargs)
+    result_unit = get_op_output_unit(
+        "invdiv", first_input_units, tuple(chain(args, kwargs.values()))
+    )
+    return first_input_units._REGISTRY.Quantity(result_magnitude, result_unit)
 
 
 @implements("geomspace", "function")
