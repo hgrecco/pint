@@ -712,6 +712,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         # TODO: This should be to_units_container(input_units, self)
         # but this tries to reparse and fail for dimensions.
+        if isinstance(input_units, str):
+            for p in self.preprocessors:
+                input_units = p(input_units)
         input_units = to_units_container(input_units)
 
         return self._get_dimensionality(input_units)
