@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 #   (tested: pyright 1.1.411)
 #
 # See https://discuss.python.org/t/conditional-imports-in-stub-files/50326 for context
-type _BuiltinScalar = complex | float | int | Decimal | Fraction
+type _BuiltinScalar = complex | float | Decimal | Fraction
 try:
     import numpy as np
 
