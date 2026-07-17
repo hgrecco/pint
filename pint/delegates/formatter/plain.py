@@ -307,7 +307,7 @@ class PrettyFormatter(BaseFormatter):
             else:
                 mstr = format_number(magnitude)
 
-            m = _EXP_PATTERN.match(mstr)
+            m = _EXP_PATTERN.search(mstr)
 
             if m:
                 exp = int(m.group(2) + m.group(3))

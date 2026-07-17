@@ -1477,6 +1477,19 @@ def test_issue2256_2():
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
 
 
+def test_negative_magnitude_scientific_notation_formatting():
+    # A negative magnitude shown in scientific notation must get the same pretty
+    # (and HTML) exponent formatting as its positive counterpart. _EXP_PATTERN
+    # was applied with .match(), which anchors at the start and so failed on the
+    # leading "-", leaving negatives with raw e-notation.
+    ureg = UnitRegistry()
+
+    assert f"{2.3e-6 * ureg.m:~P}" == "2.3×10⁻⁶ m"
+    assert f"{-2.3e-6 * ureg.m:~P}" == "-2.3×10⁻⁶ m"
+    assert f"{2.3e-6 * ureg.m:~H}" == "2.3×10<sup>-6</sup> m"
+    assert f"{-2.3e-6 * ureg.m:~H}" == "-2.3×10<sup>-6</sup> m"
+
+
 def test_issue2305():
     # Offset (affine) conversion of a Decimal magnitude must not raise
     # TypeError from mixing Decimal with the float scale/offset.

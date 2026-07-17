@@ -76,7 +76,7 @@ class HTMLFormatter(BaseFormatter):
                         + "</pre>"
                     )
 
-        m = _EXP_PATTERN.match(mstr)
+        m = _EXP_PATTERN.search(mstr)
         _exp_formatter = lambda s: f"<sup>{s}</sup>"
 
         if m:
