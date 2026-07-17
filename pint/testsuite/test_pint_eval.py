@@ -171,3 +171,21 @@ def test_uncertainty(input_text: str, parsed: str):
             assert _pre(uncertainty_tokenizer, input_text)
     else:
         assert _pre(uncertainty_tokenizer, input_text) == parsed
+
+
+@pytest.mark.parametrize("tokenizer", TOKENIZERS)
+@pytest.mark.parametrize(
+    "input_text",
+    # unbalanced parentheses reach the stdlib tokenizer (which raised TokenError),
+    # empty/incomplete groups reached an assert; both are syntax errors.
+    ("(", "(m", "m(", "(1", "((m)", "((", "a(b", "()", "1()", "()()"),
+)
+def test_build_eval_tree_bad_parentheses_raises_definition_syntax_error(
+    tokenizer, input_text: str
+):
+    # Regression: unbalanced or empty parentheses must raise a pint
+    # DefinitionSyntaxError, not a bare tokenize.TokenError or AssertionError.
+    from pint.errors import DefinitionSyntaxError
+
+    with pytest.raises(DefinitionSyntaxError):
+        build_eval_tree(tokenizer(input_text))

@@ -450,11 +450,13 @@ def _build_eval_tree(
                     )
                 elif prev_op == "(":
                     # close parenthetical group
-                    assert result is not None
+                    if result is None:
+                        raise DefinitionSyntaxError("missing operand")
                     return result, index
                 else:
                     # parenthetical group ending, but we need to close sub-operations within group
-                    assert result is not None
+                    if result is None:
+                        raise DefinitionSyntaxError("missing operand")
                     return result, index - 1
             elif token_text == "(":
                 # gather parenthetical group
@@ -563,8 +565,11 @@ def build_eval_tree(
         op_priority = _OP_PRIORITY
 
     if not isinstance(tokens, list):
-        # ensure tokens is list so we can access by index
-        tokens = list(tokens)
+        # Unbalanced parentheses make the stdlib tokenizer raise TokenError here.
+        try:
+            tokens = list(tokens)
+        except tokenize.TokenError as exc:
+            raise DefinitionSyntaxError(str(exc)) from exc
 
     result, _ = _build_eval_tree(tokens, op_priority, 0, 0)
 
