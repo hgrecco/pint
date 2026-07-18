@@ -759,7 +759,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                     accumulator[key] += exp2
 
             else:
-                reg = self._units[self.get_name(key)]
+                name = self.get_name(key)
+                if not name:
+                    # ``dimensionless`` referenced by name resolves to "", which is
+                    # the identity and contributes nothing to the dimensionality.
+                    continue
+                reg = self._units[name]
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
@@ -1005,6 +1010,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         for key in ref:
             exp2 = exp * ref[key]
             key = self.get_name(key)
+            if not key:
+                # ``dimensionless`` referenced by name resolves to "", which is
+                # the identity and has no root units.
+                continue
             reg = self._units[key]
             if reg.is_base:
                 accumulators[key] += exp2
