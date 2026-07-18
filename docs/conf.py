@@ -59,6 +59,9 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
+
+# Optional notebook deps (numba/sparse) are not installed on RTD Python 3.12.
+nbsphinx_allow_errors = True
 project = "pint"
 author = "Hernan E. Grecco"
 
