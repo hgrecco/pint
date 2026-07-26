@@ -1193,6 +1193,16 @@ def test_issue1505():
     )  # unexpected fail (magnitude should be a decimal)
 
 
+def test_issue2068():
+    ur = UnitRegistry(non_int_type=decimal.Decimal)
+
+    q = ur.Quantity("1.2345", "m")
+
+    assert q.magnitude == decimal.Decimal("1.2345")
+    assert isinstance(q.magnitude, decimal.Decimal)
+    assert q.to("cm").magnitude == decimal.Decimal("123.45")
+
+
 def test_issue_1845():
     ur = UnitRegistry(auto_reduce_dimensions=True, non_int_type=decimal.Decimal)
     # before issue 1845 these inputs would have resulted in a TypeError
