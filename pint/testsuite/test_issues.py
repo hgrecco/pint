@@ -1193,6 +1193,22 @@ def test_issue1505():
     )  # unexpected fail (magnitude should be a decimal)
 
 
+def test_issue2153():
+    q = get_application_registry().Quantity(1, "%")
+
+    assert q.check("%")
+
+
+def test_issue2068():
+    ur = UnitRegistry(non_int_type=decimal.Decimal)
+
+    q = ur.Quantity("1.2345", "m")
+
+    assert q.magnitude == decimal.Decimal("1.2345")
+    assert isinstance(q.magnitude, decimal.Decimal)
+    assert q.to("cm").magnitude == decimal.Decimal("123.45")
+
+
 def test_issue_1845():
     ur = UnitRegistry(auto_reduce_dimensions=True, non_int_type=decimal.Decimal)
     # before issue 1845 these inputs would have resulted in a TypeError
@@ -1534,3 +1550,26 @@ def test_issue1798():
     # dimensionless quantities keep working
     d = 3.0 * ureg.dimensionless
     assert f"{d:25.1f}" == "        3.0 dimensionless"
+
+
+def test_issue1513():
+    # ``dimensionless`` referenced by name resolves to "", which is not a key in
+    # the unit registry; the recurse loops used to index it directly and raise
+    # KeyError(''). It is the identity and must behave like the empty unit.
+    ureg = UnitRegistry()
+
+    # #1513: get_dimensionality by name must not raise
+    assert ureg.get_dimensionality("dimensionless") == ureg.get_dimensionality("")
+
+    # #1994: check() by name must not raise
+    assert ureg.Quantity(5, "dimensionless").check("dimensionless")
+
+    # a fractional dimensionless unit defined via ``* dimensionless`` must match
+    # the same unit defined as a bare scalar
+    ureg.define("frac = 0.01 * dimensionless")
+    ureg.define("frac_bare = 0.01")
+    assert (
+        ureg.Quantity(50, "frac").to_base_units()
+        == ureg.Quantity(50, "frac_bare").to_base_units()
+    )
+    assert ureg.get_root_units("frac") == ureg.get_root_units("frac_bare")
