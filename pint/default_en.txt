@@ -710,7 +710,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
     RKM  = gf / tex
 
     number_english = 840 * yard / pound = Ne = NeC = ECC
-    number_meter = kilometer / kilogram = Nm
+    number_meter = kilometer / kilogram
 @end
 
 
@@ -866,7 +866,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 
 @context textile
     # Allow switching between Direct count system (i.e. tex) and
-    # Indirect count system (i.e. Ne, Nm)
+    # Indirect count system (i.e. number_english, number_meter)
     [mass] / [length] <-> [length] / [mass]: 1 / value
 @end
 
