@@ -132,8 +132,7 @@ def split_magnitude_spec(spec: str) -> tuple[str, str]:
         return spec, ""
 
     number_spec = "".join(
-        gd[key] or ""
-        for key in ("sign", "z", "alt", "grouping", "precision", "type")
+        gd[key] or "" for key in ("sign", "z", "alt", "grouping", "precision", "type")
     )
     # Default to right alignment (matches the intuition of a numeric field).
     field_spec = (gd["fill"] or "") + (align or ">") + width
