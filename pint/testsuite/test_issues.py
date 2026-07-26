@@ -1197,8 +1197,8 @@ def test_issue2153():
     q = get_application_registry().Quantity(1, "%")
 
     assert q.check("%")
-    
-    
+
+
 def test_issue2068():
     ur = UnitRegistry(non_int_type=decimal.Decimal)
 
