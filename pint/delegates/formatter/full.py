@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse
 from ...util import iterable
-from ._compound_unit_helpers import BabelKwds, SortFunc, sort_by_unit_name
+from ._compound_unit_helpers import BabelKwds
 from ._to_register import REGISTERED_FORMATTERS
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
@@ -29,12 +29,12 @@ from .plain import (
     PrettyFormatter,
     RawFormatter,
 )
+from .sorting import SortFunc, sort_by_unit_name
 
 if TYPE_CHECKING:
     from ...compat import Locale
     from ...facets.measurement import Measurement
     from ...facets.plain import (
-        MagnitudeT,
         PlainQuantity,
         PlainUnit,
     )
@@ -136,10 +136,14 @@ class FullFormatter(BaseFormatter):
         uspec = uspec or self.default_format
         sort_func = sort_func or self.default_sort_func
         return self.get_formatter(uspec).format_unit(
-            unit, uspec, sort_func=sort_func, **babel_kwds
+            unit,
+            uspec,
+            sort_func=sort_func,
+            as_ratio=False if "^" in uspec else True,
+            **babel_kwds,
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
@@ -231,7 +235,7 @@ class FullFormatter(BaseFormatter):
             locale=locale or self.locale,
         )
 
-    def format_quantity_babel(
+    def format_quantity_babel[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",

@@ -39,9 +39,6 @@ from tokenize import TokenInfo
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
-    TypeVar,
-    Union,
 )
 
 if TYPE_CHECKING:
@@ -49,6 +46,8 @@ if TYPE_CHECKING:
     from ..context import Context
 
     # from ..._typing import Quantity, Unit
+
+from typing import Self, TypeAlias
 
 import platformdirs
 
@@ -60,7 +59,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import Self, TypeAlias, deprecated
+from ...compat import coerce_scalar, deprecated
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -91,8 +90,6 @@ from .definitions import (
 )
 from .objects import PlainQuantity, PlainUnit
 
-T = TypeVar("T")
-
 _BLOCK_RE = re.compile(r"[ (]")
 
 
@@ -111,7 +108,7 @@ def pattern_to_regex(pattern: str | re.Pattern[str]) -> re.Pattern[str]:
     return re.compile(pattern)
 
 
-NON_INT_TYPE = type[Union[float, Decimal, Fraction]]
+NON_INT_TYPE = type[float | Decimal | Fraction]
 PreprocessorType = Callable[[str], str]
 
 
@@ -130,7 +127,7 @@ class RegistryCache:
         self.dimensionality: dict[UnitsContainer, UnitsContainer] = {}
 
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit: dict[str, UnitsContainer] = {}
+        self.parse_unit: dict[tuple[str, bool], UnitsContainer] = {}
 
         self.conversion_factor: dict[
             tuple[UnitsContainer, UnitsContainer], Scalar | DimensionalityError
@@ -160,12 +157,9 @@ class RegistryMeta(type):
         return obj
 
 
-# Generic types used to mark types associated to Registries.
-QuantityT = TypeVar("QuantityT", bound=PlainQuantity)
-UnitT = TypeVar("UnitT", bound=PlainUnit)
-
-
-class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
+class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
+    metaclass=RegistryMeta
+):
     """Base class for all registries.
 
     Capabilities:
@@ -343,7 +337,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._build_cache(loaded_files)
         self._initialized = True
 
-    def _register_adder(
+    def _register_adder[T](
         self,
         definition_class: type[T],
         adder_func: Callable[
@@ -365,7 +359,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
-    def __deepcopy__(self: Self, memo) -> type[Self]:
+    def __deepcopy__(self, memo) -> type[Self]:
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
@@ -384,8 +378,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def __getitem__(self, item: str) -> UnitT:
         return self.parse_expression(item)
 
-    def __contains__(self, item: str) -> bool:
+    def __contains__(self, item: str | UnitT) -> bool:
         """Support checking prefixed units with the `in` operator"""
+        if isinstance(item, self.Unit):
+            item = str(item)
         try:
             self.__getattr__(item)
             return True
@@ -711,6 +707,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def _get_symbol(self, name: str) -> str:
         return self._units[name].symbol
 
+    def _apply_preprocessors(self, input_string: str) -> str:
+        """Apply the registry's preprocessors to a unit or expression string."""
+        for p in self.preprocessors:
+            input_string = p(input_string)
+        return input_string
+
     def get_dimensionality(self, input_units: UnitLike) -> UnitsContainer:
         """Convert unit or dict of units or dimensions to a dict of plain dimensions
         dimensions
@@ -718,6 +720,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         # TODO: This should be to_units_container(input_units, self)
         # but this tries to reparse and fail for dimensions.
+        if isinstance(input_units, str):
+            input_units = self._apply_preprocessors(input_units)
         input_units = to_units_container(input_units)
 
         return self._get_dimensionality(input_units)
@@ -765,7 +769,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                     accumulator[key] += exp2
 
             else:
-                reg = self._units[self.get_name(key)]
+                name = self.get_name(key)
+                if name == "":
+                    continue
+                reg = self._units[name]
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
@@ -1011,6 +1018,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for key in ref:
             exp2 = exp * ref[key]
             key = self.get_name(key)
+            if key == "":
+                continue
             reg = self._units[key]
             if reg.is_base:
                 accumulators[key] += exp2
@@ -1084,7 +1093,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return not isinstance(obj2, (self.Quantity, self.Unit))
 
-    def convert(
+    def convert[T](
         self,
         value: T,
         src: QuantityOrUnitLike,
@@ -1120,7 +1129,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._convert(value, src, dst, inplace, **ctx_kwargs)
 
-    def _convert(
+    def _convert[T](
         self,
         value: T,
         src: UnitsContainer,
@@ -1155,12 +1164,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if isinstance(factor, DimensionalityError):
             raise factor
 
-        # factor is type float and if our magnitude is type Decimal then
-        # must first convert to Decimal before we can '*' the values
-        if isinstance(value, Decimal):
-            factor = Decimal(str(factor))
-        elif isinstance(value, Fraction):
-            factor = Fraction(str(factor))
+        # Decimal/Fraction magnitudes can't mix with float — coerce to match.
+        factor = coerce_scalar(value, factor)
 
         if inplace:
             value *= factor
@@ -1310,11 +1315,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # Issue #1097: it is possible, when a unit was defined while a different context
         # was active, that the unit is in self._cache.parse_unit but not in self._units.
         # If this is the case, force self._units to be repopulated.
-        if as_delta and input_string in cache and input_string in self._units:
-            return cache[input_string]
+        if as_delta and (input_string, case_sensitive) in cache:
+            cached = cache[input_string, case_sensitive]
+            if all(name in self._units for name in cached):
+                return cached
 
-        for p in self.preprocessors:
-            input_string = p(input_string)
+        input_string = self._apply_preprocessors(input_string)
 
         if not input_string:
             return self.UnitsContainer()
@@ -1340,7 +1346,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             ret = ret.add(cname, value)
 
         if as_delta:
-            cache[input_string] = ret
+            cache[input_string, case_sensitive] = ret
 
         return ret
 
@@ -1446,7 +1452,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         return results
 
     def parse_expression(
-        self: Self,
+        self,
         input_string: str,
         case_sensitive: bool | None = None,
         **values: QuantityArgument,
@@ -1470,8 +1476,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if not input_string:
             return self.Quantity(1)
 
-        for p in self.preprocessors:
-            input_string = p(input_string)
+        input_string = self._apply_preprocessors(input_string)
         input_string = string_preprocessor(input_string)
         gen = pint_eval.tokenizer(input_string)
 

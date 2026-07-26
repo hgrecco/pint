@@ -11,9 +11,9 @@ from __future__ import annotations
 import numbers
 from collections.abc import Callable, Iterable
 from numbers import Number
-from typing import Any, Generic
+from typing import Any, Self
 
-from ..._typing import UnitLike
+from ..._typing import Magnitude, UnitLike
 from ...babel_names import _babel_systems
 from ...compat import babel_parse
 from ...util import (
@@ -23,13 +23,12 @@ from ...util import (
     to_units_container,
 )
 from .. import group
-from ..plain import MagnitudeT
 from .definitions import SystemDefinition
 
 GetRootUnits = Callable[[UnitLike, bool], tuple[Number, UnitLike]]
 
 
-class SystemQuantity(Generic[MagnitudeT], group.GroupQuantity[MagnitudeT]):
+class SystemQuantity[MagnitudeT: Magnitude](group.GroupQuantity[MagnitudeT]):
     pass
 
 
@@ -126,15 +125,13 @@ class System(SharedRegistryObject):
             return locale.measurement_systems[name]
         return self.name
 
-    # TODO: When 3.11 is minimal version, use Self
-
     @classmethod
     def from_lines(
-        cls: type[System],
+        cls,
         lines: Iterable[str],
         get_root_func: GetRootUnits,
         non_int_type: type = float,
-    ) -> System:
+    ) -> Self:
         # TODO: we changed something here it used to be
         # system_definition = SystemDefinition.from_lines(lines, get_root_func)
         system_definition = SystemDefinition.from_lines(lines, non_int_type)
@@ -146,10 +143,10 @@ class System(SharedRegistryObject):
 
     @classmethod
     def from_definition(
-        cls: type[System],
+        cls,
         system_definition: SystemDefinition,
         get_root_func: GetRootUnits | None = None,
-    ) -> System:
+    ) -> Self:
         if get_root_func is None:
             # TODO: kept for backwards compatibility
             get_root_func = cls._REGISTRY.get_root_units

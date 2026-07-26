@@ -22,7 +22,7 @@ where each part is optional and the order of these is arbitrary.
    >>> f"{q:~P}"  # short pretty
    '2.3×10⁻⁶ m³/kg/s²'
    >>> f"{q:~^P}"  # short pretty with negative exponents
-   '2.3×10⁻⁶ kg⁻¹·m³·s⁻²'
+   '2.3×10⁻⁶ kg⁻¹⋅m³⋅s⁻²'
    >>> f"{q:~#P}"  # compact short pretty
    '2.3 mm³/g/s²'
    >>> f"{q:P#~}"  # also compact short pretty
@@ -49,7 +49,7 @@ Pint Format Types
 Spec    Name            Examples
 ======= =============== ======================================================================
 ``D``   default         ``3.4e+09 kilogram * meter / second ** 2``
-``P``   pretty          ``3.4×10⁹ kilogram·meter/second²``
+``P``   pretty          ``3.4×10⁹ kilogram⋅meter/second²``
 ``H``   HTML            ``3.4×10<sup>9</sup> kilogram meter/second<sup>2</sup>``
 ``L``   latex           ``3.4\\times 10^{9}\\ \\frac{\\mathrm{kilogram} \\cdot \\mathrm{meter}}{\\mathrm{second}^{2}}``
 ``Lx``  latex siunitx   ``\\SI[]{3.4e+09}{\\kilo\\gram\\meter\\per\\second\\squared}``
@@ -66,7 +66,7 @@ Quantity modifiers
 ======== =================================================== ================================
 Modifier Meaning                                             Example
 ======== =================================================== ================================
-``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m·mg/s²`` (``f"{q:#~P}"``)
+``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m⋅mg/s²`` (``f"{q:#~P}"``)
 ======== =================================================== ================================
 
 Unit modifiers
@@ -75,8 +75,8 @@ Unit modifiers
 ======== =================================================== ================================
 Modifier Meaning                                             Example
 ======== =================================================== ================================
-``~``    Use the unit's symbol instead of its canonical name ``kg·m/s²`` (``f"{u:~P}"``)
-``^``    Use negative exponents instead of ratio             ``kg·m·s⁻²`` (``f"{u:~^P}"``)
+``~``    Use the unit's symbol instead of its canonical name ``kg⋅m/s²`` (``f"{u:~P}"``)
+``^``    Use negative exponents instead of ratio             ``kg⋅m⋅s⁻²`` (``f"{u:~^P}"``)
 ======== =================================================== ================================
 
 Magnitude modifiers
@@ -85,6 +85,57 @@ Magnitude modifiers
 Pint uses the :ref:`format specifications <formatspec>`. However, it is important to remember
 that only the  type honors the locale. Using any other numeric format (e.g. `g`, `e`, `f`)
 will result  in a non-localized representation of the number.
+
+
+Ordering units
+--------------
+
+When a quantity has a compound unit (e.g. after multiplying two quantities
+together), the order in which the individual units appear is controlled by
+``ureg.formatter.default_sort_func``. By default, units are sorted alphabetically
+by name (:py:func:`pint.delegates.formatter.sort_by_unit_name`).
+
+A sort function must have the following signature:
+
+.. code-block:: python
+
+   def sort_func(
+       items: Iterable[tuple[str, Any, str]],
+       registry: UnitRegistry | None,
+   ) -> Iterable[tuple[str, Any, str]]: ...
+
+where ``items`` is an iterable of ``(display_name, exponent, unit_name)``
+triplets, one per unit in the compound unit, and ``registry`` is the
+:class:`~pint.UnitRegistry` in use (or ``None``). It must return the same
+triplets in the desired display order. This is exposed as the
+``pint.delegates.formatter.SortFunc`` type alias.
+
+To instead sort by dimensionality, use
+:py:func:`pint.delegates.formatter.sort_by_dimensionality`,
+which orders units according to ``ureg.formatter.dim_order``:
+
+.. doctest::
+
+   >>> ureg2 = pint.UnitRegistry()
+   >>> ureg2.formatter.dim_order
+   ('[substance]', '[mass]', '[current]', '[luminosity]', '[length]', '[]', '[time]', '[temperature]')
+   >>> from pint.delegates.formatter import sort_by_dimensionality
+   >>> ureg2.formatter.default_sort_func = sort_by_dimensionality
+   >>> Q2_ = ureg2.Quantity
+   >>> str(Q2_(1, "m") * Q2_(1, "N"))
+   '1 newton * meter'
+
+Reordering ``dim_order`` changes which dimension's unit is listed first:
+
+.. doctest::
+
+   >>> ureg2.formatter.dim_order = ('[temperature]', '[time]', '[]', '[length]', '[luminosity]', '[current]', '[mass]', '[substance]')
+   >>> str(Q2_(1, "m") * Q2_(1, "N"))
+   '1 meter * newton'
+
+For full control (e.g. ordering by a specific list of preferred units rather
+than by dimension), write a custom sort function matching the signature above
+and assign it to ``default_sort_func``.
 
 
 Custom formats

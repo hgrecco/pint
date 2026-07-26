@@ -18,7 +18,6 @@ from locale import LC_NUMERIC, getlocale, setlocale
 from typing import (
     TYPE_CHECKING,
     Any,
-    TypeVar,
 )
 
 from ...compat import ndarray
@@ -31,11 +30,6 @@ except ImportError:
 
 if TYPE_CHECKING:
     from ...compat import Locale, Number
-
-T = TypeVar("T")
-U = TypeVar("U")
-V = TypeVar("V")
-W = TypeVar("W")
 
 _PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 _JOIN_REG_EXP = re.compile(r"{\d*}")

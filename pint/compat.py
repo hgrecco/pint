@@ -12,17 +12,16 @@ from __future__ import annotations
 
 import math
 import sys
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from decimal import Decimal
+from fractions import Fraction
 from importlib import import_module
 from importlib.util import find_spec
 from numbers import Number
 from typing import (
     Any,
     # Remove once all dependent packages change their imports.
-    Never,  # noqa
     NoReturn,
-    Self,  # noqa
     TypeAlias,  # noqa
     Unpack,  # noqa
 )
@@ -31,6 +30,27 @@ if sys.version_info >= (3, 13):
     from warnings import deprecated  # noqa
 else:
     from typing_extensions import deprecated  # noqa
+
+
+def coerce_scalar(value, scalar):
+    """Coerce a scalar (a conversion scale or offset) to be arithmetically
+    compatible with value (magnitude).
+
+    Decimal refuses arithmetic with float (both directions raise TypeError);
+    Fraction loses its type when combined with float. Promote the scalar to
+    match a Decimal/Fraction magnitude, and demote a Decimal scalar to float
+    when value is a plain float (the only case where float OP Decimal fails).
+    int OP Decimal works fine and is left unchanged.
+    """
+    if isinstance(value, Decimal):
+        if not isinstance(scalar, Decimal):
+            return Decimal(str(scalar))
+    elif isinstance(value, Fraction):
+        if not isinstance(scalar, Fraction):
+            return Fraction(str(scalar))
+    elif isinstance(value, float) and isinstance(scalar, Decimal):
+        return float(scalar)
+    return scalar
 
 
 def missing_dependency(
@@ -269,6 +289,7 @@ if HAS_NUMPY:
         log,  # noqa: F401
         ndarray,
     )
+    from numpy import timedelta64 as np_timedelta64
 
     NUMPY_VER = np.__version__
     if HAS_UNCERTAINTIES:
@@ -305,6 +326,9 @@ else:
         pass
 
     class np_datetime64:
+        pass
+
+    class np_timedelta64:
         pass
 
     from math import (
@@ -376,4 +400,4 @@ upcast_type_names = (
 )
 
 #: Map type name to the actual type (for upcast types).
-upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
+upcast_type_map: dict[str, type | None] = {k: None for k in upcast_type_names}

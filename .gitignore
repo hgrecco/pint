@@ -23,6 +23,9 @@ pip-wheel-metadata
 pint/testsuite/dask-worker-space
 venv
 
+# Pixi lockfile
+pixi.lock
+
 # WebDAV file system cache files
 .DAV/
 
