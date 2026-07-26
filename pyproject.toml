@@ -64,7 +64,6 @@ docs = [
   "graphviz",
   "pooch",
   "sparse",
-  "numba>=0.59",              # for sparse
   "Serialize",
   "pygments>=2.4",
   "sphinx-book-theme>=1.1.0",
