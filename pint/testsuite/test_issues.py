@@ -1193,6 +1193,12 @@ def test_issue1505():
     )  # unexpected fail (magnitude should be a decimal)
 
 
+def test_issue2153():
+    q = get_application_registry().Quantity(1, "%")
+
+    assert q.check("%")
+
+
 def test_issue2068():
     ur = UnitRegistry(non_int_type=decimal.Decimal)
 
@@ -1518,6 +1524,32 @@ def test_issue2305():
     ureg_dec = UnitRegistry(non_int_type=Decimal)
     assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
     assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue1798():
+    # Format spec width/fill/alignment must apply to the whole quantity
+    # (magnitude and unit), not only to the magnitude.
+    ureg = UnitRegistry()
+
+    q = 2.52 * ureg.meter
+    # width honored across the full "magnitude unit" string
+    assert f"{q:20.1f}" == "           2.5 meter"
+    assert f"{q:>20.1f}" == "           2.5 meter"
+    assert f"{q:<20.1f}" == "2.5 meter           "
+    assert f"{q:*<20.1f}" == "2.5 meter***********"
+
+    # a plain magnitude still behaves the same way
+    assert f"{q.magnitude:20.1f}" == "                 2.5"
+
+    # zero-padding remains a magnitude-only concern
+    assert f"{q:05.1f}" == "002.5 meter"
+
+    # specs without a width are unaffected
+    assert f"{q:.1f}" == "2.5 meter"
+
+    # dimensionless quantities keep working
+    d = 3.0 * ureg.dimensionless
+    assert f"{d:25.1f}" == "        3.0 dimensionless"
 
 
 def test_issue1513():
