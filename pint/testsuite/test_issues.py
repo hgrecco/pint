@@ -1294,7 +1294,7 @@ def test_issue2017():
 
     @fmt.register_unit_format("test2017")
     def _test_format(unit, registry, **options):
-        proc = {u.replace("µ", "u"): e for u, e in unit.items()}
+        proc = {u.replace("µ", "u").replace("μ", "u"): e for u, e in unit.items()}
         return fmt.formatter(
             proc.items(),
             as_ratio=True,
