@@ -565,8 +565,16 @@ class UnitsContainer(Mapping[str, Scalar]):
     def __getstate__(self) -> tuple[udict, Scalar, type, bool]:
         return self._d, self._one, self._non_int_type, self._auto_reduce_units
 
-    def __setstate__(self, state: tuple[udict, Scalar, type, bool]):
-        self._d, self._one, self._non_int_type, self._auto_reduce_units = state
+    def __setstate__(
+        self, state: tuple[udict, Scalar, type] | tuple[udict, Scalar, type, bool]
+    ):
+        # Older pickles (pre auto_reduce_units) only have 3 elements; default
+        # the new field the same way it always defaulted for un-pickled data.
+        if len(state) == 3:
+            self._d, self._one, self._non_int_type = state
+            self._auto_reduce_units = True
+        else:
+            self._d, self._one, self._non_int_type, self._auto_reduce_units = state
         self._hash = None
 
     def __eq__(self, other: Any) -> bool:
@@ -947,9 +955,19 @@ class ParserHelper(UnitsContainer):
     def __getstate__(self) -> tuple[udict, Scalar, type, bool, Scalar]:
         return super().__getstate__() + (self.scale,)
 
-    def __setstate__(self, state: tuple[udict, Scalar, type, bool, Scalar]) -> None:
-        super().__setstate__(state[:4])
-        self.scale = state[4]
+    def __setstate__(
+        self,
+        state: tuple[udict, Scalar, type, Scalar]
+        | tuple[udict, Scalar, type, bool, Scalar],
+    ) -> None:
+        # Older pickles (pre auto_reduce_units) only have 4 elements: the
+        # base UnitsContainer's old 3-element state plus scale.
+        if len(state) == 4:
+            super().__setstate__(state[:3])
+            self.scale = state[3]
+        else:
+            super().__setstate__(state[:4])
+            self.scale = state[4]
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, ParserHelper):

@@ -4,6 +4,7 @@ import collections
 import copy
 import math
 import operator as op
+import pickle
 
 import pytest
 
@@ -130,6 +131,24 @@ class TestUnitsContainer:
         with pytest.raises(TypeError):
             d.__rtruediv__([])
 
+    def test_pickle(self):
+        x = UnitsContainer(meter=1, second=-2, auto_reduce_units=False)
+        y = pickle.loads(pickle.dumps(x))
+        assert y == x
+        assert y._auto_reduce_units is False
+
+    def test_pickle_old_format(self):
+        # Pickles written before the auto_reduce_units feature only have a
+        # 3-element __getstate__ tuple (_d, _one, _non_int_type); loading one
+        # must not raise and must default auto_reduce_units to True, matching
+        # behavior before the field existed.
+        x = UnitsContainer(meter=1, second=-2)
+        old_state = (x._d, x._one, x._non_int_type)
+        restored = UnitsContainer.__new__(UnitsContainer)
+        restored.__setstate__(old_state)
+        assert restored == x
+        assert restored._auto_reduce_units is True
+
 
 class TestToUnitsContainer:
     def test_str_conversion(self):
@@ -212,6 +231,26 @@ class TestParseHelper:
                 p = ParserHelper.from_string(s + " kg")
                 assert math.isnan(p.scale)
                 assert dict(p) == {"kg": 1}
+
+    def test_pickle(self):
+        x = ParserHelper(2, meter=2, auto_reduce_units=False)
+        y = pickle.loads(pickle.dumps(x))
+        assert y == x
+        assert y.scale == x.scale
+        assert y._auto_reduce_units is False
+
+    def test_pickle_old_format(self):
+        # Pickles written before the auto_reduce_units feature have a
+        # 4-element __getstate__ tuple (_d, _one, _non_int_type, scale);
+        # loading one must not raise and must default auto_reduce_units to
+        # True, matching behavior before the field existed.
+        x = ParserHelper(2, meter=2)
+        old_state = (x._d, x._one, x._non_int_type, x.scale)
+        restored = ParserHelper.__new__(ParserHelper)
+        restored.__setstate__(old_state)
+        assert restored == x
+        assert restored.scale == x.scale
+        assert restored._auto_reduce_units is True
 
 
 class TestStringProcessor:
