@@ -4,7 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
-- Fix `wraps` raising an `AssertionError` for arguments declared as `"dimensionless"` (affecting math functions such as `exp`, `log` or `factorial`); string unit specs for input arguments are now resolved through the registry, as the return units already were (#2255)
+- Fix `wraps` raising an `AssertionError` for arguments declared as `"dimensionless"` (affecting math functions such as `exp` or `log`) (#2255)
 - Fix offset (affine) unit conversion of `Decimal` magnitudes raising `TypeError` from mixing `Decimal` with the float scale/offset (e.g. `Quantity(Decimal(10), "degC").to("K")`), and the mirror case of a plain `float` magnitude in a `Decimal` registry (#2305)
 - Add `system` parameter to `to_base_units` and `ito_base_units` to allow converting to the base units of a specific unit system (#2297)
 - Add beats per minute (`beats_per_minute`, `bpm`) (#2286)
