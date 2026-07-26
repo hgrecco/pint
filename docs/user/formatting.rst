@@ -87,6 +87,42 @@ that only the  type honors the locale. Using any other numeric format (e.g. `g`,
 will result  in a non-localized representation of the number.
 
 
+Ordering units
+--------------
+
+When a quantity has a compound unit (e.g. after multiplying two quantities
+together), the order in which the individual units appear is controlled by
+``ureg.formatter.default_sort_func``. By default, units are sorted alphabetically
+by name (``pint.delegates.formatter._compound_unit_helpers.sort_by_unit_name``).
+
+To instead sort by dimensionality, use
+``pint.delegates.formatter._compound_unit_helpers.sort_by_dimensionality``,
+which orders units according to ``ureg.formatter.dim_order``:
+
+.. doctest::
+
+   >>> ureg2 = pint.UnitRegistry()
+   >>> ureg2.formatter.dim_order
+   ('[substance]', '[mass]', '[current]', '[luminosity]', '[length]', '[]', '[time]', '[temperature]')
+   >>> from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+   >>> ureg2.formatter.default_sort_func = sort_by_dimensionality
+   >>> Q2_ = ureg2.Quantity
+   >>> str(Q2_(1, "m") * Q2_(1, "N"))
+   '1 newton * meter'
+
+Reordering ``dim_order`` changes which dimension's unit is listed first:
+
+.. doctest::
+
+   >>> ureg2.formatter.dim_order = ('[temperature]', '[time]', '[]', '[length]', '[luminosity]', '[current]', '[mass]', '[substance]')
+   >>> str(Q2_(1, "m") * Q2_(1, "N"))
+   '1 meter * newton'
+
+For full control (e.g. ordering by a specific list of preferred units rather
+than by dimension), write a custom sort function with the same signature as
+``sort_by_dimensionality`` and assign it to ``default_sort_func``.
+
+
 Custom formats
 --------------
 Using :py:func:`pint.register_unit_format`, it is possible to add custom
