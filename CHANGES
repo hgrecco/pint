@@ -9,6 +9,7 @@ Pint Changelog
 - Support the superscript decimal point `⋅` (U+22C5) and fraction slash `⸍` (U+2E0D) in unit exponents, e.g. `gr⁰⋅³³³` (`grain**0.333`) and `gr¹⸍³` (`grain**(1/3)`) (#2250)
 - Fix `KeyError('')` raised when the `dimensionless` unit is referenced by name, e.g. `get_dimensionality("dimensionless")`, `Quantity(5, "dimensionless").check("dimensionless")`, or a unit defined via `* dimensionless` (#1513, #1994)
 - Fix offset (affine) unit conversion of `Decimal` magnitudes raising `TypeError` from mixing `Decimal` with the float scale/offset (e.g. `Quantity(Decimal(10), "degC").to("K")`), and the mirror case of a plain `float` magnitude in a `Decimal` registry (#2305)
+- Accept strings in `Quantity.to_preferred()` and `Quantity.ito_preferred()` preferred unit lists (#2185)
 - Raise `OffsetUnitCalculusError` for `numpy.linalg.solve` with offset unit inputs when offset autoconversion is disabled (#2211)
 - Apply registry preprocessors when getting dimensionality from text input (#2153)
 - Allow `UnitRegistry.wraps()` to pass through arbitrary `**kwargs` without requiring a unit slot (#2175)
