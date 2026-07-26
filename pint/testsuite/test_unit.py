@@ -229,6 +229,22 @@ class TestUnit(QuantityTestCase):
         unit = self.ureg.Unit("")
         assert unit.is_compatible_with(0.5)
 
+    def test_is_compatible_with_offset_units(self):
+        # 1190
+        unit = self.ureg.Unit("degC")
+
+        assert unit.is_compatible_with(self.ureg.Unit("degF"))
+        assert unit.is_compatible_with("kelvin")
+        assert not unit.is_compatible_with("kg")
+
+    def test_is_compatible_with_string_with_magnitude(self):
+        # 1190: parsing a string with a scaling factor used to raise
+        # ValueError instead of being treated like any other unit string.
+        unit = self.ureg.Unit("in")
+
+        assert unit.is_compatible_with("35000 ft")
+        assert not unit.is_compatible_with("35000 kg")
+
     def test_systems(self):
         unit = self.ureg.Unit("m")
         assert unit.systems == frozenset({"cgs", "atomic", "Planck", "mks", "SI"})

@@ -515,7 +515,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         if isinstance(other, str):
             return (
-                self.dimensionality == self._REGISTRY.parse_units(other).dimensionality
+                self.dimensionality
+                == self._REGISTRY.parse_expression(other).dimensionality
             )
 
         return self.dimensionless
