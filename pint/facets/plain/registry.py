@@ -760,9 +760,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
             else:
                 name = self.get_name(key)
-                if not name:
-                    # ``dimensionless`` referenced by name resolves to "", which is
-                    # the identity and contributes nothing to the dimensionality.
+                if name == "":
                     continue
                 reg = self._units[name]
                 if reg.reference is not None:
@@ -1010,9 +1008,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         for key in ref:
             exp2 = exp * ref[key]
             key = self.get_name(key)
-            if not key:
-                # ``dimensionless`` referenced by name resolves to "", which is
-                # the identity and has no root units.
+            if key == "":
                 continue
             reg = self._units[key]
             if reg.is_base:
