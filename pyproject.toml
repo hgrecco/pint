@@ -219,6 +219,7 @@ pandoc = "*"
 pandas = "*"
 tabulate = "*"
 graphviz = "*"
+numpy = "<2.5"
 
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
