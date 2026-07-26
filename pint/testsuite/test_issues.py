@@ -1556,6 +1556,19 @@ def test_issue2255():
 
     assert f(Q_(1000, "m")) == 1.0
 
+  
+def test_issue2320():
+    ureg = UnitRegistry()
+    for spelling in ("kg", "kWh", "ms", "degC**2"):
+        first = ureg.parse_units_as_container(spelling)
+        second = ureg.parse_units_as_container(spelling)
+        assert second is first, f"{spelling} re-parsed instead of hitting the cache"
+
+    ureg = UnitRegistry()
+    assert ureg.parse_units("Meter", case_sensitive=False) == UnitsContainer(meter=1)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_units("Meter", case_sensitive=True)
+
 
 def test_issue1798():
     # Format spec width/fill/alignment must apply to the whole quantity

@@ -127,7 +127,7 @@ class RegistryCache:
         self.dimensionality: dict[UnitsContainer, UnitsContainer] = {}
 
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit: dict[str, UnitsContainer] = {}
+        self.parse_unit: dict[tuple[str, bool], UnitsContainer] = {}
 
         self.conversion_factor: dict[
             tuple[UnitsContainer, UnitsContainer], Scalar | DimensionalityError
@@ -1313,8 +1313,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # Issue #1097: it is possible, when a unit was defined while a different context
         # was active, that the unit is in self._cache.parse_unit but not in self._units.
         # If this is the case, force self._units to be repopulated.
-        if as_delta and input_string in cache and input_string in self._units:
-            return cache[input_string]
+        if as_delta and (input_string, case_sensitive) in cache:
+            cached = cache[input_string, case_sensitive]
+            if all(name in self._units for name in cached):
+                return cached
 
         input_string = self._apply_preprocessors(input_string)
 
@@ -1342,7 +1344,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             ret = ret.add(cname, value)
 
         if as_delta:
-            cache[input_string] = ret
+            cache[input_string, case_sensitive] = ret
 
         return ret
 
