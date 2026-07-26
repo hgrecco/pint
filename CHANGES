@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Fix `unit in registry` raising `AttributeError` instead of returning `True` when checking membership with a `Unit` object rather than a string (#2156)
 - Fix `DimensionalityError` from `numpy_scalar == quantity` for incompatible dimensions; now returns `False`/`True` like `quantity == numpy_scalar` (#2182)
 - Fix `wraps` raising an `AssertionError` for arguments declared as `"dimensionless"` (affecting math functions such as `exp` or `log`) (#2255)
 - Raise ``DefinitionSyntaxError`` instead of a bare ``AssertionError`` when parsing an expression that is only an operator, e.g. ``ureg('-')`` or ``ureg('*')`` (#2124)
