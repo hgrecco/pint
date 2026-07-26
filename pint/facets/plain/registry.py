@@ -1091,7 +1091,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 obj2, *contexts, **ctx_kwargs
             )
 
-        return not isinstance(obj2, (self.Quantity, self.Unit))
+        if isinstance(obj2, (self.Quantity, self.Unit, str)):
+            return self.is_compatible_with(obj2, obj1, *contexts, **ctx_kwargs)
+
+        # neither obj1 nor obj2 is a Quantity, Unit or str, so both are
+        # treated as dimensionless and are therefore compatible.
+        return True
 
     def convert[T](
         self,

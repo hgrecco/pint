@@ -808,6 +808,65 @@ class TestQuantity(QuantityTestCase):
 
         assert c.is_compatible_with(12)
 
+    def test_is_compatible_with_offset_units(self):
+        # 1190: offset units follow a different code path (via .to()) when
+        # contexts are involved, so make sure dimensionality-based
+        # compatibility still holds for them.
+        a = self.Q_(100, "degC")
+        b = self.Q_(50, "degF")
+
+        assert a.is_compatible_with(b)
+        assert a.is_compatible_with("degF")
+        assert a.is_compatible_with("kelvin")
+        assert a.is_compatible_with(self.U_("kelvin"))
+        assert not a.is_compatible_with("kg")
+
+    def test_is_compatible_with_string_with_magnitude(self):
+        # 1190: parsing a string with a scaling factor used to raise
+        # ValueError instead of being treated like any other unit string.
+        a = self.Q_(80, "in")
+
+        assert a.is_compatible_with("35000 ft")
+        assert not a.is_compatible_with("35000 kg")
+
+    def test_registry_is_compatible_with(self):
+        # 1190: UnitRegistry.is_compatible_with(obj1, obj2) used to be
+        # asymmetric when obj1 was a plain number/array and obj2 was a
+        # Quantity or Unit.
+        ureg = self.ureg
+
+        assert ureg.is_compatible_with(ureg.deg, 10.0)
+        assert ureg.is_compatible_with(10.0, ureg.deg)
+        assert ureg.is_compatible_with(self.Q_(10, ""), ureg.deg)
+        assert ureg.is_compatible_with(ureg.deg, self.Q_(10, ""))
+        assert not ureg.is_compatible_with(10.0, ureg.meter)
+        assert not ureg.is_compatible_with(ureg.meter, 10.0)
+
+        assert ureg.is_compatible_with("80 in", "35000 ft")
+        assert ureg.is_compatible_with("in", "35000 ft")
+        assert not ureg.is_compatible_with("80 in", "35000 kg")
+
+    def test_registry_is_compatible_with_non_pint_types(self):
+        # 1190: when neither argument is a Quantity, Unit or str, both are
+        # treated as dimensionless (matching master's pre-existing, if
+        # accidental, behavior of never raising here).
+        ureg = self.ureg
+
+        assert ureg.is_compatible_with(10.0, 5.0)
+        assert ureg.is_compatible_with(True, False)
+        assert ureg.is_compatible_with(None, None)
+        assert ureg.is_compatible_with({"a": 1}, {"a": 1})
+
+    @helpers.requires_numpy
+    def test_registry_is_compatible_with_np(self):
+        # 1190
+        ureg = self.ureg
+        arr = np.array([1, 2, 3, 4])
+
+        assert ureg.is_compatible_with(arr, ureg.deg)
+        assert ureg.is_compatible_with(ureg.deg, arr)
+        assert not ureg.is_compatible_with(arr, ureg.meter)
+
     def test_is_compatible_with_with_context(self):
         a = self.Q_(532.0, "nm")
         b = self.Q_(563.5, "terahertz")
