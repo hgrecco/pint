@@ -314,13 +314,16 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
 
     def _is_timedelta(self, value) -> bool:
         return (
-            isinstance(value, datetime.timedelta)
+            super()._is_timedelta(value)
             or isinstance(value, np_timedelta64)
             or (is_duck_array(value) and value.dtype.type == np_timedelta64)
         )
 
     def _convert_timedelta(self, value: Any) -> tuple[float, str]:
         """Convert a timedelta object to magnitude and unit string."""
+        if isinstance(value, datetime.timedelta):
+            return super()._convert_timedelta(value)
+
         _dtype_to_unit = {
             "timedelta64[Y]": "year",
             "timedelta64[M]": "month",
@@ -336,8 +339,6 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
             "timedelta64[fs]": "fs",
             "timedelta64[as]": "as",
         }
-        if isinstance(value, datetime.timedelta):
-            return value.total_seconds(), "seconds"
-        elif isinstance(value, np_timedelta64) or value.dtype.type == np_timedelta64:
+        if isinstance(value, np_timedelta64) or value.dtype.type == np_timedelta64:
             return value.astype(float), _dtype_to_unit[str(value.dtype)]
         raise TypeError(f"Cannot convert {value!r} to seconds.")
