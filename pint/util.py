@@ -1043,9 +1043,7 @@ def to_units_container(
         return unit_like._units
     elif str in mro:
         if registry:
-            # TODO: document how to whether to lift preprocessing loop out to caller
-            for p in registry.preprocessors:
-                unit_like = p(unit_like)
+            unit_like = registry._apply_preprocessors(unit_like)
             return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
