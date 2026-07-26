@@ -1193,6 +1193,22 @@ def test_issue1505():
     )  # unexpected fail (magnitude should be a decimal)
 
 
+def test_issue2153():
+    q = get_application_registry().Quantity(1, "%")
+
+    assert q.check("%")
+
+
+def test_issue2068():
+    ur = UnitRegistry(non_int_type=decimal.Decimal)
+
+    q = ur.Quantity("1.2345", "m")
+
+    assert q.magnitude == decimal.Decimal("1.2345")
+    assert isinstance(q.magnitude, decimal.Decimal)
+    assert q.to("cm").magnitude == decimal.Decimal("123.45")
+
+
 def test_issue_1845():
     ur = UnitRegistry(auto_reduce_dimensions=True, non_int_type=decimal.Decimal)
     # before issue 1845 these inputs would have resulted in a TypeError
@@ -1203,9 +1219,9 @@ def test_issue_1845():
 @pytest.mark.parametrize(
     "units,spec,expected",
     [
-        # (dict(hour=1, watt=1), "P~", "W·h"),
-        (dict(ampere=1, volt=1), "P~", "V·A"),
-        # (dict(meter=1, newton=1), "P~", "N·m"),
+        # (dict(hour=1, watt=1), "P~", "W⋅h"),
+        (dict(ampere=1, volt=1), "P~", "V⋅A"),
+        # (dict(meter=1, newton=1), "P~", "N⋅m"),
     ],
 )
 def test_issues_1841(func_registry, units, spec, expected):
@@ -1464,7 +1480,7 @@ def test_issue2256():
         return pf.format_unit(unit, "~", as_ratio=False)
 
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
-    assert f"{q:test2256}" == "2.3e-06 kg⁻¹·m³·s⁻²"
+    assert f"{q:test2256}" == "2.3e-06 kg⁻¹⋅m³⋅s⁻²"
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
 
 
@@ -1473,7 +1489,7 @@ def test_issue2256_2():
 
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
-    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
+    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹⋅m³⋅s⁻²"
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
 
 
@@ -1521,3 +1537,116 @@ def test_issue2156(func_registry):
     assert "joule" in ureg
     assert "kJ" in ureg
     assert "definitely_not_a_unit" not in ureg
+
+
+def test_issue2255():
+    # wraps must resolve the string unit specs for the *input* arguments through
+    # the registry, exactly as it already does for the return units. Otherwise a
+    # spec such as "dimensionless" is parsed as a unit literally named
+    # "dimensionless" (a non-empty UnitsContainer) instead of an empty,
+    # genuinely dimensionless one, and converting an argument to it raised an
+    # AssertionError deep in the offset-unit handling.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    exp = ureg.wraps("dimensionless", "dimensionless")(math.exp)
+    assert exp(Q_(1)) == Q_(math.exp(1), "dimensionless")
+    # a dimensionless argument carrying convertible units is converted first
+    assert exp(Q_(100, "percent")) == Q_(math.exp(1), "dimensionless")
+
+    # other functions taking dimensionless parameters used to raise as well
+    factorial = ureg.wraps("dimensionless", "dimensionless")(math.factorial)
+    assert factorial(Q_(5)) == Q_(120, "dimensionless")
+
+    asin = ureg.wraps("radian", "dimensionless")(math.asin)
+    assert asin(Q_(1)) == Q_(math.asin(1), "radian")
+
+    # input specs are now parsed with the registry, so a symbol/prefixed
+    # spelling behaves like its canonical name (km -> kilometer)
+    @ureg.wraps(None, "km")
+    def f(x):
+        return x
+
+    assert f(Q_(1000, "m")) == 1.0
+
+
+def test_issue2320():
+    ureg = UnitRegistry()
+    for spelling in ("kg", "kWh", "ms", "degC**2"):
+        first = ureg.parse_units_as_container(spelling)
+        second = ureg.parse_units_as_container(spelling)
+        assert second is first, f"{spelling} re-parsed instead of hitting the cache"
+
+    ureg = UnitRegistry()
+    assert ureg.parse_units("Meter", case_sensitive=False) == UnitsContainer(meter=1)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_units("Meter", case_sensitive=True)
+
+
+def test_issue1798():
+    # Format spec width/fill/alignment must apply to the whole quantity
+    # (magnitude and unit), not only to the magnitude.
+    ureg = UnitRegistry()
+
+    q = 2.52 * ureg.meter
+    # width honored across the full "magnitude unit" string
+    assert f"{q:20.1f}" == "           2.5 meter"
+    assert f"{q:>20.1f}" == "           2.5 meter"
+    assert f"{q:<20.1f}" == "2.5 meter           "
+    assert f"{q:*<20.1f}" == "2.5 meter***********"
+
+    # a plain magnitude still behaves the same way
+    assert f"{q.magnitude:20.1f}" == "                 2.5"
+
+    # zero-padding remains a magnitude-only concern
+    assert f"{q:05.1f}" == "002.5 meter"
+
+    # specs without a width are unaffected
+    assert f"{q:.1f}" == "2.5 meter"
+
+    # dimensionless quantities keep working
+    d = 3.0 * ureg.dimensionless
+    assert f"{d:25.1f}" == "        3.0 dimensionless"
+
+
+def test_issue1513():
+    # ``dimensionless`` referenced by name resolves to "", which is not a key in
+    # the unit registry; the recurse loops used to index it directly and raise
+    # KeyError(''). It is the identity and must behave like the empty unit.
+    ureg = UnitRegistry()
+
+    # #1513: get_dimensionality by name must not raise
+    assert ureg.get_dimensionality("dimensionless") == ureg.get_dimensionality("")
+
+    # #1994: check() by name must not raise
+    assert ureg.Quantity(5, "dimensionless").check("dimensionless")
+
+    # a fractional dimensionless unit defined via ``* dimensionless`` must match
+    # the same unit defined as a bare scalar
+    ureg.define("frac = 0.01 * dimensionless")
+    ureg.define("frac_bare = 0.01")
+    assert (
+        ureg.Quantity(50, "frac").to_base_units()
+        == ureg.Quantity(50, "frac_bare").to_base_units()
+    )
+    assert ureg.get_root_units("frac") == ureg.get_root_units("frac_bare")
+
+
+@helpers.requires_numpy
+def test_issue2182():
+    # Comparing a Quantity to an incompatible-dimension value returns False (and
+    # `!=` returns True), regardless of which side of `==`/`!=` the Quantity is on.
+    ureg = UnitRegistry()
+    q = ureg.Quantity(5.0, "Hz")
+
+    assert not (q == 5.0)
+    assert not (5.0 == q)
+    assert not (q == np.float64(5.0))
+    assert not (np.float64(5.0) == q)  # used to raise DimensionalityError
+    assert not (np.array(5.0) == q)  # used to raise DimensionalityError
+
+    assert q != 5.0
+    assert 5.0 != q
+    assert q != np.float64(5.0)
+    assert np.float64(5.0) != q  # used to raise DimensionalityError
+    assert np.array(5.0) != q  # used to raise DimensionalityError

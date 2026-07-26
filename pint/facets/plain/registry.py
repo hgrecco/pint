@@ -127,7 +127,7 @@ class RegistryCache:
         self.dimensionality: dict[UnitsContainer, UnitsContainer] = {}
 
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit: dict[str, UnitsContainer] = {}
+        self.parse_unit: dict[tuple[str, bool], UnitsContainer] = {}
 
         self.conversion_factor: dict[
             tuple[UnitsContainer, UnitsContainer], Scalar | DimensionalityError
@@ -707,6 +707,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def _get_symbol(self, name: str) -> str:
         return self._units[name].symbol
 
+    def _apply_preprocessors(self, input_string: str) -> str:
+        """Apply the registry's preprocessors to a unit or expression string."""
+        for p in self.preprocessors:
+            input_string = p(input_string)
+        return input_string
+
     def get_dimensionality(self, input_units: UnitLike) -> UnitsContainer:
         """Convert unit or dict of units or dimensions to a dict of plain dimensions
         dimensions
@@ -714,6 +720,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         # TODO: This should be to_units_container(input_units, self)
         # but this tries to reparse and fail for dimensions.
+        if isinstance(input_units, str):
+            input_units = self._apply_preprocessors(input_units)
         input_units = to_units_container(input_units)
 
         return self._get_dimensionality(input_units)
@@ -761,7 +769,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                     accumulator[key] += exp2
 
             else:
-                reg = self._units[self.get_name(key)]
+                name = self.get_name(key)
+                if name == "":
+                    continue
+                reg = self._units[name]
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
@@ -1007,6 +1018,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         for key in ref:
             exp2 = exp * ref[key]
             key = self.get_name(key)
+            if key == "":
+                continue
             reg = self._units[key]
             if reg.is_base:
                 accumulators[key] += exp2
@@ -1302,11 +1315,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # Issue #1097: it is possible, when a unit was defined while a different context
         # was active, that the unit is in self._cache.parse_unit but not in self._units.
         # If this is the case, force self._units to be repopulated.
-        if as_delta and input_string in cache and input_string in self._units:
-            return cache[input_string]
+        if as_delta and (input_string, case_sensitive) in cache:
+            cached = cache[input_string, case_sensitive]
+            if all(name in self._units for name in cached):
+                return cached
 
-        for p in self.preprocessors:
-            input_string = p(input_string)
+        input_string = self._apply_preprocessors(input_string)
 
         if not input_string:
             return self.UnitsContainer()
@@ -1332,7 +1346,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             ret = ret.add(cname, value)
 
         if as_delta:
-            cache[input_string] = ret
+            cache[input_string, case_sensitive] = ret
 
         return ret
 
@@ -1462,8 +1476,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if not input_string:
             return self.Quantity(1)
 
-        for p in self.preprocessors:
-            input_string = p(input_string)
+        input_string = self._apply_preprocessors(input_string)
         input_string = string_preprocessor(input_string)
         gen = pint_eval.tokenizer(input_string)
 

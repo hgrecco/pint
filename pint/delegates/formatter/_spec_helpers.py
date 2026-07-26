@@ -90,6 +90,56 @@ def remove_custom_flags(spec: str) -> str:
     return spec
 
 
+# Regex for the Python format specification mini-language:
+# [[fill]align][sign][z][#][0][width][grouping_option][.precision][type]
+_FORMAT_SPEC_RE = re.compile(
+    r"^(?:(?P<fill>.)?(?P<align>[<>=^]))?"
+    r"(?P<sign>[-+ ])?(?P<z>z)?(?P<alt>\#)?(?P<zero>0)?"
+    r"(?P<width>\d+)?(?P<grouping>[,_])?"
+    r"(?P<precision>\.\d+)?(?P<type>[a-zA-Z%])?$"
+)
+
+
+def split_magnitude_spec(spec: str) -> tuple[str, str]:
+    """Split a magnitude format spec into a number spec and a field spec.
+
+    The width/fill/alignment part of the specification should apply to the whole
+    formatted quantity (magnitude and unit), while the sign/precision/type part
+    only applies to the magnitude. This returns ``(number_spec, field_spec)`` so
+    the caller can format the magnitude with ``number_spec`` and then apply
+    ``field_spec`` to the joined ``"magnitude unit"`` string.
+
+    Zero-padding (the ``0`` flag) and internal alignment (``=``) are
+    number-specific, so in those cases the whole spec is kept on the magnitude
+    and ``field_spec`` is empty.
+    """
+
+    match = _FORMAT_SPEC_RE.match(spec)
+    if match is None:
+        return spec, ""
+
+    gd = match.groupdict()
+
+    width = gd["width"]
+    align = gd["align"]
+
+    # Nothing to pull out to the outer field.
+    if not width:
+        return spec, ""
+
+    # Zero-padding and internal alignment only make sense on the number itself.
+    if gd["zero"] or align == "=":
+        return spec, ""
+
+    number_spec = "".join(
+        gd[key] or "" for key in ("sign", "z", "alt", "grouping", "precision", "type")
+    )
+    # Default to right alignment (matches the intuition of a numeric field).
+    field_spec = (gd["fill"] or "") + (align or ">") + width
+
+    return number_spec, field_spec
+
+
 ##########
 # This weird way of defining split format
 # is the only reasonable way I foudn to use
