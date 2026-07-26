@@ -8,27 +8,25 @@ pint.facets.group.registry
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic
+from typing import TYPE_CHECKING, Any
 
 from ... import errors
 from ...compat import TypeAlias
 
 if TYPE_CHECKING:
-    from ..._typing import Unit, UnitsContainer
+    from ..._typing import Quantity, Unit, UnitsContainer
 
 from ...util import create_class_with_registry, to_units_container
 from ..plain import (
     GenericPlainRegistry,
-    QuantityT,
     UnitDefinition,
-    UnitT,
 )
 from . import objects
 from .definitions import GroupDefinition
 
 
-class GenericGroupRegistry(
-    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+class GenericGroupRegistry[QuantityT: Quantity, UnitT: Unit](
+    GenericPlainRegistry[QuantityT, UnitT]
 ):
     """Handle of Groups.
 

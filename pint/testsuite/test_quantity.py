@@ -7,6 +7,7 @@ import math
 import operator as op
 import pickle
 import warnings
+from typing import TYPE_CHECKING, assert_type
 from unittest.mock import patch
 
 import pytest
@@ -22,6 +23,9 @@ from pint.errors import UndefinedBehavior
 from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
+if TYPE_CHECKING:
+    from pint import Quantity as Q_
+
 
 class FakeWrapper:
     # Used in test_upcast_type_rejection_on_creation
@@ -34,6 +38,7 @@ class TestQuantity(QuantityTestCase):
     kwargs = dict(autoconvert_offset_to_baseunit=False)
 
     def test_quantity_creation(self, caplog):
+        x: Q_[float]
         for args in (
             (4.2, "meter"),
             (4.2, UnitsContainer(meter=1)),
@@ -62,13 +67,15 @@ class TestQuantity(QuantityTestCase):
 
         assert self.Q_("4.2×10⁻¹² ft/s") == self.Q_(4.2e-12, "foot/second")
 
-    def test_round(self):
-        x = self.Q_(1.1, "kg")
-        assert isinstance(round(x).magnitude, int)
-        assert isinstance(round(x, 0).magnitude, float)
+    def test_round(self) -> None:
+        x: Q_[float] = self.Q_(1.1, "kg")
+        round1 = assert_type(round(x), "Q_[int]")
+        round2 = assert_type(round(x, 0), "Q_[float]")
+        assert isinstance(round1.magnitude, int)
+        assert isinstance(round2.magnitude, float)
 
     def test_quantity_with_quantity(self):
-        x = self.Q_(4.2, "m")
+        x: Q_[float] = self.Q_(4.2, "m")
         assert self.Q_(x, "m").magnitude == 4.2
         assert self.Q_(x, "cm").magnitude == 420.0
 
@@ -82,13 +89,13 @@ class TestQuantity(QuantityTestCase):
         assert not self.Q_(0, "delta_degC")
 
     def test_quantity_comparison(self):
-        x = self.Q_(4.2, "meter")
-        y = self.Q_(4.2, "meter")
-        z = self.Q_(5, "meter")
-        j = self.Q_(5, "meter*meter")
+        x: Q_[float] = self.Q_(4.2, "meter")
+        y: Q_[float] = self.Q_(4.2, "meter")
+        z: Q_[int] = self.Q_(5, "meter")
+        j: Q_[int] = self.Q_(5, "meter*meter")
 
         # Include a comparison to the application registry
-        5 * get_application_registry().meter
+        _ = 5 * get_application_registry().meter
         # Include a comparison to a directly created Quantity
         from pint import Quantity
 
@@ -133,7 +140,24 @@ class TestQuantity(QuantityTestCase):
     def test_quantity_repr(self):
         x = self.Q_(4.2, UnitsContainer(meter=1))
         assert str(x) == "4.2 meter"
-        assert repr(x) == "<Quantity(4.2, 'meter')>"
+        assert repr(x) == 'Quantity(4.2, "meter")'
+
+        # Imports needed for the eval
+        from pint import Quantity  # noqa: F401
+
+        assert eval(repr(x)) == x
+
+    @helpers.requires_numpy
+    def test_quantity_repr_numpy(self):
+        x_arr = self.Q_(np.array([1.0, 2.0, 3.0]), UnitsContainer(meter=2))
+        assert repr(x_arr) == 'Quantity(array([1., 2., 3.]), "meter ** 2")'
+
+        # Imports needed for the eval
+        from numpy import array  # noqa: F401
+
+        from pint import Quantity  # noqa: F401
+
+        assert np.all(eval(repr(x_arr)) == x_arr)
 
     def test_quantity_hash(self):
         x = self.Q_(4.2, "meter")
@@ -365,6 +389,20 @@ class TestQuantity(QuantityTestCase):
             x.to_base_units(), self.Q_(0.0254 / 60.0, "meter/second")
         )
 
+    @pytest.mark.parametrize(
+        "input_quantity, system, expected_quantity",
+        [
+            ("100 meter", "imperial", "109.36132983377078 yard"),
+            ("1 km", "mks", "1000 meter"),
+            ("1 inch", "mks", "0.0254 meter"),
+        ],
+    )
+    def test_to_base_units_with_system(self, input_quantity, system, expected_quantity):
+        helpers.assert_quantity_almost_equal(
+            self.Q_(input_quantity).to_base_units(system=system),
+            self.Q_(expected_quantity),
+        )
+
     def test_convert(self):
         helpers.assert_quantity_almost_equal(
             self.Q_("2 inch").to("meter"), self.Q_(2.0 * 0.0254, "meter")
@@ -383,6 +421,14 @@ class TestQuantity(QuantityTestCase):
         assert (
             round(abs(self.Q_("2 second").to("millisecond").magnitude - 2000), 7) == 0
         )
+
+    def test_convert_to_none(self):
+        q = self.Q_(5, None)
+
+        helpers.assert_quantity_equal(q.to(None), self.Q_(5, None))
+
+        q.ito(None)
+        helpers.assert_quantity_equal(q, self.Q_(5, None))
 
     @helpers.requires_scipy
     def test_to_preferred(self):
@@ -421,6 +467,20 @@ class TestQuantity(QuantityTestCase):
 
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
+
+    def test_to_preferred_accepts_unitlike_strings(self):
+        ureg = self.ureg
+        q = self.Q_("1 g")
+
+        preferred = q.to_preferred(["kg"])
+
+        assert preferred.units == ureg.kg
+        assert preferred.magnitude == 0.001
+
+        q.ito_preferred(["kg"])
+
+        assert q.units == ureg.kg
+        assert q.magnitude == 0.001
 
     @helpers.requires_scipy
     def test_to_preferred_registry(self):
@@ -710,7 +770,7 @@ class TestQuantity(QuantityTestCase):
         with pytest.raises(TypeError):
             iter(x)
 
-    @helpers.requires_array_function_protocol()
+    @helpers.requires_numpy()
     def test_no_longer_array_function_warning_on_creation(self):
         # Test that warning is no longer raised on first creation
         with warnings.catch_warnings():
@@ -1037,13 +1097,16 @@ class TestQuantityBasicMath(QuantityTestCase):
         func(op.ifloordiv, 10.0, "4.2*meter/meter", 2, unit)
         func(op.ifloordiv, "10*meter", "4.2*inch", 93, unit)
 
-    def _test_quantity_divmod_one(self, a, b):
+    def _test_quantity_divmod_one(
+        self, /, a: str | int | Q_[int], b: str | int | Q_[int]
+    ) -> None:
         if isinstance(a, str):
             a = self.Q_(a)
         if isinstance(b, str):
             b = self.Q_(b)
 
         q, r = divmod(a, b)
+        assert isinstance(q, self.Q_) and isinstance(r, self.Q_)
         assert q == a // b
         assert r == a % b
         assert a == (q * b) + r
@@ -1064,7 +1127,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         copy_a //= b
         assert copy_a == q
 
-    def _test_quantity_divmod(self):
+    def _test_quantity_divmod(self, /) -> None:
         self._test_quantity_divmod_one("10*meter", "4.2*inch")
         self._test_quantity_divmod_one("-10*meter", "4.2*inch")
         self._test_quantity_divmod_one("-10*meter", "-4.2*inch")
@@ -1076,8 +1139,8 @@ class TestQuantityBasicMath(QuantityTestCase):
         self._test_quantity_divmod_one("20", 4)
         self._test_quantity_divmod_one("300*degree", "100 degree")
 
-        a = self.Q_("10*meter")
-        b = self.Q_("3*second")
+        a: Q_[int] = self.Q_("10*meter")
+        b: Q_[int] = self.Q_("3*second")
         with pytest.raises(DimensionalityError):
             divmod(a, b)
         with pytest.raises(DimensionalityError):
@@ -1096,7 +1159,29 @@ class TestQuantityBasicMath(QuantityTestCase):
         # self._test_quantity_ifloordiv(unit, ifunc)
 
     def test_float(self):
+        # Runtime tests
         self._test_numeric(1.0, self._test_not_inplace)
+        # Typing tests (TODO: expand these with more cases)
+        if TYPE_CHECKING:
+            from typing import Any  # noqa
+
+            x: Q_[float] = self.Q_(1.0)
+            y: Q_[float] = self.Q_(1.0)
+            assert_type(x + y, "Q_[float]")
+            assert_type(x - y, "Q_[float]")
+            assert_type(x * y, "Q_[float]")
+            assert_type(x / y, "Q_[float]")
+            assert_type(x // y, "Q_[float]")
+            assert_type(x % y, "Q_[float]")
+            assert_type(x**y, "Q_[Any]")  # NOTE: This is a known problem in typeshed
+            assert_type(divmod(x, y), "tuple[Q_[float], Q_[float]]")
+            x += y
+            x -= y
+            x *= y
+            x /= y
+            x //= y
+            x %= y
+            x **= y
 
     def test_fraction(self):
         import fractions
@@ -1107,9 +1192,10 @@ class TestQuantityBasicMath(QuantityTestCase):
     def test_nparray(self):
         self._test_numeric(np.ones((1, 3)), self._test_inplace)
 
-    def test_quantity_abs_round(self):
-        x = self.Q_(-4.2, "meter")
-        y = self.Q_(4.2, "meter")
+    def test_quantity_abs_round(self) -> None:
+        x: Q_[float] = self.Q_(-4.2, "meter")
+        y: Q_[float] = self.Q_(4.2, "meter")
+        c: Q_[complex] = self.Q_(3 + 2j, "meter")
 
         for fun in (abs, round, op.pos, op.neg):
             zx = self.Q_(fun(x.magnitude), "meter")
@@ -1121,10 +1207,19 @@ class TestQuantityBasicMath(QuantityTestCase):
             assert rx is not zx, f"while testing {fun}"
             assert ry is not zy, f"while testing {fun}"
 
-    def test_quantity_float_complex(self):
-        x = self.Q_(-4.2, None)
-        y = self.Q_(4.2, None)
-        z = self.Q_(1, "meter")
+        # type checking tests
+        assert_type(abs(x), "Q_[float]")
+        assert_type(abs(c), "Q_[float]")
+        assert_type(round(x), "Q_[int]")
+        assert_type(+x, "Q_[float]")
+        assert_type(+c, "Q_[complex]")
+        assert_type(-x, "Q_[float]")
+        assert_type(-c, "Q_[complex]")
+
+    def test_quantity_float_complex(self) -> None:
+        x: Q_[float] = self.Q_(-4.2, None)
+        y: Q_[float] = self.Q_(4.2, None)
+        z: Q_[int] = self.Q_(1, "meter")
         for fun in (float, complex):
             assert fun(x) == fun(x.magnitude)
             assert fun(y) == fun(y.magnitude)
@@ -1137,7 +1232,7 @@ class TestQuantityNeutralAdd(QuantityTestCase):
     """Addition to zero or NaN is allowed between a Quantity and a non-Quantity"""
 
     def test_bare_zero(self):
-        v = self.Q_(2.0, "m")
+        v: Q_[float] = self.Q_(2.0, "m")
         assert v + 0 == v
         assert v - 0 == v
         assert 0 + v == v
@@ -1238,6 +1333,8 @@ class TestDimensions(QuantityTestCase):
         assert get(UnitsContainer({"[time]": 1})) == UnitsContainer({"[time]": 1})
         assert get("seconds") == UnitsContainer({"[time]": 1})
         assert get(UnitsContainer({"seconds": 1})) == UnitsContainer({"[time]": 1})
+        assert get("%") == UnitsContainer({})
+        assert get("‰") == UnitsContainer({})
         assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
         assert get("[acceleration]") == UnitsContainer({"[length]": 1, "[time]": -2})
 
@@ -1830,8 +1927,7 @@ class TestOffsetUnitMath(QuantityTestCase):
                 in1_cp = copy.copy(in1)
                 helpers.assert_quantity_almost_equal(op.ipow(in1_cp, in2), expected)
 
-    # matmul is only a ufunc since 1.16
-    @helpers.requires_numpy_at_least("1.16")
+    @helpers.requires_numpy()
     def test_matmul_with_numpy(self):
         A = [[1, 2], [3, 4]] * self.ureg.m
         B = np.array([[0, -1], [-1, 0]])

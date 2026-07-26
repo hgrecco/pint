@@ -73,9 +73,7 @@ def to_reduced_units(
     return quantity.to(new_units)
 
 
-def to_compact(
-    quantity: PlainQuantity, unit: UnitsContainer | None = None
-) -> PlainQuantity:
+def to_compact[Q: PlainQuantity](quantity: Q, unit: UnitsContainer | None = None) -> Q:
     """ "Return PlainQuantity rescaled to compact, human-readable units.
 
     To get output in terms of a different unit, use the unit parameter.
@@ -87,9 +85,9 @@ def to_compact(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (200e-9 * ureg.s).to_compact()
-    <Quantity(200.0, 'nanosecond')>
+    Quantity(199.99999999999997, "nanosecond")
     >>> (1e-2 * ureg("kg m/s^2")).to_compact("N")
-    <Quantity(10.0, 'millinewton')>
+    Quantity(10.0, "millinewton")
     """
 
     if not isinstance(quantity.magnitude, numbers.Number) and not hasattr(
@@ -207,9 +205,9 @@ def to_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    <Quantity(4046.87261, 'meter ** 2')>
+    Quantity(4046.8726098742513, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'watt * second')>
+    Quantity(4.4482216152605005, "watt * second")
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -227,9 +225,9 @@ def ito_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    <Quantity(4046.87261, 'meter ** 2')>
+    Quantity(4046.8726098742513, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'watt * second')>
+    Quantity(4.4482216152605005, "watt * second")
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -241,6 +239,7 @@ def _get_preferred(
 ) -> PlainQuantity:
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.default_preferred_units
+    preferred_units = list(map(quantity._REGISTRY.Unit, preferred_units))
 
     if not quantity.dimensionality:
         return quantity._units.copy()

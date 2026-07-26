@@ -1193,6 +1193,22 @@ def test_issue1505():
     )  # unexpected fail (magnitude should be a decimal)
 
 
+def test_issue2153():
+    q = get_application_registry().Quantity(1, "%")
+
+    assert q.check("%")
+
+
+def test_issue2068():
+    ur = UnitRegistry(non_int_type=decimal.Decimal)
+
+    q = ur.Quantity("1.2345", "m")
+
+    assert q.magnitude == decimal.Decimal("1.2345")
+    assert isinstance(q.magnitude, decimal.Decimal)
+    assert q.to("cm").magnitude == decimal.Decimal("123.45")
+
+
 def test_issue_1845():
     ur = UnitRegistry(auto_reduce_dimensions=True, non_int_type=decimal.Decimal)
     # before issue 1845 these inputs would have resulted in a TypeError
@@ -1276,7 +1292,7 @@ def test_issue2017():
 
     from pint import formatting as fmt
 
-    @fmt.register_unit_format("test")
+    @fmt.register_unit_format("test2017")
     def _test_format(unit, registry, **options):
         proc = {u.replace("µ", "u"): e for u, e in unit.items()}
         return fmt.formatter(
@@ -1291,8 +1307,8 @@ def test_issue2017():
         )
 
     base_unit = ureg.microsecond
-    assert f"{base_unit:~test}" == "us"
-    assert f"{base_unit:test}" == "microsecond"
+    assert f"{base_unit:~test2017}" == "us"
+    assert f"{base_unit:test2017}" == "microsecond"
 
 
 def test_issue2007():
@@ -1397,6 +1413,30 @@ def test_issue2228(func_registry):
     assert ok_factor == 100.0
 
 
+def test_issue2261(func_registry):
+    func_registry.define("truckload = nan kg")
+
+    # Converting to a prefixed form of a NaN unit should give a numeric result
+    q = func_registry.Quantity("1000 truckloads")
+    result = q.to("kilotruckload")
+    assert result.magnitude == 1.0
+
+    # Reverse direction should also work
+    q2 = func_registry.Quantity("1 kilotruckload")
+    result2 = q2.to("truckload")
+    assert result2.magnitude == 1000.0
+
+    # NaN should still propagate when converting to a non-NaN unit
+    q3 = func_registry.Quantity("2 truckloads")
+    result3 = q3.to("kg")
+    assert math.isnan(result3.magnitude)
+
+    # Compound units containing a NaN unit should also convert correctly
+    q4 = func_registry.Quantity("1000 truckload/day")
+    result4 = q4.to("kilotruckload/day")
+    assert result4.magnitude == 1.0
+
+
 def test_issue2265():
     """Check that dask.array is not imported with pint."""
     if importlib.util.find_spec("dask") is None:
@@ -1426,6 +1466,8 @@ def test_issue2265_2():
     assert dask_array_class is not None
     # Verify it's the actual dask Array class by checking module
     assert dask_array_class.__module__ == "dask.array.core"
+
+
 def test_issue2256():
     ureg = UnitRegistry()
 
@@ -1438,7 +1480,7 @@ def test_issue2256():
         return pf.format_unit(unit, "~", as_ratio=False)
 
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
-    assert f"{q:test2256}" == "2.3e-06 kg⁻¹·m³·s⁻²"
+    assert f"{q:test2256}" == "2.3e-06 kg⁻¹⋅m³⋅s⁻²"
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
 
 
@@ -1447,5 +1489,100 @@ def test_issue2256_2():
 
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
-    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
+    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹⋅m³⋅s⁻²"
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
+
+
+def test_issue2305():
+    # Offset (affine) conversion of a Decimal magnitude must not raise
+    # TypeError from mixing Decimal with the float scale/offset.
+    from decimal import Decimal
+
+    ureg = UnitRegistry()
+
+    # to_reference (degC -> K): adds the offset
+    q = ureg.Quantity(Decimal(10), "degC").to("K")
+    assert q.magnitude == Decimal("283.15")
+    assert isinstance(q.magnitude, Decimal)
+
+    # from_reference (K -> degC): subtracts the offset
+    q = ureg.Quantity(Decimal(300), "kelvin").to("degC")
+    assert q.magnitude == Decimal("26.85")
+    assert isinstance(q.magnitude, Decimal)
+
+    # scale and offset together (degF): the Decimal result tracks the float
+    # scale (5/9), so compare with a tolerance like the float path does
+    degf = ureg.Quantity(Decimal(32), "degF").to("K").magnitude
+    assert isinstance(degf, Decimal)
+    assert abs(float(degf) - 273.15) < 1e-9
+
+    # float magnitudes are unaffected
+    assert ureg.Quantity(10.0, "degC").to("K").magnitude == 273.15 + 10.0
+
+    # and in a Decimal registry, float magnitudes still convert (no longer
+    # the "problem just moves around" reported in the issue)
+    ureg_dec = UnitRegistry(non_int_type=Decimal)
+    assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
+    assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue2320():
+    ureg = UnitRegistry()
+    for spelling in ("kg", "kWh", "ms", "degC**2"):
+        first = ureg.parse_units_as_container(spelling)
+        second = ureg.parse_units_as_container(spelling)
+        assert second is first, f"{spelling} re-parsed instead of hitting the cache"
+
+    ureg = UnitRegistry()
+    assert ureg.parse_units("Meter", case_sensitive=False) == UnitsContainer(meter=1)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_units("Meter", case_sensitive=True)
+
+
+def test_issue1798():
+    # Format spec width/fill/alignment must apply to the whole quantity
+    # (magnitude and unit), not only to the magnitude.
+    ureg = UnitRegistry()
+
+    q = 2.52 * ureg.meter
+    # width honored across the full "magnitude unit" string
+    assert f"{q:20.1f}" == "           2.5 meter"
+    assert f"{q:>20.1f}" == "           2.5 meter"
+    assert f"{q:<20.1f}" == "2.5 meter           "
+    assert f"{q:*<20.1f}" == "2.5 meter***********"
+
+    # a plain magnitude still behaves the same way
+    assert f"{q.magnitude:20.1f}" == "                 2.5"
+
+    # zero-padding remains a magnitude-only concern
+    assert f"{q:05.1f}" == "002.5 meter"
+
+    # specs without a width are unaffected
+    assert f"{q:.1f}" == "2.5 meter"
+
+    # dimensionless quantities keep working
+    d = 3.0 * ureg.dimensionless
+    assert f"{d:25.1f}" == "        3.0 dimensionless"
+
+
+def test_issue1513():
+    # ``dimensionless`` referenced by name resolves to "", which is not a key in
+    # the unit registry; the recurse loops used to index it directly and raise
+    # KeyError(''). It is the identity and must behave like the empty unit.
+    ureg = UnitRegistry()
+
+    # #1513: get_dimensionality by name must not raise
+    assert ureg.get_dimensionality("dimensionless") == ureg.get_dimensionality("")
+
+    # #1994: check() by name must not raise
+    assert ureg.Quantity(5, "dimensionless").check("dimensionless")
+
+    # a fractional dimensionless unit defined via ``* dimensionless`` must match
+    # the same unit defined as a bare scalar
+    ureg.define("frac = 0.01 * dimensionless")
+    ureg.define("frac_bare = 0.01")
+    assert (
+        ureg.Quantity(50, "frac").to_base_units()
+        == ureg.Quantity(50, "frac_bare").to_base_units()
+    )
+    assert ureg.get_root_units("frac") == ureg.get_root_units("frac_bare")

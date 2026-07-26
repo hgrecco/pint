@@ -11,10 +11,10 @@ from __future__ import annotations
 import weakref
 from collections import ChainMap, defaultdict
 from collections.abc import Callable, Iterable
-from typing import TYPE_CHECKING, Any, Generic, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from ..._typing import Magnitude
-from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit, UnitDefinition
+from ...facets.plain import PlainQuantity, PlainUnit, UnitDefinition
 from ...util import UnitsContainer, to_units_container
 from .definitions import ContextDefinition
 
@@ -34,7 +34,7 @@ ToBaseFunc = Callable[[UnitsContainer], UnitsContainer]
 SrcDst = tuple[UnitsContainer, UnitsContainer]
 
 
-class ContextQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+class ContextQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     pass
 
 
