@@ -23,10 +23,11 @@ from typing import (
     Generic,
     Self,
     TypeAlias,
-    TypeVar,
     overload,
     override,
 )
+
+from typing_extensions import TypeVar
 
 from . import facets, registry_helpers
 from .util import logger, pi_theorem
@@ -46,7 +47,9 @@ if TYPE_CHECKING:
 # but
 
 
-MagnitudeT_co = TypeVar("MagnitudeT_co", covariant=True, bound="Magnitude")
+MagnitudeT_co = TypeVar(
+    "MagnitudeT_co", covariant=True, bound="Magnitude", default="Any"
+)
 
 
 class Quantity(
