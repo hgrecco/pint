@@ -23,7 +23,7 @@ from typing import (
 )
 
 from ...compat import TypeAlias, babel_parse
-from ...util import NonReducingUnitsContainer, UnitsContainer
+from ...util import NonReducingUnitsContainer, SharedRegistryObject, UnitsContainer
 
 if TYPE_CHECKING:
     from ...compat import Locale, Number
@@ -251,10 +251,11 @@ def prepare_compount_unit[T](
 
     if isinstance(unit, UnitsContainer):
         out = unit.items()
-    elif hasattr(unit, "_units") and isinstance(unit._units, NonReducingUnitsContainer):
-        out = unit._units.non_reduced_d_items
-    elif hasattr(unit, "_units"):
-        out = unit._units.items()
+    elif isinstance(unit, SharedRegistryObject):
+        if isinstance(unit._units, NonReducingUnitsContainer):
+            out = unit._units.non_reduced_d_items
+        else:
+            out = unit._units.items()
     else:
         out = unit
 

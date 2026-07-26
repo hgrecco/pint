@@ -693,17 +693,25 @@ class NonReducingUnitsContainer(UnitsContainer):
 
     def __init__(
         self,
-        units: list[UnitsContainer] | list[tuple[QuantityOrUnitLike, Scalar]],
+        units: list[QuantityOrUnitLike | tuple[QuantityOrUnitLike, Scalar]],
         non_int_type: type | None = None,
         auto_reduce_units: bool = True,
     ) -> None:
-        self.non_reduced_units = []
+        self.non_reduced_units: list[UnitsContainer] = []
 
         for u in units:
+            power: Scalar | None = None
             if isinstance(u, tuple):
-                u = u[0]._units ** u[1]
-            if hasattr(u, "_units"):
+                u, power = u
+
+            if isinstance(u, SharedRegistryObject):
                 u = u._units
+            if not isinstance(u, UnitsContainer):
+                raise TypeError(f"Cannot build NonReducingUnitsContainer from {u!r}")
+
+            if power is not None:
+                u = u**power
+
             self.non_reduced_units.append(u)
 
         if non_int_type is None and self.non_reduced_units:
@@ -732,7 +740,7 @@ class NonReducingUnitsContainer(UnitsContainer):
         ]
         self.i = 0
 
-    def __copy__(self):
+    def __copy__(self) -> Self:
         # UnitsContainer.__copy__ uses object.__new__ and skips __init__, so it
         # only copies the base class's __slots__. Carry over the extra state
         # this subclass keeps in its instance __dict__ too.
