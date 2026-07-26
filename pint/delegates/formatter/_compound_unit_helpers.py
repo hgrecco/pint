@@ -17,27 +17,22 @@ from functools import partial
 from itertools import filterfalse, tee
 from typing import (
     TYPE_CHECKING,
-    Any,
     Literal,
     TypedDict,
 )
 
-from ...compat import TypeAlias, babel_parse
+from ...compat import babel_parse
 from ...util import UnitsContainer
+from .sorting import SortFunc
 
 if TYPE_CHECKING:
-    from ...compat import Locale, Number
+    from ...compat import Locale
     from ...facets.plain import PlainUnit
     from ...registry import UnitRegistry
 
 
 class SortKwds(TypedDict):
     registry: UnitRegistry
-
-
-SortFunc: TypeAlias = Callable[
-    [Iterable[tuple[str, Any, str]], Any], Iterable[tuple[str, Any, str]]
-]
 
 
 class BabelKwds(TypedDict, total=False):
@@ -170,64 +165,6 @@ def localize_display_exponent_name[T](
         element[1],
         element[2],
     )
-
-
-#####################
-# Sorting functions
-#####################
-
-
-def sort_by_unit_name(
-    items: Iterable[tuple[str, Number, str]], _registry: UnitRegistry | None
-) -> Iterable[tuple[str, Number, str]]:
-    return sorted(items, key=lambda el: el[2])
-
-
-def sort_by_display_name(
-    items: Iterable[tuple[str, Number, str]], _registry: UnitRegistry | None
-) -> Iterable[tuple[str, Number, str]]:
-    return sorted(items)
-
-
-def sort_by_dimensionality(
-    items: Iterable[tuple[str, Number, str]], registry: UnitRegistry | None
-) -> Iterable[tuple[str, Number, str]]:
-    """Sort a list of units by dimensional order (from `registry.formatter.dim_order`).
-
-    Parameters
-    ----------
-    items : tuple
-        a list of tuples containing (unit names, exponent values).
-    registry : UnitRegistry | None
-        the registry to use for looking up the dimensions of each unit.
-
-    Returns
-    -------
-    list
-        the list of units sorted by most significant dimension first.
-
-    Raises
-    ------
-    KeyError
-        If unit cannot be found in the registry.
-    """
-
-    if registry is None:
-        return items
-
-    dim_order = registry.formatter.dim_order
-
-    def sort_key(item: tuple[str, Number, str]):
-        _display_name, _unit_exponent, unit_name = item
-        cname = registry.get_name(unit_name)
-        cname_dims = registry.get_dimensionality(cname) or {"[]": None}
-        for cname_dim in cname_dims:
-            if cname_dim in dim_order:
-                return dim_order.index(cname_dim), cname
-
-        raise KeyError(f"Unit {unit_name} (aka {cname}) has no recognized dimensions")
-
-    return sorted(items, key=sort_key)
 
 
 def prepare_compount_unit[T](

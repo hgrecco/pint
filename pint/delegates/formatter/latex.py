@@ -21,7 +21,6 @@ from ..._typing import Magnitude
 from ...compat import Number, Unpack, ndarray
 from ._compound_unit_helpers import (
     BabelKwds,
-    SortFunc,
     prepare_compount_unit,
 )
 from ._format_helpers import (
@@ -36,6 +35,7 @@ from ._spec_helpers import (
     split_format,
 )
 from .plain import BaseFormatter
+from .sorting import SortFunc
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
