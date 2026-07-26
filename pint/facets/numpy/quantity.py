@@ -16,7 +16,9 @@ from typing import Any
 from ..._typing import Magnitude, Shape
 from ...compat import HAS_NUMPY, _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ...util import UnitsContainer
 from ..plain import PlainQuantity
+from ..plain.qto import _get_compact_base, _get_si_prefixes, _pick_compact_unit
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
@@ -304,3 +306,67 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
                 f"Neither Quantity object nor its magnitude ({self._magnitude}) "
                 "supports indexing"
             ) from exc
+
+    def to_compact(
+        self, unit: UnitsContainer | None = None, maximumPrefix: bool = False
+    ) -> NumpyQuantity[MagnitudeT]:
+        """Return NumpyQuantity rescaled to compact, human-readable units.
+
+        Arrays are scaled to the smallest common prefix by default, set `maximumPrefix`
+        to `True` to use the largest possible prefix instead.
+        Infinite and  `nan` values are ignored.
+        To get output in terms of a different unit, use the unit parameter.
+
+
+        Examples
+        --------
+
+        >>> import pint
+        >>> ureg = pint.UnitRegistry()
+        >>> ([200e-9, 300e-12] * ureg.s).to_compact()
+        Quantity(array([200. ,   0.3]), "nanosecond")
+        >>> ([1e-2, 3] * ureg("kg m/s^2")).to_compact("N")
+        Quantity(array([0.01, 3.  ]), "newton")
+        >>> ([1, 6000] * ureg("g")).to_compact(maximumPrefix=True)
+        Quantity(array([1.e-03, 6.e+00]), "kilogram")
+        """
+        if not (HAS_NUMPY and isinstance(self._magnitude, np.ndarray)):
+            # Not an array (e.g. numpy isn't installed, or the magnitude is a
+            # plain scalar/Decimal/etc.): maximumPrefix doesn't apply to a
+            # single value, so defer to the scalar implementation.
+            return super().to_compact(unit)
+
+        qm = self.magnitude
+        if (
+            self.unitless
+            or np.all(qm == 0)
+            or np.all(np.isnan(qm))
+            or np.all(np.isinf(qm))
+        ):
+            return self
+
+        SI_powers, SI_bases = _get_si_prefixes(self._REGISTRY)
+        q_base, unit_str, unit_power = _get_compact_base(self, unit)
+
+        magnitude = q_base.magnitude
+        # Support uncertainties
+        if hasattr(magnitude, "nominal_value"):
+            magnitude = magnitude.nominal_value
+
+        if unit_power > 0:
+            power = np.floor(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
+        else:
+            power = np.ceil(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
+
+        finite_powers = power[np.isfinite(power)]
+        pivot = (
+            finite_powers[np.argmax(np.abs(finite_powers))]
+            if maximumPrefix
+            else (finite_powers[np.argmin(np.abs(finite_powers))])
+        )
+
+        new_unit_container = _pick_compact_unit(
+            q_base, unit_str, pivot, SI_powers, SI_bases
+        )
+
+        return self.to(new_unit_container)
