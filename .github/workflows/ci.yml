@@ -6,52 +6,70 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: actions/checkout@v6.0.2
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: lint
       - run: pixi run --environment lint lint --all-files --show-diff-on-failure
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: prefix-dev/setup-pixi@v0.9.4
+        with:
+          environments: typecheck
+          activate-environment: true
+      - uses: jakebailey/pyright-action@v2
+        continue-on-error: true
+        with:
+          version: PATH
 
   test-linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         environment:
-          - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
+          - test-py314
+        numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
         include:
-          - environment: "test-py311" # Minimal versions
-            numpy: "numpy>=1.25,<2.0.0"
+          - environment: "test-py312" # Minimal versions
+            numpy: "numpy>=2.0.0,<2.1.0"
             extras: matplotlib==3.5.3
-          - environment: "test-py311"
+          - environment: "test-py312"
             numpy: "numpy"
             uncertainties: "uncertainties"
-            extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 mip>=1.13"
-          - environment: "test-py311"
-            numpy: "numpy==1.26.1"
+            extras: "sparse xarray netCDF4 dask[complete]==2024.5.1 graphviz babel==2.8 scipy pyyaml"
+          - environment: "test-py312"
+            numpy: "numpy>=2.0.0,<2.1.0"
             uncertainties: null
             extras: "babel==2.15 matplotlib==3.9.0"
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: actions/checkout@v6.0.2
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: ${{ matrix.environment }}
+          activate-environment: true
           log-level: vvv
+
+      - name: Install pip
+        run: pixi add pip
+
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
-        run: pip install "${{matrix.numpy}}"
+        run: pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
 
       - name: Install uncertainties
         if: ${{ matrix.uncertainties != null }}
-        run: pip install "${{matrix.uncertainties}}"
+        run: pixi run -e ${{ matrix.environment }} pip install "${{matrix.uncertainties}}"
 
       - name: Install extras
         if: ${{ matrix.extras != null }}
-        run: pip install ${{matrix.extras}}
+        run: pixi run -e ${{ matrix.environment }} pip install ${{matrix.extras}}
 
       - name: Install locales
         if: ${{ matrix.extras != null }}
@@ -65,11 +83,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt install -y graphviz
-          pip install packaging
+          pixi run -e ${{ matrix.environment }} pip install packaging
 
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
-        run: pip install pytest-mpl
+        run: pixi run -e ${{ matrix.environment }} pip install pytest-mpl
       - run: pixi run --environment ${{ matrix.environment }} test
 
   test-windows:
@@ -77,13 +95,13 @@ jobs:
     strategy:
       matrix:
         environment:
-          - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
+          - test-py314
+        numpy: [null, "numpy>=2.0.0,<2.1.0", "numpy>=2.4.0"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: actions/checkout@v6.0.2
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: ${{ matrix.environment }}
           log-level: vvv
@@ -97,13 +115,13 @@ jobs:
     strategy:
       matrix:
         environment:
-          - test-py311
           - test-py312
           - test-py313
-        numpy: [null, "numpy>=1.25,<2.0.0", "numpy>=2.0.0rc1"]
+          - test-py314
+        numpy: [null, "numpy>=2.4.0"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: actions/checkout@v6.0.2
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: ${{ matrix.environment }}
           log-level: vvv
@@ -121,11 +139,11 @@ jobs:
       name: pypi
       url: https://pypi.org/p/pint
     permissions:
-      id-token: write  # for trusted publising to PyPI
+      id-token: write  # for trusted publishing to PyPI
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.10
+      - uses: actions/checkout@v6.0.2
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
           environments: build
       - name: Build the package

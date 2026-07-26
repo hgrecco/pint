@@ -171,3 +171,16 @@ def test_uncertainty(input_text: str, parsed: str):
             assert _pre(uncertainty_tokenizer, input_text)
     else:
         assert _pre(uncertainty_tokenizer, input_text) == parsed
+
+
+@pytest.mark.parametrize("tokenizer", TOKENIZERS)
+@pytest.mark.parametrize("input_text", ["-", "*", "/", "+"])
+def test_build_eval_tree_missing_operand_raises_definition_syntax_error(
+    tokenizer, input_text: str
+):
+    # Regression test for #2124: an operator with no operand must raise a pint
+    # DefinitionSyntaxError, not a bare AssertionError.
+    from pint.errors import DefinitionSyntaxError
+
+    with pytest.raises(DefinitionSyntaxError):
+        build_eval_tree(tokenizer(input_text))

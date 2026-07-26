@@ -16,12 +16,10 @@ import tokenize
 from collections.abc import Iterable
 from io import BytesIO
 from tokenize import TokenInfo
-from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
+from typing import Any, Callable, Generator, Iterator
 
 from .compat import HAS_UNCERTAINTIES, ufloat
 from .errors import DefinitionSyntaxError
-
-S = TypeVar("S")
 
 if HAS_UNCERTAINTIES:
     _ufloat = ufloat  # type: ignore
@@ -86,7 +84,7 @@ _OP_PRIORITY = {
 }
 
 
-class IteratorLookAhead(Generic[S]):
+class IteratorLookAhead[S]:
     """An iterator with lookahead buffer.
 
     Adapted: https://stackoverflow.com/a/1517965/1291237
@@ -515,13 +513,13 @@ def _build_eval_tree(
         if tokens[index][0] == tokenlib.ENDMARKER:
             if prev_op == "(":
                 raise DefinitionSyntaxError("unclosed parentheses in tokens")
+            if result is None:
+                raise DefinitionSyntaxError("missing operand")
             if depth > 0 or prev_op:
                 # have to close recursion
-                assert result is not None
                 return result, index
             else:
                 # recursion all closed, so just return the final result
-                assert result is not None
                 return result, -1
 
         if index + 1 >= len(tokens):

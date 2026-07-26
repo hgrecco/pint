@@ -17,7 +17,7 @@ from .delegates.formatter._format_helpers import (
     _PRETTY_EXPONENTS,  # noqa: F401
 )
 from .delegates.formatter._format_helpers import (
-    join_u as _join,  # noqa: F401
+    formatter as fh_formatter,  # noqa: F401
 )
 from .delegates.formatter._format_helpers import (
     pretty_fmt_exponent as _pretty_fmt_exponent,  # noqa: F401
@@ -93,8 +93,6 @@ def formatter(
 
     """
 
-    join_u = _join
-
     if sort is False:
         items = tuple(items)
     else:
@@ -103,43 +101,20 @@ def formatter(
     if not items:
         return ""
 
-    if as_ratio:
-        fun = lambda x: exp_call(abs(x))
-    else:
-        fun = exp_call
+    numerator = [(key, value) for key, value in items if value >= 0]
+    denominator = [(key, value) for key, value in items if value < 0]
 
-    pos_terms, neg_terms = [], []
-
-    for key, value in items:
-        if value == 1:
-            pos_terms.append(key)
-        elif value > 0:
-            pos_terms.append(power_fmt.format(key, fun(value)))
-        elif value == -1 and as_ratio:
-            neg_terms.append(key)
-        else:
-            neg_terms.append(power_fmt.format(key, fun(value)))
-
-    if not as_ratio:
-        # Show as Product: positive * negative terms ** -1
-        return _join(product_fmt, pos_terms + neg_terms)
-
-    # Show as Ratio: positive terms / negative terms
-    pos_ret = _join(product_fmt, pos_terms) or "1"
-
-    if not neg_terms:
-        return pos_ret
-
-    if single_denominator:
-        neg_ret = join_u(product_fmt, neg_terms)
-        if len(neg_terms) > 1:
-            neg_ret = parentheses_fmt.format(neg_ret)
-    else:
-        neg_ret = join_u(division_fmt, neg_terms)
-
-    # TODO: first or last pos_ret should be pluralized
-
-    return _join(division_fmt, [pos_ret, neg_ret])
+    return fh_formatter(
+        numerator=numerator,
+        denominator=denominator,
+        as_ratio=as_ratio,
+        single_denominator=single_denominator,
+        product_fmt=product_fmt,
+        division_fmt=division_fmt,
+        power_fmt=power_fmt,
+        parentheses_fmt=parentheses_fmt,
+        exp_call=exp_call,
+    )
 
 
 def format_unit(unit, spec: str, registry=None, **options):

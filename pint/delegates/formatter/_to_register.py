@@ -20,7 +20,7 @@ from ._spec_helpers import REGISTERED_FORMATTERS, split_format
 from .plain import BaseFormatter
 
 if TYPE_CHECKING:
-    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
+    from ...facets.plain import PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
 
 
@@ -88,11 +88,13 @@ def register_unit_format(name: str):
                 uspec: str = "",
                 **babel_kwds: Unpack[BabelKwds],
             ) -> str:
+                if "as_ratio" in babel_kwds.keys():
+                    babel_kwds.pop("as_ratio")
                 numerator, _denominator = prepare_compount_unit(
                     unit,
                     uspec,
                     **babel_kwds,
-                    as_ratio=False,
+                    as_ratio=False,  # required to get _denominator empty
                     registry=self._registry,
                 )
 
@@ -103,7 +105,7 @@ def register_unit_format(name: str):
 
                 return func(units, registry=self._registry)
 
-            def format_quantity(
+            def format_quantity[MagnitudeT: Magnitude](
                 self,
                 quantity: PlainQuantity[MagnitudeT],
                 qspec: str = "",

@@ -11,16 +11,13 @@ Adds pint the capability to interoperate with Dask
 from __future__ import annotations
 
 import functools
-from typing import Any, Generic
 
+from ..._typing import Magnitude
 from ...compat import TypeAlias, compute, dask_array, persist, visualize
 from ..plain import (
     GenericPlainRegistry,
-    MagnitudeT,
     PlainQuantity,
     PlainUnit,
-    QuantityT,
-    UnitT,
 )
 
 
@@ -38,7 +35,7 @@ def check_dask_array(f):
     return wrapper
 
 
-class DaskQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+class DaskQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     # Dask.array.Array ducking
     def __dask_graph__(self):
         if isinstance(self._magnitude, dask_array.Array):
@@ -130,12 +127,12 @@ class DaskUnit(PlainUnit):
     pass
 
 
-class GenericDaskRegistry(
-    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+class GenericDaskRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
+    GenericPlainRegistry[QuantityT, UnitT]
 ):
     pass
 
 
-class DaskRegistry(GenericDaskRegistry[DaskQuantity[Any], DaskUnit]):
-    Quantity: TypeAlias = DaskQuantity[Any]
+class DaskRegistry(GenericDaskRegistry[DaskQuantity, DaskUnit]):
+    Quantity: TypeAlias = DaskQuantity
     Unit: TypeAlias = DaskUnit

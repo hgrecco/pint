@@ -21,6 +21,8 @@ where each part is optional and the order of these is arbitrary.
    >>> q = 2.3e-6 * ureg.m ** 3 / (ureg.s ** 2 * ureg.kg)
    >>> f"{q:~P}"  # short pretty
    '2.3×10⁻⁶ m³/kg/s²'
+   >>> f"{q:~^P}"  # short pretty with negative exponents
+   '2.3×10⁻⁶ kg⁻¹⋅m³⋅s⁻²'
    >>> f"{q:~#P}"  # compact short pretty
    '2.3 mm³/g/s²'
    >>> f"{q:P#~}"  # also compact short pretty
@@ -47,7 +49,7 @@ Pint Format Types
 Spec    Name            Examples
 ======= =============== ======================================================================
 ``D``   default         ``3.4e+09 kilogram * meter / second ** 2``
-``P``   pretty          ``3.4×10⁹ kilogram·meter/second²``
+``P``   pretty          ``3.4×10⁹ kilogram⋅meter/second²``
 ``H``   HTML            ``3.4×10<sup>9</sup> kilogram meter/second<sup>2</sup>``
 ``L``   latex           ``3.4\\times 10^{9}\\ \\frac{\\mathrm{kilogram} \\cdot \\mathrm{meter}}{\\mathrm{second}^{2}}``
 ``Lx``  latex siunitx   ``\\SI[]{3.4e+09}{\\kilo\\gram\\meter\\per\\second\\squared}``
@@ -64,7 +66,7 @@ Quantity modifiers
 ======== =================================================== ================================
 Modifier Meaning                                             Example
 ======== =================================================== ================================
-``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m·mg/s²`` (``f"{q:#~P}"``)
+``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m⋅mg/s²`` (``f"{q:#~P}"``)
 ======== =================================================== ================================
 
 Unit modifiers
@@ -73,7 +75,8 @@ Unit modifiers
 ======== =================================================== ================================
 Modifier Meaning                                             Example
 ======== =================================================== ================================
-``~``    Use the unit's symbol instead of its canonical name ``kg·m/s²`` (``f"{u:~P}"``)
+``~``    Use the unit's symbol instead of its canonical name ``kg⋅m/s²`` (``f"{u:~P}"``)
+``^``    Use negative exponents instead of ratio             ``kg⋅m⋅s⁻²`` (``f"{u:~^P}"``)
 ======== =================================================== ================================
 
 Magnitude modifiers

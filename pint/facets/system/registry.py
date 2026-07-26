@@ -9,11 +9,10 @@ pint.facets.systems.registry
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Generic
+from typing import TYPE_CHECKING
 
 from ... import errors
 from ...compat import TypeAlias
-from ..plain import QuantityT, UnitT
 
 if TYPE_CHECKING:
     from ..._typing import Quantity, Unit
@@ -29,8 +28,8 @@ from . import objects
 from .definitions import SystemDefinition
 
 
-class GenericSystemRegistry(
-    Generic[QuantityT, UnitT], GenericGroupRegistry[QuantityT, UnitT]
+class GenericSystemRegistry[QuantityT: Quantity, UnitT: Unit](
+    GenericGroupRegistry[QuantityT, UnitT]
 ):
     """Handle of Systems.
 
@@ -258,8 +257,6 @@ class GenericSystemRegistry(
             raise ex
 
 
-class SystemRegistry(
-    GenericSystemRegistry[objects.SystemQuantity[Any], objects.SystemUnit]
-):
-    Quantity: TypeAlias = objects.SystemQuantity[Any]
+class SystemRegistry(GenericSystemRegistry[objects.SystemQuantity, objects.SystemUnit]):
+    Quantity: TypeAlias = objects.SystemQuantity
     Unit: TypeAlias = objects.SystemUnit

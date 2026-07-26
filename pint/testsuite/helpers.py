@@ -13,22 +13,21 @@ from pint.testing import assert_equal as assert_quantity_equal  # noqa: F401
 
 from ..compat import (
     HAS_BABEL,
-    HAS_MIP,
     HAS_NUMPY,
-    HAS_NUMPY_ARRAY_FUNCTION,
+    HAS_SCIPY,
     HAS_UNCERTAINTIES,
     NUMPY_VER,
 )
 
 _number_re = r"([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)"
 _q_re = re.compile(
-    r"<Quantity\("
+    r"Quantity\("
     + r"\s*"
     + r"(?P<magnitude>%s)" % _number_re
     + r"\s*,\s*"
-    + r"'(?P<unit>.*)'"
+    + r"\"(?P<unit>.*)\""
     + r"\s*"
-    + r"\)>"
+    + r"\)"
 )
 
 _sq_re = re.compile(
@@ -92,24 +91,6 @@ requires_not_numpy = pytest.mark.skipif(
 )
 
 
-def requires_array_function_protocol():
-    if not HAS_NUMPY:
-        return pytest.mark.skip("Requires NumPy")
-    return pytest.mark.skipif(
-        not HAS_NUMPY_ARRAY_FUNCTION,
-        reason="Requires __array_function__ protocol to be enabled",
-    )
-
-
-def requires_not_array_function_protocol():
-    if not HAS_NUMPY:
-        return pytest.mark.skip("Requires NumPy")
-    return pytest.mark.skipif(
-        HAS_NUMPY_ARRAY_FUNCTION,
-        reason="Requires __array_function__ protocol to be unavailable or disabled",
-    )
-
-
 def requires_numpy_previous_than(version):
     if not HAS_NUMPY:
         return pytest.mark.skip("Requires NumPy")
@@ -157,7 +138,7 @@ requires_uncertainties = pytest.mark.skipif(
 requires_not_uncertainties = pytest.mark.skipif(
     HAS_UNCERTAINTIES, reason="Requires Uncertainties not to be installed."
 )
-requires_mip = pytest.mark.skipif(not HAS_MIP, reason="Requires MIP")
+requires_scipy = pytest.mark.skipif(not HAS_SCIPY, reason="Requires scipy")
 
 # Parametrization
 

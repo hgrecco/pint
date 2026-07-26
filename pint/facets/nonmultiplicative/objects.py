@@ -8,12 +8,11 @@ pint.facets.nonmultiplicative.objects
 
 from __future__ import annotations
 
-from typing import Generic
+from ..._typing import Magnitude
+from ..plain import PlainQuantity, PlainUnit
 
-from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 
-
-class NonMultiplicativeQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+class NonMultiplicativeQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     @property
     def _is_multiplicative(self) -> bool:
         """Check if the PlainQuantity object has only multiplicative units."""

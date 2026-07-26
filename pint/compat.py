@@ -12,16 +12,16 @@ from __future__ import annotations
 
 import math
 import sys
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from decimal import Decimal
+from fractions import Fraction
 from importlib import import_module
+from importlib.util import find_spec
 from numbers import Number
 from typing import (
     Any,
     # Remove once all dependent packages change their imports.
-    Never,  # noqa
     NoReturn,
-    Self,  # noqa
     TypeAlias,  # noqa
     Unpack,  # noqa
 )
@@ -30,6 +30,27 @@ if sys.version_info >= (3, 13):
     from warnings import deprecated  # noqa
 else:
     from typing_extensions import deprecated  # noqa
+
+
+def coerce_scalar(value, scalar):
+    """Coerce a scalar (a conversion scale or offset) to be arithmetically
+    compatible with value (magnitude).
+
+    Decimal refuses arithmetic with float (both directions raise TypeError);
+    Fraction loses its type when combined with float. Promote the scalar to
+    match a Decimal/Fraction magnitude, and demote a Decimal scalar to float
+    when value is a plain float (the only case where float OP Decimal fails).
+    int OP Decimal works fine and is left unchanged.
+    """
+    if isinstance(value, Decimal):
+        if not isinstance(scalar, Decimal):
+            return Decimal(str(scalar))
+    elif isinstance(value, Fraction):
+        if not isinstance(scalar, Fraction):
+            return Fraction(str(scalar))
+    elif isinstance(value, float) and isinstance(scalar, Decimal):
+        return float(scalar)
+    return scalar
 
 
 def missing_dependency(
@@ -96,7 +117,6 @@ def is_duck_array_type(cls: type) -> bool:
     return issubclass(cls, ndarray) or (
         not hasattr(cls, "_magnitude")
         and not hasattr(cls, "_units")
-        and HAS_NUMPY_ARRAY_FUNCTION
         and hasattr(cls, "__array_function__")
         and hasattr(cls, "ndim")
         and hasattr(cls, "dtype")
@@ -227,18 +247,13 @@ except ImportError:
     HAS_NUMPY = False
 
 try:
-    import mip  # noqa: F401
+    import scipy  # noqa: F401
 
-    HAS_MIP = True
+    HAS_SCIPY = True
 except ImportError:
-    HAS_MIP = False
+    HAS_SCIPY = False
 
-try:
-    import dask  # noqa: F401
-
-    HAS_DASK = True
-except ImportError:
-    HAS_DASK = False
+HAS_DASK = find_spec("dask") is not None
 
 
 ##############################
@@ -302,21 +317,6 @@ if HAS_NUMPY:
             return np.asarray(value)
         return value
 
-    def _test_array_function_protocol():
-        # Test if the __array_function__ protocol is enabled
-        try:
-
-            class FakeArray:
-                def __array_function__(self, *args, **kwargs):
-                    return
-
-            np.concatenate([FakeArray()])
-            return True
-        except ValueError:
-            return False
-
-    HAS_NUMPY_ARRAY_FUNCTION = _test_array_function_protocol()
-
     NP_NO_VALUE = np._NoValue
 
 else:
@@ -338,7 +338,6 @@ else:
 
     NUMPY_VER = "0"
     NUMERIC_TYPES = (Number, Decimal)
-    HAS_NUMPY_ARRAY_FUNCTION = False
     NP_NO_VALUE = None
 
     def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
@@ -363,31 +362,23 @@ else:
         return value
 
 
-if HAS_MIP:
-    import mip
-
-    mip_model = mip.model
-    mip_Model = mip.Model
-    mip_INF = mip.INF
-    mip_INTEGER = mip.INTEGER
-    mip_xsum = mip.xsum
-    mip_OptimizationStatus = mip.OptimizationStatus
+if HAS_SCIPY:
+    import scipy
 else:
-    mip_missing = missing_dependency("mip")
-    mip_model = mip_missing
-    mip_Model = mip_missing
-    mip_INF = mip_missing
-    mip_INTEGER = mip_missing
-    mip_xsum = mip_missing
-    mip_OptimizationStatus = mip_missing
+    scipy = missing_dependency("scipy")
 
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast
 # types using guarded imports
 
 if HAS_DASK:
-    from dask import array as dask_array
     from dask.base import compute, persist, visualize
+
+    class _LazyDaskArray:
+        def __getattr__(self, attr):
+            return getattr(import_module("dask.array"), attr)
+
+    dask_array = _LazyDaskArray()
 else:
     compute, persist, visualize = None, None, None
     dask_array = None
@@ -409,4 +400,4 @@ upcast_type_names = (
 )
 
 #: Map type name to the actual type (for upcast types).
-upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
+upcast_type_map: dict[str, type | None] = {k: None for k in upcast_type_names}
