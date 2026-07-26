@@ -278,7 +278,7 @@ def wraps(
                 "%s takes %i parameters, but %i units were passed"
                 % (func.__name__, count_params, len(args))
             )
-        converter = _parse_wrap_args(converter_args)
+        converter = _parse_wrap_args(converter_args, ureg)
 
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
