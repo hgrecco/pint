@@ -19,6 +19,7 @@ from ...compat import HAS_NUMPY, _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
 from ...util import UnitsContainer, infer_base_unit
 from ..plain import MagnitudeT, PlainQuantity
+from ..plain.qto import _get_si_prefixes
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
@@ -330,6 +331,12 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         >>> ([1, 6000] * ureg("g")).to_compact(maximumPrefix=True)
         <Quantity([0.001, 6.0], 'kilogram')>
         """
+        if not (HAS_NUMPY and isinstance(self._magnitude, np.ndarray)):
+            # Not an array (e.g. numpy isn't installed, or the magnitude is a
+            # plain scalar/Decimal/etc.): maximumPrefix doesn't apply to a
+            # single value, so defer to the scalar implementation.
+            return super().to_compact(unit)
+
         qm = self.magnitude
         if (
             self.unitless
@@ -339,20 +346,7 @@ class NumpyQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
         ):
             return self
 
-        SI_prefixes: dict[int, str] = {}
-        for prefix in self._REGISTRY._prefixes.values():
-            try:
-                scale = prefix.converter.scale
-                # Kludgy way to check if this is an SI prefix
-                log10_scale = int(math.log10(scale))
-                if log10_scale == math.log10(scale):
-                    SI_prefixes[log10_scale] = prefix.name
-            except Exception:
-                SI_prefixes[0] = ""
-
-        SI_prefixes_list = sorted(SI_prefixes.items())
-        SI_powers = [item[0] for item in SI_prefixes_list]
-        SI_bases = [item[1] for item in SI_prefixes_list]
+        SI_powers, SI_bases = _get_si_prefixes(self._REGISTRY)
 
         if unit is None:
             unit = infer_base_unit(self, registry=self._REGISTRY)

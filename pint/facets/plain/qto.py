@@ -12,6 +12,7 @@ from ...util import UnitsContainer, infer_base_unit
 
 if TYPE_CHECKING:
     from ..._typing import UnitLike
+    from ...registry import UnitRegistry
     from .quantity import PlainQuantity
 
 
@@ -73,6 +74,27 @@ def to_reduced_units(
     return quantity.to(new_units)
 
 
+def _get_si_prefixes(registry: UnitRegistry) -> tuple[list[int], list[str]]:
+    """Return the (power of ten, prefix name) pairs of the registry's SI prefixes,
+    sorted by power, as parallel lists.
+    """
+    SI_prefixes: dict[int, str] = {}
+    for prefix in registry._prefixes.values():
+        try:
+            scale = prefix.converter.scale
+            # Kludgy way to check if this is an SI prefix
+            log10_scale = int(math.log10(scale))
+            if log10_scale == math.log10(scale):
+                SI_prefixes[log10_scale] = prefix.name
+        except Exception:
+            SI_prefixes[0] = ""
+
+    SI_prefixes_list = sorted(SI_prefixes.items())
+    SI_powers = [item[0] for item in SI_prefixes_list]
+    SI_bases = [item[1] for item in SI_prefixes_list]
+    return SI_powers, SI_bases
+
+
 def to_compact(
     quantity: PlainQuantity, unit: UnitsContainer | None = None
 ) -> PlainQuantity:
@@ -110,20 +132,7 @@ def to_compact(
     if quantity.unitless or qm == 0 or math.isnan(qm) or math.isinf(qm):
         return quantity
 
-    SI_prefixes: dict[int, str] = {}
-    for prefix in quantity._REGISTRY._prefixes.values():
-        try:
-            scale = prefix.converter.scale
-            # Kludgy way to check if this is an SI prefix
-            log10_scale = int(math.log10(scale))
-            if log10_scale == math.log10(scale):
-                SI_prefixes[log10_scale] = prefix.name
-        except Exception:
-            SI_prefixes[0] = ""
-
-    SI_prefixes_list = sorted(SI_prefixes.items())
-    SI_powers = [item[0] for item in SI_prefixes_list]
-    SI_bases = [item[1] for item in SI_prefixes_list]
+    SI_powers, SI_bases = _get_si_prefixes(quantity._REGISTRY)
 
     if unit is None:
         unit = infer_base_unit(quantity, registry=quantity._REGISTRY)
