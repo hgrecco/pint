@@ -33,8 +33,7 @@ Pint Changelog
 - Document how custom duck array classes can register as upcast types and mark
   the public upcast type map as mutable (#2063)
 - `Quantity` now converts  `datetime.timedelta` objects to seconds or specified units when
-  initializing a `Quantity` with a `datetime.timedelta` value.
-  (PR #1978)
+  initializing a `Quantity` with a `datetime.timedelta` value.  (#1978)
 
 0.25.3 (2026-03-19)
 -------------------
