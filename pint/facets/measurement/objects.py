@@ -10,15 +10,15 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import Generic
 
+from ..._typing import Magnitude
 from ...compat import ufloat
-from ..plain import MagnitudeT, PlainQuantity, PlainUnit
+from ..plain import PlainQuantity, PlainUnit
 
 MISSING = object()
 
 
-class MeasurementQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+class MeasurementQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     # Measurement support
     def plus_minus(self, error, relative=False):
         if isinstance(error, self.__class__):
@@ -98,9 +98,7 @@ class Measurement(PlainQuantity):
         return _unpickle_measurement, (Measurement, self.magnitude, self._units)
 
     def __repr__(self):
-        return "<Measurement({}, {}, {})>".format(
-            self.magnitude.nominal_value, self.magnitude.std_dev, self.units
-        )
+        return f'Measurement({repr(self.magnitude.nominal_value)}, {repr(self.magnitude.std_dev)}, "{self.units}")'
 
     def __str__(self):
         return f"{self}"

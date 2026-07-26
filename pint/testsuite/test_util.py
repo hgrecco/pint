@@ -67,13 +67,13 @@ class TestUnitsContainer:
     def test_unitcontainer_repr(self):
         x = UnitsContainer()
         assert str(x) == "dimensionless"
-        assert repr(x) == "<UnitsContainer({})>"
+        assert repr(x) == "UnitsContainer({})"
         x = UnitsContainer(meter=1, second=2)
         assert str(x) == "meter * second ** 2"
-        assert repr(x) == "<UnitsContainer({'meter': 1, 'second': 2})>"
+        assert repr(x) == "UnitsContainer({'meter': 1, 'second': 2})"
         x = UnitsContainer(meter=1, second=2.5)
         assert str(x) == "meter * second ** 2.5"
-        assert repr(x) == "<UnitsContainer({'meter': 1, 'second': 2.5})>"
+        assert repr(x) == "UnitsContainer({'meter': 1, 'second': 2.5})"
 
     def test_unitcontainer_bool(self):
         assert UnitsContainer(meter=1, second=2)
@@ -166,7 +166,7 @@ class TestParseHelper:
         assert x() == xp()
         assert x() != y()
         assert ParserHelper.from_string("") == ParserHelper()
-        assert repr(x()) == "<ParserHelper(1, {'meter': 2})>"
+        assert repr(x()) == "ParserHelper(1, {'meter': 2})"
 
         assert ParserHelper(2) == 2
 
@@ -232,6 +232,23 @@ class TestStringProcessor:
         self._test("square bcd", "bcd**2")
         self._test("cubic bcd", "bcd**3")
         self._test("bcd efg", "bcd*efg")
+
+    def test_superscript(self):
+        # Existing superscript exponents.
+        self._test("gr²", "gr**(2)")
+        self._test("gr⁻³", "gr**(-3)")
+        # ``·`` (MIDDLE DOT, U+00B7) and ``⋅`` (DOT OPERATOR, U+22C5) are both
+        # multiplication when not inside a superscript exponent (issue #2272).
+        self._test("kg·m", "kg*m")
+        self._test("kg⋅m", "kg*m")
+        # ``⋅`` right after an exponent, with no following superscript digit,
+        # is multiplication between two exponentiated terms, not a decimal
+        # point with no digits after it.
+        self._test("m²⋅s⁻¹", "m**(2)*s**(-1)")
+        # ``⋅`` is a decimal point and ``⸍`` (U+2E0D) a fraction slash
+        # inside superscript exponents (issue #2250).
+        self._test("gr⁰⋅³³³", "gr**(0.333)")
+        self._test("gr¹⸍³", "gr**(1/3)")
 
     def test_per(self):
         self._test("miles per hour", "miles/hour")

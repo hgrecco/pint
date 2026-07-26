@@ -20,7 +20,7 @@ from ._spec_helpers import REGISTERED_FORMATTERS, split_format
 from .plain import BaseFormatter
 
 if TYPE_CHECKING:
-    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
+    from ...facets.plain import PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
 
 
@@ -105,7 +105,7 @@ def register_unit_format(name: str):
 
                 return func(units, registry=self._registry)
 
-            def format_quantity(
+            def format_quantity[MagnitudeT: Magnitude](
                 self,
                 quantity: PlainQuantity[MagnitudeT],
                 qspec: str = "",

@@ -64,6 +64,7 @@ def test_register_unit_format(registry_tiny):
         return "<formatted unit>"
 
     quantity = 1.0 * registry_tiny.meter
+    assert f"{quantity:g#~custom}" == "1 <formatted unit>"
     assert f"{quantity:custom}" == "1.0 <formatted unit>"
 
     with pytest.raises(ValueError, match="format 'custom' already exists"):
@@ -71,3 +72,12 @@ def test_register_unit_format(registry_tiny):
         @fmt.register_unit_format("custom")
         def format_custom_redefined(unit, registry, **options):
             return "<overwritten>"
+
+
+def test_format_unit_caret_negative_power(func_registry):
+    """format_unit with ^ flag should use negative powers (fixes #2313)."""
+    u = func_registry.Unit("second") ** -1
+    # With ^ flag: s⁻¹ (negative power form)
+    assert format(u, "~^P") == "s⁻¹"
+    # Without ^ flag: 1/s (ratio form, unchanged)
+    assert format(u, "~P") == "1/s"
