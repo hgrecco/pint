@@ -318,7 +318,11 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         return (
             super()._is_timedelta(value)
             or isinstance(value, np_timedelta64)
-            or (is_duck_array(value) and value.dtype.type == np_timedelta64)
+            or (
+                not isinstance(value, PlainQuantity)
+                and is_duck_array(value)
+                and value.dtype.type == np_timedelta64
+            )
         )
 
     def _convert_timedelta(self, value: Any) -> tuple[float, str]:

@@ -2067,6 +2067,20 @@ class TestTimedelta(QuantityTestCase):
             self.Q_(1, result.units), self.Q_(1, expected.units)
         )
 
+    def test_init_quantity_with_quantity_and_units(self):
+        # Q_(quantity, units) used to crash: _is_timedelta's duck-array check
+        # misidentified the Quantity itself as a duck array (is_duck_array_type
+        # sees __array_function__/ndim/dtype on the class but can't see that
+        # _magnitude/_units are only set per-instance), then failed accessing
+        # `.dtype` on a magnitude that doesn't have one.
+        length = self.Q_(30, "cm")
+        assert self.Q_(length, "cm") == length
+
+    @helpers.requires_numpy
+    def test_init_quantity_np_array_with_quantity_and_units(self):
+        length = self.Q_(np.array([30.0]), "cm")
+        helpers.assert_quantity_almost_equal(self.Q_(length, "cm"), length)
+
 
 # TODO: do not subclass from QuantityTestCase
 class TestCompareNeutral(QuantityTestCase):
