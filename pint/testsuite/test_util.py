@@ -233,6 +233,17 @@ class TestStringProcessor:
         self._test("cubic bcd", "bcd**3")
         self._test("bcd efg", "bcd*efg")
 
+    def test_superscript(self):
+        # Existing superscript exponents.
+        self._test("gr²", "gr**(2)")
+        self._test("gr⁻³", "gr**(-3)")
+        # ``·`` (U+00B7) is multiplication, not a decimal point.
+        self._test("kg·m", "kg*m")
+        # ``⋅`` (U+22C5) is a decimal point and ``⸍`` (U+2E0D) a fraction slash
+        # inside superscript exponents (issue #2250).
+        self._test("gr⁰⋅³³³", "gr**(0.333)")
+        self._test("gr¹⸍³", "gr**(1/3)")
+
     def test_per(self):
         self._test("miles per hour", "miles/hour")
 
