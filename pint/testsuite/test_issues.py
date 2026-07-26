@@ -1556,7 +1556,7 @@ def test_issue2255():
 
     assert f(Q_(1000, "m")) == 1.0
 
-  
+
 def test_issue2320():
     ureg = UnitRegistry()
     for spelling in ("kg", "kWh", "ms", "degC**2"):
