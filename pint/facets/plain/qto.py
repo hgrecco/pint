@@ -239,6 +239,7 @@ def _get_preferred(
 ) -> PlainQuantity:
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.default_preferred_units
+    preferred_units = list(map(quantity._REGISTRY.Unit, preferred_units))
 
     if not quantity.dimensionality:
         return quantity._units.copy()
