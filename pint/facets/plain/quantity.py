@@ -215,7 +215,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if inst._is_timedelta(value):
             m, u = inst._convert_timedelta(value)
             inst._magnitude = m
-            inst._units = inst.UnitsContainer({u: 1})
+            inst._units = inst._REGISTRY.parse_units(u)._units
             if units:
                 inst.ito(units)
             return inst
@@ -687,6 +687,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             operator function (e.g. operator.add, operator.isub)
 
         """
+        if self._is_timedelta(other):
+            other = self.__class__(other)
+
         if not self._check(other):
             # other not a PlainQuantity
             try:
@@ -799,6 +802,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         op : function
             operator function (e.g. operator.add, operator.isub)
         """
+        if self._is_timedelta(other):
+            other = self.__class__(other)
+
         if not self._check(other):
             # other not from same Registry or not a PlainQuantity
             if zero_or_nan(other, True):
@@ -1037,6 +1043,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if units_op is None:
             units_op = magnitude_op
 
+        if self._is_timedelta(other):
+            other = self.__class__(other)
+
         offset_units_self = self._get_non_multiplicative_units()
         no_offset_units_self = len(offset_units_self)
 
@@ -1105,6 +1114,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         """
         if units_op is None:
             units_op = magnitude_op
+
+        if self._is_timedelta(other):
+            other = self.__class__(other)
 
         offset_units_self = self._get_non_multiplicative_units()
         no_offset_units_self = len(offset_units_self)
@@ -1247,6 +1259,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         other: opt.CanTruediv[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __rtruediv__(self: PlainQuantity, other) -> PlainQuantity:
+        if self._is_timedelta(other):
+            return self.__class__(other) / self
+
         try:
             other_magnitude = _to_magnitude(
                 other, self.force_ndarray, self.force_ndarray_like
