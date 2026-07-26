@@ -324,11 +324,11 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         >>> import pint
         >>> ureg = pint.UnitRegistry()
         >>> ([200e-9, 300e-12] * ureg.s).to_compact()
-        <Quantity([200.0, 0.3], , 'nanosecond')>
+        Quantity(array([200. ,   0.3]), "nanosecond")
         >>> ([1e-2, 3] * ureg("kg m/s^2")).to_compact("N")
-        <Quantity([0.01, 3.0], 'newton')>
+        Quantity(array([0.01, 3.  ]), "newton")
         >>> ([1, 6000] * ureg("g")).to_compact(maximumPrefix=True)
-        <Quantity([0.001, 6.0], 'kilogram')>
+        Quantity(array([1.e-03, 6.e+00]), "kilogram")
         """
         if not (HAS_NUMPY and isinstance(self._magnitude, np.ndarray)):
             # Not an array (e.g. numpy isn't installed, or the magnitude is a
