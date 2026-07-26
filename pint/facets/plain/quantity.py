@@ -210,8 +210,16 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         if units is None and isinstance(value, cls):
             return copy.copy(value)
-
         inst = SharedRegistryObject().__new__(cls)
+
+        if inst._is_timedelta(value):
+            m, u = inst._convert_timedelta(value)
+            inst._magnitude = m
+            inst._units = inst.UnitsContainer({u: 1})
+            if units:
+                inst.ito(units)
+            return inst
+
         if units is None:
             units = inst.UnitsContainer()
         else:
@@ -251,6 +259,15 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         inst._units = units
 
         return inst
+
+    def _is_timedelta(self, value: Any) -> bool:
+        return isinstance(value, datetime.timedelta)
+
+    def _convert_timedelta(self, value: Any) -> tuple[float, str]:
+        """Convert a timedelta object to magnitude and unit string."""
+        if isinstance(value, datetime.timedelta):
+            return value.total_seconds(), "seconds"
+        raise TypeError(f"Cannot convert {value!r} to seconds.")
 
     def __iter__[T: Magnitude](
         self: PlainQuantity[opt.CanIter[T]],
