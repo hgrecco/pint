@@ -8,7 +8,14 @@ The getting started guide aims to get you using pint productively as quickly as 
 Installation
 ------------
 
-Pint has no dependencies except Python itself. It runs on Python 3.9+.
+Pint runs on Python 3.12+.
+It only depends on a couple small packages for its core functionality:
+- :code:`flexparser` and :code:`flexcache` for parsing unit definition files
+- :code:`typing_extensions` for better compatibility with all supported Python versions
+- :code:`platformdirs` for finding platform-dependent cache paths
+
+Beyond this minimal setup, pint supports interoperability with other libraries, such as
+numpy and uncertainties, that are considered optional dependencies.
 
 .. grid:: 2
 
