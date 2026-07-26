@@ -142,9 +142,8 @@ Finding compatible units
 ------------------------
 
 With so many units defined, it is not always obvious which ones are
-available to convert to. The ``compatible_units()`` method, available on
-both ``Quantity`` and ``Unit`` objects, returns the set of units sharing
-the same dimensionality:
+available to convert to. The ``compatible_units()`` method returns the
+set of units sharing the same dimensionality:
 
 .. doctest::
 
