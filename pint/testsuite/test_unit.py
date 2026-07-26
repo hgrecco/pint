@@ -5,6 +5,7 @@ import functools
 import logging
 import math
 import operator
+import pickle
 import re
 from contextlib import nullcontext as does_not_raise
 
@@ -995,6 +996,96 @@ class TestNonReducing(QuantityTestCase):
         combo = strain * ureg.Unit("km")
         assert combo == ureg.Unit("km")
         assert format(combo, "~D") == format(ureg.Unit("km"), "~D")
+
+    @pytest.mark.xfail(
+        reason=(
+            "NonReducingUnitsContainer.non_reduced_d_items (and unit_items()) "
+            "read a nested NonReducingUnitsContainer ingredient through its "
+            "reduced _d, not its own non_reduced_d_items, so a further "
+            "multiply/divide bakes away display fidelity for any earlier "
+            "group that doesn't fully cancel to nothing. This was masked by "
+            "test_chained_operation_after_non_reducing, whose earlier group "
+            "(mm/mm) happens to cancel to an empty dict."
+        ),
+        strict=True,
+    )
+    def test_chained_operation_preserves_partial_cancellation(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        a = ureg.Unit("mm") ** 2 / ureg.Unit("mm")
+        assert a._units.non_reduced_d_items == [("millimeter", 2), ("millimeter", -1)]
+
+        b = a * ureg.Unit("s")
+        assert b._units.non_reduced_d_items == [
+            ("millimeter", 2),
+            ("millimeter", -1),
+            ("second", 1),
+        ]
+
+    def test_deepcopy(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain = ureg.Unit("mm") / ureg.Unit("mm")
+        copied = copy.deepcopy(strain)
+        assert format(copied, "~D") == format(strain, "~D")
+        assert copied._units.non_reduced_d_items == strain._units.non_reduced_d_items
+
+    def test_pickle_non_reducing_units_container(self):
+        # NonReducingUnitsContainer.__getstate__/__setstate__ used to only
+        # cover the base UnitsContainer's __slots__ (_d, _one, _non_int_type),
+        # silently dropping _auto_reduce_units (a slot added to the base
+        # class for this feature) and this subclass's own
+        # non_reduced_units/reduced_units/non_reduced_d_items/i, so a round
+        # trip through pickle either raised AttributeError on the next
+        # __mul__/__truediv__ or crashed formatting the restored object.
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain_uc = (ureg.Unit("mm") / ureg.Unit("mm"))._units
+        assert isinstance(strain_uc, NonReducingUnitsContainer)
+
+        restored = pickle.loads(pickle.dumps(strain_uc))
+        assert restored._auto_reduce_units is False
+        assert restored.non_reduced_units == strain_uc.non_reduced_units
+        assert restored.non_reduced_d_items == strain_uc.non_reduced_d_items
+        assert restored.reduced_units == strain_uc.reduced_units
+        assert restored.i == strain_uc.i
+
+        # the restored object must still support further non-reducing ops
+        combo = restored * ureg.Unit("s")._units
+        assert isinstance(combo, NonReducingUnitsContainer)
+
+    def test_pickle_unit_and_quantity(self, monkeypatch):
+        # Unit/Quantity pickling reconstructs against the application
+        # registry (see pint._unpickle_unit/_unpickle_quantity), which
+        # requires the registry actually used to build the object to be the
+        # application registry; set it explicitly here rather than relying
+        # on the process-wide default (which may or may not already know
+        # about "millimeter" depending on unrelated prior use).
+        import pint
+
+        ureg = UnitRegistry(auto_reduce_units=False)
+        monkeypatch.setattr(
+            pint, "application_registry", pint.ApplicationRegistry(ureg)
+        )
+
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        restored_unit = pickle.loads(pickle.dumps(strain_unit))
+        assert format(restored_unit, "~D") == format(strain_unit, "~D")
+
+        strain_q = ureg.Quantity(1, "mm") / ureg.Quantity(1, "mm")
+        restored_q = pickle.loads(pickle.dumps(strain_q))
+        assert format(restored_q, "~D") == format(strain_q, "~D")
+
+    def test_formatting_caret_spec_and_sort_order(self):
+        # Coverage for the empty_numerator_fmt / custom sort_func plumbing
+        # added for NonReducingUnitsContainer across full.py,
+        # _format_helpers.py and plain.py, which is only exercised via the
+        # "^" (as_ratio=False) format spec path.
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        assert format(strain_unit, "~^D") == "mm * mm ** -1"
+
+        # the custom sort_func preserves insertion order instead of the
+        # default dimension/name based sort
+        mixed = ureg.Unit("s") * ureg.Unit("mm") / ureg.Unit("s")
+        assert format(mixed, "~D") == "s * mm / s"
 
 
 class TestCaseInsensitiveRegistry(QuantityTestCase):

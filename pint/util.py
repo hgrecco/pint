@@ -562,11 +562,11 @@ class UnitsContainer(Mapping[str, Scalar]):
         return self._hash
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
-    def __getstate__(self) -> tuple[udict, Scalar, type]:
-        return self._d, self._one, self._non_int_type
+    def __getstate__(self) -> tuple[udict, Scalar, type, bool]:
+        return self._d, self._one, self._non_int_type, self._auto_reduce_units
 
-    def __setstate__(self, state: tuple[udict, Scalar, type]):
-        self._d, self._one, self._non_int_type = state
+    def __setstate__(self, state: tuple[udict, Scalar, type, bool]):
+        self._d, self._one, self._non_int_type, self._auto_reduce_units = state
         self._hash = None
 
     def __eq__(self, other: Any) -> bool:
@@ -760,6 +760,47 @@ class NonReducingUnitsContainer(UnitsContainer):
     def unit_items(self) -> Iterable[tuple[str, Scalar]]:
         return [items for _d in self.non_reduced_units for items in _d.items()]
 
+    # UnitsContainer.__getstate__ only covers the base class's __slots__; carry
+    # over the extra state this subclass keeps in its instance __dict__ too
+    # (same issue __copy__ has, see above).
+    def __getstate__(
+        self,
+    ) -> tuple[
+        udict,
+        Scalar,
+        type,
+        bool,
+        list[UnitsContainer],
+        UnitsContainer,
+        list[tuple[str, Scalar]],
+        int,
+    ]:
+        return super().__getstate__() + (
+            self.non_reduced_units,
+            self.reduced_units,
+            self.non_reduced_d_items,
+            self.i,
+        )
+
+    def __setstate__(
+        self,
+        state: tuple[
+            udict,
+            Scalar,
+            type,
+            bool,
+            list[UnitsContainer],
+            UnitsContainer,
+            list[tuple[str, Scalar]],
+            int,
+        ],
+    ) -> None:
+        super().__setstate__(state[:4])
+        self.non_reduced_units = state[4]
+        self.reduced_units = state[5]
+        self.non_reduced_d_items = state[6]
+        self.i = state[7]
+
 
 class ParserHelper(UnitsContainer):
     """The ParserHelper stores in place the product of variables and
@@ -895,12 +936,12 @@ class ParserHelper(UnitsContainer):
         return super().__hash__()
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
-    def __getstate__(self):
+    def __getstate__(self) -> tuple[udict, Scalar, type, bool, Scalar]:
         return super().__getstate__() + (self.scale,)
 
-    def __setstate__(self, state):
-        super().__setstate__(state[:-1])
-        self.scale = state[-1]
+    def __setstate__(self, state: tuple[udict, Scalar, type, bool, Scalar]) -> None:
+        super().__setstate__(state[:4])
+        self.scale = state[4]
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, ParserHelper):
