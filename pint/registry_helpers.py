@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 from ._typing import FuncType
 from .errors import DimensionalityError
+from .facets.plain import PlainQuantity, PlainUnit
 from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
@@ -145,7 +146,7 @@ def _parse_wrap_args(args, registry=None):
 
         # third pass: convert other arguments
         for ndx in unit_args_ndx:
-            if isinstance(values[ndx], ureg.Quantity):
+            if isinstance(values[ndx], PlainQuantity):
                 values[ndx] = ureg._convert(
                     values[ndx]._magnitude, values[ndx]._units, args_as_uc[ndx][0]
                 )
@@ -237,7 +238,7 @@ def wraps(
         args = (args,)
 
     for arg in args:
-        if arg is not None and not isinstance(arg, (ureg.Unit, str)):
+        if arg is not None and not isinstance(arg, (PlainUnit, str)):
             raise TypeError(
                 "wraps arguments must by of type str or Unit, not %s (%s)"
                 % (type(arg), arg)
@@ -248,14 +249,14 @@ def wraps(
     is_ret_container = isinstance(ret, (list, tuple))
     if is_ret_container:
         for arg in ret:
-            if arg is not None and not isinstance(arg, (ureg.Unit, str)):
+            if arg is not None and not isinstance(arg, (PlainUnit, str)):
                 raise TypeError(
                     "wraps 'ret' argument must by of type str or Unit, not %s (%s)"
                     % (type(arg), arg)
                 )
         ret = ret.__class__([_to_units_container(arg, ureg) for arg in ret])
     else:
-        if ret is not None and not isinstance(ret, (ureg.Unit, str)):
+        if ret is not None and not isinstance(ret, (PlainUnit, str)):
             raise TypeError(
                 "wraps 'ret' argument must by of type str or Unit, not %s (%s)"
                 % (type(ret), ret)

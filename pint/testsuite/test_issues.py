@@ -13,6 +13,8 @@ import pytest
 from pint import (
     Context,
     DimensionalityError,
+    Quantity,
+    Unit,
     UndefinedUnitError,
     UnitRegistry,
     get_application_registry,
@@ -1508,3 +1510,26 @@ def test_issue2305():
     ureg_dec = UnitRegistry(non_int_type=Decimal)
     assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
     assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue2046():
+    # `Unit` and `Quantity` imported from `pint` are aliases for
+    # `UnitRegistry.Unit`/`.Quantity`, not the dynamic subclasses a
+    # UnitRegistry instance builds for itself in `_init_dynamic_classes`.
+    # Both kinds of object share `_REGISTRY` when bound to the application
+    # registry, but `Unit.from_` and `wraps` used to check `isinstance`
+    # against the registry-specific subclass directly, so a "public" object
+    # of the same registry was wrongly rejected.
+    ureg = get_application_registry()
+
+    # Unit.from_ with a public Quantity
+    assert ureg.Unit("meter").from_(Quantity(2, "inch")) == ureg.Quantity(
+        2 * 0.0254, "meter"
+    )
+
+    # wraps with public Units as the argument/return spec
+    def func(x):
+        return x
+
+    wrapped = ureg.wraps(Unit("meter"), [Unit("meter")])(func)
+    assert wrapped(Quantity(200, "centimeter")) == ureg.Quantity(2, "meter")

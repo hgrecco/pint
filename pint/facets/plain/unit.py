@@ -276,7 +276,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         """
         if self._check(value):
-            if not isinstance(value, self._REGISTRY.Quantity):
+            from .quantity import PlainQuantity
+
+            if not isinstance(value, PlainQuantity):
                 value = self._REGISTRY.Quantity(1, value)
             return value.to(self)
         elif strict:

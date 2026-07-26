@@ -978,13 +978,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return -self._add_sub(other, operator.sub)
 
-    def _is_same_registry_unit(self, other) -> bool:
-        from .unit import PlainUnit
-
-        return isinstance(other, self._REGISTRY.Unit) or (
-            isinstance(other, PlainUnit) and other._REGISTRY is self._REGISTRY
-        )
-
     @check_implemented
     @ireduce_dimensions
     def _imul_div(self, other, magnitude_op, units_op=None):
@@ -1035,7 +1028,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             self._units = units_op(self._units, self.UnitsContainer())
             return self
 
-        if self._is_same_registry_unit(other):
+        from .unit import PlainUnit
+
+        if isinstance(other, PlainUnit):
             other = 1 * other
 
         if not self._ok_for_muldiv(no_offset_units_self):
@@ -1106,7 +1101,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
             return self.__class__(magnitude, units)
 
-        if self._is_same_registry_unit(other):
+        from .unit import PlainUnit
+
+        if isinstance(other, PlainUnit):
             other = 1 * other
 
         new_self = self
