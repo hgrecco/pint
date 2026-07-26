@@ -861,6 +861,26 @@ class TestNonReducing(QuantityTestCase):
         assert format(strain_unit, "~D") == "mm / mm"
         assert format(strain_unit, "P") == "millimeter/millimeter"
 
+    def test_issue1993_parse_expression(self):
+        # Parsing a quantity string that multiplies units together used to
+        # crash with AttributeError('NonReducingUnitsContainer' object has no
+        # attribute '_one'/'non_reduced_units'), since the units are combined
+        # via UnitsContainer.__mul__, which builds a NonReducingUnitsContainer
+        # whose __init__ never fully mirrored the base class's, and whose
+        # extra state was dropped by the base class's __copy__.
+        ureg = UnitRegistry(auto_reduce_units=False)
+
+        q = ureg("1.0 kN.m")
+        assert q.magnitude == 1.0
+        assert q.units == ureg.Unit("kN.m")
+
+        q = ureg("m/s/m")
+        assert q.magnitude == 1.0
+
+        # a copy of the resulting NonReducingUnitsContainer must keep working
+        # (this is what previously crashed inside UnitsContainer.__mul__)
+        assert ureg("1.0 kN.m") * ureg("2 s") == ureg("2.0 kN.m.s")
+
 
 class TestCaseInsensitiveRegistry(QuantityTestCase):
     kwargs = dict(case_sensitive=False)

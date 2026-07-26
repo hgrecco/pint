@@ -704,8 +704,6 @@ class NonReducingUnitsContainer(UnitsContainer):
         auto_reduce_units: bool = True,
     ) -> None:
         self.non_reduced_units = []
-        self._non_int_type = non_int_type
-        self._auto_reduce_units = auto_reduce_units
 
         for u in units:
             if isinstance(u, tuple):
@@ -713,6 +711,18 @@ class NonReducingUnitsContainer(UnitsContainer):
             if hasattr(u, "_units"):
                 u = u._units
             self.non_reduced_units.append(u)
+
+        if non_int_type is None and self.non_reduced_units:
+            non_int_type = self.non_reduced_units[0]._non_int_type
+        self._non_int_type = non_int_type or float
+        self._auto_reduce_units = auto_reduce_units
+
+        # UnitsContainer.__copy__ (inherited, not overridden here) copies _one,
+        # so it must be set like the base class does.
+        if self._non_int_type is float:
+            self._one = 1
+        else:
+            self._one = self._non_int_type("1")
 
         self.reduced_units = UnitsContainer()
         for unit in self.non_reduced_units:
@@ -727,6 +737,17 @@ class NonReducingUnitsContainer(UnitsContainer):
             for key, value in uc._d.items()
         ]
         self.i = 0
+
+    def __copy__(self):
+        # UnitsContainer.__copy__ uses object.__new__ and skips __init__, so it
+        # only copies the base class's __slots__. Carry over the extra state
+        # this subclass keeps in its instance __dict__ too.
+        new = super().__copy__()
+        new.non_reduced_units = list(self.non_reduced_units)
+        new.reduced_units = self.reduced_units
+        new.non_reduced_d_items = list(self.non_reduced_d_items)
+        new.i = self.i
+        return new
 
     def __repr__(self) -> str:
         tmp = "[%s]" % ", ".join(
