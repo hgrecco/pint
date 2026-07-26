@@ -907,8 +907,13 @@ _subs_re_list = [
 _subs_re = [
     (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re_list
 ]
-_pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⁻", "0123456789*-")
-_pretty_exp_re = re.compile(r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?)")
+# ``⋅`` (U+22C5) acts as a decimal point and ``⸍`` (U+2E0D) as a fraction slash
+# inside superscript exponents, e.g. ``gr⁰⋅³³³`` (grain**0.333) and ``gr¹⸍³``
+# (grain**(1/3)).  ``·`` (U+00B7) is the multiplication operator and maps to ``*``.
+_pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⁻⋅⸍", "0123456789*-./")
+_pretty_exp_re = re.compile(
+    r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:[.⋅][⁰¹²³⁴⁵⁶⁷⁸⁹]*)?(?:⸍[⁰¹²³⁴⁵⁶⁷⁸⁹]+)?)"
+)
 
 
 def string_preprocessor(input_string: str) -> str:
@@ -1038,9 +1043,7 @@ def to_units_container(
         return unit_like._units
     elif str in mro:
         if registry:
-            # TODO: document how to whether to lift preprocessing loop out to caller
-            for p in registry.preprocessors:
-                unit_like = p(unit_like)
+            unit_like = registry._apply_preprocessors(unit_like)
             return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
