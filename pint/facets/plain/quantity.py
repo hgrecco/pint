@@ -687,6 +687,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             operator function (e.g. operator.add, operator.isub)
 
         """
+        if self._is_timedelta(other):
+            other = self.__class__(other)
+
         if not self._check(other):
             # other not a PlainQuantity
             try:
@@ -799,6 +802,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         op : function
             operator function (e.g. operator.add, operator.isub)
         """
+        if self._is_timedelta(other):
+            other = self.__class__(other)
+
         if not self._check(other):
             # other not from same Registry or not a PlainQuantity
             if zero_or_nan(other, True):

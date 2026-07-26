@@ -2053,6 +2053,48 @@ class TestTimedelta(QuantityTestCase):
             q, self.Q_(np.array([0.1, 0.2, 0.36]), "m/s**2")
         )
 
+    def test_add_sub_timedelta(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(3.6, "s")
+        assert q + t == self.Q_(13.6, "s")
+        assert t + q == self.Q_(13.6, "s")
+        assert q - t == self.Q_(-6.4, "s")
+        assert t - q == self.Q_(6.4, "s")
+
+        with pytest.raises(DimensionalityError):
+            self.Q_(3.6, "m") + t
+
+        q2 = self.Q_(3.6, "s")
+        q2 += t
+        assert q2 == self.Q_(13.6, "s")
+        q3 = self.Q_(3.6, "s")
+        q3 -= t
+        assert q3 == self.Q_(-6.4, "s")
+
+    @helpers.requires_numpy
+    def test_add_sub_timedelta_np(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(np.array([1.0, 2.0, 3.6]), "s")
+        helpers.assert_quantity_almost_equal(
+            q + t, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            t + q, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            q - t, self.Q_(np.array([-9.0, -8.0, -6.4]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            t - q, self.Q_(np.array([9.0, 8.0, 6.4]), "s")
+        )
+
+        q += t
+        helpers.assert_quantity_almost_equal(
+            q, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+
     @pytest.mark.parametrize(
         ["timedelta_unit", "pint_unit"],
         (
