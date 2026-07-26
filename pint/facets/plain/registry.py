@@ -59,7 +59,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import deprecated
+from ...compat import coerce_scalar, deprecated
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -759,7 +759,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                     accumulator[key] += exp2
 
             else:
-                reg = self._units[self.get_name(key)]
+                name = self.get_name(key)
+                if name == "":
+                    continue
+                reg = self._units[name]
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
@@ -1005,6 +1008,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         for key in ref:
             exp2 = exp * ref[key]
             key = self.get_name(key)
+            if key == "":
+                continue
             reg = self._units[key]
             if reg.is_base:
                 accumulators[key] += exp2
@@ -1149,12 +1154,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if isinstance(factor, DimensionalityError):
             raise factor
 
-        # factor is type float and if our magnitude is type Decimal then
-        # must first convert to Decimal before we can '*' the values
-        if isinstance(value, Decimal):
-            factor = Decimal(str(factor))
-        elif isinstance(value, Fraction):
-            factor = Fraction(str(factor))
+        # Decimal/Fraction magnitudes can't mix with float — coerce to match.
+        factor = coerce_scalar(value, factor)
 
         if inplace:
             value *= factor

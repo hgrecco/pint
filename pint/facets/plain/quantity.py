@@ -5,6 +5,7 @@ pint.facets.plain.quantity
 :copyright: 2022 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+# pyright: reportInvalidTypeArguments=warning
 
 from __future__ import annotations
 
@@ -18,10 +19,10 @@ from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
+    Generic,
     Self,
-    SupportsComplex,
-    SupportsFloat,
-    SupportsInt,
+    TypeVar,
+    cast,
     overload,
 )
 
@@ -48,12 +49,21 @@ from . import qto
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
+    import optype as opt
+    from optype import do_neg, do_pos, do_round
+
     from ..context import Context
+    from ..system import System
     from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
     if HAS_NUMPY:
         import numpy as np  # noqa
+
+else:
+    do_round = round
+    do_pos = operator.pos
+    do_neg = operator.neg
 
 try:
     import uncertainties.unumpy as unp
@@ -113,8 +123,10 @@ def method_wraps(numpy_func):
 
 # TODO: remove all nonmultiplicative remnants
 
+MagnitudeT_co = TypeVar("MagnitudeT_co", bound=Magnitude, covariant=True)
 
-class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
+
+class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co]):
     """Implements a class to describe a physical quantity:
     the product of a numerical value and a unit of measurement.
 
@@ -130,7 +142,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
     """
 
-    _magnitude: MagnitudeT
+    _magnitude: MagnitudeT_co
 
     @property
     def ndim(self) -> int:
@@ -148,19 +160,27 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     def force_ndarray_like(self) -> bool:
         return self._REGISTRY.force_ndarray_like
 
-    def __reduce__(self) -> tuple[type, Magnitude, UnitsContainer]:
+    def __reduce__(
+        self,
+    ) -> tuple[
+        Callable[
+            [type[PlainQuantity[MagnitudeT_co]], MagnitudeT_co, UnitsContainer],
+            PlainQuantity[MagnitudeT_co],
+        ],
+        tuple[type[PlainQuantity[MagnitudeT_co]], MagnitudeT_co, UnitsContainer],
+    ]:
         """Allow pickling quantities. Since UnitRegistries are not pickled, upon
         unpickling the new object is always attached to the application registry.
         """
         from pint import _unpickle_quantity
 
         # Note: type(self) would be a mistake as subclasses built by
-        # dinamically can't be pickled
+        # dynamically can't be pickled
         # TODO: Check if this is still the case.
         return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
     @overload
-    def __new__(cls, value: MagnitudeT, units: UnitLike | None = None) -> Self: ...
+    def __new__(cls, value: MagnitudeT_co, units: UnitLike | None = None) -> Self: ...
 
     @overload
     def __new__(cls, value: str, units: UnitLike | None = None) -> Self: ...
@@ -184,7 +204,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         if units is None and isinstance(value, str):
             ureg = SharedRegistryObject.__new__(cls)._REGISTRY
-            inst = ureg.parse_expression(value)
+            inst = cast(Self, ureg.parse_expression(value))
             return cls.__new__(cls, inst)
 
         if units is None and isinstance(value, cls):
@@ -217,20 +237,23 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             magnitude = _to_magnitude(
                 value, inst.force_ndarray, inst.force_ndarray_like
             )
-        inst._magnitude = magnitude
+        inst._magnitude = cast("MagnitudeT_co", magnitude)
         inst._units = units
 
         return inst
 
-    def __iter__(self: PlainQuantity[Iterable]) -> Iterator[PlainQuantity[Any]]:
+    def __iter__[T: Magnitude](
+        self: PlainQuantity[opt.CanIter[T]],
+    ) -> Iterator[PlainQuantity[T]]:
         # Make sure that, if self.magnitude is not iterable, we raise TypeError as soon
         # as one calls iter(self) without waiting for the first element to be drawn from
         # the iterator
-        it_magnitude = iter(self.magnitude)
+        it_magnitude: Iterator[T] = iter(self.magnitude)  # type: ignore
 
         def it_outer():
             for element in it_magnitude:
-                yield self.__class__(element, self._units)
+                cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
+                yield cls(element, self._units)
 
         return it_outer()
 
@@ -271,16 +294,16 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return hash((self_base.__class__, self_base.magnitude, self_base.units))
 
     @property
-    def magnitude(self) -> MagnitudeT:
+    def magnitude(self) -> MagnitudeT_co:
         """PlainQuantity's magnitude. Long form for `m`"""
         return self._magnitude
 
     @property
-    def m(self) -> MagnitudeT:
+    def m(self) -> MagnitudeT_co:
         """PlainQuantity's magnitude. Short form for `magnitude`"""
         return self._magnitude
 
-    def m_as(self, units: QuantityOrUnitLike | None) -> MagnitudeT:
+    def m_as(self, units: QuantityOrUnitLike | None) -> MagnitudeT_co:
         """PlainQuantity's magnitude expressed in particular units.
 
         Parameters
@@ -340,9 +363,16 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
 
     @classmethod
-    def from_list(
-        cls, quant_list: list[PlainQuantity[MagnitudeT]], units=None
-    ) -> PlainQuantity[MagnitudeT]:
+    def from_list[T: np.floating | np.integer](
+        cls: type[PlainQuantity[opt.numpy.Array1D[np.float64]]],
+        quant_list: list[
+            PlainQuantity[np.floating]
+            | PlainQuantity[np.integer]
+            | PlainQuantity[float]
+            | PlainQuantity[int]
+        ],
+        units: UnitLike | None = None,
+    ) -> PlainQuantity[opt.numpy.Array1D[np.float64]]:
         """Transforms a list of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
@@ -365,8 +395,15 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
     @classmethod
     def from_sequence(
-        cls, seq: Sequence[PlainQuantity[MagnitudeT]], units=None
-    ) -> PlainQuantity[MagnitudeT]:
+        cls: type[PlainQuantity[opt.numpy.Array1D[np.float64]]],
+        seq: Sequence[
+            PlainQuantity[np.floating]
+            | PlainQuantity[np.integer]
+            | PlainQuantity[float]
+            | PlainQuantity[int]
+        ],
+        units: UnitLike | None = None,
+    ) -> PlainQuantity[opt.numpy.Array1D[np.float64]]:
         """Transforms a sequence of Quantities into an numpy.array quantity.
         If no units are specified, the unit of the first element will be used.
 
@@ -401,15 +438,17 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return cls(a, units)
 
     @classmethod
-    def from_tuple(cls, tup) -> Self:
+    def from_tuple(
+        cls, tup: tuple[MagnitudeT_co, Iterable[tuple[str, Scalar]]]
+    ) -> Self:
         for units_tup in tup[1]:
             cls._REGISTRY.get_name(units_tup[0])
         return cls(tup[0], cls._REGISTRY.UnitsContainer(tup[1]))
 
-    def to_tuple(self) -> tuple[MagnitudeT, tuple[tuple[str, Scalar], ...]]:
+    def to_tuple(self) -> tuple[MagnitudeT_co, tuple[tuple[str, Scalar], ...]]:
         return self.m, tuple(self._units.items())
 
-    def compatible_units(self, *contexts):
+    def compatible_units(self, *contexts) -> frozenset[Unit]:
         if contexts:
             with self._REGISTRY.context(*contexts):
                 return self._REGISTRY.get_compatible_units(self._units)
@@ -530,7 +569,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return None
 
-    def to_root_units(self) -> PlainQuantity[MagnitudeT]:
+    def to_root_units(self) -> Self:
         """Return PlainQuantity rescaled to root units."""
 
         _, other = self._REGISTRY._get_root_units(self._units)
@@ -539,7 +578,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return self.__class__(magnitude, other)
 
-    def ito_base_units(self, system=None) -> None:
+    def ito_base_units(self, system: str | System | None = None) -> None:
         """Return PlainQuantity rescaled to plain units.
 
         Parameters
@@ -556,7 +595,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return None
 
-    def to_base_units(self, system=None) -> Self:
+    def to_base_units(self, system: str | System | None = None) -> Self:
         """Return PlainQuantity rescaled to plain units.
 
         Parameters
@@ -584,17 +623,17 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     ito_unprefixed = qto.ito_unprefixed
 
     # Mathematical operations
-    def __int__(self: PlainQuantity[SupportsInt]) -> int:
+    def __int__(self: PlainQuantity[opt.CanInt]) -> int:
         if self.dimensionless:
             return int(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
 
-    def __float__(self: PlainQuantity[SupportsFloat]) -> float:
+    def __float__(self: PlainQuantity[opt.CanFloat]) -> float:
         if self.dimensionless:
             return float(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
 
-    def __complex__(self: PlainQuantity[SupportsComplex]) -> complex:
+    def __complex__(self: PlainQuantity[opt.CanComplex]) -> complex:
         if self.dimensionless:
             return complex(self._convert_magnitude_not_inplace(UnitsContainer()))
         raise DimensionalityError(self._units, "dimensionless")
@@ -851,40 +890,91 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, units)
 
     @overload
-    def __iadd__(self, other: datetime.datetime) -> datetime.timedelta:  # type: ignore[misc]
-        ...
-
+    def __iadd__[T: int | float](
+        self: PlainQuantity[T], other: datetime.datetime
+    ) -> datetime.timedelta: ...
     @overload
-    def __iadd__(self, other) -> PlainQuantity[MagnitudeT]: ...
-
+    def __iadd__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIAdd[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):
-            return self.to_timedelta() + other
+            return cast("PlainQuantity[int | float]", self).to_timedelta() + other
         elif is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.iadd)
-
         return self._add_sub(other, operator.add)
 
+    @overload
+    def __add__(
+        self: PlainQuantity[int | float], other: datetime.datetime
+    ) -> datetime.timedelta: ...
+    @overload
+    def __add__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanAdd[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __add__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRAdd[MagnitudeT_co, U]]
+        | opt.CanRAdd[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
-            return self.to_timedelta() + other
-
+            return cast("PlainQuantity[int | float]", self).to_timedelta() + other
         return self._add_sub(other, operator.add)
 
-    __radd__ = __add__
+    if TYPE_CHECKING:
+        __radd__ = __add__
+    else:
+        # this way a subclass can override just `__add__`
+        # and `__radd__` will have the same behavior
+        def __radd__(self, other):
+            return self.__add__(other)
 
+    @overload
+    def __isub__(
+        self: PlainQuantity[int | float], other: datetime.datetime
+    ) -> datetime.timedelta: ...
+    @overload
+    def __isub__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanISub[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
     def __isub__(self, other):
         if is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.isub)
 
         return self._add_sub(other, operator.sub)
 
+    @overload
+    def __sub__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanSub[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __sub__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRSub[MagnitudeT_co, U]]
+        | opt.CanRSub[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     def __sub__(self, other):
         return self._add_sub(other, operator.sub)
 
+    @overload
+    def __rsub__(
+        self: PlainQuantity[int | float],
+        other: datetime.datetime,
+    ) -> datetime.datetime: ...
+    @overload
+    def __rsub__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanRSub[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __rsub__[U: Magnitude](
+        self,
+        other: opt.CanSub[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     def __rsub__(self, other):
         if isinstance(other, datetime.datetime):
-            return other - self.to_timedelta()
+            return other - cast("PlainQuantity[int | float]", self).to_timedelta()
 
         return -self._add_sub(other, operator.sub)
 
@@ -1031,21 +1121,55 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
         return self.__class__(magnitude, units)
 
-    def __imul__(self, other):
+    def __imul__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIMul[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.imul)
 
         return self._mul_div(other, operator.mul)
 
-    def __mul__(self, other):
+    @overload
+    def __mul__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanMul[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __mul__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRMul[MagnitudeT_co, U]]
+        | opt.CanRMul[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
+    def __mul__(self: PlainQuantity, other) -> PlainQuantity:
         return self._mul_div(other, operator.mul)
 
-    __rmul__ = __mul__
+    if TYPE_CHECKING:
+        __rmul__ = __mul__
+    else:
+        # this way a subclass can override just `__mul__`
+        # and `__rmul__` will have the same behavior
+        def __rmul__(self, other):
+            return self.__mul__(other)
 
-    def __matmul__(self, other):
-        return np.matmul(self, other)
+    @overload
+    def __matmul__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanMatmul[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __matmul__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRMatmul[MagnitudeT_co, U]]
+        | opt.CanRMatmul[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
+    def __matmul__(self: PlainQuantity, other) -> PlainQuantity:
+        return self._mul_div(other, operator.matmul, operator.mul)
 
-    __rmatmul__ = __matmul__
+    if TYPE_CHECKING:
+        __rmatmul__ = __matmul__
+    else:
+        # this way a subclass can override just `__matmul__`
+        # and `__rmatmul__` will have the same behavior
+        def __rmatmul__(self, other):
+            return self.__matmul__(other)
 
     def _truedivide_cast_int(self, a, b):
         t = self._REGISTRY.non_int_type
@@ -1055,18 +1179,39 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             b = t(b)
         return operator.truediv(a, b)
 
-    def __itruediv__(self, other):
+    def __itruediv__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanITruediv[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if is_duck_array_type(type(self._magnitude)):
             return self._imul_div(other, operator.itruediv)
 
         return self._mul_div(other, operator.truediv)
 
-    def __truediv__(self, other):
+    @overload
+    def __truediv__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanTruediv[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __truediv__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRTruediv[MagnitudeT_co, U]]
+        | opt.CanRTruediv[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
+    def __truediv__(self: PlainQuantity, other) -> PlainQuantity:
         if isinstance(self.m, int) or isinstance(getattr(other, "m", None), int):
             return self._mul_div(other, self._truedivide_cast_int, operator.truediv)
         return self._mul_div(other, operator.truediv)
 
-    def __rtruediv__(self, other):
+    @overload
+    def __rtruediv__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanRTruediv[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __rtruediv__[U: Magnitude](
+        self,
+        other: opt.CanTruediv[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
+    def __rtruediv__(self: PlainQuantity, other) -> PlainQuantity:
         try:
             other_magnitude = _to_magnitude(
                 other, self.force_ndarray, self.force_ndarray_like
@@ -1088,7 +1233,9 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     __rdiv__ = __rtruediv__
     __idiv__ = __itruediv__
 
-    def __ifloordiv__(self, other):
+    def __ifloordiv__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIFloordiv[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if self._check(other):
             self._magnitude //= other.to(self._units)._magnitude
         elif self.dimensionless:
@@ -1098,8 +1245,18 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         self._units = self.UnitsContainer({})
         return self
 
+    @overload
+    def __floordiv__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanFloordiv[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __floordiv__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRFloordiv[MagnitudeT_co, U]]
+        | opt.CanRTruediv[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     @check_implemented
-    def __floordiv__(self, other):
+    def __floordiv__(self: PlainQuantity, other) -> PlainQuantity:
         if self._check(other):
             magnitude = self._magnitude // other.to(self._units)._magnitude
         elif self.dimensionless:
@@ -1108,8 +1265,17 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             raise DimensionalityError(self._units, "dimensionless")
         return self.__class__(magnitude, self.UnitsContainer({}))
 
+    @overload
+    def __rfloordiv__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanRFloordiv[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __rfloordiv__[U: Magnitude](
+        self,
+        other: opt.CanFloordiv[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     @check_implemented
-    def __rfloordiv__(self, other):
+    def __rfloordiv__(self: PlainQuantity, other) -> PlainQuantity:
         if self._check(other):
             magnitude = other._magnitude // self.to(other._units)._magnitude
         elif self.dimensionless:
@@ -1119,21 +1285,42 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return self.__class__(magnitude, self.UnitsContainer({}))
 
     @check_implemented
-    def __imod__(self, other):
+    def __imod__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIMod[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if not self._check(other):
             other = self.__class__(other, self.UnitsContainer({}))
         self._magnitude %= other.to(self._units)._magnitude
         return self
 
+    @overload
+    def __mod__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanMod[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __mod__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRMod[MagnitudeT_co, U]]
+        | opt.CanRMod[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     @check_implemented
-    def __mod__(self, other):
+    def __mod__(self: PlainQuantity, other) -> PlainQuantity:
         if not self._check(other):
             other = self.__class__(other, self.UnitsContainer({}))
         magnitude = self._magnitude % other.to(self._units)._magnitude
         return self.__class__(magnitude, self._units)
 
+    @overload
+    def __rmod__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanRMod[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __rmod__[U: Magnitude](
+        self,
+        other: opt.CanMod[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     @check_implemented
-    def __rmod__(self, other):
+    def __rmod__(self: PlainQuantity, other) -> PlainQuantity:
         if self._check(other):
             magnitude = other._magnitude % self.to(other._units)._magnitude
             return self.__class__(magnitude, other._units)
@@ -1143,8 +1330,19 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         else:
             raise DimensionalityError(self._units, "dimensionless")
 
+    @overload
+    def __divmod__[T: Magnitude, U1: Magnitude, U2: Magnitude](
+        self: PlainQuantity[opt.CanDivmod[T, tuple[U1, U2]]],
+        other: PlainQuantity[T] | T,
+    ) -> tuple[PlainQuantity[U1], PlainQuantity[U2]]: ...
+    @overload
+    def __divmod__[U1: Magnitude, U2: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRDivmod[MagnitudeT_co, tuple[U1, U2]]]
+        | opt.CanRDivmod[MagnitudeT_co, tuple[U1, U2]],
+    ) -> tuple[PlainQuantity[U1], PlainQuantity[U2]]: ...
     @check_implemented
-    def __divmod__(self, other):
+    def __divmod__(self: PlainQuantity, other) -> tuple[PlainQuantity, PlainQuantity]:
         if not self._check(other):
             other = self.__class__(other, self.UnitsContainer({}))
         q, r = divmod(self._magnitude, other.to(self._units)._magnitude)
@@ -1153,8 +1351,16 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             self.__class__(r, self._units),
         )
 
+    @overload
+    def __rdivmod__[T: Magnitude, U1: Magnitude, U2: Magnitude](
+        self: PlainQuantity[opt.CanRDivmod[T, tuple[U1, U2]]], other: T
+    ) -> tuple[PlainQuantity[U1], PlainQuantity[U2]]: ...
+    @overload
+    def __rdivmod__[U1: Magnitude, U2: Magnitude](
+        self, other: opt.CanDivmod[MagnitudeT_co, tuple[U1, U2]]
+    ) -> tuple[PlainQuantity[U1], PlainQuantity[U2]]: ...
     @check_implemented
-    def __rdivmod__(self, other):
+    def __rdivmod__(self: PlainQuantity, other) -> tuple[PlainQuantity, PlainQuantity]:
         if self._check(other):
             q, r = divmod(other._magnitude, self.to(other._units)._magnitude)
             unit = other._units
@@ -1166,7 +1372,9 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
         return (self.__class__(q, self.UnitsContainer({})), self.__class__(r, unit))
 
     @check_implemented
-    def __ipow__(self, other):
+    def __ipow__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanIPow[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]:
         if not is_duck_array_type(type(self._magnitude)):
             return self.__pow__(other)
 
@@ -1229,8 +1437,18 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             )
             return self
 
+    @overload
+    def __pow__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanPow[T, U]], other: PlainQuantity[T] | T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __pow__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRPow[MagnitudeT_co, U]]
+        | opt.CanRPow[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     @check_implemented
-    def __pow__(self, other) -> PlainQuantity[MagnitudeT]:
+    def __pow__(self: PlainQuantity, other) -> PlainQuantity:
         try:
             _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
@@ -1294,8 +1512,17 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             magnitude = new_self._magnitude**exponent
             return self.__class__(magnitude, units)
 
+    @overload
+    def __rpow__[T: Magnitude, U: Magnitude](
+        self: PlainQuantity[opt.CanRPow[T, U]], other: T
+    ) -> PlainQuantity[U]: ...
+    @overload
+    def __rpow__[U: Magnitude](
+        self,
+        other: opt.CanPow[MagnitudeT_co, U],
+    ) -> PlainQuantity[U]: ...
     @check_implemented
-    def __rpow__(self, other) -> PlainQuantity[MagnitudeT]:
+    def __rpow__(self: PlainQuantity, other) -> PlainQuantity:
         try:
             _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
         except PintTypeError:
@@ -1308,17 +1535,33 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
             new_self = self.to_root_units()
             return other**new_self._magnitude
 
-    def __abs__(self) -> Self:
-        return self.__class__(abs(self._magnitude), self._units)
+    def __abs__[T: Magnitude](self: PlainQuantity[opt.CanAbs[T]]) -> PlainQuantity[T]:
+        cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
+        return cls(abs(self._magnitude), self._units)
 
-    def __round__(self, ndigits: int | None = None) -> PlainQuantity[int]:
-        return self.__class__(round(self._magnitude, ndigits), self._units)
+    @overload
+    def __round__[T: Magnitude](
+        self: PlainQuantity[opt.CanRound1[T]], ndigits: None = None
+    ) -> PlainQuantity[T]: ...
+    @overload
+    def __round__[T: Magnitude](
+        self: PlainQuantity[opt.CanRound2[int, T]], ndigits: int
+    ) -> PlainQuantity[T]: ...
+    def __round__[T: Magnitude, int](
+        self: PlainQuantity[opt.CanRound1[T]] | PlainQuantity[opt.CanRound2[int, T]],
+        ndigits: int | None = None,
+    ) -> PlainQuantity[T]:
+        cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
+        mag: opt.CanRound[int, T, T] = self._magnitude  # type: ignore
+        return cls(do_round(mag, ndigits), self._units)
 
     def __pos__(self) -> Self:
-        return self.__class__(operator.pos(self._magnitude), self._units)
+        mag: MagnitudeT_co = do_pos(self._magnitude)  # type: ignore
+        return self.__class__(mag, self._units)
 
     def __neg__(self) -> Self:
-        return self.__class__(operator.neg(self._magnitude), self._units)
+        mag: MagnitudeT_co = do_neg(self._magnitude)  # type: ignore
+        return self.__class__(mag, self._units)
 
     @check_implemented
     def __eq__(self, other):
@@ -1429,10 +1672,10 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     __ge__ = lambda self, other: self.compare(other, op=operator.ge)
     __gt__ = lambda self, other: self.compare(other, op=operator.gt)
 
-    def __bool__(self) -> bool:
+    def __bool__[B: bool](self: PlainQuantity[opt.CanBool[B]]) -> B:
         # Only cast when non-ambiguous (when multiplicative unit)
         if self._is_multiplicative:
-            return bool(self._magnitude)
+            return bool(self._magnitude)  # type: ignore
         else:
             raise ValueError(
                 "Boolean value of PlainQuantity with offset unit is ambiguous."
@@ -1440,11 +1683,40 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
 
     __nonzero__ = __bool__
 
-    def tolist(self):
+    @overload
+    def tolist[T: opt.numpy.Array0D | np.number](
+        self: PlainQuantity[T],
+    ) -> PlainQuantity[T]: ...
+    @overload
+    def tolist[X: np.number](
+        self: PlainQuantity[opt.numpy.Array1D[X]],
+    ) -> list[PlainQuantity[X]]: ...
+    @overload
+    def tolist[X: np.number](
+        self: PlainQuantity[opt.numpy.Array2D[X]],
+    ) -> list[list[PlainQuantity[X]]]: ...
+    @overload
+    def tolist[X: np.number](
+        self: PlainQuantity[opt.numpy.Array3D[X]],
+    ) -> list[list[list[PlainQuantity[X]]]]: ...
+    @overload
+    def tolist[X: np.number](
+        self: PlainQuantity[
+            opt.numpy.Array[tuple[int, int, int, int, *tuple[int, ...]], X]
+        ],
+    ) -> list[list[list[list[Any]]]]: ...
+    def tolist[T: opt.numpy.Array | np.number](
+        self: PlainQuantity[T],
+    ) -> PlainQuantity[T] | list[Any]:
         units = self._units
 
         try:
             values = self._magnitude.tolist()
+        except AttributeError:
+            raise AttributeError(
+                f"Magnitude '{type(self._magnitude).__name__}' does not support tolist."
+            )
+        else:
             if not isinstance(values, list):
                 return self.__class__(values, units)
 
@@ -1452,12 +1724,8 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
                 self.__class__(value, units).tolist()
                 if isinstance(value, list)
                 else self.__class__(value, units)
-                for value in self._magnitude.tolist()
+                for value in values
             ]
-        except AttributeError:
-            raise AttributeError(
-                f"Magnitude '{type(self._magnitude).__name__}' does not support tolist."
-            )
 
     def _get_unit_definition(self, unit: str) -> UnitDefinition:
         try:
@@ -1496,7 +1764,7 @@ class PlainQuantity[MagnitudeT: Magnitude](PrettyIPython, SharedRegistryObject):
     def _ok_for_muldiv(self, no_offset_units=None) -> bool:
         return True
 
-    def to_timedelta(self: PlainQuantity[MagnitudeT]) -> datetime.timedelta:
+    def to_timedelta(self: PlainQuantity[int | float]) -> datetime.timedelta:
         return datetime.timedelta(microseconds=self.to("microseconds").magnitude)
 
     # We put this last to avoid overriding UnitsContainer

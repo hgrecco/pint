@@ -25,12 +25,11 @@ else:
     type Scalar = _BuiltinScalar
     type Array = Never
 
-# TODO: Change when Python 3.10 becomes minimal version.
-Magnitude = Scalar | Array
+type Magnitude = Scalar | Array
 
 type UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
 
-type QuantityOrUnitLike = Quantity | UnitLike
+type QuantityOrUnitLike = Quantity[Any] | UnitLike
 
 type Shape = tuple[int, ...]
 

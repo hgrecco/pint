@@ -73,9 +73,7 @@ def to_reduced_units(
     return quantity.to(new_units)
 
 
-def to_compact(
-    quantity: PlainQuantity, unit: UnitsContainer | None = None
-) -> PlainQuantity:
+def to_compact[Q: PlainQuantity](quantity: Q, unit: UnitsContainer | None = None) -> Q:
     """ "Return PlainQuantity rescaled to compact, human-readable units.
 
     To get output in terms of a different unit, use the unit parameter.
