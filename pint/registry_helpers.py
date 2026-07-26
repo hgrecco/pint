@@ -247,8 +247,6 @@ def wraps(
                 % (type(arg), arg)
             )
 
-    converter = _parse_wrap_args(args, ureg)
-
     is_ret_container = isinstance(ret, (list, tuple))
     if is_ret_container:
         for arg in ret:
@@ -280,7 +278,7 @@ def wraps(
                 "%s takes %i parameters, but %i units were passed"
                 % (func.__name__, count_params, len(args))
             )
-        converter = _parse_wrap_args(converter_args)
+        converter = _parse_wrap_args(converter_args, ureg)
 
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
