@@ -93,10 +93,25 @@ Ordering units
 When a quantity has a compound unit (e.g. after multiplying two quantities
 together), the order in which the individual units appear is controlled by
 ``ureg.formatter.default_sort_func``. By default, units are sorted alphabetically
-by name (``pint.delegates.formatter._compound_unit_helpers.sort_by_unit_name``).
+by name (:py:func:`pint.delegates.formatter.sort_by_unit_name`).
+
+A sort function must have the following signature:
+
+.. code-block:: python
+
+   def sort_func(
+       items: Iterable[tuple[str, Any, str]],
+       registry: UnitRegistry | None,
+   ) -> Iterable[tuple[str, Any, str]]: ...
+
+where ``items`` is an iterable of ``(display_name, exponent, unit_name)``
+triplets, one per unit in the compound unit, and ``registry`` is the
+:class:`~pint.UnitRegistry` in use (or ``None``). It must return the same
+triplets in the desired display order. This is exposed as the
+``pint.delegates.formatter.SortFunc`` type alias.
 
 To instead sort by dimensionality, use
-``pint.delegates.formatter._compound_unit_helpers.sort_by_dimensionality``,
+:py:func:`pint.delegates.formatter.sort_by_dimensionality`,
 which orders units according to ``ureg.formatter.dim_order``:
 
 .. doctest::
@@ -104,7 +119,7 @@ which orders units according to ``ureg.formatter.dim_order``:
    >>> ureg2 = pint.UnitRegistry()
    >>> ureg2.formatter.dim_order
    ('[substance]', '[mass]', '[current]', '[luminosity]', '[length]', '[]', '[time]', '[temperature]')
-   >>> from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+   >>> from pint.delegates.formatter import sort_by_dimensionality
    >>> ureg2.formatter.default_sort_func = sort_by_dimensionality
    >>> Q2_ = ureg2.Quantity
    >>> str(Q2_(1, "m") * Q2_(1, "N"))
@@ -119,8 +134,8 @@ Reordering ``dim_order`` changes which dimension's unit is listed first:
    '1 meter * newton'
 
 For full control (e.g. ordering by a specific list of preferred units rather
-than by dimension), write a custom sort function with the same signature as
-``sort_by_dimensionality`` and assign it to ``default_sort_func``.
+than by dimension), write a custom sort function matching the signature above
+and assign it to ``default_sort_func``.
 
 
 Custom formats

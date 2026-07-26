@@ -18,7 +18,7 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
-from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+from pint.delegates.formatter import sort_by_dimensionality
 from pint.facets.plain.unit import UnitsContainer
 from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
@@ -1235,7 +1235,7 @@ def test_issues_1841(func_registry, units, spec, expected):
 @pytest.mark.xfail
 def test_issues_1841_xfail():
     from pint import formatting as fmt
-    from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+    from pint.delegates.formatter import sort_by_dimensionality
 
     # sets compact display mode by default
     ur = UnitRegistry()

@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse
 from ...util import iterable
-from ._compound_unit_helpers import BabelKwds, SortFunc, sort_by_unit_name
+from ._compound_unit_helpers import BabelKwds
 from ._to_register import REGISTERED_FORMATTERS
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
@@ -29,6 +29,7 @@ from .plain import (
     PrettyFormatter,
     RawFormatter,
 )
+from .sorting import SortFunc, sort_by_unit_name
 
 if TYPE_CHECKING:
     from ...compat import Locale
