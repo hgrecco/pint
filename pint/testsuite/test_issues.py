@@ -1666,6 +1666,8 @@ def test_issue2182():
     assert q != np.float64(5.0)
     assert np.float64(5.0) != q  # used to raise DimensionalityError
     assert np.array(5.0) != q  # used to raise DimensionalityError
+
+
 def test_negative_magnitude_pretty_exponent():
     # The exponent pattern was anchored with match() but did not allow a leading
     # sign, so a negative magnitude never matched and kept the raw "e-07" form
