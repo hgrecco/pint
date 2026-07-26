@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Allow string parsing of offset units (#386)
 - Remove the ambiguous `Nm` alias from `number_meter` (Textile group), since it's commonly expected to mean newton-meter (torque) (#1966)
 - Fix `unit in registry` raising `AttributeError` instead of returning `True` when checking membership with a `Unit` object rather than a string (#2156)
 - Support `*`, `/`, `+`, and `-` between `Quantity` and `datetime.timedelta`, converting the `timedelta` to a `Quantity` in seconds (#2348)
@@ -394,7 +395,6 @@ Pint Changelog
 - Improved the application registry.
   (Issue #1366, thanks keewis)
 - Improved testing isolation using pytest fixtures.
-
 ### Breaking Changes
 
 - pint no longer supports Python 3.6
