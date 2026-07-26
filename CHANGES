@@ -17,7 +17,7 @@ Pint Changelog
   the public upcast type map as mutable (#2063)
 
 0.25.3 (2026-03-19)
------------------
+-------------------
 
 - `GenericPlainRegistry.parse_expression` now correctly returns a dimensionless Quantity when taking a float, int, or NaN (#2259)
 - Replace MIP with scipy in `Quantity.to_preferred` (#2264)
