@@ -1666,3 +1666,27 @@ def test_issue2182():
     assert q != np.float64(5.0)
     assert np.float64(5.0) != q  # used to raise DimensionalityError
     assert np.array(5.0) != q  # used to raise DimensionalityError
+def test_negative_magnitude_pretty_exponent():
+    # The exponent pattern was anchored with match() but did not allow a leading
+    # sign, so a negative magnitude never matched and kept the raw "e-07" form
+    # while its positive counterpart was formatted.
+    ureg = UnitRegistry()
+
+    assert f"{ureg.Quantity(1.5e-7, 'meter'):P}" == "1.5×10⁻⁷ meter"
+    assert f"{ureg.Quantity(-1.5e-7, 'meter'):P}" == "-1.5×10⁻⁷ meter"
+
+    assert f"{ureg.Quantity(-1.5e-7, 'meter'):H}" == "-1.5×10<sup>-7</sup> meter"
+
+
+@helpers.requires_numpy
+def test_negative_magnitude_pretty_exponent_leaves_arrays_alone():
+    # Guards the tempting fix. Relaxing match() to search() so the leading "-" stops
+    # blocking would match inside an array's bracketed string, and sub() builds its
+    # replacement once from the first match, so every element would be rewritten with
+    # the first element's exponent: [1e-16 1 1e+10] -> [1×10⁻¹⁶ 1 1×10⁻¹⁶].
+    ureg = UnitRegistry()
+
+    for values in ([1e-16, 1.0, 1e10], [-1e-16, 1.0, 1e10]):
+        formatted = f"{ureg.Quantity(np.array(values), 'meter'):P}"
+        assert "×10" not in formatted
+        assert formatted == f"{ureg.Quantity(np.array(values), 'meter'):}"
