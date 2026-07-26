@@ -1219,9 +1219,9 @@ def test_issue_1845():
 @pytest.mark.parametrize(
     "units,spec,expected",
     [
-        # (dict(hour=1, watt=1), "P~", "W·h"),
-        (dict(ampere=1, volt=1), "P~", "V·A"),
-        # (dict(meter=1, newton=1), "P~", "N·m"),
+        # (dict(hour=1, watt=1), "P~", "W⋅h"),
+        (dict(ampere=1, volt=1), "P~", "V⋅A"),
+        # (dict(meter=1, newton=1), "P~", "N⋅m"),
     ],
 )
 def test_issues_1841(func_registry, units, spec, expected):
@@ -1480,7 +1480,7 @@ def test_issue2256():
         return pf.format_unit(unit, "~", as_ratio=False)
 
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
-    assert f"{q:test2256}" == "2.3e-06 kg⁻¹·m³·s⁻²"
+    assert f"{q:test2256}" == "2.3e-06 kg⁻¹⋅m³⋅s⁻²"
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
 
 
@@ -1489,7 +1489,7 @@ def test_issue2256_2():
 
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
-    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
+    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹⋅m³⋅s⁻²"
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
 
 

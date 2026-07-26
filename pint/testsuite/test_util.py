@@ -237,9 +237,15 @@ class TestStringProcessor:
         # Existing superscript exponents.
         self._test("gr²", "gr**(2)")
         self._test("gr⁻³", "gr**(-3)")
-        # ``·`` (U+00B7) is multiplication, not a decimal point.
+        # ``·`` (MIDDLE DOT, U+00B7) and ``⋅`` (DOT OPERATOR, U+22C5) are both
+        # multiplication when not inside a superscript exponent (issue #2272).
         self._test("kg·m", "kg*m")
-        # ``⋅`` (U+22C5) is a decimal point and ``⸍`` (U+2E0D) a fraction slash
+        self._test("kg⋅m", "kg*m")
+        # ``⋅`` right after an exponent, with no following superscript digit,
+        # is multiplication between two exponentiated terms, not a decimal
+        # point with no digits after it.
+        self._test("m²⋅s⁻¹", "m**(2)*s**(-1)")
+        # ``⋅`` is a decimal point and ``⸍`` (U+2E0D) a fraction slash
         # inside superscript exponents (issue #2250).
         self._test("gr⁰⋅³³³", "gr**(0.333)")
         self._test("gr¹⸍³", "gr**(1/3)")
