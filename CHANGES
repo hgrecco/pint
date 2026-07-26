@@ -6,6 +6,7 @@ Pint Changelog
 
 - Fix `KeyError('')` raised when the `dimensionless` unit is referenced by name, e.g. `get_dimensionality("dimensionless")`, `Quantity(5, "dimensionless").check("dimensionless")`, or a unit defined via `* dimensionless` (#1513, #1994)
 - Fix offset (affine) unit conversion of `Decimal` magnitudes raising `TypeError` from mixing `Decimal` with the float scale/offset (e.g. `Quantity(Decimal(10), "degC").to("K")`), and the mirror case of a plain `float` magnitude in a `Decimal` registry (#2305)
+- Allow `UnitRegistry.wraps()` to pass through arbitrary `**kwargs` without requiring a unit slot (#2175)
 - Treat `None` as dimensionless destination units for `Quantity.to()` and `Quantity.ito()` (#2174)
 - Parse string magnitudes passed with explicit units using the registry's `non_int_type` (#2068)
 - Add `system` parameter to `to_base_units` and `ito_base_units` to allow converting to the base units of a specific unit system (#2297)
