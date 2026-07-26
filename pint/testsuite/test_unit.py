@@ -14,7 +14,7 @@ from pint import DimensionalityError, RedefinitionError, UndefinedUnitError, err
 from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
-from pint.util import ParserHelper, UnitsContainer
+from pint.util import NonReducingUnitsContainer, ParserHelper, UnitsContainer
 
 from .helpers import internal
 
@@ -929,6 +929,21 @@ class TestNonReducing(QuantityTestCase):
 
         strain_q = ureg.Quantity(1, "mm") / ureg.Quantity(1, "mm")
         assert strain_q.units == strain_unit
+
+    def test_ureg_auto_reduce_units_true(self):
+        # Companion to test_ureg_auto_reduce_units: with the default
+        # auto_reduce_units=True, mm/mm must still reduce to plain
+        # dimensionless as before this feature existed, not a
+        # NonReducingUnitsContainer.
+        ureg = UnitRegistry(auto_reduce_units=True)
+
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        assert strain_unit == ureg.Unit("dimensionless")
+        assert not isinstance(strain_unit._units, NonReducingUnitsContainer)
+
+        strain_q = ureg.Quantity(1, "mm") / ureg.Quantity(1, "mm")
+        assert strain_q.units == strain_unit
+        assert not isinstance(strain_q._units, NonReducingUnitsContainer)
 
     def test_formatting(self):
         ureg = UnitRegistry(auto_reduce_units=False)
