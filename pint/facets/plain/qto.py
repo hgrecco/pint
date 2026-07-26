@@ -11,7 +11,7 @@ from ...errors import UndefinedBehavior
 from ...util import UnitsContainer, infer_base_unit
 
 if TYPE_CHECKING:
-    from ..._typing import UnitLike
+    from ..._typing import Scalar, UnitLike
     from ...registry import UnitRegistry
     from .quantity import PlainQuantity
 
@@ -95,6 +95,51 @@ def _get_si_prefixes(registry: UnitRegistry) -> tuple[list[int], list[str]]:
     return SI_powers, SI_bases
 
 
+def _get_compact_base[Q: PlainQuantity](
+    quantity: Q, unit: UnitsContainer | None
+) -> tuple[Q, str, Scalar]:
+    """Resolve the base quantity to search for a compact prefix in, along with
+    the numerator unit name and exponent whose magnitude the prefix is picked for.
+    """
+    if unit is None:
+        unit = infer_base_unit(quantity, registry=quantity._REGISTRY)
+    else:
+        unit = infer_base_unit(quantity.__class__(1, unit), registry=quantity._REGISTRY)
+
+    q_base = quantity.to(unit)
+
+    units = list(q_base._units.items())
+    units_numerator = [a for a in units if a[1] > 0]
+
+    if len(units_numerator) > 0:
+        unit_str, unit_power = units_numerator[0]
+    else:
+        unit_str, unit_power = units[0]
+
+    return q_base, unit_str, unit_power
+
+
+def _pick_compact_unit(
+    q_base: PlainQuantity,
+    unit_str: str,
+    power: Scalar,
+    SI_powers: list[int],
+    SI_bases: list[str],
+) -> UnitsContainer:
+    """Return q_base's UnitsContainer with unit_str renamed to the SI-prefixed
+    spelling matching the given power of ten.
+    """
+    index = bisect.bisect_left(SI_powers, power)
+
+    if index >= len(SI_bases):
+        index = -1
+
+    prefix_str = SI_bases[index]
+
+    new_unit_str = prefix_str + unit_str
+    return q_base._units.rename(unit_str, new_unit_str)
+
+
 def to_compact[Q: PlainQuantity](quantity: Q, unit: UnitsContainer | None = None) -> Q:
     """ "Return PlainQuantity rescaled to compact, human-readable units.
 
@@ -131,41 +176,21 @@ def to_compact[Q: PlainQuantity](quantity: Q, unit: UnitsContainer | None = None
         return quantity
 
     SI_powers, SI_bases = _get_si_prefixes(quantity._REGISTRY)
-
-    if unit is None:
-        unit = infer_base_unit(quantity, registry=quantity._REGISTRY)
-    else:
-        unit = infer_base_unit(quantity.__class__(1, unit), registry=quantity._REGISTRY)
-
-    q_base = quantity.to(unit)
+    q_base, unit_str, unit_power = _get_compact_base(quantity, unit)
 
     magnitude = q_base.magnitude
     # Support uncertainties
     if hasattr(magnitude, "nominal_value"):
         magnitude = magnitude.nominal_value
 
-    units = list(q_base._units.items())
-    units_numerator = [a for a in units if a[1] > 0]
-
-    if len(units_numerator) > 0:
-        unit_str, unit_power = units_numerator[0]
-    else:
-        unit_str, unit_power = units[0]
-
     if unit_power > 0:
         power = math.floor(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
     else:
         power = math.ceil(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
 
-    index = bisect.bisect_left(SI_powers, power)
-
-    if index >= len(SI_bases):
-        index = -1
-
-    prefix_str = SI_bases[index]
-
-    new_unit_str = prefix_str + unit_str
-    new_unit_container = q_base._units.rename(unit_str, new_unit_str)
+    new_unit_container = _pick_compact_unit(
+        q_base, unit_str, power, SI_powers, SI_bases
+    )
 
     return quantity.to(new_unit_container)
 

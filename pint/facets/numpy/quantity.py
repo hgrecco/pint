@@ -8,7 +8,6 @@ pint.facets.numpy.quantity
 
 from __future__ import annotations
 
-import bisect
 import functools
 import math
 import warnings
@@ -17,9 +16,9 @@ from typing import Any
 from ..._typing import Magnitude, Shape
 from ...compat import HAS_NUMPY, _to_magnitude, np
 from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
-from ...util import UnitsContainer, infer_base_unit
+from ...util import UnitsContainer
 from ..plain import PlainQuantity
-from ..plain.qto import _get_si_prefixes
+from ..plain.qto import _get_compact_base, _get_si_prefixes, _pick_compact_unit
 from .numpy_func import (
     HANDLED_UFUNCS,
     copy_units_output_ufuncs,
@@ -347,26 +346,12 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             return self
 
         SI_powers, SI_bases = _get_si_prefixes(self._REGISTRY)
-
-        if unit is None:
-            unit = infer_base_unit(self, registry=self._REGISTRY)
-        else:
-            unit = infer_base_unit(self.__class__(1, unit), registry=self._REGISTRY)
-
-        q_base = self.to(unit)
+        q_base, unit_str, unit_power = _get_compact_base(self, unit)
 
         magnitude = q_base.magnitude
         # Support uncertainties
         if hasattr(magnitude, "nominal_value"):
             magnitude = magnitude.nominal_value
-
-        units = list(q_base._units.items())
-        units_numerator = [a for a in units if a[1] > 0]
-
-        if len(units_numerator) > 0:
-            unit_str, unit_power = units_numerator[0]
-        else:
-            unit_str, unit_power = units[0]
 
         if unit_power > 0:
             power = np.floor(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
@@ -379,14 +364,9 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             if maximumPrefix
             else (finite_powers[np.argmin(np.abs(finite_powers))])
         )
-        index = bisect.bisect_left(SI_powers, pivot)
 
-        if index >= len(SI_bases):
-            index = -1
-
-        prefix_str = SI_bases[index]
-
-        new_unit_str = prefix_str + unit_str
-        new_unit_container = q_base._units.rename(unit_str, new_unit_str)
+        new_unit_container = _pick_compact_unit(
+            q_base, unit_str, pivot, SI_powers, SI_bases
+        )
 
         return self.to(new_unit_container)
