@@ -16,6 +16,7 @@ Pint Changelog
 - Fix regression when using magnitude format specs in string formats (#2291)
 - Updated repr for various objects so that eval(repr(...)) works (#1495)
 - Improve type annotations for `Quantity` (#2302, #2303)
+- Fix NumPy ufunc mul/div paths allowing offset units to bypass `OffsetUnitCalculusError` (#1335)
 - Document how custom duck array classes can register as upcast types and mark
   the public upcast type map as mutable (#2063)
 

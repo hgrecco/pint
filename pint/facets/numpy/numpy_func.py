@@ -138,6 +138,15 @@ def unwrap_and_wrap_consistent_units(*args):
     )
 
 
+def _validated_muldiv_unit(unit):
+    """Return ``unit`` after applying Quantity's offset-unit mul/div checks."""
+    quantity = unit._REGISTRY.Quantity(1, unit)
+    non_multiplicative_units = len(quantity._get_non_multiplicative_units())
+    if not quantity._ok_for_muldiv(non_multiplicative_units):
+        raise OffsetUnitCalculusError(quantity._units, "")
+    return quantity.units
+
+
 def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     """Determine resulting unit from given operation.
 
@@ -179,9 +188,9 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         result_unit = (1 * first_input_units + 1 * first_input_units).units
     elif unit_op == "mul":
         product = first_input_units._REGISTRY.parse_units("")
-        for x in all_args:
-            if hasattr(x, "units"):
-                product *= x.units
+        quantity_units = [x.units for x in all_args if hasattr(x, "units")]
+        for unit in quantity_units:
+            product *= _validated_muldiv_unit(unit)
         result_unit = product
     elif unit_op == "delta":
         result_unit = (1 * first_input_units - 1 * first_input_units).units
@@ -193,12 +202,18 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         result_unit = product
     elif unit_op == "div":
         # Start with first arg in numerator, all others in denominator
-        product = getattr(
-            all_args[0], "units", first_input_units._REGISTRY.parse_units("")
-        )
+        quantity_count = sum(1 for x in all_args if hasattr(x, "units"))
+        if hasattr(all_args[0], "units"):
+            numerator_unit = all_args[0].units
+            numerator = all_args[0]._REGISTRY.Quantity(1, numerator_unit)
+            if quantity_count == 1 and numerator._get_non_multiplicative_units():
+                raise OffsetUnitCalculusError(numerator._units, "")
+            product = _validated_muldiv_unit(numerator_unit)
+        else:
+            product = first_input_units._REGISTRY.parse_units("")
         for x in all_args[1:]:
             if hasattr(x, "units"):
-                product /= x.units
+                product /= _validated_muldiv_unit(x.units)
         result_unit = product
     elif unit_op == "variance":
         result_unit = ((1 * first_input_units - 1 * first_input_units) ** 2).units
