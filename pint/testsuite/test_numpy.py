@@ -459,6 +459,10 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
 
         helpers.assert_quantity_almost_equal(np.dot(A, x), b)
 
+    def test_solve_offset(self):
+        with pytest.raises(OffsetUnitCalculusError):
+            np.linalg.solve(self.q_temperature, [1, 1])
+
     # Arithmetic operations
     def test_addition_with_scalar(self):
         a = np.array([0, 1, 2])

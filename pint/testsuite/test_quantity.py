@@ -422,6 +422,14 @@ class TestQuantity(QuantityTestCase):
             round(abs(self.Q_("2 second").to("millisecond").magnitude - 2000), 7) == 0
         )
 
+    def test_convert_to_none(self):
+        q = self.Q_(5, None)
+
+        helpers.assert_quantity_equal(q.to(None), self.Q_(5, None))
+
+        q.ito(None)
+        helpers.assert_quantity_equal(q, self.Q_(5, None))
+
     @helpers.requires_scipy
     def test_to_preferred(self):
         ureg = self.ureg
@@ -459,6 +467,20 @@ class TestQuantity(QuantityTestCase):
 
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
+
+    def test_to_preferred_accepts_unitlike_strings(self):
+        ureg = self.ureg
+        q = self.Q_("1 g")
+
+        preferred = q.to_preferred(["kg"])
+
+        assert preferred.units == ureg.kg
+        assert preferred.magnitude == 0.001
+
+        q.ito_preferred(["kg"])
+
+        assert q.units == ureg.kg
+        assert q.magnitude == 0.001
 
     @helpers.requires_scipy
     def test_to_preferred_registry(self):
@@ -1311,6 +1333,8 @@ class TestDimensions(QuantityTestCase):
         assert get(UnitsContainer({"[time]": 1})) == UnitsContainer({"[time]": 1})
         assert get("seconds") == UnitsContainer({"[time]": 1})
         assert get(UnitsContainer({"seconds": 1})) == UnitsContainer({"[time]": 1})
+        assert get("%") == UnitsContainer({})
+        assert get("‰") == UnitsContainer({})
         assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
         assert get("[acceleration]") == UnitsContainer({"[length]": 1, "[time]": -2})
 
