@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Fix format specs with a width/fill/alignment (e.g. `f"{q:20.1f}"`) not honoring the requested field width for quantities, because the width was applied only to the magnitude before the unit was appended. The width/fill/alignment now applies to the whole formatted quantity while sign/precision/type/zero-padding stay with the magnitude (#1798)
 - Support the superscript decimal point `⋅` (U+22C5) and fraction slash `⸍` (U+2E0D) in unit exponents, e.g. `gr⁰⋅³³³` (`grain**0.333`) and `gr¹⸍³` (`grain**(1/3)`) (#2250)
 - Fix `KeyError('')` raised when the `dimensionless` unit is referenced by name, e.g. `get_dimensionality("dimensionless")`, `Quantity(5, "dimensionless").check("dimensionless")`, or a unit defined via `* dimensionless` (#1513, #1994)
 - Fix offset (affine) unit conversion of `Decimal` magnitudes raising `TypeError` from mixing `Decimal` with the float scale/offset (e.g. `Quantity(Decimal(10), "degC").to("K")`), and the mirror case of a plain `float` magnitude in a `Decimal` registry (#2305)
