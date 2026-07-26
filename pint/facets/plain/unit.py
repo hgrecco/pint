@@ -12,9 +12,9 @@ import copy
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self, overload
 
-from ..._typing import UnitLike
+from ..._typing import Magnitude, UnitLike
 from ...compat import NUMERIC_TYPES, deprecated
 from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
@@ -22,6 +22,7 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
+    from .quantity import PlainQuantity
 
 
 class PlainUnit(PrettyIPython, SharedRegistryObject):
@@ -73,7 +74,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        return f"<Unit('{self._units}')>"
+        return f'Unit("{self._units}")'
 
     @property
     def dimensionless(self) -> bool:
@@ -141,6 +142,12 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         return self.dimensionless
 
+    @overload
+    def __mul__(self, other: Self) -> Self: ...
+    @overload
+    def __mul__[T: Magnitude](self, other: T) -> PlainQuantity[T]: ...
+    @overload
+    def __mul__(self, other: str) -> PlainQuantity[Any]: ...
     def __mul__(self, other):
         if self._check(other):
             if isinstance(other, self.__class__):
@@ -154,8 +161,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         return self._REGISTRY.Quantity(1, self._units) * other
 
-    def __rmul__(self, other):
-        return self.__mul__(other)
+    __rmul__ = __mul__
 
     def __truediv__(self, other):
         if self._check(other):
@@ -195,6 +201,14 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other) -> bool:
         # We compare to the plain class of PlainUnit because each PlainUnit class is
         # unique.
+        if isinstance(other, str):
+            if str(self) == other:
+                return True
+            try:
+                other = self._REGISTRY.Unit(other)
+            except Exception:
+                return False
+
         if self._check(other):
             if isinstance(other, self.__class__):
                 return self._units == other._units

@@ -20,11 +20,11 @@ classifiers = [
   "Programming Language :: Python",
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development :: Libraries",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 keywords = ["physical", "quantities", "unit", "conversion", "science"]
 dependencies = [
   "platformdirs>=2.1.0",
@@ -43,6 +43,7 @@ test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
 codspeed = ["pint[test-all]", "pytest-codspeed"]
 numpy = ["numpy >= 2.0.0"]
+optype = ["optype[numpy]"]
 uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel <= 2.8"]
 pandas = ["pint-pandas >= 0.3"]
@@ -52,7 +53,7 @@ dask = ["dask < 2025.3.0"]
 scipy = ["scipy"]
 matplotlib = ["matplotlib"]
 all = [
-  "pint[numpy,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
+  "pint[numpy,optype,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
 ]
 docs = [
   "sphinx>=6,<8.2",
@@ -63,6 +64,7 @@ docs = [
   "graphviz",
   "pooch",
   "sparse",
+  "numba>=0.59",              # for sparse
   "Serialize",
   "pygments>=2.4",
   "sphinx-book-theme>=1.1.0",
@@ -76,9 +78,10 @@ docs = [
   "scipy",
   "currencyconverter",
   "matplotlib",
-  "numpy",
+  "numpy<2.5",
   "xarray",
   "dask[complete]<2025.3.0",
+  "optype[numpy]",
 ]
 
 [project.urls]
@@ -107,14 +110,15 @@ pythonpath = "."
 docstring-code-format = true
 
 [tool.ruff.lint]
-extend-select = ["I"]
+select = ["E4", "E7", "E9", "F", "I"]
 ignore = [
   "E402", # module level import not at top of file
   "E731", # do not assign a lambda expression, use a def
+  "E741", # ambiguous variable name
 ]
 
 [tool.pixi.workspace]
-channels = ["https://fast.prefix.dev/conda-forge"]
+channels = ["https://prefix.dev/conda-forge"]
 platforms = ['osx-arm64', 'linux-64', 'win-64']
 
 [tool.pixi.tasks]
@@ -126,9 +130,13 @@ pint = { path = ".", editable = true }
 dev = { features = ["numpy", "dev", "py313"], solve-group = "default" }
 lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
-typecheck = { features = ["typecheck"], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
+typecheck = { features = [
+  "typecheck",
+  "optype",
+  "test-all",
+], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
 codspeed = { features = ["codspeed"], solve-group = "default" }
 docs = { features = [
@@ -139,7 +147,7 @@ docs = { features = [
   "dask",
   "xarray",
   "test",
-  "py311",
+  "py312",
 ] }
 # When pint[all] works in pixi, this will be easier.
 all = { features = [
@@ -156,15 +164,15 @@ all = { features = [
   "matplotlib",
 ], solve-group = "default" }
 
-test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
-test-py311-numpy = ["numpy", "test", "py311"]
+test-py314 = ["test", "py314"]
 test-py312-numpy = ["numpy", "test", "py312"]
 test-py313-numpy = ["numpy", "test", "py313"]
-test-py311-all = ["all", "test", "py311"]
+test-py314-numpy = ["numpy", "test", "py314"]
 test-py312-all = ["all", "test", "py312"]
 test-py313-all = ["all", "test", "py313"]
+test-py314-all = ["all", "test", "py314"]
 
 [tool.pixi.feature.dev.dependencies]
 tomlkit = "*"
@@ -210,9 +218,7 @@ doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/docte
 pandoc = "*"
 pandas = "*"
 tabulate = "*"
-
-[tool.pixi.feature.py311.dependencies]
-python = "3.11.*"
+graphviz = "*"
 
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
@@ -220,9 +226,14 @@ python = "3.12.*"
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
 
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
+
 [tool.pyright]
 include = ["pint"]
 exclude = ["pint/testsuite"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
 
 [tool.pyright.defineConstant]
 HAS_BABEL = true
