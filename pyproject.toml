@@ -77,7 +77,7 @@ docs = [
   "scipy",
   "currencyconverter",
   "matplotlib",
-  "numpy",
+  "numpy<2.5",
   "xarray",
   "dask[complete]<2025.3.0",
   "optype[numpy]",
@@ -109,10 +109,11 @@ pythonpath = "."
 docstring-code-format = true
 
 [tool.ruff.lint]
-extend-select = ["I"]
+select = ["E4", "E7", "E9", "F", "I"]
 ignore = [
   "E402", # module level import not at top of file
   "E731", # do not assign a lambda expression, use a def
+  "E741", # ambiguous variable name
 ]
 
 [tool.pixi.workspace]
@@ -214,6 +215,7 @@ doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/docte
 
 [tool.pixi.feature.docs.dependencies]
 pandoc = "*"
+graphviz = "*"
 
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
