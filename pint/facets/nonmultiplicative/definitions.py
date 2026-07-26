@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..._typing import Magnitude
-from ...compat import HAS_NUMPY, exp, log
+from ...compat import HAS_NUMPY, coerce_scalar, exp, log
 from ..plain import ScaleConverter
 
 
@@ -26,20 +26,26 @@ class OffsetConverter(ScaleConverter):
         return self.offset == 0
 
     def to_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
+        # Decimal magnitudes can't mix with float scale/offset — coerce to match.
+        scale = coerce_scalar(value, self.scale)
+        offset = coerce_scalar(value, self.offset)
         if inplace:
-            value *= self.scale
-            value += self.offset
+            value *= scale
+            value += offset
         else:
-            value = value * self.scale + self.offset
+            value = value * scale + offset
 
         return value
 
     def from_reference(self, value: Magnitude, inplace: bool = False) -> Magnitude:
+        # Decimal magnitudes can't mix with float scale/offset — coerce to match.
+        scale = coerce_scalar(value, self.scale)
+        offset = coerce_scalar(value, self.offset)
         if inplace:
-            value -= self.offset
-            value /= self.scale
+            value -= offset
+            value /= scale
         else:
-            value = (value - self.offset) / self.scale
+            value = (value - offset) / scale
 
         return value
 

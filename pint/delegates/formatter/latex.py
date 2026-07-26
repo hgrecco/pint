@@ -39,7 +39,7 @@ from .plain import BaseFormatter
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
-    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
+    from ...facets.plain import PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
     from ...util import ItMatrix
 
@@ -209,10 +209,13 @@ class LatexFormatter(BaseFormatter):
 
         # division_fmt = r"\frac" + division_fmt.format("[{}]", "[{}]")
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         formatted = formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=True,
             product_fmt=r" \cdot ",
             division_fmt=r"\frac[{}][{}]",
@@ -222,7 +225,7 @@ class LatexFormatter(BaseFormatter):
 
         return formatted.replace("[", "{").replace("]", "}")
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
@@ -350,7 +353,7 @@ class SIunitxFormatter(BaseFormatter):
         # the units are returned?
         return rf"\si[]{{{formatted}}}"
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",

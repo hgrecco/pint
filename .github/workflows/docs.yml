@@ -20,6 +20,7 @@ jobs:
           environments: docs
       - name: Install locales
         run: |
+          sudo apt-get update
           sudo apt-get install language-pack-fr
           sudo localedef -i fr_FR -f UTF-8 fr_FR
       - run: pixi run --environment docs doctest

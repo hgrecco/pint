@@ -18,7 +18,6 @@ from locale import LC_NUMERIC, getlocale, setlocale
 from typing import (
     TYPE_CHECKING,
     Any,
-    TypeVar,
 )
 
 from ...compat import ndarray
@@ -31,11 +30,6 @@ except ImportError:
 
 if TYPE_CHECKING:
     from ...compat import Locale, Number
-
-T = TypeVar("T")
-U = TypeVar("U")
-V = TypeVar("V")
-W = TypeVar("W")
 
 _PRETTY_EXPONENTS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
 _JOIN_REG_EXP = re.compile(r"{\d*}")
@@ -167,8 +161,10 @@ def formatter(
 
     Parameters
     ----------
-    items : list
-        a list of (name, exponent) pairs.
+    numerator : list
+        a list of (name, exponent) pairs with positive exponents.
+    denominator : list
+        a list of (name, exponent) pairs with negaitve exponents.
     as_ratio : bool, optional
         True to display as ratio, False as negative powers. (Default value = True)
     single_denominator : bool, optional

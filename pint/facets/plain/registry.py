@@ -39,9 +39,6 @@ from tokenize import TokenInfo
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
-    TypeVar,
-    Union,
 )
 
 if TYPE_CHECKING:
@@ -49,6 +46,8 @@ if TYPE_CHECKING:
     from ..context import Context
 
     # from ..._typing import Quantity, Unit
+
+from typing import Self, TypeAlias
 
 import platformdirs
 
@@ -60,7 +59,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import Self, TypeAlias, deprecated
+from ...compat import coerce_scalar, deprecated
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -91,8 +90,6 @@ from .definitions import (
 )
 from .objects import PlainQuantity, PlainUnit
 
-T = TypeVar("T")
-
 _BLOCK_RE = re.compile(r"[ (]")
 
 
@@ -111,7 +108,7 @@ def pattern_to_regex(pattern: str | re.Pattern[str]) -> re.Pattern[str]:
     return re.compile(pattern)
 
 
-NON_INT_TYPE = type[Union[float, Decimal, Fraction]]
+NON_INT_TYPE = type[float | Decimal | Fraction]
 PreprocessorType = Callable[[str], str]
 
 
@@ -130,7 +127,7 @@ class RegistryCache:
         self.dimensionality: dict[UnitsContainer, UnitsContainer] = {}
 
         #: Cache the unit name associated to user input. ('mV' -> 'millivolt')
-        self.parse_unit: dict[str, UnitsContainer] = {}
+        self.parse_unit: dict[tuple[str, bool], UnitsContainer] = {}
 
         self.conversion_factor: dict[
             tuple[UnitsContainer, UnitsContainer], Scalar | DimensionalityError
@@ -160,12 +157,9 @@ class RegistryMeta(type):
         return obj
 
 
-# Generic types used to mark types associated to Registries.
-QuantityT = TypeVar("QuantityT", bound=PlainQuantity)
-UnitT = TypeVar("UnitT", bound=PlainUnit)
-
-
-class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
+class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
+    metaclass=RegistryMeta
+):
     """Base class for all registries.
 
     Capabilities:
@@ -343,7 +337,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._build_cache(loaded_files)
         self._initialized = True
 
-    def _register_adder(
+    def _register_adder[T](
         self,
         definition_class: type[T],
         adder_func: Callable[
@@ -365,7 +359,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
-    def __deepcopy__(self: Self, memo) -> type[Self]:
+    def __deepcopy__(self, memo) -> type[Self]:
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
@@ -711,6 +705,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
     def _get_symbol(self, name: str) -> str:
         return self._units[name].symbol
 
+    def _apply_preprocessors(self, input_string: str) -> str:
+        """Apply the registry's preprocessors to a unit or expression string."""
+        for p in self.preprocessors:
+            input_string = p(input_string)
+        return input_string
+
     def get_dimensionality(self, input_units: UnitLike) -> UnitsContainer:
         """Convert unit or dict of units or dimensions to a dict of plain dimensions
         dimensions
@@ -718,6 +718,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         # TODO: This should be to_units_container(input_units, self)
         # but this tries to reparse and fail for dimensions.
+        if isinstance(input_units, str):
+            input_units = self._apply_preprocessors(input_units)
         input_units = to_units_container(input_units)
 
         return self._get_dimensionality(input_units)
@@ -765,7 +767,10 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
                     accumulator[key] += exp2
 
             else:
-                reg = self._units[self.get_name(key)]
+                name = self.get_name(key)
+                if name == "":
+                    continue
+                reg = self._units[name]
                 if reg.reference is not None:
                     self._get_dimensionality_recurse(reg.reference, exp2, accumulator)
 
@@ -907,13 +912,6 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         )
         self._get_root_units_recurse(input_units, 1, accumulators, fraction)
 
-        if any(
-            isnan(k)
-            for k in itertools.chain(fraction["numerator"], fraction["denominator"])
-        ):
-            # If there is a nan factor, the result is nan
-            return float("nan"), self.UnitsContainer()
-
         # Identify if terms appear in both numerator and denominator
         def terms_are_unique(fraction):
             for n_factor, n_exp in fraction["numerator"].items():
@@ -944,11 +942,17 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for n_factor, n_exponent in fraction["numerator"].copy().items():
             if n_exponent == 0:
                 del fraction["numerator"][n_factor]
+            elif isinstance(n_factor, tuple):
+                # Uncancelled NaN factor: result is NaN
+                factor = float("nan")
             else:
                 factor *= n_factor**n_exponent
         for d_factor, d_exponent in fraction["denominator"].copy().items():
             if d_exponent == 0:
                 del fraction["denominator"][d_factor]
+            elif isinstance(d_factor, tuple):
+                # Uncancelled NaN factor: result is NaN
+                factor = float("nan")
             else:
                 factor *= d_factor**-d_exponent
 
@@ -1012,18 +1016,27 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         for key in ref:
             exp2 = exp * ref[key]
             key = self.get_name(key)
+            if key == "":
+                continue
             reg = self._units[key]
             if reg.is_base:
                 accumulators[key] += exp2
             else:
-                # Build numerator and denominator
+                # Build numerator and denominator.
+                # For NaN scales, use a unit-specific key so that NaN factors
+                # from different units don't incorrectly cancel each other,
+                # while NaN factors from the same unit (e.g. truckload appearing
+                # via kilotruckload) can still cancel correctly.
+                scale_key = (
+                    (key, "nan") if isnan(reg.converter.scale) else reg.converter.scale
+                )
                 if exp2 < 0:
-                    fraction["denominator"][reg.converter.scale] = (
-                        fraction["denominator"].get(reg.converter.scale, 0) - exp2
+                    fraction["denominator"][scale_key] = (
+                        fraction["denominator"].get(scale_key, 0) - exp2
                     )
                 else:
-                    fraction["numerator"][reg.converter.scale] = (
-                        fraction["numerator"].get(reg.converter.scale, 0) + exp2
+                    fraction["numerator"][scale_key] = (
+                        fraction["numerator"].get(scale_key, 0) + exp2
                     )
                 if reg.reference is not None:
                     self._get_root_units_recurse(
@@ -1078,7 +1091,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return not isinstance(obj2, (self.Quantity, self.Unit))
 
-    def convert(
+    def convert[T](
         self,
         value: T,
         src: QuantityOrUnitLike,
@@ -1114,7 +1127,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
 
         return self._convert(value, src, dst, inplace, **ctx_kwargs)
 
-    def _convert(
+    def _convert[T](
         self,
         value: T,
         src: UnitsContainer,
@@ -1149,12 +1162,8 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if isinstance(factor, DimensionalityError):
             raise factor
 
-        # factor is type float and if our magnitude is type Decimal then
-        # must first convert to Decimal before we can '*' the values
-        if isinstance(value, Decimal):
-            factor = Decimal(str(factor))
-        elif isinstance(value, Fraction):
-            factor = Fraction(str(factor))
+        # Decimal/Fraction magnitudes can't mix with float — coerce to match.
+        factor = coerce_scalar(value, factor)
 
         if inplace:
             value *= factor
@@ -1304,11 +1313,12 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         # Issue #1097: it is possible, when a unit was defined while a different context
         # was active, that the unit is in self._cache.parse_unit but not in self._units.
         # If this is the case, force self._units to be repopulated.
-        if as_delta and input_string in cache and input_string in self._units:
-            return cache[input_string]
+        if as_delta and (input_string, case_sensitive) in cache:
+            cached = cache[input_string, case_sensitive]
+            if all(name in self._units for name in cached):
+                return cached
 
-        for p in self.preprocessors:
-            input_string = p(input_string)
+        input_string = self._apply_preprocessors(input_string)
 
         if not input_string:
             return self.UnitsContainer()
@@ -1334,7 +1344,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
             ret = ret.add(cname, value)
 
         if as_delta:
-            cache[input_string] = ret
+            cache[input_string, case_sensitive] = ret
 
         return ret
 
@@ -1440,7 +1450,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         return results
 
     def parse_expression(
-        self: Self,
+        self,
         input_string: str,
         case_sensitive: bool | None = None,
         **values: QuantityArgument,
@@ -1464,8 +1474,7 @@ class GenericPlainRegistry(Generic[QuantityT, UnitT], metaclass=RegistryMeta):
         if not input_string:
             return self.Quantity(1)
 
-        for p in self.preprocessors:
-            input_string = p(input_string)
+        input_string = self._apply_preprocessors(input_string)
         input_string = string_preprocessor(input_string)
         gen = pint_eval.tokenizer(input_string)
 
