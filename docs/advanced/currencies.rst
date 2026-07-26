@@ -99,7 +99,7 @@ Many common currency symbols are not supported by the pint parser. A preprocesso
    1 euro
 
 Example using Currency Converter
--------------------------------
+--------------------------------
 
 The following example demonstrates how to use `currency_converter`_ with Pint to perform currency conversions with historical rates.
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import math
 import sys
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from decimal import Decimal
 from fractions import Fraction
 from importlib import import_module
@@ -396,4 +396,4 @@ upcast_type_names = (
 )
 
 #: Map type name to the actual type (for upcast types).
-upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
+upcast_type_map: dict[str, type | None] = {k: None for k in upcast_type_names}

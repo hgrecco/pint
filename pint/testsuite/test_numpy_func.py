@@ -140,6 +140,36 @@ class TestNumPyFuncUtils(TestNumpyMethods):
             == self.ureg.m**3
         )
 
+    def test_op_output_unit_mul_offset_array_protocol(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = False
+            temperature = (400 * self.ureg.K).to("degC")
+
+            with pytest.raises(OffsetUnitCalculusError):
+                np.array(2) * temperature
+            with pytest.raises(OffsetUnitCalculusError):
+                np.multiply(temperature, 2 * self.ureg.m)
+
+    def test_op_output_unit_div_offset_array_protocol(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = False
+            temperature = (400 * self.ureg.K).to("degC")
+
+            with pytest.raises(OffsetUnitCalculusError):
+                np.array(2) / temperature
+
     def test_op_output_unit_delta(self):
         assert get_op_output_unit("delta", self.ureg.m) == self.ureg.m
         assert get_op_output_unit("delta", self.ureg.degC) == self.ureg.delta_degC
