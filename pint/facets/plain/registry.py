@@ -705,6 +705,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def _get_symbol(self, name: str) -> str:
         return self._units[name].symbol
 
+    def _apply_preprocessors(self, input_string: str) -> str:
+        """Apply the registry's preprocessors to a unit or expression string."""
+        for p in self.preprocessors:
+            input_string = p(input_string)
+        return input_string
+
     def get_dimensionality(self, input_units: UnitLike) -> UnitsContainer:
         """Convert unit or dict of units or dimensions to a dict of plain dimensions
         dimensions
@@ -713,8 +719,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # TODO: This should be to_units_container(input_units, self)
         # but this tries to reparse and fail for dimensions.
         if isinstance(input_units, str):
-            for p in self.preprocessors:
-                input_units = p(input_units)
+            input_units = self._apply_preprocessors(input_units)
         input_units = to_units_container(input_units)
 
         return self._get_dimensionality(input_units)
@@ -1306,8 +1311,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if as_delta and input_string in cache and input_string in self._units:
             return cache[input_string]
 
-        for p in self.preprocessors:
-            input_string = p(input_string)
+        input_string = self._apply_preprocessors(input_string)
 
         if not input_string:
             return self.UnitsContainer()
@@ -1463,8 +1467,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if not input_string:
             return self.Quantity(1)
 
-        for p in self.preprocessors:
-            input_string = p(input_string)
+        input_string = self._apply_preprocessors(input_string)
         input_string = string_preprocessor(input_string)
         gen = pint_eval.tokenizer(input_string)
 
