@@ -538,7 +538,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             Values for the Context/s
         """
 
-        other = to_units_container(other, self._REGISTRY)
+        other = (
+            self.UnitsContainer({})
+            if other is None
+            else to_units_container(other, self._REGISTRY)
+        )
 
         self._magnitude = self._convert_magnitude(other, *contexts, **ctx_kwargs)
         self._units = other
@@ -563,7 +567,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         -------
         pint.PlainQuantity
         """
-        other = to_units_container(other, self._REGISTRY)
+        other = (
+            self.UnitsContainer({})
+            if other is None
+            else to_units_container(other, self._REGISTRY)
+        )
 
         magnitude = self._convert_magnitude_not_inplace(other, *contexts, **ctx_kwargs)
 
