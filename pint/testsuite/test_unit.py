@@ -34,7 +34,8 @@ class TestUnit(QuantityTestCase):
     def test_unit_repr(self):
         x = self.U_(UnitsContainer(meter=1))
         assert str(x) == "meter"
-        assert repr(x) == "<Unit('meter')>"
+        assert repr(x) == 'Unit("meter")'
+        assert eval(repr(x).replace("Unit", "self.U_")) == x
 
     def test_unit_formatting(self, subtests):
         x = self.U_(UnitsContainer(meter=2, kilogram=1, second=-1))
@@ -46,13 +47,13 @@ class TestUnit(QuantityTestCase):
                 "{:L}",
                 r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
-            ("{:P}", "kilogram·meter²/second"),
+            ("{:P}", "kilogram⋅meter²/second"),
             ("{:H}", "kilogram meter<sup>2</sup>/second"),
             ("{:C}", "kilogram*meter**2/second"),
             ("{:Lx}", r"\si[]{\kilo\gram\meter\squared\per\second}"),
             ("{:~}", "kg * m ** 2 / s"),
             ("{:L~}", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
-            ("{:P~}", "kg·m²/s"),
+            ("{:P~}", "kg⋅m²/s"),
             ("{:H~}", "kg m<sup>2</sup>/s"),
             ("{:C~}", "kg*m**2/s"),
         ):
@@ -70,7 +71,7 @@ class TestUnit(QuantityTestCase):
             "Lx~": r"\si[]{\%}",
         }.items():
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, got {x} expected {result}"
         # no '#' here as it's a comment char when define()ing new units
         ureg.define(r"weirdunit = 1 = \~_^&%$_{}")
@@ -83,7 +84,7 @@ class TestUnit(QuantityTestCase):
             # "Lx~": r"\si[]{\textbackslash \textasciitilde \_\textasciicircum \&\%\$\_\{\}}",
         }.items():
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
     def test_unit_default_formatting(self, subtests):
@@ -94,23 +95,23 @@ class TestUnit(QuantityTestCase):
                 "L",
                 r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
-            ("P", "kilogram·meter²/second"),
+            ("P", "kilogram⋅meter²/second"),
             ("H", "kilogram meter<sup>2</sup>/second"),
             ("C", "kilogram*meter**2/second"),
             ("~", "kg * m ** 2 / s"),
             ("L~", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
-            ("P~", "kg·m²/s"),
+            ("P~", "kg⋅m²/s"),
             ("H~", "kg m<sup>2</sup>/s"),
             ("C~", "kg*m**2/s"),
         ):
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
     @pytest.mark.xfail(reason="Still not clear how default formatting will work.")
     def test_unit_formatting_defaults_warning(self):
         ureg = UnitRegistry()
-        ureg.default_format = "~P"
+        ureg.formatter.default_format = "~P"
         x = ureg.Unit("m / s ** 2")
 
         with pytest.warns(DeprecationWarning):
@@ -136,7 +137,7 @@ class TestUnit(QuantityTestCase):
             ("C~", "oil_bbl"),
         ):
             with subtests.test(spec):
-                ureg.default_format = spec
+                ureg.formatter.default_format = spec
                 assert f"{x}" == result, f"Failed for {spec}, {result}"
 
     def test_unit_formatting_custom(self, monkeypatch):
@@ -176,15 +177,15 @@ class TestUnit(QuantityTestCase):
             r"\mathrm{meter}^{2}}{\mathrm{second}}$"
         )
         x._repr_pretty_(Pretty, False)
-        assert "".join(alltext) == "kilogram·meter²/second"
-        ureg.default_format = "~"
+        assert "".join(alltext) == "kilogram⋅meter²/second"
+        ureg.formatter.default_format = "~"
         assert x._repr_html_() == "kg m<sup>2</sup>/s"
         assert (
             x._repr_latex_() == r"$\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}$"
         )
         alltext = []
         x._repr_pretty_(Pretty, False)
-        assert "".join(alltext) == "kg·m²/s"
+        assert "".join(alltext) == "kg⋅m²/s"
 
     def test_unit_mul(self):
         x = self.U_("m")
@@ -251,6 +252,24 @@ class TestUnit(QuantityTestCase):
 
         assert self.U_("byte") == self.U_("byte")
         assert not (self.U_("byte") != self.U_("byte"))
+
+    @pytest.mark.parametrize(
+        ("unit", "string", "expected"),
+        [
+            ("meter", "meter", True),
+            ("meter", "m", True),
+            ("m", "meter", True),
+            ("dimensionless", "dimensionless", True),
+            ("", "dimensionless", True),
+            ("meter", "second", False),
+            ("meter", "not_a_unit_xyz", False),
+            ("metre", "meter", True),
+            ("metre", "metre", True),
+        ],
+    )
+    def test_unit_eq_string(self, unit, string, expected):
+        # gh-634: Unit equality with strings, including dimensionless
+        assert (self.U_(unit) == string) is expected
 
     def test_unit_cmp(self):
         x = self.U_("m")
@@ -322,11 +341,11 @@ class TestRegistry(QuantityTestCase):
         q = ureg.meter
         s1 = f"{q}"
         s2 = f"{q:~}"
-        ureg.default_format = "~"
+        ureg.formatter.default_format = "~"
         s3 = f"{q}"
         assert s2 == s3
         assert s1 != s3
-        assert ureg.default_format == "~"
+        assert ureg.formatter.default_format == "~"
 
     def test_iterate(self):
         ureg = UnitRegistry()
@@ -394,13 +413,13 @@ class TestRegistry(QuantityTestCase):
         assert self.ureg.parse_expression("m³/s³") == self.Q_(
             1, UnitsContainer(meter=3.0, second=-3)
         )
-        assert self.ureg.parse_expression("meter² · second") == self.Q_(
+        assert self.ureg.parse_expression("meter² ⋅ second") == self.Q_(
             1, UnitsContainer(meter=2.0, second=1)
         )
-        assert self.ureg.parse_expression("m²·s⁻²") == self.Q_(
+        assert self.ureg.parse_expression("m²⋅s⁻²") == self.Q_(
             1, UnitsContainer(meter=2, second=-2)
         )
-        assert self.ureg.parse_expression("meter⁰.⁵·second") == self.Q_(
+        assert self.ureg.parse_expression("meter⁰.⁵⋅second") == self.Q_(
             1, UnitsContainer(meter=0.5, second=1)
         )
         assert self.ureg.parse_expression("meter³⁷/second⁴.³²¹") == self.Q_(
@@ -623,6 +642,41 @@ class TestRegistry(QuantityTestCase):
             1 * ureg.meter, 2 * ureg.centimeter, 3 * ureg.meter, d=4 * ureg.centimeter
         ) == (1, 2, 3, 4)
 
+        def kwargs_func(arg1, arg2, kwarg1=0, **kwargs):
+            assert kwargs == {"printmsg": True}
+            return arg1 + arg2 + kwarg1
+
+        kwargs_wrapped = ureg.wraps(
+            ret=ureg.centimeter,
+            args=(ureg.meter, ureg.meter, ureg.meter),
+            strict=False,
+        )(kwargs_func)
+        assert (
+            kwargs_wrapped(
+                1 * ureg.meter, 2 * ureg.meter, kwarg1=5 * ureg.meter, printmsg=True
+            )
+            == 8 * ureg.centimeter
+        )
+
+        kwargs_wrapped_with_placeholder = ureg.wraps(
+            ret=ureg.centimeter,
+            args=(ureg.meter, ureg.meter, ureg.meter, None),
+            strict=False,
+        )(kwargs_func)
+        assert (
+            kwargs_wrapped_with_placeholder(
+                1 * ureg.meter, 2 * ureg.meter, kwarg1=5 * ureg.meter, printmsg=True
+            )
+            == 8 * ureg.centimeter
+        )
+
+        with pytest.raises(TypeError):
+            ureg.wraps(
+                ret=ureg.centimeter,
+                args=(ureg.meter, ureg.meter, ureg.meter, ureg.meter),
+                strict=False,
+            )(kwargs_func)
+
     def test_wrap_referencing(self):
         ureg = self.ureg
 
@@ -658,6 +712,27 @@ class TestRegistry(QuantityTestCase):
         )
         assert g4(3.0 * ureg.meter, 2.0) == ureg("(3*meter)**2 * 2")
         assert g4(3.0, 2.0 * ureg.second) == ureg("3**2 * 2 * second")
+
+        def gfunc4(x, y):
+            return x / y
+
+        g5 = ureg.wraps("=A/B", ["=A", "=B"])(gfunc4)
+        assert g5(3.0 * ureg.angstrom, 2.0 * ureg.second) == ureg(
+            "3 / 2 * angstrom / second"
+        )
+
+    @helpers.requires_numpy
+    def test_wrap_referencing_integer_array(self):
+        ureg = self.ureg
+
+        def gfunc4(x, y):
+            return x / y
+
+        g5 = ureg.wraps("=A/B", ["=A", "=B"])(gfunc4)
+        helpers.assert_quantity_equal(
+            g5(np.array([1]) * ureg.angstrom, np.array([2]) * ureg.second),
+            np.array([0.5]) * ureg.angstrom / ureg.second,
+        )
 
     def test_check(self):
         def func(x):
@@ -1093,3 +1168,8 @@ class TestConvertWithOffset(QuantityTestCase):
         # Define against unknown name
         with pytest.raises(KeyError):
             ureg.define("@alias notexist = something")
+
+    def test_prefix_offset_units(self):
+        ureg = UnitRegistry()
+        with pytest.raises(errors.OffsetUnitCalculusError):
+            ureg.parse_units("kilodegree_Celsius")

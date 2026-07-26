@@ -1,27 +1,28 @@
 """
-    pint.facets.nonmultiplicative.registry
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.nonmultiplicative.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from ...compat import TypeAlias
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer, logger
-from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
+from ..plain import GenericPlainRegistry, UnitDefinition
 from . import objects
 from .definitions import OffsetConverter, ScaleConverter
 
-T = TypeVar("T")
+if TYPE_CHECKING:
+    from ..._typing import Quantity, Unit
 
 
-class GenericNonMultiplicativeRegistry(
-    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+class GenericNonMultiplicativeRegistry[QuantityT: Quantity, UnitT: Unit](
+    GenericPlainRegistry[QuantityT, UnitT]
 ):
     """Handle of non multiplicative units (e.g. Temperature).
 
@@ -212,8 +213,13 @@ class GenericNonMultiplicativeRegistry(
         # Otherwise, return the units unmodified
         return all_units
 
-    def _convert(
-        self, value: T, src: UnitsContainer, dst: UnitsContainer, inplace: bool = False
+    def _convert[T](
+        self,
+        value: T,
+        src: UnitsContainer,
+        dst: UnitsContainer,
+        inplace: bool = False,
+        **ctx_kwargs: Any,
     ) -> T:
         """Convert value from some source to destination units.
 
@@ -284,7 +290,7 @@ class GenericNonMultiplicativeRegistry(
             dst = self._add_ref_of_log_or_offset_unit(dst_offset_unit, dst)
 
         # Convert non multiplicative units to the dst.
-        value = super()._convert(value, src, dst, inplace, False)
+        value = super()._convert(value, src, dst, inplace, False, **ctx_kwargs)
 
         # Finally convert to offset units specified in destination
         if dst_offset_unit:
@@ -297,8 +303,8 @@ class GenericNonMultiplicativeRegistry(
 
 class NonMultiplicativeRegistry(
     GenericNonMultiplicativeRegistry[
-        objects.NonMultiplicativeQuantity[Any], objects.NonMultiplicativeUnit
+        objects.NonMultiplicativeQuantity, objects.NonMultiplicativeUnit
     ]
 ):
-    Quantity: TypeAlias = objects.NonMultiplicativeQuantity[Any]
+    Quantity: TypeAlias = objects.NonMultiplicativeQuantity
     Unit: TypeAlias = objects.NonMultiplicativeUnit

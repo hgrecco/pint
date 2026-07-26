@@ -67,13 +67,13 @@ class TestUnitsContainer:
     def test_unitcontainer_repr(self):
         x = UnitsContainer()
         assert str(x) == "dimensionless"
-        assert repr(x) == "<UnitsContainer({})>"
+        assert repr(x) == "UnitsContainer({})"
         x = UnitsContainer(meter=1, second=2)
         assert str(x) == "meter * second ** 2"
-        assert repr(x) == "<UnitsContainer({'meter': 1, 'second': 2})>"
+        assert repr(x) == "UnitsContainer({'meter': 1, 'second': 2})"
         x = UnitsContainer(meter=1, second=2.5)
         assert str(x) == "meter * second ** 2.5"
-        assert repr(x) == "<UnitsContainer({'meter': 1, 'second': 2.5})>"
+        assert repr(x) == "UnitsContainer({'meter': 1, 'second': 2.5})"
 
     def test_unitcontainer_bool(self):
         assert UnitsContainer(meter=1, second=2)
@@ -166,7 +166,7 @@ class TestParseHelper:
         assert x() == xp()
         assert x() != y()
         assert ParserHelper.from_string("") == ParserHelper()
-        assert repr(x()) == "<ParserHelper(1, {'meter': 2})>"
+        assert repr(x()) == "ParserHelper(1, {'meter': 2})"
 
         assert ParserHelper(2) == 2
 
@@ -199,7 +199,7 @@ class TestParseHelper:
         token = next(pint_eval.tokenizer(expression))
         actual = ParserHelper.eval_token(token)
         assert expected == actual
-        assert type(expected) == type(actual)
+        assert type(expected) is type(actual)
 
     def test_eval_token(self):
         self._test_eval_token(1000.0, "1e3")
@@ -232,6 +232,23 @@ class TestStringProcessor:
         self._test("square bcd", "bcd**2")
         self._test("cubic bcd", "bcd**3")
         self._test("bcd efg", "bcd*efg")
+
+    def test_superscript(self):
+        # Existing superscript exponents.
+        self._test("gr²", "gr**(2)")
+        self._test("gr⁻³", "gr**(-3)")
+        # ``·`` (MIDDLE DOT, U+00B7) and ``⋅`` (DOT OPERATOR, U+22C5) are both
+        # multiplication when not inside a superscript exponent (issue #2272).
+        self._test("kg·m", "kg*m")
+        self._test("kg⋅m", "kg*m")
+        # ``⋅`` right after an exponent, with no following superscript digit,
+        # is multiplication between two exponentiated terms, not a decimal
+        # point with no digits after it.
+        self._test("m²⋅s⁻¹", "m**(2)*s**(-1)")
+        # ``⋅`` is a decimal point and ``⸍`` (U+2E0D) a fraction slash
+        # inside superscript exponents (issue #2250).
+        self._test("gr⁰⋅³³³", "gr**(0.333)")
+        self._test("gr¹⸍³", "gr**(1/3)")
 
     def test_per(self):
         self._test("miles per hour", "miles/hour")
@@ -303,6 +320,22 @@ class TestGraph:
         assert p == [3, 2, 1]
         p = find_shortest_path(g, 2, 1)
         assert p == [2, 1]
+
+    def test_shortest_path_densely_connected_2146(self):
+        import itertools
+
+        g = collections.defaultdict(set)
+        for i, j in itertools.combinations(range(42), 2):
+            g[i].add(j)
+            g[j].add(i)
+        p = find_shortest_path(g, 0, 39)
+        assert p == [0, 39]
+        p = find_shortest_path(g, 0, 41)
+        assert p == [0, 41]
+        p = find_shortest_path(g, 17, 2)
+        assert p == [17, 2]
+        p = find_shortest_path(g, 12, 12)
+        assert p == [12]
 
 
 class TestMatrix:

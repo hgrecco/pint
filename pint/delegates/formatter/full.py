@@ -1,18 +1,19 @@
 """
-    pint.delegates.formatter.full
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.full
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements:
-    - Full: dispatch to other formats, accept defaults.
+Implements:
+- Full: dispatch to other formats, accept defaults.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 import locale
-from typing import TYPE_CHECKING, Any, Iterable, Literal
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, Literal
 
 from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse
@@ -33,7 +34,6 @@ if TYPE_CHECKING:
     from ...compat import Locale
     from ...facets.measurement import Measurement
     from ...facets.plain import (
-        MagnitudeT,
         PlainQuantity,
         PlainUnit,
     )
@@ -148,10 +148,11 @@ class FullFormatter(BaseFormatter):
             uspec,
             sort_func=sort_func,
             empty_numerator_fmt=empty_numerator_fmt,
+            as_ratio=False if "^" in uspec else True,
             **babel_kwds,
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",
@@ -186,6 +187,7 @@ class FullFormatter(BaseFormatter):
             use_plural=use_plural,
             length=babel_kwds.get("length", None),
             locale=locale,
+            as_ratio=False if "^" in spec else True,
         )
 
     def format_measurement(
@@ -242,7 +244,7 @@ class FullFormatter(BaseFormatter):
             locale=locale or self.locale,
         )
 
-    def format_quantity_babel(
+    def format_quantity_babel[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         spec: str = "",

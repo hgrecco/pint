@@ -101,6 +101,25 @@ class TestDefinition:
                 "degF = 9 / 5 * kelvin; offset: 255.372222 bla",
             )
 
+        x = Definition.from_string("meter_per_second_squared = acceleration")
+
+        assert isinstance(x, UnitDefinition)
+        assert x.name == "meter_per_second_squared"
+        assert x.aliases == ()
+        assert x.symbol == "meter_per_second_squared"
+        assert not x.is_base
+        assert isinstance(x.converter, ScaleConverter)
+        assert x.reference == UnitsContainer(acceleration=1)
+        x = Definition.from_string("kilometer_per_second = velocity")
+        assert isinstance(x, UnitDefinition)
+
+        assert x.name == "kilometer_per_second"
+        assert x.aliases == ()
+        assert x.symbol == "kilometer_per_second"
+        assert not x.is_base
+        assert isinstance(x.converter, ScaleConverter)
+        assert x.reference == UnitsContainer(velocity=1)
+
     def test_log_unit_definition(self):
         x = Definition.from_string(
             "decibelmilliwatt = 1e-3 watt; logbase: 10; logfactor: 10 = dBm"

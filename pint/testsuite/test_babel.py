@@ -13,7 +13,7 @@ def test_no_babel(func_registry):
     ureg = func_registry
     distance = 24.0 * ureg.meter
     with pytest.raises(Exception):
-        distance.format_babel(locale="fr_FR", length="long")
+        ureg.formatter.format_unit_babel(distance, locale="fr_FR", length="long")
 
 
 @helpers.requires_babel(["fr_FR", "ro_RO"])
@@ -66,7 +66,7 @@ def test_unit_format_babel():
     volume = ureg.Unit("ml")
     assert volume.format_babel() == "millilitre"
 
-    ureg.default_format = "~"
+    ureg.formatter.default_format = "~"
     assert volume.format_babel() == "ml"
 
     dimensionless_unit = ureg.Unit("")

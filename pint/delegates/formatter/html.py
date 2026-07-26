@@ -1,18 +1,19 @@
 """
-    pint.delegates.formatter.html
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.html
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements:
-    - HTML: suitable for web/jupyter notebook outputs.
+Implements:
+- HTML: suitable for web/jupyter notebook outputs.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
@@ -37,7 +38,7 @@ from .plain import BaseFormatter
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
-    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
+    from ...facets.plain import PlainQuantity, PlainUnit
 
 _EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
@@ -105,10 +106,13 @@ class HTMLFormatter(BaseFormatter):
         else:
             division_fmt = "{}/{}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=True,
             product_fmt=r" ",
             division_fmt=division_fmt,
@@ -116,7 +120,7 @@ class HTMLFormatter(BaseFormatter):
             parentheses_fmt=r"({})",
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",

@@ -21,6 +21,8 @@ where each part is optional and the order of these is arbitrary.
    >>> q = 2.3e-6 * ureg.m ** 3 / (ureg.s ** 2 * ureg.kg)
    >>> f"{q:~P}"  # short pretty
    '2.3×10⁻⁶ m³/kg/s²'
+   >>> f"{q:~^P}"  # short pretty with negative exponents
+   '2.3×10⁻⁶ kg⁻¹⋅m³⋅s⁻²'
    >>> f"{q:~#P}"  # compact short pretty
    '2.3 mm³/g/s²'
    >>> f"{q:P#~}"  # also compact short pretty
@@ -47,7 +49,7 @@ Pint Format Types
 Spec    Name            Examples
 ======= =============== ======================================================================
 ``D``   default         ``3.4e+09 kilogram * meter / second ** 2``
-``P``   pretty          ``3.4×10⁹ kilogram·meter/second²``
+``P``   pretty          ``3.4×10⁹ kilogram⋅meter/second²``
 ``H``   HTML            ``3.4×10<sup>9</sup> kilogram meter/second<sup>2</sup>``
 ``L``   latex           ``3.4\\times 10^{9}\\ \\frac{\\mathrm{kilogram} \\cdot \\mathrm{meter}}{\\mathrm{second}^{2}}``
 ``Lx``  latex siunitx   ``\\SI[]{3.4e+09}{\\kilo\\gram\\meter\\per\\second\\squared}``
@@ -64,7 +66,7 @@ Quantity modifiers
 ======== =================================================== ================================
 Modifier Meaning                                             Example
 ======== =================================================== ================================
-``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m·mg/s²`` (``f"{q:#~P}"``)
+``#``    Call :py:meth:`Quantity.to_compact` first           ``1.0 m⋅mg/s²`` (``f"{q:#~P}"``)
 ======== =================================================== ================================
 
 Unit modifiers
@@ -73,7 +75,8 @@ Unit modifiers
 ======== =================================================== ================================
 Modifier Meaning                                             Example
 ======== =================================================== ================================
-``~``    Use the unit's symbol instead of its canonical name ``kg·m/s²`` (``f"{u:~P}"``)
+``~``    Use the unit's symbol instead of its canonical name ``kg⋅m/s²`` (``f"{u:~P}"``)
+``^``    Use negative exponents instead of ratio             ``kg⋅m⋅s⁻²`` (``f"{u:~^P}"``)
 ======== =================================================== ================================
 
 Magnitude modifiers
@@ -103,7 +106,8 @@ their exponents, ``registry`` is the current instance of :py:class:``UnitRegistr
 
 You can choose to replace the complete formatter. Briefly, the formatter if an object with the
 following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format_uncertainty`,
-`format_measurement`. The easiest way to create your own formatter is to subclass one that you like.
+`format_measurement`. The easiest way to create your own formatter is to subclass one that you
+like and replace the methods you need. For example, to replace the unit formatting:
 
 .. doctest::
 
@@ -122,3 +126,26 @@ following methods: `format_magnitude`, `format_unit`, `format_quantity`, `format
 
 
 By replacing other methods, you can customize the output as much as you need.
+
+SciForm_ is a library that can be used to format the magnitude of the number. This can be used
+in a customer formatter as follows:
+
+.. doctest::
+
+   >>> from sciform import Formatter
+   >>> sciform_formatter = Formatter(round_mode="sig_fig", ndigits=4, exp_mode="engineering")
+
+   >>> class MyFormatter(DefaultFormatter):
+   ...
+   ...      default_format = ""
+   ...
+   ...      def format_magnitude(self, value, spec, **options) -> str:
+   ...          return sciform_formatter(value)
+   ...
+   >>> ureg.formatter = MyFormatter()
+   >>> ureg.formatter._registry = ureg
+   >>> str(q * 10)
+   '23.00e-06 meter ** 3 / second ** 2 / kilogram'
+
+
+.. _SciForm: https://sciform.readthedocs.io/en/stable/

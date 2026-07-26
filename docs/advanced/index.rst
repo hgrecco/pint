@@ -10,6 +10,7 @@ Pint contains some useful and fun feature. You will find them here.
     performance
     serialization
     defining
+    typing
     wrapping
     measurement
     pitheorem

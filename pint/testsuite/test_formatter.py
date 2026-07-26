@@ -4,6 +4,7 @@ import pytest
 
 from pint import formatting as fmt
 from pint.delegates.formatter._format_helpers import formatter, join_u
+from pint.formatting import formatter as pf_formatter
 
 
 class TestFormatter:
@@ -55,3 +56,35 @@ class TestFormatter:
         assert fmt.format_unit("", "C") == "dimensionless"
         with pytest.raises(ValueError):
             fmt.format_unit("m", "W")
+
+    def test_pf_formatter(self):
+        assert pf_formatter({}.items()) == ""
+        assert pf_formatter(dict(meter=1).items()) == "meter"
+        assert pf_formatter(dict(meter=-1).items()) == "1 / meter"
+        assert pf_formatter(dict(meter=-1).items(), as_ratio=False) == "meter ** -1"
+
+        assert (
+            pf_formatter(dict(meter=-1, second=-1).items(), as_ratio=False)
+            == "meter ** -1 * second ** -1"
+        )
+        assert (
+            pf_formatter(
+                dict(meter=-1, second=-1).items(),
+            )
+            == "1 / meter / second"
+        )
+        assert (
+            pf_formatter(dict(meter=-1, second=-1).items(), single_denominator=True)
+            == "1 / (meter * second)"
+        )
+        assert (
+            pf_formatter(dict(meter=-1, second=-2).items()) == "1 / meter / second ** 2"
+        )
+        assert (
+            pf_formatter(dict(second=-2, meter=-1).items(), sort=False)
+            == "1 / second ** 2 / meter"
+        )
+        assert (
+            pf_formatter(dict(meter=-1, second=-2).items(), single_denominator=True)
+            == "1 / (meter * second ** 2)"
+        )

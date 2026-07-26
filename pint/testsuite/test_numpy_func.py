@@ -140,6 +140,36 @@ class TestNumPyFuncUtils(TestNumpyMethods):
             == self.ureg.m**3
         )
 
+    def test_op_output_unit_mul_offset_array_protocol(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = False
+            temperature = (400 * self.ureg.K).to("degC")
+
+            with pytest.raises(OffsetUnitCalculusError):
+                np.array(2) * temperature
+            with pytest.raises(OffsetUnitCalculusError):
+                np.multiply(temperature, 2 * self.ureg.m)
+
+    def test_op_output_unit_div_offset_array_protocol(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = False
+            temperature = (400 * self.ureg.K).to("degC")
+
+            with pytest.raises(OffsetUnitCalculusError):
+                np.array(2) / temperature
+
     def test_op_output_unit_delta(self):
         assert get_op_output_unit("delta", self.ureg.m) == self.ureg.m
         assert get_op_output_unit("delta", self.ureg.degC) == self.ureg.delta_degC
@@ -172,8 +202,8 @@ class TestNumPyFuncUtils(TestNumpyMethods):
 
     def test_op_output_unit_variance(self):
         assert get_op_output_unit("variance", self.ureg.m) == self.ureg.m**2
-        with pytest.raises(OffsetUnitCalculusError):
-            get_op_output_unit("variance", self.ureg.degC)
+        # with pytest.raises(OffsetUnitCalculusError):
+        assert get_op_output_unit("variance", self.ureg.degC) == self.ureg.delta_degC**2
 
     def test_op_output_unit_square(self):
         assert get_op_output_unit("square", self.ureg.m) == self.ureg.m**2
@@ -195,7 +225,7 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         # TODO (#905 follow-up): test that NotImplemented is returned when upcast types
         # present
 
-    def test_trapz(self):
+    def test_trapezoid(self):
         with ExitStack() as stack:
             stack.callback(
                 setattr,
@@ -207,14 +237,14 @@ class TestNumPyFuncUtils(TestNumpyMethods):
             t = self.Q_(np.array([0.0, 4.0, 8.0]), "degC")
             z = self.Q_(np.array([0.0, 2.0, 4.0]), "m")
             helpers.assert_quantity_equal(
-                np.trapz(t, x=z), self.Q_(1108.6, "kelvin meter")
+                np.trapezoid(t, x=z), self.Q_(1108.6, "kelvin meter")
             )
 
-    def test_trapz_no_autoconvert(self):
+    def test_trapezoid_no_autoconvert(self):
         t = self.Q_(np.array([0.0, 4.0, 8.0]), "degC")
         z = self.Q_(np.array([0.0, 2.0, 4.0]), "m")
         with pytest.raises(OffsetUnitCalculusError):
-            np.trapz(t, x=z)
+            np.trapezoid(t, x=z)
 
     def test_correlate(self):
         a = self.Q_(np.array([1, 2, 3]), "m")
@@ -265,3 +295,74 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
         with pytest.raises(OffsetUnitCalculusError):
             np.cross(t, z)
+
+    def test_vdot(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            # Real case with offset
+            t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+            z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+            helpers.assert_quantity_almost_equal(
+                np.vdot(t, z), self.Q_(1678.9, "kelvin meter")
+            )
+            # Complex case
+            a = self.Q_(np.array([1j, 2j]), "m")
+            b = self.Q_(np.array([1j, 2j]), "s")
+            # conj(1j)*1j + conj(2j)*2j = 1 + 4 = 5
+            helpers.assert_quantity_almost_equal(np.vdot(a, b), self.Q_(5.0, "m * s"))
+
+    def test_vdot_no_autoconvert(self):
+        t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+        z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+        with pytest.raises(OffsetUnitCalculusError):
+            np.vdot(t, z)
+
+    def test_inner(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+            z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+            helpers.assert_quantity_almost_equal(
+                np.inner(t, z), self.Q_(1678.9, "kelvin meter")
+            )
+
+    def test_inner_no_autoconvert(self):
+        t = self.Q_(np.array([0.0, 5.0, 10.0]), "degC")
+        z = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+        with pytest.raises(OffsetUnitCalculusError):
+            np.inner(t, z)
+
+    def test_outer(self):
+        with ExitStack() as stack:
+            stack.callback(
+                setattr,
+                self.ureg,
+                "autoconvert_offset_to_baseunit",
+                self.ureg.autoconvert_offset_to_baseunit,
+            )
+            self.ureg.autoconvert_offset_to_baseunit = True
+            t = self.Q_(np.array([0.0, 5.0]), "degC")
+            z = self.Q_(np.array([1.0, 2.0]), "m")
+            # [273.15, 278.15] outer [1.0, 2.0] = [[273.15, 546.3], [278.15, 556.3]]
+            expected = np.array([[273.15, 546.3], [278.15, 556.3]])
+            helpers.assert_quantity_almost_equal(
+                np.outer(t, z), self.Q_(expected, "kelvin meter")
+            )
+
+    def test_outer_no_autoconvert(self):
+        t = self.Q_(np.array([0.0, 5.0]), "degC")
+        z = self.Q_(np.array([1.0, 2.0]), "m")
+        with pytest.raises(OffsetUnitCalculusError):
+            np.outer(t, z)

@@ -1,17 +1,17 @@
 """
-    pint.delegates.txt_defparser.context
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.txt_defparser.context
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Definitions for parsing Context and their related objects
+Definitions for parsing Context and their related objects
 
-    Notices that some of the checks are done within the
-    format agnostic parent definition class.
+Notices that some of the checks are done within the
+format agnostic parent definition class.
 
-    See each one for a slighly longer description of the
-    syntax.
+See each one for a slighly longer description of the
+syntax.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ import numbers
 import re
 import typing as ty
 from dataclasses import dataclass
-from typing import Union
 
 import flexparser as fp
 
@@ -28,11 +27,8 @@ from ...facets.context import definitions
 from ..base_defparser import ParserConfig, PintParsedStatement
 from . import block, common, plain
 
-# TODO check syntax
-T = ty.TypeVar("T", bound="Union[ForwardRelation, BidirectionalRelation]")
 
-
-def _from_string_and_context_sep(
+def _from_string_and_context_sep[T: ForwardRelation | BidirectionalRelation](
     cls: type[T], s: str, config: ParserConfig, separator: str
 ) -> T | None:
     if separator not in s:

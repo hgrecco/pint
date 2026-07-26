@@ -1,11 +1,11 @@
 """
-    pint.util
-    ~~~~~~~~~
+pint.util
+~~~~~~~~~
 
-    Miscellaneous functions for pint.
+Miscellaneous functions for pint.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import operator
 import re
 import tokenize
 import types
+from collections import deque
 from collections.abc import Callable, Generator, Hashable, Iterable, Iterator, Mapping
 from fractions import Fraction
 from functools import lru_cache, partial
@@ -26,16 +27,19 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
-    TypeVar,
+    Self,
+    TypeAlias,
 )
 
 from . import pint_eval
 from ._typing import Scalar
-from .compat import NUMERIC_TYPES, Self
+from .compat import NUMERIC_TYPES
 from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
+    from typing_extensions import TypeIs
+
     from ._typing import QuantityOrUnitLike
     from .registry import UnitRegistry
 
@@ -43,18 +47,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 logger.addHandler(NullHandler())
 
-T = TypeVar("T")
-TH = TypeVar("TH", bound=Hashable)
-TT = TypeVar("TT", bound=type)
-
-# TODO: Change when Python 3.10 becomes minimal version.
-# ItMatrix: TypeAlias = Iterable[Iterable[PintScalar]]
-# Matrix: TypeAlias = list[list[PintScalar]]
-ItMatrix = Iterable[Iterable[Scalar]]
-Matrix = list[list[Scalar]]
+ItMatrix: TypeAlias = Iterable[Iterable[Scalar]]
+Matrix: TypeAlias = list[list[Scalar]]
 
 
-def _noop(x: T) -> T:
+def _noop[T](x: T) -> T:
     return x
 
 
@@ -302,9 +299,9 @@ def pi_theorem(quantities: dict[str, Any], registry: UnitRegistry | None = None)
     return results
 
 
-def solve_dependencies(
+def solve_dependencies[TH: Hashable](
     dependencies: dict[TH, set[TH]],
-) -> Generator[set[TH], None, None]:
+) -> Generator[set[TH]]:
     """Solve a dependency graph.
 
     Parameters
@@ -341,9 +338,7 @@ def solve_dependencies(
         yield t
 
 
-def find_shortest_path(
-    graph: dict[TH, set[TH]], start: TH, end: TH, path: list[TH] | None = None
-):
+def find_shortest_path[TH: Hashable](graph: dict[TH, set[TH]], start: TH, end: TH):
     """Find shortest path between two nodes within a graph.
 
     Parameters
@@ -355,35 +350,32 @@ def find_shortest_path(
         Starting node.
     end
         End node.
-    path
-        Path to prepend to the one found.
-        (default = None, empty path.)
 
     Returns
     -------
     list[TH]
         The shortest path between two nodes.
     """
-    path = (path or []) + [start]
+    path = [start]
     if start == end:
         return path
 
-    # TODO: raise ValueError when start not in graph
-    if start not in graph:
-        return None
+    fifo = deque()
+    fifo.append((start, path))
+    visited = set()
+    while fifo:
+        node, path = fifo.popleft()
+        visited.add(node)
+        for adjascent_node in graph[node] - visited:
+            if adjascent_node == end:
+                return path + [adjascent_node]
+            else:
+                fifo.append((adjascent_node, path + [adjascent_node]))
 
-    shortest = None
-    for node in graph[start]:
-        if node not in path:
-            newpath = find_shortest_path(graph, node, end, path)
-            if newpath:
-                if not shortest or len(newpath) < len(shortest):
-                    shortest = newpath
-
-    return shortest
+    return None
 
 
-def find_connected_nodes(
+def find_connected_nodes[TH: Hashable](
     graph: dict[TH, set[TH]], start: TH, visited: set[TH] | None = None
 ) -> set[TH] | None:
     """Find all nodes connected to a start node within a graph.
@@ -425,7 +417,7 @@ class udict(dict[str, Scalar]):
     def __missing__(self, key: str):
         return 0
 
-    def copy(self: Self) -> Self:
+    def copy(self) -> Self:
         return udict(self)
 
 
@@ -481,11 +473,11 @@ class UnitsContainer(Mapping[str, Scalar]):
                 d[key] = self._non_int_type(value)
         self._hash = None
 
-    def copy(self: Self) -> Self:
+    def copy(self) -> Self:
         """Create a copy of this UnitsContainer."""
         return self.__copy__()
 
-    def add(self: Self, key: str, value: Number) -> Self:
+    def add(self, key: str, value: Number) -> Self:
         """Create a new UnitsContainer adding value to
         the value existing for a given key.
 
@@ -510,7 +502,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def remove(self: Self, keys: Iterable[str]) -> Self:
+    def remove(self, keys: Iterable[str]) -> Self:
         """Create a new UnitsContainer purged from given entries.
 
         Parameters
@@ -529,7 +521,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def rename(self: Self, oldkey: str, newkey: str) -> Self:
+    def rename(self, oldkey: str, newkey: str) -> Self:
         """Create a new UnitsContainer in which an entry has been renamed.
 
         Parameters
@@ -602,10 +594,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         return self.__format__("")
 
     def __repr__(self) -> str:
-        tmp = "{%s}" % ", ".join(
-            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
-        )
-        return f"<UnitsContainer({tmp})>"
+        return f"UnitsContainer({repr(self._d)})"
 
     def __format__(self, spec: str) -> str:
         # TODO: provisional
@@ -929,10 +918,7 @@ class ParserHelper(UnitsContainer):
         return f"{self.scale} {tmp}"
 
     def __repr__(self):
-        tmp = "{%s}" % ", ".join(
-            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
-        )
-        return f"<ParserHelper({self.scale}, {tmp})>"
+        return f"ParserHelper({repr(self.scale)}, {repr(self._d)})"
 
     def __mul__(self, other):
         if isinstance(other, str):
@@ -1004,8 +990,21 @@ _subs_re_list = [
 _subs_re = [
     (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re_list
 ]
-_pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⁻", "0123456789*-")
-_pretty_exp_re = re.compile(r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?)")
+# Inside a superscript exponent, ``⋅`` (U+22C5) acts as a decimal point and
+# ``⸍`` (U+2E0D) as a fraction slash, e.g. ``gr⁰⋅³³³`` (grain**0.333) and
+# ``gr¹⸍³`` (grain**(1/3)). Elsewhere, ``·`` (MIDDLE DOT, U+00B7) and ``⋅``
+# (DOT OPERATOR, U+22C5) are both pretty-printed multiplication and map to ``*``.
+_pretty_superscript_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-")
+_pretty_table = str.maketrans("·⋅", "**")
+_pretty_exp_re = re.compile(
+    r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:[.⋅][⁰¹²³⁴⁵⁶⁷⁸⁹]+)?(?:⸍[⁰¹²³⁴⁵⁶⁷⁸⁹]+)?)"
+)
+
+
+def _convert_pretty_exponent(match: re.Match[str]) -> str:
+    text = match.group(1).translate(_pretty_superscript_table)
+    text = text.replace("⋅", ".").replace("⸍", "/")
+    return f"**({text})"
 
 
 def string_preprocessor(input_string: str) -> str:
@@ -1015,8 +1014,8 @@ def string_preprocessor(input_string: str) -> str:
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)
 
-    input_string = _pretty_exp_re.sub(r"**(\1)", input_string)
-    # Replace pretty format characters
+    input_string = _pretty_exp_re.sub(_convert_pretty_exponent, input_string)
+    # Replace pretty format characters (multiplication operator)
     input_string = input_string.translate(_pretty_table)
 
     # Handle caret exponentiation
@@ -1055,7 +1054,7 @@ class SharedRegistryObject:
             inst._REGISTRY = application_registry.get()
         return inst
 
-    def _check(self, other: Any) -> bool:
+    def _check(self, other: Any) -> "TypeIs[SharedRegistryObject]":
         """Check if the other object use a registry and if so that it is the
         same registry.
 
@@ -1135,9 +1134,7 @@ def to_units_container(
         return unit_like._units
     elif str in mro:
         if registry:
-            # TODO: document how to whether to lift preprocessing loop out to caller
-            for p in registry.preprocessors:
-                unit_like = p(unit_like)
+            unit_like = registry._apply_preprocessors(unit_like)
             return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
@@ -1237,7 +1234,7 @@ def sized(y: Any) -> bool:
     return True
 
 
-def create_class_with_registry(
+def create_class_with_registry[TT: type](
     registry: UnitRegistry, base_class: type[TT]
 ) -> type[TT]:
     """Create new class inheriting from base_class and

@@ -1,24 +1,24 @@
 """
-    pint.delegates.txt_defparser.plain
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.txt_defparser.plain
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Definitions for parsing:
-    - Equality
-    - CommentDefinition
-    - PrefixDefinition
-    - UnitDefinition
-    - DimensionDefinition
-    - DerivedDimensionDefinition
-    - AliasDefinition
+Definitions for parsing:
+- Equality
+- CommentDefinition
+- PrefixDefinition
+- UnitDefinition
+- DimensionDefinition
+- DerivedDimensionDefinition
+- AliasDefinition
 
-    Notices that some of the checks are done within the
-    format agnostic parent definition class.
+Notices that some of the checks are done within the
+format agnostic parent definition class.
 
-    See each one for a slighly longer description of the
-    syntax.
+See each one for a slighly longer description of the
+syntax.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations

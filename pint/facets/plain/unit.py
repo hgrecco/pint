@@ -1,9 +1,9 @@
 """
-    pint.facets.plain.unit
-    ~~~~~~~~~~~~~~~~~~~~~
+pint.facets.plain.unit
+~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -12,9 +12,9 @@ import copy
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self, overload
 
-from ..._typing import UnitLike
+from ..._typing import Magnitude, UnitLike
 from ...compat import NUMERIC_TYPES, deprecated
 from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
@@ -22,6 +22,7 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     from ..context import Context
+    from .quantity import PlainQuantity
 
 
 class PlainUnit(PrettyIPython, SharedRegistryObject):
@@ -43,7 +44,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             self._units = units._units
         else:
             raise TypeError(
-                "units must be of type str, Unit or " "UnitsContainer; not {}.".format(
+                "units must be of type str, Unit or UnitsContainer; not {}.".format(
                     type(units)
                 )
             )
@@ -73,7 +74,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        return f"<Unit('{self._units}')>"
+        return f'Unit("{self._units}")'
 
     @property
     def dimensionless(self) -> bool:
@@ -141,6 +142,12 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         return self.dimensionless
 
+    @overload
+    def __mul__(self, other: Self) -> Self: ...
+    @overload
+    def __mul__[T: Magnitude](self, other: T) -> PlainQuantity[T]: ...
+    @overload
+    def __mul__(self, other: str) -> PlainQuantity[Any]: ...
     def __mul__(self, other):
         if self._check(other):
             if isinstance(other, self.__class__):
@@ -163,8 +170,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             else:
                 qself = 1 * self
                 return qself / other
-
-        return self._REGISTRY.Quantity(1 / other, self._units)
+        # Perform division after initializing a Quantity for compatibility with with
+        # upcast types #2126
+        return self._REGISTRY.Quantity(1, self._units) / other
 
     def __rtruediv__(self, other):
         # As PlainUnit and Quantity both handle truediv with each other rtruediv can
@@ -193,6 +201,14 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other) -> bool:
         # We compare to the plain class of PlainUnit because each PlainUnit class is
         # unique.
+        if isinstance(other, str):
+            if str(self) == other:
+                return True
+            try:
+                other = self._REGISTRY.Unit(other)
+            except Exception:
+                return False
+
         if self._check(other):
             if isinstance(other, self.__class__):
                 return self._units == other._units

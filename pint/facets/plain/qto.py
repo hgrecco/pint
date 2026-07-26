@@ -6,20 +6,13 @@ import numbers
 import warnings
 from typing import TYPE_CHECKING
 
-from ...compat import (
-    mip_INF,
-    mip_INTEGER,
-    mip_Model,
-    mip_model,
-    mip_OptimizationStatus,
-    mip_xsum,
-)
+from ...compat import np, scipy
 from ...errors import UndefinedBehavior
-from ...util import infer_base_unit
+from ...util import UnitsContainer, infer_base_unit
 
 if TYPE_CHECKING:
-    from ..._typing import UnitLike
-    from ...util import UnitsContainer
+    from ..._typing import Scalar, UnitLike
+    from ...registry import UnitRegistry
     from .quantity import PlainQuantity
 
 
@@ -81,45 +74,12 @@ def to_reduced_units(
     return quantity.to(new_units)
 
 
-def to_compact(
-    quantity: PlainQuantity, unit: UnitsContainer | None = None
-) -> PlainQuantity:
-    """ "Return PlainQuantity rescaled to compact, human-readable units.
-
-    To get output in terms of a different unit, use the unit parameter.
-
-
-    Examples
-    --------
-
-    >>> import pint
-    >>> ureg = pint.UnitRegistry()
-    >>> (200e-9*ureg.s).to_compact()
-    <Quantity(200.0, 'nanosecond')>
-    >>> (1e-2*ureg('kg m/s^2')).to_compact('N')
-    <Quantity(10.0, 'millinewton')>
+def _get_si_prefixes(registry: UnitRegistry) -> tuple[list[int], list[str]]:
+    """Return the (power of ten, prefix name) pairs of the registry's SI prefixes,
+    sorted by power, as parallel lists.
     """
-
-    if not isinstance(quantity.magnitude, numbers.Number) and not hasattr(
-        quantity.magnitude, "nominal_value"
-    ):
-        warnings.warn(
-            "to_compact applied to non numerical types has an undefined behavior.",
-            UndefinedBehavior,
-            stacklevel=2,
-        )
-        return quantity
-
-    if (
-        quantity.unitless
-        or quantity.magnitude == 0
-        or math.isnan(quantity.magnitude)
-        or math.isinf(quantity.magnitude)
-    ):
-        return quantity
-
     SI_prefixes: dict[int, str] = {}
-    for prefix in quantity._REGISTRY._prefixes.values():
+    for prefix in registry._prefixes.values():
         try:
             scale = prefix.converter.scale
             # Kludgy way to check if this is an SI prefix
@@ -132,18 +92,21 @@ def to_compact(
     SI_prefixes_list = sorted(SI_prefixes.items())
     SI_powers = [item[0] for item in SI_prefixes_list]
     SI_bases = [item[1] for item in SI_prefixes_list]
+    return SI_powers, SI_bases
 
+
+def _get_compact_base[Q: PlainQuantity](
+    quantity: Q, unit: UnitsContainer | None
+) -> tuple[Q, str, Scalar]:
+    """Resolve the base quantity to search for a compact prefix in, along with
+    the numerator unit name and exponent whose magnitude the prefix is picked for.
+    """
     if unit is None:
         unit = infer_base_unit(quantity, registry=quantity._REGISTRY)
     else:
         unit = infer_base_unit(quantity.__class__(1, unit), registry=quantity._REGISTRY)
 
     q_base = quantity.to(unit)
-
-    magnitude = q_base.magnitude
-    # Support uncertainties
-    if hasattr(magnitude, "nominal_value"):
-        magnitude = magnitude.nominal_value
 
     units = list(q_base._units.items())
     units_numerator = [a for a in units if a[1] > 0]
@@ -153,11 +116,19 @@ def to_compact(
     else:
         unit_str, unit_power = units[0]
 
-    if unit_power > 0:
-        power = math.floor(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
-    else:
-        power = math.ceil(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
+    return q_base, unit_str, unit_power
 
+
+def _pick_compact_unit(
+    q_base: PlainQuantity,
+    unit_str: str,
+    power: Scalar,
+    SI_powers: list[int],
+    SI_bases: list[str],
+) -> UnitsContainer:
+    """Return q_base's UnitsContainer with unit_str renamed to the SI-prefixed
+    spelling matching the given power of ten.
+    """
     index = bisect.bisect_left(SI_powers, power)
 
     if index >= len(SI_bases):
@@ -166,9 +137,95 @@ def to_compact(
     prefix_str = SI_bases[index]
 
     new_unit_str = prefix_str + unit_str
-    new_unit_container = q_base._units.rename(unit_str, new_unit_str)
+    return q_base._units.rename(unit_str, new_unit_str)
+
+
+def to_compact[Q: PlainQuantity](quantity: Q, unit: UnitsContainer | None = None) -> Q:
+    """ "Return PlainQuantity rescaled to compact, human-readable units.
+
+    To get output in terms of a different unit, use the unit parameter.
+
+
+    Examples
+    --------
+
+    >>> import pint
+    >>> ureg = pint.UnitRegistry()
+    >>> (200e-9 * ureg.s).to_compact()
+    Quantity(199.99999999999997, "nanosecond")
+    >>> (1e-2 * ureg("kg m/s^2")).to_compact("N")
+    Quantity(10.0, "millinewton")
+    """
+
+    if not isinstance(quantity.magnitude, numbers.Number) and not hasattr(
+        quantity.magnitude, "nominal_value"
+    ):
+        warnings.warn(
+            "to_compact applied to non numerical types has an undefined behavior.",
+            UndefinedBehavior,
+            stacklevel=2,
+        )
+        return quantity
+
+    qm = (
+        quantity.magnitude
+        if not hasattr(quantity.magnitude, "nominal_value")
+        else quantity.magnitude.nominal_value
+    )
+    if quantity.unitless or qm == 0 or math.isnan(qm) or math.isinf(qm):
+        return quantity
+
+    SI_powers, SI_bases = _get_si_prefixes(quantity._REGISTRY)
+    q_base, unit_str, unit_power = _get_compact_base(quantity, unit)
+
+    magnitude = q_base.magnitude
+    # Support uncertainties
+    if hasattr(magnitude, "nominal_value"):
+        magnitude = magnitude.nominal_value
+
+    if unit_power > 0:
+        power = math.floor(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
+    else:
+        power = math.ceil(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
+
+    new_unit_container = _pick_compact_unit(
+        q_base, unit_str, power, SI_powers, SI_bases
+    )
 
     return quantity.to(new_unit_container)
+
+
+def _get_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
+    units = list(quantity._units.items())
+    new_units = []
+
+    base_unit_map = {}
+
+    for unit in quantity._REGISTRY._base_units:
+        base_unit_map[unit] = str(quantity._REGISTRY.get_base_units(unit)[1]._units)
+
+    # TODO: This code is very similar to util.infer_base_unit.
+    # Look at combining the two functions.
+    for unit in units:
+        candidates = quantity._REGISTRY.parse_unit_name(unit[0])
+        _, unprefix_unit, _ = candidates[0]
+        # the unprefix_unit could be g rather than kg.
+        # check whether the base_unit for the unprefix_unit also maps to g
+        if unprefix_unit in base_unit_map:
+            unprefix_unit = base_unit_map[unprefix_unit]
+        new_units.append((unprefix_unit, unit[1]))
+    new_unit_container = UnitsContainer(new_units)
+    return new_unit_container
+
+
+def to_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
+    units = _get_unprefixed(quantity)
+    return quantity.to(units)
+
+
+def ito_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
+    units = _get_unprefixed(quantity)
+    return quantity.ito(units)
 
 
 def to_preferred(
@@ -181,10 +238,10 @@ def to_preferred(
 
     >>> import pint
     >>> ureg = pint.UnitRegistry()
-    >>> (1*ureg.acre).to_preferred([ureg.meters])
-    <Quantity(4046.87261, 'meter ** 2')>
-    >>> (1*(ureg.force_pound*ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'watt * second')>
+    >>> (1 * ureg.acre).to_preferred([ureg.meters])
+    Quantity(4046.8726098742513, "meter ** 2")
+    >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
+    Quantity(4.4482216152605005, "watt * second")
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -201,10 +258,10 @@ def ito_preferred(
 
     >>> import pint
     >>> ureg = pint.UnitRegistry()
-    >>> (1*ureg.acre).to_preferred([ureg.meters])
-    <Quantity(4046.87261, 'meter ** 2')>
-    >>> (1*(ureg.force_pound*ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'watt * second')>
+    >>> (1 * ureg.acre).to_preferred([ureg.meters])
+    Quantity(4046.8726098742513, "meter ** 2")
+    >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
+    Quantity(4.4482216152605005, "watt * second")
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -216,6 +273,7 @@ def _get_preferred(
 ) -> PlainQuantity:
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.default_preferred_units
+    preferred_units = list(map(quantity._REGISTRY.Unit, preferred_units))
 
     if not quantity.dimensionality:
         return quantity._units.copy()
@@ -331,50 +389,7 @@ def _get_preferred(
 
     # Now that the input data is minimized, setup the optimization problem
 
-    # use mip to select units from preferred units
-
-    model = mip_Model()
-    model.verbose = 0
-
-    # Make one variable for each candidate unit
-
-    vars = [
-        model.add_var(str(unit), lb=-mip_INF, ub=mip_INF, var_type=mip_INTEGER)
-        for unit in (preferred_units + unpreferred_units)
-    ]
-
-    # where [u1 ... uN] are powers of N candidate units (vars)
-    # and [d1(uI) ... dK(uI)] are the K dimensional exponents of candidate unit I
-    # and [t1 ... tK] are the dimensional exponents of the quantity (quantity)
-    # create the following constraints
-    #
-    #                ⎡ d1(u1) ⋯ dK(u1) ⎤
-    # [ u1 ⋯ uN ] * ⎢    ⋮    ⋱         ⎢ = [ t1 ⋯ tK ]
-    #                ⎣ d1(uN)    dK(uN) ⎦
-    #
-    # in English, the units we choose, and their exponents, when combined, must have the
-    # target dimensionality
-
-    matrix = [
-        [preferred_unit.dimensionality[dimension] for dimension in dimensions]
-        for preferred_unit in (preferred_units + unpreferred_units)
-    ]
-
-    # Do the matrix multiplication with mip_model.xsum for performance and create constraints
-    for i in range(len(dimensions)):
-        dot = mip_model.xsum([var * vector[i] for var, vector in zip(vars, matrix)])
-        # add constraint to the model
-        model += dot == dimensionality[i]
-
-    # where [c1 ... cN] are costs, 1 when a preferred variable, and a large value when not
-    # minimize sum(abs(u1) * c1 ... abs(uN) * cN)
-
-    # linearize the optimization variable via a proxy
-    objective = model.add_var("objective", lb=0, ub=mip_INF, var_type=mip_INTEGER)
-
-    # Constrain the objective to be equal to the sums of the absolute values of the preferred
-    # unit powers. Do this by making a separate constraint for each permutation of signedness.
-    # Also apply the cost coefficient, which causes the output to prefer the preferred units
+    # use scipy.optimize.milp to select units from preferred units
 
     # prefer units that interact with fewer dimensions
     cost = [len(p.dimensionality) for p in preferred_units]
@@ -385,37 +400,58 @@ def _get_preferred(
     )  # arbitrary, just needs to be larger
     cost.extend([bias] * len(unpreferred_units))
 
-    for i in range(1 << len(vars)):
-        sum = mip_xsum(
-            [
-                (-1 if i & 1 << (len(vars) - j - 1) else 1) * cost[j] * var
-                for j, var in enumerate(vars)
-            ]
-        )
-        model += objective >= sum
+    all_units = preferred_units + unpreferred_units
+    num_units = len(all_units)
+    num_dims = len(dimensions)
 
-    model.objective = objective
+    # where [u_1 ... u_N] are powers of N candidate units (vars)
+    # introduce auxiliary variables [a_1 ... a_N] to handle absolute values
+    # such that |u_i| <= a_i
+    # variables: x = [u_1, ..., u_N, a_1, ..., a_N]
+    # objective: min c @ x
+    # where c = [0, ..., 0, cost_1, ..., cost_i]
+    c = np.concatenate([np.zeros(num_units), np.array(cost)])
+
+    # u: (-inf, inf), a: (0, inf)
+    bounds = scipy.optimize.Bounds(
+        lb=np.concatenate([-np.inf * np.ones(num_units), np.zeros(num_units)]),
+        ub=np.inf * np.ones(2 * num_units),
+    )
+
+    # constraint: 1 means integer
+    integrality = np.ones(2 * num_units, dtype=np.intp)
+
+    # constraint: |u_i| <= a_i
+    E = np.eye(num_units)
+    constraints = [
+        # 1)  u_i - a_i <= 0
+        scipy.optimize.LinearConstraint(A=np.hstack([E, -E]), lb=-np.inf, ub=0),
+        # 2) -u_i - a_i <= 0
+        scipy.optimize.LinearConstraint(A=np.hstack([-E, -E]), lb=-np.inf, ub=0),
+    ]
+
+    # constraint: [D, 0] @ [u, a] = dimensionality
+    if num_dims > 0:
+        D = np.array(
+            [[unit.dimensionality[d] for d in dimensions] for unit in all_units]
+        ).transpose()
+
+        A_eq = np.hstack([D, np.zeros((num_dims, num_units))])
+        b_eq = np.array(dimensionality)
+        constraints.append(scipy.optimize.LinearConstraint(A=A_eq, lb=b_eq, ub=b_eq))
 
     # run the mips minimizer and extract the result if successful
-    if model.optimize() == mip_OptimizationStatus.OPTIMAL:
-        optimal_units = []
-        min_objective = float("inf")
-        for i in range(model.num_solutions):
-            if model.objective_values[i] < min_objective:
-                min_objective = model.objective_values[i]
-                optimal_units.clear()
-            elif model.objective_values[i] > min_objective:
-                continue
+    res = scipy.optimize.milp(
+        c, constraints=constraints, integrality=integrality, bounds=bounds
+    )
 
-            temp_unit = quantity._REGISTRY.Unit("")
-            for var in vars:
-                if var.xi(i):
-                    temp_unit *= quantity._REGISTRY.Unit(var.name) ** var.xi(i)
-            optimal_units.append(temp_unit)
+    if res.success and res.x is not None:
+        exponents = np.round(res.x[:num_units]).astype(int)
 
-        sorting_keys = {tuple(sorted(unit._units)): unit for unit in optimal_units}
-        min_key = sorted(sorting_keys)[0]
-        result_unit = sorting_keys[min_key]
+        result_unit = quantity._REGISTRY.Unit("")
+        for unit, exponent in zip(all_units, exponents, strict=True):
+            if exponent != 0:
+                result_unit *= unit**exponent
 
         return result_unit
 

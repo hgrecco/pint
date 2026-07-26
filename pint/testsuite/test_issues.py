@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import copy
 import decimal
+import importlib.util
 import math
 import pprint
+import subprocess
+import sys
 
 import pytest
 
 from pint import (
     Context,
     DimensionalityError,
+    UndefinedUnitError,
     UnitRegistry,
     get_application_registry,
 )
@@ -61,29 +65,6 @@ class TestIssues(QuantityTestCase):
         assert q.units == module_registry.meter.units
 
         m = np.ma.masked_array(2 * np.ones(3, 3))
-        qq = q * m
-        assert isinstance(qq, module_registry.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        assert qq.units == module_registry.meter.units
-        qq = m * q
-        assert isinstance(qq, module_registry.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        assert qq.units == module_registry.meter.units
-
-    @pytest.mark.xfail
-    @helpers.requires_numpy
-    def test_issue39(self, module_registry):
-        x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-        q = module_registry.meter * x
-        assert isinstance(q, module_registry.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        assert q.units == module_registry.meter.units
-        q = x * module_registry.meter
-        assert isinstance(q, module_registry.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        assert q.units == module_registry.meter.units
-
-        m = np.matrix(2 * np.ones(3, 3))
         qq = q * m
         assert isinstance(qq, module_registry.Quantity)
         np.testing.assert_array_equal(qq.magnitude, x * m)
@@ -400,13 +381,22 @@ class TestIssues(QuantityTestCase):
         module_registry.Quantity(2, "Å")
 
     def test_alternative_angstrom_definition(self, module_registry):
-        module_registry.Quantity(2, "\u212B")
+        module_registry.Quantity(2, "\u212b")
 
     def test_micro_creation_U03bc(self, module_registry):
         module_registry.Quantity(2, "μm")
 
     def test_micro_creation_U00b5(self, module_registry):
         module_registry.Quantity(2, "µm")
+
+    def test_micro_creation_mu(self, module_registry):
+        module_registry.Quantity(2, "mug")
+
+    def test_micro_creation_mc(self, module_registry):
+        module_registry.Quantity(2, "mcg")
+
+    def test_liter_creation_U2113(self, module_registry):
+        module_registry.Quantity(2, "ℓ")
 
     @helpers.requires_numpy
     def test_issue171_real_imag(self, module_registry):
@@ -884,6 +874,24 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    def test_issue1963(self, module_registry):
+        ureg = module_registry
+        assert ureg("‰") == ureg("permille")
+        assert ureg("‰") == ureg.permille
+
+        a = ureg.Quantity("10 ‰")
+        b = ureg.Quantity("100 ppm")
+        c = ureg.Quantity("0.5")
+
+        assert f"{a}" == "10 permille"
+        assert f"{a:~}" == "10 ‰"
+
+        assert_equal(a, 0.01)
+        assert_equal(1e2 * b, a)
+        assert_equal(c, 50 * a)
+
+        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), 1 * ureg.permille)
+
     @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
@@ -922,6 +930,7 @@ class TestIssues(QuantityTestCase):
         assert q2.format_babel("~", locale="es_ES") == "3,1 W/cm"
         assert q2.format_babel("", locale="es_ES") == "3,1 vatios por centímetro"
 
+    @helpers.requires_numpy()
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):
         from numpy.testing import assert_almost_equal
@@ -1184,6 +1193,22 @@ def test_issue1505():
     )  # unexpected fail (magnitude should be a decimal)
 
 
+def test_issue2153():
+    q = get_application_registry().Quantity(1, "%")
+
+    assert q.check("%")
+
+
+def test_issue2068():
+    ur = UnitRegistry(non_int_type=decimal.Decimal)
+
+    q = ur.Quantity("1.2345", "m")
+
+    assert q.magnitude == decimal.Decimal("1.2345")
+    assert isinstance(q.magnitude, decimal.Decimal)
+    assert q.to("cm").magnitude == decimal.Decimal("123.45")
+
+
 def test_issue_1845():
     ur = UnitRegistry(auto_reduce_dimensions=True, non_int_type=decimal.Decimal)
     # before issue 1845 these inputs would have resulted in a TypeError
@@ -1194,15 +1219,15 @@ def test_issue_1845():
 @pytest.mark.parametrize(
     "units,spec,expected",
     [
-        # (dict(hour=1, watt=1), "P~", "W·h"),
-        (dict(ampere=1, volt=1), "P~", "V·A"),
-        # (dict(meter=1, newton=1), "P~", "N·m"),
+        # (dict(hour=1, watt=1), "P~", "W⋅h"),
+        (dict(ampere=1, volt=1), "P~", "V⋅A"),
+        # (dict(meter=1, newton=1), "P~", "N⋅m"),
     ],
 )
 def test_issues_1841(func_registry, units, spec, expected):
     ur = func_registry
     ur.formatter.default_sort_func = sort_by_dimensionality
-    ur.default_format = spec
+    ur.formatter.default_format = spec
     value = ur.Unit(UnitsContainer(**units))
     assert f"{value}" == expected
 
@@ -1214,7 +1239,7 @@ def test_issues_1841_xfail():
 
     # sets compact display mode by default
     ur = UnitRegistry()
-    ur.default_format = "~P"
+    ur.formatter.default_format = "~P"
     ur.formatter.default_sort_func = sort_by_dimensionality
 
     q = ur.Quantity("2*pi radian * hour")
@@ -1267,9 +1292,8 @@ def test_issue2017():
 
     from pint import formatting as fmt
 
-    @fmt.register_unit_format("test")
+    @fmt.register_unit_format("test2017")
     def _test_format(unit, registry, **options):
-        print("format called")
         proc = {u.replace("µ", "u"): e for u, e in unit.items()}
         return fmt.formatter(
             proc.items(),
@@ -1283,8 +1307,8 @@ def test_issue2017():
         )
 
     base_unit = ureg.microsecond
-    assert f"{base_unit:~test}" == "us"
-    assert f"{base_unit:test}" == "microsecond"
+    assert f"{base_unit:~test2017}" == "us"
+    assert f"{base_unit:test2017}" == "microsecond"
 
 
 def test_issue2007():
@@ -1303,3 +1327,313 @@ def test_issue2007():
     assert f"{q:~C}" == "1"
     assert f"{q:~D}" == "1"
     assert f"{q:~H}" == "1"
+
+
+@helpers.requires_uncertainties()
+@helpers.requires_numpy()
+def test_issue2044():
+    from numpy.testing import assert_almost_equal
+    from uncertainties import ufloat
+
+    ureg = UnitRegistry()
+    # First make sure this doesn't fail completely (A Measurement)
+    q = ureg.Quantity(10_000, "m").plus_minus(0.01).to_compact()
+    assert_almost_equal(q.m.n, 10.0)
+    assert q.u == "kilometer"
+
+    # Similarly, for a Ufloat with units
+    q = (ufloat(10_000, 0.01) * ureg.m).to_compact()
+    assert_almost_equal(q.m.n, 10.0)
+    assert q.u == "kilometer"
+
+
+def test_issue2107():
+    # Use decimal
+    ureg = UnitRegistry(non_int_type=decimal.Decimal)
+    # 2 L/h is equal to 48 L/day
+    flow = decimal.Decimal("2") * ureg.L / ureg.h
+    assert flow.to(ureg.L / ureg.day).magnitude == 48.0
+    # 1 inch is equal to 1000 thou
+    distance = ureg.Quantity(decimal.Decimal("1.0"), ureg.inch)
+    assert distance.to(ureg.thou).magnitude == 1000.0
+
+    # Perform the same conversions without decimal
+    ureg = UnitRegistry()
+    # 2 L/h is equal to 48 L/day
+    flow = 2 * ureg.L / ureg.h
+    assert flow.to(ureg.L / ureg.day).magnitude == 48.0
+    # 1 inch is equal to 1000 thou
+    distance = ureg.Quantity(1, ureg.inch)
+    assert distance.to(ureg.thou).magnitude == 1000.0
+
+
+def test_issue2172():
+    ureg = UnitRegistry()
+
+    def mass_to_volume(u, value, *, density=None):
+        """Convert mass to volume using density."""
+        density = density or 1000 * u.kilogram / u.meter**3  # 5 C
+        return value / density
+
+    context = Context("Water")
+    context.add_transformation("[mass]", "[volume]", mass_to_volume)
+    ureg.add_context(context)
+
+    ureg.enable_contexts(context.name)
+    mass = ureg.Quantity(1000, "kg")
+    assert mass.to("m**3").m == pytest.approx(1.0)
+    assert mass.to(
+        "m**3", density=958.05 * ureg.kilogram / ureg.meter**3
+    ).m == pytest.approx(1.0437868587234487)  # 100 C
+
+    mass.ito("m**3", density=958.05 * ureg.kilogram / ureg.meter**3)
+    assert mass.m == pytest.approx(1.0437868587234487)  # 100 C
+
+
+def test_issue2199(func_registry):
+    msg = "is not defined in the unit registry"
+    with pytest.raises(UndefinedUnitError, match=msg):
+        func_registry.Quantity.from_tuple((1, (("wrong", 1),)))
+
+
+def test_issue2228(func_registry):
+    func_registry.define("test2228A = nan meter")
+    func_registry.define("test2228B = nan meter")
+    # Behaviour before 2228 was fixed
+    nan_factor, _ = func_registry._get_root_units(
+        UnitsContainer({"test2228A": 1, "test2228B": -1})
+    )
+    assert nan_factor != 1
+    # Expected behaviour - return nan
+    assert math.isnan(nan_factor)
+
+    ok_factor, _ = func_registry._get_root_units(
+        UnitsContainer({"meter": 1, "centimeter": -1})
+    )
+    assert ok_factor == 100.0
+
+
+def test_issue2261(func_registry):
+    func_registry.define("truckload = nan kg")
+
+    # Converting to a prefixed form of a NaN unit should give a numeric result
+    q = func_registry.Quantity("1000 truckloads")
+    result = q.to("kilotruckload")
+    assert result.magnitude == 1.0
+
+    # Reverse direction should also work
+    q2 = func_registry.Quantity("1 kilotruckload")
+    result2 = q2.to("truckload")
+    assert result2.magnitude == 1000.0
+
+    # NaN should still propagate when converting to a non-NaN unit
+    q3 = func_registry.Quantity("2 truckloads")
+    result3 = q3.to("kg")
+    assert math.isnan(result3.magnitude)
+
+    # Compound units containing a NaN unit should also convert correctly
+    q4 = func_registry.Quantity("1000 truckload/day")
+    result4 = q4.to("kilotruckload/day")
+    assert result4.magnitude == 1.0
+
+
+def test_issue2265():
+    """Check that dask.array is not imported with pint."""
+    if importlib.util.find_spec("dask") is None:
+        pytest.skip("dask is not available")
+
+    command = [
+        sys.executable,
+        "-c",
+        "import pint, sys; print('dask.array' in sys.modules)",
+    ]
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    assert result.stdout.strip() == "False"
+
+
+def test_issue2265_2():
+    """Verify that lazy-loaded dask_array.Array works when accessed."""
+    if importlib.util.find_spec("dask") is None:
+        pytest.skip("dask is not available")
+
+    from pint.compat import HAS_DASK, dask_array
+
+    if not HAS_DASK:
+        pytest.skip("dask is not available")
+
+    # Access dask_array.Array to trigger lazy import
+    dask_array_class = dask_array.Array
+    assert dask_array_class is not None
+    # Verify it's the actual dask Array class by checking module
+    assert dask_array_class.__module__ == "dask.array.core"
+
+
+def test_issue2256():
+    ureg = UnitRegistry()
+
+    from pint import formatting as fmt
+    from pint.delegates.formatter.plain import PrettyFormatter
+
+    @fmt.register_unit_format("test2256")
+    def _test_format(unit, registry, **options):
+        pf = PrettyFormatter(registry)
+        return pf.format_unit(unit, "~", as_ratio=False)
+
+    q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
+    assert f"{q:test2256}" == "2.3e-06 kg⁻¹⋅m³⋅s⁻²"
+    assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
+
+
+def test_issue2256_2():
+    ureg = UnitRegistry()
+
+    q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
+    assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
+    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹⋅m³⋅s⁻²"
+    assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
+
+
+def test_issue2305():
+    # Offset (affine) conversion of a Decimal magnitude must not raise
+    # TypeError from mixing Decimal with the float scale/offset.
+    from decimal import Decimal
+
+    ureg = UnitRegistry()
+
+    # to_reference (degC -> K): adds the offset
+    q = ureg.Quantity(Decimal(10), "degC").to("K")
+    assert q.magnitude == Decimal("283.15")
+    assert isinstance(q.magnitude, Decimal)
+
+    # from_reference (K -> degC): subtracts the offset
+    q = ureg.Quantity(Decimal(300), "kelvin").to("degC")
+    assert q.magnitude == Decimal("26.85")
+    assert isinstance(q.magnitude, Decimal)
+
+    # scale and offset together (degF): the Decimal result tracks the float
+    # scale (5/9), so compare with a tolerance like the float path does
+    degf = ureg.Quantity(Decimal(32), "degF").to("K").magnitude
+    assert isinstance(degf, Decimal)
+    assert abs(float(degf) - 273.15) < 1e-9
+
+    # float magnitudes are unaffected
+    assert ureg.Quantity(10.0, "degC").to("K").magnitude == 273.15 + 10.0
+
+    # and in a Decimal registry, float magnitudes still convert (no longer
+    # the "problem just moves around" reported in the issue)
+    ureg_dec = UnitRegistry(non_int_type=Decimal)
+    assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
+    assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue2255():
+    # wraps must resolve the string unit specs for the *input* arguments through
+    # the registry, exactly as it already does for the return units. Otherwise a
+    # spec such as "dimensionless" is parsed as a unit literally named
+    # "dimensionless" (a non-empty UnitsContainer) instead of an empty,
+    # genuinely dimensionless one, and converting an argument to it raised an
+    # AssertionError deep in the offset-unit handling.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    exp = ureg.wraps("dimensionless", "dimensionless")(math.exp)
+    assert exp(Q_(1)) == Q_(math.exp(1), "dimensionless")
+    # a dimensionless argument carrying convertible units is converted first
+    assert exp(Q_(100, "percent")) == Q_(math.exp(1), "dimensionless")
+
+    # other functions taking dimensionless parameters used to raise as well
+    factorial = ureg.wraps("dimensionless", "dimensionless")(math.factorial)
+    assert factorial(Q_(5)) == Q_(120, "dimensionless")
+
+    asin = ureg.wraps("radian", "dimensionless")(math.asin)
+    assert asin(Q_(1)) == Q_(math.asin(1), "radian")
+
+    # input specs are now parsed with the registry, so a symbol/prefixed
+    # spelling behaves like its canonical name (km -> kilometer)
+    @ureg.wraps(None, "km")
+    def f(x):
+        return x
+
+    assert f(Q_(1000, "m")) == 1.0
+
+
+def test_issue2320():
+    ureg = UnitRegistry()
+    for spelling in ("kg", "kWh", "ms", "degC**2"):
+        first = ureg.parse_units_as_container(spelling)
+        second = ureg.parse_units_as_container(spelling)
+        assert second is first, f"{spelling} re-parsed instead of hitting the cache"
+
+    ureg = UnitRegistry()
+    assert ureg.parse_units("Meter", case_sensitive=False) == UnitsContainer(meter=1)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_units("Meter", case_sensitive=True)
+
+
+def test_issue1798():
+    # Format spec width/fill/alignment must apply to the whole quantity
+    # (magnitude and unit), not only to the magnitude.
+    ureg = UnitRegistry()
+
+    q = 2.52 * ureg.meter
+    # width honored across the full "magnitude unit" string
+    assert f"{q:20.1f}" == "           2.5 meter"
+    assert f"{q:>20.1f}" == "           2.5 meter"
+    assert f"{q:<20.1f}" == "2.5 meter           "
+    assert f"{q:*<20.1f}" == "2.5 meter***********"
+
+    # a plain magnitude still behaves the same way
+    assert f"{q.magnitude:20.1f}" == "                 2.5"
+
+    # zero-padding remains a magnitude-only concern
+    assert f"{q:05.1f}" == "002.5 meter"
+
+    # specs without a width are unaffected
+    assert f"{q:.1f}" == "2.5 meter"
+
+    # dimensionless quantities keep working
+    d = 3.0 * ureg.dimensionless
+    assert f"{d:25.1f}" == "        3.0 dimensionless"
+
+
+def test_issue1513():
+    # ``dimensionless`` referenced by name resolves to "", which is not a key in
+    # the unit registry; the recurse loops used to index it directly and raise
+    # KeyError(''). It is the identity and must behave like the empty unit.
+    ureg = UnitRegistry()
+
+    # #1513: get_dimensionality by name must not raise
+    assert ureg.get_dimensionality("dimensionless") == ureg.get_dimensionality("")
+
+    # #1994: check() by name must not raise
+    assert ureg.Quantity(5, "dimensionless").check("dimensionless")
+
+    # a fractional dimensionless unit defined via ``* dimensionless`` must match
+    # the same unit defined as a bare scalar
+    ureg.define("frac = 0.01 * dimensionless")
+    ureg.define("frac_bare = 0.01")
+    assert (
+        ureg.Quantity(50, "frac").to_base_units()
+        == ureg.Quantity(50, "frac_bare").to_base_units()
+    )
+    assert ureg.get_root_units("frac") == ureg.get_root_units("frac_bare")
+
+
+@helpers.requires_numpy
+def test_issue2182():
+    # Comparing a Quantity to an incompatible-dimension value returns False (and
+    # `!=` returns True), regardless of which side of `==`/`!=` the Quantity is on.
+    ureg = UnitRegistry()
+    q = ureg.Quantity(5.0, "Hz")
+
+    assert not (q == 5.0)
+    assert not (5.0 == q)
+    assert not (q == np.float64(5.0))
+    assert not (np.float64(5.0) == q)  # used to raise DimensionalityError
+    assert not (np.array(5.0) == q)  # used to raise DimensionalityError
+
+    assert q != 5.0
+    assert 5.0 != q
+    assert q != np.float64(5.0)
+    assert np.float64(5.0) != q  # used to raise DimensionalityError
+    assert np.array(5.0) != q  # used to raise DimensionalityError

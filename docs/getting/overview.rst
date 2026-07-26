@@ -14,7 +14,7 @@ Due to its modular design, you can extend (or even rewrite!) the complete list
 without changing the source code. It supports a lot of numpy mathematical
 operations **without monkey patching or wrapping numpy**.
 
-It has a complete test coverage. It runs in Python 3.9+ with no other
+It has a complete test coverage. It runs in Python 3.12+ with minimal
 dependencies. It is licensed under a `BSD 3-clause style license`_.
 
 It is extremely easy and natural to use:
@@ -24,7 +24,7 @@ It is extremely easy and natural to use:
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> 3 * ureg.meter + 4 * ureg.cm
-    <Quantity(3.04, 'meter')>
+    Quantity(3.04, "meter")
 
 and you can make good use of numpy if you want:
 
@@ -32,9 +32,9 @@ and you can make good use of numpy if you want:
 
     >>> import numpy as np
     >>> [3, 4] * ureg.meter + [4, 3] * ureg.cm
-    <Quantity([ 3.04  4.03], 'meter')>
+    Quantity([ 3.04  4.03], "meter")
     >>> np.sum(_)
-    <Quantity(7.07, 'meter')>
+    Quantity(7.07, "meter")
 
 See the :ref:`Tutorial` for more help getting started.
 
@@ -78,8 +78,9 @@ package`_.
 **Handle temperature**: conversion between units with different reference
 points, like positions on a map or absolute temperature scales.
 
-**Dependency free**: it depends only on Python and its standard library. It interacts with other packages
-like numpy and uncertainties if they are installed
+**Minimal dependencies**: it depends only on Python, its standard library and a couple small packages that
+implement essential features (e.g. parsing unit definition files and caching).
+It only interacts with other external packages, like numpy and uncertainties, if they are installed.
 
 **Pandas integration**: The `pint-pandas`_ package makes it possible to use Pint with Pandas.
 Operations on DataFrames and between columns are units aware, providing even more convenience for users
@@ -105,6 +106,7 @@ License
 -------
 
 .. literalinclude:: ../../LICENSE
+   :language: none
 
 .. _`comprehensive list of physical units, prefixes and constants`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
 .. _`uncertainties package`: https://pythonhosted.org/uncertainties/

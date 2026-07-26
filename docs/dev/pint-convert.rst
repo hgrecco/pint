@@ -68,7 +68,7 @@ compatible units:
     540 nanometer = 5.4e-07 m
 
     $ pint-convert kcal/mol
-    $ 1.0 kilocalorie / mole = 4184 kg·m²/mol/s²
+    $ 1.0 kilocalorie / mole = 4184 kg⋅m²/mol/s²
 
     $ pint-convert 540nm kcal/mol
     540 nanometer = 52.9471025594 kcal/mol
@@ -77,36 +77,39 @@ With the `uncertainties` package, the experimental uncertainty in the physical
 constants is considered, and the result is given in compact notation, with the
 uncertainty in the last figures in parentheses:
 
+The uncertainty can be enabled with `-U` (by default it is not enabled):
+
 .. code-block:: console
 
-    $ pint-convert Eh eV
+    $ pint-convert -p 20 -U Eh eV
+    1 hartree = 27.211386245988(52) eV
+
+.. code-block:: console
+
+    $ pint-convert -U Eh eV
     1 hartree = 27.21138624599(5) eV
 
 The precision is limited by both the maximum number of significant digits (`-p`)
 and the maximum number of uncertainty digits (`-u`, 2 by default)::
 
-    $ pint-convert -p 20 Eh eV
+    $ pint-convert -U -p 20 Eh eV
     1 hartree = 27.211386245988(52) eV
 
-    $ pint-convert -p 20 -u 4 Eh eV
+    $ pint-convert -U -p 20 -u 4 Eh eV
     1 hartree = 27.21138624598847(5207) eV
 
-The uncertainty can be disabled with `-U`):
-
-.. code-block:: console
-
-    $ pint-convert -p 20 -U Eh eV
-    1 hartree = 27.211386245988471444 eV
-
 Correlations between experimental constants are also known, and taken into
-account. Use `-C` to disable it:
+account if uncertainties `-U` is enabled. Use `-C` to disable it:
 
 .. code-block:: console
 
     $ pint-convert --sys atomic m_p
+    1 proton_mass = 1836.15267344 m_e
+
+    $ pint-convert -U --sys atomic m_p
     1 proton_mass = 1836.15267344(11) m_e
 
-    $ pint-convert --sys atomic -C m_p
+    $ pint-convert -U --sys atomic -C m_p
     1 proton_mass = 1836.15267344(79) m_e
 
 Again, note that results may differ slightly, usually in the last figure, from

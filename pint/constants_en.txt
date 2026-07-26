@@ -3,6 +3,7 @@
 # Language: english
 # Source: https://physics.nist.gov/cuu/Constants/
 #         https://physics.nist.gov/PhysRefData/XrayTrans/Html/search.html
+#         https://physics.nist.gov/cuu/pdf/sp811.pdf
 # :copyright: 2013,2019 by Pint Authors, see AUTHORS for more details.
 
 #### MATHEMATICAL CONSTANTS ####
@@ -26,6 +27,8 @@ standard_gravity = 9.80665 m/s^2 = g_0 = g0 = g_n = gravity   # since 1901
 standard_atmosphere = 1.01325e5 Pa = atm = atmosphere         # since 1954
 conventional_josephson_constant = 4.835979e14 Hz / V = K_J90  # since Jan 1990
 conventional_von_klitzing_constant = 2.5812807e4 ohm = R_K90  # since Jan 1990
+conventional_water_density = 1000 kg/m^3 = ρH2O
+conventional_mercury_density = 13595.1 kg/m^3 = ρHg
 
 #### DERIVED EXACT CONSTANTS ####
 # Floating-point conversion may introduce inaccuracies
@@ -46,22 +49,28 @@ wien_wavelength_displacement_law_constant = ℎ * c / (k * wien_x)
 wien_frequency_displacement_law_constant = wien_u * k / ℎ
 
 #### MEASURED CONSTANTS ####
-# Recommended CODATA-2018 values
+# Recommended CODATA-2022 values
 # To some extent, what is measured and what is derived is a bit arbitrary.
 # The choice of measured constants is based on convenience and on available uncertainty.
 # The uncertainty in the last significant digits is given in parentheses as a comment.
 
 newtonian_constant_of_gravitation = 6.67430e-11 m^3/(kg s^2) = _ = gravitational_constant  # (15)
-rydberg_constant = 1.0973731568160e7 * m^-1 = R_∞ = R_inf                                  # (21)
-electron_g_factor = -2.00231930436256 = g_e                                                # (35)
-atomic_mass_constant = 1.66053906660e-27 kg = m_u                                          # (50)
-electron_mass = 9.1093837015e-31 kg = m_e = atomic_unit_of_mass = a_u_mass                 # (28)
-proton_mass = 1.67262192369e-27 kg = m_p                                                   # (51)
-neutron_mass = 1.67492749804e-27 kg = m_n                                                  # (95)
-lattice_spacing_of_Si = 1.920155716e-10 m = d_220                                          # (32)
-K_alpha_Cu_d_220 = 0.80232719                                                              # (22)
-K_alpha_Mo_d_220 = 0.36940604                                                              # (19)
-K_alpha_W_d_220 = 0.108852175                                                              # (98)
+rydberg_constant = 1.0973731568157e7 * m^-1 = R_∞ = R_inf                                  # (12)
+electron_g_factor = -2.00231930436092 = g_e                                                # (36)
+atomic_mass_constant = 1.66053906892e-27 kg = m_u                                          # (52)
+electron_mass = 9.1093837139e-31 kg = m_e = atomic_unit_of_mass = a_u_mass                 # (28)
+proton_mass = 1.67262192595e-27 kg = m_p                                                   # (52)
+neutron_mass = 1.67492750056e-27 kg = m_n                                                  # (85)
+x_unit_Cu = 1.00207697e-13 m = Xu_Cu                                                       # (28)
+x_unit_Mo = 1.00209952e-13 m = Xu_Mo                                                       # (53)
+angstrom_star = 1.00001495e-10 m = Å_star                                                  # (90)
+
+# Mass densities
+water_density_4C = 999.972 kg/m^3 = ρH2O_4C				# approximate
+water_density_60F = 999.001 kg/m^3 = ρH2O_60F			# approximate
+mercury_density_0C = 13595.1 kg/m^3 = ρHg_0C			# approximate
+mercury_density_32F = 13595.1 kg/m^3 = ρHg_32F			# approximate
+mercury_density_60F = 13556.8 kg/m^3 = ρHg_60F			# approximate
 
 #### DERIVED CONSTANTS ####
 

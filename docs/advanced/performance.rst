@@ -120,7 +120,7 @@ If you want to use the default cache folder provided by the OS, use **:auto:**
     >>> import pint
     >>> ureg = pint.UnitRegistry(cache_folder=":auto:")  # doctest: +SKIP
 
-Pint use an included version of appdirs_ to obtain the correct folder,
+Pint use an external dependency of platformdirs_ to obtain the correct folder,
 for example in macOS is `/Users/<username>/Library/Caches/pint`
 
 In any case, you can check the location of the cache folder.
@@ -146,5 +146,5 @@ In any case, you can check the location of the cache folder.
 
 
 .. _`brentq method`: http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.brentq.html
-.. _appdirs: https://pypi.org/project/appdirs/
+.. _platformdirs: https://pypi.org/project/platformdirs
 .. _flexcache: https://github.com/hgrecco/flexcache/

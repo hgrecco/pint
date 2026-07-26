@@ -13,7 +13,7 @@ Pint integrations:
 
 
 Packages using pint:
-------------------
+--------------------
 
 - `fluids <https://github.com/CalebBell/fluids>`_ Practical fluid dynamics calculations
 - `ht <https://github.com/CalebBell/ht/>`_ Practical heat transfer calculations

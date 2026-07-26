@@ -1,9 +1,9 @@
 """
-    pint.facets.numpy.numpy_func
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.numpy.numpy_func
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -138,6 +138,15 @@ def unwrap_and_wrap_consistent_units(*args):
     )
 
 
+def _validated_muldiv_unit(unit):
+    """Return ``unit`` after applying Quantity's offset-unit mul/div checks."""
+    quantity = unit._REGISTRY.Quantity(1, unit)
+    non_multiplicative_units = len(quantity._get_non_multiplicative_units())
+    if not quantity._ok_for_muldiv(non_multiplicative_units):
+        raise OffsetUnitCalculusError(quantity._units, "")
+    return quantity.units
+
+
 def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     """Determine resulting unit from given operation.
 
@@ -179,9 +188,9 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         result_unit = (1 * first_input_units + 1 * first_input_units).units
     elif unit_op == "mul":
         product = first_input_units._REGISTRY.parse_units("")
-        for x in all_args:
-            if hasattr(x, "units"):
-                product *= x.units
+        quantity_units = [x.units for x in all_args if hasattr(x, "units")]
+        for unit in quantity_units:
+            product *= _validated_muldiv_unit(unit)
         result_unit = product
     elif unit_op == "delta":
         result_unit = (1 * first_input_units - 1 * first_input_units).units
@@ -193,15 +202,21 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         result_unit = product
     elif unit_op == "div":
         # Start with first arg in numerator, all others in denominator
-        product = getattr(
-            all_args[0], "units", first_input_units._REGISTRY.parse_units("")
-        )
+        quantity_count = sum(1 for x in all_args if hasattr(x, "units"))
+        if hasattr(all_args[0], "units"):
+            numerator_unit = all_args[0].units
+            numerator = all_args[0]._REGISTRY.Quantity(1, numerator_unit)
+            if quantity_count == 1 and numerator._get_non_multiplicative_units():
+                raise OffsetUnitCalculusError(numerator._units, "")
+            product = _validated_muldiv_unit(numerator_unit)
+        else:
+            product = first_input_units._REGISTRY.parse_units("")
         for x in all_args[1:]:
             if hasattr(x, "units"):
-                product /= x.units
+                product /= _validated_muldiv_unit(x.units)
         result_unit = product
     elif unit_op == "variance":
-        result_unit = ((1 * first_input_units + 1 * first_input_units) ** 2).units
+        result_unit = ((1 * first_input_units - 1 * first_input_units) ** 2).units
     elif unit_op == "square":
         result_unit = first_input_units**2
     elif unit_op == "sqrt":
@@ -284,7 +299,9 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
     if func is None:
         return
     for func_str_piece in func_str_split[1:]:
-        func = getattr(func, func_str_piece)
+        func = getattr(func, func_str_piece, None)
+        if func is None:
+            return
 
     @implements(func_str, func_type)
     def implementation(*args, **kwargs):
@@ -369,12 +386,10 @@ Define ufunc behavior collections.
 """
 strip_unit_input_output_ufuncs = ["isnan", "isinf", "isfinite", "signbit", "sign"]
 matching_input_bare_output_ufuncs = [
-    "equal",
     "greater",
     "greater_equal",
     "less",
     "less_equal",
-    "not_equal",
 ]
 matching_input_set_units_output_ufuncs = {"arctan2": "radian"}
 set_units_ufuncs = {
@@ -445,7 +460,7 @@ matching_input_copy_units_output_ufuncs = [
 ]
 copy_units_output_ufuncs = ["ldexp", "fmod", "mod", "remainder"]
 op_units_output_ufuncs = {
-    "var": "square",
+    "var": "variance",
     "multiply": "mul",
     "true_divide": "div",
     "divide": "div",
@@ -454,7 +469,7 @@ op_units_output_ufuncs = {
     "cbrt": "cbrt",
     "square": "square",
     "reciprocal": "reciprocal",
-    "std": "sum",
+    "std": "delta",
     "sum": "sum",
     "cumsum": "sum",
     "matmul": "mul",
@@ -470,6 +485,24 @@ for ufunc_str in strip_unit_input_output_ufuncs:
 for ufunc_str in matching_input_bare_output_ufuncs:
     # Require all inputs to match units, but output plain ndarray/duck array
     implement_func("ufunc", ufunc_str, input_units="all_consistent", output_unit=None)
+
+
+def implement_eq_ne_ufunc(ufunc_str, dunder):
+    # Unlike the other comparison ufuncs, equal/not_equal must not raise on
+    # incompatible dimensions: `q1 == q2` returns False (and `!=` True) for
+    # mismatched units, same as Python's usual equality semantics. Delegate to
+    # PlainQuantity.__eq__/__ne__, which already implements that.
+    if np is None:
+        return
+
+    @implements(ufunc_str, "ufunc")
+    def implementation(x1, x2, *args, **kwargs):
+        quantity, other = (x1, x2) if _is_quantity(x1) else (x2, x1)
+        return getattr(quantity, dunder)(other)
+
+
+implement_eq_ne_ufunc("equal", "__eq__")
+implement_eq_ne_ufunc("not_equal", "__ne__")
 
 for ufunc_str, out_unit in matching_input_set_units_output_ufuncs.items():
     # Require all inputs to match units, but output in specified unit
@@ -559,7 +592,7 @@ def _full_like(a, fill_value, **kwargs):
 def _interp(x, xp, fp, left=None, right=None, period=None):
     # Need to handle x and y units separately
     (x, xp, period), _ = unwrap_and_wrap_consistent_units(x, xp, period)
-    (fp, right, left), output_wrap = unwrap_and_wrap_consistent_units(fp, left, right)
+    (fp, left, right), output_wrap = unwrap_and_wrap_consistent_units(fp, left, right)
     return output_wrap(np.interp(x, xp, fp, left=left, right=right, period=period))
 
 
@@ -756,11 +789,9 @@ def _base_unit_if_needed(a):
             raise OffsetUnitCalculusError(a.units)
 
 
-# NP2 Can remove trapz wrapping when we only support numpy>=2
-@implements("trapz", "function")
 @implements("trapezoid", "function")
 def _trapz(y, x=None, dx=1.0, **kwargs):
-    trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+    trapezoid = np.trapezoid
     y = _base_unit_if_needed(y)
     units = y.units
     if x is not None:
@@ -788,27 +819,64 @@ def _correlate(a, v, mode="valid", **kwargs):
     return a.units._REGISTRY.Quantity(ret, units)
 
 
+def _dimensionless_if_needed(*args):
+    registry = None
+    for arg in args:
+        if _is_quantity(arg):
+            registry = arg.units._REGISTRY
+            break
+    if registry is None:
+        raise ValueError(
+            "At least one argument must be a Quantity to determine the registry."
+        )
+    new_args = []
+    for arg in args:
+        if _is_quantity(arg):
+            new_args.append(arg)
+        else:
+            new_args.append(registry.Quantity(arg, "dimensionless"))
+    return new_args
+
+
 def implement_mul_func(func):
     # If NumPy is not available, do not attempt implement that which does not exist
     if np is None:
         return
+    if "." not in func_str:
+        func = getattr(np, func_str, None)
+    else:
+        parts = func_str.split(".")
+        module = np
+        for part in parts[:-1]:
+            module = getattr(module, part, None)
+        func = getattr(module, parts[-1], None)
 
-    func = getattr(np, func_str)
+    # if NumPy does not implement it, do not implement it either
+    if func is None:
+        return
 
     @implements(func_str, "function")
     def implementation(a, b, **kwargs):
+        a, b = _dimensionless_if_needed(a, b)
         a = _base_unit_if_needed(a)
-        units = a.units
-        if hasattr(b, "units"):
-            b = _base_unit_if_needed(b)
-            units *= b.units
-            b = b._magnitude
-
-        mag = func(a._magnitude, b, **kwargs)
-        return a.units._REGISTRY.Quantity(mag, units)
+        b = _base_unit_if_needed(b)
+        units = a.units * b.units
+        mag = func(a._magnitude, b._magnitude, **kwargs)
+        return mag * units
 
 
-for func_str in ("cross", "dot"):
+for func_str in (
+    "cross",
+    "dot",
+    "vdot",
+    "inner",
+    "outer",
+    "linalg.outer",
+    "matvec",
+    "vecmat",
+    "tensordot",
+    "linalg.tensordot",
+):
     implement_mul_func(func_str)
 
 
@@ -869,6 +937,7 @@ for func_str, unit_arguments, wrap_output in (
     ("moveaxis", "a", True),
     ("around", "a", True),
     ("diagonal", "a", True),
+    ("linalg.diagonal", "x", True),
     ("mean", "a", True),
     ("ptp", "a", True),
     ("ravel", "a", True),
@@ -878,6 +947,7 @@ for func_str, unit_arguments, wrap_output in (
     ("median", "a", True),
     ("nanmedian", "a", True),
     ("transpose", "a", True),
+    ("linalg.matrix_transpose", "x", True),
     ("roll", "a", True),
     ("copy", "a", True),
     ("average", "a", True),
@@ -1033,23 +1103,56 @@ for func_str in (
 
 # Handle functions with output unit defined by operation
 for func_str in (
-    "std",
-    "nanstd",
     "sum",
+    "diag",
+    "tril",
+    "triu",
     "nansum",
     "cumsum",
     "nancumsum",
     "linalg.norm",
+    "linalg.eigvals",
+    "linalg.eigvalsh",
+    "linalg.matrix_norm",
+    "linalg.vector_norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ("diff", "ediff1d"):
+for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ("linalg.solve",):
-    implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
+
+
+@implements("linalg.solve", "function")
+def _linalg_solve(a, b, **kwargs):
+    args = tuple(
+        _base_unit_if_needed(arg) if _is_quantity(arg) else arg for arg in (a, b)
+    )
+    first_input_units = _get_first_input_units(args, kwargs)
+    stripped_args, stripped_kwargs = convert_to_consistent_units(*args, **kwargs)
+    result_magnitude = np.linalg.solve(*stripped_args, **stripped_kwargs)
+    result_unit = get_op_output_unit(
+        "invdiv", first_input_units, tuple(chain(args, kwargs.values()))
+    )
+    return first_input_units._REGISTRY.Quantity(result_magnitude, result_unit)
+
+
+@implements("geomspace", "function")
+def _geomspace(start, stop, num=50, endpoint=True, dtype=None, axis=0):
+    if all(not _is_quantity(arg) for arg in (start, stop)):
+        return np.geomspace(start, stop, num, endpoint, dtype, axis)
+    first_input_units = _get_first_input_units((start, stop))
+    if not _is_quantity(start):
+        start = start * first_input_units._REGISTRY.parse_units("dimensionless")
+    if not _is_quantity(stop):
+        stop = stop * first_input_units._REGISTRY.parse_units("dimensionless")
+
+    start = _base_unit_if_needed(start)
+    stop = _base_unit_if_needed(stop)
+    (start, stop), output_wrap = unwrap_and_wrap_consistent_units(start, stop)
+    return output_wrap(np.geomspace(start, stop, num, endpoint, dtype, axis))
 
 
 def numpy_wrap(func_type, func, args, kwargs, types):

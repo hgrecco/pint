@@ -1,11 +1,11 @@
 """
-    pint.delegates.formatter._spec_helpers
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter._spec_helpers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Convenient functions to deal with format specifications.
+Convenient functions to deal with format specifications.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ def extract_custom_flags(spec: str) -> str:
     # sort by length, with longer items first
     known_flags = sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True)
 
-    flag_re = re.compile("(" + "|".join(known_flags + ["~"]) + ")")
+    flag_re = re.compile("(" + "|".join(known_flags + ["~", "^"]) + ")")
     custom_flags = flag_re.findall(spec)
 
     return "".join(custom_flags)
@@ -81,16 +81,77 @@ def remove_custom_flags(spec: str) -> str:
     (i.e those not part of Python's formatting mini language)
     """
 
-    for flag in sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True) + ["~"]:
+    for flag in sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True) + [
+        "~",
+        "^",
+    ]:
         if flag:
             spec = spec.replace(flag, "")
     return spec
 
 
+# Regex for the Python format specification mini-language:
+# [[fill]align][sign][z][#][0][width][grouping_option][.precision][type]
+_FORMAT_SPEC_RE = re.compile(
+    r"^(?:(?P<fill>.)?(?P<align>[<>=^]))?"
+    r"(?P<sign>[-+ ])?(?P<z>z)?(?P<alt>\#)?(?P<zero>0)?"
+    r"(?P<width>\d+)?(?P<grouping>[,_])?"
+    r"(?P<precision>\.\d+)?(?P<type>[a-zA-Z%])?$"
+)
+
+
+def split_magnitude_spec(spec: str) -> tuple[str, str]:
+    """Split a magnitude format spec into a number spec and a field spec.
+
+    The width/fill/alignment part of the specification should apply to the whole
+    formatted quantity (magnitude and unit), while the sign/precision/type part
+    only applies to the magnitude. This returns ``(number_spec, field_spec)`` so
+    the caller can format the magnitude with ``number_spec`` and then apply
+    ``field_spec`` to the joined ``"magnitude unit"`` string.
+
+    Zero-padding (the ``0`` flag) and internal alignment (``=``) are
+    number-specific, so in those cases the whole spec is kept on the magnitude
+    and ``field_spec`` is empty.
+    """
+
+    match = _FORMAT_SPEC_RE.match(spec)
+    if match is None:
+        return spec, ""
+
+    gd = match.groupdict()
+
+    width = gd["width"]
+    align = gd["align"]
+
+    # Nothing to pull out to the outer field.
+    if not width:
+        return spec, ""
+
+    # Zero-padding and internal alignment only make sense on the number itself.
+    if gd["zero"] or align == "=":
+        return spec, ""
+
+    number_spec = "".join(
+        gd[key] or "" for key in ("sign", "z", "alt", "grouping", "precision", "type")
+    )
+    # Default to right alignment (matches the intuition of a numeric field).
+    field_spec = (gd["fill"] or "") + (align or ">") + width
+
+    return number_spec, field_spec
+
+
+##########
+# This weird way of defining split format
+# is the only reasonable way I foudn to use
+# lru_cache in a function that might emit warning
+# and do it every time.
+# TODO: simplify it when there are no warnings.
+
+
 @functools.lru_cache
-def split_format(
+def _split_format(
     spec: str, default: str, separate_format_defaults: bool = True
-) -> tuple[str, str]:
+) -> tuple[str, str, list[str]]:
     """Split format specification into magnitude and unit format."""
     mspec = remove_custom_flags(spec)
     uspec = extract_custom_flags(spec)
@@ -98,34 +159,42 @@ def split_format(
     default_mspec = remove_custom_flags(default)
     default_uspec = extract_custom_flags(default)
 
+    warns = []
     if separate_format_defaults in (False, None):
         # should we warn always or only if there was no explicit choice?
         # Given that we want to eventually remove the flag again, I'd say yes?
         if spec and separate_format_defaults is None:
             if not uspec and default_uspec:
-                warnings.warn(
-                    (
-                        "The given format spec does not contain a unit formatter."
-                        " Falling back to the builtin defaults, but in the future"
-                        " the unit formatter specified in the `default_format`"
-                        " attribute will be used instead."
-                    ),
-                    DeprecationWarning,
+                warns.append(
+                    "The given format spec does not contain a unit formatter."
+                    " Falling back to the builtin defaults, but in the future"
+                    " the unit formatter specified in the `default_format`"
+                    " attribute will be used instead."
                 )
             if not mspec and default_mspec:
-                warnings.warn(
-                    (
-                        "The given format spec does not contain a magnitude formatter."
-                        " Falling back to the builtin defaults, but in the future"
-                        " the magnitude formatter specified in the `default_format`"
-                        " attribute will be used instead."
-                    ),
-                    DeprecationWarning,
+                warns.append(
+                    "The given format spec does not contain a magnitude formatter."
+                    " Falling back to the builtin defaults, but in the future"
+                    " the magnitude formatter specified in the `default_format`"
+                    " attribute will be used instead."
                 )
         elif not spec:
             mspec, uspec = default_mspec, default_uspec
     else:
         mspec = mspec or default_mspec
         uspec = uspec or default_uspec
+
+    return mspec, uspec, warns
+
+
+def split_format(
+    spec: str, default: str, separate_format_defaults: bool = True
+) -> tuple[str, str]:
+    """Split format specification into magnitude and unit format."""
+
+    mspec, uspec, warns = _split_format(spec, default, separate_format_defaults)
+
+    for warn_msg in warns:
+        warnings.warn(warn_msg, DeprecationWarning)
 
     return mspec, uspec

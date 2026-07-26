@@ -1,22 +1,23 @@
 """
-    pint.delegates.formatter.plain
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.plain
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements plain text formatters:
-    - Raw: as simple as it gets (no locale aware, no unit formatter.)
-    - Default: used when no string spec is given.
-    - Compact: like default but with less spaces.
-    - Pretty: pretty printed formatter.
+Implements plain text formatters:
+- Raw: as simple as it gets (no locale aware, no unit formatter.)
+- Default: used when no string spec is given.
+- Compact: like default but with less spaces.
+- Pretty: pretty printed formatter.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 import itertools
 import re
-from typing import TYPE_CHECKING, Any, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
@@ -36,11 +37,12 @@ from ._format_helpers import (
 from ._spec_helpers import (
     remove_custom_flags,
     split_format,
+    split_magnitude_spec,
 )
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
-    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
+    from ...facets.plain import PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
 
 
@@ -102,10 +104,13 @@ class DefaultFormatter(BaseFormatter):
         else:
             division_fmt = "{} / {}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=False,
             product_fmt="{} * {}",
             division_fmt=division_fmt,
@@ -113,7 +118,7 @@ class DefaultFormatter(BaseFormatter):
             parentheses_fmt=r"({})",
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
@@ -130,12 +135,17 @@ class DefaultFormatter(BaseFormatter):
             qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
+        mspec, field_spec = split_magnitude_spec(mspec)
+
         joint_fstring = "{} {}"
-        return join_mu(
+        result = join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
+        if field_spec:
+            result = format(result, field_spec)
+        return result
 
     def format_uncertainty(
         self,
@@ -218,10 +228,13 @@ class CompactFormatter(BaseFormatter):
         # Division format in compact formatter is not localized.
         division_fmt = "{}/{}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=False,
             product_fmt="*",  # TODO: Should this just be ''?
             division_fmt=division_fmt,
@@ -230,7 +243,7 @@ class CompactFormatter(BaseFormatter):
             empty_numerator_fmt=empty_numerator_fmt,
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
@@ -243,13 +256,17 @@ class CompactFormatter(BaseFormatter):
             qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
-        joint_fstring = "{} {}"
+        mspec, field_spec = split_magnitude_spec(mspec)
 
-        return join_mu(
+        joint_fstring = "{} {}"
+        result = join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
+        if field_spec:
+            result = format(result, field_spec)
+        return result
 
     def format_uncertainty(
         self,
@@ -333,12 +350,15 @@ class PrettyFormatter(BaseFormatter):
         else:
             division_fmt = "{}/{}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=False,
-            product_fmt="·",
+            product_fmt="⋅",
             division_fmt=division_fmt,
             power_fmt="{}{}",
             parentheses_fmt="({})",
@@ -346,7 +366,7 @@ class PrettyFormatter(BaseFormatter):
             empty_numerator_fmt=empty_numerator_fmt,
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
@@ -359,13 +379,17 @@ class PrettyFormatter(BaseFormatter):
             qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
-        joint_fstring = "{} {}"
+        mspec, field_spec = split_magnitude_spec(mspec)
 
-        return join_mu(
+        joint_fstring = "{} {}"
+        result = join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
+        if field_spec:
+            result = format(result, field_spec)
+        return result
 
     def format_uncertainty(
         self,
@@ -434,7 +458,7 @@ class RawFormatter(BaseFormatter):
             for k, v in itertools.chain(numerator, denominator)
         )
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
@@ -447,12 +471,17 @@ class RawFormatter(BaseFormatter):
             qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
+        mspec, field_spec = split_magnitude_spec(mspec)
+
         joint_fstring = "{} {}"
-        return join_mu(
+        result = join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
+        if field_spec:
+            result = format(result, field_spec)
+        return result
 
     def format_uncertainty(
         self,

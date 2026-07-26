@@ -1,22 +1,20 @@
 """
-    pint.delegates.txt_defparser.block
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.txt_defparser.block
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Classes for Pint Blocks, which are defined by:
+Classes for Pint Blocks, which are defined by:
 
-        @<block name>
-            <content>
-        @end
+    @<block name>
+        <content>
+    @end
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
-
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 import flexparser as fp
 
@@ -34,15 +32,9 @@ class EndDirectiveBlock(PintParsedStatement):
         return None
 
 
-OPST = TypeVar("OPST", bound="PintParsedStatement")
-IPST = TypeVar("IPST", bound="PintParsedStatement")
-
-DefT = TypeVar("DefT")
-
-
 @dataclass(frozen=True)
-class DirectiveBlock(
-    Generic[DefT, OPST, IPST], fp.Block[OPST, IPST, EndDirectiveBlock, ParserConfig]
+class DirectiveBlock[DefT, OPST: PintParsedStatement, IPST: PintParsedStatement](
+    fp.Block[OPST, IPST, EndDirectiveBlock, ParserConfig]
 ):
     """Directive blocks have beginning statement starting with a @ character.
     and ending with a "@end" (captured using a EndDirectiveBlock).
@@ -50,5 +42,4 @@ class DirectiveBlock(
     Subclass this class for convenience.
     """
 
-    def derive_definition(self) -> DefT:
-        ...
+    def derive_definition(self) -> DefT: ...
