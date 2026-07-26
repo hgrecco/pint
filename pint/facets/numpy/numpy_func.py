@@ -386,12 +386,10 @@ Define ufunc behavior collections.
 """
 strip_unit_input_output_ufuncs = ["isnan", "isinf", "isfinite", "signbit", "sign"]
 matching_input_bare_output_ufuncs = [
-    "equal",
     "greater",
     "greater_equal",
     "less",
     "less_equal",
-    "not_equal",
 ]
 matching_input_set_units_output_ufuncs = {"arctan2": "radian"}
 set_units_ufuncs = {
@@ -487,6 +485,24 @@ for ufunc_str in strip_unit_input_output_ufuncs:
 for ufunc_str in matching_input_bare_output_ufuncs:
     # Require all inputs to match units, but output plain ndarray/duck array
     implement_func("ufunc", ufunc_str, input_units="all_consistent", output_unit=None)
+
+
+def implement_eq_ne_ufunc(ufunc_str, dunder):
+    # Unlike the other comparison ufuncs, equal/not_equal must not raise on
+    # incompatible dimensions: `q1 == q2` returns False (and `!=` True) for
+    # mismatched units, same as Python's usual equality semantics. Delegate to
+    # PlainQuantity.__eq__/__ne__, which already implements that.
+    if np is None:
+        return
+
+    @implements(ufunc_str, "ufunc")
+    def implementation(x1, x2, *args, **kwargs):
+        quantity, other = (x1, x2) if _is_quantity(x1) else (x2, x1)
+        return getattr(quantity, dunder)(other)
+
+
+implement_eq_ne_ufunc("equal", "__eq__")
+implement_eq_ne_ufunc("not_equal", "__ne__")
 
 for ufunc_str, out_unit in matching_input_set_units_output_ufuncs.items():
     # Require all inputs to match units, but output in specified unit
