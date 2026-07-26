@@ -971,6 +971,31 @@ class TestNonReducing(QuantityTestCase):
         # (this is what previously crashed inside UnitsContainer.__mul__)
         assert ureg("1.0 kN.m") * ureg("2 s") == ureg("2.0 kN.m.s")
 
+    def test_quantity_init_with_units_list(self):
+        # Quantity(value, units=[...]) used to raise UndefinedUnitError via a
+        # typo'd registry attribute lookup (NonReducingUnitContainer instead
+        # of NonReducingUnitsContainer).
+        ureg = UnitRegistry(auto_reduce_units=False)
+        q = ureg.Quantity(1, [ureg.Unit("mm"), ureg.Unit("mm") ** -1])
+        assert q.magnitude == 1
+        assert q.units == ureg.Unit("mm") / ureg.Unit("mm")
+
+    def test_chained_operation_after_non_reducing(self):
+        # Operating again on an already non-reducing Unit/Quantity used to
+        # leave its display (non_reduced_d_items) stale: the result computed
+        # correctly (e.g. to kilometer), but formatting it still showed the
+        # pre-operation "mm / mm" because the NonReducingUnitsContainer built
+        # by __mul__/__truediv__ always defaulted to auto_reduce_units=True
+        # instead of inheriting the registry's False setting, so it silently
+        # took the reducing fast path on the next operation.
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain = ureg.Unit("mm") / ureg.Unit("mm")
+        assert strain._units._auto_reduce_units is False
+
+        combo = strain * ureg.Unit("km")
+        assert combo == ureg.Unit("km")
+        assert format(combo, "~D") == format(ureg.Unit("km"), "~D")
+
 
 class TestCaseInsensitiveRegistry(QuantityTestCase):
     kwargs = dict(case_sensitive=False)

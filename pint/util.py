@@ -627,7 +627,9 @@ class UnitsContainer(Mapping[str, Scalar]):
             raise TypeError(err.format(type(other)))
 
         if not self._auto_reduce_units:
-            return NonReducingUnitsContainer([self, other])
+            return NonReducingUnitsContainer(
+                [self, other], auto_reduce_units=self._auto_reduce_units
+            )
 
         new = self.copy()
         for key, value in other.items():
@@ -657,7 +659,10 @@ class UnitsContainer(Mapping[str, Scalar]):
             raise TypeError(err.format(type(other)))
 
         if not self._auto_reduce_units:
-            return NonReducingUnitsContainer([self, UnitsContainer({}) / other])
+            return NonReducingUnitsContainer(
+                [self, UnitsContainer({}) / other],
+                auto_reduce_units=self._auto_reduce_units,
+            )
 
         new = self.copy()
         for key, value in other.items():
