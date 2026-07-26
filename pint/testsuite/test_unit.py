@@ -678,6 +678,14 @@ class TestRegistry(QuantityTestCase):
         assert g4(3.0 * ureg.meter, 2.0) == ureg("(3*meter)**2 * 2")
         assert g4(3.0, 2.0 * ureg.second) == ureg("3**2 * 2 * second")
 
+        def gfunc4(x, y):
+            return x / y
+
+        g5 = ureg.wraps("=A/B", ["=A", "=B"])(gfunc4)
+        assert g5(3.0 * ureg.angstrom, 2.0 * ureg.second) == ureg(
+            "3 / 2 * angstrom / second"
+        )
+
     @helpers.requires_numpy
     def test_wrap_referencing_integer_array(self):
         ureg = self.ureg
