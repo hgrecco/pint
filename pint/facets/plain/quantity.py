@@ -39,6 +39,7 @@ from ...compat import (
 )
 from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
 from ...util import (
+    ParserHelper,
     PrettyIPython,
     SharedRegistryObject,
     UnitsContainer,
@@ -233,6 +234,15 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 )
         if isinstance(value, cls):
             magnitude = value.to(units)._magnitude
+        elif isinstance(value, str):
+            if value == "":
+                raise ValueError("Quantity magnitude cannot be an empty string.")
+            parsed = ParserHelper.from_string(value, inst._REGISTRY.non_int_type)
+            magnitude = (
+                _to_magnitude(value, inst.force_ndarray, inst.force_ndarray_like)
+                if parsed
+                else parsed.scale
+            )
         else:
             magnitude = _to_magnitude(
                 value, inst.force_ndarray, inst.force_ndarray_like
@@ -528,7 +538,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             Values for the Context/s
         """
 
-        other = to_units_container(other, self._REGISTRY)
+        other = (
+            self.UnitsContainer({})
+            if other is None
+            else to_units_container(other, self._REGISTRY)
+        )
 
         self._magnitude = self._convert_magnitude(other, *contexts, **ctx_kwargs)
         self._units = other
@@ -553,7 +567,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         -------
         pint.PlainQuantity
         """
-        other = to_units_container(other, self._REGISTRY)
+        other = (
+            self.UnitsContainer({})
+            if other is None
+            else to_units_container(other, self._REGISTRY)
+        )
 
         magnitude = self._convert_magnitude_not_inplace(other, *contexts, **ctx_kwargs)
 
