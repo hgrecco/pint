@@ -1508,3 +1508,26 @@ def test_issue2305():
     ureg_dec = UnitRegistry(non_int_type=Decimal)
     assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
     assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue1513():
+    # ``dimensionless`` referenced by name resolves to "", which is not a key in
+    # the unit registry; the recurse loops used to index it directly and raise
+    # KeyError(''). It is the identity and must behave like the empty unit.
+    ureg = UnitRegistry()
+
+    # #1513: get_dimensionality by name must not raise
+    assert ureg.get_dimensionality("dimensionless") == ureg.get_dimensionality("")
+
+    # #1994: check() by name must not raise
+    assert ureg.Quantity(5, "dimensionless").check("dimensionless")
+
+    # a fractional dimensionless unit defined via ``* dimensionless`` must match
+    # the same unit defined as a bare scalar
+    ureg.define("frac = 0.01 * dimensionless")
+    ureg.define("frac_bare = 0.01")
+    assert (
+        ureg.Quantity(50, "frac").to_base_units()
+        == ureg.Quantity(50, "frac_bare").to_base_units()
+    )
+    assert ureg.get_root_units("frac") == ureg.get_root_units("frac_bare")
