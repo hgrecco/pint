@@ -1617,3 +1617,23 @@ def test_issue1513():
         == ureg.Quantity(50, "frac_bare").to_base_units()
     )
     assert ureg.get_root_units("frac") == ureg.get_root_units("frac_bare")
+
+
+@helpers.requires_numpy
+def test_issue2182():
+    # Comparing a Quantity to an incompatible-dimension value returns False (and
+    # `!=` returns True), regardless of which side of `==`/`!=` the Quantity is on.
+    ureg = UnitRegistry()
+    q = ureg.Quantity(5.0, "Hz")
+
+    assert not (q == 5.0)
+    assert not (5.0 == q)
+    assert not (q == np.float64(5.0))
+    assert not (np.float64(5.0) == q)  # used to raise DimensionalityError
+    assert not (np.array(5.0) == q)  # used to raise DimensionalityError
+
+    assert q != 5.0
+    assert 5.0 != q
+    assert q != np.float64(5.0)
+    assert np.float64(5.0) != q  # used to raise DimensionalityError
+    assert np.array(5.0) != q  # used to raise DimensionalityError
