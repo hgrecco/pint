@@ -983,33 +983,30 @@ class TestNonReducing(QuantityTestCase):
 
     def test_chained_operation_after_non_reducing(self):
         # Operating again on an already non-reducing Unit/Quantity used to
-        # leave its display (non_reduced_d_items) stale: the result computed
-        # correctly (e.g. to kilometer), but formatting it still showed the
-        # pre-operation "mm / mm" because the NonReducingUnitsContainer built
-        # by __mul__/__truediv__ always defaulted to auto_reduce_units=True
-        # instead of inheriting the registry's False setting, so it silently
-        # took the reducing fast path on the next operation.
+        # crash / silently take the reducing fast path, because the
+        # NonReducingUnitsContainer built by __mul__/__truediv__ always
+        # defaulted to auto_reduce_units=True instead of inheriting the
+        # registry's False setting.
         ureg = UnitRegistry(auto_reduce_units=False)
         strain = ureg.Unit("mm") / ureg.Unit("mm")
         assert strain._units._auto_reduce_units is False
 
         combo = strain * ureg.Unit("km")
+        # Dimensionally/numerically, mm and mm ** -1 still cancel.
         assert combo == ureg.Unit("km")
-        assert format(combo, "~D") == format(ureg.Unit("km"), "~D")
+        # But with auto_reduce_units=False nothing is ever collapsed away for
+        # display purposes, including the earlier mm/mm group -- see
+        # test_chained_operation_preserves_partial_cancellation.
+        assert format(combo, "~D") == "mm * km / mm"
 
-    @pytest.mark.xfail(
-        reason=(
-            "NonReducingUnitsContainer.non_reduced_d_items (and unit_items()) "
-            "read a nested NonReducingUnitsContainer ingredient through its "
-            "reduced _d, not its own non_reduced_d_items, so a further "
-            "multiply/divide bakes away display fidelity for any earlier "
-            "group that doesn't fully cancel to nothing. This was masked by "
-            "test_chained_operation_after_non_reducing, whose earlier group "
-            "(mm/mm) happens to cancel to an empty dict."
-        ),
-        strict=True,
-    )
     def test_chained_operation_preserves_partial_cancellation(self):
+        # non_reduced_d_items/unit_items() used to read a nested
+        # NonReducingUnitsContainer ingredient through its reduced _d rather
+        # than its own non-reduced items, so a further multiply/divide baked
+        # away display fidelity for any earlier group that didn't fully
+        # cancel to nothing. This was masked by
+        # test_chained_operation_after_non_reducing, whose earlier group
+        # (mm/mm) happens to cancel to an empty dict.
         ureg = UnitRegistry(auto_reduce_units=False)
         a = ureg.Unit("mm") ** 2 / ureg.Unit("mm")
         assert a._units.non_reduced_d_items == [("millimeter", 2), ("millimeter", -1)]
@@ -1020,6 +1017,10 @@ class TestNonReducing(QuantityTestCase):
             ("millimeter", -1),
             ("second", 1),
         ]
+        assert format(b, "~D") == "mm ** 2 * s / mm"
+
+        # unit_items() (used by the Quantity formatting path) must agree
+        assert b._units.unit_items() == b._units.non_reduced_d_items
 
     def test_deepcopy(self):
         ureg = UnitRegistry(auto_reduce_units=False)

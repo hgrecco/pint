@@ -733,11 +733,17 @@ class NonReducingUnitsContainer(UnitsContainer):
         self._d = self.reduced_units._d
         self._hash = self.reduced_units._hash
 
-        self.non_reduced_d_items = [
-            (key, value)
-            for uc in self.non_reduced_units
-            for key, value in uc._d.items()
-        ]
+        # Read each ingredient through its own non_reduced_d_items when it is
+        # itself a NonReducingUnitsContainer (e.g. built by a further
+        # multiply/divide on an already non-reducing container), not through
+        # its reduced _d -- otherwise any earlier group that doesn't fully
+        # cancel to nothing loses its display fidelity on the next operation.
+        self.non_reduced_d_items: list[tuple[str, Scalar]] = []
+        for uc in self.non_reduced_units:
+            if isinstance(uc, NonReducingUnitsContainer):
+                self.non_reduced_d_items.extend(uc.non_reduced_d_items)
+            else:
+                self.non_reduced_d_items.extend(uc._d.items())
         self.i = 0
 
     def __copy__(self) -> Self:
@@ -758,7 +764,9 @@ class NonReducingUnitsContainer(UnitsContainer):
         return f"<NonReducingUnitsContainer({tmp})>"
 
     def unit_items(self) -> Iterable[tuple[str, Scalar]]:
-        return [items for _d in self.non_reduced_units for items in _d.items()]
+        # Same data as non_reduced_d_items; kept as one implementation so a
+        # display-fidelity fix (see __init__) can't drift between the two.
+        return self.non_reduced_d_items
 
     # UnitsContainer.__getstate__ only covers the base class's __slots__; carry
     # over the extra state this subclass keeps in its instance __dict__ too
