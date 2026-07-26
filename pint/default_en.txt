@@ -72,7 +72,7 @@ pico- =  1e-12 = p-
 nano- =  1e-9  = n-
 # The micro (U+00B5) and Greek mu (U+03BC) are both valid prefixes,
 # and they often use the same glyph.
-micro- = 1e-6  = µ- = μ- = u- = mu- = mc-
+micro- = 1e-6  = μ- = µ- = u- = mu- = mc-
 milli- = 1e-3  = m-
 centi- = 1e-2  = c-
 deci- =  1e-1  = d-
@@ -156,7 +156,7 @@ strain = 1 = ε = ϵ     # NOTE: ε = U+03B5 (GREEK SMALL LETTER EPSILON), ϵ = 
 
 # Length
 angstrom = 1e-10 * meter = Å = ångström = Å
-micron = micrometer = µ = μ
+micron = micrometer = μ = µ
 fermi = femtometer = fm
 light_year = speed_of_light * julian_year = ly = lightyear
 astronomical_unit = 149597870700 * meter = au  # since Aug 2012
@@ -710,7 +710,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
     RKM  = gf / tex
 
     number_english = 840 * yard / pound = Ne = NeC = ECC
-    number_meter = kilometer / kilogram = Nm
+    number_meter = kilometer / kilogram
 @end
 
 
@@ -866,7 +866,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 
 @context textile
     # Allow switching between Direct count system (i.e. tex) and
-    # Indirect count system (i.e. Ne, Nm)
+    # Indirect count system (i.e. number_english, number_meter)
     [mass] / [length] <-> [length] / [mass]: 1 / value
 @end
 

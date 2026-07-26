@@ -2007,6 +2007,160 @@ class TestTimedelta(QuantityTestCase):
         with pytest.raises(DimensionalityError):
             after -= d
 
+    def test_init_quantity(self):
+        # 608
+        td = datetime.timedelta(seconds=3)
+        assert self.Q_(td) == 3 * self.ureg.second
+        q_hours = self.Q_(td, "hours")
+        assert q_hours == 3 * self.ureg.second
+        assert q_hours.units == self.ureg.hour
+
+    def test_mul_div(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(3.6, "m/s")
+        assert q * t == self.Q_(36.0, "m")
+        assert t * q == self.Q_(36.0, "m")
+        assert q / t == self.Q_(0.36, "m/s**2")
+        assert t / q == self.Q_(10 / 3.6, "s**2/m")
+
+    @helpers.requires_numpy
+    def test_mul_div_np(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(np.array([1.0, 2.0, 3.6]), "m/s")
+        helpers.assert_quantity_almost_equal(
+            q * t, self.Q_(np.array([10.0, 20.0, 36.0]), "m")
+        )
+        helpers.assert_quantity_almost_equal(
+            t * q, self.Q_(np.array([10.0, 20.0, 36.0]), "m")
+        )
+        helpers.assert_quantity_almost_equal(
+            q / t, self.Q_(np.array([0.1, 0.2, 0.36]), "m/s**2")
+        )
+        helpers.assert_quantity_almost_equal(
+            t / q, self.Q_(10 / np.array([1.0, 2.0, 3.6]), "s**2/m")
+        )
+
+        q *= t
+        helpers.assert_quantity_almost_equal(
+            q, self.Q_(np.array([10.0, 20.0, 36.0]), "m")
+        )
+
+        q = self.Q_(np.array([1.0, 2.0, 3.6]), "m/s")
+        q /= t
+        helpers.assert_quantity_almost_equal(
+            q, self.Q_(np.array([0.1, 0.2, 0.36]), "m/s**2")
+        )
+
+    def test_add_sub_timedelta(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(3.6, "s")
+        assert q + t == self.Q_(13.6, "s")
+        assert t + q == self.Q_(13.6, "s")
+        assert q - t == self.Q_(-6.4, "s")
+        assert t - q == self.Q_(6.4, "s")
+
+        with pytest.raises(DimensionalityError):
+            self.Q_(3.6, "m") + t
+
+        q2 = self.Q_(3.6, "s")
+        q2 += t
+        assert q2 == self.Q_(13.6, "s")
+        q3 = self.Q_(3.6, "s")
+        q3 -= t
+        assert q3 == self.Q_(-6.4, "s")
+
+    @helpers.requires_numpy
+    def test_add_sub_timedelta_np(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(np.array([1.0, 2.0, 3.6]), "s")
+        helpers.assert_quantity_almost_equal(
+            q + t, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            t + q, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            q - t, self.Q_(np.array([-9.0, -8.0, -6.4]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            t - q, self.Q_(np.array([9.0, 8.0, 6.4]), "s")
+        )
+
+        q += t
+        helpers.assert_quantity_almost_equal(
+            q, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+
+    @pytest.mark.parametrize(
+        ["timedelta_unit", "pint_unit"],
+        (
+            pytest.param("s", "second", id="second"),
+            pytest.param("ms", "millisecond", id="millisecond"),
+            pytest.param("us", "microsecond", id="microsecond"),
+            pytest.param("ns", "nanosecond", id="nanosecond"),
+            pytest.param("m", "minute", id="minute"),
+            pytest.param("h", "hour", id="hour"),
+            pytest.param("D", "day", id="day"),
+            pytest.param("W", "week", id="week"),
+            pytest.param("M", "month", id="month"),
+            pytest.param("Y", "year", id="year"),
+        ),
+    )
+    @helpers.requires_numpy
+    def test_init_quantity_np(self, timedelta_unit, pint_unit):
+        # test init with the timedelta unit
+        td = np.timedelta64(3, timedelta_unit)
+        result = self.Q_(td)
+        expected = self.Q_(3, pint_unit)
+        helpers.assert_quantity_almost_equal(result, expected)
+        # check units are same. Use Q_ since Unit(s) != Unit(second)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test init with unit specified
+        result = self.Q_(td, "hours")
+        expected = self.Q_(3, pint_unit).to("hours")
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test array
+        td = np.array([3], dtype="timedelta64[{}]".format(timedelta_unit))
+        result = self.Q_(td)
+        expected = self.Q_([3], pint_unit)
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test array with unit specified
+        result = self.Q_(td, "hours")
+        expected = self.Q_([3], pint_unit).to("hours")
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+    def test_init_quantity_with_quantity_and_units(self):
+        # Q_(quantity, units) used to crash: _is_timedelta's duck-array check
+        # misidentified the Quantity itself as a duck array (is_duck_array_type
+        # sees __array_function__/ndim/dtype on the class but can't see that
+        # _magnitude/_units are only set per-instance), then failed accessing
+        # `.dtype` on a magnitude that doesn't have one.
+        length = self.Q_(30, "cm")
+        assert self.Q_(length, "cm") == length
+
+    @helpers.requires_numpy
+    def test_init_quantity_np_array_with_quantity_and_units(self):
+        length = self.Q_(np.array([30.0]), "cm")
+        helpers.assert_quantity_almost_equal(self.Q_(length, "cm"), length)
+
 
 # TODO: do not subclass from QuantityTestCase
 class TestCompareNeutral(QuantityTestCase):

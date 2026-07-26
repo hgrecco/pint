@@ -13,12 +13,13 @@ import pytest
 from pint import (
     Context,
     DimensionalityError,
+    OffsetUnitCalculusError,
     UndefinedUnitError,
     UnitRegistry,
     get_application_registry,
 )
 from pint.compat import np
-from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+from pint.delegates.formatter import sort_by_dimensionality
 from pint.facets.plain.unit import UnitsContainer
 from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
@@ -450,6 +451,21 @@ class TestIssues(QuantityTestCase):
         )
         assert f"{1 * module_registry.count:~}" == "1 count"
         assert "{:~}".format(1 * module_registry("MiB")) == "1 MiB"
+
+    def test_issue_386(self, module_registry):
+        x = module_registry.Quantity(42, "degC")
+        y = module_registry.Quantity("42 degC")
+        assert x == y
+
+        # make sure normal combined units still work
+        x = module_registry.Quantity(42, module_registry.mm * module_registry.s)
+        y = module_registry.Quantity("42 mm s")
+        assert x == y
+
+        # offset unit combined with another unit should still fail (default registry settings)
+        ureg = UnitRegistry()
+        with pytest.raises(OffsetUnitCalculusError):
+            ureg.Quantity("42 degC/m")
 
     def test_issue468(self, module_registry):
         @module_registry.wraps("kg", "meter")
@@ -1235,7 +1251,7 @@ def test_issues_1841(func_registry, units, spec, expected):
 @pytest.mark.xfail
 def test_issues_1841_xfail():
     from pint import formatting as fmt
-    from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+    from pint.delegates.formatter import sort_by_dimensionality
 
     # sets compact display mode by default
     ur = UnitRegistry()
@@ -1294,7 +1310,7 @@ def test_issue2017():
 
     @fmt.register_unit_format("test2017")
     def _test_format(unit, registry, **options):
-        proc = {u.replace("µ", "u"): e for u, e in unit.items()}
+        proc = {u.replace("µ", "u").replace("μ", "u"): e for u, e in unit.items()}
         return fmt.formatter(
             proc.items(),
             as_ratio=True,
@@ -1524,6 +1540,19 @@ def test_issue2305():
     ureg_dec = UnitRegistry(non_int_type=Decimal)
     assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
     assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue2156(func_registry):
+    # `unit in registry` should work with a Unit object, not just a string.
+    # Previously the membership test passed the Unit straight to __getattr__,
+    # which assumed a str and raised AttributeError ('Unit' has no 'endswith').
+    ureg = func_registry
+    assert ureg.Unit("J") in ureg
+    assert (ureg.Unit("m") / ureg.Unit("s")) in ureg
+    # the existing string path is unchanged
+    assert "joule" in ureg
+    assert "kJ" in ureg
+    assert "definitely_not_a_unit" not in ureg
 
 
 def test_issue2255():

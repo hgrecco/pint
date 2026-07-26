@@ -216,7 +216,10 @@ doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/docte
 
 [tool.pixi.feature.docs.dependencies]
 pandoc = "*"
+pandas = "*"
+tabulate = "*"
 graphviz = "*"
+numpy = "<2.5"
 
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"

@@ -66,7 +66,7 @@ from ...errors import (
     RedefinitionError,
     UndefinedUnitError,
 )
-from ...pint_eval import build_eval_tree
+from ...pint_eval import _BINARY_OPERATOR_MAP, build_eval_tree
 from ...util import (
     NonReducingUnitsContainer,
     ParserHelper,
@@ -383,8 +383,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def __getitem__(self, item: str) -> UnitT:
         return self.parse_expression(item)
 
-    def __contains__(self, item: str) -> bool:
+    def __contains__(self, item: str | UnitT) -> bool:
         """Support checking prefixed units with the `in` operator"""
+        if isinstance(item, self.Unit):
+            item = str(item)
         try:
             self.__getattr__(item)
             return True
@@ -1486,7 +1488,16 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         def _define_op(s: str):
             return self._eval_token(s, case_sensitive=case_sensitive, **values)
 
-        result = build_eval_tree(gen).evaluate(_define_op)
+        def _eval_implicit_mul(left, right):
+            if isinstance(left, self.Quantity):
+                return left * right
+            if isinstance(right, self.Quantity):
+                return self.Quantity(left, right)
+            return left * right
+
+        # replace implicit multiplication with self._eval_implicit_mul
+        bin_op = {**_BINARY_OPERATOR_MAP, "": _eval_implicit_mul}
+        result = build_eval_tree(gen).evaluate(_define_op, bin_op=bin_op)
 
         if not isinstance(result, self.Quantity):
             return self.Quantity(result)
