@@ -32,6 +32,9 @@ Pint Changelog
 - Fix NumPy ufunc mul/div paths allowing offset units to bypass `OffsetUnitCalculusError` (#1335)
 - Document how custom duck array classes can register as upcast types and mark
   the public upcast type map as mutable (#2063)
+- `Quantity` now converts  `datetime.timedelta` objects to seconds or specified units when
+  initializing a `Quantity` with a `datetime.timedelta` value.
+  (PR #1978)
 
 0.25.3 (2026-03-19)
 -------------------
@@ -79,9 +82,6 @@ Pint Changelog
 - Fix return type of `PlainQuantity.to` (#2088)
 - Update constants to CODATA 2022 recommended values. (#2049)
 - Fixed issue with `.to_compact` and Magnitudes with uncertainties / Quantities with units (PR #2069, issue #2044)
-- `Quantity` now converts  `datetime.timedelta` objects to seconds or specified units when
-  initializing a `Quantity` with a `datetime.timedelta` value.
-  (PR #1978)
 - Fixed issue in unit conversion which led to loss of precision when using `decimal`. (#2107)
 - Add conductivity dimension. (#2112)
 - Add absorbance unit and dimension. (#2114)
