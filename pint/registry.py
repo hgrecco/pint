@@ -64,6 +64,8 @@ class Quantity(
     Generic[MagnitudeT_co],
 ):
     if TYPE_CHECKING:
+        # NOTE: This list of method signatures must be kept in sync with PlainQuantity's overloads
+        #   (you can find the class in pint/facets/plain/quantity.py)
 
         @overload
         def __new__(
@@ -77,10 +79,14 @@ class Quantity(
         def __new__[ScalarT: Scalar](  # type: ignore[misc]
             cls, value: Sequence[ScalarT], units: UnitLike | None = None
         ) -> "Quantity[npt.Array1D]": ...
+        @overload  # This overload allows for `Quantity[Any](<T>)` to return `Quantity[T]`.
+        def __new__[T: Magnitude](
+            cls,
+            value: T,
+            units: UnitLike | None = None,
+        ) -> "Quantity[T]": ...
         @overload
-        def __new__(
-            cls, value: Self | MagnitudeT_co, units: UnitLike | None = None
-        ) -> Self: ...
+        def __new__(cls, value: Self, units: UnitLike | None = None) -> Self: ...
 
         @override
         def __iter__[T: Magnitude](

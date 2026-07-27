@@ -144,6 +144,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     """
 
+    # NOTE: The method signatures here must be kept in sync with Quantity's overloads
+    #   (you can find the class in pint/registry.py)
+
     _magnitude: MagnitudeT_co
 
     @property
@@ -193,10 +196,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __new__[ScalarT: Scalar](  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
     ) -> "PlainQuantity[npt.Array1D]": ...
+    @overload  # This overload allows for `PlainQuantity[Any](<T>)` to return `PlainQuantity[T]`.
+    def __new__[T: Magnitude](
+        cls,
+        value: T,
+        units: UnitLike | None = None,
+    ) -> "PlainQuantity[T]": ...
     @overload
-    def __new__(
-        cls, value: Self | MagnitudeT_co, units: UnitLike | None = None
-    ) -> Self: ...
+    def __new__(cls, value: Self, units: UnitLike | None = None) -> Self: ...
 
     def __new__(cls, value, units: UnitLike | None = None) -> PlainQuantity:
         if is_upcast_type(type(value)):

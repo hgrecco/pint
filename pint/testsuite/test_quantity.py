@@ -25,7 +25,12 @@ from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
 if TYPE_CHECKING:
+    from typing import TypedDict
+
     from pint import Quantity as Q_
+
+    class _TestQuantityKwargs(TypedDict):
+        autoconvert_offset_to_baseunit: bool
 
 
 class FakeWrapper:
@@ -36,7 +41,7 @@ class FakeWrapper:
 
 # TODO: do not subclass from QuantityTestCase
 class TestQuantity(QuantityTestCase):
-    kwargs = dict(autoconvert_offset_to_baseunit=False)
+    kwargs: "_TestQuantityKwargs" = {"autoconvert_offset_to_baseunit": False}
 
     def test_quantity_creation(self, caplog):
         x: Q_[float]
