@@ -51,6 +51,7 @@ from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
     import optype as opt
+    import optype.numpy as npt
     from optype import do_neg, do_pos, do_round
 
     from ..context import Context
@@ -181,20 +182,23 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         return _unpickle_quantity, (PlainQuantity, self.magnitude, self._units)
 
     @overload
-    def __new__(cls, value: MagnitudeT_co, units: UnitLike | None = None) -> Self: ...
-
+    def __new__(
+        cls, value: datetime.timedelta, units: UnitLike | None = None
+    ) -> "PlainQuantity[float]": ...
     @overload
-    def __new__(cls, value: str, units: UnitLike | None = None) -> Self: ...
-
-    @overload
+    def __new__(
+        cls, value: str, units: UnitLike | None = None
+    ) -> "PlainQuantity[Any]": ...
+    @overload  # FIXME: This could be more precise
     def __new__[ScalarT: Scalar](  # type: ignore[misc]
         cls, value: Sequence[ScalarT], units: UnitLike | None = None
+    ) -> "PlainQuantity[npt.Array1D]": ...
+    @overload
+    def __new__(
+        cls, value: Self | MagnitudeT_co, units: UnitLike | None = None
     ) -> Self: ...
 
-    @overload
-    def __new__(cls, value: Self, units: UnitLike | None = None) -> Self: ...
-
-    def __new__(cls, value, units: UnitLike | None = None) -> Self:
+    def __new__(cls, value, units: UnitLike | None = None) -> PlainQuantity:
         if is_upcast_type(type(value)):
             raise TypeError(f"PlainQuantity cannot wrap upcast type {type(value)}")
 

@@ -37,8 +37,9 @@ if TYPE_CHECKING:
 
     import numpy as np
     import optype as opt
+    import optype.numpy as npt
 
-    from ._typing import Magnitude, UnitLike
+    from ._typing import Magnitude, Scalar, UnitLike
     from ._typing import Quantity as _Quantity
     from ._typing import Unit as _Unit
 
@@ -63,6 +64,23 @@ class Quantity(
     Generic[MagnitudeT_co],
 ):
     if TYPE_CHECKING:
+
+        @overload
+        def __new__(
+            cls, value: datetime.timedelta, units: UnitLike | None = None
+        ) -> "Quantity[float]": ...
+        @overload
+        def __new__(
+            cls, value: str, units: UnitLike | None = None
+        ) -> "Quantity[Any]": ...
+        @overload  # FIXME: This could be more precise
+        def __new__[ScalarT: Scalar](  # type: ignore[misc]
+            cls, value: Sequence[ScalarT], units: UnitLike | None = None
+        ) -> "Quantity[npt.Array1D]": ...
+        @overload
+        def __new__(
+            cls, value: Self | MagnitudeT_co, units: UnitLike | None = None
+        ) -> Self: ...
 
         @override
         def __iter__[T: Magnitude](

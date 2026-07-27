@@ -289,11 +289,13 @@ def pi_theorem(quantities: dict[str, Any], registry: UnitRegistry | None = None)
             continue
         max_den = max(f.denominator for f in rowi)
         neg = -1 if sum(f < 0 for f in rowi) > sum(f > 0 for f in rowi) else 1
-        results.append({
-            q[0]: neg * f.numerator * max_den / f.denominator
-            for q, f in zip(quant, rowi)
-            if f.numerator != 0
-        })
+        results.append(
+            {
+                q[0]: neg * f.numerator * max_den / f.denominator
+                for q, f in zip(quant, rowi)
+                if f.numerator != 0
+            }
+        )
     return results
 
 
@@ -827,9 +829,9 @@ class ParserHelper(UnitsContainer):
         return self.__class__(self.scale, d, non_int_type=self._non_int_type)
 
     def __str__(self):
-        tmp = "{%s}" % ", ".join([
-            f"'{key}': {value}" for key, value in sorted(self._d.items())
-        ])
+        tmp = "{%s}" % ", ".join(
+            [f"'{key}': {value}" for key, value in sorted(self._d.items())]
+        )
         return f"{self.scale} {tmp}"
 
     def __repr__(self):
