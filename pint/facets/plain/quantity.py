@@ -966,11 +966,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # PlainQuantity[float | array[float]] + timedelta -> PlainQuantity[float | array[float]]
     @overload
     def __add__(
-        self: PlainQuantity[float], other: datetime.timedelta
+        self: PlainQuantity[float], other: datetime.timedelta | np.timedelta64
     ) -> PlainQuantity[float]: ...
     @overload
     def __add__[X: np.floating, S: Shape](
-        self: PlainQuantity[npt.ArrayND[X, S]], other: datetime.timedelta
+        self: PlainQuantity[npt.ArrayND[X, S]],
+        other: datetime.timedelta | np.timedelta64,
     ) -> PlainQuantity[npt.ArrayND[X, S]]: ...
     # General overloads (should work in most cases)
     @overload
@@ -1010,6 +1011,17 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return self._add_sub(other, operator.sub)
 
+    # PlainQuantity[float | array[float]] - timedelta -> PlainQuantity[float | array[float]]
+    @overload
+    def __sub__(
+        self: PlainQuantity[float], other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    @overload
+    def __sub__[X: np.floating, S: Shape](
+        self: PlainQuantity[npt.ArrayND[X, S]],
+        other: datetime.timedelta | np.timedelta64,
+    ) -> PlainQuantity[npt.ArrayND[X, S]]: ...
+    # General overloads (should work in most cases)
     @overload
     def __sub__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanSub[T, U]], other: PlainQuantity[T] | T
@@ -1023,6 +1035,17 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __sub__(self, other):
         return self._add_sub(other, operator.sub)
 
+    # timedelta - PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
+    @overload
+    def __rsub__(
+        self: PlainQuantity[float], other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    @overload
+    def __rsub__[X: np.floating, S: Shape](
+        self: PlainQuantity[npt.ArrayND[X, S]],
+        other: datetime.timedelta | np.timedelta64,
+    ) -> PlainQuantity[npt.ArrayND[X, S]]: ...
+    # General overloads (should work in most cases)
     @overload
     def __rsub__(
         self: PlainQuantity[int | float],

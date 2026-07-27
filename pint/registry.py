@@ -199,6 +199,17 @@ class Quantity(
             | opt.CanRAdd[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
+        # Quantity[float | array[float]] - timedelta -> Quantity[float | array[float]]
+        @overload
+        def __sub__(
+            self: Quantity[float], other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        @overload
+        def __sub__[X: np.floating, S: Shape](
+            self: Quantity[npt.ArrayND[X, S]],
+            other: datetime.timedelta | np.timedelta64,
+        ) -> Quantity[npt.ArrayND[X, S]]: ...
+        # General overloads (should work in most cases)
         @overload
         def __sub__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanSub[T, U]], other: Quantity[T] | T
@@ -210,6 +221,17 @@ class Quantity(
             | opt.CanRSub[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
+        # timedelta - Quantity[float | array[float]] -> Quantity[float | array[float]]
+        @overload
+        def __rsub__(
+            self: Quantity[float], other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        @overload
+        def __rsub__[X: np.floating, S: Shape](
+            self: Quantity[npt.ArrayND[X, S]],
+            other: datetime.timedelta | np.timedelta64,
+        ) -> Quantity[npt.ArrayND[X, S]]: ...
+        # General overloads (should work in most cases)
         @overload
         def __rsub__(
             self: Quantity[int | float],
