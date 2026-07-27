@@ -1223,6 +1223,17 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return self._mul_div(other, operator.mul)
 
+    # Quantity[float | array[float]] * timedelta -> Quantity[float | array[float]]
+    @overload
+    def __mul__(
+        self: PlainQuantity[float], other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    @overload
+    def __mul__[X: np.floating, S: Shape](
+        self: PlainQuantity[npt.ArrayND[X, S]],
+        other: datetime.timedelta | np.timedelta64,
+    ) -> PlainQuantity[npt.ArrayND[X, S]]: ...
+    # General overloads (should work in most cases)
     @overload
     def __mul__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanMul[T, U]], other: PlainQuantity[T] | T

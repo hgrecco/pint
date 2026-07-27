@@ -252,6 +252,17 @@ class Quantity(
             self: Quantity[opt.CanIMul[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
 
+        # Quantity[float | array[float]] * timedelta -> Quantity[float | array[float]]
+        @overload
+        def __mul__(
+            self: Quantity[float], other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        @overload
+        def __mul__[X: np.floating, S: Shape](
+            self: Quantity[npt.ArrayND[X, S]],
+            other: datetime.timedelta | np.timedelta64,
+        ) -> Quantity[npt.ArrayND[X, S]]: ...
+        # General overloads (should work in most cases)
         @overload
         def __mul__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanMul[T, U]], other: Quantity[T] | T
