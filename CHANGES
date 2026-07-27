@@ -4,7 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
-- Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and NumPy walkthrough notebook, requiring no local install (#2372)
+- Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and notebook, requiring no local install (#2372)
 - Fix `is_compatible_with` edge cases with dimensionless types and unit strings with a scaling factor (e.g. `"35000 ft"`) (#1190)
 - Allow string parsing of offset units (#386)
 - Remove the ambiguous `Nm` alias from `number_meter` (Textile group), since it's commonly expected to mean newton-meter (torque) (#1966)
