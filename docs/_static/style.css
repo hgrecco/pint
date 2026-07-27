@@ -39,13 +39,9 @@ pre, code {
 .sd-card .sd-card-header {
   border: none;
   color: #150458;
-  font-size: var(--pst-font-size-h6);
+  font-size: var(--pst-font-size-h5);
   font-weight: bold;
   padding: 1.25rem 0rem 0.25rem 0rem;
-}
-
-.sd-card .sd-card-body {
-  font-size: 0.85rem;
 }
 
 html[data-theme=dark] {

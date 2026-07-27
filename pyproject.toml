@@ -64,13 +64,13 @@ docs = [
   "graphviz",
   "pooch",
   "sparse",
-  "numba>=0.59",                # for sparse
+  "numba>=0.59",                     # for sparse
   "Serialize",
   "pygments>=2.4",
   "sphinx-book-theme>=1.1.0",
   "sphinx_copybutton",
   "sphinx_design",
-  "docutils",                   #==0.14",
+  "docutils",                        #==0.14",
   "commonmark==0.8.1",
   "recommonmark==0.5.0",
   "babel",
@@ -82,8 +82,8 @@ docs = [
   "xarray",
   "dask[complete]<2025.3.0",
   "optype[numpy]",
-  "jupyterlite-sphinx",
-  "jupyterlite-pyodide-kernel",
+  "jupyterlite-sphinx>=0.20",
+  "jupyterlite-pyodide-kernel>=0.4",
 ]
 
 [project.urls]
