@@ -4,7 +4,7 @@ Getting Started
 The getting started guide aims to get you using pint productively as quickly as possible.
 
 Want to try it before installing anything? Head over to
-:doc:`try-in-browser` to run Pint directly in your browser.
+:doc:`/try-in-browser` to run Pint directly in your browser.
 
 
 Installation
@@ -56,6 +56,5 @@ That's all! You can check that Pint is correctly installed by starting up python
 
     overview
     tutorial
-    try-in-browser
     pint-in-your-projects
     faq

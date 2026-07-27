@@ -80,10 +80,10 @@ copyright = f"2012-{this_year}, Pint Developers"
 
 exclude_patterns = [
     "_build",
-    # Embedded in the JupyterLite console on getting/try-in-browser.rst;
+    # Embedded in the JupyterLite console on try-in-browser.rst;
     # excluded here so nbsphinx doesn't also try to execute it as a
     # regular (server-side) doc page.
-    "getting/try_pint_numpy.ipynb",
+    "try_pint_numpy.ipynb",
 ]
 
 # Napoleon configurations

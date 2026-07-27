@@ -86,6 +86,7 @@ Use the interactive shell to try Pint in the browser.
     User Guide <user/index>
     Advanced topics <advanced/index>
     ecosystem
+    try-in-browser
     API Reference <api/index>
     changes
 
