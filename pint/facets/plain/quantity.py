@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     import optype as opt
     import optype.numpy as npt
     from optype import do_neg, do_pos, do_round
+    from typing_extensions import TypeIs
 
     from ..context import Context
     from ..system import System
@@ -271,10 +272,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return inst
 
-    def _is_timedelta(self, value: Any) -> bool:
+    def _is_timedelta(self, value: object) -> TypeIs[datetime.timedelta]:
         return isinstance(value, datetime.timedelta)
 
-    def _convert_timedelta(self, value: Any) -> tuple[float, str]:
+    def _convert_timedelta(self, value: object) -> tuple[float, str]:
         """Convert a timedelta object to magnitude and unit string."""
         if isinstance(value, datetime.timedelta):
             return value.total_seconds(), "seconds"
