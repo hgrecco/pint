@@ -17,7 +17,7 @@ pre, code {
 
 .sd-card {
   border-radius: 0;
-  padding: 30px 10px 20px 10px;
+  padding: 15px 10px 10px 10px;
   margin: 10px 0px;
 }
 
@@ -30,8 +30,8 @@ pre, code {
 }
 
 .sd-card .sd-card-img-top {
-  height: 52px;
-  width: 52px;
+  height: 34px;
+  width: 34px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -39,9 +39,13 @@ pre, code {
 .sd-card .sd-card-header {
   border: none;
   color: #150458;
-  font-size: var(--pst-font-size-h5);
+  font-size: var(--pst-font-size-h6);
   font-weight: bold;
-  padding: 2.5rem 0rem 0.5rem 0rem;
+  padding: 1.25rem 0rem 0.25rem 0rem;
+}
+
+.sd-card .sd-card-body {
+  font-size: 0.85rem;
 }
 
 html[data-theme=dark] {

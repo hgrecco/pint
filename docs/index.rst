@@ -8,8 +8,6 @@ Pint: makes units easy
 `Issues <https://github.com/hgrecco/pint/issues>`__ |
 `Discussions <https://github.com/hgrecco/pint/discussions>`__
 
-
-
 .. grid:: 1 1 2 2
     :gutter: 2
 
@@ -58,6 +56,24 @@ Pint: makes units easy
         Saw a typo in the documentation? Want to improve existing functionalities?
         The contributing guidelines will guide you through the process of improving
         Pint.
+
+
+Try Pint
+--------
+
+Use the interactive shell to try Pint in the browser.
+
+.. replite::
+   :kernel: python
+   :height: 500px
+   :toolbar: True
+
+   %pip install -q pint
+   import pint
+
+   ureg = pint.UnitRegistry()
+   distance = 42 * ureg.kilometer
+   print(distance.to("mile"))
 
 
 .. toctree::
