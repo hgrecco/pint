@@ -72,7 +72,8 @@ Use the interactive shell to try Pint in the browser.
    import pint
 
    ureg = pint.UnitRegistry()
-   distance = 42 * ureg.kilometer
+   Q_ = ureg.Quantity
+   distance = Q_("42 km")
    print(distance.to("mile"))
 
 
