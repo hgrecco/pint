@@ -26,7 +26,7 @@ from typing import (
     overload,
 )
 
-from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
+from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, Shape, UnitLike
 from ...compat import (
     HAS_NUMPY,
     _to_magnitude,
@@ -957,10 +957,21 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             return self._iadd_sub(other, operator.iadd)
         return self._add_sub(other, operator.add)
 
+    # PlainQuantity[float] + datetime -> datetime
     @overload
     def __add__(
         self: PlainQuantity[float], other: datetime.datetime
     ) -> datetime.timedelta: ...
+    # PlainQuantity[float | array[float]] + timedelta -> PlainQuantity[float | array[float]]
+    @overload
+    def __add__(
+        self: PlainQuantity[float], other: datetime.timedelta
+    ) -> PlainQuantity[float]: ...
+    @overload
+    def __add__[X: np.floating, S: Shape](
+        self: PlainQuantity[npt.ArrayND[X, S]], other: datetime.timedelta
+    ) -> PlainQuantity[npt.ArrayND[X, S]]: ...
+    # General overloads (should work in most cases)
     @overload
     def __add__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanAdd[T, U]], other: PlainQuantity[T] | T

@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     import optype as opt
     import optype.numpy as npt
 
-    from ._typing import Magnitude, Scalar, UnitLike
+    from ._typing import Magnitude, Scalar, Shape, UnitLike
     from ._typing import Quantity as _Quantity
     from ._typing import Unit as _Unit
 
@@ -172,10 +172,22 @@ class Quantity(
             self: Quantity[opt.CanISub[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
 
+        # Quantity[float] + datetime -> datetime
         @overload
         def __add__(
             self: Quantity[int | float], other: datetime.datetime
         ) -> datetime.timedelta: ...
+        # Quantity[float | array[float]] + timedelta -> Quantity[float | array[float]]
+        @overload
+        def __add__(
+            self: Quantity[float], other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        @overload
+        def __add__[X: np.floating, S: Shape](
+            self: Quantity[npt.ArrayND[X, S]],
+            other: datetime.timedelta | np.timedelta64,
+        ) -> Quantity[npt.ArrayND[X, S]]: ...
+        # General overloads (should work in most cases)
         @overload
         def __add__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanAdd[T, U]], other: Quantity[T] | T

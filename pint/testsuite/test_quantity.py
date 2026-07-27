@@ -2055,7 +2055,7 @@ class TestTimedelta(QuantityTestCase):
         after = d - 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
         with pytest.raises(DimensionalityError):
-            3 * self.ureg.second - d
+            3 * self.ureg.second - d  # pyright: ignore[reportOperatorIssue]
 
     def test_iadd_isub(self):
         d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
