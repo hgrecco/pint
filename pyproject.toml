@@ -82,6 +82,8 @@ docs = [
   "xarray",
   "dask[complete]<2025.3.0",
   "optype[numpy]",
+  "jupyterlite-sphinx",
+  "jupyterlite-pyodide-kernel",
 ]
 
 [project.urls]
