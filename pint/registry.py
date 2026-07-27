@@ -69,7 +69,9 @@ class Quantity(
 
         @overload
         def __new__(
-            cls, value: datetime.timedelta, units: UnitLike | None = None
+            cls,
+            value: datetime.timedelta | np.timedelta64,
+            units: UnitLike | None = None,
         ) -> "Quantity[float]": ...
         @overload
         def __new__(
