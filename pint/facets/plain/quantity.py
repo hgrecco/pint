@@ -1292,6 +1292,17 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return self._mul_div(other, operator.truediv)
 
+    # PlainQuantity[float | array[float]] / timedelta -> PlainQuantity[float | array[float]]
+    @overload
+    def __truediv__(
+        self: PlainQuantity[float], other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    @overload
+    def __truediv__[X: np.floating, S: Shape](
+        self: PlainQuantity[npt.ArrayND[X, S]],
+        other: datetime.timedelta | np.timedelta64,
+    ) -> PlainQuantity[npt.ArrayND[X, S]]: ...
+    # General overloads
     @overload
     def __truediv__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanTruediv[T, U]], other: PlainQuantity[T] | T
@@ -1307,6 +1318,17 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             return self._mul_div(other, self._truedivide_cast_int, operator.truediv)
         return self._mul_div(other, operator.truediv)
 
+    # timedelta / PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
+    @overload
+    def __rtruediv__(
+        self: PlainQuantity[float], other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    @overload
+    def __rtruediv__[X: np.floating, S: Shape](
+        self: PlainQuantity[npt.ArrayND[X, S]],
+        other: datetime.timedelta | np.timedelta64,
+    ) -> PlainQuantity[npt.ArrayND[X, S]]: ...
+    # General overloads
     @overload
     def __rtruediv__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanRTruediv[T, U]], other: T

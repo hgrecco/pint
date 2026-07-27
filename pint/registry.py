@@ -294,6 +294,17 @@ class Quantity(
             self: Quantity[opt.CanITruediv[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
 
+        # Quantity[float | array[float]] / timedelta -> Quantity[float | array[float]]
+        @overload
+        def __truediv__(
+            self: Quantity[float], other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        @overload
+        def __truediv__[X: np.floating, S: Shape](
+            self: Quantity[npt.ArrayND[X, S]],
+            other: datetime.timedelta | np.timedelta64,
+        ) -> Quantity[npt.ArrayND[X, S]]: ...
+        # General overloads
         @overload
         def __truediv__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanTruediv[T, U]], other: Quantity[T] | T
@@ -305,6 +316,17 @@ class Quantity(
             | opt.CanRTruediv[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
+        # timedelta / Quantity[float | array[float]] -> Quantity[float | array[float]]
+        @overload
+        def __rtruediv__(
+            self: Quantity[float], other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        @overload
+        def __rtruediv__[X: np.floating, S: Shape](
+            self: Quantity[npt.ArrayND[X, S]],
+            other: datetime.timedelta | np.timedelta64,
+        ) -> Quantity[npt.ArrayND[X, S]]: ...
+        # General overloads
         @overload
         def __rtruediv__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanRTruediv[T, U]], other: T
