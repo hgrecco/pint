@@ -305,7 +305,7 @@ class Quantity(
 
         @overload
         def __pow__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanPow[T, U]], other: Quantity[T] | T
+            self: Quantity[opt.CanPow2[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
         @overload
         def __pow__[U: Magnitude](

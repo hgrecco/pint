@@ -1,3 +1,4 @@
+# pyright: reportUnusedExpression=none
 from __future__ import annotations
 
 import copy

@@ -932,7 +932,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         return self.__class__(magnitude, units)
 
     @overload
-    def __iadd__[T: int | float](
+    def __iadd__[T: float](
         self: PlainQuantity[T], other: datetime.datetime
     ) -> datetime.timedelta: ...
     @overload
@@ -948,7 +948,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @overload
     def __add__(
-        self: PlainQuantity[int | float], other: datetime.datetime
+        self: PlainQuantity[float], other: datetime.datetime
     ) -> datetime.timedelta: ...
     @overload
     def __add__[T: Magnitude, U: Magnitude](
@@ -962,7 +962,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     ) -> PlainQuantity[U]: ...
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
-            return cast("PlainQuantity[int | float]", self).to_timedelta() + other
+            return cast(PlainQuantity[float], self).to_timedelta() + other
         return self._add_sub(other, operator.add)
 
     if TYPE_CHECKING:
@@ -1490,7 +1490,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @overload
     def __pow__[T: Magnitude, U: Magnitude](
-        self: PlainQuantity[opt.CanPow[T, U]], other: PlainQuantity[T] | T
+        self: PlainQuantity[opt.CanPow2[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]: ...
     @overload
     def __pow__[U: Magnitude](
@@ -1815,7 +1815,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def _ok_for_muldiv(self, no_offset_units=None) -> bool:
         return True
 
-    def to_timedelta(self: PlainQuantity[int | float]) -> datetime.timedelta:
+    def to_timedelta(self: PlainQuantity[float]) -> datetime.timedelta:
         return datetime.timedelta(microseconds=self.to("microseconds").magnitude)
 
     # We put this last to avoid overriding UnitsContainer
