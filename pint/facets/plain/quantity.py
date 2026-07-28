@@ -944,7 +944,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         return self.__class__(magnitude, units)
 
     @overload
-    def __iadd__[T: float](
+    def __iadd__[T: int | float](
         self: PlainQuantity[T], other: datetime.datetime
     ) -> datetime.timedelta: ...
     @overload
@@ -961,7 +961,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # PlainQuantity[float] + datetime -> datetime
     @overload
     def __add__(
-        self: PlainQuantity[float], other: datetime.datetime
+        self: PlainQuantity[int | float], other: datetime.datetime
     ) -> datetime.timedelta: ...
     # PlainQuantity[float | array[float]] + timedelta -> PlainQuantity[float | array[float]]
     @overload
