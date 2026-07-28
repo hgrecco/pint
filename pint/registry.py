@@ -42,6 +42,10 @@ if TYPE_CHECKING:
     from ._typing import Magnitude, Scalar, Shape, UnitLike
     from ._typing import Quantity as _Quantity
     from ._typing import Unit as _Unit
+    from .facets.plain.quantity import PlainQuantity as _PlainQuantity
+
+else:
+    _PlainQuantity = facets.PlainRegistry.Quantity["MagnitudeT_co"]
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
@@ -60,7 +64,7 @@ class Quantity(
     facets.NumpyRegistry.Quantity[MagnitudeT_co],
     facets.MeasurementRegistry.Quantity[MagnitudeT_co],
     facets.NonMultiplicativeRegistry.Quantity[MagnitudeT_co],
-    facets.PlainRegistry.Quantity[MagnitudeT_co],
+    _PlainQuantity[MagnitudeT_co],
     Generic[MagnitudeT_co],
 ):
     if TYPE_CHECKING:
