@@ -150,15 +150,15 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     # PlainUnit * PlainUnit -> PlainUnit
     @overload
     def __mul__(self, other: Self) -> Self: ...
-    # PlainUnit * timedelta -> Quantity[float]
+    # PlainUnit * timedelta -> PlainQuantity[float]
     @overload
     def __mul__(
         self, other: datetime.timedelta | np.timedelta64
     ) -> PlainQuantity[float]: ...
-    # PlainUnit * <Magnitude> -> Quantity[<Magnitude>]
+    # PlainUnit * <Magnitude> -> PlainQuantity[<Magnitude>]
     @overload
     def __mul__[T: Magnitude](self, other: T) -> PlainQuantity[T]: ...
-    # PlainUnit * str -> Quantity
+    # PlainUnit * str -> PlainQuantity
     @overload
     def __mul__(self, other: str) -> PlainQuantity[Any]: ...
     def __mul__(self, other):
