@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from .facets.plain.quantity import PlainQuantity as _PlainQuantity
 
 else:
-    _PlainQuantity = facets.PlainRegistry.Quantity["MagnitudeT_co"]
+    _PlainQuantity = facets.PlainRegistry.Quantity
 
 # To build the Quantity and Unit classes
 # we follow the UnitRegistry bases
@@ -453,11 +453,18 @@ class Unit(
     facets.PlainRegistry.Unit,
 ):
     if TYPE_CHECKING:
-
+        # Unit * Unit -> Unit
         @overload
         def __mul__(self, other: Self) -> Self: ...
+        # Unit * timedelta -> Quantity[float]
+        @overload
+        def __mul__(
+            self, other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        # Unit * <Magnitude> -> Quantity[<Magnitude>]
         @overload
         def __mul__[T: Magnitude](self, other: T) -> Quantity[T]: ...
+        # Unit * str -> Quantity
         @overload
         def __mul__(self, other: str) -> Quantity[Any]: ...
 
