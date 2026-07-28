@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     import optype as opt
     import optype.numpy as npt
 
-    from ._typing import Magnitude, Scalar, Shape, UnitLike
+    from ._typing import Magnitude, Scalar, UnitLike
     from ._typing import Quantity as _Quantity
     from ._typing import Unit as _Unit
     from .facets.plain.quantity import PlainQuantity as _PlainQuantity

@@ -26,7 +26,7 @@ from typing import (
     overload,
 )
 
-from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, Shape, UnitLike
+from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
     _to_magnitude,
