@@ -983,7 +983,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     ) -> PlainQuantity[U]: ...
     def __add__(self, other):
         if isinstance(other, datetime.datetime):
-            return cast(PlainQuantity[float], self).to_timedelta() + other
+            return cast("PlainQuantity[int | float]", self).to_timedelta() + other
         return self._add_sub(other, operator.add)
 
     if TYPE_CHECKING:
