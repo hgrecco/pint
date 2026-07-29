@@ -302,9 +302,7 @@ def _pint_reference_tables():
         key=lambda u: u.name,
     )
     unit_items = [
-        _format_entry(
-            u.name, u.defined_symbol, u.aliases, _base_si_value(ureg, u.name)
-        )
+        _format_entry(u.name, u.defined_symbol, u.aliases, _base_si_value(ureg, u.name))
         for u in units
     ]
 

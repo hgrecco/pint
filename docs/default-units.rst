@@ -40,6 +40,6 @@ Available contexts
 
 A context lets you convert between otherwise incompatible dimensions (e.g.
 wavelength and frequency) within a ``with ureg.context(...):`` block. See
-:ref:`Contexts` for more.
+:doc:`user/contexts` for more.
 
 %%PINT_CONTEXTS%%
