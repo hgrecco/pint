@@ -273,9 +273,12 @@ def _format_entry(name, symbol, aliases, base_value=None):
     return label
 
 
-def _bullet_list(items, columns=2):
-    lines = [".. hlist::", f"    :columns: {columns}", ""]
-    lines.extend(f"    - {item}" for item in items)
+def _bullet_list(items, columns=None):
+    if columns is None:
+        lines = [f"- {item}" for item in items]
+    else:
+        lines = [".. hlist::", f"    :columns: {columns}", ""]
+        lines.extend(f"    - {item}" for item in items)
     lines.append("")
     return "\n".join(lines)
 
@@ -290,7 +293,8 @@ def _pint_reference_tables():
         key=lambda p: p.name,
     )
     prefix_items = [
-        _format_entry(p.name, p.defined_symbol, p.aliases) for p in prefixes
+        _format_entry(p.name, p.defined_symbol, p.aliases, f"{p.value:g}")
+        for p in prefixes
     ]
 
     units = sorted(
@@ -310,7 +314,7 @@ def _pint_reference_tables():
     ]
 
     return {
-        "%%PINT_PREFIXES%%": _bullet_list(prefix_items, columns=3),
+        "%%PINT_PREFIXES%%": _bullet_list(prefix_items, columns=4),
         "%%PINT_UNITS%%": _bullet_list(unit_items, columns=2),
         "%%PINT_SYSTEMS%%": _bullet_list(system_items, columns=2),
     }
