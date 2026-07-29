@@ -54,5 +54,6 @@ That's all! You can check that Pint is correctly installed by starting up python
 
     overview
     tutorial
+    default-units
     pint-in-your-projects
     faq
