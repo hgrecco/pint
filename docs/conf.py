@@ -240,3 +240,73 @@ not_installed = {
     ]
 }
 """
+
+# -- Generated reference tables -------------------------------------------------
+#
+# getting/default-units.rst lists every prefix, unit and system known to a
+# plain UnitRegistry. Rather than hand-maintaining that list, it is generated
+# from the registry itself each time the docs are built, so it can never go
+# stale relative to `default_en.txt`.
+
+
+def _format_entry(name, symbol, aliases):
+    label = f"**{name}**"
+    if symbol and symbol != name:
+        label += f" ({symbol})"
+    if aliases:
+        label += f" -- *{', '.join(aliases)}*"
+    return label
+
+
+def _bullet_list(items):
+    lines = [f"- {item}" for item in items]
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _pint_reference_tables():
+    import pint
+
+    ureg = pint.UnitRegistry()
+
+    prefixes = sorted(
+        {p.name: p for p in ureg._prefixes.values() if p.name}.values(),
+        key=lambda p: p.name,
+    )
+    prefix_items = [
+        _format_entry(p.name, p.defined_symbol, p.aliases) for p in prefixes
+    ]
+
+    units = sorted(
+        {u.name: u for u in ureg._units.values()}.values(),
+        key=lambda u: u.name,
+    )
+    unit_items = [_format_entry(u.name, u.defined_symbol, u.aliases) for u in units]
+
+    systems = sorted(ureg._systems)
+    system_items = [
+        f"**{name}** ({len(ureg._systems[name].members)} units)" for name in systems
+    ]
+
+    return {
+        "%%PINT_PREFIXES%%": _bullet_list(prefix_items),
+        "%%PINT_UNITS%%": _bullet_list(unit_items),
+        "%%PINT_SYSTEMS%%": _bullet_list(system_items),
+    }
+
+
+def _expand_pint_reference_tables(app, docname, source):
+    if docname != "getting/default-units":
+        return
+
+    text = source[0]
+    if "%%PINT_" not in text:
+        return
+
+    for token, block in _pint_reference_tables().items():
+        text = text.replace(token, block)
+    source[0] = text
+
+
+def setup(app):
+    app.connect("source-read", _expand_pint_reference_tables)

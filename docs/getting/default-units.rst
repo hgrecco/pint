@@ -32,3 +32,25 @@ opening the definition file:
 
 If you need a unit that isn't defined, or want to change the definition of an
 existing one, see :ref:`defining`.
+
+The lists below are generated directly from a default ``UnitRegistry`` when
+these docs are built, so they always match the current release.
+
+Prefixes
+--------
+
+%%PINT_PREFIXES%%
+
+Units
+-----
+
+%%PINT_UNITS%%
+
+Unit systems
+------------
+
+A system is a named subset of units. Setting ``ureg.system = "imperial"``
+(for example) changes which unit ``to_base_units()`` converts to. See
+:ref:`systems` for more.
+
+%%PINT_SYSTEMS%%
