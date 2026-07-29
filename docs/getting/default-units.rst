@@ -3,11 +3,11 @@
 List of default units
 ======================
 
-Hover over the name of a unit to see its value.
-
 The default definitions can be found at `default_en.txt
 <https://github.com/hgrecco/pint/blob/master/pint/default_en.txt>`_ and have
 been used to generate the following lists.
+
+Hover over the name of a unit to see its value.
 
 Prefixes
 --------
