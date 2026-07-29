@@ -243,7 +243,7 @@ not_installed = {
 
 # -- Generated reference tables -------------------------------------------------
 #
-# getting/default-units.rst lists every prefix, unit and system known to a
+# default-units.rst lists every prefix, unit and system known to a
 # plain UnitRegistry. Rather than hand-maintaining that list, it is generated
 # from the registry itself each time the docs are built, so it can never go
 # stale relative to `default_en.txt`.
@@ -313,15 +313,28 @@ def _pint_reference_tables():
         f"**{name}** ({len(ureg._systems[name].members)} units)" for name in systems
     ]
 
+    groups = sorted(ureg._groups)
+    group_items = [
+        f"**{name}** ({len(ureg._groups[name].members)} units)" for name in groups
+    ]
+
+    contexts = sorted(
+        {c.name: c for c in ureg._contexts.values()}.values(),
+        key=lambda c: c.name,
+    )
+    context_items = [_format_entry(c.name, None, c.aliases) for c in contexts]
+
     return {
         "%%PINT_PREFIXES%%": _bullet_list(prefix_items, columns=4),
         "%%PINT_UNITS%%": _bullet_list(unit_items, columns=2),
         "%%PINT_SYSTEMS%%": _bullet_list(system_items, columns=2),
+        "%%PINT_GROUPS%%": _bullet_list(group_items, columns=2),
+        "%%PINT_CONTEXTS%%": _bullet_list(context_items, columns=2),
     }
 
 
 def _expand_pint_reference_tables(app, docname, source):
-    if docname != "getting/default-units":
+    if docname != "default-units":
         return
 
     text = source[0]

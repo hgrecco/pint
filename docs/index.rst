@@ -68,6 +68,7 @@ Pint: makes units easy
     Getting started <getting/index>
     User Guide <user/index>
     Advanced topics <advanced/index>
+    Default Units <default-units>
     ecosystem
     API Reference <api/index>
     changes

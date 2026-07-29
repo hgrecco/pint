@@ -27,3 +27,19 @@ A system is a named subset of units. Setting ``ureg.system = "imperial"``
 :ref:`systems` for more.
 
 %%PINT_SYSTEMS%%
+
+Groups
+------
+
+A group is a named subset of units, similar to a system.
+
+%%PINT_GROUPS%%
+
+Available contexts
+-------------------
+
+A context lets you convert between otherwise incompatible dimensions (e.g.
+wavelength and frequency) within a ``with ureg.context(...):`` block. See
+:ref:`Contexts` for more.
+
+%%PINT_CONTEXTS%%
