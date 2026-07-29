@@ -249,8 +249,23 @@ not_installed = {
 # stale relative to `default_en.txt`.
 
 
-def _format_entry(name, symbol, aliases):
-    label = f"**{name}**"
+def _base_si_value(ureg, name):
+    """Value of 1 `name` expressed in base SI units, or None if it can't be computed."""
+    try:
+        q = ureg.Quantity(1, name).to_base_units()
+    except Exception:
+        return None
+    return f"{q.magnitude:g} {q.units}"
+
+
+def _format_entry(name, symbol, aliases, base_value=None):
+    if base_value:
+        # :abbr:`text (title)` renders as <abbr title="title">text</abbr>,
+        # which browsers show as a hover tooltip.
+        title = base_value.replace("`", "'")
+        label = f":abbr:`{name} (= {title})`"
+    else:
+        label = f"**{name}**"
     if symbol and symbol != name:
         label += f" ({symbol})"
     if aliases:
@@ -282,7 +297,12 @@ def _pint_reference_tables():
         {u.name: u for u in ureg._units.values()}.values(),
         key=lambda u: u.name,
     )
-    unit_items = [_format_entry(u.name, u.defined_symbol, u.aliases) for u in units]
+    unit_items = [
+        _format_entry(
+            u.name, u.defined_symbol, u.aliases, _base_si_value(ureg, u.name)
+        )
+        for u in units
+    ]
 
     systems = sorted(ureg._systems)
     system_items = [
