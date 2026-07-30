@@ -970,7 +970,7 @@ class SharedRegistryObject:
             inst._REGISTRY = application_registry.get()
         return inst
 
-    def _check(self, other: Any) -> "TypeIs[SharedRegistryObject]":
+    def _check(self, other: object) -> "TypeIs[SharedRegistryObject]":
         """Check if the other object use a registry and if so that it is the
         same registry.
 

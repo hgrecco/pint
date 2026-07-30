@@ -21,6 +21,10 @@ from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
+    import datetime
+
+    import numpy as np
+
     from ..context import Context
     from .quantity import PlainQuantity
 
@@ -143,10 +147,18 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         return self.dimensionless
 
+    # PlainUnit * PlainUnit -> PlainUnit
     @overload
     def __mul__(self, other: Self) -> Self: ...
+    # PlainUnit * timedelta -> PlainQuantity[float]
+    @overload
+    def __mul__(
+        self, other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    # PlainUnit * <Magnitude> -> PlainQuantity[<Magnitude>]
     @overload
     def __mul__[T: Magnitude](self, other: T) -> PlainQuantity[T]: ...
+    # PlainUnit * str -> PlainQuantity
     @overload
     def __mul__(self, other: str) -> PlainQuantity[Any]: ...
     def __mul__(self, other):
