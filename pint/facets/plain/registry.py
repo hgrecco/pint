@@ -69,8 +69,8 @@ from ...errors import (
 from ...pint_eval import _BINARY_OPERATOR_MAP, build_eval_tree
 from ...util import (
     ParserHelper,
+    _clean_exponent,
     _is_dim,
-    _is_negligible_exponent,
     create_class_with_registry,
     getattr_maybe_raise,
     logger,
@@ -745,9 +745,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if "[]" in accumulator:
             del accumulator["[]"]
 
-        dims = self.UnitsContainer(
-            {k: v for k, v in accumulator.items() if not _is_negligible_exponent(v)}
-        )
+        cleaned = {k: _clean_exponent(v) for k, v in accumulator.items()}
+        dims = self.UnitsContainer({k: v for k, v in cleaned.items() if v != 0})
 
         cache[input_units] = dims
 
@@ -961,13 +960,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             else:
                 factor *= d_factor**-d_exponent
 
-        units = self.UnitsContainer(
-            {
-                k: v
-                for k, v in accumulators.items()
-                if k is not None and not _is_negligible_exponent(v)
-            }
-        )
+        cleaned = {
+            k: _clean_exponent(v) for k, v in accumulators.items() if k is not None
+        }
+        units = self.UnitsContainer({k: v for k, v in cleaned.items() if v != 0})
 
         # Check if any of the final units is non multiplicative and return None instead.
         if check_nonmult:

@@ -421,18 +421,20 @@ class udict(dict[str, Scalar]):
         return udict(self)
 
 
-def _is_negligible_exponent(value: Scalar) -> bool:
-    """Whether a UnitsContainer exponent should be treated as zero.
-
-    Floats get a small absolute tolerance to absorb the floating-point noise
-    that repeated multiplication/division of fractional exponents can
-    accumulate (e.g. ``meter ** 5.55e-17`` instead of exactly ``meter ** 0``),
-    which otherwise breaks dimensionality-based conversion (see GH #1487).
-    Exact numeric types (int, Fraction, Decimal) are compared exactly.
+def _clean_exponent(value: Scalar) -> Scalar:
+    """Snap a UnitsContainer exponent back to the nearest integer if
+    floating-point noise from combining fractional powers has nudged it just
+    off of one, e.g. ``-0.9999999999999998`` instead of exactly ``-1`` (GH
+    #681), or ``5.55e-17`` instead of exactly ``0`` (GH #1487). Only floats
+    within a tiny absolute tolerance of an integer are snapped; genuinely
+    fractional exponents (like ``0.333333``) are returned unchanged, as are
+    exact numeric types (int, Fraction, Decimal).
     """
     if isinstance(value, float):
-        return math.isclose(value, 0.0, abs_tol=1e-10)
-    return value == 0
+        rounded = round(value)
+        if math.isclose(value, rounded, abs_tol=1e-9):
+            return float(rounded)
+    return value
 
 
 class UnitsContainer(Mapping[str, Scalar]):
@@ -501,9 +503,9 @@ class UnitsContainer(Mapping[str, Scalar]):
         UnitsContainer
             A copy of this container.
         """
-        newval = self._d[key] + self._normalize_nonfloat_value(value)
+        newval = _clean_exponent(self._d[key] + self._normalize_nonfloat_value(value))
         new = self.copy()
-        if _is_negligible_exponent(newval):
+        if newval == 0:
             new._d.pop(key)
         else:
             new._d[key] = newval
@@ -632,9 +634,11 @@ class UnitsContainer(Mapping[str, Scalar]):
 
         new = self.copy()
         for key, value in other.items():
-            new._d[key] += value
-            if _is_negligible_exponent(new._d[key]):
+            combined = _clean_exponent(new._d[key] + value)
+            if combined == 0:
                 del new._d[key]
+            else:
+                new._d[key] = combined
 
         new._hash = None
         return new
@@ -659,9 +663,13 @@ class UnitsContainer(Mapping[str, Scalar]):
 
         new = self.copy()
         for key, value in other.items():
-            new._d[key] -= self._normalize_nonfloat_value(value)
-            if _is_negligible_exponent(new._d[key]):
+            combined = _clean_exponent(
+                new._d[key] - self._normalize_nonfloat_value(value)
+            )
+            if combined == 0:
                 del new._d[key]
+            else:
+                new._d[key] = combined
 
         new._hash = None
         return new
