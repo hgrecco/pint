@@ -7,6 +7,7 @@ Pint Changelog
 - Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and notebook, requiring no local install (#2372)
 - Switch CodSpeed CI benchmarks to `simulation` mode to fix a walltime environment warning.
 - Fix `DimensionalityError` from a leftover floating-point-noise exponent (e.g. `meter ** 5.55e-17` instead of exactly `meter ** 0`) after combining fractional unit powers, which broke `to_base_units`, `to_reduced_units`, and `to` (#1487)
+- Fix `DimensionalityError` from floating-point noise in combined fractional unit exponents (e.g. `meter ** 5.55e-17`) (#1487)
 - Fix `is_compatible_with` edge cases with dimensionless types and unit strings with a scaling factor (e.g. `"35000 ft"`) (#1190)
 - Allow string parsing of offset units (#386)
 - Remove the ambiguous `Nm` alias from `number_meter` (Textile group), since it's commonly expected to mean newton-meter (torque) (#1966)
