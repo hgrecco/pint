@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Raise `DefinitionSyntaxError` instead of an uncaught `RecursionError` when parsing a deeply nested expression (e.g. many chained `**` or `^` operators), bounding operator-recursion depth in `_build_eval_tree`
 - Fix `is_compatible_with` edge cases with dimensionless types and unit strings with a scaling factor (e.g. `"35000 ft"`) (#1190)
 - Allow string parsing of offset units (#386)
 - Remove the ambiguous `Nm` alias from `number_meter` (Textile group), since it's commonly expected to mean newton-meter (torque) (#1966)
