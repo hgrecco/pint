@@ -60,6 +60,7 @@ class GenericSystemRegistry[QuantityT: Quantity, UnitT: Unit](
         self._base_units_cache: dict[UnitsContainerT, UnitsContainerT] = {}
 
         self._default_system_name: str | None = system
+        self._system_definitions: list[SystemDefinition] = []
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -84,6 +85,8 @@ class GenericSystemRegistry[QuantityT: Quantity, UnitT: Unit](
         self._register_adder(SystemDefinition, self._add_system)
 
     def _add_system(self, sd: SystemDefinition) -> None:
+        self._system_definitions.append(sd)
+
         if sd.name in self._systems:
             raise ValueError(f"System {sd.name} already present in registry")
 

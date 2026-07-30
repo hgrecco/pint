@@ -28,6 +28,8 @@ class Relation:
 
     _varname_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
+    #: Original string defining the relation
+    value_text: str
     #: Source dimensionality
     src: UnitsContainer
     #: Destination dimensionality

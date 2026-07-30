@@ -47,6 +47,7 @@ class GenericGroupRegistry[QuantityT: Quantity, UnitT: Unit](
         #: Map group name to group.
         self._groups: dict[str, objects.Group] = {}
         self._groups["root"] = self.Group("root")
+        self._group_definitions: list[GroupDefinition] = []
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -85,6 +86,7 @@ class GenericGroupRegistry[QuantityT: Quantity, UnitT: Unit](
         self.get_group("root").add_units(definition.name)
 
     def _add_group(self, gd: GroupDefinition):
+        self._group_definitions.append(gd)
         if gd.name in self._groups:
             raise ValueError(f"Group {gd.name} already present in registry")
         try:
