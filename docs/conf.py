@@ -240,3 +240,109 @@ not_installed = {
     ]
 }
 """
+
+# -- Generated reference tables -------------------------------------------------
+#
+# default-units.rst lists every prefix, unit and system known to a
+# plain UnitRegistry. Rather than hand-maintaining that list, it is generated
+# from the registry itself each time the docs are built, so it can never go
+# stale relative to `default_en.txt`.
+
+
+def _base_si_value(ureg, name):
+    """Value of 1 `name` expressed in base SI units, or None if it can't be computed."""
+    try:
+        q = ureg.Quantity(1, name).to_base_units()
+    except Exception:
+        return None
+    return f"{q.magnitude:g} {q.units}"
+
+
+def _format_entry(name, symbol, aliases, base_value=None):
+    if base_value:
+        # :abbr:`text (title)` renders as <abbr title="title">text</abbr>,
+        # which browsers show as a hover tooltip.
+        title = base_value.replace("`", "'")
+        label = f":abbr:`{name} (= {title})`"
+    else:
+        label = f"**{name}**"
+    if symbol and symbol != name:
+        label += f" ({symbol})"
+    if aliases:
+        label += f" -- *{', '.join(aliases)}*"
+    return label
+
+
+def _bullet_list(items, columns=None):
+    if columns is None:
+        lines = [f"- {item}" for item in items]
+    else:
+        lines = [".. hlist::", f"    :columns: {columns}", ""]
+        lines.extend(f"    - {item}" for item in items)
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _pint_reference_tables():
+    import pint
+
+    ureg = pint.UnitRegistry()
+
+    prefixes = sorted(
+        {p.name: p for p in ureg._prefixes.values() if p.name}.values(),
+        key=lambda p: p.name,
+    )
+    prefix_items = [
+        _format_entry(p.name, p.defined_symbol, p.aliases, f"{p.value:g}")
+        for p in prefixes
+    ]
+
+    units = sorted(
+        {u.name: u for u in ureg._units.values()}.values(),
+        key=lambda u: u.name,
+    )
+    unit_items = [
+        _format_entry(u.name, u.defined_symbol, u.aliases, _base_si_value(ureg, u.name))
+        for u in units
+    ]
+
+    systems = sorted(ureg._systems)
+    system_items = [
+        f"**{name}** ({len(ureg._systems[name].members)} units)" for name in systems
+    ]
+
+    groups = sorted(ureg._groups)
+    group_items = [
+        f"**{name}** ({len(ureg._groups[name].members)} units)" for name in groups
+    ]
+
+    contexts = sorted(
+        {c.name: c for c in ureg._contexts.values()}.values(),
+        key=lambda c: c.name,
+    )
+    context_items = [_format_entry(c.name, None, c.aliases) for c in contexts]
+
+    return {
+        "%%PINT_PREFIXES%%": _bullet_list(prefix_items, columns=4),
+        "%%PINT_UNITS%%": _bullet_list(unit_items, columns=2),
+        "%%PINT_SYSTEMS%%": _bullet_list(system_items, columns=2),
+        "%%PINT_GROUPS%%": _bullet_list(group_items, columns=2),
+        "%%PINT_CONTEXTS%%": _bullet_list(context_items, columns=2),
+    }
+
+
+def _expand_pint_reference_tables(app, docname, source):
+    if docname != "default-units":
+        return
+
+    text = source[0]
+    if "%%PINT_" not in text:
+        return
+
+    for token, block in _pint_reference_tables().items():
+        text = text.replace(token, block)
+    source[0] = text
+
+
+def setup(app):
+    app.connect("source-read", _expand_pint_reference_tables)
