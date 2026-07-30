@@ -1156,6 +1156,29 @@ def test_issue1433(func_registry):
     assert func_registry.Quantity("1 micron") == func_registry.Quantity("1 micrometer")
 
 
+def test_issue1487():
+    # Floating-point noise from combining fractional exponents (e.g.
+    # meter ** 5.55e-17 instead of exactly meter ** 0) used to make
+    # to_base_units/to_reduced_units/to raise DimensionalityError.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    V = Q_(1.0, "m/s")
+    k = Q_(1.0, "W/(m*K)")
+    rho = Q_(1.0, "kg/m**3")
+    cp = Q_(1.0, "J/(kg*K)")
+    D = Q_(1.0, "m")
+    nu = Q_(1.0, "m**2/s")
+
+    h_c = 0.023 * V**0.8 * k**0.6 * (rho * cp) ** 0.4 / (D**0.2 * nu**0.4)
+
+    h_c.to_base_units()
+    h_c.to_reduced_units()
+    result = h_c.to("W/(m**2*K)")
+    assert result.magnitude == pytest.approx(0.023)
+    assert result.units == ureg.Unit("W/(m**2*K)")
+
+
 def test_issue1527():
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     x = ureg.parse_expression("2 microliter milligram/liter")

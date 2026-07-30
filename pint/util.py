@@ -421,6 +421,20 @@ class udict(dict[str, Scalar]):
         return udict(self)
 
 
+def _is_negligible_exponent(value: Scalar) -> bool:
+    """Whether a UnitsContainer exponent should be treated as zero.
+
+    Floats get a small absolute tolerance to absorb the floating-point noise
+    that repeated multiplication/division of fractional exponents can
+    accumulate (e.g. ``meter ** 5.55e-17`` instead of exactly ``meter ** 0``),
+    which otherwise breaks dimensionality-based conversion (see GH #1487).
+    Exact numeric types (int, Fraction, Decimal) are compared exactly.
+    """
+    if isinstance(value, float):
+        return math.isclose(value, 0.0, abs_tol=1e-10)
+    return value == 0
+
+
 class UnitsContainer(Mapping[str, Scalar]):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations.
@@ -489,10 +503,10 @@ class UnitsContainer(Mapping[str, Scalar]):
         """
         newval = self._d[key] + self._normalize_nonfloat_value(value)
         new = self.copy()
-        if newval:
-            new._d[key] = newval
-        else:
+        if _is_negligible_exponent(newval):
             new._d.pop(key)
+        else:
+            new._d[key] = newval
         new._hash = None
         return new
 
@@ -619,7 +633,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new = self.copy()
         for key, value in other.items():
             new._d[key] += value
-            if new._d[key] == 0:
+            if _is_negligible_exponent(new._d[key]):
                 del new._d[key]
 
         new._hash = None
@@ -646,7 +660,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new = self.copy()
         for key, value in other.items():
             new._d[key] -= self._normalize_nonfloat_value(value)
-            if new._d[key] == 0:
+            if _is_negligible_exponent(new._d[key]):
                 del new._d[key]
 
         new._hash = None
