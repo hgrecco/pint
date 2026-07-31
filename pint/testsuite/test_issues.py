@@ -1666,3 +1666,15 @@ def test_issue2182():
     assert q != np.float64(5.0)
     assert np.float64(5.0) != q  # used to raise DimensionalityError
     assert np.array(5.0) != q  # used to raise DimensionalityError
+
+
+def test_issue800():
+    ureg = UnitRegistry()
+    assert ureg.parse_expression(
+        "Constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    assert ureg.parse_expression(
+        "constant", case_sensitive=False, constant=95
+    ) == ureg.Quantity(95)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_expression("Constant", constant=95)
