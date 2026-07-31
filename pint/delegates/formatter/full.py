@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse
-from ...util import iterable
+from ...util import NonReducingUnitsContainer, SharedRegistryObject, iterable
 from ._compound_unit_helpers import BabelKwds
 from ._to_register import REGISTERED_FORMATTERS
 from .html import HTMLFormatter
@@ -39,6 +39,11 @@ if TYPE_CHECKING:
         PlainUnit,
     )
     from ...registry import UnitRegistry
+
+
+def _sort_func(items, registry):
+    # print([i for i in items])
+    return items
 
 
 class FullFormatter(BaseFormatter):
@@ -135,10 +140,17 @@ class FullFormatter(BaseFormatter):
     ) -> str:
         uspec = uspec or self.default_format
         sort_func = sort_func or self.default_sort_func
+        empty_numerator_fmt = "1"
+        if isinstance(unit, SharedRegistryObject) and isinstance(
+            unit._units, NonReducingUnitsContainer
+        ):
+            sort_func = _sort_func
+            empty_numerator_fmt = ""
         return self.get_formatter(uspec).format_unit(
             unit,
             uspec,
             sort_func=sort_func,
+            empty_numerator_fmt=empty_numerator_fmt,
             as_ratio=False if "^" in uspec else True,
             **babel_kwds,
         )

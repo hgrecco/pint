@@ -5,6 +5,7 @@ import functools
 import logging
 import math
 import operator
+import pickle
 import re
 from contextlib import nullcontext as does_not_raise
 
@@ -14,7 +15,7 @@ from pint import DimensionalityError, RedefinitionError, UndefinedUnitError, err
 from pint.compat import np
 from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
-from pint.util import ParserHelper, UnitsContainer
+from pint.util import NonReducingUnitsContainer, ParserHelper, UnitsContainer
 
 from .helpers import internal
 
@@ -921,6 +922,187 @@ class TestRegistry(QuantityTestCase):
             meter=1
         )
         assert ureg.parse_units("j", case_sensitive=False) == UnitsContainer(joule=1)
+
+
+class TestNonReducing(QuantityTestCase):
+    def test_init(self):
+        ureg = self.ureg
+        NRUC_ = ureg.NonReducingUnitsContainer
+
+        strain_unit_container = NRUC_([(ureg.mm, 1), (ureg.mm, -1)])
+        assert strain_unit_container.non_reduced_units == [
+            ureg.UnitsContainer({"millimeter": 1}),
+            ureg.UnitsContainer({"millimeter": -1}),
+        ]
+        assert strain_unit_container == ureg.dimensionless
+
+    def test_ureg_auto_reduce_units(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        NRUC_ = ureg.NonReducingUnitsContainer
+
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        strain_unit == NRUC_([(ureg.mm, 1), (ureg.mm, -1)])
+        strain_unit == ureg.Unit("dimensionless")
+
+        strain_q = ureg.Quantity(1, "mm") / ureg.Quantity(1, "mm")
+        assert strain_q.units == strain_unit
+
+    def test_ureg_auto_reduce_units_true(self):
+        # Companion to test_ureg_auto_reduce_units: with the default
+        # auto_reduce_units=True, mm/mm must still reduce to plain
+        # dimensionless as before this feature existed, not a
+        # NonReducingUnitsContainer.
+        ureg = UnitRegistry(auto_reduce_units=True)
+
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        assert strain_unit == ureg.Unit("dimensionless")
+        assert not isinstance(strain_unit._units, NonReducingUnitsContainer)
+
+        strain_q = ureg.Quantity(1, "mm") / ureg.Quantity(1, "mm")
+        assert strain_q.units == strain_unit
+        assert not isinstance(strain_q._units, NonReducingUnitsContainer)
+
+    def test_formatting(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        assert format(strain_unit, "~D") == "mm / mm"
+        assert format(strain_unit, "P") == "millimeter/millimeter"
+
+    def test_issue1993_parse_expression(self):
+        # Parsing a quantity string that multiplies units together used to
+        # crash with AttributeError('NonReducingUnitsContainer' object has no
+        # attribute '_one'/'non_reduced_units'), since the units are combined
+        # via UnitsContainer.__mul__, which builds a NonReducingUnitsContainer
+        # whose __init__ never fully mirrored the base class's, and whose
+        # extra state was dropped by the base class's __copy__.
+        ureg = UnitRegistry(auto_reduce_units=False)
+
+        q = ureg("1.0 kN.m")
+        assert q.magnitude == 1.0
+        assert q.units == ureg.Unit("kN.m")
+
+        q = ureg("m/s/m")
+        assert q.magnitude == 1.0
+
+        # a copy of the resulting NonReducingUnitsContainer must keep working
+        # (this is what previously crashed inside UnitsContainer.__mul__)
+        assert ureg("1.0 kN.m") * ureg("2 s") == ureg("2.0 kN.m.s")
+
+    def test_quantity_init_with_units_list(self):
+        # Quantity(value, units=[...]) used to raise UndefinedUnitError via a
+        # typo'd registry attribute lookup (NonReducingUnitContainer instead
+        # of NonReducingUnitsContainer).
+        ureg = UnitRegistry(auto_reduce_units=False)
+        q = ureg.Quantity(1, [ureg.Unit("mm"), ureg.Unit("mm") ** -1])
+        assert q.magnitude == 1
+        assert q.units == ureg.Unit("mm") / ureg.Unit("mm")
+
+    def test_chained_operation_after_non_reducing(self):
+        # Operating again on an already non-reducing Unit/Quantity used to
+        # crash / silently take the reducing fast path, because the
+        # NonReducingUnitsContainer built by __mul__/__truediv__ always
+        # defaulted to auto_reduce_units=True instead of inheriting the
+        # registry's False setting.
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain = ureg.Unit("mm") / ureg.Unit("mm")
+        assert strain._units._auto_reduce_units is False
+
+        combo = strain * ureg.Unit("km")
+        # Dimensionally/numerically, mm and mm ** -1 still cancel.
+        assert combo == ureg.Unit("km")
+        # But with auto_reduce_units=False nothing is ever collapsed away for
+        # display purposes, including the earlier mm/mm group -- see
+        # test_chained_operation_preserves_partial_cancellation.
+        assert format(combo, "~D") == "mm * km / mm"
+
+    def test_chained_operation_preserves_partial_cancellation(self):
+        # non_reduced_d_items/unit_items() used to read a nested
+        # NonReducingUnitsContainer ingredient through its reduced _d rather
+        # than its own non-reduced items, so a further multiply/divide baked
+        # away display fidelity for any earlier group that didn't fully
+        # cancel to nothing. This was masked by
+        # test_chained_operation_after_non_reducing, whose earlier group
+        # (mm/mm) happens to cancel to an empty dict.
+        ureg = UnitRegistry(auto_reduce_units=False)
+        a = ureg.Unit("mm") ** 2 / ureg.Unit("mm")
+        assert a._units.non_reduced_d_items == [("millimeter", 2), ("millimeter", -1)]
+
+        b = a * ureg.Unit("s")
+        assert b._units.non_reduced_d_items == [
+            ("millimeter", 2),
+            ("millimeter", -1),
+            ("second", 1),
+        ]
+        assert format(b, "~D") == "mm ** 2 * s / mm"
+
+        # unit_items() (used by the Quantity formatting path) must agree
+        assert b._units.unit_items() == b._units.non_reduced_d_items
+
+    def test_deepcopy(self):
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain = ureg.Unit("mm") / ureg.Unit("mm")
+        copied = copy.deepcopy(strain)
+        assert format(copied, "~D") == format(strain, "~D")
+        assert copied._units.non_reduced_d_items == strain._units.non_reduced_d_items
+
+    def test_pickle_non_reducing_units_container(self):
+        # NonReducingUnitsContainer.__getstate__/__setstate__ used to only
+        # cover the base UnitsContainer's __slots__ (_d, _one, _non_int_type),
+        # silently dropping _auto_reduce_units (a slot added to the base
+        # class for this feature) and this subclass's own
+        # non_reduced_units/reduced_units/non_reduced_d_items/i, so a round
+        # trip through pickle either raised AttributeError on the next
+        # __mul__/__truediv__ or crashed formatting the restored object.
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain_uc = (ureg.Unit("mm") / ureg.Unit("mm"))._units
+        assert isinstance(strain_uc, NonReducingUnitsContainer)
+
+        restored = pickle.loads(pickle.dumps(strain_uc))
+        assert restored._auto_reduce_units is False
+        assert restored.non_reduced_units == strain_uc.non_reduced_units
+        assert restored.non_reduced_d_items == strain_uc.non_reduced_d_items
+        assert restored.reduced_units == strain_uc.reduced_units
+        assert restored.i == strain_uc.i
+
+        # the restored object must still support further non-reducing ops
+        combo = restored * ureg.Unit("s")._units
+        assert isinstance(combo, NonReducingUnitsContainer)
+
+    def test_pickle_unit_and_quantity(self, monkeypatch):
+        # Unit/Quantity pickling reconstructs against the application
+        # registry (see pint._unpickle_unit/_unpickle_quantity), which
+        # requires the registry actually used to build the object to be the
+        # application registry; set it explicitly here rather than relying
+        # on the process-wide default (which may or may not already know
+        # about "millimeter" depending on unrelated prior use).
+        import pint
+
+        ureg = UnitRegistry(auto_reduce_units=False)
+        monkeypatch.setattr(
+            pint, "application_registry", pint.ApplicationRegistry(ureg)
+        )
+
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        restored_unit = pickle.loads(pickle.dumps(strain_unit))
+        assert format(restored_unit, "~D") == format(strain_unit, "~D")
+
+        strain_q = ureg.Quantity(1, "mm") / ureg.Quantity(1, "mm")
+        restored_q = pickle.loads(pickle.dumps(strain_q))
+        assert format(restored_q, "~D") == format(strain_q, "~D")
+
+    def test_formatting_caret_spec_and_sort_order(self):
+        # Coverage for the empty_numerator_fmt / custom sort_func plumbing
+        # added for NonReducingUnitsContainer across full.py,
+        # _format_helpers.py and plain.py, which is only exercised via the
+        # "^" (as_ratio=False) format spec path.
+        ureg = UnitRegistry(auto_reduce_units=False)
+        strain_unit = ureg.Unit("mm") / ureg.Unit("mm")
+        assert format(strain_unit, "~^D") == "mm * mm ** -1"
+
+        # the custom sort_func preserves insertion order instead of the
+        # default dimension/name based sort
+        mixed = ureg.Unit("s") * ureg.Unit("mm") / ureg.Unit("s")
+        assert format(mixed, "~D") == "s * mm / s"
 
 
 class TestCaseInsensitiveRegistry(QuantityTestCase):

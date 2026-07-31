@@ -235,6 +235,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if units is None:
             units = inst.UnitsContainer()
         else:
+            if isinstance(units, list):
+                units = inst._REGISTRY.NonReducingUnitsContainer(units)
             if isinstance(units, (UnitsContainer, UnitDefinition)):
                 units = units
             elif isinstance(units, str):

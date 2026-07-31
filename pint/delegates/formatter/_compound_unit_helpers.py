@@ -22,7 +22,7 @@ from typing import (
 )
 
 from ...compat import babel_parse
-from ...util import UnitsContainer
+from ...util import NonReducingUnitsContainer, SharedRegistryObject, UnitsContainer
 from .sorting import SortFunc
 
 if TYPE_CHECKING:
@@ -176,6 +176,7 @@ def prepare_compount_unit[T](
     locale: Locale | str | None = None,
     as_ratio: bool = True,
     registry: UnitRegistry | None = None,
+    empty_numerator_fmt: str = "1",
 ) -> tuple[Iterable[tuple[str, T]], Iterable[tuple[str, T]]]:
     """Format compound unit into unit container given
     an spec and locale.
@@ -187,8 +188,11 @@ def prepare_compount_unit[T](
 
     if isinstance(unit, UnitsContainer):
         out = unit.items()
-    elif hasattr(unit, "_units"):
-        out = unit._units.items()
+    elif isinstance(unit, SharedRegistryObject):
+        if isinstance(unit._units, NonReducingUnitsContainer):
+            out = unit._units.non_reduced_d_items
+        else:
+            out = unit._units.items()
     else:
         out = unit
 

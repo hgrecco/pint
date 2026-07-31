@@ -83,6 +83,7 @@ class DefaultFormatter(BaseFormatter):
         unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
+        empty_numerator_fmt: str = "1",
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         """Format a unit (can be compound) into string
@@ -213,6 +214,7 @@ class CompactFormatter(BaseFormatter):
         unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
+        empty_numerator_fmt: str = "1",
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         numerator, denominator = prepare_compount_unit(
@@ -238,6 +240,7 @@ class CompactFormatter(BaseFormatter):
             division_fmt=division_fmt,
             power_fmt="{}**{}",
             parentheses_fmt=r"({})",
+            empty_numerator_fmt=empty_numerator_fmt,
         )
 
     def format_quantity[MagnitudeT: Magnitude](
@@ -330,6 +333,7 @@ class PrettyFormatter(BaseFormatter):
         unit: PlainUnit | Iterable[tuple[str, Any]],
         uspec: str = "",
         sort_func: SortFunc | None = None,
+        empty_numerator_fmt: str = "1",
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
         numerator, denominator = prepare_compount_unit(
@@ -359,6 +363,7 @@ class PrettyFormatter(BaseFormatter):
             power_fmt="{}{}",
             parentheses_fmt="({})",
             exp_call=pretty_fmt_exponent,
+            empty_numerator_fmt=empty_numerator_fmt,
         )
 
     def format_quantity[MagnitudeT: Magnitude](

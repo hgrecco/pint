@@ -434,15 +434,20 @@ class UnitsContainer(Mapping[str, Scalar]):
         Numerical type used for non integer values.
     """
 
-    __slots__ = ("_d", "_hash", "_one", "_non_int_type")
+    __slots__ = ("_d", "_hash", "_one", "_non_int_type", "_auto_reduce_units")
 
     _d: udict
     _hash: int | None
     _one: Scalar
     _non_int_type: type
+    _auto_reduce_units: bool
 
     def __init__(
-        self, *args: Any, non_int_type: type | None = None, **kwargs: Any
+        self,
+        *args: Any,
+        non_int_type: type | None = None,
+        auto_reduce_units: bool = True,
+        **kwargs: Any,
     ) -> None:
         if args and isinstance(args[0], UnitsContainer):
             default_non_int_type = args[0]._non_int_type
@@ -450,6 +455,7 @@ class UnitsContainer(Mapping[str, Scalar]):
             default_non_int_type = float
 
         self._non_int_type = non_int_type or default_non_int_type
+        self._auto_reduce_units = auto_reduce_units
 
         if self._non_int_type is float:
             self._one = 1
@@ -556,11 +562,19 @@ class UnitsContainer(Mapping[str, Scalar]):
         return self._hash
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
-    def __getstate__(self) -> tuple[udict, Scalar, type]:
-        return self._d, self._one, self._non_int_type
+    def __getstate__(self) -> tuple[udict, Scalar, type, bool]:
+        return self._d, self._one, self._non_int_type, self._auto_reduce_units
 
-    def __setstate__(self, state: tuple[udict, Scalar, type]):
-        self._d, self._one, self._non_int_type = state
+    def __setstate__(
+        self, state: tuple[udict, Scalar, type] | tuple[udict, Scalar, type, bool]
+    ):
+        # Older pickles (pre auto_reduce_units) only have 3 elements; default
+        # the new field the same way it always defaulted for un-pickled data.
+        if len(state) == 3:
+            self._d, self._one, self._non_int_type = state
+            self._auto_reduce_units = True
+        else:
+            self._d, self._one, self._non_int_type, self._auto_reduce_units = state
         self._hash = None
 
     def __eq__(self, other: Any) -> bool:
@@ -609,12 +623,21 @@ class UnitsContainer(Mapping[str, Scalar]):
         out._hash = self._hash
         out._non_int_type = self._non_int_type
         out._one = self._one
+        out._auto_reduce_units = self._auto_reduce_units
         return out
 
+    def __deepcopy__(self, memo):
+        return self.copy()
+
     def __mul__(self, other: Any):
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, UnitsContainer):
             err = "Cannot multiply UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
+
+        if not self._auto_reduce_units:
+            return NonReducingUnitsContainer(
+                [self, other], auto_reduce_units=self._auto_reduce_units
+            )
 
         new = self.copy()
         for key, value in other.items():
@@ -639,9 +662,15 @@ class UnitsContainer(Mapping[str, Scalar]):
         return new
 
     def __truediv__(self, other: Any):
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, UnitsContainer):
             err = "Cannot divide UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
+
+        if not self._auto_reduce_units:
+            return NonReducingUnitsContainer(
+                [self, UnitsContainer({}) / other],
+                auto_reduce_units=self._auto_reduce_units,
+            )
 
         new = self.copy()
         for key, value in other.items():
@@ -653,7 +682,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         return new
 
     def __rtruediv__(self, other: Any):
-        if not isinstance(other, self.__class__) and other != 1:
+        if not isinstance(other, UnitsContainer) and other != 1:
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
 
@@ -663,6 +692,130 @@ class UnitsContainer(Mapping[str, Scalar]):
         if not isinstance(value, int) and not isinstance(value, self._non_int_type):
             return self._non_int_type(value)  # type: ignore[no-any-return]
         return value
+
+
+class NonReducingUnitsContainer(UnitsContainer):
+    """The NonReducingUnitsContainer stores UnitsContainers without simplifying common units.
+    This is useful when it is desired to show a unit in the numerator and denominator, eg mm/mm.
+    """
+
+    def __init__(
+        self,
+        units: list[QuantityOrUnitLike | tuple[QuantityOrUnitLike, Scalar]],
+        non_int_type: type | None = None,
+        auto_reduce_units: bool = True,
+    ) -> None:
+        self.non_reduced_units: list[UnitsContainer] = []
+
+        for u in units:
+            power: Scalar | None = None
+            if isinstance(u, tuple):
+                u, power = u
+
+            if isinstance(u, SharedRegistryObject):
+                u = u._units
+            if not isinstance(u, UnitsContainer):
+                raise TypeError(f"Cannot build NonReducingUnitsContainer from {u!r}")
+
+            if power is not None:
+                u = u**power
+
+            self.non_reduced_units.append(u)
+
+        if non_int_type is None and self.non_reduced_units:
+            non_int_type = self.non_reduced_units[0]._non_int_type
+        self._non_int_type = non_int_type or float
+        self._auto_reduce_units = auto_reduce_units
+
+        # UnitsContainer.__copy__ (inherited, not overridden here) copies _one,
+        # so it must be set like the base class does.
+        if self._non_int_type is float:
+            self._one = 1
+        else:
+            self._one = self._non_int_type("1")
+
+        self.reduced_units = UnitsContainer()
+        for unit in self.non_reduced_units:
+            self.reduced_units *= unit
+
+        self._d = self.reduced_units._d
+        self._hash = self.reduced_units._hash
+
+        # Read each ingredient through its own non_reduced_d_items when it is
+        # itself a NonReducingUnitsContainer (e.g. built by a further
+        # multiply/divide on an already non-reducing container), not through
+        # its reduced _d -- otherwise any earlier group that doesn't fully
+        # cancel to nothing loses its display fidelity on the next operation.
+        self.non_reduced_d_items: list[tuple[str, Scalar]] = []
+        for uc in self.non_reduced_units:
+            if isinstance(uc, NonReducingUnitsContainer):
+                self.non_reduced_d_items.extend(uc.non_reduced_d_items)
+            else:
+                self.non_reduced_d_items.extend(uc._d.items())
+        self.i = 0
+
+    def __copy__(self) -> Self:
+        # UnitsContainer.__copy__ uses object.__new__ and skips __init__, so it
+        # only copies the base class's __slots__. Carry over the extra state
+        # this subclass keeps in its instance __dict__ too.
+        new = super().__copy__()
+        new.non_reduced_units = list(self.non_reduced_units)
+        new.reduced_units = self.reduced_units
+        new.non_reduced_d_items = list(self.non_reduced_d_items)
+        new.i = self.i
+        return new
+
+    def __repr__(self) -> str:
+        tmp = "[%s]" % ", ".join(
+            [f"'{key}': {value}" for key, value in self.non_reduced_d_items]
+        )
+        return f"<NonReducingUnitsContainer({tmp})>"
+
+    def unit_items(self) -> Iterable[tuple[str, Scalar]]:
+        # Same data as non_reduced_d_items; kept as one implementation so a
+        # display-fidelity fix (see __init__) can't drift between the two.
+        return self.non_reduced_d_items
+
+    # UnitsContainer.__getstate__ only covers the base class's __slots__; carry
+    # over the extra state this subclass keeps in its instance __dict__ too
+    # (same issue __copy__ has, see above).
+    def __getstate__(
+        self,
+    ) -> tuple[
+        udict,
+        Scalar,
+        type,
+        bool,
+        list[UnitsContainer],
+        UnitsContainer,
+        list[tuple[str, Scalar]],
+        int,
+    ]:
+        return super().__getstate__() + (
+            self.non_reduced_units,
+            self.reduced_units,
+            self.non_reduced_d_items,
+            self.i,
+        )
+
+    def __setstate__(
+        self,
+        state: tuple[
+            udict,
+            Scalar,
+            type,
+            bool,
+            list[UnitsContainer],
+            UnitsContainer,
+            list[tuple[str, Scalar]],
+            int,
+        ],
+    ) -> None:
+        super().__setstate__(state[:4])
+        self.non_reduced_units = state[4]
+        self.reduced_units = state[5]
+        self.non_reduced_d_items = state[6]
+        self.i = state[7]
 
 
 class ParserHelper(UnitsContainer):
@@ -799,12 +952,22 @@ class ParserHelper(UnitsContainer):
         return super().__hash__()
 
     # Only needed by pickle protocol 0 and 1 (used by pytables)
-    def __getstate__(self):
+    def __getstate__(self) -> tuple[udict, Scalar, type, bool, Scalar]:
         return super().__getstate__() + (self.scale,)
 
-    def __setstate__(self, state):
-        super().__setstate__(state[:-1])
-        self.scale = state[-1]
+    def __setstate__(
+        self,
+        state: tuple[udict, Scalar, type, Scalar]
+        | tuple[udict, Scalar, type, bool, Scalar],
+    ) -> None:
+        # Older pickles (pre auto_reduce_units) only have 4 elements: the
+        # base UnitsContainer's old 3-element state plus scale.
+        if len(state) == 4:
+            super().__setstate__(state[:3])
+            self.scale = state[3]
+        else:
+            super().__setstate__(state[:4])
+            self.scale = state[4]
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, ParserHelper):
