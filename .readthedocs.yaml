@@ -1,19 +1,11 @@
 version: 2
 build:
   os: ubuntu-22.04
-  tools:
-    python: "3.12"
-  apt_packages:
-    - graphviz
-  jobs:
-    build:
-      html:
-        # Same command as the `docbuild` pixi task in pyproject.toml, so RTD
-        # builds the docs the same way as local development.
-        - sphinx-build -n -j auto -b html -d $READTHEDOCS_OUTPUT/doctrees docs $READTHEDOCS_OUTPUT/html
-python:
-   install:
-     - method: pip
-       path: .
-       extra_requirements:
-         - docs
+  commands:
+    # Use the same pixi "docs" environment and task as local development
+    # (see [tool.pixi.environments] "docs" and [tool.pixi.feature.docs.tasks]
+    # "docbuild" in pyproject.toml), instead of a separate pip install.
+    - curl -fsSL https://pixi.sh/install.sh | sh
+    - $HOME/.pixi/bin/pixi run -e docs docbuild
+    - mkdir -p $READTHEDOCS_OUTPUT/html
+    - cp -r build/html/. $READTHEDOCS_OUTPUT/html/
