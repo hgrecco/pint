@@ -213,7 +213,9 @@ typecheck = "pyright"
 pint = { path = ".", editable = true }
 
 [tool.pixi.feature.docs.tasks]
-docbuild = "sphinx-build -n -j auto -b html -d build/doctrees docs build/html"
+docbuild = { cmd = "sphinx-build -n -j auto -b html -d build/doctrees docs {{ loc }}", args = [
+  { arg = "loc", default = "build/html" },
+] }
 doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest"
 
 [tool.pixi.feature.docs.dependencies]
