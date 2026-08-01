@@ -367,7 +367,7 @@ class PrettyFormatter(BaseFormatter):
             single_denominator=False,
             product_fmt="⋅",
             division_fmt=division_fmt,
-            power_fmt="{} ** {}" if "/" in uspec else "{}{}",
+            power_fmt="{}{}",
             parentheses_fmt="({})",
             exp_call=pretty_fmt_exponent_fraction
             if "/" in uspec

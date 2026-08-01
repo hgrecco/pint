@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from fractions import Fraction
+
 import pytest
 
 import pint.formatting as fmt
@@ -84,17 +86,21 @@ def test_format_unit_caret_negative_power(func_registry):
 
 
 def test_format_unit_fraction_exponent(func_registry):
-    """format_unit with / flag renders fractional exponents as a plain
-    fraction instead of a decimal (fixes #60).
+    """format_unit with / flag renders fractional exponents as a pretty
+    printed fraction (superscript numerator, superscript slash, superscript
+    denominator) instead of a decimal (fixes #60).
     """
     u = func_registry.Unit("second") ** 1.5
     assert format(u, "~P") == "s¹⋅⁵"
-    assert format(u, "~/P") == "s ** (3/2)"
+    assert format(u, "~/P") == "s³ᐟ²"
 
-    # Whole-number exponents are unaffected (still a plain, unparenthesized
-    # exponent using the ** notation this modifier switches to).
+    # Whole-number exponents are unaffected (still a plain superscript).
     u2 = func_registry.Unit("meter") ** 2
-    assert format(u2, "~/P") == "m ** 2"
+    assert format(u2, "~/P") == "m²"
+
+    # An exact Fraction exponent renders the same as the equivalent float.
+    u3 = func_registry.Unit("second") ** Fraction(3, 2)
+    assert format(u3, "~/P") == "s³ᐟ²"
 
 
 def test_format_unit_fraction_exponent_absorbs_noise(func_registry):
@@ -107,4 +113,4 @@ def test_format_unit_fraction_exponent_absorbs_noise(func_registry):
 
     # Noise near zero (#1487): the residual exponent snaps to 0.
     u2 = func_registry.Unit("meter") ** 5.55e-17
-    assert format(u2, "~/P") == "m ** 0"
+    assert format(u2, "~/P") == "m⁰"
