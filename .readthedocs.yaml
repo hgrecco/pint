@@ -14,5 +14,6 @@ build:
       - pixi install -e docs
     build:
       html:
-        # Same command as the `docbuild` pixi task in pyproject.toml.
-        - pixi run -e docs sphinx-build -n -j auto -b html -d $READTHEDOCS_OUTPUT/doctrees docs $READTHEDOCS_OUTPUT/html
+        - pixi run -e docs docbuild
+        - mkdir -p $READTHEDOCS_OUTPUT/html
+        - cp -r build/html/. $READTHEDOCS_OUTPUT/html/
