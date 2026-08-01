@@ -83,8 +83,7 @@ Modifier Meaning                                             Example
 .. note::
 
    The ``/`` modifier converts floats to the nearest fraction with a
-   denominator of at most 1000, aleviating floating point issues (see
-   issues #1487 and #681):
+   denominator of at most 1000, aleviating floating point issues:
 
    .. doctest::
 
