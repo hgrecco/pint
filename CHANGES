@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Raise `DefinitionSyntaxError` instead of a bare `RecursionError` for deeply nested expressions
 - Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and notebook, requiring no local install (#2372)
 - Switch CodSpeed CI benchmarks to `simulation` mode to fix a walltime environment warning.
 - Fix `is_compatible_with` edge cases with dimensionless types and unit strings with a scaling factor (e.g. `"35000 ft"`) (#1190)

@@ -184,3 +184,22 @@ def test_build_eval_tree_missing_operand_raises_definition_syntax_error(
 
     with pytest.raises(DefinitionSyntaxError):
         build_eval_tree(tokenizer(input_text))
+
+
+@pytest.mark.parametrize("tokenizer", TOKENIZERS)
+@pytest.mark.parametrize("op", ["**", "^"])
+def test_build_eval_tree_deeply_nested_raises_definition_syntax_error(
+    tokenizer, op: str
+):
+    # Regression test for uncontrolled recursion (CWE-674): a deeply nested
+    # right-associative expression must raise a pint DefinitionSyntaxError
+    # instead of an uncaught RecursionError out of the public API. Python's
+    # tokenize caps nested parentheses but not operator nesting, so without
+    # the depth bound in _build_eval_tree a ~6 KB payload of chained ``**`` /
+    # ``^`` operators recurses past sys.getrecursionlimit().
+    from pint.errors import DefinitionSyntaxError
+
+    evil = "kg " + f"{op} kg " * 1000
+    with pytest.raises(DefinitionSyntaxError):
+        build_eval_tree(tokenizer(evil))
+
