@@ -81,3 +81,30 @@ def test_format_unit_caret_negative_power(func_registry):
     assert format(u, "~^P") == "s⁻¹"
     # Without ^ flag: 1/s (ratio form, unchanged)
     assert format(u, "~P") == "1/s"
+
+
+def test_format_unit_fraction_exponent(func_registry):
+    """format_unit with / flag renders fractional exponents as a plain
+    fraction instead of a decimal (fixes #60).
+    """
+    u = func_registry.Unit("second") ** 1.5
+    assert format(u, "~P") == "s¹⋅⁵"
+    assert format(u, "~/P") == "s ** (3/2)"
+
+    # Whole-number exponents are unaffected (still a plain, unparenthesized
+    # exponent using the ** notation this modifier switches to).
+    u2 = func_registry.Unit("meter") ** 2
+    assert format(u2, "~/P") == "m ** 2"
+
+
+def test_format_unit_fraction_exponent_absorbs_noise(func_registry):
+    """The / flag snaps near-integer floating-point noise back to a clean
+    exponent, the same noise that caused DimensionalityError in #1487/#681.
+    """
+    # Noise near an integer, e.g. from combining fractional powers (#681).
+    u = func_registry.Unit("second") ** -0.9999999999999998
+    assert format(u, "~/P") == "1/s"
+
+    # Noise near zero (#1487): the residual exponent snaps to 0.
+    u2 = func_registry.Unit("meter") ** 5.55e-17
+    assert format(u2, "~/P") == "m ** 0"

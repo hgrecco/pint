@@ -77,7 +77,39 @@ Modifier Meaning                                             Example
 ======== =================================================== ================================
 ``~``    Use the unit's symbol instead of its canonical name ``kg⋅m/s²`` (``f"{u:~P}"``)
 ``^``    Use negative exponents instead of ratio             ``kg⋅m⋅s⁻²`` (``f"{u:~^P}"``)
+``/``    Show a fractional exponent as a fraction, not a     ``s ** (3/2)`` (``f"{u:~/P}"``)
+         decimal
 ======== =================================================== ================================
+
+By default, a fractional exponent (e.g. from raising a unit to a fractional
+power) is shown as a decimal, which loses precision for anything but a simple
+fraction. The ``/`` modifier instead renders it using ``**`` with the
+exponent as a ``(numerator/denominator)`` fraction:
+
+.. doctest::
+
+   >>> u = ureg.Unit("second") ** 1.5
+   >>> f"{u:~P}"
+   's¹⋅⁵'
+   >>> f"{u:~/P}"
+   's ** (3/2)'
+
+The exponent is snapped to the nearest fraction with a denominator of at
+most 1000, which also absorbs the kind of floating-point noise that
+combining fractional powers can leave behind (see issues #1487 and #681):
+a value that should be exactly ``-1`` but landed on
+``-0.9999999999999998``, or one that should be exactly ``0`` but landed on
+``5.55e-17``, both snap back to a clean exponent instead of printing the
+noise:
+
+.. doctest::
+
+   >>> noisy_minus_one = ureg.Unit("second") ** -0.9999999999999998
+   >>> f"{noisy_minus_one:~/P}"
+   '1/s'
+   >>> noisy_near_zero = ureg.Unit("meter") ** 5.55e-17
+   >>> f"{noisy_near_zero:~/P}"
+   'm ** 0'
 
 Magnitude modifiers
 -------------------
