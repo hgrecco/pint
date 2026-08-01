@@ -5,9 +5,6 @@ build:
   tools:
     python: "3.12"
   jobs:
-    # Use the same pixi "docs" environment as local development (see
-    # [tool.pixi.environments] "docs" in pyproject.toml), following the
-    # pattern from
     # https://docs.readthedocs.com/platform/stable/build-customization.html
     create_environment:
       - asdf plugin add pixi
