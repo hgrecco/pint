@@ -550,7 +550,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
     def _add_alias(self, definition: AliasDefinition) -> None:
         unit_dict = self._units
-        unit = unit_dict[definition.name]
+        unit = unit_dict[self.get_name(definition.name)]
         while not isinstance(unit, UnitDefinition):
             unit = unit_dict[unit.name]
         for alias in definition.aliases:
