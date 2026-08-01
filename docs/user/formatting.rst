@@ -80,24 +80,11 @@ Modifier Meaning                                             Example
 ``/``    Show exponent as a fraction                            ``s³ᐟ²`` (``f"{u:~/P}"``)
 ======== =================================================== ================================
 
-By default, a fractional exponent (e.g. from raising a unit to a fractional
-power) is shown as a decimal, which loses precision for anything but a simple
-fraction. The ``/`` modifier instead renders it as a pretty printed fraction,
-entirely in superscript (numerator, slash, and denominator):
-
-.. doctest::
-
-   >>> u = ureg.Unit("second") ** 1.5
-   >>> f"{u:~P}"
-   's¹⋅⁵'
-   >>> f"{u:~/P}"
-   's³ᐟ²'
-
 .. note::
 
-   The exponent is snapped to the nearest fraction with a denominator of at
-   most 1000, which also absorbs floating-point noise from combining
-   fractional powers (see issues #1487 and #681):
+   The ``/`` modifier converts floats to the nearest fraction with a
+   denominator of at most 1000, aleviating floating point issues (see
+   issues #1487 and #681):
 
    .. doctest::
 

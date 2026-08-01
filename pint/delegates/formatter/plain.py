@@ -343,11 +343,6 @@ class PrettyFormatter(BaseFormatter):
         )
 
         if "/" in uspec:
-            # Snap each exponent to the nearest simple fraction before
-            # `formatter()` sees it, so its "omit the exponent when exactly
-            # 1 (or -1)" shortcut also fires on noise like
-            # 0.9999999999999998 (#681) or 5.55e-17 (#1487), not just the
-            # rendering of a genuine fraction.
             numerator = [(key, _clean_exponent(value)) for key, value in numerator]
             denominator = [(key, _clean_exponent(value)) for key, value in denominator]
 
