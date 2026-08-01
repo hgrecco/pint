@@ -9,7 +9,8 @@ Pint is a Python package to define, operate and manipulate **physical quantities
 the product of a numerical value and a unit of measurement. It allows
 arithmetic operations between them and conversions from and to different units.
 
-It is distributed with a `comprehensive list of physical units, prefixes and constants`_.
+It is distributed with a comprehensive :ref:`list of physical units, prefixes and
+constants <default-units>`.
 Due to its modular design, you can extend (or even rewrite!) the complete list
 without changing the source code. It supports a lot of numpy mathematical
 operations **without monkey patching or wrapping numpy**.
@@ -108,7 +109,6 @@ License
 .. literalinclude:: ../../LICENSE
    :language: none
 
-.. _`comprehensive list of physical units, prefixes and constants`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
 .. _`uncertainties package`: https://pythonhosted.org/uncertainties/
 .. _`NumPy`: http://www.numpy.org/
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/

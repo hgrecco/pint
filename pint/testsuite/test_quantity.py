@@ -1,3 +1,4 @@
+# pyright: reportUnusedExpression=none
 from __future__ import annotations
 
 import copy
@@ -24,7 +25,12 @@ from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
 if TYPE_CHECKING:
+    from typing import TypedDict
+
     from pint import Quantity as Q_
+
+    class _TestQuantityKwargs(TypedDict):
+        autoconvert_offset_to_baseunit: bool
 
 
 class FakeWrapper:
@@ -35,7 +41,7 @@ class FakeWrapper:
 
 # TODO: do not subclass from QuantityTestCase
 class TestQuantity(QuantityTestCase):
-    kwargs = dict(autoconvert_offset_to_baseunit=False)
+    kwargs: "_TestQuantityKwargs" = {"autoconvert_offset_to_baseunit": False}
 
     def test_quantity_creation(self, caplog):
         x: Q_[float]
@@ -2049,7 +2055,7 @@ class TestTimedelta(QuantityTestCase):
         after = d - 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
         with pytest.raises(DimensionalityError):
-            3 * self.ureg.second - d
+            3 * self.ureg.second - d  # pyright: ignore[reportOperatorIssue]
 
     def test_iadd_isub(self):
         d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
