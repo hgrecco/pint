@@ -97,18 +97,20 @@ multiplications by ``meter ** 0.1`` don't quite add up to exactly
    True
 
 This comes at a performance cost (roughly 25% slower than plain ``float``
-for typical arithmetic), and it only stays exact as long as every operand
-is exact: raising an exact ``Fraction``-based unit to an ordinary ``float``
-power converts its exponent back to ``float``, reintroducing the same
-fragility:
+for typical arithmetic), and it only stays exact as long as every exponent
+is exact: combining an exact ``Fraction`` exponent with an ordinary
+``float`` exponent on the same unit produces a ``float`` result, the same
+noise-prone type this is meant to avoid:
 
 .. doctest::
 
-   >>> u3
-   Unit("meter")
-   >>> u3 ** 2.0
-   Unit("meter ** 2")
-   >>> type((u3**2.0)._units["meter"])
+   >>> Q_ = ureg2.Quantity
+   >>> a = Q_(1, ureg2.m ** fractions.Fraction(8, 10))
+   >>> b = Q_(1, ureg2.m ** 0.5)
+   >>> c = a * b
+   >>> c.units._units["meter"]
+   1.3
+   >>> type(c.units._units["meter"])
    <class 'float'>
 
 
