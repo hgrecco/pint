@@ -265,7 +265,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             )
         else:
             magnitude = _to_magnitude(
-                value, inst.force_ndarray, inst.force_ndarray_like
+                value,
+                inst.force_ndarray,
+                inst.force_ndarray_like,
+                non_int_type=inst._REGISTRY.non_int_type,
             )
         inst._magnitude = cast("MagnitudeT_co", magnitude)
         inst._units = units

@@ -299,12 +299,16 @@ if HAS_NUMPY:
     else:
         NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
-    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
+    def _to_magnitude(
+        value, force_ndarray=False, force_ndarray_like=False, non_int_type=float
+    ):
         if isinstance(value, (dict, bool)) or value is None:
             raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
         elif isinstance(value, str) and value == "":
             raise ValueError("Quantity magnitude cannot be an empty string.")
         elif isinstance(value, (list, tuple)):
+            if any(isinstance(v, str) for v in value):
+                value = [non_int_type(v) if isinstance(v, str) else v for v in value]
             return np.asarray(value)
         elif HAS_UNCERTAINTIES:
             from pint.facets.measurement.objects import Measurement
@@ -340,7 +344,9 @@ else:
     NUMERIC_TYPES = (Number, Decimal)
     NP_NO_VALUE = None
 
-    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
+    def _to_magnitude(
+        value, force_ndarray=False, force_ndarray_like=False, non_int_type=float
+    ):
         if force_ndarray or force_ndarray_like:
             raise ValueError(
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."

@@ -1157,6 +1157,25 @@ def test_issue1433(func_registry):
 
 
 @helpers.requires_numpy
+def test_issue1735():
+    # A list/tuple of numeric strings used to keep a string dtype instead of
+    # being parsed into the registry's non_int_type, unlike an equivalent
+    # scalar string (e.g. Quantity("2", "m")), which already parses correctly.
+    ureg = UnitRegistry()
+
+    q = ureg.Quantity(["0.0", "1.0"], "kg")
+    assert q.magnitude.dtype != object
+    assert list(q.magnitude) == [0.0, 1.0]
+
+    q_tuple = ureg.Quantity(("1.5", "2.5"), "kg")
+    assert list(q_tuple.magnitude) == [1.5, 2.5]
+
+    ureg_dec = UnitRegistry(non_int_type=decimal.Decimal)
+    q_dec = ureg_dec.Quantity(["0.0", "1.0"], "kg")
+    assert list(q_dec.magnitude) == [decimal.Decimal("0.0"), decimal.Decimal("1.0")]
+
+
+@helpers.requires_numpy
 def test_issue681():
     # Floating-point noise from combining fractional exponents used to leave
     # a near-integer (not just near-zero) residual, e.g. [time] ** -0.9999999999999998
