@@ -109,8 +109,10 @@ def test_format_unit_fraction_exponent_absorbs_noise(func_registry):
     """
     # Noise near an integer, e.g. from combining fractional powers (#681).
     u = func_registry.Unit("second") ** -0.9999999999999998
+    assert format(u, "~P") == "1/s¹"
     assert format(u, "~/P") == "1/s"
 
     # Noise near zero (#1487): the residual exponent snaps to 0.
     u2 = func_registry.Unit("meter") ** 5.55e-17
+    assert format(u2, "~P") == "m⁵⋅⁵⁵e⁻¹⁷"
     assert format(u2, "~/P") == "m⁰"
