@@ -1,3 +1,4 @@
+# pyright: reportUnusedExpression=none
 from __future__ import annotations
 
 import copy
@@ -24,7 +25,12 @@ from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
 if TYPE_CHECKING:
+    from typing import TypedDict
+
     from pint import Quantity as Q_
+
+    class _TestQuantityKwargs(TypedDict):
+        autoconvert_offset_to_baseunit: bool
 
 
 class FakeWrapper:
@@ -35,7 +41,7 @@ class FakeWrapper:
 
 # TODO: do not subclass from QuantityTestCase
 class TestQuantity(QuantityTestCase):
-    kwargs = dict(autoconvert_offset_to_baseunit=False)
+    kwargs: "_TestQuantityKwargs" = {"autoconvert_offset_to_baseunit": False}
 
     def test_quantity_creation(self, caplog):
         x: Q_[float]
@@ -192,7 +198,7 @@ class TestQuantity(QuantityTestCase):
                 "{:L}",
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
-            ("{:P}", "4.12345678 kilogram·meter²/second"),
+            ("{:P}", "4.12345678 kilogram⋅meter²/second"),
             ("{:H}", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("{:C}", "4.12345678 kilogram*meter**2/second"),
             ("{:~}", "4.12345678 kg * m ** 2 / s"),
@@ -200,7 +206,7 @@ class TestQuantity(QuantityTestCase):
                 "{:L~}",
                 r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}",
             ),
-            ("{:P~}", "4.12345678 kg·m²/s"),
+            ("{:P~}", "4.12345678 kg⋅m²/s"),
             ("{:H~}", "4.12345678 kg m<sup>2</sup>/s"),
             ("{:C~}", "4.12345678 kg*m**2/s"),
             ("{:Lx}", r"\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}"),
@@ -233,8 +239,8 @@ class TestQuantity(QuantityTestCase):
                 "{:.2f}",
                 "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kilogram * meter ** 2",
             ),
-            ("{:.2f~P}", "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg·m²"),
-            ("{:g~P}", "[1e-16 1 1e+07 1e+12 nan inf] kg·m²"),
+            ("{:.2f~P}", "[0.00 1.00 10000000.00 1000000000000.00 nan inf] kg⋅m²"),
+            ("{:g~P}", "[1e-16 1 1e+07 1e+12 nan inf] kg⋅m²"),
             (
                 "{:.2f~H}",
                 (
@@ -286,12 +292,12 @@ class TestQuantity(QuantityTestCase):
                 "L",
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
-            ("P", "4.12345678 kilogram·meter²/second"),
+            ("P", "4.12345678 kilogram⋅meter²/second"),
             ("H", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("C", "4.12345678 kilogram*meter**2/second"),
             ("~", "4.12345678 kg * m ** 2 / s"),
             ("L~", r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
-            ("P~", "4.12345678 kg·m²/s"),
+            ("P~", "4.12345678 kg⋅m²/s"),
             ("H~", "4.12345678 kg m<sup>2</sup>/s"),
             ("C~", "4.12345678 kg*m**2/s"),
         ):
@@ -364,7 +370,7 @@ class TestQuantity(QuantityTestCase):
             r"\mathrm{meter}^{2}}{\mathrm{second}}$"
         )
         x._repr_pretty_(Pretty, False)
-        assert "".join(alltext) == "3.5 kilogram·meter²/second"
+        assert "".join(alltext) == "3.5 kilogram⋅meter²/second"
         ureg.formatter.default_format = "~"
         assert x._repr_html_() == "3.5 kg m<sup>2</sup>/s"
         assert (
@@ -373,7 +379,7 @@ class TestQuantity(QuantityTestCase):
         )
         alltext = []
         x._repr_pretty_(Pretty, False)
-        assert "".join(alltext) == "3.5 kg·m²/s"
+        assert "".join(alltext) == "3.5 kg⋅m²/s"
 
     def test_to_base_units(self):
         x = self.Q_("1*inch")
@@ -422,6 +428,14 @@ class TestQuantity(QuantityTestCase):
             round(abs(self.Q_("2 second").to("millisecond").magnitude - 2000), 7) == 0
         )
 
+    def test_convert_to_none(self):
+        q = self.Q_(5, None)
+
+        helpers.assert_quantity_equal(q.to(None), self.Q_(5, None))
+
+        q.ito(None)
+        helpers.assert_quantity_equal(q, self.Q_(5, None))
+
     @helpers.requires_scipy
     def test_to_preferred(self):
         ureg = self.ureg
@@ -459,6 +473,20 @@ class TestQuantity(QuantityTestCase):
 
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
+
+    def test_to_preferred_accepts_unitlike_strings(self):
+        ureg = self.ureg
+        q = self.Q_("1 g")
+
+        preferred = q.to_preferred(["kg"])
+
+        assert preferred.units == ureg.kg
+        assert preferred.magnitude == 0.001
+
+        q.ito_preferred(["kg"])
+
+        assert q.units == ureg.kg
+        assert q.magnitude == 0.001
 
     @helpers.requires_scipy
     def test_to_preferred_registry(self):
@@ -785,6 +813,65 @@ class TestQuantity(QuantityTestCase):
         assert not a.is_compatible_with(12)
 
         assert c.is_compatible_with(12)
+
+    def test_is_compatible_with_offset_units(self):
+        # 1190: offset units follow a different code path (via .to()) when
+        # contexts are involved, so make sure dimensionality-based
+        # compatibility still holds for them.
+        a = self.Q_(100, "degC")
+        b = self.Q_(50, "degF")
+
+        assert a.is_compatible_with(b)
+        assert a.is_compatible_with("degF")
+        assert a.is_compatible_with("kelvin")
+        assert a.is_compatible_with(self.U_("kelvin"))
+        assert not a.is_compatible_with("kg")
+
+    def test_is_compatible_with_string_with_magnitude(self):
+        # 1190: parsing a string with a scaling factor used to raise
+        # ValueError instead of being treated like any other unit string.
+        a = self.Q_(80, "in")
+
+        assert a.is_compatible_with("35000 ft")
+        assert not a.is_compatible_with("35000 kg")
+
+    def test_registry_is_compatible_with(self):
+        # 1190: UnitRegistry.is_compatible_with(obj1, obj2) used to be
+        # asymmetric when obj1 was a plain number/array and obj2 was a
+        # Quantity or Unit.
+        ureg = self.ureg
+
+        assert ureg.is_compatible_with(ureg.deg, 10.0)
+        assert ureg.is_compatible_with(10.0, ureg.deg)
+        assert ureg.is_compatible_with(self.Q_(10, ""), ureg.deg)
+        assert ureg.is_compatible_with(ureg.deg, self.Q_(10, ""))
+        assert not ureg.is_compatible_with(10.0, ureg.meter)
+        assert not ureg.is_compatible_with(ureg.meter, 10.0)
+
+        assert ureg.is_compatible_with("80 in", "35000 ft")
+        assert ureg.is_compatible_with("in", "35000 ft")
+        assert not ureg.is_compatible_with("80 in", "35000 kg")
+
+    def test_registry_is_compatible_with_non_pint_types(self):
+        # 1190: when neither argument is a Quantity, Unit or str, both are
+        # treated as dimensionless (matching master's pre-existing, if
+        # accidental, behavior of never raising here).
+        ureg = self.ureg
+
+        assert ureg.is_compatible_with(10.0, 5.0)
+        assert ureg.is_compatible_with(True, False)
+        assert ureg.is_compatible_with(None, None)
+        assert ureg.is_compatible_with({"a": 1}, {"a": 1})
+
+    @helpers.requires_numpy
+    def test_registry_is_compatible_with_np(self):
+        # 1190
+        ureg = self.ureg
+        arr = np.array([1, 2, 3, 4])
+
+        assert ureg.is_compatible_with(arr, ureg.deg)
+        assert ureg.is_compatible_with(ureg.deg, arr)
+        assert not ureg.is_compatible_with(arr, ureg.meter)
 
     def test_is_compatible_with_with_context(self):
         a = self.Q_(532.0, "nm")
@@ -1311,6 +1398,8 @@ class TestDimensions(QuantityTestCase):
         assert get(UnitsContainer({"[time]": 1})) == UnitsContainer({"[time]": 1})
         assert get("seconds") == UnitsContainer({"[time]": 1})
         assert get(UnitsContainer({"seconds": 1})) == UnitsContainer({"[time]": 1})
+        assert get("%") == UnitsContainer({})
+        assert get("‰") == UnitsContainer({})
         assert get("[velocity]") == UnitsContainer({"[length]": 1, "[time]": -1})
         assert get("[acceleration]") == UnitsContainer({"[length]": 1, "[time]": -2})
 
@@ -1966,7 +2055,7 @@ class TestTimedelta(QuantityTestCase):
         after = d - 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
         with pytest.raises(DimensionalityError):
-            3 * self.ureg.second - d
+            3 * self.ureg.second - d  # pyright: ignore[reportOperatorIssue]
 
     def test_iadd_isub(self):
         d = datetime.datetime(year=1968, month=1, day=10, hour=3, minute=42, second=24)
@@ -1982,6 +2071,160 @@ class TestTimedelta(QuantityTestCase):
         after = 3 * self.ureg.second
         with pytest.raises(DimensionalityError):
             after -= d
+
+    def test_init_quantity(self):
+        # 608
+        td = datetime.timedelta(seconds=3)
+        assert self.Q_(td) == 3 * self.ureg.second
+        q_hours = self.Q_(td, "hours")
+        assert q_hours == 3 * self.ureg.second
+        assert q_hours.units == self.ureg.hour
+
+    def test_mul_div(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(3.6, "m/s")
+        assert q * t == self.Q_(36.0, "m")
+        assert t * q == self.Q_(36.0, "m")
+        assert q / t == self.Q_(0.36, "m/s**2")
+        assert t / q == self.Q_(10 / 3.6, "s**2/m")
+
+    @helpers.requires_numpy
+    def test_mul_div_np(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(np.array([1.0, 2.0, 3.6]), "m/s")
+        helpers.assert_quantity_almost_equal(
+            q * t, self.Q_(np.array([10.0, 20.0, 36.0]), "m")
+        )
+        helpers.assert_quantity_almost_equal(
+            t * q, self.Q_(np.array([10.0, 20.0, 36.0]), "m")
+        )
+        helpers.assert_quantity_almost_equal(
+            q / t, self.Q_(np.array([0.1, 0.2, 0.36]), "m/s**2")
+        )
+        helpers.assert_quantity_almost_equal(
+            t / q, self.Q_(10 / np.array([1.0, 2.0, 3.6]), "s**2/m")
+        )
+
+        q *= t
+        helpers.assert_quantity_almost_equal(
+            q, self.Q_(np.array([10.0, 20.0, 36.0]), "m")
+        )
+
+        q = self.Q_(np.array([1.0, 2.0, 3.6]), "m/s")
+        q /= t
+        helpers.assert_quantity_almost_equal(
+            q, self.Q_(np.array([0.1, 0.2, 0.36]), "m/s**2")
+        )
+
+    def test_add_sub_timedelta(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(3.6, "s")
+        assert q + t == self.Q_(13.6, "s")
+        assert t + q == self.Q_(13.6, "s")
+        assert q - t == self.Q_(-6.4, "s")
+        assert t - q == self.Q_(6.4, "s")
+
+        with pytest.raises(DimensionalityError):
+            self.Q_(3.6, "m") + t
+
+        q2 = self.Q_(3.6, "s")
+        q2 += t
+        assert q2 == self.Q_(13.6, "s")
+        q3 = self.Q_(3.6, "s")
+        q3 -= t
+        assert q3 == self.Q_(-6.4, "s")
+
+    @helpers.requires_numpy
+    def test_add_sub_timedelta_np(self):
+        # 2348
+        t = datetime.timedelta(seconds=10)
+        q = self.Q_(np.array([1.0, 2.0, 3.6]), "s")
+        helpers.assert_quantity_almost_equal(
+            q + t, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            t + q, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            q - t, self.Q_(np.array([-9.0, -8.0, -6.4]), "s")
+        )
+        helpers.assert_quantity_almost_equal(
+            t - q, self.Q_(np.array([9.0, 8.0, 6.4]), "s")
+        )
+
+        q += t
+        helpers.assert_quantity_almost_equal(
+            q, self.Q_(np.array([11.0, 12.0, 13.6]), "s")
+        )
+
+    @pytest.mark.parametrize(
+        ["timedelta_unit", "pint_unit"],
+        (
+            pytest.param("s", "second", id="second"),
+            pytest.param("ms", "millisecond", id="millisecond"),
+            pytest.param("us", "microsecond", id="microsecond"),
+            pytest.param("ns", "nanosecond", id="nanosecond"),
+            pytest.param("m", "minute", id="minute"),
+            pytest.param("h", "hour", id="hour"),
+            pytest.param("D", "day", id="day"),
+            pytest.param("W", "week", id="week"),
+            pytest.param("M", "month", id="month"),
+            pytest.param("Y", "year", id="year"),
+        ),
+    )
+    @helpers.requires_numpy
+    def test_init_quantity_np(self, timedelta_unit, pint_unit):
+        # test init with the timedelta unit
+        td = np.timedelta64(3, timedelta_unit)
+        result = self.Q_(td)
+        expected = self.Q_(3, pint_unit)
+        helpers.assert_quantity_almost_equal(result, expected)
+        # check units are same. Use Q_ since Unit(s) != Unit(second)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test init with unit specified
+        result = self.Q_(td, "hours")
+        expected = self.Q_(3, pint_unit).to("hours")
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test array
+        td = np.array([3], dtype="timedelta64[{}]".format(timedelta_unit))
+        result = self.Q_(td)
+        expected = self.Q_([3], pint_unit)
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+        # test array with unit specified
+        result = self.Q_(td, "hours")
+        expected = self.Q_([3], pint_unit).to("hours")
+        helpers.assert_quantity_almost_equal(result, expected)
+        helpers.assert_quantity_almost_equal(
+            self.Q_(1, result.units), self.Q_(1, expected.units)
+        )
+
+    def test_init_quantity_with_quantity_and_units(self):
+        # Q_(quantity, units) used to crash: _is_timedelta's duck-array check
+        # misidentified the Quantity itself as a duck array (is_duck_array_type
+        # sees __array_function__/ndim/dtype on the class but can't see that
+        # _magnitude/_units are only set per-instance), then failed accessing
+        # `.dtype` on a magnitude that doesn't have one.
+        length = self.Q_(30, "cm")
+        assert self.Q_(length, "cm") == length
+
+    @helpers.requires_numpy
+    def test_init_quantity_np_array_with_quantity_and_units(self):
+        length = self.Q_(np.array([30.0]), "cm")
+        helpers.assert_quantity_almost_equal(self.Q_(length, "cm"), length)
 
 
 # TODO: do not subclass from QuantityTestCase

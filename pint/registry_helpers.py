@@ -39,11 +39,11 @@ def _replace_units(original_units, values_by_name):
     -------
 
     """
-    q = 1
+    q = UnitsContainer({})
     for arg_name, exponent in original_units.items():
-        q = q * values_by_name[arg_name] ** exponent
+        q *= getattr(values_by_name[arg_name], "_units", UnitsContainer({})) ** exponent
 
-    return getattr(q, "_units", UnitsContainer({}))
+    return q
 
 
 def _to_units_container(a, registry=None):
@@ -121,7 +121,9 @@ def _parse_wrap_args(args, registry=None):
         len_initial_values = len(values)
 
         # pack kwargs
-        for i, param_name in enumerate(sig.parameters):
+        for i, (param_name, param) in enumerate(sig.parameters.items()):
+            if param.kind == Parameter.VAR_KEYWORD:
+                continue
             if i >= len_initial_values:
                 values.append(kw[param_name])
 
@@ -167,7 +169,9 @@ def _parse_wrap_args(args, registry=None):
                         )
 
         # unpack kwargs
-        for i, param_name in enumerate(sig.parameters):
+        for i, (param_name, param) in enumerate(sig.parameters.items()):
+            if param.kind == Parameter.VAR_KEYWORD:
+                continue
             if i >= len_initial_values:
                 kw[param_name] = values[i]
 
@@ -243,8 +247,6 @@ def wraps(
                 % (type(arg), arg)
             )
 
-    converter = _parse_wrap_args(args)
-
     is_ret_container = isinstance(ret, (list, tuple))
     if is_ret_container:
         for arg in ret:
@@ -264,12 +266,19 @@ def wraps(
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Quantity]:
         sig = signature(func)
-        count_params = len(sig.parameters)
-        if len(args) != count_params:
+        params = tuple(sig.parameters.values())
+        has_var_keyword = any(param.kind == Parameter.VAR_KEYWORD for param in params)
+        count_params = sum(param.kind != Parameter.VAR_KEYWORD for param in params)
+        converter_args = args
+        if has_var_keyword and len(args) == count_params + 1 and args[-1] is None:
+            converter_args = args[:-1]
+
+        if len(converter_args) != count_params:
             raise TypeError(
                 "%s takes %i parameters, but %i units were passed"
                 % (func.__name__, count_params, len(args))
             )
+        converter = _parse_wrap_args(converter_args, ureg)
 
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)

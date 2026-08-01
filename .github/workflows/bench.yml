@@ -30,4 +30,4 @@ jobs:
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: pytest . --codspeed
-          mode: walltime
+          mode: simulation

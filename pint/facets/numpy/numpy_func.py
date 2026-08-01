@@ -138,6 +138,15 @@ def unwrap_and_wrap_consistent_units(*args):
     )
 
 
+def _validated_muldiv_unit(unit):
+    """Return ``unit`` after applying Quantity's offset-unit mul/div checks."""
+    quantity = unit._REGISTRY.Quantity(1, unit)
+    non_multiplicative_units = len(quantity._get_non_multiplicative_units())
+    if not quantity._ok_for_muldiv(non_multiplicative_units):
+        raise OffsetUnitCalculusError(quantity._units, "")
+    return quantity.units
+
+
 def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
     """Determine resulting unit from given operation.
 
@@ -179,9 +188,9 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         result_unit = (1 * first_input_units + 1 * first_input_units).units
     elif unit_op == "mul":
         product = first_input_units._REGISTRY.parse_units("")
-        for x in all_args:
-            if hasattr(x, "units"):
-                product *= x.units
+        quantity_units = [x.units for x in all_args if hasattr(x, "units")]
+        for unit in quantity_units:
+            product *= _validated_muldiv_unit(unit)
         result_unit = product
     elif unit_op == "delta":
         result_unit = (1 * first_input_units - 1 * first_input_units).units
@@ -193,12 +202,18 @@ def get_op_output_unit(unit_op, first_input_units, all_args=None, size=None):
         result_unit = product
     elif unit_op == "div":
         # Start with first arg in numerator, all others in denominator
-        product = getattr(
-            all_args[0], "units", first_input_units._REGISTRY.parse_units("")
-        )
+        quantity_count = sum(1 for x in all_args if hasattr(x, "units"))
+        if hasattr(all_args[0], "units"):
+            numerator_unit = all_args[0].units
+            numerator = all_args[0]._REGISTRY.Quantity(1, numerator_unit)
+            if quantity_count == 1 and numerator._get_non_multiplicative_units():
+                raise OffsetUnitCalculusError(numerator._units, "")
+            product = _validated_muldiv_unit(numerator_unit)
+        else:
+            product = first_input_units._REGISTRY.parse_units("")
         for x in all_args[1:]:
             if hasattr(x, "units"):
-                product /= x.units
+                product /= _validated_muldiv_unit(x.units)
         result_unit = product
     elif unit_op == "variance":
         result_unit = ((1 * first_input_units - 1 * first_input_units) ** 2).units
@@ -371,12 +386,10 @@ Define ufunc behavior collections.
 """
 strip_unit_input_output_ufuncs = ["isnan", "isinf", "isfinite", "signbit", "sign"]
 matching_input_bare_output_ufuncs = [
-    "equal",
     "greater",
     "greater_equal",
     "less",
     "less_equal",
-    "not_equal",
 ]
 matching_input_set_units_output_ufuncs = {"arctan2": "radian"}
 set_units_ufuncs = {
@@ -472,6 +485,24 @@ for ufunc_str in strip_unit_input_output_ufuncs:
 for ufunc_str in matching_input_bare_output_ufuncs:
     # Require all inputs to match units, but output plain ndarray/duck array
     implement_func("ufunc", ufunc_str, input_units="all_consistent", output_unit=None)
+
+
+def implement_eq_ne_ufunc(ufunc_str, dunder):
+    # Unlike the other comparison ufuncs, equal/not_equal must not raise on
+    # incompatible dimensions: `q1 == q2` returns False (and `!=` True) for
+    # mismatched units, same as Python's usual equality semantics. Delegate to
+    # PlainQuantity.__eq__/__ne__, which already implements that.
+    if np is None:
+        return
+
+    @implements(ufunc_str, "ufunc")
+    def implementation(x1, x2, *args, **kwargs):
+        quantity, other = (x1, x2) if _is_quantity(x1) else (x2, x1)
+        return getattr(quantity, dunder)(other)
+
+
+implement_eq_ne_ufunc("equal", "__eq__")
+implement_eq_ne_ufunc("not_equal", "__ne__")
 
 for ufunc_str, out_unit in matching_input_set_units_output_ufuncs.items():
     # Require all inputs to match units, but output in specified unit
@@ -1090,10 +1121,22 @@ for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ("linalg.solve",):
-    implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
+
+
+@implements("linalg.solve", "function")
+def _linalg_solve(a, b, **kwargs):
+    args = tuple(
+        _base_unit_if_needed(arg) if _is_quantity(arg) else arg for arg in (a, b)
+    )
+    first_input_units = _get_first_input_units(args, kwargs)
+    stripped_args, stripped_kwargs = convert_to_consistent_units(*args, **kwargs)
+    result_magnitude = np.linalg.solve(*stripped_args, **stripped_kwargs)
+    result_unit = get_op_output_unit(
+        "invdiv", first_input_units, tuple(chain(args, kwargs.values()))
+    )
+    return first_input_units._REGISTRY.Quantity(result_magnitude, result_unit)
 
 
 @implements("geomspace", "function")

@@ -231,7 +231,24 @@ class TestStringProcessor:
         self._test("sq bcd", "bcd**2")
         self._test("square bcd", "bcd**2")
         self._test("cubic bcd", "bcd**3")
-        self._test("bcd efg", "bcd*efg")
+        self._test("bcd efg", "bcd efg")
+
+    def test_superscript(self):
+        # Existing superscript exponents.
+        self._test("gr²", "gr**(2)")
+        self._test("gr⁻³", "gr**(-3)")
+        # ``·`` (MIDDLE DOT, U+00B7) and ``⋅`` (DOT OPERATOR, U+22C5) are both
+        # multiplication when not inside a superscript exponent (issue #2272).
+        self._test("kg·m", "kg*m")
+        self._test("kg⋅m", "kg*m")
+        # ``⋅`` right after an exponent, with no following superscript digit,
+        # is multiplication between two exponentiated terms, not a decimal
+        # point with no digits after it.
+        self._test("m²⋅s⁻¹", "m**(2)*s**(-1)")
+        # ``⋅`` is a decimal point and ``⸍`` (U+2E0D) a fraction slash
+        # inside superscript exponents (issue #2250).
+        self._test("gr⁰⋅³³³", "gr**(0.333)")
+        self._test("gr¹⸍³", "gr**(1/3)")
 
     def test_per(self):
         self._test("miles per hour", "miles/hour")
@@ -246,25 +263,25 @@ class TestStringProcessor:
         self._test("1E24", "1E24")
 
     def test_space_multiplication(self):
-        self._test("bcd efg", "bcd*efg")
-        self._test("bcd  efg", "bcd*efg")
-        self._test("1 hour", "1*hour")
-        self._test("1. hour", "1.*hour")
-        self._test("1.1 hour", "1.1*hour")
-        self._test("1E24 hour", "1E24*hour")
-        self._test("1E-24 hour", "1E-24*hour")
-        self._test("1E+24 hour", "1E+24*hour")
-        self._test("1.2E24 hour", "1.2E24*hour")
-        self._test("1.2E-24 hour", "1.2E-24*hour")
-        self._test("1.2E+24 hour", "1.2E+24*hour")
+        self._test("bcd efg", "bcd efg")
+        self._test("bcd  efg", "bcd efg")
+        self._test("1 hour", "1 hour")
+        self._test("1. hour", "1. hour")
+        self._test("1.1 hour", "1.1 hour")
+        self._test("1E24 hour", "1E24 hour")
+        self._test("1E-24 hour", "1E-24 hour")
+        self._test("1E+24 hour", "1E+24 hour")
+        self._test("1.2E24 hour", "1.2E24 hour")
+        self._test("1.2E-24 hour", "1.2E-24 hour")
+        self._test("1.2E+24 hour", "1.2E+24 hour")
 
     def test_joined_multiplication(self):
-        self._test("1hour", "1*hour")
-        self._test("1.hour", "1.*hour")
-        self._test("1.1hour", "1.1*hour")
-        self._test("1h", "1*h")
-        self._test("1.h", "1.*h")
-        self._test("1.1h", "1.1*h")
+        self._test("1hour", "1 hour")
+        self._test("1.hour", "1. hour")
+        self._test("1.1hour", "1.1 hour")
+        self._test("1h", "1 h")
+        self._test("1.h", "1. h")
+        self._test("1.1h", "1.1 h")
 
     def test_names(self):
         self._test("g_0", "g_0")

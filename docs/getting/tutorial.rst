@@ -138,6 +138,33 @@ how to do:
 See the section on :doc:`contexts` for information about expanding Pint's
 automatic conversion capabilities for your application.
 
+Finding compatible units
+------------------------
+
+With so many units defined, it is not always obvious which ones are
+available to convert to. The ``compatible_units()`` method returns the
+set of units sharing the same dimensionality:
+
+.. doctest::
+
+   >>> for unit in sorted(speed.compatible_units(), key=str):
+   ...     print(unit)
+   LMH
+   foot_per_second
+   kilometer_per_hour
+   kilometer_per_second
+   knot
+   meter_per_second
+   mile_per_hour
+   speed_of_light
+   >>> ureg.knot in speed.compatible_units()
+   True
+
+Note that this only lists units that are defined with a name in the
+registry, such as ``knot`` or ``meter_per_second``; it does not include
+every compound unit of the same dimensionality that could be built
+from other units, such as ``mile / hour``.
+
 Simplifying units
 -----------------
 
