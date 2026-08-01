@@ -43,6 +43,7 @@ extensions = [
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinx_design",
+    "jupyterlite_sphinx",
 ]
 
 
@@ -77,7 +78,13 @@ release = version
 this_year = datetime.date.today().year
 copyright = f"2012-{this_year}, Pint Developers"
 
-exclude_patterns = ["_build"]
+exclude_patterns = [
+    "_build",
+    # Embedded in the JupyterLite console on try-in-browser.rst;
+    # excluded here so nbsphinx doesn't also try to execute it as a
+    # regular (server-side) doc page.
+    "try_pint_numpy.ipynb",
+]
 
 # Napoleon configurations
 

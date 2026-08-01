@@ -5,6 +5,8 @@ Pint Changelog
 -------------------
 
 - Raise `DefinitionSyntaxError` instead of a bare `RecursionError` for deeply nested expressions
+- Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and notebook, requiring no local install (#2372)
+- Switch CodSpeed CI benchmarks to `simulation` mode to fix a walltime environment warning.
 - Fix `is_compatible_with` edge cases with dimensionless types and unit strings with a scaling factor (e.g. `"35000 ft"`) (#1190)
 - Allow string parsing of offset units (#386)
 - Remove the ambiguous `Nm` alias from `number_meter` (Textile group), since it's commonly expected to mean newton-meter (torque) (#1966)
@@ -37,6 +39,7 @@ Pint Changelog
 - Fix regression when using magnitude format specs in string formats (#2291)
 - Updated repr for various objects so that eval(repr(...)) works (#1495)
 - Improve type annotations for `Quantity` (#2302, #2303)
+- Fix `@alias` raising a bare `KeyError` on prefixed unit targets (#1076, #1447)
 - Fix `parse_units` cache never being hit for symbol and prefixed spellings (e.g. `kg`, `kWh`, `ms`), making those very common lookups re-parse on every call (#2320)
 - Fix NumPy ufunc mul/div paths allowing offset units to bypass `OffsetUnitCalculusError` (#1335)
 - Document how custom duck array classes can register as upcast types and mark
