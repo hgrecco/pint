@@ -1174,6 +1174,7 @@ def test_issue681():
 
     d = (f / n) ** (1 / 3)
     e = n * d / ureg.meter / np.sqrt(Q_(100.0, ureg.meter) / ureg.meter)
+    assert e.is_compatible_with(ureg.rpm)
     result = e.to(ureg.rpm)
     assert result.magnitude == pytest.approx(5.7333501976722845)
 
@@ -1193,6 +1194,7 @@ def test_issue681_auto_reduce_dimensions():
         * 0.007
         / (1.75 * ureg.inch) ** 5
     )
+    assert result.is_compatible_with("kg/m/s**2")
     base = result.to_base_units()
     assert base.magnitude == pytest.approx(67886.22, rel=1e-4)
 
@@ -1213,6 +1215,7 @@ def test_issue1487():
 
     h_c = 0.023 * V**0.8 * k**0.6 * (rho * cp) ** 0.4 / (D**0.2 * nu**0.4)
 
+    assert h_c.is_compatible_with("W/(m**2*K)")
     h_c.to_base_units()
     h_c.to_reduced_units()
     result = h_c.to("W/(m**2*K)")
