@@ -12,7 +12,7 @@ Why the name *Pint*?
 Pint is a unit and sounds like Python in the first syllable. Most important, it is a good unit for beer.
 
 
-How can I avoid floating-point precision issues?
+How can I avoid magnitude floating point issues?
 -------------------------------------------------------------
 
 By default, ``UnitRegistry`` uses ``float`` for magnitudes, which is subject
@@ -46,19 +46,69 @@ This avoids floating-point noise entirely (no rounding to begin with), at
 the cost of some performance compared to plain ``float``.
 
 
-Why does my quantity have a unit with a strange exponent like ``meter ** 0.9999999999999998``?
+How can I avoid exponent floating point issues?
 -------------------------------------------------------------------------------------------------
 
 Combining quantities raised to fractional powers (e.g. multiplying and
 dividing several quantities each raised to a different fractional exponent)
 can leave a tiny floating-point residual on an exponent that should be an
 exact integer or zero, instead of the number of a whole quantity you might
-expect.
+expect, e.g. ``meter ** 0.9999999999999998`` instead of exactly ``meter ** 1``.
 
 Converting the quantity with :py:meth:`Quantity.to`, :py:meth:`Quantity.to_base_units`,
 or :py:meth:`Quantity.to_reduced_units` recomputes the units against the
 requested target and resolves this: the result has exactly the units you
 asked for, with no leftover noise.
+
+.. note::
+
+   Formatters may round the displayed exponent, hiding the issue rather than
+   fixing it: ``meter ** 0.9999999999999998`` still *prints* as
+   ``meter ** 1``, even though the stored exponent is not exactly ``1``.
+
+Using ``non_int_type=fractions.Fraction`` (see above) avoids this noise from
+the start, since fractional exponents are then combined exactly instead of
+as rounded floats -- but only if the exponent itself is a ``Fraction``, not
+a plain ``float``: raising to a ``float`` power still produces a ``float``
+exponent, and the same noise, even in a ``Fraction``-based registry. Ten
+multiplications by ``meter ** 0.1`` don't quite add up to exactly
+``meter ** 1``; ten multiplications by ``meter ** Fraction(1, 10)`` do:
+
+.. doctest::
+
+   >>> u = ureg.Unit("meter") ** 0.1
+   >>> for _ in range(9):
+   ...     u = u * ureg.Unit("meter") ** 0.1
+   >>> u == ureg.Unit("meter")
+   False
+
+   >>> import fractions
+   >>> ureg2 = pint.UnitRegistry(non_int_type=fractions.Fraction)
+   >>> u2 = ureg2.Unit("meter") ** 0.1
+   >>> for _ in range(9):
+   ...     u2 = u2 * ureg2.Unit("meter") ** 0.1
+   >>> u2 == ureg2.Unit("meter")
+   False
+
+   >>> u3 = ureg2.Unit("meter") ** fractions.Fraction(1, 10)
+   >>> for _ in range(9):
+   ...     u3 = u3 * ureg2.Unit("meter") ** fractions.Fraction(1, 10)
+   >>> u3 == ureg2.Unit("meter")
+   True
+
+This comes at a performance cost (roughly 25% slower than plain ``float``
+for typical arithmetic), and it only stays exact as long as every operand
+is exact: multiplying an exact ``Fraction``-based quantity by an ordinary
+``float`` converts its magnitude back to ``float``, reintroducing the same
+floating-point noise:
+
+.. doctest::
+
+   >>> q = ureg2("1 gallon").to("l")
+   >>> q
+   Quantity(Fraction(473176473, 125000000), "liter")
+   >>> q * 1.5
+   Quantity(5.678117675999999, "liter")
 
 
 You mention other similar Python libraries. Can you point me to those?
