@@ -41,10 +41,6 @@ if TYPE_CHECKING:
     from ...facets.plain import PlainQuantity, PlainUnit
 
 _EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
-# The leading sign is part of the pattern rather than relaxing match() to search().
-# An array magnitude is one bracketed string of several numbers, and sub() below builds
-# its replacement once from the first match, so a search() would give every element the
-# first element's exponent: [1e-16 1 1e+10] would render as [1x10^-16 1 1x10^-16].
 
 
 class HTMLFormatter(BaseFormatter):
