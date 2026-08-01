@@ -98,17 +98,18 @@ multiplications by ``meter ** 0.1`` don't quite add up to exactly
 
 This comes at a performance cost (roughly 25% slower than plain ``float``
 for typical arithmetic), and it only stays exact as long as every operand
-is exact: multiplying an exact ``Fraction``-based quantity by an ordinary
-``float`` converts its magnitude back to ``float``, reintroducing the same
-floating-point noise:
+is exact: raising an exact ``Fraction``-based unit to an ordinary ``float``
+power converts its exponent back to ``float``, reintroducing the same
+fragility:
 
 .. doctest::
 
-   >>> q = ureg2("1 gallon").to("l")
-   >>> q
-   Quantity(Fraction(473176473, 125000000), "liter")
-   >>> q * 1.5
-   Quantity(5.678117675999999, "liter")
+   >>> u3
+   Unit("meter")
+   >>> u3 ** 2.0
+   Unit("meter ** 2")
+   >>> type((u3**2.0)._units["meter"])
+   <class 'float'>
 
 
 You mention other similar Python libraries. Can you point me to those?
