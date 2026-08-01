@@ -69,6 +69,7 @@ from ...errors import (
 from ...pint_eval import _BINARY_OPERATOR_MAP, build_eval_tree
 from ...util import (
     ParserHelper,
+    _clean_exponent,
     _is_dim,
     create_class_with_registry,
     getattr_maybe_raise,
@@ -744,7 +745,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if "[]" in accumulator:
             del accumulator["[]"]
 
-        dims = self.UnitsContainer({k: v for k, v in accumulator.items() if v != 0})
+        cleaned = {k: _clean_exponent(v) for k, v in accumulator.items()}
+        dims = self.UnitsContainer({k: v for k, v in cleaned.items() if v != 0})
 
         cache[input_units] = dims
 

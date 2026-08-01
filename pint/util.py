@@ -421,6 +421,22 @@ class udict(dict[str, Scalar]):
         return udict(self)
 
 
+def _clean_exponent(value: Scalar) -> Scalar:
+    """Snap a dimension/root-unit exponent back to the nearest integer if
+    floating-point noise from combining fractional powers has nudged it just
+    off of one, e.g. ``-0.9999999999999998`` instead of exactly ``-1`` (GH
+    #681), or ``5.55e-17`` instead of exactly ``0`` (GH #1487). Only floats
+    within a tiny absolute tolerance of an integer are snapped; genuinely
+    fractional exponents (like ``0.333333``) are returned unchanged, as are
+    exact numeric types (int, Fraction, Decimal).
+    """
+    if isinstance(value, float):
+        rounded = round(value)
+        if math.isclose(value, rounded, abs_tol=1e-9):
+            return float(rounded)
+    return value
+
+
 class UnitsContainer(Mapping[str, Scalar]):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations.

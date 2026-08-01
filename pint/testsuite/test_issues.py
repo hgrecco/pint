@@ -1156,6 +1156,69 @@ def test_issue1433(func_registry):
     assert func_registry.Quantity("1 micron") == func_registry.Quantity("1 micrometer")
 
 
+@helpers.requires_numpy
+def test_issue681():
+    # Floating-point noise from combining fractional exponents used to leave
+    # a near-integer (not just near-zero) residual, e.g. [time] ** -0.9999999999999998
+    # instead of exactly [time] ** -1, breaking dimensionality-based conversion.
+    import numpy as np
+
+    ureg = UnitRegistry(system="mks")
+    Q_ = ureg.Quantity
+
+    n = Q_(600, ureg.rpm)
+    q = Q_(1000, ureg.watt) / (
+        Q_(42.0, "kg/m**3") * Q_(43.0, "m/s**2") * Q_(100, ureg.meter) * 44.0
+    )
+    f = Q_(52.0, ureg.rpm) * 0.8 * q / Q_(10, "l/s") * ureg.meter**3
+
+    d = (f / n) ** (1 / 3)
+    e = n * d / ureg.meter / np.sqrt(Q_(100.0, ureg.meter) / ureg.meter)
+    result = e.to(ureg.rpm)
+    assert result.magnitude == pytest.approx(5.7333501976722845)
+
+
+def test_issue681_auto_reduce_dimensions():
+    ureg = UnitRegistry(auto_reduce_dimensions=True)
+
+    result = (
+        8
+        * 1000
+        * ureg.kg
+        / ureg.m**3
+        / math.pi**2
+        * 50
+        * ureg.feet
+        * (185 * ureg.gallon / ureg.min) ** 2
+        * 0.007
+        / (1.75 * ureg.inch) ** 5
+    )
+    base = result.to_base_units()
+    assert base.magnitude == pytest.approx(67886.22, rel=1e-4)
+
+
+def test_issue1487():
+    # Floating-point noise from combining fractional exponents (e.g.
+    # meter ** 5.55e-17 instead of exactly meter ** 0) used to make
+    # to_base_units/to_reduced_units/to raise DimensionalityError.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    V = Q_(1.0, "m/s")
+    k = Q_(1.0, "W/(m*K)")
+    rho = Q_(1.0, "kg/m**3")
+    cp = Q_(1.0, "J/(kg*K)")
+    D = Q_(1.0, "m")
+    nu = Q_(1.0, "m**2/s")
+
+    h_c = 0.023 * V**0.8 * k**0.6 * (rho * cp) ** 0.4 / (D**0.2 * nu**0.4)
+
+    h_c.to_base_units()
+    h_c.to_reduced_units()
+    result = h_c.to("W/(m**2*K)")
+    assert result.magnitude == pytest.approx(0.023)
+
+
 def test_issue1527():
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     x = ureg.parse_expression("2 microliter milligram/liter")
