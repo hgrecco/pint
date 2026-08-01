@@ -163,7 +163,7 @@ def siunitx_format_unit(
     return "".join(lpos) + "".join(lneg)
 
 
-_EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
+_EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
 class LatexFormatter(BaseFormatter):
