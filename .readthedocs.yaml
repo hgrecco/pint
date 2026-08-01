@@ -1,11 +1,21 @@
 version: 2
+
 build:
   os: ubuntu-22.04
-  commands:
-    # Use the same pixi "docs" environment and task as local development
-    # (see [tool.pixi.environments] "docs" and [tool.pixi.feature.docs.tasks]
-    # "docbuild" in pyproject.toml), instead of a separate pip install.
-    - curl -fsSL https://pixi.sh/install.sh | sh
-    - $HOME/.pixi/bin/pixi run -e docs docbuild
-    - mkdir -p $READTHEDOCS_OUTPUT/html
-    - cp -r build/html/. $READTHEDOCS_OUTPUT/html/
+  tools:
+    python: "3.12"
+  jobs:
+    # Use the same pixi "docs" environment as local development (see
+    # [tool.pixi.environments] "docs" in pyproject.toml), following the
+    # pattern from
+    # https://docs.readthedocs.com/platform/stable/build-customization.html
+    create_environment:
+      - asdf plugin add pixi
+      - asdf install pixi latest
+      - asdf global pixi latest
+    install:
+      - pixi install -e docs
+    build:
+      html:
+        # Same command as the `docbuild` pixi task in pyproject.toml.
+        - pixi run -e docs sphinx-build -n -j auto -b html -d $READTHEDOCS_OUTPUT/doctrees docs $READTHEDOCS_OUTPUT/html
