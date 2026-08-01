@@ -89,6 +89,7 @@ _OP_PRIORITY = {
 # chained ``**``) can recurse past ``sys.getrecursionlimit()`` and raise an
 # uncaught ``RecursionError`` out of the public API. 100 is far above any
 # legitimate unit expression while staying well below CPython's default limit.
+# See https://github.com/hgrecco/pint/pull/2376
 _MAX_RECURSION_DEPTH = 100
 
 
