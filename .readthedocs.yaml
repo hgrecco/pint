@@ -14,6 +14,4 @@ build:
       - pixi install -e docs
     build:
       html:
-        - pixi run -e docs docbuild
-        - mkdir -p $READTHEDOCS_OUTPUT/html
-        - cp -r build/html/. $READTHEDOCS_OUTPUT/html/
+        - pixi run -e docs docbuild $READTHEDOCS_OUTPUT/html
