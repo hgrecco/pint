@@ -5,9 +5,12 @@ build:
     python: "3.12"
   apt_packages:
     - graphviz
-sphinx:
-  configuration: docs/conf.py
-  fail_on_warning: false
+  jobs:
+    build:
+      html:
+        # Same command as the `docbuild` pixi task in pyproject.toml, so RTD
+        # builds the docs the same way as local development.
+        - sphinx-build -n -j auto -b html -d $READTHEDOCS_OUTPUT/doctrees docs $READTHEDOCS_OUTPUT/html
 python:
    install:
      - method: pip
