@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
+from fractions import Fraction
 from functools import partial
 from locale import LC_NUMERIC, getlocale, setlocale
 from typing import (
@@ -98,6 +99,30 @@ def pretty_fmt_exponent(num: Number) -> str:
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
+
+
+def _pretty_digits(n: int, digits: str) -> str:
+    return "".join(digits[int(d)] for d in str(n))
+
+
+def pretty_fmt_exponent_fraction(num: Number, max_denominator: int = 1000) -> str:
+    """Format a number as a pretty printed fraction exponent, e.g.
+    ``1.5`` -> ``"³ᐟ²"`` (superscript numerator, superscript slash,
+    superscript denominator).
+
+    The exponent is converted to a `Fraction`, snapped to the nearest
+    fraction with a denominator of at most `max_denominator` via
+    `limit_denominator`. A whole number is rendered the same way as
+    `pretty_fmt_exponent` (a superscript integer).
+    """
+    frac = Fraction(num).limit_denominator(max_denominator)
+    sign = "⁻" if frac < 0 else ""
+    frac = abs(frac)
+    numerator = _pretty_digits(frac.numerator, _PRETTY_EXPONENTS)
+    if frac.denominator == 1:
+        return sign + numerator
+    denominator = _pretty_digits(frac.denominator, _PRETTY_EXPONENTS)
+    return f"{sign}{numerator}ᐟ{denominator}"
 
 
 def join_u(fmt: str, iterable: Iterable[Any]) -> str:

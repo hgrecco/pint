@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from fractions import Fraction
+
 import pytest
 
 import pint.formatting as fmt
@@ -81,3 +83,36 @@ def test_format_unit_caret_negative_power(func_registry):
     assert format(u, "~^P") == "s⁻¹"
     # Without ^ flag: 1/s (ratio form, unchanged)
     assert format(u, "~P") == "1/s"
+
+
+def test_format_unit_fraction_exponent(func_registry):
+    """format_unit with / flag renders fractional exponents as a pretty
+    printed fraction (superscript numerator, superscript slash, superscript
+    denominator) instead of a decimal (fixes #60).
+    """
+    u = func_registry.Unit("second") ** 1.5
+    assert format(u, "~P") == "s¹⋅⁵"
+    assert format(u, "~/P") == "s³ᐟ²"
+
+    # Whole-number exponents are unaffected (still a plain superscript).
+    u2 = func_registry.Unit("meter") ** 2
+    assert format(u2, "~/P") == "m²"
+
+    # An exact Fraction exponent renders the same as the equivalent float.
+    u3 = func_registry.Unit("second") ** Fraction(3, 2)
+    assert format(u3, "~/P") == "s³ᐟ²"
+
+
+def test_format_unit_fraction_exponent_absorbs_noise(func_registry):
+    """The / flag snaps near-integer floating-point noise back to a clean
+    exponent, the same noise that caused DimensionalityError in #1487/#681.
+    """
+    # Noise near an integer, e.g. from combining fractional powers (#681).
+    u = func_registry.Unit("second") ** -0.9999999999999998
+    assert format(u, "~P") == "1/s¹"
+    assert format(u, "~/P") == "1/s"
+
+    # Noise near zero (#1487): the residual exponent snaps to 0.
+    u2 = func_registry.Unit("meter") ** 5.55e-17
+    assert format(u2, "~P") == "m⁵⋅⁵⁵e⁻¹⁷"
+    assert format(u2, "~/P") == "m⁰"
