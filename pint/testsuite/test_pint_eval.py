@@ -202,4 +202,3 @@ def test_build_eval_tree_deeply_nested_raises_definition_syntax_error(
     evil = "kg " + f"{op} kg " * 1000
     with pytest.raises(DefinitionSyntaxError):
         build_eval_tree(tokenizer(evil))
-
