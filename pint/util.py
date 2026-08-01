@@ -422,7 +422,7 @@ class udict(dict[str, Scalar]):
 
 
 def _clean_exponent(value: Scalar) -> Scalar:
-    """Snap a dimension/root-unit exponent back to the nearest simple
+    """Snap a dimensionality exponent back to the nearest simple
     fraction if floating-point noise from combining fractional powers has
     nudged it just off of one, e.g. ``-0.9999999999999998`` instead of
     exactly ``-1`` (GH #681), ``5.55e-17`` instead of exactly ``0`` (GH
