@@ -407,13 +407,18 @@ class TestOtherUtils:
             (-0.9999999999999998, -1.0),
             (0.8000000000000002, 0.8),
             (3, 3),
+            # Below 9 threes, 1/3 is the nearest candidate fraction but still
+            # farther than the 1e-9 tolerance, so it's left unchanged.
+            (0.333333, 0.333333),
+            (0.3333333, 0.3333333),
+            (0.33333333, 0.33333333),
+            # At 9+ threes the gap is within tolerance, so it snaps to 1/3.
+            (0.333333333, 1 / 3),
+            (0.3333333333, 1 / 3),
         ],
     )
     def test_clean_exponent_snaps_noise(self, value, expected):
         assert _clean_exponent(value) == expected
-
-    def test_clean_exponent_leaves_genuine_fraction_unchanged(self):
-        assert _clean_exponent(0.333333) == 0.333333
 
     def test_clean_exponent_leaves_nan_unchanged(self):
         assert math.isnan(_clean_exponent(float("nan")))
