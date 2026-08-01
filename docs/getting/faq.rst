@@ -12,7 +12,7 @@ Why the name *Pint*?
 Pint is a unit and sounds like Python in the first syllable. Most important, it is a good unit for beer.
 
 
-How can I avoid floating-point precision issues altogether?
+How can I avoid floating-point precision issues?
 -------------------------------------------------------------
 
 By default, ``UnitRegistry`` uses ``float`` for magnitudes, which is subject
