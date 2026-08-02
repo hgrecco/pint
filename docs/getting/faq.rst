@@ -66,11 +66,9 @@ asked for, with no leftover noise.
    fixing it: ``meter ** 0.9999999999999998`` still *prints* as
    ``meter ** 1``, even though the stored exponent is not exactly ``1``.
 
-Using Fraction as the exponent avoids this noise, however if this quantity is
-then multiplied by a quantity which includes a float exponent, the same
-noise reappears (see below). Ten multiplications by ``meter ** 0.1`` don't
-quite add up to exactly ``meter ** 1``; ten multiplications by
-``meter ** Fraction(1, 10)`` do:
+Using ``Fraction`` or ``int`` avoids this noise. Ten multiplications by
+``meter ** 0.1`` don't quite add up to exactly ``meter ** 1``; ten
+multiplications by ``meter ** Fraction(1, 10)`` do:
 
 .. doctest::
 
@@ -82,12 +80,6 @@ quite add up to exactly ``meter ** 1``; ten multiplications by
 
    >>> import fractions
    >>> ureg2 = pint.UnitRegistry(non_int_type=fractions.Fraction)
-   >>> u2 = ureg2.Unit("meter") ** 0.1
-   >>> for _ in range(9):
-   ...     u2 = u2 * ureg2.Unit("meter") ** 0.1
-   >>> u2 == ureg2.Unit("meter")
-   False
-
    >>> u3 = ureg2.Unit("meter") ** fractions.Fraction(1, 10)
    >>> for _ in range(9):
    ...     u3 = u3 * ureg2.Unit("meter") ** fractions.Fraction(1, 10)
