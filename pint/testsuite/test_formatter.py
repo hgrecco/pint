@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from fractions import Fraction
+
 import pytest
 
+from pint import UnitRegistry
 from pint import formatting as fmt
 from pint.delegates.formatter._format_helpers import formatter, join_u
 from pint.formatting import formatter as pf_formatter
@@ -56,6 +59,16 @@ class TestFormatter:
         assert fmt.format_unit("", "C") == "dimensionless"
         with pytest.raises(ValueError):
             fmt.format_unit("m", "W")
+
+    def test_fraction_exponent(self):
+        # Fraction does not accept the "n" format spec, so formatting a unit
+        # with a Fraction exponent used to raise ValueError. See issue #2386.
+        ureg = UnitRegistry(non_int_type=Fraction)
+        unit = ureg.Unit("m**2.3")
+        assert f"{unit}" == "meter ** 23/10"
+        assert f"{unit:P}" == "meter²³ᐟ¹⁰"
+        assert f"{unit:C}" == "meter**23/10"
+        assert f"{ureg.Quantity('3 m**2.3')}" == "3 meter ** 23/10"
 
     def test_pf_formatter(self):
         assert pf_formatter({}.items()) == ""
