@@ -13,12 +13,13 @@ import pytest
 from pint import (
     Context,
     DimensionalityError,
+    OffsetUnitCalculusError,
     UndefinedUnitError,
     UnitRegistry,
     get_application_registry,
 )
 from pint.compat import np
-from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+from pint.delegates.formatter import sort_by_dimensionality
 from pint.facets.plain.unit import UnitsContainer
 from pint.testing import assert_equal
 from pint.testsuite import QuantityTestCase, helpers
@@ -450,6 +451,21 @@ class TestIssues(QuantityTestCase):
         )
         assert f"{1 * module_registry.count:~}" == "1 count"
         assert "{:~}".format(1 * module_registry("MiB")) == "1 MiB"
+
+    def test_issue_386(self, module_registry):
+        x = module_registry.Quantity(42, "degC")
+        y = module_registry.Quantity("42 degC")
+        assert x == y
+
+        # make sure normal combined units still work
+        x = module_registry.Quantity(42, module_registry.mm * module_registry.s)
+        y = module_registry.Quantity("42 mm s")
+        assert x == y
+
+        # offset unit combined with another unit should still fail (default registry settings)
+        ureg = UnitRegistry()
+        with pytest.raises(OffsetUnitCalculusError):
+            ureg.Quantity("42 degC/m")
 
     def test_issue468(self, module_registry):
         @module_registry.wraps("kg", "meter")
@@ -1140,6 +1156,72 @@ def test_issue1433(func_registry):
     assert func_registry.Quantity("1 micron") == func_registry.Quantity("1 micrometer")
 
 
+@helpers.requires_numpy
+def test_issue681():
+    # Floating-point noise from combining fractional exponents used to leave
+    # a near-integer (not just near-zero) residual, e.g. [time] ** -0.9999999999999998
+    # instead of exactly [time] ** -1, breaking dimensionality-based conversion.
+    import numpy as np
+
+    ureg = UnitRegistry(system="mks")
+    Q_ = ureg.Quantity
+
+    n = Q_(600, ureg.rpm)
+    q = Q_(1000, ureg.watt) / (
+        Q_(42.0, "kg/m**3") * Q_(43.0, "m/s**2") * Q_(100, ureg.meter) * 44.0
+    )
+    f = Q_(52.0, ureg.rpm) * 0.8 * q / Q_(10, "l/s") * ureg.meter**3
+
+    d = (f / n) ** (1 / 3)
+    e = n * d / ureg.meter / np.sqrt(Q_(100.0, ureg.meter) / ureg.meter)
+    assert e.is_compatible_with(ureg.rpm)
+    result = e.to(ureg.rpm)
+    assert result.magnitude == pytest.approx(5.7333501976722845)
+
+
+def test_issue681_auto_reduce_dimensions():
+    ureg = UnitRegistry(auto_reduce_dimensions=True)
+
+    result = (
+        8
+        * 1000
+        * ureg.kg
+        / ureg.m**3
+        / math.pi**2
+        * 50
+        * ureg.feet
+        * (185 * ureg.gallon / ureg.min) ** 2
+        * 0.007
+        / (1.75 * ureg.inch) ** 5
+    )
+    assert result.is_compatible_with("kg/m/s**2")
+    base = result.to_base_units()
+    assert base.magnitude == pytest.approx(67886.22, rel=1e-4)
+
+
+def test_issue1487():
+    # Floating-point noise from combining fractional exponents (e.g.
+    # meter ** 5.55e-17 instead of exactly meter ** 0) used to make
+    # to_base_units/to_reduced_units/to raise DimensionalityError.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    V = Q_(1.0, "m/s")
+    k = Q_(1.0, "W/(m*K)")
+    rho = Q_(1.0, "kg/m**3")
+    cp = Q_(1.0, "J/(kg*K)")
+    D = Q_(1.0, "m")
+    nu = Q_(1.0, "m**2/s")
+
+    h_c = 0.023 * V**0.8 * k**0.6 * (rho * cp) ** 0.4 / (D**0.2 * nu**0.4)
+
+    assert h_c.is_compatible_with("W/(m**2*K)")
+    h_c.to_base_units()
+    h_c.to_reduced_units()
+    result = h_c.to("W/(m**2*K)")
+    assert result.magnitude == pytest.approx(0.023)
+
+
 def test_issue1527():
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     x = ureg.parse_expression("2 microliter milligram/liter")
@@ -1193,6 +1275,22 @@ def test_issue1505():
     )  # unexpected fail (magnitude should be a decimal)
 
 
+def test_issue2153():
+    q = get_application_registry().Quantity(1, "%")
+
+    assert q.check("%")
+
+
+def test_issue2068():
+    ur = UnitRegistry(non_int_type=decimal.Decimal)
+
+    q = ur.Quantity("1.2345", "m")
+
+    assert q.magnitude == decimal.Decimal("1.2345")
+    assert isinstance(q.magnitude, decimal.Decimal)
+    assert q.to("cm").magnitude == decimal.Decimal("123.45")
+
+
 def test_issue_1845():
     ur = UnitRegistry(auto_reduce_dimensions=True, non_int_type=decimal.Decimal)
     # before issue 1845 these inputs would have resulted in a TypeError
@@ -1203,9 +1301,9 @@ def test_issue_1845():
 @pytest.mark.parametrize(
     "units,spec,expected",
     [
-        # (dict(hour=1, watt=1), "P~", "W·h"),
-        (dict(ampere=1, volt=1), "P~", "V·A"),
-        # (dict(meter=1, newton=1), "P~", "N·m"),
+        # (dict(hour=1, watt=1), "P~", "W⋅h"),
+        (dict(ampere=1, volt=1), "P~", "V⋅A"),
+        # (dict(meter=1, newton=1), "P~", "N⋅m"),
     ],
 )
 def test_issues_1841(func_registry, units, spec, expected):
@@ -1219,7 +1317,7 @@ def test_issues_1841(func_registry, units, spec, expected):
 @pytest.mark.xfail
 def test_issues_1841_xfail():
     from pint import formatting as fmt
-    from pint.delegates.formatter._compound_unit_helpers import sort_by_dimensionality
+    from pint.delegates.formatter import sort_by_dimensionality
 
     # sets compact display mode by default
     ur = UnitRegistry()
@@ -1278,7 +1376,7 @@ def test_issue2017():
 
     @fmt.register_unit_format("test2017")
     def _test_format(unit, registry, **options):
-        proc = {u.replace("µ", "u"): e for u, e in unit.items()}
+        proc = {u.replace("µ", "u").replace("μ", "u"): e for u, e in unit.items()}
         return fmt.formatter(
             proc.items(),
             as_ratio=True,
@@ -1464,7 +1562,7 @@ def test_issue2256():
         return pf.format_unit(unit, "~", as_ratio=False)
 
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
-    assert f"{q:test2256}" == "2.3e-06 kg⁻¹·m³·s⁻²"
+    assert f"{q:test2256}" == "2.3e-06 kg⁻¹⋅m³⋅s⁻²"
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
 
 
@@ -1473,7 +1571,7 @@ def test_issue2256_2():
 
     q = 2.3e-6 * ureg.m**3 / (ureg.s**2 * ureg.kg)
     assert f"{q:~P}" == "2.3×10⁻⁶ m³/kg/s²"
-    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹·m³·s⁻²"
+    assert f"{q:~^P}" == "2.3×10⁻⁶ kg⁻¹⋅m³⋅s⁻²"
     assert f"{q:^}" == "2.3e-06 kilogram ** -1 * meter ** 3 * second ** -2"
 
 
@@ -1508,3 +1606,155 @@ def test_issue2305():
     ureg_dec = UnitRegistry(non_int_type=Decimal)
     assert ureg_dec.Quantity(10.0, "degC").to("K").magnitude == 283.15
     assert ureg_dec.Quantity(Decimal(10), "degC").to("K").magnitude == Decimal("283.15")
+
+
+def test_issue2156(func_registry):
+    # `unit in registry` should work with a Unit object, not just a string.
+    # Previously the membership test passed the Unit straight to __getattr__,
+    # which assumed a str and raised AttributeError ('Unit' has no 'endswith').
+    ureg = func_registry
+    assert ureg.Unit("J") in ureg
+    assert (ureg.Unit("m") / ureg.Unit("s")) in ureg
+    # the existing string path is unchanged
+    assert "joule" in ureg
+    assert "kJ" in ureg
+    assert "definitely_not_a_unit" not in ureg
+
+
+def test_issue2255():
+    # wraps must resolve the string unit specs for the *input* arguments through
+    # the registry, exactly as it already does for the return units. Otherwise a
+    # spec such as "dimensionless" is parsed as a unit literally named
+    # "dimensionless" (a non-empty UnitsContainer) instead of an empty,
+    # genuinely dimensionless one, and converting an argument to it raised an
+    # AssertionError deep in the offset-unit handling.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    exp = ureg.wraps("dimensionless", "dimensionless")(math.exp)
+    assert exp(Q_(1)) == Q_(math.exp(1), "dimensionless")
+    # a dimensionless argument carrying convertible units is converted first
+    assert exp(Q_(100, "percent")) == Q_(math.exp(1), "dimensionless")
+
+    # other functions taking dimensionless parameters used to raise as well
+    factorial = ureg.wraps("dimensionless", "dimensionless")(math.factorial)
+    assert factorial(Q_(5)) == Q_(120, "dimensionless")
+
+    asin = ureg.wraps("radian", "dimensionless")(math.asin)
+    assert asin(Q_(1)) == Q_(math.asin(1), "radian")
+
+    # input specs are now parsed with the registry, so a symbol/prefixed
+    # spelling behaves like its canonical name (km -> kilometer)
+    @ureg.wraps(None, "km")
+    def f(x):
+        return x
+
+    assert f(Q_(1000, "m")) == 1.0
+
+
+def test_issue2320():
+    ureg = UnitRegistry()
+    for spelling in ("kg", "kWh", "ms", "degC**2"):
+        first = ureg.parse_units_as_container(spelling)
+        second = ureg.parse_units_as_container(spelling)
+        assert second is first, f"{spelling} re-parsed instead of hitting the cache"
+
+    ureg = UnitRegistry()
+    assert ureg.parse_units("Meter", case_sensitive=False) == UnitsContainer(meter=1)
+    with pytest.raises(UndefinedUnitError):
+        ureg.parse_units("Meter", case_sensitive=True)
+
+
+def test_issue1798():
+    # Format spec width/fill/alignment must apply to the whole quantity
+    # (magnitude and unit), not only to the magnitude.
+    ureg = UnitRegistry()
+
+    q = 2.52 * ureg.meter
+    # width honored across the full "magnitude unit" string
+    assert f"{q:20.1f}" == "           2.5 meter"
+    assert f"{q:>20.1f}" == "           2.5 meter"
+    assert f"{q:<20.1f}" == "2.5 meter           "
+    assert f"{q:*<20.1f}" == "2.5 meter***********"
+
+    # a plain magnitude still behaves the same way
+    assert f"{q.magnitude:20.1f}" == "                 2.5"
+
+    # zero-padding remains a magnitude-only concern
+    assert f"{q:05.1f}" == "002.5 meter"
+
+    # specs without a width are unaffected
+    assert f"{q:.1f}" == "2.5 meter"
+
+    # dimensionless quantities keep working
+    d = 3.0 * ureg.dimensionless
+    assert f"{d:25.1f}" == "        3.0 dimensionless"
+
+
+def test_issue1513():
+    # ``dimensionless`` referenced by name resolves to "", which is not a key in
+    # the unit registry; the recurse loops used to index it directly and raise
+    # KeyError(''). It is the identity and must behave like the empty unit.
+    ureg = UnitRegistry()
+
+    # #1513: get_dimensionality by name must not raise
+    assert ureg.get_dimensionality("dimensionless") == ureg.get_dimensionality("")
+
+    # #1994: check() by name must not raise
+    assert ureg.Quantity(5, "dimensionless").check("dimensionless")
+
+    # a fractional dimensionless unit defined via ``* dimensionless`` must match
+    # the same unit defined as a bare scalar
+    ureg.define("frac = 0.01 * dimensionless")
+    ureg.define("frac_bare = 0.01")
+    assert (
+        ureg.Quantity(50, "frac").to_base_units()
+        == ureg.Quantity(50, "frac_bare").to_base_units()
+    )
+    assert ureg.get_root_units("frac") == ureg.get_root_units("frac_bare")
+
+
+@helpers.requires_numpy
+def test_issue2182():
+    # Comparing a Quantity to an incompatible-dimension value returns False (and
+    # `!=` returns True), regardless of which side of `==`/`!=` the Quantity is on.
+    ureg = UnitRegistry()
+    q = ureg.Quantity(5.0, "Hz")
+
+    assert not (q == 5.0)
+    assert not (5.0 == q)
+    assert not (q == np.float64(5.0))
+    assert not (np.float64(5.0) == q)  # used to raise DimensionalityError
+    assert not (np.array(5.0) == q)  # used to raise DimensionalityError
+
+    assert q != 5.0
+    assert 5.0 != q
+    assert q != np.float64(5.0)
+    assert np.float64(5.0) != q  # used to raise DimensionalityError
+    assert np.array(5.0) != q  # used to raise DimensionalityError
+
+
+def test_negative_magnitude_pretty_exponent():
+    # The exponent pattern was anchored with match() but did not allow a leading
+    # sign, so a negative magnitude never matched and kept the raw "e-07" form
+    # while its positive counterpart was formatted.
+    ureg = UnitRegistry()
+
+    assert f"{ureg.Quantity(1.5e-7, 'meter'):P}" == "1.5×10⁻⁷ meter"
+    assert f"{ureg.Quantity(-1.5e-7, 'meter'):P}" == "-1.5×10⁻⁷ meter"
+
+    assert f"{ureg.Quantity(-1.5e-7, 'meter'):H}" == "-1.5×10<sup>-7</sup> meter"
+
+
+@helpers.requires_numpy
+def test_negative_magnitude_pretty_exponent_leaves_arrays_alone():
+    # Guards the tempting fix. Relaxing match() to search() so the leading "-" stops
+    # blocking would match inside an array's bracketed string, and sub() builds its
+    # replacement once from the first match, so every element would be rewritten with
+    # the first element's exponent: [1e-16 1 1e+10] -> [1×10⁻¹⁶ 1 1×10⁻¹⁶].
+    ureg = UnitRegistry()
+
+    for values in ([1e-16, 1.0, 1e10], [-1e-16, 1.0, 1e10]):
+        formatted = f"{ureg.Quantity(np.array(values), 'meter'):P}"
+        assert "×10" not in formatted
+        assert formatted == f"{ureg.Quantity(np.array(values), 'meter'):}"

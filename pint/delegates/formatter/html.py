@@ -20,7 +20,6 @@ from ...compat import Unpack, ndarray, np
 from ...util import iterable
 from ._compound_unit_helpers import (
     BabelKwds,
-    SortFunc,
     localize_per,
     prepare_compount_unit,
 )
@@ -35,12 +34,13 @@ from ._spec_helpers import (
     split_format,
 )
 from .plain import BaseFormatter
+from .sorting import SortFunc
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
     from ...facets.plain import PlainQuantity, PlainUnit
 
-_EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
+_EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
 class HTMLFormatter(BaseFormatter):

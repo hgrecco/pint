@@ -64,12 +64,13 @@ docs = [
   "graphviz",
   "pooch",
   "sparse",
+  "numba>=0.59",                     # for sparse
   "Serialize",
   "pygments>=2.4",
   "sphinx-book-theme>=1.1.0",
   "sphinx_copybutton",
   "sphinx_design",
-  "docutils",                 #==0.14",
+  "docutils",                        #==0.14",
   "commonmark==0.8.1",
   "recommonmark==0.5.0",
   "babel",
@@ -77,10 +78,12 @@ docs = [
   "scipy",
   "currencyconverter",
   "matplotlib",
-  "numpy",
+  "numpy<2.5",
   "xarray",
   "dask[complete]<2025.3.0",
   "optype[numpy]",
+  "jupyterlite-sphinx>=0.20",
+  "jupyterlite-pyodide-kernel>=0.4",
 ]
 
 [project.urls]
@@ -109,10 +112,11 @@ pythonpath = "."
 docstring-code-format = true
 
 [tool.ruff.lint]
-extend-select = ["I"]
+select = ["E4", "E7", "E9", "F", "I"]
 ignore = [
   "E402", # module level import not at top of file
   "E731", # do not assign a lambda expression, use a def
+  "E741", # ambiguous variable name
 ]
 
 [tool.pixi.workspace]
@@ -209,11 +213,17 @@ typecheck = "pyright"
 pint = { path = ".", editable = true }
 
 [tool.pixi.feature.docs.tasks]
-docbuild = "sphinx-build -n -j auto -b html -d build/doctrees docs build/html"
+docbuild = { cmd = "sphinx-build -n -j auto -b html -d build/doctrees docs {{ loc }}", args = [
+  { arg = "loc", default = "build/html" },
+] }
 doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest"
 
 [tool.pixi.feature.docs.dependencies]
 pandoc = "*"
+pandas = "*"
+tabulate = "*"
+graphviz = "*"
+numpy = "<2.5"
 
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"

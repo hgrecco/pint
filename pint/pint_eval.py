@@ -83,6 +83,15 @@ _OP_PRIORITY = {
     "-": 0,
 }
 
+# Maximum nesting depth for operator recursion in _build_eval_tree. Python's
+# tokenize caps nested parentheses at 200 but does not cap operator nesting, so
+# without this bound a deeply nested right-associative expression (e.g. many
+# chained ``**``) can recurse past ``sys.getrecursionlimit()`` and raise an
+# uncaught ``RecursionError`` out of the public API. 100 is far above any
+# legitimate unit expression while staying well below CPython's default limit.
+# See https://github.com/hgrecco/pint/pull/2376
+_MAX_RECURSION_DEPTH = 100
+
 
 class IteratorLookAhead[S]:
     """An iterator with lookahead buffer.
@@ -435,6 +444,12 @@ def _build_eval_tree(
 
     """
 
+    if depth > _MAX_RECURSION_DEPTH:
+        raise DefinitionSyntaxError(
+            f"maximum recursion depth exceeded in expression parsing "
+            f"({_MAX_RECURSION_DEPTH}); expression is too deeply nested"
+        )
+
     result = None
 
     while True:
@@ -513,13 +528,13 @@ def _build_eval_tree(
         if tokens[index][0] == tokenlib.ENDMARKER:
             if prev_op == "(":
                 raise DefinitionSyntaxError("unclosed parentheses in tokens")
+            if result is None:
+                raise DefinitionSyntaxError("missing operand")
             if depth > 0 or prev_op:
                 # have to close recursion
-                assert result is not None
                 return result, index
             else:
                 # recursion all closed, so just return the final result
-                assert result is not None
                 return result, -1
 
         if index + 1 >= len(tokens):

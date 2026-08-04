@@ -21,9 +21,9 @@ from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
 from ...compat import Unpack, ndarray, np
+from ...util import _clean_exponent
 from ._compound_unit_helpers import (
     BabelKwds,
-    SortFunc,
     localize_per,
     prepare_compount_unit,
 )
@@ -33,11 +33,14 @@ from ._format_helpers import (
     join_unc,
     override_locale,
     pretty_fmt_exponent,
+    pretty_fmt_exponent_fraction,
 )
 from ._spec_helpers import (
     remove_custom_flags,
     split_format,
+    split_magnitude_spec,
 )
+from .sorting import SortFunc
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
@@ -45,7 +48,7 @@ if TYPE_CHECKING:
     from ...registry import UnitRegistry
 
 
-_EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
+_EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
 class BaseFormatter:
@@ -133,12 +136,17 @@ class DefaultFormatter(BaseFormatter):
             qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
+        mspec, field_spec = split_magnitude_spec(mspec)
+
         joint_fstring = "{} {}"
-        return join_mu(
+        result = join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
+        if field_spec:
+            result = format(result, field_spec)
+        return result
 
     def format_uncertainty(
         self,
@@ -247,13 +255,17 @@ class CompactFormatter(BaseFormatter):
             qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
-        joint_fstring = "{} {}"
+        mspec, field_spec = split_magnitude_spec(mspec)
 
-        return join_mu(
+        joint_fstring = "{} {}"
+        result = join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
+        if field_spec:
+            result = format(result, field_spec)
+        return result
 
     def format_uncertainty(
         self,
@@ -330,6 +342,10 @@ class PrettyFormatter(BaseFormatter):
             registry=self._registry,
         )
 
+        if "/" in uspec:
+            numerator = [(key, _clean_exponent(value)) for key, value in numerator]
+            denominator = [(key, _clean_exponent(value)) for key, value in denominator]
+
         if babel_kwds.get("locale", None):
             length = babel_kwds.get("length") or ("short" if "~" in uspec else "long")
             division_fmt = localize_per(length, babel_kwds.get("locale"), "{}/{}")
@@ -344,11 +360,13 @@ class PrettyFormatter(BaseFormatter):
             denominator,
             as_ratio=as_ratio,
             single_denominator=False,
-            product_fmt="·",
+            product_fmt="⋅",
             division_fmt=division_fmt,
             power_fmt="{}{}",
             parentheses_fmt="({})",
-            exp_call=pretty_fmt_exponent,
+            exp_call=pretty_fmt_exponent_fraction
+            if "/" in uspec
+            else pretty_fmt_exponent,
         )
 
     def format_quantity[MagnitudeT: Magnitude](
@@ -364,13 +382,17 @@ class PrettyFormatter(BaseFormatter):
             qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
-        joint_fstring = "{} {}"
+        mspec, field_spec = split_magnitude_spec(mspec)
 
-        return join_mu(
+        joint_fstring = "{} {}"
+        result = join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
+        if field_spec:
+            result = format(result, field_spec)
+        return result
 
     def format_uncertainty(
         self,
@@ -452,12 +474,17 @@ class RawFormatter(BaseFormatter):
             qspec, registry.formatter.default_format, registry.separate_format_defaults
         )
 
+        mspec, field_spec = split_magnitude_spec(mspec)
+
         joint_fstring = "{} {}"
-        return join_mu(
+        result = join_mu(
             joint_fstring,
             self.format_magnitude(quantity.magnitude, mspec, **babel_kwds),
             self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds),
         )
+        if field_spec:
+            result = format(result, field_spec)
+        return result
 
     def format_uncertainty(
         self,

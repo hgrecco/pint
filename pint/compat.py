@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import math
 import sys
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from decimal import Decimal
 from fractions import Fraction
 from importlib import import_module
@@ -289,6 +289,7 @@ if HAS_NUMPY:
         log,  # noqa: F401
         ndarray,
     )
+    from numpy import timedelta64 as np_timedelta64
 
     NUMPY_VER = np.__version__
     if HAS_UNCERTAINTIES:
@@ -325,6 +326,9 @@ else:
         pass
 
     class np_datetime64:
+        pass
+
+    class np_timedelta64:
         pass
 
     from math import (
@@ -396,4 +400,4 @@ upcast_type_names = (
 )
 
 #: Map type name to the actual type (for upcast types).
-upcast_type_map: Mapping[str, type | None] = {k: None for k in upcast_type_names}
+upcast_type_map: dict[str, type | None] = {k: None for k in upcast_type_names}

@@ -421,6 +421,23 @@ class udict(dict[str, Scalar]):
         return udict(self)
 
 
+def _clean_exponent(value: Scalar) -> Scalar:
+    """Snap a dimensionality exponent back to the nearest simple
+    fraction if floating-point noise from combining fractional powers has
+    nudged it just off of one, e.g. ``-0.9999999999999998`` instead of
+    exactly ``-1`` (GH #681), ``5.55e-17`` instead of exactly ``0`` (GH
+    #1487), or ``0.49999999999`` instead of exactly ``0.5``. Only floats
+    within a tiny absolute tolerance of a low-denominator fraction are
+    snapped; genuinely fractional exponents (like ``0.333333``) are returned
+    unchanged, as are exact numeric types (int, Fraction, Decimal).
+    """
+    if isinstance(value, float) and math.isfinite(value):
+        nearby = Fraction(value).limit_denominator(1000)
+        if math.isclose(value, float(nearby), abs_tol=1e-9):
+            return float(nearby)
+    return value
+
+
 class UnitsContainer(Mapping[str, Scalar]):
     """The UnitsContainer stores the product of units and their respective
     exponent and implements the corresponding operations.
@@ -898,17 +915,29 @@ _subs_re_list = [
     (r"sq ({})", r"\1**2"),
     (
         r"\b([0-9]+\.?[0-9]*)(?=[e|E][a-zA-Z]|[a-df-zA-DF-Z])",
-        r"\1*",
+        r"\1 ",
     ),  # Handle numberLetter for multiplication
-    (r"([\w\.\)])\s+(?=[\w\(])", r"\1*"),  # Handle space for multiplication
 ]
 
 #: Compiles the regex and replace {} by a regex that matches an identifier.
 _subs_re = [
     (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in _subs_re_list
 ]
-_pretty_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹·⁻", "0123456789*-")
-_pretty_exp_re = re.compile(r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:\.[⁰¹²³⁴⁵⁶⁷⁸⁹]*)?)")
+# Inside a superscript exponent, ``⋅`` (U+22C5) acts as a decimal point and
+# ``⸍`` (U+2E0D) as a fraction slash, e.g. ``gr⁰⋅³³³`` (grain**0.333) and
+# ``gr¹⸍³`` (grain**(1/3)). Elsewhere, ``·`` (MIDDLE DOT, U+00B7) and ``⋅``
+# (DOT OPERATOR, U+22C5) are both pretty-printed multiplication and map to ``*``.
+_pretty_superscript_table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-")
+_pretty_table = str.maketrans("·⋅", "**")
+_pretty_exp_re = re.compile(
+    r"(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:[.⋅][⁰¹²³⁴⁵⁶⁷⁸⁹]+)?(?:⸍[⁰¹²³⁴⁵⁶⁷⁸⁹]+)?)"
+)
+
+
+def _convert_pretty_exponent(match: re.Match[str]) -> str:
+    text = match.group(1).translate(_pretty_superscript_table)
+    text = text.replace("⋅", ".").replace("⸍", "/")
+    return f"**({text})"
 
 
 def string_preprocessor(input_string: str) -> str:
@@ -918,8 +947,8 @@ def string_preprocessor(input_string: str) -> str:
     for a, b in _subs_re:
         input_string = a.sub(b, input_string)
 
-    input_string = _pretty_exp_re.sub(r"**(\1)", input_string)
-    # Replace pretty format characters
+    input_string = _pretty_exp_re.sub(_convert_pretty_exponent, input_string)
+    # Replace pretty format characters (multiplication operator)
     input_string = input_string.translate(_pretty_table)
 
     # Handle caret exponentiation
@@ -958,7 +987,7 @@ class SharedRegistryObject:
             inst._REGISTRY = application_registry.get()
         return inst
 
-    def _check(self, other: Any) -> "TypeIs[SharedRegistryObject]":
+    def _check(self, other: object) -> "TypeIs[SharedRegistryObject]":
         """Check if the other object use a registry and if so that it is the
         same registry.
 
@@ -1038,9 +1067,7 @@ def to_units_container(
         return unit_like._units
     elif str in mro:
         if registry:
-            # TODO: document how to whether to lift preprocessing loop out to caller
-            for p in registry.preprocessors:
-                unit_like = p(unit_like)
+            unit_like = registry._apply_preprocessors(unit_like)
             return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)

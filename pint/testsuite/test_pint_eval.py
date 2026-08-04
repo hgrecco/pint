@@ -110,19 +110,19 @@ def test_build_eval_tree(tokenizer, input_text: str, parsed: str):
         ("3 * -(2 + 4)", "(3 * (- (2 + 4)))"),  # parenthetical unary
         ("3 * -((2 + 4))", "(3 * (- (2 + 4)))"),  # parenthetical unary
         # implicit op
-        ("3 4", "(3 * 4)"),
+        ("3 4", "(3 4)"),
         # implicit op, then parentheses
-        ("3 (2 + 4)", "(3 * (2 + 4))"),
+        ("3 (2 + 4)", "(3 (2 + 4))"),
         # parentheses, then implicit
-        ("(3 ** 4 ) 5", "((3 ** 4) * 5)"),
+        ("(3 ** 4 ) 5", "((3 ** 4) 5)"),
         # implicit op, then exponentiation
-        ("3 4 ** 5", "(3 * (4 ** 5))"),
+        ("3 4 ** 5", "(3 (4 ** 5))"),
         # implicit op, then addition
-        ("3 4 + 5", "((3 * 4) + 5)"),
+        ("3 4 + 5", "((3 4) + 5)"),
         # power followed by implicit
-        ("3 ** 4 5", "((3 ** 4) * 5)"),
+        ("3 ** 4 5", "((3 ** 4) 5)"),
         # implicit with parentheses
-        ("3 (4 ** 5)", "(3 * (4 ** 5))"),
+        ("3 (4 ** 5)", "(3 (4 ** 5))"),
         # exponent with e
         ("3e-1", "3e-1"),
         # multiple units with exponents
@@ -132,7 +132,7 @@ def test_build_eval_tree(tokenizer, input_text: str, parsed: str):
         # multiple units with neg exponents
         ("kg^-1 * s^-2", "((kg ** (- 1)) * (s ** (- 2)))"),
         # multiple units with neg exponents, implicit op
-        ("kg^-1 s^-2", "((kg ** (- 1)) * (s ** (- 2)))"),
+        ("kg^-1 s^-2", "((kg ** (- 1)) (s ** (- 2)))"),
         # nested power
         ("2 ^ 3 ^ 2", "(2 ** (3 ** 2))"),
         # nested power
@@ -141,9 +141,9 @@ def test_build_eval_tree(tokenizer, input_text: str, parsed: str):
         ("gram / meter ** 2 / second", "((gram / (meter ** 2)) / second)"),
         # units should behave like numbers, so we don't need a bunch of extra tests for them
         # implicit op, then addition
-        ("3 kg + 5", "((3 * kg) + 5)"),
-        ("(5 % 2) m", "((5 % 2) * m)"),  # mod operator
-        ("(5 // 2) m", "((5 // 2) * m)"),  # floordiv operator
+        ("3 kg + 5", "((3 kg) + 5)"),
+        ("(5 % 2) m", "((5 % 2) m)"),  # mod operator
+        ("(5 // 2) m", "((5 // 2) m)"),  # floordiv operator
     ),
 )
 def test_preprocessed_eval_tree(tokenizer, input_text: str, parsed: str):
@@ -171,3 +171,34 @@ def test_uncertainty(input_text: str, parsed: str):
             assert _pre(uncertainty_tokenizer, input_text)
     else:
         assert _pre(uncertainty_tokenizer, input_text) == parsed
+
+
+@pytest.mark.parametrize("tokenizer", TOKENIZERS)
+@pytest.mark.parametrize("input_text", ["-", "*", "/", "+"])
+def test_build_eval_tree_missing_operand_raises_definition_syntax_error(
+    tokenizer, input_text: str
+):
+    # Regression test for #2124: an operator with no operand must raise a pint
+    # DefinitionSyntaxError, not a bare AssertionError.
+    from pint.errors import DefinitionSyntaxError
+
+    with pytest.raises(DefinitionSyntaxError):
+        build_eval_tree(tokenizer(input_text))
+
+
+@pytest.mark.parametrize("tokenizer", TOKENIZERS)
+@pytest.mark.parametrize("op", ["**", "^"])
+def test_build_eval_tree_deeply_nested_raises_definition_syntax_error(
+    tokenizer, op: str
+):
+    # Regression test for uncontrolled recursion (CWE-674): a deeply nested
+    # right-associative expression must raise a pint DefinitionSyntaxError
+    # instead of an uncaught RecursionError out of the public API. Python's
+    # tokenize caps nested parentheses but not operator nesting, so without
+    # the depth bound in _build_eval_tree a ~6 KB payload of chained ``**`` /
+    # ``^`` operators recurses past sys.getrecursionlimit().
+    from pint.errors import DefinitionSyntaxError
+
+    evil = "kg " + f"{op} kg " * 1000
+    with pytest.raises(DefinitionSyntaxError):
+        build_eval_tree(tokenizer(evil))
