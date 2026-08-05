@@ -7,6 +7,7 @@ Pint Changelog
 - Raise `DefinitionSyntaxError` instead of a bare `RecursionError` for deeply nested expressions
 - Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and notebook, requiring no local install (#2372)
 - Switch CodSpeed CI benchmarks to `simulation` mode to fix a walltime environment warning.
+- Document that instantiating `Quantity` from a `(magnitude, unit)` pair is significantly faster than from a string or by multiplying by a unit (#1873)
 - Fix `DimensionalityError` from floating-point noise in combined fractional unit exponents (#1487, #681)
 - Add `/` unit modifier to pretty-print fractional exponents as a fraction (e.g. `s**1.5` -> `s³ᐟ²`) (#60)
 - Fix `is_compatible_with` edge cases with dimensionless types and unit strings with a scaling factor (e.g. `"35000 ft"`) (#1190)
