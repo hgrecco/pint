@@ -298,6 +298,19 @@ class TestGraph:
         g[2] = {3}
         assert find_connected_nodes(g, 9) is None
 
+    def test_find_connected_nodes_deep_chain(self):
+        # Regression test for CWE-674: the recursive predecessor of
+        # find_connected_nodes raised RecursionError on a linear chain
+        # longer than sys.getrecursionlimit(). The iterative version
+        # must handle it without crashing.
+        n = 2000
+        g = collections.defaultdict(set)
+        for i in range(n):
+            g[i].add(i + 1)
+        result = find_connected_nodes(g, 0)
+        assert result is not None
+        assert len(result) == n + 1
+
     def test_shortest_path(self):
         g = collections.defaultdict(set)
         g[1] = {2}
