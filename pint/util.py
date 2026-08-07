@@ -402,11 +402,7 @@ def find_connected_nodes[TH: Hashable](
         return None
 
     visited = visited or set()
-    # Iterative DFS to avoid RecursionError on deeply chained graphs
-    # (CWE-674). The recursive predecessor recursed once per unvisited
-    # adjacent node, so a linear chain longer than sys.getrecursionlimit()
-    # raised an uncaught RecursionError. See GH #2376 for the same class
-    # of issue in _build_eval_tree.
+    # Iterative DFS to avoid RecursionError on deep chains: https://github.com/hgrecco/pint/issues/2388
     stack = [start]
     while stack:
         node = stack.pop()
