@@ -402,11 +402,14 @@ def find_connected_nodes[TH: Hashable](
         return None
 
     visited = visited or set()
-    visited.add(start)
-
-    for node in graph[start]:
-        if node not in visited:
-            find_connected_nodes(graph, node, visited)
+    # Iterative DFS to avoid RecursionError on deep chains: https://github.com/hgrecco/pint/issues/2388
+    stack = [start]
+    while stack:
+        node = stack.pop()
+        if node in visited:
+            continue
+        visited.add(node)
+        stack.extend(graph[node] - visited)
 
     return visited
 

@@ -4,6 +4,7 @@ Pint Changelog
 0.26.0 (unreleased)
 -------------------
 
+- Fix `RecursionError` in `find_connected_nodes` for deeply chained context graphs by replacing recursion with an iterative DFS
 - Raise `DefinitionSyntaxError` instead of a bare `RecursionError` for deeply nested expressions
 - Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and notebook, requiring no local install (#2372)
 - Switch CodSpeed CI benchmarks to `simulation` mode to fix a walltime environment warning.
