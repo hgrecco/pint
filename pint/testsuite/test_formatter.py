@@ -44,6 +44,36 @@ class TestFormatter:
             == "1 / (meter * second ** 2)"
         )
 
+    def test_formatter_fraction_exponent(self):
+        # A Fraction exponent (used when a registry is created with
+        # non_int_type=Fraction) does not accept the 'n' format spec, so the
+        # default exponent formatting used to raise ValueError instead of
+        # rendering. See GH #2386.
+        from fractions import Fraction
+
+        exp = Fraction(23, 10)
+        assert formatter(dict(meter=exp).items(), ()) == "meter ** 23/10"
+        assert (
+            formatter((), dict(meter=-exp).items(), as_ratio=False)
+            == "meter ** -23/10"
+        )
+
+    def test_unit_fraction_exponent_formatting(self):
+        # End-to-end: formatting a unit whose exponent is a Fraction must not
+        # raise for any of the built-in format specs. GH #2386.
+        import fractions
+
+        import pint
+
+        ureg = pint.UnitRegistry(non_int_type=fractions.Fraction)
+        u = ureg.Unit("m**2.3")
+        assert str(u) == "meter ** 23/10"
+        assert format(u, "~") == "m ** 23/10"
+        # Pretty specs render the exponent as superscripts; assert they produce
+        # (non-empty) output rather than raising.
+        assert format(u, "P")
+        assert format(u, "~P")
+
     def testparse_spec(self):
         assert fmt._parse_spec("") == ""
         assert fmt._parse_spec("") == ""

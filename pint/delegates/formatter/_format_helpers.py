@@ -92,10 +92,25 @@ def override_locale(
         setlocale(LC_NUMERIC, prev_locale_string)
 
 
+def _format_exponent_n(num: Number) -> str:
+    """Format an exponent using the locale-aware ``n`` spec, with a fallback.
+
+    Some numeric types do not accept the ``n`` presentation type and raise
+    ``ValueError`` when formatted with it - most notably ``fractions.Fraction``,
+    which is used as the exponent type when a registry is created with
+    ``non_int_type=fractions.Fraction``. For those, fall back to ``str`` so that
+    formatting produces output instead of raising.
+    """
+    try:
+        return f"{num:n}"
+    except (ValueError, TypeError):
+        return str(num)
+
+
 def pretty_fmt_exponent(num: Number) -> str:
     """Format an number into a pretty printed exponent."""
     # unicode dot operator (U+22C5) looks like a superscript decimal
-    ret = f"{num:n}".replace("-", "⁻").replace(".", "\u22c5")
+    ret = _format_exponent_n(num).replace("-", "⁻").replace(".", "\u22c5")
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
@@ -180,7 +195,7 @@ def formatter(
     division_fmt: str = " / ",
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
-    exp_call: FORMATTER = "{:n}".format,
+    exp_call: FORMATTER = _format_exponent_n,
 ) -> str:
     """Format a list of (name, exponent) pairs.
 
