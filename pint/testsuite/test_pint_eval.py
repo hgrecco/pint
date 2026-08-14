@@ -202,3 +202,29 @@ def test_build_eval_tree_deeply_nested_raises_definition_syntax_error(
     evil = "kg " + f"{op} kg " * 1000
     with pytest.raises(DefinitionSyntaxError):
         build_eval_tree(tokenizer(evil))
+
+
+@pytest.mark.parametrize("tokenizer", TOKENIZERS)
+@pytest.mark.parametrize("input_text", ["()", "( )", "( ( ) )", "kg * ()"])
+def test_build_eval_tree_empty_parentheses_raises_definition_syntax_error(
+    tokenizer, input_text: str
+):
+    # An empty parenthetical group has no operand to close, which used to trip a
+    # bare AssertionError instead of a pint DefinitionSyntaxError.
+    from pint.errors import DefinitionSyntaxError
+
+    with pytest.raises(DefinitionSyntaxError):
+        build_eval_tree(tokenizer(input_text))
+
+
+@pytest.mark.parametrize("tokenizer", TOKENIZERS)
+@pytest.mark.parametrize("input_text", ["(", "((", "1 (", "kg (", "(1 + 2"])
+def test_build_eval_tree_unbalanced_parentheses_raises_definition_syntax_error(
+    tokenizer, input_text: str
+):
+    # An unclosed "(" makes Python's tokenizer raise tokenize.TokenError while
+    # the tokens are materialized; it must surface as a pint DefinitionSyntaxError.
+    from pint.errors import DefinitionSyntaxError
+
+    with pytest.raises(DefinitionSyntaxError):
+        build_eval_tree(tokenizer(input_text))

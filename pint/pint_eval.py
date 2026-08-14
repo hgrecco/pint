@@ -465,11 +465,13 @@ def _build_eval_tree(
                     )
                 elif prev_op == "(":
                     # close parenthetical group
-                    assert result is not None
+                    if result is None:
+                        raise DefinitionSyntaxError("empty parentheses in tokens")
                     return result, index
                 else:
                     # parenthetical group ending, but we need to close sub-operations within group
-                    assert result is not None
+                    if result is None:
+                        raise DefinitionSyntaxError("empty parentheses in tokens")
                     return result, index - 1
             elif token_text == "(":
                 # gather parenthetical group
@@ -579,7 +581,13 @@ def build_eval_tree(
 
     if not isinstance(tokens, list):
         # ensure tokens is list so we can access by index
-        tokens = list(tokens)
+        try:
+            tokens = list(tokens)
+        except tokenize.TokenError as exc:
+            # e.g. an unbalanced "(" makes the Python tokenizer raise TokenError
+            # ("unexpected EOF in multi-line statement"); surface it as a pint
+            # syntax error instead.
+            raise DefinitionSyntaxError(str(exc)) from exc
 
     result, _ = _build_eval_tree(tokens, op_priority, 0, 0)
 

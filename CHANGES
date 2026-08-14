@@ -5,6 +5,8 @@ Pint Changelog
 -------------------
 
 - Raise `DefinitionSyntaxError` instead of a bare `RecursionError` for deeply nested expressions
+- Raise `DefinitionSyntaxError` instead of a bare `AssertionError` (empty parentheses) or
+  `tokenize.TokenError` (unbalanced parentheses) when parsing a malformed expression
 - Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and notebook, requiring no local install (#2372)
 - Switch CodSpeed CI benchmarks to `simulation` mode to fix a walltime environment warning.
 - Document that instantiating `Quantity` from a `(magnitude, unit)` pair is significantly faster than from a string or by multiplying by a unit (#1873)
