@@ -6,6 +6,7 @@ Pint Changelog
 
 - Fix `numpy.sum`/`numpy.nansum` not converting a Quantity `initial` value, unlike `numpy.max`/`numpy.min` (#2400)
 - Fix `Quantity.to_compact()` raising `OffsetUnitCalculusError` for offset units like `degree_Celsius` with magnitude below 1 (#2005)
+- Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
 
 
 0.26.1 (2026-09-10)

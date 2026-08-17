@@ -297,7 +297,7 @@ def _get_preferred(
                     preferred_unit.dimensionality[d] for d in dims
                 )
                 if all(
-                    s_exps_tail[i] * p_exps_head == p_exps_tail[i] ** s_exps_head
+                    s_exps_tail[i] * p_exps_head == p_exps_tail[i] * s_exps_head
                     for i in range(n)
                 ):
                     ratio = p_exps_head / s_exps_head
