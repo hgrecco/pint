@@ -198,7 +198,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             v = self.__class__(v, "").to(self)
         else:
             raise DimensionalityError("dimensionless", self._units)
-        return self.magnitude.searchsorted(v, side)
+        return self.magnitude.searchsorted(v, side, sorter)
 
     def dot(self, b):
         """Dot product of two arrays.

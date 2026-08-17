@@ -684,6 +684,13 @@ class TestNumpyUnclassified(TestNumpyMethods):
         with pytest.raises(DimensionalityError):
             q.searchsorted([1.5, 2.5])
 
+    def test_searchsorted_sorter(self):
+        q = [30.0, 10.0, 20.0] * self.ureg.m
+        sorter = [1, 2, 0]
+        self.assertNDArrayEqual(
+            q.searchsorted([15.0, 25.0] * self.ureg.m, "left", sorter), [1, 2]
+        )
+
     def test_searchsorted_numpy_func(self):
         """Test searchsorted as numpy function."""
         q = self.q.flatten()
