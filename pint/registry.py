@@ -55,6 +55,7 @@ else:
 MagnitudeT_co = TypeVar(
     "MagnitudeT_co", covariant=True, bound="Magnitude", default="Any"
 )
+MagnitudeT = TypeVar("MagnitudeT", bound="Magnitude", default="Any")
 
 
 class Quantity(
@@ -451,8 +452,8 @@ class GenericUnitRegistry[QuantityT: _Quantity, UnitT: _Unit](
     pass
 
 
-class UnitRegistry[MagnitudeT: Magnitude](
-    GenericUnitRegistry[Quantity[MagnitudeT], Unit]
+class UnitRegistry(
+    GenericUnitRegistry[Quantity[MagnitudeT], Unit], Generic[MagnitudeT]
 ):
     """The unit registry stores the definitions and relationships between units.
 
