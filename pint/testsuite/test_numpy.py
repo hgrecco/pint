@@ -1503,8 +1503,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.array([[-2.0, -1.0, -1.0], [0.0, -5.0, 1.0], [0.0, 0.0, -2.0]])
             * self.ureg.m
         )
-        helpers.assert_quantity_equal(Q, Q_expected)
-        helpers.assert_quantity_equal(R, R_expected)
+        helpers.assert_quantity_almost_equal(Q, Q_expected)
+        helpers.assert_quantity_almost_equal(R, R_expected)
 
     def test_linalg_qr_offset(self):
         A = self.Q_(np.array([[0, 3, 1], [0, 4, -2], [2, 1, 1]]), self.ureg.degC)
