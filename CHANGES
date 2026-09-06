@@ -63,6 +63,7 @@ Pint Changelog
 - Fix `Unit.__eq__` when comparing with strings using unit aliases (e.g. `Unit('metre') == 'meter'`) (#634)
 - Fix `@alias` raising a bare `KeyError` on prefixed unit targets (#1076, #1447)
 - Fix `parse_units` cache never being hit for symbol and prefixed spellings (e.g. `kg`, `kWh`, `ms`), making those very common lookups re-parse on every call (#2320)
+- Fix `numpy.sum`/`numpy.nansum` treating a Quantity `initial` as a bare magnitude instead of converting it to the input's units, unlike `numpy.max`/`numpy.min` which already convert it correctly (#2400)
 - Fix NumPy ufunc mul/div paths allowing offset units to bypass `OffsetUnitCalculusError` (#1335)
 
 
