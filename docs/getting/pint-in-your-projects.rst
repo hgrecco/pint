@@ -54,6 +54,23 @@ also define the registry as the application registry
    False
 
 
+Preprocessing input strings
+---------------------------
+
+When an application accepts unit spellings that Pint does not define, pass
+callables to the ``UnitRegistry`` ``preprocessors`` argument. The callables are
+applied in order to each input string before parsing. For example, a registry can
+support a known ``sq_cm`` spelling without changing its unit definitions:
+
+.. doctest::
+
+   >>> ureg = UnitRegistry(
+   ...     preprocessors=[lambda value: value.replace("sq_cm", "cm ** 2")]
+   ... )
+   >>> ureg("3 sq_cm")
+   Quantity(3, "centimeter ** 2")
+
+
 Keeping up to date with Pint development
 ----------------------------------------
 

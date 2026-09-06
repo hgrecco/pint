@@ -17,22 +17,16 @@ from functools import partial
 from itertools import filterfalse, tee
 from typing import (
     TYPE_CHECKING,
-    Any,
     Literal,
     TypedDict,
-    TypeVar,
 )
 
-from ...compat import TypeAlias, babel_parse
+from ...compat import babel_parse
 from ...util import UnitsContainer
-
-T = TypeVar("T")
-U = TypeVar("U")
-V = TypeVar("V")
-W = TypeVar("W")
+from .sorting import SortFunc
 
 if TYPE_CHECKING:
-    from ...compat import Locale, Number
+    from ...compat import Locale
     from ...facets.plain import PlainUnit
     from ...registry import UnitRegistry
 
@@ -41,12 +35,7 @@ class SortKwds(TypedDict):
     registry: UnitRegistry
 
 
-SortFunc: TypeAlias = Callable[
-    [Iterable[tuple[str, Any, str]], Any], Iterable[tuple[str, Any, str]]
-]
-
-
-class BabelKwds(TypedDict):
+class BabelKwds(TypedDict, total=False):
     """Babel related keywords used in formatters."""
 
     use_plural: bool
@@ -54,7 +43,7 @@ class BabelKwds(TypedDict):
     locale: Locale | str | None
 
 
-def partition(
+def partition[T](
     predicate: Callable[[T], bool], iterable: Iterable[T]
 ) -> tuple[filterfalse[T], filter[T]]:
     """Partition entries into false entries and true entries.
@@ -139,13 +128,13 @@ def localize_unit_name(
     return f"{fallback_name or measurement_unit}"  # pragma: no cover
 
 
-def extract2(element: tuple[str, T, str]) -> tuple[str, T]:
+def extract2[T](element: tuple[str, T, str]) -> tuple[str, T]:
     """Extract display name and exponent from a tuple containing display name, exponent and unit name."""
 
     return element[:2]
 
 
-def to_name_exponent_name(element: tuple[str, T]) -> tuple[str, T, str]:
+def to_name_exponent_name[T](element: tuple[str, T]) -> tuple[str, T, str]:
     """Convert unit name and exponent to unit name as display name, exponent and unit name."""
 
     # TODO: write a generic typing
@@ -153,14 +142,14 @@ def to_name_exponent_name(element: tuple[str, T]) -> tuple[str, T, str]:
     return element + (element[0],)
 
 
-def to_symbol_exponent_name(
+def to_symbol_exponent_name[T](
     el: tuple[str, T], registry: UnitRegistry
 ) -> tuple[str, T, str]:
     """Convert unit name and exponent to unit symbol as display name, exponent and unit name."""
     return registry._get_symbol(el[0]), el[1], el[0]
 
 
-def localize_display_exponent_name(
+def localize_display_exponent_name[T](
     element: tuple[str, T, str],
     use_plural: bool,
     length: Literal["short", "long", "narrow"] = "long",
@@ -178,65 +167,7 @@ def localize_display_exponent_name(
     )
 
 
-#####################
-# Sorting functions
-#####################
-
-
-def sort_by_unit_name(
-    items: Iterable[tuple[str, Number, str]], _registry: UnitRegistry | None
-) -> Iterable[tuple[str, Number, str]]:
-    return sorted(items, key=lambda el: el[2])
-
-
-def sort_by_display_name(
-    items: Iterable[tuple[str, Number, str]], _registry: UnitRegistry | None
-) -> Iterable[tuple[str, Number, str]]:
-    return sorted(items)
-
-
-def sort_by_dimensionality(
-    items: Iterable[tuple[str, Number, str]], registry: UnitRegistry | None
-) -> Iterable[tuple[str, Number, str]]:
-    """Sort a list of units by dimensional order (from `registry.formatter.dim_order`).
-
-    Parameters
-    ----------
-    items : tuple
-        a list of tuples containing (unit names, exponent values).
-    registry : UnitRegistry | None
-        the registry to use for looking up the dimensions of each unit.
-
-    Returns
-    -------
-    list
-        the list of units sorted by most significant dimension first.
-
-    Raises
-    ------
-    KeyError
-        If unit cannot be found in the registry.
-    """
-
-    if registry is None:
-        return items
-
-    dim_order = registry.formatter.dim_order
-
-    def sort_key(item: tuple[str, Number, str]):
-        _display_name, _unit_exponent, unit_name = item
-        cname = registry.get_name(unit_name)
-        cname_dims = registry.get_dimensionality(cname) or {"[]": None}
-        for cname_dim in cname_dims:
-            if cname_dim in dim_order:
-                return dim_order.index(cname_dim), cname
-
-        raise KeyError(f"Unit {unit_name} (aka {cname}) has no recognized dimensions")
-
-    return sorted(items, key=sort_key)
-
-
-def prepare_compount_unit(
+def prepare_compount_unit[T](
     unit: PlainUnit | UnitsContainer | Iterable[tuple[str, T]],
     spec: str = "",
     sort_func: SortFunc | None = None,

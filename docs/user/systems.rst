@@ -18,7 +18,7 @@ This has an effect in the base units. For example:
 
     >>> q = 3600. * ureg.meter / ureg.hour
     >>> q.to_base_units()
-    <Quantity(1.0, 'meter / second')>
+    Quantity(1.0, "meter / second")
 
 But if you change to cgs:
 
@@ -26,7 +26,7 @@ But if you change to cgs:
 
     >>> ureg.default_system = 'cgs'
     >>> q.to_base_units()
-    <Quantity(100.0, 'centimeter / second')>
+    Quantity(100.0, "centimeter / second")
 
 or more drastically to:
 
@@ -60,8 +60,8 @@ Notice that this give you the opportunity to choose within units with colliding 
 .. doctest::
 
     >>> (1 * ureg.sys.imperial.pint).to('liter')
-    <Quantity(0.568261..., 'liter')>
+    Quantity(0.568261..., "liter")
     >>> (1 * ureg.sys.US.pint).to('liter')
-    <Quantity(0.473176..., 'liter')>
+    Quantity(0.473176..., "liter")
     >>> (1 * ureg.sys.US.pint).to(ureg.sys.imperial.pint)
-    <Quantity(0.832674..., 'imperial_pint')>
+    Quantity(0.832674..., "imperial_pint")

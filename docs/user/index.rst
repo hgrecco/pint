@@ -10,6 +10,7 @@ examples that describe many common tasks that you can accomplish with pint.
     :hidden:
 
     defining-quantities
+    quantity-to
     formatting
     nonmult
     log_units

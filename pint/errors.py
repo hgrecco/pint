@@ -12,6 +12,9 @@ from __future__ import annotations
 
 import typing as ty
 
+if ty.TYPE_CHECKING:
+    from .facets.plain.unit import UnitsContainer as UnitsContainerT
+
 OFFSET_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/nonmult.html"
 LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/log_units.html"
 
@@ -166,16 +169,16 @@ class DimensionalityError(PintTypeError):
 
     units1: ty.Any
     units2: ty.Any
-    dim1: str = ""
-    dim2: str = ""
+    dim1: "str | UnitsContainerT" = ""
+    dim2: "str | UnitsContainerT" = ""
     extra_msg: str = ""
 
     def __init__(
         self,
         units1: ty.Any,
         units2: ty.Any,
-        dim1: str = "",
-        dim2: str = "",
+        dim1: "str | UnitsContainerT" = "",
+        dim2: "str | UnitsContainerT" = "",
         extra_msg: str = "",
     ) -> None:
         self.units1 = units1

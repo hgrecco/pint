@@ -14,6 +14,12 @@ description of a formatter.
 from __future__ import annotations
 
 from .full import FullFormatter
+from .sorting import (
+    SortFunc,
+    sort_by_dimensionality,
+    sort_by_display_name,
+    sort_by_unit_name,
+)
 
 
 class Formatter(FullFormatter):
@@ -24,4 +30,8 @@ class Formatter(FullFormatter):
 
 __all__ = [
     "Formatter",
+    "SortFunc",
+    "sort_by_dimensionality",
+    "sort_by_display_name",
+    "sort_by_unit_name",
 ]

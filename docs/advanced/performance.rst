@@ -8,6 +8,37 @@ Pint can impose a significant performance overhead on computationally-intensive 
 
 .. note:: Examples below are based on the IPython shell (which provides the handy %timeit extension), so they will not work in a standard Python interpreter.
 
+Instantiate Quantity from a (magnitude, unit) pair
+---------------------------------------------------
+
+Building a :py:class:`pint.Quantity` from a ``(magnitude, unit)`` pair is
+significantly faster than parsing an equivalent string, and somewhat faster
+than multiplying a magnitude by a unit (which still has to look up the unit
+by attribute each time):
+
+.. ipython::
+    :verbatim:
+
+    In [1]: from pint import UnitRegistry
+
+    In [2]: ureg = UnitRegistry()
+
+    In [3]: Q_ = ureg.Quantity
+
+    In [4]: %timeit Q_(1.0, "meter")
+    5.65 us +- 178 ns per loop (mean +- std. dev. of 7 runs, 100,000 loops each)
+
+    In [5]: %timeit Q_("1.0 meter")
+    44.1 us +- 536 ns per loop (mean +- std. dev. of 7 runs, 100,000 loops each)
+
+    In [6]: %timeit 1.0 * ureg.meter
+    7.31 us +- 429 ns per loop (mean +- std. dev. of 7 runs, 100,000 loops each)
+
+This adds up quickly in code that builds many quantities (e.g. reading a
+column of values from a file), so prefer ``Q_(value, "unit")`` over parsing
+a string or multiplying by a unit attribute in performance-sensitive code.
+
+
 Use magnitudes when possible
 ----------------------------
 

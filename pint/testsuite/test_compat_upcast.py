@@ -65,10 +65,12 @@ def test_quantification(module_registry, ds):
         (lambda ureg, q: q, lambda ureg, q: xr.DataArray(q)),
         (
             lambda ureg, q: xr.DataArray([1.0, 2.0] * ureg.m, dims=("y",)),
-            lambda ureg, q: xr.DataArray(
-                np.arange(6, dtype="float").reshape(3, 2, 1), dims=("z", "y", "x")
-            )
-            * ureg.km,
+            lambda ureg, q: (
+                xr.DataArray(
+                    np.arange(6, dtype="float").reshape(3, 2, 1), dims=("z", "y", "x")
+                )
+                * ureg.km
+            ),
         ),
         (lambda ureg, q: 1 * ureg.m, lambda ureg, q: xr.DataArray(q)),
     ],

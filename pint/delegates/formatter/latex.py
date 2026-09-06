@@ -21,7 +21,6 @@ from ..._typing import Magnitude
 from ...compat import Number, Unpack, ndarray
 from ._compound_unit_helpers import (
     BabelKwds,
-    SortFunc,
     prepare_compount_unit,
 )
 from ._format_helpers import (
@@ -36,10 +35,11 @@ from ._spec_helpers import (
     split_format,
 )
 from .plain import BaseFormatter
+from .sorting import SortFunc
 
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
-    from ...facets.plain import MagnitudeT, PlainQuantity, PlainUnit
+    from ...facets.plain import PlainQuantity, PlainUnit
     from ...registry import UnitRegistry
     from ...util import ItMatrix
 
@@ -163,7 +163,7 @@ def siunitx_format_unit(
     return "".join(lpos) + "".join(lneg)
 
 
-_EXP_PATTERN = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
+_EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
 
 
 class LatexFormatter(BaseFormatter):
@@ -225,7 +225,7 @@ class LatexFormatter(BaseFormatter):
 
         return formatted.replace("[", "{").replace("]", "}")
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",
@@ -353,7 +353,7 @@ class SIunitxFormatter(BaseFormatter):
         # the units are returned?
         return rf"\si[]{{{formatted}}}"
 
-    def format_quantity(
+    def format_quantity[MagnitudeT: Magnitude](
         self,
         quantity: PlainQuantity[MagnitudeT],
         qspec: str = "",

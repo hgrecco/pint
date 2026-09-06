@@ -11,7 +11,8 @@ from ...errors import UndefinedBehavior
 from ...util import UnitsContainer, infer_base_unit
 
 if TYPE_CHECKING:
-    from ..._typing import UnitLike
+    from ..._typing import Scalar, UnitLike
+    from ...registry import UnitRegistry
     from .quantity import PlainQuantity
 
 
@@ -73,9 +74,73 @@ def to_reduced_units(
     return quantity.to(new_units)
 
 
-def to_compact(
-    quantity: PlainQuantity, unit: UnitsContainer | None = None
-) -> PlainQuantity:
+def _get_si_prefixes(registry: UnitRegistry) -> tuple[list[int], list[str]]:
+    """Return the (power of ten, prefix name) pairs of the registry's SI prefixes,
+    sorted by power, as parallel lists.
+    """
+    SI_prefixes: dict[int, str] = {}
+    for prefix in registry._prefixes.values():
+        try:
+            scale = prefix.converter.scale
+            # Kludgy way to check if this is an SI prefix
+            log10_scale = int(math.log10(scale))
+            if log10_scale == math.log10(scale):
+                SI_prefixes[log10_scale] = prefix.name
+        except Exception:
+            SI_prefixes[0] = ""
+
+    SI_prefixes_list = sorted(SI_prefixes.items())
+    SI_powers = [item[0] for item in SI_prefixes_list]
+    SI_bases = [item[1] for item in SI_prefixes_list]
+    return SI_powers, SI_bases
+
+
+def _get_compact_base[Q: PlainQuantity](
+    quantity: Q, unit: UnitsContainer | None
+) -> tuple[Q, str, Scalar]:
+    """Resolve the base quantity to search for a compact prefix in, along with
+    the numerator unit name and exponent whose magnitude the prefix is picked for.
+    """
+    if unit is None:
+        unit = infer_base_unit(quantity, registry=quantity._REGISTRY)
+    else:
+        unit = infer_base_unit(quantity.__class__(1, unit), registry=quantity._REGISTRY)
+
+    q_base = quantity.to(unit)
+
+    units = list(q_base._units.items())
+    units_numerator = [a for a in units if a[1] > 0]
+
+    if len(units_numerator) > 0:
+        unit_str, unit_power = units_numerator[0]
+    else:
+        unit_str, unit_power = units[0]
+
+    return q_base, unit_str, unit_power
+
+
+def _pick_compact_unit(
+    q_base: PlainQuantity,
+    unit_str: str,
+    power: Scalar,
+    SI_powers: list[int],
+    SI_bases: list[str],
+) -> UnitsContainer:
+    """Return q_base's UnitsContainer with unit_str renamed to the SI-prefixed
+    spelling matching the given power of ten.
+    """
+    index = bisect.bisect_left(SI_powers, power)
+
+    if index >= len(SI_bases):
+        index = -1
+
+    prefix_str = SI_bases[index]
+
+    new_unit_str = prefix_str + unit_str
+    return q_base._units.rename(unit_str, new_unit_str)
+
+
+def to_compact[Q: PlainQuantity](quantity: Q, unit: UnitsContainer | None = None) -> Q:
     """ "Return PlainQuantity rescaled to compact, human-readable units.
 
     To get output in terms of a different unit, use the unit parameter.
@@ -87,9 +152,9 @@ def to_compact(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (200e-9 * ureg.s).to_compact()
-    <Quantity(200.0, 'nanosecond')>
+    Quantity(199.99999999999997, "nanosecond")
     >>> (1e-2 * ureg("kg m/s^2")).to_compact("N")
-    <Quantity(10.0, 'millinewton')>
+    Quantity(10.0, "millinewton")
     """
 
     if not isinstance(quantity.magnitude, numbers.Number) and not hasattr(
@@ -110,55 +175,22 @@ def to_compact(
     if quantity.unitless or qm == 0 or math.isnan(qm) or math.isinf(qm):
         return quantity
 
-    SI_prefixes: dict[int, str] = {}
-    for prefix in quantity._REGISTRY._prefixes.values():
-        try:
-            scale = prefix.converter.scale
-            # Kludgy way to check if this is an SI prefix
-            log10_scale = int(math.log10(scale))
-            if log10_scale == math.log10(scale):
-                SI_prefixes[log10_scale] = prefix.name
-        except Exception:
-            SI_prefixes[0] = ""
-
-    SI_prefixes_list = sorted(SI_prefixes.items())
-    SI_powers = [item[0] for item in SI_prefixes_list]
-    SI_bases = [item[1] for item in SI_prefixes_list]
-
-    if unit is None:
-        unit = infer_base_unit(quantity, registry=quantity._REGISTRY)
-    else:
-        unit = infer_base_unit(quantity.__class__(1, unit), registry=quantity._REGISTRY)
-
-    q_base = quantity.to(unit)
+    SI_powers, SI_bases = _get_si_prefixes(quantity._REGISTRY)
+    q_base, unit_str, unit_power = _get_compact_base(quantity, unit)
 
     magnitude = q_base.magnitude
     # Support uncertainties
     if hasattr(magnitude, "nominal_value"):
         magnitude = magnitude.nominal_value
 
-    units = list(q_base._units.items())
-    units_numerator = [a for a in units if a[1] > 0]
-
-    if len(units_numerator) > 0:
-        unit_str, unit_power = units_numerator[0]
-    else:
-        unit_str, unit_power = units[0]
-
     if unit_power > 0:
         power = math.floor(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
     else:
         power = math.ceil(math.log10(abs(magnitude)) / float(unit_power) / 3) * 3
 
-    index = bisect.bisect_left(SI_powers, power)
-
-    if index >= len(SI_bases):
-        index = -1
-
-    prefix_str = SI_bases[index]
-
-    new_unit_str = prefix_str + unit_str
-    new_unit_container = q_base._units.rename(unit_str, new_unit_str)
+    new_unit_container = _pick_compact_unit(
+        q_base, unit_str, power, SI_powers, SI_bases
+    )
 
     return quantity.to(new_unit_container)
 
@@ -207,9 +239,9 @@ def to_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    <Quantity(4046.87261, 'meter ** 2')>
+    Quantity(4046.8726098742513, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'watt * second')>
+    Quantity(4.4482216152605005, "watt * second")
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -227,9 +259,9 @@ def ito_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    <Quantity(4046.87261, 'meter ** 2')>
+    Quantity(4046.8726098742513, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
-    <Quantity(4.44822162, 'watt * second')>
+    Quantity(4.4482216152605005, "watt * second")
     """
 
     units = _get_preferred(quantity, preferred_units)
@@ -241,6 +273,7 @@ def _get_preferred(
 ) -> PlainQuantity:
     if preferred_units is None:
         preferred_units = quantity._REGISTRY.default_preferred_units
+    preferred_units = list(map(quantity._REGISTRY.Unit, preferred_units))
 
     if not quantity.dimensionality:
         return quantity._units.copy()

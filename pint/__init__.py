@@ -14,6 +14,7 @@ and conversions from and to different units.
 from __future__ import annotations
 
 from importlib.metadata import version
+from typing import TYPE_CHECKING, TypeAlias
 
 from .delegates.formatter._format_helpers import formatter
 from .errors import (  # noqa: F401
@@ -32,11 +33,18 @@ from .util import logger, pi_theorem  # noqa: F401
 
 # Default Quantity, Unit and Measurement are the ones
 # build in the default registry.
-Quantity = UnitRegistry.Quantity
-Unit = UnitRegistry.Unit
-Measurement = UnitRegistry.Measurement
-Context = UnitRegistry.Context
-Group = UnitRegistry.Group
+if TYPE_CHECKING:
+    # This is a workaround for https://github.com/hgrecco/pint/issues/2306
+    from .facets.context.objects import Context
+    from .facets.group.objects import Group
+    from .facets.measurement.objects import Measurement
+    from .registry import Quantity
+else:
+    Quantity: TypeAlias = UnitRegistry.Quantity
+    Measurement: TypeAlias = UnitRegistry.Measurement
+    Context: TypeAlias = UnitRegistry.Context
+    Group: TypeAlias = UnitRegistry.Group
+Unit: TypeAlias = UnitRegistry.Unit
 
 try:  # pragma: no cover
     __version__ = version("pint")
@@ -126,6 +134,7 @@ __all__ = (
     "Quantity",
     "Unit",
     "UnitRegistry",
+    "Group",
     "PintError",
     "DefinitionSyntaxError",
     "LogarithmicUnitCalculusError",

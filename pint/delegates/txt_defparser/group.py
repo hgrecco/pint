@@ -65,10 +65,7 @@ class GroupDefinition(
     block.DirectiveBlock[
         definitions.GroupDefinition,
         BeginGroup,
-        ty.Union[
-            plain.CommentDefinition,
-            plain.UnitDefinition,
-        ],
+        ty.Union[plain.CommentDefinition, plain.UnitDefinition],
     ]
 ):
     """Definition of a group.

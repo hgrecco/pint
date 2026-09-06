@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Self
 
 from ... import errors
-from ...compat import Self
 
 
 @dataclass(frozen=True)
@@ -44,9 +44,7 @@ class SystemDefinition(errors.WithDefErr):
     rules: tuple[BaseUnitRule, ...]
 
     @classmethod
-    def from_lines(
-        cls: type[Self], lines: Iterable[str], non_int_type: type
-    ) -> Self | None:
+    def from_lines(cls, lines: Iterable[str], non_int_type: type) -> Self | None:
         # TODO: this is to keep it backwards compatible
         # TODO: check when is None returned.
         from ...delegates import ParserConfig, txt_defparser

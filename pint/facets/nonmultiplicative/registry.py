@@ -8,20 +8,21 @@ pint.facets.nonmultiplicative.registry
 
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from ...compat import TypeAlias
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer, logger
-from ..plain import GenericPlainRegistry, QuantityT, UnitDefinition, UnitT
+from ..plain import GenericPlainRegistry, UnitDefinition
 from . import objects
 from .definitions import OffsetConverter, ScaleConverter
 
-T = TypeVar("T")
+if TYPE_CHECKING:
+    from ..._typing import Quantity, Unit
 
 
-class GenericNonMultiplicativeRegistry(
-    Generic[QuantityT, UnitT], GenericPlainRegistry[QuantityT, UnitT]
+class GenericNonMultiplicativeRegistry[QuantityT: Quantity, UnitT: Unit](
+    GenericPlainRegistry[QuantityT, UnitT]
 ):
     """Handle of non multiplicative units (e.g. Temperature).
 
@@ -212,7 +213,7 @@ class GenericNonMultiplicativeRegistry(
         # Otherwise, return the units unmodified
         return all_units
 
-    def _convert(
+    def _convert[T](
         self,
         value: T,
         src: UnitsContainer,

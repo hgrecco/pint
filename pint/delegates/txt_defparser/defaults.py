@@ -42,10 +42,7 @@ class DefaultsDefinition(
     block.DirectiveBlock[
         definitions.DefaultsDefinition,
         BeginDefaults,
-        ty.Union[
-            plain.CommentDefinition,
-            plain.Equality,
-        ],
+        ty.Union[plain.CommentDefinition, plain.Equality],
     ]
 ):
     """Directive to store values.
