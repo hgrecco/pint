@@ -740,7 +740,7 @@ def _qr(a, mode="reduced"):
     # In the result, Q is dimensionless, and R has the same units as a
     a = _base_unit_if_needed(a)
     q, r = np.linalg.qr(a._magnitude, mode=mode)
-    return np.linalg.linalg.QRResult(
+    return np.linalg._linalg.QRResult(
         q * a.units._REGISTRY.dimensionless,
         r * a.units,
     )
@@ -757,7 +757,7 @@ def _svd(a, full_matrices=True, compute_uv=True, hermitian=False):
             compute_uv=compute_uv,
             hermitian=hermitian,
         )
-        return np.linalg.linalg.SVDResult(
+        return np.linalg._linalg.SVDResult(
             u * a.units._REGISTRY.dimensionless,
             s * a.units,
             vh * a.units._REGISTRY.dimensionless,
@@ -777,7 +777,7 @@ def _eig(a):
     # In the result, eigenvalues have the same units as a, and eigenvectors are dimensionless
     a = _base_unit_if_needed(a)
     eigenvalues, eigenvectors = np.linalg.eig(a._magnitude)
-    return np.linalg.linalg.EigResult(
+    return np.linalg._linalg.EigResult(
         eigenvalues * a.units,
         eigenvectors * a.units._REGISTRY.dimensionless,
     )

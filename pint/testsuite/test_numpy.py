@@ -1507,7 +1507,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_equal(R, R_expected)
 
     def test_linalg_qr_offset(self):
-        A = np.array([[0, 3, 1], [0, 4, -2], [2, 1, 1]]) * self.ureg.degC
+        A = self.Q_(np.array([[0, 3, 1], [0, 4, -2], [2, 1, 1]]), self.ureg.degC)
         with pytest.raises(OffsetUnitCalculusError):
             np.linalg.qr(A)
 
@@ -1522,7 +1522,7 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_almost_equal(eigenvectors, eigenvectors_expected)
 
     def test_linalg_eig_offset(self):
-        A = np.array([[1, -1], [1, 1]]) * self.ureg.degC
+        A = self.Q_(np.array([[1, -1], [1, 1]]), self.ureg.degC)
         with pytest.raises(OffsetUnitCalculusError):
             np.linalg.eig(A)
 
@@ -1535,10 +1535,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_almost_equal(np.linalg.det(A), expected)
 
     def test_linalg_det_offset(self):
-        A = (
+        A = self.Q_(
             np.array([[[1, 2], [3, 4]], [[1, 2], [2, 1]], [[1, 3], [3, 1]]])
-            * self.ureg.degC
-        )
+            , self.ureg.degC)
         with pytest.raises(OffsetUnitCalculusError):
             np.linalg.det(A)
 
