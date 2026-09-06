@@ -734,6 +734,7 @@ def _all(a, *args, **kwargs):
     else:
         raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
+
 @implements("linalg.qr", "function")
 def _qr(a, mode="reduced"):
     # In the result, Q is dimensionless, and R has the same units as a
@@ -744,13 +745,17 @@ def _qr(a, mode="reduced"):
         r * a.units,
     )
 
+
 @implements("linalg.svd", "function")
 def _svd(a, full_matrices=True, compute_uv=True, hermitian=False):
     # In the result, U and Vh are dimensionless, and S has the same units as a
     a = _base_unit_if_needed(a)
-    if(compute_uv):
+    if compute_uv:
         u, s, vh = np.linalg.svd(
-            a._magnitude, full_matrices=full_matrices, compute_uv=compute_uv, hermitian=hermitian
+            a._magnitude,
+            full_matrices=full_matrices,
+            compute_uv=compute_uv,
+            hermitian=hermitian,
         )
         return np.linalg.linalg.SVDResult(
             u * a.units._REGISTRY.dimensionless,
@@ -759,9 +764,13 @@ def _svd(a, full_matrices=True, compute_uv=True, hermitian=False):
         )
     else:
         s = np.linalg.svd(
-            a._magnitude, full_matrices=full_matrices, compute_uv=compute_uv, hermitian=hermitian
+            a._magnitude,
+            full_matrices=full_matrices,
+            compute_uv=compute_uv,
+            hermitian=hermitian,
         )
         return s * a.units
+
 
 @implements("linalg.eig", "function")
 def _eig(a):
@@ -773,6 +782,7 @@ def _eig(a):
         eigenvectors * a.units._REGISTRY.dimensionless,
     )
 
+
 @implements("linalg.eigh", "function")
 def _eigh(a, UPLO="L"):
     # In the result, eigenvalues have the same units as a, and eigenvectors are dimensionless
@@ -783,12 +793,14 @@ def _eigh(a, UPLO="L"):
         eigenvectors * a.units._REGISTRY.dimensionless,
     )
 
+
 @implements("linalg.det", "function")
 def _det(a):
     # The determinant has units of the input raised to the power of the array dimension
     a = _base_unit_if_needed(a)
-    units = a.units**a.shape[-1]
+    units = a.units ** a.shape[-1]
     return a.units._REGISTRY.Quantity(np.linalg.det(a._magnitude), units)
+
 
 def implement_prod_func(name):
     if np is None:
@@ -1179,7 +1191,7 @@ for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ("linalg.solve","linalg.tensorsolve"):
+for func_str in ("linalg.solve", "linalg.tensorsolve"):
     implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
