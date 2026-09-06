@@ -1537,7 +1537,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
     def test_linalg_det_offset(self):
         A = self.Q_(
             np.array([[[1, 2], [3, 4]], [[1, 2], [2, 1]], [[1, 3], [3, 1]]]),
-            self.ureg.degC)
+            self.ureg.degC,
+        )
         with pytest.raises(OffsetUnitCalculusError):
             np.linalg.det(A)
 
