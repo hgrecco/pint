@@ -454,9 +454,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         A = self.q
         b = [[3], [7]] * self.ureg.s
         x = np.linalg.solve(A, b)
-
         helpers.assert_quantity_almost_equal(x, self.Q_([[1], [1]], "s / m"))
-
         helpers.assert_quantity_almost_equal(np.dot(A, x), b)
 
     def test_solve_offset(self):
@@ -467,9 +465,7 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         A = self.q
         b = [3, 7] * self.ureg.s
         x = np.linalg.tensorsolve(A, b)
-
         helpers.assert_quantity_almost_equal(x, self.Q_([1, 1], "s / m"))
-
         helpers.assert_quantity_almost_equal(np.dot(A, x), b)
 
     def test_tensorsolve_offset(self):
