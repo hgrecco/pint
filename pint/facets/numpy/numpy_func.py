@@ -949,6 +949,39 @@ for func_str in (
     implement_mul_func(func_str)
 
 
+def implement_solve_func(func):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+    if "." not in func_str:
+        func = getattr(np, func_str, None)
+    else:
+        parts = func_str.split(".")
+        module = np
+        for part in parts[:-1]:
+            module = getattr(module, part, None)
+        func = getattr(module, parts[-1], None)
+
+    # if NumPy does not implement it, do not implement it either
+    if func is None:
+        return
+
+    @implements(func_str, "function")
+    def implementation(a, b, **kwargs):
+        a, b = _dimensionless_if_needed(a, b)
+        a = _base_unit_if_needed(a)
+        b = _base_unit_if_needed(b)
+        units = b.units / a.units
+        mag = func(a._magnitude, b._magnitude, **kwargs)
+        return mag * units
+
+
+for func_str in (
+    "linalg.solve",
+    "linalg.tensorsolve",
+):
+    implement_solve_func(func_str)
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
@@ -1191,24 +1224,8 @@ for func_str in ("diff", "ediff1d", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
-for func_str in ("linalg.solve", "linalg.tensorsolve"):
-    implement_func("function", func_str, input_units=None, output_unit="invdiv")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
-
-
-@implements("linalg.solve", "function")
-def _linalg_solve(a, b, **kwargs):
-    args = tuple(
-        _base_unit_if_needed(arg) if _is_quantity(arg) else arg for arg in (a, b)
-    )
-    first_input_units = _get_first_input_units(args, kwargs)
-    stripped_args, stripped_kwargs = convert_to_consistent_units(*args, **kwargs)
-    result_magnitude = np.linalg.solve(*stripped_args, **stripped_kwargs)
-    result_unit = get_op_output_unit(
-        "invdiv", first_input_units, tuple(chain(args, kwargs.values()))
-    )
-    return first_input_units._REGISTRY.Quantity(result_magnitude, result_unit)
 
 
 @implements("geomspace", "function")

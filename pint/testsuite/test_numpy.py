@@ -463,6 +463,19 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         with pytest.raises(OffsetUnitCalculusError):
             np.linalg.solve(self.q_temperature, [1, 1])
 
+    def test_tensorsolve(self):
+        A = self.q
+        b = [3, 7] * self.ureg.s
+        x = np.linalg.tensorsolve(A, b)
+
+        helpers.assert_quantity_almost_equal(x, self.Q_([1, 1], "s / m"))
+
+        helpers.assert_quantity_almost_equal(np.dot(A, x), b)
+
+    def test_tensorsolve_offset(self):
+        with pytest.raises(OffsetUnitCalculusError):
+            np.linalg.solve(self.q_temperature, [1, 1])
+
     # Arithmetic operations
     def test_addition_with_scalar(self):
         a = np.array([0, 1, 2])
