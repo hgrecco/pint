@@ -5,6 +5,7 @@ Pint Changelog
 -----------------
 
 - Fix `UnitRegistry(system="imperial")` returning US units instead of imperial ones for shared names like `gallon` or `pint` (#2408)
+- Give `UnitRegistry`'s magnitude type parameter a default, so `ureg = UnitRegistry()` needs no annotation (#2245)
 
 
 0.26.0 (2026-09-10)
