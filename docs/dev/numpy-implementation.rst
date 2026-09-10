@@ -1,12 +1,12 @@
 .. _numpy-implementation:
 
-Adding support for numpy functions
-==================================
+Adding numpy functions
+======================
 
 The numpy support in Pint lives in ``pint/facets/numpy/numpy_func.py``.
 
 Numpy function implementations
-------------------------------
+-------------------------------
 
 The basic way to implement a numpy function is through the ``@implements``
 decorator. Its syntax is::
@@ -29,7 +29,8 @@ it, you should do the following:
 - Create an output quantity object whose magnitude is the numpy output value
   and whose units are derived from the input units, then return it.
 
-#### Individual implementations
+Individual implementations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For complex functions, a separate implementation must be written for each
 function. For example::
@@ -49,7 +50,8 @@ function. For example::
         (start, stop), output_wrap = unwrap_and_wrap_consistent_units(start, stop)
         return output_wrap(np.geomspace(start, stop, num, endpoint, dtype, axis))
 
-### Shared implementations
+Shared implementations
+~~~~~~~~~~~~~~~~~~~~~~~
 
 If several functions have the same argument format and unit conversion
 relationship, they can share an implementation. For example::
@@ -82,7 +84,8 @@ relationship, they can share an implementation. For example::
 
 The following are the commonly used shared implementations:
 
-#### implement_consistent_units_by_argument
+implement_consistent_units_by_argument
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The output uses the unit of one of the input arguments, or requires multiple
 input arguments to be same-kind physical quantities — the output then uses that
@@ -102,19 +105,22 @@ where:
 - ``wrap_output``: whether to re-wrap the output with the input units. When
   ``False``, the output is unitless (such as ``searchsorted``).
 
-#### strip_unit_input_output_ufuncs
+strip_unit_input_output_ufuncs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Ignore the units of the inputs; the output is a unitless bare value. The
 results of these ufuncs are independent of units, such as testing whether the
 input is zero, finite, its sign bit, and so on.
 
-#### matching_input_bare_output_ufuncs
+matching_input_bare_output_ufuncs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Require all inputs to be same-kind physical quantities (converted to the unit
 of the first input), but the output is a unitless bare value. These ufuncs are
 usually comparisons, returning booleans that carry no physical meaning.
 
-#### set_units_ufuncs
+set_units_ufuncs
+^^^^^^^^^^^^^^^^^
 
 Specify the input and output units with a dict, ``(in_unit, out_unit)``: the
 input is first converted to ``in_unit``, then its magnitude is handed to the
@@ -143,14 +149,16 @@ Implementation::
 Note: an ``in_unit`` of ``""`` (the empty string) means dimensionless; an
 ``out_unit`` of ``""`` means the output is dimensionless.
 
-#### matching_input_copy_units_output_ufuncs
+matching_input_copy_units_output_ufuncs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Require all inputs to be same-kind physical quantities, and the output uses the
 unit of the first input. These ufuncs do not change the physical meaning of the
 input quantities, such as ``max``, ``mean``, ``min``, ``round``, ``hypot``, and
 so on.
 
-#### copy_units_output_ufuncs
+copy_units_output_ufuncs
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Ignore the units of all inputs except the first, and the output uses the unit
 of the first input. Used for ``ldexp``, ``fmod``, ``mod``, ``remainder``, and so
@@ -158,7 +166,8 @@ on. For these ufuncs, the second argument carries no physical unit of its own
 (such as the modulus of a modulo operation), or its result is independent of
 the second argument's units.
 
-#### op_units_output_ufuncs
+op_units_output_ufuncs
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The output unit is determined from the input units by some operation
 ``unit_op``; see ``get_op_output_unit`` for the specific operations. For
@@ -188,7 +197,8 @@ Implementation::
     for ufunc_str, unit_op in op_units_output_ufuncs.items():
         implement_func("ufunc", ufunc_str, input_units=None, output_unit=unit_op)
 
-#### implement_func
+implement_func
+^^^^^^^^^^^^^^^
 
 This is the foundation on which all the above behaviors are built. Its
 definition is::
@@ -219,14 +229,16 @@ definition is::
   - any other string: parsed as a unit, used as the output unit.
   - ``None``: returns a bare magnitude, without units.
 
-#### implement_mul_func
+implement_mul_func
+^^^^^^^^^^^^^^^^^^^
 
 Provides a shared implementation for the several numpy functions whose "units
 multiply", such as ``cross``, ``dot``, ``inner``, ``outer``, ``tensordot``,
 ``convolve``, ``matvec``, and so on. The output unit of these functions is the
 product of the input argument units.
 
-#### implement_solve_func
+implement_solve_func
+^^^^^^^^^^^^^^^^^^^^^
 
 Similar to ``implement_mul_func``, but the output unit is the quotient of the
 input units (``b.units / a.units``), used for solving linear systems, such as
@@ -234,7 +246,8 @@ input units (``b.units / a.units``), used for solving linear systems, such as
 ``A·x = b``, the solution ``x`` has the units of ``b`` divided by the units of
 ``A``.
 
-#### implement_consistent_units_by_argument
+implement_consistent_units_by_argument
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Performs unit consistency conversion on the specified arguments, and the output
 uses the input units. Its definition is::
@@ -253,7 +266,8 @@ The implementation skips the specified arguments whose value is ``None`` (such
 as ``clip``'s ``a_min``/``a_max`` when ``None``), and only performs consistency
 conversion on the non-``None`` unit-carrying arguments.
 
-#### Other shared implementations
+Other shared implementations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - ``implement_close``: implements ``isclose`` and ``allclose``. If ``atol`` is a
   bare value, it is treated as a tolerance in the unit of the first input
@@ -275,7 +289,8 @@ conversion on the non-``None`` unit-carrying arguments.
   implementations for special cases (such as ``_add``, ``_subtract``,
   ``_modf``, ``_frexp``, ``_power``, and so on).
 
-#### get_op_output_unit
+get_op_output_unit
+^^^^^^^^^^^^^^^^^^^
 
 When the ``output_unit`` of ``op_units_output_ufuncs`` and ``implement_func`` is
 a ``unit_op`` string, this function derives the output unit from the input
@@ -313,7 +328,8 @@ allowed to participate in multiplication and division.
 Notes
 -----
 
-### Functions with multiple arguments are not necessarily all unit-carrying physical quantities
+Functions with multiple arguments are not necessarily all unit-carrying physical quantities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When implementing support for a function with multiple arguments, consider the
 case where some user-supplied arguments are unit-carrying physical quantities
@@ -322,7 +338,8 @@ treated as dimensionless quantities in the computation. You can use
 ``_dimensionless_if_needed`` to assign the dimensionless unit of the unit system
 to bare values.
 
-### Consider whether the function mathematically allows non-multiplicative units
+Consider whether the function mathematically allows non-multiplicative units
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In Pint, temperature is represented by non-multiplicative units, such as degrees
 Celsius ``degC`` and degrees Fahrenheit ``degF``. Non-multiplicative units have a
