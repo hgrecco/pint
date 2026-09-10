@@ -5,6 +5,7 @@ Pint Changelog
 -----------------
 
 - Fix `UnitRegistry(system="imperial")` returning US units instead of imperial ones for shared names like `gallon` or `pint` (#2408)
+- Give `UnitRegistry`'s magnitude type parameter a default, so `ureg = UnitRegistry()` needs no annotation (#2245)
 
 
 0.26.0 (2026-09-10)
@@ -28,7 +29,6 @@ Pint Changelog
   initializing a `Quantity` with a `datetime.timedelta` value.  (#1978)
 - Improve type annotations for `Quantity` (#2302, #2303)
 - Improve type annotations for `Quantity`'s `__new__` and document support for arithmetic with `datetime.timedelta` introduced in #2348 at the typing level (#2373)
-- Give `UnitRegistry`'s magnitude type parameter a default, so `ureg = UnitRegistry()` needs no annotation (#2245)
 
 ### Formatting changes
 
