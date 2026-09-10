@@ -98,6 +98,7 @@ Use the interactive shell to try Pint in the browser.
 
     dev/contributing
     dev/pint-convert
+    dev/numpy-implementation
 
 .. toctree::
    :maxdepth: 1
