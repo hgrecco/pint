@@ -4,7 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
-- No changes yet.
+- Fix `Quantity.to_compact()` raising `OffsetUnitCalculusError` for offset units like `degree_Celsius` with magnitude below 1 (#2005)
 
 
 0.26.1 (2026-09-10)
