@@ -438,6 +438,22 @@ class Unit(
 
         __rmul__ = __mul__
 
+        # Unit / Unit -> Unit
+        @overload
+        def __truediv__(self, other: Self) -> Self: ...
+        # Unit / timedelta -> Quantity[float]
+        @overload
+        def __truediv__(
+            self, other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        # Unit / <Magnitude> or Quantity[<Magnitude>]
+        #   -> Quantity[type of 1 / <Magnitude>]
+        @overload
+        def __truediv__[U: Magnitude](
+            self,
+            other: Quantity[opt.CanRTruediv[int, U]] | opt.CanRTruediv[int, U],
+        ) -> Quantity[U]: ...
+
 
 class GenericUnitRegistry[QuantityT: _Quantity, UnitT: _Unit](
     facets.GenericSystemRegistry[QuantityT, UnitT],
