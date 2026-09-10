@@ -474,6 +474,7 @@ class TestQuantity(QuantityTestCase):
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
 
+    @helpers.requires_scipy
     def test_to_preferred_no_spurious_dimensionality_error(self):
         # find_simple() compared the dimensionality exponent-vectors with `**`
         # instead of `*`, so a preferred unit whose exponent signature happened
