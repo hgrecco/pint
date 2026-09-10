@@ -175,6 +175,9 @@ def to_compact[Q: PlainQuantity](quantity: Q, unit: UnitsContainer | None = None
     if quantity.unitless or qm == 0 or math.isnan(qm) or math.isinf(qm):
         return quantity
 
+    if quantity._get_non_multiplicative_units():
+        return quantity
+
     SI_powers, SI_bases = _get_si_prefixes(quantity._REGISTRY)
     q_base, unit_str, unit_power = _get_compact_base(quantity, unit)
 
