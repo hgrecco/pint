@@ -38,7 +38,7 @@ def ds():
 def test_xarray_quantity_creation(module_registry, q_base):
     with pytest.raises(TypeError) as exc:
         module_registry.Quantity(xr.DataArray(np.arange(4)), "m")
-        assert "Quantity cannot wrap upcast type" in str(exc)
+    assert "Quantity cannot wrap upcast type" in str(exc.value)
     assert xr.DataArray(q_base).data is q_base
 
 
@@ -124,7 +124,7 @@ def test_dataarray_inequalities(da, module_registry):
     )
     with pytest.raises(ValueError) as exc:
         da > 2
-        assert "Cannot compare Quantity and <class 'int'>" in str(exc)
+    assert "Cannot compare PlainQuantity and <class 'int'>" in str(exc.value)
 
 
 def test_array_function_deferral(da, module_registry):
