@@ -124,6 +124,25 @@ def test_to_compact_fraction(sess_registry):
     assert r == Q(1000, "s/m")
 
 
+@pytest.mark.parametrize("magnitude", [0.1, -0.5, 2500])
+def test_to_compact_offset_unit(sess_registry, magnitude):
+    # Offset (non-multiplicative) units such as degree_Celsius cannot take an
+    # SI prefix, so to_compact must return the quantity unchanged instead of
+    # raising OffsetUnitCalculusError (issue #2005).
+    q = sess_registry.Quantity(magnitude, "degree_Celsius")
+    compact = q.to_compact()
+    assert compact.magnitude == magnitude
+    assert compact.units == q.units
+
+
+def test_to_compact_delta_offset_unit_still_compacts(sess_registry):
+    # delta_degree_Celsius is multiplicative, so compacting must still apply a
+    # prefix (no regression from the offset-unit guard).
+    compact = sess_registry.Quantity(0.001, "delta_degree_Celsius").to_compact()
+    expected = sess_registry.Quantity(1.0, "millidelta_degree_Celsius")
+    helpers.assert_quantity_almost_equal(compact, expected)
+
+
 def test_volts(sess_registry):
     r = (
         sess_registry.Quantity(1, "V")
