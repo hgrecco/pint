@@ -47,6 +47,7 @@ Pint Changelog
 - Fix format specs with a width/fill/alignment (e.g. `f"{q:20.1f}"`) not honoring the requested field width for quantities, because the width was applied only to the magnitude before the unit was appended. The width/fill/alignment now applies to the whole formatted quantity while sign/precision/type/zero-padding stay with the magnitude (#1798)
 - Fix `format_unit` not respecting the `^` flag for negative powers on standalone `Unit` objects (e.g. `format(Unit("second")**-1, "~^P")` returning `"1/s"` instead of `"s⁻¹"`) (#2313)
 - Fix regression when using magnitude format specs in string formats (#2291)
+- Add support for numpy's `linalg.trace`, `cumulative_sum`, `linalg.qr`, `linalg.svd`, `linalg.eig`, `linalg.eigh`, `linalg.det`, `linalg.svdvals`, `linalg.tensorsolve` (#2409)
 
 ### Minor changes
 

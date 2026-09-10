@@ -454,12 +454,21 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         A = self.q
         b = [[3], [7]] * self.ureg.s
         x = np.linalg.solve(A, b)
-
         helpers.assert_quantity_almost_equal(x, self.Q_([[1], [1]], "s / m"))
-
         helpers.assert_quantity_almost_equal(np.dot(A, x), b)
 
     def test_solve_offset(self):
+        with pytest.raises(OffsetUnitCalculusError):
+            np.linalg.solve(self.q_temperature, [1, 1])
+
+    def test_tensorsolve(self):
+        A = self.q
+        b = [3, 7] * self.ureg.s
+        x = np.linalg.tensorsolve(A, b)
+        helpers.assert_quantity_almost_equal(x, self.Q_([1, 1], "s / m"))
+        helpers.assert_quantity_almost_equal(np.dot(A, x), b)
+
+    def test_tensorsolve_offset(self):
         with pytest.raises(OffsetUnitCalculusError):
             np.linalg.solve(self.q_temperature, [1, 1])
 
@@ -1491,6 +1500,56 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_equal(result1, expected)
         result2 = np.geomspace(1 * self.ureg.dimensionless, 4, num=3)
         helpers.assert_quantity_equal(result2, expected)
+
+    def test_linalg_qr(self):
+        A = np.array([[0, 3, 1], [0, 4, -2], [2, 1, 1]]) * self.ureg.m
+        Q, R = np.linalg.qr(A)
+        Q_expected = (
+            np.array([[0.0, -0.6, -0.8], [-0.0, -0.8, 0.6], [-1.0, 0.0, 0.0]])
+            * self.ureg.dimensionless
+        )
+        R_expected = (
+            np.array([[-2.0, -1.0, -1.0], [0.0, -5.0, 1.0], [0.0, 0.0, -2.0]])
+            * self.ureg.m
+        )
+        helpers.assert_quantity_almost_equal(Q, Q_expected)
+        helpers.assert_quantity_almost_equal(R, R_expected)
+
+    def test_linalg_qr_offset(self):
+        A = self.Q_(np.array([[0, 3, 1], [0, 4, -2], [2, 1, 1]]), self.ureg.degC)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.linalg.qr(A)
+
+    def test_linalg_eig(self):
+        A = np.array([[1, -1], [1, 1]]) * self.ureg.m
+        eigenvalues, eigenvectors = np.linalg.eig(A)
+        eigenvalues_expected = np.array([1 + 1j, 1 - 1j]) * self.ureg.m
+        eigenvectors_expected = (
+            np.sqrt(2) / 2 * np.array([[1, 1], [-1j, 1j]]) * self.ureg.dimensionless
+        )
+        helpers.assert_quantity_equal(eigenvalues, eigenvalues_expected)
+        helpers.assert_quantity_almost_equal(eigenvectors, eigenvectors_expected)
+
+    def test_linalg_eig_offset(self):
+        A = self.Q_(np.array([[1, -1], [1, 1]]), self.ureg.degC)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.linalg.eig(A)
+
+    def test_linalg_det(self):
+        A = (
+            np.array([[[1, 2], [3, 4]], [[1, 2], [2, 1]], [[1, 3], [3, 1]]])
+            * self.ureg.m
+        )
+        expected = np.array([-2, -3, -8]) * self.ureg.m**2
+        helpers.assert_quantity_almost_equal(np.linalg.det(A), expected)
+
+    def test_linalg_det_offset(self):
+        A = self.Q_(
+            np.array([[[1, 2], [3, 4]], [[1, 2], [2, 1]], [[1, 3], [3, 1]]]),
+            self.ureg.degC,
+        )
+        with pytest.raises(OffsetUnitCalculusError):
+            np.linalg.det(A)
 
 
 @pytest.mark.skip
