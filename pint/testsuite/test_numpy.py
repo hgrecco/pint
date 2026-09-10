@@ -355,6 +355,16 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.nansum(self.q_nan, axis=0), [4, 2] * self.ureg.m
         )
 
+    def test_sum_with_initial_arg(self):
+        # a Quantity `initial` should be converted, not added as a bare magnitude
+        # (https://github.com/hgrecco/pint/issues/2400)
+        assert np.sum(self.q, initial=100 * self.ureg.cm) == 11 * self.ureg.m
+        with pytest.raises(DimensionalityError):
+            np.sum(self.q, initial=1 * self.ureg.s)
+
+    def test_nansum_with_initial_arg(self):
+        assert np.nansum(self.q_nan, initial=100 * self.ureg.cm) == 7 * self.ureg.m
+
     def test_cumprod(self):
         with pytest.raises(DimensionalityError):
             self.q.cumprod()
