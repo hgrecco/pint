@@ -318,11 +318,7 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
 
         first_input_units = _get_first_input_units(args, kwargs)
         if input_units is None and _is_quantity(kwargs.get("initial")):
-            # np.sum/np.nansum accept an `initial` value that gets added to the
-            # reduction; unlike amax/amin (handled elsewhere, see
-            # implement_consistent_units_by_argument), this path strips units
-            # without converting, so a Quantity `initial` would otherwise be
-            # added as a bare magnitude in whatever unit it happens to carry.
+            # Unlike amax/amin, this path doesn't convert a Quantity `initial`.
             kwargs = {**kwargs, "initial": kwargs["initial"].m_as(first_input_units)}
         if input_units == "all_consistent":
             # Match all input args/kwargs to same units
