@@ -1,7 +1,7 @@
 Pint Changelog
 ==============
 
-0.26.1 (unreleased)
+0.26.1 (2026-09-10)
 -----------------
 
 - Fix `UnitRegistry(system="imperial")` returning US units instead of imperial ones for shared names like `gallon` or `pint` (#2408)
