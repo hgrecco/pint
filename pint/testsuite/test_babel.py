@@ -77,6 +77,15 @@ def test_unit_format_babel():
         volume.format_babel()
 
 
+@helpers.requires_babel(["fr_FR"])
+def test_unit_format_babel_pint_specific_name():
+    # Units whose pint name differs from the CLDR identifier must still be
+    # localized, see issue #2234.
+    ureg = UnitRegistry(fmt_locale="fr_FR")
+    assert ureg.Unit("kWh").format_babel() == "kilowatt-heure"
+    assert ureg.Unit("light_year").format_babel() == "année-lumière"
+
+
 @helpers.requires_babel()
 def test_no_registry_locale(func_registry):
     ureg = func_registry
