@@ -1758,3 +1758,37 @@ def test_negative_magnitude_pretty_exponent_leaves_arrays_alone():
         formatted = f"{ureg.Quantity(np.array(values), 'meter'):P}"
         assert "×10" not in formatted
         assert formatted == f"{ureg.Quantity(np.array(values), 'meter'):}"
+
+
+def test_issue2403_unity_multiplication_reduces_dimensions():
+    # A magnitude of 1 is shortcut in PlainUnit.__mul__ because non-multiplicative
+    # units cannot go through the multiplication. That shortcut used to skip the
+    # reduction every other magnitude gets.
+    ureg = UnitRegistry(auto_reduce_dimensions=True)
+
+    assert (2 * ureg.deg).units == ureg.dimensionless
+    assert (1 * ureg.deg).units == ureg.dimensionless
+    assert (ureg.deg * 1).units == ureg.dimensionless
+    assert (1.0 * ureg.deg).units == ureg.dimensionless
+    assert (1 * ureg.deg).magnitude == pytest.approx(math.radians(1))
+
+    # Units that do not reduce keep their units, and the shortcut still carries
+    # non-multiplicative units, which cannot be multiplied at all.
+    assert (1 * ureg.foot).units == ureg.foot
+    assert (1 * ureg.degC).units == ureg.degC
+
+
+def test_issue2403_unity_multiplication_converts_to_preferred():
+    ureg = UnitRegistry(autoconvert_to_preferred=True)
+    ureg.default_preferred_units = [ureg.m, ureg.s]
+
+    assert (2 * ureg.km).units == ureg.m
+    assert (1 * ureg.km).units == ureg.m
+
+
+def test_issue2403_unity_multiplication_default_registry_unchanged():
+    ureg = UnitRegistry()
+
+    assert (1 * ureg.deg).units == ureg.deg
+    assert (2 * ureg.deg).units == ureg.deg
+    assert (1 * ureg.degC).units == ureg.degC
