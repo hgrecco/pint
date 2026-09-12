@@ -361,9 +361,15 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         assert np.sum(self.q, initial=100 * self.ureg.cm) == 11 * self.ureg.m
         with pytest.raises(DimensionalityError):
             np.sum(self.q, initial=1 * self.ureg.s)
+        # bare non-zero numeric must raise like np.max (#2401); zero still ok
+        with pytest.raises(DimensionalityError):
+            np.sum(self.q, initial=100)
+        assert np.sum(self.q, initial=0) == 10 * self.ureg.m
 
     def test_nansum_with_initial_arg(self):
         assert np.nansum(self.q_nan, initial=100 * self.ureg.cm) == 7 * self.ureg.m
+        with pytest.raises(DimensionalityError):
+            np.nansum(self.q_nan, initial=100)
 
     def test_cumprod(self):
         with pytest.raises(DimensionalityError):
