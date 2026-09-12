@@ -1758,3 +1758,12 @@ def test_negative_magnitude_pretty_exponent_leaves_arrays_alone():
         formatted = f"{ureg.Quantity(np.array(values), 'meter'):P}"
         assert "×10" not in formatted
         assert formatted == f"{ureg.Quantity(np.array(values), 'meter'):}"
+
+
+def test_issue2397_fathom_is_exact_international_yards():
+    # fathom was defined as 6 * survey_foot, so 1 fathom.to(yard) was ~2.000004.
+    ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
+    assert (1 * ureg.fathom).to(ureg.yard).magnitude == 2
+    assert (1 * ureg.fathom).to(ureg.foot).magnitude == 6
+    # Survey-era length remains available explicitly.
+    assert (1 * ureg.survey_fathom).to(ureg.survey_foot).magnitude == 6

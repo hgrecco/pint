@@ -557,6 +557,9 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
     hand = 4 * inch
     foot = yard / 3 = ft = international_foot = feet = international_feet
     yard = 0.9144 * meter = yd = international_yard  # since Jul 1959
+    # Exactly 2 international yards (6 international feet). Survey-era
+    # fathoms remain available as survey_fathom.
+    fathom = 6 * foot
     mile = 1760 * yard = mi = international_mile
 
     circular_mil = π / 4 * mil_length ** 2 = cmil
@@ -573,11 +576,11 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 @group USCSLengthSurvey
     link = 1e-2 * chain = li = survey_link
     survey_foot = 1200 / 3937 * meter = sft
-    fathom = 6 * survey_foot
+    survey_fathom = 6 * survey_foot
     rod = 16.5 * survey_foot = rd = pole = perch
     chain = 4 * rod
     furlong = 40 * rod = fur
-    cables_length = 120 * fathom
+    cables_length = 120 * survey_fathom
     survey_mile = 5280 * survey_foot = smi = us_statute_mile
     league = 3 * survey_mile
 
