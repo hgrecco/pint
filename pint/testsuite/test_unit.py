@@ -794,6 +794,113 @@ class TestRegistry(QuantityTestCase):
         with pytest.raises(TypeError):
             ureg.check("[velocity]", "[time]", "[mass]")(gfunc)
 
+    def test_check_var_positional_and_keyword_only(self):
+        ureg = self.ureg
+
+        @ureg.check(None, "[length]")
+        def checked(*values, scale):
+            return values, scale
+
+        scale = 2 * ureg.meter
+        values, out = checked(1, 2 * ureg.second, scale=scale)
+        assert values == (1, 2 * ureg.second)
+        assert out is scale
+        assert checked(scale=scale) == ((), scale)
+        with pytest.raises(DimensionalityError):
+            checked(1, 2 * ureg.meter, scale=2 * ureg.second)
+        with pytest.raises(DimensionalityError):
+            checked(scale=2)
+        with pytest.raises(TypeError):
+            checked(1 * ureg.meter)
+
+    def test_check_var_positional_items(self):
+        ureg = self.ureg
+
+        @ureg.check("[length]", None)
+        def lengths(*values, **options):
+            return values, options
+
+        assert lengths() == ((), {})
+        assert lengths(1 * ureg.meter, 2 * ureg.centimeter) == (
+            (1 * ureg.meter, 2 * ureg.centimeter),
+            {},
+        )
+        assert lengths(1 * ureg.meter, label="x") == (
+            (1 * ureg.meter,),
+            {"label": "x"},
+        )
+        with pytest.raises(DimensionalityError):
+            lengths(1 * ureg.meter, 1 * ureg.second)
+        with pytest.raises(DimensionalityError):
+            lengths(1 * ureg.meter, 2)
+
+    def test_check_var_keyword_requires_none(self):
+        ureg = self.ureg
+
+        def timed(label, **durations):
+            return label, durations
+
+        with pytest.raises(TypeError, match=r"use None for the \*\*kwargs dimension"):
+            ureg.check(None, "[time]")(timed)
+
+        checked = ureg.check(None, None)(timed)
+        assert checked("a") == ("a", {})
+        assert checked("a", note="x") == ("a", {"note": "x"})
+
+    def test_check_keyword_only_binding(self):
+        ureg = self.ureg
+        default = 2 * ureg.second
+
+        @ureg.check("[length]", "[time]")
+        def func(x, *, y=default):
+            return x, y
+
+        x = 1 * ureg.meter
+        assert func(x)[1] is default
+        assert func(x=x, y=default)[0] is x
+        with pytest.raises(TypeError) as exc:
+            func(x, 1 * ureg.kilogram)
+        assert exc.type is TypeError
+
+    def test_check_positional_only_default(self):
+        ureg = self.ureg
+        default = 2 * ureg.meter
+
+        @ureg.check("[length]", "[length]")
+        def func(x, y=default, /):
+            return x, y
+
+        x = 1 * ureg.meter
+        out = func(x)
+        assert out[0] is x
+        assert out[1] is default
+        assert func(x, 3 * ureg.centimeter) == (x, 3 * ureg.centimeter)
+        with pytest.raises(DimensionalityError):
+            func(x, 3 * ureg.second)
+        with pytest.raises(TypeError):
+            func(x, y=3 * ureg.meter)
+
+        @ureg.check("[length]", "[length]")
+        def bad_default(x, y=2, /):
+            return x, y
+
+        with pytest.raises(DimensionalityError):
+            bad_default(x)
+
+    def test_check_invalid_call_raises_type_error(self):
+        ureg = self.ureg
+
+        @ureg.check("[length]", "[time]")
+        def func(x, y):
+            return x, y
+
+        with pytest.raises(TypeError):
+            func(1 * ureg.meter)
+        with pytest.raises(TypeError):
+            func(1 * ureg.meter, 1 * ureg.second, 3)
+        with pytest.raises(TypeError):
+            func(1 * ureg.meter, z=1 * ureg.second)
+
     def test_to_ref_vs_to(self):
         self.ureg.autoconvert_offset_to_baseunit = True
         q = 8.0 * self.ureg.inch

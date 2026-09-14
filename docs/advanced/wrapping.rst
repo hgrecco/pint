@@ -251,6 +251,20 @@ In the decorator format:
     ... def pendulum_period(length):
     ...     return 2*math.pi*math.sqrt(length/G)
 
+One dimension is given per parameter of the function, in signature order, including
+keyword-only and variadic parameters. A dimension given for ``*args`` is checked
+against every value passed through it. None skips checking a parameter and is
+required for ``**kwargs``:
+
+.. doctest::
+
+    >>> @ureg.check('[length]', None)
+    ... def count_lengths(*lengths, **options):
+    ...     return len(lengths)
+    ...
+    >>> count_lengths(1 * ureg.m, 2 * ureg.cm, label='total')
+    2
+
 If you just want to check the dimensionality of a quantity, you can do so with the built-in 'check' function.
 
 .. doctest::

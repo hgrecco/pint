@@ -335,8 +335,10 @@ def check[F: FuncType](
     ureg : UnitRegistry
         a UnitRegistry instance.
     args : str or UnitContainer or None
-        Dimensions of each of the input arguments.
-        Use `None` to skip argument conversion.
+        Dimensions of each of the input arguments, one per parameter of the
+        decorated function in signature order. A dimension given for a
+        ``*args`` parameter is checked against each value supplied through it.
+        Use `None` to skip checking a parameter; ``**kwargs`` requires `None`.
 
     Returns
     -------
@@ -357,12 +359,23 @@ def check[F: FuncType](
 
     def decorator(func):
         sig = signature(func)
-        count_params = len(sig.parameters)
+        params = tuple(sig.parameters.values())
+        count_params = len(params)
         if len(dimensions) != count_params:
             raise TypeError(
                 "%s takes %i parameters, but %i dimensions were passed"
                 % (func.__name__, count_params, len(dimensions))
             )
+
+        for param, dim in zip(params, dimensions):
+            if param.kind is Parameter.VAR_KEYWORD and dim is not None:
+                raise TypeError("use None for the **kwargs dimension")
+
+        needs_binding = any(
+            param.kind
+            not in (Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD)
+            for param in params
+        )
 
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
@@ -373,19 +386,36 @@ def check[F: FuncType](
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*args, **kwargs):
-            list_args, kw = _apply_defaults(sig, args, kwargs)
+            if needs_binding:
+                # Binding distinguishes positional values from keyword-only and
+                # variadic parameters before dimensional checks run.
+                bound = sig.bind(*args, **kwargs)
+                bound.apply_defaults()
+                values = [bound.arguments[param.name] for param in params]
+            else:
+                values = list(args)
+                for param in params[len(args) :]:
+                    if param.name in kwargs:
+                        values.append(kwargs[param.name])
+                    elif param.default is not Parameter.empty:
+                        values.append(param.default)
+                    else:
+                        # Missing required argument: let the call below raise.
+                        break
 
-            for i, param_name in enumerate(sig.parameters):
-                if i >= len(args):
-                    list_args.append(kw[param_name])
-
-            for dim, value in zip(dimensions, list_args):
+            for param, dim, value in zip(params, dimensions, values):
                 if dim is None:
                     continue
 
-                if not ureg.Quantity(value).check(dim):
-                    val_dim = ureg.get_dimensionality(value)
-                    raise DimensionalityError(value, "a quantity of", val_dim, dim)
+                if param.kind is Parameter.VAR_POSITIONAL:
+                    items = value
+                else:
+                    items = (value,)
+
+                for item in items:
+                    if not ureg.Quantity(item).check(dim):
+                        val_dim = ureg.get_dimensionality(item)
+                        raise DimensionalityError(item, "a quantity of", val_dim, dim)
             return func(*args, **kwargs)
 
         return wrapper
