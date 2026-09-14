@@ -1513,7 +1513,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             if other == 1:
                 return self
             elif other == 0:
-                self._units = self.UnitsContainer()
+                new_units = self.UnitsContainer()
             else:
                 if not self._is_multiplicative:
                     if self._REGISTRY.autoconvert_offset_to_baseunit:
@@ -1523,15 +1523,16 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
                 if getattr(other, "dimensionless", False):
                     other = other.to_base_units().magnitude
-                    self._units **= other
+                    new_units = self._units**other
                 elif not getattr(other, "dimensionless", True):
                     raise DimensionalityError(self._units, "dimensionless")
                 else:
-                    self._units **= other
+                    new_units = self._units**other
 
             self._magnitude **= _to_magnitude(
                 other, self.force_ndarray, self.force_ndarray_like
             )
+            self._units = new_units
             return self
 
     @overload
