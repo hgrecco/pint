@@ -747,6 +747,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_nanmax(self):
         assert np.nanmax(self.q_nan) == 3 * self.ureg.m
+        assert np.nanmax(self.q_nan, initial=500 * self.ureg.cm) == 5 * self.ureg.m
+        with pytest.raises(DimensionalityError):
+            np.nanmax(self.q_nan, initial=1 * self.ureg.s)
 
     def test_argmax(self):
         assert self.q.argmax() == 3
@@ -779,6 +782,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_nanmin(self):
         assert np.nanmin(self.q_nan) == 1 * self.ureg.m
+        assert np.nanmin(self.q_nan, initial=50 * self.ureg.cm) == 0.5 * self.ureg.m
+        with pytest.raises(DimensionalityError):
+            np.nanmin(self.q_nan, initial=1 * self.ureg.s)
 
     def test_argmin(self):
         assert self.q.argmin() == 0
