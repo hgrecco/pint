@@ -382,8 +382,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return not bool(tmp.dimensionality)
 
-    _dimensionality: UnitsContainerT | None = None
-
     @property
     def dimensionality(self) -> UnitsContainerT:
         """
@@ -392,10 +390,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         dict
             Dimensionality of the PlainQuantity, e.g. ``{length: 1, time: -1}``
         """
-        if self._dimensionality is None:
-            self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
-
-        return self._dimensionality
+        return self._REGISTRY._get_dimensionality(self._units)
 
     def check(self, dimension: UnitLike) -> bool:
         """Return true if the quantity's dimension matches passed dimension."""

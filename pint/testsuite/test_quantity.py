@@ -1431,6 +1431,13 @@ class TestDimensions(QuantityTestCase):
         assert not (self.Q_(42, "meter") / self.Q_(1, "second")).dimensionless
         assert (self.Q_(42, "meter") / self.Q_(1, "inch")).dimensionless
 
+    @helpers.requires_numpy
+    def test_dimensionality_after_inplace_operation(self):
+        x = self.Q_(np.array([20.0]), "m")
+        assert x.dimensionality == UnitsContainer({"[length]": 1})
+        x /= self.Q_(1, "s")
+        assert x.dimensionality == UnitsContainer({"[length]": 1, "[time]": -1})
+
     def test_inclusion(self):
         dim = self.Q_(42, "meter").dimensionality
         assert "[length]" in dim
