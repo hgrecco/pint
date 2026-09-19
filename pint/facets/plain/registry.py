@@ -236,18 +236,18 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if cache_folder == ":auto:":
             cache_folder = platformdirs.user_cache_path(appname="pint", appauthor=False)
 
-        from ... import delegates  # TODO: change this
+        from ...delegates import Formatter
+        from ...delegates.base_defparser import ParserConfig, build_disk_cache_class
+        from ...delegates.txt_defparser import DefParser
 
         if cache_folder is not None:
-            self._diskcache = delegates.build_disk_cache_class(non_int_type)(
-                cache_folder
-            )
+            self._diskcache = build_disk_cache_class(non_int_type)(cache_folder)
 
-        self._def_parser = delegates.txt_defparser.DefParser(
-            delegates.ParserConfig(non_int_type), diskcache=self._diskcache
+        self._def_parser = DefParser(
+            ParserConfig(non_int_type), diskcache=self._diskcache
         )
 
-        self.formatter = delegates.Formatter(self)
+        self.formatter = Formatter(self)
         self._filename = filename
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
