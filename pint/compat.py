@@ -19,6 +19,7 @@ from importlib import import_module
 from importlib.util import find_spec
 from numbers import Number
 from typing import (
+    TYPE_CHECKING,
     Any,
     # Remove once all dependent packages change their imports.
     NoReturn,
@@ -246,12 +247,7 @@ try:
 except ImportError:
     HAS_NUMPY = False
 
-try:
-    import scipy  # noqa: F401
-
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
+HAS_SCIPY = find_spec("scipy") is not None
 
 HAS_DASK = find_spec("dask") is not None
 
@@ -362,10 +358,22 @@ else:
         return value
 
 
-if HAS_SCIPY:
-    import scipy
-else:
-    scipy = missing_dependency("scipy")
+if TYPE_CHECKING:
+    import scipy  # noqa: F401
+
+
+def __getattr__(name: str) -> Any:
+    if name == "scipy":
+        if HAS_SCIPY:
+            import scipy
+
+            value = scipy
+        else:
+            value = missing_dependency("scipy")
+        globals()["scipy"] = value
+        return value
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 # Define location of pint.Quantity in NEP-13 type cast hierarchy by defining upcast

@@ -6,7 +6,7 @@ import numbers
 import warnings
 from typing import TYPE_CHECKING
 
-from ...compat import np, scipy
+from ...compat import np
 from ...errors import UndefinedBehavior
 from ...util import UnitsContainer, infer_base_unit
 
@@ -391,6 +391,8 @@ def _get_preferred(
     dimensionality = [quantity.dimensionality[dimension] for dimension in dimensions]
 
     # Now that the input data is minimized, setup the optimization problem
+
+    from ...compat import scipy
 
     # use scipy.optimize.milp to select units from preferred units
 

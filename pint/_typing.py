@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 from fractions import Fraction
+from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Never, Protocol
 
 if TYPE_CHECKING:
@@ -19,17 +20,33 @@ if TYPE_CHECKING:
 #   (tested: pyright 1.1.411)
 #
 # See https://discuss.python.org/t/conditional-imports-in-stub-files/50326 for context
+#
+# The runtime branch below keeps numpy off the import path: the value of a
+# `type` alias (PEP 695) is only computed when it is first accessed, so numpy is
+# imported then -- if ever -- rather than when this module is imported. Whether
+# numpy is installed is checked without importing it.
 type _BuiltinScalar = complex | float | Decimal | Fraction
-try:
+if TYPE_CHECKING:
     import numpy as np
 
     type Scalar = _BuiltinScalar | np.number[Any]
     type Array = np.ndarray[Any, Any]
-except ModuleNotFoundError:
+else:
     # NOTE: redefining type aliases is not supported and may lead to type checker misbehavior
-    assert not TYPE_CHECKING
-    type Scalar = _BuiltinScalar
-    type Array = Never
+    _HAS_NUMPY = find_spec("numpy") is not None
+
+    def _np_number():
+        import numpy as np
+
+        return np.number[Any]
+
+    def _np_ndarray():
+        import numpy as np
+
+        return np.ndarray[Any, Any]
+
+    type Scalar = (_BuiltinScalar | _np_number()) if _HAS_NUMPY else _BuiltinScalar
+    type Array = _np_ndarray() if _HAS_NUMPY else Never
 
 type Magnitude = Scalar | Array
 
