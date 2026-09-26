@@ -135,7 +135,7 @@ arcminute = degree / 60 = arcmin = arc_minute = angular_minute
 arcsecond = arcminute / 60 = arcsec = arc_second = angular_second
 milliarcsecond = 1e-3 * arcsecond = mas
 grade = π / 200 * radian = grad = gon = gradian
-mil = π / 32000 * radian
+mil = π / 3200 * radian  # 6400 per turn
 
 # Solid angle
 steradian = radian ** 2 = sr
