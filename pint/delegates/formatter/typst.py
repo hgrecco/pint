@@ -140,7 +140,11 @@ class TypstFormatter(BaseFormatter):
             joint_fstring,
             "(",
             ")",
-            self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            re.sub(
+                r"([Ee])(?:\+|(-))?0*(\d+)",
+                r" times 10^(\2\3)",
+                self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
+            ),
             self.format_unit(measurement.units, uspec, sort_func, **babel_kwds),
         )
 
