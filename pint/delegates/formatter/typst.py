@@ -151,21 +151,13 @@ class ZeroFormatter(BaseFormatter):
     See: https://typst.app/universe/package/zero
     """
 
-    default_format = ""
-
     def format_magnitude(
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
             mstr = format_number(magnitude)
 
-        return (
-            mstr
-                .replace("E", "e")
-                .replace("e+00", "")
-                .replace("e+0", "e+")
-                .replace("e-0", "e-")
-        )
+        return re.sub(r"([Ee])(?:\+|(-))?0*(\d+)", r"\1\2\3", mstr)
 
     def format_unit(
         self,
@@ -236,15 +228,10 @@ class ZeroFormatter(BaseFormatter):
         sort_func: SortFunc | None = None,
         **babel_kwds: Unpack[BabelKwds],
     ) -> str:
-        return (
-            format(uncertainty, unc_spec)
-            .replace("+/-", "+-")
-            .replace("e+00", "")
-            .replace("e+0", "e")
-            .replace("e-0", "e-")
-            .replace("(", "")
-            .replace(")", "")
-        )
+        ustr = format(uncertainty, unc_spec).replace("+/-", "+-")
+        ustr = re.sub(r"([Ee])(?:\+|(-))?0*(\d+)", r"\1\2\3", ustr)
+
+        return ustr.replace("(", "").replace(")", "")
 
     def format_measurement(
         self,
@@ -263,7 +250,11 @@ class ZeroFormatter(BaseFormatter):
 
         unc_spec = remove_custom_flags(meas_spec)
 
-        joint_fstring = "{} {}"
+        ustr = self.format_unit(measurement.units, uspec, sort_func, **babel_kwds)[
+            len("#quan[") :
+        ]
+
+        joint_fstring = "{}{}" if ustr == "]" else "{} {}"
 
         return "#quan" + join_unc(
             joint_fstring,
@@ -271,7 +262,5 @@ class ZeroFormatter(BaseFormatter):
             "",
             "[%s"
             % self.format_uncertainty(measurement.magnitude, unc_spec, **babel_kwds),
-            self.format_unit(measurement.units, uspec, sort_func, **babel_kwds)[
-                len("#quan[") :
-            ],
+            ustr,
         )
