@@ -17,6 +17,7 @@ need.
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from threading import RLock
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -591,34 +592,90 @@ class UnitRegistry(
 class LazyRegistry[QuantityT: Quantity, UnitT: Unit]:
     def __init__(self, args=None, kwargs=None):
         self.__dict__["params"] = args or (), kwargs or {}
+        self.__dict__["_initialization_lock"] = RLock()
 
-    def __init(self):
-        args, kwargs = self.__dict__["params"]
-        kwargs["on_redefinition"] = "raise"
-        self.__class__ = UnitRegistry
-        self.__init__(*args, **kwargs)
-        self._after_init()
+    def _initialize(self):
+        state = object.__getattribute__(self, "__dict__")
+        lock = state.get("_initialization_lock")
+        if lock is None:
+            # Another caller may arrive between lock removal and publication.
+            # Complete that transition before deepcopy inspects the type.
+            if type(self) is _InitializingRegistry:
+                object.__setattr__(self, "__class__", UnitRegistry)
+            return
+        with lock:
+            lazy_type = type(self)
+            if not issubclass(lazy_type, LazyRegistry):
+                # The initializer may re-enter through the temporary class, or
+                # another caller may already have finished initializing it.
+                return
+            original_state = object.__getattribute__(self, "__dict__").copy()
+            args, original_kwargs = original_state["params"]
+            kwargs = dict(original_kwargs)
+            if kwargs.get("preprocessors") is not None:
+                # UnitRegistry inserts built-in preprocessors into this list.
+                # Retrying must start from the caller's original arguments.
+                kwargs["preprocessors"] = list(kwargs["preprocessors"])
+            kwargs["on_redefinition"] = "raise"
+            object.__setattr__(self, "__class__", _InitializingRegistry)
+            try:
+                UnitRegistry.__init__(self, *args, **kwargs)
+                self._after_init()
+            except BaseException:
+                # Keep the same lock visible to waiting callers throughout
+                # rollback; an empty intermediate dictionary would bypass it.
+                object.__setattr__(self, "__dict__", original_state)
+                object.__setattr__(self, "__class__", lazy_type)
+                raise
+            # Readiness is complete. Remove the lock before publishing the
+            # final class so a concurrent deepcopy never encounters the lock.
+            del object.__getattribute__(self, "__dict__")["_initialization_lock"]
+            object.__setattr__(self, "__class__", UnitRegistry)
 
     def __getattr__(self, item):
         if item == "_on_redefinition":
             return "raise"
-        self.__init()
+        LazyRegistry._initialize(self)
         return getattr(self, item)
 
     def __setattr__(self, key, value):
         if key == "__class__":
             super().__setattr__(key, value)
         else:
-            self.__init()
+            LazyRegistry._initialize(self)
             setattr(self, key, value)
 
     def __getitem__(self, item):
-        self.__init()
+        LazyRegistry._initialize(self)
         return self[item]
 
     def __call__(self, *args, **kwargs):
-        self.__init()
+        LazyRegistry._initialize(self)
         return self(*args, **kwargs)
+
+
+class _InitializingRegistry(UnitRegistry):
+    """Keep other callers out until a lazy registry's definitions are ready."""
+
+    def __getattribute__(self, name):
+        # Initialize in __getattr__ so an AttributeError from initialization is
+        # propagated instead of triggering another unit-name lookup.
+        raise AttributeError(name)
+
+    def __getattr__(self, name):
+        LazyRegistry._initialize(self)
+        try:
+            return UnitRegistry.__getattribute__(self, name)
+        except AttributeError:
+            return UnitRegistry.__getattr__(self, name)
+
+    def __setattr__(self, name, value):
+        LazyRegistry._initialize(self)
+        UnitRegistry.__setattr__(self, name, value)
+
+    def __delattr__(self, name):
+        LazyRegistry._initialize(self)
+        UnitRegistry.__delattr__(self, name)
 
 
 class ApplicationRegistry:
