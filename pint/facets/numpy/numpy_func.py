@@ -436,7 +436,6 @@ matching_input_copy_units_output_ufuncs = [
     "max",
     "mean",
     "min",
-    "ptp",
     "ravel",
     "repeat",
     "reshape",
@@ -473,6 +472,7 @@ op_units_output_ufuncs = {
     "square": "square",
     "reciprocal": "reciprocal",
     "std": "delta",
+    "ptp": "delta",
     "sum": "sum",
     "cumsum": "sum",
     "matmul": "mul",
@@ -942,7 +942,6 @@ for func_str, unit_arguments, wrap_output in (
     ("diagonal", "a", True),
     ("linalg.diagonal", "x", True),
     ("mean", "a", True),
-    ("ptp", "a", True),
     ("ravel", "a", True),
     ("round_", "a", True),
     ("round", "a", True),
@@ -1120,7 +1119,7 @@ for func_str in (
     "linalg.vector_norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ("diff", "ediff1d", "std", "nanstd"):
+for func_str in ("diff", "ediff1d", "ptp", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")

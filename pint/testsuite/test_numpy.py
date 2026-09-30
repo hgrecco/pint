@@ -796,6 +796,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_ptp_numpy_func(self):
         helpers.assert_quantity_equal(np.ptp(self.q, axis=0), [2, 2] * self.ureg.m)
+        helpers.assert_quantity_equal(
+            np.ptp(self.q_temperature, axis=0), [2, 2] * self.ureg.delta_degC
+        )
 
     def test_clip(self):
         helpers.assert_quantity_equal(
