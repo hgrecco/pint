@@ -43,6 +43,14 @@ if TYPE_CHECKING:
 
 _EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)[eE](-?)\+?0*([0-9]+)")
 
+_typst_unit_fixes = {
+    "deg": "degree",
+}
+
+_zero_unit_fixes = {
+    "deg": "°",
+}
+
 
 class TypstFormatter(BaseFormatter):
     """Typst localizable text formatter."""
@@ -70,8 +78,8 @@ class TypstFormatter(BaseFormatter):
             registry=self._registry,
         )
 
-        numerator = ((f'"{u}"', p) for u, p in numerator)
-        denominator = ((f'"{u}"', p) for u, p in denominator)
+        numerator = ((_typst_unit_fixes.get(u, f'"{u}"'), p) for u, p in numerator)
+        denominator = ((_typst_unit_fixes.get(u, f'"{u}"'), p) for u, p in denominator)
 
         as_ratio = babel_kwds.get("as_ratio", True)
         assert isinstance(as_ratio, bool)
@@ -180,6 +188,9 @@ class ZeroFormatter(BaseFormatter):
             **babel_kwds,
             registry=self._registry,
         )
+
+        numerator = ((_zero_unit_fixes.get(u, u), p) for u, p in numerator)
+        denominator = ((_zero_unit_fixes.get(u, u), p) for u, p in denominator)
 
         if babel_kwds.get("locale", None):
             length = babel_kwds.get("length") or ("short" if "~" in uspec else "long")
