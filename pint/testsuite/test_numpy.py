@@ -973,6 +973,89 @@ class TestNumpyUnclassified(TestNumpyMethods):
             assert not w
             assert q.mask[0]
 
+    @pytest.mark.parametrize("shape", [(), (1,), (1, 1), (1, 1, 1)])
+    @pytest.mark.parametrize("key", [slice(None), (0, slice(None)), (slice(None), 0)])
+    @pytest.mark.parametrize("masked", [False, True])
+    def test_setitem_singleton_nan(self, shape, key, masked):
+        magnitude = np.ones((2, 2))
+        if masked:
+            magnitude = np.ma.array(magnitude)
+        q = self.Q_(magnitude, "m")
+        expected = magnitude.copy()
+        value = np.full(shape, np.nan)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            expected[key] = value
+            q[key] = value
+
+        self.assertNDArrayEqual(q.magnitude, expected)
+        assert q.units == self.ureg.m
+
+    def test_setitem_unmasked_singleton_nan(self):
+        q = self.Q_(np.ones(2), "m")
+        q[:] = np.ma.array([np.nan], mask=False)
+        self.assertNDArrayEqual(q.magnitude, [np.nan, np.nan])
+
+    @pytest.mark.parametrize(
+        "value, dtype",
+        [
+            ([1.0], float),
+            ([], float),
+            ([float("nan"), float("nan")], float),
+            ([float("nan"), 1.0], float),
+            ([complex(1, float("nan"))], complex),
+            (["NaT"], "datetime64[s]"),
+            (["NaT"], "timedelta64[s]"),
+        ],
+    )
+    def test_setitem_array_requires_units(self, value, dtype):
+        q = self.Q_(np.ones(2), "m")
+        with pytest.raises(DimensionalityError):
+            q[:] = np.array(value, dtype=dtype)
+        self.assertNDArrayEqual(q.magnitude, [1.0, 1.0])
+
+    def test_setitem_object_nan_requires_units(self):
+        q = self.Q_(np.ones(2), "m")
+        with pytest.raises(DimensionalityError):
+            q[:] = np.array([np.nan], dtype=object)
+        self.assertNDArrayEqual(q.magnitude, [1.0, 1.0])
+
+    @pytest.mark.parametrize("shape", [(), (1,), (1, 1), (1, 1, 1)])
+    def test_setitem_nan_quantity_requires_compatible_units(self, shape):
+        q = self.Q_(np.ones(2), "m")
+        with pytest.raises(DimensionalityError):
+            q[:] = self.Q_(np.full(shape, np.nan), "s")
+        self.assertNDArrayEqual(q.magnitude, [1.0, 1.0])
+
+    def test_setitem_array_converts_compatible_units(self):
+        q = self.Q_(np.ones(2), "m")
+        q[:] = self.Q_([100.0, np.nan], "cm")
+        self.assertNDArrayEqual(q.magnitude, [1.0, np.nan])
+
+    @pytest.mark.parametrize("as_array", [False, True])
+    def test_setitem_nan_preserves_assignment_typeerror(self, as_array):
+        class ReadOnlyArray(np.ndarray):
+            def __setitem__(self, key, value):
+                raise TypeError("assignment is not supported")
+
+        q = self.Q_(np.ones(2).view(ReadOnlyArray), "m")
+        value = np.array([np.nan]) if as_array else np.nan
+        with pytest.raises(TypeError, match="^assignment is not supported$"):
+            q[:] = value
+
+    def test_setitem_nan_preserves_invalid_cast(self):
+        q = self.Q_(np.ones(2, dtype=int), "m")
+        with np.errstate(invalid="raise"):
+            with pytest.raises(FloatingPointError):
+                q[:] = np.array([np.nan])
+
+    def test_setitem_nan_preserves_readonly_error(self):
+        q = self.Q_(np.ones(2), "m")
+        q.magnitude.flags.writeable = False
+        with pytest.raises(ValueError, match="read-only"):
+            q[:] = np.array([np.nan])
+
     def test_setitem_mixed_masked(self):
         masked = np.ma.array(
             [

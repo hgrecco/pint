@@ -274,16 +274,27 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
     def __setitem__(self, key, value):
         try:
-            # If we're dealing with a masked single value or a nan, set it
-            if (
-                isinstance(self._magnitude, np.ma.MaskedArray)
-                and np.ma.is_masked(value)
-                and getattr(value, "size", 0) == 1
-            ) or (getattr(value, "ndim", 0) == 0 and math.isnan(value)):
-                self._magnitude[key] = value
-                return
+            # Allow a masked single value or a NaN, including a singleton array.
+            is_missing = (
+                (
+                    isinstance(self._magnitude, np.ma.MaskedArray)
+                    and np.ma.is_masked(value)
+                    and getattr(value, "size", 0) == 1
+                )
+                or (
+                    isinstance(value, np.ndarray)
+                    and value.size == 1
+                    and value.dtype.kind == "f"
+                    and np.isnan(value).all()
+                )
+                or (getattr(value, "ndim", 0) == 0 and math.isnan(value))
+            )
         except TypeError:
-            pass
+            is_missing = False
+
+        if is_missing:
+            self._magnitude[key] = value
+            return
 
         try:
             if isinstance(value, self.__class__):
