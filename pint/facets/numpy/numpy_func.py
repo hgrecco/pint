@@ -445,6 +445,7 @@ matching_input_copy_units_output_ufuncs = [
     "swapaxes",
     "take",
     "trace",
+    "linalg.trace",
     "transpose",
     "roll",
     "ceil",
@@ -475,6 +476,7 @@ op_units_output_ufuncs = {
     "std": "delta",
     "sum": "sum",
     "cumsum": "sum",
+    "cumulative_sum": "sum",
     "matmul": "mul",
 }
 
@@ -736,6 +738,73 @@ def _all(a, *args, **kwargs):
         raise ValueError("Boolean value of Quantity with offset unit is ambiguous.")
 
 
+@implements("linalg.qr", "function")
+def _qr(a, mode="reduced"):
+    # In the result, Q is dimensionless, and R has the same units as a
+    a = _base_unit_if_needed(a)
+    q, r = np.linalg.qr(a._magnitude, mode=mode)
+    return np.linalg._linalg.QRResult(
+        q * a.units._REGISTRY.dimensionless,
+        r * a.units,
+    )
+
+
+@implements("linalg.svd", "function")
+def _svd(a, full_matrices=True, compute_uv=True, hermitian=False):
+    # In the result, U and Vh are dimensionless, and S has the same units as a
+    a = _base_unit_if_needed(a)
+    if compute_uv:
+        u, s, vh = np.linalg.svd(
+            a._magnitude,
+            full_matrices=full_matrices,
+            compute_uv=compute_uv,
+            hermitian=hermitian,
+        )
+        return np.linalg._linalg.SVDResult(
+            u * a.units._REGISTRY.dimensionless,
+            s * a.units,
+            vh * a.units._REGISTRY.dimensionless,
+        )
+    else:
+        s = np.linalg.svd(
+            a._magnitude,
+            full_matrices=full_matrices,
+            compute_uv=compute_uv,
+            hermitian=hermitian,
+        )
+        return s * a.units
+
+
+@implements("linalg.eig", "function")
+def _eig(a):
+    # In the result, eigenvalues have the same units as a, and eigenvectors are dimensionless
+    a = _base_unit_if_needed(a)
+    eigenvalues, eigenvectors = np.linalg.eig(a._magnitude)
+    return np.linalg._linalg.EigResult(
+        eigenvalues * a.units,
+        eigenvectors * a.units._REGISTRY.dimensionless,
+    )
+
+
+@implements("linalg.eigh", "function")
+def _eigh(a, UPLO="L"):
+    # In the result, eigenvalues have the same units as a, and eigenvectors are dimensionless
+    a = _base_unit_if_needed(a)
+    eigenvalues, eigenvectors = np.linalg.eigh(a._magnitude, UPLO=UPLO)
+    return np.linalg.linalg.EighResult(
+        eigenvalues * a.units,
+        eigenvectors * a.units._REGISTRY.dimensionless,
+    )
+
+
+@implements("linalg.det", "function")
+def _det(a):
+    # The determinant has units of the input raised to the power of the array dimension
+    a = _base_unit_if_needed(a)
+    units = a.units ** a.shape[-1]
+    return a.units._REGISTRY.Quantity(np.linalg.det(a._magnitude), units)
+
+
 def implement_prod_func(name):
     if np is None:
         return
@@ -883,6 +952,39 @@ for func_str in (
     implement_mul_func(func_str)
 
 
+def implement_solve_func(func):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+    if "." not in func_str:
+        func = getattr(np, func_str, None)
+    else:
+        parts = func_str.split(".")
+        module = np
+        for part in parts[:-1]:
+            module = getattr(module, part, None)
+        func = getattr(module, parts[-1], None)
+
+    # if NumPy does not implement it, do not implement it either
+    if func is None:
+        return
+
+    @implements(func_str, "function")
+    def implementation(a, b, **kwargs):
+        a, b = _dimensionless_if_needed(a, b)
+        a = _base_unit_if_needed(a)
+        b = _base_unit_if_needed(b)
+        units = b.units / a.units
+        mag = func(a._magnitude, b._magnitude, **kwargs)
+        return mag * units
+
+
+for func_str in (
+    "linalg.solve",
+    "linalg.tensorsolve",
+):
+    implement_solve_func(func_str)
+
 # Implement simple matching-unit or stripped-unit functions based on signature
 
 
@@ -956,8 +1058,8 @@ for func_str, unit_arguments, wrap_output in (
     ("average", "a", True),
     ("nanmean", "a", True),
     ("swapaxes", "a", True),
-    ("nanmin", "a", True),
-    ("nanmax", "a", True),
+    ("nanmin", ["a", "initial"], True),
+    ("nanmax", ["a", "initial"], True),
     ("percentile", "a", True),
     ("nanpercentile", "a", True),
     ("quantile", "a", True),
@@ -972,7 +1074,7 @@ for func_str, unit_arguments, wrap_output in (
     ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
-    ("clip", ["a", "a_min", "a_max"], True),
+    ("clip", ["a", "a_min", "a_max", "min", "max"], True),
     ("append", ["arr", "values"], True),
     ("compress", "a", True),
     ("linspace", ["start", "stop"], True),
@@ -1114,6 +1216,7 @@ for func_str in (
     "cumsum",
     "nancumsum",
     "linalg.norm",
+    "linalg.svdvals",
     "linalg.eigvals",
     "linalg.eigvalsh",
     "linalg.matrix_norm",
@@ -1126,20 +1229,6 @@ for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
-
-
-@implements("linalg.solve", "function")
-def _linalg_solve(a, b, **kwargs):
-    args = tuple(
-        _base_unit_if_needed(arg) if _is_quantity(arg) else arg for arg in (a, b)
-    )
-    first_input_units = _get_first_input_units(args, kwargs)
-    stripped_args, stripped_kwargs = convert_to_consistent_units(*args, **kwargs)
-    result_magnitude = np.linalg.solve(*stripped_args, **stripped_kwargs)
-    result_unit = get_op_output_unit(
-        "invdiv", first_input_units, tuple(chain(args, kwargs.values()))
-    )
-    return first_input_units._REGISTRY.Quantity(result_magnitude, result_unit)
 
 
 @implements("geomspace", "function")
