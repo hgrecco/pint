@@ -580,6 +580,32 @@ def _meshgrid(*xi, **kwargs):
     return [out * unit for out, unit in zip(res, input_units)]
 
 
+@implements("gradient", "function")
+def _gradient(f, *varargs, **kwargs):
+    first_input_units = _get_first_input_units((f, *varargs))
+    registry = first_input_units._REGISTRY
+    args, kwargs = convert_to_consistent_units(f, *varargs, **kwargs)
+    result = np.gradient(*args, **kwargs)
+    field_unit = (
+        first_input_units
+        if _is_quantity(f) or _is_sequence_with_quantity_elements(f)
+        else registry.dimensionless
+    )
+    delta_unit = get_op_output_unit("delta", field_unit)
+    output_units = [
+        delta_unit / spacing.units if hasattr(spacing, "units") else delta_unit
+        for spacing in (varargs or (1,))
+    ]
+    # Preserve the stacked Quantity when every component has the same unit.
+    if all(unit == output_units[0] for unit in output_units[1:]):
+        return registry.Quantity(result, output_units[0])
+    # Different coordinate units require independently wrapped components.
+    return type(result)(
+        registry.Quantity(component, unit)
+        for component, unit in zip(result, output_units)
+    )
+
+
 @implements("full_like", "function")
 def _full_like(a, fill_value, **kwargs):
     # Make full_like by multiplying with array from ones_like in a
@@ -1224,8 +1250,6 @@ for func_str in (
     implement_func("function", func_str, input_units=None, output_unit="sum")
 for func_str in ("diff", "ediff1d", "ptp", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
-for func_str in ("gradient",):
-    implement_func("function", func_str, input_units=None, output_unit="delta,div")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
 

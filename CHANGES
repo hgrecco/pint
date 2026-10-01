@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix `numpy.gradient` dividing each component by all coordinate units instead of its own (#1591). Components with identical units remain a stacked Quantity; differing units return separate Quantities in NumPy's result container.
 - Fix in-place `**=` changing a Quantity's units when the magnitude update fails, e.g. a fractional power of an integer array (#2423)
 - Fix `numpy.ptp` returning an absolute temperature instead of a delta for offset units (#2441)
 - Fix `Quantity.dimensionality` being stale after an in-place operation changes the units (#1938)
