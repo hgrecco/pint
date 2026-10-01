@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix `numpy.ptp` returning an absolute temperature instead of a delta for offset units (#2441)
 - Fix `Quantity.dimensionality` being stale after an in-place operation changes the units (#1938)
 - Fix `numpy.nanmax`/`numpy.nanmin` raising `ValueError` on a Quantity `initial` value, unlike `numpy.max`/`numpy.min` (#2425)
 - Fix `numpy.clip` not converting the units of the numpy 2.1 `min`/`max` keywords (#2433)
