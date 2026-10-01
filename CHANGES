@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix CI never comparing the matplotlib test figures with the baseline images: `--mpl` was lost with the Travis config in 2021 (#2432)
 - Improve type annotations for `Unit`: `/` and `**` keep the unit type, and `__copy__`/`__deepcopy__` keep the registry subclass (#2406)
 - Fix `numpy.sum`/`numpy.nansum` not converting a Quantity `initial` value, unlike `numpy.max`/`numpy.min` (#2400)
 - Fix `Quantity.to_compact()` raising `OffsetUnitCalculusError` for offset units like `degree_Celsius` with magnitude below 1 (#2005)
