@@ -16,11 +16,13 @@ need.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+import pathlib
+from collections.abc import Iterable, Iterator, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
+    Literal,
     Self,
     TypeAlias,
     overload,
@@ -39,7 +41,7 @@ if TYPE_CHECKING:
     import optype as opt
     import optype.numpy as npt
 
-    from ._typing import Magnitude, Scalar, UnitLike
+    from ._typing import Magnitude, Scalar, UnitLike, UnitsContainer
     from ._typing import Quantity as _Quantity
     from ._typing import Unit as _Unit
     from .facets.plain.quantity import PlainQuantity as _PlainQuantity
@@ -71,6 +73,13 @@ class Quantity(
     if TYPE_CHECKING:
         # NOTE: This list of method signatures must be kept in sync with PlainQuantity's overloads
         #   (you can find the class in pint/facets/plain/quantity.py)
+
+        @property
+        @override
+        def u(self) -> Unit: ...
+        @property
+        @override
+        def units(self) -> Unit: ...
 
         @overload
         def __new__(
@@ -422,38 +431,66 @@ class Unit(
     facets.PlainRegistry.Unit,
 ):
     if TYPE_CHECKING:
-        # Unit * Unit -> Unit
+        # Unit * (Unit | UnitsContainer) -> Unit
         @overload
-        def __mul__(self, other: Self) -> Self: ...
+        def __mul__(self, other: Self | UnitsContainer) -> Self: ...
         # Unit * timedelta -> Quantity[float]
         @overload
         def __mul__(
             self, other: datetime.timedelta | np.timedelta64
         ) -> Quantity[float]: ...
+        # Unit * <ArrayLike> -> Quantity[<Array>]
+        @overload
+        def __mul__[T: np.number](
+            self, other: opt.numpy.AnyArray[T]
+        ) -> opt.numpy.ArrayND[T]: ...
         # Unit * <Magnitude> -> Quantity[<Magnitude>]
         @overload
         def __mul__[T: Magnitude](self, other: T) -> Quantity[T]: ...
-        # Unit * str -> Quantity
+        # Unit * <Quantity> -> <Quantity>
         @overload
-        def __mul__(self, other: str) -> Quantity[Any]: ...
+        def __mul__[Q: Quantity](self, other: Q) -> Q: ...
 
         __rmul__ = __mul__
 
-        # Unit / Unit -> Unit
+        # Unit / (Unit or UnitsContainer) -> Unit
         @overload
-        def __truediv__(self, other: Self) -> Self: ...
+        def __truediv__(self, other: Self | UnitsContainer) -> Self: ...
         # Unit / timedelta -> Quantity[float]
         @overload
         def __truediv__(
             self, other: datetime.timedelta | np.timedelta64
         ) -> Quantity[float]: ...
-        # Unit / <Magnitude> or Quantity[<Magnitude>]
+        # Unit / <ArrayLike> -> Quantity[<Array>]
+        @overload
+        def __truediv__[T: np.number](
+            self, other: opt.numpy.AnyArray[T]
+        ) -> Quantity[opt.numpy.ArrayND[T]]: ...
+        # Unit / (<Magnitude> or Quantity[<Magnitude>])
         #   -> Quantity[type of 1 / <Magnitude>]
         @overload
         def __truediv__[U: Magnitude](
             self,
-            other: Quantity[opt.CanRTruediv[int, U]] | opt.CanRTruediv[int, U],
+            other: Quantity[opt.CanRTruediv[Literal[1], U]]
+            | opt.CanRTruediv[Literal[1], U],
         ) -> Quantity[U]: ...
+
+        # UnitsContainer / Unit -> Unit
+        @overload
+        def __rtruediv__(self, other: UnitsContainer) -> Self: ...
+        # timedelta / Unit -> Quantity[float]
+        @overload
+        def __rtruediv__(
+            self, other: datetime.timedelta | np.timedelta64
+        ) -> Quantity[float]: ...
+        # <Magnitude> / Unit -> Quantity[<Magnitude>]
+        @overload
+        def __rtruediv__[M: Magnitude](self, other: M) -> Quantity[M]: ...
+        # <ArrayLike> / Unit -> Quantity[<Array>]
+        @overload
+        def __rtruediv__[T: np.number](
+            self, other: opt.numpy.AnyArray[T]
+        ) -> Quantity[opt.numpy.ArrayND[T]]: ...
 
 
 class GenericUnitRegistry[QuantityT: _Quantity, UnitT: _Unit](
@@ -521,7 +558,7 @@ class UnitRegistry(
 
     def __init__(
         self,
-        filename="",
+        filename: Iterable[str] | str | pathlib.Path | None = "",
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
         default_as_delta: bool = True,

@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 import copy
+import datetime
 import functools
 import logging
 import math
 import operator
 import re
 from contextlib import nullcontext as does_not_raise
+from decimal import Decimal
+from fractions import Fraction
 from typing import assert_type
 
 import pytest
 
 from pint import DimensionalityError, RedefinitionError, UndefinedUnitError, errors
-from pint.compat import np
+from pint.compat import HAS_NUMPY, np
 from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 from pint.util import ParserHelper, UnitsContainer
@@ -190,22 +193,77 @@ class TestUnit(QuantityTestCase):
 
     def test_unit_mul(self):
         x = self.U_("m")
+        # x * <magnitude>
         assert x * 1 == self.Q_(1, "m")
         assert x * 0.5 == self.Q_(0.5, "m")
-        assert x * self.Q_(1, "m") == self.Q_(1, "m**2")
-        assert 1 * x == self.Q_(1, "m")
+        with pytest.raises(TypeError):
+            _ = x * True
+        with pytest.raises(TypeError):
+            _ = x * False
+        assert x * Fraction(3, 7) == self.Q_(Fraction(3, 7), "m")
+        assert x * Decimal("0.1") == self.Q_(Decimal("0.1"), "m")
+        if HAS_NUMPY:
+            assert x * [1] == self.Q_(np.array([1]), "m")
+        else:
+            with pytest.raises(TypeError):
+                _ = x * [1]
+        assert x * "1" == self.Q_(1, "m")
+        # x * <unit>
+        assert x * self.U_("s") == self.U_("m s")
+        assert_type(x * self.U_("s"), UnitRegistry.Unit)
+        # x * <quantity>
+        assert x * datetime.timedelta(0, 1, 0) == self.Q_(1.0, "m s")
+        assert x * self.Q_(1, "s") == self.Q_(1, "m s")
+        # assert x * "1 m" == self.Q_(1)
 
     def test_unit_div(self):
         x = self.U_("m")
+        # x / <magnitude>
         assert x / 1 == self.Q_(1, "m")
         assert x / 0.5 == self.Q_(2.0, "m")
-        assert x / self.Q_(1, "m") == self.Q_(1)
+        with pytest.raises(TypeError):
+            _ = x / True
+        with pytest.raises(TypeError):
+            _ = x / False
+        assert x / Fraction(3, 7) == self.Q_(Fraction(7, 3), "m")
+        assert x / Decimal("0.1") == self.Q_(Decimal("10"), "m")
+        if HAS_NUMPY:
+            assert x / [1] == self.Q_(np.array([1]), "m")
+        else:
+            with pytest.raises(TypeError):
+                _ = x / [1]
+        assert x / "1" == self.Q_(1, "m")
+        # x / <unit>
         assert x / self.U_("s") == self.U_("m / s")
         assert_type(x / self.U_("s"), UnitRegistry.Unit)
+        assert x / self.Q_(1, "s").units == self.U_("m / s")
+        assert self.Q_(1, "s").units / x == self.U_("s / m")
+        # x / <quantity>
+        assert x / datetime.timedelta(0, 1, 0) == self.Q_(1.0, "m/s")
+        assert x / self.Q_(1, "m") == self.Q_(1)
+        # assert x / "1 m" == self.Q_(1)
 
     def test_unit_rdiv(self):
         x = self.U_("m")
+        # <magnitude> / x
         assert 1 / x == self.Q_(1, "1/m")
+        assert 0.5 / x == self.Q_(0.5, "1/m")
+        with pytest.raises(TypeError):
+            _ = True / x
+        with pytest.raises(TypeError):
+            _ = False / x
+        assert Fraction(3, 7) / x == self.Q_(Fraction(3, 7), "1/m")
+        assert Decimal("0.1") / x == self.Q_(Decimal("0.1"), "1/m")
+        if HAS_NUMPY:
+            assert [1] / x == self.Q_(np.array([1]), "1/m")
+        else:
+            with pytest.raises(TypeError):
+                _ = [1] / x
+        assert "1" / x == self.Q_(1, "1/m")
+        # <quantity> / x
+        assert datetime.timedelta(0, 1, 0) / x == self.Q_(1.0, "s/m")
+        assert self.Q_(1, "m") / x == self.Q_(1)
+        # assert "1 m" / x == self.Q_(1)
 
     @pytest.mark.parametrize(
         ("unit", "power_ratio", "expectation", "expected_unit"),

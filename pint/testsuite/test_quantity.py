@@ -802,9 +802,6 @@ class TestQuantity(QuantityTestCase):
             self.Q_(1, "m").__array__()
 
     @patch(
-        "pint.compat.upcast_type_names", ("pint.testsuite.test_quantity.FakeWrapper",)
-    )
-    @patch(
         "pint.compat.upcast_type_map",
         {"pint.testsuite.test_quantity.FakeWrapper": FakeWrapper},
     )

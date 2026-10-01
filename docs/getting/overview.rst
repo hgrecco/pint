@@ -1,5 +1,5 @@
-What is Pint ?
-==============
+What is Pint?
+=============
 
 .. .. image:: _static/logo-full.jpg
 ..    :alt: Pint: **physical quantities**
@@ -64,8 +64,8 @@ LaTeX and pretty formatting. Unit name translation is available if Babel_ is
 installed.
 
 **Free to choose the numerical type**: You can use any numerical type
-(``fraction``, ``float``, ``decimal``, ``numpy.ndarray``, etc). NumPy_ is not
-required, but is supported.
+(:py:class:`float`, :py:class:`fractions.Fraction`, :py:class:`decimal.Decimal`,
+:py:class:`numpy.ndarray`, etc). NumPy_ is supported, but not required.
 
 **Awesome NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and
 ufuncs are supported including automatic conversion of units. For example
@@ -73,7 +73,7 @@ ufuncs are supported including automatic conversion of units. For example
 quantity will be radian.
 
 **Uncertainties integration**:  transparently handles calculations with
-quantities with uncertainties (like 3.14±0.01) meter via the `uncertainties
+quantities with uncertainties, like (3.14 ± 0.01) meter, via the `uncertainties
 package`_.
 
 **Handle temperature**: conversion between units with different reference
