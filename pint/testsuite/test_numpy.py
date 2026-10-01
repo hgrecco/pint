@@ -824,6 +824,26 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.clip(self.q, 150 * self.ureg.cm, None), [[1.5, 2], [3, 4]] * self.ureg.m
         )
 
+    @helpers.requires_numpy_at_least("2.1")
+    def test_clip_numpy_func_array_api_names(self):
+        # numpy 2.1 added `min`/`max` as array-API compatible spellings of
+        # `a_min`/`a_max`; they must get the same unit handling.
+        helpers.assert_quantity_equal(
+            np.clip(self.q, min=150 * self.ureg.cm), [[1.5, 2], [3, 4]] * self.ureg.m
+        )
+        helpers.assert_quantity_equal(
+            np.clip(self.q, max=2 * self.ureg.m), [[1, 2], [2, 2]] * self.ureg.m
+        )
+        helpers.assert_quantity_equal(
+            np.clip(self.q, min=2 * self.ureg.m, max=3 * self.ureg.m),
+            [[2, 2], [3, 3]] * self.ureg.m,
+        )
+        # Same contract as the `Quantity.clip` method, see `test_clip`.
+        with pytest.raises(DimensionalityError):
+            np.clip(self.q, min=self.ureg.J)
+        with pytest.raises(DimensionalityError):
+            np.clip(self.q, min=1)
+
     def test_round(self):
         q = [1, 1.33, 5.67, 22] * self.ureg.m
         helpers.assert_quantity_equal(q.round(0), [1, 1, 6, 22] * self.ureg.m)

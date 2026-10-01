@@ -972,7 +972,7 @@ for func_str, unit_arguments, wrap_output in (
     ("min", ["a", "initial"], True),
     ("searchsorted", ["a", "v"], False),
     ("nan_to_num", ["x", "nan", "posinf", "neginf"], True),
-    ("clip", ["a", "a_min", "a_max"], True),
+    ("clip", ["a", "a_min", "a_max", "min", "max"], True),
     ("append", ["arr", "values"], True),
     ("compress", "a", True),
     ("linspace", ["start", "stop"], True),
