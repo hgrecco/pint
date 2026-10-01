@@ -247,12 +247,15 @@ def prepare_compount_unit[T](
     if use_plural:
         if not isinstance(numerator, list):
             numerator = list(numerator)
-        numerator[-1] = localize_display_exponent_name(
-            numerator[-1],
-            use_plural,
-            length=length,
-            locale=locale,
-            default=numerator[-1][0],
-        )
+        # A unit whose exponents are all negative (e.g. 1 / second) has an empty
+        # numerator, and then there is nothing to pluralize.
+        if numerator:
+            numerator[-1] = localize_display_exponent_name(
+                numerator[-1],
+                use_plural,
+                length=length,
+                locale=locale,
+                default=numerator[-1][0],
+            )
 
     return map(extract2, numerator), map(extract2, denominator)
