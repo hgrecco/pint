@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix `Quantity.dimensionality` being stale after an in-place operation changes the units (#1938)
 - Fix `numpy.nanmax`/`numpy.nanmin` raising `ValueError` on a Quantity `initial` value, unlike `numpy.max`/`numpy.min` (#2425)
 - Fix `numpy.clip` not converting the units of the numpy 2.1 `min`/`max` keywords (#2433)
 - Fix CI never comparing the matplotlib test figures with the baseline images: `--mpl` was lost with the Travis config in 2021 (#2432)
