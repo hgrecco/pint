@@ -2,7 +2,7 @@
 name = "Pint"
 authors = [{ name = "Hernan E. Grecco", email = "hernan.grecco@gmail.com" }]
 dynamic = ["version"]
-license = { text = "BSD" }
+license = "BSD-3-Clause"
 description = "Physical quantities module"
 readme = "README.rst"
 maintainers = [
@@ -13,7 +13,6 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: BSD License",
   "Operating System :: MacOS :: MacOS X",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX",

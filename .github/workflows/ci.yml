@@ -88,7 +88,7 @@ jobs:
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
         run: pixi run -e ${{ matrix.environment }} pip install pytest-mpl
-      - run: pixi run --environment ${{ matrix.environment }} test
+      - run: pixi run --environment ${{ matrix.environment }} test ${{ contains(matrix.extras, 'matplotlib') && '--mpl' || '' }}
 
   test-windows:
     runs-on: windows-latest
