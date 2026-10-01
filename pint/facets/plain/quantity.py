@@ -383,6 +383,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         return not bool(tmp.dimensionality)
 
     _dimensionality: UnitsContainerT | None = None
+    _dimensionality_units: UnitsContainerT | None = None
 
     @property
     def dimensionality(self) -> UnitsContainerT:
@@ -392,8 +393,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         dict
             Dimensionality of the PlainQuantity, e.g. ``{length: 1, time: -1}``
         """
-        if self._dimensionality is None:
-            self._dimensionality = self._REGISTRY._get_dimensionality(self._units)
+        # In-place operations rebind ``_units``, which invalidates the cache.
+        units = self._units
+        if self._dimensionality_units is not units:
+            self._dimensionality = self._REGISTRY._get_dimensionality(units)
+            self._dimensionality_units = units
 
         return self._dimensionality
 
