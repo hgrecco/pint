@@ -106,3 +106,17 @@ def test_str(func_registry):
     assert str(d) == s
     assert "%s" % d == s
     assert f"{d}" == s
+
+
+@helpers.requires_babel(["fr_FR"])
+def test_unit_with_empty_numerator(func_registry):
+    # A unit whose exponents are all negative has an empty numerator, and the
+    # pluralization step used to reach for its last element, raising IndexError.
+    ureg = func_registry
+    ureg.formatter.locale = "fr_FR"
+
+    assert f"{3 / ureg.second}" == "3 1 par seconde"
+    assert f"{3 / ureg.meter**2}" == "3 1 par mètre ** 2"
+    assert ureg.formatter.format_unit(ureg.Unit("1 / second"), locale="fr_FR") == (
+        "1 par seconde"
+    )

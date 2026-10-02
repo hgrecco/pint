@@ -474,6 +474,19 @@ class TestQuantity(QuantityTestCase):
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
 
+    @helpers.requires_scipy
+    def test_to_preferred_no_spurious_dimensionality_error(self):
+        # find_simple() compared the dimensionality exponent-vectors with `**`
+        # instead of `*`, so a preferred unit whose exponent signature happened
+        # to satisfy the spurious exponential identity was matched, and to()
+        # then raised a DimensionalityError on a perfectly valid call.
+        ureg = self.ureg
+        Q_ = self.Q_
+
+        q = Q_(1.0, "m**3 * s**4")
+        result = q.to_preferred([ureg.Unit("m**2 * s**2")])
+        assert result.to_base_units() == q.to_base_units()
+
     def test_to_preferred_accepts_unitlike_strings(self):
         ureg = self.ureg
         q = self.Q_("1 g")
@@ -1417,6 +1430,26 @@ class TestDimensions(QuantityTestCase):
         assert (self.Q_(42, "meter") / self.Q_(1, "meter")).dimensionless
         assert not (self.Q_(42, "meter") / self.Q_(1, "second")).dimensionless
         assert (self.Q_(42, "meter") / self.Q_(1, "inch")).dimensionless
+
+    def test_dimensionality_after_ito(self):
+        x = self.Q_(1.0, "m")
+        assert x.dimensionality == UnitsContainer({"[length]": 1})
+        with self.ureg.context("sp"):
+            x.ito("Hz")
+        assert x.dimensionality == UnitsContainer({"[time]": -1})
+
+    @helpers.requires_numpy
+    def test_dimensionality_after_inplace_operation(self):
+        length = UnitsContainer({"[length]": 1})
+        x = self.Q_(np.array([20.0]), "m")
+        assert x.dimensionality == length
+        x /= self.Q_(1, "s")
+        assert x.dimensionality == UnitsContainer({"[length]": 1, "[time]": -1})
+        x *= self.Q_(1, "s")
+        assert x.dimensionality == length
+        x **= 2
+        assert x.dimensionality == UnitsContainer({"[length]": 2})
+        assert x.check("[area]")
 
     def test_inclusion(self):
         dim = self.Q_(42, "meter").dimensionality
