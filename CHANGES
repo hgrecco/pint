@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix `RecursionError` in `find_connected_nodes` for long chains of contexts (#2388)
 - Fix formatting a unit with only negative exponents, e.g. `1 / second`, raising `IndexError` when a locale is set (#2446)
 - Fix the angular mil so one turn is 6400 mil
 - Fix in-place `**=` changing a Quantity's units when the magnitude update fails, e.g. a fractional power of an integer array (#2423)
