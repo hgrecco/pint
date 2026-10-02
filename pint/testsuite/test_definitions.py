@@ -61,6 +61,11 @@ class TestDefinition:
         assert x.is_base
         assert x.reference == UnitsContainer({"[length]": 1})
 
+    def test_baseunit_definition_with_a_scale(self):
+        # The message is written in the code; it has to be the one raised
+        with pytest.raises(DefinitionSyntaxError, match="cannot have a scale"):
+            Definition.from_string("bar = 2 [length]")
+
     def test_unit_definition(self):
         x = Definition.from_string("coulomb = ampere * second")
         assert isinstance(x, UnitDefinition)
