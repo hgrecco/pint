@@ -44,11 +44,11 @@ you can define simple logarithmic quantities like most others:
 .. doctest::
 
     >>> 20.0 * ureg.dBm
-    <Quantity(20.0, 'decibelmilliwatt')>
+    Quantity(20.0, "decibelmilliwatt")
     >>> ureg('20.0 dBm')
-    <Quantity(20.0, 'decibelmilliwatt')>
+    Quantity(20.0, "decibelmilliwatt")
     >>> ureg('20 dB')
-    <Quantity(20, 'decibel')>
+    Quantity(20, "decibel")
 
 
 Converting to and from base units
@@ -60,9 +60,9 @@ Get a sense of how logarithmic units are handled by using the `.to()` and
 .. doctest::
 
     >>> ureg('20 dBm').to('mW')
-    <Quantity(100.0, 'milliwatt')>
+    Quantity(np.float64(100.00000000000004), "milliwatt")
     >>> ureg('20 dB').to_base_units()
-    <Quantity(100.0, 'dimensionless')>
+    Quantity(np.float64(100.00000000000004), "dimensionless")
 
 .. note::
 
@@ -76,12 +76,12 @@ Convert back from a base unit to a logarithmic unit using the `.to()` method:
 .. doctest::
 
     >>> (100.0 * ureg('mW')).to('dBm')
-    <Quantity(20.0, 'decibelmilliwatt')>
+    Quantity(np.float64(20.0), "decibelmilliwatt")
     >>> shift = Q_(4, '')
     >>> shift
-    <Quantity(4, 'dimensionless')>
+    Quantity(4, "dimensionless")
     >>> shift.to('octave')
-    <Quantity(2.0, 'octave')>
+    Quantity(np.float64(2.0), "octave")
 
 Compound log units
 ------------------
@@ -101,9 +101,9 @@ example of computing RMS noise from a noise density and a bandwidth:
     >>> bandwidth = 10.0 * ureg.kHz
     >>> noise_power = noise_density * bandwidth
     >>> noise_power.to('dBm')
-    <Quantity(-121.0, 'decibelmilliwatt')>
+    Quantity(np.float64(-121.00000000000003), "decibelmilliwatt")
     >>> noise_power.to('mW')
-    <Quantity(7.94328235e-13, 'milliwatt')>
+    Quantity(np.float64(7.943282347242739e-13), "milliwatt")
 
 There are still issues with parsing compound units, so for now the following
 will not work:

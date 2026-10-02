@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 
-def test_import(benchmark):
+def import_pint():
     # on py37+ the "-X importtime" usage gives us a more precise
     #  measurement of the import time we actually care about,
     #  without the subprocess or interpreter overhead
@@ -16,3 +16,7 @@ def test_import(benchmark):
     field = line.split(b"|")[-2].strip()
     total = int(field)  # microseconds
     return total
+
+
+def test_import(benchmark):
+    benchmark(import_pint)

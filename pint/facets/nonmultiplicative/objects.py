@@ -1,19 +1,18 @@
 """
-    pint.facets.nonmultiplicative.objects
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.nonmultiplicative.objects
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
-from typing import Generic
+from ..._typing import Magnitude
+from ..plain import PlainQuantity, PlainUnit
 
-from ..plain import MagnitudeT, PlainQuantity, PlainUnit
 
-
-class NonMultiplicativeQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+class NonMultiplicativeQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     @property
     def _is_multiplicative(self) -> bool:
         """Check if the PlainQuantity object has only multiplicative units."""
@@ -26,6 +25,16 @@ class NonMultiplicativeQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
             for unit in self._units
             if not self._get_unit_definition(unit).is_multiplicative
         ]
+
+    @property
+    def _is_logarithmic(self) -> bool:
+        """Check if the PlainQuantity object has logarithmic units."""
+        if (
+            len(self._units) == 1
+            and self._get_unit_definition(next(iter(self._units))).is_logarithmic
+        ):
+            return True
+        return False
 
     def _get_delta_units(self) -> list[str]:
         """Return list of delta units ot the PlainQuantity object."""

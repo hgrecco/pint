@@ -722,10 +722,18 @@ class TestComparisonUfuncs(TestUFuncs):
         self._testn2(np.less_equal, self.q1, (self.q2,), (self.qm,))
 
     def test_not_equal(self):
-        self._testn2(np.not_equal, self.q1, (self.q2,), (self.qm,))
+        # Unlike the other comparison ufuncs, not_equal must not raise for
+        # incompatible dimensions: it should report everything as unequal,
+        # matching Quantity.__ne__ and Python's usual equality semantics.
+        self._testn2(np.not_equal, self.q1, (self.q2,))
+        assert np.all(np.not_equal(self.q1, self.qm))
 
     def test_equal(self):
-        self._testn2(np.equal, self.q1, (self.q2,), (self.qm,))
+        # Unlike the other comparison ufuncs, equal must not raise for
+        # incompatible dimensions: it should report everything as unequal,
+        # matching Quantity.__eq__ and Python's usual equality semantics.
+        self._testn2(np.equal, self.q1, (self.q2,))
+        assert not np.any(np.equal(self.q1, self.qm))
 
 
 class TestFloatingUfuncs(TestUFuncs):

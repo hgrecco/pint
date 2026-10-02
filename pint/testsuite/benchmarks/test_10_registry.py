@@ -3,7 +3,7 @@ from __future__ import annotations
 import pathlib
 from collections.abc import Callable
 from operator import getitem
-from typing import Any, TypeVar
+from typing import Any
 
 import pytest
 
@@ -18,12 +18,10 @@ OTHER_UNITS = ("meter", "angstrom", "kilometer/second", "angstrom/minute")
 ALL_VALUES = ("int", "float", "complex")
 
 
-T = TypeVar("T")
-
 SetupType: TypeAlias = tuple[pint.UnitRegistry, dict[str, Any]]
 
 
-def no_benchmark(fun: Callable[..., T], *args: Any, **kwargs: Any) -> T:
+def no_benchmark[**P, R](fun: Callable[P, R], *args: P.args, **kwargs: P.kwargs) -> R:
     return fun(*args, **kwargs)
 
 

@@ -1,9 +1,11 @@
-"""
-    pint.facets.plain.unit
-    ~~~~~~~~~~~~~~~~~~~~~
+# pyright: reportInvalidTypeArguments=warning
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+"""
+pint.facets.plain.unit
+~~~~~~~~~~~~~~~~~~~~~
+
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -12,16 +14,22 @@ import copy
 import locale
 import operator
 from numbers import Number
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self, overload
 
-from ..._typing import UnitLike
+from ..._typing import Magnitude, UnitLike
 from ...compat import NUMERIC_TYPES, deprecated
 from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
+    import datetime
+
+    import numpy as np
+    import optype as opt
+
     from ..context import Context
+    from .quantity import PlainQuantity
 
 
 class PlainUnit(PrettyIPython, SharedRegistryObject):
@@ -43,16 +51,16 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             self._units = units._units
         else:
             raise TypeError(
-                "units must be of type str, Unit or " "UnitsContainer; not {}.".format(
+                "units must be of type str, Unit or UnitsContainer; not {}.".format(
                     type(units)
                 )
             )
 
-    def __copy__(self) -> PlainUnit:
+    def __copy__(self) -> Self:
         ret = self.__class__(self._units)
         return ret
 
-    def __deepcopy__(self, memo) -> PlainUnit:
+    def __deepcopy__(self, memo) -> Self:
         ret = self.__class__(copy.deepcopy(self._units, memo))
         return ret
 
@@ -73,7 +81,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         return str(self).encode(locale.getpreferredencoding())
 
     def __repr__(self) -> str:
-        return f"<Unit('{self._units}')>"
+        return f'Unit("{self._units}")'
 
     @property
     def dimensionless(self) -> bool:
@@ -136,11 +144,26 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         if isinstance(other, str):
             return (
-                self.dimensionality == self._REGISTRY.parse_units(other).dimensionality
+                self.dimensionality
+                == self._REGISTRY.parse_expression(other).dimensionality
             )
 
         return self.dimensionless
 
+    # PlainUnit * PlainUnit -> PlainUnit
+    @overload
+    def __mul__(self, other: Self) -> Self: ...
+    # PlainUnit * timedelta -> PlainQuantity[float]
+    @overload
+    def __mul__(
+        self, other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    # PlainUnit * <Magnitude> -> PlainQuantity[<Magnitude>]
+    @overload
+    def __mul__[T: Magnitude](self, other: T) -> PlainQuantity[T]: ...
+    # PlainUnit * str -> PlainQuantity
+    @overload
+    def __mul__(self, other: str) -> PlainQuantity[Any]: ...
     def __mul__(self, other):
         if self._check(other):
             if isinstance(other, self.__class__):
@@ -156,6 +179,21 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
     __rmul__ = __mul__
 
+    # PlainUnit / PlainUnit -> PlainUnit
+    @overload
+    def __truediv__(self, other: Self) -> Self: ...
+    # PlainUnit / timedelta -> PlainQuantity[float]
+    @overload
+    def __truediv__(
+        self, other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    # PlainUnit / <Magnitude> or PlainQuantity[<Magnitude>]
+    #   -> PlainQuantity[type of 1 / <Magnitude>]
+    @overload
+    def __truediv__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRTruediv[int, U]] | opt.CanRTruediv[int, U],
+    ) -> PlainQuantity[U]: ...
     def __truediv__(self, other):
         if self._check(other):
             if isinstance(other, self.__class__):
@@ -163,8 +201,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             else:
                 qself = 1 * self
                 return qself / other
-
-        return self._REGISTRY.Quantity(1 / other, self._units)
+        # Perform division after initializing a Quantity for compatibility with with
+        # upcast types #2126
+        return self._REGISTRY.Quantity(1, self._units) / other
 
     def __rtruediv__(self, other):
         # As PlainUnit and Quantity both handle truediv with each other rtruediv can
@@ -179,7 +218,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
-    def __pow__(self, other) -> PlainUnit:
+    def __pow__(self, other) -> Self:
         if isinstance(other, NUMERIC_TYPES):
             return self.__class__(self._units**other)
 
@@ -193,6 +232,14 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __eq__(self, other) -> bool:
         # We compare to the plain class of PlainUnit because each PlainUnit class is
         # unique.
+        if isinstance(other, str):
+            if str(self) == other:
+                return True
+            try:
+                other = self._REGISTRY.Unit(other)
+            except Exception:
+                return False
+
         if self._check(other):
             if isinstance(other, self.__class__):
                 return self._units == other._units

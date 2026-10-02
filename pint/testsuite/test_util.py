@@ -11,6 +11,7 @@ from pint import pint_eval
 from pint.util import (
     ParserHelper,
     UnitsContainer,
+    _clean_exponent,
     find_connected_nodes,
     find_shortest_path,
     iterable,
@@ -67,13 +68,13 @@ class TestUnitsContainer:
     def test_unitcontainer_repr(self):
         x = UnitsContainer()
         assert str(x) == "dimensionless"
-        assert repr(x) == "<UnitsContainer({})>"
+        assert repr(x) == "UnitsContainer({})"
         x = UnitsContainer(meter=1, second=2)
         assert str(x) == "meter * second ** 2"
-        assert repr(x) == "<UnitsContainer({'meter': 1, 'second': 2})>"
+        assert repr(x) == "UnitsContainer({'meter': 1, 'second': 2})"
         x = UnitsContainer(meter=1, second=2.5)
         assert str(x) == "meter * second ** 2.5"
-        assert repr(x) == "<UnitsContainer({'meter': 1, 'second': 2.5})>"
+        assert repr(x) == "UnitsContainer({'meter': 1, 'second': 2.5})"
 
     def test_unitcontainer_bool(self):
         assert UnitsContainer(meter=1, second=2)
@@ -166,7 +167,7 @@ class TestParseHelper:
         assert x() == xp()
         assert x() != y()
         assert ParserHelper.from_string("") == ParserHelper()
-        assert repr(x()) == "<ParserHelper(1, {'meter': 2})>"
+        assert repr(x()) == "ParserHelper(1, {'meter': 2})"
 
         assert ParserHelper(2) == 2
 
@@ -199,7 +200,7 @@ class TestParseHelper:
         token = next(pint_eval.tokenizer(expression))
         actual = ParserHelper.eval_token(token)
         assert expected == actual
-        assert type(expected) == type(actual)
+        assert type(expected) is type(actual)
 
     def test_eval_token(self):
         self._test_eval_token(1000.0, "1e3")
@@ -231,7 +232,24 @@ class TestStringProcessor:
         self._test("sq bcd", "bcd**2")
         self._test("square bcd", "bcd**2")
         self._test("cubic bcd", "bcd**3")
-        self._test("bcd efg", "bcd*efg")
+        self._test("bcd efg", "bcd efg")
+
+    def test_superscript(self):
+        # Existing superscript exponents.
+        self._test("gr²", "gr**(2)")
+        self._test("gr⁻³", "gr**(-3)")
+        # ``·`` (MIDDLE DOT, U+00B7) and ``⋅`` (DOT OPERATOR, U+22C5) are both
+        # multiplication when not inside a superscript exponent (issue #2272).
+        self._test("kg·m", "kg*m")
+        self._test("kg⋅m", "kg*m")
+        # ``⋅`` right after an exponent, with no following superscript digit,
+        # is multiplication between two exponentiated terms, not a decimal
+        # point with no digits after it.
+        self._test("m²⋅s⁻¹", "m**(2)*s**(-1)")
+        # ``⋅`` is a decimal point and ``⸍`` (U+2E0D) a fraction slash
+        # inside superscript exponents (issue #2250).
+        self._test("gr⁰⋅³³³", "gr**(0.333)")
+        self._test("gr¹⸍³", "gr**(1/3)")
 
     def test_per(self):
         self._test("miles per hour", "miles/hour")
@@ -246,25 +264,25 @@ class TestStringProcessor:
         self._test("1E24", "1E24")
 
     def test_space_multiplication(self):
-        self._test("bcd efg", "bcd*efg")
-        self._test("bcd  efg", "bcd*efg")
-        self._test("1 hour", "1*hour")
-        self._test("1. hour", "1.*hour")
-        self._test("1.1 hour", "1.1*hour")
-        self._test("1E24 hour", "1E24*hour")
-        self._test("1E-24 hour", "1E-24*hour")
-        self._test("1E+24 hour", "1E+24*hour")
-        self._test("1.2E24 hour", "1.2E24*hour")
-        self._test("1.2E-24 hour", "1.2E-24*hour")
-        self._test("1.2E+24 hour", "1.2E+24*hour")
+        self._test("bcd efg", "bcd efg")
+        self._test("bcd  efg", "bcd efg")
+        self._test("1 hour", "1 hour")
+        self._test("1. hour", "1. hour")
+        self._test("1.1 hour", "1.1 hour")
+        self._test("1E24 hour", "1E24 hour")
+        self._test("1E-24 hour", "1E-24 hour")
+        self._test("1E+24 hour", "1E+24 hour")
+        self._test("1.2E24 hour", "1.2E24 hour")
+        self._test("1.2E-24 hour", "1.2E-24 hour")
+        self._test("1.2E+24 hour", "1.2E+24 hour")
 
     def test_joined_multiplication(self):
-        self._test("1hour", "1*hour")
-        self._test("1.hour", "1.*hour")
-        self._test("1.1hour", "1.1*hour")
-        self._test("1h", "1*h")
-        self._test("1.h", "1.*h")
-        self._test("1.1h", "1.1*h")
+        self._test("1hour", "1 hour")
+        self._test("1.hour", "1. hour")
+        self._test("1.1hour", "1.1 hour")
+        self._test("1h", "1 h")
+        self._test("1.h", "1. h")
+        self._test("1.1h", "1.1 h")
 
     def test_names(self):
         self._test("g_0", "g_0")
@@ -279,6 +297,19 @@ class TestGraph:
         g[1] = {2}
         g[2] = {3}
         assert find_connected_nodes(g, 9) is None
+
+    def test_find_connected_nodes_deep_chain(self):
+        # Regression test for CWE-674: the recursive predecessor of
+        # find_connected_nodes raised RecursionError on a linear chain
+        # longer than sys.getrecursionlimit(). The iterative version
+        # must handle it without crashing.
+        n = 2000
+        g = collections.defaultdict(set)
+        for i in range(n):
+            g[i].add(i + 1)
+        result = find_connected_nodes(g, 0)
+        assert result is not None
+        assert len(result) == n + 1
 
     def test_shortest_path(self):
         g = collections.defaultdict(set)
@@ -306,6 +337,7 @@ class TestGraph:
 
     def test_shortest_path_densely_connected_2146(self):
         import itertools
+
         g = collections.defaultdict(set)
         for i, j in itertools.combinations(range(42), 2):
             g[i].add(j)
@@ -379,3 +411,27 @@ class TestOtherUtils:
         assert sized("test")
         assert not sized(i for i in range(5))
         assert not sized(0)
+
+    @pytest.mark.parametrize(
+        "value,expected",
+        [
+            (0.49999999999, 0.5),
+            (5.55e-17, 0.0),
+            (-0.9999999999999998, -1.0),
+            (0.8000000000000002, 0.8),
+            (3, 3),
+            # Below 9 threes, 1/3 is the nearest candidate fraction but still
+            # farther than the 1e-9 tolerance, so it's left unchanged.
+            (0.333333, 0.333333),
+            (0.3333333, 0.3333333),
+            (0.33333333, 0.33333333),
+            # At 9+ threes the gap is within tolerance, so it snaps to 1/3.
+            (0.333333333, 1 / 3),
+            (0.3333333333, 1 / 3),
+        ],
+    )
+    def test_clean_exponent_snaps_noise(self, value, expected):
+        assert _clean_exponent(value) == expected
+
+    def test_clean_exponent_leaves_nan_unchanged(self):
+        assert math.isnan(_clean_exponent(float("nan")))

@@ -24,7 +24,7 @@ You probably want to use the relation `frequency = speed_of_light / wavelength`:
 .. doctest::
 
     >>> (ureg.speed_of_light / q).to('Hz')
-    <Quantity(5.99584916e+14, 'hertz')>
+    Quantity(599584915999999.9, "hertz")
 
 
 To make this task easy, Pint has the concept of `contexts` which provides
@@ -36,14 +36,14 @@ different units.
 .. doctest::
 
     >>> q.to('Hz', 'spectroscopy')
-    <Quantity(5.99584916e+14, 'hertz')>
+    Quantity(599584915999999.9, "hertz")
 
 or with the abbreviated form:
 
 .. doctest::
 
     >>> q.to('Hz', 'sp')
-    <Quantity(5.99584916e+14, 'hertz')>
+    Quantity(599584915999999.9, "hertz")
 
 Contexts can be also enabled for blocks of code using the `with` statement:
 
@@ -51,7 +51,7 @@ Contexts can be also enabled for blocks of code using the `with` statement:
 
     >>> with ureg.context('sp'):
     ...     q.to('Hz')
-    <Quantity(5.99584916e+14, 'hertz')>
+    Quantity(599584915999999.9, "hertz")
 
 If you need a particular context in all your code, you can enable it for all
 operations with the registry
@@ -75,7 +75,7 @@ You can enable multiple contexts:
 .. doctest::
 
     >>> q.to('Hz', 'sp', 'boltzmann')
-    <Quantity(5.99584916e+14, 'hertz')>
+    Quantity(599584915999999.9, "hertz")
 
 This works also using the `with` statement:
 
@@ -83,7 +83,7 @@ This works also using the `with` statement:
 
     >>> with ureg.context('sp', 'boltzmann'):
     ...     q.to('Hz')
-    <Quantity(5.99584916e+14, 'hertz')>
+    Quantity(599584915999999.9, "hertz")
 
 or in the registry:
 
@@ -91,7 +91,7 @@ or in the registry:
 
     >>> ureg.enable_contexts('sp', 'boltzmann')
     >>> q.to('Hz')
-    <Quantity(5.99584916e+14, 'hertz')>
+    Quantity(599584915999999.9, "hertz")
 
 If a conversion rule between two dimensions appears in more than one context,
 the one in the last context has precedence. This is easy to remember if you
@@ -102,7 +102,7 @@ think that the previous syntax is equivalent to nest contexts:
     >>> with ureg.context('sp'):
     ...     with ureg.context('boltzmann') :
     ...         q.to('Hz')
-    <Quantity(5.99584916e+14, 'hertz')>
+    Quantity(599584915999999.9, "hertz")
 
 
 Parameterized contexts
@@ -117,7 +117,7 @@ calculate, for example, the wavelength in water of a laser which on air is 530 n
     >>> wl = 530. * ureg.nm
     >>> f = wl.to('Hz', 'sp')
     >>> f.to('nm', 'sp', n=1.33)
-    <Quantity(398.4962..., 'nanometer')>
+    Quantity(398.4962..., "nanometer")
 
 Contexts can also accept Pint Quantity objects as parameters. For example, the
 'chemistry' context accepts the molecular weight of a substance (as a Quantity
@@ -128,7 +128,7 @@ mass.
 
     >>> substance = 95 * ureg('g')
     >>> substance.to('moles', 'chemistry', mw = 5 * ureg('g/mol'))
-    <Quantity(19.0, 'mole')>
+    Quantity(19.0, "mole")
 
 
 Ensuring context when calling a function
@@ -205,7 +205,7 @@ functions. For example:
     ...                      lambda ureg, x: x * ureg.speed_of_light)
     >>> ureg.add_context(c)
     >>> ureg("1 s").to("km", "ab")
-    <Quantity(299792.458, 'kilometer')>
+    Quantity(299792.458, "kilometer")
 
 It is also possible to create anonymous contexts without invoking add_context:
 
@@ -214,7 +214,7 @@ It is also possible to create anonymous contexts without invoking add_context:
    >>> c = pint.Context()
    >>> c.add_transformation('[time]', '[length]', lambda ureg, x: x * ureg.speed_of_light)
    >>> ureg("1 s").to("km", c)
-   <Quantity(299792.458, 'kilometer')>
+   Quantity(299792.458, "kilometer")
 
 Using contexts for unit redefinition
 ------------------------------------

@@ -1,18 +1,18 @@
 """
-    pint.facets.group.definitions
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.group.definitions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Self
 
 from ... import errors
-from ...compat import Self
 from .. import plain
 
 
@@ -28,9 +28,7 @@ class GroupDefinition(errors.WithDefErr):
     definitions: tuple[plain.UnitDefinition, ...]
 
     @classmethod
-    def from_lines(
-        cls: type[Self], lines: Iterable[str], non_int_type: type
-    ) -> Self | None:
+    def from_lines(cls, lines: Iterable[str], non_int_type: type) -> Self | None:
         # TODO: this is to keep it backwards compatible
         from ...delegates import ParserConfig, txt_defparser
 

@@ -1,16 +1,19 @@
 """
-    pint.errors
-    ~~~~~~~~~~~
+pint.errors
+~~~~~~~~~~~
 
-    Functions and classes related to unit definitions and conversions.
+Functions and classes related to unit definitions and conversions.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 import typing as ty
+
+if ty.TYPE_CHECKING:
+    from .facets.plain.unit import UnitsContainer as UnitsContainerT
 
 OFFSET_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/nonmult.html"
 LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/log_units.html"
@@ -55,9 +58,9 @@ def _no_space(name: str) -> bool:
 
 is_valid_group_name = _no_space
 
-is_valid_unit_alias = (
-    is_valid_prefix_alias
-) = is_valid_unit_symbol = is_valid_prefix_symbol = _no_space
+is_valid_unit_alias = is_valid_prefix_alias = is_valid_unit_symbol = (
+    is_valid_prefix_symbol
+) = _no_space
 
 
 def is_valid_dimension_name(name: str) -> bool:
@@ -166,16 +169,16 @@ class DimensionalityError(PintTypeError):
 
     units1: ty.Any
     units2: ty.Any
-    dim1: str = ""
-    dim2: str = ""
+    dim1: "str | UnitsContainerT" = ""
+    dim2: "str | UnitsContainerT" = ""
     extra_msg: str = ""
 
     def __init__(
         self,
         units1: ty.Any,
         units2: ty.Any,
-        dim1: str = "",
-        dim2: str = "",
+        dim1: "str | UnitsContainerT" = "",
+        dim2: "str | UnitsContainerT" = "",
         extra_msg: str = "",
     ) -> None:
         self.units1 = units1

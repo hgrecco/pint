@@ -698,12 +698,12 @@ class TestDefinedContexts:
         ureg = class_registry
         qty_direct = 1.331 * ureg.tex
         with pytest.raises(DimensionalityError):
-            qty_indirect = qty_direct.to("Nm")
+            qty_indirect = qty_direct.to("number_meter")
 
         with ureg.context("textile"):
             from pint.util import find_shortest_path
 
-            qty_indirect = qty_direct.to("Nm")
+            qty_indirect = qty_direct.to("number_meter")
             a = qty_direct.to_base_units()
             b = qty_indirect.to_base_units()
             da, db = Context.__keytransform__(a.dimensionality, b.dimensionality)

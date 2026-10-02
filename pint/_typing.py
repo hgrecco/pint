@@ -3,9 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 from fractions import Fraction
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, Union
-
-from .compat import Never, TypeAlias
+from typing import TYPE_CHECKING, Any, Never, Protocol
 
 if TYPE_CHECKING:
     from .facets.plain import PlainQuantity as Quantity
@@ -13,40 +11,40 @@ if TYPE_CHECKING:
     from .util import UnitsContainer
 
 
-HAS_NUMPY = False
-if TYPE_CHECKING:
-    from .compat import HAS_NUMPY
+# NOTE: There is no supported pattern for conditionally defining types
+#   based on the availability of external dependencies.
+#
+# The pattern used here allows type checkers to correctly infer types when numpy
+#   is available, but falls back to Any/Unknown (and not Never) in case of error
+#   (tested: pyright 1.1.411)
+#
+# See https://discuss.python.org/t/conditional-imports-in-stub-files/50326 for context
+type _BuiltinScalar = complex | float | Decimal | Fraction
+try:
+    import numpy as np
 
-if HAS_NUMPY:
-    from .compat import np
+    type Scalar = _BuiltinScalar | np.number[Any]
+    type Array = np.ndarray[Any, Any]
+except ModuleNotFoundError:
+    # NOTE: redefining type aliases is not supported and may lead to type checker misbehavior
+    assert not TYPE_CHECKING
+    type Scalar = _BuiltinScalar
+    type Array = Never
 
-    Scalar: TypeAlias = Union[float, int, Decimal, Fraction, np.number[Any]]
-    Array = np.ndarray[Any, Any]
-else:
-    Scalar: TypeAlias = Union[float, int, Decimal, Fraction]
-    Array: TypeAlias = Never
+type Magnitude = Scalar | Array
 
-# TODO: Change when Python 3.10 becomes minimal version.
-Magnitude = Union[Scalar, Array]
+type UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
 
-UnitLike = Union[str, dict[str, Scalar], "UnitsContainer", "Unit"]
+type QuantityOrUnitLike = Quantity[Any] | UnitLike
 
-QuantityOrUnitLike = Union["Quantity", UnitLike]
+type Shape = tuple[int, ...]
 
-Shape = tuple[int, ...]
-
-S = TypeVar("S")
-
-FuncType = Callable[..., Any]
-F = TypeVar("F", bound=FuncType)
+type FuncType = Callable[..., Any]
 
 
 # TODO: Improve or delete types
 QuantityArgument = Any
 
-T = TypeVar("T")
-
 
 class Handler(Protocol):
-    def __getitem__(self, item: type[T]) -> Callable[[T], None]:
-        ...
+    def __getitem__[T](self, item: type[T]) -> Callable[[T], None]: ...

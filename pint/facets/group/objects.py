@@ -1,18 +1,19 @@
 """
-    pint.facets.group.objects
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.group.objects
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Iterable
-from typing import TYPE_CHECKING, Any, Generic
+from typing import TYPE_CHECKING, Any
 
+from ..._typing import Magnitude
 from ...util import SharedRegistryObject, getattr_maybe_raise
-from ..plain import MagnitudeT, PlainQuantity, PlainUnit
+from ..plain import PlainQuantity, PlainUnit
 from .definitions import GroupDefinition
 
 if TYPE_CHECKING:
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
     ]
 
 
-class GroupQuantity(Generic[MagnitudeT], PlainQuantity[MagnitudeT]):
+class GroupQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     pass
 
 

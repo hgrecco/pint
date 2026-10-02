@@ -1,21 +1,21 @@
 """
-    pint.converters
-    ~~~~~~~~~~~~~~~
+pint.converters
+~~~~~~~~~~~~~~~
 
-    Functions and classes related to unit conversions.
+Functions and classes related to unit conversions.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from dataclasses import fields as dc_fields
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self  # noqa: F401
 
 from ._typing import Magnitude
-from .compat import HAS_NUMPY, Self, exp, log  # noqa: F401
+from .compat import HAS_NUMPY, exp, log  # noqa: F401
 
 
 @dataclass(frozen=True)

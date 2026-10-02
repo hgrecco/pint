@@ -7,6 +7,7 @@ import os
 import pathlib
 import unittest
 import warnings
+from typing import TYPE_CHECKING, ClassVar
 
 from pint import UnitRegistry
 from pint.testsuite.helpers import PintOutputChecker
@@ -15,14 +16,24 @@ from pint.testsuite.helpers import PintOutputChecker
 class QuantityTestCase:
     kwargs = {}
 
+    ureg: ClassVar[UnitRegistry]
+
+    # NOTE: These type annotations are technically lies,
+    #   but the intention is to support type-checking tests.
+    if TYPE_CHECKING:
+        from pint import Quantity as Q_
+        from pint import Unit as U_
+
     @classmethod
-    def setup_class(cls):
+    def setup_class(cls) -> None:
+        assert not TYPE_CHECKING
         cls.ureg = UnitRegistry(**cls.kwargs)
         cls.Q_ = cls.ureg.Quantity
         cls.U_ = cls.ureg.Unit
 
     @classmethod
-    def teardown_class(cls):
+    def teardown_class(cls) -> None:
+        assert not TYPE_CHECKING
         cls.ureg = None
         cls.Q_ = None
         cls.U_ = None

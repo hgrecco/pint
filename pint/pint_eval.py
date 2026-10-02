@@ -1,12 +1,13 @@
 """
-    pint.pint_eval
-    ~~~~~~~~~~~~~~
+pint.pint_eval
+~~~~~~~~~~~~~~
 
-    An expression evaluator to be used as a safe replacement for builtin eval.
+An expression evaluator to be used as a safe replacement for builtin eval.
 
-    :copyright: 2016 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2016 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
+
 from __future__ import annotations
 
 import operator
@@ -15,12 +16,10 @@ import tokenize
 from collections.abc import Iterable
 from io import BytesIO
 from tokenize import TokenInfo
-from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
+from typing import Any, Callable, Generator, Iterator
 
 from .compat import HAS_UNCERTAINTIES, ufloat
 from .errors import DefinitionSyntaxError
-
-S = TypeVar("S")
 
 if HAS_UNCERTAINTIES:
     _ufloat = ufloat  # type: ignore
@@ -84,8 +83,17 @@ _OP_PRIORITY = {
     "-": 0,
 }
 
+# Maximum nesting depth for operator recursion in _build_eval_tree. Python's
+# tokenize caps nested parentheses at 200 but does not cap operator nesting, so
+# without this bound a deeply nested right-associative expression (e.g. many
+# chained ``**``) can recurse past ``sys.getrecursionlimit()`` and raise an
+# uncaught ``RecursionError`` out of the public API. 100 is far above any
+# legitimate unit expression while staying well below CPython's default limit.
+# See https://github.com/hgrecco/pint/pull/2376
+_MAX_RECURSION_DEPTH = 100
 
-class IteratorLookAhead(Generic[S]):
+
+class IteratorLookAhead[S]:
     """An iterator with lookahead buffer.
 
     Adapted: https://stackoverflow.com/a/1517965/1291237
@@ -165,7 +173,7 @@ def uncertainty_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]
                 end = toklist.lookahead(e_index + 2).end
             possible_e = tokenize.TokenInfo(
                 type=tokenlib.STRING,
-                string=f"e{toklist.lookahead(e_index+1).string}{exp_number}",
+                string=f"e{toklist.lookahead(e_index + 1).string}{exp_number}",
                 start=possible_e_token.start,
                 end=end,
                 line=possible_e_token.line,
@@ -436,6 +444,12 @@ def _build_eval_tree(
 
     """
 
+    if depth > _MAX_RECURSION_DEPTH:
+        raise DefinitionSyntaxError(
+            f"maximum recursion depth exceeded in expression parsing "
+            f"({_MAX_RECURSION_DEPTH}); expression is too deeply nested"
+        )
+
     result = None
 
     while True:
@@ -514,13 +528,13 @@ def _build_eval_tree(
         if tokens[index][0] == tokenlib.ENDMARKER:
             if prev_op == "(":
                 raise DefinitionSyntaxError("unclosed parentheses in tokens")
+            if result is None:
+                raise DefinitionSyntaxError("missing operand")
             if depth > 0 or prev_op:
                 # have to close recursion
-                assert result is not None
                 return result, index
             else:
                 # recursion all closed, so just return the final result
-                assert result is not None
                 return result, -1
 
         if index + 1 >= len(tokens):

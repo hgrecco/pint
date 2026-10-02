@@ -1,9 +1,9 @@
 """
-    pint.facets.plain.definitions
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.plain.definitions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -163,7 +163,7 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
             is_base = True
             scale = getattr(self.converter, "scale", 1)
             if scale != 1:
-                return self.def_err(
+                raise self.def_err(
                     "Base unit definitions cannot have a scale different to 1. "
                     f"(`{scale}` found)"
                 )

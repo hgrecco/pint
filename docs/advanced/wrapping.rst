@@ -56,7 +56,7 @@ and:
 .. doctest::
 
     >>> mypp_caveman(100 * ureg.centimeter)
-    <Quantity(2.00640929, 'second')>
+    Quantity(2.0064092925890407, "second")
 
 Pint provides a more convenient way to do this:
 
@@ -72,7 +72,7 @@ Or in the decorator format:
     ... def mypp(length):
     ...     return pendulum_period(length)
     >>> mypp(100 * ureg.centimeter)
-    <Quantity(2.00640929, 'second')>
+    Quantity(2.0064092925890407, "second")
 
 
 `wraps` takes 3 input arguments:
@@ -95,7 +95,7 @@ the input arguments assigned to units must be a Quantities.
 .. doctest::
 
     >>> mypp(1. * ureg.meter)
-    <Quantity(2.00640929, 'second')>
+    Quantity(2.0064092925890407, "second")
     >>> mypp(1.)
     Traceback (most recent call last):
     ...
@@ -107,9 +107,9 @@ To enable using non-Quantity numerical values, set strict to False`.
 
     >>> mypp_ns = ureg.wraps(ureg.second, ureg.meter, False)(pendulum_period)
     >>> mypp_ns(1. * ureg.meter)
-    <Quantity(2.00640929, 'second')>
+    Quantity(2.0064092925890407, "second")
     >>> mypp_ns(1.)
-    <Quantity(2.00640929, 'second')>
+    Quantity(2.0064092925890407, "second")
 
 In this mode, the value is assumed to have the correct units.
 
@@ -176,10 +176,10 @@ arguments:
     >>> lunar_module_height = Q_(22, 'feet') + Q_(11, 'inches')
     >>> calculate_time_to_fall(lunar_module_height, verbose=True)
     1.1939473204801092 seconds to fall
-    <Quantity(1.19394732, 'second')>
+    Quantity(1.1939473204801092, "second")
     >>> moon_gravity = Q_(1.625, 'm/s^2')
     >>> calculate_time_to_fall(lunar_module_height, gravity=moon_gravity)
-    <Quantity(2.932051, 'second')>
+    Quantity(2.932051001760214, "second")
 
 
 Specifying relations between arguments
@@ -216,9 +216,9 @@ With optional arguments
     ...     return time * rate
     ...
     >>> get_displacement(Q_(2, 's'))
-    <Quantity(2, 'meter')>
+    Quantity(2, "meter")
     >>> get_displacement(Q_(2, 's'), Q_(1, 'deg/s'))
-    <Quantity(2, 'degree')>
+    Quantity(2, "degree")
 
 
 Ignoring an argument or return value

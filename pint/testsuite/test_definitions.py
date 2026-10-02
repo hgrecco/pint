@@ -61,6 +61,11 @@ class TestDefinition:
         assert x.is_base
         assert x.reference == UnitsContainer({"[length]": 1})
 
+    def test_baseunit_definition_with_a_scale(self):
+        # The message is written in the code; it has to be the one raised
+        with pytest.raises(DefinitionSyntaxError, match="cannot have a scale"):
+            Definition.from_string("bar = 2 [length]")
+
     def test_unit_definition(self):
         x = Definition.from_string("coulomb = ampere * second")
         assert isinstance(x, UnitDefinition)
@@ -100,6 +105,25 @@ class TestDefinition:
             Definition.from_string(
                 "degF = 9 / 5 * kelvin; offset: 255.372222 bla",
             )
+
+        x = Definition.from_string("meter_per_second_squared = acceleration")
+
+        assert isinstance(x, UnitDefinition)
+        assert x.name == "meter_per_second_squared"
+        assert x.aliases == ()
+        assert x.symbol == "meter_per_second_squared"
+        assert not x.is_base
+        assert isinstance(x.converter, ScaleConverter)
+        assert x.reference == UnitsContainer(acceleration=1)
+        x = Definition.from_string("kilometer_per_second = velocity")
+        assert isinstance(x, UnitDefinition)
+
+        assert x.name == "kilometer_per_second"
+        assert x.aliases == ()
+        assert x.symbol == "kilometer_per_second"
+        assert not x.is_base
+        assert isinstance(x.converter, ScaleConverter)
+        assert x.reference == UnitsContainer(velocity=1)
 
     def test_log_unit_definition(self):
         x = Definition.from_string(

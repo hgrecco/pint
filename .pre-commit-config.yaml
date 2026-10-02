@@ -25,14 +25,14 @@ repos:
     language: system
     types: [text]
 
-  - id: ruff check
+  - id: ruff-check
     name: Lint with ruff
     entry: pixi run -e lint ruff check --force-exclude --fix
     language: system
     types_or: [python, pyi, jupyter]
     require_serial: true
 
-  - id: ruff format
+  - id: ruff-format
     name: Format with ruff
     entry: pixi run -e lint ruff format --force-exclude
     language: system

@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.2
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: docs
       - run: pixi run --environment docs docbuild
@@ -15,11 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.2
+      - uses: prefix-dev/setup-pixi@v0.8.10
         with:
           environments: docs
       - name: Install locales
         run: |
+          sudo apt-get update
           sudo apt-get install language-pack-fr
           sudo localedef -i fr_FR -f UTF-8 fr_FR
       - run: pixi run --environment docs doctest
