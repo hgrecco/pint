@@ -60,10 +60,10 @@ class TestLogarithmicQuantity(QuantityTestCase):
         helpers.assert_quantity_almost_equal(
             self.Q_(1.0, "decade"), self.Q_(math.log2(10), "octave")
         )
-        # ## Test dB to dB units dBm - dBu
-        # 0 dBm = 1mW = 1e3 uW = 30 dBu
+        # ## Test dB to dB units dBm - dBuW
+        # 0 dBm = 1mW = 1e3 uW = 30 dBuW
         helpers.assert_quantity_almost_equal(
-            self.Q_(0.0, "dBm"), self.Q_(29.999999999999996, "dBu"), atol=1e-7
+            self.Q_(0.0, "dBm"), self.Q_(29.999999999999996, "dBuW"), atol=1e-7
         )
         # ## Test dB to dB units dBm - dBW
         # 0 dBW = 1W = 1e3 mW = 30 dBm
@@ -94,7 +94,9 @@ log_unit_names = [
     "decibelmilliwatt",
     "dBm",
     "decibelmicrowatt",
-    "dBu",
+    "dBuW",
+    "dBµW",
+    "dBμW",
     "decibel",
     "dB",
     "decade",
@@ -144,7 +146,7 @@ def test_quantity_by_multiplication(module_registry_auto_offset, unit_name, mag)
     [
         ("decibelwatt", "dBW"),
         ("decibelmilliwatt", "dBm"),
-        ("decibelmicrowatt", "dBu"),
+        ("decibelmicrowatt", "dBuW"),
         ("decibel", "dB"),
         ("octave", "oct"),
     ],
