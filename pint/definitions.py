@@ -13,7 +13,8 @@ from __future__ import annotations
 import flexparser as fp
 
 from . import errors
-from .delegates import ParserConfig, txt_defparser
+from .delegates import txt_defparser
+from .delegates.base_defparser import ParserConfig
 
 
 class Definition:

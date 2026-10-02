@@ -4,6 +4,9 @@ pint.delegates.base_defparser
 
 Common class and function for all parsers.
 
+This module has a relatively high import cost (imports ``flexcache`` and
+``flexparser``), so import it lazily.
+
 :copyright: 2022 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """

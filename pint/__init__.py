@@ -13,8 +13,7 @@ and conversions from and to different units.
 
 from __future__ import annotations
 
-from importlib.metadata import version
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 from .delegates.formatter._format_helpers import formatter
 from .errors import (  # noqa: F401
@@ -46,12 +45,26 @@ else:
     Group: TypeAlias = UnitRegistry.Group
 Unit: TypeAlias = UnitRegistry.Unit
 
-try:  # pragma: no cover
-    __version__ = version("pint")
-except Exception:  # pragma: no cover
-    # we seem to have a local copy not installed without setuptools
-    # so the reported version will be unknown
-    __version__ = "unknown"
+if TYPE_CHECKING:
+    __version__: str
+
+
+def __getattr__(name: str) -> Any:
+    # Looking up the version scans the installed distributions, which is slow.
+    # Do it on first access instead of on import.
+    if name == "__version__":
+        from importlib.metadata import version
+
+        try:  # pragma: no cover
+            value = version("pint")
+        except Exception:  # pragma: no cover
+            # we seem to have a local copy not installed without setuptools
+            # so the reported version will be unknown
+            value = "unknown"
+        globals()["__version__"] = value
+        return value
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 #: A Registry with the default units and constants.
