@@ -4,13 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
-- Fix `RecursionError` in `find_connected_nodes` for deeply chained context graphs by replacing recursion with an iterative DFS
-- Raise `DefinitionSyntaxError` instead of a bare `RecursionError` for deeply nested expressions
-- Add a "Try Pint in your browser" page to the docs with an in-browser JupyterLite console and notebook, requiring no local install (#2372)
-- Switch CodSpeed CI benchmarks to `simulation` mode to fix a walltime environment warning.
-- Fix `DimensionalityError` from floating-point noise in combined fractional unit exponents (#1487, #681)
-- Add `/` unit modifier to pretty-print fractional exponents as a fraction (e.g. `s**1.5` -> `s³ᐟ²`) (#60)
-- Fix `is_compatible_with` edge cases with dimensionless types and unit strings with a scaling factor (e.g. `"35000 ft"`) (#1190)
+- Fix `RecursionError` in `find_connected_nodes` for long chains of contexts (#2388)
 - Fix formatting a unit with only negative exponents, e.g. `1 / second`, raising `IndexError` when a locale is set (#2446)
 - Fix the angular mil so one turn is 6400 mil
 - Fix in-place `**=` changing a Quantity's units when the magnitude update fails, e.g. a fractional power of an integer array (#2423)
