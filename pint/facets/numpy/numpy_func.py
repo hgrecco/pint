@@ -11,6 +11,7 @@ from __future__ import annotations
 import warnings
 from inspect import signature
 from itertools import chain
+from typing import Any
 
 from ...compat import is_upcast_type, np, zero_or_nan
 from ...errors import DimensionalityError, OffsetUnitCalculusError, UnitStrippedWarning
@@ -1054,7 +1055,6 @@ for func_str, unit_arguments, wrap_output in (
     ("linalg.matrix_transpose", "x", True),
     ("roll", "a", True),
     ("copy", "a", True),
-    ("average", "a", True),
     ("nanmean", "a", True),
     ("swapaxes", "a", True),
     ("nanmin", ["a", "initial"], True),
@@ -1087,6 +1087,19 @@ for func_str, unit_arguments, wrap_output in (
     ("intersect1d", ["ar1", "ar2"], True),
 ):
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
+
+
+@implements("average", "function")
+def _average(a, axis=None, weights: Any = None, returned: Any = False, **kwargs):
+    args: tuple[Any, ...]
+    args, output_wrap = unwrap_and_wrap_consistent_units(a)
+    # Normalize relative weights before redispatching to NumPy. The two-output
+    # form and dimensional weights retain their existing behavior.
+    if not returned and _is_quantity(weights) and weights.dimensionless:
+        weights = weights.m_as("")
+    return output_wrap(
+        np.average(*args, axis=axis, weights=weights, returned=returned, **kwargs)
+    )
 
 
 # implement isclose and allclose
