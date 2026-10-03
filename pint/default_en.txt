@@ -560,7 +560,6 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
     hand = 4 * inch
     foot = yard / 3 = ft = international_foot = feet = international_feet
     yard = 0.9144 * meter = yd = international_yard  # since Jul 1959
-    fathom = 6 * foot
     mile = 1760 * yard = mi = international_mile
 
     circular_mil = π / 4 * mil_length ** 2 = cmil
