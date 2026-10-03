@@ -572,7 +572,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
     cubic_foot = ft ** 3 = cu_ft = cubic_feet
     cubic_yard = yd ** 3 = cu_yd
 
-    link = 0.66 * foot = li = survey_link
+    link = 0.66 * foot = li
     fathom = 6 * foot
     rod = 16.5 * foot = rd = pole = perch
     chain = 66 * foot = ch
@@ -593,11 +593,6 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 # Source: Barton, J. , Blackwell, B. , Butcher, T. , Harshman, R., Lee, G. , Olson, D. (2019), Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices as adopted by the 108th National Conference on Weights and Measures 2019, Handbook (NIST HB), National Institute of Standards and Technology, Gaithersburg, MD, [online], https://doi.org/10.6028/NIST.HB.44-2020 (Accessed January 12, 2024)
 @group USCSLengthSurvey
     survey_foot = 1200 / 3937 * meter = sft
-    survey_fathom = 6 * survey_foot
-    rod = 16.5 * survey_foot = rd = pole = perch
-    chain = 4 * rod
-    furlong = 40 * rod = fur
-    cables_length = 120 * survey_fathom
     survey_mile = 5280 * survey_foot = smi = us_statute_mile
     square_survey_mile = survey_mile ** 2
 
@@ -612,7 +607,7 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
     square_survey_rod = survey_rod ** 2 = sq_srd = sq_survey_rod = sq_survey_pole = sq_survey_perch
     survey_acre = 10 * survey_chain ** 2
     square_survey_league = survey_league ** 2
-    
+
     survey_acre_foot = survey_acre * survey_foot = _ = survey_acre_feet
 @end
 
