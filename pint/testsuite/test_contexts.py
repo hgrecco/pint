@@ -1024,3 +1024,26 @@ def test_err_new_unit():
     expected = "'bar' is not defined in the unit registry"
     with pytest.raises(UndefinedUnitError, match=expected):
         ureg.enable_contexts("c")
+
+
+def test_prefixed_unit_survives_redefining_context():
+    # A metric-prefixed unit created lazily inside a unit-redefining context
+    # must survive the context exit; it used to be cached in the transient
+    # context overlay and silently evicted, raising KeyError on later
+    # abbreviated formatting. See https://github.com/hgrecco/pint/issues/2389
+    ureg = UnitRegistry(
+        """
+        kilo- = 1000 = k-
+        foo = [d] = f
+        bar = 2 foo = b
+
+        @context c
+            b = 5 f
+        @end
+        """.splitlines()
+    )
+    with ureg.context("c"):
+        q = ureg.Quantity(1, "kilofoo")
+    assert "kilofoo" in ureg._units
+    # This abbreviated format used to raise KeyError after the context exited.
+    assert f"{q:~P}" == "1 kf"

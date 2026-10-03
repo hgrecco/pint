@@ -680,7 +680,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             name = prefix + unit_name
             symbol = self.get_symbol(name, case_sensitive)
             prefix_def = self._prefixes[prefix]
-            self._units[name] = UnitDefinition(
+            # Cache the derived prefixed unit in the persistent registry rather
+            # than in a transient context overlay that would evict it on exit.
+            # See https://github.com/hgrecco/pint/issues/2389
+            self._persistent_units[name] = UnitDefinition(
                 name,
                 symbol,
                 tuple(),
@@ -704,6 +707,15 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             )
 
         return self._prefixes[prefix].symbol + self._units[unit_name].symbol
+
+    @property
+    def _persistent_units(self) -> dict[str, UnitDefinition]:
+        """The unit mapping that survives context enter/exit.
+
+        Plain registries have no context overlays, so this is just ``_units``.
+        Context registries override this to skip the transient overlay.
+        """
+        return self._units
 
     def _get_symbol(self, name: str) -> str:
         return self._units[name].symbol

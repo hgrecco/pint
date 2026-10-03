@@ -80,6 +80,13 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         # Allow contexts to add override layers to the units
         self._units: ChainMap[str, UnitDefinition] = ChainMap(self._units)
 
+    @property
+    def _persistent_units(self) -> dict[str, UnitDefinition]:
+        # The last map is the base registry that persists across contexts; the
+        # earlier maps are transient overlays discarded on context exit, so
+        # derived units must be cached in the base one (see #2389).
+        return self._units.maps[-1]
+
     def _register_definition_adders(self) -> None:
         super()._register_definition_adders()
         self._register_adder(ContextDefinition, self.add_context)
