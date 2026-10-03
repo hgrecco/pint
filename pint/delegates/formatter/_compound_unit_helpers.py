@@ -21,6 +21,7 @@ from typing import (
     TypedDict,
 )
 
+from ...babel_names import _babel_units
 from ...compat import babel_parse
 from ...util import UnitsContainer
 from .sorting import SortFunc
@@ -104,6 +105,10 @@ def localize_unit_name(
     from babel.units import _find_unit_pattern, get_unit_name
 
     q_unit = _find_unit_pattern(measurement_unit, locale=locale)
+    if not q_unit and measurement_unit in _babel_units:
+        # Some pint unit names differ from the CLDR identifier babel expects
+        # (e.g. ``kilowatt_hour`` vs ``energy-kilowatt-hour``).
+        q_unit = _find_unit_pattern(_babel_units[measurement_unit], locale=locale)
     if not q_unit:
         return measurement_unit
 
