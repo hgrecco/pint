@@ -232,7 +232,8 @@ class TestUnit(QuantityTestCase):
         else:
             with pytest.raises(TypeError):
                 _ = x / [1]
-        assert x / "1" == self.Q_(1, "m")
+        with pytest.raises(TypeError):
+            _ = x / "1"
         # x / <unit>
         assert x / self.U_("s") == self.U_("m / s")
         assert_type(x / self.U_("s"), UnitRegistry.Unit)
@@ -241,7 +242,8 @@ class TestUnit(QuantityTestCase):
         # x / <quantity>
         assert x / datetime.timedelta(0, 1, 0) == self.Q_(1.0, "m/s")
         assert x / self.Q_(1, "m") == self.Q_(1)
-        # assert x / "1 m" == self.Q_(1)
+        with pytest.raises(TypeError):
+            _ = x / "1 m"
 
     def test_unit_rdiv(self):
         x = self.U_("m")
@@ -259,11 +261,13 @@ class TestUnit(QuantityTestCase):
         else:
             with pytest.raises(TypeError):
                 _ = [1] / x
-        assert "1" / x == self.Q_(1, "1/m")
+        with pytest.raises(TypeError):
+            _ = "1" / x
         # <quantity> / x
         assert datetime.timedelta(0, 1, 0) / x == self.Q_(1.0, "s/m")
         assert self.Q_(1, "m") / x == self.Q_(1)
-        # assert "1 m" / x == self.Q_(1)
+        with pytest.raises(TypeError):
+            _ = "1 m" / x
 
     @pytest.mark.parametrize(
         ("unit", "power_ratio", "expectation", "expected_unit"),
