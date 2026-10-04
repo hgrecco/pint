@@ -1,0 +1,14 @@
+# Density
+density_lng = 2.244 * cubic_metre_lng / metric_ton
+
+# Calorific value
+cv_lng = 1.22 * toe / metric_ton * 1.054261895
+
+metric_tons_per_second = metric_ton / s
+
+@context lng
+    [volume] / [time] -> [mass] / [time]: value / density_lng
+    [mass] / [time] -> [volume] / [time]: value * density_lng
+    [mass] / [time] -> [energy] / [time]: value * cv_lng
+    [energy] / [time] -> [mass] / [time]: value / cv_lng
+@end
