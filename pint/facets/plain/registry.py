@@ -1574,7 +1574,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     ) -> Magnitude:
         """Convenience method that converts the value into a supported magnitude.
 
-        Intended for use by `Quantity`'s methods.
+        Intended to be used by `Quantity` and `Unit` methods.
         The `units` argument is the target unit, required when `value` is a `PlainQuantity`.
         """
         if isinstance(value, PlainQuantity) and (units is not None):
@@ -1589,7 +1589,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 raise ValueError("magnitude cannot be an empty string.")
             parsed = ParserHelper.from_string(value, self.non_int_type)
             if parsed:
-                # TODO: Make `_to_magnitude` a `GenericPlainRegistry` method as well
+                # TODO(#2427 follow-up):
+                #   Make `_to_magnitude` a `GenericPlainRegistry` method as well
                 #   and subclass it in `GenericNumpyRegistry` for numpy-specific magnitude
                 #   support (e.g., `list` -> `np.ndarray` conversions).
                 # This will allow to better isolate numpy-specific code in the numpy facet.
@@ -1601,7 +1602,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         else:
             return _to_magnitude(value, self.force_ndarray, self.force_ndarray_like)
 
-    # TODO: Move `PlainQuantity._is_timedelta` and `PlainQuantity._convert_timedelta` here
+    # TODO(#2427 follow-up):
+    #   Move `PlainQuantity._is_timedelta` and `PlainQuantity._convert_timedelta` here
     #   for consistency and correctness (those methods shouldn't have access to existing
     #   magnitude/units because they're meant to *create* them...)
 
@@ -1609,10 +1611,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     # Other utilities
     ############
 
-    # We put this last to avoid overriding UnitsContainer
-    # and I do not want to rename it.
-    # TODO: Maybe in the future we need to change it to a more meaningful
-    # non-colliding name.
+    # We put this last to avoid overriding UnitsContainer and I (@hgrecco) do not want to rename it.
+    # TODO: Maybe in the future we need to change it to a more meaningful non-colliding name.
     def UnitsContainer(self, *args: Any, **kwargs: Any) -> UnitsContainer:
         return UnitsContainer(*args, non_int_type=self.non_int_type, **kwargs)
 
