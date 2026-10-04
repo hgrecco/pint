@@ -1577,7 +1577,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         Intended to be used by `Quantity` and `Unit` methods.
         The `units` argument is the target unit, required when `value` is a `PlainQuantity`.
         """
-        if isinstance(value, PlainQuantity) and (units is not None):
+        if isinstance(value, PlainQuantity):
+            if units is None:
+                raise TypeError("Expected a bare magnitude, found a quantity.")
             return value.to(units)._magnitude
         elif isinstance(value, str):
             if not parse_strings:
@@ -1590,8 +1592,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             parsed = ParserHelper.from_string(value, self.non_int_type)
             if parsed:
                 # NOTE: we're calling this function again in order to consistently handle all cases
-                #   (including when `parsed` is a `Quantity` and not just a magnitude).
-                return self._into_magnitude(parsed, units=units)
+                #   (including when `parsed` also has units and is not just a scale/magnitude).
+                quantity = self.Quantity(parsed.scale, self.Unit(parsed))
+                return self._into_magnitude(quantity, units=units)
             else:
                 return parsed.scale
         else:
