@@ -53,6 +53,7 @@ _typst_unit_fixes = {
 _zero_unit_fixes = {
     "deg": "°",
 }
+"""Unit fixes for zero package."""
 
 
 class TypstFormatter(BaseFormatter):
