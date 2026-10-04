@@ -235,7 +235,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             return inst
 
         units = inst._REGISTRY._into_units(units, target_class_name="PlainQuantity")
-        inst._magnitude = inst._REGISTRY._into_magnitude(value, units=units)
+        inst._magnitude = inst._REGISTRY._into_magnitude(
+            value, units, parse_strings=True
+        )
         inst._units = units
 
         return inst

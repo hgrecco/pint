@@ -1565,7 +1565,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             )
 
     def _into_magnitude(
-        self, value: object, /, units: UnitsContainer | None = None
+        self,
+        value: object,
+        /,
+        units: UnitsContainer | None = None,
+        *,
+        parse_strings: bool = False,
     ) -> Magnitude:
         """Convenience method that converts the value into a supported magnitude.
 
@@ -1575,6 +1580,11 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if isinstance(value, PlainQuantity) and (units is not None):
             return value.to(units)._magnitude
         elif isinstance(value, str):
+            if not parse_strings:
+                raise TypeError(
+                    "This operation does not support automatically parsing strings."
+                    " Please convert the operand to a quantity before proceeding."
+                )
             if value == "":
                 raise ValueError("magnitude cannot be an empty string.")
             parsed = ParserHelper.from_string(value, self.non_int_type)
