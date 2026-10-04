@@ -1115,7 +1115,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @check_implemented
     @ireduce_dimensions
-    def _mul_div(self, other, magnitude_op, units_op=None):
+    def _mul_div(
+        self,
+        other,
+        magnitude_op,
+        units_op=None,
+        parse_string_as_magnitude: bool = False,
+    ):
         """Perform multiplication or division operation and return the result.
 
         Parameters
@@ -1123,11 +1129,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
             object to be multiplied/divided with self
         magnitude_op : function
-            operator function to perform on the magnitudes
-            (e.g. operator.mul)
+            operator function to perform on the magnitudes (e.g. :func:`operator.mul`)
         units_op : function or None
             operator function to perform on the units; if None,
             *magnitude_op* is used (Default value = None)
+        parse_string_as_magnitude: bool, default = False
+            if this flag is set and 'other' is a string, it will be interpreted as a
+            magnitude and parsed as such; otherwise, the function will return NotImplemented.
 
         Returns
         -------
@@ -1154,7 +1162,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                         self._units, getattr(other, "units", "")
                     )
             try:
-                other_magnitude = self._REGISTRY._into_magnitude(other)
+                other_magnitude = self._REGISTRY._into_magnitude(
+                    other, parse_strings=parse_string_as_magnitude
+                )
             except PintTypeError:
                 raise
             except TypeError:

@@ -171,7 +171,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         if isinstance(other, Number) and other == 1:
             return self._REGISTRY.Quantity(other, self._units)
 
-        return self._REGISTRY.Quantity(1, self._units) * other
+        return self._REGISTRY.Quantity(1, self._units)._mul_div(
+            other, operator.mul, parse_string_as_magnitude=True
+        )
 
     __rmul__ = __mul__
 
@@ -227,8 +229,8 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         #   __rtruediv__ can only be called for something different.
         if isinstance(other, UnitsContainer):
             return self.__class__(other / self._units)
-        # other is meant to be a quantity or magnitude
-        return self._REGISTRY.Quantity(other) / self
+        # other is quantity-like or magnitude-like
+        return other / self._REGISTRY.Quantity(1, self._units)
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
