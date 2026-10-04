@@ -175,6 +175,9 @@ def to_compact[Q: PlainQuantity](quantity: Q, unit: UnitsContainer | None = None
     if quantity.unitless or qm == 0 or math.isnan(qm) or math.isinf(qm):
         return quantity
 
+    if quantity._get_non_multiplicative_units():
+        return quantity
+
     SI_powers, SI_bases = _get_si_prefixes(quantity._REGISTRY)
     q_base, unit_str, unit_power = _get_compact_base(quantity, unit)
 
@@ -239,7 +242,7 @@ def to_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    Quantity(4046.8726098742513, "meter ** 2")
+    Quantity(4046.8564224, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
     Quantity(4.4482216152605005, "watt * second")
     """
@@ -259,7 +262,7 @@ def ito_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    Quantity(4046.8726098742513, "meter ** 2")
+    Quantity(4046.8564224, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
     Quantity(4.4482216152605005, "watt * second")
     """
@@ -294,7 +297,7 @@ def _get_preferred(
                     preferred_unit.dimensionality[d] for d in dims
                 )
                 if all(
-                    s_exps_tail[i] * p_exps_head == p_exps_tail[i] ** s_exps_head
+                    s_exps_tail[i] * p_exps_head == p_exps_tail[i] * s_exps_head
                     for i in range(n)
                 ):
                     ratio = p_exps_head / s_exps_head

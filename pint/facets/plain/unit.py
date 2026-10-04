@@ -1,3 +1,5 @@
+# pyright: reportInvalidTypeArguments=warning
+
 """
 pint.facets.plain.unit
 ~~~~~~~~~~~~~~~~~~~~~
@@ -24,6 +26,7 @@ if TYPE_CHECKING:
     import datetime
 
     import numpy as np
+    import optype as opt
 
     from ..context import Context
     from .quantity import PlainQuantity
@@ -53,11 +56,11 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
                 )
             )
 
-    def __copy__(self) -> PlainUnit:
+    def __copy__(self) -> Self:
         ret = self.__class__(self._units)
         return ret
 
-    def __deepcopy__(self, memo) -> PlainUnit:
+    def __deepcopy__(self, memo) -> Self:
         ret = self.__class__(copy.deepcopy(self._units, memo))
         return ret
 
@@ -176,6 +179,21 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
     __rmul__ = __mul__
 
+    # PlainUnit / PlainUnit -> PlainUnit
+    @overload
+    def __truediv__(self, other: Self) -> Self: ...
+    # PlainUnit / timedelta -> PlainQuantity[float]
+    @overload
+    def __truediv__(
+        self, other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
+    # PlainUnit / <Magnitude> or PlainQuantity[<Magnitude>]
+    #   -> PlainQuantity[type of 1 / <Magnitude>]
+    @overload
+    def __truediv__[U: Magnitude](
+        self,
+        other: PlainQuantity[opt.CanRTruediv[int, U]] | opt.CanRTruediv[int, U],
+    ) -> PlainQuantity[U]: ...
     def __truediv__(self, other):
         if self._check(other):
             if isinstance(other, self.__class__):
@@ -200,7 +218,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
 
-    def __pow__(self, other) -> PlainUnit:
+    def __pow__(self, other) -> Self:
         if isinstance(other, NUMERIC_TYPES):
             return self.__class__(self._units**other)
 
