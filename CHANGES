@@ -21,7 +21,6 @@ Pint Changelog
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
 - Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
-- Fix `format_unit` not respecting the `^` flag for negative powers on standalone `Unit` objects (e.g. `format(Unit("second")**-1, "~^P")` returning `"1/s"` instead of `"s⁻¹"`) (#2313)
 
 
 0.26.1 (2026-09-10)
