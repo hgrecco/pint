@@ -1162,6 +1162,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                         self._units, getattr(other, "units", "")
                     )
             try:
+                # NOTE: the operand must not already have units at this stage: this is accomplished
+                #   by not setting the `units` parameter of `_into_magnitude()`.
+                # This way we can reject things like `"3 m" * ureg.m` which otherwise would become Q(3, "m"),
+                #   while still accepting `"3" * ureg.m -> Q(3, "m")` correctly.
+                # Also note that `parse_string_as_magnitude` is set to `True` by `Unit.__mul__`, but
+                #   `Quantity.__mul__` uses the default (`False`) instead.
                 other_magnitude = self._REGISTRY._into_magnitude(
                     other, parse_strings=parse_string_as_magnitude
                 )
