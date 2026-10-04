@@ -352,7 +352,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @property
     def dimensionless(self) -> bool:
-        """Whether this quantity is dimensionless (aka. adimensional)."""
+        """Whether this quantity is dimensionless."""
         tmp = self.to_root_units()
 
         return not bool(tmp.dimensionality)
