@@ -1285,7 +1285,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         | opt.CanRTruediv[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __truediv__(self: PlainQuantity, other) -> PlainQuantity:
-        return self._mul_div(other, self._REGISTRY._truediv)
+        return self._mul_div(other, self._REGISTRY._truediv, operator.truediv)
 
     # timedelta / PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
     @overload
