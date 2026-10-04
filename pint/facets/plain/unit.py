@@ -230,7 +230,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         if isinstance(other, UnitsContainer):
             return self.__class__(other / self._units)
         # other is quantity-like or magnitude-like
-        return other / self._REGISTRY.Quantity(1, self._units)
+        return self._REGISTRY.Quantity(1, 1 / self._units) * other
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
