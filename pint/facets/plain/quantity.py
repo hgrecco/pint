@@ -684,21 +684,23 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         if not self._check(other):
             # NOTE: other is not a PlainQuantity (because if the registry does not match, _check() raises)
-            # Ensure the magnitude matches the dimensionless value before proceeding (#54)
-            if self.dimensionless:
-                self.ito(self.UnitsContainer())
             # Normalize the rhs
             try:
-                other_magnitude = self._REGISTRY._into_magnitude(other, self._units)
+                other_magnitude = self._REGISTRY._into_magnitude(other)
             except PintTypeError:
                 raise
             except TypeError:
                 return NotImplemented
             # Do the operation
-            if zero_or_nan(other, True) or self.dimensionless:
+            if zero_or_nan(other_magnitude, True):
                 # If the other value is 0 (but not PlainQuantity 0) do the operation without checking units.
                 # We do the calculation anyway instead of just returning the same value
                 #   to enforce any shape checking and type casting due to the operation.
+                self._magnitude = op(self._magnitude, other_magnitude)
+                return self
+            elif self.dimensionless:
+                # Ensure the magnitude matches the dimensionless value before doing the calculation (#54)
+                self.ito(self.UnitsContainer())
                 self._magnitude = op(self._magnitude, other_magnitude)
                 return self
             else:
@@ -797,21 +799,22 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         if not self._check(other):
             # NOTE: other is not a PlainQuantity (because if the registry does not match, _check() raises)
-            # Ensure the magnitude matches the dimensionless value before proceeding (#54)
-            if self.dimensionless:
-                self = self.to(self.UnitsContainer())
             # Normalize the rhs
             try:
-                other_magnitude = self._REGISTRY._into_magnitude(other, self._units)
+                other_magnitude = self._REGISTRY._into_magnitude(other)
             except PintTypeError:
                 raise
             except TypeError:
                 return NotImplemented
             # Do the operation
-            if zero_or_nan(other, True) or self.dimensionless:
+            if zero_or_nan(other_magnitude, True):
                 # If the other value is 0 or NaN (but not a PlainQuantity) do the operation without checking units.
                 # We do the calculation anyway instead of just returning the same value
                 #   to enforce any shape checking and type casting due to the operation.
+                magnitude = op(self._magnitude, other_magnitude)
+            elif self.dimensionless:
+                # Ensure the magnitude matches the dimensionless value before doing the calculation (#54)
+                self = self.to(self.UnitsContainer())
                 magnitude = op(self._magnitude, other_magnitude)
             else:
                 raise DimensionalityError(self._units, "dimensionless")
