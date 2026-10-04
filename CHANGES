@@ -5,6 +5,8 @@ Pint Changelog
 -------------------
 
 - Improve and test `/` and `*` between `Quantity` and `Unit`, supporting more edge cases; improve their type annotations as well (#2427)
+- Fix babel not localizing unit names containing underscores, e.g. `kilowatt_hour` (#2234)
+- Remove the `babel <= 2.8` upper bound from the `babel` extra
 - Fix `RecursionError` in `find_connected_nodes` for long chains of contexts (#2388)
 - Fix formatting a unit with only negative exponents, e.g. `1 / second`, raising `IndexError` when a locale is set (#2446)
 - Fix the angular mil so one turn is 6400 mil
@@ -21,6 +23,7 @@ Pint Changelog
 - Fix CI installing the numpy matrix pin outside the pixi env on Windows/macOS, so those legs ran the no-numpy test suite (#2402)
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
+- Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
 
 
 0.26.1 (2026-09-10)
