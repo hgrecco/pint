@@ -1593,7 +1593,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             if parsed:
                 # NOTE: we're calling this function again in order to consistently handle all cases
                 #   (including when `parsed` also has units and is not just a scale/magnitude).
-                quantity = self.Quantity(parsed.scale, self.Unit(parsed))
+                quantity = self.Quantity(parsed.scale, self.UnitsContainer(parsed))
                 return self._into_magnitude(quantity, units=units)
             else:
                 return parsed.scale
