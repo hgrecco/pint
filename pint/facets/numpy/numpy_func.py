@@ -1222,12 +1222,45 @@ for func_str in (
     "linalg.vector_norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ("diff", "ediff1d", "ptp", "std", "nanstd"):
+for func_str in ("ptp", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
+
+
+# Handle differences, whose extra values are joined to either the input or the output
+def implement_diff_func(func_str, input_arguments, output_arguments=()):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(*args, **kwargs):
+        bound_args = signature(func).bind(*args, **kwargs)
+        first_input_units = _get_first_input_units(bound_args.arguments.values())
+        result_unit = get_op_output_unit("delta", first_input_units)
+
+        # Quantities joined to the input are converted to its units, and Quantities
+        # joined to the differences to the units of the output
+        for labels, units in (
+            (input_arguments, first_input_units),
+            (output_arguments, result_unit),
+        ):
+            for label in labels:
+                arg = bound_args.arguments.get(label)
+                if _is_quantity(arg) or _is_sequence_with_quantity_elements(arg):
+                    bound_args.arguments[label] = convert_arg(arg, units)
+
+        ret = func(*bound_args.args, **bound_args.kwargs)
+        return first_input_units._REGISTRY.Quantity(ret, result_unit)
+
+
+implement_diff_func("diff", ["a", "prepend", "append"])
+implement_diff_func("ediff1d", ["ary"], ["to_end", "to_begin"])
 
 
 @implements("geomspace", "function")
