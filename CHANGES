@@ -5,14 +5,22 @@ Pint Changelog
 -------------------
 
 - Improve and test `/` and `*` between `Quantity` and `Unit`, supporting more edge cases; improve their type annotations as well (#2427)
+- Fix `RecursionError` in `find_connected_nodes` for long chains of contexts (#2388)
+- Fix formatting a unit with only negative exponents, e.g. `1 / second`, raising `IndexError` when a locale is set (#2446)
+- Fix the angular mil so one turn is 6400 mil
+- Fix in-place `**=` changing a Quantity's units when the magnitude update fails, e.g. a fractional power of an integer array (#2423)
+- Fix `numpy.ptp` returning an absolute temperature instead of a delta for offset units (#2441)
+- Fix `Quantity.dimensionality` being stale after an in-place operation changes the units (#1938)
 - Fix `numpy.nanmax`/`numpy.nanmin` raising `ValueError` on a Quantity `initial` value, unlike `numpy.max`/`numpy.min` (#2425)
 - Fix `numpy.clip` not converting the units of the numpy 2.1 `min`/`max` keywords (#2433)
 - Fix CI never comparing the matplotlib test figures with the baseline images: `--mpl` was lost with the Travis config in 2021 (#2432)
 - Improve type annotations for `Unit`: `/` and `**` keep the unit type, and `__copy__`/`__deepcopy__` keep the registry subclass (#2406)
+- Fix `fathom` to equal two international yards; the old value is now `survey_fathom` (#2397)
 - Fix `numpy.sum`/`numpy.nansum` not converting a Quantity `initial` value, unlike `numpy.max`/`numpy.min` (#2400)
 - Fix `Quantity.to_compact()` raising `OffsetUnitCalculusError` for offset units like `degree_Celsius` with magnitude below 1 (#2005)
 - Fix CI installing the numpy matrix pin outside the pixi env on Windows/macOS, so those legs ran the no-numpy test suite (#2402)
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
+- Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
 
 
 0.26.1 (2026-09-10)

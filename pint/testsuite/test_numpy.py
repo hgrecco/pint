@@ -527,6 +527,12 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         )
         self.assertNDArrayEqual(arr ** self.Q_(2), np.array([0, 1, 4]))
 
+    def test_ipow_failed_cast_leaves_units_unchanged(self):
+        q = self.Q_(np.array([4, 9]), "meter")
+        with pytest.raises(TypeError):
+            q **= 0.5
+        helpers.assert_quantity_equal(q, self.Q_(np.array([4, 9]), "meter"))
+
     def test_sqrt(self):
         q = self.Q_(100, "m**2")
         helpers.assert_quantity_equal(np.sqrt(q), self.Q_(10, "m"))
@@ -811,6 +817,9 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_ptp_numpy_func(self):
         helpers.assert_quantity_equal(np.ptp(self.q, axis=0), [2, 2] * self.ureg.m)
+        helpers.assert_quantity_equal(
+            np.ptp(self.q_temperature, axis=0), [2, 2] * self.ureg.delta_degC
+        )
 
     def test_clip(self):
         helpers.assert_quantity_equal(
