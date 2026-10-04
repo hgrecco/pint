@@ -4,6 +4,8 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix babel not localizing unit names containing underscores, e.g. `kilowatt_hour` (#2234)
+- Remove the `babel <= 2.8` upper bound from the `babel` extra
 - Fix `RecursionError` in `find_connected_nodes` for long chains of contexts (#2388)
 - Fix formatting a unit with only negative exponents, e.g. `1 / second`, raising `IndexError` when a locale is set (#2446)
 - Fix the angular mil so one turn is 6400 mil
