@@ -120,3 +120,22 @@ def test_unit_with_empty_numerator(func_registry):
     assert ureg.formatter.format_unit(ureg.Unit("1 / second"), locale="fr_FR") == (
         "1 par seconde"
     )
+
+
+@helpers.requires_babel(["fr_FR"])
+def test_unit_with_underscore_name():
+    # See #2234; CLDR spelling of kilowatt-hour changed between babel versions.
+    ureg = UnitRegistry(fmt_locale="fr_FR")
+    fmt = ureg.formatter.format_unit_babel
+    assert fmt(ureg.Unit("kWh")) in ("kilowattheure", "kilowatt-heure")
+    assert fmt(ureg.Unit("mph")) == "mile par heure"
+    assert fmt(ureg.Unit("degC")) == "degré Celsius"
+    assert fmt(ureg.Unit("mmHg")) == "millimètre de mercure"
+    assert fmt(ureg.Unit("t")) == "tonne"
+
+
+def test_babel_units_use_canonical_names():
+    from pint.babel_names import _babel_units
+
+    ureg = UnitRegistry()
+    assert [k for k in _babel_units if ureg.get_name(k) != k] == []
