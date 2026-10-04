@@ -21,6 +21,7 @@ from typing import (
     TypedDict,
 )
 
+from ...babel_names import _babel_units, _babel_units_deprecated
 from ...compat import babel_parse
 from ...util import UnitsContainer
 from .sorting import SortFunc
@@ -103,11 +104,16 @@ def localize_unit_name(
     locale = babel_parse(locale)
     from babel.units import _find_unit_pattern, get_unit_name
 
-    q_unit = _find_unit_pattern(measurement_unit, locale=locale)
+    all_patterns = locale._data["unit_patterns"]
+    q_unit = _babel_units.get(measurement_unit)
+    if q_unit not in all_patterns:
+        q_unit = _babel_units_deprecated.get(q_unit)
+    if q_unit not in all_patterns:
+        q_unit = _find_unit_pattern(measurement_unit, locale=locale)
     if not q_unit:
         return measurement_unit
 
-    unit_patterns = locale._data["unit_patterns"][q_unit].get(length, {})
+    unit_patterns = all_patterns[q_unit].get(length, {})
 
     if use_plural:
         grammatical_number = "other"
@@ -247,12 +253,15 @@ def prepare_compount_unit[T](
     if use_plural:
         if not isinstance(numerator, list):
             numerator = list(numerator)
-        numerator[-1] = localize_display_exponent_name(
-            numerator[-1],
-            use_plural,
-            length=length,
-            locale=locale,
-            default=numerator[-1][0],
-        )
+        # A unit whose exponents are all negative (e.g. 1 / second) has an empty
+        # numerator, and then there is nothing to pluralize.
+        if numerator:
+            numerator[-1] = localize_display_exponent_name(
+                numerator[-1],
+                use_plural,
+                length=length,
+                locale=locale,
+                default=numerator[-1][0],
+            )
 
     return map(extract2, numerator), map(extract2, denominator)
