@@ -1322,7 +1322,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         elif no_offset_units_self == len(self._units) == 1:
             self = self.to_root_units()
 
-        return self.__class__(other_magnitude / self._magnitude, 1 / self._units)
+        return self.__class__(
+            self._REGISTRY._truediv(other_magnitude, self._magnitude),
+            1 / self._units,
+        )
 
     __div__ = __truediv__
     __rdiv__ = __rtruediv__
