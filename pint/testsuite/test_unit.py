@@ -208,13 +208,16 @@ class TestUnit(QuantityTestCase):
             with pytest.raises(TypeError):
                 _ = x * [1]
         assert x * "1" == self.Q_(1, "m")
+        assert "1" * x == self.Q_(1, "m")
         # x * <unit>
         assert x * self.U_("s") == self.U_("m s")
         assert_type(x * self.U_("s"), UnitRegistry.Unit)
         # x * <quantity>
         assert x * datetime.timedelta(0, 1, 0) == self.Q_(1.0, "m s")
         assert x * self.Q_(1, "s") == self.Q_(1, "m s")
-        # assert x * "1 m" == self.Q_(1)
+        with pytest.raises(TypeError):
+            # NOTE: a string operand is meant to be interpreted as a magnitude, not a full quantity!
+            _ = x * "1 m"
 
     def test_unit_div(self):
         x = self.U_("m")
