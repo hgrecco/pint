@@ -45,7 +45,10 @@ _EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)[eE](-?)\+?0*([0-9]+)")
 
 _typst_unit_fixes = {
     "deg": "degree",
+    "%": "percent",
+    "‰": "permille",
 }
+"""Unit fixes that does not need to be quoted in typst and renders the equivalent symbol."""
 
 _zero_unit_fixes = {
     "deg": "°",
