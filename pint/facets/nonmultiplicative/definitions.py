@@ -9,6 +9,7 @@ pint.facets.nonmultiplicative.definitions
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from ..._typing import Magnitude
 from ...compat import HAS_NUMPY, coerce_scalar, exp, log
@@ -91,6 +92,15 @@ class LogarithmicConverter(ScaleConverter):
         dBm   <------   mW
         y dBm = 10 log10( x / 1mW )
         """
+        if isinstance(value, Decimal) or (
+            isinstance(value, int) and isinstance(self.logbase, Decimal)
+        ):
+            value = Decimal(value)
+            scale = coerce_scalar(value, self.scale)
+            logbase = coerce_scalar(value, self.logbase)
+            logfactor = coerce_scalar(value, self.logfactor)
+            return logfactor * (value / scale).ln() / logbase.ln()
+
         if inplace:
             value /= self.scale
             if HAS_NUMPY:
@@ -109,6 +119,15 @@ class LogarithmicConverter(ScaleConverter):
         dBm   ------>   mW
         y dBm = 10 log10( x / 1mW )
         """
+        if isinstance(value, Decimal) or (
+            isinstance(value, int) and isinstance(self.logbase, Decimal)
+        ):
+            value = Decimal(value)
+            scale = coerce_scalar(value, self.scale)
+            logbase = coerce_scalar(value, self.logbase)
+            logfactor = coerce_scalar(value, self.logfactor)
+            return scale * (logbase.ln() * (value / logfactor)).exp()
+
         if inplace:
             value /= self.logfactor
             value *= log(self.logbase)
