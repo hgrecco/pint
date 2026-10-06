@@ -10,7 +10,9 @@ Functions and classes related to unit definitions and conversions.
 
 from __future__ import annotations
 
+import tokenize
 import typing as ty
+from io import BytesIO
 
 if ty.TYPE_CHECKING:
     from .facets.plain.unit import UnitsContainer as UnitsContainerT
@@ -20,7 +22,9 @@ LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/log_units.html
 
 MSG_INVALID_UNIT_NAME = "is not a valid unit name (must follow Python identifier rules)"
 MSG_INVALID_UNIT_SYMBOL = "is not a valid unit symbol (must not contain spaces)"
-MSG_INVALID_UNIT_ALIAS = "is not a valid unit alias (must not contain spaces)"
+MSG_INVALID_UNIT_ALIAS = (
+    "is not a valid unit alias (must be a single name without whitespace or operators)"
+)
 
 MSG_INVALID_PREFIX_NAME = (
     "is not a valid prefix name (must follow Python identifier rules)"
@@ -58,9 +62,28 @@ def _no_space(name: str) -> bool:
 
 is_valid_group_name = _no_space
 
-is_valid_unit_alias = is_valid_prefix_alias = is_valid_unit_symbol = (
-    is_valid_prefix_symbol
-) = _no_space
+is_valid_prefix_alias = is_valid_unit_symbol = is_valid_prefix_symbol = _no_space
+
+
+def is_valid_unit_alias(name: str) -> bool:
+    """Return True if the alias is a single name in a unit expression."""
+    if name in ("%", "‰"):
+        return True
+
+    # These characters are expanded into expressions by Pint's preprocessors,
+    # even when Python's tokenizer considers them part of a name.
+    if not name or any(char.isspace() or char in "%‰×±·⋅⁰¹²³⁴⁵⁶⁷⁸⁹" for char in name):
+        return False
+
+    try:
+        tokens = tokenize.tokenize(BytesIO(name.encode("utf-8")).readline)
+        next(tokens)  # Skip the encoding token, as in pint_eval.plain_tokenizer.
+        token = next(tokens)
+    except (tokenize.TokenError, SyntaxError, UnicodeError):
+        return False
+
+    # Accept Unicode unit names such as °C, which are not Python identifiers.
+    return token.type == tokenize.NAME and token.string == name
 
 
 def is_valid_dimension_name(name: str) -> bool:

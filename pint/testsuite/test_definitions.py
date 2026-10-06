@@ -20,6 +20,68 @@ from pint.facets.plain import (
 from pint.util import UnitsContainer
 
 
+@pytest.mark.parametrize(
+    "definition",
+    ["@alias meter = {alias}", "another_meter = meter = _ = {alias}"],
+)
+@pytest.mark.parametrize(
+    "alias",
+    [
+        "my'dog",
+        'my"dog',
+        "m/s",
+        "m*s",
+        "m^2",
+        "m²",
+        "m×s",
+        "m·s",
+        "m⋅s",
+        "m±s",
+        "m%s",
+        "m‰s",
+        "m.s",
+        "m,s",
+        "(m)",
+        "[m]",
+        "123",
+        "1m",
+        "m s",
+        "m\ts",
+        "m\u00a0s",
+        "\ufeffsecond",
+    ],
+)
+def test_invalid_unit_alias(registry_empty, definition, alias):
+    registry_empty.define("meter = [length]")
+    with pytest.raises(DefinitionSyntaxError, match="not a valid unit alias"):
+        registry_empty.define(definition.format(alias=alias))
+
+
+@pytest.mark.parametrize(
+    "definition",
+    ["@alias meter = {alias}", "meter = [length] = _ = {alias}"],
+)
+@pytest.mark.parametrize(
+    "alias", ["my_meter", "m2", "µm", "réaumur", "メートル", "m′", "R_∞"]
+)
+def test_valid_unit_alias(registry_empty, definition, alias):
+    if definition.startswith("@alias"):
+        registry_empty.define("meter = [length]")
+    registry_empty.define(definition.format(alias=alias))
+    assert registry_empty.Unit(alias) == registry_empty.meter
+    assert registry_empty.Quantity(1, "meter").to(alias).magnitude == 1
+
+
+@pytest.mark.parametrize(
+    "name, alias",
+    [("degreeC", "°C"), ("degreeK", "°K"), ("percent", "%"), ("permille", "‰")],
+)
+def test_preprocessed_unit_alias(registry_empty, name, alias):
+    registry_empty.define(f"{name} = [test_dimension]")
+    registry_empty.define(f"@alias {name} = {alias}")
+    assert registry_empty.Unit(alias) == registry_empty.Unit(name)
+
+
 class TestDefinition:
     def test_invalid(self):
         with pytest.raises(DefinitionSyntaxError):
