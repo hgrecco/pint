@@ -18,3 +18,10 @@ the magnitude (e.g., float, int, np.ndarray)
     ...     pass
     >>> def my_array_func(x: pint.Quantity[np.ndarray[(3, ), int]]) -> pint.Quantity[np.ndarray[(3, ), int]]:
     ...     pass
+
+When ``ureg.wraps`` receives a single return unit (a string or a Unit), the
+decorated function's return type preserves the registry's Quantity type.
+For example, array quantities returned by a ``UnitRegistry`` wrapper can be indexed.
+With ``ret=None`` or multiple return units, the return type is conservatively
+annotated as ``object``; skipped conversions and mixed return values need not
+produce a Quantity. These annotations do not change the runtime behavior.

@@ -24,6 +24,8 @@ jobs:
         continue-on-error: true
         with:
           version: PATH
+      - name: Check wraps typing regressions
+        run: pyright --project pint/testsuite/pyrightconfig.json
 
   test-linux:
     runs-on: ubuntu-latest
