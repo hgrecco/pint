@@ -27,7 +27,6 @@ import copy
 import functools
 import inspect
 import itertools
-import operator
 import pathlib
 import re
 from collections import defaultdict
@@ -469,13 +468,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     @property
     def non_int_type(self):
         return self._non_int_type
-
-    def _truediv(self, a, b):
-        """Like `operator.truediv`, but `int/int -> non_int_type` instead of `float`"""
-        if isinstance(a, int) and isinstance(b, int):
-            a = self._non_int_type(a)
-            b = self._non_int_type(b)
-        return operator.truediv(a, b)
 
     ############
     # Extending the registry with new unit definitions

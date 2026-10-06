@@ -1263,6 +1263,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         def __rmatmul__(self, other):
             return self.__matmul__(other)
 
+    def _truedivide_cast_int(self, a, b):
+        """Like `operator.truediv`, but `int/int -> non_int_type` instead of `float`"""
+        if isinstance(a, int) and isinstance(b, int):
+            t = self._REGISTRY.non_int_type
+            a, b = t(a), t(b)
+        return operator.truediv(a, b)
+
     def __itruediv__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanITruediv[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
@@ -1288,7 +1295,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         | opt.CanRTruediv[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __truediv__(self: PlainQuantity, other) -> PlainQuantity:
-        return self._mul_div(other, self._REGISTRY._truediv, operator.truediv)
+        return self._mul_div(other, self._truedivide_cast_int, operator.truediv)
 
     # timedelta / PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
     @overload
@@ -1323,7 +1330,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             self = self.to_root_units()
 
         return self.__class__(
-            self._REGISTRY._truediv(other_magnitude, self._magnitude),
+            self._truedivide_cast_int(other_magnitude, self._magnitude),
             1 / self._units,
         )
 

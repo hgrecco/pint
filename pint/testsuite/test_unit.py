@@ -252,6 +252,7 @@ class TestUnit(QuantityTestCase):
         x = self.U_("m")
         # <magnitude> / x
         assert 1 / x == self.Q_(1, "1/m")
+        assert type((1 / x).magnitude) is int
         assert 0.5 / x == self.Q_(0.5, "1/m")
         with pytest.raises(TypeError):
             _ = True / x
@@ -271,6 +272,18 @@ class TestUnit(QuantityTestCase):
         assert self.Q_(1, "m") / x == self.Q_(1)
         with pytest.raises(TypeError):
             _ = "1 m" / x
+        # offset and logarithmic units are ambiguous
+        with pytest.raises(errors.OffsetUnitCalculusError):
+            _ = 1 / self.U_("degC")
+        with pytest.raises(errors.OffsetUnitCalculusError):
+            _ = 1 / self.U_("dB")
+
+    def test_unit_rdiv_non_int_type(self):
+        ureg = UnitRegistry(non_int_type=Fraction)
+        assert type((2 / ureg.m).magnitude) is int
+        q = 2 / ureg.Quantity(3, "m")
+        assert q == ureg.Quantity(Fraction(2, 3), "1/m")
+        assert type(q.magnitude) is Fraction
 
     @pytest.mark.parametrize(
         ("unit", "power_ratio", "expectation", "expected_unit"),

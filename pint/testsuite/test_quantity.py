@@ -73,6 +73,12 @@ class TestQuantity(QuantityTestCase):
 
         assert self.Q_("4.2×10⁻¹² ft/s") == self.Q_(4.2e-12, "foot/second")
 
+        # a magnitude string with units is converted to the requested units
+        assert self.Q_("3 m", "cm") == self.Q_(300, "cm")
+        assert self.Q_("3 m", "cm").units == self.ureg.cm
+        with pytest.raises(DimensionalityError):
+            self.Q_("3 kg", "m")
+
     def test_round(self) -> None:
         x: Q_[float] = self.Q_(1.1, "kg")
         round1 = assert_type(round(x), "Q_[int]")
@@ -634,6 +640,15 @@ class TestQuantity(QuantityTestCase):
         assert self.Q_(400, "degree") // self.Q_(2 * math.pi) == 1
         assert self.Q_(400, "degree") // (2 * math.pi) == 1
         assert 7 // self.Q_(360, "degree") == 1
+
+        # adding a bare zero keeps the original (scaled) dimensionless units
+        x = self.Q_(5, "percent") + 0
+        assert x.magnitude == 5
+        assert x.units == self.ureg.percent
+        # adding a bare non-zero number converts to plain dimensionless first
+        x = self.Q_(5, "percent") + 1
+        assert x.magnitude == pytest.approx(1.05)
+        assert x.units == self.ureg.dimensionless
 
     def test_offset(self):
         helpers.assert_quantity_almost_equal(
