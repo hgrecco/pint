@@ -15,7 +15,16 @@ from pint import (
     UndefinedUnitError,
     UnitRegistry,
 )
-from pint.errors import LOG_ERROR_DOCS_HTML, OFFSET_ERROR_DOCS_HTML
+from pint.errors import (
+    LOG_ERROR_DOCS_HTML,
+    OFFSET_ERROR_DOCS_HTML,
+    is_valid_unit_alias,
+)
+
+
+@pytest.mark.parametrize("alias", ["", " m", "m ", "m\ns", "m\rs", "m\fs", "m#comment"])
+def test_invalid_unit_alias(alias):
+    assert not is_valid_unit_alias(alias)
 
 
 class TestErrors:

@@ -91,6 +91,12 @@ with new aliases from a custom file. It can also be used for translations (like 
 example above) as long as one is happy to have the localized units automatically
 converted to English when they are parsed.
 
+Unit aliases must be nonempty single names. Whitespace, ASCII quotation marks,
+numeric literals, and expression operators are not allowed. Unicode names,
+including degree spellings such as ``°C``, and the standalone ``%`` and ``‰``
+are supported. This validation applies both to aliases on a unit definition
+line and to the ``@alias`` directive.
+
 
 Programmatically
 ----------------
