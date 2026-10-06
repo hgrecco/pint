@@ -1011,9 +1011,7 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compare_quantity_compact(float("inf") * ureg.m, float("inf") * ureg.m)
 
     def test_nonnumeric_magnitudes(self):
-        ureg = self.ureg
-        x = 1 * ureg.m
-        x._magnitude = "some string"
+        x = self.Q_(object(), "m")
         with pytest.warns(UndefinedBehavior):
             x.to_compact()
 
