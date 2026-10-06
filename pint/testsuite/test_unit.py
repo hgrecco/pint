@@ -20,6 +20,54 @@ from pint.util import ParserHelper, UnitsContainer
 from .helpers import internal
 
 
+@pytest.mark.parametrize("constructor", ["parse_units", "Unit", "Quantity"])
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "kilo-watt",
+        "meter-second",
+        "meter+second",
+        "meter+1",
+        "1+meter",
+        "meter-1",
+        "1-meter",
+    ],
+)
+def test_unit_expression_addition_subtraction(sess_registry, constructor, expression):
+    with pytest.raises(errors.DefinitionSyntaxError, match="add|subtract"):
+        if constructor == "Quantity":
+            sess_registry.Quantity(value=1, units=expression)
+        else:
+            getattr(sess_registry, constructor)(expression)
+
+
+@pytest.mark.parametrize(
+    "expression, units",
+    [
+        ("kilowatt", {"kilowatt": 1}),
+        ("kilogram * meter / second**2", {"kilogram": 1, "meter": 1, "second": -2}),
+        ("meter**-2", {"meter": -2}),
+        ("meter**(1+2)", {"meter": 3}),
+        ("meter**(1-2)", {"meter": -1}),
+        ("(1+2)/3*meter", {"meter": 1}),
+    ],
+)
+def test_unit_expression_numeric_arithmetic(sess_registry, expression, units):
+    assert sess_registry.parse_units(expression)._units == UnitsContainer(units)
+
+
+@pytest.mark.parametrize("operator, magnitude", [("+", 5), ("-", 1)])
+def test_quantity_expression_addition_subtraction(sess_registry, operator, magnitude):
+    assert sess_registry.parse_expression(
+        f"3 meter {operator} 2 meter"
+    ) == sess_registry.Quantity(magnitude, "meter")
+
+
+def test_unit_expression_undefined_name(sess_registry):
+    with pytest.raises(UndefinedUnitError, match="megaflop"):
+        sess_registry.Quantity(value=1, units="megaflop")
+
+
 # TODO: do not subclass from QuantityTestCase
 class TestUnit(QuantityTestCase):
     def test_creation(self):
