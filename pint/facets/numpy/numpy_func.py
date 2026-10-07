@@ -928,12 +928,12 @@ def implement_mul_func(func):
         return
 
     @implements(func_str, "function")
-    def implementation(a, b, **kwargs):
+    def implementation(a, b, *args, **kwargs):
         a, b = _dimensionless_if_needed(a, b)
         a = _base_unit_if_needed(a)
         b = _base_unit_if_needed(b)
         units = a.units * b.units
-        mag = func(a._magnitude, b._magnitude, **kwargs)
+        mag = func(a._magnitude, b._magnitude, *args, **kwargs)
         return mag * units
 
 
