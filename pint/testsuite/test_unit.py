@@ -64,8 +64,8 @@ def test_quantity_expression_addition_subtraction(sess_registry, operator, magni
 
 
 def test_unit_expression_undefined_name(sess_registry):
-    with pytest.raises(UndefinedUnitError, match="megaflop"):
-        sess_registry.Quantity(value=1, units="megaflop")
+    with pytest.raises(UndefinedUnitError, match="megaundefined"):
+        sess_registry.Quantity(value=1, units="megaundefined")
 
 
 # TODO: do not subclass from QuantityTestCase
