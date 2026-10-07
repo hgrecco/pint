@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix `numpy.mod`, `numpy.remainder`, `numpy.fmod` and `numpy.floor_divide` ignoring the units of the divisor when both operands have the same dimensionality, e.g. `np.mod(7 m, 200 cm)` returned `7 m`
 - Document how to compare angles that differ by a full turn, e.g. `-140 degree` and `220 degree`, using the modulo operator (#1344)
 - Fix `numpy.diff` and `numpy.ediff1d` not converting the units of Quantity `prepend`/`append` and `to_end`/`to_begin` values
 - Fix babel not localizing unit names containing underscores, e.g. `kilowatt_hour` (#2234)

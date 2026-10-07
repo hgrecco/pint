@@ -398,6 +398,21 @@ class TestMathUfuncs(TestUFuncs):
             np.fmod, self.q1, (self.q2, self.qs, self.qless), (), "same", convert2=False
         )
 
+    def test_mod_floor_divide_mixed_units(self):
+        # Like the % and // operators, the divisor is converted to the units of
+        # the dividend before the operation.
+        x1 = self.Q_([7.0, -7.0], "m")
+        x2 = self.Q_(200.0, "cm")
+        for func in (np.mod, np.remainder, np.fmod):
+            helpers.assert_quantity_almost_equal(
+                func(x1, x2), self.Q_(func([7.0, -7.0], 2.0), "m")
+            )
+        helpers.assert_quantity_almost_equal(
+            np.floor_divide(x1, x2), self.Q_([3.0, -4.0], "")
+        )
+        helpers.assert_quantity_almost_equal(np.mod(x1, x2), x1 % x2)
+        helpers.assert_quantity_almost_equal(np.floor_divide(x1, x2), x1 // x2)
+
     def test_absolute(self):
         self._test1(np.absolute, (self.q2, self.qs, self.qless, self.qi), (), "same")
 
