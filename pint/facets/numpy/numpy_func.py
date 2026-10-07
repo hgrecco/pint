@@ -613,6 +613,27 @@ def _where(condition, *args):
     return output_wrap(np.where(condition, *args))
 
 
+@implements("block", "function")
+def _block(arrays):
+    # np.block takes nested lists, so the Quantities can be at any depth
+    def leaves(obj):
+        if isinstance(obj, list):
+            for item in obj:
+                yield from leaves(item)
+        else:
+            yield obj
+
+    magnitudes, output_wrap = unwrap_and_wrap_consistent_units(*leaves(arrays))
+    magnitudes = iter(magnitudes)
+
+    def rebuild(obj):
+        if isinstance(obj, list):
+            return [rebuild(item) for item in obj]
+        return next(magnitudes)
+
+    return output_wrap(np.block(rebuild(arrays)))
+
+
 @implements("concatenate", "function")
 def _concatenate(sequence, *args, **kwargs):
     sequence, output_wrap = unwrap_and_wrap_consistent_units(*sequence)
@@ -1173,7 +1194,6 @@ for func_str in ("cumprod", "nancumprod"):
 
 # Handle single-argument consistent unit functions
 for func_str in (
-    "block",
     "hstack",
     "vstack",
     "dstack",

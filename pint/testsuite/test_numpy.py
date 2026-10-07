@@ -243,6 +243,21 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
                 with pytest.raises(DimensionalityError):
                     func([nz[:, 0].m, self.q[:, 0]])
 
+    def test_block_nested(self):
+        helpers.assert_quantity_equal(
+            np.block([[self.q, self.q], [self.q, self.q]]),
+            self.Q_(
+                np.block([[self.q.m, self.q.m], [self.q.m, self.q.m]]), self.ureg.m
+            ),
+        )
+        # Inputs in other compatible units are converted to the first unit
+        helpers.assert_quantity_almost_equal(
+            np.block([[self.q], [self.q.to(self.ureg.cm)]]),
+            self.Q_(np.block([[self.q.m], [self.q.m]]), self.ureg.m),
+        )
+        with pytest.raises(DimensionalityError):
+            np.block([[self.q], [self.q.m + 1]])
+
     def test_append(self):
         helpers.assert_quantity_equal(
             np.append(self.q, [[0, 0]] * self.ureg.m, axis=0),
