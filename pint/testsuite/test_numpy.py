@@ -391,11 +391,41 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.diff(self.q_temperature, 1), [[1], [1]] * self.ureg.delta_degC
         )
 
+    def test_diff_with_prepend_and_append(self):
+        # Quantity `prepend` and `append` values are joined to the array, so they
+        # should be converted to its units, not used as bare magnitudes
+        helpers.assert_quantity_equal(
+            np.diff(self.q, prepend=50 * self.ureg.cm, append=500 * self.ureg.cm),
+            [[0.5, 1, 3], [2.5, 1, 1]] * self.ureg.m,
+        )
+        helpers.assert_quantity_almost_equal(
+            np.diff(self.q_temperature, prepend=self.Q_(273.15, self.ureg.K)),
+            [[1, 1], [3, 1]] * self.ureg.delta_degC,
+        )
+        with pytest.raises(DimensionalityError):
+            np.diff(self.q, prepend=1 * self.ureg.s)
+
     def test_ediff1d(self):
         helpers.assert_quantity_equal(np.ediff1d(self.q), [1, 1, 1] * self.ureg.m)
         helpers.assert_quantity_equal(
             np.ediff1d(self.q_temperature), [1, 1, 1] * self.ureg.delta_degC
         )
+
+    def test_ediff1d_with_to_end_and_to_begin(self):
+        # Quantity `to_end` and `to_begin` values are joined to the differences, so
+        # they should be converted to the units of the output
+        q = [1.0, 2.0, 4.0] * self.ureg.m
+        helpers.assert_quantity_equal(
+            np.ediff1d(q, to_end=50 * self.ureg.cm, to_begin=1 * self.ureg.km),
+            [1000, 1, 2, 0.5] * self.ureg.m,
+        )
+        q_temperature = self.Q_([1.0, 2.0, 4.0], self.ureg.degC)
+        helpers.assert_quantity_almost_equal(
+            np.ediff1d(q_temperature, to_end=self.Q_(9, self.ureg.delta_degF)),
+            [1, 2, 5] * self.ureg.delta_degC,
+        )
+        with pytest.raises(DimensionalityError):
+            np.ediff1d(self.q, to_end=1 * self.ureg.s)
 
     def test_gradient(self):
         grad = np.gradient([[1, 1], [3, 4]] * self.ureg.m, 1 * self.ureg.J)
