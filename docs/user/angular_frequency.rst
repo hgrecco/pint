@@ -31,6 +31,33 @@ This leads to behavior some users may find unintuitive. For example, since angle
     >>> angle.dimensionality
     <UnitsContainer({})>
 
+Comparing angles
+~~~~~~~~~~~~~~~~
+
+pint compares angles by their value, so ``-140 degree`` and ``220 degree`` are not equal even though they point
+in the same direction. This is intentional: in many contexts, such as a clockwise versus a counter-clockwise
+rotation, the two describe different things.
+
+.. doctest::
+
+    >>> from math import pi
+    >>> import pint
+    >>> ureg = pint.UnitRegistry()
+    >>> -140 * ureg.degrees == 220 * ureg.degrees
+    False
+
+If in your application angles that differ by a full turn should be treated as equal, normalize them with the
+modulo operator before comparing:
+
+.. doctest::
+
+    >>> -140 * ureg.degrees % (360 * ureg.degrees) == 220 * ureg.degrees
+    True
+    >>> -140 * ureg.degrees % (1 * ureg.turn) == 220 * ureg.degrees
+    True
+    >>> -140 * ureg.degrees % (2 * pi) == 220 * ureg.degrees
+    True
+
 
 Angular Frequency
 -----------------
