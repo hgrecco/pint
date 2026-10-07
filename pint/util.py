@@ -857,6 +857,11 @@ class ParserHelper(UnitsContainer):
     def __repr__(self):
         return f"ParserHelper({repr(self.scale)}, {repr(self._d)})"
 
+    def __add__(self, other):
+        raise DefinitionSyntaxError("Cannot add or subtract units in a unit expression")
+
+    __radd__ = __sub__ = __rsub__ = __add__
+
     def __mul__(self, other):
         if isinstance(other, str):
             new = self.add(other, self._one)
