@@ -198,6 +198,8 @@ class TestQuantity(QuantityTestCase):
                 "{:L}",
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
+            ("{:T}", '4.12345678 "kilogram" dot "meter"^(2)\\/"second"'),
+            ("{:T~}", r'4.12345678 "kg" dot "m"^(2)\/"s"'),
             ("{:P}", "4.12345678 kilogram⋅meter²/second"),
             ("{:H}", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("{:C}", "4.12345678 kilogram*meter**2/second"),
@@ -210,6 +212,8 @@ class TestQuantity(QuantityTestCase):
             ("{:H~}", "4.12345678 kg m<sup>2</sup>/s"),
             ("{:C~}", "4.12345678 kg*m**2/s"),
             ("{:Lx}", r"\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}"),
+            ("{:Tz}", "#quan[4.12345678 kg m^2 / s]"),
+            ("{:Tz~}", "#quan[4.12345678 kg m^2 / s]"),
         ):
             with subtests.test(spec):
                 assert spec.format(x) == result, spec
@@ -292,11 +296,13 @@ class TestQuantity(QuantityTestCase):
                 "L",
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
+            ("T", r'4.12345678 "kilogram" dot "meter"^(2)\/"second"'),
             ("P", "4.12345678 kilogram⋅meter²/second"),
             ("H", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("C", "4.12345678 kilogram*meter**2/second"),
             ("~", "4.12345678 kg * m ** 2 / s"),
             ("L~", r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
+            ("T~", r'4.12345678 "kg" dot "m"^(2)\/"s"'),
             ("P~", "4.12345678 kg⋅m²/s"),
             ("H~", "4.12345678 kg m<sup>2</sup>/s"),
             ("C~", "4.12345678 kg*m**2/s"),
@@ -339,12 +345,16 @@ class TestQuantity(QuantityTestCase):
         assert f"{x:~H}" == r"1×10<sup>20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{20}\ \mathrm{m}"
         assert f"{x:~Lx}" == r"\SI[]{1e+20}{\meter}"
+        assert f"{x:~T}" == '1 times 10^(20) "m"'
+        assert f"{x:~Tz}" == "#quan[1e20 m]"
         assert f"{x:~P}" == r"1×10²⁰ m"
 
         x = ureg.Quantity(1e-20, "meter")
         assert f"{x:~H}" == r"1×10<sup>-20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{-20}\ \mathrm{m}"
         assert f"{x:~Lx}" == r"\SI[]{1e-20}{\meter}"
+        assert f"{x:~T}" == '1 times 10^(-20) "m"'
+        assert f"{x:~Tz}" == "#quan[1e-20 m]"
         assert f"{x:~P}" == r"1×10⁻²⁰ m"
 
     def test_ipython(self):
