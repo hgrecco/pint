@@ -14,6 +14,118 @@ from pint.testsuite.test_umath import TestUFuncs
 
 
 @helpers.requires_numpy
+@pytest.mark.parametrize("dtype", ["f4", "f8"])
+@pytest.mark.parametrize("source_unit,target_unit", [("THz", "nm"), ("nm", "THz")])
+@pytest.mark.parametrize(
+    "key,magnitude",
+    [(0, 1), (slice(0, 2), [1, 2]), ([0, 2], [1, 2]), (Ellipsis, 1)],
+)
+def test_setitem_context(
+    func_registry, dtype, source_unit, target_unit, key, magnitude
+):
+    ureg = func_registry
+    target = ureg.Quantity(np.zeros(3, dtype=dtype), target_unit)
+    value = ureg.Quantity(magnitude, source_unit)
+    original = value.copy()
+    expected = target.copy()
+
+    with ureg.context("sp"):
+        expected.magnitude[key] = value.to(target.units).magnitude
+        target[key] = value
+
+    helpers.assert_quantity_equal(target, expected)
+    helpers.assert_quantity_equal(value, original)
+    assert target.magnitude.dtype == np.dtype(dtype)
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize("masked_target", [False, True])
+@pytest.mark.parametrize("masked_value", [False, True])
+def test_setitem_context_masked(func_registry, masked_target, masked_value):
+    ureg = func_registry
+    magnitude = np.array([3.0, 4.0])
+    if masked_target:
+        magnitude = np.ma.array(magnitude, mask=[False, True])
+    target = ureg.Quantity(magnitude, "nm")
+    magnitude = np.array([1.0, 2.0])
+    if masked_value:
+        magnitude = np.ma.array(magnitude, mask=[True, False])
+    value = ureg.Quantity(magnitude, "THz")
+    original = value.copy()
+    expected = target.copy()
+
+    with ureg.context("sp"):
+        expected.magnitude[:] = value.to(target.units).magnitude
+        target[:] = value
+
+    np.testing.assert_array_equal(target.magnitude, expected.magnitude)
+    np.testing.assert_array_equal(
+        np.ma.getmaskarray(target.magnitude), np.ma.getmaskarray(expected.magnitude)
+    )
+    np.testing.assert_array_equal(
+        np.ma.getdata(value.magnitude), np.ma.getdata(original.magnitude)
+    )
+    np.testing.assert_array_equal(
+        np.ma.getmaskarray(value.magnitude), np.ma.getmaskarray(original.magnitude)
+    )
+    assert target.units == expected.units
+
+
+@helpers.requires_numpy
+def test_setitem_context_rejects_incompatible(func_registry):
+    ureg = func_registry
+    target = ureg.Quantity(np.zeros(2), "nm")
+    original = target.copy()
+    with ureg.context("sp"):
+        with pytest.raises(DimensionalityError):
+            target[:] = ureg.Quantity([1, 2], "kg")
+    with pytest.raises(DimensionalityError):
+        target[:] = ureg.Quantity([1, 2], "THz")
+    helpers.assert_quantity_equal(target, original)
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize(
+    "magnitude,source_unit,target_unit",
+    [
+        (0, "degC", "K"),
+        (32, "degF", "degC"),
+        (273.15, "K", "degC"),
+        (0, "dBm", "mW"),
+        (10, "mW", "dBm"),
+    ],
+)
+def test_setitem_nonmultiplicative_conversion(
+    func_registry, magnitude, source_unit, target_unit
+):
+    ureg = func_registry
+    target = ureg.Quantity(np.zeros(2), target_unit)
+    value = ureg.Quantity(magnitude, source_unit)
+    original = value.copy()
+    expected = target.copy()
+    expected.magnitude[:] = value.to(target.units).magnitude
+
+    target[:] = value
+
+    helpers.assert_quantity_equal(target, expected)
+    helpers.assert_quantity_equal(value, original)
+
+
+@helpers.requires_numpy
+def test_setitem_conversion_failure_preserves_target(func_registry):
+    ureg = func_registry
+    target = ureg.Quantity(np.zeros(2), "degC")
+    original = target.copy()
+    with pytest.raises(DimensionalityError):
+        target[:] = ureg.Quantity([1, 2], "delta_degC")
+    with pytest.raises(IndexError):
+        target[4] = ureg.Quantity(32, "degF")
+    with pytest.raises(ValueError):
+        target[:] = ureg.Quantity([32, 33, 34], "degF")
+    helpers.assert_quantity_equal(target, original)
+
+
+@helpers.requires_numpy
 class TestNumpyMethods:
     @classmethod
     def setup_class(cls):
