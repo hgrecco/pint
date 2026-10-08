@@ -53,6 +53,18 @@ Contexts can be also enabled for blocks of code using the `with` statement:
     ...     q.to('Hz')
     Quantity(599584915999999.9, "hertz")
 
+An active context also applies when assigning a quantity to an array element or
+slice. The value is converted to the array's units before assignment:
+
+.. doctest::
+
+    >>> import numpy as np
+    >>> wavelengths = np.zeros(2) * ureg.nm
+    >>> with ureg.context('sp'):
+    ...     wavelengths[:] = np.array([1., 2.]) * ureg.THz
+    >>> np.allclose(wavelengths.magnitude, [299792.458, 149896.229])
+    True
+
 If you need a particular context in all your code, you can enable it for all
 operations with the registry
 

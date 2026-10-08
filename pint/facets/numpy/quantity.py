@@ -287,14 +287,10 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
         try:
             if isinstance(value, self.__class__):
-                factor = self.__class__(
-                    value.magnitude, value._units / self._units
-                ).to_root_units()
+                factor = value.to(self._units)
             else:
                 factor = self.__class__(value, self._units ** (-1)).to_root_units()
-
-            if isinstance(factor, self.__class__):
-                if not factor.dimensionless:
+                if isinstance(factor, self.__class__) and not factor.dimensionless:
                     raise DimensionalityError(
                         value,
                         self.units,
@@ -302,6 +298,8 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
                         "or access the magnitude directly as "
                         f"`obj.magnitude[{key}] = {value}`.",
                     )
+
+            if isinstance(factor, self.__class__):
                 self._magnitude[key] = factor.magnitude
             else:
                 self._magnitude[key] = factor
