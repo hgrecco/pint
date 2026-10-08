@@ -291,6 +291,28 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.unwrap([0, 540] * self.ureg.deg), [0, 180] * self.ureg.deg
         )
 
+    def test_unwrap_with_period(self):
+        # `period` and `discont` are in the units of the input, so Quantity values
+        # are converted to them.
+        helpers.assert_quantity_almost_equal(
+            np.unwrap([0, 3 * np.pi] * self.ureg.radians, period=360 * self.ureg.deg),
+            [0, np.pi] * self.ureg.radians,
+        )
+        helpers.assert_quantity_equal(
+            np.unwrap([0, 9, 1] * self.ureg.m, period=1000 * self.ureg.cm),
+            [0, -1, 1] * self.ureg.m,
+        )
+        helpers.assert_quantity_equal(
+            np.unwrap(
+                [0, 700] * self.ureg.cm,
+                discont=8 * self.ureg.m,
+                period=10 * self.ureg.m,
+            ),
+            [0, 700] * self.ureg.cm,
+        )
+        with pytest.raises(DimensionalityError):
+            np.unwrap(self.q, period=1 * self.ureg.s)
+
     # Rounding
 
     def test_fix(self):
