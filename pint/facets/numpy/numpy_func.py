@@ -626,12 +626,18 @@ def _stack(arrays, *args, **kwargs):
 
 
 @implements("unwrap", "function")
-def _unwrap(p, discont=None, axis=-1):
+def _unwrap(p, discont=None, axis=-1, *, period=None):
     # np.unwrap only dispatches over p argument, so assume it is a Quantity
-    discont = np.pi if discont is None else discont
-    return p._REGISTRY.Quantity(np.unwrap(p.m_as("rad"), discont, axis=axis), "rad").to(
-        p.units
+    if period is None:
+        discont = np.pi if discont is None else discont
+        return p._REGISTRY.Quantity(
+            np.unwrap(p.m_as("rad"), discont, axis=axis), "rad"
+        ).to(p.units)
+    # An explicit period sets the scale, so work in the units of p
+    (p, discont, period), output_wrap = unwrap_and_wrap_consistent_units(
+        p, discont, period
     )
+    return output_wrap(np.unwrap(p, discont, axis=axis, period=period))
 
 
 @implements("copyto", "function")
