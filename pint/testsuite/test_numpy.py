@@ -76,6 +76,118 @@ class TestNumpyArrayCreation(TestNumpyMethods):
         self.assertNDArrayEqual(np.full_like(self.q, 2), np.array([[2, 2], [2, 2]]))
 
 
+@helpers.requires_numpy
+class TestLinspace:
+    @pytest.mark.parametrize(
+        "endpoint, expected, step", [(True, [0, 5, 10], 5), (False, [0, 4, 8], 4)]
+    )
+    @pytest.mark.parametrize("positional", [False, True])
+    def test_retstep(self, sess_registry, endpoint, expected, step, positional):
+        start = 0 * sess_registry.m
+        stop = (1000 if endpoint else 1200) * sess_registry.cm
+        if positional:
+            samples, spacing = np.linspace(start, stop, 3, endpoint, True)
+        else:
+            samples, spacing = np.linspace(
+                start=start, stop=stop, num=3, endpoint=endpoint, retstep=True
+            )
+        helpers.assert_quantity_equal(samples, sess_registry.Quantity(expected, "m"))
+        helpers.assert_quantity_equal(spacing, step * sess_registry.m)
+
+    @pytest.mark.parametrize("retstep", [False, True])
+    def test_zero_start(self, sess_registry, retstep):
+        result = np.linspace(0, 10 * sess_registry.s, num=3, retstep=retstep)
+        if retstep:
+            samples, spacing = result
+            helpers.assert_quantity_equal(spacing, 5 * sess_registry.s)
+        else:
+            samples = result
+        helpers.assert_quantity_equal(samples, [0, 5, 10] * sess_registry.s)
+
+    @pytest.mark.parametrize(
+        "stop_unit, stop_value", [("degC", 30), ("kelvin", 303.15)]
+    )
+    def test_offset_units(self, sess_registry, stop_unit, stop_value):
+        samples, spacing = np.linspace(
+            sess_registry.Quantity(10, "degC"),
+            sess_registry.Quantity(stop_value, stop_unit),
+            num=3,
+            retstep=True,
+        )
+        helpers.assert_quantity_almost_equal(
+            samples, sess_registry.Quantity([10, 20, 30], "degC")
+        )
+        helpers.assert_quantity_almost_equal(
+            spacing, sess_registry.Quantity(10, "delta_degC")
+        )
+
+    def test_logarithmic_units(self, sess_registry):
+        samples, spacing = np.linspace(
+            sess_registry.Quantity(0, "dBm"),
+            sess_registry.Quantity(6, "dBm"),
+            num=3,
+            retstep=True,
+        )
+        helpers.assert_quantity_equal(samples, sess_registry.Quantity([0, 3, 6], "dBm"))
+        helpers.assert_quantity_almost_equal(
+            spacing, sess_registry.Quantity(1.9952623149688795)
+        )
+
+    @pytest.mark.parametrize(
+        "axis, expected",
+        [(0, [[0, 10], [1, 12], [2, 14]]), (1, [[0, 1, 2], [10, 12, 14]])],
+    )
+    def test_array_endpoints(self, sess_registry, axis, expected):
+        samples, spacing = np.linspace(
+            [0, 10] * sess_registry.m,
+            [200, 1400] * sess_registry.cm,
+            num=3,
+            retstep=True,
+            axis=axis,
+            dtype=np.float32,
+        )
+        helpers.assert_quantity_equal(samples, sess_registry.Quantity(expected, "m"))
+        helpers.assert_quantity_equal(spacing, [1, 2] * sess_registry.m)
+        assert samples.dtype == np.float32
+
+    @pytest.mark.parametrize(
+        "num, endpoint, expected",
+        [(0, True, []), (0, False, []), (1, True, [0]), (1, False, [0])],
+    )
+    def test_small_num(self, sess_registry, num, endpoint, expected):
+        samples, spacing = np.linspace(
+            0 * sess_registry.m,
+            10 * sess_registry.m,
+            num=num,
+            endpoint=endpoint,
+            retstep=True,
+        )
+        helpers.assert_quantity_equal(samples, sess_registry.Quantity(expected, "m"))
+        assert spacing.units == sess_registry.m
+        if num == 1 and not endpoint:
+            assert spacing.magnitude == 10
+        else:
+            assert np.isnan(spacing.magnitude)
+
+    @pytest.mark.parametrize("quantity_start", [False, True])
+    def test_dimensionless(self, sess_registry, quantity_start):
+        start, stop = 0, 10
+        if quantity_start:
+            start = sess_registry.Quantity(start)
+        else:
+            stop = sess_registry.Quantity(stop)
+        samples, spacing = np.linspace(start, stop, num=3, retstep=True)
+        assert isinstance(samples, sess_registry.Quantity)
+        assert isinstance(spacing, sess_registry.Quantity)
+        helpers.assert_quantity_equal(samples, sess_registry.Quantity([0, 5, 10]))
+        helpers.assert_quantity_equal(spacing, sess_registry.Quantity(5))
+
+    @pytest.mark.parametrize("retstep", [False, True])
+    def test_incompatible_units(self, sess_registry, retstep):
+        with pytest.raises(DimensionalityError):
+            np.linspace(0 * sess_registry.m, 10 * sess_registry.s, retstep=retstep)
+
+
 class TestNumpyArrayManipulation(TestNumpyMethods):
     # TODO
     # https://www.numpy.org/devdocs/reference/routines.array-manipulation.html

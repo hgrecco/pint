@@ -1082,7 +1082,6 @@ for func_str, unit_arguments, wrap_output in (
     ("clip", ["a", "a_min", "a_max", "min", "max"], True),
     ("append", ["arr", "values"], True),
     ("compress", "a", True),
-    ("linspace", ["start", "stop"], True),
     ("tile", "A", True),
     ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
@@ -1267,6 +1266,17 @@ def implement_diff_func(func_str, input_arguments, output_arguments=()):
 
 implement_diff_func("diff", ["a", "prepend", "append"])
 implement_diff_func("ediff1d", ["ary"], ["to_end", "to_begin"])
+
+
+@implements("linspace", "function")
+def _linspace(start, stop, *args, **kwargs):
+    (start, stop), output_wrap = unwrap_and_wrap_consistent_units(start, stop)
+    result = np.linspace(start, stop, *args, **kwargs)
+    if isinstance(result, tuple):
+        samples, step = result
+        # The step is a difference, including for offset and logarithmic units.
+        return output_wrap(samples), output_wrap(step) - output_wrap(0)
+    return output_wrap(result)
 
 
 @implements("geomspace", "function")
