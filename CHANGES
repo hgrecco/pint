@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix `numpy.tensordot`, `numpy.cross` and the other multiplicative functions rejecting positional arguments after the two arrays, e.g. `numpy.tensordot(a, b, 1)`
 - Fix `numpy.mod`, `numpy.remainder`, `numpy.fmod` and `numpy.floor_divide` ignoring the units of the divisor when both operands have the same dimensionality, e.g. `np.mod(7 m, 200 cm)` returned `7 m`
 - Improve and test `/` and `*` between `Quantity` and `Unit`, supporting more edge cases; improve their type annotations as well (#2427)
 - `<number> / <offset or logarithmic unit>` (e.g. `1 / ureg.degC`) now raises `OffsetUnitCalculusError`; `Unit * bool` and `Quantity * str` now raise `TypeError` (#2427)
