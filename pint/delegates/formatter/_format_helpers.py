@@ -15,7 +15,7 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from fractions import Fraction
 from functools import partial
-from locale import LC_NUMERIC, getlocale, setlocale
+from locale import LC_NUMERIC, setlocale
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -75,6 +75,7 @@ def override_locale(
 
     IMPORTANT: When the locale is not None, this function uses setlocale
     and therefore is not thread safe.
+    The previous numeric locale is restored even if formatting raises.
     """
 
     if locale is None:
@@ -83,13 +84,15 @@ def override_locale(
     else:
         # If locale is not None, change it and return the backwards compatible
         # format_number.
-        prev_locale_string = getlocale(LC_NUMERIC)
+        prev_locale_string = setlocale(LC_NUMERIC)
         if isinstance(locale, str):
             setlocale(LC_NUMERIC, locale)
         else:
             setlocale(LC_NUMERIC, str(locale))
-        yield partial(format_number, spec=spec)
-        setlocale(LC_NUMERIC, prev_locale_string)
+        try:
+            yield partial(format_number, spec=spec)
+        finally:
+            setlocale(LC_NUMERIC, prev_locale_string)
 
 
 def pretty_fmt_exponent(num: Number) -> str:

@@ -1,10 +1,88 @@
 from __future__ import annotations
 
+import locale
+
 import pytest
 
 from pint import formatting as fmt
+from pint.delegates.formatter import _format_helpers
 from pint.delegates.formatter._format_helpers import formatter, join_u
 from pint.formatting import formatter as pf_formatter
+
+
+@pytest.fixture(params=["C", "fr_FR"])
+def numeric_locale(monkeypatch, request):
+    state = {"current": request.param}
+
+    def setlocale(category, value=None):
+        assert category == locale.LC_NUMERIC
+        if value is None:
+            return state["current"]
+        if value == (None, None):
+            value = "C"
+        elif isinstance(value, tuple):
+            raise locale.Error("tuple locale is not round-trippable")
+        if value == "unavailable":
+            raise locale.Error("unsupported locale")
+        state["current"] = value
+        return value
+
+    monkeypatch.setattr(_format_helpers, "setlocale", setlocale)
+    return state
+
+
+@pytest.mark.parametrize("error_type", [ValueError, RuntimeError, KeyboardInterrupt])
+def test_override_locale_restores_after_error(numeric_locale, error_type):
+    original = numeric_locale["current"]
+    error = error_type("body error")
+    with pytest.raises(error_type) as caught:
+        with _format_helpers.override_locale(".2f", "outer"):
+            assert numeric_locale["current"] == "outer"
+            raise error
+    assert caught.value is error
+    assert numeric_locale["current"] == original
+
+
+def test_override_locale_restores_after_success(numeric_locale):
+    original = numeric_locale["current"]
+    with _format_helpers.override_locale(".2f", "outer") as format_number:
+        assert numeric_locale["current"] == "outer"
+        assert format_number(1.25) == "1.25"
+    assert numeric_locale["current"] == original
+
+
+def test_override_locale_nested_error(numeric_locale):
+    original = numeric_locale["current"]
+    with _format_helpers.override_locale("", "outer"):
+        with pytest.raises(ValueError, match="inner error"):
+            with _format_helpers.override_locale("", "inner"):
+                assert numeric_locale["current"] == "inner"
+                raise ValueError("inner error")
+        assert numeric_locale["current"] == "outer"
+    assert numeric_locale["current"] == original
+
+
+@pytest.mark.parametrize("raise_error", [False, True])
+def test_override_locale_none_does_not_change_locale(monkeypatch, raise_error):
+    def unexpected_call(*args):
+        pytest.fail("locale=None must not read or change LC_NUMERIC")
+
+    monkeypatch.setattr(_format_helpers, "setlocale", unexpected_call)
+    if raise_error:
+        with pytest.raises(ValueError, match="body error"):
+            with _format_helpers.override_locale(".2f", None):
+                raise ValueError("body error")
+    else:
+        with _format_helpers.override_locale(".2f", None) as format_number:
+            assert format_number(1.25) == "1.25"
+
+
+def test_override_locale_setup_error(numeric_locale):
+    original = numeric_locale["current"]
+    with pytest.raises(locale.Error, match="unsupported locale"):
+        with _format_helpers.override_locale("", "unavailable"):
+            pytest.fail("a failed locale setup must not enter the body")
+    assert numeric_locale["current"] == original
 
 
 class TestFormatter:

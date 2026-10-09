@@ -1,11 +1,53 @@
 from __future__ import annotations
 
+import locale
 import os
 
 import pytest
 
 from pint import UnitRegistry
 from pint.testsuite import helpers
+
+
+@helpers.requires_babel(["de_DE", "fr_FR"])
+@pytest.mark.parametrize("starting_locale", ["C", "fr_FR"])
+@pytest.mark.parametrize("spec", ["", ".2q"])
+@pytest.mark.parametrize("style", ["D", "C", "P"])
+@pytest.mark.parametrize("locale_object", [False, True])
+@pytest.mark.parametrize(
+    "array", [False, pytest.param(True, marks=helpers.requires_numpy)]
+)
+def test_format_restores_numeric_locale(
+    sess_registry, style, locale_object, array, starting_locale, spec
+):
+    from babel import Locale
+
+    magnitude = 1.25
+    if array:
+        import numpy as np
+
+        magnitude = np.array([1.25, 2.5])
+    quantity = sess_registry.Quantity(magnitude, "meter")
+    fmt_locale = Locale.parse("de_DE") if locale_object else "de_DE"
+    original = locale.setlocale(locale.LC_NUMERIC)
+    try:
+        locale.setlocale(locale.LC_NUMERIC, starting_locale)
+        before = locale.setlocale(locale.LC_NUMERIC)
+        ordinary = format(1.25, "n")
+        if spec:
+            with pytest.raises(ValueError, match="Unknown format code"):
+                sess_registry.formatter.format_quantity(
+                    quantity, spec + style, locale=fmt_locale
+                )
+        else:
+            rendered = sess_registry.formatter.format_quantity(
+                quantity, style, locale=fmt_locale
+            )
+            assert "1,25" in rendered
+        assert locale.setlocale(locale.LC_NUMERIC) == before
+        assert format(1.25, "n") == ordinary
+    finally:
+        locale.setlocale(locale.LC_NUMERIC, original)
 
 
 @helpers.requires_not_babel()

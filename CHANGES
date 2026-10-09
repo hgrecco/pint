@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Restore the previous numeric locale when localized formatting raises an exception
 - Fix `numpy.unwrap` raising `TypeError` on the `period` keyword; a Quantity `period` or `discont` is converted to the units of the input
 - Document how to compare angles that differ by a full turn, e.g. `-140 degree` and `220 degree`, using the modulo operator (#1344)
 - Fix `numpy.diff` and `numpy.ediff1d` not converting the units of Quantity `prepend`/`append` and `to_end`/`to_begin` values
