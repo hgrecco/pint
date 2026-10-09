@@ -316,6 +316,17 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
                 [func(*func_args) for func_args in zip(*args)], dtype=object
             )
 
+        if (
+            func_str in ["fmod", "mod", "remainder", "floor_divide"]
+            and len(args) >= 2
+            and _is_quantity(args[0])
+            and _is_quantity(args[1])
+            and args[0].dimensionality == args[1].dimensionality
+        ):
+            # Like the % and // operators, express the divisor in the units of the
+            # dividend, otherwise e.g. np.mod(7 m, 200 cm) computes 7 % 200.
+            args = (args[0], args[1].to(args[0].units), *args[2:])
+
         first_input_units = _get_first_input_units(args, kwargs)
         if input_units is None and _is_quantity(kwargs.get("initial")):
             # Unlike amax/amin, this path doesn't convert a Quantity `initial`.
