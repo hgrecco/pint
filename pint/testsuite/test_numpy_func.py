@@ -385,6 +385,8 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         )
         helpers.assert_quantity_almost_equal(
             np.vecmat(w, m), self.Q_(np.vecmat(w.magnitude, m.magnitude), "m * s")
+        )
+
     def test_mul_func_positional_args(self):
         a = self.Q_(np.arange(6.0).reshape(2, 3), "m")
         b = self.Q_(np.arange(6.0).reshape(3, 2), "s")
