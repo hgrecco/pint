@@ -28,6 +28,7 @@ Pint Changelog
 - Fix `Quantity.to_compact()` raising `OffsetUnitCalculusError` for offset units like `degree_Celsius` with magnitude below 1 (#2005)
 - Fix CI installing the numpy matrix pin outside the pixi env on Windows/macOS, so those legs ran the no-numpy test suite (#2402)
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
+- Fix `1 * unit` skipping `auto_reduce_dimensions` and `autoconvert_to_preferred`, so it disagreed with every other magnitude (#2403)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
 - Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
 
