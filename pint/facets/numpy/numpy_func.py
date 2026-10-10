@@ -489,6 +489,9 @@ op_units_output_ufuncs = {
     "cumsum": "sum",
     "cumulative_sum": "sum",
     "matmul": "mul",
+    "matvec": "mul",
+    "vecmat": "mul",
+    "vecdot": "mul",
 }
 
 
@@ -965,6 +968,7 @@ for func_str in (
     "vecmat",
     "tensordot",
     "linalg.tensordot",
+    "linalg.vecdot",
 ):
     implement_mul_func(func_str)
 
