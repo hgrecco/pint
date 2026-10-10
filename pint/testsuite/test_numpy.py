@@ -1353,7 +1353,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.nanpercentile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
         )
         helpers.assert_quantity_equal(
-            np.nanpercentile(self.q_nan, 25 * self.ureg.dimensionless), self.Q_(1.5, "m")
+            np.nanpercentile(self.q_nan, 25 * self.ureg.dimensionless),
+            self.Q_(1.5, "m"),
         )
 
     def test_quantile(self):
@@ -1376,7 +1377,8 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.nanquantile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
         )
         helpers.assert_quantity_equal(
-            np.nanquantile(self.q_nan, 0.25 * self.ureg.dimensionless), self.Q_(1.5, "m")
+            np.nanquantile(self.q_nan, 0.25 * self.ureg.dimensionless),
+            self.Q_(1.5, "m"),
         )
 
     def test_copyto(self):
