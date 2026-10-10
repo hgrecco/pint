@@ -54,12 +54,13 @@ import platformdirs
 from ... import pint_eval
 from ..._typing import (
     Handler,
+    Magnitude,
     QuantityArgument,
     QuantityOrUnitLike,
     Scalar,
     UnitLike,
 )
-from ...compat import coerce_scalar, deprecated
+from ...compat import _to_magnitude, coerce_scalar, deprecated
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -176,8 +177,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     Parameters
     ----------
     filename : str or None
-        path of the units definition file to load or line iterable object. Empty to load
-        the default definition file. None to leave the UnitRegistry empty.
+        path of the units definition file to load or line-iterable object.
+        Empty string to load the default definition file. (default)
+        None to leave the UnitRegistry empty.
     force_ndarray : bool
         convert any input, scalar or not to a numpy.ndarray.
     force_ndarray_like : bool
@@ -214,7 +216,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
     def __init__(
         self,
-        filename="",
+        filename: Iterable[str] | str | pathlib.Path | None = "",
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
@@ -457,9 +459,19 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             return self._diskcache.cache_folder
         return None
 
+    ############
+    # Custom non-integer-type support
+    # - used when parsing decimals: "3.14" -> non_int_type("3.14")
+    # - used when dividing integers: 3/2 -> non_int_type(3)/non_int_type(2)
+    ############
+
     @property
     def non_int_type(self):
         return self._non_int_type
+
+    ############
+    # Extending the registry with new unit definitions
+    ############
 
     def define(self, definition: str | type) -> None:
         """Add unit to the registry.
@@ -1181,6 +1193,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         return value
 
+    ############
+    # Parsing
+    ############
+
     def parse_unit_name(
         self, unit_name: str, case_sensitive: bool | None = None
     ) -> tuple[tuple[str, str, str], ...]:
@@ -1505,10 +1521,93 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             return self.Quantity(result)
         return result
 
-    # We put this last to avoid overriding UnitsContainer
-    # and I do not want to rename it.
-    # TODO: Maybe in the future we need to change it to a more meaningful
-    # non-colliding name.
+    ############
+    # Conversion methods (object -> magnitude or unit):
+    # - intended to be extended by registry subclasses that wish to support more objects
+    # - intended to only be used by the `Unit`/`Quantity` constructors
+    ############
+
+    def _into_units(
+        self, units: UnitLike | None, /, *, target_class_name: str | None = None
+    ) -> UnitsContainer:
+        """Convenience method that converts the argument into units.
+
+        Intended for use by the `Unit` and `Quantity` constructors.
+        """
+        if units is None:
+            return self.UnitsContainer()
+        if isinstance(units, (UnitsContainer, UnitDefinition)):
+            return units
+        elif isinstance(units, str):
+            return self.parse_units(units)._units
+        elif isinstance(units, PlainUnit):
+            return units._units
+        elif isinstance(units, PlainQuantity):
+            if units.magnitude != 1:
+                logger.warning(
+                    "Treating a non-unity quantity as units: the magnitude has been ignored!"
+                    # specialized warning message for maintaining backwards compatibility
+                    if target_class_name is None
+                    else f"Creating new {target_class_name} using a non unity PlainQuantity as units."
+                )
+            return units._units
+        else:
+            raise TypeError(
+                f"units must be of type str, Unit or UnitsContainer; not {type(units)}."
+            )
+
+    def _into_magnitude(
+        self,
+        value: object,
+        /,
+        units: UnitsContainer | None = None,
+        *,
+        parse_strings: bool = False,
+    ) -> Magnitude:
+        """Convenience method that converts the value into a supported magnitude.
+
+        Intended to be used by `Quantity` and `Unit` methods.
+        The `units` argument is the target unit, required when `value` is a `PlainQuantity`.
+        """
+        if isinstance(value, PlainQuantity):
+            if units is None:
+                raise TypeError("Expected a bare magnitude, found a quantity.")
+            return value.to(units)._magnitude
+        elif isinstance(value, str):
+            if not parse_strings:
+                raise TypeError(
+                    "This operation does not support automatically parsing strings."
+                    " Please convert the operand to a quantity before proceeding."
+                )
+            if value == "":
+                raise ValueError("magnitude cannot be an empty string.")
+            parsed = ParserHelper.from_string(value, self.non_int_type)
+            if parsed:
+                # NOTE: we're calling this function again in order to consistently handle all cases
+                #   (including when `parsed` also has units and is not just a scale/magnitude).
+                quantity = self.Quantity(parsed.scale, self.UnitsContainer(parsed))
+                return self._into_magnitude(quantity, units=units)
+            else:
+                return parsed.scale
+        else:
+            # TODO(#2427 follow-up):
+            #   Make `_to_magnitude` a `GenericPlainRegistry` method as well
+            #   and subclass it in `GenericNumpyRegistry` for numpy-specific magnitude
+            #   support (e.g., `list` -> `np.ndarray` conversions).
+            # This will allow to better isolate numpy-specific code in the numpy facet.
+            return _to_magnitude(value, self.force_ndarray, self.force_ndarray_like)
+
+    # TODO(#2427 follow-up):
+    #   Move `PlainQuantity._is_timedelta` and `PlainQuantity._convert_timedelta` here
+    #   for consistency and correctness (those methods shouldn't have access to existing
+    #   magnitude/units because they're meant to *create* them...)
+
+    ############
+    # Other utilities
+    ############
+
+    # We put this last to avoid overriding UnitsContainer and I (@hgrecco) do not want to rename it.
+    # TODO: Maybe in the future we need to change it to a more meaningful non-colliding name.
     def UnitsContainer(self, *args: Any, **kwargs: Any) -> UnitsContainer:
         return UnitsContainer(*args, non_int_type=self.non_int_type, **kwargs)
 
