@@ -182,7 +182,7 @@ tomlkit = "*"
 pre-commit = "*"
 pre-commit-hooks = "*"
 taplo = "*"
-ruff = "*"
+ruff = "<0.17"
 mdformat = "*"
 mdformat-ruff = "*"
 
