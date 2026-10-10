@@ -1335,18 +1335,48 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_percentile(self):
         helpers.assert_quantity_equal(np.percentile(self.q, 25), self.Q_(1.75, "m"))
+        helpers.assert_quantity_equal(
+            np.percentile(self.q, 25 * self.ureg.percent), self.Q_(1.75, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.percentile(self.q, 25 * self.ureg.dimensionless), self.Q_(1.75, "m")
+        )
+        assert np.percentile(self.q.m, 25 * self.ureg.percent) == 1.75
+        with pytest.raises(DimensionalityError):
+            np.percentile(self.q, 25 * self.ureg.m)
 
     def test_nanpercentile(self):
         helpers.assert_quantity_equal(
             np.nanpercentile(self.q_nan, 25), self.Q_(1.5, "m")
         )
+        helpers.assert_quantity_equal(
+            np.nanpercentile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanpercentile(self.q_nan, 25 * self.ureg.dimensionless), self.Q_(1.5, "m")
+        )
 
     def test_quantile(self):
         helpers.assert_quantity_equal(np.quantile(self.q, 0.25), self.Q_(1.75, "m"))
+        helpers.assert_quantity_equal(
+            np.quantile(self.q, 25 * self.ureg.percent), self.Q_(1.75, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.quantile(self.q, 0.25 * self.ureg.dimensionless), self.Q_(1.75, "m")
+        )
+        assert np.quantile(self.q.m, 25 * self.ureg.percent) == 1.75
+        with pytest.raises(DimensionalityError):
+            np.quantile(self.q, 0.25 * self.ureg.m)
 
     def test_nanquantile(self):
         helpers.assert_quantity_equal(
             np.nanquantile(self.q_nan, 0.25), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanquantile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanquantile(self.q_nan, 0.25 * self.ureg.dimensionless), self.Q_(1.5, "m")
         )
 
     def test_copyto(self):
