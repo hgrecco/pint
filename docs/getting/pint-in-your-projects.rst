@@ -70,6 +70,13 @@ support a known ``sq_cm`` spelling without changing its unit definitions:
    >>> ureg("3 sq_cm")
    Quantity(3, "centimeter ** 2")
 
+Pint first replaces the multiplication sign ``×`` with ``*``, ``‰`` with
+``permille``, and ``%`` with ``percent``. Your custom preprocessors then run in
+the order supplied. Finally, Pint normalizes expression syntax, including
+superscript exponents and caret powers (``m²`` and ``m^2`` become ``m**2``).
+These built-in steps are part of the registry's preprocessing pipeline for
+both expressions and unit strings.
+
 
 Keeping up to date with Pint development
 ----------------------------------------

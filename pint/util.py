@@ -944,7 +944,17 @@ def _convert_pretty_exponent(match: re.Match[str]) -> str:
     return f"**({text})"
 
 
+def _symbol_preprocessor(input_string: str) -> str:
+    """Normalize unit symbols before applying custom registry preprocessors."""
+    return (
+        input_string.replace("×", "*")
+        .replace("‰", " permille ")
+        .replace("%", " percent ")
+    )
+
+
 def string_preprocessor(input_string: str) -> str:
+    """Normalize expression syntax after applying custom registry preprocessors."""
     input_string = input_string.replace(",", "")
     input_string = input_string.replace(" per ", "/")
 

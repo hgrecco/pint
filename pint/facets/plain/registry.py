@@ -72,6 +72,7 @@ from ...util import (
     ParserHelper,
     _clean_exponent,
     _is_dim,
+    _symbol_preprocessor,
     create_class_with_registry,
     getattr_maybe_raise,
     logger,
@@ -253,15 +254,11 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._filename = filename
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
-        self.preprocessors = preprocessors or []
-        # use a default preprocessor to support "%"
-        self.preprocessors.insert(0, lambda string: string.replace("%", " percent "))
-
-        # use a default preprocessor to support permille "‰"
-        self.preprocessors.insert(0, lambda string: string.replace("‰", " permille "))
-
-        # use a default preprocessor to support multiplication sign "×"
-        self.preprocessors.insert(0, lambda string: string.replace("×", "*"))
+        self.preprocessors = [
+            _symbol_preprocessor,
+            *(preprocessors or []),
+            string_preprocessor,
+        ]
 
         #: mode used to fill in the format defaults
         self.separate_format_defaults = separate_format_defaults
@@ -1500,7 +1497,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             return self.Quantity(1)
 
         input_string = self._apply_preprocessors(input_string)
-        input_string = string_preprocessor(input_string)
         gen = pint_eval.tokenizer(input_string)
 
         def _define_op(s: str):
