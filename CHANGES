@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Parse `$` as a unit symbol like `£`, and raise `DefinitionSyntaxError` for unknown operators such as `&` instead of ignoring them (#1814)
 - `str()` and `format()` of a `Unit` now use the registry's `fmt_locale`, like Quantities (#1472)
 - Document `is_compatible_with` in the tutorial (#1189)
 - Document defining units with a custom `Converter` (#1453)
