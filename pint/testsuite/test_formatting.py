@@ -116,3 +116,26 @@ def test_format_unit_fraction_exponent_absorbs_noise(func_registry):
     u2 = func_registry.Unit("meter") ** 5.55e-17
     assert format(u2, "~P") == "m⁵⋅⁵⁵e⁻¹⁷"
     assert format(u2, "~/P") == "m⁰"
+
+
+@pytest.mark.parametrize(
+    ("unit", "latex", "siunitx"),
+    [
+        ("degC", r"\mathrm{{}^{\circ}C}", r"\si[]{\degreeCelsius}"),
+        ("degF", r"\mathrm{{}^{\circ}F}", r"\si[]{\degree F}"),
+        ("degR", r"\mathrm{{}^{\circ}R}", r"\si[]{\degree R}"),
+        ("delta_degC", r"\mathrm{\Delta {}^{\circ}C}", r"\si[]{\degreeCelsius}"),
+        ("delta_degF", r"\mathrm{\Delta {}^{\circ}F}", r"\si[]{\degree F}"),
+    ],
+)
+def test_format_temperature_latex(func_registry, unit, latex, siunitx):
+    """Temperature units format as valid LaTeX and siunitx (#400)."""
+    u = func_registry.Unit(unit)
+    assert format(u, "~L") == latex
+    assert format(u, "Lx") == siunitx
+    assert format(u, "~Lx") == siunitx
+
+
+def test_format_temperature_siunitx_compound(func_registry):
+    u = func_registry.Unit("joule / delta_degC ** 2")
+    assert format(u, "Lx") == r"\si[]{\joule\per\degreeCelsius\squared}"
