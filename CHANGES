@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Document `is_compatible_with` in the tutorial (#1189)
 - Fix `numpy.linspace(..., retstep=True)` on Quantities failing to return separate samples and step; offset temperature steps use delta units (#1340)
 - `numpy.sum`/`numpy.nansum` now raise `DimensionalityError` for a bare non-zero `initial` on a dimensioned Quantity, like `numpy.max` (#2401)
 - Fix logarithmic unit conversion and hashing with Decimal magnitudes and `non_int_type=Decimal`, with or without NumPy (#1936)

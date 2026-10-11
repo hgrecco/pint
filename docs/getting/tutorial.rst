@@ -165,6 +165,25 @@ registry, such as ``knot`` or ``meter_per_second``; it does not include
 every compound unit of the same dimensionality that could be built
 from other units, such as ``mile / hour``.
 
+To check whether two objects can be converted into each other, use
+``is_compatible_with()``. It is available on quantities, units and the
+registry, and accepts quantities, units or strings:
+
+.. doctest::
+
+   >>> speed.is_compatible_with('mile / hour')
+   True
+   >>> ureg.knot.is_compatible_with(ureg.joule)
+   False
+   >>> ureg.is_compatible_with('meter', '3 inch')
+   True
+
+Objects that are not a quantity, unit or string are treated as dimensionless.
+Contexts can be passed as extra arguments, e.g.
+``ureg.is_compatible_with('nm', 'Hz', 'sp')``.
+If you want an error instead of ``False``, convert directly with ``to()``,
+which raises a ``DimensionalityError`` for incompatible units.
+
 Simplifying units
 -----------------
 
