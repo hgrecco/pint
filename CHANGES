@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix `UnitRegistry.wraps()` converting only the first variadic positional argument and failing on empty `*args`; preserve keyword-only arguments and defaults (#2254)
 - Raise `DefinitionSyntaxError` instead of an internal `TypeError` for addition or subtraction in unit expressions, e.g. `kilo-watt` (#2029)
 - Reject invalid unit aliases at definition time while preserving Unicode and degree aliases (#1918)
 - Fix `numpy.block` raising `TypeError` for nested lists of Quantities, e.g. `numpy.block([[a, b], [c, d]])`
