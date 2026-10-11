@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix assigning offset-unit quantities (e.g. `degC` into a `kelvin` array) via `__setitem__` (#618)
 - Fix compound logarithmic units, e.g. `Quantity(-161, "dBm/Hz")`, becoming an undefined `delta_` unit that could not be converted (#1162)
 - `str()` and `format()` of a `Unit` now use the registry's `fmt_locale`, like Quantities (#1472)
 - Document `is_compatible_with` in the tutorial (#1189)
