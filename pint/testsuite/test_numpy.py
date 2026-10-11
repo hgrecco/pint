@@ -805,6 +805,15 @@ class TestNumpyUnclassified(TestNumpyMethods):
         helpers.assert_quantity_equal(
             self.q.repeat(2), [1, 1, 2, 2, 3, 3, 4, 4] * self.ureg.m
         )
+        helpers.assert_quantity_equal(
+            np.repeat(self.q, 2), [1, 1, 2, 2, 3, 3, 4, 4] * self.ureg.m
+        )
+        helpers.assert_quantity_equal(
+            np.repeat(self.q, [1, 2], axis=0), [[1, 2], [3, 4], [3, 4]] * self.ureg.m
+        )
+        helpers.assert_quantity_equal(
+            np.repeat(self.Q_(3, "m"), 2), [3, 3] * self.ureg.m
+        )
 
     def test_sort(self):
         q = [4, 5, 2, 3, 1, 6] * self.ureg.m
