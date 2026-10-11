@@ -14,7 +14,7 @@ import functools
 from collections.abc import Callable, Iterable
 from inspect import Parameter, signature
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 from ._typing import FuncType
 from .errors import DimensionalityError
@@ -22,6 +22,7 @@ from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
     from ._typing import Quantity, Unit
+    from .facets.plain import GenericPlainRegistry
     from .registry import UnitRegistry
 
 
@@ -251,12 +252,31 @@ def _apply_defaults(sig, args, kwargs):
     return list(args), kwargs
 
 
-def wraps(
-    ureg: UnitRegistry,
+@overload
+def wraps[QuantityT: Quantity, UnitT: Unit](
+    ureg: GenericPlainRegistry[QuantityT, UnitT],
+    ret: str | Unit,
+    args: str | Unit | Iterable[str | Unit | None] | None,
+    strict: bool = True,
+) -> Callable[[Callable[..., Any]], Callable[..., QuantityT]]: ...
+
+
+# Skipped conversion and multiple return values need not produce a Quantity.
+@overload
+def wraps[QuantityT: Quantity, UnitT: Unit](
+    ureg: GenericPlainRegistry[QuantityT, UnitT],
     ret: str | Unit | Iterable[str | Unit | None] | None,
     args: str | Unit | Iterable[str | Unit | None] | None,
     strict: bool = True,
-) -> Callable[[Callable[..., Any]], Callable[..., Quantity]]:
+) -> Callable[[Callable[..., Any]], Callable[..., object]]: ...
+
+
+def wraps[QuantityT: Quantity, UnitT: Unit](
+    ureg: GenericPlainRegistry[QuantityT, UnitT],
+    ret: str | Unit | Iterable[str | Unit | None] | None,
+    args: str | Unit | Iterable[str | Unit | None] | None,
+    strict: bool = True,
+) -> Callable[[Callable[..., Any]], Callable[..., object]]:
     """Wraps a function to become pint-aware.
 
     Use it when a function requires a numerical value but in some specific
@@ -321,7 +341,7 @@ def wraps(
             )
         ret = _to_units_container(ret, ureg)
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Quantity]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., object]:
         sig = signature(func)
         params = tuple(sig.parameters.values())
         has_varargs = any(param.kind == Parameter.VAR_POSITIONAL for param in params)
@@ -346,7 +366,7 @@ def wraps(
         )
 
         @functools.wraps(func, assigned=assigned, updated=updated)
-        def wrapper(*values, **kw) -> Quantity:
+        def wrapper(*values, **kw) -> object:
             if not has_varargs:
                 values, kw = _apply_defaults(sig, values, kw)
 
