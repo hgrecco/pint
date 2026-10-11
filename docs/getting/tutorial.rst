@@ -184,6 +184,24 @@ Contexts can be passed as extra arguments, e.g.
 If you want an error instead of ``False``, convert directly with ``to()``,
 which raises a ``DimensionalityError`` for incompatible units.
 
+.. warning::
+
+   ``Unit`` objects compare equal only if they are made of the same units.
+   A unit defined in terms of another unit, such as ``kilometer_per_hour``
+   (``kilometer / hour``) or ``micron`` (``micrometer``), is a distinct unit
+   and does not compare equal to it, although quantities in those units do:
+
+   .. doctest::
+
+      >>> ureg.kph == ureg.km / ureg.hour
+      False
+      >>> 1 * ureg.kph == 1 * ureg.km / ureg.hour
+      True
+      >>> ureg.micron == ureg.micrometer
+      False
+      >>> 1 * ureg.micron == 1 * ureg.micrometer
+      True
+
 Simplifying units
 -----------------
 
