@@ -533,6 +533,23 @@ for ufunc_str, (in_unit, out_unit) in set_units_ufuncs.items():
     # Require inputs in specified unit, and output in specified unit
     implement_func("ufunc", ufunc_str, input_units=in_unit, output_unit=out_unit)
 
+
+def implement_to_radians_ufunc(ufunc_str):
+    # Like NumPy on plain numbers, treat unitless input as degrees.
+    generic = HANDLED_UFUNCS.get(ufunc_str)
+    if generic is None:
+        return
+
+    @implements(ufunc_str, "ufunc")
+    def implementation(x, *args, **kwargs):
+        if _is_quantity(x) and not x._units:
+            x = x._REGISTRY.Quantity(x.m, "degree")
+        return generic(x, *args, **kwargs)
+
+
+for ufunc_str in ("radians", "deg2rad"):
+    implement_to_radians_ufunc(ufunc_str)
+
 for ufunc_str in matching_input_copy_units_output_ufuncs:
     # Require all inputs to match units, and output as first unit in arguments
     implement_func(

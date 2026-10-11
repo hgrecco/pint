@@ -686,6 +686,20 @@ class TestTrigUfuncs(TestUFuncs):
             "radians",
         )
 
+    @pytest.mark.parametrize("func", ["deg2rad", "radians"])
+    def test_deg2rad_dimensionless_is_degrees(self, func):
+        # Unitless numbers are taken as degrees, as in NumPy (#650)
+        for q, expected in (
+            (self.Q_(180, ""), pi),
+            (self.Q_(1000, "m/km"), 1),
+            (self.Q_(180, "degree"), pi),
+            (self.Q_(pi, "radian"), pi),
+            (self.Q_(60, "arcmin"), pi / 180),
+        ):
+            result = getattr(np, func)(q)
+            assert result.units == self.ureg.radian
+            helpers.assert_quantity_almost_equal(result.m, expected)
+
     def test_rad2deg(self):
         self._test1(
             np.rad2deg,
