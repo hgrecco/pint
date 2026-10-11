@@ -265,6 +265,11 @@ class TestQuantity(QuantityTestCase):
                 assert spec.format(x) == result
 
     @helpers.requires_numpy
+    def test_quantity_array_2d_html_keeps_rows(self):
+        x = self.Q_(np.array([[1, 2], [3, 4]]), "m")
+        assert "<pre>[[1 2]\n [3 4]]</pre>" in x._repr_html_()
+
+    @helpers.requires_numpy
     def test_quantity_array_scalar_format(self, subtests):
         x = self.Q_(np.array(4.12345678), "kg * m ** 2")
         for spec, result in (
