@@ -291,6 +291,28 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.unwrap([0, 540] * self.ureg.deg), [0, 180] * self.ureg.deg
         )
 
+    def test_unwrap_with_period(self):
+        # `period` and `discont` are in the units of the input, so Quantity values
+        # are converted to them.
+        helpers.assert_quantity_almost_equal(
+            np.unwrap([0, 3 * np.pi] * self.ureg.radians, period=360 * self.ureg.deg),
+            [0, np.pi] * self.ureg.radians,
+        )
+        helpers.assert_quantity_equal(
+            np.unwrap([0, 9, 1] * self.ureg.m, period=1000 * self.ureg.cm),
+            [0, -1, 1] * self.ureg.m,
+        )
+        helpers.assert_quantity_equal(
+            np.unwrap(
+                [0, 700] * self.ureg.cm,
+                discont=8 * self.ureg.m,
+                period=10 * self.ureg.m,
+            ),
+            [0, 700] * self.ureg.cm,
+        )
+        with pytest.raises(DimensionalityError):
+            np.unwrap(self.q, period=1 * self.ureg.s)
+
     # Rounding
 
     def test_fix(self):
@@ -391,11 +413,41 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
             np.diff(self.q_temperature, 1), [[1], [1]] * self.ureg.delta_degC
         )
 
+    def test_diff_with_prepend_and_append(self):
+        # Quantity `prepend` and `append` values are joined to the array, so they
+        # should be converted to its units, not used as bare magnitudes
+        helpers.assert_quantity_equal(
+            np.diff(self.q, prepend=50 * self.ureg.cm, append=500 * self.ureg.cm),
+            [[0.5, 1, 3], [2.5, 1, 1]] * self.ureg.m,
+        )
+        helpers.assert_quantity_almost_equal(
+            np.diff(self.q_temperature, prepend=self.Q_(273.15, self.ureg.K)),
+            [[1, 1], [3, 1]] * self.ureg.delta_degC,
+        )
+        with pytest.raises(DimensionalityError):
+            np.diff(self.q, prepend=1 * self.ureg.s)
+
     def test_ediff1d(self):
         helpers.assert_quantity_equal(np.ediff1d(self.q), [1, 1, 1] * self.ureg.m)
         helpers.assert_quantity_equal(
             np.ediff1d(self.q_temperature), [1, 1, 1] * self.ureg.delta_degC
         )
+
+    def test_ediff1d_with_to_end_and_to_begin(self):
+        # Quantity `to_end` and `to_begin` values are joined to the differences, so
+        # they should be converted to the units of the output
+        q = [1.0, 2.0, 4.0] * self.ureg.m
+        helpers.assert_quantity_equal(
+            np.ediff1d(q, to_end=50 * self.ureg.cm, to_begin=1 * self.ureg.km),
+            [1000, 1, 2, 0.5] * self.ureg.m,
+        )
+        q_temperature = self.Q_([1.0, 2.0, 4.0], self.ureg.degC)
+        helpers.assert_quantity_almost_equal(
+            np.ediff1d(q_temperature, to_end=self.Q_(9, self.ureg.delta_degF)),
+            [1, 2, 5] * self.ureg.delta_degC,
+        )
+        with pytest.raises(DimensionalityError):
+            np.ediff1d(self.q, to_end=1 * self.ureg.s)
 
     def test_gradient(self):
         grad = np.gradient([[1, 1], [3, 4]] * self.ureg.m, 1 * self.ureg.J)
@@ -1283,18 +1335,50 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_percentile(self):
         helpers.assert_quantity_equal(np.percentile(self.q, 25), self.Q_(1.75, "m"))
+        helpers.assert_quantity_equal(
+            np.percentile(self.q, 25 * self.ureg.percent), self.Q_(1.75, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.percentile(self.q, 25 * self.ureg.dimensionless), self.Q_(1.75, "m")
+        )
+        assert np.percentile(self.q.m, 25 * self.ureg.percent) == 1.75
+        with pytest.raises(DimensionalityError):
+            np.percentile(self.q, 25 * self.ureg.m)
 
     def test_nanpercentile(self):
         helpers.assert_quantity_equal(
             np.nanpercentile(self.q_nan, 25), self.Q_(1.5, "m")
         )
+        helpers.assert_quantity_equal(
+            np.nanpercentile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanpercentile(self.q_nan, 25 * self.ureg.dimensionless),
+            self.Q_(1.5, "m"),
+        )
 
     def test_quantile(self):
         helpers.assert_quantity_equal(np.quantile(self.q, 0.25), self.Q_(1.75, "m"))
+        helpers.assert_quantity_equal(
+            np.quantile(self.q, 25 * self.ureg.percent), self.Q_(1.75, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.quantile(self.q, 0.25 * self.ureg.dimensionless), self.Q_(1.75, "m")
+        )
+        assert np.quantile(self.q.m, 25 * self.ureg.percent) == 1.75
+        with pytest.raises(DimensionalityError):
+            np.quantile(self.q, 0.25 * self.ureg.m)
 
     def test_nanquantile(self):
         helpers.assert_quantity_equal(
             np.nanquantile(self.q_nan, 0.25), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanquantile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanquantile(self.q_nan, 0.25 * self.ureg.dimensionless),
+            self.Q_(1.5, "m"),
         )
 
     def test_copyto(self):
