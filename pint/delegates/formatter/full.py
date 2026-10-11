@@ -138,6 +138,8 @@ class FullFormatter(BaseFormatter):
     ) -> str:
         uspec = uspec or self.default_format
         sort_func = sort_func or self.default_sort_func
+        babel_kwds.setdefault("locale", self.locale)
+        babel_kwds.setdefault("use_plural", False)
         return self.get_formatter(uspec).format_unit(
             unit,
             uspec,
