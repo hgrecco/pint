@@ -17,6 +17,7 @@ Pint Changelog
 - Remove the `babel <= 2.8` upper bound from the `babel` extra
 - Fix `RecursionError` in `find_connected_nodes` for long chains of contexts (#2388)
 - Fix formatting a unit with only negative exponents, e.g. `1 / second`, raising `IndexError` when a locale is set (#2446)
+- Fix `override_locale` leaving `LC_NUMERIC` changed when a localized formatting call raises, and save the locale name in the round-trippable form `setlocale` returns rather than the `getlocale` pair that fails to restore on Windows (#2469)
 - Fix the angular mil so one turn is 6400 mil
 - Fix in-place `**=` changing a Quantity's units when the magnitude update fails, e.g. a fractional power of an integer array (#2423)
 - Fix `numpy.ptp` returning an absolute temperature instead of a delta for offset units (#2441)
