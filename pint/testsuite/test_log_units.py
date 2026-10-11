@@ -318,6 +318,24 @@ def test_compound_log_unit_conversion(module_registry_auto_offset):
     helpers.assert_quantity_almost_equal(q.to("mW/Hz"), Q_(10**-16.1, "mW/Hz"))
 
 
+@pytest.mark.parametrize(
+    "reference, linear, db",
+    [
+        ("volt / ampere", "ohm", 0.0),
+        ("volt * ampere", "watt", 0.0),
+        ("volt * ampere", "10 watt", 10.0),
+        ("meter / second ** 2", "100 cm/s**2", 0.0),
+    ],
+)
+def test_log_unit_with_compound_reference(reference, linear, db):
+    """Log units whose reference has several units convert correctly (#1840)."""
+    ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
+    ureg.define(f"decibelref = {reference}; logbase: 10; logfactor: 10 = dBref")
+    lin = ureg.Quantity(linear)
+    helpers.assert_quantity_almost_equal(lin.to("dBref"), ureg.Quantity(db, "dBref"))
+    helpers.assert_quantity_almost_equal(ureg.Quantity(db, "dBref").to(lin.units), lin)
+
+
 def test_compound_log_unit_parse_definition(module_registry_auto_offset):
     Q_ = module_registry_auto_offset.Quantity
     canonical_def = Q_(-161, "dBm") / module_registry_auto_offset.Hz
