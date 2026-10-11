@@ -169,10 +169,6 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
                 return self._REGISTRY.Quantity(1, self._units) * other
 
         if isinstance(other, Number) and other == 1:
-            # Multiplying by 1 is shortcut here because non-multiplicative units
-            # (e.g. degC) cannot go through the multiplication below. Apply the
-            # conversions that `ireduce_dimensions` would have applied on that
-            # path, so that `1 * ureg.deg` and `2 * ureg.deg` agree.
             qty = self._REGISTRY.Quantity(other, self._units)
             if self._REGISTRY.autoconvert_to_preferred:
                 qty.ito_preferred()
