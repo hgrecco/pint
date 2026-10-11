@@ -165,6 +165,43 @@ registry, such as ``knot`` or ``meter_per_second``; it does not include
 every compound unit of the same dimensionality that could be built
 from other units, such as ``mile / hour``.
 
+To check whether two objects can be converted into each other, use
+``is_compatible_with()``. It is available on quantities, units and the
+registry, and accepts quantities, units or strings:
+
+.. doctest::
+
+   >>> speed.is_compatible_with('mile / hour')
+   True
+   >>> ureg.knot.is_compatible_with(ureg.joule)
+   False
+   >>> ureg.is_compatible_with('meter', '3 inch')
+   True
+
+Objects that are not a quantity, unit or string are treated as dimensionless.
+Contexts can be passed as extra arguments, e.g.
+``ureg.is_compatible_with('nm', 'Hz', 'sp')``.
+If you want an error instead of ``False``, convert directly with ``to()``,
+which raises a ``DimensionalityError`` for incompatible units.
+
+.. warning::
+
+   ``Unit`` objects compare equal only if they are made of the same units.
+   A unit defined in terms of another unit, such as ``kilometer_per_hour``
+   (``kilometer / hour``) or ``micron`` (``micrometer``), is a distinct unit
+   and does not compare equal to it, although quantities in those units do:
+
+   .. doctest::
+
+      >>> ureg.kph == ureg.km / ureg.hour
+      False
+      >>> 1 * ureg.kph == 1 * ureg.km / ureg.hour
+      True
+      >>> ureg.micron == ureg.micrometer
+      False
+      >>> 1 * ureg.micron == 1 * ureg.micrometer
+      True
+
 Simplifying units
 -----------------
 
@@ -380,8 +417,8 @@ Pint also supports `f-strings`_ from python>=3.6 :
    >>> print(f'The str is {accel:~H}')      # HTML format (displays well in Jupyter)
    The str is 1.3 m/s<sup>2</sup>
 
-But Pint also extends the standard formatting capabilities for unicode, LaTeX, and HTML
-representations:
+But Pint also extends the standard formatting capabilities for unicode, LaTeX, Typst
+and HTML representations:
 
 .. doctest::
 
@@ -392,6 +429,9 @@ representations:
    >>> # LaTeX print
    >>> 'The LaTeX representation is {:L}'.format(accel)
    'The LaTeX representation is 1.3\\ \\frac{\\mathrm{meter}}{\\mathrm{second}^{2}}'
+   >>> # Typst print
+   >>> 'The Typst representation is {:T}'.format(accel)
+   'The Typst representation is 1.3 "meter"\\/"second"^(2)'
    >>> # HTML print - good for Jupyter notebooks
    >>> 'The HTML representation is {:H}'.format(accel)
    'The HTML representation is 1.3 meter/second<sup>2</sup>'
@@ -406,7 +446,7 @@ If you want to use abbreviated unit names, prefix the specification with `~`:
    'The pretty representation is 1.3 m/s²'
 
 
-The same is true for LaTeX (`L`) and HTML (`H`) specs.
+The same is true for LaTeX (`L`), Typst (`T`) and HTML (`H`) specs.
 
 .. note::
    The abbreviated unit is drawn from the unit registry where the 3rd item in the
@@ -434,6 +474,19 @@ Pint also supports the LaTeX `siunitx` package:
    >>> accel = accel.plus_minus(0.2)
    >>> print('The siunitx representation is {:Lx}'.format(accel))
    The siunitx representation is \SI{1.30 +- 0.20}{\meter\per\second\squared}
+
+The `zero` Typst package is also supported:
+
+.. doctest::
+   :skipif: not_installed['uncertainties']
+
+   >>> accel = 1.3 * ureg.parse_units('meter/second**2')
+   >>> # zero Typst print
+   >>> print('The zero representation is {:Tz}'.format(accel))
+   The zero representation is #quan[1.3 m / s^2]
+   >>> accel = accel.plus_minus(0.2)
+   >>> print('The zero representation is {:Tz}'.format(accel))
+   The zero representation is #quan[1.30+-0.20 m / s^2]
 
 Additionally, you can specify a default format specification:
 

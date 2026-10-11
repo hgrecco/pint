@@ -265,7 +265,7 @@ If no preferred units are given, the registry's ``default_preferred_units`` are 
 .. doctest::
 
    >>> Q_(1, "acre").to_preferred([ureg.meter])
-   Quantity(4046.8726098742513, "meter ** 2")
+   Quantity(4046.8564224, "meter ** 2")
    >>> Q_(1, "km/hour").to_preferred([ureg.mile])
    Quantity(0.621371192237334, "mile / hour")
    >>> Q_(4.184, "J").to_preferred([ureg.W, ureg.s])

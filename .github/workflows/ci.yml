@@ -24,6 +24,8 @@ jobs:
         continue-on-error: true
         with:
           version: PATH
+      - name: Check typing regressions
+        run: pyright --project pint/testsuite/typing/pyrightconfig.json
 
   test-linux:
     runs-on: ubuntu-latest
@@ -88,7 +90,7 @@ jobs:
       - name: Install pytest-mpl
         if: contains(matrix.extras, 'matplotlib')
         run: pixi run -e ${{ matrix.environment }} pip install pytest-mpl
-      - run: pixi run --environment ${{ matrix.environment }} test
+      - run: pixi run --environment ${{ matrix.environment }} test ${{ contains(matrix.extras, 'matplotlib') && '--mpl' || '' }}
 
   test-windows:
     runs-on: windows-latest

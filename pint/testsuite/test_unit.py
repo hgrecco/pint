@@ -1,22 +1,74 @@
 from __future__ import annotations
 
 import copy
+import datetime
 import functools
 import logging
 import math
 import operator
 import re
 from contextlib import nullcontext as does_not_raise
+from decimal import Decimal
+from fractions import Fraction
+from typing import assert_type
 
 import pytest
 
 from pint import DimensionalityError, RedefinitionError, UndefinedUnitError, errors
-from pint.compat import np
+from pint.compat import HAS_NUMPY, np
 from pint.registry import LazyRegistry, UnitRegistry
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 from pint.util import ParserHelper, UnitsContainer
 
 from .helpers import internal
+
+
+@pytest.mark.parametrize("constructor", ["parse_units", "Unit", "Quantity"])
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "kilo-watt",
+        "meter-second",
+        "meter+second",
+        "meter+1",
+        "1+meter",
+        "meter-1",
+        "1-meter",
+    ],
+)
+def test_unit_expression_addition_subtraction(sess_registry, constructor, expression):
+    with pytest.raises(errors.DefinitionSyntaxError, match="add|subtract"):
+        if constructor == "Quantity":
+            sess_registry.Quantity(value=1, units=expression)
+        else:
+            getattr(sess_registry, constructor)(expression)
+
+
+@pytest.mark.parametrize(
+    "expression, units",
+    [
+        ("kilowatt", {"kilowatt": 1}),
+        ("kilogram * meter / second**2", {"kilogram": 1, "meter": 1, "second": -2}),
+        ("meter**-2", {"meter": -2}),
+        ("meter**(1+2)", {"meter": 3}),
+        ("meter**(1-2)", {"meter": -1}),
+        ("(1+2)/3*meter", {"meter": 1}),
+    ],
+)
+def test_unit_expression_numeric_arithmetic(sess_registry, expression, units):
+    assert sess_registry.parse_units(expression)._units == UnitsContainer(units)
+
+
+@pytest.mark.parametrize("operator, magnitude", [("+", 5), ("-", 1)])
+def test_quantity_expression_addition_subtraction(sess_registry, operator, magnitude):
+    assert sess_registry.parse_expression(
+        f"3 meter {operator} 2 meter"
+    ) == sess_registry.Quantity(magnitude, "meter")
+
+
+def test_unit_expression_undefined_name(sess_registry):
+    with pytest.raises(UndefinedUnitError, match="megaundefined"):
+        sess_registry.Quantity(value=1, units="megaundefined")
 
 
 # TODO: do not subclass from QuantityTestCase
@@ -47,12 +99,15 @@ class TestUnit(QuantityTestCase):
                 "{:L}",
                 r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
+            ("{:T}", r'"kilogram" dot "meter"^(2)\/"second"'),
             ("{:P}", "kilogram⋅meter²/second"),
             ("{:H}", "kilogram meter<sup>2</sup>/second"),
             ("{:C}", "kilogram*meter**2/second"),
             ("{:Lx}", r"\si[]{\kilo\gram\meter\squared\per\second}"),
+            ("{:Tz}", "#quan[kg m^2 / s]"),
             ("{:~}", "kg * m ** 2 / s"),
             ("{:L~}", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
+            ("{:T~}", r'"kg" dot "m"^(2)\/"s"'),
             ("{:P~}", "kg⋅m²/s"),
             ("{:H~}", "kg m<sup>2</sup>/s"),
             ("{:C~}", "kg*m**2/s"),
@@ -69,6 +124,10 @@ class TestUnit(QuantityTestCase):
             "L~": r"\mathrm{\%}",
             "Lx": r"\si[]{\percent}",
             "Lx~": r"\si[]{\%}",
+            "T": '"percent"',
+            "T~": "percent",
+            "Tz": "#quan[%]",
+            "Tz~": "#quan[%]",
         }.items():
             with subtests.test(spec):
                 ureg.formatter.default_format = spec
@@ -95,11 +154,13 @@ class TestUnit(QuantityTestCase):
                 "L",
                 r"\frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
+            ("T", r'"kilogram" dot "meter"^(2)\/"second"'),
             ("P", "kilogram⋅meter²/second"),
             ("H", "kilogram meter<sup>2</sup>/second"),
             ("C", "kilogram*meter**2/second"),
             ("~", "kg * m ** 2 / s"),
             ("L~", r"\frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
+            ("T~", r'"kg" dot "m"^(2)\/"s"'),
             ("P~", "kg⋅m²/s"),
             ("H~", "kg m<sup>2</sup>/s"),
             ("C~", "kg*m**2/s"),
@@ -127,11 +188,13 @@ class TestUnit(QuantityTestCase):
         x = ureg.Unit(UnitsContainer(oil_barrel=1))
         for spec, result in (
             ("L", r"\mathrm{oil\_barrel}"),
+            ("T", '"oil_barrel"'),
             ("P", "oil_barrel"),
             ("H", "oil_barrel"),
             ("C", "oil_barrel"),
             ("~", "oil_bbl"),
             ("L~", r"\mathrm{oil\_bbl}"),
+            ("T~", '"oil_bbl"'),
             ("P~", "oil_bbl"),
             ("H~", "oil_bbl"),
             ("C~", "oil_bbl"),
@@ -189,20 +252,97 @@ class TestUnit(QuantityTestCase):
 
     def test_unit_mul(self):
         x = self.U_("m")
+        # x * <magnitude>
         assert x * 1 == self.Q_(1, "m")
         assert x * 0.5 == self.Q_(0.5, "m")
-        assert x * self.Q_(1, "m") == self.Q_(1, "m**2")
-        assert 1 * x == self.Q_(1, "m")
+        with pytest.raises(TypeError):
+            _ = x * True
+        with pytest.raises(TypeError):
+            _ = x * False
+        assert x * Fraction(3, 7) == self.Q_(Fraction(3, 7), "m")
+        assert x * Decimal("0.1") == self.Q_(Decimal("0.1"), "m")
+        if HAS_NUMPY:
+            assert x * [1] == self.Q_(np.array([1]), "m")
+        else:
+            with pytest.raises(TypeError):
+                _ = x * [1]
+        assert x * "1" == self.Q_(1, "m")
+        assert "1" * x == self.Q_(1, "m")
+        # x * <unit>
+        assert x * self.U_("s") == self.U_("m s")
+        assert_type(x * self.U_("s"), UnitRegistry.Unit)
+        # x * <quantity>
+        assert x * datetime.timedelta(0, 1, 0) == self.Q_(1.0, "m s")
+        assert x * self.Q_(1, "s") == self.Q_(1, "m s")
+        with pytest.raises(TypeError):
+            # NOTE: a string operand is meant to be interpreted as a magnitude, not a full quantity!
+            _ = x * "1 m"
 
     def test_unit_div(self):
         x = self.U_("m")
+        # x / <magnitude>
         assert x / 1 == self.Q_(1, "m")
         assert x / 0.5 == self.Q_(2.0, "m")
+        with pytest.raises(TypeError):
+            _ = x / True
+        with pytest.raises(TypeError):
+            _ = x / False
+        assert x / Fraction(3, 7) == self.Q_(Fraction(7, 3), "m")
+        assert x / Decimal("0.1") == self.Q_(Decimal("10"), "m")
+        if HAS_NUMPY:
+            assert x / [1] == self.Q_(np.array([1]), "m")
+        else:
+            with pytest.raises(TypeError):
+                _ = x / [1]
+        with pytest.raises(TypeError):
+            _ = x / "1"
+        # x / <unit>
+        assert x / self.U_("s") == self.U_("m / s")
+        assert_type(x / self.U_("s"), UnitRegistry.Unit)
+        assert x / self.Q_(1, "s").units == self.U_("m / s")
+        assert self.Q_(1, "s").units / x == self.U_("s / m")
+        # x / <quantity>
+        assert x / datetime.timedelta(0, 1, 0) == self.Q_(1.0, "m/s")
         assert x / self.Q_(1, "m") == self.Q_(1)
+        with pytest.raises(TypeError):
+            _ = x / "1 m"
 
     def test_unit_rdiv(self):
         x = self.U_("m")
+        # <magnitude> / x
         assert 1 / x == self.Q_(1, "1/m")
+        assert type((1 / x).magnitude) is int
+        assert 0.5 / x == self.Q_(0.5, "1/m")
+        with pytest.raises(TypeError):
+            _ = True / x
+        with pytest.raises(TypeError):
+            _ = False / x
+        assert Fraction(3, 7) / x == self.Q_(Fraction(3, 7), "1/m")
+        assert Decimal("0.1") / x == self.Q_(Decimal("0.1"), "1/m")
+        if HAS_NUMPY:
+            assert [1] / x == self.Q_(np.array([1]), "1/m")
+        else:
+            with pytest.raises(TypeError):
+                _ = [1] / x
+        with pytest.raises(TypeError):
+            _ = "1" / x
+        # <quantity> / x
+        assert datetime.timedelta(0, 1, 0) / x == self.Q_(1.0, "s/m")
+        assert self.Q_(1, "m") / x == self.Q_(1)
+        with pytest.raises(TypeError):
+            _ = "1 m" / x
+        # offset and logarithmic units are ambiguous
+        with pytest.raises(errors.OffsetUnitCalculusError):
+            _ = 1 / self.U_("degC")
+        with pytest.raises(errors.OffsetUnitCalculusError):
+            _ = 1 / self.U_("dB")
+
+    def test_unit_rdiv_non_int_type(self):
+        ureg = UnitRegistry(non_int_type=Fraction)
+        assert type((2 / ureg.m).magnitude) is int
+        q = 2 / ureg.Quantity(3, "m")
+        assert q == ureg.Quantity(Fraction(2, 3), "1/m")
+        assert type(q.magnitude) is Fraction
 
     @pytest.mark.parametrize(
         ("unit", "power_ratio", "expectation", "expected_unit"),
@@ -214,6 +354,7 @@ class TestUnit(QuantityTestCase):
     def test_unit_pow(self, unit, power_ratio, expectation, expected_unit):
         with expectation:
             x = self.U_(unit)
+            assert_type(x**2, UnitRegistry.Unit)
             assert x**power_ratio == self.U_(expected_unit)
 
     def test_is_compatible_with(self):

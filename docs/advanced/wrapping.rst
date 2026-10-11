@@ -99,7 +99,7 @@ the input arguments assigned to units must be a Quantities.
     >>> mypp(1.)
     Traceback (most recent call last):
     ...
-    ValueError: A wrapped function using strict=True requires quantity for all arguments with not None units. (error found for meter, 1.0)
+    ValueError: A wrapped function using strict=True requires quantity or a string for all arguments with not None units. (error found for meter, 1.0)
 
 To enable using non-Quantity numerical values, set strict to False`.
 
@@ -219,6 +219,41 @@ With optional arguments
     Quantity(2, "meter")
     >>> get_displacement(Q_(2, 's'), Q_(1, 'deg/s'))
     Quantity(2, "degree")
+
+
+Variable positional arguments
+-----------------------------
+
+For a function with ``*args``, provide one unit specification for that parameter.
+It applies to every supplied element. Keyword-only parameters keep their own
+unit specifications and defaults; arbitrary ``**kwargs`` are passed through.
+
+.. doctest::
+
+    >>> @ureg.wraps('meter / second', ('meter', 'second'))
+    ... def mean_speed(*distances, duration=Q_(1, 'second')):
+    ...     return sum(distances) / duration
+    ...
+    >>> mean_speed(Q_(1, 'km'), Q_(500, 'meter'), duration=Q_(30, 'second'))
+    Quantity(50.0, "meter / second")
+
+A reference defined by ``*args`` uses the first element's unit. The remaining
+elements are converted to it, rather than each defining a different unit. If
+there are no elements, that reference is dimensionless. References are resolved
+anew on every call:
+
+.. doctest::
+
+    >>> @ureg.wraps('=A', '=A')
+    ... def total(*values):
+    ...     return sum(values)
+    ...
+    >>> total(Q_(1, 'meter'), Q_(200, 'centimeter'))
+    Quantity(3.0, "meter")
+    >>> total()
+    Quantity(0, "dimensionless")
+    >>> total(Q_(2, 'second'), Q_(3000, 'millisecond'))
+    Quantity(5.0, "second")
 
 
 Ignoring an argument or return value
