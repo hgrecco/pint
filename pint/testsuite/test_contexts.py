@@ -1024,3 +1024,111 @@ def test_err_new_unit():
     expected = "'bar' is not defined in the unit registry"
     with pytest.raises(UndefinedUnitError, match=expected):
         ureg.enable_contexts("c")
+
+
+def _earth_registry():
+    ureg = UnitRegistry()
+    ctx = Context.from_lines(
+        [
+            "@context earth",
+            "[force] -> [mass]: value / (9.80665 m/s**2)",
+            "[mass] -> [force]: value * 9.80665 m/s**2",
+        ]
+    )
+    ureg.add_context(ctx)
+    return ureg
+
+
+def test_check_uses_active_context():
+    # GH 1951
+    ureg = UnitRegistry()
+    q = ureg.Quantity(500, "cm_1")
+    assert not q.check("[energy]")
+    with ureg.context("sp"):
+        assert q.check("[energy]")
+        assert q.check("[length]")
+        assert not q.check("[mass]")
+    assert not q.check("[energy]")
+
+
+def test_add_sub_use_active_context():
+    # GH 1748, GH 1002
+    ureg = _earth_registry()
+    Q = ureg.Quantity
+    with pytest.raises(DimensionalityError):
+        Q(1, "kN") + Q(10, "kg")
+    with ureg.context("earth"):
+        assert (Q(1, "kN") + Q(1000, "kg")).units == ureg.kN
+        assert (Q(1, "kN") + Q(1000, "kg")).m == pytest.approx(10.80665)
+        assert (Q(10, "kN") - Q(1000, "kg")).m == pytest.approx(0.19335)
+        q = Q(1.0, "kN")
+        q += Q(1000, "kg")
+        assert q.m == pytest.approx(10.80665)
+        q -= Q(1000, "kg")
+        assert q.m == pytest.approx(1)
+
+    water = Context.from_lines(
+        [
+            "@context water",
+            "[volume] -> [mass]: value * 1 kg/l",
+            "[mass] -> [volume]: value / (1 kg/l)",
+        ]
+    )
+    with ureg.context(water):
+        assert (Q(1, "kg") + Q(200, "ml")).m_as("kg") == pytest.approx(1.2)
+        assert (Q(200, "ml") + Q(1, "kg")).units == ureg.ml
+
+
+def test_comparisons_use_active_context():
+    # GH 1748
+    ureg = _earth_registry()
+    Q = ureg.Quantity
+    assert Q(9806.65, "N") != Q(1000, "kg")
+    with pytest.raises(DimensionalityError):
+        Q(1, "kN") <= Q(10, "kg")
+    with ureg.context("earth"):
+        assert Q(9806.65, "N") == Q(1000, "kg")
+        assert not Q(9806.65, "N") != Q(1000, "kg")
+        assert Q(1, "kN") <= Q(1000, "kg")
+        assert Q(1, "kN") < Q(1000, "kg")
+        assert Q(1000, "kg") > Q(1, "kN")
+        assert not Q(1, "kN") >= Q(1000, "kg")
+        # Unrelated dimensions still raise
+        with pytest.raises(DimensionalityError):
+            Q(1, "kN") < Q(1, "s")
+        assert Q(1, "kN") != Q(1, "s")
+
+
+def test_to_reduced_units_uses_active_context():
+    # GH 1067
+    ureg = UnitRegistry()
+    ureg.define("tt = [time2]")
+    ctx = Context("time2cont")
+    ctx.add_transformation(
+        "[time2]", "[time]", lambda reg, x, factor: x / factor * reg.Quantity("1 s/tt")
+    )
+    ctx.add_transformation(
+        "[time]", "[time2]", lambda reg, x, factor: x * factor * reg.Quantity("1 tt/s")
+    )
+    ureg.add_context(ctx)
+    q = ureg.Quantity(2, "tt") / ureg.Quantity(2, "s")
+
+    assert q.to_reduced_units() == q
+    assert q.to_reduced_units().units == ureg.tt / ureg.s
+    with ureg.context("time2cont", factor=4):
+        assert q.to_reduced_units() == ureg.Quantity(0.25, "")
+        product = (ureg.Quantity(2, "tt") * ureg.Quantity(2, "s")).to_reduced_units()
+        assert product.units == ureg.s**2
+        assert product.m == pytest.approx(1)
+        q2 = ureg.Quantity(2, "tt") / ureg.Quantity(2, "s")
+        q2.ito_reduced_units()
+        assert q2 == ureg.Quantity(0.25, "")
+        assert q2.units == ureg.dimensionless
+
+
+def test_to_reduced_units_skips_non_proportional_context():
+    # wavelength <-> frequency is inversely proportional, so nm * Hz is not reduced
+    ureg = UnitRegistry()
+    q = ureg.Quantity(1, "nm") * ureg.Quantity(1, "Hz")
+    with ureg.context("sp"):
+        assert q.to_reduced_units().units == q.units
