@@ -5,6 +5,7 @@ Pint Changelog
 -------------------
 
 - Fix Quantity array assignment ignoring active contexts (#394)
+- `check()`, `+`/`-`, comparisons and `to_reduced_units()` now use the active context, e.g. adding `kN` and `kg` in a context relating force and mass (#1951, #1748, #1002, #1067)
 - Support `numpy.repeat` on Quantities (#2104)
 - Fix converting logarithmic units defined with a compound reference, e.g. `volt / ampere`, which dropped all but one reference unit (#1840)
 - Parse `$` as a unit symbol like `£`, and raise `DefinitionSyntaxError` for unknown operators such as `&` instead of ignoring them (#1814)
