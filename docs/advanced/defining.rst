@@ -94,8 +94,7 @@ converted to English when they are parsed.
 Unit aliases must be nonempty single names. Whitespace, ASCII quotation marks,
 numeric literals, and expression operators are not allowed. Unicode names,
 including degree spellings such as ``°C``, and the standalone ``%`` and ``‰``
-are supported. This validation applies both to aliases on a unit definition
-line and to the ``@alias`` directive.
+are supported.
 
 
 Programmatically
