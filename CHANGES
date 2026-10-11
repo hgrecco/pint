@@ -5,6 +5,7 @@ Pint Changelog
 -------------------
 
 - Reject invalid unit aliases at definition time while preserving Unicode and degree aliases (#1918)
+- Fix `numpy.block` raising `TypeError` for nested lists of Quantities, e.g. `numpy.block([[a, b], [c, d]])`
 - Support the `numpy.vecdot`, `numpy.matvec` and `numpy.vecmat` ufuncs and `numpy.linalg.vecdot` on Quantities
 - Fix `numpy.percentile`, `numpy.nanpercentile`, `numpy.quantile`, and `numpy.nanquantile` raising `RecursionError` when `q` is a Quantity
 - Fix `numpy.tensordot`, `numpy.cross` and the other multiplicative functions rejecting positional arguments after the two arrays, e.g. `numpy.tensordot(a, b, 1)`
@@ -32,6 +33,7 @@ Pint Changelog
 - Fix `Quantity.to_compact()` raising `OffsetUnitCalculusError` for offset units like `degree_Celsius` with magnitude below 1 (#2005)
 - Fix CI installing the numpy matrix pin outside the pixi env on Windows/macOS, so those legs ran the no-numpy test suite (#2402)
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
+- Add `TypstFormatter`and `ZeroFormatter` to allow formatting to plain Typst and zero package (#2148)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
 - Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
 
