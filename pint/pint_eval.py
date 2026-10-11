@@ -123,10 +123,32 @@ class IteratorLookAhead[S]:
 
 
 def plain_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]:
-    """Standard python tokenizer"""
+    """Standard python tokenizer, treating ``$`` as a name character like ``£``."""
+    pending: TokenInfo | None = None
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
-        if tokinfo.type != tokenlib.ENCODING:
-            yield tokinfo
+        if tokinfo.type == tokenlib.ENCODING:
+            continue
+        if tokinfo.type == tokenlib.OP and tokinfo.string == "$":
+            tokinfo = tokinfo._replace(type=tokenlib.NAME)
+        if tokinfo.type == tokenlib.NAME:
+            if (
+                pending is not None
+                and pending.end == tokinfo.start
+                and "$" in (pending.string + tokinfo.string)
+            ):
+                # Merge "$" with directly adjacent names, e.g. "US$".
+                pending = pending._replace(
+                    string=pending.string + tokinfo.string, end=tokinfo.end
+                )
+                continue
+            if pending is not None:
+                yield pending
+            pending = tokinfo
+            continue
+        if pending is not None:
+            yield pending
+            pending = None
+        yield tokinfo
 
 
 def uncertainty_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]:
@@ -510,6 +532,8 @@ def _build_eval_tree(
                         tokens, op_priority, index + 1, depth + 1, "unary"
                     )
                     result = EvalTreeNode(left=right, operator=current_token)
+            else:
+                raise DefinitionSyntaxError(f"unknown operator '{token_text}'")
         elif token_type in (tokenlib.NUMBER, tokenlib.NAME):
             if result:
                 # tokens with an implicit operation i.e. "1 kg"

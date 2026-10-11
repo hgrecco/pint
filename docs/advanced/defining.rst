@@ -91,6 +91,11 @@ with new aliases from a custom file. It can also be used for translations (like 
 example above) as long as one is happy to have the localized units automatically
 converted to English when they are parsed.
 
+Unit aliases must be nonempty single names. Whitespace, ASCII quotation marks,
+numeric literals, and expression operators are not allowed. Unicode names,
+including degree spellings such as ``°C``, and the standalone ``%`` and ``‰``
+are supported.
+
 
 Programmatically
 ----------------
@@ -152,6 +157,62 @@ leading underscore:
    >>> ureg.define('mpg = 1 * mile / gallon')
    >>> fuel_ec_europe = 5 * ureg.L / ureg._100km
    >>> fuel_ec_us = (1 / fuel_ec_europe).to(ureg.mpg)
+
+
+Units with a custom converter
+-----------------------------
+
+Definition strings can only express multiplicative, offset (see :ref:`nonmult`)
+and logarithmic conversions. For any other invertible mapping, subclass
+:class:`pint.converters.Converter` and register a
+:class:`~pint.facets.plain.definitions.UnitDefinition` that uses it. These are
+lower-level APIs than ``ureg.define('...')``.
+
+For example, a road grade in percent is ``100 * tan(angle)``:
+
+.. doctest::
+
+   >>> import math
+   >>> from dataclasses import dataclass
+   >>> from pint.converters import Converter
+   >>> from pint.facets.plain.definitions import UnitDefinition
+   >>> from pint.util import UnitsContainer
+
+   >>> @dataclass(frozen=True)
+   ... class TangentConverter(Converter):
+   ...     tan_scale: float
+   ...
+   ...     @property
+   ...     def is_multiplicative(self):
+   ...         return False
+   ...
+   ...     def to_reference(self, value, inplace=False):
+   ...         return math.atan(value / self.tan_scale)
+   ...
+   ...     def from_reference(self, value, inplace=False):
+   ...         return self.tan_scale * math.tan(value)
+
+   >>> ureg.define(
+   ...     UnitDefinition(
+   ...         "grade_percent",  # name
+   ...         "gradepct",  # symbol
+   ...         (),  # aliases
+   ...         TangentConverter(tan_scale=100),
+   ...         UnitsContainer(radian=1),  # reference unit
+   ...     )
+   ... )
+   >>> print(Q_(45, "degree").to("gradepct"))
+   99.99999999... grade_percent
+   >>> print(Q_(10, "gradepct").to("degree"))
+   5.7105931374... degree
+
+``to_reference`` converts a value in the new unit to the reference unit, and
+``from_reference`` does the reverse. Use ``numpy`` functions instead of ``math``
+to support array magnitudes.
+
+As with offset units, arithmetic such as ``Q_(10, "gradepct") * 2`` raises an
+error. Also, because ``radian`` is dimensionless, ``.to("percent")`` returns the
+angle in radians expressed as a percent, not the grade.
 
 
 Checking if a unit is already defined

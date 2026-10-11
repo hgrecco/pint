@@ -285,21 +285,28 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         except TypeError:
             pass
 
+        def dim_error():
+            return DimensionalityError(
+                value,
+                self.units,
+                extra_msg=". Assign a quantity with the same dimensionality "
+                "or access the magnitude directly as "
+                f"`obj.magnitude[{key}] = {value}`.",
+            )
+
         try:
             if isinstance(value, self.__class__):
-                factor = value.to(self._units)
+                # m_as handles offset units (e.g. degC into kelvin).
+                try:
+                    factor = value.m_as(self._units)
+                except DimensionalityError:
+                    raise dim_error() from None
             else:
                 factor = self.__class__(value, self._units ** (-1)).to_root_units()
-                if isinstance(factor, self.__class__) and not factor.dimensionless:
-                    raise DimensionalityError(
-                        value,
-                        self.units,
-                        extra_msg=". Assign a quantity with the same dimensionality "
-                        "or access the magnitude directly as "
-                        f"`obj.magnitude[{key}] = {value}`.",
-                    )
 
             if isinstance(factor, self.__class__):
+                if not factor.dimensionless:
+                    raise dim_error()
                 self._magnitude[key] = factor.magnitude
             else:
                 self._magnitude[key] = factor
