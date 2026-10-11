@@ -4,10 +4,12 @@ import collections
 import copy
 import math
 import operator as op
+from decimal import Decimal
+from fractions import Fraction
 
 import pytest
 
-from pint import pint_eval
+from pint import DefinitionSyntaxError, pint_eval
 from pint.util import (
     ParserHelper,
     UnitsContainer,
@@ -213,6 +215,21 @@ class TestParseHelper:
                 p = ParserHelper.from_string(s + " kg")
                 assert math.isnan(p.scale)
                 assert dict(p) == {"kg": 1}
+
+
+@pytest.mark.parametrize("non_int_type", [float, Decimal, Fraction])
+@pytest.mark.parametrize("expression", ["kilo-watt", "meter+second"])
+def test_parse_helper_addition_subtraction(non_int_type, expression):
+    with pytest.raises(DefinitionSyntaxError, match="add|subtract"):
+        ParserHelper.from_string(expression, non_int_type)
+
+
+@pytest.mark.parametrize("non_int_type", [float, Decimal, Fraction])
+@pytest.mark.parametrize("operator, power", [("+", 3), ("-", -1)])
+def test_parse_helper_numeric_exponent(non_int_type, operator, power):
+    parsed = ParserHelper.from_string(f"meter**(1{operator}2)", non_int_type)
+    assert parsed.scale == 1
+    assert dict(parsed) == {"meter": power}
 
 
 class TestStringProcessor:

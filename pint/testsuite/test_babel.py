@@ -120,3 +120,43 @@ def test_unit_with_empty_numerator(func_registry):
     assert ureg.formatter.format_unit(ureg.Unit("1 / second"), locale="fr_FR") == (
         "1 par seconde"
     )
+
+
+@helpers.requires_babel(["fr_FR"])
+def test_unit_with_underscore_name():
+    # See #2234; CLDR spelling of kilowatt-hour changed between babel versions.
+    ureg = UnitRegistry(fmt_locale="fr_FR")
+    fmt = ureg.formatter.format_unit_babel
+    assert fmt(ureg.Unit("kWh")) in ("kilowattheure", "kilowatt-heure")
+    assert fmt(ureg.Unit("mph")) == "mile par heure"
+    assert fmt(ureg.Unit("degC")) == "degré Celsius"
+    assert fmt(ureg.Unit("mmHg")) == "millimètre de mercure"
+    assert fmt(ureg.Unit("t")) == "tonne"
+
+
+def test_babel_units_use_canonical_names():
+    from pint.babel_names import _babel_units
+
+    ureg = UnitRegistry()
+    assert [k for k in _babel_units if ureg.get_name(k) != k] == []
+
+
+@helpers.requires_babel(["de_DE"])
+def test_format_quantity_restores_locale_on_error(func_registry):
+    # See #2469; override_locale must restore LC_NUMERIC even when the
+    # formatting call inside the context manager raises.
+    import locale
+
+    ureg = func_registry
+    original = locale.setlocale(locale.LC_NUMERIC)
+    try:
+        locale.setlocale(locale.LC_NUMERIC, "C")
+        with pytest.raises(ValueError):
+            ureg.formatter.format_quantity(
+                ureg.Quantity(1.25, "meter"), ".2q", locale="de_DE"
+            )
+        assert locale.setlocale(locale.LC_NUMERIC) == "C"
+        ureg.formatter.format_quantity(ureg.Quantity(1.25, "meter"), "", locale="de_DE")
+        assert locale.setlocale(locale.LC_NUMERIC) == "C"
+    finally:
+        locale.setlocale(locale.LC_NUMERIC, original)
