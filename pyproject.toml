@@ -202,6 +202,8 @@ test = "pytest --benchmark-skip"
 bench = "pytest --benchmark-only"
 
 [tool.pixi.feature.typecheck.dependencies]
+nodejs = ">=20"
+pytest = "*"
 pyright = "*"
 pip = "*"
 

@@ -1095,6 +1095,53 @@ class TestNumpyUnclassified(TestNumpyMethods):
             rtol=1e-5,
         )
 
+    @pytest.mark.parametrize("unit", ["dimensionless", "percent", "meter / centimeter"])
+    @pytest.mark.parametrize("data_unit", [None, "dimensionless", "meter"])
+    @pytest.mark.parametrize("positional", [False, True])
+    def test_average_dimensionless_weights(self, unit, data_unit, positional):
+        values = np.arange(6.0).reshape(2, 3)
+        data = values if data_unit is None else self.Q_(values, data_unit)
+        weights = self.Q_([1.0, 2.0, 3.0], unit)
+        original = weights.copy()
+        expected = np.average(values, axis=1, weights=weights.m_as(""), keepdims=True)
+        if positional:
+            result = np.average(data, 1, weights, False, keepdims=True)
+        else:
+            result = np.average(a=data, axis=1, weights=weights, keepdims=True)
+        if data_unit is None:
+            assert isinstance(result, np.ndarray)
+            np.testing.assert_allclose(result, expected)
+        else:
+            assert result.units == data.units
+            helpers.assert_quantity_almost_equal(result, self.Q_(expected, data_unit))
+        assert result.shape == (2, 1)
+        assert weights.units == original.units
+        np.testing.assert_array_equal(weights.magnitude, original.magnitude)
+
+    @pytest.mark.parametrize("weights", [None, [1.0, 2.0, 3.0]])
+    def test_average_plain_weights(self, weights):
+        data = self.Q_([1.0, 2.0, 4.0], "meter")
+        result = np.average(data, weights=weights)
+        helpers.assert_quantity_almost_equal(
+            result, self.Q_(np.average(data.magnitude, weights=weights), "meter")
+        )
+
+    @pytest.mark.parametrize("axis", [None, (0, 1)])
+    def test_average_full_shape_weights(self, axis):
+        values = np.arange(6.0).reshape(2, 3)
+        weights = self.Q_([[1, 2, 3], [4, 5, 6]], "percent")
+        result = np.average(values * self.ureg.meter, axis=axis, weights=weights)
+        expected = np.average(values, axis=axis, weights=weights.m_as(""))
+        helpers.assert_quantity_almost_equal(result, expected * self.ureg.meter)
+
+    @pytest.mark.parametrize(
+        "weights, error", [([0, 0, 0], ZeroDivisionError), ([1, 2], ValueError)]
+    )
+    def test_average_weight_validation(self, weights, error):
+        data = self.Q_(np.arange(6).reshape(2, 3), "meter")
+        with pytest.raises(error):
+            np.average(data, axis=1, weights=self.Q_(weights, "percent"))
+
     def test_median_numpy_func(self):
         assert np.median(self.q) == 2.5 * self.ureg.m
 
@@ -1196,6 +1243,23 @@ class TestNumpyUnclassified(TestNumpyMethods):
             # Check for no warnings
             assert not w
             assert q.mask[0]
+
+    def test_setitem_offset_units(self):
+        # issue #618
+        q = self.Q_(np.zeros(4), "kelvin")
+        q[:] = self.Q_(25, "degC")
+        helpers.assert_quantity_almost_equal(q, self.Q_(np.full(4, 298.15), "kelvin"))
+
+        q = self.Q_(np.zeros(2), "degC")
+        q[0] = self.Q_(300, "kelvin")
+        helpers.assert_quantity_almost_equal(q, self.Q_([26.85, 0], "degC"))
+
+        q = self.Q_(np.zeros(2), "degF")
+        q[1] = self.Q_(100, "degC")
+        helpers.assert_quantity_almost_equal(q, self.Q_([0, 212], "degF"))
+
+        with pytest.raises(DimensionalityError):
+            q[0] = self.Q_(1, "m")
 
     def test_setitem_mixed_masked(self):
         masked = np.ma.array(
