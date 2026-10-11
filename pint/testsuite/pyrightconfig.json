@@ -1,6 +1,0 @@
-{
-    "include": ["test_wraps_typing.py"],
-    "extraPaths": ["../.."],
-    "pythonVersion": "3.12",
-    "typeCheckingMode": "basic"
-}
