@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Fix `numpy.block` raising `TypeError` for nested lists of Quantities, e.g. `numpy.block([[a, b], [c, d]])`
 - Support the `numpy.vecdot`, `numpy.matvec` and `numpy.vecmat` ufuncs and `numpy.linalg.vecdot` on Quantities
 - Fix `numpy.percentile`, `numpy.nanpercentile`, `numpy.quantile`, and `numpy.nanquantile` raising `RecursionError` when `q` is a Quantity
 - Fix `numpy.tensordot`, `numpy.cross` and the other multiplicative functions rejecting positional arguments after the two arrays, e.g. `numpy.tensordot(a, b, 1)`
