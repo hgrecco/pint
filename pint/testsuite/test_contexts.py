@@ -1120,7 +1120,7 @@ def test_to_reduced_units_uses_active_context():
         product = (ureg.Quantity(2, "tt") * ureg.Quantity(2, "s")).to_reduced_units()
         assert product.units == ureg.s**2
         assert product.m == pytest.approx(1)
-        q2 = q.copy()
+        q2 = ureg.Quantity(2, "tt") / ureg.Quantity(2, "s")
         q2.ito_reduced_units()
         assert q2 == ureg.Quantity(0.25, "")
         assert q2.units == ureg.dimensionless
