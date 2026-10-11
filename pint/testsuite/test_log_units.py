@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
+from decimal import Decimal, localcontext
 
 import pytest
 
@@ -13,6 +14,74 @@ from pint.testsuite import QuantityTestCase, helpers
 @pytest.fixture(scope="module")
 def module_registry_auto_offset():
     return UnitRegistry(autoconvert_offset_to_baseunit=True)
+
+
+@pytest.fixture(scope="module")
+def decimal_registry():
+    return UnitRegistry(non_int_type=Decimal)
+
+
+def test_decimal_log_quantity_hash(decimal_registry):
+    quantity = decimal_registry("dB")
+    assert quantity in {quantity}
+    assert hash(quantity) == hash(quantity.to_base_units())
+    assert hash(decimal_registry("0 dB")) == hash(decimal_registry.Quantity(1, ""))
+
+
+@pytest.mark.parametrize("inplace", [False, True])
+@pytest.mark.parametrize("decimal_parameters", [False, True])
+@pytest.mark.parametrize(
+    "value, src, dst, expected",
+    [
+        (
+            "1",
+            "dB",
+            "dimensionless",
+            "1.2589254117941672104239541063958006060936174094669",
+        ),
+        (
+            "2",
+            "dimensionless",
+            "dB",
+            "3.0102999566398119521373889472449302676818988146211",
+        ),
+        (
+            "1",
+            "dBm",
+            "watt",
+            "0.0012589254117941672104239541063958006060936174094669",
+        ),
+        (
+            "0.002",
+            "watt",
+            "dBm",
+            "3.0102999566398119521373889472449302676818988146211",
+        ),
+    ],
+)
+def test_decimal_log_conversion(
+    decimal_registry,
+    module_registry,
+    decimal_parameters,
+    inplace,
+    value,
+    src,
+    dst,
+    expected,
+):
+    registry = decimal_registry if decimal_parameters else module_registry
+    with localcontext() as context:
+        context.prec = 50
+        result = registry.convert(Decimal(value), src, dst, inplace=inplace)
+        assert isinstance(result, Decimal)
+        assert abs(result - Decimal(expected)) < Decimal("1e-48")
+
+
+@pytest.mark.parametrize("inplace", [False, True])
+def test_decimal_log_integer_conversion(decimal_registry, inplace):
+    result = decimal_registry.convert(10, "dimensionless", "dB", inplace=inplace)
+    assert isinstance(result, Decimal)
+    assert abs(result - Decimal(10)) < Decimal("1e-25")
 
 
 # TODO: do not subclass from QuantityTestCase
