@@ -30,6 +30,7 @@ from .plain import (
     RawFormatter,
 )
 from .sorting import SortFunc, sort_by_unit_name
+from .typst import TypstFormatter, ZeroFormatter
 
 if TYPE_CHECKING:
     from ...compat import Locale
@@ -78,6 +79,8 @@ class FullFormatter(BaseFormatter):
         self._formatters["Lx"] = SIunitxFormatter(registry)
         self._formatters["L"] = LatexFormatter(registry)
         self._formatters["C"] = CompactFormatter(registry)
+        self._formatters["Tz"] = ZeroFormatter(registry)
+        self._formatters["T"] = TypstFormatter(registry)
 
     def set_locale(self, loc: str | None) -> None:
         """Change the locale used by default by `format_babel`.
@@ -271,3 +274,5 @@ REGISTERED_FORMATTERS["P"] = PrettyFormatter()
 REGISTERED_FORMATTERS["Lx"] = SIunitxFormatter()
 REGISTERED_FORMATTERS["L"] = LatexFormatter()
 REGISTERED_FORMATTERS["C"] = CompactFormatter()
+REGISTERED_FORMATTERS["Tz"] = ZeroFormatter()
+REGISTERED_FORMATTERS["T"] = TypstFormatter()

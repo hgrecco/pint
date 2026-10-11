@@ -346,6 +346,21 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
                 with pytest.raises(DimensionalityError):
                     func([nz[:, 0].m, self.q[:, 0]])
 
+    def test_block_nested(self):
+        helpers.assert_quantity_equal(
+            np.block([[self.q, self.q], [self.q, self.q]]),
+            self.Q_(
+                np.block([[self.q.m, self.q.m], [self.q.m, self.q.m]]), self.ureg.m
+            ),
+        )
+        # Inputs in other compatible units are converted to the first unit
+        helpers.assert_quantity_almost_equal(
+            np.block([[self.q], [self.q.to(self.ureg.cm)]]),
+            self.Q_(np.block([[self.q.m], [self.q.m]]), self.ureg.m),
+        )
+        with pytest.raises(DimensionalityError):
+            np.block([[self.q], [self.q.m + 1]])
+
     def test_append(self):
         helpers.assert_quantity_equal(
             np.append(self.q, [[0, 0]] * self.ureg.m, axis=0),
@@ -486,9 +501,19 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         assert np.sum(self.q, initial=100 * self.ureg.cm) == 11 * self.ureg.m
         with pytest.raises(DimensionalityError):
             np.sum(self.q, initial=1 * self.ureg.s)
+        # a bare non-zero number is dimensionless and must raise, like np.max
+        # (https://github.com/hgrecco/pint/issues/2401); zero is allowed
+        with pytest.raises(DimensionalityError):
+            np.sum(self.q, initial=100)
+        assert np.sum(self.q, initial=0) == 10 * self.ureg.m
+        q = self.Q_([1, 2], "dimensionless")
+        assert np.sum(q, initial=3) == self.Q_(6, "dimensionless")
 
     def test_nansum_with_initial_arg(self):
         assert np.nansum(self.q_nan, initial=100 * self.ureg.cm) == 7 * self.ureg.m
+        with pytest.raises(DimensionalityError):
+            np.nansum(self.q_nan, initial=100)
+        assert np.nansum(self.q_nan, initial=0) == 6 * self.ureg.m
 
     def test_cumprod(self):
         with pytest.raises(DimensionalityError):
@@ -1438,18 +1463,50 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_percentile(self):
         helpers.assert_quantity_equal(np.percentile(self.q, 25), self.Q_(1.75, "m"))
+        helpers.assert_quantity_equal(
+            np.percentile(self.q, 25 * self.ureg.percent), self.Q_(1.75, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.percentile(self.q, 25 * self.ureg.dimensionless), self.Q_(1.75, "m")
+        )
+        assert np.percentile(self.q.m, 25 * self.ureg.percent) == 1.75
+        with pytest.raises(DimensionalityError):
+            np.percentile(self.q, 25 * self.ureg.m)
 
     def test_nanpercentile(self):
         helpers.assert_quantity_equal(
             np.nanpercentile(self.q_nan, 25), self.Q_(1.5, "m")
         )
+        helpers.assert_quantity_equal(
+            np.nanpercentile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanpercentile(self.q_nan, 25 * self.ureg.dimensionless),
+            self.Q_(1.5, "m"),
+        )
 
     def test_quantile(self):
         helpers.assert_quantity_equal(np.quantile(self.q, 0.25), self.Q_(1.75, "m"))
+        helpers.assert_quantity_equal(
+            np.quantile(self.q, 25 * self.ureg.percent), self.Q_(1.75, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.quantile(self.q, 0.25 * self.ureg.dimensionless), self.Q_(1.75, "m")
+        )
+        assert np.quantile(self.q.m, 25 * self.ureg.percent) == 1.75
+        with pytest.raises(DimensionalityError):
+            np.quantile(self.q, 0.25 * self.ureg.m)
 
     def test_nanquantile(self):
         helpers.assert_quantity_equal(
             np.nanquantile(self.q_nan, 0.25), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanquantile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanquantile(self.q_nan, 0.25 * self.ureg.dimensionless),
+            self.Q_(1.5, "m"),
         )
 
     def test_copyto(self):

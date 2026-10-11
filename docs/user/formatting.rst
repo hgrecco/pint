@@ -53,6 +53,8 @@ Spec    Name            Examples
 ``H``   HTML            ``3.4×10<sup>9</sup> kilogram meter/second<sup>2</sup>``
 ``L``   latex           ``3.4\\times 10^{9}\\ \\frac{\\mathrm{kilogram} \\cdot \\mathrm{meter}}{\\mathrm{second}^{2}}``
 ``Lx``  latex siunitx   ``\\SI[]{3.4e+09}{\\kilo\\gram\\meter\\per\\second\\squared}``
+``T``   typst           ``3.4 times 10^(9) "kilogram" dot "meter"\/"second"^(2)``
+``Tz``  typst zero      ``#quan[3.4e9 kg m / s^2]``
 ``C``   compact         ``3.4e+09 kilogram*meter/second**2``
 ======= =============== ======================================================================
 
