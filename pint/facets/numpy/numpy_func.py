@@ -489,6 +489,9 @@ op_units_output_ufuncs = {
     "cumsum": "sum",
     "cumulative_sum": "sum",
     "matmul": "mul",
+    "matvec": "mul",
+    "vecmat": "mul",
+    "vecdot": "mul",
 }
 
 
@@ -622,6 +625,27 @@ def _where(condition, *args):
     condition = getattr(condition, "magnitude", condition)
     args, output_wrap = unwrap_and_wrap_consistent_units(*args)
     return output_wrap(np.where(condition, *args))
+
+
+@implements("block", "function")
+def _block(arrays):
+    # np.block takes nested lists, so the Quantities can be at any depth
+    def leaves(obj):
+        if isinstance(obj, list):
+            for item in obj:
+                yield from leaves(item)
+        else:
+            yield obj
+
+    magnitudes, output_wrap = unwrap_and_wrap_consistent_units(*leaves(arrays))
+    magnitudes = iter(magnitudes)
+
+    def rebuild(obj):
+        if isinstance(obj, list):
+            return [rebuild(item) for item in obj]
+        return next(magnitudes)
+
+    return output_wrap(np.block(rebuild(arrays)))
 
 
 @implements("concatenate", "function")
@@ -965,6 +989,7 @@ for func_str in (
     "vecmat",
     "tensordot",
     "linalg.tensordot",
+    "linalg.vecdot",
 ):
     implement_mul_func(func_str)
 
@@ -1076,10 +1101,6 @@ for func_str, unit_arguments, wrap_output in (
     ("swapaxes", "a", True),
     ("nanmin", ["a", "initial"], True),
     ("nanmax", ["a", "initial"], True),
-    ("percentile", "a", True),
-    ("nanpercentile", "a", True),
-    ("quantile", "a", True),
-    ("nanquantile", "a", True),
     ("flip", "m", True),
     ("fix", "x", True),
     ("trim_zeros", ["filt"], True),
@@ -1104,6 +1125,48 @@ for func_str, unit_arguments, wrap_output in (
     ("intersect1d", ["ar1", "ar2"], True),
 ):
     implement_consistent_units_by_argument(func_str, unit_arguments, wrap_output)
+
+
+def implement_percentile_func(func_str, is_quantile=False):
+    if np is None:
+        return
+    func = getattr(np, func_str, None)
+    if func is None:
+        return
+
+    @implements(func_str, "function")
+    def implementation(*args, **kwargs):
+        bound_args = signature(func).bind(*args, **kwargs)
+        a = bound_args.arguments.get("a")
+        (a,), output_wrap = unwrap_and_wrap_consistent_units(a)
+        bound_args.arguments["a"] = a
+
+        q = bound_args.arguments.get("q")
+        if _is_quantity(q):
+            if not q.dimensionless:
+                raise DimensionalityError(q.units, "dimensionless")
+            if is_quantile or q.units != q._REGISTRY.percent:
+                bound_args.arguments["q"] = q.m_as("dimensionless")
+            else:
+                bound_args.arguments["q"] = q.m_as("percent")
+
+        weights = bound_args.arguments.get("weights")
+        if _is_quantity(weights):
+            if not weights.dimensionless:
+                raise DimensionalityError(weights.units, "dimensionless")
+            bound_args.arguments["weights"] = weights.m_as("dimensionless")
+
+        ret = func(*bound_args.args, **bound_args.kwargs)
+        return output_wrap(ret)
+
+
+for func_str, is_quantile in (
+    ("percentile", False),
+    ("nanpercentile", False),
+    ("quantile", True),
+    ("nanquantile", True),
+):
+    implement_percentile_func(func_str, is_quantile)
 
 
 # implement isclose and allclose
@@ -1190,7 +1253,6 @@ for func_str in ("cumprod", "nancumprod"):
 
 # Handle single-argument consistent unit functions
 for func_str in (
-    "block",
     "hstack",
     "vstack",
     "dstack",
