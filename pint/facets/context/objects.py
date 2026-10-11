@@ -116,7 +116,7 @@ class ContextQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         return factor, units
 
     def to_reduced_units(self) -> Self:
-        """Return PlainQuantity scaled to reduced units, i.e. one unit per
+        """Return a copy scaled to reduced units, i.e. one unit per
         dimension, also merging units linked by the active contexts.
         """
         factor, units = self._reduce_through_contexts()
