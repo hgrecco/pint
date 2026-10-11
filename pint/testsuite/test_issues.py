@@ -12,6 +12,7 @@ import pytest
 
 from pint import (
     Context,
+    DefinitionSyntaxError,
     DimensionalityError,
     OffsetUnitCalculusError,
     UndefinedUnitError,
@@ -1803,3 +1804,26 @@ def test_issue2397_fathom_is_exact_international_yards(sess_registry):
     assert (1 * ureg.survey_fathom).to(ureg.survey_foot).magnitude == 6
     assert (1 * ureg.cables_length).to(ureg.foot).magnitude == 720
     assert (1 * ureg.survey_cables_length).to(ureg.survey_foot).magnitude == 720
+
+
+@pytest.mark.parametrize("symbol", ["$", "£", "€", "US$"])
+def test_issue1814_currency_symbols(symbol):
+    ureg = UnitRegistry()
+    ureg.define(f"currency_unit = [currency] = {symbol}")
+    q = ureg.Quantity(f"5 {symbol}/kg")
+    assert q.magnitude == 5
+    assert q.units == ureg.currency_unit / ureg.kilogram
+
+
+@pytest.mark.parametrize("symbol", ["$", "£"])
+def test_issue1814_undefined_currency_symbol_raises(symbol):
+    ureg = UnitRegistry()
+    with pytest.raises(UndefinedUnitError):
+        ureg.Quantity(f"1 {symbol}")
+
+
+@pytest.mark.parametrize("expr", ["1 &", "1 !", "1 & kg"])
+def test_issue1814_unknown_operator_raises(expr):
+    ureg = UnitRegistry()
+    with pytest.raises(DefinitionSyntaxError):
+        ureg.Quantity(expr)

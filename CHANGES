@@ -5,6 +5,7 @@ Pint Changelog
 -------------------
 
 - Fix converting logarithmic units defined with a compound reference, e.g. `volt / ampere`, which dropped all but one reference unit (#1840)
+- Parse `$` as a unit symbol like `£`, and raise `DefinitionSyntaxError` for unknown operators such as `&` instead of ignoring them (#1814)
 - Preserve the registry's Quantity type in `wraps` annotations for a single return unit, allowing array results to be indexed (#2278)
 - Fix recursion in `numpy.average` with dimensionless Quantity weights and `returned=False` (#1609).
 - Fix assigning offset-unit quantities (e.g. `degC` into a `kelvin` array) via `__setitem__` (#618)
