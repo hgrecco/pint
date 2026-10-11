@@ -109,6 +109,23 @@ def test_str(func_registry):
 
 
 @helpers.requires_babel(["fr_FR"])
+def test_unit_str_uses_registry_locale(func_registry):
+    # See #1472: str/format of a Unit should honour the registry locale.
+    ureg = func_registry
+    u = ureg.Unit("metre")
+    assert str(u) == "meter"
+
+    ureg.set_fmt_locale("fr_FR")
+    assert str(u) == "mètre"
+    assert f"{u}" == "mètre"
+    assert f"{u:~}" == "m"
+    assert repr(u) == 'Unit("meter")'
+
+    ureg.set_fmt_locale(None)
+    assert str(u) == "meter"
+
+
+@helpers.requires_babel(["fr_FR"])
 def test_unit_with_empty_numerator(func_registry):
     # A unit whose exponents are all negative has an empty numerator, and the
     # pluralization step used to reach for its last element, raising IndexError.
