@@ -394,14 +394,21 @@ def check[F: FuncType](
                 values = [bound.arguments[param.name] for param in params]
             else:
                 values = list(args)
+                used_kwargs = 0
                 for param in params[len(args) :]:
-                    if param.name in kwargs:
+                    if (
+                        param.name in kwargs
+                        and param.kind is not Parameter.POSITIONAL_ONLY
+                    ):
                         values.append(kwargs[param.name])
+                        used_kwargs += 1
                     elif param.default is not Parameter.empty:
                         values.append(param.default)
                     else:
-                        # Missing required argument: let the call below raise.
                         break
+                if len(values) != count_params or used_kwargs != len(kwargs):
+                    # Invalid call: let it raise TypeError before any checks.
+                    return func(*args, **kwargs)
 
             for param, dim, value in zip(params, dimensions, values):
                 if dim is None:

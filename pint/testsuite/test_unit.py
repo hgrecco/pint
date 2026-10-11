@@ -810,8 +810,9 @@ class TestRegistry(QuantityTestCase):
             checked(1, 2 * ureg.meter, scale=2 * ureg.second)
         with pytest.raises(DimensionalityError):
             checked(scale=2)
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError) as exc:
             checked(1 * ureg.meter)
+        assert exc.type is TypeError
 
     def test_check_var_positional_items(self):
         ureg = self.ureg
@@ -877,8 +878,10 @@ class TestRegistry(QuantityTestCase):
         assert func(x, 3 * ureg.centimeter) == (x, 3 * ureg.centimeter)
         with pytest.raises(DimensionalityError):
             func(x, 3 * ureg.second)
-        with pytest.raises(TypeError):
-            func(x, y=3 * ureg.meter)
+        for y in (3 * ureg.meter, 3 * ureg.second):
+            with pytest.raises(TypeError) as exc:
+                func(x, y=y)
+            assert exc.type is TypeError
 
         @ureg.check("[length]", "[length]")
         def bad_default(x, y=2, /):
@@ -894,12 +897,17 @@ class TestRegistry(QuantityTestCase):
         def func(x, y):
             return x, y
 
-        with pytest.raises(TypeError):
-            func(1 * ureg.meter)
-        with pytest.raises(TypeError):
-            func(1 * ureg.meter, 1 * ureg.second, 3)
-        with pytest.raises(TypeError):
-            func(1 * ureg.meter, z=1 * ureg.second)
+        # Wrong dimensions too: an invalid call must not raise DimensionalityError.
+        invalid_calls = [
+            ((1 * ureg.second,), {}),
+            ((1 * ureg.second, 1 * ureg.meter, 3), {}),
+            ((1 * ureg.second,), {"z": 1 * ureg.meter}),
+            ((1 * ureg.second, 1 * ureg.meter), {"x": 1 * ureg.meter}),
+        ]
+        for args, kwargs in invalid_calls:
+            with pytest.raises(TypeError) as exc:
+                func(*args, **kwargs)
+            assert exc.type is TypeError
 
     def test_to_ref_vs_to(self):
         self.ureg.autoconvert_offset_to_baseunit = True
