@@ -328,9 +328,12 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
             args = (args[0], args[1].to(args[0].units), *args[2:])
 
         first_input_units = _get_first_input_units(args, kwargs)
-        if input_units is None and _is_quantity(kwargs.get("initial")):
-            # Unlike amax/amin, this path doesn't convert a Quantity `initial`.
-            kwargs = {**kwargs, "initial": kwargs["initial"].m_as(first_input_units)}
+        if input_units is None and kwargs.get("initial") is not None:
+            # Convert `initial` like amax/amin do: a bare non-zero number raises.
+            kwargs = {
+                **kwargs,
+                "initial": convert_arg(kwargs["initial"], first_input_units),
+            }
         if input_units == "all_consistent":
             # Match all input args/kwargs to same units
             stripped_args, stripped_kwargs = convert_to_consistent_units(

@@ -398,9 +398,19 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         assert np.sum(self.q, initial=100 * self.ureg.cm) == 11 * self.ureg.m
         with pytest.raises(DimensionalityError):
             np.sum(self.q, initial=1 * self.ureg.s)
+        # a bare non-zero number is dimensionless and must raise, like np.max
+        # (https://github.com/hgrecco/pint/issues/2401); zero is allowed
+        with pytest.raises(DimensionalityError):
+            np.sum(self.q, initial=100)
+        assert np.sum(self.q, initial=0) == 10 * self.ureg.m
+        q = self.Q_([1, 2], "dimensionless")
+        assert np.sum(q, initial=3) == self.Q_(6, "dimensionless")
 
     def test_nansum_with_initial_arg(self):
         assert np.nansum(self.q_nan, initial=100 * self.ureg.cm) == 7 * self.ureg.m
+        with pytest.raises(DimensionalityError):
+            np.nansum(self.q_nan, initial=100)
+        assert np.nansum(self.q_nan, initial=0) == 6 * self.ureg.m
 
     def test_cumprod(self):
         with pytest.raises(DimensionalityError):
