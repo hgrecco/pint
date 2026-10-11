@@ -1244,6 +1244,23 @@ class TestNumpyUnclassified(TestNumpyMethods):
             assert not w
             assert q.mask[0]
 
+    def test_setitem_offset_units(self):
+        # issue #618
+        q = self.Q_(np.zeros(4), "kelvin")
+        q[:] = self.Q_(25, "degC")
+        helpers.assert_quantity_almost_equal(q, self.Q_(np.full(4, 298.15), "kelvin"))
+
+        q = self.Q_(np.zeros(2), "degC")
+        q[0] = self.Q_(300, "kelvin")
+        helpers.assert_quantity_almost_equal(q, self.Q_([26.85, 0], "degC"))
+
+        q = self.Q_(np.zeros(2), "degF")
+        q[1] = self.Q_(100, "degC")
+        helpers.assert_quantity_almost_equal(q, self.Q_([0, 212], "degF"))
+
+        with pytest.raises(DimensionalityError):
+            q[0] = self.Q_(1, "m")
+
     def test_setitem_mixed_masked(self):
         masked = np.ma.array(
             [

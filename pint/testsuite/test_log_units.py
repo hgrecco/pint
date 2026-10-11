@@ -291,7 +291,9 @@ def test_dbm_mw_conversion(module_registry, dbm_value, mw_value):
     assert Q_(mw_value, "mW").to("dBm").magnitude == pytest.approx(dbm_value)
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(
+    reason="ureg('dBm/Hz') evaluates 1 dBm before dividing, so it is converted"
+)
 def test_compound_log_unit_multiply_definition(module_registry_auto_offset):
     """Check that compound log units can be defined using multiply."""
     Q_ = module_registry_auto_offset.Quantity
@@ -300,13 +302,20 @@ def test_compound_log_unit_multiply_definition(module_registry_auto_offset):
     assert mult_def == canonical_def
 
 
-@pytest.mark.xfail
 def test_compound_log_unit_quantity_definition(module_registry_auto_offset):
     """Check that compound log units can be defined using ``Quantity()``."""
     Q_ = module_registry_auto_offset.Quantity
     canonical_def = Q_(-161, "dBm") / module_registry_auto_offset.Hz
     quantity_def = Q_(-161, "dBm/Hz")
     assert quantity_def == canonical_def
+
+
+def test_compound_log_unit_conversion(module_registry_auto_offset):
+    """Compound log units are not turned into undefined delta units (#1162)."""
+    Q_ = module_registry_auto_offset.Quantity
+    q = Q_(-161, "dBm/Hz")
+    assert str(q.units) == "decibelmilliwatt / hertz"
+    helpers.assert_quantity_almost_equal(q.to("mW/Hz"), Q_(10**-16.1, "mW/Hz"))
 
 
 def test_compound_log_unit_parse_definition(module_registry_auto_offset):
