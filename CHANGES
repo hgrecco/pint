@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Add `pct` as an alias of `percent`, which was parsed as `picocarat` (#2478)
 - Support `numpy.repeat` on Quantities (#2104)
 - Fix converting logarithmic units defined with a compound reference, e.g. `volt / ampere`, which dropped all but one reference unit (#1840)
 - Parse `$` as a unit symbol like `£`, and raise `DefinitionSyntaxError` for unknown operators such as `&` instead of ignoring them (#1814)
