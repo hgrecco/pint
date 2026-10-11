@@ -317,10 +317,24 @@ def implement_func(func_type, func_str, input_units=None, output_unit=None):
                 [func(*func_args) for func_args in zip(*args)], dtype=object
             )
 
+        if (
+            func_str in ["fmod", "mod", "remainder", "floor_divide"]
+            and len(args) >= 2
+            and _is_quantity(args[0])
+            and _is_quantity(args[1])
+            and args[0].dimensionality == args[1].dimensionality
+        ):
+            # Like the % and // operators, express the divisor in the units of the
+            # dividend, otherwise e.g. np.mod(7 m, 200 cm) computes 7 % 200.
+            args = (args[0], args[1].to(args[0].units), *args[2:])
+
         first_input_units = _get_first_input_units(args, kwargs)
-        if input_units is None and _is_quantity(kwargs.get("initial")):
-            # Unlike amax/amin, this path doesn't convert a Quantity `initial`.
-            kwargs = {**kwargs, "initial": kwargs["initial"].m_as(first_input_units)}
+        if input_units is None and kwargs.get("initial") is not None:
+            # Convert `initial` like amax/amin do: a bare non-zero number raises.
+            kwargs = {
+                **kwargs,
+                "initial": convert_arg(kwargs["initial"], first_input_units),
+            }
         if input_units == "all_consistent":
             # Match all input args/kwargs to same units
             stripped_args, stripped_kwargs = convert_to_consistent_units(
@@ -479,6 +493,9 @@ op_units_output_ufuncs = {
     "cumsum": "sum",
     "cumulative_sum": "sum",
     "matmul": "mul",
+    "matvec": "mul",
+    "vecmat": "mul",
+    "vecdot": "mul",
 }
 
 
@@ -614,6 +631,27 @@ def _where(condition, *args):
     return output_wrap(np.where(condition, *args))
 
 
+@implements("block", "function")
+def _block(arrays):
+    # np.block takes nested lists, so the Quantities can be at any depth
+    def leaves(obj):
+        if isinstance(obj, list):
+            for item in obj:
+                yield from leaves(item)
+        else:
+            yield obj
+
+    magnitudes, output_wrap = unwrap_and_wrap_consistent_units(*leaves(arrays))
+    magnitudes = iter(magnitudes)
+
+    def rebuild(obj):
+        if isinstance(obj, list):
+            return [rebuild(item) for item in obj]
+        return next(magnitudes)
+
+    return output_wrap(np.block(rebuild(arrays)))
+
+
 @implements("concatenate", "function")
 def _concatenate(sequence, *args, **kwargs):
     sequence, output_wrap = unwrap_and_wrap_consistent_units(*sequence)
@@ -627,12 +665,18 @@ def _stack(arrays, *args, **kwargs):
 
 
 @implements("unwrap", "function")
-def _unwrap(p, discont=None, axis=-1):
+def _unwrap(p, discont=None, axis=-1, *, period=None):
     # np.unwrap only dispatches over p argument, so assume it is a Quantity
-    discont = np.pi if discont is None else discont
-    return p._REGISTRY.Quantity(np.unwrap(p.m_as("rad"), discont, axis=axis), "rad").to(
-        p.units
+    if period is None:
+        discont = np.pi if discont is None else discont
+        return p._REGISTRY.Quantity(
+            np.unwrap(p.m_as("rad"), discont, axis=axis), "rad"
+        ).to(p.units)
+    # An explicit period sets the scale, so work in the units of p
+    (p, discont, period), output_wrap = unwrap_and_wrap_consistent_units(
+        p, discont, period
     )
+    return output_wrap(np.unwrap(p, discont, axis=axis, period=period))
 
 
 @implements("copyto", "function")
@@ -929,12 +973,12 @@ def implement_mul_func(func):
         return
 
     @implements(func_str, "function")
-    def implementation(a, b, **kwargs):
+    def implementation(a, b, *args, **kwargs):
         a, b = _dimensionless_if_needed(a, b)
         a = _base_unit_if_needed(a)
         b = _base_unit_if_needed(b)
         units = a.units * b.units
-        mag = func(a._magnitude, b._magnitude, **kwargs)
+        mag = func(a._magnitude, b._magnitude, *args, **kwargs)
         return mag * units
 
 
@@ -949,6 +993,7 @@ for func_str in (
     "vecmat",
     "tensordot",
     "linalg.tensordot",
+    "linalg.vecdot",
 ):
     implement_mul_func(func_str)
 
@@ -1059,10 +1104,6 @@ for func_str, unit_arguments, wrap_output in (
     ("swapaxes", "a", True),
     ("nanmin", ["a", "initial"], True),
     ("nanmax", ["a", "initial"], True),
-    ("percentile", "a", True),
-    ("nanpercentile", "a", True),
-    ("quantile", "a", True),
-    ("nanquantile", "a", True),
     ("flip", "m", True),
     ("fix", "x", True),
     ("trim_zeros", ["filt"], True),
@@ -1076,7 +1117,6 @@ for func_str, unit_arguments, wrap_output in (
     ("clip", ["a", "a_min", "a_max", "min", "max"], True),
     ("append", ["arr", "values"], True),
     ("compress", "a", True),
-    ("linspace", ["start", "stop"], True),
     ("tile", "A", True),
     ("lib.stride_tricks.sliding_window_view", "x", True),
     ("rot90", "m", True),
@@ -1100,6 +1140,48 @@ def _average(a, axis=None, weights: Any = None, returned: Any = False, **kwargs)
     return output_wrap(
         np.average(*args, axis=axis, weights=weights, returned=returned, **kwargs)
     )
+
+
+def implement_percentile_func(func_str, is_quantile=False):
+    if np is None:
+        return
+    func = getattr(np, func_str, None)
+    if func is None:
+        return
+
+    @implements(func_str, "function")
+    def implementation(*args, **kwargs):
+        bound_args = signature(func).bind(*args, **kwargs)
+        a = bound_args.arguments.get("a")
+        (a,), output_wrap = unwrap_and_wrap_consistent_units(a)
+        bound_args.arguments["a"] = a
+
+        q = bound_args.arguments.get("q")
+        if _is_quantity(q):
+            if not q.dimensionless:
+                raise DimensionalityError(q.units, "dimensionless")
+            if is_quantile or q.units != q._REGISTRY.percent:
+                bound_args.arguments["q"] = q.m_as("dimensionless")
+            else:
+                bound_args.arguments["q"] = q.m_as("percent")
+
+        weights = bound_args.arguments.get("weights")
+        if _is_quantity(weights):
+            if not weights.dimensionless:
+                raise DimensionalityError(weights.units, "dimensionless")
+            bound_args.arguments["weights"] = weights.m_as("dimensionless")
+
+        ret = func(*bound_args.args, **bound_args.kwargs)
+        return output_wrap(ret)
+
+
+for func_str, is_quantile in (
+    ("percentile", False),
+    ("nanpercentile", False),
+    ("quantile", True),
+    ("nanquantile", True),
+):
+    implement_percentile_func(func_str, is_quantile)
 
 
 # implement isclose and allclose
@@ -1186,7 +1268,6 @@ for func_str in ("cumprod", "nancumprod"):
 
 # Handle single-argument consistent unit functions
 for func_str in (
-    "block",
     "hstack",
     "vstack",
     "dstack",
@@ -1235,12 +1316,56 @@ for func_str in (
     "linalg.vector_norm",
 ):
     implement_func("function", func_str, input_units=None, output_unit="sum")
-for func_str in ("diff", "ediff1d", "ptp", "std", "nanstd"):
+for func_str in ("ptp", "std", "nanstd"):
     implement_func("function", func_str, input_units=None, output_unit="delta")
 for func_str in ("gradient",):
     implement_func("function", func_str, input_units=None, output_unit="delta,div")
 for func_str in ("var", "nanvar"):
     implement_func("function", func_str, input_units=None, output_unit="variance")
+
+
+# Handle differences, whose extra values are joined to either the input or the output
+def implement_diff_func(func_str, input_arguments, output_arguments=()):
+    # If NumPy is not available, do not attempt implement that which does not exist
+    if np is None:
+        return
+
+    func = getattr(np, func_str)
+
+    @implements(func_str, "function")
+    def implementation(*args, **kwargs):
+        bound_args = signature(func).bind(*args, **kwargs)
+        first_input_units = _get_first_input_units(bound_args.arguments.values())
+        result_unit = get_op_output_unit("delta", first_input_units)
+
+        # Quantities joined to the input are converted to its units, and Quantities
+        # joined to the differences to the units of the output
+        for labels, units in (
+            (input_arguments, first_input_units),
+            (output_arguments, result_unit),
+        ):
+            for label in labels:
+                arg = bound_args.arguments.get(label)
+                if _is_quantity(arg) or _is_sequence_with_quantity_elements(arg):
+                    bound_args.arguments[label] = convert_arg(arg, units)
+
+        ret = func(*bound_args.args, **bound_args.kwargs)
+        return first_input_units._REGISTRY.Quantity(ret, result_unit)
+
+
+implement_diff_func("diff", ["a", "prepend", "append"])
+implement_diff_func("ediff1d", ["ary"], ["to_end", "to_begin"])
+
+
+@implements("linspace", "function")
+def _linspace(start, stop, *args, **kwargs):
+    (start, stop), output_wrap = unwrap_and_wrap_consistent_units(start, stop)
+    result = np.linspace(start, stop, *args, **kwargs)
+    if isinstance(result, tuple):
+        samples, step = result
+        # The step is a difference, including for offset and logarithmic units.
+        return output_wrap(samples), output_wrap(step) - output_wrap(0)
+    return output_wrap(result)
 
 
 @implements("geomspace", "function")

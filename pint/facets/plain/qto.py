@@ -242,7 +242,7 @@ def to_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    Quantity(4046.8726098742513, "meter ** 2")
+    Quantity(4046.8564224, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
     Quantity(4.4482216152605005, "watt * second")
     """
@@ -262,7 +262,7 @@ def ito_preferred(
     >>> import pint
     >>> ureg = pint.UnitRegistry()
     >>> (1 * ureg.acre).to_preferred([ureg.meters])
-    Quantity(4046.8726098742513, "meter ** 2")
+    Quantity(4046.8564224, "meter ** 2")
     >>> (1 * (ureg.force_pound * ureg.m)).to_preferred([ureg.W])
     Quantity(4.4482216152605005, "watt * second")
     """

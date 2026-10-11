@@ -110,7 +110,7 @@ It is fairly good at detecting compound units:
     >>> g
     Quantity(9.8, "meter / second ** 2")
     >>> g.to('furlongs/fortnight**2')
-    Quantity(71277074338.9091, "furlong / fortnight ** 2")
+    Quantity(71277216893.34288, "furlong / fortnight ** 2")
 
 And behaves well when given dimensionless quantities, which are parsed into
 dimensionless ``Quantity`` objects:
