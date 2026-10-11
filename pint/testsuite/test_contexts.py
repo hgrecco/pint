@@ -1028,9 +1028,13 @@ def test_err_new_unit():
 
 def _earth_registry():
     ureg = UnitRegistry()
-    ctx = Context("earth")
-    ctx.add_transformation("[force]", "[mass]", lambda ureg, x: x / ureg.g_n)
-    ctx.add_transformation("[mass]", "[force]", lambda ureg, x: x * ureg.g_n)
+    ctx = Context.from_lines(
+        [
+            "@context earth",
+            "[force] -> [mass]: value / (9.80665 m/s**2)",
+            "[mass] -> [force]: value * 9.80665 m/s**2",
+        ]
+    )
     ureg.add_context(ctx)
     return ureg
 
