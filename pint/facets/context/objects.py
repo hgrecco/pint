@@ -85,7 +85,8 @@ class ContextQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
     def _reduce_through_contexts(self) -> tuple[Any, UnitsContainer]:
         """Merge units whose dimensionalities are linked by a proportional
-        transformation of the active contexts, e.g. ``tt / s`` -> ``s / s``.
+        transformation of the active contexts. For example, in a context with
+        ``[volume] -> [mass]: value * 1 kg/l``, ``kg / l`` becomes ``kg / kg``.
 
         Returns the factor to multiply the magnitude by and the new units.
         """
