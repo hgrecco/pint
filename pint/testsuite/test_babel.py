@@ -109,6 +109,23 @@ def test_str(func_registry):
 
 
 @helpers.requires_babel(["fr_FR"])
+def test_unit_str_uses_registry_locale(func_registry):
+    # See #1472: str/format of a Unit should honour the registry locale.
+    ureg = func_registry
+    u = ureg.Unit("metre")
+    assert str(u) == "meter"
+
+    ureg.set_fmt_locale("fr_FR")
+    assert str(u) == "mètre"
+    assert f"{u}" == "mètre"
+    assert f"{u:~}" == "m"
+    assert repr(u) == 'Unit("meter")'
+
+    ureg.set_fmt_locale(None)
+    assert str(u) == "meter"
+
+
+@helpers.requires_babel(["fr_FR"])
 def test_unit_with_empty_numerator(func_registry):
     # A unit whose exponents are all negative has an empty numerator, and the
     # pluralization step used to reach for its last element, raising IndexError.
@@ -139,3 +156,24 @@ def test_babel_units_use_canonical_names():
 
     ureg = UnitRegistry()
     assert [k for k in _babel_units if ureg.get_name(k) != k] == []
+
+
+@helpers.requires_babel(["de_DE"])
+def test_format_quantity_restores_locale_on_error(func_registry):
+    # See #2469; override_locale must restore LC_NUMERIC even when the
+    # formatting call inside the context manager raises.
+    import locale
+
+    ureg = func_registry
+    original = locale.setlocale(locale.LC_NUMERIC)
+    try:
+        locale.setlocale(locale.LC_NUMERIC, "C")
+        with pytest.raises(ValueError):
+            ureg.formatter.format_quantity(
+                ureg.Quantity(1.25, "meter"), ".2q", locale="de_DE"
+            )
+        assert locale.setlocale(locale.LC_NUMERIC) == "C"
+        ureg.formatter.format_quantity(ureg.Quantity(1.25, "meter"), "", locale="de_DE")
+        assert locale.setlocale(locale.LC_NUMERIC) == "C"
+    finally:
+        locale.setlocale(locale.LC_NUMERIC, original)

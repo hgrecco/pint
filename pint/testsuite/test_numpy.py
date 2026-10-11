@@ -75,6 +75,109 @@ class TestNumpyArrayCreation(TestNumpyMethods):
         )
         self.assertNDArrayEqual(np.full_like(self.q, 2), np.array([[2, 2], [2, 2]]))
 
+    @pytest.mark.parametrize(
+        "endpoint, expected, step", [(True, [0, 5, 10], 5), (False, [0, 4, 8], 4)]
+    )
+    @pytest.mark.parametrize("positional", [False, True])
+    def test_linspace_retstep(self, endpoint, expected, step, positional):
+        start = 0 * self.ureg.m
+        stop = (1000 if endpoint else 1200) * self.ureg.cm
+        if positional:
+            samples, spacing = np.linspace(start, stop, 3, endpoint, True)
+        else:
+            samples, spacing = np.linspace(
+                start=start, stop=stop, num=3, endpoint=endpoint, retstep=True
+            )
+        helpers.assert_quantity_equal(samples, self.Q_(expected, "m"))
+        helpers.assert_quantity_equal(spacing, step * self.ureg.m)
+
+    @pytest.mark.parametrize("retstep", [False, True])
+    def test_linspace_zero_start(self, retstep):
+        result = np.linspace(0, 10 * self.ureg.s, num=3, retstep=retstep)
+        if retstep:
+            samples, spacing = result
+            helpers.assert_quantity_equal(spacing, 5 * self.ureg.s)
+        else:
+            samples = result
+        helpers.assert_quantity_equal(samples, [0, 5, 10] * self.ureg.s)
+
+    @pytest.mark.parametrize(
+        "stop_unit, stop_value", [("degC", 30), ("kelvin", 303.15)]
+    )
+    def test_linspace_offset_units(self, stop_unit, stop_value):
+        samples, spacing = np.linspace(
+            self.Q_(10, "degC"),
+            self.Q_(stop_value, stop_unit),
+            num=3,
+            retstep=True,
+        )
+        helpers.assert_quantity_almost_equal(samples, self.Q_([10, 20, 30], "degC"))
+        helpers.assert_quantity_almost_equal(spacing, self.Q_(10, "delta_degC"))
+
+    def test_linspace_logarithmic_units(self):
+        samples, spacing = np.linspace(
+            self.Q_(0, "dBm"),
+            self.Q_(6, "dBm"),
+            num=3,
+            retstep=True,
+        )
+        helpers.assert_quantity_equal(samples, self.Q_([0, 3, 6], "dBm"))
+        helpers.assert_quantity_almost_equal(spacing, self.Q_(1.9952623149688795))
+
+    @pytest.mark.parametrize(
+        "axis, expected",
+        [(0, [[0, 10], [1, 12], [2, 14]]), (1, [[0, 1, 2], [10, 12, 14]])],
+    )
+    def test_linspace_array_endpoints(self, axis, expected):
+        samples, spacing = np.linspace(
+            [0, 10] * self.ureg.m,
+            [200, 1400] * self.ureg.cm,
+            num=3,
+            retstep=True,
+            axis=axis,
+            dtype=np.float32,
+        )
+        helpers.assert_quantity_equal(samples, self.Q_(expected, "m"))
+        helpers.assert_quantity_equal(spacing, [1, 2] * self.ureg.m)
+        assert samples.dtype == np.float32
+
+    @pytest.mark.parametrize(
+        "num, endpoint, expected",
+        [(0, True, []), (0, False, []), (1, True, [0]), (1, False, [0])],
+    )
+    def test_linspace_small_num(self, num, endpoint, expected):
+        samples, spacing = np.linspace(
+            0 * self.ureg.m,
+            10 * self.ureg.m,
+            num=num,
+            endpoint=endpoint,
+            retstep=True,
+        )
+        helpers.assert_quantity_equal(samples, self.Q_(expected, "m"))
+        assert spacing.units == self.ureg.m
+        if num == 1 and not endpoint:
+            assert spacing.magnitude == 10
+        else:
+            assert np.isnan(spacing.magnitude)
+
+    @pytest.mark.parametrize("quantity_start", [False, True])
+    def test_linspace_dimensionless(self, quantity_start):
+        start, stop = 0, 10
+        if quantity_start:
+            start = self.Q_(start)
+        else:
+            stop = self.Q_(stop)
+        samples, spacing = np.linspace(start, stop, num=3, retstep=True)
+        assert isinstance(samples, self.Q_)
+        assert isinstance(spacing, self.Q_)
+        helpers.assert_quantity_equal(samples, self.Q_([0, 5, 10]))
+        helpers.assert_quantity_equal(spacing, self.Q_(5))
+
+    @pytest.mark.parametrize("retstep", [False, True])
+    def test_linspace_incompatible_units(self, retstep):
+        with pytest.raises(DimensionalityError):
+            np.linspace(0 * self.ureg.m, 10 * self.ureg.s, retstep=retstep)
+
 
 class TestNumpyArrayManipulation(TestNumpyMethods):
     # TODO
@@ -243,6 +346,21 @@ class TestNumpyArrayManipulation(TestNumpyMethods):
                 with pytest.raises(DimensionalityError):
                     func([nz[:, 0].m, self.q[:, 0]])
 
+    def test_block_nested(self):
+        helpers.assert_quantity_equal(
+            np.block([[self.q, self.q], [self.q, self.q]]),
+            self.Q_(
+                np.block([[self.q.m, self.q.m], [self.q.m, self.q.m]]), self.ureg.m
+            ),
+        )
+        # Inputs in other compatible units are converted to the first unit
+        helpers.assert_quantity_almost_equal(
+            np.block([[self.q], [self.q.to(self.ureg.cm)]]),
+            self.Q_(np.block([[self.q.m], [self.q.m]]), self.ureg.m),
+        )
+        with pytest.raises(DimensionalityError):
+            np.block([[self.q], [self.q.m + 1]])
+
     def test_append(self):
         helpers.assert_quantity_equal(
             np.append(self.q, [[0, 0]] * self.ureg.m, axis=0),
@@ -290,6 +408,28 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         helpers.assert_quantity_equal(
             np.unwrap([0, 540] * self.ureg.deg), [0, 180] * self.ureg.deg
         )
+
+    def test_unwrap_with_period(self):
+        # `period` and `discont` are in the units of the input, so Quantity values
+        # are converted to them.
+        helpers.assert_quantity_almost_equal(
+            np.unwrap([0, 3 * np.pi] * self.ureg.radians, period=360 * self.ureg.deg),
+            [0, np.pi] * self.ureg.radians,
+        )
+        helpers.assert_quantity_equal(
+            np.unwrap([0, 9, 1] * self.ureg.m, period=1000 * self.ureg.cm),
+            [0, -1, 1] * self.ureg.m,
+        )
+        helpers.assert_quantity_equal(
+            np.unwrap(
+                [0, 700] * self.ureg.cm,
+                discont=8 * self.ureg.m,
+                period=10 * self.ureg.m,
+            ),
+            [0, 700] * self.ureg.cm,
+        )
+        with pytest.raises(DimensionalityError):
+            np.unwrap(self.q, period=1 * self.ureg.s)
 
     # Rounding
 
@@ -361,9 +501,19 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         assert np.sum(self.q, initial=100 * self.ureg.cm) == 11 * self.ureg.m
         with pytest.raises(DimensionalityError):
             np.sum(self.q, initial=1 * self.ureg.s)
+        # a bare non-zero number is dimensionless and must raise, like np.max
+        # (https://github.com/hgrecco/pint/issues/2401); zero is allowed
+        with pytest.raises(DimensionalityError):
+            np.sum(self.q, initial=100)
+        assert np.sum(self.q, initial=0) == 10 * self.ureg.m
+        q = self.Q_([1, 2], "dimensionless")
+        assert np.sum(q, initial=3) == self.Q_(6, "dimensionless")
 
     def test_nansum_with_initial_arg(self):
         assert np.nansum(self.q_nan, initial=100 * self.ureg.cm) == 7 * self.ureg.m
+        with pytest.raises(DimensionalityError):
+            np.nansum(self.q_nan, initial=100)
+        assert np.nansum(self.q_nan, initial=0) == 6 * self.ureg.m
 
     def test_cumprod(self):
         with pytest.raises(DimensionalityError):
@@ -1313,18 +1463,50 @@ class TestNumpyUnclassified(TestNumpyMethods):
 
     def test_percentile(self):
         helpers.assert_quantity_equal(np.percentile(self.q, 25), self.Q_(1.75, "m"))
+        helpers.assert_quantity_equal(
+            np.percentile(self.q, 25 * self.ureg.percent), self.Q_(1.75, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.percentile(self.q, 25 * self.ureg.dimensionless), self.Q_(1.75, "m")
+        )
+        assert np.percentile(self.q.m, 25 * self.ureg.percent) == 1.75
+        with pytest.raises(DimensionalityError):
+            np.percentile(self.q, 25 * self.ureg.m)
 
     def test_nanpercentile(self):
         helpers.assert_quantity_equal(
             np.nanpercentile(self.q_nan, 25), self.Q_(1.5, "m")
         )
+        helpers.assert_quantity_equal(
+            np.nanpercentile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanpercentile(self.q_nan, 25 * self.ureg.dimensionless),
+            self.Q_(1.5, "m"),
+        )
 
     def test_quantile(self):
         helpers.assert_quantity_equal(np.quantile(self.q, 0.25), self.Q_(1.75, "m"))
+        helpers.assert_quantity_equal(
+            np.quantile(self.q, 25 * self.ureg.percent), self.Q_(1.75, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.quantile(self.q, 0.25 * self.ureg.dimensionless), self.Q_(1.75, "m")
+        )
+        assert np.quantile(self.q.m, 25 * self.ureg.percent) == 1.75
+        with pytest.raises(DimensionalityError):
+            np.quantile(self.q, 0.25 * self.ureg.m)
 
     def test_nanquantile(self):
         helpers.assert_quantity_equal(
             np.nanquantile(self.q_nan, 0.25), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanquantile(self.q_nan, 25 * self.ureg.percent), self.Q_(1.5, "m")
+        )
+        helpers.assert_quantity_equal(
+            np.nanquantile(self.q_nan, 0.25 * self.ureg.dimensionless),
+            self.Q_(1.5, "m"),
         )
 
     def test_copyto(self):
