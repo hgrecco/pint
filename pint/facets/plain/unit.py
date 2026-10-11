@@ -169,7 +169,12 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
                 return self._REGISTRY.Quantity(1, self._units) * other
 
         if isinstance(other, Number) and other == 1:
-            return self._REGISTRY.Quantity(other, self._units)
+            qty = self._REGISTRY.Quantity(other, self._units)
+            if self._REGISTRY.autoconvert_to_preferred:
+                qty.ito_preferred()
+            if self._REGISTRY.auto_reduce_dimensions:
+                qty.ito_reduced_units()
+            return qty
 
         return self._REGISTRY.Quantity(1, self._units)._mul_div(
             other, operator.mul, parse_string_as_magnitude=True
