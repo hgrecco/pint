@@ -1364,7 +1364,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 continue
             if as_delta and (many or (not many and value != 1)):
                 definition = self._units[cname]
-                if not definition.is_multiplicative:
+                # Logarithmic units have no delta counterpart.
+                if not (definition.is_multiplicative or definition.is_logarithmic):
                     cname = "delta_" + cname
             ret = ret.add(cname, value)
 
