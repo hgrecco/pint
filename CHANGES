@@ -5,6 +5,7 @@ Pint Changelog
 -------------------
 
 - `check()`, `+`/`-`, comparisons and `to_reduced_units()` now use the active context, e.g. adding `kN` and `kg` in a context relating force and mass (#1951, #1748, #1002, #1067)
+- Support `numpy.repeat` on Quantities (#2104)
 - Fix converting logarithmic units defined with a compound reference, e.g. `volt / ampere`, which dropped all but one reference unit (#1840)
 - Parse `$` as a unit symbol like `£`, and raise `DefinitionSyntaxError` for unknown operators such as `&` instead of ignoring them (#1814)
 - Preserve the registry's Quantity type in `wraps` annotations for a single return unit, allowing array results to be indexed (#2278)
@@ -50,6 +51,7 @@ Pint Changelog
 - Fix `Quantity.to_compact()` raising `OffsetUnitCalculusError` for offset units like `degree_Celsius` with magnitude below 1 (#2005)
 - Fix CI installing the numpy matrix pin outside the pixi env on Windows/macOS, so those legs ran the no-numpy test suite (#2402)
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
+- Fix `UnitRegistry.check()` validating the wrong arguments of functions with `*args`, `**kwargs` or keyword-only parameters, and failing to call functions with positional-only defaults
 - Fix `1 * unit` skipping `auto_reduce_dimensions` and `autoconvert_to_preferred`, so it disagreed with every other magnitude (#2403)
 - Add `TypstFormatter`and `ZeroFormatter` to allow formatting to plain Typst and zero package (#2148)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
