@@ -394,7 +394,7 @@ and HTML representations:
    'The LaTeX representation is 1.3\\ \\frac{\\mathrm{meter}}{\\mathrm{second}^{2}}'
    >>> # Typst print
    >>> 'The Typst representation is {:T}'.format(accel)
-   'The Typst representation is 1.3 "meter"\/"second"^(2)'
+   'The Typst representation is 1.3 "meter"\\/"second"^(2)'
    >>> # HTML print - good for Jupyter notebooks
    >>> 'The HTML representation is {:H}'.format(accel)
    'The HTML representation is 1.3 meter/second<sup>2</sup>'
@@ -441,14 +441,15 @@ Pint also supports the LaTeX `siunitx` package:
 The `zero` Typst package is also supported:
 
 .. doctest::
+   :skipif: not_installed['uncertainties']
 
    >>> accel = 1.3 * ureg.parse_units('meter/second**2')
    >>> # zero Typst print
    >>> print('The zero representation is {:Tz}'.format(accel))
-   'The zero representation is #quan[1.3 m / s^2]'
+   The zero representation is #quan[1.3 m / s^2]
    >>> accel = accel.plus_minus(0.2)
    >>> print('The zero representation is {:Tz}'.format(accel))
-   'The zero representation is #quan[1.30+-0.20 m / s^2]'
+   The zero representation is #quan[1.30+-0.20 m / s^2]
 
 Additionally, you can specify a default format specification:
 
