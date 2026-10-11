@@ -199,12 +199,10 @@ class GenericNonMultiplicativeRegistry[QuantityT: Quantity, UnitT: Unit](
 
             # TODO: Check that reference is None
 
-            # If reference unit is not dimensionless
-            if slct_ref != UnitsContainer():
-                # Extract reference unit
-                (u, e) = [(u, e) for u, e in slct_ref.items()].pop()
-                # Add it back to the unit list
-                return all_units.add(u, e)
+            # Add the (possibly compound) reference back to the unit list
+            for u, e in slct_ref.items():
+                all_units = all_units.add(u, e)
+            return all_units
 
         if not slct_unit.is_multiplicative:  # is offset unit
             # Extract reference unit
