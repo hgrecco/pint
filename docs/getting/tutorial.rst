@@ -89,7 +89,7 @@ See `String parsing`_ and :ref:`Defining Quantities` for more ways of defining
 a ``Quantity()`` object.
 
 ``Quantity()`` objects also work well with NumPy arrays, which you can
-read about in the section on :doc:`NumPy support <numpy>`.
+read about in the section on :doc:`NumPy support </user/numpy>`.
 
 Converting to different units
 -----------------------------
@@ -135,7 +135,7 @@ how to do:
    ...
    DimensionalityError: Cannot convert from 'inch / minute' ([length] / [time]) to 'joule' ([length] ** 2 * [mass] / [time] ** 2)
 
-See the section on :doc:`contexts` for information about expanding Pint's
+See the section on :doc:`/user/contexts` for information about expanding Pint's
 automatic conversion capabilities for your application.
 
 Finding compatible units
@@ -535,7 +535,7 @@ and by doing that, string formatting is now localized:
     >>> "{}".format(accel)
     '1,3 mètres par seconde²'
 
-If you want to customize string formatting, take a look at :ref:`formatting`.
+If you want to customize string formatting, take a look at :doc:`/user/formatting`.
 
 
 .. _`default list of units`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt

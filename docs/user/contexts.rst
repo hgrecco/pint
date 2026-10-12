@@ -150,7 +150,7 @@ context and the parameters that you wish to set.
 
 
 This decorator can be combined with **wraps** or **check** decorators described in
-:doc:`wrapping`.
+:doc:`/advanced/wrapping`.
 
 
 Defining contexts in a file
