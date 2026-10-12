@@ -73,7 +73,7 @@ def ndarray_to_latex_parts(
     """
 
     if isinstance(fmtfun, str):
-        fmtfun = fmtfun.format
+        fmtfun = ("{:" + fmtfun + "}").format
 
     if ndarr.ndim == 0:
         _ndarr = ndarr.reshape(1)
