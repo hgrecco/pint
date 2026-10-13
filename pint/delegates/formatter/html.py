@@ -62,9 +62,7 @@ class HTMLFormatter(BaseFormatter):
                         mstr = format_number(magnitude)
                     else:
                         with np.printoptions(formatter={"float_kind": format_number}):
-                            mstr = (
-                                "<pre>" + format(magnitude).replace("\n", "") + "</pre>"
-                            )
+                            mstr = "<pre>" + format(magnitude) + "</pre>"
                 elif not iterable(magnitude):
                     # Use plain text for scalars
                     mstr = format_number(magnitude)

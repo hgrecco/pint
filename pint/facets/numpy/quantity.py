@@ -198,7 +198,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             v = self.__class__(v, "").to(self)
         else:
             raise DimensionalityError("dimensionless", self._units)
-        return self.magnitude.searchsorted(v, side)
+        return self.magnitude.searchsorted(v, side, sorter)
 
     def dot(self, b):
         """Dot product of two arrays.
@@ -285,23 +285,28 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         except TypeError:
             pass
 
+        def dim_error():
+            return DimensionalityError(
+                value,
+                self.units,
+                extra_msg=". Assign a quantity with the same dimensionality "
+                "or access the magnitude directly as "
+                f"`obj.magnitude[{key}] = {value}`.",
+            )
+
         try:
             if isinstance(value, self.__class__):
-                factor = self.__class__(
-                    value.magnitude, value._units / self._units
-                ).to_root_units()
+                # m_as handles offset units (e.g. degC into kelvin).
+                try:
+                    factor = value.m_as(self._units)
+                except DimensionalityError:
+                    raise dim_error() from None
             else:
                 factor = self.__class__(value, self._units ** (-1)).to_root_units()
 
             if isinstance(factor, self.__class__):
                 if not factor.dimensionless:
-                    raise DimensionalityError(
-                        value,
-                        self.units,
-                        extra_msg=". Assign a quantity with the same dimensionality "
-                        "or access the magnitude directly as "
-                        f"`obj.magnitude[{key}] = {value}`.",
-                    )
+                    raise dim_error()
                 self._magnitude[key] = factor.magnitude
             else:
                 self._magnitude[key] = factor

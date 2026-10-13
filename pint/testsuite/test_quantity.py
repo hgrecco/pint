@@ -73,6 +73,12 @@ class TestQuantity(QuantityTestCase):
 
         assert self.Q_("4.2×10⁻¹² ft/s") == self.Q_(4.2e-12, "foot/second")
 
+        # a magnitude string with units is converted to the requested units
+        assert self.Q_("3 m", "cm") == self.Q_(300, "cm")
+        assert self.Q_("3 m", "cm").units == self.ureg.cm
+        with pytest.raises(DimensionalityError):
+            self.Q_("3 kg", "m")
+
     def test_round(self) -> None:
         x: Q_[float] = self.Q_(1.1, "kg")
         round1 = assert_type(round(x), "Q_[int]")
@@ -198,6 +204,8 @@ class TestQuantity(QuantityTestCase):
                 "{:L}",
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
+            ("{:T}", '4.12345678 "kilogram" dot "meter"^(2)\\/"second"'),
+            ("{:T~}", r'4.12345678 "kg" dot "m"^(2)\/"s"'),
             ("{:P}", "4.12345678 kilogram⋅meter²/second"),
             ("{:H}", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("{:C}", "4.12345678 kilogram*meter**2/second"),
@@ -210,6 +218,8 @@ class TestQuantity(QuantityTestCase):
             ("{:H~}", "4.12345678 kg m<sup>2</sup>/s"),
             ("{:C~}", "4.12345678 kg*m**2/s"),
             ("{:Lx}", r"\SI[]{4.12345678}{\kilo\gram\meter\squared\per\second}"),
+            ("{:Tz}", "#quan[4.12345678 kg m^2 / s]"),
+            ("{:Tz~}", "#quan[4.12345678 kg m^2 / s]"),
         ):
             with subtests.test(spec):
                 assert spec.format(x) == result, spec
@@ -255,6 +265,11 @@ class TestQuantity(QuantityTestCase):
                 assert spec.format(x) == result
 
     @helpers.requires_numpy
+    def test_quantity_array_2d_html_keeps_rows(self):
+        x = self.Q_(np.array([[1, 2], [3, 4]]), "m")
+        assert "<pre>[[1 2]\n [3 4]]</pre>" in x._repr_html_()
+
+    @helpers.requires_numpy
     def test_quantity_array_scalar_format(self, subtests):
         x = self.Q_(np.array(4.12345678), "kg * m ** 2")
         for spec, result in (
@@ -292,11 +307,13 @@ class TestQuantity(QuantityTestCase):
                 "L",
                 r"4.12345678\ \frac{\mathrm{kilogram} \cdot \mathrm{meter}^{2}}{\mathrm{second}}",
             ),
+            ("T", r'4.12345678 "kilogram" dot "meter"^(2)\/"second"'),
             ("P", "4.12345678 kilogram⋅meter²/second"),
             ("H", "4.12345678 kilogram meter<sup>2</sup>/second"),
             ("C", "4.12345678 kilogram*meter**2/second"),
             ("~", "4.12345678 kg * m ** 2 / s"),
             ("L~", r"4.12345678\ \frac{\mathrm{kg} \cdot \mathrm{m}^{2}}{\mathrm{s}}"),
+            ("T~", r'4.12345678 "kg" dot "m"^(2)\/"s"'),
             ("P~", "4.12345678 kg⋅m²/s"),
             ("H~", "4.12345678 kg m<sup>2</sup>/s"),
             ("C~", "4.12345678 kg*m**2/s"),
@@ -339,12 +356,16 @@ class TestQuantity(QuantityTestCase):
         assert f"{x:~H}" == r"1×10<sup>20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{20}\ \mathrm{m}"
         assert f"{x:~Lx}" == r"\SI[]{1e+20}{\meter}"
+        assert f"{x:~T}" == '1 times 10^(20) "m"'
+        assert f"{x:~Tz}" == "#quan[1e20 m]"
         assert f"{x:~P}" == r"1×10²⁰ m"
 
         x = ureg.Quantity(1e-20, "meter")
         assert f"{x:~H}" == r"1×10<sup>-20</sup> m"
         assert f"{x:~L}" == r"1\times 10^{-20}\ \mathrm{m}"
         assert f"{x:~Lx}" == r"\SI[]{1e-20}{\meter}"
+        assert f"{x:~T}" == '1 times 10^(-20) "m"'
+        assert f"{x:~Tz}" == "#quan[1e-20 m]"
         assert f"{x:~P}" == r"1×10⁻²⁰ m"
 
     def test_ipython(self):
@@ -473,6 +494,19 @@ class TestQuantity(QuantityTestCase):
 
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
+
+    @helpers.requires_scipy
+    def test_to_preferred_no_spurious_dimensionality_error(self):
+        # find_simple() compared the dimensionality exponent-vectors with `**`
+        # instead of `*`, so a preferred unit whose exponent signature happened
+        # to satisfy the spurious exponential identity was matched, and to()
+        # then raised a DimensionalityError on a perfectly valid call.
+        ureg = self.ureg
+        Q_ = self.Q_
+
+        q = Q_(1.0, "m**3 * s**4")
+        result = q.to_preferred([ureg.Unit("m**2 * s**2")])
+        assert result.to_base_units() == q.to_base_units()
 
     def test_to_preferred_accepts_unitlike_strings(self):
         ureg = self.ureg
@@ -621,6 +655,15 @@ class TestQuantity(QuantityTestCase):
         assert self.Q_(400, "degree") // self.Q_(2 * math.pi) == 1
         assert self.Q_(400, "degree") // (2 * math.pi) == 1
         assert 7 // self.Q_(360, "degree") == 1
+
+        # adding a bare zero keeps the original (scaled) dimensionless units
+        x = self.Q_(5, "percent") + 0
+        assert x.magnitude == 5
+        assert x.units == self.ureg.percent
+        # adding a bare non-zero number converts to plain dimensionless first
+        x = self.Q_(5, "percent") + 1
+        assert x.magnitude == pytest.approx(1.05)
+        assert x.units == self.ureg.dimensionless
 
     def test_offset(self):
         helpers.assert_quantity_almost_equal(
@@ -788,9 +831,6 @@ class TestQuantity(QuantityTestCase):
         with pytest.raises(ValueError):
             self.Q_(1, "m").__array__()
 
-    @patch(
-        "pint.compat.upcast_type_names", ("pint.testsuite.test_quantity.FakeWrapper",)
-    )
     @patch(
         "pint.compat.upcast_type_map",
         {"pint.testsuite.test_quantity.FakeWrapper": FakeWrapper},
@@ -986,8 +1026,7 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compare_quantity_compact(float("inf") * ureg.m, float("inf") * ureg.m)
 
     def test_nonnumeric_magnitudes(self):
-        ureg = self.ureg
-        x = "some string" * ureg.m
+        x = self.Q_(object(), "m")
         with pytest.warns(UndefinedBehavior):
             x.to_compact()
 
@@ -1417,6 +1456,26 @@ class TestDimensions(QuantityTestCase):
         assert (self.Q_(42, "meter") / self.Q_(1, "meter")).dimensionless
         assert not (self.Q_(42, "meter") / self.Q_(1, "second")).dimensionless
         assert (self.Q_(42, "meter") / self.Q_(1, "inch")).dimensionless
+
+    def test_dimensionality_after_ito(self):
+        x = self.Q_(1.0, "m")
+        assert x.dimensionality == UnitsContainer({"[length]": 1})
+        with self.ureg.context("sp"):
+            x.ito("Hz")
+        assert x.dimensionality == UnitsContainer({"[time]": -1})
+
+    @helpers.requires_numpy
+    def test_dimensionality_after_inplace_operation(self):
+        length = UnitsContainer({"[length]": 1})
+        x = self.Q_(np.array([20.0]), "m")
+        assert x.dimensionality == length
+        x /= self.Q_(1, "s")
+        assert x.dimensionality == UnitsContainer({"[length]": 1, "[time]": -1})
+        x *= self.Q_(1, "s")
+        assert x.dimensionality == length
+        x **= 2
+        assert x.dimensionality == UnitsContainer({"[length]": 2})
+        assert x.check("[area]")
 
     def test_inclusion(self):
         dim = self.Q_(42, "meter").dimensionality

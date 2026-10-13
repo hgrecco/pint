@@ -4,10 +4,12 @@ import collections
 import copy
 import math
 import operator as op
+from decimal import Decimal
+from fractions import Fraction
 
 import pytest
 
-from pint import pint_eval
+from pint import DefinitionSyntaxError, pint_eval
 from pint.util import (
     ParserHelper,
     UnitsContainer,
@@ -215,6 +217,21 @@ class TestParseHelper:
                 assert dict(p) == {"kg": 1}
 
 
+@pytest.mark.parametrize("non_int_type", [float, Decimal, Fraction])
+@pytest.mark.parametrize("expression", ["kilo-watt", "meter+second"])
+def test_parse_helper_addition_subtraction(non_int_type, expression):
+    with pytest.raises(DefinitionSyntaxError, match="add|subtract"):
+        ParserHelper.from_string(expression, non_int_type)
+
+
+@pytest.mark.parametrize("non_int_type", [float, Decimal, Fraction])
+@pytest.mark.parametrize("operator, power", [("+", 3), ("-", -1)])
+def test_parse_helper_numeric_exponent(non_int_type, operator, power):
+    parsed = ParserHelper.from_string(f"meter**(1{operator}2)", non_int_type)
+    assert parsed.scale == 1
+    assert dict(parsed) == {"meter": power}
+
+
 class TestStringProcessor:
     def _test(self, bef, aft):
         for pattern in ("{}", "+{}+"):
@@ -297,6 +314,19 @@ class TestGraph:
         g[1] = {2}
         g[2] = {3}
         assert find_connected_nodes(g, 9) is None
+
+    def test_find_connected_nodes_deep_chain(self):
+        # Regression test for CWE-674: the recursive predecessor of
+        # find_connected_nodes raised RecursionError on a linear chain
+        # longer than sys.getrecursionlimit(). The iterative version
+        # must handle it without crashing.
+        n = 2000
+        g = collections.defaultdict(set)
+        for i in range(n):
+            g[i].add(i + 1)
+        result = find_connected_nodes(g, 0)
+        assert result is not None
+        assert len(result) == n + 1
 
     def test_shortest_path(self):
         g = collections.defaultdict(set)

@@ -113,9 +113,19 @@ def latex_escape(string: str) -> str:
             (r"[~]", r"\\textasciitilde "),
             (r"[\^]", r"\\textasciicircum "),
             (r"([&%$#_{}])", r"\\\1"),
+            (r"°", r"{}^{\\circ}"),
+            (r"Δ", r"\\Delta "),
         ),
         str(string),
     )
+
+
+# siunitx macros for units whose pint name is not a valid siunitx macro.
+_SIUNITX_UNITS = {
+    "degree_Celsius": r"\degreeCelsius",
+    "degree_Fahrenheit": r"\degree F",
+    "degree_Rankine": r"\degree R",
+}
 
 
 def siunitx_format_unit(
@@ -145,6 +155,15 @@ def siunitx_format_unit(
         # siunitx supports \prefix commands
 
         lpick = lpos if power >= 0 else lneg
+        # siunitx has no notation for temperature differences.
+        siunit = _SIUNITX_UNITS.get(unit.removeprefix("delta_"))
+        if siunit is not None:
+            if power < 0:
+                lpick.append(r"\per")
+            lpick.append(siunit)
+            lpick.append(_tothe(abs(power)))
+            continue
+
         prefix = None
         # TODO: fix this to be fore efficient and detect also aliases.
         for p in registry._prefixes.values():

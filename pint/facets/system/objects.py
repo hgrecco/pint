@@ -166,7 +166,7 @@ class System(SharedRegistryObject):
                 base_unit_names[old_unit] = {new_unit: 1 / value}
             else:
                 # The old unit MUST be a root unit, if not raise an error.
-                if old_unit != str(get_root_func(old_unit)[1]):
+                if old_unit != str(get_root_func(old_unit)[1]._units):
                     raise ValueError(
                         f"The old unit {old_unit} must be a root unit "
                         f"in order to be replaced by new unit {new_unit}"

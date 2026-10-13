@@ -2,7 +2,7 @@
 name = "Pint"
 authors = [{ name = "Hernan E. Grecco", email = "hernan.grecco@gmail.com" }]
 dynamic = ["version"]
-license = { text = "BSD" }
+license = "BSD-3-Clause"
 description = "Physical quantities module"
 readme = "README.rst"
 maintainers = [
@@ -13,7 +13,6 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: BSD License",
   "Operating System :: MacOS :: MacOS X",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX",
@@ -45,7 +44,7 @@ codspeed = ["pint[test-all]", "pytest-codspeed"]
 numpy = ["numpy >= 2.0.0"]
 optype = ["optype[numpy]"]
 uncertainties = ["uncertainties >= 3.1.6"]
-babel = ["babel <= 2.8"]
+babel = ["babel"]
 pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
 # Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
@@ -183,7 +182,7 @@ tomlkit = "*"
 pre-commit = "*"
 pre-commit-hooks = "*"
 taplo = "*"
-ruff = "*"
+ruff = "<0.17"
 mdformat = "*"
 mdformat-ruff = "*"
 
@@ -203,6 +202,8 @@ test = "pytest --benchmark-skip"
 bench = "pytest --benchmark-only"
 
 [tool.pixi.feature.typecheck.dependencies]
+nodejs = ">=20"
+pytest = "*"
 pyright = "*"
 pip = "*"
 

@@ -186,7 +186,7 @@ features that work best as an extension package versus direct inclusion in Pint 
 * Extension (separate packages)
 
   * Duck array types that wrap Pint (come above Pint
-    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`)
+    in :ref:`the type casting hierarchy </user/numpy.ipynb#Technical-Commentary>`)
 
   * Uses features independent/on top of the libraries
 

@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from typing_extensions import TypeIs
 
     from ._typing import QuantityOrUnitLike
+    from .facets.plain import GenericPlainRegistry
     from .registry import UnitRegistry
 
 
@@ -402,11 +403,14 @@ def find_connected_nodes[TH: Hashable](
         return None
 
     visited = visited or set()
-    visited.add(start)
-
-    for node in graph[start]:
-        if node not in visited:
-            find_connected_nodes(graph, node, visited)
+    # Iterative DFS to avoid RecursionError on deep chains: https://github.com/hgrecco/pint/issues/2388
+    stack = [start]
+    while stack:
+        node = stack.pop()
+        if node in visited:
+            continue
+        visited.add(node)
+        stack.extend(graph[node] - visited)
 
     return visited
 
@@ -854,6 +858,11 @@ class ParserHelper(UnitsContainer):
     def __repr__(self):
         return f"ParserHelper({repr(self.scale)}, {repr(self._d)})"
 
+    def __add__(self, other):
+        raise DefinitionSyntaxError("Cannot add or subtract units in a unit expression")
+
+    __radd__ = __sub__ = __rsub__ = __add__
+
     def __mul__(self, other):
         if isinstance(other, str):
             new = self.add(other, self._one)
@@ -975,6 +984,8 @@ class SharedRegistryObject:
     """
 
     _REGISTRY: ClassVar[UnitRegistry]
+
+    # TODO: Should `_units` really be `UnitsContainer | UnitDefinition`?
     _units: UnitsContainer
 
     def __new__(cls, *args, **kwargs):
@@ -988,8 +999,7 @@ class SharedRegistryObject:
         return inst
 
     def _check(self, other: object) -> "TypeIs[SharedRegistryObject]":
-        """Check if the other object use a registry and if so that it is the
-        same registry.
+        """Check if the other object uses a registry and if so that it is the same registry.
 
         Parameters
         ----------
@@ -1167,9 +1177,9 @@ def sized(y: Any) -> bool:
     return True
 
 
-def create_class_with_registry[TT: type](
-    registry: UnitRegistry, base_class: type[TT]
-) -> type[TT]:
+def create_class_with_registry[T](
+    registry: GenericPlainRegistry, base_class: type[T]
+) -> type[T]:
     """Create new class inheriting from base_class and
     filling _REGISTRY class attribute with an actual instanced registry.
     """
