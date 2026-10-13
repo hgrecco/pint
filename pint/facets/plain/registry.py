@@ -718,7 +718,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         return self._prefixes[prefix].symbol + self._units[unit_name].symbol
 
     def _get_symbol(self, name: str) -> str:
-        return self._units[name].symbol
+        if name in self._units:
+            return self._units[name].symbol
+        return self.get_symbol(name)
 
     def _apply_preprocessors(self, input_string: str) -> str:
         """Apply the registry's preprocessors to a unit or expression string."""
