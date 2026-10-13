@@ -72,13 +72,10 @@ def matrix_to_typst(
 
     ret: list[str] = []
 
+    left, right = ("#quan[", "]") if zero else ("", "")
+
     for row in matrix:
-        ret += [
-            ", ".join(
-                f"{'#quan[' if zero else ''}{fmtfun(f)}{']' if zero else ''}"
-                for f in row
-            )
-        ]
+        ret += [", ".join(f"{left}{fmtfun(f)}{right}" for f in row)]
 
     return r"mat(%s)" % " ;\n".join(ret)
 
