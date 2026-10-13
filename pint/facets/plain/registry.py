@@ -720,8 +720,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def _get_symbol(self, name: str) -> str:
         if name in self._units:
             return self._units[name].symbol
-        # A prefixed unit cached while a context was active is dropped
-        # with the context's overlay, so derive its symbol again.
         return self.get_symbol(name)
 
     def _apply_preprocessors(self, input_string: str) -> str:
