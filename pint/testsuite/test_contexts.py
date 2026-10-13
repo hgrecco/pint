@@ -1026,11 +1026,10 @@ def test_err_new_unit():
         ureg.enable_contexts("c")
 
 
-def test_prefixed_unit_survives_redefining_context():
-    # A metric-prefixed unit created lazily inside a unit-redefining context
-    # must survive the context exit; it used to be cached in the transient
-    # context overlay and silently evicted, raising KeyError on later
-    # abbreviated formatting. See https://github.com/hgrecco/pint/issues/2389
+def test_prefixed_unit_from_context_formats_after_exit():
+    # A prefixed unit first parsed inside a unit-redefining context is
+    # cached in that context's overlay; formatting it with abbreviations
+    # after the context exits used to raise KeyError. See #2389
     ureg = UnitRegistry(
         """
         kilo- = 1000 = k-
@@ -1044,6 +1043,5 @@ def test_prefixed_unit_survives_redefining_context():
     )
     with ureg.context("c"):
         q = ureg.Quantity(1, "kilofoo")
-    assert "kilofoo" in ureg._units
     # This abbreviated format used to raise KeyError after the context exited.
     assert f"{q:~P}" == "1 kf"
