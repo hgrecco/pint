@@ -4,7 +4,7 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
-- No changes yet.
+- Fix `numpy.average(..., returned=True)` wrapping its weight sum in the data units and recursing with dimensionless Quantity weights.
 
 
 0.26.2 (2026-10-19)
