@@ -1134,13 +1134,14 @@ for func_str, unit_arguments, wrap_output in (
 def _average(a, axis=None, weights: Any = None, returned: Any = False, **kwargs):
     args: tuple[Any, ...]
     args, output_wrap = unwrap_and_wrap_consistent_units(a)
-    # Normalize relative weights before redispatching to NumPy. The two-output
-    # form and dimensional weights retain their existing behavior.
-    if not returned and _is_quantity(weights) and weights.dimensionless:
+    # Normalize relative weights before redispatching to NumPy.
+    if _is_quantity(weights) and weights.dimensionless:
         weights = weights.m_as("")
-    return output_wrap(
-        np.average(*args, axis=axis, weights=weights, returned=returned, **kwargs)
-    )
+    result = np.average(*args, axis=axis, weights=weights, returned=returned, **kwargs)
+    if returned:
+        average, sum_weights = result
+        return output_wrap(average), sum_weights
+    return output_wrap(result)
 
 
 def implement_percentile_func(func_str, is_quantile=False):
