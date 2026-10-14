@@ -4,7 +4,7 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
-- No changes yet.
+- Fix `numpy.correlate` raising `AttributeError` when only one operand is a Quantity.
 
 
 0.26.2 (2026-10-19)
