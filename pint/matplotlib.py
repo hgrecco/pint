@@ -33,10 +33,12 @@ class PintConverter(matplotlib.units.ConversionInterface):
         self._reg = registry
 
     def convert(self, value, unit, axis):
-        """Convert :`Quantity` instances for matplotlib to use."""
+        """Convert `Quantity` instances for matplotlib to use."""
+        # Matplotlib passes a None unit while the axis has no unit yet. There is
+        # nothing to convert to, so the values keep the units they carry.
         # Short circuit for arrays
         if hasattr(value, "units"):
-            return value.to(unit).magnitude
+            return value.magnitude if unit is None else value.to(unit).magnitude
         if iterable(value):
             return [self._convert_value(v, unit, axis) for v in value]
 
@@ -45,7 +47,9 @@ class PintConverter(matplotlib.units.ConversionInterface):
     def _convert_value(self, value, unit, axis):
         """Handle converting using attached unit or falling back to axis units."""
         if hasattr(value, "units"):
-            return value.to(unit).magnitude
+            return value.magnitude if unit is None else value.to(unit).magnitude
+        if unit is None:
+            return value
 
         return self._reg.Quantity(value, axis.get_units()).to(unit).magnitude
 
@@ -53,7 +57,7 @@ class PintConverter(matplotlib.units.ConversionInterface):
     def axisinfo(unit, axis):
         """Return axis information for this particular unit."""
 
-        return PintAxisInfo(unit)
+        return None if unit is None else PintAxisInfo(unit)
 
     @staticmethod
     def default_units(x, axis):
