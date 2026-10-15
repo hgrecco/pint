@@ -4,6 +4,7 @@ Pint Changelog
 0.26.2 (unreleased)
 -------------------
 
+- Raise `UndefinedUnitError` instead of a misleading `AttributeError` when accessing `dimensionality`, `dimensionless` or `unitless` of a Quantity whose unit is defined in terms of an undefined unit (#1154)
 - Format temperature units as valid LaTeX (`~L`) and siunitx (`Lx`), e.g. `\degreeCelsius` (#400)
 - `check()`, `+`/`-`, comparisons and `to_reduced_units()` now use the active context, e.g. adding `kN` and `kg` in a context relating force and mass (#1951, #1748, #1002, #1067)
 - Support `numpy.repeat` on Quantities (#2104)
