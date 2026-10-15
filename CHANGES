@@ -57,6 +57,7 @@ Pint Changelog
 - Add `TypstFormatter`and `ZeroFormatter` to allow formatting to plain Typst and zero package (#2148)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
 - Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
+- Fix matplotlib raising `ConversionError` for `Axis.set_ticks()` called before the axis has a unit, e.g. `ax.set_yticks(ureg.Quantity([1, 2], "pascal"))`, and allow resetting the axis units to `None` (#1927)
 
 
 0.26.1 (2026-09-10)
