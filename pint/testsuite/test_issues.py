@@ -1827,3 +1827,13 @@ def test_issue1814_unknown_operator_raises(expr):
     ureg = UnitRegistry()
     with pytest.raises(DefinitionSyntaxError):
         ureg.Quantity(expr)
+
+
+@pytest.mark.parametrize("attr", ["dimensionality", "dimensionless", "unitless"])
+def test_issue1154_undefined_reference_raises_undefined_unit_error(attr):
+    ureg = UnitRegistry(["foo = 1 bar"])
+    q = ureg.Quantity(1, "foo")
+    with pytest.raises(UndefinedUnitError, match="'bar' is not defined"):
+        getattr(q, attr)
+    with pytest.raises(AttributeError, match="Neither Quantity object"):
+        q.nonexistent
