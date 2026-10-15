@@ -1343,6 +1343,26 @@ def test_issues_1841_xfail():
     # print(q)
 
 
+def test_issue1126_load_definitions():
+    # No unit is defined as "= []", so "[]" is not in the registry's dimensions.
+    ureg = UnitRegistry(["percent = 0.01", "foo = [d]"])
+    ureg.load_definitions(
+        ["@context c", "    [] -> [d]: value * 5 foo / percent", "@end"]
+    )
+    q = ureg.Quantity(3, "percent").to("foo", "c")
+    helpers.assert_quantity_almost_equal(q, ureg.Quantity(15.0, "foo"))
+
+
+def test_issue1126_context_from_lines():
+    ureg = UnitRegistry(["percent = 0.01", "foo = [d]"])
+    ctx = Context.from_lines(["@context c", "    [] -> [d]: value * 5 foo / percent"])
+    q = ureg.Quantity(3, "percent").to("foo", ctx)
+    helpers.assert_quantity_almost_equal(q, ureg.Quantity(15.0, "foo"))
+
+    with pytest.raises(ValueError, match=r"\[bar\] is not defined as dimension"):
+        ureg.get_dimensionality("[bar]")
+
+
 def test_issue1949(registry_empty):
     ureg = UnitRegistry()
     ureg.define(
