@@ -1806,6 +1806,13 @@ def test_issue2397_fathom_is_exact_international_yards(sess_registry):
     assert (1 * ureg.survey_cables_length).to(ureg.survey_foot).magnitude == 720
 
 
+def test_issue2478_pct_is_percent_alias(sess_registry):
+    # "pct" used to parse as pico + carat.
+    ureg = sess_registry
+    assert ureg.Unit("pct") == ureg.Unit("percent")
+    assert ureg.Quantity(50, "pct").to("dimensionless").magnitude == 0.5
+
+
 @pytest.mark.parametrize("symbol", ["$", "£", "€", "US$"])
 def test_issue1814_currency_symbols(symbol):
     ureg = UnitRegistry()
