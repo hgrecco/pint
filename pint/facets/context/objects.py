@@ -8,14 +8,16 @@ pint.facets.context.objects
 
 from __future__ import annotations
 
+import math
 import weakref
 from collections import ChainMap, defaultdict
 from collections.abc import Callable, Iterable
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, Self
 
 from ..._typing import Magnitude
+from ...errors import DimensionalityError
 from ...facets.plain import PlainQuantity, PlainUnit, UnitDefinition
-from ...util import UnitsContainer, to_units_container
+from ...util import UnitsContainer, find_shortest_path, to_units_container
 from .definitions import ContextDefinition
 
 if TYPE_CHECKING:
@@ -35,7 +37,102 @@ SrcDst = tuple[UnitsContainer, UnitsContainer]
 
 
 class ContextQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
-    pass
+    def _has_context_path(
+        self, src_dim: UnitsContainer, dst_dim: UnitsContainer
+    ) -> bool:
+        ctx = self._REGISTRY._active_ctx
+        return bool(ctx) and bool(find_shortest_path(ctx.graph, src_dim, dst_dim))
+
+    def check(self, dimension: UnitLike) -> bool:
+        """Return :py:const:`True` if the quantity's dimension matches passed
+        dimension, or can be converted to it through the active contexts.
+        """
+        dst_dim = self._REGISTRY.get_dimensionality(dimension)
+        return self.dimensionality == dst_dim or self._has_context_path(
+            self.dimensionality, dst_dim
+        )
+
+    def _to_own_dimensionality(self, other: Any) -> Any:
+        """Convert other to self's units through the active contexts when
+        their dimensionalities differ, otherwise return it unchanged.
+        """
+        if (
+            not self._REGISTRY._active_ctx
+            or not isinstance(other, PlainQuantity)
+            or other._REGISTRY is not self._REGISTRY
+            or other.dimensionality == self.dimensionality
+            or (self._is_logarithmic and other._is_logarithmic)
+        ):
+            return other
+        try:
+            return other.to(self._units)
+        except DimensionalityError:
+            return other
+
+    def _add_sub(self, other, op):
+        return super()._add_sub(self._to_own_dimensionality(other), op)
+
+    def _iadd_sub(self, other, op):
+        return super()._iadd_sub(self._to_own_dimensionality(other), op)
+
+    def __eq__(self, other):
+        return super().__eq__(self._to_own_dimensionality(other))
+
+    __hash__ = PlainQuantity.__hash__
+
+    def compare(self, other, op):
+        return super().compare(self._to_own_dimensionality(other), op)
+
+    def _reduce_through_contexts(self) -> tuple[Any, UnitsContainer]:
+        """Merge units whose dimensionalities are linked by a proportional
+        transformation of the active contexts. For example, in a context with
+        ``[volume] -> [mass]: value * 1 kg/l``, ``kg / l`` becomes ``kg / kg``.
+
+        Returns the factor to multiply the magnitude by and the new units.
+        """
+        registry = self._REGISTRY
+        units = self._units
+        factor = 1
+        if not registry._active_ctx:
+            return factor, units
+
+        one, two = registry.non_int_type(1), registry.non_int_type(2)
+        for unit1 in tuple(units):
+            src = UnitsContainer({unit1: 1})
+            src_dim = registry._get_dimensionality(src)
+            for unit2 in units:
+                dst = UnitsContainer({unit2: 1})
+                dst_dim = registry._get_dimensionality(dst)
+                if src_dim == dst_dim or not self._has_context_path(src_dim, dst_dim):
+                    continue
+                scale = registry.convert(one, src, dst)
+                # Only proportional transformations can be applied to a unit power.
+                if not math.isclose(registry.convert(two, src, dst), two * scale):
+                    continue
+                exp = units[unit1]
+                factor = factor * scale**exp
+                units = units.remove([unit1]).add(unit2, exp)
+                break
+        return factor, units
+
+    def to_reduced_units(self) -> Self:
+        """Return a copy scaled to reduced units, i.e. one unit per
+        dimension, also merging units linked by the active contexts.
+        """
+        factor, units = self._reduce_through_contexts()
+        if units is self._units:
+            return super().to_reduced_units()
+        return self.__class__(self._magnitude * factor, units).to_reduced_units()
+
+    def ito_reduced_units(self) -> None:
+        """Scale in place to reduced units, i.e. one unit per dimension, also
+        merging units linked by the active contexts.
+        """
+        factor, units = self._reduce_through_contexts()
+        if units is not self._units:
+            self._magnitude = self._magnitude * factor
+            self._units = units
+        return super().ito_reduced_units()
 
 
 class ContextUnit(PlainUnit):
