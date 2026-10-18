@@ -57,6 +57,7 @@ Pint Changelog
 - Add `TypstFormatter`and `ZeroFormatter` to allow formatting to plain Typst and zero package (#2148)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
 - Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
+- Fix `parse_expression` not matching passed values case insensitively when `case_sensitive=False` (#800)
 
 
 0.26.1 (2026-09-10)
