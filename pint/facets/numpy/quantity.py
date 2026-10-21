@@ -421,6 +421,9 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             power = np.ceil(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
 
         finite_powers = power[np.isfinite(power)]
+        if finite_powers.size == 0:
+            # Only zeros, nan and inf: there is no prefix to pick.
+            return self
         pivot = (
             finite_powers[np.argmax(np.abs(finite_powers))]
             if maximumPrefix

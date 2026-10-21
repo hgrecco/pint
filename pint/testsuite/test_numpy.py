@@ -2009,3 +2009,7 @@ class TestToCompact:
     def test_to_compact_nan(self):
         assert self.q_one_nan.to_compact().units == "millimeter"
         assert self.q_all_nan.to_compact().units == "meter"
+
+    @pytest.mark.parametrize("values", [[0, np.nan], [0, np.inf], [np.nan, np.inf]])
+    def test_to_compact_no_finite_power(self, values):
+        assert (values * self.ureg.m).to_compact().units == "meter"
