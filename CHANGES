@@ -66,9 +66,6 @@ Pint Changelog
 - Fix `UnitRegistry.wraps()` converting only the first variadic positional argument and failing on empty `*args`; preserve keyword-only arguments and defaults (#2254)
 - Fix `UnitRegistry.check()` validating the wrong arguments of functions with `*args`, `**kwargs` or keyword-only parameters, and failing to call functions with positional-only defaults
 - Fix `1 * unit` skipping `auto_reduce_dimensions` and `autoconvert_to_preferred`, so it disagreed with every other magnitude (#2403)
-- Add `TypstFormatter`and `ZeroFormatter` to allow formatting to plain Typst and zero package (#2148)
-- Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
-- Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
 - Fix `RecursionError` in `find_connected_nodes` for long chains of contexts (#2388)
 - Fix in-place `**=` changing a Quantity's units when the magnitude update fails, e.g. a fractional power of an integer array (#2423)
