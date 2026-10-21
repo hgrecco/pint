@@ -11,6 +11,8 @@ from ...errors import UndefinedBehavior
 from ...util import UnitsContainer, infer_base_unit
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from ..._typing import Scalar, UnitLike
     from ...registry import UnitRegistry
     from .quantity import PlainQuantity
@@ -229,6 +231,62 @@ def to_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
 def ito_unprefixed(quantity: PlainQuantity) -> PlainQuantity:
     units = _get_unprefixed(quantity)
     return quantity.ito(units)
+
+
+def to_mixed_units[Q: PlainQuantity](
+    quantity: Q, units: Iterable[UnitLike], ndigits: int | None = None
+) -> tuple[Q, ...]:
+    """Return the quantity split across several units, e.g. feet and inches.
+
+    The units must be ordered from largest to smallest. Every part but the
+    last is a whole number, the last part holds what is left, and the parts
+    add up to the quantity. The parts of a negative quantity are negative.
+
+    If ndigits is given, the last part is rounded to that many decimal
+    places, and carried into the larger units if it rounds up to a whole one.
+
+    Examples
+    --------
+
+    >>> import pint
+    >>> ureg = pint.UnitRegistry()
+    >>> (5.5 * ureg.ft).to_mixed_units(["ft", "inch"])
+    (Quantity(5, "foot"), Quantity(6.0, "inch"))
+    >>> (71.9 * ureg.inch).to_mixed_units(["ft", "inch"], ndigits=0)
+    (Quantity(6, "foot"), Quantity(0.0, "inch"))
+    """
+    chain = [quantity._REGISTRY.Unit(unit) for unit in units]
+    if not chain:
+        raise ValueError("to_mixed_units needs at least one unit")
+
+    smallest = chain[-1]
+    # how many of the smallest unit make one of each unit
+    sizes = [quantity._REGISTRY.Quantity(1, unit).to(smallest).m for unit in chain]
+    if any(larger <= smaller for larger, smaller in zip(sizes, sizes[1:])):
+        raise ValueError("units must be ordered from largest to smallest")
+
+    rest = quantity.to(smallest).m
+    negative = rest < 0
+    rest = abs(rest)
+    if ndigits is not None:
+        # rounding the total carries a last part that rounds up to a whole
+        # larger unit into that unit
+        rest = round(rest, ndigits)
+
+    magnitudes = []
+    for size in sizes[:-1]:
+        count = math.floor(rest / size)
+        magnitudes.append(count)
+        rest -= count * size
+    if ndigits is not None:
+        # units that are not whole multiples of each other leave a long tail
+        rest = round(rest, ndigits)
+    magnitudes.append(rest)
+
+    if negative:
+        # leave the zero parts unsigned
+        magnitudes = [-m if m else m for m in magnitudes]
+    return tuple(quantity.__class__(m, unit) for m, unit in zip(magnitudes, chain))
 
 
 def to_preferred(

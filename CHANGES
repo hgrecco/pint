@@ -8,6 +8,7 @@ Pint Changelog
 - Fix `to_compact` raising `ValueError` on arrays with no finite non-zero value (#2504)
 - Format numpy array magnitudes with the Typst (`T`) and zero (`Tz`) formatters (#2494)
 - Fix LaTeX formatting of arrays not displaying values (#1887)
+- Add `Quantity.to_mixed_units()` to split a quantity across several units, e.g. feet and inches (#2238)
 
 
 0.26.2 (2026-10-19)

@@ -648,6 +648,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     ito_reduced_units = qto.ito_reduced_units
     to_unprefixed = qto.to_unprefixed
     ito_unprefixed = qto.ito_unprefixed
+    to_mixed_units = qto.to_mixed_units
 
     # Mathematical operations
     def __int__(self: PlainQuantity[opt.CanInt]) -> int:

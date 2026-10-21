@@ -8,6 +8,7 @@ import math
 import operator as op
 import pickle
 import warnings
+from decimal import Decimal
 from typing import TYPE_CHECKING, assert_type
 from unittest.mock import patch
 
@@ -571,6 +572,64 @@ class TestQuantity(QuantityTestCase):
 
         result = Q_(input_string).to_unprefixed()
         assert result.units == ureg.Unit(expected)
+
+    @pytest.mark.parametrize(
+        ("value", "units", "ndigits", "expected"),
+        [
+            ("5.5 ft", ["ft", "inch"], None, [(5, "foot"), (6.0, "inch")]),
+            (
+                "100 inch",
+                ["yard", "ft", "inch"],
+                None,
+                [(2, "yard"), (2, "foot"), (4.0, "inch")],
+            ),
+            ("2.75 hour", ["hour", "minute"], None, [(2, "hour"), (45.0, "minute")]),
+            ("-5.5 ft", ["ft", "inch"], None, [(-5, "foot"), (-6.0, "inch")]),
+            ("-5 ft", ["ft", "inch"], None, [(-5, "foot"), (0.0, "inch")]),
+            ("1.75 m", ["ft", "inch"], 0, [(5, "foot"), (9.0, "inch")]),
+            # the inches round up to a foot, which makes the second yard
+            (
+                "71.96 inch",
+                ["yard", "ft", "inch"],
+                0,
+                [(2, "yard"), (0, "foot"), (0.0, "inch")],
+            ),
+            ("5 ft", ["inch"], None, [(60.0, "inch")]),
+        ],
+    )
+    def test_to_mixed_units(self, value, units, ndigits, expected):
+        parts = self.Q_(value).to_mixed_units(units, ndigits=ndigits)
+        assert [(part.magnitude, part.units) for part in parts] == [
+            (magnitude, self.ureg.Unit(unit)) for magnitude, unit in expected
+        ]
+
+    def test_to_mixed_units_adds_up(self):
+        q = self.Q_(1.75, "m")
+        feet, inches = q.to_mixed_units([self.ureg.ft, self.ureg.inch])
+        assert feet.magnitude == 5
+        assert (feet + inches).to("m").magnitude == pytest.approx(1.75)
+
+    def test_to_mixed_units_decimal(self):
+        ureg = UnitRegistry(non_int_type=Decimal)
+        feet, inches = ureg.Quantity(Decimal("5.5"), "ft").to_mixed_units(
+            ["ft", "inch"]
+        )
+        assert feet.magnitude == 5
+        assert inches.magnitude == Decimal(6)
+
+    @pytest.mark.parametrize(
+        ("units", "error"),
+        [
+            ([], ValueError),
+            (["inch", "ft"], ValueError),
+            (["ft", "ft"], ValueError),
+            (["ft", "second"], DimensionalityError),
+            (["hour", "minute"], DimensionalityError),
+        ],
+    )
+    def test_to_mixed_units_invalid(self, units, error):
+        with pytest.raises(error):
+            self.Q_(1, "ft").to_mixed_units(units)
 
     @helpers.requires_numpy
     def test_convert_numpy(self):

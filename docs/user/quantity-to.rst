@@ -288,6 +288,38 @@ unprefixed form of a unit while staying in the same unit family.
    Quantity(1000000.0, "watt")
 
 
+to_mixed_units
+--------------
+
+Split a quantity across several units, ordered from largest to smallest. Every
+part but the last is a whole number, and the last part holds what is left.
+
+.. doctest::
+
+   >>> Q_(5.5, "ft").to_mixed_units(["ft", "inch"])
+   (Quantity(5, "foot"), Quantity(6.0, "inch"))
+   >>> Q_(9000, "s").to_mixed_units(["hour", "minute", "second"])
+   (Quantity(2, "hour"), Quantity(30, "minute"), Quantity(0, "second"))
+
+``ndigits`` rounds the last part, and carries it into the larger units when it
+rounds up to a whole one:
+
+.. doctest::
+
+   >>> Q_(71.9, "inch").to_mixed_units(["ft", "inch"], ndigits=0)
+   (Quantity(6, "foot"), Quantity(0.0, "inch"))
+
+The parts can then be formatted as needed:
+
+.. doctest::
+
+   >>> feet, inches = Q_(1.75, "m").to_mixed_units(["ft", "inch"], ndigits=0)
+   >>> f"{feet:~} {inches:.0f~}"
+   '5 ft 9 in'
+   >>> f"{feet.m}′ {inches.m:.0f}″"
+   '5′ 9″'
+
+
 to_tuple
 --------
 
