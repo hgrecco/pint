@@ -1837,3 +1837,35 @@ def test_issue1154_undefined_reference_raises_undefined_unit_error(attr):
         getattr(q, attr)
     with pytest.raises(AttributeError, match="Neither Quantity object"):
         q.nonexistent
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize(
+    "spec, expected",
+    [
+        (
+            "L",
+            r"\begin{pmatrix}2 & 1\\" + " \n" + r"3 & 1\end{pmatrix}\ \mathrm{meter}",
+        ),
+        (
+            ".1fL",
+            r"\begin{pmatrix}2.0 & 1.0\\"
+            + " \n"
+            + r"3.0 & 1.0\end{pmatrix}\ \mathrm{meter}",
+        ),
+    ],
+)
+def test_issue1887_latex_array(spec, expected):
+    ureg = UnitRegistry()
+    q = np.array([[2, 1], [3, 1]]) * ureg.meter
+    assert format(q, spec) == expected
+
+
+@helpers.requires_numpy
+def test_issue1887_ndarray_to_latex_template_and_spec():
+    from pint.formatting import ndarray_to_latex
+
+    arr = np.array([1.0, 2.5])
+    expected = r"\begin{pmatrix}1.00 & 2.50\end{pmatrix}"
+    assert ndarray_to_latex(arr, ".2f") == expected
+    assert ndarray_to_latex(arr, "{:.2f}") == expected
