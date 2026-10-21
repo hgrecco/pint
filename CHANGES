@@ -5,6 +5,7 @@ Pint Changelog
 -------------------
 
 - Fix `numpy.correlate` raising `AttributeError` when only one operand is a Quantity.
+- Raise `UndefinedUnitError` instead of `AttributeError` for `dimensionality`, `dimensionless` and `unitless` when a unit references an undefined unit (#1154)
 
 
 0.26.2 (2026-10-19)
