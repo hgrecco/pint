@@ -106,7 +106,7 @@ def ndarray_to_typst_parts(
     else:
         ret = []
         if ndarr.ndim == 3:
-            header = ("arr[%s," % ",".join("%d" % d for d in dim)) + "%d,:,:]"
+            header = "arr[" + "".join("%d," % d for d in dim) + "%d,:,:]"
             for elno, el in enumerate(ndarr):
                 ret += [header % elno + " = " + matrix_to_typst(el, fmtfun, zero)]
         else:
