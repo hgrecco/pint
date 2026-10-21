@@ -5,6 +5,7 @@ Pint Changelog
 -------------------
 
 - Raise `UndefinedUnitError` instead of `AttributeError` for `dimensionality`, `dimensionless` and `unitless` when a unit references an undefined unit (#1154)
+- Fix LaTeX formatting of arrays not displaying values (#1887)
 
 
 0.26.2 (2026-10-19)
@@ -68,7 +69,6 @@ Pint Changelog
 - Add `TypstFormatter`and `ZeroFormatter` to allow formatting to plain Typst and zero package (#2148)
 - Update definition of US survey units to reflect the 2022 revision by NIST/NGS. (#1920)
 - Add a deprecation warning to `ApplicationRegistry.__getitem__()` matching direct registry item access (#2267)
-- Fix LaTeX formatting of arrays not displaying values (#1887)
 - Fix `to_preferred` raising a spurious `DimensionalityError` for some preferred units (#2395)
 - Fix `RecursionError` in `find_connected_nodes` for long chains of contexts (#2388)
 - Fix in-place `**=` changing a Quantity's units when the magnitude update fails, e.g. a fractional power of an integer array (#2423)
