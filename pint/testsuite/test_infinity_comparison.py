@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 
-from pint import Quantity
 from pint.testing import assert_allclose
 
 
@@ -16,14 +15,21 @@ from pint.testing import assert_allclose
         (1, float("-inf")),
     ],
 )
-def test_assert_allclose_rejects_unequal_infinities(first, second, quantified):
+def test_assert_allclose_rejects_unequal_infinities(
+    first, second, quantified, sess_registry
+):
     if quantified:
-        first, second = Quantity(first, "m"), Quantity(second, "m")
+        first, second = (
+            sess_registry.Quantity(first, "m"),
+            sess_registry.Quantity(second, "m"),
+        )
     with pytest.raises(AssertionError, match="different infinity"):
         assert_allclose(first, second, rtol=1, atol=1, msg="different infinity")
 
 
 @pytest.mark.parametrize("value", [float("inf"), float("-inf")])
-def test_assert_allclose_accepts_matching_infinities(value):
+def test_assert_allclose_accepts_matching_infinities(value, sess_registry):
     assert_allclose(value, value)
-    assert_allclose(Quantity(value, "m"), Quantity(value, "cm"))
+    assert_allclose(
+        sess_registry.Quantity(value, "m"), sess_registry.Quantity(value, "cm")
+    )
