@@ -249,8 +249,6 @@ except ImportError:
 
 HAS_DASK = find_spec("dask") is not None
 
-HAS_TOMLKIT = find_spec("tomlkit") is not None
-
 
 ##############################
 # Imports are handled here

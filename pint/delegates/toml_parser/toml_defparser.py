@@ -15,7 +15,8 @@ import tomllib
 from collections.abc import Generator
 from typing import Any
 
-from ...errors import DefinitionSyntaxError
+from ...errors import DefinitionSyntaxError, PintError
+from ...facets.plain.definitions import NotNumeric
 from ..base_defparser import ParserConfig
 from . import plain
 
@@ -30,6 +31,23 @@ _ARRAYS_OF_TABLES = {
     "system": plain.system_,
     "context": plain.context_,
 }
+
+
+def _section(parsed_project: dict[str, Any], key: str, kind: type):
+    value = parsed_project.get(key, kind())
+    if not isinstance(value, kind):
+        expected = "a table" if kind is dict else "an array of tables"
+        raise DefinitionSyntaxError(f"[{key}] must be {expected}")
+    return value
+
+
+def _build(where: str, build, d):
+    if not isinstance(d, dict):
+        raise DefinitionSyntaxError(f"{where} must be a table, not {d!r}")
+    try:
+        return build(d)
+    except (PintError, NotNumeric, ValueError, TypeError, KeyError) as ex:
+        raise DefinitionSyntaxError(f"In {where}: {ex}") from ex
 
 
 class TomlParser:
@@ -48,13 +66,18 @@ class TomlParser:
             )
 
         if "defaults" in parsed_project:
-            yield plain.defaults(parsed_project["defaults"], cfg)
+            yield _build(
+                "[defaults]",
+                lambda d: plain.defaults(d, cfg),
+                parsed_project["defaults"],
+            )
         for key, build in _NAMED_TABLES.items():
-            for name, d in parsed_project.get(key, {}).items():
-                yield build(name, d, cfg)
+            for name, d in _section(parsed_project, key, dict).items():
+                yield _build(f"[{key}] {name}", lambda d: build(name, d, cfg), d)
         for key, build in _ARRAYS_OF_TABLES.items():
-            for d in parsed_project.get(key, ()):
-                yield build(d, cfg)
+            for i, d in enumerate(_section(parsed_project, key, list)):
+                name = d.get("name", i) if isinstance(d, dict) else i
+                yield _build(f"[[{key}]] {name}", lambda d: build(d, cfg), d)
 
     def parse_file(self, filename: pathlib.Path | str) -> dict[str, Any]:
         with open(filename, "rb") as f:

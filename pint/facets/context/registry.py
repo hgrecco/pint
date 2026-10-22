@@ -75,7 +75,8 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         # Map context chain to units override
         self._context_units = {}
 
-        self._context_definitions: list[ContextDefinition] = []
+        #: Map context name to the definition it was added from.
+        self._context_definitions: dict[str, ContextDefinition] = {}
 
         super().__init__(**kwargs)
 
@@ -94,13 +95,17 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         Notice that this method will NOT enable the context;
         see :meth:`enable_contexts`.
         """
+        definition = None
         if isinstance(context, ContextDefinition):
             definition = context
             context = objects.Context.from_definition(context, self.get_dimensionality)
-            self._context_definitions.append(definition)
 
         if not context.name:
             raise ValueError("Can't add unnamed context to registry")
+        # a re-added name replaces the previous definition
+        self._context_definitions.pop(context.name, None)
+        if definition is not None:
+            self._context_definitions[context.name] = definition
         if context.name in self._contexts:
             logger.warning(
                 "The name %s was already registered for another context.", context.name
@@ -125,6 +130,7 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         del self._contexts[context.name]
         for alias in context.aliases:
             del self._contexts[alias]
+        self._context_definitions.pop(context.name, None)
 
         return context
 

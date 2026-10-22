@@ -53,11 +53,22 @@ from ..base_defparser import ParserConfig
 
 
 def _tuple(d: dict[str, Any], key: str) -> tuple[str, ...]:
-    return tuple(d.get(key, ()))
+    value = d.get(key, [])
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        raise DefinitionSyntaxError(f"'{key}' must be a list of strings, not {value!r}")
+    return tuple(value)
+
+
+def _str(d: dict[str, Any], key: str) -> str:
+    if key not in d:
+        raise DefinitionSyntaxError(f"missing '{key}'")
+    if not isinstance(d[key], str):
+        raise DefinitionSyntaxError(f"'{key}' must be a string, not {d[key]!r}")
+    return d[key]
 
 
 def prefix(name: str, d: dict[str, Any], config: ParserConfig):
-    value = d["value"]
+    value = _str(d, "value")
     try:
         value_number = config.to_number(value)
     except definitions.NotNumeric as ex:
@@ -74,7 +85,7 @@ def prefix(name: str, d: dict[str, Any], config: ParserConfig):
 
 
 def unit(name: str, d: dict[str, Any], config: ParserConfig):
-    value = d["value"]
+    value = _str(d, "value")
     converter, *modifier_parts = value.split(";")
     try:
         modifiers = {}
@@ -109,7 +120,7 @@ def unit(name: str, d: dict[str, Any], config: ParserConfig):
 
 
 def dimension(name: str, d: dict[str, Any], config: ParserConfig):
-    value = d["value"]
+    value = _str(d, "value")
     return definitions.DerivedDimensionDefinition(
         f"[{name}]", config.to_dimension_container(value), value_text=value
     )
@@ -126,7 +137,7 @@ def defaults(d: dict[str, Any], config: ParserConfig):
 
 def group_(d: dict[str, Any], config: ParserConfig):
     return group.GroupDefinition(
-        d["name"],
+        _str(d, "name"),
         _tuple(d, "using_group_names"),
         tuple(unit(k, v, config) for k, v in d.get("definitions", {}).items()),
     )
@@ -142,7 +153,7 @@ def system_(d: dict[str, Any], config: ParserConfig):
             )
         rules.append(system.BaseUnitRule(*parts))
     return system.SystemDefinition(
-        d["name"], _tuple(d, "using_group_names"), tuple(rules)
+        _str(d, "name"), _tuple(d, "using_group_names"), tuple(rules)
     )
 
 
@@ -162,7 +173,7 @@ def _relation(s: str, config: ParserConfig):
 
 def context_(d: dict[str, Any], config: ParserConfig):
     return context.ContextDefinition(
-        d["name"],
+        _str(d, "name"),
         _tuple(d, "aliases"),
         {k: config.to_number(str(v)) for k, v in d.get("defaults", {}).items()},
         tuple(_relation(r, config) for r in d.get("relations", ())),

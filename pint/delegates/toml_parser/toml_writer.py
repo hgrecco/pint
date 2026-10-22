@@ -4,8 +4,9 @@ pint.delegates.toml_parser.toml_writer
 
 Write the definitions of a registry to a TOML file. Requires tomlkit.
 
-Only definitions that keep their source text (``value_text``) are written,
-so units derived by the registry (prefixed units, delta units) are skipped.
+Values are written from their source text (``value_text``), or rebuilt for
+definitions made in code. Units derived by the registry (prefixed units,
+delta units) and the overlays of active contexts are not written.
 
 :copyright: 2025 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -14,24 +15,69 @@ so units derived by the registry (prefixed units, delta units) are skipped.
 from __future__ import annotations
 
 import pathlib
+from collections import ChainMap
 from typing import TYPE_CHECKING, Any
+
+from ...facets.context import BidirectionalRelation
+from ...facets.nonmultiplicative.definitions import (
+    LogarithmicConverter,
+    OffsetConverter,
+)
 
 if TYPE_CHECKING:
     from ...facets.plain import GenericPlainRegistry
 
 
-def _unique(definitions) -> dict[str, Any]:
-    # registry dicts map aliases and symbols to the same definition
-    return {d.name: d for d in definitions if d.value_text}
+def _unit_value(d) -> str:
+    """Rebuild the value of a unit defined in code, without source text."""
+    if d.is_base:
+        text = str(d.reference) if d.reference else "[]"
+    else:
+        scale = d.converter.scale
+        parts = ([] if scale == 1 else [str(scale)]) + (
+            [str(d.reference)] if d.reference else []
+        )
+        text = " * ".join(parts) or "1"
+    c = d.converter
+    if isinstance(c, LogarithmicConverter):
+        text += f"; logbase: {c.logbase}; logfactor: {c.logfactor}"
+    elif isinstance(c, OffsetConverter):
+        text += f"; offset: {c.offset}"
+    return text
 
 
-def _definition(definition) -> dict[str, Any]:
-    d: dict[str, Any] = {"value": definition.value_text}
+def _relation_value(r) -> str:
+    if r.value_text:
+        return r.value_text
+    separator = "<->" if isinstance(r, BidirectionalRelation) else "->"
+    return f"{r.src} {separator} {r.dst}: {r.equation}"
+
+
+def _definition(definition, value: str | None = None) -> dict[str, Any]:
+    d: dict[str, Any] = {"value": definition.value_text or value}
     if getattr(definition, "defined_symbol", None):
         d["defined_symbol"] = definition.defined_symbol
     if getattr(definition, "aliases", ()):
         d["aliases"] = list(definition.aliases)
     return d
+
+
+def _unit(d) -> dict[str, Any]:
+    return _definition(d, d.value_text or _unit_value(d))
+
+
+def _generated_by_registry(ureg, d) -> bool:
+    """Prefixed units cached by get_name, and delta units of offset units."""
+    if d.value_text:
+        return False
+    if d.name.startswith("delta_") and d.name[6:] in ureg._units:
+        return True
+    if len(d.reference) != 1 or d.is_base:
+        return False
+    ((base, exponent),) = d.reference.items()
+    return exponent == 1 and any(
+        d.name == p.name + base for p in ureg._prefixes.values() if p.name
+    )
 
 
 def _number(value):
@@ -42,30 +88,35 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
     """Collect the definitions of a registry as plain TOML-ready data."""
     groups = getattr(ureg, "_group_definitions", [])
     systems = getattr(ureg, "_system_definitions", [])
-    contexts = getattr(ureg, "_context_definitions", [])
+    contexts = getattr(ureg, "_context_definitions", {}).values()
     group_units = {u.name for g in groups for u in g.definitions}
+
+    # skip the overlays of active contexts; aliases map to the same definition
+    units = ureg._units.maps[-1] if isinstance(ureg._units, ChainMap) else ureg._units
+    units = {d.name: d for d in units.values()}
+    prefixes = {d.name: d for d in ureg._prefixes.values() if d.name}
+    dimensions = {d.name: d for d in ureg._dimensions.values() if not d.is_base}
 
     data: dict[str, Any] = {}
     if ureg._defaults:
         data["defaults"] = dict(ureg._defaults)
     data["prefix"] = {
-        name: _definition(d) for name, d in _unique(ureg._prefixes.values()).items()
+        name: _definition(d, str(d.value)) for name, d in prefixes.items()
     }
     data["dimension"] = {
-        name[1:-1]: {"value": d.value_text}
-        for name, d in _unique(ureg._dimensions.values()).items()
-        if not d.is_base
+        name[1:-1]: {"value": d.value_text or str(d.reference)}
+        for name, d in dimensions.items()
     }
     data["unit"] = {
-        name: _definition(d)
-        for name, d in _unique(ureg._units.values()).items()
-        if name not in group_units
+        name: _unit(d)
+        for name, d in units.items()
+        if name not in group_units and not _generated_by_registry(ureg, d)
     }
     data["group"] = [
         {
             "name": g.name,
             "using_group_names": list(g.using_group_names),
-            "definitions": {u.name: _definition(u) for u in g.definitions},
+            "definitions": {u.name: _unit(u) for u in g.definitions},
         }
         for g in groups
     ]
@@ -87,8 +138,8 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
             "name": c.name,
             "aliases": list(c.aliases),
             "defaults": {k: _number(v) for k, v in c.defaults.items()},
-            "relations": [r.value_text for r in c.relations],
-            "redefinitions": {u.name: _definition(u) for u in c.redefinitions},
+            "relations": [_relation_value(r) for r in c.relations],
+            "redefinitions": {u.name: _unit(u) for u in c.redefinitions},
         }
         for c in contexts
     ]

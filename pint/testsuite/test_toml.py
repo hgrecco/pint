@@ -38,6 +38,10 @@ minute = 60 * second = min
 @context(n=1) spectroscopy = sp
     [length] <-> [time]: n * meter * second / value
 @end
+
+@context fast
+    minute = 30 * second
+@end
 """
 
 
@@ -112,6 +116,13 @@ def test_sections_are_optional(tmp_path):
         '[unit]\ncelsius = { value = "kelvin; offset" }\n',
         '[defaults]\nsystm = "mks"\n',
         '[[context]]\nname = "c"\nrelations = ["[length] <> [time]: value"]\n',
+        '[unit]\nmeter = { value = "[length]", aliases = "metre" }\n',
+        '[unit]\nmeter = { defined_symbol = "m" }\n',
+        "[unit]\nmeter = { value = 1 }\n",
+        '[[unit]]\nmeter = "[length]"\n',
+        '[unit]\nmeter = "[length]"\n',
+        '[[context]]\nname = "c"\ndefaults = { n = "x" }\n',
+        '[[system]]\nrules = ["meter"]\n',
     ],
 )
 def test_syntax_errors(tmp_path, content):
@@ -119,6 +130,73 @@ def test_syntax_errors(tmp_path, content):
     f.write_text(content, encoding="utf-8")
     with pytest.raises(DefinitionSyntaxError):
         pint.UnitRegistry(f)
+
+
+def test_error_names_definition(tmp_path):
+    f = tmp_path / "defs.toml"
+    f.write_text('[unit]\nmeter = { defined_symbol = "m" }\n', encoding="utf-8")
+    with pytest.raises(DefinitionSyntaxError, match=r"\[unit\] meter: missing 'value'"):
+        pint.UnitRegistry(f)
+
+
+def write_and_load(ureg, tmp_path):
+    pytest.importorskip("tomlkit")
+    f = tmp_path / "out.toml"
+    ureg.write_definitions(f)
+    return pint.UnitRegistry(f), tomllib.loads(f.read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def tiny(tmp_path):
+    f = tmp_path / "defs.txt"
+    f.write_text(TINY_TXT, encoding="utf-8")
+    return pint.UnitRegistry(f)
+
+
+def test_removed_and_replaced_contexts(tiny, tmp_path):
+    from pint.facets.context import ContextDefinition
+
+    tiny.remove_context("sp")
+    tiny.add_context(ContextDefinition("fast", (), {}, (), ()))
+    reloaded, data = write_and_load(tiny, tmp_path)
+    assert data["context"] == [{"name": "fast"}]
+    assert sorted(reloaded._contexts) == ["fast"]
+
+
+def test_definitions_made_in_code(tiny, tmp_path):
+    from pint.facets.context import ContextDefinition, ForwardRelation
+    from pint.facets.nonmultiplicative.definitions import OffsetConverter
+    from pint.facets.plain import ScaleConverter, UnitDefinition
+    from pint.util import UnitsContainer
+
+    tiny.define(
+        UnitDefinition("double", "dbl", (), ScaleConverter(2), UnitsContainer(meter=1))
+    )
+    tiny.define(
+        UnitDefinition(
+            "warm", None, (), OffsetConverter(1, 10), UnitsContainer(kelvin=1)
+        )
+    )
+    relation = ForwardRelation(
+        UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": 1}), "value"
+    )
+    tiny.add_context(ContextDefinition("code", (), {}, (relation,), ()))
+    tiny.Quantity(1, "km")  # caches the prefixed unit kilometer
+
+    reloaded, data = write_and_load(tiny, tmp_path)
+    assert data["unit"]["double"] == {"value": "2 * meter", "defined_symbol": "dbl"}
+    assert "kilometer" not in data["unit"]
+    assert "delta_degree_Celsius" not in data["unit"]
+    assert reloaded.Quantity(1, "dbl").to("m").magnitude == 2
+    assert reloaded.Quantity(0, "warm").to("K").magnitude == 10
+    assert reloaded._context_definitions["code"].relations[0].equation == "value"
+
+
+def test_active_context_not_written(tiny, tmp_path):
+    with tiny.context("fast"):
+        reloaded, data = write_and_load(tiny, tmp_path)
+    assert data["unit"]["minute"]["value"] == "60 * second"
+    assert reloaded.Quantity(1, "minute").to("s").magnitude == 60
 
 
 def test_write_without_tomlkit(tmp_path, monkeypatch):

@@ -63,12 +63,9 @@ def registry_tiny(tiny_definition_file: pathlib.Path):
     return pint.UnitRegistry(tiny_definition_file)
 
 
-_PINT_DIR = pathlib.Path(pint.__file__).parent
-
-
-@pytest.fixture(params=["default_en.txt", "default_en.toml"])
-def func_registry(request):
-    return pint.UnitRegistry(_PINT_DIR / request.param)
+@pytest.fixture
+def func_registry():
+    return pint.UnitRegistry()
 
 
 @pytest.fixture(scope="class")
