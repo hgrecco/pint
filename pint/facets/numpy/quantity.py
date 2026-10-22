@@ -289,12 +289,23 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
     def __setitem__(self, key, value):
         try:
-            # If we're dealing with a masked single value or a nan, set it
+            # Assign masked single values and bare NaNs directly.
             if (
                 isinstance(self._magnitude, np.ma.MaskedArray)
                 and np.ma.is_masked(value)
                 and getattr(value, "size", 0) == 1
-            ) or (getattr(value, "ndim", 0) == 0 and math.isnan(value)):
+            ) or (
+                not isinstance(value, PlainQuantity)
+                and (
+                    (getattr(value, "ndim", 0) == 0 and math.isnan(value))
+                    or (
+                        isinstance(value, np.ndarray)
+                        and value.size > 0
+                        and value.dtype.kind in "fc"
+                        and np.isnan(value).all()
+                    )
+                )
+            ):
                 self._magnitude[key] = value
                 return
         except TypeError:
