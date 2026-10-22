@@ -261,6 +261,8 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         try:
             return getattr(self._magnitude, item)
         except AttributeError:
+            if item == "copy" and not HAS_NUMPY:
+                return self.__copy__
             prop = getattr(type(self), item, None)
             if isinstance(prop, property):
                 # The property raised AttributeError to get here; surface an
