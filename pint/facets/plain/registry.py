@@ -42,7 +42,6 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from ...compat import Locale
     from ..context import Context
 
     # from ..._typing import Quantity, Unit
@@ -60,7 +59,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import _to_magnitude, coerce_scalar, deprecated
+from ...compat import _to_magnitude, coerce_scalar
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -374,13 +373,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # self.Unit will call parse_units
         return self.Unit(item)
 
-    @deprecated(
-        "Calling the getitem method from a UnitRegistry will be removed in future versions of pint.\n"
-        "use `parse_expression` method or use the registry as a callable."
-    )
-    def __getitem__(self, item: str) -> UnitT:
-        return self.parse_expression(item)
-
     def __contains__(self, item: str | UnitT) -> bool:
         """Support checking prefixed units with the `in` operator"""
         if isinstance(item, self.Unit):
@@ -404,54 +396,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         Iterator over names of all units in registry, ordered alphabetically.
         """
         return iter(sorted(self._units.keys()))
-
-    @property
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.fmt_locale"
-    )
-    def fmt_locale(self) -> Locale | None:
-        return self.formatter.locale
-
-    @fmt_locale.setter
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.set_locale"
-    )
-    def fmt_locale(self, loc: str | None):
-        self.formatter.set_locale(loc)
-
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.set_locale"
-    )
-    def set_fmt_locale(self, loc: str | None) -> None:
-        """Change the locale used by default by `format_babel`.
-
-        Parameters
-        ----------
-        loc : str or None
-            None` (do not translate), 'sys' (detect the system locale) or a locale id string.
-        """
-
-        self.formatter.set_locale(loc)
-
-    @property
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.default_format"
-    )
-    def default_format(self) -> str:
-        """Default formatting string for quantities."""
-        return self.formatter.default_format
-
-    @default_format.setter
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.default_format"
-    )
-    def default_format(self, value: str) -> None:
-        self.formatter.default_format = value
 
     @property
     def cache_folder(self) -> pathlib.Path | None:

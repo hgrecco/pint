@@ -82,17 +82,10 @@ class TestDefaultApplicationRegistry:
         u = ureg.Unit("kg")
         assert str(u) == "kilogram"
 
-    def test_getitem_warns(self):
+    def test_getitem_removed(self):
         ureg = get_application_registry()
-
-        with pytest.warns(
-            DeprecationWarning,
-            match="Calling the getitem method from an ApplicationRegistry",
-        ) as warnings:
-            q = ureg["kg"]
-
-        assert len(warnings) == 1
-        assert str(q.units) == "kilogram"
+        with pytest.raises(TypeError):
+            ureg["kg"]
 
     @helpers.allprotos
     def test_pickle_crash(self, protocol):
