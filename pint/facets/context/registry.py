@@ -172,6 +172,7 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         try:
             self._cache = self._caches[key]
             self._units.maps.insert(0, self._context_units[key])
+            return
         except KeyError:
             pass
 
