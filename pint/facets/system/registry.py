@@ -85,8 +85,6 @@ class GenericSystemRegistry[QuantityT: Quantity, UnitT: Unit](
         self._register_adder(SystemDefinition, self._add_system)
 
     def _add_system(self, sd: SystemDefinition) -> None:
-        self._system_definitions.append(sd)
-
         if sd.name in self._systems:
             raise ValueError(f"System {sd.name} already present in registry")
 
@@ -97,6 +95,7 @@ class GenericSystemRegistry[QuantityT: Quantity, UnitT: Unit](
         except KeyError as e:
             # TODO: fix this error message
             raise errors.DefinitionError(f"unknown dimension {e} in context")
+        self._system_definitions.append(sd)
 
     @property
     def sys(self):

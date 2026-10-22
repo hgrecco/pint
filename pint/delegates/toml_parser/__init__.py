@@ -1,8 +1,8 @@
 """
 pint.delegates.toml_parser
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Parser for the toml Pint Definition file.
+Parser and writer for TOML definition files.
 
 :copyright: 2025 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.

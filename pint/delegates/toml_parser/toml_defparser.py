@@ -1,67 +1,64 @@
+"""
+pint.delegates.toml_parser.toml_defparser
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parser for TOML definition files.
+
+:copyright: 2025 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
+"""
+
 from __future__ import annotations
 
-import copy
 import pathlib
 import tomllib
+from collections.abc import Generator
+from typing import Any
 
-import flexcache as fc
-
+from ...errors import DefinitionSyntaxError
 from ..base_defparser import ParserConfig
 from . import plain
 
+#: Definitions are added in this order, so groups exist before systems use them.
+_NAMED_TABLES = {
+    "prefix": plain.prefix,
+    "dimension": plain.dimension,
+    "unit": plain.unit,
+}
+_ARRAYS_OF_TABLES = {
+    "group": plain.group_,
+    "system": plain.system_,
+    "context": plain.context_,
+}
+
 
 class TomlParser:
-    def __init__(self, default_config: ParserConfig, diskcache: fc.DiskCache):
+    def __init__(self, default_config: ParserConfig):
         self._default_config = default_config
-        self._diskcache = diskcache
 
-    def iter_parsed_project(self, parsed_project: dict):
-        stmts = {
-            "unit": plain.UnitDefinition,
-            "prefix": plain.PrefixDefinition,
-            "dimension": plain.DerivedDimensionDefinition,
-            "system": plain.SystemDefinition,
-            "context": plain.ContextDefinition,
-            "group": plain.GroupDefinition,
-        }
-        for definition_type in [
-            "prefix",
-            "unit",
-            "dimension",
-            "system",
-            "context",
-            "group",
-        ]:
-            if definition_type in ["unit", "prefix", "dimension"]:
-                for key, value in parsed_project[definition_type].items():
-                    d = copy.copy(value)
-                    d["name"] = key
-                    stmt = stmts[definition_type].from_dict_and_config(
-                        d, self._default_config
-                    )
-                    yield stmt
-            elif definition_type in ["system", "context", "group"]:
-                if definition_type not in parsed_project:
-                    continue
-                for entry in parsed_project[definition_type]:
-                    stmt = stmts[definition_type].from_dict_and_config(
-                        entry, self._default_config
-                    )
-                    yield stmt
+    def iter_parsed_project(
+        self, parsed_project: dict[str, Any], cfg: ParserConfig | None = None
+    ) -> Generator[Any, None, None]:
+        cfg = cfg or self._default_config
 
-    def parse_file(
-        self, filename: pathlib.Path | str, cfg: ParserConfig | None = None
-    ) -> dict:
+        unknown = set(parsed_project) - {"defaults", *_NAMED_TABLES, *_ARRAYS_OF_TABLES}
+        if unknown:
+            raise DefinitionSyntaxError(
+                f"Unknown sections in TOML definitions: {', '.join(sorted(unknown))}"
+            )
+
+        if "defaults" in parsed_project:
+            yield plain.defaults(parsed_project["defaults"], cfg)
+        for key, build in _NAMED_TABLES.items():
+            for name, d in parsed_project.get(key, {}).items():
+                yield build(name, d, cfg)
+        for key, build in _ARRAYS_OF_TABLES.items():
+            for d in parsed_project.get(key, ()):
+                yield build(d, cfg)
+
+    def parse_file(self, filename: pathlib.Path | str) -> dict[str, Any]:
         with open(filename, "rb") as f:
-            data = tomllib.load(f)
-        return data
+            return tomllib.load(f)
 
-    # def parse_string(self, content: str, cfg: ParserConfig | None = None):
-    #     return fp.parse_bytes(
-    #         content.encode("utf-8"),
-    #         _PintParser,
-    #         cfg or self._default_config,
-    #         diskcache=self._diskcache,
-    #         strip_spaces=True,
-    #         delimiters=_PintParser._delimiters,
-    #     )
+    def parse_string(self, content: str) -> dict[str, Any]:
+        return tomllib.loads(content)

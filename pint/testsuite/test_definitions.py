@@ -248,7 +248,7 @@ class TestDefinition:
         assert x.reference == UnitsContainer()
 
     def test_dimension_definition(self):
-        x = DimensionDefinition("[time]", value_text="second = [time] = s")
+        x = DimensionDefinition("[time]")
         assert x.is_base
         assert x.name == "[time]"
 

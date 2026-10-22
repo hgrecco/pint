@@ -248,10 +248,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._def_parser = delegates.txt_defparser.DefParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
-        self._toml_parser = delegates.toml_defparser.TomlParser(
-            delegates.ParserConfig(non_int_type), diskcache=self._diskcache
+        self._toml_parser = delegates.toml_parser.TomlParser(
+            delegates.ParserConfig(non_int_type)
         )
-        self.write_definitions = lambda x: delegates.write_definitions(x, self)
         self.formatter = delegates.Formatter(self)
         self._filename = filename
         self.force_ndarray = force_ndarray
@@ -313,7 +312,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._units_casei: dict[str, set[str]] = defaultdict(set)
 
         #: Map prefix name (string) to its definition (PrefixDefinition).
-        self._prefixes: dict[str, PrefixDefinition] = {"": PrefixDefinition("", "", 1)}
+        self._prefixes: dict[str, PrefixDefinition] = {"": PrefixDefinition("", 1)}
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes: dict[str, str] = {"": "", "s": ""}
@@ -578,9 +577,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def _add_derived_dimension(self, definition: DerivedDimensionDefinition) -> None:
         for dim_name in definition.reference.keys():
             if dim_name not in self._dimensions:
-                self._add_dimension(
-                    DimensionDefinition(dim_name, definition.value_text)
-                )
+                self._add_dimension(DimensionDefinition(dim_name))
         self._helper_adder(definition, self._dimensions, None)
 
     def _add_prefix(self, definition: PrefixDefinition) -> None:
@@ -591,7 +588,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             self._base_units.append(definition.name)
             for dim_name in definition.reference.keys():
                 if dim_name not in self._dimensions:
-                    self._add_dimension(DimensionDefinition(dim_name, ""))
+                    self._add_dimension(DimensionDefinition(dim_name))
 
         self._helper_adder(definition, self._units, self._units_casei)
 
@@ -611,20 +608,28 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         if isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
-            parsed_project = self._def_parser.parse_string("\n".join(file))
-        elif str(file)[-5:] == ".toml":
-            parsed_project = self._toml_parser.parse_file(file)
+            parser = self._def_parser
+            parsed_project = parser.parse_string("\n".join(file))
+        elif pathlib.Path(file).suffix.lower() == ".toml":
+            parser = self._toml_parser
+            parsed_project = parser.parse_file(file)
         else:
-            parsed_project = self._def_parser.parse_file(file)
+            parser = self._def_parser
+            parsed_project = parser.parse_file(file)
 
-        if str(file)[-5:] == ".toml":
-            for definition in self._toml_parser.iter_parsed_project(parsed_project):
-                self._helper_dispatch_adder(definition)
-        else:
-            for definition in self._def_parser.iter_parsed_project(parsed_project):
-                self._helper_dispatch_adder(definition)
+        for definition in parser.iter_parsed_project(parsed_project):
+            self._helper_dispatch_adder(definition)
 
+        if parser is self._toml_parser:
+            # the disk cache is keyed on parsed txt projects
+            return None
         return parsed_project
+
+    def write_definitions(self, filename: str | pathlib.Path) -> None:
+        """Write the registry definitions to a TOML file (requires tomlkit)."""
+        from ...delegates.toml_parser import write_definitions
+
+        write_definitions(filename, self)
 
     def _build_cache(self, loaded_files=None) -> None:
         """Build a cache of dimensionality and plain units."""
@@ -705,7 +710,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             prefix_def = self._prefixes[prefix]
             self._units[name] = UnitDefinition(
                 name,
-                "",  # the value text is set to empty to indicate it is a prefixed unit not directly defined in the definitions file
                 symbol,
                 tuple(),
                 prefix_def.converter,

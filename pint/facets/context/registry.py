@@ -95,8 +95,9 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         see :meth:`enable_contexts`.
         """
         if isinstance(context, ContextDefinition):
-            self._context_definitions.append(context)
+            definition = context
             context = objects.Context.from_definition(context, self.get_dimensionality)
+            self._context_definitions.append(definition)
 
         if not context.name:
             raise ValueError("Can't add unnamed context to registry")

@@ -42,7 +42,7 @@ def _from_string_and_context_sep[T: ForwardRelation | BidirectionalRelation](
 
     src, dst = (config.to_dimension_container(s) for s in parts)
 
-    return cls(s, src, dst, eq.strip())
+    return cls(src, dst, eq.strip(), value_text=s)
 
 
 @dataclass(frozen=True)

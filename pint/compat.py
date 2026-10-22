@@ -249,12 +249,7 @@ except ImportError:
 
 HAS_DASK = find_spec("dask") is not None
 
-try:
-    import tomlkit  # noqa: F401
-
-    HAS_TOMLKIT = True
-except ImportError:
-    HAS_TOMLKIT = False
+HAS_TOMLKIT = find_spec("tomlkit") is not None
 
 
 ##############################
@@ -263,12 +258,6 @@ except ImportError:
 # them as constants
 # in mypy configuration.
 ##############################
-
-if HAS_TOMLKIT:
-    import tomlkit  # noqa: F401
-else:
-    tomlkit = None
-
 
 if HAS_BABEL:
     from babel import Locale

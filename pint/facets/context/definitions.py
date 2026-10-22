@@ -12,7 +12,7 @@ import itertools
 import numbers
 import re
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from ... import errors
@@ -28,8 +28,6 @@ class Relation:
 
     _varname_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
-    #: Original string defining the relation
-    value_text: str
     #: Source dimensionality
     src: UnitsContainer
     #: Destination dimensionality
@@ -37,6 +35,8 @@ class Relation:
     #: Equation connecting both dimensionalities from which the tranformation
     #: will be built.
     equation: str
+    #: Original string defining the relation
+    value_text: str = field(default="", kw_only=True)
 
     # Instead of defining __post_init__ here,
     # it will be added to the container class

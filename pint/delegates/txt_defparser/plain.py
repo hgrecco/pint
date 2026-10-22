@@ -114,7 +114,9 @@ class PrefixDefinition(PintParsedStatement, definitions.PrefixDefinition):
             )
 
         try:
-            return cls(name, value.strip(), value_number, defined_symbol, aliases)
+            return cls(
+                name, value_number, defined_symbol, aliases, value_text=value.strip()
+            )
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 
@@ -190,7 +192,12 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
 
         try:
             return cls(
-                name, value, defined_symbol, tuple(aliases), converter, reference
+                name,
+                defined_symbol,
+                tuple(aliases),
+                converter,
+                reference,
+                value_text=value,
             )
         except Exception as ex:
             return common.DefinitionSyntaxError(str(ex))
@@ -214,7 +221,7 @@ class DimensionDefinition(PintParsedStatement, definitions.DimensionDefinition):
         if not (s.startswith("[") and "=" not in s):
             return None
 
-        return cls(s, "")
+        return cls(s)
 
 
 @dataclass(frozen=True)
@@ -253,7 +260,7 @@ class DerivedDimensionDefinition(
             )
 
         try:
-            return cls(name.strip(), value.strip(), reference)
+            return cls(name.strip(), reference, value_text=value.strip())
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 

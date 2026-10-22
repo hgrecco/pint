@@ -86,7 +86,6 @@ class GenericGroupRegistry[QuantityT: Quantity, UnitT: Unit](
         self.get_group("root").add_units(definition.name)
 
     def _add_group(self, gd: GroupDefinition):
-        self._group_definitions.append(gd)
         if gd.name in self._groups:
             raise ValueError(f"Group {gd.name} already present in registry")
         try:
@@ -95,6 +94,7 @@ class GenericGroupRegistry[QuantityT: Quantity, UnitT: Unit](
             self.Group.from_definition(gd)
         except KeyError as e:
             raise errors.DefinitionSyntaxError(f"unknown dimension {e} in context")
+        self._group_definitions.append(gd)
 
     def get_group(self, name: str, create_if_needed: bool = True) -> objects.Group:
         """Return a Group.
