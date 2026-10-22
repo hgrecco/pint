@@ -31,8 +31,8 @@ assert type(result.magnitude) is int
 
 
 @pytest.mark.parametrize("magnitude", [3, 3.5, Decimal("3.5"), Fraction(7, 2)])
-def test_scalar_copy(func_registry, magnitude):
-    quantity = func_registry.Quantity(magnitude, "m")
+def test_scalar_copy(sess_registry, magnitude):
+    quantity = sess_registry.Quantity(magnitude, "m")
 
     result = quantity.copy()
 
