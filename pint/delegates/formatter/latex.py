@@ -118,6 +118,7 @@ def latex_escape(string: str) -> str:
             (r"([&%$#_{}])", r"\\\1"),
             (r"°", r"{}^{\\circ}"),
             (r"Δ", r"\\Delta "),
+            (r"[μµ]", r"\\mu "),
         ),
         str(string),
     )

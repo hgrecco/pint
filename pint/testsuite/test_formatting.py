@@ -9,6 +9,26 @@ from pint.compat import np
 from pint.testsuite import helpers
 
 
+@pytest.mark.parametrize(
+    ("unit", "expected"),
+    [
+        ("micrometer", r"\mathrm{\mu m}"),
+        ("1 / micrometer", r"\frac{1}{\mathrm{\mu m}}"),
+        ("micrometer ** 2", r"\mathrm{\mu m}^{2}"),
+    ],
+)
+def test_format_micro_units_latex(func_registry, unit, expected):
+    assert format(func_registry.Unit(unit), "~L") == expected
+
+
+@pytest.mark.parametrize("symbol", ["µ", "μ"])
+def test_latex_escape_micro_symbols(symbol):
+    from pint.delegates.formatter.latex import latex_escape
+
+    assert latex_escape(symbol + "m") == r"\mu m"
+    assert latex_escape(symbol + "m_2") == r"\mu m\_2"
+
+
 @pytest.mark.filterwarnings("ignore::DeprecationWarning:pint*")
 @pytest.mark.parametrize(
     ["format", "default", "flag", "expected"],
