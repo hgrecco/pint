@@ -676,7 +676,7 @@ class ApplicationRegistry:
 
         Parameters
         ----------
-        new_registry : ApplicationRegistry or LazyRegistry or UnitRegistry
+        new_registry : ApplicationRegistry or LazyRegistry or GenericUnitRegistry
             The new registry.
 
         See Also
@@ -686,8 +686,8 @@ class ApplicationRegistry:
         if isinstance(new_registry, type(self)):
             new_registry = new_registry.get()
 
-        if not isinstance(new_registry, (LazyRegistry, UnitRegistry)):
-            raise TypeError("Expected UnitRegistry; got %s" % type(new_registry))
+        if not isinstance(new_registry, (LazyRegistry, GenericUnitRegistry)):
+            raise TypeError("Expected GenericUnitRegistry; got %s" % type(new_registry))
         logger.debug(
             "Changing app registry from %r to %r.", self._registry, new_registry
         )

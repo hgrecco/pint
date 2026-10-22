@@ -16,7 +16,46 @@ from pint import (
     get_application_registry,
     set_application_registry,
 )
+from pint.registry import GenericUnitRegistry
 from pint.testsuite import helpers
+
+
+@pytest.mark.usefixtures("isolate_application_registry")
+@pytest.mark.parametrize("wrapped", [False, True])
+def test_generic_application_registry(wrapped):
+    class CustomQuantity(UnitRegistry.Quantity):
+        pass
+
+    class CustomUnit(UnitRegistry.Unit):
+        pass
+
+    class CustomRegistry(GenericUnitRegistry[CustomQuantity, CustomUnit]):
+        Quantity = CustomQuantity
+        Unit = CustomUnit
+
+    registry = CustomRegistry(None)
+    registry.define("custom_length = [length]")
+    replacement = ApplicationRegistry(registry) if wrapped else registry
+    set_application_registry(replacement)
+
+    assert get_application_registry().get() is registry
+    assert Quantity(2, "custom_length").magnitude == 2
+    quantity = registry.Quantity(2, "custom_length")
+    assert isinstance(quantity, CustomQuantity)
+    assert isinstance(quantity.units, CustomUnit)
+    assert quantity._REGISTRY is registry
+    restored = pickle.loads(pickle.dumps(quantity))
+    assert isinstance(restored, CustomQuantity)
+    assert restored == quantity
+
+
+@pytest.mark.usefixtures("isolate_application_registry")
+@pytest.mark.parametrize("invalid", [None, object(), UnitRegistry])
+def test_application_registry_rejects_non_registry(invalid):
+    before = get_application_registry().get()
+    with pytest.raises(TypeError, match="Expected"):
+        set_application_registry(invalid)
+    assert get_application_registry().get() is before
 
 
 @pytest.fixture
