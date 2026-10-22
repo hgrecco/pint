@@ -22,3 +22,5 @@ Packages using pint:
 - `Taurus <https://taurus-scada.org/>`_ Control system UI creation
 - `InstrumentKit <https://github.com/instrumentkit/InstrumentKit>`_ Interacting with laboratory equipment over various buses.
 - `NEMO <https://github.com/bje-/NEMO/>`_ Electricity production cost model
+- `MetPy <https://www.unidata.ucar.edu/software/metpy>`_ Collection of weather data visualisation and analysis tools
+- `PySDM <https://open-atmos.github.io/PySDM>`_ Atmospheric cloud modelling package
