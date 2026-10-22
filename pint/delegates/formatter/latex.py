@@ -73,6 +73,9 @@ def ndarray_to_latex_parts(
     """
 
     if isinstance(fmtfun, str):
+        # Accept both a format template ("{:.2f}") and a bare spec (".2f").
+        if "{" not in fmtfun:
+            fmtfun = "{:" + fmtfun + "}"
         fmtfun = fmtfun.format
 
     if ndarr.ndim == 0:

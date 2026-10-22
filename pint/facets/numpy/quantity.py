@@ -22,7 +22,12 @@ from ...compat import (
     np,
     np_timedelta64,
 )
-from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ...errors import (
+    DimensionalityError,
+    PintTypeError,
+    UndefinedUnitError,
+    UnitStrippedWarning,
+)
 from ...util import UnitsContainer
 from ..plain import PlainQuantity
 from ..plain.qto import _get_compact_base, _get_si_prefixes, _pick_compact_unit
@@ -256,6 +261,16 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         try:
             return getattr(self._magnitude, item)
         except AttributeError:
+            prop = getattr(type(self), item, None)
+            if isinstance(prop, property):
+                # The property raised AttributeError to get here; surface an
+                # UndefinedUnitError (an AttributeError subclass) from it.
+                try:
+                    prop.fget(self)
+                except UndefinedUnitError as exc:
+                    raise exc from None
+                except AttributeError:
+                    pass
             raise AttributeError(
                 "Neither Quantity object nor its magnitude ({}) "
                 "has attribute '{}'".format(self._magnitude, item)
@@ -406,6 +421,9 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             power = np.ceil(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
 
         finite_powers = power[np.isfinite(power)]
+        if finite_powers.size == 0:
+            # Only zeros, nan and inf: there is no prefix to pick.
+            return self
         pivot = (
             finite_powers[np.argmax(np.abs(finite_powers))]
             if maximumPrefix

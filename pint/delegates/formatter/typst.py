@@ -17,13 +17,14 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude
-from ...compat import Unpack
+from ...compat import Unpack, ndarray
 from ._compound_unit_helpers import (
     BabelKwds,
     localize_per,
     prepare_compount_unit,
 )
 from ._format_helpers import (
+    FORMATTER,
     formatter,
     join_mu,
     join_unc,
@@ -39,6 +40,7 @@ from .sorting import SortFunc
 if TYPE_CHECKING:
     from ...facets.measurement import Measurement
     from ...facets.plain import PlainQuantity, PlainUnit
+    from ...util import ItMatrix
 
 
 _EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)[eE](-?)\+?0*([0-9]+)")
@@ -56,6 +58,74 @@ _zero_unit_fixes = {
 """Unit fixes for zero package."""
 
 
+def vector_to_typst(
+    vec: Iterable[Any], fmtfun: FORMATTER | str = "{:.2n}".format, zero: bool = False
+) -> str:
+    """Format a vector into a typst string."""
+    return matrix_to_typst([vec], fmtfun, zero)
+
+
+def matrix_to_typst(
+    matrix: ItMatrix, fmtfun: FORMATTER | str = "{:.2n}".format, zero: bool = False
+) -> str:
+    """Format a matrix into a typst string."""
+
+    ret: list[str] = []
+
+    left, right = ("#quan[", "]") if zero else ("", "")
+
+    for row in matrix:
+        ret += [", ".join(f"{left}{fmtfun(f)}{right}" for f in row)]
+
+    return r"mat(%s)" % " ;\n".join(ret)
+
+
+def ndarray_to_typst_parts(
+    ndarr: ndarray,
+    fmtfun: FORMATTER = "{:.2n}".format,
+    dim: tuple[int, ...] = tuple(),
+    zero: bool = False,
+) -> list[str]:
+    """Convert an numpy array into an iterable of elements to be print.
+
+    e.g.
+    - if the array is 2d, it will return an iterable of rows.
+    - if the array is 3d, it will return an iterable of matrices.
+    """
+
+    if isinstance(fmtfun, str):
+        fmtfun = ("{:" + fmtfun + "}").format
+
+    if ndarr.ndim == 0:
+        _ndarr = ndarr.reshape(1)
+        return [vector_to_typst(_ndarr, fmtfun, zero)]
+    if ndarr.ndim == 1:
+        return [vector_to_typst(ndarr, fmtfun, zero)]
+    if ndarr.ndim == 2:
+        return [matrix_to_typst(ndarr, fmtfun, zero)]
+    else:
+        ret = []
+        if ndarr.ndim == 3:
+            header = "arr[" + "".join("%d," % d for d in dim) + "%d,:,:]"
+            for elno, el in enumerate(ndarr):
+                ret += [header % elno + " = " + matrix_to_typst(el, fmtfun, zero)]
+        else:
+            for elno, el in enumerate(ndarr):
+                ret += ndarray_to_typst_parts(el, fmtfun, dim + (elno,), zero)
+
+        return ret
+
+
+def ndarray_to_typst(
+    ndarr: ndarray,
+    fmtfun: FORMATTER | str = "{:.2n}".format,
+    dim: tuple[int, ...] = tuple(),
+    zero: bool = False,
+) -> str:
+    """Format a numpy array into string."""
+    return "\n".join(ndarray_to_typst_parts(ndarr, fmtfun, dim, zero))
+
+
 class TypstFormatter(BaseFormatter):
     """Typst localizable text formatter."""
 
@@ -63,7 +133,12 @@ class TypstFormatter(BaseFormatter):
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
-            mstr = _EXP_PATTERN.sub(r"\1 times 10^(\2\3)", format_number(magnitude))
+            if isinstance(magnitude, ndarray):
+                mstr = ndarray_to_typst(magnitude, mspec)
+            else:
+                mstr = format_number(magnitude)
+
+            mstr = _EXP_PATTERN.sub(r"\1 times 10^(\2\3)", mstr)
 
         return mstr
 
@@ -171,7 +246,10 @@ class ZeroFormatter(BaseFormatter):
         self, magnitude: Magnitude, mspec: str = "", **babel_kwds: Unpack[BabelKwds]
     ) -> str:
         with override_locale(mspec, babel_kwds.get("locale", None)) as format_number:
-            mstr = format_number(magnitude)
+            if isinstance(magnitude, ndarray):
+                mstr = ndarray_to_typst(magnitude, mspec, zero=True)
+            else:
+                mstr = format_number(magnitude)
 
         return re.sub(r"([Ee])(?:\+|(-))?0*(\d+)", r"\1\2\3", mstr)
 
@@ -232,9 +310,12 @@ class ZeroFormatter(BaseFormatter):
         )
 
         mstr = self.format_magnitude(quantity.magnitude, mspec, **babel_kwds)
-        ustr = self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds)[
-            len("#quan[") :
-        ]
+        ustr = self.format_unit(quantity.unit_items(), uspec, sort_func, **babel_kwds)
+
+        if isinstance(quantity.magnitude, ndarray):
+            return f"{mstr} {ustr}"
+
+        ustr = ustr[len("#quan[") :]
 
         joint_fstring = "{}{}" if ustr == "]" else "{} {}"
 
