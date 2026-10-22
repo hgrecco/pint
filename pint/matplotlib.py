@@ -36,6 +36,8 @@ class PintConverter(matplotlib.units.ConversionInterface):
         """Convert :`Quantity` instances for matplotlib to use."""
         # Short circuit for arrays
         if hasattr(value, "units"):
+            if unit is None and getattr(value.magnitude, "size", None) == 0:
+                return value.magnitude
             return value.to(unit).magnitude
         if iterable(value):
             return [self._convert_value(v, unit, axis) for v in value]
@@ -58,6 +60,9 @@ class PintConverter(matplotlib.units.ConversionInterface):
     @staticmethod
     def default_units(x, axis):
         """Get the default unit to use for the given combination of unit and axis."""
+        units = getattr(x, "units", None)
+        if units is not None:
+            return units
         if iterable(x) and sized(x):
             return getattr(x[0], "units", None)
         return getattr(x, "units", None)
