@@ -1254,22 +1254,22 @@ class TestNumpyUnclassified(TestNumpyMethods):
             assert q.mask[0]
 
     @pytest.mark.parametrize(
-        "key, value, expected",
+        "key, value, as_array, expected",
         [
-            ((0, slice(0, 1)), np.array([np.nan]), [[np.nan, 2], [3, 4]]),
-            (0, np.array([np.nan, np.nan]), [[np.nan, np.nan], [3, 4]]),
-            (slice(None), np.array([np.nan, np.nan]), [[np.nan] * 2] * 2),
-            ((0, 0), np.nan, [[np.nan, 2], [3, 4]]),
-            ((0, 0), np.array(np.nan), [[np.nan, 2], [3, 4]]),
+            ((0, slice(0, 1)), [float("nan")], True, [[float("nan"), 2], [3, 4]]),
+            (0, [float("nan")] * 2, True, [[float("nan")] * 2, [3, 4]]),
+            (slice(None), [float("nan")] * 2, True, [[float("nan")] * 2] * 2),
+            ((0, 0), float("nan"), False, [[float("nan"), 2], [3, 4]]),
+            ((0, 0), float("nan"), True, [[float("nan"), 2], [3, 4]]),
         ],
     )
-    def test_setitem_nan(self, key, value, expected):
+    def test_setitem_nan(self, key, value, as_array, expected):
         q = self.Q_([[1.0, 2.0], [3.0, 4.0]], "m")
-        q[key] = value
+        q[key] = np.array(value) if as_array else value
         np.testing.assert_equal(q.magnitude, expected)
         assert q.units == self.ureg.m
 
-    @pytest.mark.parametrize("value", [[1.0, 2.0], [np.nan, 2.0], [], ["nan"]])
+    @pytest.mark.parametrize("value", [[1.0, 2.0], [float("nan"), 2.0], [], ["nan"]])
     def test_setitem_nan_requires_all_nan(self, value):
         q = self.Q_([1.0, 2.0], "m")
         with pytest.raises(DimensionalityError):
