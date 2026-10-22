@@ -15,6 +15,8 @@ import tomllib
 from collections.abc import Generator
 from typing import Any
 
+import flexcache as fc
+
 from ...errors import DefinitionSyntaxError, PintError
 from ...facets.plain.definitions import NotNumeric
 from ..base_defparser import ParserConfig
@@ -51,8 +53,9 @@ def _build(where: str, build, d):
 
 
 class TomlParser:
-    def __init__(self, default_config: ParserConfig):
+    def __init__(self, default_config: ParserConfig, diskcache: fc.DiskCache | None):
         self._default_config = default_config
+        self._diskcache = diskcache
 
     def iter_parsed_project(
         self, parsed_project: dict[str, Any], cfg: ParserConfig | None = None
@@ -79,9 +82,17 @@ class TomlParser:
                 name = d.get("name", i) if isinstance(d, dict) else i
                 yield _build(f"[[{key}]] {name}", lambda d: build(d, cfg), d)
 
-    def parse_file(self, filename: pathlib.Path | str) -> dict[str, Any]:
-        with open(filename, "rb") as f:
-            return tomllib.load(f)
+    def parse_file(self, filename: pathlib.Path | str) -> list[Any]:
+        """Return the definitions in a TOML file, using the disk cache if any."""
+        path = pathlib.Path(filename)
+        if self._diskcache is None:
+            return self._parse_path(path)
+        definitions, _ = self._diskcache.load(path, self._parse_path)
+        return definitions
 
-    def parse_string(self, content: str) -> dict[str, Any]:
-        return tomllib.loads(content)
+    def parse_string(self, content: str) -> list[Any]:
+        return list(self.iter_parsed_project(tomllib.loads(content)))
+
+    def _parse_path(self, path: pathlib.Path) -> list[Any]:
+        with path.open("rb") as f:
+            return list(self.iter_parsed_project(tomllib.load(f)))

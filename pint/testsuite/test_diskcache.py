@@ -102,3 +102,9 @@ def test_change_file(tmp_path):
     assert ureg.x == 1235
     files = tuple(internal(ureg)._diskcache.cache_folder.glob("*.pickle"))
     assert len(files) == 4
+
+
+def test_cache_hit_restores_registry_cache(tmp_path):
+    first = pint.UnitRegistry(cache_folder=tmp_path)
+    second = pint.UnitRegistry(cache_folder=tmp_path)
+    assert second._cache.root_units == first._cache.root_units

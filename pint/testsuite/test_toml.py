@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import pathlib
 import sys
 import tomllib
@@ -205,3 +206,33 @@ def test_write_without_tomlkit(tmp_path, monkeypatch):
         pint.UnitRegistry(PINT_DIR / "default_en.toml").write_definitions(
             tmp_path / "out.toml"
         )
+
+
+def test_disk_cache(tmp_path, monkeypatch):
+    from pint.delegates.toml_parser import TomlParser
+
+    f = tmp_path / "defs.toml"
+    f.write_text('[unit]\nx = { value = "1234" }\n', encoding="utf-8")
+    cache = tmp_path / "cache"
+
+    calls = []
+    parse_path = TomlParser._parse_path
+
+    @functools.wraps(parse_path)
+    def counting(self, path):
+        calls.append(path)
+        return parse_path(self, path)
+
+    monkeypatch.setattr(TomlParser, "_parse_path", counting)
+
+    first = pint.UnitRegistry(f, cache_folder=cache)
+    # one file for the definitions, one for the RegistryCache
+    assert len(tuple(cache.glob("*.pickle"))) == 2
+    second = pint.UnitRegistry(f, cache_folder=cache)
+    assert len(calls) == 1
+    assert second._cache.root_units == first._cache.root_units
+    assert second.x == 1234
+
+    f.write_text('[unit]\nx = { value = "1235" }\n', encoding="utf-8")
+    assert pint.UnitRegistry(f, cache_folder=cache).x == 1235
+    assert len(calls) == 2

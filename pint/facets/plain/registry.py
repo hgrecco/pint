@@ -249,7 +249,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
         self._toml_parser = delegates.toml_parser.TomlParser(
-            delegates.ParserConfig(non_int_type)
+            delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
         self.formatter = delegates.Formatter(self)
         self._filename = filename
@@ -608,21 +608,18 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         if isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
-            parser = self._def_parser
-            parsed_project = parser.parse_string("\n".join(file))
+            parsed_project = self._def_parser.parse_string("\n".join(file))
         elif pathlib.Path(file).suffix.lower() == ".toml":
-            parser = self._toml_parser
-            parsed_project = parser.parse_file(file)
+            for definition in self._toml_parser.parse_file(file):
+                self._helper_dispatch_adder(definition)
+            # the disk cache keys a path by its content
+            return pathlib.Path(file)
         else:
-            parser = self._def_parser
-            parsed_project = parser.parse_file(file)
+            parsed_project = self._def_parser.parse_file(file)
 
-        for definition in parser.iter_parsed_project(parsed_project):
+        for definition in self._def_parser.iter_parsed_project(parsed_project):
             self._helper_dispatch_adder(definition)
 
-        if parser is self._toml_parser:
-            # the disk cache is keyed on parsed txt projects
-            return None
         return parsed_project
 
     def write_definitions(self, filename: str | pathlib.Path) -> None:
@@ -640,6 +637,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             if cache is None:
                 self._build_cache()
                 diskcache.save(self._cache, loaded_files, "build_cache")
+            else:
+                self._cache = cache
             return
 
         self._cache = RegistryCache()
