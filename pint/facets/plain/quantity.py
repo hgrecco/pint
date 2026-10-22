@@ -304,7 +304,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if self_base.dimensionless:
             return hash(self_base.magnitude)
 
-        return hash((self_base.__class__, self_base.magnitude, self_base.units))
+        return hash((self_base.magnitude, self_base.units))
 
     @property
     def magnitude(self) -> MagnitudeT_co:
