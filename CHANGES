@@ -5,10 +5,13 @@ Pint Changelog
 -------------------
 
 - Fix assigning bare all-NaN NumPy arrays into Quantity slices, including xarray indexed assignment (#1896)
+- Fix context relations using `[]` raising `ValueError` when no unit is defined as `= []` (#1126)
+- Fix `numpy.correlate` raising `AttributeError` when only one operand is a Quantity.
 - Raise `UndefinedUnitError` instead of `AttributeError` for `dimensionality`, `dimensionless` and `unitless` when a unit references an undefined unit (#1154)
 - Fix `to_compact` raising `ValueError` on arrays with no finite non-zero value (#2504)
 - Format numpy array magnitudes with the Typst (`T`) and zero (`Tz`) formatters (#2494)
 - Fix LaTeX formatting of arrays not displaying values (#1887)
+- Drop the archived `pytest-subtests` test dependency; the `test` extra now requires pytest>=9, which ships the `subtests` fixture (#2502)
 
 
 0.26.2 (2026-10-19)
