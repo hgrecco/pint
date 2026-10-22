@@ -4,7 +4,7 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
-- Remove `standard_liter_per_minute` (`slpm`, `slm`), which was wrongly defined as a unit of power (#1354)
+- Remove the `slpm` abbreviation for `standard_liter_per_minute` (#1354)
 - Fix assigning bare all-NaN NumPy arrays into Quantity slices, including xarray indexed assignment (#1896)
 - Fix context relations using `[]` raising `ValueError` when no unit is defined as `= []` (#1126)
 - Fix `numpy.correlate` raising `AttributeError` when only one operand is a Quantity.
