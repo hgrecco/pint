@@ -62,9 +62,21 @@ def _tuple(d: dict[str, Any], key: str) -> tuple[str, ...]:
 def _str(d: dict[str, Any], key: str) -> str:
     if key not in d:
         raise DefinitionSyntaxError(f"missing '{key}'")
-    if not isinstance(d[key], str):
-        raise DefinitionSyntaxError(f"'{key}' must be a string, not {d[key]!r}")
-    return d[key]
+    return _optional_str(d, key)
+
+
+def _optional_str(d: dict[str, Any], key: str) -> str | None:
+    value = d.get(key)
+    if value is not None and not isinstance(value, str):
+        raise DefinitionSyntaxError(f"'{key}' must be a string, not {value!r}")
+    return value
+
+
+def _table(d: dict[str, Any], key: str) -> dict[str, Any]:
+    value = d.get(key, {})
+    if not isinstance(value, dict):
+        raise DefinitionSyntaxError(f"'{key}' must be a table, not {value!r}")
+    return value
 
 
 def prefix(name: str, d: dict[str, Any], config: ParserConfig):
@@ -78,7 +90,7 @@ def prefix(name: str, d: dict[str, Any], config: ParserConfig):
     return definitions.PrefixDefinition(
         name,
         value_number,
-        d.get("defined_symbol"),
+        _optional_str(d, "defined_symbol"),
         _tuple(d, "aliases"),
         value_text=value,
     )
@@ -111,7 +123,7 @@ def unit(name: str, d: dict[str, Any], config: ParserConfig):
 
     return definitions.UnitDefinition(
         name,
-        d.get("defined_symbol"),
+        _optional_str(d, "defined_symbol"),
         _tuple(d, "aliases"),
         converter,
         definitions.UnitsContainer(scaled),
@@ -132,20 +144,22 @@ def defaults(d: dict[str, Any], config: ParserConfig):
         raise DefinitionSyntaxError(
             f"Invalid keys in [defaults]: {', '.join(sorted(unknown))}"
         )
-    return definitions.DefaultsDefinition(d.get("group"), d.get("system"))
+    return definitions.DefaultsDefinition(
+        _optional_str(d, "group"), _optional_str(d, "system")
+    )
 
 
 def group_(d: dict[str, Any], config: ParserConfig):
     return group.GroupDefinition(
         _str(d, "name"),
         _tuple(d, "using_group_names"),
-        tuple(unit(k, v, config) for k, v in d.get("definitions", {}).items()),
+        tuple(unit(k, v, config) for k, v in _table(d, "definitions").items()),
     )
 
 
 def system_(d: dict[str, Any], config: ParserConfig):
     rules = []
-    for rule in d.get("rules", ()):
+    for rule in _tuple(d, "rules"):
         parts = [p.strip() for p in rule.split(":")]
         if len(parts) > 2:
             raise DefinitionSyntaxError(
@@ -175,7 +189,7 @@ def context_(d: dict[str, Any], config: ParserConfig):
     return context.ContextDefinition(
         _str(d, "name"),
         _tuple(d, "aliases"),
-        {k: config.to_number(str(v)) for k, v in d.get("defaults", {}).items()},
-        tuple(_relation(r, config) for r in d.get("relations", ())),
-        tuple(unit(k, v, config) for k, v in d.get("redefinitions", {}).items()),
+        {k: config.to_number(str(v)) for k, v in _table(d, "defaults").items()},
+        tuple(_relation(r, config) for r in _tuple(d, "relations")),
+        tuple(unit(k, v, config) for k, v in _table(d, "redefinitions").items()),
     )

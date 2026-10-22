@@ -94,5 +94,8 @@ class TomlParser:
         return list(self.iter_parsed_project(tomllib.loads(content)))
 
     def _parse_path(self, path: pathlib.Path) -> list[Any]:
-        with path.open("rb") as f:
-            return list(self.iter_parsed_project(tomllib.load(f)))
+        try:
+            with path.open("rb") as f:
+                return list(self.iter_parsed_project(tomllib.load(f)))
+        except (tomllib.TOMLDecodeError, DefinitionSyntaxError) as ex:
+            raise DefinitionSyntaxError(f"{path}: {ex}") from ex

@@ -73,6 +73,7 @@ def test_default_toml_matches_txt():
     assert summary(toml) == summary(txt)
 
 
+@pytest.mark.filterwarnings("error")
 def test_default_toml_is_up_to_date(tmp_path):
     pytest.importorskip("tomlkit")
     out = tmp_path / "default_en.toml"
@@ -124,6 +125,14 @@ def test_sections_are_optional(tmp_path):
         '[unit]\nmeter = "[length]"\n',
         '[[context]]\nname = "c"\ndefaults = { n = "x" }\n',
         '[[system]]\nrules = ["meter"]\n',
+        '[[system]]\nname = "s"\nrules = "meter"\n',
+        '[[context]]\nname = "c"\nrelations = "[length] -> [time]: value"\n',
+        '[[group]]\nname = "g"\ndefinitions = ["meter"]\n',
+        '[[context]]\nname = "c"\ndefaults = ["n"]\n',
+        '[[context]]\nname = "c"\nredefinitions = ["meter"]\n',
+        '[unit]\nmeter = { value = "[length]", defined_symbol = 1 }\n',
+        "[defaults]\ngroup = 1\n",
+        "[unit\n",
     ],
 )
 def test_syntax_errors(tmp_path, content):
@@ -133,11 +142,32 @@ def test_syntax_errors(tmp_path, content):
         pint.UnitRegistry(f)
 
 
-def test_error_names_definition(tmp_path):
+def test_error_names_file_and_definition(tmp_path):
     f = tmp_path / "defs.toml"
     f.write_text('[unit]\nmeter = { defined_symbol = "m" }\n', encoding="utf-8")
     with pytest.raises(DefinitionSyntaxError, match=r"\[unit\] meter: missing 'value'"):
         pint.UnitRegistry(f)
+    with pytest.raises(DefinitionSyntaxError, match="defs.toml"):
+        pint.UnitRegistry(f)
+
+
+def test_registry_error_notes_file(tmp_path):
+    f = tmp_path / "defs.toml"
+    f.write_text(
+        '[unit]\nmeter = { value = "[length]" }\n'
+        '[[system]]\nname = "s"\nrules = ["parsec"]\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(pint.UndefinedUnitError) as excinfo:
+        pint.UnitRegistry(f)
+    assert any("defs.toml" in note for note in excinfo.value.__notes__)
+
+
+def test_line_generator_is_not_a_path():
+    ureg = pint.UnitRegistry(None)
+    # same TypeError as before TOML support: only lists of lines are accepted
+    with pytest.raises(TypeError, match="generator"):
+        ureg.load_definitions(line for line in ["meter = [length]"])
 
 
 def write_and_load(ureg, tmp_path):
@@ -198,6 +228,64 @@ def test_active_context_not_written(tiny, tmp_path):
         reloaded, data = write_and_load(tiny, tmp_path)
     assert data["unit"]["minute"]["value"] == "60 * second"
     assert reloaded.Quantity(1, "minute").to("s").magnitude == 60
+
+
+def test_more_definitions_made_in_code(tiny, tmp_path):
+    from pint.facets.context import BidirectionalRelation, ContextDefinition
+    from pint.facets.nonmultiplicative.definitions import LogarithmicConverter
+    from pint.facets.plain import PrefixDefinition, ScaleConverter, UnitDefinition
+    from pint.facets.plain.definitions import DerivedDimensionDefinition
+    from pint.util import UnitsContainer
+
+    tiny.define(PrefixDefinition("mega", 1e6, "M"))
+    tiny.define(DerivedDimensionDefinition("[area]", UnitsContainer({"[length]": 2})))
+    tiny.define(
+        UnitDefinition(
+            "mybel", None, (), LogarithmicConverter(1, 10, 1), UnitsContainer()
+        )
+    )
+    # named like a prefixed unit, but defined in code
+    tiny.define(
+        UnitDefinition(
+            "kilofoot", None, (), ScaleConverter(1000), UnitsContainer(foot=1)
+        )
+    )
+    tiny.define(
+        UnitDefinition(
+            "delta_minute", None, (), ScaleConverter(2), UnitsContainer(minute=1)
+        )
+    )
+    tiny.define("@alias meter = metro")
+    relation = BidirectionalRelation(
+        UnitsContainer({"[length]": 1}),
+        UnitsContainer({"[time]": 1}),
+        "meter * second / value",
+    )
+    tiny.add_context(ContextDefinition("both", (), {}, (relation,), ()))
+
+    reloaded, data = write_and_load(tiny, tmp_path)
+    assert data["prefix"]["mega"] == {"value": "1000000.0", "defined_symbol": "M"}
+    assert data["dimension"]["area"] == {"value": "[length] ** 2"}
+    assert data["unit"]["mybel"]["value"] == "1; logbase: 10; logfactor: 1"
+    assert data["unit"]["meter"]["aliases"] == ["metre", "metro"]
+    assert reloaded.Quantity(2, "mybel").to("").magnitude == pytest.approx(100)
+    assert reloaded.Quantity(1, "kilofoot").to("foot").magnitude == 1000
+    assert reloaded.Quantity(1, "delta_minute").to("minute").magnitude == 2
+    assert reloaded.Quantity(1, "metro").to("meter").magnitude == 1
+    with reloaded.context("both"):
+        assert reloaded.Quantity(4, "s").to("m").magnitude == 0.25
+
+
+def test_warns_about_what_cannot_be_written(tiny, tmp_path):
+    tiny.add_context(pint.Context("adhoc"))
+    tiny.get_group("international").add_units("minute")
+    tiny.get_group("extra").add_units("second")
+    with pytest.warns(UserWarning) as record:
+        write_and_load(tiny, tmp_path)
+    message = str(record[0].message)
+    assert "context adhoc" in message
+    assert "group extra" in message
+    assert record[0].filename == __file__
 
 
 def test_write_without_tomlkit(tmp_path, monkeypatch):

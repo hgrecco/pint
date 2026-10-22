@@ -27,6 +27,7 @@ import copy
 import functools
 import inspect
 import itertools
+import os
 import pathlib
 import re
 from collections import defaultdict
@@ -609,9 +610,16 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
             parsed_project = self._def_parser.parse_string("\n".join(file))
-        elif pathlib.Path(file).suffix.lower() == ".toml":
+        elif (
+            isinstance(file, (str, os.PathLike))
+            and pathlib.Path(file).suffix.lower() == ".toml"
+        ):
             for definition in self._toml_parser.parse_file(file):
-                self._helper_dispatch_adder(definition)
+                try:
+                    self._helper_dispatch_adder(definition)
+                except Exception as ex:
+                    ex.add_note(f"While adding {definition!r} from {file}")
+                    raise
             # the disk cache keys a path by its content
             return pathlib.Path(file)
         else:
