@@ -17,7 +17,7 @@ from numbers import Number
 from typing import TYPE_CHECKING, Any, Literal, Self, cast, overload
 
 from ..._typing import Magnitude, UnitLike
-from ...compat import NUMERIC_TYPES, deprecated
+from ...compat import NUMERIC_TYPES, deprecated, is_duck_array_type
 from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
@@ -273,7 +273,10 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             return self._units == other
 
     def __ne__(self, other) -> bool:
-        return not (self == other)
+        out = self == other
+        if is_duck_array_type(type(out)):
+            return ~out
+        return not out
 
     def compare(self, other, op) -> bool:
         self_q = self._REGISTRY.Quantity(1, self)

@@ -23,6 +23,27 @@ from pint.util import ParserHelper, UnitsContainer
 from .helpers import internal
 
 
+@pytest.mark.skipif(not HAS_NUMPY, reason="NumPy is not available")
+@pytest.mark.parametrize(
+    ("unit", "quantity_units", "magnitudes", "expected"),
+    [
+        ("m", "m", [1, 2], [False, True]),
+        ("m", "cm", [100, 200], [False, True]),
+        ("m", "s", [1, 2], [True, True]),
+        ("", "", [1, 2], [False, True]),
+        ("m", "m", [[1, 2], [3, 1]], [[False, True], [True, False]]),
+        ("m", "m", [], []),
+    ],
+)
+def test_unit_array_inequality(
+    sess_registry, unit, quantity_units, magnitudes, expected
+):
+    unit = sess_registry.Unit(unit)
+    quantity = sess_registry.Quantity(np.array(magnitudes), quantity_units)
+    np.testing.assert_array_equal(unit != quantity, expected)
+    np.testing.assert_array_equal(unit != quantity, np.logical_not(unit == quantity))
+
+
 @pytest.mark.parametrize("constructor", ["parse_units", "Unit", "Quantity"])
 @pytest.mark.parametrize(
     "expression",
