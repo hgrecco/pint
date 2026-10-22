@@ -1343,6 +1343,26 @@ def test_issues_1841_xfail():
     # print(q)
 
 
+def test_issue1126_load_definitions():
+    # No unit is defined as "= []", so "[]" is not in the registry's dimensions.
+    ureg = UnitRegistry(["percent = 0.01", "foo = [d]"])
+    ureg.load_definitions(
+        ["@context c", "    [] -> [d]: value * 5 foo / percent", "@end"]
+    )
+    q = ureg.Quantity(3, "percent").to("foo", "c")
+    helpers.assert_quantity_almost_equal(q, ureg.Quantity(15.0, "foo"))
+
+
+def test_issue1126_context_from_lines():
+    ureg = UnitRegistry(["percent = 0.01", "foo = [d]"])
+    ctx = Context.from_lines(["@context c", "    [] -> [d]: value * 5 foo / percent"])
+    q = ureg.Quantity(3, "percent").to("foo", ctx)
+    helpers.assert_quantity_almost_equal(q, ureg.Quantity(15.0, "foo"))
+
+    with pytest.raises(ValueError, match=r"\[bar\] is not defined as dimension"):
+        ureg.get_dimensionality("[bar]")
+
+
 def test_issue1949(registry_empty):
     ureg = UnitRegistry()
     ureg.define(
@@ -1886,3 +1906,45 @@ def test_issue922_define_delayed_cache_rebuild(monkeypatch):
     assert len(calls) == 1
     assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.5)
     assert ureg.Quantity(1, "oz").to("kg").magnitude == pytest.approx(0.125)
+
+
+@pytest.mark.parametrize("attr", ["dimensionality", "dimensionless", "unitless"])
+def test_issue1154_undefined_reference_raises_undefined_unit_error(attr):
+    ureg = UnitRegistry(["foo = 1 bar"])
+    q = ureg.Quantity(1, "foo")
+    with pytest.raises(UndefinedUnitError, match="'bar' is not defined"):
+        getattr(q, attr)
+    with pytest.raises(AttributeError, match="Neither Quantity object"):
+        q.nonexistent
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize(
+    "spec, expected",
+    [
+        (
+            "L",
+            r"\begin{pmatrix}2 & 1\\" + " \n" + r"3 & 1\end{pmatrix}\ \mathrm{meter}",
+        ),
+        (
+            ".1fL",
+            r"\begin{pmatrix}2.0 & 1.0\\"
+            + " \n"
+            + r"3.0 & 1.0\end{pmatrix}\ \mathrm{meter}",
+        ),
+    ],
+)
+def test_issue1887_latex_array(spec, expected):
+    ureg = UnitRegistry()
+    q = np.array([[2, 1], [3, 1]]) * ureg.meter
+    assert format(q, spec) == expected
+
+
+@helpers.requires_numpy
+def test_issue1887_ndarray_to_latex_template_and_spec():
+    from pint.formatting import ndarray_to_latex
+
+    arr = np.array([1.0, 2.5])
+    expected = r"\begin{pmatrix}1.00 & 2.50\end{pmatrix}"
+    assert ndarray_to_latex(arr, ".2f") == expected
+    assert ndarray_to_latex(arr, "{:.2f}") == expected

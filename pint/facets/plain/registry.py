@@ -801,6 +801,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 try:
                     reg = self._dimensions[key]
                 except KeyError:
+                    # "[]" is dimensionless even if no unit was defined as "= []".
+                    if key == "[]":
+                        continue
                     raise ValueError(
                         f"{key} is not defined as dimension in the pint UnitRegistry"
                     )

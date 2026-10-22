@@ -9,7 +9,7 @@ Logarithmic Units
     Support for logarithmic units in Pint is currently in Beta. Please take
     careful note of the information below, particularly around `compound log units`_
     to avoid calculation errors. Bug reports and pull requests are always
-    welcome, please see :doc:`contributing` for more information on
+    welcome, please see :doc:`/dev/contributing` for more information on
     how you can help improve this feature (and Pint in general).
 
 Pint supports some logarithmic units, including `dB`, `dBm`, `octave`, and `decade`
