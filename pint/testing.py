@@ -152,10 +152,8 @@ def assert_allclose(
         assert math.isnan(m2), msg
     elif math.isnan(m2):
         assert math.isnan(m1), msg
-    elif math.isinf(m1):
-        assert math.isinf(m2), msg
-    elif math.isinf(m2):
-        assert math.isinf(m1), msg
+    elif math.isinf(m1) or math.isinf(m2):
+        assert m1 == m2, msg
     else:
         # Numpy version (don't like because is not symmetric)
         # assert abs(m1 - m2) <= atol + rtol * abs(m2), msg
