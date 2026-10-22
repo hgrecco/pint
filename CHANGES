@@ -4,6 +4,7 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
+- Restore active contexts, unit definitions and caches when enabling a context fails.
 - Raise `UndefinedUnitError` instead of `AttributeError` for `dimensionality`, `dimensionless` and `unitless` when a unit references an undefined unit (#1154)
 - Fix `to_compact` raising `ValueError` on arrays with no finite non-zero value (#2504)
 - Format numpy array magnitudes with the Typst (`T`) and zero (`Tz`) formatters (#2494)

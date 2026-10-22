@@ -929,6 +929,49 @@ def test_err_change_base_unit():
         ureg.enable_contexts("c")
 
 
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("use_context_manager", [False, True])
+def test_failed_context_activation_restores_registry(
+    registry_empty, nested, use_context_manager
+):
+    ureg = registry_empty
+    ureg.define("foo = [d1]")
+    ureg.define("bar = [d2]")
+    ureg.define("baz = 2 * foo")
+    outer = Context("outer")
+    outer.redefine("baz = 3 * foo")
+    if nested:
+        ureg.enable_contexts(outer)
+
+    invalid = Context("invalid")
+    invalid.redefine("baz = 4 * foo")
+    invalid.redefine("bar = foo")
+    contexts = ureg._active_ctx.contexts.copy()
+    cache = ureg._cache
+    caches = ureg._caches.copy()
+    context_units = ureg._context_units.copy()
+    expected = 3 if nested else 2
+
+    # Repeating a failed activation must not retain contexts or partial overrides.
+    for _ in range(2):
+        with pytest.raises(
+            ValueError, match="Can't redefine a plain unit to a derived one"
+        ):
+            if use_context_manager:
+                with ureg.context(invalid):
+                    pytest.fail("An invalid context must not be entered")
+            else:
+                ureg.enable_contexts(invalid)
+        assert ureg._active_ctx.contexts == contexts
+        assert ureg._cache is cache
+        assert ureg._caches == caches
+        assert ureg._context_units == context_units
+        assert ureg.Quantity(1, "baz").to("foo").magnitude == expected
+
+    ureg.disable_contexts()
+    assert ureg.Quantity(1, "baz").to("foo").magnitude == 2
+
+
 def test_err_to_base_unit():
     expected = ".*can't define plain units within a context"
     with pytest.raises(DefinitionSyntaxError, match=expected):

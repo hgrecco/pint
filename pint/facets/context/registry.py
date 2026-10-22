@@ -251,8 +251,20 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         contexts = tuple(objects.Context.from_context(ctx, **kwargs) for ctx in ctxs)
 
         # Finally we add them to the active context.
+        previous_cache = self._cache
+        previous_units = self._units.maps.copy()
         self._active_ctx.insert_contexts(*contexts)
-        self._switch_context_cache_and_units()
+        try:
+            self._switch_context_cache_and_units()
+        except Exception:
+            # A failed redefinition must not leave a partially enabled context.
+            key = self._active_ctx.hashable()
+            self._caches.pop(key, None)
+            self._context_units.pop(key, None)
+            self._active_ctx.remove_contexts(len(contexts))
+            self._cache = previous_cache
+            self._units.maps[:] = previous_units
+            raise
 
     def disable_contexts(self, n: int | None = None) -> None:
         """Disable the last n enabled contexts.
