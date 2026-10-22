@@ -290,3 +290,55 @@ class TestSystem(QuantityTestCase):
         ureg = self.ureg
         for name in dir(ureg.sys):
             dir(getattr(ureg.sys, name))
+
+    def test_issue2048_imperial_system_units(self):
+        """Test that UnitRegistry(system="imperial") correctly returns imperial units.
+
+        When creating a registry with system="imperial", accessing units like
+        gallon or pint should return the imperial variants, not the US variants.
+        This test reproduces the bug reported in issue #2048.
+        """
+        # Create registries with different systems
+        imperial_reg = UnitRegistry(system="imperial")
+        us_reg = UnitRegistry(system="US")
+        plain_reg = UnitRegistry()
+
+        # Test that imperial_reg correctly identifies its system
+        assert imperial_reg.default_system == "imperial"
+        assert us_reg.default_system == "US"
+
+        # Test pint volumes
+        imp_reg_pint = 1 * imperial_reg.pint
+        us_reg_pint = 1 * us_reg.pint
+        plain_imp_pint = 1 * plain_reg.sys.imperial.pint
+        plain_us_pint = 1 * plain_reg.sys.US.pint
+
+        # Convert to a common unit (litre) to compare
+        imp_pint_litres = imp_reg_pint.to("litre").magnitude
+        us_pint_litres = us_reg_pint.to("litre").magnitude
+        plain_imp_pint_litres = plain_imp_pint.to("litre").magnitude
+        plain_us_pint_litres = plain_us_pint.to("litre").magnitude
+
+        # The imperial_reg.pint should match plain_reg.sys.imperial.pint
+        assert abs(imp_pint_litres - plain_imp_pint_litres) < 1e-8
+        assert abs(us_pint_litres - plain_us_pint_litres) < 1e-8
+        # And they should be different from each other
+        assert abs(imp_pint_litres - us_pint_litres) > 0.01
+
+        # Test gallon volumes
+        imp_reg_gallon = 1 * imperial_reg.gallon
+        us_reg_gallon = 1 * us_reg.gallon
+        plain_imp_gallon = 1 * plain_reg.sys.imperial.gallon
+        plain_us_gallon = 1 * plain_reg.sys.US.gallon
+
+        # Convert to a common unit (litre) to compare
+        imp_gallon_litres = imp_reg_gallon.to("litre").magnitude
+        us_gallon_litres = us_reg_gallon.to("litre").magnitude
+        plain_imp_gallon_litres = plain_imp_gallon.to("litre").magnitude
+        plain_us_gallon_litres = plain_us_gallon.to("litre").magnitude
+
+        # The imperial_reg.gallon should match plain_reg.sys.imperial.gallon
+        assert abs(imp_gallon_litres - plain_imp_gallon_litres) < 1e-8
+        assert abs(us_gallon_litres - plain_us_gallon_litres) < 1e-8
+        # And they should be different from each other
+        assert abs(imp_gallon_litres - us_gallon_litres) > 0.5

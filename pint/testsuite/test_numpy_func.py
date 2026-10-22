@@ -254,6 +254,38 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         assert np.array_equal(res.magnitude, ref)
         assert res.units == "meter * second"
 
+    @pytest.mark.parametrize("quantity_position", ["a", "v", "both"])
+    @pytest.mark.parametrize("mode", ["valid", "same", "full"])
+    @pytest.mark.parametrize("dtype", ["float32", "float64"])
+    @helpers.requires_numpy
+    def test_correlate_mixed_operands(
+        self, sess_registry, quantity_position, mode, dtype
+    ):
+        signal = np.array([1.0, 2.0, 3.0, 4.0], dtype=dtype)
+        template = np.array([0.5, 1.0], dtype=dtype)
+        signal_before = signal.copy()
+        template_before = template.copy()
+        a = (
+            sess_registry.Quantity(signal, "meter")
+            if quantity_position in ("a", "both")
+            else signal
+        )
+        v = (
+            sess_registry.Quantity(template, "second")
+            if quantity_position in ("v", "both")
+            else template
+        )
+        result = np.correlate(a, v, mode=mode)
+        units = (sess_registry.meter if quantity_position in ("a", "both") else 1) * (
+            sess_registry.second if quantity_position in ("v", "both") else 1
+        )
+        expected = sess_registry.Quantity(
+            np.correlate(signal_before, template_before, mode=mode), units
+        )
+        helpers.assert_quantity_almost_equal(result, expected)
+        np.testing.assert_array_equal(signal, signal_before)
+        np.testing.assert_array_equal(template, template_before)
+
     def test_dot(self):
         with ExitStack() as stack:
             stack.callback(
@@ -366,3 +398,37 @@ class TestNumPyFuncUtils(TestNumpyMethods):
         z = self.Q_(np.array([1.0, 2.0]), "m")
         with pytest.raises(OffsetUnitCalculusError):
             np.outer(t, z)
+
+    def test_vecdot(self):
+        a = self.Q_(np.array([1.0, 2.0, 3.0]), "m")
+        b = self.Q_(np.array([4.0, 5.0, 6.0]), "s")
+        helpers.assert_quantity_almost_equal(np.vecdot(a, b), self.Q_(32.0, "m * s"))
+        helpers.assert_quantity_almost_equal(
+            np.linalg.vecdot(a, b), self.Q_(32.0, "m * s")
+        )
+
+    @helpers.requires_numpy_at_least("2.2")
+    def test_matvec_vecmat(self):
+        m = self.Q_(np.arange(6.0).reshape(2, 3), "m")
+        v = self.Q_(np.array([1.0, 2.0, 3.0]), "s")
+        w = self.Q_(np.array([1.0, 2.0]), "s")
+        helpers.assert_quantity_almost_equal(
+            np.matvec(m, v), self.Q_(np.matvec(m.magnitude, v.magnitude), "m * s")
+        )
+        helpers.assert_quantity_almost_equal(
+            np.vecmat(w, m), self.Q_(np.vecmat(w.magnitude, m.magnitude), "m * s")
+        )
+
+    def test_mul_func_positional_args(self):
+        a = self.Q_(np.arange(6.0).reshape(2, 3), "m")
+        b = self.Q_(np.arange(6.0).reshape(3, 2), "s")
+        helpers.assert_quantity_almost_equal(
+            np.tensordot(a, b, 1),
+            self.Q_(np.tensordot(a.magnitude, b.magnitude, 1), "m * s"),
+        )
+        u = self.Q_(np.array([[1.0, 2.0, 3.0]]), "m")
+        v = self.Q_(np.array([[4.0], [5.0], [6.0]]), "s")
+        helpers.assert_quantity_almost_equal(
+            np.cross(u, v.T, -1, -1),
+            self.Q_(np.cross(u.magnitude, v.magnitude.T, -1, -1), "m * s"),
+        )

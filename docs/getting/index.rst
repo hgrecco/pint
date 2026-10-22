@@ -3,6 +3,8 @@ Getting Started
 
 The getting started guide aims to get you using pint productively as quickly as possible.
 
+Want to try it before installing anything? Head over to
+:doc:`/try-in-browser` to run Pint directly in your browser.
 
 
 Installation

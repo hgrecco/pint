@@ -22,7 +22,12 @@ from ...compat import (
     np,
     np_timedelta64,
 )
-from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ...errors import (
+    DimensionalityError,
+    PintTypeError,
+    UndefinedUnitError,
+    UnitStrippedWarning,
+)
 from ...util import UnitsContainer
 from ..plain import PlainQuantity
 from ..plain.qto import _get_compact_base, _get_si_prefixes, _pick_compact_unit
@@ -198,7 +203,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             v = self.__class__(v, "").to(self)
         else:
             raise DimensionalityError("dimensionless", self._units)
-        return self.magnitude.searchsorted(v, side)
+        return self.magnitude.searchsorted(v, side, sorter)
 
     def dot(self, b):
         """Dot product of two arrays.
@@ -256,6 +261,16 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         try:
             return getattr(self._magnitude, item)
         except AttributeError:
+            prop = getattr(type(self), item, None)
+            if isinstance(prop, property):
+                # The property raised AttributeError to get here; surface an
+                # UndefinedUnitError (an AttributeError subclass) from it.
+                try:
+                    prop.fget(self)
+                except UndefinedUnitError as exc:
+                    raise exc from None
+                except AttributeError:
+                    pass
             raise AttributeError(
                 "Neither Quantity object nor its magnitude ({}) "
                 "has attribute '{}'".format(self._magnitude, item)
@@ -285,23 +300,28 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         except TypeError:
             pass
 
+        def dim_error():
+            return DimensionalityError(
+                value,
+                self.units,
+                extra_msg=". Assign a quantity with the same dimensionality "
+                "or access the magnitude directly as "
+                f"`obj.magnitude[{key}] = {value}`.",
+            )
+
         try:
             if isinstance(value, self.__class__):
-                factor = self.__class__(
-                    value.magnitude, value._units / self._units
-                ).to_root_units()
+                # m_as handles offset units (e.g. degC into kelvin).
+                try:
+                    factor = value.m_as(self._units)
+                except DimensionalityError:
+                    raise dim_error() from None
             else:
                 factor = self.__class__(value, self._units ** (-1)).to_root_units()
 
             if isinstance(factor, self.__class__):
                 if not factor.dimensionless:
-                    raise DimensionalityError(
-                        value,
-                        self.units,
-                        extra_msg=". Assign a quantity with the same dimensionality "
-                        "or access the magnitude directly as "
-                        f"`obj.magnitude[{key}] = {value}`.",
-                    )
+                    raise dim_error()
                 self._magnitude[key] = factor.magnitude
             else:
                 self._magnitude[key] = factor
@@ -401,6 +421,9 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             power = np.ceil(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
 
         finite_powers = power[np.isfinite(power)]
+        if finite_powers.size == 0:
+            # Only zeros, nan and inf: there is no prefix to pick.
+            return self
         pivot = (
             finite_powers[np.argmax(np.abs(finite_powers))]
             if maximumPrefix

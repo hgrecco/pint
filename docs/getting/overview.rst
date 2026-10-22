@@ -1,5 +1,5 @@
-What is Pint ?
-==============
+What is Pint?
+=============
 
 .. .. image:: _static/logo-full.jpg
 ..    :alt: Pint: **physical quantities**
@@ -9,7 +9,8 @@ Pint is a Python package to define, operate and manipulate **physical quantities
 the product of a numerical value and a unit of measurement. It allows
 arithmetic operations between them and conversions from and to different units.
 
-It is distributed with a `comprehensive list of physical units, prefixes and constants`_.
+It is distributed with a comprehensive :ref:`list of physical units, prefixes and
+constants <default-units>`.
 Due to its modular design, you can extend (or even rewrite!) the complete list
 without changing the source code. It supports a lot of numpy mathematical
 operations **without monkey patching or wrapping numpy**.
@@ -59,12 +60,12 @@ definitions does not involve changing the code.
 
 **Advanced string formatting**: a quantity can be formatted into string using
 `PEP 3101`_ syntax. Extended conversion flags are given to provide symbolic,
-LaTeX and pretty formatting. Unit name translation is available if Babel_ is
-installed.
+LaTeX, Typst, and pretty formatting. Unit name translation is available if
+Babel_ is installed.
 
 **Free to choose the numerical type**: You can use any numerical type
-(``fraction``, ``float``, ``decimal``, ``numpy.ndarray``, etc). NumPy_ is not
-required, but is supported.
+(:py:class:`float`, :py:class:`fractions.Fraction`, :py:class:`decimal.Decimal`,
+:py:class:`numpy.ndarray`, etc). NumPy_ is supported, but not required.
 
 **Awesome NumPy integration**: When you choose to use a NumPy_ ndarray, its methods and
 ufuncs are supported including automatic conversion of units. For example
@@ -72,7 +73,7 @@ ufuncs are supported including automatic conversion of units. For example
 quantity will be radian.
 
 **Uncertainties integration**:  transparently handles calculations with
-quantities with uncertainties (like 3.14±0.01) meter via the `uncertainties
+quantities with uncertainties, like (3.14 ± 0.01) meter, via the `uncertainties
 package`_.
 
 **Handle temperature**: conversion between units with different reference
@@ -108,7 +109,6 @@ License
 .. literalinclude:: ../../LICENSE
    :language: none
 
-.. _`comprehensive list of physical units, prefixes and constants`: https://github.com/hgrecco/pint/blob/master/pint/default_en.txt
 .. _`uncertainties package`: https://pythonhosted.org/uncertainties/
 .. _`NumPy`: http://www.numpy.org/
 .. _`PEP 3101`: https://www.python.org/dev/peps/pep-3101/

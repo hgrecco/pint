@@ -83,6 +83,15 @@ _OP_PRIORITY = {
     "-": 0,
 }
 
+# Maximum nesting depth for operator recursion in _build_eval_tree. Python's
+# tokenize caps nested parentheses at 200 but does not cap operator nesting, so
+# without this bound a deeply nested right-associative expression (e.g. many
+# chained ``**``) can recurse past ``sys.getrecursionlimit()`` and raise an
+# uncaught ``RecursionError`` out of the public API. 100 is far above any
+# legitimate unit expression while staying well below CPython's default limit.
+# See https://github.com/hgrecco/pint/pull/2376
+_MAX_RECURSION_DEPTH = 100
+
 
 class IteratorLookAhead[S]:
     """An iterator with lookahead buffer.
@@ -114,10 +123,32 @@ class IteratorLookAhead[S]:
 
 
 def plain_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]:
-    """Standard python tokenizer"""
+    """Standard python tokenizer, treating ``$`` as a name character like ``£``."""
+    pending: TokenInfo | None = None
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
-        if tokinfo.type != tokenlib.ENCODING:
-            yield tokinfo
+        if tokinfo.type == tokenlib.ENCODING:
+            continue
+        if tokinfo.type == tokenlib.OP and tokinfo.string == "$":
+            tokinfo = tokinfo._replace(type=tokenlib.NAME)
+        if tokinfo.type == tokenlib.NAME:
+            if (
+                pending is not None
+                and pending.end == tokinfo.start
+                and "$" in (pending.string + tokinfo.string)
+            ):
+                # Merge "$" with directly adjacent names, e.g. "US$".
+                pending = pending._replace(
+                    string=pending.string + tokinfo.string, end=tokinfo.end
+                )
+                continue
+            if pending is not None:
+                yield pending
+            pending = tokinfo
+            continue
+        if pending is not None:
+            yield pending
+            pending = None
+        yield tokinfo
 
 
 def uncertainty_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]:
@@ -435,6 +466,12 @@ def _build_eval_tree(
 
     """
 
+    if depth > _MAX_RECURSION_DEPTH:
+        raise DefinitionSyntaxError(
+            f"maximum recursion depth exceeded in expression parsing "
+            f"({_MAX_RECURSION_DEPTH}); expression is too deeply nested"
+        )
+
     result = None
 
     while True:
@@ -495,6 +532,8 @@ def _build_eval_tree(
                         tokens, op_priority, index + 1, depth + 1, "unary"
                     )
                     result = EvalTreeNode(left=right, operator=current_token)
+            else:
+                raise DefinitionSyntaxError(f"unknown operator '{token_text}'")
         elif token_type in (tokenlib.NUMBER, tokenlib.NAME):
             if result:
                 # tokens with an implicit operation i.e. "1 kg"

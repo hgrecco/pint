@@ -12,7 +12,9 @@ import pytest
 
 from pint import (
     Context,
+    DefinitionSyntaxError,
     DimensionalityError,
+    OffsetUnitCalculusError,
     UndefinedUnitError,
     UnitRegistry,
     get_application_registry,
@@ -450,6 +452,21 @@ class TestIssues(QuantityTestCase):
         )
         assert f"{1 * module_registry.count:~}" == "1 count"
         assert "{:~}".format(1 * module_registry("MiB")) == "1 MiB"
+
+    def test_issue_386(self, module_registry):
+        x = module_registry.Quantity(42, "degC")
+        y = module_registry.Quantity("42 degC")
+        assert x == y
+
+        # make sure normal combined units still work
+        x = module_registry.Quantity(42, module_registry.mm * module_registry.s)
+        y = module_registry.Quantity("42 mm s")
+        assert x == y
+
+        # offset unit combined with another unit should still fail (default registry settings)
+        ureg = UnitRegistry()
+        with pytest.raises(OffsetUnitCalculusError):
+            ureg.Quantity("42 degC/m")
 
     def test_issue468(self, module_registry):
         @module_registry.wraps("kg", "meter")
@@ -1140,6 +1157,72 @@ def test_issue1433(func_registry):
     assert func_registry.Quantity("1 micron") == func_registry.Quantity("1 micrometer")
 
 
+@helpers.requires_numpy
+def test_issue681():
+    # Floating-point noise from combining fractional exponents used to leave
+    # a near-integer (not just near-zero) residual, e.g. [time] ** -0.9999999999999998
+    # instead of exactly [time] ** -1, breaking dimensionality-based conversion.
+    import numpy as np
+
+    ureg = UnitRegistry(system="mks")
+    Q_ = ureg.Quantity
+
+    n = Q_(600, ureg.rpm)
+    q = Q_(1000, ureg.watt) / (
+        Q_(42.0, "kg/m**3") * Q_(43.0, "m/s**2") * Q_(100, ureg.meter) * 44.0
+    )
+    f = Q_(52.0, ureg.rpm) * 0.8 * q / Q_(10, "l/s") * ureg.meter**3
+
+    d = (f / n) ** (1 / 3)
+    e = n * d / ureg.meter / np.sqrt(Q_(100.0, ureg.meter) / ureg.meter)
+    assert e.is_compatible_with(ureg.rpm)
+    result = e.to(ureg.rpm)
+    assert result.magnitude == pytest.approx(5.7333501976722845)
+
+
+def test_issue681_auto_reduce_dimensions():
+    ureg = UnitRegistry(auto_reduce_dimensions=True)
+
+    result = (
+        8
+        * 1000
+        * ureg.kg
+        / ureg.m**3
+        / math.pi**2
+        * 50
+        * ureg.feet
+        * (185 * ureg.gallon / ureg.min) ** 2
+        * 0.007
+        / (1.75 * ureg.inch) ** 5
+    )
+    assert result.is_compatible_with("kg/m/s**2")
+    base = result.to_base_units()
+    assert base.magnitude == pytest.approx(67886.22, rel=1e-4)
+
+
+def test_issue1487():
+    # Floating-point noise from combining fractional exponents (e.g.
+    # meter ** 5.55e-17 instead of exactly meter ** 0) used to make
+    # to_base_units/to_reduced_units/to raise DimensionalityError.
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+
+    V = Q_(1.0, "m/s")
+    k = Q_(1.0, "W/(m*K)")
+    rho = Q_(1.0, "kg/m**3")
+    cp = Q_(1.0, "J/(kg*K)")
+    D = Q_(1.0, "m")
+    nu = Q_(1.0, "m**2/s")
+
+    h_c = 0.023 * V**0.8 * k**0.6 * (rho * cp) ** 0.4 / (D**0.2 * nu**0.4)
+
+    assert h_c.is_compatible_with("W/(m**2*K)")
+    h_c.to_base_units()
+    h_c.to_reduced_units()
+    result = h_c.to("W/(m**2*K)")
+    assert result.magnitude == pytest.approx(0.023)
+
+
 def test_issue1527():
     ureg = UnitRegistry(non_int_type=decimal.Decimal)
     x = ureg.parse_expression("2 microliter milligram/liter")
@@ -1650,3 +1733,139 @@ def test_issue2182():
     assert q != np.float64(5.0)
     assert np.float64(5.0) != q  # used to raise DimensionalityError
     assert np.array(5.0) != q  # used to raise DimensionalityError
+
+
+def test_negative_magnitude_pretty_exponent():
+    # The exponent pattern was anchored with match() but did not allow a leading
+    # sign, so a negative magnitude never matched and kept the raw "e-07" form
+    # while its positive counterpart was formatted.
+    ureg = UnitRegistry()
+
+    assert f"{ureg.Quantity(1.5e-7, 'meter'):P}" == "1.5×10⁻⁷ meter"
+    assert f"{ureg.Quantity(-1.5e-7, 'meter'):P}" == "-1.5×10⁻⁷ meter"
+
+    assert f"{ureg.Quantity(-1.5e-7, 'meter'):H}" == "-1.5×10<sup>-7</sup> meter"
+
+
+@helpers.requires_numpy
+def test_negative_magnitude_pretty_exponent_leaves_arrays_alone():
+    # Guards the tempting fix. Relaxing match() to search() so the leading "-" stops
+    # blocking would match inside an array's bracketed string, and sub() builds its
+    # replacement once from the first match, so every element would be rewritten with
+    # the first element's exponent: [1e-16 1 1e+10] -> [1×10⁻¹⁶ 1 1×10⁻¹⁶].
+    ureg = UnitRegistry()
+
+    for values in ([1e-16, 1.0, 1e10], [-1e-16, 1.0, 1e10]):
+        formatted = f"{ureg.Quantity(np.array(values), 'meter'):P}"
+        assert "×10" not in formatted
+        assert formatted == f"{ureg.Quantity(np.array(values), 'meter'):}"
+
+
+def test_issue2403_unity_multiplication_reduces_dimensions():
+    # A magnitude of 1 is shortcut in PlainUnit.__mul__ because non-multiplicative
+    # units cannot go through the multiplication. That shortcut used to skip the
+    # reduction every other magnitude gets.
+    ureg = UnitRegistry(auto_reduce_dimensions=True)
+
+    assert (2 * ureg.deg).units == ureg.dimensionless
+    assert (1 * ureg.deg).units == ureg.dimensionless
+    assert (ureg.deg * 1).units == ureg.dimensionless
+    assert (1.0 * ureg.deg).units == ureg.dimensionless
+    assert (1 * ureg.deg).magnitude == pytest.approx(math.radians(1))
+
+    # Units that do not reduce keep their units, and the shortcut still carries
+    # non-multiplicative units, which cannot be multiplied at all.
+    assert (1 * ureg.foot).units == ureg.foot
+    assert (1 * ureg.degC).units == ureg.degC
+
+
+def test_issue2403_unity_multiplication_converts_to_preferred():
+    ureg = UnitRegistry(autoconvert_to_preferred=True)
+    ureg.default_preferred_units = [ureg.m, ureg.s]
+
+    assert (2 * ureg.km).units == ureg.m
+    assert (1 * ureg.km).units == ureg.m
+
+
+def test_issue2403_unity_multiplication_default_registry_unchanged():
+    ureg = UnitRegistry()
+
+    assert (1 * ureg.deg).units == ureg.deg
+    assert (2 * ureg.deg).units == ureg.deg
+    assert (1 * ureg.degC).units == ureg.degC
+
+
+def test_issue2397_fathom_is_exact_international_yards(sess_registry):
+    # fathom was defined as 6 * survey_foot, so 1 fathom.to(yard) was ~2.000004.
+    ureg = sess_registry
+    assert (1 * ureg.fathom).to(ureg.yard).magnitude == 2
+    assert (1 * ureg.fathom).to(ureg.foot).magnitude == 6
+    # Survey-era length remains available explicitly.
+    assert (1 * ureg.survey_fathom).to(ureg.survey_foot).magnitude == 6
+    assert (1 * ureg.cables_length).to(ureg.foot).magnitude == 720
+    assert (1 * ureg.survey_cables_length).to(ureg.survey_foot).magnitude == 720
+
+
+@pytest.mark.parametrize("symbol", ["$", "£", "€", "US$"])
+def test_issue1814_currency_symbols(symbol):
+    ureg = UnitRegistry()
+    ureg.define(f"currency_unit = [currency] = {symbol}")
+    q = ureg.Quantity(f"5 {symbol}/kg")
+    assert q.magnitude == 5
+    assert q.units == ureg.currency_unit / ureg.kilogram
+
+
+@pytest.mark.parametrize("symbol", ["$", "£"])
+def test_issue1814_undefined_currency_symbol_raises(symbol):
+    ureg = UnitRegistry()
+    with pytest.raises(UndefinedUnitError):
+        ureg.Quantity(f"1 {symbol}")
+
+
+@pytest.mark.parametrize("expr", ["1 &", "1 !", "1 & kg"])
+def test_issue1814_unknown_operator_raises(expr):
+    ureg = UnitRegistry()
+    with pytest.raises(DefinitionSyntaxError):
+        ureg.Quantity(expr)
+
+
+@pytest.mark.parametrize("attr", ["dimensionality", "dimensionless", "unitless"])
+def test_issue1154_undefined_reference_raises_undefined_unit_error(attr):
+    ureg = UnitRegistry(["foo = 1 bar"])
+    q = ureg.Quantity(1, "foo")
+    with pytest.raises(UndefinedUnitError, match="'bar' is not defined"):
+        getattr(q, attr)
+    with pytest.raises(AttributeError, match="Neither Quantity object"):
+        q.nonexistent
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize(
+    "spec, expected",
+    [
+        (
+            "L",
+            r"\begin{pmatrix}2 & 1\\" + " \n" + r"3 & 1\end{pmatrix}\ \mathrm{meter}",
+        ),
+        (
+            ".1fL",
+            r"\begin{pmatrix}2.0 & 1.0\\"
+            + " \n"
+            + r"3.0 & 1.0\end{pmatrix}\ \mathrm{meter}",
+        ),
+    ],
+)
+def test_issue1887_latex_array(spec, expected):
+    ureg = UnitRegistry()
+    q = np.array([[2, 1], [3, 1]]) * ureg.meter
+    assert format(q, spec) == expected
+
+
+@helpers.requires_numpy
+def test_issue1887_ndarray_to_latex_template_and_spec():
+    from pint.formatting import ndarray_to_latex
+
+    arr = np.array([1.0, 2.5])
+    expected = r"\begin{pmatrix}1.00 & 2.50\end{pmatrix}"
+    assert ndarray_to_latex(arr, ".2f") == expected
+    assert ndarray_to_latex(arr, "{:.2f}") == expected

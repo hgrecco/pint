@@ -9,7 +9,7 @@ Pint uses (and thanks):
 - `github actions`_ to test all commits and PRs.
 - coveralls_ to monitor coverage test coverage
 - readthedocs_ to host the documentation.
-- black_, isort_ and flake8_ as code linters and pre-commit_ to enforce them.
+- ruff_ as code linter and formatter, and pre-commit_ to enforce them.
 - pytest_ to write tests
 - sphinx_ to write docs.
 
@@ -186,7 +186,7 @@ features that work best as an extension package versus direct inclusion in Pint 
 * Extension (separate packages)
 
   * Duck array types that wrap Pint (come above Pint
-    in :ref:`the type casting hierarchy <_numpy#technical-commentary>`)
+    in :ref:`the type casting hierarchy </user/numpy.ipynb#Technical-Commentary>`)
 
   * Uses features independent/on top of the libraries
 
@@ -234,9 +234,7 @@ And push the tags and CHANGES ::
 .. _coveralls: https://coveralls.io/
 .. _readthedocs: https://readthedocs.org/
 .. _pre-commit: https://pre-commit.com/
-.. _black: https://black.readthedocs.io/en/stable/
-.. _isort: https://pycqa.github.io/isort/
-.. _flake8: https://flake8.pycqa.org/en/latest/
+.. _ruff: https://docs.astral.sh/ruff/
 .. _pytest: https://docs.pytest.org/en/stable/
 .. _sphinx: https://www.sphinx-doc.org/en/master/
 .. _`extension/compatibility packages`:

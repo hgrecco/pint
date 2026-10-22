@@ -2,7 +2,7 @@
 name = "Pint"
 authors = [{ name = "Hernan E. Grecco", email = "hernan.grecco@gmail.com" }]
 dynamic = ["version"]
-license = { text = "BSD" }
+license = "BSD-3-Clause"
 description = "Physical quantities module"
 readme = "README.rst"
 maintainers = [
@@ -13,7 +13,6 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: BSD License",
   "Operating System :: MacOS :: MacOS X",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX",
@@ -38,20 +37,14 @@ packages = ["pint"]
 include = ["pint/default_en.txt", "pint/constants_en.txt"]
 
 [project.optional-dependencies]
-test = [
-  "tomlkit",
-  "pytest",
-  "pytest-cov",
-  "pytest-subtests",
-  "pytest-benchmark",
-]
+test = ["tomlkit", "pytest>=9", "pytest-cov", "pytest-benchmark"]
 test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
 codspeed = ["pint[test-all]", "pytest-codspeed"]
 numpy = ["numpy >= 2.0.0"]
 optype = ["optype[numpy]"]
 uncertainties = ["uncertainties >= 3.1.6"]
-babel = ["babel <= 2.8"]
+babel = ["babel"]
 pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
 # Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
@@ -71,7 +64,7 @@ docs = [
   "graphviz",
   "pooch",
   "sparse",
-  "numba>=0.59",              # for sparse
+  "numba>=0.59",                     # for sparse
   "Serialize",
   "pygments>=2.4",
   "sphinx-book-theme>=1.1.0",
@@ -90,6 +83,8 @@ docs = [
   "dask[complete]<2025.3.0",
   "optype[numpy]",
   "tomlkit",
+  "jupyterlite-sphinx>=0.20",
+  "jupyterlite-pyodide-kernel>=0.4",
 ]
 
 [project.urls]
@@ -190,7 +185,7 @@ tomlkit = "*"
 pre-commit = "*"
 pre-commit-hooks = "*"
 taplo = "*"
-ruff = "*"
+ruff = "<0.17"
 mdformat = "*"
 mdformat-ruff = "*"
 
@@ -210,6 +205,8 @@ test = "pytest --benchmark-skip"
 bench = "pytest --benchmark-only"
 
 [tool.pixi.feature.typecheck.dependencies]
+nodejs = ">=20"
+pytest = "*"
 pyright = "*"
 pip = "*"
 
@@ -220,7 +217,9 @@ typecheck = "pyright"
 pint = { path = ".", editable = true }
 
 [tool.pixi.feature.docs.tasks]
-docbuild = "sphinx-build -n -j auto -b html -d build/doctrees docs build/html"
+docbuild = { cmd = "sphinx-build -n -j auto -b html -d build/doctrees docs {{ loc }}", args = [
+  { arg = "loc", default = "build/html" },
+] }
 doctest = "sphinx-build -a -j auto -b doctest -d build/doctrees docs build/doctest"
 
 [tool.pixi.feature.docs.dependencies]

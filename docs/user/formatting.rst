@@ -53,6 +53,8 @@ Spec    Name            Examples
 ``H``   HTML            ``3.4×10<sup>9</sup> kilogram meter/second<sup>2</sup>``
 ``L``   latex           ``3.4\\times 10^{9}\\ \\frac{\\mathrm{kilogram} \\cdot \\mathrm{meter}}{\\mathrm{second}^{2}}``
 ``Lx``  latex siunitx   ``\\SI[]{3.4e+09}{\\kilo\\gram\\meter\\per\\second\\squared}``
+``T``   typst           ``3.4 times 10^(9) "kilogram" dot "meter"\/"second"^(2)``
+``Tz``  typst zero      ``#quan[3.4e9 kg m / s^2]``
 ``C``   compact         ``3.4e+09 kilogram*meter/second**2``
 ======= =============== ======================================================================
 
@@ -77,7 +79,20 @@ Modifier Meaning                                             Example
 ======== =================================================== ================================
 ``~``    Use the unit's symbol instead of its canonical name ``kg⋅m/s²`` (``f"{u:~P}"``)
 ``^``    Use negative exponents instead of ratio             ``kg⋅m⋅s⁻²`` (``f"{u:~^P}"``)
+``/``    Show exponent as a fraction                            ``s³ᐟ²`` (``f"{u:~/P}"``)
 ======== =================================================== ================================
+
+.. note::
+
+   The ``/`` modifier converts floats to the nearest fraction with a
+   denominator of at most 1000, hiding floating point issues:
+
+   .. doctest::
+
+      >>> f"{ureg.Unit('second') ** -0.9999999999999998:~/P}"
+      '1/s'
+      >>> f"{ureg.Unit('meter') ** 5.55e-17:~/P}"
+      'm⁰'
 
 Magnitude modifiers
 -------------------

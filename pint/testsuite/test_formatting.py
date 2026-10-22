@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from fractions import Fraction
+
 import pytest
 
 import pint.formatting as fmt
+from pint.compat import np
+from pint.testsuite import helpers
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning:pint*")
@@ -81,3 +85,92 @@ def test_format_unit_caret_negative_power(func_registry):
     assert format(u, "~^P") == "s⁻¹"
     # Without ^ flag: 1/s (ratio form, unchanged)
     assert format(u, "~P") == "1/s"
+
+
+def test_format_unit_fraction_exponent(func_registry):
+    """format_unit with / flag renders fractional exponents as a pretty
+    printed fraction (superscript numerator, superscript slash, superscript
+    denominator) instead of a decimal (fixes #60).
+    """
+    u = func_registry.Unit("second") ** 1.5
+    assert format(u, "~P") == "s¹⋅⁵"
+    assert format(u, "~/P") == "s³ᐟ²"
+
+    # Whole-number exponents are unaffected (still a plain superscript).
+    u2 = func_registry.Unit("meter") ** 2
+    assert format(u2, "~/P") == "m²"
+
+    # An exact Fraction exponent renders the same as the equivalent float.
+    u3 = func_registry.Unit("second") ** Fraction(3, 2)
+    assert format(u3, "~/P") == "s³ᐟ²"
+
+
+def test_format_unit_fraction_exponent_absorbs_noise(func_registry):
+    """The / flag snaps near-integer floating-point noise back to a clean
+    exponent, the same noise that caused DimensionalityError in #1487/#681.
+    """
+    # Noise near an integer, e.g. from combining fractional powers (#681).
+    u = func_registry.Unit("second") ** -0.9999999999999998
+    assert format(u, "~P") == "1/s¹"
+    assert format(u, "~/P") == "1/s"
+
+    # Noise near zero (#1487): the residual exponent snaps to 0.
+    u2 = func_registry.Unit("meter") ** 5.55e-17
+    assert format(u2, "~P") == "m⁵⋅⁵⁵e⁻¹⁷"
+    assert format(u2, "~/P") == "m⁰"
+
+
+@pytest.mark.parametrize(
+    ("unit", "latex", "siunitx"),
+    [
+        ("degC", r"\mathrm{{}^{\circ}C}", r"\si[]{\degreeCelsius}"),
+        ("degF", r"\mathrm{{}^{\circ}F}", r"\si[]{\degree F}"),
+        ("degR", r"\mathrm{{}^{\circ}R}", r"\si[]{\degree R}"),
+        ("delta_degC", r"\mathrm{\Delta {}^{\circ}C}", r"\si[]{\degreeCelsius}"),
+        ("delta_degF", r"\mathrm{\Delta {}^{\circ}F}", r"\si[]{\degree F}"),
+    ],
+)
+def test_format_temperature_latex(func_registry, unit, latex, siunitx):
+    """Temperature units format as valid LaTeX and siunitx (#400)."""
+    u = func_registry.Unit(unit)
+    assert format(u, "~L") == latex
+    assert format(u, "Lx") == siunitx
+    assert format(u, "~Lx") == siunitx
+
+
+def test_format_temperature_siunitx_compound(func_registry):
+    u = func_registry.Unit("joule / delta_degC ** 2")
+    assert format(u, "Lx") == r"\si[]{\joule\per\degreeCelsius\squared}"
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize(
+    "spec, shape, expected",
+    [
+        ("~T", (2,), 'mat(0, 1) "m"'),
+        ("~T", (2, 2), 'mat(0, 1 ;\n2, 3) "m"'),
+        (
+            "~T",
+            (2, 1, 1),
+            'arr[0,:,:] = mat(0)\narr[1,:,:] = mat(1) "m"',
+        ),
+        (
+            "~T",
+            (1, 2, 1, 1),
+            'arr[0,0,:,:] = mat(0)\narr[0,1,:,:] = mat(1) "m"',
+        ),
+        ("~Tz", (2,), "mat(#quan[0], #quan[1]) #quan[m]"),
+        ("~Tz", (2, 2), "mat(#quan[0], #quan[1] ;\n#quan[2], #quan[3]) #quan[m]"),
+    ],
+)
+def test_format_typst_array(func_registry, spec, shape, expected):
+    q = func_registry.Quantity(np.arange(np.prod(shape)).reshape(shape), "m")
+    assert format(q, spec) == expected
+
+
+@helpers.requires_numpy
+def test_format_typst_array_mspec(func_registry):
+    q = func_registry.Quantity(np.array([1.0, 2e20]), "m")
+    assert format(q, ".1f~T") == 'mat(1.0, 200000000000000000000.0) "m"'
+    assert format(q, "~T") == 'mat(1.0, 2 times 10^(20)) "m"'
+    assert format(q, "~Tz") == "mat(#quan[1.0], #quan[2e20]) #quan[m]"

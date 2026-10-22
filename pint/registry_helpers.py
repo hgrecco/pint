@@ -14,7 +14,7 @@ import functools
 from collections.abc import Callable, Iterable
 from inspect import Parameter, signature
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 from ._typing import FuncType
 from .errors import DimensionalityError
@@ -22,6 +22,7 @@ from .util import UnitsContainer, to_units_container
 
 if TYPE_CHECKING:
     from ._typing import Quantity, Unit
+    from .facets.plain import GenericPlainRegistry
     from .registry import UnitRegistry
 
 
@@ -69,7 +70,7 @@ def _to_units_container(a, registry=None):
     return to_units_container(a, registry), False
 
 
-def _parse_wrap_args(args, registry=None):
+def _parse_wrap_args(args, registry=None, *, has_varargs=False):
     # Arguments which contain definitions
     # (i.e. names that appear alone and for the first time)
     defs_args = set()
@@ -117,56 +118,110 @@ def _parse_wrap_args(args, registry=None):
                 "Not all variable referenced in %s are defined using !" % args[ndx]
             )
 
+    single_indices = tuple((ndx,) for ndx in range(len(args)))
+
     def _converter(ureg, sig, values, kw, strict):
         len_initial_values = len(values)
 
-        # pack kwargs
-        for i, (param_name, param) in enumerate(sig.parameters.items()):
-            if param.kind == Parameter.VAR_KEYWORD:
-                continue
-            if i >= len_initial_values:
-                values.append(kw[param_name])
+        if has_varargs:
+            # Bind before flattening: keyword-only arguments must not be
+            # mistaken for elements of *args, even when defaults are omitted.
+            bound = sig.bind(*values, **kw)
+            bound.apply_defaults()
+            values = []
+            indices = []
+            for name, param in sig.parameters.items():
+                if param.kind == Parameter.VAR_KEYWORD:
+                    continue
+                start = len(values)
+                if param.kind == Parameter.VAR_POSITIONAL:
+                    values.extend(bound.arguments[name])
+                else:
+                    values.append(bound.arguments[name])
+                indices.append(range(start, len(values)))
+        else:
+            indices = single_indices
+            # pack kwargs
+            for i, (param_name, param) in enumerate(sig.parameters.items()):
+                if param.kind == Parameter.VAR_KEYWORD:
+                    continue
+                if i >= len_initial_values:
+                    values.append(kw[param_name])
 
         values_by_name = {}
 
         # first pass: Grab named values
         for ndx in defs_args_ndx:
-            value = values[ndx]
+            positions = indices[ndx]
+            # An empty *args has no unit-bearing value to bind. Its reference
+            # is dimensionless, just as for a plain scalar argument.
+            value = values[positions[0]] if positions else None
             values_by_name[args_as_uc[ndx][0]] = value
-            values[ndx] = getattr(value, "_magnitude", value)
+            if positions:
+                values[positions[0]] = getattr(value, "_magnitude", value)
+                # Only the first variadic value defines the reference; every
+                # subsequent one must be converted to that same unit.
+                for pos in positions[1:]:
+                    other = values[pos]
+                    values[pos] = ureg._convert(
+                        getattr(other, "_magnitude", other),
+                        getattr(other, "_units", UnitsContainer({})),
+                        getattr(value, "_units", UnitsContainer({})),
+                    )
 
         # second pass: calculate derived values based on named values
         for ndx in dependent_args_ndx:
-            value = values[ndx]
-            assert _replace_units(args_as_uc[ndx][0], values_by_name) is not None
-            values[ndx] = ureg._convert(
-                getattr(value, "_magnitude", value),
-                getattr(value, "_units", UnitsContainer({})),
-                _replace_units(args_as_uc[ndx][0], values_by_name),
-            )
+            positions = indices[ndx]
+            if not positions:
+                continue
+            target_units = _replace_units(args_as_uc[ndx][0], values_by_name)
+            assert target_units is not None
+            for pos in positions:
+                value = values[pos]
+                values[pos] = ureg._convert(
+                    getattr(value, "_magnitude", value),
+                    getattr(value, "_units", UnitsContainer({})),
+                    target_units,
+                )
 
         # third pass: convert other arguments
         for ndx in unit_args_ndx:
-            if isinstance(values[ndx], ureg.Quantity):
-                values[ndx] = ureg._convert(
-                    values[ndx]._magnitude, values[ndx]._units, args_as_uc[ndx][0]
-                )
-            else:
-                if strict:
-                    if isinstance(values[ndx], str):
-                        # if the value is a string, we try to parse it
-                        tmp_value = ureg.parse_expression(values[ndx])
-                        values[ndx] = ureg._convert(
-                            tmp_value._magnitude, tmp_value._units, args_as_uc[ndx][0]
-                        )
-                    else:
-                        raise ValueError(
-                            "A wrapped function using strict=True requires "
-                            "quantity or a string for all arguments with not None units. "
-                            "(error found for {}, {})".format(
-                                args_as_uc[ndx][0], values[ndx]
+            for pos in indices[ndx]:
+                if isinstance(values[pos], ureg.Quantity):
+                    values[pos] = ureg._convert(
+                        values[pos]._magnitude, values[pos]._units, args_as_uc[ndx][0]
+                    )
+                else:
+                    if strict:
+                        if isinstance(values[pos], str):
+                            # if the value is a string, we try to parse it
+                            tmp_value = ureg.parse_expression(values[pos])
+                            values[pos] = ureg._convert(
+                                tmp_value._magnitude,
+                                tmp_value._units,
+                                args_as_uc[ndx][0],
                             )
-                        )
+                        else:
+                            raise ValueError(
+                                "A wrapped function using strict=True requires "
+                                "quantity or a string for all arguments with not None units. "
+                                "(error found for {}, {})".format(
+                                    args_as_uc[ndx][0], values[pos]
+                                )
+                            )
+
+        if has_varargs:
+            ndx = 0
+            for name, param in sig.parameters.items():
+                if param.kind == Parameter.VAR_KEYWORD:
+                    continue
+                positions = indices[ndx]
+                if param.kind == Parameter.VAR_POSITIONAL:
+                    bound.arguments[name] = tuple(values[pos] for pos in positions)
+                else:
+                    bound.arguments[name] = values[positions[0]]
+                ndx += 1
+            return bound.args, bound.kwargs, values_by_name
 
         # unpack kwargs
         for i, (param_name, param) in enumerate(sig.parameters.items()):
@@ -197,12 +252,31 @@ def _apply_defaults(sig, args, kwargs):
     return list(args), kwargs
 
 
-def wraps(
-    ureg: UnitRegistry,
+@overload
+def wraps[QuantityT: Quantity, UnitT: Unit](
+    ureg: GenericPlainRegistry[QuantityT, UnitT],
+    ret: str | Unit,
+    args: str | Unit | Iterable[str | Unit | None] | None,
+    strict: bool = True,
+) -> Callable[[Callable[..., Any]], Callable[..., QuantityT]]: ...
+
+
+# Skipped conversion and multiple return values need not produce a Quantity.
+@overload
+def wraps[QuantityT: Quantity, UnitT: Unit](
+    ureg: GenericPlainRegistry[QuantityT, UnitT],
     ret: str | Unit | Iterable[str | Unit | None] | None,
     args: str | Unit | Iterable[str | Unit | None] | None,
     strict: bool = True,
-) -> Callable[[Callable[..., Any]], Callable[..., Quantity]]:
+) -> Callable[[Callable[..., Any]], Callable[..., object]]: ...
+
+
+def wraps[QuantityT: Quantity, UnitT: Unit](
+    ureg: GenericPlainRegistry[QuantityT, UnitT],
+    ret: str | Unit | Iterable[str | Unit | None] | None,
+    args: str | Unit | Iterable[str | Unit | None] | None,
+    strict: bool = True,
+) -> Callable[[Callable[..., Any]], Callable[..., object]]:
     """Wraps a function to become pint-aware.
 
     Use it when a function requires a numerical value but in some specific
@@ -221,6 +295,9 @@ def wraps(
         Units of each of the return values. Use `None` to skip argument conversion.
     args : str, pint.Unit, or iterable of str or pint.Unit
         Units of each of the input arguments. Use `None` to skip argument conversion.
+        One unit specification applies to every element of a ``*args`` parameter.
+        If that specification defines a reference such as ``"=A"``, the first
+        element defines its unit; an empty ``*args`` defines it as dimensionless.
     strict : bool
         Indicates that only quantities are accepted. (Default value = True)
 
@@ -264,9 +341,10 @@ def wraps(
             )
         ret = _to_units_container(ret, ureg)
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Quantity]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., object]:
         sig = signature(func)
         params = tuple(sig.parameters.values())
+        has_varargs = any(param.kind == Parameter.VAR_POSITIONAL for param in params)
         has_var_keyword = any(param.kind == Parameter.VAR_KEYWORD for param in params)
         count_params = sum(param.kind != Parameter.VAR_KEYWORD for param in params)
         converter_args = args
@@ -278,7 +356,7 @@ def wraps(
                 "%s takes %i parameters, but %i units were passed"
                 % (func.__name__, count_params, len(args))
             )
-        converter = _parse_wrap_args(converter_args, ureg)
+        converter = _parse_wrap_args(converter_args, ureg, has_varargs=has_varargs)
 
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
@@ -288,8 +366,9 @@ def wraps(
         )
 
         @functools.wraps(func, assigned=assigned, updated=updated)
-        def wrapper(*values, **kw) -> Quantity:
-            values, kw = _apply_defaults(sig, values, kw)
+        def wrapper(*values, **kw) -> object:
+            if not has_varargs:
+                values, kw = _apply_defaults(sig, values, kw)
 
             # In principle, the values are used as is
             # When then extract the magnitudes when needed.
@@ -335,8 +414,10 @@ def check[F: FuncType](
     ureg : UnitRegistry
         a UnitRegistry instance.
     args : str or UnitContainer or None
-        Dimensions of each of the input arguments.
-        Use `None` to skip argument conversion.
+        Dimensions of each of the input arguments, one per parameter of the
+        decorated function in signature order. A dimension given for a
+        ``*args`` parameter is checked against each value supplied through it.
+        Use `None` to skip checking a parameter; ``**kwargs`` requires `None`.
 
     Returns
     -------
@@ -357,12 +438,23 @@ def check[F: FuncType](
 
     def decorator(func):
         sig = signature(func)
-        count_params = len(sig.parameters)
+        params = tuple(sig.parameters.values())
+        count_params = len(params)
         if len(dimensions) != count_params:
             raise TypeError(
                 "%s takes %i parameters, but %i dimensions were passed"
                 % (func.__name__, count_params, len(dimensions))
             )
+
+        for param, dim in zip(params, dimensions):
+            if param.kind is Parameter.VAR_KEYWORD and dim is not None:
+                raise TypeError("use None for the **kwargs dimension")
+
+        needs_binding = any(
+            param.kind
+            not in (Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD)
+            for param in params
+        )
 
         assigned = tuple(
             attr for attr in functools.WRAPPER_ASSIGNMENTS if hasattr(func, attr)
@@ -373,19 +465,43 @@ def check[F: FuncType](
 
         @functools.wraps(func, assigned=assigned, updated=updated)
         def wrapper(*args, **kwargs):
-            list_args, kw = _apply_defaults(sig, args, kwargs)
+            if needs_binding:
+                # Binding distinguishes positional values from keyword-only and
+                # variadic parameters before dimensional checks run.
+                bound = sig.bind(*args, **kwargs)
+                bound.apply_defaults()
+                values = [bound.arguments[param.name] for param in params]
+            else:
+                values = list(args)
+                used_kwargs = 0
+                for param in params[len(args) :]:
+                    if (
+                        param.name in kwargs
+                        and param.kind is not Parameter.POSITIONAL_ONLY
+                    ):
+                        values.append(kwargs[param.name])
+                        used_kwargs += 1
+                    elif param.default is not Parameter.empty:
+                        values.append(param.default)
+                    else:
+                        break
+                if len(values) != count_params or used_kwargs != len(kwargs):
+                    # Invalid call: let it raise TypeError before any checks.
+                    return func(*args, **kwargs)
 
-            for i, param_name in enumerate(sig.parameters):
-                if i >= len(args):
-                    list_args.append(kw[param_name])
-
-            for dim, value in zip(dimensions, list_args):
+            for param, dim, value in zip(params, dimensions, values):
                 if dim is None:
                     continue
 
-                if not ureg.Quantity(value).check(dim):
-                    val_dim = ureg.get_dimensionality(value)
-                    raise DimensionalityError(value, "a quantity of", val_dim, dim)
+                if param.kind is Parameter.VAR_POSITIONAL:
+                    items = value
+                else:
+                    items = (value,)
+
+                for item in items:
+                    if not ureg.Quantity(item).check(dim):
+                        val_dim = ureg.get_dimensionality(item)
+                        raise DimensionalityError(item, "a quantity of", val_dim, dim)
             return func(*args, **kwargs)
 
         return wrapper

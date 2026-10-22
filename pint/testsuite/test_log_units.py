@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
+from decimal import Decimal, localcontext
 
 import pytest
 
@@ -13,6 +14,74 @@ from pint.testsuite import QuantityTestCase, helpers
 @pytest.fixture(scope="module")
 def module_registry_auto_offset():
     return UnitRegistry(autoconvert_offset_to_baseunit=True)
+
+
+@pytest.fixture(scope="module")
+def decimal_registry():
+    return UnitRegistry(non_int_type=Decimal)
+
+
+def test_decimal_log_quantity_hash(decimal_registry):
+    quantity = decimal_registry("dB")
+    assert quantity in {quantity}
+    assert hash(quantity) == hash(quantity.to_base_units())
+    assert hash(decimal_registry("0 dB")) == hash(decimal_registry.Quantity(1, ""))
+
+
+@pytest.mark.parametrize("inplace", [False, True])
+@pytest.mark.parametrize("decimal_parameters", [False, True])
+@pytest.mark.parametrize(
+    "value, src, dst, expected",
+    [
+        (
+            "1",
+            "dB",
+            "dimensionless",
+            "1.2589254117941672104239541063958006060936174094669",
+        ),
+        (
+            "2",
+            "dimensionless",
+            "dB",
+            "3.0102999566398119521373889472449302676818988146211",
+        ),
+        (
+            "1",
+            "dBm",
+            "watt",
+            "0.0012589254117941672104239541063958006060936174094669",
+        ),
+        (
+            "0.002",
+            "watt",
+            "dBm",
+            "3.0102999566398119521373889472449302676818988146211",
+        ),
+    ],
+)
+def test_decimal_log_conversion(
+    decimal_registry,
+    module_registry,
+    decimal_parameters,
+    inplace,
+    value,
+    src,
+    dst,
+    expected,
+):
+    registry = decimal_registry if decimal_parameters else module_registry
+    with localcontext() as context:
+        context.prec = 50
+        result = registry.convert(Decimal(value), src, dst, inplace=inplace)
+        assert isinstance(result, Decimal)
+        assert abs(result - Decimal(expected)) < Decimal("1e-48")
+
+
+@pytest.mark.parametrize("inplace", [False, True])
+def test_decimal_log_integer_conversion(decimal_registry, inplace):
+    result = decimal_registry.convert(10, "dimensionless", "dB", inplace=inplace)
+    assert isinstance(result, Decimal)
+    assert abs(result - Decimal(10)) < Decimal("1e-25")
 
 
 # TODO: do not subclass from QuantityTestCase
@@ -222,7 +291,9 @@ def test_dbm_mw_conversion(module_registry, dbm_value, mw_value):
     assert Q_(mw_value, "mW").to("dBm").magnitude == pytest.approx(dbm_value)
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(
+    reason="ureg('dBm/Hz') evaluates 1 dBm before dividing, so it is converted"
+)
 def test_compound_log_unit_multiply_definition(module_registry_auto_offset):
     """Check that compound log units can be defined using multiply."""
     Q_ = module_registry_auto_offset.Quantity
@@ -231,13 +302,38 @@ def test_compound_log_unit_multiply_definition(module_registry_auto_offset):
     assert mult_def == canonical_def
 
 
-@pytest.mark.xfail
 def test_compound_log_unit_quantity_definition(module_registry_auto_offset):
     """Check that compound log units can be defined using ``Quantity()``."""
     Q_ = module_registry_auto_offset.Quantity
     canonical_def = Q_(-161, "dBm") / module_registry_auto_offset.Hz
     quantity_def = Q_(-161, "dBm/Hz")
     assert quantity_def == canonical_def
+
+
+def test_compound_log_unit_conversion(module_registry_auto_offset):
+    """Compound log units are not turned into undefined delta units (#1162)."""
+    Q_ = module_registry_auto_offset.Quantity
+    q = Q_(-161, "dBm/Hz")
+    assert str(q.units) == "decibelmilliwatt / hertz"
+    helpers.assert_quantity_almost_equal(q.to("mW/Hz"), Q_(10**-16.1, "mW/Hz"))
+
+
+@pytest.mark.parametrize(
+    "reference, linear, db",
+    [
+        ("volt / ampere", "ohm", 0.0),
+        ("volt * ampere", "watt", 0.0),
+        ("volt * ampere", "10 watt", 10.0),
+        ("meter / second ** 2", "100 cm/s**2", 0.0),
+    ],
+)
+def test_log_unit_with_compound_reference(reference, linear, db):
+    """Log units whose reference has several units convert correctly (#1840)."""
+    ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
+    ureg.define(f"decibelref = {reference}; logbase: 10; logfactor: 10 = dBref")
+    lin = ureg.Quantity(linear)
+    helpers.assert_quantity_almost_equal(lin.to("dBref"), ureg.Quantity(db, "dBref"))
+    helpers.assert_quantity_almost_equal(ureg.Quantity(db, "dBref").to(lin.units), lin)
 
 
 def test_compound_log_unit_parse_definition(module_registry_auto_offset):
