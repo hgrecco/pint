@@ -109,3 +109,50 @@ def test_assert_equal(sess_registry, first, second, error, message):
             testing.assert_equal(first, second)
     else:
         testing.assert_equal(first, second)
+
+
+@pytest.mark.parametrize(
+    ["first", "second", "error"],
+    (
+        pytest.param(float("inf"), float("-inf"), True, id="scalar-opposite-inf"),
+        pytest.param(float("inf"), float("inf"), False, id="scalar-positive-inf"),
+        pytest.param(float("-inf"), float("-inf"), False, id="scalar-negative-inf"),
+        pytest.param(float("inf"), 1.0, True, id="scalar-inf-finite"),
+        pytest.param(1.0, float("-inf"), True, id="scalar-finite-inf"),
+        pytest.param(float("nan"), float("nan"), False, id="scalar-nan"),
+        pytest.param(
+            QuantityToBe.from_many(float("inf"), "m"),
+            QuantityToBe.from_many(float("-inf"), "m"),
+            True,
+            id="quantity-opposite-inf",
+        ),
+        pytest.param(
+            QuantityToBe.from_many(float("inf"), "m"),
+            QuantityToBe.from_many(float("inf"), "km"),
+            False,
+            id="quantity-same-inf-converted",
+        ),
+        pytest.param(
+            QuantityToBe.from_many(float("inf"), "m"),
+            QuantityToBe.from_many(float("-inf"), "km"),
+            True,
+            id="quantity-opposite-inf-converted",
+        ),
+        pytest.param(
+            np.array([float("inf"), 1.0]),
+            np.array([float("-inf"), 1.0]),
+            True,
+            id="array-opposite-inf",
+        ),
+    ),
+)
+def test_assert_allclose_infinities(sess_registry, first, second, error):
+    if isinstance(first, QuantityToBe):
+        first = sess_registry.Quantity(*first)
+    if isinstance(second, QuantityToBe):
+        second = sess_registry.Quantity(*second)
+    if error:
+        with pytest.raises(AssertionError):
+            testing.assert_allclose(first, second)
+    else:
+        testing.assert_allclose(first, second)

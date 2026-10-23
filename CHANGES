@@ -13,6 +13,7 @@ Pint Changelog
 - Format numpy array magnitudes with the Typst (`T`) and zero (`Tz`) formatters (#2494)
 - Fix LaTeX formatting of arrays not displaying values (#1887)
 - Drop the archived `pytest-subtests` test dependency; the `test` extra now requires pytest>=9, which ships the `subtests` fixture (#2502)
+- Fix scalar `assert_allclose` accepting `+inf` and `-inf` as close (#2514)
 
 
 0.26.2 (2026-10-19)

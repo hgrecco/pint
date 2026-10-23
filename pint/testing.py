@@ -152,10 +152,11 @@ def assert_allclose(
         assert math.isnan(m2), msg
     elif math.isnan(m2):
         assert math.isnan(m1), msg
-    elif math.isinf(m1):
-        assert math.isinf(m2), msg
-    elif math.isinf(m2):
-        assert math.isinf(m1), msg
+    elif math.isinf(m1) or math.isinf(m2):
+        # abs(inf - inf) is NaN and abs(inf - (-inf)) is inf, so the finite
+        # tolerance check cannot see the sign. Equality keeps matching
+        # infinities and rejects opposite signs.
+        assert m1 == m2, msg
     else:
         # Numpy version (don't like because is not symmetric)
         # assert abs(m1 - m2) <= atol + rtol * abs(m2), msg
