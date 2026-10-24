@@ -22,7 +22,12 @@ from pint import (
 from pint.compat import np
 from pint.errors import UndefinedBehavior
 from pint.facets.plain.unit import UnitsContainer
-from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
+from pint.testsuite import (
+    PintClassesMixin,
+    QuantityTestCase,
+    assert_no_warnings,
+    helpers,
+)
 
 if TYPE_CHECKING:
     from typing import TypedDict
@@ -2431,3 +2436,36 @@ class TestGenericQuantityTyping:
         from pint import Quantity
 
         _ = Quantity[int]
+
+
+# Rerun the tests above using pint.Quantity and pint.Unit.
+class TestQuantityPintClasses(PintClassesMixin, TestQuantity):
+    pass
+
+
+class TestQuantityToCompactPintClasses(PintClassesMixin, TestQuantityToCompact):
+    pass
+
+
+class TestQuantityBasicMathPintClasses(PintClassesMixin, TestQuantityBasicMath):
+    pass
+
+
+class TestQuantityNeutralAddPintClasses(PintClassesMixin, TestQuantityNeutralAdd):
+    pass
+
+
+class TestDimensionsPintClasses(PintClassesMixin, TestDimensions):
+    pass
+
+
+class TestOffsetUnitMathPintClasses(PintClassesMixin, TestOffsetUnitMath):
+    pass
+
+
+class TestTimedeltaPintClasses(PintClassesMixin, TestTimedelta):
+    pass
+
+
+class TestCompareNeutralPintClasses(PintClassesMixin, TestCompareNeutral):
+    pass

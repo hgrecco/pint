@@ -39,6 +39,31 @@ class QuantityTestCase:
         cls.U_ = None
 
 
+class PintClassesMixin:
+    """Run a QuantityTestCase with pint.Quantity and pint.Unit
+    instead of ureg.Quantity and ureg.Unit.
+
+    The test registry is set as the application registry for the class.
+    """
+
+    @classmethod
+    def setup_class(cls) -> None:
+        import pint
+
+        super().setup_class()
+        cls._app_registry_bak = pint.get_application_registry().get()
+        pint.set_application_registry(cls.ureg)
+        cls.Q_ = pint.Quantity
+        cls.U_ = pint.Unit
+
+    @classmethod
+    def teardown_class(cls) -> None:
+        import pint
+
+        pint.set_application_registry(cls._app_registry_bak)
+        super().teardown_class()
+
+
 @contextlib.contextmanager
 def assert_no_warnings():
     with warnings.catch_warnings():

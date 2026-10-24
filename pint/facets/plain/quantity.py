@@ -1080,7 +1080,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             self._units = units
             return self
 
-        if isinstance(other, self._REGISTRY.Unit):
+        from .unit import PlainUnit
+
+        if isinstance(other, PlainUnit):
             other = 1 * other
         # from now on, we know `other` is a `PlainQuantity`
         other = cast(PlainQuantity, other)
@@ -1171,7 +1173,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
             return self.__class__(magnitude, units)
 
-        if isinstance(other, self._REGISTRY.Unit):
+        from .unit import PlainUnit
+
+        if isinstance(other, PlainUnit):
             other = 1 * other
         other = cast(PlainQuantity, other)
 

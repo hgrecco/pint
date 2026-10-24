@@ -155,7 +155,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             return self.__class__(self._units * other)
 
         if self._check(other):
-            if isinstance(other, self.__class__):
+            if isinstance(other, PlainUnit):
                 return self.__class__(self._units * other._units)
             else:
                 other = cast("PlainQuantity", other)
@@ -201,7 +201,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         if isinstance(other, UnitsContainer):
             return self.__class__(self._units / other)
         if self._check(other):
-            if isinstance(other, self.__class__):
+            if isinstance(other, PlainUnit):
                 return self.__class__(self._units / other._units)
             other = cast("PlainQuantity", other)
         return self._REGISTRY.Quantity(1, self._units) / other
@@ -254,7 +254,7 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
                 return False
 
         if self._check(other):
-            if isinstance(other, self.__class__):
+            if isinstance(other, PlainUnit):
                 return self._units == other._units
             else:
                 return other == self._REGISTRY.Quantity(1, self._units)

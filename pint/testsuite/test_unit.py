@@ -17,7 +17,12 @@ import pytest
 from pint import DimensionalityError, RedefinitionError, UndefinedUnitError, errors
 from pint.compat import HAS_NUMPY, np
 from pint.registry import LazyRegistry, UnitRegistry
-from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
+from pint.testsuite import (
+    PintClassesMixin,
+    QuantityTestCase,
+    assert_no_warnings,
+    helpers,
+)
 from pint.util import ParserHelper, UnitsContainer
 
 from .helpers import internal
@@ -306,6 +311,17 @@ class TestUnit(QuantityTestCase):
         assert x / self.Q_(1, "m") == self.Q_(1)
         with pytest.raises(TypeError):
             _ = x / "1 m"
+
+    def test_unit_mul_div_registry_classes(self):
+        # Mix the registry's own classes with self.U_ / self.Q_.
+        x = self.U_("m")
+        assert self.ureg.Unit("s") * x == self.U_("m * s")
+        assert self.ureg.Unit("s") / x == self.U_("s / m")
+        assert self.ureg.Quantity(1, "s") * x == self.Q_(1, "m * s")
+        assert self.ureg.Quantity(1, "s") / x == self.Q_(1, "s / m")
+        q = self.ureg.Quantity(1.0, "s")
+        q /= x
+        assert q == self.Q_(1.0, "s / m")
 
     def test_unit_rdiv(self):
         x = self.U_("m")
@@ -1412,3 +1428,20 @@ class TestConvertWithOffset(QuantityTestCase):
         ureg = UnitRegistry()
         with pytest.raises(errors.OffsetUnitCalculusError):
             ureg.parse_units("kilodegree_Celsius")
+
+
+# Rerun the tests above using pint.Quantity and pint.Unit.
+class TestUnitPintClasses(PintClassesMixin, TestUnit):
+    pass
+
+
+class TestRegistryPintClasses(PintClassesMixin, TestRegistry):
+    pass
+
+
+class TestCompatibleUnitsPintClasses(PintClassesMixin, TestCompatibleUnits):
+    pass
+
+
+class TestConvertWithOffsetPintClasses(PintClassesMixin, TestConvertWithOffset):
+    pass
