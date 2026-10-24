@@ -47,6 +47,7 @@ class GenericGroupRegistry[QuantityT: Quantity, UnitT: Unit](
         #: Map group name to group.
         self._groups: dict[str, objects.Group] = {}
         self._groups["root"] = self.Group("root")
+        self._group_definitions: list[GroupDefinition] = []
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -93,6 +94,7 @@ class GenericGroupRegistry[QuantityT: Quantity, UnitT: Unit](
             self.Group.from_definition(gd)
         except KeyError as e:
             raise errors.DefinitionSyntaxError(f"unknown dimension {e} in context")
+        self._group_definitions.append(gd)
 
     def get_group(self, name: str, create_if_needed: bool = True) -> objects.Group:
         """Return a Group.

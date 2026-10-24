@@ -11,7 +11,7 @@ from __future__ import annotations
 import itertools
 import numbers
 import typing as ty
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Any
 
@@ -72,6 +72,8 @@ class DefaultsDefinition:
 class NamedDefinition:
     #: name of the prefix
     name: str
+    #: original text of the value, empty if not read from a definitions file
+    value_text: str = field(default="", kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -213,6 +215,18 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
     @property
     def has_symbol(self) -> bool:
         return bool(self.defined_symbol)
+
+
+@dataclass(frozen=True)
+class DerivedUnitDefinition(UnitDefinition):
+    """A unit the registry derives itself, e.g. a prefixed or delta unit."""
+
+    #: aliases given by the registry; others were added with @alias
+    auto_aliases: tuple[str, ...] = field(default=(), kw_only=True)
+
+    @property
+    def user_aliases(self) -> tuple[str, ...]:
+        return tuple(a for a in self.aliases if a not in self.auto_aliases)
 
 
 @dataclass(frozen=True)

@@ -11,8 +11,15 @@ between incompatible dimensions.
 
 from __future__ import annotations
 
-from .definitions import ContextDefinition
+from .definitions import BidirectionalRelation, ContextDefinition, ForwardRelation
 from .objects import Context
 from .registry import ContextRegistry, GenericContextRegistry
 
-__all__ = ["ContextDefinition", "Context", "ContextRegistry", "GenericContextRegistry"]
+__all__ = [
+    "ContextDefinition",
+    "Context",
+    "ContextRegistry",
+    "GenericContextRegistry",
+    "ForwardRelation",
+    "BidirectionalRelation",
+]

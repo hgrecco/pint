@@ -34,10 +34,14 @@ dependencies = [
 
 [tool.hatch.build]
 packages = ["pint"]
-include = ["pint/default_en.txt", "pint/constants_en.txt"]
+include = [
+  "pint/default_en.txt",
+  "pint/default_en.toml",
+  "pint/constants_en.txt",
+]
 
 [project.optional-dependencies]
-test = ["pytest>=9", "pytest-cov", "pytest-benchmark"]
+test = ["tomlkit", "pytest>=9", "pytest-cov", "pytest-benchmark"]
 test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
 codspeed = ["pint[test-all]", "pytest-codspeed"]
@@ -50,9 +54,10 @@ xarray = ["xarray"]
 # Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
 dask = ["dask < 2025.3.0"]
 scipy = ["scipy"]
+tomlkit = ["tomlkit"]
 matplotlib = ["matplotlib"]
 all = [
-  "pint[numpy,optype,uncertainties,babel,pandas,pandas,xarray,dask,scipy,matplotlib]",
+  "pint[numpy,optype,uncertainties,babel,pandas,xarray,dask,scipy,matplotlib,tomlkit]",
 ]
 docs = [
   "sphinx>=6,<8.2",
@@ -69,7 +74,7 @@ docs = [
   "sphinx-book-theme>=1.1.0",
   "sphinx_copybutton",
   "sphinx_design",
-  "docutils",                        #==0.14",
+  "docutils",
   "commonmark==0.8.1",
   "recommonmark==0.5.0",
   "babel",
@@ -81,6 +86,7 @@ docs = [
   "xarray",
   "dask[complete]<2025.3.0",
   "optype[numpy]",
+  "tomlkit",
   "jupyterlite-sphinx>=0.20",
   "jupyterlite-pyodide-kernel>=0.4",
 ]
@@ -149,6 +155,7 @@ docs = { features = [
   "xarray",
   "test",
   "py312",
+  "tomlkit",
 ] }
 # When pint[all] works in pixi, this will be easier.
 all = { features = [

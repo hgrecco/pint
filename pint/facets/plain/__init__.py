@@ -13,6 +13,7 @@ from __future__ import annotations
 from .definitions import (
     AliasDefinition,
     DefaultsDefinition,
+    DerivedUnitDefinition,
     DimensionDefinition,
     PrefixDefinition,
     ScaleConverter,
@@ -32,4 +33,5 @@ __all__ = [
     "PrefixDefinition",
     "ScaleConverter",
     "UnitDefinition",
+    "DerivedUnitDefinition",
 ]
