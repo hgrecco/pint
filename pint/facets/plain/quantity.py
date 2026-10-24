@@ -19,6 +19,7 @@ from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
+    Concatenate,
     Generic,
     Self,
     TypeVar,
@@ -75,8 +76,12 @@ except ImportError:
     HAS_UNCERTAINTIES = False
 
 
-def ireduce_dimensions(f):
-    def wrapped(self, *args, **kwargs):
+def ireduce_dimensions[X, **P, R: PlainQuantity | NotImplementedType](
+    f: Callable[Concatenate[X, P], R],
+) -> Callable[Concatenate[X, P], R]:
+    """This decorator applies the operations `ito_preferred()` and `ito_reduced_units()` to the result as needed."""
+
+    def wrapped(self: X, *args: P.args, **kwargs: P.kwargs) -> R:
         result = f(self, *args, **kwargs)
         try:
             if result._REGISTRY.autoconvert_to_preferred:
