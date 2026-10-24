@@ -61,7 +61,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import coerce_scalar
+from ...compat import coerce_scalar, is_duck_array
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -1581,7 +1581,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 return parsed.scale
         elif isinstance(value, bool):
             pass  # integers are ok but booleans do not make sense
-        elif isinstance(value, Number):
+        elif isinstance(value, Number) or is_duck_array(value):
             return cast(Magnitude, value)
         raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
 
