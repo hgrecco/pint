@@ -9,15 +9,39 @@ pint.facets.timedelta.objects
 from __future__ import annotations
 
 import datetime
-from typing import Any, cast
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any, Self, cast, overload
 
-from ..._typing import Magnitude, UnitLike
+from ..._typing import Magnitude, Scalar, UnitLike
 from ...util import SharedRegistryObject
 from ..plain import PlainQuantity, PlainUnit
+
+if TYPE_CHECKING:
+    import numpy as np
+    import optype.numpy as npt
 
 
 class TimedeltaQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     """Quantity that can be built from and combined with timedeltas and datetimes."""
+
+    @overload
+    def __new__(
+        cls, value: datetime.timedelta | np.timedelta64, units: UnitLike | None = None
+    ) -> TimedeltaQuantity[float]: ...
+    @overload
+    def __new__(
+        cls, value: str, units: UnitLike | None = None
+    ) -> TimedeltaQuantity[Any]: ...
+    @overload  # FIXME: This could be more precise
+    def __new__[ScalarT: Scalar](  # type: ignore[misc]
+        cls, value: Sequence[ScalarT], units: UnitLike | None = None
+    ) -> TimedeltaQuantity[npt.Array1D]: ...
+    @overload
+    def __new__[T: Magnitude](
+        cls, value: T, units: UnitLike | None = None
+    ) -> TimedeltaQuantity[T]: ...
+    @overload
+    def __new__(cls, value: Self, units: UnitLike | None = None) -> Self: ...
 
     def __new__(cls, value: Any, units: UnitLike | None = None) -> Any:
         ureg = SharedRegistryObject.__new__(cls)._REGISTRY
