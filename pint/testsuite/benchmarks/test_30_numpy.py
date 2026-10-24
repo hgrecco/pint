@@ -69,12 +69,6 @@ def test_finding_meter_getattr(benchmark, setup):
 
 
 @requires_numpy
-def test_finding_meter_getitem(benchmark, setup):
-    ureg, _ = setup
-    benchmark(operator.getitem, ureg, "meter")
-
-
-@requires_numpy
 @pytest.mark.parametrize(
     "unit", ["meter", "angstrom", "meter/second", "angstrom/minute"]
 )

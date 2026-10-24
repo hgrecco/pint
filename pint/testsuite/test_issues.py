@@ -909,15 +909,6 @@ class TestIssues(QuantityTestCase):
 
         assert_equal((1 * ureg.milligram) / (1 * ureg.gram), 1 * ureg.permille)
 
-    @pytest.mark.xfail
-    @helpers.requires_uncertainties()
-    def test_issue_1300(self):
-        # TODO: THIS is not longer necessary after moving to formatter
-        module_registry = UnitRegistry()
-        module_registry.default_format = "~P"
-        m = module_registry.Measurement(1, 0.1, "meter")
-        assert m.default_format == "~P"
-
     @helpers.requires_numpy()
     def test_issue1674(self, module_registry):
         Q_ = module_registry.Quantity
@@ -942,10 +933,22 @@ class TestIssues(QuantityTestCase):
     def test_issue_1400(self, sess_registry):
         q1 = 3.1 * sess_registry.W
         q2 = 3.1 * sess_registry.W / sess_registry.cm
-        assert q1.format_babel("~", locale="es_ES") == "3,1 W"
-        assert q1.format_babel("", locale="es_ES") == "3,1 vatios"
-        assert q2.format_babel("~", locale="es_ES") == "3,1 W/cm"
-        assert q2.format_babel("", locale="es_ES") == "3,1 vatios por centímetro"
+        assert (
+            sess_registry.formatter.format_quantity_babel(q1, "~", locale="es_ES")
+            == "3,1 W"
+        )
+        assert (
+            sess_registry.formatter.format_quantity_babel(q1, "", locale="es_ES")
+            == "3,1 vatios"
+        )
+        assert (
+            sess_registry.formatter.format_quantity_babel(q2, "~", locale="es_ES")
+            == "3,1 W/cm"
+        )
+        assert (
+            sess_registry.formatter.format_quantity_babel(q2, "", locale="es_ES")
+            == "3,1 vatios por centímetro"
+        )
 
     @helpers.requires_numpy()
     @helpers.requires_uncertainties()
@@ -1847,6 +1850,65 @@ def test_issue1814_unknown_operator_raises(expr):
     ureg = UnitRegistry()
     with pytest.raises(DefinitionSyntaxError):
         ureg.Quantity(expr)
+
+
+def test_issue922_redefinition_after_use_clears_cache():
+    ureg = UnitRegistry(on_redefinition="ignore")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.45359237)
+    ureg.define("pound = 0.5 kg = lb")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.5)
+    assert ureg.Quantity(1, "pound").to("kg").magnitude == pytest.approx(0.5)
+    assert ureg.Quantity(1, "kg").to("lb").magnitude == pytest.approx(2)
+    # Units derived from the redefined one are refreshed too.
+    assert ureg.Quantity(1, "ton").to("kg").magnitude == pytest.approx(1000)
+
+
+def test_issue922_load_definitions_redefinition_clears_cache():
+    ureg = UnitRegistry(on_redefinition="ignore")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.45359237)
+    ureg.load_definitions(["pound = 0.5 kg = lb"])
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.5)
+
+
+def test_issue740_redefine_new_unit():
+    ureg = UnitRegistry(on_redefinition="ignore")
+    ureg.define("eyespan = 2 cm")
+    assert ureg.Quantity(1, "eyespan").to("cm").magnitude == pytest.approx(2)
+    assert ureg.Quantity(1, "cm").to("eyespan").magnitude == pytest.approx(0.5)
+    ureg.define("eyespan = 5 cm")
+    assert ureg.Quantity(1, "eyespan").to("cm").magnitude == pytest.approx(5)
+    assert ureg.Quantity(1, "cm").to("eyespan").magnitude == pytest.approx(0.2)
+
+
+def test_issue922_redefinition_with_active_context():
+    ureg = UnitRegistry(on_redefinition="ignore")
+    ureg.define("eyespan = 2 cm")
+    ctx = Context("c")
+    ctx.redefine("inch = 2 cm")
+    ureg.add_context(ctx)
+    with ureg.context("c"):
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+        ureg.define("eyespan = 5 cm")
+        assert ureg.Quantity(1, "eyespan").to("cm").magnitude == pytest.approx(5)
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+    assert ureg.Quantity(1, "eyespan").to("cm").magnitude == pytest.approx(5)
+    assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2.54)
+
+
+def test_issue922_define_delayed_cache_rebuild(monkeypatch):
+    ureg = UnitRegistry(on_redefinition="ignore")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.45359237)
+    calls = []
+    build_cache = ureg._build_cache
+    monkeypatch.setattr(ureg, "_build_cache", lambda *a: calls.append(build_cache()))
+
+    ureg.define("pound = 0.5 kg = lb", rebuild_cache=False)
+    ureg.load_definitions(["ounce = 0.25 lb = oz"], rebuild_cache=False)
+    assert not calls
+    ureg.define("eyespan = 2 cm")
+    assert len(calls) == 1
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.5)
+    assert ureg.Quantity(1, "oz").to("kg").magnitude == pytest.approx(0.125)
 
 
 @pytest.mark.parametrize("attr", ["dimensionality", "dimensionless", "unitless"])
