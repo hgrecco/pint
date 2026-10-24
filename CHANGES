@@ -4,6 +4,10 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
+- Fix redefining a unit with `define()` or `load_definitions()` after it was used, which kept the old cached conversion; pass `rebuild_cache=False` to delay the rebuild (#922, #740)
+- Remove the `slpm` abbreviation for `standard_liter_per_minute` (#1354)
+- Fix assigning bare all-NaN NumPy arrays into Quantity slices, including xarray indexed assignment (#1896)
+- Fix context relations using `[]` raising `ValueError` when no unit is defined as `= []` (#1126)
 - Fix `numpy.correlate` raising `AttributeError` when only one operand is a Quantity.
 - Raise `UndefinedUnitError` instead of `AttributeError` for `dimensionality`, `dimensionless` and `unitless` when a unit references an undefined unit (#1154)
 - Fix `to_compact` raising `ValueError` on arrays with no finite non-zero value (#2504)
@@ -13,6 +17,7 @@ Pint Changelog
 - Fix `cache_folder` cache hits discarding the cached unit data
 - `@alias` now adds the aliases to the unit's definition, so contexts that redefine the unit also apply to them
 - Load definitions from TOML files (`pint/default_en.toml` is provided) and write a registry's definitions with `ureg.write_definitions(path)`, which needs `tomlkit` (#2133)
+- Remove deprecated APIs: `ureg[...]` (use `ureg(...)` or `parse_expression`), `Quantity.format_babel`/`Unit.format_babel`, and registry `fmt_locale`, `set_fmt_locale` and `default_format` (use `ureg.formatter`)
 
 
 0.26.2 (2026-10-19)

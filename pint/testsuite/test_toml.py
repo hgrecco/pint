@@ -426,3 +426,15 @@ def test_disk_cache(tmp_path, monkeypatch):
     f.write_text('[unit]\nx = { value = "1235" }\n', encoding="utf-8")
     assert pint.UnitRegistry(f, cache_folder=cache).x == 1235
     assert len(calls) == 2
+
+
+def test_toml_redefinition_after_use_clears_cache(tmp_path):
+    ureg = pint.UnitRegistry(on_redefinition="ignore")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.45359237)
+    f = tmp_path / "defs.toml"
+    f.write_text(
+        '[unit]\npound = { value = "0.5 kg", defined_symbol = "lb" }\n',
+        encoding="utf-8",
+    )
+    ureg.load_definitions(f)
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.5)

@@ -440,9 +440,7 @@ refrigeration_ton = { value = "12e3 * Btu / hour", aliases = [
   "ton_of_refrigeration",
 ] }
 cooling_tower_ton = { value = "1.25 * refrigeration_ton" }
-standard_liter_per_minute = { value = "atmosphere * liter / minute", defined_symbol = "slpm", aliases = [
-  "slm",
-] }
+standard_liter_per_minute = { value = "atmosphere * liter / minute", defined_symbol = "slm" }
 conventional_watt_90 = { value = "K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt", defined_symbol = "W_90" }
 pascal = { value = "newton / meter ** 2", defined_symbol = "Pa" }
 barye = { value = "dyne / centimeter ** 2", defined_symbol = "Ba", aliases = [

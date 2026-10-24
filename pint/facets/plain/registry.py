@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import copy
 import dataclasses
+import datetime
 import functools
 import inspect
 import itertools
@@ -44,7 +45,6 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from ...compat import Locale
     from ..context import Context
 
     # from ..._typing import Quantity, Unit
@@ -62,7 +62,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import _to_magnitude, coerce_scalar, deprecated
+from ...compat import _to_magnitude, coerce_scalar
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -323,6 +323,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         #: Map contexts to RegistryCache
         self._cache = RegistryCache()
 
+        #: Set when a definition is overwritten after initialization.
+        self._cache_stale = False
+
         self._initialized = False
 
     def _init_dynamic_classes(self) -> None:
@@ -379,13 +382,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # self.Unit will call parse_units
         return self.Unit(item)
 
-    @deprecated(
-        "Calling the getitem method from a UnitRegistry will be removed in future versions of pint.\n"
-        "use `parse_expression` method or use the registry as a callable."
-    )
-    def __getitem__(self, item: str) -> UnitT:
-        return self.parse_expression(item)
-
     def __contains__(self, item: str | UnitT) -> bool:
         """Support checking prefixed units with the `in` operator"""
         if isinstance(item, self.Unit):
@@ -411,54 +407,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         return iter(sorted(self._units.keys()))
 
     @property
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.fmt_locale"
-    )
-    def fmt_locale(self) -> Locale | None:
-        return self.formatter.locale
-
-    @fmt_locale.setter
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.set_locale"
-    )
-    def fmt_locale(self, loc: str | None):
-        self.formatter.set_locale(loc)
-
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.set_locale"
-    )
-    def set_fmt_locale(self, loc: str | None) -> None:
-        """Change the locale used by default by `format_babel`.
-
-        Parameters
-        ----------
-        loc : str or None
-            None` (do not translate), 'sys' (detect the system locale) or a locale id string.
-        """
-
-        self.formatter.set_locale(loc)
-
-    @property
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.default_format"
-    )
-    def default_format(self) -> str:
-        """Default formatting string for quantities."""
-        return self.formatter.default_format
-
-    @default_format.setter
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.default_format"
-    )
-    def default_format(self, value: str) -> None:
-        self.formatter.default_format = value
-
-    @property
     def cache_folder(self) -> pathlib.Path | None:
         if self._diskcache:
             return self._diskcache.cache_folder
@@ -478,13 +426,17 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     # Extending the registry with new unit definitions
     ############
 
-    def define(self, definition: str | type) -> None:
+    def define(self, definition: str | type, rebuild_cache: bool = True) -> None:
         """Add unit to the registry.
 
         Parameters
         ----------
         definition : str or Definition
             a dimension, unit or prefix definition.
+        rebuild_cache : bool
+            if False, delay rebuilding the cache after a redefinition until the
+            next call to `define` or `load_definitions` that rebuilds it.
+            (Default value = True)
         """
 
         if isinstance(definition, str):
@@ -494,6 +446,15 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 self._helper_dispatch_adder(definition)
         else:
             self._helper_dispatch_adder(definition)
+
+        if rebuild_cache:
+            self._rebuild_cache_if_stale()
+
+    def _rebuild_cache_if_stale(self) -> None:
+        """Rebuild the cache if a definition was overwritten since it was built."""
+        if self._cache_stale:
+            self._cache_stale = False
+            self._build_cache()
 
     ############
     # Adders
@@ -557,6 +518,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 raise RedefinitionError(key, type(value))
             elif self._on_redefinition == "warn":
                 logger.warning(f"Redefining '{key}' ({type(value)})")
+            if self._initialized:
+                self._cache_stale = True
 
         target_dict[key] = value
         if casei_target_dict is not None:
@@ -608,7 +571,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._helper_adder(definition, self._units, self._units_casei)
 
     def load_definitions(
-        self, file: Iterable[str] | str | pathlib.Path, is_resource: bool = False
+        self,
+        file: Iterable[str] | str | pathlib.Path,
+        is_resource: bool = False,
+        rebuild_cache: bool = True,
     ):
         """Add units and prefixes defined in a definition text file.
 
@@ -619,6 +585,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         is_resource :
             used to indicate that the file is a resource file
             and therefore should be loaded from the package. (Default value = False)
+        rebuild_cache :
+            if False, delay rebuilding the cache after a redefinition until the
+            next call to `define` or `load_definitions` that rebuilds it.
+            (Default value = True)
         """
 
         if isinstance(file, (list, tuple)):
@@ -637,6 +607,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                         f"While adding {type(definition).__name__} {name!r} from {file}"
                     )
                     raise
+            if rebuild_cache:
+                self._rebuild_cache_if_stale()
             # the disk cache keys a path by its content
             return pathlib.Path(file)
         else:
@@ -644,6 +616,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         for definition in self._def_parser.iter_parsed_project(parsed_project):
             self._helper_dispatch_adder(definition)
+
+        if rebuild_cache:
+            self._rebuild_cache_if_stale()
 
         return parsed_project
 
@@ -813,6 +788,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 try:
                     reg = self._dimensions[key]
                 except KeyError:
+                    # "[]" is dimensionless even if no unit was defined as "= []".
+                    if key == "[]":
+                        continue
                     raise ValueError(
                         f"{key} is not defined as dimension in the pint UnitRegistry"
                     )
@@ -1638,10 +1616,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             # This will allow to better isolate numpy-specific code in the numpy facet.
             return _to_magnitude(value, self.force_ndarray, self.force_ndarray_like)
 
-    # TODO(#2427 follow-up):
-    #   Move `PlainQuantity._is_timedelta` and `PlainQuantity._convert_timedelta` here
-    #   for consistency and correctness (those methods shouldn't have access to existing
-    #   magnitude/units because they're meant to *create* them...)
+    def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
+        """Return the magnitude and units of a value that carries its own units
+        (e.g. a timedelta), or None for any other value."""
+        if isinstance(value, datetime.timedelta):
+            return value.total_seconds(), "seconds"
+        return None
 
     ############
     # Other utilities
