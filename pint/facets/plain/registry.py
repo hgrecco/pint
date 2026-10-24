@@ -1573,11 +1573,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             # This will allow to better isolate numpy-specific code in the numpy facet.
             return _to_magnitude(value, self.force_ndarray, self.force_ndarray_like)
 
-    # TODO(#2427 follow-up):
-    #   Move `PlainQuantity._is_timedelta` and `PlainQuantity._convert_timedelta` here
-    #   for consistency and correctness (those methods shouldn't have access to existing
-    #   magnitude/units because they're meant to *create* them...)
-
     ############
     # Other utilities
     ############

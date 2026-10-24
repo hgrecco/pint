@@ -10,7 +10,6 @@ pint.facets.plain.quantity
 from __future__ import annotations
 
 import copy
-import datetime
 import locale
 import numbers
 import operator
@@ -50,7 +49,6 @@ if TYPE_CHECKING:
     import optype as opt
     import optype.numpy as npt
     from optype import do_neg, do_pos, do_round
-    from typing_extensions import TypeIs
 
     from ..context import Context
     from ..system import System
@@ -132,7 +130,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     Parameters
     ----------
-    value : str, PlainQuantity, datetime.timedelta or any numeric type
+    value : str, PlainQuantity or any numeric type
         Value of the physical quantity to be created.
     units : UnitsContainer, str, PlainQuantity or None, default: None
         Units of the physical quantity to be created.
@@ -186,10 +184,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @overload
     def __new__(
-        cls, value: datetime.timedelta | np.timedelta64, units: UnitLike | None = None
-    ) -> "PlainQuantity[float]": ...
-    @overload
-    def __new__(
         cls, value: str, units: UnitLike | None = None
     ) -> "PlainQuantity[Any]": ...
     @overload  # FIXME: This could be more precise
@@ -225,14 +219,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         inst = SharedRegistryObject().__new__(cls)
 
-        if inst._is_timedelta(value):
-            m, u = inst._convert_timedelta(value)
-            inst._magnitude = m
-            inst._units = inst._REGISTRY.parse_units(u)._units
-            if units:
-                inst.ito(units)
-            return inst
-
         units = inst._REGISTRY._into_units(units, target_class_name="PlainQuantity")
         inst._magnitude = inst._REGISTRY._into_magnitude(
             value, units, parse_strings=True
@@ -240,19 +226,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         inst._units = units
 
         return inst
-
-    # TODO: Move the two timedelta-related methods inside `GenericPlainRegistry`
-    #   for consistency and correctness (those methods shouldn't have access to existing
-    #   magnitude/units because they're meant to *create* them...)
-
-    def _is_timedelta(self, value: object) -> TypeIs[datetime.timedelta]:
-        return isinstance(value, datetime.timedelta)
-
-    def _convert_timedelta(self, value: object) -> tuple[float, str]:
-        """Convert a timedelta object to magnitude and unit string."""
-        if isinstance(value, datetime.timedelta):
-            return value.total_seconds(), "seconds"
-        raise TypeError(f"Cannot convert {value!r} to seconds.")
 
     def __iter__[T: Magnitude](
         self: PlainQuantity[opt.CanIter[T]],
@@ -671,9 +644,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             operator function (e.g. operator.add, operator.isub)
 
         """
-        if self._is_timedelta(other):
-            other = self.__class__(other)
-
         if not self._check(other):
             # NOTE: other is not a PlainQuantity (because if the registry does not match, _check() raises)
             # Normalize the rhs
@@ -786,9 +756,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         op : function
             operator function (e.g. operator.add, operator.isub)
         """
-        if self._is_timedelta(other):
-            other = self.__class__(other)
-
         if not self._check(other):
             # NOTE: other is not a PlainQuantity (because if the registry does not match, _check() raises)
             # Normalize the rhs
@@ -917,33 +884,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return self.__class__(magnitude, units)
 
-    # Quantity[float] += datetime -> becomes datetime
-    @overload
-    def __iadd__[T: int | float](
-        self: PlainQuantity[T], other: datetime.datetime
-    ) -> datetime.datetime: ...
-    # General overload (should work in most cases)
-    @overload
     def __iadd__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanIAdd[T, U]], other: PlainQuantity[T] | T
-    ) -> PlainQuantity[U]: ...
-    def __iadd__(self, other):
-        if isinstance(other, datetime.datetime):
-            return cast("PlainQuantity[int | float]", self).to_timedelta() + other
-        elif is_duck_array_type(type(self._magnitude)):
+    ) -> PlainQuantity[U]:
+        if is_duck_array_type(type(self._magnitude)):
             return self._iadd_sub(other, operator.iadd)
         return self._add_sub(other, operator.add)
 
-    # PlainQuantity[float] + datetime -> datetime
-    @overload
-    def __add__(
-        self: PlainQuantity[int | float], other: datetime.datetime
-    ) -> datetime.datetime: ...
-    # PlainQuantity[float | array[float]] + timedelta -> PlainQuantity[float | array[float]]
-    @overload
-    def __add__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
-    ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
     def __add__[T: Magnitude, U: Magnitude](
@@ -956,8 +903,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         | opt.CanRAdd[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __add__(self, other):
-        if isinstance(other, datetime.datetime):
-            return cast("PlainQuantity[int | float]", self).to_timedelta() + other
         return self._add_sub(other, operator.add)
 
     if TYPE_CHECKING:
@@ -976,11 +921,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return self._add_sub(other, operator.sub)
 
-    # PlainQuantity[float | array[float]] - timedelta -> PlainQuantity[float | array[float]]
-    @overload
-    def __sub__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
-    ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
     def __sub__[T: Magnitude, U: Magnitude](
@@ -995,17 +935,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __sub__(self, other):
         return self._add_sub(other, operator.sub)
 
-    # datetime - PlainQuantity[float] -> datetime
-    @overload
-    def __rsub__(
-        self: PlainQuantity[int | float],
-        other: datetime.datetime,
-    ) -> datetime.datetime: ...
-    # timedelta - PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
-    @overload
-    def __rsub__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
-    ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
     def __rsub__[T: Magnitude, U: Magnitude](
@@ -1017,9 +946,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         other: opt.CanSub[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __rsub__(self, other):
-        if isinstance(other, datetime.datetime):
-            return other - cast("PlainQuantity[int | float]", self).to_timedelta()
-
         return -self._add_sub(other, operator.sub)
 
     @check_implemented
@@ -1053,9 +979,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             units_op = cast(
                 Callable[[UnitsContainer, UnitsContainer], UnitsContainer], magnitude_op
             )
-
-        if self._is_timedelta(other):
-            other = self.__class__(other)
 
         offset_units_self = self._get_non_multiplicative_units()
         no_offset_units_self = len(offset_units_self)
@@ -1139,9 +1062,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if units_op is None:
             units_op = magnitude_op
 
-        if self._is_timedelta(other):
-            other = self.__class__(other)
-
         offset_units_self = self._get_non_multiplicative_units()
         no_offset_units_self = len(offset_units_self)
 
@@ -1207,11 +1127,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return self._mul_div(other, operator.mul)
 
-    # Quantity[float | array[float]] * timedelta -> Quantity[float | array[float]]
-    @overload
-    def __mul__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
-    ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
     def __mul__[T: Magnitude, U: Magnitude](
@@ -1270,11 +1185,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return self._mul_div(other, operator.truediv)
 
-    # PlainQuantity[float | array[float]] / timedelta -> PlainQuantity[float | array[float]]
-    @overload
-    def __truediv__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
-    ) -> PlainQuantity[T]: ...
     # General overloads
     @overload
     def __truediv__[T: Magnitude, U: Magnitude](
@@ -1289,11 +1199,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __truediv__(self: PlainQuantity, other) -> PlainQuantity:
         return self._mul_div(other, self._truedivide_cast_int, operator.truediv)
 
-    # timedelta / PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
-    @overload
-    def __rtruediv__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
-    ) -> PlainQuantity[T]: ...
     # General overloads
     @overload
     def __rtruediv__[T: Magnitude, U: Magnitude](
@@ -1305,9 +1210,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         other: opt.CanTruediv[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __rtruediv__(self: PlainQuantity, other) -> PlainQuantity:
-        if self._is_timedelta(other):
-            return self.__class__(other) / self
-
         try:
             other_magnitude = self._REGISTRY._into_magnitude(other, units=self._units)
         except PintTypeError:
@@ -1861,9 +1763,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     def _ok_for_muldiv(self, no_offset_units=None) -> bool:
         return True
-
-    def to_timedelta(self: PlainQuantity[int | float]) -> datetime.timedelta:
-        return datetime.timedelta(microseconds=self.to("microseconds").magnitude)
 
     # We put this last to avoid overriding UnitsContainer
     # and I do not want to rename it.

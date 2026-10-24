@@ -59,6 +59,9 @@ Currently the folowing facets are implemented:
 - system: redefine base units for dimensions for a particular
   collection of units (e.g. imperial)
 
+- timedelta: build quantities from and combine them with
+  `datetime.timedelta`, `datetime.datetime` and `numpy.timedelta64`.
+
 - context: provides the means to interconvert between incompatible
   units through well defined relations (e.g. spectroscopy allows
   converting between spatial wavelength and temporal frequency)
@@ -80,6 +83,7 @@ from .nonmultiplicative import (
 from .numpy import GenericNumpyRegistry, NumpyRegistry
 from .plain import GenericPlainRegistry, PlainRegistry
 from .system import GenericSystemRegistry, SystemRegistry
+from .timedelta import GenericTimedeltaRegistry, TimedeltaRegistry
 
 __all__ = [
     "ContextRegistry",
@@ -91,6 +95,7 @@ __all__ = [
     "NumpyRegistry",
     "PlainRegistry",
     "SystemRegistry",
+    "TimedeltaRegistry",
     "GenericContextRegistry",
     "GenericDaskRegistry",
     "GenericFormattingRegistry",
@@ -100,4 +105,5 @@ __all__ = [
     "GenericNumpyRegistry",
     "GenericPlainRegistry",
     "GenericSystemRegistry",
+    "GenericTimedeltaRegistry",
 ]

@@ -67,12 +67,14 @@ class Quantity(
     facets.NumpyRegistry.Quantity[MagnitudeT_co],
     facets.MeasurementRegistry.Quantity[MagnitudeT_co],
     facets.NonMultiplicativeRegistry.Quantity[MagnitudeT_co],
+    facets.TimedeltaRegistry.Quantity[MagnitudeT_co],
     _PlainQuantity[MagnitudeT_co],
     Generic[MagnitudeT_co],
 ):
     if TYPE_CHECKING:
         # NOTE: This list of method signatures must be kept in sync with PlainQuantity's overloads
-        #   (you can find the class in pint/facets/plain/quantity.py)
+        #   (you can find the class in pint/facets/plain/quantity.py), plus the
+        #   timedelta/datetime ones handled by pint/facets/timedelta.
 
         @property
         @override
@@ -428,6 +430,7 @@ class Unit(
     facets.NumpyRegistry.Unit,
     facets.MeasurementRegistry.Unit,
     facets.NonMultiplicativeRegistry.Unit,
+    facets.TimedeltaRegistry.Unit,
     facets.PlainRegistry.Unit,
 ):
     if TYPE_CHECKING:
@@ -500,6 +503,7 @@ class GenericUnitRegistry[QuantityT: _Quantity, UnitT: _Unit](
     facets.GenericNumpyRegistry[QuantityT, UnitT],
     facets.GenericMeasurementRegistry[QuantityT, UnitT],
     facets.GenericNonMultiplicativeRegistry[QuantityT, UnitT],
+    facets.GenericTimedeltaRegistry[QuantityT, UnitT],
     facets.GenericPlainRegistry[QuantityT, UnitT],
 ):
     pass
