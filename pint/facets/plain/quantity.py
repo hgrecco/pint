@@ -1492,13 +1492,18 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 self._magnitude = self.m_as("") ** other
                 self._units = self.UnitsContainer()
                 return self
-            elif np.size(other) > 1:
+            elif np.size(other) != 1:
                 raise DimensionalityError(
                     self._units,
                     "dimensionless",
                     extra_msg=". PlainQuantity array exponents are only allowed if the "
                     "plain is dimensionless",
                 )
+            else:
+                # we don't want array units!
+                unit_exponent = other.item()
+        else:
+            unit_exponent = other
         # Unit calculation
         if other == 1:
             return self
@@ -1511,7 +1516,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 else:
                     raise OffsetUnitCalculusError(self._units)
 
-            new_units = self._units**other
+            new_units = self._units**unit_exponent
         # Magnitude calculation
         self._magnitude **= other
         # Result
@@ -1554,12 +1559,17 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 return self.__class__(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()) ** other,
                 )
-            elif np.size(other) > 1:
+            elif np.size(other) != 1:
                 raise DimensionalityError(
                     self._units,
                     "dimensionless",
                     extra_msg=". PlainQuantity array exponents are only allowed if the base is dimensionless",
                 )
+            else:
+                # we don't want array units!
+                unit_exponent = other.item()
+        else:
+            unit_exponent = other
         # Unit calculation
         if other == 1:
             return self
@@ -1572,7 +1582,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                     self = self.to_root_units()
                 else:
                     raise OffsetUnitCalculusError(self._units)
-            units = self._units**other
+            units = self._units**unit_exponent
         # Magnitude calculation
         magnitude = self._magnitude**other
         # Result
