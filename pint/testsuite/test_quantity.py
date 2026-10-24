@@ -1026,9 +1026,8 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compare_quantity_compact(float("inf") * ureg.m, float("inf") * ureg.m)
 
     def test_nonnumeric_magnitudes(self):
-        x = self.Q_(object(), "m")
-        with pytest.warns(UndefinedBehavior):
-            x.to_compact()
+        with pytest.raises(TypeError):
+            _ = self.Q_(object(), "m")  # pyright: ignore[reportCallIssue,reportArgumentType]
 
     def test_very_large_to_compact(self):
         # This should not raise an IndexError
@@ -2112,7 +2111,7 @@ class TestTimedelta(QuantityTestCase):
         assert d + datetime.timedelta(seconds=3) == after
         after = d - 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
-        with pytest.raises(DimensionalityError):
+        with pytest.raises(TypeError):
             3 * self.ureg.second - d  # pyright: ignore[reportOperatorIssue]
 
     def test_iadd_isub(self):
@@ -2127,8 +2126,8 @@ class TestTimedelta(QuantityTestCase):
         after -= 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
         after = 3 * self.ureg.second
-        with pytest.raises(DimensionalityError):
-            after -= d
+        with pytest.raises(TypeError):
+            after -= d  # pyright: ignore[reportOperatorIssue]
 
     def test_init_quantity(self):
         # 608
