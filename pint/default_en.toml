@@ -1,47 +1,69 @@
+# Default Pint units definition file, in TOML
+# Based on the International System of Units
+# Language: english
+# :copyright: 2013,2019 by Pint Authors, see AUTHORS for more details.
+#
+# Holds the same definitions as default_en.txt; values use the same syntax.
+#
+# [prefix]     <name> = { value = <number>, symbol = "<symbol>", aliases = [...] }
+# [dimension]  <name> = { value = "<relation to other dimensions>" }
+# [unit]       <name> = { value = "<relation to another unit or dimension>",
+#                         symbol = "<symbol>", aliases = [...] }
+#              offset units add offset = <number>; logarithmic units add
+#              logbase = <number> and logfactor = <number>
+# [[group]], [[system]] and [[context]] hold the @group, @system and @context
+# blocks of the text format.
+#
+# See also: https://pint.readthedocs.io/en/latest/defining.html
+
 [defaults]
 group = "international"
 system = "mks"
 
 [prefix]
-quecto = { value = "1e-30", defined_symbol = "q" }
-ronto = { value = "1e-27", defined_symbol = "r" }
-yocto = { value = "1e-24", defined_symbol = "y" }
-zepto = { value = "1e-21", defined_symbol = "z" }
-atto = { value = "1e-18", defined_symbol = "a" }
-femto = { value = "1e-15", defined_symbol = "f" }
-pico = { value = "1e-12", defined_symbol = "p" }
-nano = { value = "1e-9", defined_symbol = "n" }
-micro = { value = "1e-6", defined_symbol = "μ", aliases = [
-  "µ",
-  "u",
-  "mu",
-  "mc",
-] }
-milli = { value = "1e-3", defined_symbol = "m" }
-centi = { value = "1e-2", defined_symbol = "c" }
-deci = { value = "1e-1", defined_symbol = "d" }
-deca = { value = "1e+1", defined_symbol = "da", aliases = ["deka"] }
-hecto = { value = "1e2", defined_symbol = "h" }
-kilo = { value = "1e3", defined_symbol = "k" }
-mega = { value = "1e6", defined_symbol = "M" }
-giga = { value = "1e9", defined_symbol = "G" }
-tera = { value = "1e12", defined_symbol = "T" }
-peta = { value = "1e15", defined_symbol = "P" }
-exa = { value = "1e18", defined_symbol = "E" }
-zetta = { value = "1e21", defined_symbol = "Z" }
-yotta = { value = "1e24", defined_symbol = "Y" }
-ronna = { value = "1e27", defined_symbol = "R" }
-quetta = { value = "1e30", defined_symbol = "Q" }
-kibi = { value = "2**10", defined_symbol = "Ki" }
-mebi = { value = "2**20", defined_symbol = "Mi" }
-gibi = { value = "2**30", defined_symbol = "Gi" }
-tebi = { value = "2**40", defined_symbol = "Ti" }
-pebi = { value = "2**50", defined_symbol = "Pi" }
-exbi = { value = "2**60", defined_symbol = "Ei" }
-zebi = { value = "2**70", defined_symbol = "Zi" }
-yobi = { value = "2**80", defined_symbol = "Yi" }
-semi = { value = "0.5", aliases = ["demi"] }
-sesqui = { value = "1.5" }
+#### PREFIXES ####
+
+# decimal prefixes
+quecto = { value = 1e-30, symbol = "q" }
+ronto = { value = 1e-27, symbol = "r" }
+yocto = { value = 1e-24, symbol = "y" }
+zepto = { value = 1e-21, symbol = "z" }
+atto = { value = 1e-18, symbol = "a" }
+femto = { value = 1e-15, symbol = "f" }
+pico = { value = 1e-12, symbol = "p" }
+nano = { value = 1e-9, symbol = "n" }
+# The micro (U+00B5) and Greek mu (U+03BC) are both valid prefixes,
+# and they often use the same glyph.
+micro = { value = 1e-6, symbol = "μ", aliases = ["µ", "u", "mu", "mc"] }
+milli = { value = 1e-3, symbol = "m" }
+centi = { value = 1e-2, symbol = "c" }
+deci = { value = 1e-1, symbol = "d" }
+deca = { value = 1e+1, symbol = "da", aliases = ["deka"] }
+hecto = { value = 1e2, symbol = "h" }
+kilo = { value = 1e3, symbol = "k" }
+mega = { value = 1e6, symbol = "M" }
+giga = { value = 1e9, symbol = "G" }
+tera = { value = 1e12, symbol = "T" }
+peta = { value = 1e15, symbol = "P" }
+exa = { value = 1e18, symbol = "E" }
+zetta = { value = 1e21, symbol = "Z" }
+yotta = { value = 1e24, symbol = "Y" }
+ronna = { value = 1e27, symbol = "R" }
+quetta = { value = 1e30, symbol = "Q" }
+
+# binary_prefixes
+kibi = { value = "2**10", symbol = "Ki" }
+mebi = { value = "2**20", symbol = "Mi" }
+gibi = { value = "2**30", symbol = "Gi" }
+tebi = { value = "2**40", symbol = "Ti" }
+pebi = { value = "2**50", symbol = "Pi" }
+exbi = { value = "2**60", symbol = "Ei" }
+zebi = { value = "2**70", symbol = "Zi" }
+yobi = { value = "2**80", symbol = "Yi" }
+
+# extra_prefixes
+semi = { value = 0.5, aliases = ["demi"] }
+sesqui = { value = 1.5 }
 
 [dimension]
 area = { value = "[length] ** 2" }
@@ -120,826 +142,656 @@ esu_magnetic_field_strength = { value = "[esu_current] / [length]" }
 esu_magnetic_dipole = { value = "[esu_current] * [area]" }
 
 [unit]
-meter = { value = "[length]", defined_symbol = "m", aliases = ["metre"] }
-second = { value = "[time]", defined_symbol = "s", aliases = ["sec"] }
-ampere = { value = "[current]", defined_symbol = "A", aliases = ["amp"] }
-candela = { value = "[luminosity]", defined_symbol = "cd", aliases = [
-  "candle",
-] }
-gram = { value = "[mass]", defined_symbol = "g" }
-mole = { value = "[substance]", defined_symbol = "mol" }
-kelvin = { value = "[temperature]; offset: 0", defined_symbol = "K", aliases = [
-  "degK",
-  "°K",
-  "degree_Kelvin",
-  "degreeK",
-] }
-radian = { value = "[]", defined_symbol = "rad" }
+#### BASE UNITS ####
+
+meter = { value = "[length]", symbol = "m", aliases = ["metre"] }
+second = { value = "[time]", symbol = "s", aliases = ["sec"] }
+ampere = { value = "[current]", symbol = "A", aliases = ["amp"] }
+candela = { value = "[luminosity]", symbol = "cd", aliases = ["candle"] }
+gram = { value = "[mass]", symbol = "g" }
+mole = { value = "[substance]", symbol = "mol" }
+kelvin = { value = "[temperature]", offset = 0, symbol = "K", aliases = ["degK", "°K", "degree_Kelvin", "degreeK"] } # older names supported for compatibility
+radian = { value = "[]", symbol = "rad" }
 bit = { value = "[]" }
 count = { value = "[]" }
-pi = { value = "3.1415926535897932384626433832795028841971693993751", defined_symbol = "π" }
-tansec = { value = "4.8481368111333441675396429478852851658848753880815e-6" }
-ln10 = { value = "2.3025850929940456840179914546843642076011014886288" }
-wien_x = { value = "4.9651142317442763036987591313228939440555849867973" }
-wien_u = { value = "2.8214393721220788934031913302944851953458817440731" }
+
+#### CONSTANTS ####
+
+# Default Pint constants definition file
+# Based on the International System of Units
+# Language: english
+# Source: https://physics.nist.gov/cuu/Constants/
+#         https://physics.nist.gov/PhysRefData/XrayTrans/Html/search.html
+#         https://physics.nist.gov/cuu/pdf/sp811.pdf
+# :copyright: 2013,2019 by Pint Authors, see AUTHORS for more details.
+
+#### MATHEMATICAL CONSTANTS ####
+# As computed by Maxima with fpprec:50
+
+pi = { value = "3.1415926535897932384626433832795028841971693993751", symbol = "π" } # pi
+tansec = { value = "4.8481368111333441675396429478852851658848753880815e-6" }        # tangent of 1 arc-second ~ arc_second/radian
+ln10 = { value = "2.3025850929940456840179914546843642076011014886288" }             # natural logarithm of 10
+wien_x = { value = "4.9651142317442763036987591313228939440555849867973" }           # solution to (x-5)*exp(x)+5 = 0 => x = W(5/exp(5))+5
+wien_u = { value = "2.8214393721220788934031913302944851953458817440731" }           # solution to (u-3)*exp(u)+3 = 0 => u = W(3/exp(3))+3
 eulers_number = { value = "2.71828182845904523536028747135266249775724709369995" }
-speed_of_light = { value = "299792458 m/s", defined_symbol = "c", aliases = [
-  "c_0",
-] }
-planck_constant = { value = "6.62607015e-34 J s", defined_symbol = "ℎ" }
-elementary_charge = { value = "1.602176634e-19 C", defined_symbol = "e" }
-avogadro_number = { value = "6.02214076e23" }
-boltzmann_constant = { value = "1.380649e-23 J K^-1", defined_symbol = "k", aliases = [
-  "k_B",
-] }
-standard_gravity = { value = "9.80665 m/s^2", defined_symbol = "g_0", aliases = [
-  "g0",
-  "g_n",
-  "gravity",
-] }
-standard_atmosphere = { value = "1.01325e5 Pa", defined_symbol = "atm", aliases = [
-  "atmosphere",
-] }
-conventional_josephson_constant = { value = "4.835979e14 Hz / V", defined_symbol = "K_J90" }
-conventional_von_klitzing_constant = { value = "2.5812807e4 ohm", defined_symbol = "R_K90" }
-conventional_water_density = { value = "1000 kg/m^3", defined_symbol = "ρH2O" }
-conventional_mercury_density = { value = "13595.1 kg/m^3", defined_symbol = "ρHg" }
-zeta = { value = "c / (cm/s)", defined_symbol = "ζ" }
-dirac_constant = { value = "ℎ / (2 * π)", defined_symbol = "ħ", aliases = [
-  "hbar",
-  "atomic_unit_of_action",
-  "a_u_action",
-] }
-avogadro_constant = { value = "avogadro_number * mol^-1", defined_symbol = "N_A" }
-molar_gas_constant = { value = "k * N_A", defined_symbol = "R" }
+
+#### DEFINED EXACT CONSTANTS ####
+
+speed_of_light = { value = "299792458 m/s", symbol = "c", aliases = ["c_0"] }                      # since 1983
+planck_constant = { value = "6.62607015e-34 J s", symbol = "ℎ" }                                   # since May 2019
+elementary_charge = { value = "1.602176634e-19 C", symbol = "e" }                                  # since May 2019
+avogadro_number = { value = "6.02214076e23" }                                                      # since May 2019
+boltzmann_constant = { value = "1.380649e-23 J K^-1", symbol = "k", aliases = ["k_B"] }            # since May 2019
+standard_gravity = { value = "9.80665 m/s^2", symbol = "g_0", aliases = ["g0", "g_n", "gravity"] } # since 1901
+standard_atmosphere = { value = "1.01325e5 Pa", symbol = "atm", aliases = ["atmosphere"] }         # since 1954
+conventional_josephson_constant = { value = "4.835979e14 Hz / V", symbol = "K_J90" }               # since Jan 1990
+conventional_von_klitzing_constant = { value = "2.5812807e4 ohm", symbol = "R_K90" }               # since Jan 1990
+conventional_water_density = { value = "1000 kg/m^3", symbol = "ρH2O" }
+conventional_mercury_density = { value = "13595.1 kg/m^3", symbol = "ρHg" }
+
+#### DERIVED EXACT CONSTANTS ####
+# Floating-point conversion may introduce inaccuracies
+
+zeta = { value = "c / (cm/s)", symbol = "ζ" }
+dirac_constant = { value = "ℎ / (2 * π)", symbol = "ħ", aliases = ["hbar", "atomic_unit_of_action", "a_u_action"] }
+avogadro_constant = { value = "avogadro_number * mol^-1", symbol = "N_A" }
+molar_gas_constant = { value = "k * N_A", symbol = "R" }
 faraday_constant = { value = "e * N_A" }
-conductance_quantum = { value = "2 * e ** 2 / ℎ", defined_symbol = "G_0" }
-magnetic_flux_quantum = { value = "ℎ / (2 * e)", defined_symbol = "Φ_0", aliases = [
-  "Phi_0",
-] }
-josephson_constant = { value = "2 * e / ℎ", defined_symbol = "K_J" }
-von_klitzing_constant = { value = "ℎ / e ** 2", defined_symbol = "R_K" }
-stefan_boltzmann_constant = { value = "2 / 15 * π ** 5 * k ** 4 / (ℎ ** 3 * c ** 2)", defined_symbol = "σ", aliases = [
-  "sigma",
-] }
-first_radiation_constant = { value = "2 * π * ℎ * c ** 2", defined_symbol = "c_1" }
-second_radiation_constant = { value = "ℎ * c / k", defined_symbol = "c_2" }
+conductance_quantum = { value = "2 * e ** 2 / ℎ", symbol = "G_0" }
+magnetic_flux_quantum = { value = "ℎ / (2 * e)", symbol = "Φ_0", aliases = ["Phi_0"] }
+josephson_constant = { value = "2 * e / ℎ", symbol = "K_J" }
+von_klitzing_constant = { value = "ℎ / e ** 2", symbol = "R_K" }
+stefan_boltzmann_constant = { value = "2 / 15 * π ** 5 * k ** 4 / (ℎ ** 3 * c ** 2)", symbol = "σ", aliases = ["sigma"] }
+first_radiation_constant = { value = "2 * π * ℎ * c ** 2", symbol = "c_1" }
+second_radiation_constant = { value = "ℎ * c / k", symbol = "c_2" }
 wien_wavelength_displacement_law_constant = { value = "ℎ * c / (k * wien_x)" }
 wien_frequency_displacement_law_constant = { value = "wien_u * k / ℎ" }
-newtonian_constant_of_gravitation = { value = "6.67430e-11 m^3/(kg s^2)", aliases = [
-  "gravitational_constant",
-] }
-rydberg_constant = { value = "1.0973731568157e7 * m^-1", defined_symbol = "R_∞", aliases = [
-  "R_inf",
-] }
-electron_g_factor = { value = "-2.00231930436092", defined_symbol = "g_e" }
-atomic_mass_constant = { value = "1.66053906892e-27 kg", defined_symbol = "m_u" }
-electron_mass = { value = "9.1093837139e-31 kg", defined_symbol = "m_e", aliases = [
-  "atomic_unit_of_mass",
-  "a_u_mass",
-] }
-proton_mass = { value = "1.67262192595e-27 kg", defined_symbol = "m_p" }
-neutron_mass = { value = "1.67492750056e-27 kg", defined_symbol = "m_n" }
-x_unit_Cu = { value = "1.00207697e-13 m", defined_symbol = "Xu_Cu" }
-x_unit_Mo = { value = "1.00209952e-13 m", defined_symbol = "Xu_Mo" }
-angstrom_star = { value = "1.00001495e-10 m", defined_symbol = "Å_star" }
-water_density_4C = { value = "999.972 kg/m^3", defined_symbol = "ρH2O_4C" }
-water_density_60F = { value = "999.001 kg/m^3", defined_symbol = "ρH2O_60F" }
-mercury_density_0C = { value = "13595.1 kg/m^3", defined_symbol = "ρHg_0C" }
-mercury_density_32F = { value = "13595.1 kg/m^3", defined_symbol = "ρHg_32F" }
-mercury_density_60F = { value = "13556.8 kg/m^3", defined_symbol = "ρHg_60F" }
-fine_structure_constant = { value = "(2 * ℎ * R_inf / (m_e * c)) ** 0.5", defined_symbol = "α", aliases = [
-  "alpha",
-] }
-vacuum_permeability = { value = "2 * α * ℎ / (e ** 2 * c)", defined_symbol = "µ_0", aliases = [
-  "mu_0",
-  "mu0",
-  "magnetic_constant",
-] }
-vacuum_permittivity = { value = "e ** 2 / (2 * α * ℎ * c)", defined_symbol = "ε_0", aliases = [
-  "epsilon_0",
-  "eps_0",
-  "eps0",
-  "electric_constant",
-] }
-impedance_of_free_space = { value = "2 * α * ℎ / e ** 2", defined_symbol = "Z_0", aliases = [
-  "characteristic_impedance_of_vacuum",
-] }
-coulomb_constant = { value = "α * hbar * c / e ** 2", defined_symbol = "k_C" }
-classical_electron_radius = { value = "α * hbar / (m_e * c)", defined_symbol = "r_e" }
-thomson_cross_section = { value = "8 / 3 * π * r_e ** 2", defined_symbol = "σ_e", aliases = [
-  "sigma_e",
-] }
+
+#### MEASURED CONSTANTS ####
+# Recommended CODATA-2022 values
+# To some extent, what is measured and what is derived is a bit arbitrary.
+# The choice of measured constants is based on convenience and on available uncertainty.
+# The uncertainty in the last significant digits is given in parentheses as a comment.
+
+newtonian_constant_of_gravitation = { value = "6.67430e-11 m^3/(kg s^2)", aliases = ["gravitational_constant"] } # (15)
+rydberg_constant = { value = "1.0973731568157e7 * m^-1", symbol = "R_∞", aliases = ["R_inf"] }                   # (12)
+electron_g_factor = { value = "-2.00231930436092", symbol = "g_e" }                                              # (36)
+atomic_mass_constant = { value = "1.66053906892e-27 kg", symbol = "m_u" }                                        # (52)
+electron_mass = { value = "9.1093837139e-31 kg", symbol = "m_e", aliases = ["atomic_unit_of_mass", "a_u_mass"] } # (28)
+proton_mass = { value = "1.67262192595e-27 kg", symbol = "m_p" }                                                 # (52)
+neutron_mass = { value = "1.67492750056e-27 kg", symbol = "m_n" }                                                # (85)
+x_unit_Cu = { value = "1.00207697e-13 m", symbol = "Xu_Cu" }                                                     # (28)
+x_unit_Mo = { value = "1.00209952e-13 m", symbol = "Xu_Mo" }                                                     # (53)
+angstrom_star = { value = "1.00001495e-10 m", symbol = "Å_star" }                                                # (90)
+
+# Mass densities
+water_density_4C = { value = "999.972 kg/m^3", symbol = "ρH2O_4C" }    # approximate
+water_density_60F = { value = "999.001 kg/m^3", symbol = "ρH2O_60F" }  # approximate
+mercury_density_0C = { value = "13595.1 kg/m^3", symbol = "ρHg_0C" }   # approximate
+mercury_density_32F = { value = "13595.1 kg/m^3", symbol = "ρHg_32F" } # approximate
+mercury_density_60F = { value = "13556.8 kg/m^3", symbol = "ρHg_60F" } # approximate
+
+#### DERIVED CONSTANTS ####
+
+fine_structure_constant = { value = "(2 * ℎ * R_inf / (m_e * c)) ** 0.5", symbol = "α", aliases = ["alpha"] }
+vacuum_permeability = { value = "2 * α * ℎ / (e ** 2 * c)", symbol = "µ_0", aliases = ["mu_0", "mu0", "magnetic_constant"] }
+vacuum_permittivity = { value = "e ** 2 / (2 * α * ℎ * c)", symbol = "ε_0", aliases = ["epsilon_0", "eps_0", "eps0", "electric_constant"] }
+impedance_of_free_space = { value = "2 * α * ℎ / e ** 2", symbol = "Z_0", aliases = ["characteristic_impedance_of_vacuum"] }
+coulomb_constant = { value = "α * hbar * c / e ** 2", symbol = "k_C" }
+classical_electron_radius = { value = "α * hbar / (m_e * c)", symbol = "r_e" }
+thomson_cross_section = { value = "8 / 3 * π * r_e ** 2", symbol = "σ_e", aliases = ["sigma_e"] }
+
+#### UNITS ####
+# Common and less common, grouped by quantity.
+# Conversion factors are exact (except when noted),
+# although floating-point conversion may introduce inaccuracies
+
+# Angle
 turn = { value = "2 * π * radian", aliases = ["revolution", "cycle", "circle"] }
-degree = { value = "π / 180 * radian", defined_symbol = "deg", aliases = [
-  "arcdeg",
-  "arcdegree",
-  "angular_degree",
-] }
-arcminute = { value = "degree / 60", defined_symbol = "arcmin", aliases = [
-  "arc_minute",
-  "angular_minute",
-] }
-arcsecond = { value = "arcminute / 60", defined_symbol = "arcsec", aliases = [
-  "arc_second",
-  "angular_second",
-] }
-milliarcsecond = { value = "1e-3 * arcsecond", defined_symbol = "mas" }
-grade = { value = "π / 200 * radian", defined_symbol = "grad", aliases = [
-  "gon",
-  "gradian",
-] }
-mil = { value = "π / 3200 * radian" }
-steradian = { value = "radian ** 2", defined_symbol = "sr" }
-square_degree = { value = "(π / 180) ** 2 * sr", defined_symbol = "sq_deg", aliases = [
-  "sqdeg",
-] }
-baud = { value = "bit / second", defined_symbol = "Bd", aliases = ["bps"] }
-byte = { value = "8 * bit", defined_symbol = "B", aliases = ["octet"] }
-percent = { value = "0.01", defined_symbol = "%" }
-permille = { value = "0.001", defined_symbol = "‰" }
+degree = { value = "π / 180 * radian", symbol = "deg", aliases = ["arcdeg", "arcdegree", "angular_degree"] }
+arcminute = { value = "degree / 60", symbol = "arcmin", aliases = ["arc_minute", "angular_minute"] }
+arcsecond = { value = "arcminute / 60", symbol = "arcsec", aliases = ["arc_second", "angular_second"] }
+milliarcsecond = { value = "1e-3 * arcsecond", symbol = "mas" }
+grade = { value = "π / 200 * radian", symbol = "grad", aliases = ["gon", "gradian"] }
+mil = { value = "π / 3200 * radian" }                                                                        # 6400 per turn
+
+# Solid angle
+steradian = { value = "radian ** 2", symbol = "sr" }
+square_degree = { value = "(π / 180) ** 2 * sr", symbol = "sq_deg", aliases = ["sqdeg"] }
+
+# Information
+baud = { value = "bit / second", symbol = "Bd", aliases = ["bps"] }
+
+byte = { value = "8 * bit", symbol = "B", aliases = ["octet"] }
+# byte = 8 * bit = _ = octet
+## NOTE: B (byte) symbol can conflict with Bell
+
+# Dimensionless ratios
+percent = { value = "0.01", symbol = "%" }
+permille = { value = "0.001", symbol = "‰" }            # NOTE: ‰ = U+2030 (PER MILLE SIGN)
 ppm = { value = "1e-6" }
-strain = { value = "1", defined_symbol = "ε", aliases = ["ϵ"] }
-angstrom = { value = "1e-10 * meter", defined_symbol = "Å", aliases = [
-  "ångström",
-  "Å",
-] }
-micron = { value = "micrometer", defined_symbol = "μ", aliases = ["µ"] }
-fermi = { value = "femtometer", defined_symbol = "fm" }
-light_year = { value = "speed_of_light * julian_year", defined_symbol = "ly", aliases = [
-  "lightyear",
-] }
-astronomical_unit = { value = "149597870700 * meter", defined_symbol = "au" }
-parsec = { value = "1 / tansec * astronomical_unit", defined_symbol = "pc" }
-nautical_mile = { value = "1852 * meter", defined_symbol = "nmi" }
-bohr = { value = "hbar / (alpha * m_e * c)", defined_symbol = "a_0", aliases = [
-  "a0",
-  "bohr_radius",
-  "atomic_unit_of_length",
-  "a_u_length",
-] }
+strain = { value = "1", symbol = "ε", aliases = ["ϵ"] } # NOTE: ε = U+03B5 (GREEK SMALL LETTER EPSILON), ϵ = U+03F5 (GREEK LUNATE EPSILON SYMBOL)
+
+# Length
+angstrom = { value = "1e-10 * meter", symbol = "Å", aliases = ["ångström", "Å"] }
+micron = { value = "micrometer", symbol = "μ", aliases = ["µ"] }
+fermi = { value = "femtometer", symbol = "fm" }
+light_year = { value = "speed_of_light * julian_year", symbol = "ly", aliases = ["lightyear"] }
+astronomical_unit = { value = "149597870700 * meter", symbol = "au" }                                                                 # since Aug 2012
+parsec = { value = "1 / tansec * astronomical_unit", symbol = "pc" }
+nautical_mile = { value = "1852 * meter", symbol = "nmi" }
+bohr = { value = "hbar / (alpha * m_e * c)", symbol = "a_0", aliases = ["a0", "bohr_radius", "atomic_unit_of_length", "a_u_length"] }
 planck_length = { value = "(hbar * gravitational_constant / c ** 3) ** 0.5" }
-metric_ton = { value = "1e3 * kilogram", defined_symbol = "t", aliases = [
-  "tonne",
-] }
-unified_atomic_mass_unit = { value = "atomic_mass_constant", defined_symbol = "u", aliases = [
-  "amu",
-] }
-dalton = { value = "atomic_mass_constant", defined_symbol = "Da" }
-grain = { value = "64.79891 * milligram", defined_symbol = "gr" }
+
+# Mass
+metric_ton = { value = "1e3 * kilogram", symbol = "t", aliases = ["tonne"] }
+unified_atomic_mass_unit = { value = "atomic_mass_constant", symbol = "u", aliases = ["amu"] }
+dalton = { value = "atomic_mass_constant", symbol = "Da" }
+grain = { value = "64.79891 * milligram", symbol = "gr" }
 gamma_mass = { value = "microgram" }
-carat = { value = "200 * milligram", defined_symbol = "ct" }
+carat = { value = "200 * milligram", symbol = "ct" }
 planck_mass = { value = "(hbar * c / gravitational_constant) ** 0.5" }
-minute = { value = "60 * second", defined_symbol = "min" }
-hour = { value = "60 * minute", defined_symbol = "h", aliases = ["hr"] }
-day = { value = "24 * hour", defined_symbol = "d" }
+
+# Time
+minute = { value = "60 * second", symbol = "min" }
+hour = { value = "60 * minute", symbol = "h", aliases = ["hr"] }
+day = { value = "24 * hour", symbol = "d" }
 week = { value = "7 * day" }
 fortnight = { value = "2 * week" }
-year = { value = "365.25 * day", defined_symbol = "a", aliases = [
-  "yr",
-  "julian_year",
-] }
+year = { value = "365.25 * day", symbol = "a", aliases = ["yr", "julian_year"] }
 month = { value = "year / 12" }
+
+# decade = 10 * year
+## NOTE: decade [time] can conflict with decade [dimensionless]
+
 century = { value = "100 * year", aliases = ["centuries"] }
 millennium = { value = "1e3 * year", aliases = ["millennia"] }
 eon = { value = "1e9 * year" }
 shake = { value = "1e-8 * second" }
 svedberg = { value = "1e-13 * second" }
-atomic_unit_of_time = { value = "hbar / E_h", defined_symbol = "a_u_time" }
+atomic_unit_of_time = { value = "hbar / E_h", symbol = "a_u_time" }
 gregorian_year = { value = "365.2425 * day" }
-sidereal_year = { value = "365.256363004 * day" }
-tropical_year = { value = "365.242190402 * day" }
+sidereal_year = { value = "365.256363004 * day" }                           # approximate, as of J2000 epoch
+tropical_year = { value = "365.242190402 * day" }                           # approximate, as of J2000 epoch
 common_year = { value = "365 * day" }
 leap_year = { value = "366 * day" }
-sidereal_day = { value = "day / 1.00273790935079524" }
-sidereal_month = { value = "27.32166155 * day" }
-tropical_month = { value = "27.321582 * day" }
-synodic_month = { value = "29.530589 * day", aliases = ["lunar_month"] }
+sidereal_day = { value = "day / 1.00273790935079524" }                      # approximate
+sidereal_month = { value = "27.32166155 * day" }                            # approximate
+tropical_month = { value = "27.321582 * day" }                              # approximate
+synodic_month = { value = "29.530589 * day", aliases = ["lunar_month"] }    # approximate
 planck_time = { value = "(hbar * gravitational_constant / c ** 5) ** 0.5" }
-degree_Celsius = { value = "kelvin; offset: 273.15", defined_symbol = "°C", aliases = [
-  "celsius",
-  "degC",
-  "degreeC",
-] }
-degree_Rankine = { value = "5 / 9 * kelvin; offset: 0", defined_symbol = "°R", aliases = [
-  "rankine",
-  "degR",
-  "degreeR",
-] }
-degree_Fahrenheit = { value = "5 / 9 * kelvin; offset: 233.15 + 200 / 9", defined_symbol = "°F", aliases = [
-  "fahrenheit",
-  "degF",
-  "degreeF",
-] }
-degree_Reaumur = { value = "5 / 4 * kelvin; offset: 273.15", defined_symbol = "°Re", aliases = [
-  "reaumur",
-  "degRe",
-  "degreeRe",
-  "degree_Réaumur",
-  "réaumur",
-] }
-atomic_unit_of_temperature = { value = "E_h / k", defined_symbol = "a_u_temp" }
+
+# Temperature
+degree_Celsius = { value = "kelvin", offset = 273.15, symbol = "°C", aliases = ["celsius", "degC", "degreeC"] }
+degree_Rankine = { value = "5 / 9 * kelvin", offset = 0, symbol = "°R", aliases = ["rankine", "degR", "degreeR"] }
+degree_Fahrenheit = { value = "5 / 9 * kelvin", offset = "233.15 + 200 / 9", symbol = "°F", aliases = ["fahrenheit", "degF", "degreeF"] }
+degree_Reaumur = { value = "5 / 4 * kelvin", offset = 273.15, symbol = "°Re", aliases = ["reaumur", "degRe", "degreeRe", "degree_Réaumur", "réaumur"] }
+atomic_unit_of_temperature = { value = "E_h / k", symbol = "a_u_temp" }
 planck_temperature = { value = "(hbar * c ** 5 / gravitational_constant / k ** 2) ** 0.5" }
+
+# Area
 are = { value = "100 * meter ** 2" }
-barn = { value = "1e-28 * meter ** 2", defined_symbol = "b" }
+barn = { value = "1e-28 * meter ** 2", symbol = "b" }
 darcy = { value = "centipoise * centimeter ** 2 / (second * atmosphere)" }
-hectare = { value = "100 * are", defined_symbol = "ha" }
-liter = { value = "decimeter ** 3", defined_symbol = "l", aliases = [
-  "L",
-  "ℓ",
-  "litre",
-] }
-cubic_centimeter = { value = "centimeter ** 3", defined_symbol = "cc" }
-lambda = { value = "microliter", defined_symbol = "λ" }
+hectare = { value = "100 * are", symbol = "ha" }
+
+# Volume
+liter = { value = "decimeter ** 3", symbol = "l", aliases = ["L", "ℓ", "litre"] }
+cubic_centimeter = { value = "centimeter ** 3", symbol = "cc" }
+lambda = { value = "microliter", symbol = "λ" }
 stere = { value = "meter ** 3" }
-hertz = { value = "1 / second", defined_symbol = "Hz" }
-revolutions_per_minute = { value = "revolution / minute", defined_symbol = "rpm" }
-revolutions_per_second = { value = "revolution / second", defined_symbol = "rps" }
-counts_per_second = { value = "count / second", defined_symbol = "cps" }
-beats_per_minute = { value = "1 / minute", defined_symbol = "bpm" }
-reciprocal_centimeter = { value = "1 / cm", defined_symbol = "cm_1", aliases = [
-  "kayser",
-] }
-knot = { value = "nautical_mile / hour", defined_symbol = "kn", aliases = [
-  "kt",
-  "knot_international",
-  "international_knot",
-] }
-mile_per_hour = { value = "mile / hour", defined_symbol = "mph", aliases = [
-  "MPH",
-] }
-kilometer_per_hour = { value = "kilometer / hour", defined_symbol = "kph", aliases = [
-  "KPH",
-] }
-kilometer_per_second = { value = "kilometer / second", defined_symbol = "kps" }
-meter_per_second = { value = "meter / second", defined_symbol = "mps" }
-foot_per_second = { value = "foot / second", defined_symbol = "fps" }
-sverdrup = { value = "1e6 * meter ** 3 / second", defined_symbol = "sv" }
-galileo = { value = "centimeter / second ** 2", defined_symbol = "Gal" }
+
+# Frequency
+hertz = { value = "1 / second", symbol = "Hz" }
+revolutions_per_minute = { value = "revolution / minute", symbol = "rpm" }
+revolutions_per_second = { value = "revolution / second", symbol = "rps" }
+counts_per_second = { value = "count / second", symbol = "cps" }
+beats_per_minute = { value = "1 / minute", symbol = "bpm" }
+
+# Wavenumber
+reciprocal_centimeter = { value = "1 / cm", symbol = "cm_1", aliases = ["kayser"] }
+
+# Velocity
+knot = { value = "nautical_mile / hour", symbol = "kn", aliases = ["kt", "knot_international", "international_knot"] }
+mile_per_hour = { value = "mile / hour", symbol = "mph", aliases = ["MPH"] }
+kilometer_per_hour = { value = "kilometer / hour", symbol = "kph", aliases = ["KPH"] }
+kilometer_per_second = { value = "kilometer / second", symbol = "kps" }
+meter_per_second = { value = "meter / second", symbol = "mps" }
+foot_per_second = { value = "foot / second", symbol = "fps" }
+
+# Volumetric Flow Rate
+sverdrup = { value = "1e6 * meter ** 3 / second", symbol = "sv" }
+
+# Acceleration
+galileo = { value = "centimeter / second ** 2", symbol = "Gal" }
 meter_per_second_squared = { value = "meter / second ** 2" }
-newton = { value = "kilogram * meter / second ** 2", defined_symbol = "N" }
-dyne = { value = "gram * centimeter / second ** 2", defined_symbol = "dyn" }
-force_kilogram = { value = "g_0 * kilogram", defined_symbol = "kgf", aliases = [
-  "kilogram_force",
-] }
-force_gram = { value = "g_0 * gram", defined_symbol = "gf", aliases = [
-  "gram_force",
-  "pond",
-] }
-force_metric_ton = { value = "g_0 * metric_ton", defined_symbol = "tf", aliases = [
-  "metric_ton_force",
-  "force_t",
-  "t_force",
-] }
-atomic_unit_of_force = { value = "E_h / a_0", defined_symbol = "a_u_force" }
-joule = { value = "newton * meter", defined_symbol = "J" }
+
+# Force
+newton = { value = "kilogram * meter / second ** 2", symbol = "N" }
+dyne = { value = "gram * centimeter / second ** 2", symbol = "dyn" }
+force_kilogram = { value = "g_0 * kilogram", symbol = "kgf", aliases = ["kilogram_force"] }
+force_gram = { value = "g_0 * gram", symbol = "gf", aliases = ["gram_force", "pond"] }
+force_metric_ton = { value = "g_0 * metric_ton", symbol = "tf", aliases = ["metric_ton_force", "force_t", "t_force"] }
+atomic_unit_of_force = { value = "E_h / a_0", symbol = "a_u_force" }
+
+# Energy
+joule = { value = "newton * meter", symbol = "J" }
 erg = { value = "dyne * centimeter" }
-watt_hour = { value = "watt * hour", defined_symbol = "Wh", aliases = [
-  "watthour",
-] }
-electron_volt = { value = "e * volt", defined_symbol = "eV", aliases = [
-  "electronvolt",
-] }
-rydberg = { value = "ℎ * c * R_inf", defined_symbol = "Ry" }
-hartree = { value = "2 * rydberg", defined_symbol = "E_h", aliases = [
-  "Eh",
-  "hartree_energy",
-  "atomic_unit_of_energy",
-  "a_u_energy",
-] }
-calorie = { value = "4.184 * joule", defined_symbol = "cal", aliases = [
-  "thermochemical_calorie",
-  "cal_th",
-] }
-international_calorie = { value = "4.1868 * joule", defined_symbol = "cal_it", aliases = [
-  "international_steam_table_calorie",
-] }
-fifteen_degree_calorie = { value = "4.1855 * joule", defined_symbol = "cal_15" }
-british_thermal_unit = { value = "1055.056 * joule", defined_symbol = "Btu", aliases = [
-  "BTU",
-  "Btu_iso",
-] }
-international_british_thermal_unit = { value = "1e3 * pound / kilogram * degR / kelvin * international_calorie", defined_symbol = "Btu_it" }
-thermochemical_british_thermal_unit = { value = "1e3 * pound / kilogram * degR / kelvin * calorie", defined_symbol = "Btu_th" }
-quadrillion_Btu = { value = "1e15 * Btu", defined_symbol = "quad" }
-therm = { value = "1e5 * Btu", defined_symbol = "thm", aliases = ["EC_therm"] }
-US_therm = { value = "1.054804e8 * joule" }
-ton_TNT = { value = "1e9 * calorie", defined_symbol = "tTNT" }
-tonne_of_oil_equivalent = { value = "1e10 * international_calorie", defined_symbol = "toe" }
-atmosphere_liter = { value = "atmosphere * liter", defined_symbol = "atm_l" }
-watt = { value = "joule / second", defined_symbol = "W" }
-volt_ampere = { value = "volt * ampere", defined_symbol = "VA" }
-horsepower = { value = "550 * foot * force_pound / second", defined_symbol = "hp", aliases = [
-  "UK_horsepower",
-  "hydraulic_horsepower",
-] }
-boiler_horsepower = { value = "33475 * Btu / hour" }
+watt_hour = { value = "watt * hour", symbol = "Wh", aliases = ["watthour"] }
+electron_volt = { value = "e * volt", symbol = "eV", aliases = ["electronvolt"] }
+rydberg = { value = "ℎ * c * R_inf", symbol = "Ry" }
+hartree = { value = "2 * rydberg", symbol = "E_h", aliases = ["Eh", "hartree_energy", "atomic_unit_of_energy", "a_u_energy"] }
+calorie = { value = "4.184 * joule", symbol = "cal", aliases = ["thermochemical_calorie", "cal_th"] }
+international_calorie = { value = "4.1868 * joule", symbol = "cal_it", aliases = ["international_steam_table_calorie"] }
+fifteen_degree_calorie = { value = "4.1855 * joule", symbol = "cal_15" }
+british_thermal_unit = { value = "1055.056 * joule", symbol = "Btu", aliases = ["BTU", "Btu_iso"] }
+international_british_thermal_unit = { value = "1e3 * pound / kilogram * degR / kelvin * international_calorie", symbol = "Btu_it" }
+thermochemical_british_thermal_unit = { value = "1e3 * pound / kilogram * degR / kelvin * calorie", symbol = "Btu_th" }
+quadrillion_Btu = { value = "1e15 * Btu", symbol = "quad" }
+therm = { value = "1e5 * Btu", symbol = "thm", aliases = ["EC_therm"] }
+US_therm = { value = "1.054804e8 * joule" }                                                                                          # approximate, no exact definition
+ton_TNT = { value = "1e9 * calorie", symbol = "tTNT" }
+tonne_of_oil_equivalent = { value = "1e10 * international_calorie", symbol = "toe" }
+atmosphere_liter = { value = "atmosphere * liter", symbol = "atm_l" }
+
+# Power
+watt = { value = "joule / second", symbol = "W" }
+volt_ampere = { value = "volt * ampere", symbol = "VA" }
+horsepower = { value = "550 * foot * force_pound / second", symbol = "hp", aliases = ["UK_horsepower", "hydraulic_horsepower"] }
+boiler_horsepower = { value = "33475 * Btu / hour" }                                                                             # unclear which Btu
 metric_horsepower = { value = "75 * force_kilogram * meter / second" }
 electrical_horsepower = { value = "746 * watt" }
-refrigeration_ton = { value = "12e3 * Btu / hour", aliases = [
-  "ton_of_refrigeration",
-] }
-cooling_tower_ton = { value = "1.25 * refrigeration_ton" }
-standard_liter_per_minute = { value = "atmosphere * liter / minute", defined_symbol = "slm" }
-conventional_watt_90 = { value = "K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt", defined_symbol = "W_90" }
-pascal = { value = "newton / meter ** 2", defined_symbol = "Pa" }
-barye = { value = "dyne / centimeter ** 2", defined_symbol = "Ba", aliases = [
-  "barie",
-  "barad",
-  "barrie",
-  "baryd",
-] }
+refrigeration_ton = { value = "12e3 * Btu / hour", aliases = ["ton_of_refrigeration"] }                                          # approximate, no exact definition
+cooling_tower_ton = { value = "1.25 * refrigeration_ton" }                                                                       # approximate, no exact definition
+standard_liter_per_minute = { value = "atmosphere * liter / minute", symbol = "slm" }
+conventional_watt_90 = { value = "K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt", symbol = "W_90" }
+
+# Momentum
+
+# Density
+
+# Pressure
+pascal = { value = "newton / meter ** 2", symbol = "Pa" }
+barye = { value = "dyne / centimeter ** 2", symbol = "Ba", aliases = ["barie", "barad", "barrie", "baryd"] }
 bar = { value = "1e5 * pascal" }
-technical_atmosphere = { value = "kilogram * g_0 / centimeter ** 2", defined_symbol = "at" }
+technical_atmosphere = { value = "kilogram * g_0 / centimeter ** 2", symbol = "at" }
 torr = { value = "atm / 760" }
-pound_force_per_square_inch = { value = "force_pound / inch ** 2", defined_symbol = "psi" }
-kip_per_square_inch = { value = "kip / inch ** 2", defined_symbol = "ksi" }
-meter_H2O = { value = "meter * conventional_water_density * g_0", defined_symbol = "mH2O", aliases = [
-  "m_H2O",
-] }
-meter_H2O_4C = { value = "meter * water_density_4C * g_0", defined_symbol = "mH2O_4C", aliases = [
-  "m_H2O_4C",
-] }
-meter_H2O_60F = { value = "meter * water_density_60F * g_0", defined_symbol = "mH2O_60F", aliases = [
-  "m_H2O_60F",
-] }
-inch_H2O = { value = "inch * conventional_water_density * g_0", defined_symbol = "inH2O", aliases = [
-  "in_H2O",
-  "inchesH2O",
-  "inches_H2O",
-] }
-inch_H2O_4C = { value = "inch * water_density_4C * g_0", defined_symbol = "inH2O_4C", aliases = [
-  "in_H2O_4C",
-  "inchesH2O_4C",
-  "inches_H2O_4C",
-] }
-inch_H2O_60F = { value = "inch * water_density_60F * g_0", defined_symbol = "inH2O_60F", aliases = [
-  "in_H2O_60F",
-  "inchesH2O_60F",
-  "inches_H2O_60F",
-] }
-foot_H2O = { value = "foot * conventional_water_density * g_0", defined_symbol = "ftH2O", aliases = [
-  "ft_H2O",
-  "feetH2O",
-  "feet_H2O",
-] }
-foot_H2O_4C = { value = "foot * water_density_4C * g_0", defined_symbol = "ftH2O_4C", aliases = [
-  "ft_H2O_4C",
-  "feetH2O_4C",
-  "feet_H2O_4C",
-] }
-foot_H2O_60F = { value = "foot * water_density_60F * g_0", defined_symbol = "ftH2O_60F", aliases = [
-  "ft_H2O_60F",
-  "feetH2O_60F",
-  "feet_H2O_60F",
-] }
-meter_Hg = { value = "meter * conventional_mercury_density * g_0", defined_symbol = "mHg", aliases = [
-  "m_Hg",
-] }
-meter_Hg_0C = { value = "meter * mercury_density_0C * g_0", defined_symbol = "mHg_0C", aliases = [
-  "m_Hg_0C",
-] }
-meter_Hg_32F = { value = "meter * mercury_density_32F * g_0", defined_symbol = "mHg_32F", aliases = [
-  "m_Hg_32F",
-] }
-meter_Hg_60F = { value = "meter * mercury_density_60F * g_0", defined_symbol = "mHg_60F", aliases = [
-  "m_Hg_60F",
-] }
-inch_Hg = { value = "inch * conventional_mercury_density * g_0", defined_symbol = "inHg", aliases = [
-  "in_Hg",
-  "inchesHg",
-  "inches_Hg",
-] }
-inch_Hg_0C = { value = "inch * mercury_density_0C * g_0", defined_symbol = "inHg_0C", aliases = [
-  "in_Hg_0C",
-  "inchesHg_0C",
-  "inches_Hg_0C",
-] }
-inch_Hg_32F = { value = "inch * mercury_density_32F * g_0", defined_symbol = "inHg_32F", aliases = [
-  "in_Hg_32F",
-  "inchesHg_32F",
-  "inches_Hg_32F",
-] }
-inch_Hg_60F = { value = "inch * mercury_density_60F * g_0", defined_symbol = "inHg_60F", aliases = [
-  "in_Hg_60F",
-  "inchesHg_60F",
-  "inches_Hg_60F",
-] }
-foot_Hg = { value = "foot * conventional_mercury_density * g_0", defined_symbol = "ftHg", aliases = [
-  "ft_Hg",
-  "feetHg",
-  "feet_Hg",
-] }
-foot_Hg_0C = { value = "foot * mercury_density_0C * g_0", defined_symbol = "ftHg_0C", aliases = [
-  "ft_Hg_0C",
-  "feetHg_0C",
-  "feet_Hg_0C",
-] }
-foot_Hg_32F = { value = "foot * mercury_density_32F * g_0", defined_symbol = "ftHg_32F", aliases = [
-  "ft_Hg_32F",
-  "feetHg_32F",
-  "feet_Hg_32F",
-] }
-foot_Hg_60F = { value = "foot * mercury_density_60F * g_0", defined_symbol = "ftHg_60F", aliases = [
-  "ft_Hg_60F",
-  "feetHg_60F",
-  "feet_Hg_60F",
-] }
-sound_pressure_level = { value = "20e-6 * pascal", defined_symbol = "SPL" }
-foot_pound = { value = "foot * force_pound", defined_symbol = "ft_lb", aliases = [
-  "footpound",
-] }
-poise = { value = "0.1 * Pa * second", defined_symbol = "P" }
+pound_force_per_square_inch = { value = "force_pound / inch ** 2", symbol = "psi" }
+kip_per_square_inch = { value = "kip / inch ** 2", symbol = "ksi" }
+meter_H2O = { value = "meter * conventional_water_density * g_0", symbol = "mH2O", aliases = ["m_H2O"] }
+meter_H2O_4C = { value = "meter * water_density_4C * g_0", symbol = "mH2O_4C", aliases = ["m_H2O_4C"] }
+meter_H2O_60F = { value = "meter * water_density_60F * g_0", symbol = "mH2O_60F", aliases = ["m_H2O_60F"] }
+inch_H2O = { value = "inch * conventional_water_density * g_0", symbol = "inH2O", aliases = ["in_H2O", "inchesH2O", "inches_H2O"] }
+inch_H2O_4C = { value = "inch * water_density_4C * g_0", symbol = "inH2O_4C", aliases = ["in_H2O_4C", "inchesH2O_4C", "inches_H2O_4C"] }
+inch_H2O_60F = { value = "inch * water_density_60F * g_0", symbol = "inH2O_60F", aliases = ["in_H2O_60F", "inchesH2O_60F", "inches_H2O_60F"] }
+foot_H2O = { value = "foot * conventional_water_density * g_0", symbol = "ftH2O", aliases = ["ft_H2O", "feetH2O", "feet_H2O"] }
+foot_H2O_4C = { value = "foot * water_density_4C * g_0", symbol = "ftH2O_4C", aliases = ["ft_H2O_4C", "feetH2O_4C", "feet_H2O_4C"] }
+foot_H2O_60F = { value = "foot * water_density_60F * g_0", symbol = "ftH2O_60F", aliases = ["ft_H2O_60F", "feetH2O_60F", "feet_H2O_60F"] }
+meter_Hg = { value = "meter * conventional_mercury_density * g_0", symbol = "mHg", aliases = ["m_Hg"] }
+meter_Hg_0C = { value = "meter * mercury_density_0C * g_0", symbol = "mHg_0C", aliases = ["m_Hg_0C"] }
+meter_Hg_32F = { value = "meter * mercury_density_32F * g_0", symbol = "mHg_32F", aliases = ["m_Hg_32F"] }
+meter_Hg_60F = { value = "meter * mercury_density_60F * g_0", symbol = "mHg_60F", aliases = ["m_Hg_60F"] }
+inch_Hg = { value = "inch * conventional_mercury_density * g_0", symbol = "inHg", aliases = ["in_Hg", "inchesHg", "inches_Hg"] }
+inch_Hg_0C = { value = "inch * mercury_density_0C * g_0", symbol = "inHg_0C", aliases = ["in_Hg_0C", "inchesHg_0C", "inches_Hg_0C"] }
+inch_Hg_32F = { value = "inch * mercury_density_32F * g_0", symbol = "inHg_32F", aliases = ["in_Hg_32F", "inchesHg_32F", "inches_Hg_32F"] }
+inch_Hg_60F = { value = "inch * mercury_density_60F * g_0", symbol = "inHg_60F", aliases = ["in_Hg_60F", "inchesHg_60F", "inches_Hg_60F"] }
+foot_Hg = { value = "foot * conventional_mercury_density * g_0", symbol = "ftHg", aliases = ["ft_Hg", "feetHg", "feet_Hg"] }
+foot_Hg_0C = { value = "foot * mercury_density_0C * g_0", symbol = "ftHg_0C", aliases = ["ft_Hg_0C", "feetHg_0C", "feet_Hg_0C"] }
+foot_Hg_32F = { value = "foot * mercury_density_32F * g_0", symbol = "ftHg_32F", aliases = ["ft_Hg_32F", "feetHg_32F", "feet_Hg_32F"] }
+foot_Hg_60F = { value = "foot * mercury_density_60F * g_0", symbol = "ftHg_60F", aliases = ["ft_Hg_60F", "feetHg_60F", "feet_Hg_60F"] }
+sound_pressure_level = { value = "20e-6 * pascal", symbol = "SPL" }
+
+# Torque
+foot_pound = { value = "foot * force_pound", symbol = "ft_lb", aliases = ["footpound"] }
+
+# Viscosity
+poise = { value = "0.1 * Pa * second", symbol = "P" }
 reyn = { value = "psi * second" }
-stokes = { value = "centimeter ** 2 / second", defined_symbol = "St" }
+
+# Kinematic viscosity
+stokes = { value = "centimeter ** 2 / second", symbol = "St" }
+
+# Fluidity
 rhe = { value = "1 / poise" }
+
+# Amount of substance
 particle = { value = "1 / N_A", aliases = ["molec", "molecule"] }
-molar = { value = "mole / liter", defined_symbol = "M" }
-katal = { value = "mole / second", defined_symbol = "kat" }
-enzyme_unit = { value = "micromole / minute", defined_symbol = "U", aliases = [
-  "enzymeunit",
-] }
-clausius = { value = "calorie / kelvin", defined_symbol = "Cl" }
-entropy_unit = { value = "calorie / kelvin / mole", defined_symbol = "eu" }
-becquerel = { value = "counts_per_second", defined_symbol = "Bq" }
-curie = { value = "3.7e10 * becquerel", defined_symbol = "Ci" }
-rutherford = { value = "1e6 * becquerel", defined_symbol = "Rd" }
-gray = { value = "joule / kilogram", defined_symbol = "Gy" }
-sievert = { value = "joule / kilogram", defined_symbol = "Sv" }
+
+# Concentration
+molar = { value = "mole / liter", symbol = "M" }
+
+# Catalytic activity
+katal = { value = "mole / second", symbol = "kat" }
+enzyme_unit = { value = "micromole / minute", symbol = "U", aliases = ["enzymeunit"] }
+
+# Entropy
+clausius = { value = "calorie / kelvin", symbol = "Cl" }
+
+# Molar entropy
+entropy_unit = { value = "calorie / kelvin / mole", symbol = "eu" }
+
+# Radiation
+becquerel = { value = "counts_per_second", symbol = "Bq" }
+curie = { value = "3.7e10 * becquerel", symbol = "Ci" }
+rutherford = { value = "1e6 * becquerel", symbol = "Rd" }
+gray = { value = "joule / kilogram", symbol = "Gy" }
+sievert = { value = "joule / kilogram", symbol = "Sv" }
 rads = { value = "0.01 * gray" }
 rem = { value = "0.01 * sievert" }
-roentgen = { value = "2.58e-4 * coulomb / kilogram", aliases = ["röntgen"] }
-peak_sun_hour = { value = "1e3 * watt_hour / meter ** 2", defined_symbol = "PSH" }
-langley = { value = "thermochemical_calorie / centimeter ** 2", defined_symbol = "Ly" }
+roentgen = { value = "2.58e-4 * coulomb / kilogram", aliases = ["röntgen"] } # approximate, depends on medium
+
+# Heat transimission
+peak_sun_hour = { value = "1e3 * watt_hour / meter ** 2", symbol = "PSH" }
+langley = { value = "thermochemical_calorie / centimeter ** 2", symbol = "Ly" }
+
+# Luminance
 nit = { value = "candela / meter ** 2" }
 stilb = { value = "candela / centimeter ** 2" }
 lambert = { value = "1 / π * candela / centimeter ** 2" }
-lumen = { value = "candela * steradian", defined_symbol = "lm" }
-lux = { value = "lumen / meter ** 2", defined_symbol = "lx" }
-atomic_unit_of_intensity = { value = "0.5 * ε_0 * c * atomic_unit_of_electric_field ** 2", defined_symbol = "a_u_intensity" }
-biot = { value = "10 * ampere", defined_symbol = "Bi" }
-abampere = { value = "biot", defined_symbol = "abA" }
-atomic_unit_of_current = { value = "e / atomic_unit_of_time", defined_symbol = "a_u_current" }
-mean_international_ampere = { value = "mean_international_volt / mean_international_ohm", defined_symbol = "A_it" }
-US_international_ampere = { value = "US_international_volt / US_international_ohm", defined_symbol = "A_US" }
-conventional_ampere_90 = { value = "K_J90 * R_K90 / (K_J * R_K) * ampere", defined_symbol = "A_90" }
-planck_current = { value = "(c ** 6 / gravitational_constant / k_C) ** 0.5" }
-coulomb = { value = "ampere * second", defined_symbol = "C" }
-abcoulomb = { value = "10 * C", defined_symbol = "abC" }
-faraday = { value = "e * N_A * mole" }
-conventional_coulomb_90 = { value = "K_J90 * R_K90 / (K_J * R_K) * coulomb", defined_symbol = "C_90" }
-ampere_hour = { value = "ampere * hour", defined_symbol = "Ah" }
-volt = { value = "joule / coulomb", defined_symbol = "V" }
-abvolt = { value = "1e-8 * volt", defined_symbol = "abV" }
-mean_international_volt = { value = "1.00034 * volt", defined_symbol = "V_it" }
-US_international_volt = { value = "1.00033 * volt", defined_symbol = "V_US" }
-conventional_volt_90 = { value = "K_J90 / K_J * volt", defined_symbol = "V_90" }
-atomic_unit_of_electric_field = { value = "e * k_C / a_0 ** 2", defined_symbol = "a_u_electric_field" }
-atomic_unit_of_electric_field_gradient = { value = "E_h / a_0 ** 2 / e", defined_symbol = "a_u_efg" }
-townsend = { value = "1e-21 * V * m^2", defined_symbol = "Td" }
-ohm = { value = "volt / ampere", defined_symbol = "Ω" }
-abohm = { value = "1e-9 * ohm", defined_symbol = "abΩ" }
-mean_international_ohm = { value = "1.00049 * ohm", defined_symbol = "Ω_it", aliases = [
-  "ohm_it",
-] }
-US_international_ohm = { value = "1.000495 * ohm", defined_symbol = "Ω_US", aliases = [
-  "ohm_US",
-] }
-conventional_ohm_90 = { value = "R_K / R_K90 * ohm", defined_symbol = "Ω_90", aliases = [
-  "ohm_90",
-] }
-siemens = { value = "ampere / volt", defined_symbol = "S", aliases = ["mho"] }
-absiemens = { value = "1e9 * siemens", defined_symbol = "abS", aliases = [
-  "abmho",
-] }
-farad = { value = "coulomb / volt", defined_symbol = "F" }
-abfarad = { value = "1e9 * farad", defined_symbol = "abF" }
-conventional_farad_90 = { value = "R_K90 / R_K * farad", defined_symbol = "F_90" }
-weber = { value = "volt * second", defined_symbol = "Wb" }
-unit_pole = { value = "µ_0 * biot * centimeter" }
-henry = { value = "weber / ampere", defined_symbol = "H" }
-abhenry = { value = "1e-9 * henry", defined_symbol = "abH" }
-conventional_henry_90 = { value = "R_K / R_K90 * henry", defined_symbol = "H_90" }
-tesla = { value = "weber / meter ** 2", defined_symbol = "T" }
-gamma = { value = "1e-9 * tesla", defined_symbol = "γ" }
-ampere_turn = { value = "ampere", defined_symbol = "At" }
-biot_turn = { value = "biot" }
-gilbert = { value = "1 / (4 * π) * biot_turn", defined_symbol = "Gb" }
-debye = { value = "1e-9 / ζ * coulomb * angstrom", defined_symbol = "D" }
-buckingham = { value = "debye * angstrom" }
-bohr_magneton = { value = "e * hbar / (2 * m_e)", defined_symbol = "µ_B", aliases = [
-  "mu_B",
-] }
-nuclear_magneton = { value = "e * hbar / (2 * m_p)", defined_symbol = "µ_N", aliases = [
-  "mu_N",
-] }
-refractive_index_unit = { value = "[]", defined_symbol = "RIU" }
-absorbance_unit = { value = "[]", defined_symbol = "AU" }
-LMH = { value = "L / m**2 / h" }
-decibelwatt = { value = "watt; logbase: 10; logfactor: 10", defined_symbol = "dBW" }
-decibelmilliwatt = { value = "1e-3 watt; logbase: 10; logfactor: 10", defined_symbol = "dBm" }
-decibelmicrowatt = { value = "1e-6 watt; logbase: 10; logfactor: 10", defined_symbol = "dBu" }
-decibel = { value = "1 ; logbase: 10; logfactor: 10", defined_symbol = "dB" }
-decade = { value = "1 ; logbase: 10; logfactor: 1" }
-octave = { value = "1 ; logbase: 2; logfactor: 1", defined_symbol = "oct" }
-neper = { value = "1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfactor: 0.5", defined_symbol = "Np" }
 
+# Luminous flux
+lumen = { value = "candela * steradian", symbol = "lm" }
+
+# Illuminance
+lux = { value = "lumen / meter ** 2", symbol = "lx" }
+
+# Intensity
+atomic_unit_of_intensity = { value = "0.5 * ε_0 * c * atomic_unit_of_electric_field ** 2", symbol = "a_u_intensity" }
+
+# Current
+biot = { value = "10 * ampere", symbol = "Bi" }
+abampere = { value = "biot", symbol = "abA" }
+atomic_unit_of_current = { value = "e / atomic_unit_of_time", symbol = "a_u_current" }
+mean_international_ampere = { value = "mean_international_volt / mean_international_ohm", symbol = "A_it" }
+US_international_ampere = { value = "US_international_volt / US_international_ohm", symbol = "A_US" }
+conventional_ampere_90 = { value = "K_J90 * R_K90 / (K_J * R_K) * ampere", symbol = "A_90" }
+planck_current = { value = "(c ** 6 / gravitational_constant / k_C) ** 0.5" }
+
+# Charge
+coulomb = { value = "ampere * second", symbol = "C" }
+abcoulomb = { value = "10 * C", symbol = "abC" }
+faraday = { value = "e * N_A * mole" }
+conventional_coulomb_90 = { value = "K_J90 * R_K90 / (K_J * R_K) * coulomb", symbol = "C_90" }
+ampere_hour = { value = "ampere * hour", symbol = "Ah" }
+
+# Electric potential
+volt = { value = "joule / coulomb", symbol = "V" }
+abvolt = { value = "1e-8 * volt", symbol = "abV" }
+mean_international_volt = { value = "1.00034 * volt", symbol = "V_it" }  # approximate
+US_international_volt = { value = "1.00033 * volt", symbol = "V_US" }    # approximate
+conventional_volt_90 = { value = "K_J90 / K_J * volt", symbol = "V_90" }
+
+# Electric field
+atomic_unit_of_electric_field = { value = "e * k_C / a_0 ** 2", symbol = "a_u_electric_field" }
+
+# Electric field gradient
+atomic_unit_of_electric_field_gradient = { value = "E_h / a_0 ** 2 / e", symbol = "a_u_efg" }
+
+# Electric displacement field
+
+# Reduced electric field
+townsend = { value = "1e-21 * V * m^2", symbol = "Td" }
+
+# Resistance
+ohm = { value = "volt / ampere", symbol = "Ω" }
+abohm = { value = "1e-9 * ohm", symbol = "abΩ" }
+mean_international_ohm = { value = "1.00049 * ohm", symbol = "Ω_it", aliases = ["ohm_it"] }  # approximate
+US_international_ohm = { value = "1.000495 * ohm", symbol = "Ω_US", aliases = ["ohm_US"] }   # approximate
+conventional_ohm_90 = { value = "R_K / R_K90 * ohm", symbol = "Ω_90", aliases = ["ohm_90"] }
+
+# Resistivity
+
+# Conductance
+siemens = { value = "ampere / volt", symbol = "S", aliases = ["mho"] }
+absiemens = { value = "1e9 * siemens", symbol = "abS", aliases = ["abmho"] }
+
+# Conductivity
+
+# Capacitance
+farad = { value = "coulomb / volt", symbol = "F" }
+abfarad = { value = "1e9 * farad", symbol = "abF" }
+conventional_farad_90 = { value = "R_K90 / R_K * farad", symbol = "F_90" }
+
+# Magnetic flux
+weber = { value = "volt * second", symbol = "Wb" }
+unit_pole = { value = "µ_0 * biot * centimeter" }
+
+# Inductance
+henry = { value = "weber / ampere", symbol = "H" }
+abhenry = { value = "1e-9 * henry", symbol = "abH" }
+conventional_henry_90 = { value = "R_K / R_K90 * henry", symbol = "H_90" }
+
+# Magnetic field
+tesla = { value = "weber / meter ** 2", symbol = "T" }
+gamma = { value = "1e-9 * tesla", symbol = "γ" }
+
+# Magnetomotive force
+ampere_turn = { value = "ampere", symbol = "At" }
+biot_turn = { value = "biot" }
+gilbert = { value = "1 / (4 * π) * biot_turn", symbol = "Gb" }
+
+# Magnetic field strength
+
+# Electric dipole moment
+debye = { value = "1e-9 / ζ * coulomb * angstrom", symbol = "D" } # formally 1 D = 1e-10 Fr*Å, but we generally want to use it outside the Gaussian context
+
+# Electric quadrupole moment
+buckingham = { value = "debye * angstrom" }
+
+# Magnetic dipole moment
+bohr_magneton = { value = "e * hbar / (2 * m_e)", symbol = "µ_B", aliases = ["mu_B"] }
+nuclear_magneton = { value = "e * hbar / (2 * m_p)", symbol = "µ_N", aliases = ["mu_N"] }
+
+# Refractive index
+refractive_index_unit = { value = "[]", symbol = "RIU" }
+
+# Absorbance
+absorbance_unit = { value = "[]", symbol = "AU" }
+
+# Membrane filtration flux
+LMH = { value = "L / m**2 / h" }
+
+# Membrane filtration permeability
+
+# Logaritmic Unit Definition
+#  Unit = scale; logbase; logfactor
+#  x_dB = [logfactor] * log( x_lin / [scale] ) / log( [logbase] )
+
+# Logaritmic Units of dimensionless quantity: [ https://en.wikipedia.org/wiki/Level_(logarithmic_quantity) ]
+
+decibelwatt = { value = "watt", logbase = 10, logfactor = 10, symbol = "dBW" }
+decibelmilliwatt = { value = "1e-3 watt", logbase = 10, logfactor = 10, symbol = "dBm" }
+decibelmicrowatt = { value = "1e-6 watt", logbase = 10, logfactor = 10, symbol = "dBu" }
+
+decibel = { value = "1", logbase = 10, logfactor = 10, symbol = "dB" }
+# bell = 1 ; logbase: 10; logfactor: = B
+## NOTE: B (Bell) symbol conflicts with byte
+
+decade = { value = "1", logbase = 10, logfactor = 1 }
+## NOTE: decade [time] can conflict with decade [dimensionless]
+
+octave = { value = "1", logbase = 2, logfactor = 1, symbol = "oct" }
+
+neper = { value = "1", logbase = 2.71828182845904523536028747135266249775724709369995, logfactor = 0.5, symbol = "Np" }
+
+# neper = 1 ; logbase: eulers_number; logfactor: 0.5 = Np
+
+#### UNIT GROUPS ####
+# Mostly for length, area, volume, mass, force
+# (customary or specialized units)
+
+# Note: historically, many of the units in this group were derived from each other (e.g. 1 chain = 10 fathoms = 4 rods = 100 links)
+# but we've followed the NIST's lead here and defined all of the units directly based on "common" units (feet and miles)
+# Source: Warfield, L. , Konijnenburg, J. , Lippa, K. , Lee, G. , Minnich, L. and Williams, J. (2023), Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices as adopted by the 108th National Conference on Weights and Measures, Handbook (NIST HB), National Institute of Standards and Technology, Gaithersburg, MD, [online], https://doi.org/10.6028/NIST.HB.44-2024 (Accessed January 12, 2024)
 [[group]]
 name = "USCSLengthInternational"
-
 [group.definitions]
-thou = { value = "1e-3 * inch", defined_symbol = "th", aliases = [
-  "mil_length",
-] }
-inch = { value = "yard / 36", defined_symbol = "in", aliases = [
-  "international_inch",
-  "inches",
-  "international_inches",
-] }
+thou = { value = "1e-3 * inch", symbol = "th", aliases = ["mil_length"] }
+inch = { value = "yard / 36", symbol = "in", aliases = ["international_inch", "inches", "international_inches"] }
 hand = { value = "4 * inch" }
-foot = { value = "yard / 3", defined_symbol = "ft", aliases = [
-  "international_foot",
-  "feet",
-  "international_feet",
-] }
-yard = { value = "0.9144 * meter", defined_symbol = "yd", aliases = [
-  "international_yard",
-] }
-mile = { value = "1760 * yard", defined_symbol = "mi", aliases = [
-  "international_mile",
-] }
-circular_mil = { value = "π / 4 * mil_length ** 2", defined_symbol = "cmil" }
-square_inch = { value = "inch ** 2", defined_symbol = "sq_in", aliases = [
-  "square_inches",
-] }
-square_foot = { value = "foot ** 2", defined_symbol = "sq_ft", aliases = [
-  "square_feet",
-] }
-square_yard = { value = "yard ** 2", defined_symbol = "sq_yd" }
-square_mile = { value = "mile ** 2", defined_symbol = "sq_mi" }
-cubic_inch = { value = "in ** 3", defined_symbol = "cu_in" }
-cubic_foot = { value = "ft ** 3", defined_symbol = "cu_ft", aliases = [
-  "cubic_feet",
-] }
-cubic_yard = { value = "yd ** 3", defined_symbol = "cu_yd" }
-link = { value = "0.66 * foot", defined_symbol = "li" }
+foot = { value = "yard / 3", symbol = "ft", aliases = ["international_foot", "feet", "international_feet"] }
+yard = { value = "0.9144 * meter", symbol = "yd", aliases = ["international_yard"] }                              # since Jul 1959
+mile = { value = "1760 * yard", symbol = "mi", aliases = ["international_mile"] }
+
+circular_mil = { value = "π / 4 * mil_length ** 2", symbol = "cmil" }
+square_inch = { value = "inch ** 2", symbol = "sq_in", aliases = ["square_inches"] }
+square_foot = { value = "foot ** 2", symbol = "sq_ft", aliases = ["square_feet"] }
+square_yard = { value = "yard ** 2", symbol = "sq_yd" }
+square_mile = { value = "mile ** 2", symbol = "sq_mi" }
+
+cubic_inch = { value = "in ** 3", symbol = "cu_in" }
+cubic_foot = { value = "ft ** 3", symbol = "cu_ft", aliases = ["cubic_feet"] }
+cubic_yard = { value = "yd ** 3", symbol = "cu_yd" }
+
+link = { value = "0.66 * foot", symbol = "li" }
 fathom = { value = "6 * foot" }
-rod = { value = "16.5 * foot", defined_symbol = "rd", aliases = [
-  "pole",
-  "perch",
-] }
-chain = { value = "66 * foot", defined_symbol = "ch" }
-furlong = { value = "660 * foot", defined_symbol = "fur" }
+rod = { value = "16.5 * foot", symbol = "rd", aliases = ["pole", "perch"] }
+chain = { value = "66 * foot", symbol = "ch" }
+furlong = { value = "660 * foot", symbol = "fur" }
 cables_length = { value = "720 * foot" }
 league = { value = "3 * mile" }
-square_rod = { value = "rod ** 2", defined_symbol = "sq_rd", aliases = [
-  "sq_rod",
-  "sq_pole",
-  "sq_perch",
-] }
+
+square_rod = { value = "rod ** 2", symbol = "sq_rd", aliases = ["sq_rod", "sq_pole", "sq_perch"] }
 acre = { value = "43560 * square_foot" }
 square_league = { value = "league ** 2" }
+
 acre_foot = { value = "acre * foot", aliases = ["acre_feet"] }
 
+# The adoption of the international foot in 1959 temporarily permitted the continued use of the 1893 definition of the foot for survey purposes.
+# That established the Survey Foot. After 2022, that exception was no longer permitted and all feet are feet (survey or otherwise).
+# The units below are preserved here for historical applications.
+# Source: Barton, J. , Blackwell, B. , Butcher, T. , Harshman, R., Lee, G. , Olson, D. (2019), Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices as adopted by the 108th National Conference on Weights and Measures 2019, Handbook (NIST HB), National Institute of Standards and Technology, Gaithersburg, MD, [online], https://doi.org/10.6028/NIST.HB.44-2020 (Accessed January 12, 2024)
 [[group]]
 name = "USCSLengthSurvey"
-
 [group.definitions]
-survey_foot = { value = "1200 / 3937 * meter", defined_symbol = "sft" }
-survey_mile = { value = "5280 * survey_foot", defined_symbol = "smi", aliases = [
-  "us_statute_mile",
-] }
+survey_foot = { value = "1200 / 3937 * meter", symbol = "sft" }
+survey_mile = { value = "5280 * survey_foot", symbol = "smi", aliases = ["us_statute_mile"] }
 square_survey_mile = { value = "survey_mile ** 2" }
-survey_link = { value = "0.66 * survey_foot", defined_symbol = "sli" }
+
+survey_link = { value = "0.66 * survey_foot", symbol = "sli" }
 survey_fathom = { value = "6 * survey_foot" }
-survey_rod = { value = "16.5 * survey_foot", defined_symbol = "srd", aliases = [
-  "survey_pole",
-  "survey_perch",
-] }
-survey_chain = { value = "66 * survey_foot", defined_symbol = "sch" }
-survey_furlong = { value = "660 * survey_foot", defined_symbol = "sfur" }
+survey_rod = { value = "16.5 * survey_foot", symbol = "srd", aliases = ["survey_pole", "survey_perch"] }
+survey_chain = { value = "66 * survey_foot", symbol = "sch" }
+survey_furlong = { value = "660 * survey_foot", symbol = "sfur" }
 survey_cables_length = { value = "720 * survey_foot" }
 survey_league = { value = "3 * survey_mile" }
-square_survey_rod = { value = "survey_rod ** 2", defined_symbol = "sq_srd", aliases = [
-  "sq_survey_rod",
-  "sq_survey_pole",
-  "sq_survey_perch",
-] }
+
+square_survey_rod = { value = "survey_rod ** 2", symbol = "sq_srd", aliases = ["sq_survey_rod", "sq_survey_pole", "sq_survey_perch"] }
 survey_acre = { value = "10 * survey_chain ** 2" }
 square_survey_league = { value = "survey_league ** 2" }
-survey_acre_foot = { value = "survey_acre * survey_foot", aliases = [
-  "survey_acre_feet",
-] }
+
+survey_acre_foot = { value = "survey_acre * survey_foot", aliases = ["survey_acre_feet"] }
 
 [[group]]
 name = "USCSDryVolume"
-
 [group.definitions]
-dry_pint = { value = "bushel / 64", defined_symbol = "dpi", aliases = [
-  "US_dry_pint",
-] }
-dry_quart = { value = "bushel / 32", defined_symbol = "dqt", aliases = [
-  "US_dry_quart",
-] }
-dry_gallon = { value = "bushel / 8", defined_symbol = "dgal", aliases = [
-  "US_dry_gallon",
-] }
-peck = { value = "bushel / 4", defined_symbol = "pk" }
-bushel = { value = "2150.42 cubic_inch", defined_symbol = "bu" }
+dry_pint = { value = "bushel / 64", symbol = "dpi", aliases = ["US_dry_pint"] }
+dry_quart = { value = "bushel / 32", symbol = "dqt", aliases = ["US_dry_quart"] }
+dry_gallon = { value = "bushel / 8", symbol = "dgal", aliases = ["US_dry_gallon"] }
+peck = { value = "bushel / 4", symbol = "pk" }
+bushel = { value = "2150.42 cubic_inch", symbol = "bu" }
 dry_barrel = { value = "7056 cubic_inch", aliases = ["US_dry_barrel"] }
-board_foot = { value = "ft * ft * in", defined_symbol = "FBM", aliases = [
-  "board_feet",
-  "BF",
-  "BDFT",
-  "super_foot",
-  "superficial_foot",
-  "super_feet",
-  "superficial_feet",
-] }
+board_foot = { value = "ft * ft * in", symbol = "FBM", aliases = ["board_feet", "BF", "BDFT", "super_foot", "superficial_foot", "super_feet", "superficial_feet"] }
 
 [[group]]
 name = "USCSLiquidVolume"
-
 [group.definitions]
 minim = { value = "pint / 7680" }
-fluid_dram = { value = "pint / 128", defined_symbol = "fldr", aliases = [
-  "fluidram",
-  "US_fluid_dram",
-  "US_liquid_dram",
-] }
-fluid_ounce = { value = "pint / 16", defined_symbol = "floz", aliases = [
-  "US_fluid_ounce",
-  "US_liquid_ounce",
-] }
-gill = { value = "pint / 4", defined_symbol = "gi", aliases = [
-  "liquid_gill",
-  "US_liquid_gill",
-] }
-pint = { value = "quart / 2", defined_symbol = "pt", aliases = [
-  "liquid_pint",
-  "US_pint",
-] }
+fluid_dram = { value = "pint / 128", symbol = "fldr", aliases = ["fluidram", "US_fluid_dram", "US_liquid_dram"] }
+fluid_ounce = { value = "pint / 16", symbol = "floz", aliases = ["US_fluid_ounce", "US_liquid_ounce"] }
+gill = { value = "pint / 4", symbol = "gi", aliases = ["liquid_gill", "US_liquid_gill"] }
+pint = { value = "quart / 2", symbol = "pt", aliases = ["liquid_pint", "US_pint"] }
 fifth = { value = "gallon / 5", aliases = ["US_liquid_fifth"] }
-quart = { value = "gallon / 4", defined_symbol = "qt", aliases = [
-  "liquid_quart",
-  "US_liquid_quart",
-] }
-gallon = { value = "231 * cubic_inch", defined_symbol = "gal", aliases = [
-  "liquid_gallon",
-  "US_liquid_gallon",
-] }
+quart = { value = "gallon / 4", symbol = "qt", aliases = ["liquid_quart", "US_liquid_quart"] }
+gallon = { value = "231 * cubic_inch", symbol = "gal", aliases = ["liquid_gallon", "US_liquid_gallon"] }
 
 [[group]]
 name = "USCSVolumeOther"
-
 [group.definitions]
-teaspoon = { value = "fluid_ounce / 6", defined_symbol = "tsp" }
-tablespoon = { value = "fluid_ounce / 2", defined_symbol = "tbsp" }
-shot = { value = "3 * tablespoon", defined_symbol = "jig", aliases = [
-  "US_shot",
-] }
-cup = { value = "pint / 2", defined_symbol = "cp", aliases = [
-  "liquid_cup",
-  "US_liquid_cup",
-] }
-barrel = { value = "31.5 * gallon", defined_symbol = "bbl" }
-oil_barrel = { value = "42 * gallon", defined_symbol = "oil_bbl" }
-beer_barrel = { value = "31 * gallon", defined_symbol = "beer_bbl" }
+teaspoon = { value = "fluid_ounce / 6", symbol = "tsp" }
+tablespoon = { value = "fluid_ounce / 2", symbol = "tbsp" }
+shot = { value = "3 * tablespoon", symbol = "jig", aliases = ["US_shot"] }
+cup = { value = "pint / 2", symbol = "cp", aliases = ["liquid_cup", "US_liquid_cup"] }
+barrel = { value = "31.5 * gallon", symbol = "bbl" }
+oil_barrel = { value = "42 * gallon", symbol = "oil_bbl" }
+beer_barrel = { value = "31 * gallon", symbol = "beer_bbl" }
 hogshead = { value = "63 * gallon" }
 
 [[group]]
 name = "Avoirdupois"
-
 [group.definitions]
-dram = { value = "pound / 256", defined_symbol = "dr", aliases = [
-  "avoirdupois_dram",
-  "avdp_dram",
-] }
-ounce = { value = "pound / 16", defined_symbol = "oz", aliases = [
-  "avoirdupois_ounce",
-  "avdp_ounce",
-] }
-pound = { value = "7e3 * grain", defined_symbol = "lb", aliases = [
-  "avoirdupois_pound",
-  "avdp_pound",
-] }
+dram = { value = "pound / 256", symbol = "dr", aliases = ["avoirdupois_dram", "avdp_dram"] }
+ounce = { value = "pound / 16", symbol = "oz", aliases = ["avoirdupois_ounce", "avdp_ounce"] }
+pound = { value = "7e3 * grain", symbol = "lb", aliases = ["avoirdupois_pound", "avdp_pound"] }
 stone = { value = "14 * pound" }
 quarter = { value = "28 * pound" }
 bag = { value = "94 * pound" }
-hundredweight = { value = "100 * pound", defined_symbol = "cwt", aliases = [
-  "short_hundredweight",
-] }
+hundredweight = { value = "100 * pound", symbol = "cwt", aliases = ["short_hundredweight"] }
 long_hundredweight = { value = "112 * pound" }
 ton = { value = "2e3 * pound", aliases = ["short_ton"] }
 long_ton = { value = "2240 * pound" }
 slug = { value = "g_0 * pound * second ** 2 / foot" }
-slinch = { value = "g_0 * pound * second ** 2 / inch", defined_symbol = "blob", aliases = [
-  "slugette",
-] }
-force_ounce = { value = "g_0 * ounce", defined_symbol = "ozf", aliases = [
-  "ounce_force",
-] }
-force_pound = { value = "g_0 * pound", defined_symbol = "lbf", aliases = [
-  "pound_force",
-] }
-force_ton = { value = "g_0 * ton", aliases = [
-  "ton_force",
-  "force_short_ton",
-  "short_ton_force",
-] }
+slinch = { value = "g_0 * pound * second ** 2 / inch", symbol = "blob", aliases = ["slugette"] }
+
+force_ounce = { value = "g_0 * ounce", symbol = "ozf", aliases = ["ounce_force"] }
+force_pound = { value = "g_0 * pound", symbol = "lbf", aliases = ["pound_force"] }
+force_ton = { value = "g_0 * ton", aliases = ["ton_force", "force_short_ton", "short_ton_force"] }
 force_long_ton = { value = "g_0 * long_ton", aliases = ["long_ton_force"] }
 kip = { value = "1e3 * force_pound" }
-poundal = { value = "pound * foot / second ** 2", defined_symbol = "pdl" }
+poundal = { value = "pound * foot / second ** 2", symbol = "pdl" }
 
 [[group]]
 name = "AvoirdupoisUK"
 using_group_names = ["Avoirdupois"]
-
 [group.definitions]
-UK_hundredweight = { value = "long_hundredweight", defined_symbol = "UK_cwt" }
+UK_hundredweight = { value = "long_hundredweight", symbol = "UK_cwt" }
 UK_ton = { value = "long_ton" }
 UK_force_ton = { value = "force_long_ton", aliases = ["UK_ton_force"] }
 
 [[group]]
 name = "AvoirdupoisUS"
 using_group_names = ["Avoirdupois"]
-
 [group.definitions]
-US_hundredweight = { value = "hundredweight", defined_symbol = "US_cwt" }
+US_hundredweight = { value = "hundredweight", symbol = "US_cwt" }
 US_ton = { value = "ton" }
 US_force_ton = { value = "force_ton", aliases = ["US_ton_force"] }
 
 [[group]]
 name = "Troy"
-
 [group.definitions]
-pennyweight = { value = "24 * grain", defined_symbol = "dwt" }
-troy_ounce = { value = "480 * grain", defined_symbol = "toz", aliases = [
-  "ozt",
-] }
-troy_pound = { value = "12 * troy_ounce", defined_symbol = "tlb", aliases = [
-  "lbt",
-] }
+pennyweight = { value = "24 * grain", symbol = "dwt" }
+troy_ounce = { value = "480 * grain", symbol = "toz", aliases = ["ozt"] }
+troy_pound = { value = "12 * troy_ounce", symbol = "tlb", aliases = ["lbt"] }
 
 [[group]]
 name = "Apothecary"
-
 [group.definitions]
 scruple = { value = "20 * grain" }
-apothecary_dram = { value = "3 * scruple", defined_symbol = "ap_dr", aliases = [
-  "apothecary_drachm",
-  "drachm",
-] }
-apothecary_ounce = { value = "8 * apothecary_dram", defined_symbol = "ap_oz" }
-apothecary_pound = { value = "12 * apothecary_ounce", defined_symbol = "ap_lb" }
+apothecary_dram = { value = "3 * scruple", symbol = "ap_dr", aliases = ["apothecary_drachm", "drachm"] }
+apothecary_ounce = { value = "8 * apothecary_dram", symbol = "ap_oz" }
+apothecary_pound = { value = "12 * apothecary_ounce", symbol = "ap_lb" }
 
 [[group]]
 name = "ImperialVolume"
-
 [group.definitions]
 imperial_minim = { value = "imperial_fluid_ounce / 480" }
 imperial_fluid_scruple = { value = "imperial_fluid_ounce / 24" }
-imperial_fluid_drachm = { value = "imperial_fluid_ounce / 8", defined_symbol = "imperial_fldr", aliases = [
-  "imperial_fluid_dram",
-] }
-imperial_fluid_ounce = { value = "imperial_pint / 20", defined_symbol = "imperial_floz", aliases = [
-  "UK_fluid_ounce",
-] }
-imperial_gill = { value = "imperial_pint / 4", defined_symbol = "imperial_gi", aliases = [
-  "UK_gill",
-] }
-imperial_cup = { value = "imperial_pint / 2", defined_symbol = "imperial_cp", aliases = [
-  "UK_cup",
-] }
-imperial_pint = { value = "imperial_gallon / 8", defined_symbol = "imperial_pt", aliases = [
-  "UK_pint",
-] }
-imperial_quart = { value = "imperial_gallon / 4", defined_symbol = "imperial_qt", aliases = [
-  "UK_quart",
-] }
-imperial_gallon = { value = "4.54609 * liter", defined_symbol = "imperial_gal", aliases = [
-  "UK_gallon",
-] }
-imperial_peck = { value = "2 * imperial_gallon", defined_symbol = "imperial_pk", aliases = [
-  "UK_pk",
-] }
-imperial_bushel = { value = "8 * imperial_gallon", defined_symbol = "imperial_bu", aliases = [
-  "UK_bushel",
-] }
-imperial_barrel = { value = "36 * imperial_gallon", defined_symbol = "imperial_bbl", aliases = [
-  "UK_bbl",
-] }
+imperial_fluid_drachm = { value = "imperial_fluid_ounce / 8", symbol = "imperial_fldr", aliases = ["imperial_fluid_dram"] }
+imperial_fluid_ounce = { value = "imperial_pint / 20", symbol = "imperial_floz", aliases = ["UK_fluid_ounce"] }
+imperial_gill = { value = "imperial_pint / 4", symbol = "imperial_gi", aliases = ["UK_gill"] }
+imperial_cup = { value = "imperial_pint / 2", symbol = "imperial_cp", aliases = ["UK_cup"] }
+imperial_pint = { value = "imperial_gallon / 8", symbol = "imperial_pt", aliases = ["UK_pint"] }
+imperial_quart = { value = "imperial_gallon / 4", symbol = "imperial_qt", aliases = ["UK_quart"] }
+imperial_gallon = { value = "4.54609 * liter", symbol = "imperial_gal", aliases = ["UK_gallon"] }
+imperial_peck = { value = "2 * imperial_gallon", symbol = "imperial_pk", aliases = ["UK_pk"] }
+imperial_bushel = { value = "8 * imperial_gallon", symbol = "imperial_bu", aliases = ["UK_bushel"] }
+imperial_barrel = { value = "36 * imperial_gallon", symbol = "imperial_bbl", aliases = ["UK_bbl"] }
 
 [[group]]
 name = "Printer"
-
 [group.definitions]
 pica = { value = "inch / 6", aliases = ["printers_pica"] }
-point = { value = "pica / 12", defined_symbol = "pp", aliases = [
-  "printers_point",
-  "big_point",
-  "bp",
-] }
+point = { value = "pica / 12", symbol = "pp", aliases = ["printers_point", "big_point", "bp"] }
 didot = { value = "1 / 2660 * m" }
 cicero = { value = "12 * didot" }
 tex_point = { value = "inch / 72.27" }
@@ -947,69 +799,56 @@ tex_pica = { value = "12 * tex_point" }
 tex_didot = { value = "1238 / 1157 * tex_point" }
 tex_cicero = { value = "12 * tex_didot" }
 scaled_point = { value = "tex_point / 65536" }
-css_pixel = { value = "inch / 96", defined_symbol = "px" }
-pixel = { value = "[printing_unit]", aliases = [
-  "dot",
-  "pel",
-  "picture_element",
-] }
-pixels_per_centimeter = { value = "pixel / cm", defined_symbol = "PPCM" }
-pixels_per_inch = { value = "pixel / inch", defined_symbol = "dots_per_inch", aliases = [
-  "PPI",
-  "ppi",
-  "DPI",
-  "printers_dpi",
-] }
-bits_per_pixel = { value = "bit / pixel", defined_symbol = "bpp" }
+css_pixel = { value = "inch / 96", symbol = "px" }
+
+pixel = { value = "[printing_unit]", aliases = ["dot", "pel", "picture_element"] }
+pixels_per_centimeter = { value = "pixel / cm", symbol = "PPCM" }
+pixels_per_inch = { value = "pixel / inch", symbol = "dots_per_inch", aliases = ["PPI", "ppi", "DPI", "printers_dpi"] }
+bits_per_pixel = { value = "bit / pixel", symbol = "bpp" }
 
 [[group]]
 name = "Textile"
-
 [group.definitions]
-tex = { value = "gram / kilometer", defined_symbol = "Tt" }
+tex = { value = "gram / kilometer", symbol = "Tt" }
 dtex = { value = "decitex" }
-denier = { value = "gram / (9 * kilometer)", defined_symbol = "den" }
-jute = { value = "pound / (14400 * yard)", defined_symbol = "Tj" }
-aberdeen = { value = "jute", defined_symbol = "Ta" }
+denier = { value = "gram / (9 * kilometer)", symbol = "den" }
+jute = { value = "pound / (14400 * yard)", symbol = "Tj" }
+aberdeen = { value = "jute", symbol = "Ta" }
 RKM = { value = "gf / tex" }
-number_english = { value = "840 * yard / pound", defined_symbol = "Ne", aliases = [
-  "NeC",
-  "ECC",
-] }
+
+number_english = { value = "840 * yard / pound", symbol = "Ne", aliases = ["NeC", "ECC"] }
 number_meter = { value = "kilometer / kilogram" }
 
+#### CGS ELECTROMAGNETIC UNITS ####
+
+# === Gaussian system of units ===
 [[group]]
 name = "Gaussian"
-
 [group.definitions]
-franklin = { value = "erg ** 0.5 * centimeter ** 0.5", defined_symbol = "Fr", aliases = [
-  "statcoulomb",
-  "statC",
-  "esu",
-] }
-statvolt = { value = "erg / franklin", defined_symbol = "statV" }
-statampere = { value = "franklin / second", defined_symbol = "statA" }
-gauss = { value = "dyne / franklin", defined_symbol = "G" }
-maxwell = { value = "gauss * centimeter ** 2", defined_symbol = "Mx" }
-oersted = { value = "dyne / maxwell", defined_symbol = "Oe", aliases = [
-  "ørsted",
-] }
-statohm = { value = "statvolt / statampere", defined_symbol = "statΩ" }
-statfarad = { value = "franklin / statvolt", defined_symbol = "statF" }
+franklin = { value = "erg ** 0.5 * centimeter ** 0.5", symbol = "Fr", aliases = ["statcoulomb", "statC", "esu"] }
+statvolt = { value = "erg / franklin", symbol = "statV" }
+statampere = { value = "franklin / second", symbol = "statA" }
+gauss = { value = "dyne / franklin", symbol = "G" }
+maxwell = { value = "gauss * centimeter ** 2", symbol = "Mx" }
+oersted = { value = "dyne / maxwell", symbol = "Oe", aliases = ["ørsted"] }
+statohm = { value = "statvolt / statampere", symbol = "statΩ" }
+statfarad = { value = "franklin / statvolt", symbol = "statF" }
 statmho = { value = "statampere / statvolt" }
 
+# === ESU system of units ===
+#   (where different from Gaussian)
+#   See note for Gaussian system too
 [[group]]
 name = "ESU"
 using_group_names = ["Gaussian"]
-
 [group.definitions]
-statweber = { value = "statvolt * second", defined_symbol = "statWb" }
-stattesla = { value = "statweber / centimeter ** 2", defined_symbol = "statT" }
-stathenry = { value = "statweber / statampere", defined_symbol = "statH" }
+statweber = { value = "statvolt * second", symbol = "statWb" }
+stattesla = { value = "statweber / centimeter ** 2", symbol = "statT" }
+stathenry = { value = "statweber / statampere", symbol = "statH" }
 
+#### SYSTEMS OF UNITS ####
 [[system]]
 name = "SI"
-using_group_names = ["root"]
 rules = ["second", "meter", "kilogram", "ampere", "kelvin", "mole", "candela"]
 
 [[system]]
@@ -1026,6 +865,7 @@ rules = ["centimeter", "gram", "second"]
 name = "atomic"
 using_group_names = ["international"]
 rules = [
+  # based on unit m_e, e, hbar, k_C, k
   "bohr: meter",
   "electron_mass: gram",
   "atomic_unit_of_time: second",
@@ -1037,6 +877,7 @@ rules = [
 name = "Planck"
 using_group_names = ["international"]
 rules = [
+  # based on unit c, gravitational_constant, hbar, k_C, k
   "planck_length: meter",
   "planck_mass: gram",
   "planck_time: second",
@@ -1065,6 +906,10 @@ using_group_names = [
 ]
 rules = ["yard", "pound"]
 
+# Note this system is not commensurate with SI, as ε_0 and µ_0 disappear;
+# some quantities with different dimensions in SI have the same
+# dimensions in the Gaussian system (e.g. [Mx] = [Fr], but [Wb] != [C]),
+# and therefore the conversion factors depend on the context (not in pint sense)
 [[context]]
 name = "Gaussian"
 aliases = ["Gau"]
@@ -1117,14 +962,17 @@ relations = [
   "[magnetic_dipole] -> [esu_magnetic_dipole]: value * k_C ** 0.5",
 ]
 
+#### CONVERSION CONTEXTS ####
 [[context]]
 name = "spectroscopy"
 aliases = ["sp"]
 defaults = { n = 1 }
 relations = [
+  # n index of refraction of the medium.
   "[length] <-> [frequency]: speed_of_light / n / value",
   "[frequency] -> [energy]: planck_constant * value",
   "[energy] -> [frequency]: value / planck_constant",
+  # allow wavenumber / kayser
   "[wavenumber] <-> [length]: 1 / value",
 ]
 
@@ -1149,20 +997,38 @@ name = "chemistry"
 aliases = ["chem"]
 defaults = { mw = 0, volume = 0, solvent_mass = 0 }
 relations = [
+  # mw is the molecular weight of the species
+  # volume is the volume of the solution
+  # solvent_mass is the mass of solvent in the solution
+
+  # moles -> mass require the molecular weight
   "[substance] -> [mass]: value * mw",
   "[mass] -> [substance]: value / mw",
+
+  # moles/volume -> mass/volume and moles/mass -> mass/mass
+  # require the  molecular weight
   "[substance] / [volume] -> [mass] / [volume]: value * mw",
   "[mass] / [volume] -> [substance] / [volume]: value / mw",
   "[substance] / [mass] -> [mass] / [mass]: value * mw",
   "[mass] / [mass] -> [substance] / [mass]: value / mw",
+
+  # moles/volume -> moles requires the solution volume
   "[substance] / [volume] -> [substance]: value * volume",
   "[substance] -> [substance] / [volume]: value / volume",
+
+  # moles/mass -> moles requires the solvent (usually water) mass
   "[substance] / [mass] -> [substance]: value * solvent_mass",
   "[substance] -> [substance] / [mass]: value / solvent_mass",
+
+  # moles/mass -> moles/volume require the solvent mass and the volume
   "[substance] / [mass] -> [substance]/[volume]: value * solvent_mass / volume",
   "[substance] / [volume] -> [substance] / [mass]: value / solvent_mass * volume",
 ]
 
 [[context]]
 name = "textile"
-relations = ["[mass] / [length] <-> [length] / [mass]: 1 / value"]
+relations = [
+  # Allow switching between Direct count system (i.e. tex) and
+  # Indirect count system (i.e. number_english, number_meter)
+  "[mass] / [length] <-> [length] / [mass]: 1 / value",
+]

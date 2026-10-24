@@ -9,19 +9,20 @@ Parser for TOML definition files, e.g. ``default_en.toml``::
     system = "mks"
 
     [prefix]
-    kilo = { value = "1e3", defined_symbol = "k" }
+    kilo = { value = 1e3, symbol = "k" }
 
     [dimension]
     density = { value = "[mass] / [volume]" }
 
     [unit]
-    meter = { value = "[length]", defined_symbol = "m", aliases = ["metre"] }
-    degree_Celsius = { value = "kelvin; offset: 273.15", defined_symbol = "°C" }
+    meter = { value = "[length]", symbol = "m", aliases = ["metre"] }
+    degree_Celsius = { value = "kelvin", offset = 273.15, symbol = "°C" }
+    decibel = { value = "1", logbase = 10, logfactor = 10, symbol = "dB" }
 
     [[group]]
     name = "Avoirdupois"
     [group.definitions]
-    pound = { value = "7000 * grain", defined_symbol = "lb" }
+    pound = { value = "7000 * grain", symbol = "lb" }
 
     [[system]]
     name = "mks"
@@ -34,7 +35,9 @@ Parser for TOML definition files, e.g. ``default_en.toml``::
     defaults = { n = 1 }
     relations = ["[length] <-> [frequency]: speed_of_light / n / value"]
 
-Values use the same syntax as the text format.
+Values use the same syntax as the text format. Numbers (prefix values and the
+``offset``, ``logbase`` and ``logfactor`` of a unit) may be TOML numbers or
+strings such as ``"2**10"``; both are read with the registry's number type.
 
 :copyright: 2025 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -60,25 +63,30 @@ from ..facets.system.definitions import BaseUnitRule, SystemDefinition
 from .base_defparser import ParserConfig
 
 
+def _number(value: Any, cfg: ParserConfig):
+    # floats arrive as their source text (parse_float=str), keeping all digits
+    return cfg.to_number(str(value))
+
+
 def _prefix(name: str, d: dict[str, Any], cfg: ParserConfig):
     return definitions.PrefixDefinition(
         name,
-        cfg.to_number(d["value"]),
-        d.get("defined_symbol"),
+        _number(d["value"], cfg),
+        d.get("symbol"),
         tuple(d.get("aliases", ())),
     )
 
 
 def _unit(name: str, d: dict[str, Any], cfg: ParserConfig):
-    converter, *modifier_parts = d["value"].split(";")
-    modifiers = {}
-    for part in modifier_parts:
-        key, number = part.split(":")
-        modifiers[key.strip()] = cfg.to_number(number)
-    scaled = cfg.to_scaled_units_container(converter)
+    modifiers = {
+        key: _number(d[key], cfg)
+        for key in ("offset", "logbase", "logfactor")
+        if key in d
+    }
+    scaled = cfg.to_scaled_units_container(str(d["value"]))
     return definitions.UnitDefinition(
         name,
-        d.get("defined_symbol"),
+        d.get("symbol"),
         tuple(d.get("aliases", ())),
         Converter.from_arguments(scale=scaled.scale, **modifiers),
         definitions.UnitsContainer(scaled),
@@ -120,7 +128,7 @@ def _context(d: dict[str, Any], cfg: ParserConfig):
     return ContextDefinition(
         d["name"],
         tuple(d.get("aliases", ())),
-        {k: cfg.to_number(str(v)) for k, v in d.get("defaults", {}).items()},
+        {k: _number(v, cfg) for k, v in d.get("defaults", {}).items()},
         tuple(_relation(r, cfg) for r in d.get("relations", ())),
         tuple(_unit(k, v, cfg) for k, v in d.get("redefinitions", {}).items()),
     )
@@ -145,7 +153,7 @@ class TomlParser:
     def parse_file(self, filename: pathlib.Path | str) -> Iterator[Any]:
         """Yield the definitions in a TOML file."""
         with open(filename, "rb") as f:
-            data = tomllib.load(f)
+            data = tomllib.load(f, parse_float=str)
         cfg = self._default_config
 
         unknown = set(data) - {"defaults", *_SECTIONS}
