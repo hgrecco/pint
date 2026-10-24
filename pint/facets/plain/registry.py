@@ -24,6 +24,7 @@ The registry contains the following important methods:
 from __future__ import annotations
 
 import copy
+import dataclasses
 import functools
 import inspect
 import itertools
@@ -315,6 +316,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         #: Map prefix name (string) to its definition (PrefixDefinition).
         self._prefixes: dict[str, PrefixDefinition] = {"": PrefixDefinition("", 1)}
 
+        #: Names of units derived by the registry, e.g. prefixed and delta units.
+        self._generated_units: set[str] = set()
+
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes: dict[str, str] = {"": "", "s": ""}
 
@@ -569,8 +573,16 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         unit = unit_dict[self.get_name(definition.name)]
         while not isinstance(unit, UnitDefinition):
             unit = unit_dict[unit.name]
+        # keep the definition complete, e.g. for write_definitions
+        known = {unit.name, unit.symbol, *unit.aliases}
+        added = tuple(a for a in dict.fromkeys(definition.aliases) if a not in known)
+        new = dataclasses.replace(unit, aliases=unit.aliases + added)
+        for layer in getattr(unit_dict, "maps", (unit_dict,)):
+            for key in [k for k, v in layer.items() if v is unit]:
+                layer[key] = new
+        self._generated_units.discard(unit.name)
         for alias in definition.aliases:
-            self._helper_single_adder(alias, unit, self._units, self._units_casei)
+            self._helper_single_adder(alias, new, self._units, self._units_casei)
 
     def _add_dimension(self, definition: DimensionDefinition) -> None:
         self._helper_adder(definition, self._dimensions, None)
@@ -592,6 +604,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                     self._add_dimension(DimensionDefinition(dim_name))
 
         self._helper_adder(definition, self._units, self._units_casei)
+        # an explicit definition replaces a derived one of the same name
+        self._generated_units.discard(definition.name)
 
     def load_definitions(
         self, file: Iterable[str] | str | pathlib.Path, is_resource: bool = False
@@ -618,7 +632,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 try:
                     self._helper_dispatch_adder(definition)
                 except Exception as ex:
-                    ex.add_note(f"While adding {definition!r} from {file}")
+                    name = getattr(definition, "name", "")
+                    ex.add_note(
+                        f"While adding {type(definition).__name__} {name!r} from {file}"
+                    )
                     raise
             # the disk cache keys a path by its content
             return pathlib.Path(file)
@@ -634,7 +651,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         """Write the registry definitions to a TOML file (requires tomlkit)."""
         from ...delegates.toml_parser import write_definitions
 
-        write_definitions(filename, self)
+        write_definitions(filename, self, stacklevel=3)
 
     def _build_cache(self, loaded_files=None) -> None:
         """Build a cache of dimensionality and plain units."""
@@ -722,6 +739,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 prefix_def.converter,
                 self.UnitsContainer({unit_name: 1}),
             )
+            self._generated_units.add(name)
             return prefix + unit_name
 
         return unit_name

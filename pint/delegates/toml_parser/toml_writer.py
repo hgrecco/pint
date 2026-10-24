@@ -63,34 +63,15 @@ def _definition(definition, value: str | None = None) -> dict[str, Any]:
     return d
 
 
-def _unit(d, extra_aliases=()) -> dict[str, Any]:
-    out = _definition(d, d.value_text or _unit_value(d))
-    if extra_aliases:
-        out["aliases"] = out.get("aliases", []) + list(extra_aliases)
-    return out
+def _unit(d) -> dict[str, Any]:
+    return _definition(d, d.value_text or _unit_value(d))
 
 
-def _generated_by_registry(ureg, d) -> bool:
-    """Prefixed units cached by get_name, and delta units of offset units."""
-    if d.value_text:
-        return False
-    if d.name.startswith("delta_"):
-        base = ureg._units.get(d.name[6:])
-        if base is not None and not base.is_multiplicative:
-            return d.reference == base.reference
-    # get_name reuses the prefix's converter object
-    return any(
-        d.converter is p.converter and d.name.startswith(p.name)
-        for p in ureg._prefixes.values()
-        if p.name
-    )
-
-
-def _warn_unwritten(ureg, groups, systems, contexts) -> None:
-    """Warn about groups, systems and contexts that were not added from
-    definitions (or were changed afterwards), as they cannot be written."""
+def unwritten(ureg: GenericPlainRegistry) -> list[str]:
+    """Groups, systems and contexts that were not added from definitions
+    (or were changed afterwards), and so cannot be written."""
     skipped = []
-    defined_groups = {g.name: g for g in groups}
+    defined_groups = {g.name: g for g in getattr(ureg, "_group_definitions", [])}
     for name, group in getattr(ureg, "_groups", {}).items():
         gd = defined_groups.get(name)
         # these also collect the units defined outside any group
@@ -104,13 +85,12 @@ def _warn_unwritten(ureg, groups, systems, contexts) -> None:
             group._used_groups != set(gd.using_group_names)
         ):
             skipped.append(f"changes to group {name}")
-    defined_systems = {s.name for s in systems}
-    skipped += [
-        f"system {name}"
-        for name in getattr(ureg, "_systems", {})
-        if name not in defined_systems
-    ]
-    defined_contexts = {c.name for c in contexts}
+    defined_systems = {s.name for s in getattr(ureg, "_system_definitions", [])}
+    for name, s in getattr(ureg, "_systems", {}).items():
+        # empty systems are created on demand by get_system
+        if name not in defined_systems and (s._used_groups or s.base_units):
+            skipped.append(f"system {name}")
+    defined_contexts = set(getattr(ureg, "_context_definitions", {}))
     skipped += [
         f"context {name}"
         for name in dict.fromkeys(
@@ -118,11 +98,7 @@ def _warn_unwritten(ureg, groups, systems, contexts) -> None:
         )
         if name not in defined_contexts
     ]
-    if skipped:
-        warnings.warn(
-            "Only definitions can be written to TOML; skipping " + ", ".join(skipped),
-            stacklevel=5,
-        )
+    return skipped
 
 
 def _number(value):
@@ -135,15 +111,10 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
     systems = getattr(ureg, "_system_definitions", [])
     contexts = list(getattr(ureg, "_context_definitions", {}).values())
     group_units = {u.name for g in groups for u in g.definitions}
-    _warn_unwritten(ureg, groups, systems, contexts)
+    skip_units = group_units | getattr(ureg, "_generated_units", set())
 
     # skip the overlays of active contexts; aliases map to the same definition
     units = ureg._units.maps[-1] if isinstance(ureg._units, ChainMap) else ureg._units
-    # aliases added with @alias are only keys in the registry
-    extra_aliases: dict[str, list[str]] = {}
-    for key, d in units.items():
-        if key not in (d.name, d.symbol) and key not in d.aliases:
-            extra_aliases.setdefault(d.name, []).append(key)
     units = {d.name: d for d in units.values()}
     prefixes = {d.name: d for d in ureg._prefixes.values() if d.name}
     dimensions = {d.name: d for d in ureg._dimensions.values() if not d.is_base}
@@ -159,17 +130,14 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
         for name, d in dimensions.items()
     }
     data["unit"] = {
-        name: _unit(d, extra_aliases.get(name, ()))
-        for name, d in units.items()
-        if name not in group_units and not _generated_by_registry(ureg, d)
+        name: _unit(d) for name, d in units.items() if name not in skip_units
     }
     data["group"] = [
         {
             "name": g.name,
             "using_group_names": list(g.using_group_names),
-            "definitions": {
-                u.name: _unit(u, extra_aliases.get(u.name, ())) for u in g.definitions
-            },
+            # the registry's copy has any aliases added later with @alias
+            "definitions": {u.name: _unit(units.get(u.name, u)) for u in g.definitions},
         }
         for g in groups
     ]
@@ -199,7 +167,9 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
     return data
 
 
-def write_definitions(filename: str | pathlib.Path, ureg: GenericPlainRegistry):
+def write_definitions(
+    filename: str | pathlib.Path, ureg: GenericPlainRegistry, *, stacklevel: int = 2
+):
     try:
         import tomlkit
     except ImportError:
@@ -221,6 +191,12 @@ def write_definitions(filename: str | pathlib.Path, ureg: GenericPlainRegistry):
         a.extend(values)
         return a.multiline(len(values) > 1)
 
+    skipped = unwritten(ureg)
+    if skipped:
+        warnings.warn(
+            "Only definitions can be written to TOML; skipping " + ", ".join(skipped),
+            stacklevel=stacklevel,
+        )
     data = to_dict(ureg)
     doc = tomlkit.document()
     if "defaults" in data:

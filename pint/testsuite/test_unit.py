@@ -1385,6 +1385,9 @@ class TestConvertWithOffset(QuantityTestCase):
         assert internal(ureg)._units["canonical"].aliases == (
             "alias1",
             "alias2",
+            "alias3",
+            "alias4",
+            "alias5",
         )
 
         # Define against unknown name

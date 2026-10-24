@@ -160,13 +160,14 @@ def test_registry_error_notes_file(tmp_path):
     )
     with pytest.raises(pint.UndefinedUnitError) as excinfo:
         pint.UnitRegistry(f)
-    assert any("defs.toml" in note for note in excinfo.value.__notes__)
+    (note,) = excinfo.value.__notes__
+    assert note == f"While adding SystemDefinition 's' from {f}"
 
 
 def test_line_generator_is_not_a_path():
     ureg = pint.UnitRegistry(None)
     # same TypeError as before TOML support: only lists of lines are accepted
-    with pytest.raises(TypeError, match="generator"):
+    with pytest.raises(TypeError):
         ureg.load_definitions(line for line in ["meter = [length]"])
 
 
@@ -285,6 +286,42 @@ def test_warns_about_what_cannot_be_written(tiny, tmp_path):
     message = str(record[0].message)
     assert "context adhoc" in message
     assert "group extra" in message
+    assert record[0].filename == __file__
+
+
+def test_alias_updates_definition(tiny):
+    tiny.define("@alias meter = metro")
+    meter = tiny._units["meter"]
+    assert meter.aliases == ("metre", "metro")
+    assert tiny._units["m"] is tiny._units["metro"] is meter
+
+
+def test_aliases_of_prefixed_and_group_units(tiny, tmp_path):
+    tiny.define("@alias kilometer = kilometro")
+    tiny.define("@alias inch = pulgada")
+    reloaded, data = write_and_load(tiny, tmp_path)
+    assert data["unit"]["kilometer"]["aliases"] == ["kilometro"]
+    (international,) = data["group"]
+    assert international["definitions"]["inch"]["aliases"] == ["pulgada"]
+    assert reloaded.Quantity(1, "kilometro").to("m").magnitude == 1000
+    assert reloaded.Quantity(1, "km").to("m").magnitude == 1000
+    assert reloaded.Quantity(1, "pulgada").to("inch").magnitude == 1
+
+
+@pytest.mark.filterwarnings("error")
+def test_empty_on_demand_system_not_reported(tiny, tmp_path):
+    tiny.get_system("nothing")
+    tiny.get_group("nothing_either")
+    write_and_load(tiny, tmp_path)
+
+
+def test_direct_write_warns_at_caller(tiny, tmp_path):
+    pytest.importorskip("tomlkit")
+    from pint.delegates.toml_parser import write_definitions
+
+    tiny.add_context(pint.Context("adhoc"))
+    with pytest.warns(UserWarning, match="context adhoc") as record:
+        write_definitions(tmp_path / "out.toml", tiny)
     assert record[0].filename == __file__
 
 

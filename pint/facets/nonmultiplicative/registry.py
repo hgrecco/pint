@@ -107,6 +107,7 @@ class GenericNonMultiplicativeRegistry[QuantityT: Quantity, UnitT: Unit](
             delta_reference,
         )
         super()._add_unit(delta_def)
+        self._generated_units.add(delta_name)
 
     def _is_multiplicative(self, unit_name: str) -> bool:
         """True if the unit is multiplicative.

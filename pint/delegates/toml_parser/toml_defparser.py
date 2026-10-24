@@ -58,9 +58,9 @@ class TomlParser:
         self._diskcache = diskcache
 
     def iter_parsed_project(
-        self, parsed_project: dict[str, Any], cfg: ParserConfig | None = None
+        self, parsed_project: dict[str, Any]
     ) -> Generator[Any, None, None]:
-        cfg = cfg or self._default_config
+        cfg = self._default_config
 
         unknown = set(parsed_project) - {"defaults", *_NAMED_TABLES, *_ARRAYS_OF_TABLES}
         if unknown:
@@ -89,9 +89,6 @@ class TomlParser:
             return self._parse_path(path)
         definitions, _ = self._diskcache.load(path, self._parse_path)
         return definitions
-
-    def parse_string(self, content: str) -> list[Any]:
-        return list(self.iter_parsed_project(tomllib.loads(content)))
 
     def _parse_path(self, path: pathlib.Path) -> list[Any]:
         try:
