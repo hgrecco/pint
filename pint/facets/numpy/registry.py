@@ -9,15 +9,13 @@ pint.facets.numpy.registry
 from __future__ import annotations
 
 from types import NotImplementedType
-from typing import TYPE_CHECKING, Any, Literal, overload, override
+from typing import TYPE_CHECKING, Literal, overload, override
 
 from ...compat import (
     HAS_NUMPY,
-    HAS_UNCERTAINTIES,
     TypeAlias,
     is_duck_array,
     np_timedelta64,
-    ufloat,
 )
 from ..plain import GenericPlainRegistry, PlainQuantity
 from .quantity import NumpyQuantity
