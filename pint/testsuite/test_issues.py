@@ -1852,6 +1852,65 @@ def test_issue1814_unknown_operator_raises(expr):
         ureg.Quantity(expr)
 
 
+def test_issue922_redefinition_after_use_clears_cache():
+    ureg = UnitRegistry(on_redefinition="ignore")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.45359237)
+    ureg.define("pound = 0.5 kg = lb")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.5)
+    assert ureg.Quantity(1, "pound").to("kg").magnitude == pytest.approx(0.5)
+    assert ureg.Quantity(1, "kg").to("lb").magnitude == pytest.approx(2)
+    # Units derived from the redefined one are refreshed too.
+    assert ureg.Quantity(1, "ton").to("kg").magnitude == pytest.approx(1000)
+
+
+def test_issue922_load_definitions_redefinition_clears_cache():
+    ureg = UnitRegistry(on_redefinition="ignore")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.45359237)
+    ureg.load_definitions(["pound = 0.5 kg = lb"])
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.5)
+
+
+def test_issue740_redefine_new_unit():
+    ureg = UnitRegistry(on_redefinition="ignore")
+    ureg.define("eyespan = 2 cm")
+    assert ureg.Quantity(1, "eyespan").to("cm").magnitude == pytest.approx(2)
+    assert ureg.Quantity(1, "cm").to("eyespan").magnitude == pytest.approx(0.5)
+    ureg.define("eyespan = 5 cm")
+    assert ureg.Quantity(1, "eyespan").to("cm").magnitude == pytest.approx(5)
+    assert ureg.Quantity(1, "cm").to("eyespan").magnitude == pytest.approx(0.2)
+
+
+def test_issue922_redefinition_with_active_context():
+    ureg = UnitRegistry(on_redefinition="ignore")
+    ureg.define("eyespan = 2 cm")
+    ctx = Context("c")
+    ctx.redefine("inch = 2 cm")
+    ureg.add_context(ctx)
+    with ureg.context("c"):
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+        ureg.define("eyespan = 5 cm")
+        assert ureg.Quantity(1, "eyespan").to("cm").magnitude == pytest.approx(5)
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+    assert ureg.Quantity(1, "eyespan").to("cm").magnitude == pytest.approx(5)
+    assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2.54)
+
+
+def test_issue922_define_delayed_cache_rebuild(monkeypatch):
+    ureg = UnitRegistry(on_redefinition="ignore")
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.45359237)
+    calls = []
+    build_cache = ureg._build_cache
+    monkeypatch.setattr(ureg, "_build_cache", lambda *a: calls.append(build_cache()))
+
+    ureg.define("pound = 0.5 kg = lb", rebuild_cache=False)
+    ureg.load_definitions(["ounce = 0.25 lb = oz"], rebuild_cache=False)
+    assert not calls
+    ureg.define("eyespan = 2 cm")
+    assert len(calls) == 1
+    assert ureg.Quantity(1, "lb").to("kg").magnitude == pytest.approx(0.5)
+    assert ureg.Quantity(1, "oz").to("kg").magnitude == pytest.approx(0.125)
+
+
 @pytest.mark.parametrize("attr", ["dimensionality", "dimensionless", "unitless"])
 def test_issue1154_undefined_reference_raises_undefined_unit_error(attr):
     ureg = UnitRegistry(["foo = 1 bar"])

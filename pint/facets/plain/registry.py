@@ -317,6 +317,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         #: Map contexts to RegistryCache
         self._cache = RegistryCache()
 
+        #: Set when a definition is overwritten after initialization.
+        self._cache_stale = False
+
         self._initialized = False
 
     def _init_dynamic_classes(self) -> None:
@@ -417,13 +420,17 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     # Extending the registry with new unit definitions
     ############
 
-    def define(self, definition: str | type) -> None:
+    def define(self, definition: str | type, rebuild_cache: bool = True) -> None:
         """Add unit to the registry.
 
         Parameters
         ----------
         definition : str or Definition
             a dimension, unit or prefix definition.
+        rebuild_cache : bool
+            if False, delay rebuilding the cache after a redefinition until the
+            next call to `define` or `load_definitions` that rebuilds it.
+            (Default value = True)
         """
 
         if isinstance(definition, str):
@@ -433,6 +440,15 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 self._helper_dispatch_adder(definition)
         else:
             self._helper_dispatch_adder(definition)
+
+        if rebuild_cache:
+            self._rebuild_cache_if_stale()
+
+    def _rebuild_cache_if_stale(self) -> None:
+        """Rebuild the cache if a definition was overwritten since it was built."""
+        if self._cache_stale:
+            self._cache_stale = False
+            self._build_cache()
 
     ############
     # Adders
@@ -496,6 +512,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 raise RedefinitionError(key, type(value))
             elif self._on_redefinition == "warn":
                 logger.warning(f"Redefining '{key}' ({type(value)})")
+            if self._initialized:
+                self._cache_stale = True
 
         target_dict[key] = value
         if casei_target_dict is not None:
@@ -535,7 +553,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._helper_adder(definition, self._units, self._units_casei)
 
     def load_definitions(
-        self, file: Iterable[str] | str | pathlib.Path, is_resource: bool = False
+        self,
+        file: Iterable[str] | str | pathlib.Path,
+        is_resource: bool = False,
+        rebuild_cache: bool = True,
     ):
         """Add units and prefixes defined in a definition text file.
 
@@ -546,6 +567,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         is_resource :
             used to indicate that the file is a resource file
             and therefore should be loaded from the package. (Default value = False)
+        rebuild_cache :
+            if False, delay rebuilding the cache after a redefinition until the
+            next call to `define` or `load_definitions` that rebuilds it.
+            (Default value = True)
         """
 
         if isinstance(file, (list, tuple)):
@@ -556,6 +581,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         for definition in self._def_parser.iter_parsed_project(parsed_project):
             self._helper_dispatch_adder(definition)
+
+        if rebuild_cache:
+            self._rebuild_cache_if_stale()
 
         return parsed_project
 

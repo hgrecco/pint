@@ -1132,3 +1132,17 @@ def test_to_reduced_units_skips_non_proportional_context():
     q = ureg.Quantity(1, "nm") * ureg.Quantity(1, "Hz")
     with ureg.context("sp"):
         assert q.to_reduced_units().units == q.units
+
+
+def test_redefining_context_cache_reused():
+    ureg = UnitRegistry()
+    ctx = Context("c")
+    ctx.redefine("inch = 2 cm")
+    ureg.add_context(ctx)
+    with ureg.context("c"):
+        first = ureg._cache
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+    with ureg.context("c"):
+        assert ureg._cache is first
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+    assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2.54)
