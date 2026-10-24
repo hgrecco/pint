@@ -19,6 +19,7 @@ from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
+    Concatenate,
     Generic,
     Self,
     TypeVar,
@@ -50,7 +51,6 @@ if TYPE_CHECKING:
     import optype as opt
     import optype.numpy as npt
     from optype import do_neg, do_pos, do_round
-    from typing_extensions import TypeIs
 
     from ..context import Context
     from ..system import System
@@ -76,8 +76,12 @@ except ImportError:
     HAS_UNCERTAINTIES = False
 
 
-def ireduce_dimensions(f):
-    def wrapped(self, *args, **kwargs):
+def ireduce_dimensions[X, **P, R: PlainQuantity | NotImplementedType](
+    f: Callable[Concatenate[X, P], R],
+) -> Callable[Concatenate[X, P], R]:
+    """This decorator applies the operations `ito_preferred()` and `ito_reduced_units()` to the result as needed."""
+
+    def wrapped(self: X, *args: P.args, **kwargs: P.kwargs) -> R:
         result = f(self, *args, **kwargs)
         try:
             if result._REGISTRY.autoconvert_to_preferred:
@@ -225,8 +229,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         inst = SharedRegistryObject().__new__(cls)
 
-        if inst._is_timedelta(value):
-            m, u = inst._convert_timedelta(value)
+        parts = inst._REGISTRY._as_magnitude_and_units(value)
+        if parts is not None:
+            m, u = parts
             inst._magnitude = m
             inst._units = inst._REGISTRY.parse_units(u)._units
             if units:
@@ -241,18 +246,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return inst
 
-    # TODO: Move the two timedelta-related methods inside `GenericPlainRegistry`
-    #   for consistency and correctness (those methods shouldn't have access to existing
-    #   magnitude/units because they're meant to *create* them...)
-
-    def _is_timedelta(self, value: object) -> TypeIs[datetime.timedelta]:
-        return isinstance(value, datetime.timedelta)
-
-    def _convert_timedelta(self, value: object) -> tuple[float, str]:
-        """Convert a timedelta object to magnitude and unit string."""
-        if isinstance(value, datetime.timedelta):
-            return value.total_seconds(), "seconds"
-        raise TypeError(f"Cannot convert {value!r} to seconds.")
+    def _coerce_operand(self, other: Any) -> Any:
+        """Turn an operand that carries its own units (e.g. a timedelta) into a quantity."""
+        parts = self._REGISTRY._as_magnitude_and_units(other)
+        if parts is None:
+            return other
+        return self.__class__(*parts)
 
     def __iter__[T: Magnitude](
         self: PlainQuantity[opt.CanIter[T]],
@@ -671,8 +670,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             operator function (e.g. operator.add, operator.isub)
 
         """
-        if self._is_timedelta(other):
-            other = self.__class__(other)
+        other = self._coerce_operand(other)
 
         if not self._check(other):
             # NOTE: other is not a PlainQuantity (because if the registry does not match, _check() raises)
@@ -786,8 +784,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         op : function
             operator function (e.g. operator.add, operator.isub)
         """
-        if self._is_timedelta(other):
-            other = self.__class__(other)
+        other = self._coerce_operand(other)
 
         if not self._check(other):
             # NOTE: other is not a PlainQuantity (because if the registry does not match, _check() raises)
@@ -1054,8 +1051,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 Callable[[UnitsContainer, UnitsContainer], UnitsContainer], magnitude_op
             )
 
-        if self._is_timedelta(other):
-            other = self.__class__(other)
+        other = self._coerce_operand(other)
 
         offset_units_self = self._get_non_multiplicative_units()
         no_offset_units_self = len(offset_units_self)
@@ -1139,8 +1135,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if units_op is None:
             units_op = magnitude_op
 
-        if self._is_timedelta(other):
-            other = self.__class__(other)
+        other = self._coerce_operand(other)
 
         offset_units_self = self._get_non_multiplicative_units()
         no_offset_units_self = len(offset_units_self)
@@ -1305,8 +1300,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         other: opt.CanTruediv[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __rtruediv__(self: PlainQuantity, other) -> PlainQuantity:
-        if self._is_timedelta(other):
-            return self.__class__(other) / self
+        coerced = self._coerce_operand(other)
+        if coerced is not other:
+            return coerced / self
 
         try:
             other_magnitude = self._REGISTRY._into_magnitude(other, units=self._units)

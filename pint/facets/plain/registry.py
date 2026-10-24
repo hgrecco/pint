@@ -24,6 +24,7 @@ The registry contains the following important methods:
 from __future__ import annotations
 
 import copy
+import datetime
 import functools
 import inspect
 import itertools
@@ -1585,10 +1586,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             return cast(Magnitude, value)
         raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
 
-    # TODO(#2427 follow-up):
-    #   Move `PlainQuantity._is_timedelta` and `PlainQuantity._convert_timedelta` here
-    #   for consistency and correctness (those methods shouldn't have access to existing
-    #   magnitude/units because they're meant to *create* them...)
+    def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
+        """Return the magnitude and units of a value that carries its own units
+        (e.g. a timedelta), or None for any other value."""
+        if isinstance(value, datetime.timedelta):
+            return value.total_seconds(), "seconds"
+        return None
 
     ############
     # Other utilities
