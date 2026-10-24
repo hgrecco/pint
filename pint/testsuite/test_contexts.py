@@ -1132,3 +1132,24 @@ def test_to_reduced_units_skips_non_proportional_context():
     q = ureg.Quantity(1, "nm") * ureg.Quantity(1, "Hz")
     with ureg.context("sp"):
         assert q.to_reduced_units().units == q.units
+
+
+def test_prefixed_unit_from_context_formats_after_exit():
+    # A prefixed unit first parsed inside a unit-redefining context is
+    # cached in that context's overlay; formatting it with abbreviations
+    # after the context exits used to raise KeyError. See #2389
+    ureg = UnitRegistry(
+        """
+        kilo- = 1000 = k-
+        foo = [d] = f
+        bar = 2 foo = b
+
+        @context c
+            b = 5 f
+        @end
+        """.splitlines()
+    )
+    with ureg.context("c"):
+        q = ureg.Quantity(1, "kilofoo")
+    # This abbreviated format used to raise KeyError after the context exited.
+    assert f"{q:~P}" == "1 kf"
