@@ -15,9 +15,10 @@ from ..plain import GenericPlainRegistry
 from .quantity import NumpyQuantity
 from .unit import NumpyUnit
 
-if TYPE_CHECKING:
+if HAS_NUMPY:
     import numpy as np
 
+if TYPE_CHECKING:
     from ..._typing import Magnitude, Quantity, Unit, UnitsContainer
 
 
