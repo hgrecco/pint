@@ -673,7 +673,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         Parameters
         ----------
-        other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
+        other : pint.PlainQuantity or magnitude-like
             object to be added to / subtracted from self
         op : function
             operator function (e.g. operator.add, operator.isub)
@@ -789,7 +789,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         Parameters
         ----------
-        other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
+        other : pint.PlainQuantity or magnitude-like
             object to be added to / subtracted from self
         op : function
             operator function (e.g. operator.add, operator.isub)
@@ -1044,7 +1044,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         Parameters
         ----------
-        other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
+        other : pint.PlainQuantity or magnitude-like
             object to be multiplied/divided with self
         magnitude_op : function
             operator function to perform on the magnitudes
@@ -1129,7 +1129,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         Parameters
         ----------
-        other : pint.PlainQuantity or any type accepted by :func:`_to_magnitude`
+        other : pint.PlainQuantity or magnitude-like
             object to be multiplied/divided with self
         magnitude_op : function
             operator function to perform on the magnitudes (e.g. :func:`operator.mul`)
