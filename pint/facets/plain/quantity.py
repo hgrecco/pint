@@ -19,6 +19,7 @@ from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
+    Concatenate,
     Generic,
     Self,
     TypeVar,
@@ -77,8 +78,12 @@ except ImportError:
     HAS_UNCERTAINTIES = False
 
 
-def ireduce_dimensions(f):
-    def wrapped(self, *args, **kwargs):
+def ireduce_dimensions[X, **P, R: PlainQuantity | NotImplementedType](
+    f: Callable[Concatenate[X, P], R],
+) -> Callable[Concatenate[X, P], R]:
+    """This decorator applies the operations `ito_preferred()` and `ito_reduced_units()` to the result as needed."""
+
+    def wrapped(self: X, *args: P.args, **kwargs: P.kwargs) -> R:
         result = f(self, *args, **kwargs)
         try:
             if result._REGISTRY.autoconvert_to_preferred:
@@ -110,19 +115,6 @@ def check_implemented(f):
     return wrapped
 
 
-# TODO: remove this utility function since it's not used anywhere
-def method_wraps(numpy_func):
-    if isinstance(numpy_func, str):
-        numpy_func = getattr(np, numpy_func, None)
-
-    def wrapper(func):
-        func.__wrapped__ = numpy_func
-
-        return func
-
-    return wrapper
-
-
 # TODO: remove all nonmultiplicative remnants
 
 MagnitudeT_co = TypeVar("MagnitudeT_co", bound=Magnitude, covariant=True)
@@ -152,6 +144,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @property
     def ndim(self) -> int:
+        """Number of dimensions of the data (0 for scalars)."""
         if isinstance(self.magnitude, numbers.Number):
             return 0
         if str(type(self.magnitude)) == "NAType":
@@ -1263,10 +1256,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         def __rmatmul__(self, other):
             return self.__matmul__(other)
 
-    def _truedivide_cast_int(self, a, b):
+    @classmethod
+    def _truedivide_cast_int(cls, a, b):
         """Like `operator.truediv`, but `int/int -> non_int_type` instead of `float`"""
         if isinstance(a, int) and isinstance(b, int):
-            t = self._REGISTRY.non_int_type
+            t = cls._REGISTRY.non_int_type
             a, b = t(a), t(b)
         return operator.truediv(a, b)
 
