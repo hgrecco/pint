@@ -34,11 +34,13 @@ from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
 from fractions import Fraction
 from math import isnan
+from numbers import Number
 from token import NAME, NUMBER
 from tokenize import TokenInfo
 from typing import (
     TYPE_CHECKING,
     Any,
+    cast,
 )
 
 if TYPE_CHECKING:
@@ -60,7 +62,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import _to_magnitude, coerce_scalar, deprecated
+from ...compat import coerce_scalar, deprecated
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -1601,13 +1603,11 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 return self._into_magnitude(quantity, units=units)
             else:
                 return parsed.scale
-        else:
-            # TODO(#2427 follow-up):
-            #   Make `_to_magnitude` a `GenericPlainRegistry` method as well
-            #   and subclass it in `GenericNumpyRegistry` for numpy-specific magnitude
-            #   support (e.g., `list` -> `np.ndarray` conversions).
-            # This will allow to better isolate numpy-specific code in the numpy facet.
-            return _to_magnitude(value, self.force_ndarray, self.force_ndarray_like)
+        elif isinstance(value, bool):
+            pass  # integers are ok but booleans do not make sense
+        elif isinstance(value, Number):
+            return cast(Magnitude, value)
+        raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
 
     # TODO(#2427 follow-up):
     #   Move `PlainQuantity._is_timedelta` and `PlainQuantity._convert_timedelta` here
