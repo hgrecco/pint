@@ -29,7 +29,6 @@ from typing import (
 from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
-    _to_magnitude,
     deprecated,
     eq,
     is_duck_array,
@@ -1603,16 +1602,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     @check_implemented
     def __rpow__(self: PlainQuantity, other) -> PlainQuantity:
         try:
-            _to_magnitude(other, self.force_ndarray, self.force_ndarray_like)
+            other = self._REGISTRY._into_magnitude(other)
         except PintTypeError:
             raise
         except TypeError:
             return NotImplemented
-        else:
-            if not self.dimensionless:
-                raise DimensionalityError(self._units, "dimensionless")
-            new_self = self.to_root_units()
-            return other**new_self._magnitude
+        if not self.dimensionless:
+            raise DimensionalityError(self._units, "dimensionless")
+        return other ** self.to_root_units()._magnitude
 
     def __abs__[T: Magnitude](self: PlainQuantity[opt.CanAbs[T]]) -> PlainQuantity[T]:
         cls: type[PlainQuantity[T]] = self.__class__  # type: ignore
