@@ -164,15 +164,23 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 ):
     """Base class for all registries.
 
-    Capabilities:
+    A registry is responsible for input normalization (including string parsing):
+    as a result, it is also the source of truth for unit definitions
+    and, more broadly, pint's configuration.
 
+    Therefore, every interaction between objects of different registries
+    is not intended to work and will result in an error.
+
+    Capabilities implemented here:
+
+    - Normalize magnitude values.
     - Register units, prefixes, and dimensions, and their relations.
     - Convert between units.
     - Find dimensionality of a unit.
     - Parse units with prefix and/or suffix.
     - Parse expressions.
     - Parse a definition file.
-    - Allow extending the definition file parser by registering @ directives.
+    - Allow extending the definition file parser by registering :text:`@` directives.
 
     Parameters
     ----------
