@@ -65,12 +65,16 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
             force_ndarray = self.force_ndarray
         if force_ndarray_like is None:
             force_ndarray_like = self.force_ndarray_like
+        # process `force_ndarray` and `force_ndarray_like`
         if (force_ndarray or force_ndarray_like) and not HAS_NUMPY:
             raise ValueError(
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."
             )
-        # handle arrays
-        if HAS_NUMPY and isinstance(value, np.ndarray):
+        if force_ndarray or (force_ndarray_like and not is_duck_array(value)):
+            # NOTE: per the check above, we know numpy is installed
+            return np.asarray(value)
+        # handle arrays & scalars
+        if HAS_NUMPY and isinstance(value, np.ndarray | np.number):
             return value
         # handle array-likes
         elif isinstance(value, (list, tuple)):
@@ -81,7 +85,8 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
                     "lists and tuples are valid magnitudes for "
                     "Quantity only when NumPy is present."
                 )
-        elif HAS_UNCERTAINTIES:  # TODO: Move this part to the measurement facet itself
+        # handle uncertainties (TODO: move this part to the measurement facet itself)
+        elif HAS_UNCERTAINTIES:
             from uncertainties import UFloat
 
             from pint.facets.measurement.objects import Measurement
@@ -90,9 +95,6 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
                 return value
             if isinstance(value, Measurement):
                 return ufloat(value.value, value.error)
-        if force_ndarray or (force_ndarray_like and not is_duck_array(value)):
-            # NOTE: per the check above, we know numpy is installed
-            return np.asarray(value)
         # let `PlainQuantity` handle all other objects
         return super()._into_magnitude(value, units=units, parse_strings=parse_strings)
 

@@ -1559,6 +1559,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             if units is None:
                 raise TypeError("Expected a bare magnitude, found a quantity.")
             return value.to(units)._magnitude
+        elif isinstance(value, PlainUnit):
+            if units is None:
+                raise TypeError("Expected a magnitude, found a unit.")
+            return (1 * value).to(units)._magnitude
         elif isinstance(value, str):
             if not parse_strings:
                 raise TypeError(
