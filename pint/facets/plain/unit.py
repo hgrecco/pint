@@ -22,6 +22,8 @@ from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
 if TYPE_CHECKING:
+    import datetime
+
     import numpy as np
     import optype as opt
 
@@ -132,6 +134,11 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     # PlainUnit * (PlainUnit | UnitsContainer) -> PlainUnit
     @overload
     def __mul__(self, other: Self | UnitsContainer) -> Self: ...
+    # PlainUnit * timedelta -> PlainQuantity[float]
+    @overload
+    def __mul__(
+        self, other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
     # PlainUnit * <ArrayLike> -> PlainQuantity[<Array>]
     @overload
     def __mul__[T: np.number](
@@ -171,6 +178,11 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     # PlainUnit / (PlainUnit or UnitsContainer) -> PlainUnit
     @overload
     def __truediv__(self, other: Self | UnitsContainer) -> Self: ...
+    # PlainUnit / timedelta -> PlainQuantity[float]
+    @overload
+    def __truediv__(
+        self, other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
     # PlainUnit / <ArrayLike> -> PlainQuantity[<Array>]
     @overload
     def __truediv__[T: np.number](
@@ -197,6 +209,11 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     # UnitsContainer / PlainUnit -> PlainUnit
     @overload
     def __rtruediv__(self, other: UnitsContainer) -> Self: ...
+    # timedelta / PlainUnit -> PlainQuantity[float]
+    @overload
+    def __rtruediv__(
+        self, other: datetime.timedelta | np.timedelta64
+    ) -> PlainQuantity[float]: ...
     # <Magnitude> / PlainUnit -> PlainQuantity[<Magnitude>]
     @overload
     def __rtruediv__[M: Magnitude](self, other: M) -> PlainQuantity[M]: ...

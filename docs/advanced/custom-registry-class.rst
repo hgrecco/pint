@@ -20,7 +20,6 @@ and create your own.
 - DaskRegistry: adds the capability to interoperate with Dask.
 - ContextRegistry: the capability to contexts: predefined conversions
   between incompatible dimensions.
-- TimedeltaRegistry: adds the capability to interoperate with `datetime.timedelta`, `datetime.datetime` and `numpy.timedelta64`.
 - NonMultiplicativeRegistry: adds the capability to handle nonmultiplicative units (offset, logarithmic).
 - PlainRegistry: base implementation for registry, units and quantities.
 

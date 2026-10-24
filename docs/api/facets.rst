@@ -40,10 +40,6 @@ The default UnitRegistry inherits from all of them.
     :members:
     :exclude-members: Quantity, Unit, Measurement, Group, Context, System
 
-.. automodule:: pint.facets.timedelta
-    :members:
-    :exclude-members: Quantity, Unit, Measurement, Group, Context, System
-
 .. automodule:: pint.facets.context
     :members:
     :exclude-members: Quantity, Unit, Measurement, Group, Context, System
