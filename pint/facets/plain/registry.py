@@ -1574,7 +1574,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             # This will allow to better isolate numpy-specific code in the numpy facet.
             return _to_magnitude(value, self.force_ndarray, self.force_ndarray_like)
 
-    def _unit_carrying_parts(self, value: Any) -> tuple[Any, str] | None:
+    def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
         """Return the magnitude and units of a value that carries its own units
         (e.g. a timedelta), or None for any other value."""
         if isinstance(value, datetime.timedelta):

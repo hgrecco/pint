@@ -38,14 +38,14 @@ _DTYPE_TO_UNIT = {
 class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
     GenericPlainRegistry[QuantityT, UnitT]
 ):
-    def _unit_carrying_parts(self, value: Any) -> tuple[Any, str] | None:
+    def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
         if isinstance(value, np_timedelta64) or (
             not isinstance(value, PlainQuantity)
             and is_duck_array(value)
             and value.dtype.type == np_timedelta64
         ):
             return value.astype(float), _DTYPE_TO_UNIT[str(value.dtype)]
-        return super()._unit_carrying_parts(value)
+        return super()._as_magnitude_and_units(value)
 
 
 class NumpyRegistry(GenericNumpyRegistry[NumpyQuantity, NumpyUnit]):

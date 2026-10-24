@@ -224,7 +224,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         inst = SharedRegistryObject().__new__(cls)
 
-        parts = inst._REGISTRY._unit_carrying_parts(value)
+        parts = inst._REGISTRY._as_magnitude_and_units(value)
         if parts is not None:
             m, u = parts
             inst._magnitude = m
@@ -243,7 +243,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     def _coerce_operand(self, other: Any) -> Any:
         """Turn an operand that carries its own units (e.g. a timedelta) into a quantity."""
-        parts = self._REGISTRY._unit_carrying_parts(other)
+        parts = self._REGISTRY._as_magnitude_and_units(other)
         if parts is None:
             return other
         return self.__class__(*parts)
