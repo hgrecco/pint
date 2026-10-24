@@ -20,7 +20,6 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
-from pint.errors import UndefinedBehavior
 from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
@@ -1026,9 +1025,8 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compare_quantity_compact(float("inf") * ureg.m, float("inf") * ureg.m)
 
     def test_nonnumeric_magnitudes(self):
-        x = self.Q_(object(), "m")
-        with pytest.warns(UndefinedBehavior):
-            x.to_compact()
+        with pytest.raises(TypeError):
+            _ = self.Q_(object(), "m")  # pyright: ignore[reportCallIssue,reportArgumentType]
 
     def test_very_large_to_compact(self):
         # This should not raise an IndexError
@@ -2003,17 +2001,38 @@ class TestOffsetUnitMath(QuantityTestCase):
                     expected = expected_copy[i]
                 helpers.assert_quantity_almost_equal(op.pow(in1, in2), expected)
 
+    # def test_exponentiation_quantity_power(self):
+    #    ureg = pint.UnitRegistry(force_ndarray=True)
+    #    m = ureg.Quantity(2, "m")
+    #    m ** ureg.Quantity(2, "m")        # PR: 4 m**2      master: DimensionalityError
+    #    m ** ureg.Quantity(100, "cm/m")   # PR: 0 m**100    master: 2 m
+    #    m ** True                         # PR: 2 m         master: TypeError
+
     @helpers.requires_numpy
-    def test_exponentiation_force_ndarray(self):
-        ureg = UnitRegistry(force_ndarray_like=True)
+    @pytest.mark.parametrize(
+        ["inplace", "like"],
+        [
+            (False, False),
+            (False, True),
+            (True, False),
+            (False, False),
+        ],
+    )
+    def test_exponentiation_force_ndarray(self, inplace: bool, like: bool):
+        if like:
+            ureg = UnitRegistry(force_ndarray_like=True)
+        else:
+            ureg = UnitRegistry(force_ndarray=True)
         q = ureg.Quantity(1, "1 / hours")
-
-        q1 = q**2
-        assert all(isinstance(v, int) for v in q1._units.values())
-
-        q2 = q.copy()
-        q2 **= 2
-        assert all(isinstance(v, int) for v in q2._units.values())
+        if inplace:
+            q **= 2
+        else:
+            q = q**2
+        assert all(isinstance(v, np.integer) for v in q._units.values())
+        with pytest.raises(DimensionalityError):
+            _ = q ** ureg.Quantity(2, "m")
+        with pytest.raises(TypeError):
+            _ = q**True
 
     @helpers.requires_numpy
     @pytest.mark.parametrize(("input_tuple", "expected"), exponentiation)
@@ -2113,7 +2132,7 @@ class TestTimedelta(QuantityTestCase):
         assert d + datetime.timedelta(seconds=3) == after
         after = d - 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
-        with pytest.raises(DimensionalityError):
+        with pytest.raises(TypeError):
             3 * self.ureg.second - d  # pyright: ignore[reportOperatorIssue]
 
     def test_iadd_isub(self):
@@ -2128,8 +2147,8 @@ class TestTimedelta(QuantityTestCase):
         after -= 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
         after = 3 * self.ureg.second
-        with pytest.raises(DimensionalityError):
-            after -= d
+        with pytest.raises(TypeError):
+            after -= d  # pyright: ignore[reportOperatorIssue]
 
     def test_init_quantity(self):
         # 608
@@ -2272,8 +2291,8 @@ class TestTimedelta(QuantityTestCase):
         )
 
     def test_init_quantity_with_quantity_and_units(self):
-        # Q_(quantity, units) used to crash: the timedelta duck-array check (now in
-        # GenericNumpyRegistry._as_magnitude_and_units)
+        # Q_(quantity, units) used to crash: the timedelta duck-array check
+        # (now in GenericNumpyRegistry._as_magnitude_and_units)
         # misidentified the Quantity itself as a duck array (is_duck_array_type
         # sees __array_function__/ndim/dtype on the class but can't see that
         # _magnitude/_units are only set per-instance), then failed accessing

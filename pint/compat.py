@@ -25,7 +25,7 @@ from typing import (
     Unpack,  # noqa
 )
 
-from typing_extensions import deprecated  # noqa
+from typing_extensions import TypeIs, deprecated  # noqa
 
 
 def coerce_scalar(value, scalar):
@@ -117,7 +117,7 @@ def is_duck_array_type(cls: type) -> bool:
     )
 
 
-def is_duck_array(obj: type) -> bool:
+def is_duck_array(obj: object) -> TypeIs[np.typing.ArrayLike]:
     """Check if an object represents a (non-Quantity) duck array type."""
     return is_duck_array_type(type(obj))
 
@@ -293,24 +293,6 @@ if HAS_NUMPY:
     else:
         NUMERIC_TYPES = (Number, Decimal, ndarray, np.number)
 
-    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
-        if isinstance(value, (dict, bool)) or value is None:
-            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
-        elif isinstance(value, str) and value == "":
-            raise ValueError("Quantity magnitude cannot be an empty string.")
-        elif isinstance(value, (list, tuple)):
-            return np.asarray(value)
-        elif HAS_UNCERTAINTIES:
-            from pint.facets.measurement.objects import Measurement
-
-            if isinstance(value, Measurement):
-                return ufloat(value.value, value.error)
-        if force_ndarray or (
-            force_ndarray_like and not is_duck_array_type(type(value))
-        ):
-            return np.asarray(value)
-        return value
-
     NP_NO_VALUE = np._NoValue
 
 else:
@@ -333,27 +315,6 @@ else:
     NUMPY_VER = "0"
     NUMERIC_TYPES = (Number, Decimal)
     NP_NO_VALUE = None
-
-    def _to_magnitude(value, force_ndarray=False, force_ndarray_like=False):
-        if force_ndarray or force_ndarray_like:
-            raise ValueError(
-                "Cannot force to ndarray or ndarray-like when NumPy is not present."
-            )
-        elif isinstance(value, (dict, bool)) or value is None:
-            raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
-        elif isinstance(value, str) and value == "":
-            raise ValueError("Quantity magnitude cannot be an empty string.")
-        elif isinstance(value, (list, tuple)):
-            raise TypeError(
-                "lists and tuples are valid magnitudes for "
-                "Quantity only when NumPy is present."
-            )
-        elif HAS_UNCERTAINTIES:
-            from pint.facets.measurement.objects import Measurement
-
-            if isinstance(value, Measurement):
-                return ufloat(value.value, value.error)
-        return value
 
 
 if HAS_SCIPY:
