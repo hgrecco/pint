@@ -193,7 +193,6 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
                     self._redefine(definition)
         finally:
             self._on_redefinition = on_redefinition_backup
-            # Overlay writes are not redefinitions of the plain registry.
             self._cache_stale = cache_stale_backup
 
     def _redefine(self, definition: UnitDefinition) -> None:
