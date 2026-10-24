@@ -38,6 +38,7 @@ from math import isnan
 from numbers import Number
 from token import NAME, NUMBER
 from tokenize import TokenInfo
+from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -1580,11 +1581,33 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 return self._into_magnitude(quantity, units=units)
             else:
                 return parsed.scale
-        elif isinstance(value, bool):
-            pass  # integers are ok but booleans do not make sense
+        # we can finally convert the magnitude the way we wish
+        magnitude = self._normalize_magnitude(value)
+        if magnitude is NotImplemented:
+            raise TypeError(f"Invalid magnitude: {value!r}")
+        return magnitude
+
+    def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
+        """Try and convert the given value as a pure magnitude.
+
+        This method should be implemented by subclasses that wish to extend pint's magnitude normalization,
+        according to the following behavioral assumptions:
+        - if the value is unknown to the implementer, this method should return :class:`NotImplementedType`:
+            this is faster than an exception and allows other subclasses to handle the same value;
+        - if the value is not interpretable as a magnitude, this method should raise `TypeError`;
+        - if the value is malformed or invalid, this method should raise any other error (e.g. `ValueError`).
+
+        The implementation should call `value = super()._normalize_magnitude(value)` for the unhandled cases,
+          so that all subclasses get a chance of handling the value.
+        """
+        if isinstance(value, bool):
+            raise TypeError(
+                "Pint does not support boolean magnitudes because they are confusing: "
+                "please call `int()` or `float()` before interpreting the value as a magnitude."
+            )
         elif isinstance(value, Number) or is_duck_array(value):
             return cast(Magnitude, value)
-        raise TypeError(f"Invalid magnitude for Quantity: {value!r}")
+        return NotImplemented
 
     def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
         """Return the magnitude and units of a value that carries its own units

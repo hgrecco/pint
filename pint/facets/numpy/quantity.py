@@ -16,7 +16,6 @@ from typing import Any
 from ..._typing import Magnitude, Shape
 from ...compat import (
     HAS_NUMPY,
-    is_duck_array,
     np,
 )
 from ...errors import (
@@ -131,7 +130,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
                 UnitStrippedWarning,
                 stacklevel=2,
             )
-        return self._REGISTRY._into_magnitude(self._magnitude, force_ndarray=True)
+        return self._REGISTRY._into_ndarray_like(self._magnitude, force_ndarray=True)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
         if min is not None:
@@ -232,9 +231,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             # Handle array protocol attributes other than `__array__`
             raise AttributeError(f"Array protocol attribute {item} not available.")
         elif item in HANDLED_UFUNCS or item in self._wrapped_numpy_methods:
-            magnitude_as_duck_array = self._REGISTRY._into_magnitude(
-                self._magnitude, force_ndarray_like=True
-            )
+            magnitude_as_duck_array = self._REGISTRY._into_ndarray_like(self._magnitude)
             try:
                 attr = getattr(magnitude_as_duck_array, item)
                 return functools.partial(self._numpy_method_wrap, attr)
