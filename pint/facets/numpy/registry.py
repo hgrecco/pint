@@ -69,8 +69,11 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
             raise ValueError(
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."
             )
+        # handle arrays
+        if HAS_NUMPY and isinstance(value, np.ndarray):
+            return value
         # handle array-likes
-        if isinstance(value, (list, tuple)):
+        elif isinstance(value, (list, tuple)):
             if HAS_NUMPY:
                 return np.asarray(value)
             else:
@@ -78,10 +81,13 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
                     "lists and tuples are valid magnitudes for "
                     "Quantity only when NumPy is present."
                 )
-        elif HAS_UNCERTAINTIES:
-            # TODO: Move this check to the measurement facet directly
+        elif HAS_UNCERTAINTIES:  # TODO: Move this part to the measurement facet itself
+            from uncertainties import UFloat
+
             from pint.facets.measurement.objects import Measurement
 
+            if isinstance(value, UFloat):
+                return value
             if isinstance(value, Measurement):
                 return ufloat(value.value, value.error)
         if force_ndarray or (force_ndarray_like and not is_duck_array(value)):
