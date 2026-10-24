@@ -79,7 +79,7 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."
             )
         # handle array-likes
-        elif isinstance(value, (list, tuple)):
+        if isinstance(value, (list, tuple)):
             if HAS_NUMPY:
                 return np.asarray(value)
             else:

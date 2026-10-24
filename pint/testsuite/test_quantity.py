@@ -2028,7 +2028,7 @@ class TestOffsetUnitMath(QuantityTestCase):
             q **= 2
         else:
             q = q**2
-        assert all(isinstance(v, np.integer) for v in q._units.values())
+        assert all(isinstance(v, int) for v in q._units.values())
         with pytest.raises(DimensionalityError):
             _ = q ** ureg.Quantity(2, "m")
         with pytest.raises(TypeError):

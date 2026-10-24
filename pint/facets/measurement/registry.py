@@ -11,8 +11,7 @@ from __future__ import annotations
 from types import NotImplementedType
 from typing import TYPE_CHECKING, override
 
-from pint._typing import Magnitude
-
+from ..._typing import Magnitude
 from ...compat import HAS_UNCERTAINTIES, TypeAlias, ufloat
 from ...util import create_class_with_registry
 from ..plain import GenericPlainRegistry
@@ -44,7 +43,6 @@ class GenericMeasurementRegistry[QuantityT: Quantity, UnitT: Unit](
 
     @override
     def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
-        # handle uncertainties (TODO: move this part to the measurement facet itself)
         if HAS_UNCERTAINTIES:
             from uncertainties import UFloat
 
