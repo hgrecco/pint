@@ -216,14 +216,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 raise ValueError(
                     "Expression to parse as PlainQuantity cannot be an empty string."
                 )
-            ureg = SharedRegistryObject.__new__(cls)._REGISTRY
-            inst = ureg.parse_expression(value)
+            inst = cls._REGISTRY.parse_expression(value)
             return cls.__new__(cls, inst)
 
         if units is None and isinstance(value, cls):
             return copy.copy(value)
 
-        inst = SharedRegistryObject().__new__(cls)
+        cls = cls._registry_class()
+        inst = SharedRegistryObject.__new__(cls)
 
         if inst._is_timedelta(value):
             m, u = inst._convert_timedelta(value)
