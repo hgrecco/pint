@@ -124,6 +124,9 @@ its name ends in ``.toml``::
     [group.definitions]
     pound = { value = "7000 * grain", defined_symbol = "lb" }
 
+    [alias]
+    kilometer = { aliases = ["kilometro"] }
+
     [[system]]
     name = "mks"
     using_group_names = ["international"]
@@ -136,8 +139,9 @@ its name ends in ``.toml``::
     relations = ["[length] <-> [frequency]: speed_of_light / n / value"]
 
 Values are written as strings, using the same syntax as the text format. Every
-section is optional. There is no ``@alias`` or ``@import``: list the aliases on
-the unit, and put all definitions in one file.
+section is optional. ``[alias]`` plays the role of ``@alias``, e.g. for prefixed
+units, which are not defined in the file. There is no ``@import``: put all
+definitions in one file.
 
 A registry's definitions can be saved to a TOML file (this needs ``tomlkit``)::
 

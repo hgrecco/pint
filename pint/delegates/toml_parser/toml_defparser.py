@@ -22,16 +22,16 @@ from ...facets.plain.definitions import NotNumeric
 from ..base_defparser import ParserConfig
 from . import plain
 
-#: Definitions are added in this order, so groups exist before systems use them.
-_NAMED_TABLES = {
-    "prefix": plain.prefix,
-    "dimension": plain.dimension,
-    "unit": plain.unit,
-}
-_ARRAYS_OF_TABLES = {
-    "group": plain.group_,
-    "system": plain.system_,
-    "context": plain.context_,
+#: Sections in the order they are added, e.g. groups exist before systems use
+#: them. Tables map names to definitions; arrays hold named tables.
+_SECTIONS = {
+    "prefix": (dict, plain.prefix),
+    "dimension": (dict, plain.dimension),
+    "unit": (dict, plain.unit),
+    "group": (list, plain.group_),
+    "alias": (dict, plain.alias),
+    "system": (list, plain.system_),
+    "context": (list, plain.context_),
 }
 
 
@@ -62,7 +62,7 @@ class TomlParser:
     ) -> Generator[Any, None, None]:
         cfg = self._default_config
 
-        unknown = set(parsed_project) - {"defaults", *_NAMED_TABLES, *_ARRAYS_OF_TABLES}
+        unknown = set(parsed_project) - {"defaults", *_SECTIONS}
         if unknown:
             raise DefinitionSyntaxError(
                 f"Unknown sections in TOML definitions: {', '.join(sorted(unknown))}"
@@ -74,13 +74,15 @@ class TomlParser:
                 lambda d: plain.defaults(d, cfg),
                 parsed_project["defaults"],
             )
-        for key, build in _NAMED_TABLES.items():
-            for name, d in _section(parsed_project, key, dict).items():
-                yield _build(f"[{key}] {name}", lambda d: build(name, d, cfg), d)
-        for key, build in _ARRAYS_OF_TABLES.items():
-            for i, d in enumerate(_section(parsed_project, key, list)):
-                name = d.get("name", i) if isinstance(d, dict) else i
-                yield _build(f"[[{key}]] {name}", lambda d: build(d, cfg), d)
+        for key, (kind, build) in _SECTIONS.items():
+            section = _section(parsed_project, key, kind)
+            if kind is dict:
+                for name, d in section.items():
+                    yield _build(f"[{key}] {name}", lambda d: build(name, d, cfg), d)
+            else:
+                for i, d in enumerate(section):
+                    name = d.get("name", i) if isinstance(d, dict) else i
+                    yield _build(f"[[{key}]] {name}", lambda d: build(d, cfg), d)
 
     def parse_file(self, filename: pathlib.Path | str) -> list[Any]:
         """Return the definitions in a TOML file, using the disk cache if any."""

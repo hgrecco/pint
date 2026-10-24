@@ -11,6 +11,7 @@ Pint Changelog
 - Fix LaTeX formatting of arrays not displaying values (#1887)
 - Drop the archived `pytest-subtests` test dependency; the `test` extra now requires pytest>=9, which ships the `subtests` fixture (#2502)
 - Fix `cache_folder` cache hits discarding the cached unit data
+- `@alias` now adds the aliases to the unit's definition, so contexts that redefine the unit also apply to them
 - Load definitions from TOML files (`pint/default_en.toml` is provided) and write a registry's definitions with `ureg.write_definitions(path)`, which needs `tomlkit` (#2133)
 
 

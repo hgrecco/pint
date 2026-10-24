@@ -318,6 +318,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         #: Names of units derived by the registry, e.g. prefixed and delta units.
         self._generated_units: set[str] = set()
+        #: Aliases added with @alias to derived units.
+        self._generated_aliases: dict[str, tuple[str, ...]] = {}
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes: dict[str, str] = {"": "", "s": ""}
@@ -573,16 +575,25 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         unit = unit_dict[self.get_name(definition.name)]
         while not isinstance(unit, UnitDefinition):
             unit = unit_dict[unit.name]
-        # keep the definition complete, e.g. for write_definitions
-        known = {unit.name, unit.symbol, *unit.aliases}
+        known = (unit.name, unit.symbol, *unit.aliases)
         added = tuple(a for a in dict.fromkeys(definition.aliases) if a not in known)
+        # may raise on redefinition, before the definition is changed
+        for alias in definition.aliases:
+            self._helper_single_adder(alias, unit, self._units, self._units_casei)
+        if not added:
+            return
+
+        # keep the definition complete, e.g. for write_definitions
         new = dataclasses.replace(unit, aliases=unit.aliases + added)
         for layer in getattr(unit_dict, "maps", (unit_dict,)):
-            for key in [k for k, v in layer.items() if v is unit]:
-                layer[key] = new
-        self._generated_units.discard(unit.name)
-        for alias in definition.aliases:
-            self._helper_single_adder(alias, new, self._units, self._units_casei)
+            for key in (*known, *added):
+                if layer.get(key) is unit:
+                    layer[key] = new
+        if unit.name in self._generated_units:
+            # derived units are not written, so keep their aliases apart
+            self._generated_aliases[unit.name] = (
+                self._generated_aliases.get(unit.name, ()) + added
+            )
 
     def _add_dimension(self, definition: DimensionDefinition) -> None:
         self._helper_adder(definition, self._dimensions, None)
@@ -606,6 +617,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._helper_adder(definition, self._units, self._units_casei)
         # an explicit definition replaces a derived one of the same name
         self._generated_units.discard(definition.name)
+        self._generated_aliases.pop(definition.name, None)
 
     def load_definitions(
         self, file: Iterable[str] | str | pathlib.Path, is_resource: bool = False

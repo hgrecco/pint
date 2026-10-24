@@ -24,6 +24,10 @@ Build definitions from the tables of a TOML definitions file::
     [group.definitions]
     UK_hundredweight = { value = "long_hundredweight", defined_symbol = "UK_cwt" }
 
+    [alias]
+    # extra aliases for units defined elsewhere, e.g. prefixed units
+    kilometer = { aliases = ["kilometro"] }
+
     [[system]]
     name = "Planck"
     using_group_names = ["international"]
@@ -136,6 +140,10 @@ def dimension(name: str, d: dict[str, Any], config: ParserConfig):
     return definitions.DerivedDimensionDefinition(
         f"[{name}]", config.to_dimension_container(value), value_text=value
     )
+
+
+def alias(name: str, d: dict[str, Any], config: ParserConfig):
+    return definitions.AliasDefinition(name, _tuple(d, "aliases"))
 
 
 def defaults(d: dict[str, Any], config: ParserConfig):

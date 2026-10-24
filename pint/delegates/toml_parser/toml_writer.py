@@ -154,6 +154,10 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
         }
         for s in systems
     ]
+    data["alias"] = {
+        name: {"aliases": list(aliases)}
+        for name, aliases in getattr(ureg, "_generated_aliases", {}).items()
+    }
     data["context"] = [
         {
             "name": c.name,
@@ -201,8 +205,9 @@ def write_definitions(
     doc = tomlkit.document()
     if "defaults" in data:
         doc.add("defaults", data["defaults"])
-    for key in ("prefix", "dimension", "unit"):
-        doc.add(key, table_of_inline(data[key]))
+    for key in ("prefix", "dimension", "unit", "alias"):
+        if data[key] or key != "alias":
+            doc.add(key, table_of_inline(data[key]))
 
     for key in ("group", "system", "context"):
         aot = tomlkit.aot()

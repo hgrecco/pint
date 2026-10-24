@@ -133,6 +133,8 @@ def test_sections_are_optional(tmp_path):
         '[unit]\nmeter = { value = "[length]", defined_symbol = 1 }\n',
         "[defaults]\ngroup = 1\n",
         "[unit\n",
+        '[alias]\nmeter = { aliases = "metro" }\n',
+        '[alias]\nmeter = ["metro"]\n',
     ],
 )
 def test_syntax_errors(tmp_path, content):
@@ -300,7 +302,8 @@ def test_aliases_of_prefixed_and_group_units(tiny, tmp_path):
     tiny.define("@alias kilometer = kilometro")
     tiny.define("@alias inch = pulgada")
     reloaded, data = write_and_load(tiny, tmp_path)
-    assert data["unit"]["kilometer"]["aliases"] == ["kilometro"]
+    assert data["alias"] == {"kilometer": {"aliases": ["kilometro"]}}
+    assert "kilometer" not in data["unit"]
     (international,) = data["group"]
     assert international["definitions"]["inch"]["aliases"] == ["pulgada"]
     assert reloaded.Quantity(1, "kilometro").to("m").magnitude == 1000
@@ -323,6 +326,34 @@ def test_direct_write_warns_at_caller(tiny, tmp_path):
     with pytest.warns(UserWarning, match="context adhoc") as record:
         write_definitions(tmp_path / "out.toml", tiny)
     assert record[0].filename == __file__
+
+
+def test_alias_on_delta_unit_reloads_cleanly(tiny, tmp_path):
+    tiny.define("@alias delta_degree_Celsius = dC")
+    pytest.importorskip("tomlkit")
+    f = tmp_path / "out.toml"
+    tiny.write_definitions(f)
+    reloaded = pint.UnitRegistry(f, on_redefinition="raise")
+    assert "delta_degree_Celsius" not in tomllib.loads(f.read_text("utf-8"))["unit"]
+    assert reloaded.Quantity(1, "dC").to("K").magnitude == 1
+
+
+def test_failed_alias_leaves_definition_unchanged(tmp_path):
+    ureg = pint.UnitRegistry(
+        ["canonical = [] = can = alias1", "other = [] = oth = alias2"],
+        on_redefinition="raise",
+    )
+    with pytest.raises(pint.RedefinitionError):
+        ureg.define("@alias canonical = alias2")
+    assert ureg._units["canonical"].aliases == ("alias1",)
+    assert ureg._units["alias2"].name == "other"
+
+
+def test_alias_applies_to_context_redefinition(tiny):
+    tiny.define("@alias minute = minuto")
+    with tiny.context("fast"):
+        assert tiny.Quantity(1, "minuto").to("s").magnitude == 30
+    assert tiny.Quantity(1, "minuto").to("s").magnitude == 60
 
 
 def test_write_without_tomlkit(tmp_path, monkeypatch):
