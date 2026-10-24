@@ -89,16 +89,6 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
                     "lists and tuples are valid magnitudes for "
                     "Quantity only when NumPy is present."
                 )
-        # handle uncertainties (TODO: move this part to the measurement facet itself)
-        elif HAS_UNCERTAINTIES:
-            from uncertainties import UFloat
-
-            from pint.facets.measurement.objects import Measurement
-
-            if isinstance(value, UFloat):
-                return value
-            if isinstance(value, Measurement):
-                return ufloat(value.value, value.error)
         # let `PlainQuantity` handle all other objects
         value = super()._normalize_magnitude(value)
         if value is NotImplemented:
