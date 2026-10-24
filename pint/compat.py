@@ -25,7 +25,7 @@ from typing import (
     Unpack,  # noqa
 )
 
-from typing_extensions import deprecated  # noqa
+from typing_extensions import TypeIs, deprecated  # noqa
 
 
 def coerce_scalar(value, scalar):
@@ -117,7 +117,7 @@ def is_duck_array_type(cls: type) -> bool:
     )
 
 
-def is_duck_array(obj: type) -> bool:
+def is_duck_array(obj: object) -> TypeIs[np.typing.ArrayLike]:
     """Check if an object represents a (non-Quantity) duck array type."""
     return is_duck_array_type(type(obj))
 
