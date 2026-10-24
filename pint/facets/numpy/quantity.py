@@ -345,7 +345,8 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
                 "supports indexing"
             ) from exc
 
-    def _is_timedelta(self, value) -> bool:
+    @classmethod
+    def _is_timedelta(cls, value) -> bool:
         return (
             super()._is_timedelta(value)
             or isinstance(value, np_timedelta64)
@@ -356,7 +357,8 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             )
         )
 
-    def _convert_timedelta(self, value: Any) -> tuple[float, str]:
+    @classmethod
+    def _convert_timedelta(cls, value: Any) -> tuple[float, str]:
         """Convert a timedelta object to magnitude and unit string."""
         if isinstance(value, datetime.timedelta):
             return super()._convert_timedelta(value)

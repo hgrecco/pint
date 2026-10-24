@@ -239,10 +239,12 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     #   for consistency and correctness (those methods shouldn't have access to existing
     #   magnitude/units because they're meant to *create* them...)
 
-    def _is_timedelta(self, value: object) -> TypeIs[datetime.timedelta]:
+    @classmethod
+    def _is_timedelta(cls, value: object) -> TypeIs[datetime.timedelta]:
         return isinstance(value, datetime.timedelta)
 
-    def _convert_timedelta(self, value: object) -> tuple[float, str]:
+    @classmethod
+    def _convert_timedelta(cls, value: object) -> tuple[float, str]:
         """Convert a timedelta object to magnitude and unit string."""
         if isinstance(value, datetime.timedelta):
             return value.total_seconds(), "seconds"
