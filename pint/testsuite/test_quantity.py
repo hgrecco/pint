@@ -20,7 +20,6 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
-from pint.errors import UndefinedBehavior
 from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
