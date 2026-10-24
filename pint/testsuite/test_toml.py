@@ -133,6 +133,9 @@ def test_sections_are_optional(tmp_path):
         '[unit]\nmeter = { value = "[length]", defined_symbol = 1 }\n',
         "[defaults]\ngroup = 1\n",
         "[unit\n",
+        '[unit]\nmeter = { value = "[length]", symbol = "m" }\n',
+        '[[group]]\nname = "g"\nusing = ["root"]\n',
+        '[alias]\nmeter = { alias = ["metro"] }\n',
         '[alias]\nmeter = { aliases = "metro" }\n',
         '[alias]\nmeter = ["metro"]\n',
     ],
@@ -354,6 +357,37 @@ def test_alias_applies_to_context_redefinition(tiny):
     with tiny.context("fast"):
         assert tiny.Quantity(1, "minuto").to("s").magnitude == 30
     assert tiny.Quantity(1, "minuto").to("s").magnitude == 60
+
+
+def test_derived_units_are_marked(tiny):
+    from pint.facets.plain import DerivedUnitDefinition
+
+    tiny.Quantity(1, "km")
+    assert isinstance(tiny._units["kilometer"], DerivedUnitDefinition)
+    assert isinstance(tiny._units["delta_degree_Celsius"], DerivedUnitDefinition)
+    assert not isinstance(tiny._units["meter"], DerivedUnitDefinition)
+
+
+def test_context_redefinition_keeps_derived_aliases(tiny, tmp_path):
+    tiny.define("@alias delta_degree_Celsius = dC")
+    tiny.define("@alias kilometer = kilometro")
+    tiny.define("@context warm\n    degree_Celsius = kelvin; offset: 300\n@end")
+    with tiny.context("warm"):
+        assert tiny.Quantity(1, "dC").to("K").magnitude == 1
+    _, data = write_and_load(tiny, tmp_path)
+    assert data["alias"] == {
+        "delta_degree_Celsius": {"aliases": ["dC"]},
+        "kilometer": {"aliases": ["kilometro"]},
+    }
+    assert "kilometer" not in data["unit"]
+
+
+def test_redefined_base_keeps_delta_alias(tiny, tmp_path):
+    tiny.define("@alias delta_degree_Celsius = dC")
+    tiny.define("degree_Celsius = kelvin; offset: 273.15 = °C = celsius")
+    assert tiny._units["dC"] is tiny._units["delta_degree_Celsius"]
+    _, data = write_and_load(tiny, tmp_path)
+    assert data["alias"] == {"delta_degree_Celsius": {"aliases": ["dC"]}}
 
 
 def test_write_without_tomlkit(tmp_path, monkeypatch):

@@ -24,6 +24,7 @@ from ...facets.nonmultiplicative.definitions import (
     LogarithmicConverter,
     OffsetConverter,
 )
+from ...facets.plain import DerivedUnitDefinition
 
 if TYPE_CHECKING:
     from ...facets.plain import GenericPlainRegistry
@@ -111,11 +112,12 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
     systems = getattr(ureg, "_system_definitions", [])
     contexts = list(getattr(ureg, "_context_definitions", {}).values())
     group_units = {u.name for g in groups for u in g.definitions}
-    skip_units = group_units | getattr(ureg, "_generated_units", set())
 
     # skip the overlays of active contexts; aliases map to the same definition
     units = ureg._units.maps[-1] if isinstance(ureg._units, ChainMap) else ureg._units
     units = {d.name: d for d in units.values()}
+    # prefixed and delta units are derived again on load
+    derived = {n: d for n, d in units.items() if isinstance(d, DerivedUnitDefinition)}
     prefixes = {d.name: d for d in ureg._prefixes.values() if d.name}
     dimensions = {d.name: d for d in ureg._dimensions.values() if not d.is_base}
 
@@ -130,7 +132,9 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
         for name, d in dimensions.items()
     }
     data["unit"] = {
-        name: _unit(d) for name, d in units.items() if name not in skip_units
+        name: _unit(d)
+        for name, d in units.items()
+        if name not in group_units and name not in derived
     }
     data["group"] = [
         {
@@ -155,8 +159,9 @@ def to_dict(ureg: GenericPlainRegistry) -> dict[str, Any]:
         for s in systems
     ]
     data["alias"] = {
-        name: {"aliases": list(aliases)}
-        for name, aliases in getattr(ureg, "_generated_aliases", {}).items()
+        name: {"aliases": list(d.user_aliases)}
+        for name, d in derived.items()
+        if d.user_aliases
     }
     data["context"] = [
         {
@@ -206,7 +211,7 @@ def write_definitions(
     if "defaults" in data:
         doc.add("defaults", data["defaults"])
     for key in ("prefix", "dimension", "unit", "alias"):
-        if data[key] or key != "alias":
+        if data[key]:
             doc.add(key, table_of_inline(data[key]))
 
     for key in ("group", "system", "context"):

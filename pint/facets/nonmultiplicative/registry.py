@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from ...compat import TypeAlias
 from ...errors import DimensionalityError, UndefinedUnitError
 from ...util import UnitsContainer, logger
-from ..plain import GenericPlainRegistry, UnitDefinition
+from ..plain import DerivedUnitDefinition, GenericPlainRegistry, UnitDefinition
 from . import objects
 from .definitions import OffsetConverter, ScaleConverter
 
@@ -99,15 +99,21 @@ class GenericNonMultiplicativeRegistry[QuantityT: Quantity, UnitT: Unit](
             {ref: value for ref, value in definition.reference.items()}
         )
 
-        delta_def = UnitDefinition(
+        # keep aliases added with @alias when the unit is redefined
+        old = self._units.get(delta_name)
+        user_aliases = (
+            old.user_aliases if isinstance(old, DerivedUnitDefinition) else ()
+        )
+
+        delta_def = DerivedUnitDefinition(
             delta_name,
             delta_symbol,
-            delta_aliases,
+            delta_aliases + user_aliases,
             ScaleConverter(definition.converter.scale),
             delta_reference,
+            auto_aliases=delta_aliases,
         )
         super()._add_unit(delta_def)
-        self._generated_units.add(delta_name)
 
     def _is_multiplicative(self, unit_name: str) -> bool:
         """True if the unit is multiplicative.

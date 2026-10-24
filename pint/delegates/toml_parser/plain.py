@@ -56,6 +56,14 @@ from ...facets.plain import definitions
 from ..base_defparser import ParserConfig
 
 
+def _check_keys(d: dict[str, Any], *allowed: str) -> None:
+    unknown = set(d) - set(allowed)
+    if unknown:
+        raise DefinitionSyntaxError(
+            f"unknown keys {', '.join(sorted(unknown))}; expected {', '.join(allowed)}"
+        )
+
+
 def _tuple(d: dict[str, Any], key: str) -> tuple[str, ...]:
     value = d.get(key, [])
     if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
@@ -84,6 +92,7 @@ def _table(d: dict[str, Any], key: str) -> dict[str, Any]:
 
 
 def prefix(name: str, d: dict[str, Any], config: ParserConfig):
+    _check_keys(d, "value", "defined_symbol", "aliases")
     value = _str(d, "value")
     try:
         value_number = config.to_number(value)
@@ -101,6 +110,7 @@ def prefix(name: str, d: dict[str, Any], config: ParserConfig):
 
 
 def unit(name: str, d: dict[str, Any], config: ParserConfig):
+    _check_keys(d, "value", "defined_symbol", "aliases")
     value = _str(d, "value")
     converter, *modifier_parts = value.split(";")
     try:
@@ -136,6 +146,7 @@ def unit(name: str, d: dict[str, Any], config: ParserConfig):
 
 
 def dimension(name: str, d: dict[str, Any], config: ParserConfig):
+    _check_keys(d, "value")
     value = _str(d, "value")
     return definitions.DerivedDimensionDefinition(
         f"[{name}]", config.to_dimension_container(value), value_text=value
@@ -143,6 +154,7 @@ def dimension(name: str, d: dict[str, Any], config: ParserConfig):
 
 
 def alias(name: str, d: dict[str, Any], config: ParserConfig):
+    _check_keys(d, "aliases")
     return definitions.AliasDefinition(name, _tuple(d, "aliases"))
 
 
@@ -158,6 +170,7 @@ def defaults(d: dict[str, Any], config: ParserConfig):
 
 
 def group_(d: dict[str, Any], config: ParserConfig):
+    _check_keys(d, "name", "using_group_names", "definitions")
     return group.GroupDefinition(
         _str(d, "name"),
         _tuple(d, "using_group_names"),
@@ -166,6 +179,7 @@ def group_(d: dict[str, Any], config: ParserConfig):
 
 
 def system_(d: dict[str, Any], config: ParserConfig):
+    _check_keys(d, "name", "using_group_names", "rules")
     rules = []
     for rule in _tuple(d, "rules"):
         parts = [p.strip() for p in rule.split(":")]
@@ -194,6 +208,7 @@ def _relation(s: str, config: ParserConfig):
 
 
 def context_(d: dict[str, Any], config: ParserConfig):
+    _check_keys(d, "name", "aliases", "defaults", "relations", "redefinitions")
     return context.ContextDefinition(
         _str(d, "name"),
         _tuple(d, "aliases"),

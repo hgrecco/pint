@@ -87,6 +87,7 @@ from .definitions import (
     CommentDefinition,
     DefaultsDefinition,
     DerivedDimensionDefinition,
+    DerivedUnitDefinition,
     DimensionDefinition,
     NamedDefinition,
     PrefixDefinition,
@@ -315,11 +316,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         #: Map prefix name (string) to its definition (PrefixDefinition).
         self._prefixes: dict[str, PrefixDefinition] = {"": PrefixDefinition("", 1)}
-
-        #: Names of units derived by the registry, e.g. prefixed and delta units.
-        self._generated_units: set[str] = set()
-        #: Aliases added with @alias to derived units.
-        self._generated_aliases: dict[str, tuple[str, ...]] = {}
 
         #: Map suffix name (string) to canonical , and unit alias to canonical unit name
         self._suffixes: dict[str, str] = {"": "", "s": ""}
@@ -589,11 +585,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             for key in (*known, *added):
                 if layer.get(key) is unit:
                     layer[key] = new
-        if unit.name in self._generated_units:
-            # derived units are not written, so keep their aliases apart
-            self._generated_aliases[unit.name] = (
-                self._generated_aliases.get(unit.name, ()) + added
-            )
 
     def _add_dimension(self, definition: DimensionDefinition) -> None:
         self._helper_adder(definition, self._dimensions, None)
@@ -615,9 +606,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                     self._add_dimension(DimensionDefinition(dim_name))
 
         self._helper_adder(definition, self._units, self._units_casei)
-        # an explicit definition replaces a derived one of the same name
-        self._generated_units.discard(definition.name)
-        self._generated_aliases.pop(definition.name, None)
 
     def load_definitions(
         self, file: Iterable[str] | str | pathlib.Path, is_resource: bool = False
@@ -744,14 +732,13 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             name = prefix + unit_name
             symbol = self.get_symbol(name, case_sensitive)
             prefix_def = self._prefixes[prefix]
-            self._units[name] = UnitDefinition(
+            self._units[name] = DerivedUnitDefinition(
                 name,
                 symbol,
                 tuple(),
                 prefix_def.converter,
                 self.UnitsContainer({unit_name: 1}),
             )
-            self._generated_units.add(name)
             return prefix + unit_name
 
         return unit_name

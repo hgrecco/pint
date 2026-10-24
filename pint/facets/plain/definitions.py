@@ -218,6 +218,18 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
 
 
 @dataclass(frozen=True)
+class DerivedUnitDefinition(UnitDefinition):
+    """A unit the registry derives itself, e.g. a prefixed or delta unit."""
+
+    #: aliases given by the registry; others were added with @alias
+    auto_aliases: tuple[str, ...] = field(default=(), kw_only=True)
+
+    @property
+    def user_aliases(self) -> tuple[str, ...]:
+        return tuple(a for a in self.aliases if a not in self.auto_aliases)
+
+
+@dataclass(frozen=True)
 class DimensionDefinition(NamedDefinition, errors.WithDefErr):
     """Definition of a root dimension"""
 
