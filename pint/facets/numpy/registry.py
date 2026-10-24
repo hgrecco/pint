@@ -99,7 +99,7 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
             return np.asarray(value)
         return value
 
-    def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
+    def _as_magnitude_and_units(self, value: object) -> tuple[object, str] | None:
         if isinstance(value, np_timedelta64) or (
             not isinstance(value, PlainQuantity)
             and is_duck_array(value)

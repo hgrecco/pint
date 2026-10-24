@@ -246,7 +246,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         return inst
 
-    def _coerce_operand(self, other: Any) -> Any:
+    def _coerce_operand(self, other: object) -> PlainQuantity:
         """Turn an operand that carries its own units (e.g. a timedelta) into a quantity."""
         parts = self._REGISTRY._as_magnitude_and_units(other)
         if parts is None:

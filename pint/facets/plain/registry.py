@@ -1609,7 +1609,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             return cast(Magnitude, value)
         return NotImplemented
 
-    def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
+    def _as_magnitude_and_units(self, value: object) -> tuple[object, str] | None:
         """Return the magnitude and units of a value that carries its own units
         (e.g. a timedelta), or None for any other value."""
         if isinstance(value, datetime.timedelta):
