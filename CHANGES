@@ -4,6 +4,7 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
+- `pint.Quantity`, `pint.Unit` and `pint.Measurement` now look up the application registry dynamically and return objects of its own classes, e.g. `type(pint.Quantity(1, "m")) is pint.application_registry.Quantity` (#1749)
 - Fix redefining a unit with `define()` or `load_definitions()` after it was used, which kept the old cached conversion; pass `rebuild_cache=False` to delay the rebuild (#922, #740)
 - Remove the `slpm` abbreviation for `standard_liter_per_minute` (#1354)
 - Fix assigning bare all-NaN NumPy arrays into Quantity slices, including xarray indexed assignment (#1896)

@@ -286,3 +286,56 @@ def test_modify_application_registry():
     ar.force_ndarray_like = True
 
     assert ar.force_ndarray_like == u.force_ndarray_like
+
+
+@pytest.mark.usefixtures("isolate_application_registry")
+class TestApplicationRegistryClasses:
+    """pint.Quantity, pint.Unit and pint.Measurement build objects of the
+    current application registry's own classes (#1749)."""
+
+    def test_registry_lookup_is_dynamic(self):
+        assert Quantity._REGISTRY is get_application_registry().get()
+        assert Unit._REGISTRY is get_application_registry().get()
+
+        new = UnitRegistry()
+        set_application_registry(new)
+        assert Quantity._REGISTRY is new
+        assert Unit._REGISTRY is new
+
+    def test_quantity_type(self):
+        ureg = get_application_registry()
+        q1 = Quantity(1, "m")
+        q2 = Quantity("1 m")
+        q3 = ureg.Quantity(1, "m")
+        assert type(q1) is type(q3)
+        assert type(q2) is type(q3)
+        assert isinstance(q1, Quantity)
+        assert type(q1 * q1) is type(q3)
+        assert type(Quantity.from_tuple(q3.to_tuple())) is type(q3)
+
+    def test_unit_type(self):
+        ureg = get_application_registry()
+        u = Unit("m")
+        assert type(u) is type(ureg.Unit("m"))
+        assert isinstance(u, Unit)
+
+    @helpers.requires_uncertainties()
+    def test_measurement_type(self):
+        ureg = get_application_registry()
+        m = Measurement(10, 1, "m")
+        assert type(m) is ureg.Measurement
+        assert isinstance(m, Measurement)
+
+    def test_follows_set_application_registry(self):
+        new = UnitRegistry()
+        set_application_registry(new)
+        q = Quantity(1, "m")
+        u = Unit("m")
+        assert type(q) is new.Quantity
+        assert type(u) is new.Unit
+        assert q._REGISTRY is new
+
+    def test_wrapping_other_registry_quantity(self):
+        other = UnitRegistry()
+        q = other.Quantity(1, "m")
+        assert type(Quantity(q)) is other.Quantity

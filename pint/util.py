@@ -969,6 +969,15 @@ def _is_dim(name: str) -> bool:
     return name[0] == "[" and name[-1] == "]"
 
 
+class _ApplicationRegistryLookup:
+    """Descriptor returning the current application registry."""
+
+    def __get__(self, instance, owner=None):
+        from . import application_registry
+
+        return application_registry.get()
+
+
 class SharedRegistryObject:
     """Base class for object keeping a reference to the registree.
 
@@ -983,20 +992,32 @@ class SharedRegistryObject:
 
     """
 
-    _REGISTRY: ClassVar[UnitRegistry]
+    # Base classes (e.g. pint.Quantity) look up the application registry
+    # on access; classes made by create_class_with_registry override this.
+    _REGISTRY: ClassVar[UnitRegistry] = _ApplicationRegistryLookup()  # type: ignore[assignment]
 
     # TODO: Should `_units` really be `UnitsContainer | UnitDefinition`?
     _units: UnitsContainer
 
     def __new__(cls, *args, **kwargs):
-        inst = object.__new__(cls)
-        if not hasattr(cls, "_REGISTRY"):
-            # Base class, not subclasses dynamically by
-            # UnitRegistry._init_dynamic_classes
-            from . import application_registry
+        return object.__new__(cls._registry_class())
 
-            inst._REGISTRY = application_registry.get()
-        return inst
+    @classmethod
+    def _registry_class(cls) -> type[Self]:
+        """Return the class bound to the application registry if cls is
+        an unbound base class such as pint.Quantity, otherwise cls.
+        """
+        for klass in cls.__mro__:
+            if "_REGISTRY" in klass.__dict__:
+                if not isinstance(
+                    klass.__dict__["_REGISTRY"], _ApplicationRegistryLookup
+                ):
+                    return cls
+                break
+        target = getattr(cls._REGISTRY, cls.__name__, None)
+        if isinstance(target, type) and target.__bases__ == (cls,):
+            return target
+        return cls
 
     def _check(self, other: object) -> "TypeIs[SharedRegistryObject]":
         """Check if the other object uses a registry and if so that it is the same registry.
