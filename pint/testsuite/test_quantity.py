@@ -2001,16 +2001,38 @@ class TestOffsetUnitMath(QuantityTestCase):
                     expected = expected_copy[i]
                 helpers.assert_quantity_almost_equal(op.pow(in1, in2), expected)
 
+    # def test_exponentiation_quantity_power(self):
+    #    ureg = pint.UnitRegistry(force_ndarray=True)
+    #    m = ureg.Quantity(2, "m")
+    #    m ** ureg.Quantity(2, "m")        # PR: 4 m**2      master: DimensionalityError
+    #    m ** ureg.Quantity(100, "cm/m")   # PR: 0 m**100    master: 2 m
+    #    m ** True                         # PR: 2 m         master: TypeError
+
     @helpers.requires_numpy
-    @pytest.mark.parametrize("inplace", (False, True))
-    def test_exponentiation_force_ndarray(self, inplace: bool):
-        ureg = UnitRegistry(force_ndarray_like=True)
+    @pytest.mark.parametrize(
+        ["inplace", "like"],
+        [
+            (False, False),
+            (False, True),
+            (True, False),
+            (False, False),
+        ],
+    )
+    def test_exponentiation_force_ndarray(self, inplace: bool, like: bool):
+        if like:
+            ureg = UnitRegistry(force_ndarray_like=True)
+        else:
+            ureg = UnitRegistry(force_ndarray=True)
         q = ureg.Quantity(1, "1 / hours")
         if inplace:
             q **= 2
         else:
             q = q**2
         assert all(isinstance(v, np.integer) for v in q._units.values())
+        with pytest.raises(DimensionalityError):
+            _ = q ** ureg.Quantity(2, "m")
+        with pytest.raises(TypeError):
+            _ = q**True
 
     @helpers.requires_numpy
     @pytest.mark.parametrize(("input_tuple", "expected"), exponentiation)
