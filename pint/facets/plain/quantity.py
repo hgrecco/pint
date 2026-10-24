@@ -29,7 +29,6 @@ from typing import (
 from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
-    deprecated,
     eq,
     is_duck_array,
     is_duck_array_type,
@@ -279,13 +278,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             copy.deepcopy(self._magnitude, memo), copy.deepcopy(self._units, memo)
         )
         return ret
-
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.format_quantity_babel"
-    )
-    def format_babel(self, spec: str = "", **kwspec: Any) -> str:
-        return self._REGISTRY.formatter.format_quantity_babel(self, spec, **kwspec)
 
     def __format__(self, spec: str) -> str:
         return self._REGISTRY.formatter.format_quantity(self, spec)
