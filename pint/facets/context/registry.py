@@ -125,17 +125,17 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         return context
 
     def define(self, definition: str | type, rebuild_cache: bool = True) -> None:
-        with self._without_context_units():
+        with self._writing_to_plain_units():
             super().define(definition, rebuild_cache)
 
     def load_definitions(
         self, file, is_resource: bool = False, rebuild_cache: bool = True
     ):
-        with self._without_context_units():
+        with self._writing_to_plain_units():
             return super().load_definitions(file, is_resource, rebuild_cache)
 
     @contextmanager
-    def _without_context_units(self) -> Generator[None]:
+    def _writing_to_plain_units(self) -> Generator[None]:
         """Write definitions to the plain units, not an active context overlay."""
         if not self._initialized:
             yield
