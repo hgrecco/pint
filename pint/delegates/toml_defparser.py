@@ -200,12 +200,18 @@ def _contexts(data: dict[str, Any], cfg: ParserConfig) -> list:
 
 
 def _check_version(data: dict[str, Any]) -> None:
+    required = f'version = "{FORMAT_VERSION}"'
+    major = FORMAT_VERSION.split(".")[0]
     version = data.get("version")
     if version is None:
-        raise DefinitionSyntaxError(f'missing version = "{FORMAT_VERSION}"')
-    if str(version).split(".")[0] != FORMAT_VERSION.split(".")[0]:
         raise DefinitionSyntaxError(
-            f"unsupported version {version}; this Pint reads version {FORMAT_VERSION}"
+            f"missing the definitions format version; add {required} "
+            "at the top of the file, before any [section]"
+        )
+    if str(version).split(".")[0] != major:
+        raise DefinitionSyntaxError(
+            f'unsupported definitions format version "{version}"; this version '
+            f"of Pint reads version {major}.x files, e.g. {required}"
         )
 
 

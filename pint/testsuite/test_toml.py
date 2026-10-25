@@ -82,6 +82,29 @@ def test_sections_are_optional(tmp_path):
 
 
 @pytest.mark.parametrize(
+    "content, message",
+    [
+        (
+            '[unit]\nmeter = { value = "[length]" }\n',
+            'missing the definitions format version; add version = "1.0" '
+            "at the top of the file, before any [section]",
+        ),
+        (
+            'version = "2.0"\n',
+            'unsupported definitions format version "2.0"; this version of Pint '
+            'reads version 1.x files, e.g. version = "1.0"',
+        ),
+    ],
+)
+def test_version_errors_say_what_is_required(tmp_path, content, message):
+    f = tmp_path / "defs.toml"
+    f.write_text(content, encoding="utf-8")
+    with pytest.raises(DefinitionSyntaxError) as excinfo:
+        pint.UnitRegistry(f)
+    assert str(excinfo.value) == f"{f}: {message}"
+
+
+@pytest.mark.parametrize(
     "content",
     [
         VERSION + '[units]\nmeter = { value = "[length]" }\n',
