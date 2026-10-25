@@ -2021,6 +2021,14 @@ class TestOffsetUnitMath(QuantityTestCase):
         helpers.assert_quantity_equal(q, ureg.Quantity(2, "m"))
         for v in q._units.values():
             assert isinstance(v, int)
+        # non-trivial exponents must also keep integer unit exponents
+        q1 = ureg.Quantity(1, "1 / hours")
+        if inplace:
+            q1 **= 2
+        else:
+            q1 = q1**2
+        for v in q1._units.values():
+            assert isinstance(v, int)
 
     @helpers.requires_numpy
     @pytest.mark.parametrize(("input_tuple", "expected"), exponentiation)
