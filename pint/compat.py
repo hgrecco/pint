@@ -120,7 +120,7 @@ def is_duck_array_type(cls: type) -> bool:
 
 
 def is_duck_array(obj: object) -> TypeIs[Array]:
-    """Check if an object represents a (non-Quantity) duck array type."""
+    """Check if an object represents a (non-Quantity) duck array."""
     return is_duck_array_type(type(obj))
 
 
