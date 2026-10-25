@@ -144,7 +144,18 @@ _ERRORS = (PintError, definitions.NotNumeric, ValueError, TypeError, KeyError)
 
 
 def _parse_entry(where: str, parse, *args):
-    """Parse one entry, reporting errors as a syntax error naming the entry."""
+    """Parse one entry, reporting errors as a syntax error naming the entry.
+
+    Parameters
+    ----------
+    where :
+        label of the entry for error messages, e.g. ``"[unit] meter"``.
+    parse :
+        entry parser, e.g. ``_unit``, that returns a definition.
+    *args :
+        arguments for ``parse``: ``(name, d, cfg)`` for prefixes, dimensions
+        and units, ``(d, cfg)`` for groups, systems and contexts.
+    """
     try:
         return parse(*args)
     except _ERRORS as ex:
