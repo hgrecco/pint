@@ -19,7 +19,6 @@ from ...compat import (
     np_timedelta64,
 )
 from ..plain import GenericPlainRegistry, PlainQuantity
-from ..plain.registry import NON_INT_TYPE, PreprocessorType
 from .quantity import NumpyQuantity
 from .unit import NumpyUnit
 
@@ -59,32 +58,12 @@ class GenericNumpyRegistry[QuantityT: NumpyQuantity, UnitT: NumpyUnit](
     def __init__(
         self,
         filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
-        on_redefinition: str = "warn",
-        auto_reduce_dimensions: bool = False,
-        autoconvert_to_preferred: bool = False,
-        preprocessors: list[PreprocessorType] | None = None,
-        fmt_locale: str | None = None,
-        non_int_type: NON_INT_TYPE = float,
-        case_sensitive: bool = True,
-        cache_folder: str | pathlib.Path | None = None,
-        separate_format_defaults: bool | None = None,
-        mpl_formatter: str = "{:P}",
+        **kwargs,
     ):
-        super().__init__(
-            filename,
-            on_redefinition,
-            auto_reduce_dimensions=auto_reduce_dimensions,
-            autoconvert_to_preferred=autoconvert_to_preferred,
-            preprocessors=preprocessors,
-            fmt_locale=fmt_locale,
-            non_int_type=non_int_type,
-            case_sensitive=case_sensitive,
-            cache_folder=cache_folder,
-            separate_format_defaults=separate_format_defaults,
-            mpl_formatter=mpl_formatter,
-        )
+        super().__init__(filename, **kwargs)
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
 
