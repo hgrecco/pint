@@ -6,7 +6,7 @@ Compatibility layer for supporting arrays as pint magnitudes.
 
 APIs are tried in the following order:
 - Array API standard (experimental)
-- NumPy duck-arrays (partial support)
+- Duck arrays (e.g. dask/pandas; partial support)
 - NumPy ndarray (full support)
 
 :copyright: 2013 by Pint Authors, see AUTHORS for more details.
