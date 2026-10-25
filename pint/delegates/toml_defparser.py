@@ -65,6 +65,9 @@ from ..facets.plain import definitions
 from ..facets.system.definitions import BaseUnitRule, SystemDefinition
 from .base_defparser import ParserConfig
 
+#: Version of the TOML definitions format read by this parser.
+FORMAT_VERSION = "1.0"
+
 
 def _number(value: Any, cfg: ParserConfig):
     # floats arrive as their source text (parse_float=str), keeping all digits
@@ -136,9 +139,6 @@ def _context(d: dict[str, Any], cfg: ParserConfig):
         tuple(_unit(k, v, cfg) for k, v in d.get("redefinitions", {}).items()),
     )
 
-
-#: Version of the TOML definitions format read by this parser.
-FORMAT_VERSION = "1.0"
 
 _ERRORS = (PintError, definitions.NotNumeric, ValueError, TypeError, KeyError)
 
