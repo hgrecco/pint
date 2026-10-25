@@ -37,7 +37,7 @@ class ArrayAPIModule(Protocol):
     ) -> Array: ...
     def logical_not(self, array: Array, /) -> Array: ...
 
-    bool: type[np.bool]
+    bool: type["np.bool"]
 
 
 def namespace(array: Array, /) -> ArrayAPIModule:
