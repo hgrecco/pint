@@ -8,8 +8,9 @@ pint.facets.numpy.registry
 
 from __future__ import annotations
 
+import pathlib
 from types import NotImplementedType
-from typing import TYPE_CHECKING, Literal, overload, override
+from typing import TYPE_CHECKING, Iterable, Literal, overload, override
 
 from ...compat import (
     HAS_NUMPY,
@@ -18,6 +19,7 @@ from ...compat import (
     np_timedelta64,
 )
 from ..plain import GenericPlainRegistry, PlainQuantity
+from ..plain.registry import NON_INT_TYPE, PreprocessorType
 from .quantity import NumpyQuantity
 from .unit import NumpyUnit
 
@@ -25,7 +27,7 @@ if HAS_NUMPY:
     import numpy as np
 
 if TYPE_CHECKING:
-    from ..._typing import Magnitude, Quantity, Unit
+    from ..._typing import Magnitude
 
 _DTYPE_TO_UNIT = {
     "timedelta64[Y]": "year",
@@ -44,9 +46,48 @@ _DTYPE_TO_UNIT = {
 }
 
 
-class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
+class GenericNumpyRegistry[QuantityT: NumpyQuantity, UnitT: NumpyUnit](
     GenericPlainRegistry[QuantityT, UnitT]
 ):
+    force_ndarray: bool
+    """Convert any input, scalar or not, to a numpy.ndarray."""
+
+    force_ndarray_like: bool
+    """Convert all inputs other than duck arrays to a numpy.ndarray."""
+
+    @override
+    def __init__(
+        self,
+        filename: Iterable[str] | str | pathlib.Path | None = "",
+        force_ndarray: bool = False,
+        force_ndarray_like: bool = False,
+        on_redefinition: str = "warn",
+        auto_reduce_dimensions: bool = False,
+        autoconvert_to_preferred: bool = False,
+        preprocessors: list[PreprocessorType] | None = None,
+        fmt_locale: str | None = None,
+        non_int_type: NON_INT_TYPE = float,
+        case_sensitive: bool = True,
+        cache_folder: str | pathlib.Path | None = None,
+        separate_format_defaults: bool | None = None,
+        mpl_formatter: str = "{:P}",
+    ):
+        super().__init__(
+            filename,
+            on_redefinition,
+            auto_reduce_dimensions=auto_reduce_dimensions,
+            autoconvert_to_preferred=autoconvert_to_preferred,
+            preprocessors=preprocessors,
+            fmt_locale=fmt_locale,
+            non_int_type=non_int_type,
+            case_sensitive=case_sensitive,
+            cache_folder=cache_folder,
+            separate_format_defaults=separate_format_defaults,
+            mpl_formatter=mpl_formatter,
+        )
+        self.force_ndarray = force_ndarray
+        self.force_ndarray_like = force_ndarray_like
+
     @overload
     def _into_ndarray_like(
         self, value: Magnitude, /, *, force_ndarray: Literal[True]
