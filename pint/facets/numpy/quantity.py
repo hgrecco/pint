@@ -11,7 +11,8 @@ from __future__ import annotations
 import functools
 import math
 import warnings
-from typing import Any
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 from ..._typing import Magnitude, Shape
 from ...compat import (
@@ -48,6 +49,11 @@ except ImportError:
     ufloat = Ufloat = None
     HAS_UNCERTAINTIES = False
 
+if TYPE_CHECKING:
+    import optype as opt
+
+    from ..._typing import UnitLike
+
 
 def method_wraps(numpy_func):
     if isinstance(numpy_func, str):
@@ -71,6 +77,81 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     @property
     def force_ndarray_like(self) -> bool:
         return self._REGISTRY.force_ndarray_like
+
+    @classmethod
+    def from_list[T: np.floating | np.integer](
+        cls: type[NumpyQuantity[opt.numpy.Array1D[np.float64]]],
+        quant_list: list[
+            NumpyQuantity[np.floating]
+            | NumpyQuantity[np.integer]
+            | NumpyQuantity[float]
+            | NumpyQuantity[int]
+        ],
+        units: UnitLike | None = None,
+    ) -> NumpyQuantity[opt.numpy.Array1D[np.float64]]:
+        """Transforms a list of Quantities into an numpy.array quantity.
+        If no units are specified, the unit of the first element will be used.
+        Same as from_sequence.
+
+        If units is not specified and list is empty, the unit cannot be determined
+        and a ValueError is raised.
+
+        Parameters
+        ----------
+        quant_list : list of pint.PlainQuantity
+            list of pint.PlainQuantity
+        units : UnitsContainer, str or pint.PlainQuantity
+            units of the physical quantity to be created (Default value = None)
+
+        Returns
+        -------
+        pint.PlainQuantity
+        """
+        return cls.from_sequence(quant_list, units=units)
+
+    @classmethod
+    def from_sequence(
+        cls: type[NumpyQuantity[opt.numpy.Array1D[np.float64]]],
+        seq: Sequence[
+            NumpyQuantity[np.floating]
+            | NumpyQuantity[np.integer]
+            | NumpyQuantity[float]
+            | NumpyQuantity[int]
+        ],
+        units: UnitLike | None = None,
+    ) -> NumpyQuantity[opt.numpy.Array1D[np.float64]]:
+        """Transforms a sequence of Quantities into an numpy.array quantity.
+        If no units are specified, the unit of the first element will be used.
+
+        If units is not specified and sequence is empty, the unit cannot be determined
+        and a ValueError is raised.
+
+        Parameters
+        ----------
+        seq : sequence of pint.PlainQuantity
+            sequence of pint.PlainQuantity
+        units : UnitsContainer, str or pint.PlainQuantity
+            units of the physical quantity to be created (Default value = None)
+
+        Returns
+        -------
+        pint.PlainQuantity
+        """
+
+        len_seq = len(seq)
+        if units is None:
+            if len_seq:
+                units = seq[0].u
+            else:
+                raise ValueError("Cannot determine units from empty sequence!")
+
+        a = np.empty(len_seq)
+
+        for i, seq_i in enumerate(seq):
+            a[i] = seq_i.m_as(units)
+            # raises DimensionalityError if incompatible units are used in the sequence
+
+        return cls(a, units)
 
     # NumPy function/ufunc support
     __array_priority__ = 17
