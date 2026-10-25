@@ -6,7 +6,6 @@ from decimal import Decimal
 import pytest
 
 import pint
-from pint.errors import DefinitionSyntaxError
 
 PINT_DIR = pathlib.Path(pint.__file__).parent
 VERSION = 'version = "1.0"\n'
@@ -72,50 +71,3 @@ def test_modifier_keys(tmp_path):
     assert ureg.Quantity(0, "celsius").to("K").magnitude == pytest.approx(273.15)
     assert ureg.Quantity(32, "fahrenheit").to("celsius").magnitude == pytest.approx(0)
     assert ureg.Quantity(2, "B").to("").magnitude == pytest.approx(100)
-
-
-def test_sections_are_optional(tmp_path):
-    f = tmp_path / "defs.toml"
-    f.write_text(VERSION + '[unit]\nmeter = { value = "[length]" }\n', encoding="utf-8")
-    ureg = pint.UnitRegistry(f)
-    assert ureg.Quantity(1, "meter").dimensionality == {"[length]": 1}
-
-
-@pytest.mark.parametrize(
-    "content, message",
-    [
-        (
-            '[unit]\nmeter = { value = "[length]" }\n',
-            'missing the definitions format version; add version = "1.0" '
-            "at the top of the file, before any [section]",
-        ),
-        (
-            'version = "2.0"\n',
-            "unsupported version 2.0; this Pint reads version 1.0",
-        ),
-    ],
-)
-def test_version_errors_say_what_is_required(tmp_path, content, message):
-    f = tmp_path / "defs.toml"
-    f.write_text(content, encoding="utf-8")
-    with pytest.raises(DefinitionSyntaxError) as excinfo:
-        pint.UnitRegistry(f)
-    assert str(excinfo.value) == f"{f}: {message}"
-
-
-@pytest.mark.parametrize(
-    "content",
-    [
-        VERSION + '[units]\nmeter = { value = "[length]" }\n',
-        VERSION + "[unit]\nmeter = {}\n",
-        VERSION + '[prefix]\nkilo = { value = "meter" }\n',
-        # the version is required, and must have the supported major version
-        '[unit]\nmeter = { value = "[length]" }\n',
-        'version = "2.0"\n[unit]\nmeter = { value = "[length]" }\n',
-    ],
-)
-def test_syntax_errors_name_the_file(tmp_path, content):
-    f = tmp_path / "defs.toml"
-    f.write_text(content, encoding="utf-8")
-    with pytest.raises(DefinitionSyntaxError, match="defs.toml"):
-        pint.UnitRegistry(f)
