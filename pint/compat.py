@@ -27,6 +27,8 @@ from typing import (
 
 from typing_extensions import TypeIs, deprecated  # noqa
 
+from ._typing import Array
+
 
 def coerce_scalar(value, scalar):
     """Coerce a scalar (a conversion scale or offset) to be arithmetically
@@ -117,7 +119,7 @@ def is_duck_array_type(cls: type) -> bool:
     )
 
 
-def is_duck_array(obj: object) -> TypeIs[np.typing.ArrayLike]:
+def is_duck_array(obj: object) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) duck array type."""
     return is_duck_array_type(type(obj))
 
