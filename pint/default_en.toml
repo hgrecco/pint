@@ -16,6 +16,9 @@
 #
 # See also: https://pint.readthedocs.io/en/latest/defining.html
 
+# version of the TOML definitions format
+version = "1.0"
+
 [defaults]
 group = "international"
 system = "mks"

@@ -9,6 +9,7 @@ import pint
 from pint.errors import DefinitionSyntaxError
 
 PINT_DIR = pathlib.Path(pint.__file__).parent
+VERSION = 'version = "1.0"\n'
 
 
 def summary(ureg):
@@ -60,7 +61,7 @@ def test_numbers_keep_their_digits():
 def test_modifier_keys(tmp_path):
     f = tmp_path / "defs.toml"
     f.write_text(
-        "[unit]\n"
+        VERSION + "[unit]\n"
         'kelvin = { value = "[temperature]", offset = 0, symbol = "K" }\n'
         'celsius = { value = "kelvin", offset = 273.15 }\n'
         'fahrenheit = { value = "5 / 9 * kelvin", offset = "233.15 + 200 / 9" }\n'
@@ -75,7 +76,7 @@ def test_modifier_keys(tmp_path):
 
 def test_sections_are_optional(tmp_path):
     f = tmp_path / "defs.toml"
-    f.write_text('[unit]\nmeter = { value = "[length]" }\n', encoding="utf-8")
+    f.write_text(VERSION + '[unit]\nmeter = { value = "[length]" }\n', encoding="utf-8")
     ureg = pint.UnitRegistry(f)
     assert ureg.Quantity(1, "meter").dimensionality == {"[length]": 1}
 
@@ -83,9 +84,12 @@ def test_sections_are_optional(tmp_path):
 @pytest.mark.parametrize(
     "content",
     [
-        '[units]\nmeter = { value = "[length]" }\n',
-        "[unit]\nmeter = {}\n",
-        '[prefix]\nkilo = { value = "meter" }\n',
+        VERSION + '[units]\nmeter = { value = "[length]" }\n',
+        VERSION + "[unit]\nmeter = {}\n",
+        VERSION + '[prefix]\nkilo = { value = "meter" }\n',
+        # the version is required, and must have the supported major version
+        '[unit]\nmeter = { value = "[length]" }\n',
+        'version = "2.0"\n[unit]\nmeter = { value = "[length]" }\n',
     ],
 )
 def test_syntax_errors_name_the_file(tmp_path, content):

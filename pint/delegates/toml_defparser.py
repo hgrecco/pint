@@ -4,6 +4,8 @@ pint.delegates.toml_defparser
 
 Parser for TOML definition files, e.g. ``default_en.toml``::
 
+    version = "1.0"
+
     [defaults]
     group = "international"
     system = "mks"
@@ -38,6 +40,8 @@ Parser for TOML definition files, e.g. ``default_en.toml``::
 Values use the same syntax as the text format. Numbers (prefix values and the
 ``offset``, ``logbase`` and ``logfactor`` of a unit) may be TOML numbers or
 strings such as ``"2**10"``; both are read with the registry's number type.
+``version`` is the version of this format; a file for another major version is
+rejected.
 
 :copyright: 2025 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -47,7 +51,6 @@ from __future__ import annotations
 
 import pathlib
 import tomllib
-from collections.abc import Iterator
 from typing import Any
 
 from ..converters import Converter
@@ -134,15 +137,87 @@ def _context(d: dict[str, Any], cfg: ParserConfig):
     )
 
 
-#: Sections in the order they are added, so groups exist before systems use
-#: them. Tables map names to definitions; arrays hold named tables.
-_SECTIONS = {
-    "prefix": (dict, _prefix),
-    "dimension": (dict, _dimension),
-    "unit": (dict, _unit),
-    "group": (list, _group),
-    "system": (list, _system),
-    "context": (list, _context),
+#: Version of the TOML definitions format read by this parser.
+FORMAT_VERSION = "1.0"
+
+_ERRORS = (PintError, definitions.NotNumeric, ValueError, TypeError, KeyError)
+
+
+def _build(where: str, build, *args):
+    try:
+        return build(*args)
+    except _ERRORS as ex:
+        raise DefinitionSyntaxError(f"in {where}: {ex}") from ex
+
+
+def _defaults(data: dict[str, Any]) -> list:
+    if "defaults" not in data:
+        return []
+    d = data["defaults"]
+    return [definitions.DefaultsDefinition(d.get("group"), d.get("system"))]
+
+
+def _prefixes(data: dict[str, Any], cfg: ParserConfig) -> list:
+    return [
+        _build(f"[prefix] {name}", _prefix, name, d, cfg)
+        for name, d in data.get("prefix", {}).items()
+    ]
+
+
+def _dimensions(data: dict[str, Any], cfg: ParserConfig) -> list:
+    return [
+        _build(f"[dimension] {name}", _dimension, name, d, cfg)
+        for name, d in data.get("dimension", {}).items()
+    ]
+
+
+def _units(data: dict[str, Any], cfg: ParserConfig) -> list:
+    return [
+        _build(f"[unit] {name}", _unit, name, d, cfg)
+        for name, d in data.get("unit", {}).items()
+    ]
+
+
+def _groups(data: dict[str, Any], cfg: ParserConfig) -> list:
+    return [
+        _build(f"[[group]] {d.get('name')}", _group, d, cfg)
+        for d in data.get("group", [])
+    ]
+
+
+def _systems(data: dict[str, Any], cfg: ParserConfig) -> list:
+    return [
+        _build(f"[[system]] {d.get('name')}", _system, d, cfg)
+        for d in data.get("system", [])
+    ]
+
+
+def _contexts(data: dict[str, Any], cfg: ParserConfig) -> list:
+    return [
+        _build(f"[[context]] {d.get('name')}", _context, d, cfg)
+        for d in data.get("context", [])
+    ]
+
+
+def _check_version(data: dict[str, Any]) -> None:
+    version = data.get("version")
+    if version is None:
+        raise DefinitionSyntaxError(f'missing version = "{FORMAT_VERSION}"')
+    if str(version).split(".")[0] != FORMAT_VERSION.split(".")[0]:
+        raise DefinitionSyntaxError(
+            f"unsupported version {version}; this Pint reads version {FORMAT_VERSION}"
+        )
+
+
+_KEYS = {
+    "version",
+    "defaults",
+    "prefix",
+    "dimension",
+    "unit",
+    "group",
+    "system",
+    "context",
 }
 
 
@@ -150,36 +225,29 @@ class TomlParser:
     def __init__(self, default_config: ParserConfig):
         self._default_config = default_config
 
-    def parse_file(self, filename: pathlib.Path | str) -> Iterator[Any]:
-        """Yield the definitions in a TOML file."""
+    def parse_file(self, filename: pathlib.Path | str) -> list:
+        """Return the definitions in a TOML file, in the order they are added.
+
+        Groups come before systems, which use them.
+        """
         with open(filename, "rb") as f:
             data = tomllib.load(f, parse_float=str)
         cfg = self._default_config
-
-        unknown = set(data) - {"defaults", *_SECTIONS}
-        if unknown:
-            raise DefinitionSyntaxError(
-                f"{filename}: unknown sections {', '.join(sorted(unknown))}"
-            )
-        if "defaults" in data:
-            yield definitions.DefaultsDefinition(
-                data["defaults"].get("group"), data["defaults"].get("system")
-            )
-        for key, (kind, build) in _SECTIONS.items():
-            if kind is dict:
-                items = [(f"[{key}] {n}", n, d) for n, d in data.get(key, {}).items()]
-            else:
-                items = [
-                    (f"[[{key}]] {d.get('name')}", None, d) for d in data.get(key, [])
-                ]
-            for where, name, d in items:
-                try:
-                    yield build(d, cfg) if name is None else build(name, d, cfg)
-                except (
-                    PintError,
-                    definitions.NotNumeric,
-                    ValueError,
-                    TypeError,
-                    KeyError,
-                ) as ex:
-                    raise DefinitionSyntaxError(f"{filename}: in {where}: {ex}") from ex
+        try:
+            _check_version(data)
+            unknown = set(data) - _KEYS
+            if unknown:
+                raise DefinitionSyntaxError(
+                    f"unknown sections {', '.join(sorted(unknown))}"
+                )
+            return [
+                *_defaults(data),
+                *_prefixes(data, cfg),
+                *_dimensions(data, cfg),
+                *_units(data, cfg),
+                *_groups(data, cfg),
+                *_systems(data, cfg),
+                *_contexts(data, cfg),
+            ]
+        except DefinitionSyntaxError as ex:
+            raise DefinitionSyntaxError(f"{filename}: {ex}") from ex
