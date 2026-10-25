@@ -8,15 +8,24 @@ pint.facets.numpy.registry
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from types import NotImplementedType
+from typing import TYPE_CHECKING, Literal, overload, override
 
-from ...compat import TypeAlias, is_duck_array, np_timedelta64
+from ...compat import (
+    HAS_NUMPY,
+    TypeAlias,
+    is_duck_array,
+    np_timedelta64,
+)
 from ..plain import GenericPlainRegistry, PlainQuantity
 from .quantity import NumpyQuantity
 from .unit import NumpyUnit
 
+if HAS_NUMPY:
+    import numpy as np
+
 if TYPE_CHECKING:
-    from ..._typing import Quantity, Unit
+    from ..._typing import Magnitude, Quantity, Unit
 
 _DTYPE_TO_UNIT = {
     "timedelta64[Y]": "year",
@@ -38,7 +47,57 @@ _DTYPE_TO_UNIT = {
 class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
     GenericPlainRegistry[QuantityT, UnitT]
 ):
-    def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
+    @overload
+    def _into_ndarray_like(
+        self, value: Magnitude, /, *, force_ndarray: Literal[True]
+    ) -> np.ndarray: ...
+    @overload
+    def _into_ndarray_like(
+        self, value: Magnitude, /, *, force_ndarray: bool | None = None
+    ) -> Magnitude: ...
+    def _into_ndarray_like(
+        self, value: Magnitude, /, *, force_ndarray: bool | None = None
+    ) -> Magnitude:
+        """Convert the given value into a ndarray-like (or ndarray, if either `force_ndarray` or `self.force_ndarray`)."""
+        if not HAS_NUMPY:
+            raise ValueError(
+                "Cannot force to ndarray or ndarray-like when NumPy is not present."
+            )
+        if force_ndarray is None:
+            force_ndarray = self.force_ndarray
+        if force_ndarray or not is_duck_array(value):
+            return np.asarray(value)
+        return value
+
+    @override
+    def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
+        # note: `np.ndarray`s are also duck arrays, while
+        #       `np.number` inherits from `numbers.Number`
+        #     => no need to check for those, they get already accepted by `PlainQuantity`
+        if (self.force_ndarray or self.force_ndarray_like) and not HAS_NUMPY:
+            raise ValueError(
+                "Cannot force to ndarray or ndarray-like when NumPy is not present."
+            )
+        # handle array-likes
+        if isinstance(value, (list, tuple)):
+            if HAS_NUMPY:
+                return np.asarray(value)
+            else:
+                raise TypeError(
+                    "lists and tuples are valid magnitudes for "
+                    "Quantity only when NumPy is present."
+                )
+        # let `PlainQuantity` handle all other objects
+        value = super()._normalize_magnitude(value)
+        if value is NotImplemented:
+            return NotImplemented
+        # make sure to handle automatic ndarray conversion
+        if self.force_ndarray or (self.force_ndarray_like and not is_duck_array(value)):
+            # NOTE: per the check above, we know numpy is installed
+            return np.asarray(value)
+        return value
+
+    def _as_magnitude_and_units(self, value: object) -> tuple[object, str] | None:
         if isinstance(value, np_timedelta64) or (
             not isinstance(value, PlainQuantity)
             and is_duck_array(value)
