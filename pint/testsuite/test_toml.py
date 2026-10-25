@@ -91,8 +91,7 @@ def test_sections_are_optional(tmp_path):
         ),
         (
             'version = "2.0"\n',
-            'unsupported definitions format version "2.0"; this version of Pint '
-            'reads version 1.x files, e.g. version = "1.0"',
+            "unsupported version 2.0; this Pint reads version 1.0",
         ),
     ],
 )
