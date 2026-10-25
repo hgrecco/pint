@@ -143,21 +143,21 @@ def _context(d: dict[str, Any], cfg: ParserConfig):
 _ERRORS = (PintError, definitions.NotNumeric, ValueError, TypeError, KeyError)
 
 
-def _parse_entry(where: str, parse, *args):
+def _parse_entry(where: str, parser_function, *args):
     """Parse one entry, reporting errors as a syntax error naming the entry.
 
     Parameters
     ----------
     where :
         label of the entry for error messages, e.g. ``"[unit] meter"``.
-    parse :
+    parser_function :
         entry parser, e.g. ``_unit``, that returns a definition.
     *args :
-        arguments for ``parse``: ``(name, d, cfg)`` for prefixes, dimensions
-        and units, ``(d, cfg)`` for groups, systems and contexts.
+        arguments for ``parser_function``: ``(name, d, cfg)`` for prefixes,
+        dimensions and units, ``(d, cfg)`` for groups, systems and contexts.
     """
     try:
-        return parse(*args)
+        return parser_function(*args)
     except _ERRORS as ex:
         raise DefinitionSyntaxError(f"in {where}: {ex}") from ex
 
