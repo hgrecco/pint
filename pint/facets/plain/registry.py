@@ -35,11 +35,14 @@ from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
 from fractions import Fraction
 from math import isnan
+from numbers import Number
 from token import NAME, NUMBER
 from tokenize import TokenInfo
+from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
+    cast,
 )
 
 if TYPE_CHECKING:
@@ -60,7 +63,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import _to_magnitude, coerce_scalar
+from ...compat import coerce_scalar, is_duck_array
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -164,15 +167,23 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 ):
     """Base class for all registries.
 
-    Capabilities:
+    A registry is responsible for input normalization (including string parsing):
+    as a result, it is also the source of truth for unit definitions
+    and, more broadly, pint's configuration.
 
+    Therefore, every interaction between objects of different registries
+    is not intended to work and will result in an error.
+
+    Capabilities implemented here:
+
+    - Normalize magnitude values.
     - Register units, prefixes, and dimensions, and their relations.
     - Convert between units.
     - Find dimensionality of a unit.
     - Parse units with prefix and/or suffix.
     - Parse expressions.
     - Parse a definition file.
-    - Allow extending the definition file parser by registering @ directives.
+    - Allow extending the definition file parser by registering :text:`@` directives.
 
     Parameters
     ----------
@@ -1559,6 +1570,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             if units is None:
                 raise TypeError("Expected a bare magnitude, found a quantity.")
             return value.to(units)._magnitude
+        elif isinstance(value, PlainUnit):
+            if units is None:
+                raise TypeError("Expected a magnitude, found a unit.")
+            return (1 * value).to(units)._magnitude
         elif isinstance(value, str):
             if not parse_strings:
                 raise TypeError(
@@ -1575,15 +1590,35 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 return self._into_magnitude(quantity, units=units)
             else:
                 return parsed.scale
-        else:
-            # TODO(#2427 follow-up):
-            #   Make `_to_magnitude` a `GenericPlainRegistry` method as well
-            #   and subclass it in `GenericNumpyRegistry` for numpy-specific magnitude
-            #   support (e.g., `list` -> `np.ndarray` conversions).
-            # This will allow to better isolate numpy-specific code in the numpy facet.
-            return _to_magnitude(value, self.force_ndarray, self.force_ndarray_like)
+        # we can finally convert the magnitude the way we wish
+        magnitude = self._normalize_magnitude(value)
+        if magnitude is NotImplemented:
+            raise TypeError(f"Invalid magnitude: {value!r}")
+        return magnitude
 
-    def _as_magnitude_and_units(self, value: Any) -> tuple[Any, str] | None:
+    def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
+        """Try and convert the given value as a pure magnitude.
+
+        This method should be implemented by subclasses that wish to extend pint's magnitude normalization,
+        according to the following behavioral assumptions:
+        - if the value is unknown to the implementer, this method should return :class:`NotImplementedType`:
+            this is faster than an exception and allows other subclasses to handle the same value;
+        - if the value is not interpretable as a magnitude, this method should raise `TypeError`;
+        - if the value is malformed or invalid, this method should raise any other error (e.g. `ValueError`).
+
+        The implementation should call `value = super()._normalize_magnitude(value)` for the unhandled cases,
+          so that all subclasses get a chance of handling the value.
+        """
+        if isinstance(value, bool):
+            raise TypeError(
+                "Pint does not support boolean magnitudes because they are confusing: "
+                "please call `int()` or `float()` before interpreting the value as a magnitude."
+            )
+        elif isinstance(value, Number) or is_duck_array(value):
+            return cast(Magnitude, value)
+        return NotImplemented
+
+    def _as_magnitude_and_units(self, value: object) -> tuple[object, str] | None:
         """Return the magnitude and units of a value that carries its own units
         (e.g. a timedelta), or None for any other value."""
         if isinstance(value, datetime.timedelta):
