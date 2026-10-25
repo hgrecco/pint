@@ -143,9 +143,10 @@ def _context(d: dict[str, Any], cfg: ParserConfig):
 _ERRORS = (PintError, definitions.NotNumeric, ValueError, TypeError, KeyError)
 
 
-def _build(where: str, build, *args):
+def _parse_entry(where: str, parse, *args):
+    """Parse one entry, reporting errors as a syntax error naming the entry."""
     try:
-        return build(*args)
+        return parse(*args)
     except _ERRORS as ex:
         raise DefinitionSyntaxError(f"in {where}: {ex}") from ex
 
@@ -159,42 +160,42 @@ def _defaults(data: dict[str, Any]) -> list:
 
 def _prefixes(data: dict[str, Any], cfg: ParserConfig) -> list:
     return [
-        _build(f"[prefix] {name}", _prefix, name, d, cfg)
+        _parse_entry(f"[prefix] {name}", _prefix, name, d, cfg)
         for name, d in data.get("prefix", {}).items()
     ]
 
 
 def _dimensions(data: dict[str, Any], cfg: ParserConfig) -> list:
     return [
-        _build(f"[dimension] {name}", _dimension, name, d, cfg)
+        _parse_entry(f"[dimension] {name}", _dimension, name, d, cfg)
         for name, d in data.get("dimension", {}).items()
     ]
 
 
 def _units(data: dict[str, Any], cfg: ParserConfig) -> list:
     return [
-        _build(f"[unit] {name}", _unit, name, d, cfg)
+        _parse_entry(f"[unit] {name}", _unit, name, d, cfg)
         for name, d in data.get("unit", {}).items()
     ]
 
 
 def _groups(data: dict[str, Any], cfg: ParserConfig) -> list:
     return [
-        _build(f"[[group]] {d.get('name')}", _group, d, cfg)
+        _parse_entry(f"[[group]] {d.get('name')}", _group, d, cfg)
         for d in data.get("group", [])
     ]
 
 
 def _systems(data: dict[str, Any], cfg: ParserConfig) -> list:
     return [
-        _build(f"[[system]] {d.get('name')}", _system, d, cfg)
+        _parse_entry(f"[[system]] {d.get('name')}", _system, d, cfg)
         for d in data.get("system", [])
     ]
 
 
 def _contexts(data: dict[str, Any], cfg: ParserConfig) -> list:
     return [
-        _build(f"[[context]] {d.get('name')}", _context, d, cfg)
+        _parse_entry(f"[[context]] {d.get('name')}", _context, d, cfg)
         for d in data.get("context", [])
     ]
 
