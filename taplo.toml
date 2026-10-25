@@ -1,6 +1,0 @@
-# Keep each definition in pint/default_en.toml on one line
-[[rule]]
-include = ["pint/default_en.toml"]
-
-[rule.formatting]
-inline_table_expand = false
