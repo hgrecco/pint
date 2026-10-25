@@ -121,13 +121,16 @@ def _system(d: dict[str, Any], cfg: ParserConfig):
     return SystemDefinition(d["name"], tuple(d.get("using_group_names", ())), rules)
 
 
-def _relation(s: str, cfg: ParserConfig):
-    rel, equation = s.split(":", 1)
-    cls, separator = (
-        (BidirectionalRelation, "<->") if "<->" in rel else (ForwardRelation, "->")
-    )
-    src, dst = (cfg.to_dimension_container(p) for p in rel.split(separator))
-    return cls(src, dst, equation.strip())
+def _relation(text: str, cfg: ParserConfig):
+    """Parse a context relation, e.g. ``"[length] <-> [frequency]: c / value"``."""
+    dimensions, equation = text.split(":", 1)
+    arrow = "<->" if "<->" in dimensions else "->"
+    source, destination = dimensions.split(arrow)
+    source = cfg.to_dimension_container(source)
+    destination = cfg.to_dimension_container(destination)
+    if arrow == "<->":
+        return BidirectionalRelation(source, destination, equation.strip())
+    return ForwardRelation(source, destination, equation.strip())
 
 
 def _context(d: dict[str, Any], cfg: ParserConfig):
