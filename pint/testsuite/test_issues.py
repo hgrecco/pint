@@ -1784,6 +1784,18 @@ def test_negative_magnitude_pretty_exponent_leaves_arrays_alone():
         assert formatted == f"{ureg.Quantity(np.array(values), 'meter'):}"
 
 
+def test_uppercase_exponent_format_spec():
+    # The "E" and "G" format types write the exponent with an uppercase "E",
+    # which the pretty, LaTeX and HTML formatters left untouched.
+    ureg = UnitRegistry()
+    q = ureg.Quantity(1.5e-7, "meter")
+
+    assert f"{q:.2E~P}" == "1.50×10⁻⁷ m"
+    assert f"{q:.2E~L}" == r"1.50\times 10^{-7}\ \mathrm{m}"
+    assert f"{q:.2E~H}" == "1.50×10<sup>-7</sup> m"
+    assert f"{ureg.Quantity(1.5e20, 'meter'):G~P}" == "1.5×10²⁰ m"
+
+
 def test_issue2403_unity_multiplication_reduces_dimensions():
     # A magnitude of 1 is shortcut in PlainUnit.__mul__ because non-multiplicative
     # units cannot go through the multiplication. That shortcut used to skip the

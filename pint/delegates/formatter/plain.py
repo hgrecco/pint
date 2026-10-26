@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     from ...registry import UnitRegistry
 
 
-_EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
+_EXP_PATTERN = re.compile(r"(-?[0-9]\.?[0-9]*)[eE](-?)\+?0*([0-9]+)")
 
 
 class BaseFormatter:
