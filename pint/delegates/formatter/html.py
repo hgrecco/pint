@@ -158,8 +158,8 @@ class HTMLFormatter(BaseFormatter):
     ) -> str:
         unc_str = format(uncertainty, unc_spec).replace("+/-", " &plusmn; ")
 
-        unc_str = re.sub(r"\)e\+0?(\d+)", r")×10<sup>\1</sup>", unc_str)
-        unc_str = re.sub(r"\)e-0?(\d+)", r")×10<sup>-\1</sup>", unc_str)
+        unc_str = re.sub(r"\)[eE]\+0?(\d+)", r")×10<sup>\1</sup>", unc_str)
+        unc_str = re.sub(r"\)[eE]-0?(\d+)", r")×10<sup>-\1</sup>", unc_str)
         return unc_str
 
     def format_measurement(

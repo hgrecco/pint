@@ -142,6 +142,7 @@ class TestMeasurement(QuantityTestCase):
             (".1ueT", '(2.0 plus.minus 0.1) times 10^(-1) "second"^(2)'),
             (".1ueH", "(2.0 &plusmn; 0.1)×10<sup>-1</sup> second<sup>2</sup>"),
             (".1ueC", "(2.0+/-0.1)e-01 second**2"),
+            (".1uEH", "(2.0 &plusmn; 0.1)×10<sup>-1</sup> second<sup>2</sup>"),
         ],
     )
     def test_format_perce(self, func_registry, spec, expected):

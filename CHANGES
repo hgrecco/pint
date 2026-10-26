@@ -4,7 +4,7 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
-- Format magnitudes written with an uppercase `E` exponent (`E` and `G` format types) in scientific notation with the pretty, LaTeX and HTML formatters, as already done for `e`.
+- Format magnitudes written with an uppercase `E` exponent (`E` and `G` format types) in scientific notation with the pretty, LaTeX and HTML formatters (including HTML measurements), as already done for `e`.
 - Make the `Quantity` constructor stricter, rejecting unknown types on construction (#2523)
 - Improve the reliability of `**` on `Quantity`, making the implementation consistent with `*` and `/` (#2523)
 - Fix redefining a unit with `define()` or `load_definitions()` after it was used, which kept the old cached conversion; pass `rebuild_cache=False` to delay the rebuild (#922, #740)
