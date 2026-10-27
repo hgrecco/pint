@@ -14,7 +14,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .facets.plain import PlainQuantity, PlainRegistry, PlainUnit
+    from .facets.plain import GenericPlainRegistry, PlainQuantity, PlainUnit
+    from .registry import ApplicationRegistry
+
+    type AnyRegistry = GenericPlainRegistry[Any, Any] | ApplicationRegistry
     from .util import UnitsContainer
 
 #: Version of the metrology API standard implemented by pint.
@@ -28,7 +31,7 @@ class MetrologyNamespace:
     units and dimensions.
     """
 
-    def __init__(self, registry: PlainRegistry) -> None:
+    def __init__(self, registry: AnyRegistry) -> None:
         self._registry = registry
 
     def asdimension(self, obj: str | UnitsContainer, /) -> UnitsContainer:
@@ -44,9 +47,7 @@ class MetrologyNamespace:
         return self._registry.Quantity(obj, unit)
 
 
-def get_namespace(
-    registry: PlainRegistry, api_version: str | None
-) -> MetrologyNamespace:
+def get_namespace(registry: AnyRegistry, api_version: str | None) -> MetrologyNamespace:
     if api_version is not None and api_version != METROLOGY_API_VERSION:
         raise ValueError(
             f"Unsupported metrology API version {api_version!r}; "
