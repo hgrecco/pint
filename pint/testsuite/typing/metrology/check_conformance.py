@@ -129,6 +129,6 @@ q_neg: QNeg[float, Any, Any] = quantity  # pyright: ignore[reportAssignmentType]
 # Full spec protocols: known failures. Every __metrology_namespace__ needs
 # asquantity() to return a spec Quantity, which nothing satisfies (above).
 
-full_namespace: mapis.MetrologyNamespace = ureg.__metrology_namespace__()  # pyright: ignore[reportAssignmentType]
+mn: mapis.MetrologyNamespace = ureg.__metrology_namespace__()  # pyright: ignore[reportAssignmentType]
 full_unit: mapis.Unit = unit  # pyright: ignore[reportAssignmentType]
 full_quantity: mapis.Quantity = quantity  # pyright: ignore[reportAssignmentType]

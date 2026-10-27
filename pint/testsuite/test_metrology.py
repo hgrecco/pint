@@ -8,21 +8,21 @@ from pint.util import UnitsContainer
 
 
 @pytest.fixture
-def mx(func_registry):
+def mn(func_registry):
     return func_registry.__metrology_namespace__()
 
 
 def test_namespace_from_objects(func_registry):
     q = func_registry.Quantity(3, "m")
     for obj in (func_registry, q, q.unit):
-        mx = obj.__metrology_namespace__()
-        assert isinstance(mx, MetrologyNamespace)
-        assert mx._registry is func_registry
+        mn = obj.__metrology_namespace__()
+        assert isinstance(mn, MetrologyNamespace)
+        assert mn._registry is func_registry
 
 
 def test_dimension_namespace_uses_application_registry():
-    mx = UnitsContainer({"[length]": 1}).__metrology_namespace__()
-    assert mx._registry is get_application_registry()
+    mn = UnitsContainer({"[length]": 1}).__metrology_namespace__()
+    assert mn._registry is get_application_registry()
 
 
 def test_api_version(func_registry):
@@ -48,33 +48,33 @@ def test_unit_dimension(func_registry):
     assert u.dimension == u.dimensionality
 
 
-def test_asdimension(mx):
-    length = mx.asdimension("[length]")
-    time = mx.asdimension("[time]")
+def test_asdimension(mn):
+    length = mn.asdimension("[length]")
+    time = mn.asdimension("[time]")
     assert length == UnitsContainer({"[length]": 1})
-    assert mx.asdimension(length) == length
-    assert length / time == mx.asdimension("[length] / [time]")
+    assert mn.asdimension(length) == length
+    assert length / time == mn.asdimension("[length] / [time]")
     assert length * length == length**2
     assert time.__rmul__(length) == length * time
     assert time.__rtruediv__(length) == length / time
 
 
-def test_asunit(mx, func_registry):
-    m = mx.asunit("m")
+def test_asunit(mn, func_registry):
+    m = mn.asunit("m")
     assert m == func_registry.meter
-    assert mx.asunit(m) == m
-    assert m.dimension == mx.asdimension("[length]")
+    assert mn.asunit(m) == m
+    assert m.dimension == mn.asdimension("[length]")
     assert m * m == m**2
     assert func_registry.s.__rtruediv__(m) == m / func_registry.s
-    assert (m / func_registry.s).dimension == mx.asdimension("[length]/[time]")
+    assert (m / func_registry.s).dimension == mn.asdimension("[length]/[time]")
 
 
-def test_asquantity(mx, func_registry):
-    q = mx.asquantity(3, unit="m")
+def test_asquantity(mn, func_registry):
+    q = mn.asquantity(3, unit="m")
     assert isinstance(q, func_registry.Quantity)
     assert q.value == 3
     assert q.unit == func_registry.meter
-    converted = mx.asquantity(q, unit=mx.asunit("cm"))
+    converted = mn.asquantity(q, unit=mn.asunit("cm"))
     assert converted.value == 300
     assert converted.unit == func_registry.centimeter
 
