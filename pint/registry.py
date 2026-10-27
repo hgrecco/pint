@@ -80,6 +80,9 @@ class Quantity(
         @property
         @override
         def units(self) -> Unit: ...
+        @property
+        @override
+        def unit(self) -> Unit: ...
 
         @overload
         def __new__(

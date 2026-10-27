@@ -388,6 +388,11 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # self.Unit will call parse_units
         return self.Unit(item)
 
+    def __metrology_namespace__(self, /, *, api_version: str | None = None):
+        from ...metrology import get_namespace
+
+        return get_namespace(self, api_version)
+
     def __contains__(self, item: str | UnitT) -> bool:
         """Support checking prefixed units with the `in` operator"""
         if isinstance(item, self.Unit):

@@ -4,6 +4,8 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
+- Support the metrology API standard (https://github.com/quantity-dev/metrology-apis): add `__metrology_namespace__()`, `Quantity.value`, `Quantity.unit` and `Unit.dimension`
+- Fix `UnitsContainer.__rtruediv__` ignoring its other `UnitsContainer` operand
 - Make the `Quantity` constructor stricter, rejecting unknown types on construction (#2523)
 - Improve the reliability of `**` on `Quantity`, making the implementation consistent with `*` and `/` (#2523)
 - Fix redefining a unit with `define()` or `load_definitions()` after it was used, which kept the old cached conversion; pass `rebuild_cache=False` to delay the rebuild (#922, #740)

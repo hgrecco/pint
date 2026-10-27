@@ -678,7 +678,16 @@ class UnitsContainer(Mapping[str, Scalar]):
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
 
+        if isinstance(other, self.__class__):
+            return other / self
         return self**-1
+
+    def __metrology_namespace__(self, /, *, api_version: str | None = None):
+        # Dimensions are not bound to a registry, so use the application one.
+        from . import get_application_registry
+        from .metrology import get_namespace
+
+        return get_namespace(get_application_registry(), api_version)
 
     def _normalize_nonfloat_value(self, value: Scalar) -> Scalar:
         if not isinstance(value, int) and not isinstance(value, self._non_int_type):

@@ -332,6 +332,21 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         return self._REGISTRY.Unit(self._units)
 
     @property
+    def value(self) -> MagnitudeT_co:
+        """PlainQuantity's magnitude, as named by the metrology API standard."""
+        return self._magnitude
+
+    @property
+    def unit(self) -> Unit:
+        """PlainQuantity's units, as named by the metrology API standard."""
+        return self._REGISTRY.Unit(self._units)
+
+    def __metrology_namespace__(self, /, *, api_version: str | None = None):
+        from ...metrology import get_namespace
+
+        return get_namespace(self._REGISTRY, api_version)
+
+    @property
     def unitless(self) -> bool:
         """Whether this quantity does not have any units."""
         # TODO: does this imply :py:attr:`self.dimensionless`? If so this can be added to the docstring.

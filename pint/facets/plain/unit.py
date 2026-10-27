@@ -85,6 +85,16 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
 
         return self._dimensionality
 
+    @property
+    def dimension(self) -> UnitsContainer:
+        """Dimensionality of the PlainUnit, as named by the metrology API standard."""
+        return self.dimensionality
+
+    def __metrology_namespace__(self, /, *, api_version: str | None = None):
+        from ...metrology import get_namespace
+
+        return get_namespace(self._REGISTRY, api_version)
+
     def compatible_units(self, *contexts):
         if contexts:
             with self._REGISTRY.context(*contexts):
