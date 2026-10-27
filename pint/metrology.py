@@ -34,15 +34,15 @@ class MetrologyNamespace:
     def __init__(self, registry: AnyRegistry) -> None:
         self._registry = registry
 
-    def asdimension(self, obj: str | UnitsContainer, /) -> UnitsContainer:
+    def asdimension(self, obj: Any, /) -> UnitsContainer:
         """Convert an object, e.g. ``"[length] / [time]"``, to a dimension."""
         return self._registry.get_dimensionality(obj)
 
-    def asunit(self, obj: str | PlainUnit, /) -> PlainUnit:
+    def asunit(self, obj: Any, /) -> PlainUnit:
         """Convert an object to a unit."""
         return self._registry.Unit(obj)
 
-    def asquantity(self, obj: Any, /, *, unit: str | PlainUnit) -> PlainQuantity:
+    def asquantity(self, obj: Any, /, *, unit: Any) -> PlainQuantity:
         """Convert an object to a quantity, converting quantities to ``unit``."""
         return self._registry.Quantity(obj, unit)
 

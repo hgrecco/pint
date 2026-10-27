@@ -478,9 +478,9 @@ class Unit(
             | opt.CanRTruediv[Literal[1], U],
         ) -> Quantity[U]: ...
 
-        # UnitsContainer / Unit -> Unit
+        # (Unit | UnitsContainer) / Unit -> Unit
         @overload
-        def __rtruediv__(self, other: UnitsContainer) -> Self: ...
+        def __rtruediv__(self, other: Self | UnitsContainer) -> Self: ...
         # timedelta / Unit -> Quantity[float]
         @overload
         def __rtruediv__(

@@ -65,6 +65,7 @@ def test_asunit(mx, func_registry):
     assert mx.asunit(m) == m
     assert m.dimension == mx.asdimension("[length]")
     assert m * m == m**2
+    assert func_registry.s.__rtruediv__(m) == m / func_registry.s
     assert (m / func_registry.s).dimension == mx.asdimension("[length]/[time]")
 
 

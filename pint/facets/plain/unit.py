@@ -216,9 +216,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             other = cast("PlainQuantity", other)
         return self._REGISTRY.Quantity(1, self._units) / other
 
-    # UnitsContainer / PlainUnit -> PlainUnit
+    # (PlainUnit | UnitsContainer) / PlainUnit -> PlainUnit
     @overload
-    def __rtruediv__(self, other: UnitsContainer) -> Self: ...
+    def __rtruediv__(self, other: Self | UnitsContainer) -> Self: ...
     # timedelta / PlainUnit -> PlainQuantity[float]
     @overload
     def __rtruediv__(
@@ -234,9 +234,11 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     ) -> PlainQuantity[opt.numpy.ArrayND[T]]: ...
     def __rtruediv__(self: PlainUnit, other) -> PlainUnit | PlainQuantity:
         # NOTE: As PlainUnit and Quantity both handle __truediv__ with each other,
-        #   __rtruediv__ can only be called for something different.
+        #   __rtruediv__ is only called with a PlainUnit when called directly.
         if isinstance(other, UnitsContainer):
             return self.__class__(other / self._units)
+        if isinstance(other, self.__class__):
+            return self.__class__(other._units / self._units)
         # other is quantity-like or magnitude-like
         return self._REGISTRY.Quantity(1, 1 / self._units) * other
 
