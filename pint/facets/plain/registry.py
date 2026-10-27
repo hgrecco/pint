@@ -1422,8 +1422,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         Parameters
         ----------
         input_string
-
-        pattern_string:
+            The string to parse.
+        pattern
             The regex parse string
         case_sensitive, optional
             If true, a case sensitive matching of the unit name will be done in the registry.
