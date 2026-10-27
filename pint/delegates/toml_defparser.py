@@ -244,10 +244,26 @@ class TomlParser:
         self._default_config = default_config
 
     def parse_file(self, filename: pathlib.Path | str) -> list:
-        """Return the definitions in a TOML file, in the order they are added.
+        """Read the definitions in a TOML file.
 
-        Groups come before systems, as system rules can use units defined in
-        groups (e.g. yard and pound).
+        Parameters
+        ----------
+        filename :
+            path of the TOML definitions file.
+
+        Returns
+        -------
+        list
+            definitions in the order they are added to the registry: defaults,
+            prefixes, dimensions, units, groups, systems, then contexts.
+
+        Raises
+        ------
+        DefinitionSyntaxError
+            if the version is missing or unsupported, a section is unknown, or
+            an entry is invalid. The message starts with the file name.
+        tomllib.TOMLDecodeError
+            if the file is not valid TOML.
         """
         with open(filename, "rb") as f:
             data = tomllib.load(f, parse_float=str)
