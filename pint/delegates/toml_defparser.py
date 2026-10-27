@@ -246,7 +246,8 @@ class TomlParser:
     def parse_file(self, filename: pathlib.Path | str) -> list:
         """Return the definitions in a TOML file, in the order they are added.
 
-        Groups come before systems, which use them.
+        Groups come before systems, as system rules can use units defined in
+        groups (e.g. yard and pound).
         """
         with open(filename, "rb") as f:
             data = tomllib.load(f, parse_float=str)
