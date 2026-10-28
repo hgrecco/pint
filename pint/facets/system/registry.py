@@ -60,6 +60,7 @@ class GenericSystemRegistry[QuantityT: Quantity, UnitT: Unit](
         self._base_units_cache: dict[UnitsContainerT, UnitsContainerT] = {}
 
         self._default_system_name: str | None = system
+        self._system_definitions: list[SystemDefinition] = []
 
     def _init_dynamic_classes(self) -> None:
         """Generate subclasses on the fly and attach them to self"""
@@ -94,6 +95,7 @@ class GenericSystemRegistry[QuantityT: Quantity, UnitT: Unit](
         except KeyError as e:
             # TODO: fix this error message
             raise errors.DefinitionError(f"unknown dimension {e} in context")
+        self._system_definitions.append(sd)
 
     @property
     def sys(self):

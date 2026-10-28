@@ -107,14 +107,16 @@ class PrefixDefinition(PintParsedStatement, definitions.PrefixDefinition):
             aliases = tuple(alias for alias in aliases if alias not in ("", "_"))
 
         try:
-            value = config.to_number(value)
+            value_number = config.to_number(value)
         except definitions.NotNumeric as ex:
             return common.DefinitionSyntaxError(
                 f"Prefix definition ('{name}') must contain only numbers, not {ex.value}"
             )
 
         try:
-            return cls(name, value, defined_symbol, aliases)
+            return cls(
+                name, value_number, defined_symbol, aliases, value_text=value.strip()
+            )
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 
@@ -189,7 +191,14 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
             )
 
         try:
-            return cls(name, defined_symbol, tuple(aliases), converter, reference)
+            return cls(
+                name,
+                defined_symbol,
+                tuple(aliases),
+                converter,
+                reference,
+                value_text=value,
+            )
         except Exception as ex:
             return common.DefinitionSyntaxError(str(ex))
 
@@ -251,7 +260,7 @@ class DerivedDimensionDefinition(
             )
 
         try:
-            return cls(name.strip(), reference)
+            return cls(name.strip(), reference, value_text=value.strip())
         except Exception as exc:
             return common.DefinitionSyntaxError(str(exc))
 

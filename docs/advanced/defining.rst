@@ -97,6 +97,60 @@ including degree spellings such as ``°C``, and the standalone ``%`` and ``‰``
 are supported.
 
 
+In a TOML definition file
+-------------------------
+
+Definitions can also be written in TOML. Pint ships ``default_en.toml``, which
+holds the same definitions as ``default_en.txt``. A file is read as TOML when
+its name ends in ``.toml``::
+
+    [defaults]
+    group = "international"
+    system = "mks"
+
+    [prefix]
+    kilo = { value = "1e3", defined_symbol = "k" }
+
+    [dimension]
+    density = { value = "[mass] / [volume]" }
+
+    [unit]
+    meter = { value = "[length]", defined_symbol = "m", aliases = ["metre"] }
+    minute = { value = "60 * second", defined_symbol = "min" }
+    degree_Celsius = { value = "kelvin; offset: 273.15", defined_symbol = "°C" }
+
+    [[group]]
+    name = "Avoirdupois"
+    [group.definitions]
+    pound = { value = "7000 * grain", defined_symbol = "lb" }
+
+    [alias]
+    kilometer = { aliases = ["kilometro"] }
+
+    [[system]]
+    name = "mks"
+    using_group_names = ["international"]
+    rules = ["meter", "kilogram", "second"]
+
+    [[context]]
+    name = "spectroscopy"
+    aliases = ["sp"]
+    defaults = { n = 1 }
+    relations = ["[length] <-> [frequency]: speed_of_light / n / value"]
+
+Values are written as strings, using the same syntax as the text format. Every
+section is optional. ``[alias]`` plays the role of ``@alias``, e.g. for prefixed
+units, which are not defined in the file. There is no ``@import``: put all
+definitions in one file.
+
+A registry's definitions can be saved to a TOML file (this needs ``tomlkit``)::
+
+   >>> ureg.write_definitions('/your/path/to/my_def.toml') # doctest: +SKIP
+
+Groups, systems and contexts made with Python objects rather than definitions
+cannot be saved, and Pint warns about them.
+
+
 Programmatically
 ----------------
 
