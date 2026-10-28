@@ -206,11 +206,13 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
+    # arrays
     if is_duck_array(obj):
-        if obj.dtype.kind in "ifc":
-            out = np.isnan(obj)
-        elif obj.dtype.kind in "Mm":
-            out = np.isnat(obj)
+        xp = array_namespace(obj)
+        if xp.isdtype(obj.dtype, "numeric"):
+            out = xp.isnan(obj)
+        elif getattr(obj.dtype, "kind", "?") in "Mm":  # numpy datetime or timedelta
+            out = xp.isnat(obj)
         else:
             if HAS_UNCERTAINTIES:
                 try:
@@ -221,7 +223,8 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
             else:
                 # Not a numeric or datetime type
                 out = np.full(obj.shape, False)
-        return out.any() if check_all else out
+        return xp.any(out).item() if check_all else out
+    # scalars
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
     elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
