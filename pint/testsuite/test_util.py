@@ -268,8 +268,40 @@ class TestStringProcessor:
         self._test("gr⁰⋅³³³", "gr**(0.333)")
         self._test("gr¹⸍³", "gr**(1/3)")
 
+    # Testing custom unit style preprocessing
+    @pytest.mark.parametrize(
+        "custom_user_input, replacement, expected",
+        [
+            ("sqm", "m²", "m**2"),
+            ("sqmetre", "m^2", "m**2"),
+            ("sqcm", "cm²", "cm**2"),
+            ("cubm", "m³", "m**3"),
+            ("metrecubed", "m^3", "m**3"),
+            ("sqft", "ft^2", "ft**2"),
+            ("si_momentum", "kg·m/s", "kg*m/s"),
+            ("si_energy", "kg·m^2/s^2", "kg*m**(2)/s**(2)"),
+            ("m_sq_per_second", "m²⋅s⁻¹", "m**(2)*s**(-1)"),
+        ],
+    )
+    def test_preprocessing_custom(self, custom_user_input, replacement, expected):
+        from pint import UnitRegistry
+
+        # Create custom preprocessor.
+        ureg = UnitRegistry(
+            preprocessors=[lambda s: s.replace(custom_user_input, replacement)]
+        )
+        # Verify custom preprocessing produces the expected units.
+        assert ureg.parse_units(custom_user_input) == ureg.parse_units(expected)
+        assert ureg.parse_expression(f"2 {custom_user_input}") == 2 * ureg.parse_units(
+            expected
+        )
+        assert ureg.parse_expression(
+            f"-123.4 {custom_user_input}"
+        ) == -123.4 * ureg.parse_units(expected)
+
     def test_per(self):
         self._test("miles per hour", "miles/hour")
+        self._test("kilometres per hour", "kilometres/hour")
 
     def test_numbers(self):
         self._test("1,234,567", "1234567")
