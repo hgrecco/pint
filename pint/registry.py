@@ -551,6 +551,10 @@ class UnitRegistry(
     cache_folder : str or pathlib.Path or None, optional
         Specify the folder in which cache files are saved and loaded from.
         If None, the cache is disabled. (default)
+    allow_unknown_magnitude_types : bool, optional
+        Allow arbitrary magnitude types, treating unknown values as scalars.
+        This enables in part automatic interoperability with external libraries,
+        although Pint may misbehave if the value does not behave like a scalar. (Default: True)
     """
 
     Quantity: TypeAlias = Quantity
@@ -559,6 +563,7 @@ class UnitRegistry(
     def __init__(
         self,
         filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
         default_as_delta: bool = True,
@@ -572,6 +577,7 @@ class UnitRegistry(
         non_int_type=float,
         case_sensitive: bool = True,
         cache_folder=None,
+        allow_unknown_magnitude_types: bool = True,
     ):
         super().__init__(
             filename=filename,
@@ -588,6 +594,7 @@ class UnitRegistry(
             non_int_type=non_int_type,
             case_sensitive=case_sensitive,
             cache_folder=cache_folder,
+            allow_unknown_magnitude_types=allow_unknown_magnitude_types,
         )
 
     def pi_theorem(self, quantities):

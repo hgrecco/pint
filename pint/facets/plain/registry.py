@@ -217,10 +217,16 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         Separate the default format into magnitude and unit formats as soon as
         possible. The deprecated default is not to separate. This will change in a
         future release.
+    allow_unknown_magnitude_types : bool, optional
+        Allow arbitrary magnitude types, treating unknown values as scalars.
+        This enables in part automatic interoperability with external libraries,
+        although Pint may misbehave if the value does not behave like a scalar. (Default: True)
     """
 
     Quantity: type[QuantityT]
     Unit: type[UnitT]
+
+    allow_unknown_magnitude_types: bool
 
     _diskcache = None
     _def_parser = None
@@ -228,6 +234,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def __init__(
         self,
         filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
@@ -240,7 +247,11 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         cache_folder: str | pathlib.Path | None = None,
         separate_format_defaults: bool | None = None,
         mpl_formatter: str = "{:P}",
+        allow_unknown_magnitude_types: bool = True,
     ):
+        #: If this flag is set, unknown magnitude types are allowed and treated as scalars
+        self.allow_unknown_magnitude_types = allow_unknown_magnitude_types
+
         #: Map a definition class to a adder methods.
         self._adders: Handler = {}
         self._register_definition_adders()
@@ -1606,6 +1617,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 "please call `int()` or `float()` before interpreting the value as a magnitude."
             )
         elif isinstance(value, Number) or is_duck_array(value):
+            return cast(Magnitude, value)
+        # treat the surviving values as scalars
+        if self.allow_unknown_magnitude_types:
             return cast(Magnitude, value)
         return NotImplemented
 
