@@ -56,8 +56,8 @@ class ArrayAPIModule(Protocol):
     def isdtype(
         self,
         /,
-        dtype: np.dtype,
-        kind: np.dtype | _DTypeKind | tuple[np.dtype | _DTypeKind, ...],
+        dtype: "np.dtype",
+        kind: "np.dtype | _DTypeKind | tuple[np.dtype | _DTypeKind, ...]",
     ) -> bool: ...
 
     # DType conversion
