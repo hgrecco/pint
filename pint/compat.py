@@ -28,7 +28,8 @@ from typing import (
     # Remove once all dependent packages change their imports.
     NoReturn,
     TypeAlias,  # noqa
-    overload,  # noqa
+    Unpack,  # noqa
+    overload,
 )
 
 from typing_extensions import TypeIs, deprecated  # noqa
