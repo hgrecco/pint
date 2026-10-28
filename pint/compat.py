@@ -4,6 +4,11 @@ pint.compat
 
 Compatibility layer.
 
+Array detection/support functions try the APIs in the following order:
+- Array API standard (experimental)
+- Duck arrays (e.g. dask/pandas; partial support)
+- NumPy ndarray (full support)
+
 :copyright: 2013 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
@@ -19,14 +24,16 @@ from importlib.util import find_spec
 from numbers import Number
 from typing import (
     Any,
+    Literal,
     # Remove once all dependent packages change their imports.
     NoReturn,
     TypeAlias,  # noqa
-    Unpack,  # noqa
+    overload,  # noqa
 )
 
 from typing_extensions import TypeIs, deprecated  # noqa
 
+from ._array_typing import ArrayAPIModule
 from ._typing import Array
 
 
@@ -107,6 +114,38 @@ def is_upcast_type(cls: type) -> bool:
         return cls is real_cls or cls == real_cls
 
 
+#######
+# Array support
+#######
+
+
+def is_array_or_duck(obj: object) -> TypeIs[Array]:
+    return hasattr(obj, "__array_namespace__") or (
+        not hasattr(obj, "_magnitude")
+        and not hasattr(obj, "_units")
+        and hasattr(obj, "__array_function__")
+        and hasattr(obj, "ndim")
+        and hasattr(obj, "dtype")
+    )
+
+
+def array_namespace(array: Array, /) -> ArrayAPIModule:
+    if hasattr(array, "__array_namespace__"):
+        return array.__array_namespace__()  # pyright: ignore[reportReturnType]
+    # backwards-compatible duck array support
+    elif HAS_NUMPY:
+        return numpy
+    else:
+        raise TypeError("Pint only fully supports duck arrays if NumPy is available.")
+
+
+def array_size(array: Array, /) -> int:
+    if hasattr(array, "size"):
+        return array.size
+    return array_namespace(array).size(array)  # pyright: ignore[reportAttributeAccessIssue]
+
+
+@deprecated("Please use `is_array_or_duck()` instead.")
 def is_duck_array_type(cls: type) -> bool:
     """Check if the type object represents a (non-Quantity) duck array type."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
@@ -119,12 +158,17 @@ def is_duck_array_type(cls: type) -> bool:
     )
 
 
+@deprecated("Please use `is_array_or_duck()` instead.")
 def is_duck_array(obj: object) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
-    return is_duck_array_type(type(obj))
+    return is_duck_array_type(type(obj))  # pyright: ignore[reportDeprecated]
 
 
-def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
+@overload
+def eq(lhs: Any, rhs: Any, check_all: Literal[True]) -> "bool | np.bool": ...
+@overload
+def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Comparison of scalars and arrays.
 
     Parameters
@@ -142,12 +186,16 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and is_duck_array_type(type(out)):
+    if check_all and is_array_or_duck(out):
         return out.all()
     return out
 
 
-def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+@overload
+def isnan(obj: Any, check_all: Literal[True]) -> "bool | np.bool": ...
+@overload
+def isnan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def isnan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test for NaN or NaT.
 
     Parameters
@@ -163,7 +211,7 @@ def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    if is_duck_array_type(type(obj)):
+    if is_duck_array(obj):
         if obj.dtype.kind in "ifc":
             out = np.isnan(obj)
         elif obj.dtype.kind in "Mm":
