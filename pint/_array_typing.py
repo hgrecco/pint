@@ -60,5 +60,17 @@ class ArrayAPIModule(Protocol):
         kind: np.dtype | _DTypeKind | tuple[np.dtype | _DTypeKind, ...],
     ) -> bool: ...
 
-    # dtypes (defined last to avoid conflicting with builtins)
+    # DType conversion
+    def astype(
+        self,
+        x: Array,
+        dtype: type,
+        /,
+        *,
+        copy: bool = True,
+        device: Any | None = None,
+    ) -> Array: ...
+
+    # DTypes (defined last to avoid conflicting with builtins)
     bool: type["np.bool"]
+    float64: type["np.float64"]
