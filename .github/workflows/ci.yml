@@ -26,6 +26,11 @@ jobs:
           version: PATH
       - name: Check typing regressions
         run: pyright --project pint/testsuite/typing/pyrightconfig.json
+      # --no-deps: the spec pins an older optype than pint uses
+      - name: Check metrology API conformance
+        run: |
+          pip install --no-deps git+https://github.com/quantity-dev/metrology-apis@25f975f8b4193d5bfca6d49084c68c14ccb27abd
+          pyright --project pint/testsuite/typing/metrology/pyrightconfig.json
 
   test-linux:
     runs-on: ubuntu-latest

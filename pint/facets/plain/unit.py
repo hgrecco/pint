@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
     import optype as opt
 
+    from ...metrology import MetrologyNamespace
     from ..context import Context
     from .quantity import PlainQuantity
 
@@ -84,6 +85,18 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             self._dimensionality = dim
 
         return self._dimensionality
+
+    @property
+    def dimension(self) -> UnitsContainer:
+        """Dimensionality of the PlainUnit, as named by the metrology API standard."""
+        return self.dimensionality
+
+    def __metrology_namespace__(
+        self, /, *, api_version: str | None = None
+    ) -> MetrologyNamespace[PlainQuantity[Any], Self]:
+        from ...metrology import get_namespace
+
+        return get_namespace(self._REGISTRY, api_version)
 
     def compatible_units(self, *contexts):
         if contexts:
@@ -206,9 +219,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
             other = cast("PlainQuantity", other)
         return self._REGISTRY.Quantity(1, self._units) / other
 
-    # UnitsContainer / PlainUnit -> PlainUnit
+    # (PlainUnit | UnitsContainer) / PlainUnit -> PlainUnit
     @overload
-    def __rtruediv__(self, other: UnitsContainer) -> Self: ...
+    def __rtruediv__(self, other: Self | UnitsContainer) -> Self: ...
     # timedelta / PlainUnit -> PlainQuantity[float]
     @overload
     def __rtruediv__(
@@ -224,9 +237,11 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     ) -> PlainQuantity[opt.numpy.ArrayND[T]]: ...
     def __rtruediv__(self: PlainUnit, other) -> PlainUnit | PlainQuantity:
         # NOTE: As PlainUnit and Quantity both handle __truediv__ with each other,
-        #   __rtruediv__ can only be called for something different.
+        #   __rtruediv__ is only called with a PlainUnit when called directly.
         if isinstance(other, UnitsContainer):
             return self.__class__(other / self._units)
+        if isinstance(other, self.__class__):
+            return self.__class__(other._units / self._units)
         # other is quantity-like or magnitude-like
         return self._REGISTRY.Quantity(1, 1 / self._units) * other
 

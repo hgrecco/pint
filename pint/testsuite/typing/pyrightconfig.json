@@ -1,5 +1,6 @@
 {
     "include": ["."],
+    "exclude": ["metrology"],
     "extraPaths": ["../../.."],
     "pythonVersion": "3.12",
     "typeCheckingMode": "basic"
