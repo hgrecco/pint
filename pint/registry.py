@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from ._typing import Quantity as _Quantity
     from ._typing import Unit as _Unit
     from .facets.plain.quantity import PlainQuantity as _PlainQuantity
+    from .metrology import MetrologyNamespace
 
 else:
     _PlainQuantity = facets.PlainRegistry.Quantity
@@ -83,6 +84,11 @@ class Quantity(
         @property
         @override
         def unit(self) -> Unit: ...
+
+        @override
+        def __metrology_namespace__(
+            self, /, *, api_version: str | None = None
+        ) -> MetrologyNamespace[Self, Unit]: ...
 
         @overload
         def __new__(
@@ -206,6 +212,8 @@ class Quantity(
             | opt.CanRAdd[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
+        __radd__ = __add__
+
         def __isub__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanISub[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
@@ -241,7 +249,7 @@ class Quantity(
         # General overloads (should work in most cases)
         @overload
         def __rsub__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanRSub[T, U]], other: T
+            self: Quantity[opt.CanRSub[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
         @overload
         def __rsub__[U: Magnitude](
@@ -316,7 +324,7 @@ class Quantity(
         # General overloads
         @overload
         def __rtruediv__[T: Magnitude, U: Magnitude](
-            self: Quantity[opt.CanRTruediv[T, U]], other: T
+            self: Quantity[opt.CanRTruediv[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
         @overload
         def __rtruediv__[U: Magnitude](
@@ -434,6 +442,12 @@ class Unit(
     facets.PlainRegistry.Unit,
 ):
     if TYPE_CHECKING:
+
+        @override
+        def __metrology_namespace__(
+            self, /, *, api_version: str | None = None
+        ) -> MetrologyNamespace[Quantity[Any], Self]: ...
+
         # Unit * (Unit | UnitsContainer) -> Unit
         @overload
         def __mul__(self, other: Self | UnitsContainer) -> Self: ...

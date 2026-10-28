@@ -42,7 +42,8 @@ if TYPE_CHECKING:
 
     from ._typing import QuantityOrUnitLike
     from .facets.plain import GenericPlainRegistry
-    from .registry import UnitRegistry
+    from .metrology import MetrologyNamespace
+    from .registry import Quantity, Unit, UnitRegistry
 
 
 logger = logging.getLogger(__name__)
@@ -682,7 +683,9 @@ class UnitsContainer(Mapping[str, Scalar]):
             return other / self
         return self**-1
 
-    def __metrology_namespace__(self, /, *, api_version: str | None = None):
+    def __metrology_namespace__(
+        self, /, *, api_version: str | None = None
+    ) -> MetrologyNamespace[Quantity[Any], Unit]:
         # Dimensions are not bound to a registry, so use the application one.
         from . import get_application_registry
         from .metrology import get_namespace

@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     import optype.numpy as npt
     from optype import do_neg, do_pos, do_round
 
+    from ...metrology import MetrologyNamespace
     from ..context import Context
     from ..system import System
     from .unit import PlainUnit as Unit
@@ -341,7 +342,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         """PlainQuantity's units, as named by the metrology API standard."""
         return self._REGISTRY.Unit(self._units)
 
-    def __metrology_namespace__(self, /, *, api_version: str | None = None):
+    def __metrology_namespace__(
+        self, /, *, api_version: str | None = None
+    ) -> MetrologyNamespace[Self, Unit]:
         from ...metrology import get_namespace
 
         return get_namespace(self._REGISTRY, api_version)
@@ -1021,7 +1024,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # General overloads (should work in most cases)
     @overload
     def __rsub__[T: Magnitude, U: Magnitude](
-        self: PlainQuantity[opt.CanRSub[T, U]], other: T
+        self: PlainQuantity[opt.CanRSub[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]: ...
     @overload
     def __rsub__[U: Magnitude](
@@ -1307,7 +1310,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # General overloads
     @overload
     def __rtruediv__[T: Magnitude, U: Magnitude](
-        self: PlainQuantity[opt.CanRTruediv[T, U]], other: T
+        self: PlainQuantity[opt.CanRTruediv[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]: ...
     @overload
     def __rtruediv__[U: Magnitude](
@@ -1315,6 +1318,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         other: opt.CanTruediv[MagnitudeT_co, U],
     ) -> PlainQuantity[U]: ...
     def __rtruediv__(self: PlainQuantity, other) -> PlainQuantity:
+        if isinstance(other, PlainQuantity) and self._check(other):
+            return other.__truediv__(self)
+
         coerced = self._coerce_operand(other)
         if coerced is not other:
             return coerced / self

@@ -46,6 +46,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    from ...metrology import MetrologyNamespace
     from ..context import Context
 
     # from ..._typing import Quantity, Unit
@@ -388,7 +389,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # self.Unit will call parse_units
         return self.Unit(item)
 
-    def __metrology_namespace__(self, /, *, api_version: str | None = None):
+    def __metrology_namespace__(
+        self, /, *, api_version: str | None = None
+    ) -> MetrologyNamespace[QuantityT, UnitT]:
         from ...metrology import get_namespace
 
         return get_namespace(self, api_version)

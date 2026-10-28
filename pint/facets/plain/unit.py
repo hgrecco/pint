@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
     import optype as opt
 
+    from ...metrology import MetrologyNamespace
     from ..context import Context
     from .quantity import PlainQuantity
 
@@ -90,7 +91,9 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
         """Dimensionality of the PlainUnit, as named by the metrology API standard."""
         return self.dimensionality
 
-    def __metrology_namespace__(self, /, *, api_version: str | None = None):
+    def __metrology_namespace__(
+        self, /, *, api_version: str | None = None
+    ) -> MetrologyNamespace[PlainQuantity[Any], Self]:
         from ...metrology import get_namespace
 
         return get_namespace(self._REGISTRY, api_version)

@@ -29,7 +29,7 @@ jobs:
       # --no-deps: the spec pins an older optype than pint uses
       - name: Check metrology API conformance
         run: |
-          pip install --no-deps git+https://github.com/quantity-dev/metrology-apis@328e95e10a7673aded0b8b3dd524213d85ae2702
+          pip install --no-deps git+https://github.com/quantity-dev/metrology-apis@25f975f8b4193d5bfca6d49084c68c14ccb27abd
           pyright --project pint/testsuite/typing/metrology/pyrightconfig.json
 
   test-linux:

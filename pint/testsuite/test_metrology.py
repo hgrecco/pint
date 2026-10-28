@@ -79,6 +79,17 @@ def test_asquantity(mn, func_registry):
     assert converted.unit == func_registry.centimeter
 
 
+def test_quantity_reflected_operators(func_registry):
+    a = func_registry.Quantity(6.0, "m")
+    b = func_registry.Quantity(2.0, "s")
+    c = func_registry.Quantity(50.0, "cm")
+    assert b.__rtruediv__(a) == a / b
+    assert c.__rtruediv__(a) == a / c
+    assert c.__radd__(a) == a + c
+    assert c.__rsub__(a) == a - c
+    assert b.__rmul__(a) == a * b
+
+
 def test_metrology_apis_protocols(func_registry):
     mapis = pytest.importorskip("metrology_apis")
     q = func_registry.Quantity(3, "m")
