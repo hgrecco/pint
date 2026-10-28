@@ -54,7 +54,6 @@ from typing import Self, TypeAlias
 
 import platformdirs
 
-from ... import _array_compat as _array
 from ... import pint_eval
 from ..._typing import (
     Handler,
@@ -64,7 +63,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import coerce_scalar
+from ...compat import coerce_scalar, is_array_or_duck
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -1598,7 +1597,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 "Pint does not support boolean magnitudes because they are confusing: "
                 "please call `int()` or `float()` before interpreting the value as a magnitude."
             )
-        elif isinstance(value, Number) or _array.is_array_or_duck(value):
+        elif isinstance(value, Number) or is_array_or_duck(value):
             return cast(Magnitude, value)
         return NotImplemented
 
