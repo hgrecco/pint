@@ -235,7 +235,11 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
         return False
 
 
-def zero_or_nan(obj: Any, /, check_all: bool) -> bool | Iterable[bool]:
+@overload
+def zero_or_nan(obj: Any, /, check_all: Literal[True]) -> "bool | np.bool": ...
+@overload
+def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test if obj is zero, NaN, or NaT.
 
     Parameters
