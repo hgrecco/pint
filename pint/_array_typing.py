@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 class ArrayAPIModule(Protocol):
     def broadcast_arrays(self, /, *arrays: Array) -> tuple[Array, ...]: ...
+
     def full_like(
         self,
         x: Array,
@@ -16,6 +17,16 @@ class ArrayAPIModule(Protocol):
         *,
         dtype: type | None = None,
         device: Any | None = None,
+    ) -> Array: ...
+
+    # Logical operations
+    def all(
+        self,
+        x: Array,
+        /,
+        *,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
     ) -> Array: ...
     def logical_not(self, array: Array, /) -> Array: ...
 

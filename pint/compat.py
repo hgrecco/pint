@@ -182,7 +182,7 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]"
     """
     out = lhs == rhs
     if check_all and is_array_or_duck(out):
-        return out.all()
+        return array_namespace(out).all(out).item()
     return out
 
 
@@ -250,7 +250,7 @@ def zero_or_nan(obj: Any, /, check_all: bool) -> bool | Iterable[bool]:
     """
     out = (obj == 0) + isnan(obj, check_all=False)
     if check_all and is_array_or_duck(out):
-        return out.all()
+        return array_namespace(out).all(out).item()
     return out
 
 
