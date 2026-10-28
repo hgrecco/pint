@@ -120,7 +120,20 @@ def is_upcast_type(cls: type) -> bool:
 #######
 
 
+def is_duck_array(obj: object) -> TypeIs[Array]:
+    """Check if an object represents a (non-Quantity) duck array."""
+    # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
+    return isinstance(obj, ndarray) or (
+        not hasattr(obj, "_magnitude")
+        and not hasattr(obj, "_units")
+        and hasattr(obj, "__array_function__")
+        and hasattr(obj, "ndim")
+        and hasattr(obj, "dtype")
+    )
+
+
 def is_array_or_duck(obj: object) -> TypeIs[Array]:
+    # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
     return hasattr(obj, "__array_namespace__") or (
         not hasattr(obj, "_magnitude")
         and not hasattr(obj, "_units")
@@ -144,25 +157,6 @@ def array_size(array: Array, /) -> int:
     if hasattr(array, "size"):
         return array.size
     return array_namespace(array).size(array)  # pyright: ignore[reportAttributeAccessIssue]
-
-
-@deprecated("Please use `is_array_or_duck()` instead.")
-def is_duck_array_type(cls: type) -> bool:
-    """Check if the type object represents a (non-Quantity) duck array type."""
-    # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
-    return issubclass(cls, ndarray) or (
-        not hasattr(cls, "_magnitude")
-        and not hasattr(cls, "_units")
-        and hasattr(cls, "__array_function__")
-        and hasattr(cls, "ndim")
-        and hasattr(cls, "dtype")
-    )
-
-
-@deprecated("Please use `is_array_or_duck()` instead.")
-def is_duck_array(obj: object) -> TypeIs[Array]:
-    """Check if an object represents a (non-Quantity) duck array."""
-    return is_duck_array_type(type(obj))  # pyright: ignore[reportDeprecated]
 
 
 @overload
@@ -193,10 +187,10 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]"
 
 
 @overload
-def isnan(obj: Any, check_all: Literal[True]) -> "bool | np.bool": ...
+def isnan(obj: Any, /, check_all: Literal[True]) -> "bool | np.bool": ...
 @overload
-def isnan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
-def isnan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
+def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test for NaN or NaT.
 
     Parameters
@@ -238,7 +232,7 @@ def isnan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
         return False
 
 
-def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+def zero_or_nan(obj: Any, /, check_all: bool) -> bool | Iterable[bool]:
     """Test if obj is zero, NaN, or NaT.
 
     Parameters
@@ -254,8 +248,8 @@ def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    out = eq(obj, 0, False) + isnan(obj, False)
-    if check_all and is_duck_array_type(type(out)):
+    out = (obj == 0) + isnan(obj, check_all=False)
+    if check_all and is_array_or_duck(out):
         return out.all()
     return out
 
