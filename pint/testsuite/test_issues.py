@@ -146,7 +146,9 @@ class TestIssues(QuantityTestCase):
         assert 900 < module_registry.km / module_registry.m
         assert 1100 > module_registry.km / module_registry.m
 
-    def test_issue61(self, module_registry):
+    @pytest.mark.parametrize("allow_unknown_magnitude_types", (False, True))
+    def test_issue61(self, module_registry, allow_unknown_magnitude_types: bool):
+        module_registry.allow_unknown_magnitude_types = allow_unknown_magnitude_types
         Q_ = module_registry.Quantity
         for value in ({}, {"a": 3}, None):
             with pytest.raises(TypeError):
@@ -157,6 +159,7 @@ class TestIssues(QuantityTestCase):
             Q_("", "meter")
         with pytest.raises(ValueError):
             Q_("")
+        module_registry.allow_unknown_magnitude_types = True
 
     @helpers.requires_not_numpy()
     def test_issue61_notNP(self, module_registry):
