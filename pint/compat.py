@@ -251,7 +251,7 @@ def zero_or_nan(obj: Any, /, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    out = (obj == 0) + isnan(obj, check_all=False)
+    out = (obj == 0) | isnan(obj, check_all=False)
     if check_all and is_array_or_duck(out):
         return array_namespace(out).all(out).item()
     return out
