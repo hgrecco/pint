@@ -113,19 +113,6 @@ def check_implemented(f):
     return wrapped
 
 
-# TODO: remove this utility function since it's not used anywhere
-def method_wraps(numpy_func):
-    if isinstance(numpy_func, str):
-        numpy_func = getattr(np, numpy_func, None)
-
-    def wrapper(func):
-        func.__wrapped__ = numpy_func
-
-        return func
-
-    return wrapper
-
-
 # TODO: remove all nonmultiplicative remnants
 
 MagnitudeT_co = TypeVar("MagnitudeT_co", bound=Magnitude, covariant=True)
@@ -155,6 +142,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @property
     def ndim(self) -> int:
+        """Number of dimensions of the data (0 for scalars)."""
         if isinstance(self.magnitude, numbers.Number):
             return 0
         if str(type(self.magnitude)) == "NAType":
@@ -1250,10 +1238,11 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         def __rmatmul__(self, other):
             return self.__matmul__(other)
 
-    def _truedivide_cast_int(self, a, b):
+    @classmethod
+    def _truedivide_cast_int(cls, a, b):
         """Like `operator.truediv`, but `int/int -> non_int_type` instead of `float`"""
         if isinstance(a, int) and isinstance(b, int):
-            t = self._REGISTRY.non_int_type
+            t = cls._REGISTRY.non_int_type
             a, b = t(a), t(b)
         return operator.truediv(a, b)
 
