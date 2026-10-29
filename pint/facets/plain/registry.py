@@ -228,6 +228,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def __init__(
         self,
         filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
@@ -1593,7 +1594,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # we can finally convert the magnitude the way we wish
         magnitude = self._normalize_magnitude(value)
         if magnitude is NotImplemented:
-            raise TypeError(f"Invalid magnitude: {value!r}")
+            return cast(Magnitude, value)  # will be treated as a scalar
         return magnitude
 
     def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
@@ -1616,6 +1617,18 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             )
         elif isinstance(value, Number) or is_duck_array(value):
             return cast(Magnitude, value)
+        # handle clearly meaningless or unintended values
+        elif isinstance(value, (dict, set, datetime.datetime, datetime.timedelta)):
+            raise TypeError(
+                f"Pint explicitly does not support {type(value)} magnitudes."
+            )
+        elif value is None:
+            raise TypeError(
+                "Pint attempted to construct a quantity with `None` as a magnitude! "
+                "This is likely unintentional, please double-check your code and make sure "
+                "you are not passing `None` as a magnitude, either directly to the `Quantity` "
+                "constructor or as an operand of an arithmetic operation."
+            )
         return NotImplemented
 
     def _as_magnitude_and_units(self, value: object) -> tuple[object, str] | None:

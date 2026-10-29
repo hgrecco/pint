@@ -5,7 +5,7 @@ Pint Changelog
 -------------------
 
 - Load definitions from TOML files; `pint/default_en.toml` holds the default definitions (#2526)
-- Make the `Quantity` constructor stricter, rejecting unknown types on construction (#2523)
+- Reject more clearly-nonsensical builtin magnitude types, such as `datetime.datetime` and `datetime.timedelta`, and improve some related error messages (#2523, #2533)
 - Improve the reliability of `**` on `Quantity`, making the implementation consistent with `*` and `/` (#2523)
 - Fix redefining a unit with `define()` or `load_definitions()` after it was used, which kept the old cached conversion; pass `rebuild_cache=False` to delay the rebuild (#922, #740)
 - Remove the `slpm` abbreviation for `standard_liter_per_minute` (#1354)
