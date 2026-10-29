@@ -29,10 +29,6 @@ except ImportError:  # pragma: no cover
     tomlkit = None
 
 
-class _Number(str):
-    """Source text of a number, e.g. ``1e3`` or ``2**10``."""
-
-
 class TomlWriter:
     """Writer for TOML definition files. Requires tomlkit.
 
@@ -119,7 +115,7 @@ class TomlWriter:
     # Entries
 
     def format_prefix(self, d):
-        value = _Number(d.value_text) if d.value_text else d.value
+        value = self._build_number(d.value_text) if d.value_text else d.value
         return self._build_inline_table(
             {"value": value, **self._build_symbol_and_aliases(d)}
         )
@@ -171,14 +167,16 @@ class TomlWriter:
         return entry
 
     @staticmethod
+    def _build_number(text: str):
+        """The source text of a number, bare if it is a TOML number, e.g. 1e3."""
+        try:
+            item = tomlkit.value(text)
+        except tomlkit.exceptions.ParseError:
+            return text
+        return item if isinstance(item, (int, float)) else text
+
+    @staticmethod
     def _build_toml_value(value: Any):
-        if isinstance(value, _Number):
-            try:
-                item = tomlkit.value(value)
-            except tomlkit.exceptions.ParseError:
-                return str(value)
-            # written as in the source when it is a TOML number, e.g. 1e3
-            return item if isinstance(item, (int, float)) else str(value)
         if isinstance(value, (str, list, int, float)):
             return value
         # other number types, e.g. Decimal, are read back with to_number
