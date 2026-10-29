@@ -217,16 +217,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         Separate the default format into magnitude and unit formats as soon as
         possible. The deprecated default is not to separate. This will change in a
         future release.
-    allow_unknown_magnitude_types : bool, optional
-        Allow arbitrary magnitude types, treating unknown values as scalars.
-        This enables in part automatic interoperability with external libraries,
-        although Pint may misbehave if the value does not behave like a scalar. (Default: True)
     """
 
     Quantity: type[QuantityT]
     Unit: type[UnitT]
-
-    allow_unknown_magnitude_types: bool
 
     _diskcache = None
     _def_parser = None
@@ -247,11 +241,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         cache_folder: str | pathlib.Path | None = None,
         separate_format_defaults: bool | None = None,
         mpl_formatter: str = "{:P}",
-        allow_unknown_magnitude_types: bool = True,
     ):
-        #: If this flag is set, unknown magnitude types are allowed and treated as scalars
-        self.allow_unknown_magnitude_types = allow_unknown_magnitude_types
-
         #: Map a definition class to a adder methods.
         self._adders: Handler = {}
         self._register_definition_adders()
@@ -1595,9 +1585,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # we can finally convert the magnitude the way we wish
         magnitude = self._normalize_magnitude(value)
         if magnitude is NotImplemented:
-            if self.allow_unknown_magnitude_types:
-                return cast(Magnitude, value)  # will be treated as a scalar
-            raise TypeError(f"Invalid magnitude: {value!r}")
+            return cast(Magnitude, value)  # will be treated as a scalar
         return magnitude
 
     def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:

@@ -1025,16 +1025,10 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compare_quantity_compact(0 * ureg.m, 0 * ureg.m)
         self.compare_quantity_compact(float("inf") * ureg.m, float("inf") * ureg.m)
 
-    @pytest.mark.parametrize("allow_unknown_magnitude_types", (False, True))
-    def test_nonnumeric_magnitudes(self, allow_unknown_magnitude_types: bool):
-        ureg = UnitRegistry(allow_unknown_magnitude_types=allow_unknown_magnitude_types)
-        if allow_unknown_magnitude_types:
-            q = ureg.Quantity(object(), "m")  # pyright: ignore[reportCallIssue,reportArgumentType]
-            with pytest.warns(UndefinedBehavior):
-                q.to_compact()
-        else:
-            with pytest.raises(TypeError):
-                _ = ureg.Quantity(object(), "m")  # pyright: ignore[reportCallIssue,reportArgumentType]
+    def test_nonnumeric_magnitudes(self):
+        q = self.Q_(object(), "m")  # pyright: ignore[reportCallIssue,reportArgumentType]
+        with pytest.warns(UndefinedBehavior):
+            q.to_compact()
 
     def test_very_large_to_compact(self):
         # This should not raise an IndexError
