@@ -16,17 +16,17 @@ made in code, e.g. ``5 / 9 * kelvin`` becomes ``0.5555555555555556 * kelvin``.
 from __future__ import annotations
 
 import dataclasses
-import json
 import pathlib
-import re
-import tomllib
 from collections.abc import Iterable
 from typing import Any
 
 from ..facets.plain import definitions
 from .toml_defparser import FORMAT_VERSION
 
-_BARE_KEY = re.compile(r"[A-Za-z0-9_-]+")
+try:
+    import tomlkit
+except ImportError:  # pragma: no cover
+    tomlkit = None
 
 
 class _Number(str):
@@ -34,11 +34,18 @@ class _Number(str):
 
 
 class TomlWriter:
-    """Writer for TOML definition files.
+    """Writer for TOML definition files. Requires tomlkit.
 
     ``dump_*`` methods write a whole section of the file, and ``format_*``
     methods write one entry of a section.
     """
+
+    def __init__(self):
+        if tomlkit is None:
+            raise ImportError(
+                "tomlkit is required to write TOML definitions; "
+                "install it with pip install pint[toml]"
+            )
 
     def write_file(self, filename: pathlib.Path | str, defs: Iterable) -> None:
         """Write definitions to a TOML file.
@@ -73,43 +80,52 @@ class TomlWriter:
                 raise TypeError(f"cannot write {type(d).__name__} to TOML")
             sections[kind].append(d)
 
-        lines = [f'version = "{FORMAT_VERSION}"']
-        lines += self.dump_defaults(sections[definitions.DefaultsDefinition])
-        lines += self.dump_prefixes(sections[definitions.PrefixDefinition])
-        lines += self.dump_dimensions(sections[definitions.DerivedDimensionDefinition])
-        lines += self.dump_units(sections[definitions.UnitDefinition])
-        return "\n".join(lines) + "\n"
+        doc = tomlkit.document()
+        doc.add("version", FORMAT_VERSION)
+        for name, table in (
+            ("defaults", self.dump_defaults(sections[definitions.DefaultsDefinition])),
+            ("prefix", self.dump_prefixes(sections[definitions.PrefixDefinition])),
+            (
+                "dimension",
+                self.dump_dimensions(sections[definitions.DerivedDimensionDefinition]),
+            ),
+            ("unit", self.dump_units(sections[definitions.UnitDefinition])),
+        ):
+            if table:
+                doc.add(name, table)
+        return tomlkit.dumps(doc)
 
     # Sections
 
-    def dump_defaults(self, defs: list) -> list[str]:
-        if not defs:
-            return []
-        d = defs[-1]
-        values = {"group": d.group, "system": d.system}
-        return ["", "[defaults]"] + [
-            f"{key} = {self._string(value)}" for key, value in values.items() if value
-        ]
+    def dump_defaults(self, defs: list):
+        table = tomlkit.table()
+        if defs:
+            d = defs[-1]
+            for key, value in d.items():
+                table.add(key, value)
+        return table
 
-    def dump_prefixes(self, defs: list) -> list[str]:
-        return self._section("prefix", [self.format_prefix(d) for d in defs])
+    def dump_prefixes(self, defs: list):
+        return self._section_table({d.name: self.format_prefix(d) for d in defs})
 
-    def dump_dimensions(self, defs: list) -> list[str]:
-        return self._section("dimension", [self.format_dimension(d) for d in defs])
+    def dump_dimensions(self, defs: list):
+        return self._section_table(
+            {d.name[1:-1]: self.format_dimension(d) for d in defs}
+        )
 
-    def dump_units(self, defs: list) -> list[str]:
-        return self._section("unit", [self.format_unit(d) for d in defs])
+    def dump_units(self, defs: list):
+        return self._section_table({d.name: self.format_unit(d) for d in defs})
 
     # Entries
 
-    def format_prefix(self, d) -> str:
+    def format_prefix(self, d):
         value = _Number(d.value_text) if d.value_text else d.value
-        return self._entry(d.name, {"value": value, **self._names(d)})
+        return self._inline_table({"value": value, **self._symbol_and_aliases(d)})
 
-    def format_dimension(self, d) -> str:
-        return self._entry(d.name[1:-1], {"value": d.value_text or str(d.reference)})
+    def format_dimension(self, d):
+        return self._inline_table({"value": d.value_text or str(d.reference)})
 
-    def format_unit(self, d) -> str:
+    def format_unit(self, d):
         converter = d.converter
         reference = str(d.reference) if d.reference else ""
         if d.value_text:
@@ -124,12 +140,14 @@ class TomlWriter:
             for f in dataclasses.fields(converter)
             if f.name != "scale"
         }
-        return self._entry(d.name, {"value": value, **modifiers, **self._names(d)})
+        return self._inline_table(
+            {"value": value, **modifiers, **self._symbol_and_aliases(d)}
+        )
 
-    # Formatting
+    # Building TOML items
 
     @staticmethod
-    def _names(d) -> dict[str, Any]:
+    def _symbol_and_aliases(d) -> dict[str, Any]:
         names: dict[str, Any] = {}
         if d.defined_symbol:
             names["symbol"] = d.defined_symbol
@@ -138,35 +156,28 @@ class TomlWriter:
         return names
 
     @staticmethod
-    def _section(name: str, entries: list[str]) -> list[str]:
-        return ["", f"[{name}]", *entries] if entries else []
+    def _section_table(entries: dict[str, Any]):
+        table = tomlkit.table()
+        for name, entry in entries.items():
+            table.add(name, entry)
+        return table
 
-    def _entry(self, name: str, values: dict[str, Any]) -> str:
-        pairs = ", ".join(f"{key} = {self._value(v)}" for key, v in values.items())
-        return f"{self._key(name)} = {{ {pairs} }}"
-
-    def _key(self, name: str) -> str:
-        return name if _BARE_KEY.fullmatch(name) else self._string(name)
+    def _inline_table(self, values: dict[str, Any]):
+        entry = tomlkit.inline_table()
+        for key, value in values.items():
+            entry.add(key, self._toml_value(value))
+        return entry
 
     @staticmethod
-    def _string(text: str) -> str:
-        # JSON strings are valid TOML basic strings
-        return json.dumps(text, ensure_ascii=False)
-
-    def _value(self, value: Any) -> str:
+    def _toml_value(value: Any):
         if isinstance(value, _Number):
             try:
-                tomllib.loads(f"v = {value}", parse_float=str)
-                return value
-            except tomllib.TOMLDecodeError:
-                return self._string(value)
-        if isinstance(value, str):
-            return self._string(value)
-        if isinstance(value, list):
-            return "[" + ", ".join(map(self._value, value)) + "]"
-        if isinstance(value, bool):
-            raise TypeError(f"cannot write {value!r} to TOML")
-        if isinstance(value, (int, float)):
-            return repr(value)
+                item = tomlkit.value(value)
+            except tomlkit.exceptions.ParseError:
+                return str(value)
+            # written as in the source when it is a TOML number, e.g. 1e3
+            return item if isinstance(item, (int, float)) else str(value)
+        if isinstance(value, (str, list, int, float)):
+            return value
         # other number types, e.g. Decimal, are read back with to_number
-        return self._string(str(value))
+        return str(value)

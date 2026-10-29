@@ -117,10 +117,10 @@ def test_write_keeps_value_text(tmp_path):
         encoding="utf-8",
     )
     text = TomlWriter().dumps(TomlParser(ParserConfig(float)).parse_file(f))
-    assert 'kilo = { value = 1e3, symbol = "k" }' in text
-    assert 'kibi = { value = "2**10", symbol = "Ki" }' in text
-    assert 'area = { value = "[length] ** 2" }' in text
-    assert 'fahrenheit = { value = "5 / 9 * kelvin", offset = 255.37 }' in text
+    assert 'kilo = {value = 1e3, symbol = "k"}' in text
+    assert 'kibi = {value = "2**10", symbol = "Ki"}' in text
+    assert 'area = {value = "[length] ** 2"}' in text
+    assert 'fahrenheit = {value = "5 / 9 * kelvin", offset = 255.37}' in text
 
 
 def test_write_txt_definitions(tmp_path):
@@ -130,7 +130,7 @@ def test_write_txt_definitions(tmp_path):
     f = tmp_path / "defs.toml"
     TomlWriter().write_file(f, basic)
     text = f.read_text(encoding="utf-8")
-    assert 'kibi = { value = "2**10", symbol = "Ki" }' in text
+    assert 'kibi = {value = "2**10", symbol = "Ki"}' in text
     back = TomlParser(ParserConfig(float)).parse_file(f)
     # the writer gathers derived dimensions in one section, changing the order
     assert {d.name: d.value_text for d in back if hasattr(d, "value_text")} == {
