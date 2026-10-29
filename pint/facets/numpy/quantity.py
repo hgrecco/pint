@@ -442,7 +442,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
         Arrays are scaled to the smallest common prefix by default, set `maximumPrefix`
         to `True` to use the largest possible prefix instead.
-        Infinite and  `nan` values are ignored.
+        Infinite and `nan` values are ignored.
         To get output in terms of a different unit, use the unit parameter.
 
 

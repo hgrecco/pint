@@ -124,11 +124,18 @@ def is_duck_array(obj: object) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
     return (HAS_NUMPY and isinstance(obj, ndarray)) or (
+        # make sure it's not quantity-like
         not hasattr(obj, "_magnitude")
         and not hasattr(obj, "_units")
-        and hasattr(obj, "__array_function__")
+        # important array attributes
         and hasattr(obj, "ndim")
         and hasattr(obj, "dtype")
+        and (
+            # duck arrays
+            hasattr(obj, "__array_function__")
+            # scipy sparse
+            or (hasattr(obj, "__array_priority__") and hasattr(obj, "shape"))
+        )
     )
 
 
@@ -136,11 +143,18 @@ def is_array_or_duck(obj: object) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) array, or duck array."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
     return hasattr(obj, "__array_namespace__") or (
+        # make sure it's not quantity-like
         not hasattr(obj, "_magnitude")
         and not hasattr(obj, "_units")
-        and hasattr(obj, "__array_function__")
+        # important array attributes
         and hasattr(obj, "ndim")
         and hasattr(obj, "dtype")
+        and (
+            # duck arrays
+            hasattr(obj, "__array_function__")
+            # scipy sparse
+            or (hasattr(obj, "__array_priority__") and hasattr(obj, "shape"))
+        )
     )
 
 
