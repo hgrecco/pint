@@ -19,6 +19,15 @@ type _DTypeKind = Literal[
 
 class ArrayAPIModule(Protocol):
     # Constructors
+    def full(
+        self,
+        /,
+        shape: int | tuple[int, ...],
+        fill_value: bool | int | float | complex,
+        *,
+        dtype: type | None = None,
+        device: Any | None = None,
+    ) -> Array: ...
     def full_like(
         self,
         x: Array,

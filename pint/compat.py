@@ -150,7 +150,7 @@ def array_namespace(array: Array, /) -> ArrayAPIModule:
         return array.__array_namespace__()  # pyright: ignore[reportReturnType]
     # backwards-compatible duck array support
     elif HAS_NUMPY:
-        return numpy
+        return numpy  # pyright: ignore[reportReturnType]
     else:
         raise TypeError("Pint only fully supports duck arrays if NumPy is available.")
 
@@ -214,17 +214,17 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
         if xp.isdtype(obj.dtype, "numeric"):
             out = xp.isnan(obj)
         elif getattr(obj.dtype, "kind", "?") in "Mm":  # numpy datetime or timedelta
-            out = xp.isnat(obj)
+            out = xp.isnat(obj)  # pyright: ignore[reportAttributeAccessIssue]
         else:
             if HAS_UNCERTAINTIES:
                 try:
                     out = unp.isnan(obj)
                 except TypeError:
-                    # Not a numeric or UFloat type
-                    out = np.full(obj.shape, False)
+                    # Not a numeric, datetime or UFloat type
+                    out = xp.full(obj.shape, False)
             else:
                 # Not a numeric or datetime type
-                out = np.full(obj.shape, False)
+                out = xp.full(obj.shape, False)
         return xp.any(out).item() if check_all else out
     # scalars
     if isinstance(obj, np_datetime64):
