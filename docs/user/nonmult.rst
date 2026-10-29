@@ -114,6 +114,8 @@ to be explicitly created:
 .. doctest::
 
     >>> ureg = UnitRegistry()
+    >>> Q_ = ureg.Quantity
+
     >>> home = 25.4 * ureg.degC
     Traceback (most recent call last):
         ...
