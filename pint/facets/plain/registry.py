@@ -260,6 +260,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._def_parser = delegates.txt_defparser.DefParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
         )
+        self._toml_parser = delegates.toml_defparser.TomlParser(
+            delegates.ParserConfig(non_int_type)
+        )
 
         self.formatter = delegates.Formatter(self)
         self._filename = filename
@@ -589,10 +592,16 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
             parsed_project = self._def_parser.parse_string("\n".join(file))
+            definitions = self._def_parser.iter_parsed_project(parsed_project)
+        elif str(file).lower().endswith(".toml"):
+            # the disk cache is keyed on parsed text files, so TOML skips it
+            parsed_project = None
+            definitions = self._toml_parser.parse_file(file)
         else:
             parsed_project = self._def_parser.parse_file(file)
+            definitions = self._def_parser.iter_parsed_project(parsed_project)
 
-        for definition in self._def_parser.iter_parsed_project(parsed_project):
+        for definition in definitions:
             self._helper_dispatch_adder(definition)
 
         if rebuild_cache:
@@ -1423,8 +1432,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         Parameters
         ----------
         input_string
-
-        pattern_string:
+            The string to parse.
+        pattern
             The regex parse string
         case_sensitive, optional
             If true, a case sensitive matching of the unit name will be done in the registry.
