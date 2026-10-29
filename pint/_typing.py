@@ -38,8 +38,6 @@ type UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
 
 type QuantityOrUnitLike = Quantity[Any] | UnitLike
 
-type Shape = tuple[int, ...]
-
 type FuncType = Callable[..., Any]
 
 

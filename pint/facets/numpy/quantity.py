@@ -5,16 +5,18 @@ pint.facets.numpy.quantity
 :copyright: 2022 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+# pyright: reportInvalidTypeArguments=warning
 
 from __future__ import annotations
 
 import functools
 import math
 import warnings
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, Any
 
-from ..._typing import Magnitude, Shape
+from ..._array_typing import HasShape, Shape
+from ..._typing import Magnitude
 from ...compat import (
     HAS_NUMPY,
     np,
@@ -263,25 +265,28 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         return self.__class__(self._magnitude.imag, self._units)
 
     @property
-    def T(self):
+    def T(self, /) -> NumpyQuantity:
         return self.__class__(self._magnitude.T, self._units)
 
     @property
-    def flat(self):
+    def flat(self, /) -> Iterator[NumpyQuantity]:
         for v in self._magnitude.flat:
             yield self.__class__(v, self._units)
 
     @property
-    def shape(self) -> Shape:
+    def shape[S: Shape](self: NumpyQuantity[HasShape[S]], /) -> S:
         return self._magnitude.shape
 
     @property
-    def dtype(self):
+    def dtype[DT: np.dtype[np.number]](
+        self: NumpyQuantity[opt.numpy.HasDType[DT]],
+        /,
+    ) -> DT:
         return self._magnitude.dtype
 
     @shape.setter
-    def shape(self, value):
-        self._magnitude.shape = value
+    def shape(self: NumpyQuantity[np.ndarray], shape: Shape, /) -> None:
+        self._magnitude.shape = shape
 
     def searchsorted(self, v, side="left", sorter=None):
         if isinstance(v, self.__class__):

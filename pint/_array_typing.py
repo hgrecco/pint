@@ -5,7 +5,7 @@ from ._typing import Array
 if TYPE_CHECKING:
     import numpy as np
 
-
+type Shape = tuple[int, ...]
 type _DTypeKind = Literal[
     "bool",
     "signed integer",
@@ -17,12 +17,17 @@ type _DTypeKind = Literal[
 ]
 
 
+class HasShape[S: Shape](Protocol):
+    @property
+    def shape(self, /) -> S: ...
+
+
 class ArrayAPIModule(Protocol):
     # Constructors
     def full(
         self,
         /,
-        shape: int | tuple[int, ...],
+        shape: int | Shape,
         fill_value: bool | int | float | complex,
         *,
         dtype: type | None = None,
