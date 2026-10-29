@@ -168,7 +168,10 @@ class TomlWriter:
 
     @staticmethod
     def _build_number(text: str):
-        """The source text of a number, bare if it is a TOML number, e.g. 1e3."""
+        """The TOML representation of a number. Returns an int, float or string.
+
+        Uses a string only when the text is not a TOML number, e.g. ``2**10``.
+        """
         try:
             item = tomlkit.value(text)
         except tomlkit.exceptions.ParseError:
