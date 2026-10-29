@@ -6,9 +6,20 @@ from decimal import Decimal
 import pytest
 
 import pint
+from pint.delegates import ParserConfig
+from pint.delegates.toml_defparser import TomlParser
+from pint.delegates.toml_writer import TomlWriter
+from pint.facets.group.definitions import GroupDefinition
+from pint.facets.plain import definitions
 
 PINT_DIR = pathlib.Path(pint.__file__).parent
 VERSION = 'version = "1.0"\n'
+BASIC = (
+    definitions.DefaultsDefinition,
+    definitions.PrefixDefinition,
+    definitions.DerivedDimensionDefinition,
+    definitions.UnitDefinition,
+)
 
 
 def summary(ureg):
@@ -71,3 +82,22 @@ def test_modifier_keys(tmp_path):
     assert ureg.Quantity(0, "celsius").to("K").magnitude == pytest.approx(273.15)
     assert ureg.Quantity(32, "fahrenheit").to("celsius").magnitude == pytest.approx(0)
     assert ureg.Quantity(2, "B").to("").magnitude == pytest.approx(100)
+
+
+@pytest.mark.parametrize("non_int_type", [float, Decimal])
+def test_write_reads_back(tmp_path, non_int_type):
+    parser = TomlParser(ParserConfig(non_int_type))
+    basic = [
+        d
+        for d in parser.parse_file(PINT_DIR / "default_en.toml")
+        if isinstance(d, BASIC)
+    ]
+    f = tmp_path / "defs.toml"
+    TomlWriter().write_file(f, basic)
+    assert parser.parse_file(f) == basic
+
+
+def test_write_rejects_other_definitions(tmp_path):
+    group = GroupDefinition("g", (), ())
+    with pytest.raises(TypeError, match="GroupDefinition"):
+        TomlWriter().write_file(tmp_path / "defs.toml", [group])
