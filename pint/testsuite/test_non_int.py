@@ -57,7 +57,7 @@ class _TestBasic(NonIntTypeTestCase):
             assert x.magnitude == value
             assert x.units == self.ureg.UnitsContainer(meter=1)
 
-        x = self.Q_(value, UnitsContainer(length=1))
+        x = self.Q_(value, UnitsContainer(meter=1))
         y = self.Q_(x)
         assert x.magnitude == y.magnitude
         assert x.units == y.units
