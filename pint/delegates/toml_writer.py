@@ -142,8 +142,6 @@ class TomlWriter:
             {"value": value, **modifiers, **self._symbol_and_aliases_dict(d)}
         )
 
-    # Building TOML items
-
     @staticmethod
     def _symbol_and_aliases_dict(d) -> dict[str, Any]:
         names: dict[str, Any] = {}
@@ -152,6 +150,8 @@ class TomlWriter:
         if d.aliases:
             names["aliases"] = list(d.aliases)
         return names
+
+    # Building TOML items
 
     @staticmethod
     def _build_section_table(entries: dict[str, Any]):
