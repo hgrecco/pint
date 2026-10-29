@@ -106,24 +106,26 @@ class TomlWriter:
         return table
 
     def dump_prefixes(self, defs: list):
-        return self._section_table({d.name: self.format_prefix(d) for d in defs})
+        return self._build_section_table({d.name: self.format_prefix(d) for d in defs})
 
     def dump_dimensions(self, defs: list):
-        return self._section_table(
+        return self._build_section_table(
             {d.name[1:-1]: self.format_dimension(d) for d in defs}
         )
 
     def dump_units(self, defs: list):
-        return self._section_table({d.name: self.format_unit(d) for d in defs})
+        return self._build_section_table({d.name: self.format_unit(d) for d in defs})
 
     # Entries
 
     def format_prefix(self, d):
         value = _Number(d.value_text) if d.value_text else d.value
-        return self._inline_table({"value": value, **self._symbol_and_aliases(d)})
+        return self._build_inline_table(
+            {"value": value, **self._build_symbol_and_aliases(d)}
+        )
 
     def format_dimension(self, d):
-        return self._inline_table({"value": d.value_text or str(d.reference)})
+        return self._build_inline_table({"value": d.value_text or str(d.reference)})
 
     def format_unit(self, d):
         converter = d.converter
@@ -140,14 +142,14 @@ class TomlWriter:
             for f in dataclasses.fields(converter)
             if f.name != "scale"
         }
-        return self._inline_table(
-            {"value": value, **modifiers, **self._symbol_and_aliases(d)}
+        return self._build_inline_table(
+            {"value": value, **modifiers, **self._build_symbol_and_aliases(d)}
         )
 
     # Building TOML items
 
     @staticmethod
-    def _symbol_and_aliases(d) -> dict[str, Any]:
+    def _build_symbol_and_aliases(d) -> dict[str, Any]:
         names: dict[str, Any] = {}
         if d.defined_symbol:
             names["symbol"] = d.defined_symbol
@@ -156,20 +158,20 @@ class TomlWriter:
         return names
 
     @staticmethod
-    def _section_table(entries: dict[str, Any]):
+    def _build_section_table(entries: dict[str, Any]):
         table = tomlkit.table()
         for name, entry in entries.items():
             table.add(name, entry)
         return table
 
-    def _inline_table(self, values: dict[str, Any]):
+    def _build_inline_table(self, values: dict[str, Any]):
         entry = tomlkit.inline_table()
         for key, value in values.items():
-            entry.add(key, self._toml_value(value))
+            entry.add(key, self._build_toml_value(value))
         return entry
 
     @staticmethod
-    def _toml_value(value: Any):
+    def _build_toml_value(value: Any):
         if isinstance(value, _Number):
             try:
                 item = tomlkit.value(value)
