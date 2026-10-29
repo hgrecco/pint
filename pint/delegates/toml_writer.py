@@ -138,6 +138,8 @@ class TomlWriter:
             for f in dataclasses.fields(converter)
             if f.name != "scale"
         }
+        for key, text in d.modifiers_text.items():
+            modifiers[key] = self._build_number(text)
         return self._build_inline_table(
             {"value": value, **modifiers, **self._symbol_and_aliases_dict(d)}
         )

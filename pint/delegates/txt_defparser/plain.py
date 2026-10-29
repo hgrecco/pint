@@ -158,11 +158,15 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
 
         if ";" in value:
             [converter, modifiers] = value.split(";", 1)
+            modifiers_text = {
+                key.strip(): value.strip()
+                for key, value in (part.split(":") for part in modifiers.split(";"))
+            }
 
             try:
                 modifiers = {
-                    key.strip(): config.to_number(value)
-                    for key, value in (part.split(":") for part in modifiers.split(";"))
+                    key: config.to_number(value)
+                    for key, value in modifiers_text.items()
                 }
             except definitions.NotNumeric as ex:
                 return common.DefinitionSyntaxError(
@@ -172,6 +176,7 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
         else:
             converter = value
             modifiers = {}
+            modifiers_text = {}
 
         value_text = converter.strip()
         converter = config.to_scaled_units_container(converter)
@@ -197,6 +202,7 @@ class UnitDefinition(PintParsedStatement, definitions.UnitDefinition):
                 converter,
                 reference,
                 value_text=value_text,
+                modifiers_text=modifiers_text,
             )
         except Exception as ex:
             return common.DefinitionSyntaxError(str(ex))

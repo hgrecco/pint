@@ -131,6 +131,10 @@ class UnitDefinition(NamedDefinition, errors.WithDefErr):
     converter: Converter | None
     #: Reference units.
     reference: UnitsContainer | None
+    #: source text of the offset, logbase and logfactor, by name
+    modifiers_text: dict[str, str] = field(
+        default_factory=dict, kw_only=True, compare=False
+    )
 
     def __post_init__(self):
         if not errors.is_valid_unit_name(self.name):

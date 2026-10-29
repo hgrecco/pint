@@ -235,11 +235,10 @@ class TomlParser:
         )
 
     def parse_unit(self, name: str, d: dict[str, Any]):
-        modifiers = {
-            key: self._number(d[key])
-            for key in ("offset", "logbase", "logfactor")
-            if key in d
+        modifiers_text = {
+            key: str(d[key]) for key in ("offset", "logbase", "logfactor") if key in d
         }
+        modifiers = {key: self._number(text) for key, text in modifiers_text.items()}
         scaled = self._default_config.to_scaled_units_container(str(d["value"]))
         return definitions.UnitDefinition(
             name,
@@ -248,6 +247,7 @@ class TomlParser:
             Converter.from_arguments(scale=scaled.scale, **modifiers),
             definitions.UnitsContainer(scaled),
             value_text=str(d["value"]),
+            modifiers_text=modifiers_text,
         )
 
     def parse_group(self, d: dict[str, Any]):

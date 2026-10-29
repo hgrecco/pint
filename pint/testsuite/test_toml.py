@@ -136,3 +136,16 @@ def test_write_txt_definitions(tmp_path):
     assert {d.name: d.value_text for d in back if hasattr(d, "value_text")} == {
         d.name: d.value_text for d in basic if hasattr(d, "value_text")
     }
+
+
+@pytest.mark.parametrize("source", ["default_en.toml", "default_en.txt"])
+def test_write_keeps_modifier_text(source):
+    ureg = pint.UnitRegistry(None)
+    if source.endswith(".toml"):
+        defs = TomlParser(ParserConfig(float)).parse_file(PINT_DIR / source)
+    else:
+        defs = ureg._def_parser.parse_file(PINT_DIR / source).iter_statements()
+    text = TomlWriter().dumps(d for d in defs if isinstance(d, BASIC))
+    assert 'offset = "233.15 + 200 / 9"' in text
+    assert "offset = 273.15," in text
+    assert "logbase = 2.71828182845904523536028747135266249775724709369995" in text
