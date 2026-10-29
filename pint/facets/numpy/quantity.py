@@ -98,14 +98,14 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
         Parameters
         ----------
-        quant_list : list of pint.PlainQuantity
+        quant_list : list of pint.NumpyQuantity
             list of pint.PlainQuantity
-        units : UnitsContainer, str or pint.PlainQuantity
+        units : UnitsContainer, str or pint.NumpyQuantity
             units of the physical quantity to be created (Default value = None)
 
         Returns
         -------
-        pint.PlainQuantity
+        pint.NumpyQuantity
         """
         return cls.from_sequence(quant_list, units=units)
 
