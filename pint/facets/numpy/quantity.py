@@ -19,6 +19,9 @@ from ..._array_typing import HasShape, Shape
 from ..._typing import Magnitude
 from ...compat import (
     HAS_NUMPY,
+    array_namespace,
+    array_size,
+    is_array_or_duck,
     np,
 )
 from ...errors import (
@@ -458,18 +461,20 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         >>> ([1, 6000] * ureg("g")).to_compact(maximumPrefix=True)
         Quantity(array([1.e-03, 6.e+00]), "kilogram")
         """
-        if not (HAS_NUMPY and isinstance(self._magnitude, np.ndarray)):
-            # Not an array (e.g. numpy isn't installed, or the magnitude is a
-            # plain scalar/Decimal/etc.): maximumPrefix doesn't apply to a
-            # single value, so defer to the scalar implementation.
+        qm = self._magnitude
+
+        if not is_array_or_duck(qm):
+            # Not an array: maximumPrefix doesn't apply to a single value,
+            #   so defer to the scalar implementation instead.
             return super().to_compact(unit)
 
-        qm = self.magnitude
+        xp = array_namespace(qm)
+
         if (
             self.unitless
-            or np.all(qm == 0)
-            or np.all(np.isnan(qm))
-            or np.all(np.isinf(qm))
+            or xp.all(qm == 0).item()
+            or xp.all(xp.isnan(qm)).item()
+            or xp.all(xp.isinf(qm)).item()
         ):
             return self
 
@@ -482,18 +487,18 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             magnitude = magnitude.nominal_value
 
         if unit_power > 0:
-            power = np.floor(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
+            power = xp.floor(xp.log10(xp.abs(magnitude)) / float(unit_power) / 3) * 3
         else:
-            power = np.ceil(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
+            power = xp.ceil(xp.log10(xp.abs(magnitude)) / float(unit_power) / 3) * 3
 
-        finite_powers = power[np.isfinite(power)]
-        if finite_powers.size == 0:
+        finite_powers = power[xp.isfinite(power)]
+        if array_size(finite_powers) == 0:
             # Only zeros, nan and inf: there is no prefix to pick.
             return self
         pivot = (
-            finite_powers[np.argmax(np.abs(finite_powers))]
+            finite_powers[xp.argmax(xp.abs(finite_powers))]
             if maximumPrefix
-            else (finite_powers[np.argmin(np.abs(finite_powers))])
+            else (finite_powers[xp.argmin(xp.abs(finite_powers))])
         )
 
         new_unit_container = _pick_compact_unit(

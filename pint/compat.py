@@ -120,7 +120,7 @@ def is_upcast_type(cls: type) -> bool:
 #######
 
 
-def is_duck_array(obj: object) -> TypeIs[Array]:
+def is_duck_array(obj: object, /) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
     return (HAS_NUMPY and isinstance(obj, ndarray)) or (
@@ -139,7 +139,7 @@ def is_duck_array(obj: object) -> TypeIs[Array]:
     )
 
 
-def is_array_or_duck(obj: object) -> TypeIs[Array]:
+def is_array_or_duck(obj: object, /) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) array, or duck array."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
     return hasattr(obj, "__array_namespace__") or (
