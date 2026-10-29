@@ -101,3 +101,38 @@ def test_write_rejects_other_definitions(tmp_path):
     group = GroupDefinition("g", (), ())
     with pytest.raises(TypeError, match="GroupDefinition"):
         TomlWriter().write_file(tmp_path / "defs.toml", [group])
+
+
+def test_write_keeps_value_text(tmp_path):
+    f = tmp_path / "defs.toml"
+    f.write_text(
+        VERSION + "[prefix]\n"
+        'kilo = { value = 1e3, symbol = "k" }\n'
+        'kibi = { value = "2**10", symbol = "Ki" }\n'
+        "[dimension]\n"
+        'area = { value = "[length] ** 2" }\n'
+        "[unit]\n"
+        'kelvin = { value = "[temperature]", symbol = "K" }\n'
+        'fahrenheit = { value = "5 / 9 * kelvin", offset = 255.37 }\n',
+        encoding="utf-8",
+    )
+    text = TomlWriter().dumps(TomlParser(ParserConfig(float)).parse_file(f))
+    assert 'kilo = { value = 1e3, symbol = "k" }' in text
+    assert 'kibi = { value = "2**10", symbol = "Ki" }' in text
+    assert 'area = { value = "[length] ** 2" }' in text
+    assert 'fahrenheit = { value = "5 / 9 * kelvin", offset = 255.37 }' in text
+
+
+def test_write_txt_definitions(tmp_path):
+    ureg = pint.UnitRegistry(None)
+    parsed = ureg._def_parser.parse_file(PINT_DIR / "default_en.txt")
+    basic = [d for d in parsed.iter_statements() if isinstance(d, BASIC)]
+    f = tmp_path / "defs.toml"
+    TomlWriter().write_file(f, basic)
+    text = f.read_text(encoding="utf-8")
+    assert 'kibi = { value = "2**10", symbol = "Ki" }' in text
+    back = TomlParser(ParserConfig(float)).parse_file(f)
+    # the writer gathers derived dimensions in one section, changing the order
+    assert {d.name: d.value_text for d in back if hasattr(d, "value_text")} == {
+        d.name: d.value_text for d in basic if hasattr(d, "value_text")
+    }

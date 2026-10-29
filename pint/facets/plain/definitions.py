@@ -11,7 +11,7 @@ from __future__ import annotations
 import itertools
 import numbers
 import typing as ty
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Any
 
@@ -72,6 +72,8 @@ class DefaultsDefinition:
 class NamedDefinition:
     #: name of the prefix
     name: str
+    #: source text of the value, empty if not read from a definitions file
+    value_text: str = field(default="", kw_only=True, compare=False)
 
 
 @dataclass(frozen=True)

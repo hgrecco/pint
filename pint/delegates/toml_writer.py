@@ -6,8 +6,8 @@ Writer for TOML definition files, read back by
 :class:`~pint.delegates.toml_defparser.TomlParser`.
 
 Only defaults, prefixes, derived dimensions and units are written. Values are
-rebuilt from the parsed definitions, so the source text is not kept, e.g.
-``5 / 9 * kelvin`` is written as ``0.5555555555555556 * kelvin``.
+written from their source text (``value_text``), or rebuilt for definitions
+made in code, e.g. ``5 / 9 * kelvin`` becomes ``0.5555555555555556 * kelvin``.
 
 :copyright: 2025 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -19,6 +19,7 @@ import dataclasses
 import json
 import pathlib
 import re
+import tomllib
 from collections.abc import Iterable
 from typing import Any
 
@@ -62,9 +63,11 @@ class TomlWriter:
             definitions.UnitDefinition: [],
         }
         for d in defs:
-            if type(d) not in sections:
+            # subclasses too, e.g. the definitions of the text parser
+            kind = next((k for k in sections if isinstance(d, k)), None)
+            if kind is None:
                 raise TypeError(f"cannot write {type(d).__name__} to TOML")
-            sections[type(d)].append(d)
+            sections[kind].append(d)
 
         lines = [f'version = "{FORMAT_VERSION}"']
         lines += self.dump_defaults(sections[definitions.DefaultsDefinition])
@@ -96,15 +99,18 @@ class TomlWriter:
     # Entries
 
     def format_prefix(self, d) -> str:
-        return _entry(d.name, {"value": d.value, **_names(d)})
+        value = _Number(d.value_text) if d.value_text else d.value
+        return _entry(d.name, {"value": value, **_names(d)})
 
     def format_dimension(self, d) -> str:
-        return _entry(d.name[1:-1], {"value": str(d.reference)})
+        return _entry(d.name[1:-1], {"value": d.value_text or str(d.reference)})
 
     def format_unit(self, d) -> str:
         converter = d.converter
         reference = str(d.reference) if d.reference else ""
-        if d.is_base or converter.scale == 1:
+        if d.value_text:
+            value = d.value_text
+        elif d.is_base or converter.scale == 1:
             value = reference or "1"
         else:
             value = " * ".join(filter(None, (str(converter.scale), reference)))
@@ -144,7 +150,17 @@ def _string(text: str) -> str:
     return json.dumps(text, ensure_ascii=False)
 
 
+class _Number(str):
+    """Source text of a number, e.g. ``1e3`` or ``2**10``."""
+
+
 def _value(value: Any) -> str:
+    if isinstance(value, _Number):
+        try:
+            tomllib.loads(f"v = {value}", parse_float=str)
+            return value
+        except tomllib.TOMLDecodeError:
+            return _string(value)
     if isinstance(value, str):
         return _string(value)
     if isinstance(value, list):

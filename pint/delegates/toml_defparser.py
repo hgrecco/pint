@@ -224,11 +224,14 @@ class TomlParser:
             self._number(d["value"]),
             d.get("symbol"),
             tuple(d.get("aliases", ())),
+            value_text=str(d["value"]),
         )
 
     def parse_dimension(self, name: str, d: dict[str, Any]):
         return definitions.DerivedDimensionDefinition(
-            f"[{name}]", self._default_config.to_dimension_container(d["value"])
+            f"[{name}]",
+            self._default_config.to_dimension_container(d["value"]),
+            value_text=d["value"],
         )
 
     def parse_unit(self, name: str, d: dict[str, Any]):
@@ -244,6 +247,7 @@ class TomlParser:
             tuple(d.get("aliases", ())),
             Converter.from_arguments(scale=scaled.scale, **modifiers),
             definitions.UnitsContainer(scaled),
+            value_text=str(d["value"]),
         )
 
     def parse_group(self, d: dict[str, Any]):
