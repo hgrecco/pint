@@ -5,7 +5,7 @@ Pint Changelog
 -------------------
 
 - Load definitions from TOML files; `pint/default_en.toml` holds the default definitions (#2526)
-- Write prefixes, dimensions and units to TOML files with `pint.delegates.toml_writer.TomlWriter`
+- Write prefixes, dimensions and units to TOML files with `pint.delegates.toml_writer.TomlWriter` (#2539)
 - Make the `Quantity` constructor stricter, rejecting unknown types on construction (#2523)
 - Improve the reliability of `**` on `Quantity`, making the implementation consistent with `*` and `/` (#2523)
 - Fix redefining a unit with `define()` or `load_definitions()` after it was used, which kept the old cached conversion; pass `rebuild_cache=False` to delay the rebuild (#922, #740)
