@@ -117,7 +117,7 @@ class TomlWriter:
     def format_prefix(self, d):
         value = self._build_number(d.value_text) if d.value_text else d.value
         return self._build_inline_table(
-            {"value": value, **self._build_symbol_and_aliases(d)}
+            {"value": value, **self._symbol_and_aliases_dict(d)}
         )
 
     def format_dimension(self, d):
@@ -139,13 +139,13 @@ class TomlWriter:
             if f.name != "scale"
         }
         return self._build_inline_table(
-            {"value": value, **modifiers, **self._build_symbol_and_aliases(d)}
+            {"value": value, **modifiers, **self._symbol_and_aliases_dict(d)}
         )
 
     # Building TOML items
 
     @staticmethod
-    def _build_symbol_and_aliases(d) -> dict[str, Any]:
+    def _symbol_and_aliases_dict(d) -> dict[str, Any]:
         names: dict[str, Any] = {}
         if d.defined_symbol:
             names["symbol"] = d.defined_symbol
