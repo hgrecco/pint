@@ -34,13 +34,17 @@ dependencies = [
 
 [tool.hatch.build]
 packages = ["pint"]
-include = ["pint/default_en.txt", "pint/constants_en.txt"]
+include = [
+  "pint/default_en.txt",
+  "pint/default_en.toml",
+  "pint/constants_en.txt",
+]
 
 [project.optional-dependencies]
 test = ["pytest>=9", "pytest-cov", "pytest-benchmark"]
 test-mpl = ["pytest-mpl"]
 test-all = ["pint[test, test-mpl]"]
-codspeed = ["pint[test-all]", "pytest-codspeed"]
+codspeed = ["pytest>=9", "pint[test-mpl]", "pytest-codspeed"]
 numpy = ["numpy >= 2.0.0"]
 optype = ["optype[numpy]"]
 uncertainties = ["uncertainties >= 3.1.6"]
